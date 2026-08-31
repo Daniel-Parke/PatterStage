@@ -6,6 +6,7 @@
 // custom-builder preview, and the preset grouping are pure + unit-testable
 // (the component is just rendering + local state around these).
 
+import { scheduleCanEverFire } from "./next-run";
 import { parseSchedule } from "@/lib/schedule/parse-schedule";
 import {
   SCHEDULE_PRESETS,
@@ -114,7 +115,15 @@ export function groupSchedulePresets(): Array<{
 export function advancedDraftProblem(raw: string): string | null {
   const trimmed = raw.trim();
   if (!trimmed) return null;
-  return parseSchedule(trimmed).kind === "invalid"
-    ? `Not a schedule this understands: "${trimmed}"`
-    : null;
+  if (parseSchedule(trimmed).kind === "invalid") {
+    return `Not a schedule this understands: "${trimmed}"`;
+  }
+  // Shape is not satisfiability. Without this the client accepted `0 0 30 2 *`,
+  // the server accepted it too, and the only signal was the "Next:" preview row
+  // quietly disappearing -- the picker had computed the answer and thrown it
+  // away. Client and server now refuse the same expressions (T-0079).
+  if (!scheduleCanEverFire(trimmed)) {
+    return `"${trimmed}" can never fire: that date does not exist, or a field is out of range`;
+  }
+  return null;
 }

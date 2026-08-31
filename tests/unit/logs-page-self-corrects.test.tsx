@@ -145,3 +145,46 @@ describe("a 404 on the default log name does not strand the page", () => {
     await waitFor(() => expect(requested()).toContain("hermes"));
   });
 });
+
+describe("a 404 is shown as an error, not as an empty state", () => {
+  it("renders the reason when the logs directory does not exist", async () => {
+    // Driving the product in a browser found this: on a fresh install /logs
+    // answers 404 "No logs directory found" and the page showed only "No
+    // matching log files" -- an ERROR rendered as an EMPTY STATE, which the
+    // operator cannot tell from "you simply have no logs yet".
+    mockUseLogs.mockReturnValue({
+      data: null,
+      isLoading: false,
+      isFetching: false,
+      error: "No logs directory found. The agent has not written any logs yet.",
+      errorBody: { availableLogs: [], logsDirMissing: true },
+      refetch: jest.fn(),
+    });
+
+    const { container } = render(<LogsPage />);
+
+    await waitFor(() => expect(requested().length).toBeGreaterThan(0));
+    expect(container.querySelector('[role="alert"]')).not.toBeNull();
+    expect(container.textContent).toMatch(/no logs directory/i);
+  });
+
+  it("does not sit on an empty file list with nothing said", async () => {
+    // The specific confusion: "No matching log files" is the picker's empty
+    // state, and on its own it reads as good news.
+    mockUseLogs.mockReturnValue({
+      data: null,
+      isLoading: false,
+      isFetching: false,
+      error: "No logs directory found.",
+      errorBody: { availableLogs: [] },
+      refetch: jest.fn(),
+    });
+
+    const { container } = render(<LogsPage />);
+
+    await waitFor(() => expect(requested().length).toBeGreaterThan(0));
+    const hasEmptyState = /no matching log files/i.test(container.textContent ?? "");
+    const hasError = container.querySelector('[role="alert"]') !== null;
+    expect(hasEmptyState && !hasError).toBe(false);
+  });
+});

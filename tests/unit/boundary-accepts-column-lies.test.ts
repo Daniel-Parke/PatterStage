@@ -27,7 +27,7 @@
 // the one for a missing FILE -- and never touched this one, which returns no
 // availableLogs either, so the page's self-correction has nothing to work with.
 
-import { cronCanEverFire, computeNextRun } from "@/lib/schedule/next-run";
+import { cronCanEverFire, scheduleCanEverFire, computeNextRun } from "@/lib/schedule/next-run";
 import { chapterTitle } from "@/modules/rec-room/lib/chapter-title";
 import { normaliseStoryCharacters } from "@/modules/rec-room/lib/characters";
 import { missionNameFrom } from "@/lib/missions/mission-name";
@@ -67,11 +67,26 @@ describe("a cron that can never fire is refused", () => {
     expect(cronCanEverFire("0 0 30 2 1")).toBe(true);
   });
 
+  it("does not judge schedules that are not cron at all", () => {
+    // Found by the existing suite the moment this was wired in: the guard was
+    // called on every schedule, and an interval shorthand has fewer than five
+    // fields, so "every 10m" was refused as unfireable. Only cron carries the
+    // impossible-date problem.
+    expect(scheduleCanEverFire("every 10m")).toBe(true);
+    expect(scheduleCanEverFire("every 2h")).toBe(true);
+    expect(scheduleCanEverFire("2027-01-01T09:00:00Z")).toBe(true);
+  });
+
+  it("still refuses an impossible cron through the schedule-level guard", () => {
+    expect(scheduleCanEverFire("0 0 30 2 *")).toBe(false);
+    expect(scheduleCanEverFire("0 9 * * *")).toBe(true);
+  });
+
   it("agrees with computeNextRun on everything it accepts", () => {
     // The two must not disagree: anything this lets through has to actually
     // produce a next run, or the row lands enabled-and-dead exactly as before.
     for (const expr of ["0 9 * * *", "*/15 * * * *", "0 0 1 * *", "0 0 31 1 *"]) {
-      expect(computeNextRun({ kind: "cron", expr }, new Date("2026-01-01T00:00:00Z"))).not.toBeNull();
+      expect(computeNextRun(expr, new Date("2026-01-01T00:00:00Z"))).not.toBeNull();
     }
   });
 });

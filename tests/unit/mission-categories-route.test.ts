@@ -428,7 +428,11 @@ describe("mission-categories route — factory migration (session 71)", () => {
     });
 
     it("returns 200 on successful delete (happy path)", async () => {
-      mockDeleteCategory.mockReturnValue(undefined);
+      // `true` because that is what deleteCategory actually returns. This mock
+      // answered `undefined` and passed only because the route discarded the
+      // result -- which is why DELETE with an unknown id used to answer 200 and
+      // delete nothing (T-0079).
+      mockDeleteCategory.mockReturnValue(true);
 
       const res = (await DELETE(
         deleteRequest(`${BASE}?id=general`) as never
@@ -437,6 +441,18 @@ describe("mission-categories route — factory migration (session 71)", () => {
       expect(res.status).toBe(200);
       const data = lastResponse().data as { data: { deleted: string } };
       expect(data.data.deleted).toBe("general");
+    });
+
+    it("returns 404 when the category does not exist", async () => {
+      // The defect itself: the repository already reported "no such row" and
+      // the route echoed the requested id back as deleted.
+      mockDeleteCategory.mockReturnValue(false);
+
+      const res = (await DELETE(
+        deleteRequest(`${BASE}?id=no-such-category`) as never
+      )) as { status: number };
+
+      expect(res.status).toBe(404);
     });
 
     it("returns 403 'System categories' (forbidden factory)", async () => {

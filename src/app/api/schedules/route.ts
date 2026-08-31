@@ -13,7 +13,7 @@ import { ok, created, badRequest } from "@/lib/api-response";
 import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import { listSchedules, createSchedule } from "@/lib/schedules-repository";
 import { parseSchedule } from "@/lib/schedule/parse-schedule";
-import { computeNextRun } from "@/lib/schedule/next-run";
+import { computeNextRun, scheduleCanEverFire } from "@/lib/schedule/next-run";
 import { recordEvent } from "@/lib/analytics/record-event";
 
 const scheduleCreateSchema = z
@@ -44,6 +44,16 @@ export async function POST(request: NextRequest) {
   try {
     if (parseSchedule(parsed.schedule).kind === "invalid") {
       return badRequest(`Unrecognized schedule: ${parsed.schedule}`);
+    }
+    // Shape is not satisfiability. `0 0 30 2 *` is five well-formed fields
+    // naming a date that never comes: it stored enabled, computed a null
+    // next-run, and getDueSchedules filters `next_run_at IS NOT NULL` -- so
+    // the row sat enabled forever and dead forever (T-0079).
+    if (!scheduleCanEverFire(parsed.schedule)) {
+      return badRequest(
+        `Schedule "${parsed.schedule}" can never fire: it names a date that does not ` +
+          `exist, or a field outside its range. Check the day-of-month against the month.`,
+      );
     }
     const next = computeNextRun(parsed.schedule, new Date());
     const schedule = createSchedule({

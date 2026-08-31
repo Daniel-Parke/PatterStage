@@ -51,7 +51,18 @@ export async function GET(request: NextRequest) {
 
     const dirResult = resolveLogsDir();
     if (!dirResult) {
-      return notFound("No logs directory found");
+      // The DIRECTORY is missing, which is the normal state of a fresh install
+      // that has not run the agent yet. T-0071 taught the sibling 404 -- the one
+      // for a missing FILE -- to carry the available-log list so the page could
+      // pick a different one, and never touched this branch. So the page got a
+      // bare 404, showed "No matching log files", and rendered an ERROR as an
+      // EMPTY STATE: the operator could not tell "you have no logs" from "I
+      // could not look" (T-0079).
+      return notFoundWith(
+        "No logs directory found. The agent has not written any logs yet — this is normal " +
+          "on a fresh install, and the directory appears the first time it runs.",
+        { availableLogs: [] as LogFileMeta[], logsDirMissing: true },
+      );
     }
     const { logsDir, resolvedLogsDir } = dirResult;
 

@@ -11,7 +11,7 @@ import { dispatchMissionNow } from "@/lib/missions/mission-dispatch";
 import { runMissionQueueTick } from "@/lib/missions/mission-queue-tick";
 import { createSchedule } from "@/lib/schedules-repository";
 import { parseSchedule, scheduleDisplayFromParsed } from "@/lib/schedule/parse-schedule";
-import { computeNextRun } from "@/lib/schedule/next-run";
+import { computeNextRun, scheduleCanEverFire } from "@/lib/schedule/next-run";
 import { enrichedMission } from "@/lib/missions/mission-response";
 import { logApiError } from "@/lib/api-logger";
 import { isMissionDraft, isMissionQueuedForRun } from "@/lib/missions/mission-board";
@@ -159,6 +159,16 @@ export async function promoteMission(
     const parsed = parseSchedule(input.schedule!);
     if (parsed.kind === "invalid") {
       return { ok: false, status: 400, error: `Unrecognized schedule: ${input.schedule}` };
+    }
+    // Shape is not satisfiability -- see the note in src/app/api/schedules/route.ts.
+    if (!scheduleCanEverFire(input.schedule!)) {
+      return {
+        ok: false,
+        status: 400,
+        error:
+          `Schedule "${input.schedule}" can never fire: it names a date that does not ` +
+          `exist, or a field outside its range. Check the day-of-month against the month.`,
+      };
     }
     try {
       const current = getMission(input.missionId)!;

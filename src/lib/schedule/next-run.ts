@@ -58,6 +58,57 @@ function expandDow(field: string): Set<number> {
 
 const CAP_MINUTES = 366 * 24 * 60; // give up after a year of minute-stepping
 
+/** Longest each month can ever be, February counted as a leap year. */
+const MAX_DAYS_IN_MONTH = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+/**
+ * Could this cron expression EVER fire?
+ *
+ * `looksLikeCronExpression` only checks shape -- five fields of digits and
+ * punctuation -- so `0 0 30 2 *` (the 30th of February) parses as valid, is
+ * stored `enabled`, and computes a null next-run. `getDueSchedules` selects
+ * `WHERE next_run_at IS NOT NULL`, so the row sits enabled forever and dead
+ * forever, and the UI's "Next:" preview simply disappears rather than saying
+ * why (T-0079).
+ *
+ * WHY THIS IS STRUCTURAL RATHER THAN A PROBE. The obvious check -- call
+ * computeNextRun and refuse a null -- is wrong twice over. It costs ~527,000
+ * synchronous Date mutations per rejected expression, on the request thread.
+ * And CAP_MINUTES is 366 days, so `0 0 29 2 *` -- the 29th of February, a
+ * legitimate expression that fires every four years -- also returns null from
+ * most start dates and would be refused. Asking the calendar directly is exact
+ * and costs nothing.
+ */
+export function cronCanEverFire(expr: string): boolean {
+  const parts = expr.trim().split(/\s+/);
+  if (parts.length < 5) return false;
+  const [minF, hourF, domF, monF, dowF] = parts;
+
+  // An empty set means every value in that field was out of range, e.g. hour 99.
+  const minutes = expandField(minF, 0, 59);
+  const hours = expandField(hourF, 0, 23);
+  const doms = expandField(domF, 1, 31);
+  const months = expandField(monF, 1, 12);
+  const dows = expandDow(dowF);
+  if (!minutes.size || !hours.size || !doms.size || !months.size || !dows.size) return false;
+
+  // Standard cron: when BOTH day-of-month and day-of-week are restricted, a day
+  // matching EITHER fires. So an impossible date is only fatal when day-of-week
+  // is unrestricted and cannot rescue it.
+  const domRestricted = domF.trim() !== "*";
+  const monRestricted = monF.trim() !== "*";
+  const dowRestricted = dowF.trim() !== "*";
+  if (domRestricted && monRestricted && !dowRestricted) {
+    for (const m of months) {
+      for (const d of doms) {
+        if (d <= MAX_DAYS_IN_MONTH[m - 1]) return true;
+      }
+    }
+    return false;
+  }
+  return true;
+}
+
 /** Next time strictly after `from` that matches a 5-field cron expression. */
 export function nextCronAfter(expr: string, from: Date): Date | null {
   const parts = expr.trim().split(/\s+/);
@@ -114,4 +165,23 @@ export function computeNextRun(schedule: string, from: Date): Date | null {
     default:
       return null;
   }
+}
+
+/**
+ * Could this SCHEDULE ever fire?
+ *
+ * The wrapper every caller should use. `cronCanEverFire` judges a five-field
+ * cron expression and nothing else, so calling it directly on "every 10m" or an
+ * ISO one-shot refuses a perfectly good schedule — which is exactly what
+ * happened the first time this was wired in, and what the interval and one-shot
+ * cases below now pin.
+ *
+ * Only cron carries the impossible-date problem: an interval always fires, and
+ * a one-shot is already handled by computeNextRun returning null for a past
+ * date, which the callers have always coped with.
+ */
+export function scheduleCanEverFire(raw: string): boolean {
+  const parsed = parseSchedule(raw);
+  if (parsed.kind !== "cron") return true;
+  return cronCanEverFire(parsed.expr);
 }
