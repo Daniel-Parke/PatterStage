@@ -16,8 +16,13 @@ import {
 // the two catalog constants are statically imported. The 7-line
 // try/catch + `serverErrorFromCatch` that used to wrap the call site
 // was dead code: there is no I/O, no JSON parse, no DB query, and no
-// file read. Migrated from the List 3 dead-code sweep; matches the
-// `api/agent/personality` GET handler shape (pure read, no try).
+// file read. Migrated from the List 3 dead-code sweep.
+//
+// It used to cite `api/agent/personality`'s GET handler as the matching shape.
+// That handler does not exist and has not for some time -- the route is
+// PUT-only, and T-0083 gave it a GET that answers 405. A comment naming a
+// sibling that is not there sends the next reader looking for a precedent
+// rather than at the code in front of them.
 export async function GET() {
   return ok({
     platforms: HERMES_PLATFORMS,
