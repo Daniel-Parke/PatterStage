@@ -156,21 +156,19 @@ it and say so.
 
 ---
 
-## Known already - don't spend time re-finding these
+## Known already - fixed since this brief was written
 
-Found in a browser pass on a Windows dev instance. If you see something *worse*
-than what is written here, I still want it.
+Found in a browser pass on a Windows dev instance and fixed in T-0092. They
+stay here so the next run confirms them rather than re-finds them.
 
-| What | Where |
-|---|---|
-| "Enter a Mission Name before submitting" shows before you have typed anything | Missions → New Mission |
-| Goals placeholder runs three goals together while the hint says "one per line" | Missions → New Mission |
-| The dispatch-mode selector sits below the fold; the visible footer button says "Save draft" | Missions → New Mission |
-| "Hermes is not installed - nothing will actually run" is shown even when a gateway is configured and missions run fine | Dashboard and Missions banner |
-| `Total`/`Active` and `Done`/`Failed` labels overlap at ~1280px viewport width | Missions stats strip |
-| A `[paths]` boot warning tells you to set `PS_DATA_DIR` when it is already set - may not appear on a default install | Server log |
-
----
+| What was wrong | Where | Now |
+|---|---|---|
+| "Enter a Mission Name before submitting" showed before you had typed anything | Missions → New Mission | Silent until you start; the button stays disabled with the reason in its tooltip |
+| Goals placeholder ran three goals together while the hint said "one per line" | Missions → New Mission | One example line |
+| The dispatch-mode selector sat below the fold; the footer said "Save draft" | Missions → New Mission | Dispatch is the first section of the sheet |
+| "Hermes is not installed - nothing will actually run" beside a working gateway | Dashboard | Says the agent runs through the gateway at its address |
+| `Total`/`Active` and `Done`/`Failed` labels overlapped at ~1280px | Missions stats strip | Tiles wrap; a Playwright probe measures the boxes |
+| A `[paths]` boot warning told you to set `PS_DATA_DIR` when it was already set | Server log | Quiet when it was set |
 
 ## Don't file these - they are known-correct
 
@@ -221,6 +219,21 @@ Fixed last round; each is one user action in the browser.
 - Two credentials for the same provider: delete one → the shared `.env` key
   survives. Delete the second → it is removed.
 - `GET /api/stories` answers a helpful 405, not a bare 404.
+
+Fixed after round 6; each is one action in the browser or one request:
+
+- Push a profile, then open its config.yaml: one `model:` key, personality
+  intact, every preserved section still there. Pull, push, pull again: nothing
+  changes.
+- Create a story with a single-word mood: it creates, with a real chapter.
+- Dispatch with `timeoutMinutes: 1e9`: a 400 naming 1 to 4320, and no Draft.
+- A cron schedule for the 30th of February: a 400, and no Draft.
+- `GET /api/missions?limit=5`: five, newest first.
+- Cancel a mission whose run already finished: no error in the server log.
+- Approve a gate with `action: "approve"`: a 400 naming accept and reject.
+- `GET` or `POST` on `/api/skills/[name]/toggle`: a 405 with `Allow: PUT`.
+- The dashboard shows a Subsystems panel with five rows, each with a reason.
+- Personalities has no "Set as active" control.
 
 ---
 

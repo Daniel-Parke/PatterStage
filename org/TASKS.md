@@ -105,3 +105,4 @@ The records under org/tasks/ are canonical.
 | T-0090 | standard | R2 | done | t0090-gateway-gate-2026-09-05 |
 | T-0091 | standard | R1 | done | t0091-subsystems-2026-09-05 |
 | T-0092 | standard | R1 | done | t0092-browser-findings-2026-09-05 |
+| T-0093 | standard | R0 | done | t0093-round-6-records-2026-09-05 |

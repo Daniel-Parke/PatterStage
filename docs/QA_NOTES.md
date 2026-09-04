@@ -160,3 +160,68 @@ edits are made on the Agents page.
 
 See also [DATA_STORAGE.md](DATA_STORAGE.md) for where data lives and which legacy
 `control-hub` / `ch.*` names are intentional back-compat.
+
+## Round 6 (2026-09-04): run by the operator's own Hermes agent
+
+The report disclosed its model (MiniMax-M3), could not render web pages, and
+could not stop the gateway it lived behind. It said all three plainly, which is
+why its findings could be trusted where they held and traced where they did
+not. Every claim was validated against the code before anything was changed;
+three mechanisms were wrong and the symptoms were real. Read these before
+re-filing anything from that report.
+
+### Three mechanisms the report got wrong (the symptoms were real)
+
+- **config.yaml corruption (finding 9).** Blamed `syncDefaultsToHermesConfig`
+  and a missing pre-write check. That function is an object round-trip that
+  structurally cannot emit a duplicate key, and it was the only writer that
+  already refused corrupt input. The corrupter was the text-level assembler in
+  `profile-config-builder`, with three independent faults, and a loop that
+  copied the corrupt disk file back into the database. Fixed in T-0086; every
+  config.yaml write now parses before it lands, and a refusal names the backup
+  to restore. Existing installs: run Pull all once after upgrading.
+- **Story creation crash (finding 1).** Blamed an orphaned draft row from a
+  crash after insert. The crash was before the insert; the empty 500 body was
+  the router returning fourteen handler promises without awaiting them, so no
+  rejection ever reached the catch. Fixed in T-0087. The real orphan paths were
+  a restart during the LLM window (now swept at boot) and the cron-schedule 400
+  that fired after the row was written (now judged before it, T-0088).
+- **Chat title collision (finding 5).** Said the gateway's 400 surfaced as an
+  opaque failure. It never surfaced: the catch swallowed it, the conversation
+  was created with no session, and the route answered 201. Fixed in T-0089:
+  one retry with a suffixed title, then the honest fallback.
+
+### Already done when the report arrived
+
+- **Finding 19** (offline banner mid-conversation): verified live in a browser
+  on this device in T-0080 before round 6 ran.
+- **Finding 20** (logs empty state): T-0079's message reached the page; round 6
+  was right that it rendered as a red alert, and that an empty logs directory
+  got the same treatment. Both are a calm status now (T-0087).
+
+### Fixed this round, do not re-file
+
+T-0086 config assembler and belt; T-0087 stories (return await, body guards,
+update allowlist, `id` alias, boot sweep, logs calm state); T-0088 mission
+timeouts 1..4320, list-field guards, name hygiene on update, schedule judged
+before the row exists, every list bounded; T-0089 stop treats 404 as stopped,
+chat title retry, live elapsed time on a running stage, gate verbs accept and
+reject only, `Allow` on every 405 and stubs on the skills toggle, the
+Personalities "Set as active" control removed; T-0090 the gateway gate (a
+saturated endpoint answers 503 naming the gate); T-0091 `GET
+/api/status/subsystems` and the dashboard panel; T-0092 the six browser
+findings from this device.
+
+### Environment, not product
+
+- **A stale `.next/` build** serves yesterday's bundle. Rebuild before filing a
+  UI bug, as Step 0 says.
+- **A stale port** from a previous process is the previous process, not a
+  second instance. The boot line names the port actually listening.
+
+### Deferred, on purpose
+
+- **Database as the single source of truth** for everything the agent reads:
+  aligned with the standing V1-foundations roadmap (phases 2 to 5), recorded
+  there, not done in this round. The config assembler fix (T-0086) made the
+  database copy trustworthy, which is the precondition.
