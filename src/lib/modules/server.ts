@@ -82,6 +82,13 @@ export interface ServerModule {
    * module's.
    */
   publishSkill?: (skillKey: string) => void;
+  /**
+   * Boot sweep for rows a previous process left mid-flight. Runs once at
+   * scheduler boot beside core's reconcileRunsOnBoot, inside the same
+   * best-effort try/catch. Stories are the first (T-0087): a row born
+   * "generating" inside a minutes-long LLM call has no owner after a restart.
+   */
+  reconcileOnBoot?: () => void;
 }
 
 export const SERVER_MODULES: readonly ServerModule[] = [recRoomServerModule, hermesServerModule];

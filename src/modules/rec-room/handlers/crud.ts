@@ -27,10 +27,52 @@ export async function handleLoad(body: Record<string, unknown>): Promise<NextRes
   return NextResponse.json({ data: story });
 }
 
+const UPDATE_ALLOWED = ["title", "config", "chapters"] as const;
+const READ_STATUSES = new Set(["read", "unread"]);
+
 export async function handleUpdate(body: Record<string, unknown>): Promise<NextResponse> {
-  const { storyId, ...fields } = body;
+  const { storyId, action: _action, ...fields } = body;
+  void _action;
   if (!storyId) return NextResponse.json({ error: "Missing storyId" }, { status: 400 });
-  const story = updateStory(storyId as string, fields as Record<string, unknown>);
+
+  // An allowlist, not a mass assignment (T-0087). This used to pass the body
+  // straight to updateStory, so any client could write status, storyArc,
+  // chapterContents or generationError. What the reader needs to change is a
+  // chapter's readStatus and title; that is what it may change.
+  const forbidden = Object.keys(fields).filter((k) => !(UPDATE_ALLOWED as readonly string[]).includes(k));
+  if (forbidden.length > 0) {
+    return NextResponse.json(
+      { error: `update accepts ${UPDATE_ALLOWED.join(", ")} only (got: ${forbidden.join(", ")})` },
+      { status: 400 },
+    );
+  }
+  const existing = getStory(storyId as string);
+  if (!existing) return NextResponse.json({ error: "Story not found" }, { status: 404 });
+
+  const patch: Record<string, unknown> = {};
+  if (typeof fields.title === "string" && fields.title.trim()) patch.title = fields.title.trim();
+  if (fields.config && typeof fields.config === "object" && !Array.isArray(fields.config)) patch.config = fields.config;
+  if (Array.isArray(fields.chapters)) {
+    const incoming = new Map<number, Record<string, unknown>>();
+    for (const c of fields.chapters) {
+      if (c && typeof c === "object" && typeof (c as { number?: unknown }).number === "number") {
+        incoming.set((c as { number: number }).number, c as Record<string, unknown>);
+      }
+    }
+    patch.chapters = existing.chapters.map((ch) => {
+      const c = incoming.get(ch.number);
+      if (!c) return ch;
+      return {
+        ...ch,
+        ...(typeof c.title === "string" && c.title.trim() ? { title: c.title.trim() } : {}),
+        ...(typeof c.readStatus === "string" && READ_STATUSES.has(c.readStatus) ? { readStatus: c.readStatus } : {}),
+      };
+    });
+  }
+  if (Object.keys(patch).length === 0) {
+    return NextResponse.json({ error: "nothing to update" }, { status: 400 });
+  }
+  const story = updateStory(storyId as string, patch as Parameters<typeof updateStory>[1]);
   if (!story) return NextResponse.json({ error: "Story not found" }, { status: 404 });
   return NextResponse.json({ data: story });
 }

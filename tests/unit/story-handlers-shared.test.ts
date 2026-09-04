@@ -41,15 +41,19 @@ describe("validateChapterOutput", () => {
 describe("safeArc", () => {
   const flat = { storyArc: "x", fixedPlotPoints: [], chapterOutlines: [] };
 
-  it("returns a flat StoryArc as-is", () => {
-    expect(safeArc(flat)).toEqual(flat);
+  // toMatchObject since T-0087: safeArc now guarantees the outline shape the
+  // chapter prompt reads (keyBeats et al.), so an arc comes back with what it
+  // had plus what it owed. These pin unwrap/parse, not byte identity.
+  it("returns a flat StoryArc with what it had", () => {
+    expect(safeArc(flat)).toMatchObject(flat);
   });
   it("unwraps a nested { storyArc: <real arc> } wrapper", () => {
     const inner = { storyArc: "x", fixedPlotPoints: [{}], chapterOutlines: [{}] };
-    expect(safeArc({ storyArc: inner })).toEqual(inner);
+    expect(safeArc({ storyArc: inner })).toMatchObject({ storyArc: "x", fixedPlotPoints: [{}] });
+    expect(safeArc({ storyArc: inner })!.chapterOutlines[0].keyBeats).toEqual([]);
   });
   it("parses a JSON-string arc", () => {
-    expect(safeArc(JSON.stringify(flat))).toEqual(flat);
+    expect(safeArc(JSON.stringify(flat))).toMatchObject(flat);
   });
   it("returns undefined for junk / null / non-arc", () => {
     expect(safeArc("not json")).toBeUndefined();

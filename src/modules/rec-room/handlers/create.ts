@@ -13,26 +13,41 @@ import { createStory, updateStory } from "@/modules/rec-room/lib/story-repositor
 import { recordEvent } from "@/lib/analytics/record-event";
 import type { StoryArc as StoryArcType, ChapterOutline } from "@/modules/rec-room/types";
 
-import { buildMasterPrompt, getChapterCount, safeArc, validateChapterOutput } from "./shared";
+import { buildMasterPrompt, getChapterCount, normaliseMood, safeArc, validateChapterOutput } from "./shared";
 
 import { chapterTitle } from "../lib/chapter-title";
 import { normaliseStoryCharacters } from "../lib/characters";
 export async function handleCreate(body: Record<string, unknown>): Promise<NextResponse> {
   const { title, config } = body;
-  if (!config || !(config as Record<string, unknown>)?.premise) {
-    return NextResponse.json({ error: "Missing premise" }, { status: 400 });
+  // The boundary, whole (T-0087). T-0079 guarded characters; mood, title and
+  // premise sat one field away, cast and unguarded. A string mood crashed with
+  // an empty 500; an object title crashed on the SQLite bind; an object
+  // premise became "[object Object]" in the prompt.
+  if (!config || typeof config !== "object" || Array.isArray(config)) {
+    return NextResponse.json({ error: "config must be an object with a premise" }, { status: 400 });
+  }
+  const rawCfg = config as Record<string, unknown>;
+  if (typeof rawCfg.premise !== "string" || !rawCfg.premise.trim()) {
+    return NextResponse.json({ error: "Missing premise (it must be text)" }, { status: 400 });
+  }
+  if (title !== undefined && title !== null && typeof title !== "string") {
+    return NextResponse.json({ error: "title must be text" }, { status: 400 });
   }
 
-  const cfg = config as Record<string, unknown>;
+  const cfg: Record<string, unknown> = { ...rawCfg, mood: normaliseMood(rawCfg.mood) };
   const masterPrompt = buildMasterPrompt({ ...cfg, title });
-  const storyTitle = (title as string) || "Untitled Story";
+  const storyTitle = (typeof title === "string" && title.trim()) || "Untitled Story";
 
-  // Create draft in SQLite first
+  // Create draft in SQLite first, born "generating": the status the UI has
+  // always had a badge for, set by nothing until now. The boot sweep marks any
+  // row still here after a restart as failed instead of leaving it "active"
+  // with no chapters.
   const draft = createStory({
     title: storyTitle,
     config: cfg,
     masterPrompt,
     chapters: [],
+    status: "generating",
   });
   recordEvent("story.created", { entityType: "story", entityId: draft.id });
 

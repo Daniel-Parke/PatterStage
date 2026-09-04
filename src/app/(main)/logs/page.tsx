@@ -33,6 +33,11 @@ import type { LogFileMeta } from "@/lib/fs/log-files";
  * body is not schema-checked anywhere. Narrowed here rather than cast, since the
  * whole point is that this arrived on a path nothing validates.
  */
+/** The route says the DIRECTORY is missing: a fresh install's normal state. */
+function logsDirMissing(errorBody: unknown): boolean {
+  return !!errorBody && typeof errorBody === "object" && (errorBody as { logsDirMissing?: unknown }).logsDirMissing === true;
+}
+
 function errorAvailableLogs(errorBody: unknown): LogFileMeta[] | null {
   if (!errorBody || typeof errorBody !== "object") return null;
   const logs = (errorBody as { availableLogs?: unknown }).availableLogs;
@@ -246,12 +251,21 @@ export default function LogsPage() {
       />
 
       <div className="px-6 py-6 flex-1 flex flex-col min-h-0">
-        {loadError && (
+        {loadError && logsDirMissing(errorBody) ? (
+          // A normal condition in a red banner is the other kind of lie
+          // (T-0087). Same reason, calm tone, still a live region.
+          <div
+            role="status"
+            className="mb-4 rounded-xl border border-white/10 bg-dark-900/50 px-4 py-3 text-sm text-ps-text-secondary"
+          >
+            {loadError}
+          </div>
+        ) : loadError ? (
           <LoadErrorBanner
             error={loadError}
             onRetry={() => void handleRefresh()}
           />
-        )}
+        ) : null}
         {actionMessage && (
           <div className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-dark-900/50 px-4 py-2 text-xs font-mono text-ps-text-secondary">
             <span>{actionMessage}</span>

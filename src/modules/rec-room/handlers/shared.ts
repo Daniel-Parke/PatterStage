@@ -9,6 +9,45 @@
 import type { StoryArc as StoryArcType, ChapterOutline } from "@/modules/rec-room/types";
 
 import { normaliseStoryCharacters } from "../lib/characters";
+/** A mood is a list of words. A word is a one-item list; anything else is none. */
+export function normaliseMood(mood: unknown): string[] {
+  if (typeof mood === "string") return mood.trim() ? [mood.trim()] : [];
+  if (Array.isArray(mood)) return mood.filter((m): m is string => typeof m === "string" && m.trim().length > 0);
+  return [];
+}
+
+const stringList = (v: unknown): string[] =>
+  typeof v === "string" ? (v.trim() ? [v] : []) : Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
+const objectList = <T,>(v: unknown): T[] =>
+  Array.isArray(v) ? (v.filter((x) => x !== null && typeof x === "object") as T[]) : [];
+
+/**
+ * Guarantee the shape the chapter prompt reads. An LLM wrote this JSON, and
+ * generate-chapter did `outline.keyBeats.join` on it (T-0087).
+ */
+function normaliseArc(a: Record<string, unknown>): StoryArcType {
+  const outlines = objectList<Record<string, unknown>>(a.chapterOutlines).map((o, i) => ({
+    ...o,
+    number: typeof o.number === "number" ? o.number : i + 1,
+    title: typeof o.title === "string" ? o.title : `Chapter ${i + 1}`,
+    purpose: typeof o.purpose === "string" ? o.purpose : "",
+    emotionalTone: typeof o.emotionalTone === "string" ? o.emotionalTone : "",
+    keyBeats: stringList(o.keyBeats),
+  })) as unknown as ChapterOutline[];
+  // Coerce what is PRESENT and wrong; leave absent keys absent. The prompt
+  // reads the optional lists with ?. and the required ones are guaranteed.
+  const out: Record<string, unknown> = {
+    ...a,
+    storyArc: typeof a.storyArc === "string" ? a.storyArc : "",
+    fixedPlotPoints: objectList(a.fixedPlotPoints),
+    chapterOutlines: outlines,
+  };
+  if ("characterArcs" in a) out.characterArcs = objectList(a.characterArcs);
+  if ("worldRules" in a) out.worldRules = stringList(a.worldRules);
+  if ("themes" in a) out.themes = stringList(a.themes);
+  return out as unknown as StoryArcType;
+}
+
 export function safeArc(arc: unknown): StoryArcType | undefined {
   // Handle JSON string stored in DB (common for SQLite JSON columns)
   if (typeof arc === "string") {
@@ -30,7 +69,7 @@ export function safeArc(arc: unknown): StoryArcType | undefined {
       Array.isArray(inner.fixedPlotPoints) &&
       Array.isArray(inner.chapterOutlines)
     ) {
-      return inner as unknown as StoryArcType;
+      return normaliseArc(inner);
     }
   }
 
@@ -40,7 +79,7 @@ export function safeArc(arc: unknown): StoryArcType | undefined {
     Array.isArray(a.fixedPlotPoints) &&
     Array.isArray(a.chapterOutlines)
   ) {
-    return a as unknown as StoryArcType;
+    return normaliseArc(a);
   }
 
   return undefined;

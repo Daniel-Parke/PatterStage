@@ -28,10 +28,12 @@ import {
   reconcileStoriesOnBoot,
   updateStory,
 } from "@/modules/rec-room/lib/story-repository";
+import { recRoomServerModule } from "@/modules/rec-room/server";
 
 function loadRealBetterSqlite3(): unknown {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  return jest.requireActual("better-sqlite3");
+  // The mapper points "better-sqlite3" at a manual mock; the real CJS entry
+  // is reached by its file path, as every DB-backed test in this tree does.
+  return jest.requireActual("better-sqlite3/lib/index.js");
 }
 
 beforeEach(() => {
@@ -44,6 +46,16 @@ beforeEach(() => {
 afterEach(() => {
   testDb?.close();
   testDb = null;
+});
+
+describe("the module hook reaches the sweep", () => {
+  it("recRoomServerModule.reconcileOnBoot sweeps a generating story", () => {
+    const s = createStory({ title: "hook", config: {}, chapters: [], status: "generating" });
+
+    recRoomServerModule.reconcileOnBoot!();
+
+    expect(getStory(s.id)!.status).toBe("failed");
+  });
 });
 
 describe("reconcileStoriesOnBoot", () => {

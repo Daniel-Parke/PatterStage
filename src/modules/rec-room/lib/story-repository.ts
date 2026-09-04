@@ -164,3 +164,46 @@ export function deleteStory(id: string): boolean {
     .run(ts, id);
   return true;
 }
+
+/**
+ * Boot sweep, the stories half of reconcileRunsOnBoot (T-0087).
+ *
+ * Creation and chapter generation spend minutes inside an LLM call. A process
+ * that dies in that window leaves a story "generating" with no chapters, or a
+ * chapter "writing" forever, and the UI reads both as still in flight. Nothing
+ * is in flight after a restart; say so, and say why.
+ */
+export function reconcileStoriesOnBoot(): { failedStories: number; failedChapters: number } {
+  const reason = "Generation was interrupted by a restart. Retry to continue.";
+  const db = getDb();
+  const ts = now();
+  const stories = db
+    .prepare(
+      "UPDATE stories SET status = 'failed', generation_error = ?, updated_at = ? WHERE status = 'generating' AND deleted_at IS NULL",
+    )
+    .run(reason, ts).changes;
+
+  let chapters = 0;
+  const rows = db
+    .prepare("SELECT id, chapters FROM stories WHERE deleted_at IS NULL AND chapters LIKE ?")
+    .all('%"writing"%') as Array<{ id: string; chapters: string }>;
+  for (const row of rows) {
+    let parsed: StoryChapter[];
+    try {
+      parsed = JSON.parse(row.chapters) as StoryChapter[];
+    } catch {
+      continue;
+    }
+    let touched = false;
+    const swept = parsed.map((c) => {
+      if (c.status !== "writing") return c;
+      touched = true;
+      chapters += 1;
+      return { ...c, status: "failed" as const, error: reason };
+    });
+    if (touched) {
+      db.prepare("UPDATE stories SET chapters = ?, updated_at = ? WHERE id = ?").run(JSON.stringify(swept), ts, row.id);
+    }
+  }
+  return { failedStories: stories, failedChapters: chapters };
+}

@@ -13,7 +13,7 @@
 
 import type { DevDataRecord, ServerModule } from "@/lib/modules/server";
 
-import { deleteStory, listStories } from "./lib/story-repository";
+import { deleteStory, listStories, reconcileStoriesOnBoot } from "./lib/story-repository";
 
 export const recRoomServerModule: ServerModule = {
   id: "rec-room",
@@ -24,5 +24,9 @@ export const recRoomServerModule: ServerModule = {
 
   deleteDevData(id: string): void {
     deleteStory(id);
+  },
+
+  reconcileOnBoot(): void {
+    reconcileStoriesOnBoot();
   },
 };

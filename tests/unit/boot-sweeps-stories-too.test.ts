@@ -1,7 +1,7 @@
 /** @jest-environment node */
 
-// T-0087, the seam. reconcileStoriesOnBoot exists; this pins that the process
-// actually calls it at boot, beside the mission sweep it mirrors. A sweep
+// T-0087, the seam. A module's reconcileOnBoot exists; this pins that the
+// process actually calls it at boot, beside the mission sweep it mirrors. A sweep
 // nothing invokes is the T-0071 lesson again: correct, tested, unreachable.
 
 jest.mock("@/lib/sync/SyncScheduler", () => ({
@@ -19,8 +19,11 @@ jest.mock("@/lib/orchestration/scheduler/tick", () => ({ ScheduleTickSource: cla
 
 const mockRuns = jest.fn(() => ({ failed: 0 }));
 jest.mock("@/lib/orchestration/run-reconcile", () => ({ reconcileRunsOnBoot: () => mockRuns() }));
-const mockStories = jest.fn(() => ({ failedStories: 0, failedChapters: 0 }));
-jest.mock("@/modules/rec-room/lib/story-repository", () => ({ reconcileStoriesOnBoot: () => mockStories() }));
+const mockStories = jest.fn();
+// Through the composition root, never a direct module import (ADR-0005).
+jest.mock("@/lib/modules/server", () => ({
+  SERVER_MODULES: [{ id: "rec-room", reconcileOnBoot: () => mockStories() }, { id: "hermes" }],
+}));
 
 import { ensureBackgroundScheduler } from "@/lib/orchestration/scheduler/BackgroundScheduler";
 

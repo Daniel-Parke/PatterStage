@@ -21,6 +21,7 @@ import type { SyncSource, SyncResult } from "@/lib/sync/types";
 import { getSystemStat, upsertMetaValue } from "@/lib/system-repository";
 import { RunSync } from "@/lib/orchestration/RunSync";
 import { reconcileRunsOnBoot } from "@/lib/orchestration/run-reconcile";
+import { SERVER_MODULES } from "@/lib/modules/server";
 import { ensureDefaultComposerWorkflows } from "@/lib/composer/seed";
 import { ComposerTickSource } from "@/lib/composer/scheduler/composer-tick";
 import { ScheduleTickSource } from "./tick";
@@ -169,6 +170,17 @@ export function ensureBackgroundScheduler(): BackgroundScheduler {
     reconcileRunsOnBoot();
   } catch (err) {
     console.warn("[scheduler] boot run-reconcile failed:", err);
+  }
+  // Module rows left mid-flight by a previous process, through the
+  // composition root (ADR-0005: core does not import a module). Stories
+  // first (T-0087).
+  for (const mod of SERVER_MODULES) {
+    if (!mod.reconcileOnBoot) continue;
+    try {
+      mod.reconcileOnBoot();
+    } catch (err) {
+      console.warn("[scheduler] boot " + mod.id + " reconcile failed:", err);
+    }
   }
 
   // Seed the built-in Composer workflow(s) (idempotent).

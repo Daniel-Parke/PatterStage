@@ -31,22 +31,27 @@ export async function POST(request: NextRequest) {
     const body = await parseJsonBody(request);
     if (body instanceof NextResponse) return body;
     const { action } = body;
+    // Missions accept `id`; stories said `storyId`. One vocabulary (T-0087).
+    if (body.storyId === undefined && typeof body.id === "string") body.storyId = body.id;
+    // `return await`, every case. A returned-but-unawaited promise rejects
+    // OUTSIDE this try, so serverErrorFromCatch never saw it and the client got
+    // an empty 500. Fourteen actions shared that hole (T-0087).
     switch (action) {
-      case "create":            return handleCreate(body);
-      case "list":              return handleList();
-      case "load":              return handleLoad(body);
-      case "generate-chapter":  return handleGenerateChapter(body);
-      case "retry-chapter":     return handleRetryChapter(body);
-      case "rewrite-chapter":   return handleRewriteChapter(body);
-      case "edit-chapter":      return handleEditChapter(body);
-      case "extend":            return handleExtend(body);
-      case "continue":          return handleContinue(body);
-      case "update":            return handleUpdate(body);
+      case "create":            return await handleCreate(body);
+      case "list":              return await handleList();
+      case "load":              return await handleLoad(body);
+      case "generate-chapter":  return await handleGenerateChapter(body);
+      case "retry-chapter":     return await handleRetryChapter(body);
+      case "rewrite-chapter":   return await handleRewriteChapter(body);
+      case "edit-chapter":      return await handleEditChapter(body);
+      case "extend":            return await handleExtend(body);
+      case "continue":          return await handleContinue(body);
+      case "update":            return await handleUpdate(body);
       // The reusable library the Characters/Themes pages have always posted to.
-      case "characters":        return handleCharacters(body);
-      case "themes":            return handleThemes(body);
-      case "sync-titles":       return handleSyncTitles(body);
-      case "delete":            return handleDelete(body);
+      case "characters":        return await handleCharacters(body);
+      case "themes":            return await handleThemes(body);
+      case "sync-titles":       return await handleSyncTitles(body);
+      case "delete":            return await handleDelete(body);
       default:
         return NextResponse.json({ error: "Unknown action: " + action }, { status: 400 });
     }
