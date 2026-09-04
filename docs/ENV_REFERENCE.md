@@ -92,6 +92,9 @@ Read straight from the process environment; `setup.sh` writes no `.env.local` en
 | Variable | Default | Purpose |
 |----------|---------|---------|
 | `PS_RUN_MAX_MINUTES` / `CH_RUN_MAX_MINUTES` | `120` (never below `10`) | Safety cap for a mission that declared no timeout of its own. Past this plus a 5 minute grace, reconcile treats the run as stuck. A mission's own `timeoutMinutes` wins over it. |
+| `PS_GATEWAY_MAX_INFLIGHT` | `8` (never below `1`) | Concurrent request/response calls this process allows per gateway endpoint. Streams hold no slot. |
+| `PS_GATEWAY_MAX_QUEUE` | `32` | Callers allowed to wait for a slot, per endpoint. `0` refuses at once. Beyond it a call answers **503** naming the gate and the endpoint. |
+| `PS_GATEWAY_QUEUE_TIMEOUT_MS` | `10000` | How long a queued caller waits before it is refused with the same 503. |
 | `MAX_SESSION_FILE_BYTES` | `67108864` (64 MiB) | `GET /api/sessions/[id]` answers **413** rather than loading a transcript bigger than this. |
 | `SESSIONS_API_RATE_LIMIT_MAX` | `120` | Reads of `/api/sessions*` allowed per client per rolling 60 second window. Over it the route answers **429**. |
 | `PS_PULL_RECONCILE_DISK` / `CH_PULL_RECONCILE_DISK` | unset | `1`: `POST /api/agent/profiles/sync/pull` reconciles against disk on every call, as if the request body had set `reconcileDisk`. |
