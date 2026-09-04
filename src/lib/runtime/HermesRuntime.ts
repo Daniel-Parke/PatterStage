@@ -9,6 +9,7 @@
 // injectable for unit testing without a live gateway or DB.
 // ═══════════════════════════════════════════════════════════════
 
+import { GatewayGate, getDefaultGatewayGate, type GateSnapshot } from "./gateway-gate";
 import {
   type AgentRuntime,
   type RunSubmit,
@@ -59,6 +60,8 @@ function sleepAbortable(ms: number, signal?: AbortSignal): Promise<void> {
 export interface HermesRuntimeOptions {
   /** Override fetch (tests inject a mock). Defaults to global fetch. */
   fetchImpl?: typeof fetch;
+  /** Override the admission gate (tests inject a small one). Defaults to the process-wide gate. */
+  gate?: GatewayGate;
   /** Override endpoint resolution (tests inject a fixed endpoint). */
   resolve?: (profile?: string) => RuntimeEndpoint;
   /** Per-request timeout for non-streaming calls. */
@@ -175,6 +178,7 @@ export function parseSseEvent(block: string): RunEvent | null {
 
 export class HermesRuntime implements AgentRuntime {
   private readonly fetchImpl: typeof fetch;
+  private readonly gate: GatewayGate;
   private readonly resolve: (profile?: string) => RuntimeEndpoint;
   private readonly timeoutMs: number;
 
@@ -183,6 +187,7 @@ export class HermesRuntime implements AgentRuntime {
     // constructor crashes at module load in environments without a global
     // fetch (e.g. the jsdom test runtime); deferring keeps construction safe.
     this.fetchImpl = opts.fetchImpl ?? ((input, init) => globalThis.fetch(input, init));
+    this.gate = opts.gate ?? getDefaultGatewayGate();
     this.resolve = opts.resolve ?? defaultResolveEndpoint;
     this.timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   }
@@ -202,37 +207,47 @@ export class HermesRuntime implements AgentRuntime {
     opts: RequestOpts = {},
   ): Promise<T> {
     const ep = this.resolve(profile);
-    let res: Response;
-    try {
-      res = await this.fetchImpl(`${ep.baseUrl}${path}`, {
-        method: opts.method ?? "GET",
-        headers: this.buildHeaders(ep, opts),
-        body: opts.body === undefined ? undefined : JSON.stringify(opts.body),
-        signal: opts.signal ?? AbortSignal.timeout(this.timeoutMs),
-      });
-    } catch (err) {
-      // One of the two places in the product where a raw fetch to the gateway
-      // happens, and the only place where `ep.baseUrl` is known. Everything
-      // downstream reads this through `messageFromError`, so translating here
-      // fixes all seven storage columns at once (T-0080).
-      throw (
-        describeGatewayFailure(err, {
-          baseUrl: ep.baseUrl,
-          // The deadline only applies when it is OURS. A caller that brought
-          // its own signal owns the timing, and naming our 30s would be a lie.
-          timeoutMs: opts.signal ? undefined : this.timeoutMs,
-          callerSignal: opts.signal,
-        }) ?? err
-      );
-    }
-    if (!res.ok) {
-      const detail = await safeText(res);
-      throw new RuntimeRequestError(
-        `${opts.method ?? "GET"} ${path} → ${res.status} ${res.statusText}${detail ? `: ${detail}` : ""}`,
-        res.status,
-      );
-    }
-    return (await res.json()) as T;
+    // Every request/response call passes the endpoint's admission gate
+    // (T-0090). Saturation refuses with a 503 that names the gate; streams
+    // (streamRunEvents) do not come through here and hold no slot.
+    return this.gate.run(ep.baseUrl, async () => {
+      let res: Response;
+      try {
+        res = await this.fetchImpl(`${ep.baseUrl}${path}`, {
+          method: opts.method ?? "GET",
+          headers: this.buildHeaders(ep, opts),
+          body: opts.body === undefined ? undefined : JSON.stringify(opts.body),
+          signal: opts.signal ?? AbortSignal.timeout(this.timeoutMs),
+        });
+      } catch (err) {
+        // One of the two places in the product where a raw fetch to the gateway
+        // happens, and the only place where `ep.baseUrl` is known. Everything
+        // downstream reads this through `messageFromError`, so translating here
+        // fixes all seven storage columns at once (T-0080).
+        throw (
+          describeGatewayFailure(err, {
+            baseUrl: ep.baseUrl,
+            // The deadline only applies when it is OURS. A caller that brought
+            // its own signal owns the timing, and naming our 30s would be a lie.
+            timeoutMs: opts.signal ? undefined : this.timeoutMs,
+            callerSignal: opts.signal,
+          }) ?? err
+        );
+      }
+      if (!res.ok) {
+        const detail = await safeText(res);
+        throw new RuntimeRequestError(
+          `${opts.method ?? "GET"} ${path} → ${res.status} ${res.statusText}${detail ? `: ${detail}` : ""}`,
+          res.status,
+        );
+      }
+      return (await res.json()) as T;
+    });
+  }
+
+  /** The gate's counters, for the subsystem health summary (T-0091). */
+  gateSnapshot(): GateSnapshot {
+    return this.gate.snapshot();
   }
 
   /**

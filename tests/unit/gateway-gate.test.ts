@@ -7,7 +7,7 @@
 // queue callers forever, and cannot starve a healthy endpoint. Saturation is
 // a refusal that names the gate, not a hang.
 
-import { GatewayGate, GatewayGateSaturatedError } from "@/lib/runtime/gateway-gate";
+import { GatewayGate, GatewayGateSaturatedError, gateLimitsFromEnv } from "@/lib/runtime/gateway-gate";
 
 function deferred<T = void>() {
   let resolve!: (v: T) => void;
@@ -115,7 +115,6 @@ describe("the snapshot Batch 6 reads", () => {
   });
 
   it("reads its limits from the environment, with sane defaults", () => {
-    const { gateLimitsFromEnv } = jest.requireActual("@/lib/runtime/gateway-gate") as typeof import("@/lib/runtime/gateway-gate");
     expect(gateLimitsFromEnv({})).toEqual({ maxInFlight: 8, maxQueue: 32, queueTimeoutMs: 10_000 });
     expect(gateLimitsFromEnv({ PS_GATEWAY_MAX_INFLIGHT: "3", PS_GATEWAY_MAX_QUEUE: "0", PS_GATEWAY_QUEUE_TIMEOUT_MS: "250" }))
       .toEqual({ maxInFlight: 3, maxQueue: 0, queueTimeoutMs: 250 });
