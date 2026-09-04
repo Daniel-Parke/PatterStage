@@ -35,6 +35,7 @@ import {
   updateProfileContent,
 } from "./profiles-repository";
 import { configYamlToColumnValues } from "./profile-config-builder";
+import { repairGuidance } from "./profile-sync-shared";
 import { skillFilePath } from "./skills-config";
 import {
   parseSkillFrontmatter,
@@ -108,7 +109,11 @@ export function pullProfileFromHermes(
     return { success: true, slug, backupPath: null, error: null };
   }
   catch (err) {
-    const message = messageFromError(err, "");
+    const raw = messageFromError(err, "");
+    // A parse refusal names its repair (T-0086); everything else passes through.
+    const message = /did not parse/.test(raw)
+      ? `${raw} ${repairGuidance(bundle.backups, "then Pull again")}`
+      : raw;
     return { success: false, slug, backupPath: null, error: message };
   }
 }
@@ -143,7 +148,11 @@ export function pullRootFromHermes(options?: { reconcileDisk?: boolean }): SyncR
     return { success: true, slug: "default", backupPath: null, error: null };
   }
   catch (err) {
-    const message = messageFromError(err, "");
+    const raw = messageFromError(err, "");
+    // A parse refusal names its repair (T-0086); everything else passes through.
+    const message = /did not parse/.test(raw)
+      ? `${raw} ${repairGuidance(bundle.backups, "then Pull again")}`
+      : raw;
     return { success: false, slug: "default", backupPath: null, error: message };
   }
 }

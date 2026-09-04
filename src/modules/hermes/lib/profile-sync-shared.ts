@@ -119,16 +119,25 @@ export function catalogKeysForPull(): string[] {
  * it as the row's syncError, and the message names the newest backup that
  * still parses so the repair is one copy command away.
  */
+/**
+ * The repair, said once. Names the newest backup that still parses and never
+ * performs the restore (T-0086): a backup carries older model settings and
+ * reviving one silently could flip the operator's active model.
+ */
+export function repairGuidance(backupsDir: string, then: string): string {
+  const restorable = findLatestParseableBackup(backupsDir);
+  return restorable
+    ? `Restore ${restorable} over config.yaml, ${then}.`
+    : `Repair config.yaml by hand, ${then}.`;
+}
+
 export function assembleRootConfig(row: AgentRootRow): string {
   const parts = parseConfigYaml(row.configYaml);
   if (parts.parseError) {
     const backups = buildHermesPathBundle(getHermesDefaultRoot()).backups;
-    const restorable = findLatestParseableBackup(backups);
     throw new Error(
       `the stored root config.yaml did not parse (${parts.parseError}) — refusing to assemble from it. ` +
-        (restorable
-          ? `Restore ${restorable} over config.yaml, then Pull from Hermes to repair the database copy.`
-          : `Repair ~/.hermes/config.yaml by hand, then Pull from Hermes to repair the database copy.`),
+        repairGuidance(backups, "then Pull from Hermes to repair the database copy"),
     );
   }
   const { toolsets } = resolvePlatformToolsets(
