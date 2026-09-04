@@ -15,6 +15,7 @@
 // re-implement.
 
 import type { NextRequest } from "next/server";
+import { parseListBounds } from "@/lib/list-bounds";
 import { ensureSyncLayer } from "@/lib/sync";
 import type {
   AgentType,
@@ -102,8 +103,9 @@ export function parseSessionQuery(req: NextRequest): ParsedSessionQuery {
   // coalesce to undefined so callers can use a single optional check.
   const missionId: string | undefined =
     missionIdParam === null ? undefined : missionIdParam;
-  const limit = Math.min(parseInt(u.searchParams.get("limit") ?? "50", 10), 100);
-  const offset = parseInt(u.searchParams.get("offset") ?? "0", 10);
+  // parseInt bound NaN on junk and -1 on "-1", which SQLite reads as
+  // "no limit": the cap bypass the round-6 audit found (T-0088).
+  const { limit, offset } = parseListBounds(u.searchParams, { defaultLimit: 50, maxLimit: 100 });
   const searchParam = u.searchParams.get("search")?.trim();
   const search = searchParam ? searchParam : undefined;
   return { agentType, source, missionId, search, limit, offset, id };

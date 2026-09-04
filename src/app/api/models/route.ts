@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { listModels, createModel, deleteModel } from "@/lib/models-repository";
+import { boundsFrom, MODEL_LIST_BOUNDS } from "@/lib/list-bounds";
 import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
 
 import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
@@ -15,9 +16,9 @@ import { modelPostSchema } from "@/lib/api-schemas";
 import { created, ok } from "@/lib/api-response";
 import { syncDefaultsToHermesConfig } from "@/modules/hermes/lib/config-sync";
 
-export async function GET(_request: NextRequest) {
+export async function GET(request?: NextRequest) {
   try {
-    return ok({ models: listModels() });
+    return ok({ models: listModels({ limit: boundsFrom(request, MODEL_LIST_BOUNDS).limit }) });
   } catch (error) {
     return serverErrorFromCatch(
       "GET /api/models",

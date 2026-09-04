@@ -26,9 +26,20 @@ const FALLBACK = "Untitled Mission";
  * @param supplied what the caller sent, if anything
  * @param instruction the mission's own text, used when no name was given
  */
-export function missionNameFrom(supplied: unknown, instruction: unknown): string {
+/**
+ * A supplied name, collapsed and capped, or null when there is none.
+ * The update/promote path used to bypass this (T-0088): `input.name.trim()`
+ * let newlines and a thousand characters straight onto every board card.
+ */
+export function normaliseMissionName(supplied: unknown): string | null {
   const given = typeof supplied === "string" ? supplied.replace(/\s+/g, " ").trim() : "";
-  if (given) return given.length > MAX_NAME ? `${given.slice(0, MAX_NAME - 1).trimEnd()}…` : given;
+  if (!given) return null;
+  return given.length > MAX_NAME ? `${given.slice(0, MAX_NAME - 1).trimEnd()}…` : given;
+}
+
+export function missionNameFrom(supplied: unknown, instruction: unknown): string {
+  const given = normaliseMissionName(supplied);
+  if (given) return given;
 
   const body = typeof instruction === "string" ? instruction.replace(/\s+/g, " ").trim() : "";
   if (!body) return FALLBACK;

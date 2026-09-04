@@ -67,7 +67,7 @@ async function fetchProcesses(): Promise<HermesProcess[]> {
 }
 
 async function fetchMissions(): Promise<MissionBrief[]> {
-  const res = await safeApiCall<{ data?: { missions: MissionBrief[] } }>("/api/missions");
+  const res = await safeApiCall<{ data?: { missions: MissionBrief[] } }>("/api/missions?limit=200");
   if (!res.ok) throw new Error(res.error ?? "Failed to load missions");
   return res.data?.data?.missions ?? [];
 }

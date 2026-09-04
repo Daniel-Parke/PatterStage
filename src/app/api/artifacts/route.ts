@@ -2,6 +2,7 @@
 // /api/artifacts — list + manually create artifacts (the registry)
 // ═══════════════════════════════════════════════════════════════
 
+import { boundsFrom } from "@/lib/list-bounds";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -39,6 +40,7 @@ export async function GET(request: NextRequest) {
     const artifacts = listArtifacts({
       sourceKind: kind,
       sourceRunId: sp.get("runId") ?? undefined,
+      limit: boundsFrom(request, { defaultLimit: 200, maxLimit: 500 }).limit,
     });
     return ok({ artifacts });
   } catch (error) {

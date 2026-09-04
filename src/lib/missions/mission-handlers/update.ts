@@ -12,6 +12,7 @@ import { badRequest, notFound } from "@/lib/api-response";
 import { appendAuditLine } from "@/lib/audit-log";
 import { buildMissionFieldPatch } from "@/lib/missions/mission-field-updates";
 import { parseMissionBodyFields } from "@/lib/missions/mission-body";
+import { missionTimeoutError } from "@/lib/missions/mission-timeout";
 import { missionResponse } from "@/lib/missions/mission-response";
 
 import { requireMissionOrNotFound, parseCategoryIdOrError } from "./shared";
@@ -24,6 +25,8 @@ export function handleUpdateMission(body: Record<string, unknown>): NextResponse
     result?: string;
     [key: string]: unknown;
   };
+  const timeoutError = missionTimeoutError(rest);
+  if (timeoutError) return badRequest(timeoutError);
   const f = parseMissionBodyFields(rest);
   const { name, instruction, localDirs, references, skills, suggestedToolsets, goals, modelId, provider, profileName, missionTimeMinutes, timeoutMinutes, schedule, context, categoryId: categoryIdRaw, outputFormat, constraints } = f;
   const existing = requireMissionOrNotFound(body);

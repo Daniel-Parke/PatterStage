@@ -2,6 +2,7 @@
 // mission-repository.ts — Mission CRUD via SQLite
 // ═══════════════════════════════════════════════════════════════
 
+import { clampLimit, MISSION_LIST_BOUNDS } from "@/lib/list-bounds";
 import { existsSync, unlinkSync } from "fs";
 import { join } from "path";
 
@@ -114,7 +115,7 @@ export function hasDispatchedMission(): boolean {
   return Boolean(row);
 }
 
-export function listMissions(opts?: { categoryId?: string | null }): Mission[] {
+export function listMissions(opts?: { categoryId?: string | null; limit?: number; offset?: number }): Mission[] {
   let sql =
     "SELECT * FROM missions WHERE deleted_at IS NULL";
   const params: unknown[] = [];
@@ -126,10 +127,14 @@ export function listMissions(opts?: { categoryId?: string | null }): Mission[] {
       params.push(opts.categoryId);
     }
   }
-  sql += " ORDER BY created_at DESC";
+  // Bounded, always (T-0088, ruling 4). This list had no LIMIT: the board
+  // fetched every row, and `?limit=5` answered 61.
+  sql += " ORDER BY created_at DESC LIMIT ? OFFSET ?";
+  const limit = clampLimit(opts?.limit, MISSION_LIST_BOUNDS);
+  const offset = typeof opts?.offset === "number" && Number.isFinite(opts.offset) ? Math.max(0, Math.floor(opts.offset)) : 0;
   const rows = getDb()
     .prepare(sql)
-    .all(...params) as MissionRow[];
+    .all(...params, limit, offset) as MissionRow[];
   return rows.map(rowToMission).filter(Boolean) as Mission[];
 }
 

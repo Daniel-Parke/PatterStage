@@ -7,6 +7,7 @@
 //        streams progress (SSE) / polls. Gated by the `composer` flag.
 // ═══════════════════════════════════════════════════════════════
 
+import { boundsFrom } from "@/lib/list-bounds";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -33,13 +34,13 @@ const startSchema = z
   .strict()
   .refine((v) => v.workflowId || v.workflowKey, { message: "workflowId or workflowKey is required" });
 
-export async function GET() {
+export async function GET(request?: NextRequest) {
   if (!isFeatureEnabled("composer")) {
     return serviceUnavailable("Composer is not enabled. Set PS_COMPOSER=1 to enable workflows.");
   }
   try {
     ensureDb();
-    return ok({ runs: listComposerRuns() });
+    return ok({ runs: listComposerRuns(boundsFrom(request, { defaultLimit: 50, maxLimit: 500 }).limit) });
   } catch (error) {
     return serverErrorFromCatch("GET /api/composer/runs", "list", error, "Failed to list runs");
   }

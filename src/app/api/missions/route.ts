@@ -11,6 +11,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { listMissions } from "@/lib/missions/mission-repository";
+import { boundsFrom, MISSION_LIST_BOUNDS } from "@/lib/list-bounds";
 import { getLatestRunForMission, listLatestRunsForMissions } from "@/lib/runs-repository";
 import { buildMissionRunView } from "@/lib/orchestration/run-deadline";
 import { requireNotReadOnly } from "@/lib/api-auth";
@@ -49,13 +50,15 @@ export async function GET(request: NextRequest) {
     }
 
     const categoryIdParam = url.searchParams.get("categoryId");
-    const missions = listMissions(
-      categoryIdParam === "__uncategorized__"
+    const bounds = boundsFrom(request, MISSION_LIST_BOUNDS);
+    const missions = listMissions({
+      ...(categoryIdParam === "__uncategorized__"
         ? { categoryId: null }
         : categoryIdParam
           ? { categoryId: categoryIdParam }
-          : undefined,
-    );
+          : {}),
+      ...bounds,
+    });
     // One extra query for the whole page, not one per row: the board needs the
     // run anchor to distinguish a mission that started ten seconds ago from one
     // that has been dispatched for two hours.

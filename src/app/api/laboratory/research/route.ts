@@ -6,6 +6,7 @@
 //        forget), return the pending run. The page polls GET /[id] for steps.
 // ═══════════════════════════════════════════════════════════════
 
+import { boundsFrom } from "@/lib/list-bounds";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -33,10 +34,10 @@ const startSchema = z
   })
   .strict();
 
-export async function GET() {
+export async function GET(request?: NextRequest) {
   try {
     ensureDb();
-    return ok({ runs: listResearchRuns() });
+    return ok({ runs: listResearchRuns(boundsFrom(request, { defaultLimit: 50, maxLimit: 500 }).limit) });
   } catch (error) {
     return serverErrorFromCatch("GET /api/laboratory/research", "list", error, "Failed to list research runs");
   }

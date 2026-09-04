@@ -21,6 +21,7 @@
 //     backend is happily running is long, not stuck.
 // ═══════════════════════════════════════════════════════════════
 
+import { MAX_TIMEOUT_MINUTES } from "@/lib/missions/mission-timeout";
 import type { MissionRunView } from "@/lib/missions/mission-run-state";
 import type { RunRecord } from "@/lib/runs-repository";
 
@@ -48,7 +49,11 @@ export interface DeadlineMission {
 /** The mission's declared max runtime in minutes, if it declared one. */
 export function declaredTimeoutMinutes(mission: DeadlineMission | null): number | null {
   const t = mission?.timeoutMinutes ?? mission?.missionTimeMinutes;
-  return typeof t === "number" && t > 0 ? t : null;
+  if (typeof t !== "number" || !(t > 0)) return null;
+  // The belt for a row written before the boundary validated (T-0088): a
+  // stored 1e9 used to BE the unreachable-backend cap, so the run never
+  // self-healed. Nothing declared may exceed the ceiling.
+  return Math.min(t, MAX_TIMEOUT_MINUTES);
 }
 
 export interface RunDeadline {

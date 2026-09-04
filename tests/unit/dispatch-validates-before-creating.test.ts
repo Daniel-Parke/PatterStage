@@ -8,6 +8,7 @@
 
 const mockCreateMission = jest.fn();
 jest.mock("@/lib/missions/mission-repository", () => ({
+  ...(jest.requireActual("@/lib/missions/mission-repository") as object),
   createMission: (...a: unknown[]) => mockCreateMission(...a),
   updateMission: jest.fn(),
   getMission: jest.fn(),

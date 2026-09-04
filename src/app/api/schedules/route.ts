@@ -12,6 +12,7 @@ import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ok, created, badRequest } from "@/lib/api-response";
 import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import { listSchedules, createSchedule } from "@/lib/schedules-repository";
+import { boundsFrom, SCHEDULE_LIST_BOUNDS } from "@/lib/list-bounds";
 import { parseSchedule } from "@/lib/schedule/parse-schedule";
 import { computeNextRun, scheduleCanEverFire } from "@/lib/schedule/next-run";
 import { recordEvent } from "@/lib/analytics/record-event";
@@ -29,9 +30,9 @@ const scheduleCreateSchema = z
   })
   .strict();
 
-export async function GET() {
+export async function GET(request?: NextRequest) {
   try {
-    return ok({ schedules: listSchedules() });
+    return ok({ schedules: listSchedules({ limit: boundsFrom(request, SCHEDULE_LIST_BOUNDS).limit }) });
   } catch (error) {
     return serverErrorFromCatch("GET /api/schedules", "list", error, "Failed to list schedules");
   }

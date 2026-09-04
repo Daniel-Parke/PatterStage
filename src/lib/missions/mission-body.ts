@@ -6,6 +6,7 @@
 // implementation is the registry check on `modelId` — see below.
 // ═══════════════════════════════════════════════════════════════
 
+import { parseTimeoutMinutes } from "@/lib/missions/mission-timeout";
 import { findModelByModelId } from "../models-repository";
 
 /** Shared fields destructured from mission action body (dispatch/promote/update). */
@@ -45,6 +46,22 @@ export interface MissionBodyFields {
  * foreign, to keep `missions.provider` consistent with the (now-empty)
  * `missions.model_id`.
  */
+/** A list of non-empty strings from an untrusted value, or undefined. */
+function stringListOrUndefined(value: unknown): string[] | undefined {
+  if (typeof value === "string") return value.trim() ? [value.trim()] : [];
+  if (!Array.isArray(value)) return undefined;
+  return value
+    .filter((v): v is string => typeof v === "string")
+    .map((v) => v.trim())
+    .filter((v) => v.length > 0);
+}
+
+/** A timeout the reconciler can trust, or nothing. The 400 lives at the route. */
+function timeoutOrUndefined(value: unknown): number | undefined {
+  const parsed = parseTimeoutMinutes(value);
+  return parsed === "invalid" ? undefined : parsed;
+}
+
 export function parseMissionBodyFields(
   body: Record<string, unknown>,
 ): MissionBodyFields {
@@ -65,15 +82,16 @@ export function parseMissionBodyFields(
     instruction: body.instruction as string | undefined,
     context: body.context as string | undefined,
     localDirs: body.localDirs,
-    references: body.references as string[] | undefined,
-    skills: body.skills as string[] | undefined,
-    suggestedToolsets: body.suggestedToolsets as string[] | undefined,
-    goals: body.goals as string[] | undefined,
+    // The four list fields crashed formatList when a string arrived (T-0088).
+    references: stringListOrUndefined(body.references),
+    skills: stringListOrUndefined(body.skills),
+    suggestedToolsets: stringListOrUndefined(body.suggestedToolsets),
+    goals: stringListOrUndefined(body.goals),
     modelId: resolvedModelId,
     provider: resolvedModelId ? (body.provider as string | undefined) : undefined,
     profileName: body.profileName as string | undefined,
-    missionTimeMinutes: body.missionTimeMinutes as number | undefined,
-    timeoutMinutes: body.timeoutMinutes as number | undefined,
+    missionTimeMinutes: timeoutOrUndefined(body.missionTimeMinutes),
+    timeoutMinutes: timeoutOrUndefined(body.timeoutMinutes),
     schedule: body.schedule as string | undefined,
     categoryId: body.categoryId as string | null | undefined,
     outputFormat: body.outputFormat as string | undefined,

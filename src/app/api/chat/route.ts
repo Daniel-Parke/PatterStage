@@ -7,6 +7,7 @@
 // multi-turn continuity. See chat-repository + 013_chat.sql.
 // ═══════════════════════════════════════════════════════════════
 
+import { boundsFrom } from "@/lib/list-bounds";
 import { NextRequest, NextResponse } from "next/server";
 
 import { serverErrorFromCatch, logApiError } from "@/lib/api-logger";
@@ -15,9 +16,9 @@ import { parseJsonBody } from "@/lib/parse-json-body";
 import { runtime } from "@/lib/runtime";
 import { listConversations, createConversation } from "@/lib/chat-repository";
 
-export async function GET() {
+export async function GET(request?: NextRequest) {
   try {
-    return ok({ conversations: listConversations() });
+    return ok({ conversations: listConversations(boundsFrom(request, { defaultLimit: 100, maxLimit: 500 }).limit) });
   } catch (error) {
     return serverErrorFromCatch("GET /api/chat", "list", error, "Failed to list conversations");
   }

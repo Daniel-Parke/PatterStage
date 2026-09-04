@@ -74,7 +74,7 @@ export function useMissionOptions() {
     queryKey: ["mission-options"],
     retry: 0,
     queryFn: async (): Promise<MissionOption[]> => {
-      const res = await safeApiCall<{ data?: { missions: MissionOption[] } }>("/api/missions");
+      const res = await safeApiCall<{ data?: { missions: MissionOption[] } }>("/api/missions?limit=500");
       if (!res.ok) throw new Error(res.error ?? "Failed to load missions");
       return (res.data?.data?.missions ?? []).map((m) => ({ id: m.id, name: m.name }));
     },

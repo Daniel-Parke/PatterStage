@@ -8,6 +8,7 @@
 // next_run_at, never an in-memory timer.
 // ═══════════════════════════════════════════════════════════════
 
+import { clampLimit, SCHEDULE_LIST_BOUNDS } from "@/lib/list-bounds";
 import { getDb, inTransaction, uuid, now } from "./db";
 import { buildUpdate } from "./db/build-update";
 
@@ -125,10 +126,10 @@ export function getSchedule(id: string): ScheduleRecord | null {
   return rowToSchedule(row);
 }
 
-export function listSchedules(): ScheduleRecord[] {
+export function listSchedules(opts?: { limit?: number }): ScheduleRecord[] {
   const rows = getDb()
-    .prepare("SELECT * FROM schedules ORDER BY created_at DESC")
-    .all() as ScheduleRow[];
+    .prepare("SELECT * FROM schedules ORDER BY created_at DESC LIMIT ?")
+    .all(clampLimit(opts?.limit, SCHEDULE_LIST_BOUNDS)) as ScheduleRow[];
   return rows.map(rowToSchedule).filter((s): s is ScheduleRecord => s !== null);
 }
 

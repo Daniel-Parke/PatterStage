@@ -5,6 +5,7 @@
 // Drives mission dispatch, generic LLM calls, and the Hindsight bridge.
 // Defaults are stored in the model_defaults table keyed on task_type.
 
+import { clampLimit, MODEL_LIST_BOUNDS } from "@/lib/list-bounds";
 import { getDb, inTransaction, uuid, now } from "./db";
 import { isTaskType, type TaskType } from "./models/task-types";
 import { getCredentialWithKey } from "./credentials-repository";
@@ -120,10 +121,10 @@ function rowToModel(row: ModelRow): ModelRecord {
 
 // ── Read ───────────────────────────────────────────────────────
 
-export function listModels(): ModelRecord[] {
+export function listModels(opts?: { limit?: number }): ModelRecord[] {
   const rows = getDb()
-    .prepare("SELECT * FROM models ORDER BY created_at DESC")
-    .all() as ModelRow[];
+    .prepare("SELECT * FROM models ORDER BY created_at DESC LIMIT ?")
+    .all(clampLimit(opts?.limit, MODEL_LIST_BOUNDS)) as ModelRow[];
   return rows.map(rowToModel);
 }
 

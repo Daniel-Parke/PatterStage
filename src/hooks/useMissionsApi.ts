@@ -8,7 +8,7 @@ import { apiFetch, safeApiCall, safeApiCallData } from "@/lib/api-fetch";
  */
 export function useMissionsApi() {
   const fetchMissions = useCallback(async () => {
-    const d = await apiFetch("/api/missions");
+    const d = await apiFetch("/api/missions?limit=200");
     return d.data?.missions ?? [];
   }, []);
 

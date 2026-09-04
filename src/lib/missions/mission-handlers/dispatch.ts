@@ -24,6 +24,7 @@ import { parseSchedule, scheduleDisplayFromParsed } from "@/lib/schedule/parse-s
 import { computeNextRun, scheduleCanEverFire } from "@/lib/schedule/next-run";
 import { dispatchMissionNow } from "@/lib/missions/mission-dispatch";
 import { parseMissionBodyFields } from "@/lib/missions/mission-body";
+import { missionTimeoutError } from "@/lib/missions/mission-timeout";
 import { runMissionQueueTick } from "@/lib/missions/mission-queue-tick";
 import { missionResponse } from "@/lib/missions/mission-response";
 import { parseDispatchMode, DISPATCH_MODES, type DispatchMode } from "@/lib/dispatch-mode";
@@ -109,6 +110,24 @@ export async function handleDispatchMission(
     resolvedProfileId = resolveAgentSlug(profileKey);
   }
 
+  // Judged HERE, before createMission, for the reason the dispatchMode check
+  // above gives: a refusal after the row is written leaves a Draft nobody
+  // asked for. This file's own comment admitted the schedule 400 did exactly
+  // that (T-0088). The timeout joins it: an out-of-range value is a 400, not
+  // a silent drop to "no timeout".
+  const timeoutError = missionTimeoutError(body);
+  if (timeoutError) return badRequest(timeoutError);
+  if (parseDispatchMode(dispatchMode, scheduleVal).isCronMode) {
+    if (parseSchedule(scheduleVal!).kind === "invalid") {
+      return badRequest(`Unrecognized schedule: ${scheduleVal}`);
+    }
+    if (!scheduleCanEverFire(scheduleVal!)) {
+      return badRequest(
+        `Schedule "${scheduleVal}" can never fire: it names a date that does not ` +
+          `exist, or a field outside its range. Check the day-of-month against the month.`,
+      );
+    }
+  }
   const mission = createMission({
     // Derived from the instruction when no name was given, so the board does
     // not fill with rows called "Untitled Mission" that nobody can tell apart.
@@ -149,20 +168,9 @@ export async function handleDispatchMission(
     // jobs.json bridge. The first run is kicked off immediately
     // (best-effort) so the user sees activity without waiting for the next
     // tick — the schedule is durable regardless of that run's outcome.
+    // Shape and satisfiability were both judged above, before the row
+    // existed (T-0079 for the never-fires case, T-0088 for the position).
     const parsedSchedule = parseSchedule(scheduleVal!);
-    if (parsedSchedule.kind === "invalid") {
-      return badRequest(`Unrecognized schedule: ${scheduleVal}`);
-    }
-    // Shape is not satisfiability. `0 0 30 2 *` is five well-formed fields
-    // naming a date that never comes: it stored enabled, computed a null
-    // next-run, and getDueSchedules filters `next_run_at IS NOT NULL` -- so
-    // the row sat enabled forever and dead forever (T-0079).
-    if (!scheduleCanEverFire(scheduleVal!)) {
-      return badRequest(
-        `Schedule "${scheduleVal}" can never fire: it names a date that does not ` +
-          `exist, or a field outside its range. Check the day-of-month against the month.`,
-      );
-    }
 
     try {
       const next = computeNextRun(scheduleVal!, new Date());
