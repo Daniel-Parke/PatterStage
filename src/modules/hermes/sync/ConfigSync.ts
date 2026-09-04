@@ -80,10 +80,17 @@ export class ConfigSync implements SyncSource {
       try {
         yaml.load(raw);
       } catch (yamlErr) {
-        const message = yamlErr instanceof Error ? yamlErr.message : String(yamlErr);
+        // First line only, and for everything downstream: a YAMLException
+        // carries a code-frame of the file around the fault, and a real
+        // config.yaml holds api_key lines. This string is logged AND stored as
+        // config.yaml_error, which the monitor route carries to the dashboard
+        // (T-0086, the same hygiene ruling as T-0060's PUT refusal).
+        const message = (yamlErr instanceof Error ? yamlErr.message : String(yamlErr))
+          .split(String.fromCharCode(10))[0]
+          .trim();
         // Log once per distinct error (no per-tick spam).
         if (message !== lastYamlErrorSignature) {
-          logApiError("ConfigSync", "yaml.load failed (non-fatal — config is malformed)", yamlErr);
+          logApiError("ConfigSync", "yaml.load failed (non-fatal — config is malformed)", message);
           lastYamlErrorSignature = message;
         }
         // Surface the malformed-config state so the dashboard can show ONE
