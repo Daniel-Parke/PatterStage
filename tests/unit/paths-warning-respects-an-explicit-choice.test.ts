@@ -6,14 +6,21 @@
 // where PatterStage guessed; when the operator chose, there is nothing to
 // warn about and the advice is wrong.
 
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "fs";
-import { tmpdir } from "os";
+import { mkdirSync, writeFileSync, rmSync } from "fs";
+import { homedir } from "os";
 import { join } from "path";
 
-const home = mkdtempSync(join(tmpdir(), "ps-paths-home-"));
-jest.mock("os", () => ({ ...(jest.requireActual("os") as object), homedir: () => home }));
+// jest.mock is hoisted above every const, so the fake home is minted inside
+// the factory and read back through the mocked homedir().
+jest.mock("os", () => {
+  const actual = jest.requireActual("os") as typeof import("os");
+  const fake = actual.tmpdir() + "/ps-paths-home-" + process.pid + "-" + Date.now();
+  return { ...actual, homedir: () => fake };
+});
 
 import { shadowedDataWarning, getDbPath } from "@/lib/paths";
+
+const home = homedir();
 
 const SAVED = ["PS_DATA_DIR", "CH_DATA_DIR", "CONTROL_HUB_DATA_DIR"].map((k) => [k, process.env[k]] as const);
 const active = join(home, "chosen", "data");

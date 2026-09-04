@@ -237,7 +237,11 @@ export function MissionComposerActions({
     needsDispatchAck,
   });
   // A spinner already says "submitting". A tooltip repeating it is noise.
-  const blockerToShow = blocker && blocker.code !== "dispatching" ? blocker : null;
+  // The sentence waits until the person has started (T-0092, finding A). A
+  // requirement stated before anyone has typed reads as a scolding, and the
+  // button already carries the reason in its title while it is disabled.
+  const started = formState.newName.trim().length > 0 || formState.newInstruction.trim().length > 0;
+  const blockerToShow = blocker && blocker.code !== "dispatching" && started ? blocker : null;
 
   return (
     <div className="space-y-2">
@@ -251,7 +255,7 @@ export function MissionComposerActions({
           onClick={onSubmit}
           disabled={blocker !== null}
           loading={dispatching}
-          title={blockerToShow?.message}
+          title={blocker && blocker.code !== "dispatching" ? blocker.message : undefined}
           aria-describedby={blockerToShow ? dispatchHintId : undefined}
         >
           <Send className="w-3.5 h-3.5" />
@@ -437,7 +441,7 @@ export default function MissionCreateForm({
           onChange={(v) => setFormField("newGoals", v)}
           minRows={2}
           maxRows={8}
-          placeholder="Gather data&#10;Analyze findings&#10;Write report"
+          placeholder="e.g. Gather data"
         />
         <p className="text-xs text-ps-text-faint font-mono mt-1.5">
           One goal per line — checklist the agent completes alongside the task.
@@ -445,10 +449,53 @@ export default function MissionCreateForm({
       </div>
 
       <ComposerAccordion
+        title="Dispatch"
+        description="When and how this mission runs"
+        defaultOpen={DISPATCH_OPEN_BY_DEFAULT}
+        step={1}
+        accent="green"
+        // Both directions, not just the open one: collapsing the choice
+        // withdraws the acknowledgement, and the gate returns.
+        onOpenChange={(open) => onDispatchOpenChange?.(open)}
+      >
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {DISPATCH_MODES.map((mode) => (
+            <button
+              key={mode.id}
+              type="button"
+              onClick={() => setFormField("newDispatch", mode.id)}
+              className={`h-9 px-3 rounded-lg text-xs font-mono border transition-colors ${
+                formState.newDispatch === mode.id
+                  ? "border-neon-cyan/50 bg-cyan-500/10 text-neon-cyan"
+                  : "border-white/10 text-ps-text-muted hover:text-ps-text-secondary"
+              }`}
+            >
+              {mode.label}
+            </button>
+          ))}
+        </div>
+        <p className="text-xs text-ps-text-muted font-mono">
+          The button below runs the selected dispatch mode.
+        </p>
+        {formState.newDispatch === "cron" && (
+          <SchedulePicker
+            value={formState.newSchedule}
+            onChange={(s) => setFormField("newSchedule", s)}
+            // The `error` prop has always existed here and was never passed, so
+            // the picker's own complaint was the only copy and it died with the
+            // sheet. Passing it makes the reason survive a blocked submit
+            // independently of whether the field was ever blurred.
+            error={scheduleDraftError}
+            onDraftError={onScheduleDraftError}
+          />
+        )}
+      </ComposerAccordion>
+
+      <ComposerAccordion
         title="Mission parameters"
         description="Directories, references, skills, context, output, and constraints"
         defaultOpen={false}
-        step={1}
+        step={2}
         accent="cyan"
       >
         <div>
@@ -597,7 +644,7 @@ export default function MissionCreateForm({
         title="Runtime"
         description="Profile, model, scope, and timeout"
         defaultOpen={false}
-        step={2}
+        step={3}
         accent="purple"
       >
         <AgentRuntimeDefaultsCard
@@ -622,7 +669,7 @@ export default function MissionCreateForm({
         title="Assembled agent prompt"
         description="Preview of the mission prompt sent to the agent"
         defaultOpen={false}
-        step={3}
+        step={4}
         accent="pink"
       >
         <MissionPromptPreview
@@ -640,48 +687,6 @@ export default function MissionCreateForm({
         />
       </ComposerAccordion>
 
-      <ComposerAccordion
-        title="Dispatch"
-        description="When and how this mission runs"
-        defaultOpen={DISPATCH_OPEN_BY_DEFAULT}
-        step={4}
-        accent="green"
-        // Both directions, not just the open one: collapsing the choice
-        // withdraws the acknowledgement, and the gate returns.
-        onOpenChange={(open) => onDispatchOpenChange?.(open)}
-      >
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {DISPATCH_MODES.map((mode) => (
-            <button
-              key={mode.id}
-              type="button"
-              onClick={() => setFormField("newDispatch", mode.id)}
-              className={`h-9 px-3 rounded-lg text-xs font-mono border transition-colors ${
-                formState.newDispatch === mode.id
-                  ? "border-neon-cyan/50 bg-cyan-500/10 text-neon-cyan"
-                  : "border-white/10 text-ps-text-muted hover:text-ps-text-secondary"
-              }`}
-            >
-              {mode.label}
-            </button>
-          ))}
-        </div>
-        <p className="text-xs text-ps-text-muted font-mono">
-          The button below runs the selected dispatch mode.
-        </p>
-        {formState.newDispatch === "cron" && (
-          <SchedulePicker
-            value={formState.newSchedule}
-            onChange={(s) => setFormField("newSchedule", s)}
-            // The `error` prop has always existed here and was never passed, so
-            // the picker's own complaint was the only copy and it died with the
-            // sheet. Passing it makes the reason survive a blocked submit
-            // independently of whether the field was ever blurred.
-            error={scheduleDraftError}
-            onDraftError={onScheduleDraftError}
-          />
-        )}
-      </ComposerAccordion>
 
       {!embedded && (
         <MissionComposerActions

@@ -68,9 +68,12 @@ export default function FirstRunPanel({ facts }: { facts: FirstRunFacts }) {
   if (!shouldShowFirstRun(facts)) return null;
 
   const steps = firstRunSteps(facts);
+  const agent = facts.frameworkName || "your agent";
   const headline = facts.frameworkAvailable
     ? "Your install is ready and has not run anything yet."
-    : `PatterStage is running, but ${facts.frameworkName || "your agent"} is not installed on this machine yet.`;
+    : facts.gatewayReachable
+      ? `${agent} isn't installed on this machine, but a gateway at ${facts.gatewayUrl ?? "the configured address"} is configured and reachable; missions will run there.`
+      : `PatterStage is running, but ${agent} is not installed on this machine yet.`;
 
   return (
     <section className="rounded-xl border border-neon-cyan/25 bg-dark-900/50 overflow-hidden">

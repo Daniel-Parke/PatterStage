@@ -32,6 +32,8 @@ export interface SubsystemRow {
   state: SubsystemState;
   /** What a person can act on. Never empty. */
   reason: string;
+  /** The gateway row only: the base URL it probed, for callers that need the address as data. */
+  url?: string;
 }
 
 export interface SubsystemSummary {
@@ -86,8 +88,8 @@ export async function collectSubsystems(deps: SubsystemDeps): Promise<SubsystemS
       try {
         const report = await withTimeout(deps.probeGateway(), PROBE_TIMEOUT_MS, `the gateway at ${base}`);
         return report.ok
-          ? { id: "gateway", label: "Gateway", state: "ok", reason: `reachable at ${base}` }
-          : { id: "gateway", label: "Gateway", state: "down", reason: `${base} answered the health probe with ok=false` };
+          ? { id: "gateway", label: "Gateway", state: "ok", reason: `reachable at ${base}`, url: base }
+          : { id: "gateway", label: "Gateway", state: "down", reason: `${base} answered the health probe with ok=false`, url: base };
       } catch (err) {
         if (err instanceof RuntimeRequestError && (err.status === 401 || err.status === 403)) {
           return { id: "gateway", label: "Gateway", state: "down", reason: `${base} rejects our API key (${err.status} unauthorized). Check HERMES_API_KEY on both sides.` };

@@ -112,6 +112,11 @@ export function getDbPath(dir: string = PS_DATA_DIR): string {
  * (stat only); the caller logs it.
  */
 export function shadowedDataWarning(activeDir: string = PS_DATA_DIR): string | null {
+  // The warning exists for the discovery case, where the directory was
+  // guessed. When the operator chose it there is nothing to warn about, and
+  // "set PS_DATA_DIR explicitly" is wrong advice on an instance that did
+  // (T-0092, finding F).
+  if (readEnv("PS_DATA_DIR", "CH_DATA_DIR", "CONTROL_HUB_DATA_DIR")) return null;
   const activeDb = getDbPath(activeDir);
   const activeSize = fileSize(activeDb);
   for (const cand of dataDirCandidates(homedir())) {

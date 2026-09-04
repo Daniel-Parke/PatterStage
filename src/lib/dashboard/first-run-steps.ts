@@ -25,6 +25,13 @@ export interface FirstRunFacts {
    * machine. False on a PatterStage install that has never had an agent.
    */
   frameworkAvailable: boolean;
+  /**
+   * A gateway is configured and answered the health probe (T-0092). With no
+   * local install this is where the work runs, and the copy has to say so
+   * instead of "nothing will run".
+   */
+  gatewayReachable?: boolean;
+  gatewayUrl?: string | null;
   sessionCount: number;
   missionCount: number;
 }
@@ -47,23 +54,33 @@ export interface FirstRunStep {
  * and the panel gets out of the way for good.
  */
 export function shouldShowFirstRun(facts: FirstRunFacts): boolean {
-  if (!facts.frameworkAvailable) return true;
+  // A reachable gateway is a usable agent: the checklist behaves as it does
+  // for a local install and hides once something has run (T-0092).
+  const usable = facts.frameworkAvailable || facts.gatewayReachable === true;
+  if (!usable) return true;
   return facts.sessionCount === 0 && facts.missionCount === 0;
 }
 
 /** The checklist, in the order the steps actually have to happen. */
 export function firstRunSteps(facts: FirstRunFacts): FirstRunStep[] {
   const agent = facts.frameworkName || "your agent";
+  const remote = !facts.frameworkAvailable && facts.gatewayReachable === true;
   return [
     {
       id: "agent",
-      title: facts.frameworkAvailable ? `${agent} is installed` : `Install ${agent}`,
+      title: facts.frameworkAvailable
+        ? `${agent} is installed`
+        : remote
+          ? `${agent} runs through a gateway`
+          : `Install ${agent}`,
       detail: facts.frameworkAvailable
         ? `PatterStage found a configured ${agent} install on this machine.`
-        : `PatterStage is the control plane; ${agent} is the agent that does the work, and nothing can be dispatched until it is installed on this machine.`,
+        : remote
+          ? `No local ${agent} install, but a gateway at ${facts.gatewayUrl ?? "the configured address"} is configured and reachable; missions will run there.`
+          : `PatterStage is the control plane; ${agent} is the agent that does the work, and nothing can be dispatched until it is installed on this machine.`,
       href: AGENT_INSTALL_DOCS,
       external: true,
-      done: facts.frameworkAvailable,
+      done: facts.frameworkAvailable || remote,
     },
     {
       id: "mission",

@@ -201,14 +201,18 @@ export default function Dashboard() {
   const agentName = monitor?.framework?.name ?? "Hermes";
   const agentConfigured = monitor?.framework?.available !== false;
 
+  const gatewayRow = subsystems?.subsystems.find((s) => s.id === "gateway") ?? null;
+  const gatewayReachable = gatewayRow?.state === "ok";
   const firstRunFacts = useMemo(
     () => ({
       frameworkName: agentName,
       frameworkAvailable: agentConfigured,
+      gatewayReachable,
+      gatewayUrl: gatewayRow?.url ?? null,
       sessionCount: monitor?.sessions.total ?? 0,
       missionCount: missions.length,
     }),
-    [agentName, agentConfigured, monitor?.sessions.total, missions.length],
+    [agentName, agentConfigured, gatewayReachable, gatewayRow?.url, monitor?.sessions.total, missions.length],
   );
 
   const activeProcesses = useMemo(() => processes.filter((p) => p.status === "running"), [processes]);
@@ -282,10 +286,17 @@ export default function Dashboard() {
               <span className="text-xs text-ps-text-secondary font-mono">ONLINE</span>
             </div>
           ) : (
+            gatewayReachable ? (
+              <div className="flex items-center gap-2" title={`${agentName} runs through the gateway at ${gatewayRow?.url ?? "the configured address"}`}>
+                <div className="w-2 h-2 rounded-full bg-neon-cyan" />
+                <span className="text-xs text-neon-cyan font-mono">REMOTE</span>
+              </div>
+            ) : (
             <div className="flex items-center gap-2" title={`${agentName} is not installed on this machine`}>
               <div className="w-2 h-2 rounded-full bg-neon-orange" />
               <span className="text-xs text-neon-orange font-mono">NOT INSTALLED</span>
             </div>
+            )
           )}
         </div>
       </div>

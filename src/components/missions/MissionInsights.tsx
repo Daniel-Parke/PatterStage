@@ -19,10 +19,10 @@ function Tile({
   color: NeonColor;
 }) {
   return (
-    <div className="rounded-xl border border-white/5 bg-white/[0.02] px-3 py-2" style={{ boxShadow: `inset 0 0 16px ${neonAlpha(color, 5)}` }}>
-      <div className="flex items-center gap-1.5">
-        <Icon className="h-3 w-3" style={{ color: neon(color) }} />
-        <span className="text-xs uppercase tracking-wider text-ps-text-muted">{label}</span>
+    <div className="min-w-0 rounded-xl border border-white/5 bg-white/[0.02] px-3 py-2" style={{ boxShadow: `inset 0 0 16px ${neonAlpha(color, 5)}` }}>
+      <div className="flex min-w-0 items-center gap-1.5">
+        <Icon className="h-3 w-3 shrink-0" style={{ color: neon(color) }} />
+        <span className="truncate text-xs uppercase tracking-wider text-ps-text-muted">{label}</span>
       </div>
       <div className="mt-0.5 font-mono text-xl font-bold leading-none text-white">{value}</div>
     </div>
@@ -68,7 +68,7 @@ export default function MissionInsights({ missions }: { missions: MissionRow[] }
           centerSub="missions"
         />
       </div>
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-[repeat(auto-fit,minmax(7.5rem,1fr))]">
         <Tile icon={Rocket} label="Total" value={s.total} color="cyan" />
         <Tile icon={Loader2} label="Active" value={s.active} color="yellow" />
         <Tile icon={CheckCircle2} label="Done" value={s.successful} color="green" />
