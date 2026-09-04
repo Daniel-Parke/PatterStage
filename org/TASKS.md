@@ -102,3 +102,4 @@ The records under org/tasks/ are canonical.
 | T-0087 | standard | R1 | done | t0087-stories-2026-09-04 |
 | T-0088 | standard | R1 | done | t0088-missions-bounds-2026-09-05 |
 | T-0089 | standard | R1 | done | t0089-operator-ergonomics-2026-09-05 |
+| T-0090 | standard | R2 | done | t0090-gateway-gate-2026-09-05 |

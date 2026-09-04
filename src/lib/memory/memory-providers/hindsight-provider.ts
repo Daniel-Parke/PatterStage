@@ -60,7 +60,10 @@ export class HindsightMemoryProvider implements MemoryProvider {
       const r = await this.request<{ status?: string }>("/health", { timeoutMs: 3000 });
       return { available: true, status: r.status ?? "healthy" };
     } catch (e) {
-      return { available: false, error: e instanceof Error ? e.message : "unreachable" };
+      // Name the address. "fetch failed" on its own sent the operator to the
+      // config page to find out what was tried (T-0091).
+      const why = e instanceof Error ? e.message : "unreachable";
+      return { available: false, error: `could not reach ${this.baseUrl}: ${why}` };
     }
   }
 

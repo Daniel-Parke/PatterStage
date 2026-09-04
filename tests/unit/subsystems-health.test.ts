@@ -41,7 +41,17 @@ describe("gateway", () => {
     const { RuntimeRequestError } = await import("@/lib/runtime/types");
     const r = await row(deps({ probeGateway: async () => { throw new RuntimeRequestError("GET /health → 401 Unauthorized", 401); } }), "gateway");
     expect(r.state).toBe("down");
-    expect(r.reason).toMatch(/key|unauthori/i);
+    // Found by mutation: the generic branch's message already said
+    // "Unauthorized", so the branch that names the fix had no oracle.
+    expect(r.reason).toMatch(/API key/);
+    expect(r.reason).toContain("HERMES_API_KEY");
+  });
+
+  it("is down when the probe answers but says ok=false", async () => {
+    // Found by mutation: no fixture ever had the gateway answer with ok=false.
+    const r = await row(deps({ probeGateway: async () => ({ ok: false }) }), "gateway");
+    expect(r.state).toBe("down");
+    expect(r.reason).toMatch(/ok=false/);
   });
 });
 
