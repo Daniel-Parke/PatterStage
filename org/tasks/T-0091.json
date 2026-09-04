@@ -1,0 +1,44 @@
+{
+  "id": "T-0091",
+  "intent": "Round-6 architecture recommendation, ruling 2: one place that says whether each thing this product depends on is up, and why not. GET /api/status/subsystems and a dashboard panel.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0091-subsystems-2026-09-05",
+  "claims": [
+    "src/lib/status/subsystems.ts",
+    "src/app/api/status/subsystems/route.ts",
+    "src/components/dashboard/SubsystemsPanel.tsx",
+    "src/hooks/useDashboard.ts",
+    "src/app/page.tsx",
+    "src/lib/memory/memory-providers/hindsight-provider.ts",
+    "scripts/tooling/output-canary.golden.json",
+    "tests/"
+  ],
+  "invariants": [
+    "I1 Five rows, always: gateway, memory, sync, config.yaml, gateway gate. Each carries a state in words and a reason a person can act on. A reason is never empty.",
+    "I2 The gateway row is down with the probe's own failure text; a 401/403 names the API key and the variable to check; a probe that answers ok=false is down, not ok.",
+    "I3 Memory is optional: an unavailable provider is degraded, never down, and the reason names the address it tried.",
+    "I4 The sync row is degraded before any cycle has completed and after a failing one, naming the source and its error.",
+    "I5 The config row is down with the parse fault T-0086 refuses on; it is where that refusal becomes visible without opening a log.",
+    "I6 The gate row reads T-0090's snapshot: at its limit or with refusals means degraded, with the counts.",
+    "I7 One dependency throwing does not take the others with it. The rules are provable with every dependency injected."
+  ],
+  "mutation_finding": "Twelve mutants. Ten killed on the first pass. The two survivors were both on the gateway row: the branch that names the API-key fix was shadowed by a generic message that also happened to say 'Unauthorized', and no fixture ever had the gateway answer ok=false. Both oracles sharpened, both mutants killed on the re-run.",
+  "the_proof_found_two_things_and_one_was_mine": "On the isolated instance the memory row read 'hindsight: fetch failed' with the mock running: the provider targets the DB-owned config's default port, not the mock's, and the reason did not say where it had tried. The provider's health error now names its base URL. And the server appeared to vanish thirty-five seconds after config.yaml was corrupted; a clean reproduction with stdout and stderr captured separately kept it up for ninety seconds with the config row down and the parse fault named within ten. The disappearance was the proof script's process-kill loop, not the product.",
+  "the_canary_was_blessed_once": "httpSurface went from 129 lines to 130: route /api/status/subsystems [GET] added, nothing removed, diffed against a report from the committed tree before the golden was rewritten.",
+  "verification": "Isolated instance, production build: GET /api/status/subsystems answered five rows; with every mock up the gateway row read 'reachable at http://127.0.0.1:8747', config 'present and parses', gate '1 admitted, 0 refused', sync 'no sync cycle has completed yet' immediately after boot; with config.yaml hand-corrupted the config row read 'down: does not parse: duplicated mapping key (27:1). Pushes and pulls refuse until it is repaired' within ten seconds and the process stayed up. Gate by exit code: lint 0, tsc 0, 3895 tests / 440 suites, knip 0, canary OK after the one-line bless, build 0.",
+  "timestamps": {
+    "opened": "2026-09-05T05:20:00Z",
+    "updated": "2026-09-05T07:00:00Z",
+    "closed": "2026-09-05T07:00:00Z"
+  }
+}
