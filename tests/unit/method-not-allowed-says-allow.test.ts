@@ -29,24 +29,24 @@ describe("methodNotAllowed", () => {
 describe("the skills toggle answers a stub, not a framework 405", () => {
   jest.mock("@/lib/api-auth", () => ({ requireNotReadOnly: () => null }));
   jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn(), serverErrorFromCatch: jest.fn() }));
-  jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
   jest.mock("@/lib/db", () => ({ ensureDb: jest.fn(), getDb: jest.fn(), now: () => "t", uuid: () => "u", inTransaction: <T,>(fn: () => T) => fn() }));
-  jest.mock("@/lib/skills-repository", () => ({ getSkill: jest.fn(), upsertSkill: jest.fn(), parseSkillFrontmatter: jest.fn() }));
-  jest.mock("@/modules/hermes/lib/profile-push", () => ({ pushSkillToHermes: jest.fn() }));
+  jest.mock("@/lib/agent-root-repository", () => ({ getAgentRoot: jest.fn() }));
+  jest.mock("@/modules/hermes/lib/profiles-repository", () => ({ getDisabledSkills: jest.fn(), getProfile: jest.fn() }));
+  jest.mock("@/modules/hermes/handlers/profile-patch", () => ({ applyProfileOrRootPatchOrFail: jest.fn() }));
 
-  it("POST /api/skills/[name] says what to do instead, with Allow", async () => {
-    const route = (await import("@/app/api/skills/[name]/route")) as { POST?: (r: NextRequest, c: { params: Promise<{ name: string }> }) => Promise<Response> };
-    expect(typeof route.POST).toBe("function");
+  it.each(["GET", "POST"])("%s /api/skills/[name]/toggle says the verb is PUT, with Allow", async (verb) => {
+    const route = (await import("@/app/api/skills/[name]/toggle/route")) as Record<string, (r: NextRequest, c: { params: Promise<{ name: string }> }) => Promise<Response>>;
+    expect(typeof route[verb]).toBe("function");
 
-    const res = await route.POST!(
-      new NextRequest("http://localhost/api/skills/devops-terminal", { method: "POST" }),
+    const res = await route[verb](
+      new NextRequest("http://localhost/api/skills/devops-terminal/toggle", { method: verb }),
       { params: Promise.resolve({ name: "devops-terminal" }) },
     );
     const body = (await res.json()) as { error: string };
 
     expect(res.status).toBe(405);
-    expect(res.headers.get("Allow")).toBe("GET, PUT");
-    expect(body.error).toMatch(/PUT/);
-    expect(body.error).toMatch(/disabled|toggle|skills\.disabled/i);
+    expect(res.headers.get("Allow")).toBe("PUT");
+    expect(body.error).toMatch(/PUT \/api\/skills\/\[name\]\/toggle/);
+    expect(body.error).toMatch(/enabled/);
   });
 });

@@ -103,8 +103,7 @@ export async function POST(request: NextRequest) {
 // and cannot be individually deleted from PatterStage. Delete the profile instead.
 export async function DELETE() {
   return methodNotAllowed(
-    "Individual personalities cannot be deleted — delete the profile instead"
-  );
+    "Individual personalities cannot be deleted — delete the profile instead", ["GET", "POST", "PUT"]);
 }
 
 export async function PUT(request: NextRequest) {

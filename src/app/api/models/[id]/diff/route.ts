@@ -123,6 +123,5 @@ export async function POST(
 // A diff is computed from a submitted candidate, so there is nothing to GET.
 export async function GET() {
   return methodNotAllowed(
-    "GET is not supported here — POST the candidate model to diff it against the stored one",
-  );
+    "GET is not supported here — POST the candidate model to diff it against the stored one", ["POST"]);
 }

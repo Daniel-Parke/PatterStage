@@ -13,6 +13,7 @@ import { useState } from "react";
 import { Save, Check } from "lucide-react";
 import Sheet from "@/components/ui/Sheet";
 import { timeAgo } from "@/lib/utils";
+import ElapsedSince from "./ElapsedSince";
 import { safeApiCall } from "@/lib/api-fetch";
 import type { ComposerNode, ComposerNodeRun } from "@/lib/composer/schema";
 
@@ -85,7 +86,9 @@ export default function ComposerNodeRunDetail({
               {nodeRun.completedAt ? (
                 <span className="text-xs text-ps-text-muted">{timeAgo(nodeRun.completedAt)}</span>
               ) : nodeRun.startedAt ? (
-                <span className="text-xs text-ps-text-muted">started {timeAgo(nodeRun.startedAt)}</span>
+                <span className="text-xs text-ps-text-muted">
+                  running for <ElapsedSince since={nodeRun.startedAt} />
+                </span>
               ) : null}
             </div>
 

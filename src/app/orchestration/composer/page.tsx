@@ -27,6 +27,7 @@ import { safeApiCall } from "@/lib/api-fetch";
 import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
 import { isTerminalComposerRunStatus } from "@/lib/composer/schema";
 import { timeAgo } from "@/lib/utils";
+import ElapsedSince from "@/components/composer/ElapsedSince";
 
 // react-flow needs the DOM — load the canvases client-only.
 const WorkflowCanvas = dynamic(() => import("@/components/composer/WorkflowCanvas"), {
@@ -358,7 +359,13 @@ export default function ComposerPage() {
                   <div className={`font-mono text-xs uppercase ${STATUS_COLOR[run.status] ?? "text-ps-text-muted"}`}>
                     {run.status}
                   </div>
-                  <div className="mt-0.5 text-xs text-ps-text-muted">{timeAgo(run.createdAt)}</div>
+                  <div className="mt-0.5 text-xs text-ps-text-muted">
+                    {isTerminalComposerRunStatus(run.status) ? (
+                      timeAgo(run.createdAt)
+                    ) : (
+                      <>running for <ElapsedSince since={run.createdAt} /></>
+                    )}
+                  </div>
                   {!isTerminalComposerRunStatus(run.status) && (
                     // Two-step, because one click ends a multi-stage run that may
                     // be parked at a gate waiting for a person.

@@ -71,6 +71,5 @@ export async function POST(request: NextRequest, ctx: Ctx) {
 // /api/chat/[id]; this route only appends.
 export async function GET() {
   return methodNotAllowed(
-    "GET is not supported here — messages come back with GET /api/chat/[id]",
-  );
+    "GET is not supported here — messages come back with GET /api/chat/[id]", ["POST"]);
 }

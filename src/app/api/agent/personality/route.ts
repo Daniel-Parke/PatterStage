@@ -59,6 +59,5 @@ export async function PUT(request: NextRequest) {
 // read as "there is no personality" (T-0083).
 export async function GET() {
   return methodNotAllowed(
-    "GET is not supported here — read the personality from /api/agent/profiles",
-  );
+    "GET is not supported here — read the personality from /api/agent/profiles", ["PUT"]);
 }

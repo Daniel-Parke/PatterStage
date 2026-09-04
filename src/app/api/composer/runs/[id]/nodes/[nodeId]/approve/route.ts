@@ -12,7 +12,7 @@ import { z } from "zod";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ok, badRequest, notFound, serviceUnavailable } from "@/lib/api-response";
 import { isFeatureEnabled } from "@/lib/feature-flags";
-import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
+import { parseJsonBody } from "@/lib/parse-json-body";
 import {
   getComposerRun,
   getNode,
@@ -68,8 +68,23 @@ export async function POST(request: NextRequest, ctx: Ctx) {
   }
 
   const { id, nodeId } = await ctx.params;
-  const parsed = await parseAndValidateJsonBody(request, bodySchema);
-  if (parsed instanceof NextResponse) return parsed;
+  // A guessed verb gets the two real ones and the hint, not a Zod flatten.
+  // "approve" is the word people reach for; "accept" is the word the gate
+  // uses (T-0089).
+  const raw = await parseJsonBody(request);
+  if (raw instanceof NextResponse) return raw;
+  const action = (raw as { action?: unknown }).action;
+  if (action !== "accept" && action !== "reject") {
+    return badRequest(
+      `action must be "accept" or "reject" (got ${JSON.stringify(action ?? null)}). ` +
+        `To approve a gate, send "accept".`,
+    );
+  }
+  const validated = bodySchema.safeParse(raw);
+  if (!validated.success) {
+    return badRequest(validated.error.issues.map((i) => `${i.path.join(".") || "body"}: ${i.message}`).join("; "));
+  }
+  const parsed = validated.data;
 
   try {
     const run = getComposerRun(id);

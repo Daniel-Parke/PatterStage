@@ -101,8 +101,11 @@ export function conflict(error: string): NextResponse {
  * (Previously inline at 3 sites; promoted in session 76 when the
  * Rule of Three was finally met.)
  */
-export function methodNotAllowed(error: string): NextResponse {
-  return NextResponse.json({ error }, { status: 405 });
+export function methodNotAllowed(error: string, allow?: readonly string[]): NextResponse {
+  // RFC 9110: a 405 MUST carry Allow. Every stub said what to do in prose and
+  // none said it in the header a client can read (T-0089).
+  const headers = allow && allow.length > 0 ? { Allow: allow.join(", ") } : undefined;
+  return NextResponse.json({ error }, { status: 405, headers });
 }
 
 /**

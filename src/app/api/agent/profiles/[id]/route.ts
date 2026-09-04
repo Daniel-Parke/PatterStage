@@ -152,6 +152,5 @@ export async function DELETE(
 // profile in full, so there is nothing this could add.
 export async function GET() {
   return methodNotAllowed(
-    "GET is not supported here — /api/agent/profiles returns every profile in full",
-  );
+    "GET is not supported here — /api/agent/profiles returns every profile in full", ["PUT", "DELETE"]);
 }

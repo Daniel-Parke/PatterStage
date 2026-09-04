@@ -348,7 +348,7 @@ export function updateNodeRun(id: string, input: UpdateNodeRunInput): ComposerNo
 // ── Approvals ────────────────────────────────────────────────────
 export function recordComposerApproval(input: { composerRunId: string; nodeId: string; action: ApprovalAction; note?: string | null; decidedBy?: string }): ComposerApproval {
   const id = uuid();
-  const approved = input.action === "accept" || input.action === "add_feature";
+  const approved = input.action === "accept";
   getDb().prepare(`INSERT INTO composer_approvals (id, composer_run_id, node_id, action, approved, note, decided_by, created_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
     .run(id, input.composerRunId, input.nodeId, input.action, approved ? 1 : 0, input.note ?? null, input.decidedBy ?? "user", now());

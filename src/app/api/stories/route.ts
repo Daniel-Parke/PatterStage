@@ -65,6 +65,5 @@ export async function POST(request: NextRequest) {
 // and the 404 it used to produce read like the feature was missing (T-0083).
 export async function GET() {
   return methodNotAllowed(
-    "GET is not supported here — POST creates a story; list them from the Story Weaver page",
-  );
+    "GET is not supported here — POST creates a story; list them from the Story Weaver page", ["POST"]);
 }

@@ -9,7 +9,7 @@ import { NextRequest } from "next/server";
 import { approvalActionSchema } from "@/lib/composer/schema";
 
 jest.mock("@/lib/feature-flags", () => ({ isFeatureEnabled: () => true }));
-const mockRecord = jest.fn(() => ({ id: "a1" }));
+const mockRecord = jest.fn((..._a: unknown[]) => ({ id: "a1" }));
 jest.mock("@/lib/composer/composer-repository", () => ({
   getComposerRun: () => ({ id: "r1", status: "awaiting_approval", currentNodeId: "n1", error: null, workflowId: "w1" }),
   getNode: () => ({ id: "n1", gate: "hil" }),

@@ -101,6 +101,5 @@ export async function DELETE(_request: NextRequest, ctx: Ctx) {
 // per-credential read would exist only to tempt one into being added.
 export async function GET() {
   return methodNotAllowed(
-    "GET is not supported here — /api/credentials lists credentials without their keys",
-  );
+    "GET is not supported here — /api/credentials lists credentials without their keys", ["DELETE"]);
 }

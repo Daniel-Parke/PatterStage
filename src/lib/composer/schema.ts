@@ -90,7 +90,9 @@ export function isTerminalComposerRunStatus(status: string): boolean {
   return (TERMINAL_COMPOSER_RUN_STATUSES as readonly string[]).includes(status);
 }
 
-export const approvalActionSchema = z.enum(["accept", "reject", "review", "add_feature"]);
+// Two verbs (T-0089, ruling 3). "review" and "add_feature" were vestigial and
+// dangerous: add_feature silently routed as APPROVE and review as REJECT.
+export const approvalActionSchema = z.enum(["accept", "reject"]);
 export type ApprovalAction = z.infer<typeof approvalActionSchema>;
 
 // ── Domain records ───────────────────────────────────────────────

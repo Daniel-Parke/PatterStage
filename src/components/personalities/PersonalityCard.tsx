@@ -10,7 +10,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, ChevronDown, Copy, Edit3, Sparkles } from "lucide-react";
+import { Check, ChevronDown, Copy, Edit3 } from "lucide-react";
 import { getPersonalityEmoji } from "@/lib/personalities";
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 
@@ -23,13 +23,9 @@ export interface Personality {
 export default function PersonalityCard({
   personality,
   onEdit,
-  onActivate,
-  isActive,
 }: {
   personality: Personality;
   onEdit: (p: Personality) => void;
-  onActivate: (name: string) => void;
-  isActive: boolean;
 }) {
   const [textExpanded, setTextExpanded] = useState(false);
   // Use the shared `useCopyToClipboard` hook (sister to the
@@ -51,11 +47,7 @@ export default function PersonalityCard({
 
   return (
     <div
-      className={`rounded-xl border transition-all ${
-        isActive
-          ? "border-neon-cyan/50 bg-neon-cyan/5"
-          : "border-white/10 bg-dark-900/50 hover:border-white/20"
-      }`}
+      className="rounded-xl border transition-all border-white/10 bg-dark-900/50 hover:border-white/20"
     >
       <div className="p-4">
         <div className="flex items-start justify-between gap-3">
@@ -65,11 +57,6 @@ export default function PersonalityCard({
               <h3 className="font-semibold text-white truncate font-mono">
                 {personality.name}
               </h3>
-              {isActive && (
-                <span className="text-xs font-mono bg-neon-cyan/15 text-neon-cyan px-1.5 py-0.5 rounded">
-                  ACTIVE
-                </span>
-              )}
             </div>
             <p className="text-xs text-ps-text-muted leading-relaxed">
               {textExpanded ? personality.prompt : preview}
@@ -95,15 +82,6 @@ export default function PersonalityCard({
                 <Copy className="w-3.5 h-3.5" />
               )}
             </button>
-            {!isActive && (
-              <button
-                onClick={() => onActivate(personality.name)}
-                className="p-1.5 rounded-lg text-neon-cyan hover:bg-neon-cyan/10 transition-colors"
-                title="Set as active"
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-              </button>
-            )}
             <button
               onClick={() => onEdit(personality)}
               className="p-1.5 rounded-lg text-ps-text-muted hover:bg-white/5 transition-colors"

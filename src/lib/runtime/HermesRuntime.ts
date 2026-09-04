@@ -347,9 +347,17 @@ export class HermesRuntime implements AgentRuntime {
   }
 
   async stopRun(runId: string, profile?: string): Promise<void> {
-    await this.fetchJson<unknown>(profile, `/v1/runs/${encodeURIComponent(runId)}/stop`, {
-      method: "POST",
-    });
+    try {
+      await this.fetchJson<unknown>(profile, `/v1/runs/${encodeURIComponent(runId)}/stop`, {
+        method: "POST",
+      });
+    } catch (err) {
+      // "Ensure it is not running" is the semantic. A run the gateway no
+      // longer knows is not running: three cancel sites logged this 404 as an
+      // ERROR for what was a success (T-0089).
+      if (err instanceof RuntimeRequestError && err.status === 404) return;
+      throw err;
+    }
   }
 
   async resolveApproval(

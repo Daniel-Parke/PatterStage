@@ -18,7 +18,6 @@ import { SearchInput } from "@/components/ui/Input";
 import { LoadingSpinner, EmptyState } from "@/components/ui/LoadingSpinner";
 import { LastResult, useToast } from "@/components/ui/Toast";
 import { apiFetch, toastError } from "@/lib/api-fetch";
-import { runSyncAction } from "@/lib/operation-sync-action";
 import { filterByCaseInsensitiveSubstring } from "@/lib/list-search";
 import PersonalitiesInsights from "@/components/personalities/PersonalitiesInsights";
 import PersonalityCard, { type Personality } from "@/components/personalities/PersonalityCard";
@@ -29,21 +28,14 @@ export default function PersonalitiesPage() {
   const [personalities, setPersonalities] = useState<Personality[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [activePersonality, setActivePersonality] = useState<string>("");
   const [editTarget, setEditTarget] = useState<Personality | null | undefined>(undefined);
   const { showToast, toastElement, lastResult } = useToast();
 
   const loadPersonalities = useCallback(async () => {
     setLoading(true);
     try {
-      const [persData, configData] = await Promise.all([
-        apiFetch("/api/personalities"),
-        apiFetch("/api/config"),
-      ]);
+      const persData = await apiFetch("/api/personalities");
       setPersonalities(persData?.data?.personalities ?? []);
-      const displaySection = configData?.data?.display;
-      const personalityValue = (displaySection as { personality?: unknown } | null)?.personality;
-      setActivePersonality(typeof personalityValue === "string" ? personalityValue : "");
     } catch (err) {
       toastError(showToast, err, "Failed to load personalities");
     } finally {
@@ -73,25 +65,6 @@ export default function PersonalitiesPage() {
   // setters, not duplicates of close.
   const closeEdit = useCallback(() => setEditTarget(undefined), []);
 
-  const handleActivate = (name: string) => {
-    const next = activePersonality === name ? "" : name;
-    // No busy state for activation — activation is a sub-100ms PUT so
-    // showing a spinner would be UI noise. Session 170 made
-    // `runSyncAction`'s `setBusy` parameter optional (defaulting to
-    // a no-op), so this caller simply omits the key.
-    return runSyncAction({
-      showToast,
-      url: "/api/config",
-      method: "PUT",
-      body: { section: "display", values: { personality: next } },
-      successMessage: next ? `Activated: ${next}` : "Cleared active personality",
-      errorMessage: "Activation failed",
-      onSuccess: () => {
-        setActivePersonality(next);
-      },
-    });
-  };
-
   const handleSaved = () => {
     closeEdit();
     loadPersonalities();
@@ -99,24 +72,13 @@ export default function PersonalitiesPage() {
   };
 
   const sortedPersonalities = useMemo(
-    () =>
-      [...personalities].sort((a, b) => {
-        if (a.name === activePersonality) return -1;
-        if (b.name === activePersonality) return 1;
-        return a.name.localeCompare(b.name);
-      }),
-    [personalities, activePersonality],
+    () => [...personalities].sort((a, b) => a.name.localeCompare(b.name)),
+    [personalities],
   );
 
   const filtered = useMemo(
-    () =>
-      filterByCaseInsensitiveSubstring(
-        sortedPersonalities,
-        search,
-        [(p) => p.name, (p) => p.prompt],
-        (p) => p.name === activePersonality,
-      ),
-    [sortedPersonalities, search, activePersonality],
+    () => filterByCaseInsensitiveSubstring(sortedPersonalities, search, [(p) => p.name, (p) => p.prompt]),
+    [sortedPersonalities, search],
   );
 
   return (
@@ -129,13 +91,7 @@ export default function PersonalitiesPage() {
       />
 
       <div className="max-w-4xl mx-auto px-6 py-6">
-        {!loading && <PersonalitiesInsights personalities={personalities} activeName={activePersonality} />}
-
-        {activePersonality && (
-          <p className="text-xs font-mono text-neon-cyan/80 mb-4">
-            Active: <span className="text-white">{activePersonality}</span>
-          </p>
-        )}
+        {!loading && <PersonalitiesInsights personalities={personalities} />}
 
         {/* Toolbar — no "New": a personality IS a profile's identity, so new
             ones come from creating a profile on the Agents page. */}
@@ -186,8 +142,6 @@ export default function PersonalitiesPage() {
                 key={p.name}
                 personality={p}
                 onEdit={(personality) => setEditTarget(personality)}
-                onActivate={handleActivate}
-                isActive={activePersonality === p.name}
               />
             ))}
           </div>

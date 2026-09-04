@@ -89,6 +89,5 @@ export async function POST(request: NextRequest) {
 // backfills. Saying so is the whole point of this stub.
 export async function GET() {
   return methodNotAllowed(
-    "GET is not supported here — this endpoint BACKFILLS session status and is POST-only",
-  );
+    "GET is not supported here — this endpoint BACKFILLS session status and is POST-only", ["POST"]);
 }

@@ -15,8 +15,16 @@ import type { ComposerNode, ComposerNodeRun } from "@/lib/composer/schema";
 
 jest.mock("@/lib/api-fetch", () => ({ safeApiCall: jest.fn() }));
 
+// The Sheet reads a media query; jsdom has no matchMedia.
+beforeAll(() => {
+  Object.defineProperty(window, "matchMedia", {
+    writable: true,
+    value: (query: string) => ({ matches: false, media: query, onchange: null, addListener: () => {}, removeListener: () => {}, addEventListener: () => {}, removeEventListener: () => {}, dispatchEvent: () => false }),
+  });
+});
+
 describe("ElapsedSince", () => {
-  beforeEach(() => jest.useFakeTimers({ now: new Date("2026-09-05T10:00:00Z") }));
+  beforeEach(() => jest.useFakeTimers({ now: Date.parse("2026-09-05T10:00:00Z") }));
   afterEach(() => jest.useRealTimers());
 
   it("counts up every second from the given instant", () => {
@@ -35,7 +43,7 @@ describe("ElapsedSince", () => {
 });
 
 describe("the stage sheet shows a live elapsed time while a stage runs", () => {
-  beforeEach(() => jest.useFakeTimers({ now: new Date("2026-09-05T10:00:00Z") }));
+  beforeEach(() => jest.useFakeTimers({ now: Date.parse("2026-09-05T10:00:00Z") }));
   afterEach(() => jest.useRealTimers());
 
   const node = { id: "n1", kind: "worker", label: "Draft", gate: "auto" } as unknown as ComposerNode;
@@ -44,19 +52,22 @@ describe("the stage sheet shows a live elapsed time while a stage runs", () => {
     startedAt: "2026-09-05T09:58:00Z", completedAt: null, verdict: null, error: null, output: null,
   } as unknown as ComposerNodeRun;
 
+  // Sheet renders through a portal into document.body, so the RTL container
+  // is empty; read the body.
   it("ticks while running", () => {
-    const { container } = render(<ComposerNodeRunDetail open onClose={() => {}} node={node} nodeRun={running} />);
-    expect(container.textContent).toContain("2:00");
+    render(<ComposerNodeRunDetail open onClose={() => {}} node={node} nodeRun={running} />);
+    expect(document.body.textContent).toContain("2:00");
 
     act(() => { jest.advanceTimersByTime(5_000); });
 
-    expect(container.textContent).toContain("2:05");
+    expect(document.body.textContent).toContain("2:05");
   });
 
   it("does not tick once the stage has completed", () => {
     const done = { ...running, status: "completed", completedAt: "2026-09-05T09:59:00Z" } as unknown as ComposerNodeRun;
-    const { container } = render(<ComposerNodeRunDetail open onClose={() => {}} node={node} nodeRun={done} />);
+    render(<ComposerNodeRunDetail open onClose={() => {}} node={node} nodeRun={done} />);
 
-    expect(container.querySelector("time")).toBeNull();
+    expect(document.body.textContent).toContain("Draft");
+    expect(document.body.querySelector("time")).toBeNull();
   });
 });

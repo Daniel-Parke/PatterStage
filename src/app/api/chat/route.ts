@@ -14,6 +14,7 @@ import { serverErrorFromCatch, logApiError } from "@/lib/api-logger";
 import { ok, created } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { runtime } from "@/lib/runtime";
+import { RuntimeRequestError } from "@/lib/runtime/types";
 import { listConversations, createConversation } from "@/lib/chat-repository";
 
 export async function GET(request?: NextRequest) {
@@ -38,14 +39,27 @@ export async function POST(request: NextRequest) {
     // gateway is offline we still create the conversation (the first message's
     // run handle backfills the session id).
     let sessionId: string | null = null;
+    const sessionTitle = title || "New Chat";
     try {
-      const session = await runtime.createSession({
-        title: title || "New Chat",
-        source: "chat",
-      });
+      const session = await runtime.createSession({ title: sessionTitle, source: "chat" });
       sessionId = session.id || null;
     } catch (err) {
-      logApiError("POST /api/chat", "createSession", err);
+      // The gateway answers 400 when a session title already exists. That
+      // used to be swallowed here: the conversation was created with no
+      // session and answered 201, and its memory continuity was silently
+      // gone. A collision is a name problem, not a gateway problem; retry
+      // once with a suffix, and only then fall back to no session (T-0089).
+      if (err instanceof RuntimeRequestError && err.status === 400) {
+        const retitled = `${sessionTitle} (${new Date().toISOString().slice(11, 19)})`;
+        try {
+          const session = await runtime.createSession({ title: retitled, source: "chat" });
+          sessionId = session.id || null;
+        } catch (retryErr) {
+          logApiError("POST /api/chat", "createSession (retry after title collision)", retryErr);
+        }
+      } else {
+        logApiError("POST /api/chat", "createSession", err);
+      }
     }
 
     const conversation = createConversation({

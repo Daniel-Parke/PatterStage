@@ -35,6 +35,5 @@ export async function POST(_request: NextRequest) {
   if (ro) return ro;
 
   return methodNotAllowed(
-    "Tool registry mutations are disabled. Configure Hermes runtime toolsets on Operations → Tools (profile-scoped platform_toolsets).",
-  );
+    "Tool registry mutations are disabled. Configure Hermes runtime toolsets on Operations → Tools (profile-scoped platform_toolsets).", ["GET"]);
 }

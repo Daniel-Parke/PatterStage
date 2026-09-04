@@ -91,5 +91,5 @@ export async function PUT(
 }
 
 export async function DELETE() {
-  return methodNotAllowed("Method not allowed");
+  return methodNotAllowed("Method not allowed", ["GET", "PUT"]);
 }
