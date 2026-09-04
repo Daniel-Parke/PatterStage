@@ -262,7 +262,23 @@ export async function PUT(
 
     if (isManagedKey(key)) {
       if (key === "config") {
-        const cols = configYamlToColumnValues(content);
+        // configYamlToColumnValues now THROWS on unparseable YAML rather than
+        // silently dropping every preserved section (T-0086). Answer the same
+        // 409 shape the PUT /api/config refusal established in T-0060: the
+        // fault's first line, never the body (it holds api_key lines), and the
+        // operator keeps their file.
+        let cols: ReturnType<typeof configYamlToColumnValues>;
+        try {
+          cols = configYamlToColumnValues(content);
+        } catch (err) {
+          const firstLine = (err instanceof Error ? err.message : String(err))
+            .split(String.fromCharCode(10))[0]
+            .trim();
+          return NextResponse.json(
+            { error: `config.yaml was not saved: ${firstLine}` },
+            { status: 409 },
+          );
+        }
         const platformToolsetsJson = serializeJsonToolsets(
           normalizePlatformToolsets(platformToolsetsFromJson(cols.platformToolsetsJson)),
         );

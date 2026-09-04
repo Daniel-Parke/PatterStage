@@ -94,13 +94,9 @@ beforeEach(() => {
 afterAll(() => rmSync(scratch, { recursive: true, force: true }));
 
 describe("FUSE: this file writes only inside the OS temp directory", () => {
-  it("both path resolvers answer under the scratch dir", () => {
-    const runtime = require("@/modules/hermes/lib/agent-runtime") as {
-      getActiveHermesPaths: () => { config: string };
-    };
-    const paths = require("@/modules/hermes/lib/profile-paths") as {
-      getHermesDefaultRoot: () => string;
-    };
+  it("both path resolvers answer under the scratch dir", async () => {
+    const runtime = await import("@/modules/hermes/lib/agent-runtime");
+    const paths = await import("@/modules/hermes/lib/profile-paths");
 
     expect(runtime.getActiveHermesPaths().config).toContain("ps-config-refuse-");
     expect(paths.getHermesDefaultRoot()).toContain("ps-config-refuse-");

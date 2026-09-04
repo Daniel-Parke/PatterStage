@@ -181,13 +181,20 @@ function resolvedPlatformToolsetsForProfile(row: AgentProfileRow): PlatformTools
 
 export function assembleConfigYamlForProfile(row: AgentProfileRow): string {
   const parts = parseConfigYaml(row.configYaml);
+  if (parts.parseError) {
+    // Same refusal as assembleRootConfig: assembling from a failed parse
+    // silently drops every preserved section (T-0086).
+    throw new Error(
+      `profile "${row.slug}" config.yaml did not parse (${parts.parseError}) — ` +
+        `refusing to assemble from it. Pull the profile from Hermes to repair.`,
+    );
+  }
   return buildConfigYaml({
     personality: row.personality || parts.personality,
     disabledSkills: disabledSkillsFromJson(row.disabledSkillsJson),
     platformDisabledSkills: parts.platformDisabledSkills,
     platformToolsets: resolvedPlatformToolsetsForProfile(row),
     preservedSections: parts.preservedSections,
-    extraYamlLines: parts.extraYamlLines,
   });
 }
 
@@ -207,13 +214,17 @@ export function upsertProfile(input: UpsertProfileInput): AgentProfileRow {
       loadSeedPlatformToolsets(input.slug),
     ).toolsets;
     const parsed = parseConfigYaml(configYaml);
+    if (parsed.parseError) {
+      throw new Error(
+        `profile "${input.slug}" config.yaml did not parse (${parsed.parseError}) — refusing to rebuild it`,
+      );
+    }
     configYaml = buildConfigYaml({
       personality,
       disabledSkills: disabled,
       platformDisabledSkills: parsed.platformDisabledSkills,
       platformToolsets: toolsets,
       preservedSections: parsed.preservedSections,
-      extraYamlLines: parsed.extraYamlLines,
     });
   }
   getDb()
@@ -340,7 +351,6 @@ export function defaultConfigYaml(personality: string): string {
     platformDisabledSkills: {},
     platformToolsets: {},
     preservedSections: {},
-    extraYamlLines: [],
   });
 }
 

@@ -124,7 +124,16 @@ export function detectProfileDrift(slug: string): ProfileDriftEntry {
 
   const bundle = buildHermesPathBundle(profileRootForSlug(slug));
   const fields: string[] = [];
-  const expectedConfig = assembleConfigYamlForProfile(profile);
+  // A row whose stored config no longer parses cannot be assembled — and the
+  // drift banner is precisely where an operator learns that. Report it AS
+  // drift with the reason, never 500 the page that explains it (T-0086).
+  let expectedConfig: string;
+  try {
+    expectedConfig = assembleConfigYamlForProfile(profile);
+  } catch (err) {
+    const reason = err instanceof Error ? err.message : String(err);
+    return { slug, drifted: true, fields: ["config.yaml"], syncError: reason };
+  }
   const catalogKeys = catalogKeysForPull();
 
   if (existsSync(bundle.config)) {
@@ -160,7 +169,13 @@ export function detectRootDrift(): RootDriftEntry {
   const row = getAgentRoot();
   const bundle = buildHermesPathBundle(getHermesDefaultRoot());
   const fields: string[] = [];
-  const expectedConfig = assembleRootConfig(row);
+  let expectedConfig: string;
+  try {
+    expectedConfig = assembleRootConfig(row);
+  } catch (err) {
+    const reason = err instanceof Error ? err.message : String(err);
+    return { drifted: true, fields: ["config.yaml"], syncError: reason };
+  }
   const catalogKeys = catalogKeysForPull();
 
   if (existsSync(bundle.config)) {

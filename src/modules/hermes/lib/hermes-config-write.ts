@@ -25,10 +25,15 @@
 
 import {
   existsSync,
+  readdirSync,
+  readFileSync,
   renameSync,
   unlinkSync,
   writeFileSync,
 } from "fs";
+import { join } from "path";
+
+import * as yaml from "js-yaml";
 
 import { messageFromError } from "@/lib/api-fetch";
 import { invalidateConfigCache } from "@/lib/config-cache";
@@ -79,6 +84,11 @@ export function atomicWriteFile(targetPath: string, content: string): void {
  * which leaves the TTL as the backstop it was always meant to be.
  */
 export function writeHermesConfigFile(configPath: string, serialized: string): void {
+  // The belt on the object-dump writers too (T-0086). These are structurally
+  // safe today — yaml.dump of a plain object cannot emit duplicate keys — but
+  // the whole corruption survived for months precisely because nobody checked
+  // what actually landed on disk.
+  assertParseableConfigYaml(serialized, configPath);
   atomicWriteFile(configPath, serialized);
   invalidateConfigCache();
 }
@@ -128,12 +138,59 @@ export function describeWriteFailure(err: unknown): string {
   return staged && staged !== target ? raw.split(staged).join(target) : raw;
 }
 
-/** Placeholder — see T-0086. Today: no validation happens before a write. */
-export function assertParseableConfigYaml(_content: string, _targetPath: string): void {
-  // no-op
+/**
+ * Refuse to let unparseable YAML reach a config.yaml on disk.
+ *
+ * The belt for T-0086. The text-assembled writers shipped months of duplicate
+ * mapping keys with zero validation; after the assembler rewrite this should
+ * never fire, and if it ever does, a loud refusal beats a corrupt file the
+ * agent then boots from. js-yaml v4 throws on duplicated mapping keys, so a
+ * plain load covers exactly the corruption class observed.
+ *
+ * The message carries the FIRST LINE of the parse error and the target path,
+ * never the content — a real config.yaml holds api_key lines, and the refusal
+ * travels into sync errors, toasts and logs (the same hygiene the PUT
+ * /api/config refusal pinned in T-0060).
+ */
+export function assertParseableConfigYaml(content: string, targetPath: string): void {
+  try {
+    yaml.load(content);
+  } catch (err) {
+    const firstLine = (err instanceof Error ? err.message : String(err)).split(/\r?\n/)[0].trim();
+    throw new Error(
+      `refusing to write ${targetPath}: the serialised YAML does not parse (${firstLine})`,
+    );
+  }
 }
 
-/** Placeholder — see T-0086. Today: no backup discovery exists. */
-export function findLatestParseableBackup(_backupsDir: string): string | null {
+/**
+ * The newest config.yaml backup that still parses, or null.
+ *
+ * Named in refusal messages so the repair is one copy command away — and ONLY
+ * named, never restored automatically: a backup carries older model/provider
+ * settings, and silently reviving one could flip the operator's active model
+ * without consent.
+ */
+export function findLatestParseableBackup(backupsDir: string): string | null {
+  let entries: string[];
+  try {
+    entries = readdirSync(backupsDir);
+  } catch {
+    return null;
+  }
+  const candidates = entries
+    .filter((name) => name.startsWith("config.yaml.") && name.endsWith(".bak"))
+    .sort()
+    .reverse();
+  for (const name of candidates) {
+    const full = join(backupsDir, name);
+    try {
+      yaml.load(readFileSync(full, "utf-8"));
+      return full;
+    } catch {
+      // corrupt backup — exactly what a corruption-then-backup cycle leaves;
+      // keep walking toward the last good one.
+    }
+  }
   return null;
 }

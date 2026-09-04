@@ -5,7 +5,6 @@
 import * as yaml from "js-yaml";
 
 import {
-  buildDisabledYamlLines,
   computeEffectiveDisabledFromYaml,
   normalizeDisabledSkillKeys,
   parseSkillsDisabledFromYaml,
@@ -34,10 +33,27 @@ export interface ProfileConfigParts {
   disabledSkills: string[];
   platformDisabledSkills: Record<string, string[]>;
   platformToolsets: PlatformToolsets;
-  /** Structured blocks (model, auxiliary, agent.max_turns, etc.). */
-  preservedSections: Partial<Record<PreservedTopLevelKey, unknown>>;
-  /** Other top-level keys (e.g. version) not in preservedSections. */
-  extraYamlLines: string[];
+  /**
+   * EVERY top-level key except the managed ones (skills, platform_toolsets,
+   * legacy toolsets) — model, auxiliary, memory, and anything Hermes adds
+   * later, preserved as parsed objects in original insertion order.
+   *
+   * This used to be split between a fixed seven-key record and raw
+   * `extraYamlLines` text. The split was the corruption: the line walker
+   * skipped only each preserved section's HEADER, so the children leaked into
+   * the raw lines while the section was ALSO captured structurally, and the
+   * rebuild emitted both — duplicate mapping keys, orphaned indents, months of
+   * .broken backups (T-0086, round-6 finding 9).
+   */
+  preservedSections: Record<string, unknown>;
+  /**
+   * Set when the content did not parse as a YAML mapping. Deliberately a FACT
+   * rather than a throw: drift detection renders a banner off these parts and
+   * must not 500 on a poisoned row. The functions that would REBUILD from the
+   * parts are the ones that throw — rebuilding from a failed parse is exactly
+   * the silent preserved-section drop that compounded into data loss.
+   */
+  parseError?: string;
 }
 
 /** Extract model/auxiliary/agent/etc. from full config text. */
@@ -58,27 +74,7 @@ export function extractPreservedSections(content: string): Partial<Record<Preser
   }
 }
 
-function buildPreservedYamlLines(
-  sections: Partial<Record<PreservedTopLevelKey, unknown>>,
-  personality: string,
-): string[] {
-  const lines: string[] = [];
-  for (const key of PRESERVED_TOP_LEVEL_KEYS) {
-    let value = sections[key];
-    if (value === undefined) continue;
-    if (key === "agent" && value !== null && typeof value === "object" && !Array.isArray(value)) {
-      value = { ...(value as Record<string, unknown>), personality };
-    }
-    const chunk = dumpYamlConfig({ [key]: value }).trimEnd();
-    if (lines.length > 0) lines.push("");
-    lines.push(...chunk.split("\n"));
-  }
-  return lines;
-}
 
-function isPreservedTopLevelLine(trimmed: string): boolean {
-  return PRESERVED_TOP_LEVEL_KEYS.some((key) => trimmed === `${key}:` || trimmed.startsWith(`${key}:`));
-}
 
 
 function parseJsonToolsets(raw: string): PlatformToolsets {
@@ -110,178 +106,145 @@ export function serializeJsonToolsets(toolsets: PlatformToolsets): string {
 }
 
 /** Extract managed sections from existing config.yaml text. */
+/** Top-level keys PatterStage manages; everything else is preserved verbatim. */
+const MANAGED_TOP_LEVEL_KEYS = new Set(["skills", "platform_toolsets", "toolsets"]);
+
+/** First line of a YAML error, path attached — never the file body (secrets). */
+function firstLineOf(err: unknown): string {
+  const msg = err instanceof Error ? err.message : String(err);
+  return msg.split(/\r?\n/)[0].trim();
+}
+
+function coerceToolsets(raw: unknown): PlatformToolsets {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
+  const out: PlatformToolsets = {};
+  for (const [plat, value] of Object.entries(raw as Record<string, unknown>)) {
+    if (!Array.isArray(value)) continue;
+    out[plat] = value.filter((t): t is string => typeof t === "string" && t.trim().length > 0);
+  }
+  return out;
+}
+
+/**
+ * Parse a config.yaml into managed parts + everything else.
+ *
+ * A REAL parse, not a line walker. The predecessor tracked block state by hand
+ * and got all three of its state machines wrong: preserved-section children
+ * leaked into raw text (emitted twice on rebuild), the platform_toolsets
+ * scanner swallowed every following `key:` section as a phantom platform
+ * (order-dependent — why the corruption looked intermittent), and `inAgent`
+ * turned itself off on the same header line that turned it on, so
+ * `agent.personality` was NEVER read from a top-level agent block. yaml.load
+ * answers all three questions correctly and for free (T-0086).
+ *
+ * Never throws. A failed parse sets `parseError` and returns defaults, because
+ * the drift banner renders off these parts and must not crash on a poisoned
+ * row. Skills stay delegated to the scoped text parsers in skills-config.ts:
+ * they carry the `enabled:` allowlist semantics, are used independently against
+ * raw strings, and were never part of the defect.
+ */
 export function parseConfigYaml(content: string): ProfileConfigParts {
-  const lines = content.split(/\r?\n/);
-  let personality = "technical";
-  let inAgent = false;
-  let inSkills = false;
-  let skillsIndent = 0;
-  const extraLines: string[] = [];
+  const defaults: ProfileConfigParts = {
+    personality: "technical",
+    disabledSkills: [],
+    platformDisabledSkills: {},
+    platformToolsets: {},
+    preservedSections: {},
+  };
+  if (!content.trim()) return defaults;
+
+  let doc: unknown;
+  try {
+    doc = yaml.load(content);
+  } catch (err) {
+    return { ...defaults, parseError: firstLineOf(err) };
+  }
+  if (!doc || typeof doc !== "object" || Array.isArray(doc)) {
+    return { ...defaults, parseError: "config.yaml root is not a mapping" };
+  }
+  const record = doc as Record<string, unknown>;
+
   const skillsParsed = parseSkillsDisabledFromYaml(content);
-  const disabledSkills = [...skillsParsed.disabledNames].sort();
   const platformDisabledSkills: Record<string, string[]> = {};
   for (const [platform, values] of Object.entries(skillsParsed.platformDisabled)) {
     platformDisabledSkills[platform] = [...values].sort();
   }
 
-  let inPlatformToolsets = false;
-  let platformIndent = 0;
-  const platformToolsets: PlatformToolsets = {};
+  const agent = record.agent;
+  const personality =
+    agent && typeof agent === "object" && !Array.isArray(agent) &&
+    typeof (agent as Record<string, unknown>).personality === "string" &&
+    ((agent as Record<string, unknown>).personality as string).trim()
+      ? ((agent as Record<string, unknown>).personality as string).trim()
+      : "technical";
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    const trimmed = line.trim();
-
-    if (trimmed.startsWith("agent:")) {
-      inAgent = true;
-    }
-    if (inAgent) {
-      if (trimmed && !line.startsWith(" ") && !line.startsWith("\t")) {
-        inAgent = false;
-      } else if (trimmed.includes("personality:")) {
-        personality =
-          trimmed.split("personality:")[1]?.trim().replace(/['"]/g, "") || "technical";
-        continue;
-      }
-    }
-
-    if (trimmed.startsWith("skills:")) {
-      inSkills = true;
-      skillsIndent = line.search(/\S/);
-      continue;
-    }
-    if (inSkills) {
-      const indent = line.search(/\S/);
-      if (trimmed && indent <= skillsIndent) {
-        inSkills = false;
-      }
-      else {
-        continue;
-      }
-    }
-
-    if (trimmed.startsWith("platform_toolsets:")) {
-      inPlatformToolsets = true;
-      platformIndent = line.search(/\S/);
-      continue;
-    }
-    if (inPlatformToolsets) {
-      const indent = line.search(/\S/);
-      if (trimmed && indent <= platformIndent && !trimmed.endsWith(":")) {
-        inPlatformToolsets = false;
-      } else {
-        const platMatch = trimmed.match(/^([a-zA-Z0-9_-]+):\s*$/);
-        if (platMatch) {
-          const plat = platMatch[1];
-          const tools: string[] = [];
-          let j = i + 1;
-          while (j < lines.length) {
-            const row = lines[j];
-            const t = row.trim();
-            if (!t) {
-              j++;
-              continue;
-            }
-            if (row.search(/\S/) <= platformIndent && !t.startsWith("-")) break;
-            const item = t.match(/^-\s*(.+)$/);
-            if (item) tools.push(item[1].trim());
-            j++;
-          }
-          platformToolsets[plat] = tools;
-          i = j - 1;
-          continue;
-        }
-      }
-    }
-
-    if (
-      trimmed.startsWith("skills:") ||
-      trimmed.startsWith("platform_toolsets:") ||
-      isPreservedTopLevelLine(trimmed)
-    ) {
-      continue;
-    }
-    extraLines.push(line);
+  const preservedSections: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(record)) {
+    if (MANAGED_TOP_LEVEL_KEYS.has(key)) continue;
+    preservedSections[key] = value;
   }
-
-  const extraYamlLines = stripLegacyToolsetsYaml(extraLines).filter((l, idx, arr) => {
-      if (l.trim() !== "") return true;
-      return idx > 0 && arr[idx - 1]?.trim() !== "";
-    });
-
-  const preservedSections = extractPreservedSections(content);
 
   return {
     personality,
-    disabledSkills,
+    disabledSkills: [...skillsParsed.disabledNames].sort(),
     platformDisabledSkills,
-    platformToolsets,
+    platformToolsets: coerceToolsets(record.platform_toolsets),
     preservedSections,
-    extraYamlLines,
   };
-}
-
-/** Remove deprecated top-level `toolsets:` blocks from preserved yaml. */
-function stripLegacyToolsetsYaml(lines: string[]): string[] {
-  const out: string[] = [];
-  let skipping = false;
-  let toolsetsIndent = -1;
-  for (const line of lines) {
-    const trimmed = line.trim();
-    const indent = line.search(/\S/);
-    if (trimmed === "toolsets:" || trimmed.startsWith("toolsets:")) {
-      skipping = true;
-      toolsetsIndent = indent;
-      continue;
-    }
-    if (skipping) {
-      if (!trimmed) continue;
-      if (indent <= toolsetsIndent && !trimmed.startsWith("-")) {
-        skipping = false;
-      } else {
-        continue;
-      }
-    }
-    out.push(line);
-  }
-  return out;
-}
-
-function buildPlatformToolsetsLines(toolsets: PlatformToolsets): string[] {
-  const keys = Object.keys(toolsets).sort();
-  if (keys.length === 0) return [];
-  const lines = ["platform_toolsets:"];
-  for (const plat of keys) {
-    lines.push(`  ${plat}:`);
-    for (const t of toolsets[plat]) {
-      lines.push(`    - ${t}`);
-    }
-  }
-  return lines;
 }
 
 /** Assemble full config.yaml from DB-backed parts. */
 export function buildConfigYaml(parts: ProfileConfigParts): string {
-  const lines: string[] = [];
-  lines.push("skills:");
-  lines.push(...buildDisabledYamlLines(parts.disabledSkills, parts.platformDisabledSkills));
-  const pt = buildPlatformToolsetsLines(parts.platformToolsets);
-  if (pt.length > 0) {
-    lines.push(...pt);
+  // ONE object, ONE dump. A yaml.dump of a single plain object is structurally
+  // incapable of emitting a duplicate mapping key or an orphaned indent — the
+  // two corruption shapes the old two-source concatenation produced (T-0086).
+  //
+  // Section order is deliberate and fixed: the managed blocks first (matching
+  // every file this builder has ever written, so no gratuitous churn on
+  // healthy installs), then the seven historically-preserved keys in their
+  // long-standing order, then anything else in the order the source file had.
+  const doc: Record<string, unknown> = {};
+
+  const skills: Record<string, unknown> = {
+    disabled: [...parts.disabledSkills].sort(),
+  };
+  const platforms = Object.keys(parts.platformDisabledSkills).sort();
+  if (platforms.length > 0) {
+    const platformDisabled: Record<string, string[]> = {};
+    for (const platform of platforms) {
+      platformDisabled[platform] = [...new Set(parts.platformDisabledSkills[platform])].sort();
+    }
+    skills.platform_disabled = platformDisabled;
   }
-  const preservedLines = buildPreservedYamlLines(
-    parts.preservedSections ?? {},
-    parts.personality,
-  );
-  if (preservedLines.length > 0) {
-    if (lines[lines.length - 1] !== "") lines.push("");
-    lines.push(...preservedLines);
+  doc.skills = skills;
+
+  const toolsetKeys = Object.keys(parts.platformToolsets).sort();
+  if (toolsetKeys.length > 0) {
+    const toolsets: PlatformToolsets = {};
+    for (const plat of toolsetKeys) toolsets[plat] = parts.platformToolsets[plat];
+    doc.platform_toolsets = toolsets;
   }
-  if (parts.extraYamlLines.length > 0) {
-    if (lines[lines.length - 1] !== "") lines.push("");
-    lines.push(...parts.extraYamlLines);
+
+  const preserved = parts.preservedSections ?? {};
+  const emitPreserved = (key: string, value: unknown) => {
+    if (key === "agent" && value !== null && typeof value === "object" && !Array.isArray(value)) {
+      // Personality lives inside the agent block — but only when an agent
+      // block EXISTS. Inventing one on a personality-less config would change
+      // the file's key set and wake drift on every such install.
+      doc[key] = { ...(value as Record<string, unknown>), personality: parts.personality };
+      return;
+    }
+    doc[key] = value;
+  };
+  for (const key of PRESERVED_TOP_LEVEL_KEYS) {
+    if (preserved[key] !== undefined) emitPreserved(key, preserved[key]);
   }
-  return lines.join("\n") + "\n";
+  for (const [key, value] of Object.entries(preserved)) {
+    if ((PRESERVED_TOP_LEVEL_KEYS as readonly string[]).includes(key)) continue;
+    emitPreserved(key, value);
+  }
+
+  return dumpYamlConfig(doc);
 }
 
 /** Pull: parse yaml into column-friendly values. */
@@ -295,6 +258,15 @@ export function configYamlToColumnValues(
   configYaml: string;
 } {
   const parts = parseConfigYaml(content);
+  if (parts.parseError) {
+    // Rebuilding from a failed parse is how one corrupt write became a
+    // permanently poisoned row: the old path silently dropped every preserved
+    // section and stored the remainder as if it were the whole config. The
+    // pull/push/seed callers catch this and surface it as a sync error.
+    throw new Error(
+      `config.yaml did not parse (${parts.parseError}) — refusing to rebuild from a corrupt source`,
+    );
+  }
   if (catalogKeys && catalogKeys.length > 0) {
     parts.disabledSkills = computeEffectiveDisabledFromYaml(content, catalogKeys);
   }
@@ -388,6 +360,9 @@ export function configYamlSemanticallyMatches(
 ): boolean {
   const diskParts = parseConfigYaml(diskContent);
   const assembledParts = parseConfigYaml(assembledContent);
+  // An unparseable side IS drift, honestly — the alternative is comparing a
+  // defaults object against real policy and calling them equal.
+  if (diskParts.parseError || assembledParts.parseError) return false;
   if (catalogKeys && catalogKeys.length > 0) {
     diskParts.disabledSkills = computeEffectiveDisabledFromYaml(diskContent, catalogKeys);
     assembledParts.disabledSkills = computeEffectiveDisabledFromYaml(

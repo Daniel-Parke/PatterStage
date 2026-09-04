@@ -15,15 +15,16 @@ describe("profile-config-builder", () => {
       disabledSkills: ["creative/image-gen", "gaming/steam"],
       platformDisabledSkills: { telegram: ["devops/terminal"] },
       platformToolsets: { cli: ["terminal", "file"] },
-      preservedSections: { agent: { max_turns: 40 } },
-      extraYamlLines: ["version: 2"],
+      // was the raw-text half of the two-source rebuild whose double emission
+      // corrupted config.yaml for months (T-0086).
+      preservedSections: { agent: { max_turns: 40 }, version: 2 },
     });
     const parts = parseConfigYaml(yaml);
     expect(parts.personality).toBe("technical");
     expect(parts.disabledSkills).toEqual(["creative/image-gen", "gaming/steam"]);
     expect(parts.platformDisabledSkills.telegram).toEqual(["devops/terminal"]);
     expect(parts.platformToolsets.cli).toEqual(["terminal", "file"]);
-    expect(parts.extraYamlLines).toContain("version: 2");
+    expect(parts.preservedSections.version).toBe(2);
     expect(parts.preservedSections.agent).toMatchObject({ max_turns: 40 });
 
     const cols = configYamlToColumnValues(yaml);
@@ -44,17 +45,17 @@ describe("profile-config-builder", () => {
       "    - skill-a",
     ].join("\n");
     const parts = parseConfigYaml(input);
-    const rebuilt = buildConfigYaml({
-      personality: parts.personality,
-      disabledSkills: parts.disabledSkills,
-      platformDisabledSkills: parts.platformDisabledSkills,
-      platformToolsets: parts.platformToolsets,
-      preservedSections: parts.preservedSections,
-      extraYamlLines: parts.extraYamlLines,
-    });
+    const rebuilt = buildConfigYaml(parts);
     expect(rebuilt).toContain("version: 9");
     expect(rebuilt).toContain("max_turns: 30");
     expect(rebuilt).toContain("skill-a");
+    // The strengthened half (T-0086). The old assertions were satisfied by a
+    // rebuild that emitted the agent block TWICE — the very corruption this
+    // file exists to prevent — and reported personality "technical" for a
+    // config that plainly says creative.
+    expect(parts.personality).toBe("creative");
+    expect(rebuilt.match(/^agent:/gm)).toHaveLength(1);
+    expect(rebuilt.match(/personality:/g)).toHaveLength(1);
   });
 
   it("preserves model and auxiliary sections through parse/build", () => {
@@ -79,7 +80,6 @@ describe("profile-config-builder", () => {
       platformDisabledSkills: parts.platformDisabledSkills,
       platformToolsets: parts.platformToolsets,
       preservedSections: parts.preservedSections,
-      extraYamlLines: parts.extraYamlLines,
     });
     expect(rebuilt).toContain("default: deepseek/deepseek-v4-flash");
     expect(rebuilt).toContain("provider: nous");
@@ -93,7 +93,6 @@ describe("profile-config-builder", () => {
       platformDisabledSkills: {},
       platformToolsets: { cli: ["terminal"] },
       preservedSections: {},
-      extraYamlLines: [],
     });
     const resolved = resolvePlatformToolsets(
       JSON.stringify({ cli: ["hermes-cli"] }),
@@ -110,7 +109,6 @@ describe("profile-config-builder", () => {
       platformDisabledSkills: {},
       platformToolsets: { discord: ["hermes-discord"] },
       preservedSections: {},
-      extraYamlLines: [],
     });
     const resolved = resolvePlatformToolsets("{}", yaml);
     expect(resolved.source).toBe("config_yaml");
@@ -144,7 +142,6 @@ describe("profile-config-builder", () => {
       platformDisabledSkills: parts.platformDisabledSkills,
       platformToolsets: parts.platformToolsets,
       preservedSections: parts.preservedSections,
-      extraYamlLines: parts.extraYamlLines,
     });
     expect(rebuilt).toContain("provider: hindsight");
     expect(rebuilt).toContain("plugins:");

@@ -158,7 +158,12 @@ export function pushModelToHermes(modelId: string): SyncActionResult {
     return { success: false, backupPath: null, details: [{ action: "error", detail: "Model not found" }] };
   }
   try {
-    const { backupPath } = syncSingleModelToHermesConfig(modelId);
+    const { backupPath, error } = syncSingleModelToHermesConfig(modelId);
+    if (error) {
+      // Refusal, not success: the file could not be parsed so the model was
+      // not written. The message already carries the repair guidance.
+      return { success: false, backupPath, details: [{ action: "error", detail: error }] };
+    }
     return {
       success: true,
       backupPath,

@@ -151,10 +151,8 @@ export function classifyControls(sourceText, fileName = "x.tsx") {
   // and just as invisible to a regex.
   const visit = (node, insideTextLabel) => {
     let opening = null;
-    let children = [];
     if (ts.isJsxElement(node)) {
       opening = node.openingElement;
-      children = node.children;
     } else if (ts.isJsxSelfClosingElement(node)) {
       opening = node;
     }

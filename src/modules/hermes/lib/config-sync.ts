@@ -40,7 +40,7 @@ import {
   type AuxiliarySection,
   type HermesConfig,
 } from "./hermes-config-read";
-import { backupFile, writeHermesConfigFile } from "./hermes-config-write";
+import { backupFile, findLatestParseableBackup, writeHermesConfigFile } from "./hermes-config-write";
 
 /** Auxiliary slots written through to `auxiliary.<task>.*`.
  *  See `AUXILIARY_TASK_TYPES` in `@/lib/models/task-types` (canonical). */
@@ -54,7 +54,7 @@ import { backupFile, writeHermesConfigFile } from "./hermes-config-write";
  * `model.api_key` and `auxiliary.<task>.api_key` are reset to the empty
  * string so Hermes resolves the key from .env (canonical posture).
  */
-export function syncDefaultsToHermesConfig(): { backupPath: string | null } {
+export function syncDefaultsToHermesConfig(): { backupPath: string | null; error?: string } {
   const paths = getActiveHermesPaths();
   ensureDir(paths.root);
   const configPath = paths.config;
@@ -73,10 +73,22 @@ export function syncDefaultsToHermesConfig(): { backupPath: string | null } {
     // yaml.load throws and we cannot safely write a merged config. Report the
     // backing error so it surfaces in server logs but do NOT write a corrupted
     // file — return the backup path so the caller can surface a meaningful error.
-    const msg = toError(err).message || String(err);
+    const msg = (toError(err).message || String(err)).split(String.fromCharCode(10))[0].trim();
     console.error(`[syncDefaultsToHermesConfig] yaml.load failed: ${msg} — not overwriting ${configPath}`);
     console.error(`[syncDefaultsToHermesConfig] Backup at: ${backupPath}. Please repair the YAML and retry.`);
-    return { backupPath };
+    // The refusal used to be indistinguishable from success in the return
+    // value — which is exactly how a corrupt file kept round-tripping:
+    // finalizeRootConfigOnDisk saw no error and copied the corrupt disk text
+    // straight into agent_root.config_yaml (T-0086).
+    const restorable = findLatestParseableBackup(paths.backups);
+    return {
+      backupPath,
+      error:
+        `config.yaml did not parse (${msg}) — defaults not applied. ` +
+        (restorable
+          ? `Restore ${restorable} over config.yaml, then Pull from Hermes.`
+          : `Repair the YAML by hand, then Pull from Hermes.`),
+    };
   }
 
   const defaults = getModelDefaults();
@@ -123,6 +135,8 @@ export interface FinalizeRootConfigResult {
   /** Whether `model_defaults.agent` was applied to disk. */
   appliedModelDefaults: boolean;
   backupPath: string | null;
+  /** Set when the sync refused or the disk text failed to parse. */
+  error?: string;
 }
 
 /**
@@ -133,11 +147,29 @@ export interface FinalizeRootConfigResult {
 export function finalizeRootConfigOnDisk(): FinalizeRootConfigResult {
   const defaults = getModelDefaults();
   const appliedModelDefaults = Boolean(defaults.agent);
-  const { backupPath } = syncDefaultsToHermesConfig();
+  const { backupPath, error } = syncDefaultsToHermesConfig();
+
+  // THE LOOP-CLOSER, removed (T-0086). This copy used to run unconditionally:
+  // the sync above would correctly REFUSE to touch a corrupt file, and then
+  // this function copied that same corrupt disk text into
+  // agent_root.config_yaml anyway — re-poisoning the row the next push would
+  // assemble from. A refusal now stops the copy, and even a successful sync
+  // parse-checks the disk before the row is updated, because the disk is a
+  // file anything on the machine can write.
+  if (error) {
+    return { appliedModelDefaults: false, backupPath, error };
+  }
 
   const paths = getActiveHermesPaths();
   if (existsSync(paths.config)) {
     const fullYaml = readFileSync(paths.config, "utf-8");
+    try {
+      yaml.load(fullYaml);
+    } catch (err) {
+      const msg = (toError(err).message || String(err)).split(String.fromCharCode(10))[0].trim();
+      console.error(`[finalizeRootConfigOnDisk] disk config.yaml does not parse (${msg}) — leaving agent_root.config_yaml alone`);
+      return { appliedModelDefaults, backupPath, error: `disk config.yaml did not parse (${msg})` };
+    }
     updateAgentRoot({ configYaml: fullYaml });
   }
 
@@ -151,13 +183,31 @@ export function finalizeRootConfigOnDisk(): FinalizeRootConfigResult {
  * for a single model, leaving auxiliary slots untouched.
  * Used by the per-model Push button.
  */
-export function syncSingleModelToHermesConfig(modelId: string): { backupPath: string | null } {
+export function syncSingleModelToHermesConfig(modelId: string): { backupPath: string | null; error?: string } {
   const paths = getActiveHermesPaths();
   const configPath = paths.config;
   const backupPath = backupFile(configPath, paths.backups);
 
   const original = existsSync(configPath) ? readFileSync(configPath, "utf-8") : "";
-  const config: HermesConfig = loadHermesConfigFromString(original);
+  // Refuse-and-report, like the sibling above. This used to throw — the one
+  // config writer with no handler — so the per-model Push button answered a
+  // bare 500 on an already-corrupt file instead of the repair guidance every
+  // other path gives (T-0086).
+  let config: HermesConfig;
+  try {
+    config = loadHermesConfigFromString(original);
+  } catch (err) {
+    const msg = (toError(err).message || String(err)).split(String.fromCharCode(10))[0].trim();
+    const restorable = findLatestParseableBackup(paths.backups);
+    return {
+      backupPath,
+      error:
+        `config.yaml did not parse (${msg}) — model not pushed. ` +
+        (restorable
+          ? `Restore ${restorable} over config.yaml, then retry.`
+          : `Repair the YAML by hand, then retry.`),
+    };
+  }
 
   const model = getModel(modelId);
   if (model) {

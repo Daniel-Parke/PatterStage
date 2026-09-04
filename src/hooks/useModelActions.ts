@@ -142,8 +142,10 @@ export function useModelActions({
         const d = res?.data ?? {};
         const notes: string[] = [];
         if (d.envVarKeptForSibling) {
+          // design-lint-disable-next-line hermes-outside-adapter -- the toast names the exact file the shared key lives in; "the agent's env file" would send the operator hunting
           notes.push("another credential for this provider still uses the key in ~/.hermes/.env");
         } else if (d.envVarRemoved) {
+          // design-lint-disable-next-line hermes-outside-adapter -- same remedy-naming rule as the GatewayBanner precedent
           notes.push("removed from ~/.hermes/.env");
         }
         if (d.envError) notes.push(`.env not updated: ${d.envError}`);
