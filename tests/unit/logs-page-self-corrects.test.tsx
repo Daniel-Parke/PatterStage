@@ -171,6 +171,23 @@ describe("a 404 is shown as an error, not as an empty state", () => {
     expect(container.textContent).toMatch(/no logs directory/i);
   });
 
+  it("an empty logs directory is the same calm status (T-0087)", async () => {
+    mockUseLogs.mockReturnValue({
+      data: null,
+      isLoading: false,
+      isFetching: false,
+      error: "No log files yet. The agent has not written any logs - this is normal on a fresh install.",
+      errorBody: { availableLogs: [], noLogsYet: true },
+      refetch: jest.fn(),
+    });
+
+    const { container } = render(<LogsPage />);
+
+    await waitFor(() => expect(requested().length).toBeGreaterThan(0));
+    expect(container.querySelector('[role="status"]')).not.toBeNull();
+    expect(container.querySelector('[role="alert"]')).toBeNull();
+  });
+
   it("a fresh install is a calm status, not a red alert (T-0087)", async () => {
     // Round 6 nuance on finding 20: T-0079's message reached the page, but as
     // an error banner, and the logsDirMissing flag the route sends was payload

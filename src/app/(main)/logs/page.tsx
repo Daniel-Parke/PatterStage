@@ -33,9 +33,14 @@ import type { LogFileMeta } from "@/lib/fs/log-files";
  * body is not schema-checked anywhere. Narrowed here rather than cast, since the
  * whole point is that this arrived on a path nothing validates.
  */
-/** The route says the DIRECTORY is missing: a fresh install's normal state. */
-function logsDirMissing(errorBody: unknown): boolean {
-  return !!errorBody && typeof errorBody === "object" && (errorBody as { logsDirMissing?: unknown }).logsDirMissing === true;
+/**
+ * The route says there is nothing to read yet: the directory is missing, or
+ * it exists and holds no log files. Either is a fresh install's normal state.
+ */
+function noLogsYet(errorBody: unknown): boolean {
+  if (!errorBody || typeof errorBody !== "object") return false;
+  const b = errorBody as { logsDirMissing?: unknown; noLogsYet?: unknown };
+  return b.noLogsYet === true || b.logsDirMissing === true;
 }
 
 function errorAvailableLogs(errorBody: unknown): LogFileMeta[] | null {
@@ -251,7 +256,7 @@ export default function LogsPage() {
       />
 
       <div className="px-6 py-6 flex-1 flex flex-col min-h-0">
-        {loadError && logsDirMissing(errorBody) ? (
+        {loadError && noLogsYet(errorBody) ? (
           // A normal condition in a red banner is the other kind of lie
           // (T-0087). Same reason, calm tone, still a live region.
           <div

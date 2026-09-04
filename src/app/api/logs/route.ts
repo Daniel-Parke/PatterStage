@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
       return notFoundWith(
         "No logs directory found. The agent has not written any logs yet — this is normal " +
           "on a fresh install, and the directory appears the first time it runs.",
-        { availableLogs: [] as LogFileMeta[], logsDirMissing: true },
+        { availableLogs: [] as LogFileMeta[], logsDirMissing: true, noLogsYet: true },
       );
     }
     const { logsDir, resolvedLogsDir } = dirResult;
@@ -84,6 +84,17 @@ export async function GET(request: NextRequest) {
     const { safeName, absolutePath: logPath } = resolved;
 
     if (!existsSync(logPath)) {
+      // The directory exists but holds NO log files: the same fresh-install
+      // state as a missing directory, and it got the same red banner. Driving
+      // a clean instance found it (T-0087). `noLogsYet` is what the page reads
+      // for its calm state; `logsDirMissing` stays for the directory case.
+      if (availableLogs.length === 0) {
+        return notFoundWith(
+          "No log files yet. The agent has not written any logs - this is normal on a fresh install, " +
+            "and they appear the first time it runs.",
+          { availableLogs, noLogsYet: true },
+        );
+      }
       // The list is already in hand, and the page's "auto-select the first
       // available log" effect cannot fire without it. `activeLog` starts at a
       // hard-coded "agent", so an install whose logs directory has no agent.log
