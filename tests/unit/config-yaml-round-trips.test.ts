@@ -208,6 +208,20 @@ describe("mechanism 3 — agent.personality is actually parsed", () => {
     expect(doc.agent?.max_turns).toBe(40);
   });
 
+  it("the database's personality beats the one already in the file", () => {
+    // Found by mutation: every fixture's DB personality equalled the file's,
+    // so a build that ignored parts.personality and re-emitted the raw agent
+    // block passed. Changing personality in the UI is the whole feature.
+    const parts = parseConfigYaml(HERMES_NATIVE);
+    expect(parts.personality).toBe("creative");
+
+    const doc = yaml.load(buildConfigYaml({ ...parts, personality: "playful" })) as {
+      agent: { personality: string };
+    };
+
+    expect(doc.agent.personality).toBe("playful");
+  });
+
   it("does NOT invent an agent section on a config that has none", () => {
     // Byte-shape rule: personality merges into agent only when an agent
     // section exists. Inventing one would wake drift on every
@@ -255,6 +269,23 @@ describe("the properties that make a rebuild trustworthy", () => {
       }
     });
   }
+
+  it("the database's edits beat the file's raw managed blocks", () => {
+    // Found by mutation: a build that let the preserved copy of `skills`
+    // overwrite the managed one passed every round-trip test, because a
+    // round trip never CHANGES anything. Push exists to change things.
+    const parts = parseConfigYaml(SEED_ROOT);
+    const edited = {
+      ...parts,
+      disabledSkills: ["ops/only-this"],
+      platformToolsets: { cli: ["terminal"] },
+    };
+
+    const doc = yaml.load(buildConfigYaml(edited)) as Record<string, Record<string, unknown>>;
+
+    expect(doc.skills.disabled).toEqual(["ops/only-this"]);
+    expect(doc.platform_toolsets).toEqual({ cli: ["terminal"] });
+  });
 
   it("GREEN CONTROL: an empty config parses to defaults and builds cleanly", () => {
     const parts = parseConfigYaml("");

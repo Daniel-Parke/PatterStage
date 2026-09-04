@@ -125,6 +125,26 @@ describe("a failed parse is a fact, not an exception, not a default", () => {
   });
 });
 
+describe("assembly refuses a poisoned row, naming the repair", () => {
+  it("assembleRootConfig throws with the backup to restore", async () => {
+    // Found by mutation: the throw at the assembly seam had no oracle, and it
+    // is the one that turns a poisoned DB row into a refused push instead of
+    // a corrupt file.
+    const { backups } = freshHermes();
+    writeFileSync(join(backups, "config.yaml.2026-08-30T10-00-00-000Z.bak"), CLEAN, "utf-8");
+    const { assembleRootConfig } = await import("@/modules/hermes/lib/profile-sync-shared");
+    const row = {
+      id: 1, displayName: "", description: "", personality: "technical",
+      configYaml: CORRUPT, soulMd: "", agentsMd: "", frameworkMd: "", userMd: "", memoryMd: "",
+      disabledSkillsJson: "[]", platformToolsetsJson: "{}",
+      syncedAt: null, syncError: null, updatedAt: "",
+    };
+
+    expect(() => assembleRootConfig(row)).toThrow(/did not parse/);
+    expect(() => assembleRootConfig(row)).toThrow(/2026-08-30T10-00-00-000Z/);
+  });
+});
+
 describe("the belt — no config.yaml write without a parse", () => {
   it("assertParseableConfigYaml refuses duplicate keys, naming the target", () => {
     expect(() => assertParseableConfigYaml(CORRUPT, "/h/config.yaml")).toThrow(/config\.yaml/);
@@ -248,6 +268,18 @@ describe("the repair is named, never performed", () => {
     // exactly what a corruption-then-backup cycle leaves behind.
     expect(found).toContain("2026-08-30T10-00-00-000Z");
     expect(() => yaml.load(readFileSync(found!, "utf-8"))).not.toThrow();
+  });
+
+  it("prefers the NEWER of two parseable backups", () => {
+    // Found by mutation: with one clean backup the scan direction is
+    // invisible. Two clean ones pin newest-first, which matters because the
+    // older a backup, the more model settings it silently rolls back.
+    const { backups } = freshHermes();
+    writeFileSync(join(backups, "config.yaml.2026-08-29T10-00-00-000Z.bak"), CLEAN, "utf-8");
+    writeFileSync(join(backups, "config.yaml.2026-08-30T10-00-00-000Z.bak"), CLEAN, "utf-8");
+    writeFileSync(join(backups, "config.yaml.2026-08-31T10-00-00-000Z.bak"), CORRUPT, "utf-8");
+
+    expect(findLatestParseableBackup(backups)).toContain("2026-08-30T10-00-00-000Z");
   });
 
   it("returns null when no backup parses, rather than guessing", () => {

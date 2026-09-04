@@ -172,6 +172,20 @@ describe("profile drift ignores files that are absent from disk", () => {
   });
 });
 
+describe("root drift on a poisoned row is a banner, not a 500", () => {
+  it("reports config.yaml drifted with the parse fault as syncError", () => {
+    // T-0086: assembleRootConfig throws on an unparseable stored config; the
+    // drift page is where the operator learns that, so it must render.
+    rootRepo().updateAgentRoot({ configYaml: "model:\n  a: 1\nmodel:\n  b: 2\n" });
+
+    const entry = drift().detectRootDrift();
+
+    expect(entry.drifted).toBe(true);
+    expect(entry.fields).toEqual(["config.yaml"]);
+    expect(entry.syncError).toMatch(/did not parse/);
+  });
+});
+
 describe("root drift ignores files that are absent from disk", () => {
   it("reports no SOUL/AGENTS/USER/MEMORY drift when none of them are on disk", () => {
     rootRepo().updateAgentRoot({
