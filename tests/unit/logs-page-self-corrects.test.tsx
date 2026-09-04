@@ -164,8 +164,32 @@ describe("a 404 is shown as an error, not as an empty state", () => {
     const { container } = render(<LogsPage />);
 
     await waitFor(() => expect(requested().length).toBeGreaterThan(0));
-    expect(container.querySelector('[role="alert"]')).not.toBeNull();
+    // A visible live region carrying the reason. The role was "alert" when
+    // T-0079 wrote this; T-0087 made the fresh-install case a calm "status",
+    // because a normal condition in a red banner is the other kind of lie.
+    expect(container.querySelector('[role="alert"], [role="status"]')).not.toBeNull();
     expect(container.textContent).toMatch(/no logs directory/i);
+  });
+
+  it("a fresh install is a calm status, not a red alert (T-0087)", async () => {
+    // Round 6 nuance on finding 20: T-0079's message reached the page, but as
+    // an error banner, and the logsDirMissing flag the route sends was payload
+    // nothing read. Same information, honest tone: role=status, no alert.
+    mockUseLogs.mockReturnValue({
+      data: null,
+      isLoading: false,
+      isFetching: false,
+      error: "No logs directory found. The agent has not written any logs yet - this is normal on a fresh install.",
+      errorBody: { availableLogs: [], logsDirMissing: true },
+      refetch: jest.fn(),
+    });
+
+    const { container } = render(<LogsPage />);
+
+    await waitFor(() => expect(requested().length).toBeGreaterThan(0));
+    expect(container.querySelector('[role="status"]')).not.toBeNull();
+    expect(container.querySelector('[role="alert"]')).toBeNull();
+    expect(container.textContent).toMatch(/normal on a fresh install/i);
   });
 
   it("does not sit on an empty file list with nothing said", async () => {
