@@ -99,3 +99,4 @@ The records under org/tasks/ are canonical.
 | T-0084 | standard | R0 | done | t0084-records-2026-08-31 |
 | T-0085 | standard | R1 | done | t0085-form-labels-2026-09-01 |
 | T-0086 | standard | R2 | done | t0086-config-assembler-2026-09-04 |
+| T-0087 | standard | R1 | done | t0087-stories-2026-09-04 |
