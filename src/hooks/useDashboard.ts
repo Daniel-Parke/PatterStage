@@ -35,6 +35,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { safeApiCall, safeApiCallData } from "@/lib/api-fetch";
+import type { SubsystemSummary } from "@/lib/status/subsystems";
 import {
   loadInitialDashboardData,
   type DashboardTemplate,
@@ -96,6 +97,10 @@ interface DashboardStatic {
   registryAgentModelLabel: string | null;
 }
 
+async function fetchSubsystems(): Promise<SubsystemSummary | null> {
+  return (await safeApiCallData<SubsystemSummary>("/api/status/subsystems", { cache: "no-store" })) ?? null;
+}
+
 async function fetchStatic(): Promise<DashboardStatic> {
   const { dashboardData, modelsDefaults } = await loadInitialDashboardData();
   return {
@@ -122,6 +127,8 @@ export interface UseDashboardResult {
   registryAgentModelLabel: string | null;
   /** 14-day session-activity counts for the Sessions pill sparkline. */
   sessionTrend: number[];
+  /** The subsystem health summary (T-0091), null until the first check answers. */
+  subsystems: SubsystemSummary | null;
   /** True once the static bundle has resolved (gates first paint). */
   ready: boolean;
   refetchMonitor: () => Promise<unknown>;
@@ -153,6 +160,12 @@ export function useDashboard(): UseDashboardResult {
     queryFn: fetchStatic,
     staleTime: Infinity,
   });
+  const subsystemsQuery = useQuery({
+    queryKey: ["dashboard", "subsystems"],
+    queryFn: fetchSubsystems,
+    refetchInterval: 15_000,
+    staleTime: 10_000,
+  });
   const sessionTrendQuery = useQuery({
     queryKey: ["dashboard", "session-trend"],
     queryFn: fetchSessionTrend,
@@ -170,6 +183,7 @@ export function useDashboard(): UseDashboardResult {
     categories: staticQuery.data?.categories ?? [],
     registryAgentModelLabel: staticQuery.data?.registryAgentModelLabel ?? null,
     sessionTrend: sessionTrendQuery.data ?? [],
+    subsystems: subsystemsQuery.data ?? null,
     ready: !staticQuery.isLoading,
     refetchMonitor: () => monitorQuery.refetch(),
     refetchMissions: () => missionsQuery.refetch(),

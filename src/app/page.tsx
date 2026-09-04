@@ -30,6 +30,7 @@ import CommandCenter from "@/components/dashboard/CommandCenter";
 import { FadeIn } from "@/components/motion";
 import DispatchStrip from "@/components/dashboard/DispatchStrip";
 import FirstRunPanel from "@/components/dashboard/FirstRunPanel";
+import SubsystemsPanel from "@/components/dashboard/SubsystemsPanel";
 import ActiveMissionsPanel from "@/components/dashboard/ActiveMissionsPanel";
 import PlatformsPanel from "@/modules/hermes/components/PlatformsPanel";
 import ErrorsPanel from "@/components/dashboard/ErrorsPanel";
@@ -83,6 +84,7 @@ export default function Dashboard() {
     categories,
     registryAgentModelLabel,
     sessionTrend,
+    subsystems,
     ready,
     refetchMonitor,
     refetchMissions,
@@ -303,6 +305,8 @@ export default function Dashboard() {
         {monitor?.system?.configYamlError ? (
           <ConfigYamlErrorAlert message={monitor.system.configYamlError} />
         ) : null}
+        {/* Is each thing this product depends on up, and why not (T-0091). */}
+        <SubsystemsPanel subsystems={subsystems?.subsystems ?? null} checkedAt={subsystems?.checkedAt ?? null} />
         {/* ═══ Compact Stat Row ═══ */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 min-w-0">
           {monitor ? (
