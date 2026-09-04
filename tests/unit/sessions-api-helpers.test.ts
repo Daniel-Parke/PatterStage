@@ -183,3 +183,21 @@ describe("triggerSyncOnce", () => {
     }
   });
 });
+
+describe("parseSessionQuery bounds (T-0088)", () => {
+  // Round 6 audit: `?limit=-1` reached SQLite as LIMIT -1 (unlimited), the
+  // cap bypass; `?limit=abc` bound NaN and 500'd.
+  it("clamps a negative limit to one, not to unlimited", () => {
+    expect(parseSessionQuery(makeRequest("limit=-1")).limit).toBe(1);
+  });
+  it("defaults a junk limit instead of binding NaN", () => {
+    expect(parseSessionQuery(makeRequest("limit=abc")).limit).toBe(50);
+  });
+  it("floors a junk or negative offset at zero", () => {
+    expect(parseSessionQuery(makeRequest("offset=abc")).offset).toBe(0);
+    expect(parseSessionQuery(makeRequest("offset=-5")).offset).toBe(0);
+  });
+  it("GREEN CONTROL: the ceiling still holds", () => {
+    expect(parseSessionQuery(makeRequest("limit=1000")).limit).toBe(100);
+  });
+});

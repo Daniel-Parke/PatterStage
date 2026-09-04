@@ -14,6 +14,7 @@ import {
   runDeadline,
 } from "@/lib/orchestration/run-deadline";
 import type { RunRecord } from "@/lib/runs-repository";
+import { MAX_TIMEOUT_MINUTES } from "@/lib/missions/mission-timeout";
 
 const SUBMITTED = "2026-08-23T12:00:00.000Z";
 
@@ -59,6 +60,19 @@ describe("declaredTimeoutMinutes", () => {
     // the reconciler's long-standing behaviour, moved here unchanged: the
     // deadline the console shows must be the deadline the reconciler enforces.
     expect(declaredTimeoutMinutes({ timeoutMinutes: 0, missionTimeMinutes: 45 })).toBeNull();
+  });
+});
+
+describe("a stored timeout above the ceiling cannot replace the safety cap (T-0088)", () => {
+  it("caps 1e9 at MAX_TIMEOUT_MINUTES instead of waiting forever", () => {
+    // Round 6, finding 12, sharper than reported: `cap = declared ?? DEFAULT`
+    // let a 1e9 timeout become the unreachable-backend deadline, so a mission
+    // whose backend vanished never self-healed and wedged the single-flight
+    // gate. Validation refuses it at the boundary; this is the belt for a
+    // row written before the validation existed.
+    expect(declaredTimeoutMinutes({ timeoutMinutes: 1e9 })).toBe(MAX_TIMEOUT_MINUTES);
+    expect(declaredTimeoutMinutes({ missionTimeMinutes: 4321 })).toBe(MAX_TIMEOUT_MINUTES);
+    expect(declaredTimeoutMinutes({ timeoutMinutes: 4320 })).toBe(4320);
   });
 });
 
