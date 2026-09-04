@@ -33,9 +33,14 @@ describe("a reachable gateway with no local install", () => {
   it("the panel headline names the gateway instead of saying nothing will run", () => {
     const { container } = render(<FirstRunPanel facts={remote} />);
 
-    expect(container.textContent).toContain("http://192.168.1.50:8642");
+    // The phrase only the headline carries. The checklist step below also
+    // names the URL, which let a headline that ignored the gateway pass
+    // (found by mutation).
+    expect(container.textContent).toMatch(
+      /isn't installed on this machine, but a gateway at http:\/\/192\.168\.1\.50:8642 is configured and reachable/,
+    );
     expect(container.textContent).not.toMatch(/nothing will actually run/i);
-    expect(container.textContent).not.toMatch(/not installed on this machine yet\.$/m);
+    expect(container.textContent).not.toMatch(/is not installed on this machine yet/);
   });
 
   it("still shows the checklist until something has run", () => {

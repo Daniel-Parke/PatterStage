@@ -29,6 +29,8 @@ describe("gateway", () => {
     const r = await row(deps(), "gateway");
     expect(r.state).toBe("ok");
     expect(r.reason).toContain("http://127.0.0.1:8642");
+    // The dashboard reads the address as data, not out of the sentence (T-0092).
+    expect(r.url).toBe("http://127.0.0.1:8642");
   });
 
   it("is down with the probe's own reason when it throws", async () => {

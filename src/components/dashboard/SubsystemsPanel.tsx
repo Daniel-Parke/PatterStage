@@ -51,7 +51,9 @@ export default function SubsystemsPanel({
         accent={worst === "ok" ? "green" : worst === "degraded" ? "orange" : "pink"}
         rightSlot={
           checkedAt ? (
-            <span className="text-xs font-mono text-ps-text-muted">checked {checkedAt.replace("T", " ").slice(0, 19)}</span>
+            <span className="text-xs font-mono text-ps-text-muted">
+              checked {new Date(checkedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+            </span>
           ) : null
         }
       />

@@ -66,8 +66,8 @@ describe("the Goals field", () => {
     const hint = screen.getByText(/One goal per line/i);
     const goals = hint.parentElement!.querySelector("textarea")!;
 
-    expect(goals.getAttribute("placeholder") ?? "").not.toContain("\n");
-    expect(goals.getAttribute("placeholder") ?? "").not.toMatch(/&#10;/);
+    // Exact, so a missing attribute cannot pass vacuously (found by mutation).
+    expect(goals.getAttribute("placeholder")).toBe("e.g. Gather data");
   });
 });
 
