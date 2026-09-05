@@ -150,9 +150,10 @@ describe("a cancelled mission does not read as a failure", () => {
     // The run view is optional -- a mission that failed before it was ever
     // dispatched has none -- so reading run.status unguarded would crash the board.
     expect(describeMissionRunState(missionState({ run: null }), NOW).label).toBe("Failed");
+    // "Completed", not "Finished": decision 13's one vocabulary (B2, T-0096).
     expect(
       describeMissionRunState(missionState({ status: "successful", run: null }), NOW).label,
-    ).toBe("Finished");
+    ).toBe("Completed");
   });
 
   it("GREEN CONTROL: a successful run is not relabelled by this", () => {
@@ -161,7 +162,7 @@ describe("a cancelled mission does not read as a failure", () => {
         missionState({ status: "successful", run: runView({ status: "completed", error: null }) }),
         NOW,
       ).label,
-    ).toBe("Finished");
+    ).toBe("Completed");
   });
 });
 

@@ -49,9 +49,10 @@ describe("describeMissionRunState", () => {
       label: "Draft",
       duration: "2m 0s",
     });
+    // "Queued", the ratified word for a mission waiting for the queue (B2, T-0096).
     expect(describeMissionRunState({ ...base, queuedForRun: true }, NOW)).toMatchObject({
       tone: "waiting",
-      label: "Waiting to run",
+      label: "Queued",
     });
   });
 
@@ -132,7 +133,9 @@ describe("describeMissionRunState", () => {
       },
       NOW,
     );
-    expect(done).toMatchObject({ tone: "good", label: "Finished", duration: "3m 0s ago" });
+    // "Completed", not "Finished": decision 13 ratified one status vocabulary
+    // for every screen (B2, T-0096).
+    expect(done).toMatchObject({ tone: "good", label: "Completed", duration: "3m 0s ago" });
 
     const failed = describeMissionRunState(
       { status: "failed", createdAt: at(600_000), updatedAt: at(600_000) },
