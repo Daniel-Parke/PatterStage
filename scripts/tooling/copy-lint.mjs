@@ -2,7 +2,7 @@
 // ═══════════════════════════════════════════════════════════════
 // copy-lint.mjs — the copy law, measured
 //
-// docs/COPY.md says which register each surface speaks and what may never
+// docs/contributing/copy.md says which register each surface speaks and what may never
 // appear in user copy: the venture's governance ids. The review found an ADR
 // reference on the Agents page ("Capability measurement is not implemented;
 // see ADR-0004"), work-group ids in tooltips and task ids in toasts. A person
@@ -94,7 +94,7 @@ function main(argv) {
     for (const h of hits.slice(0, 3)) console.log(`    :${h.line}  ${h.text}`);
   }
   if (code === 1) {
-    console.error("\ncopy-lint: user copy carries a governance id. See docs/COPY.md.");
+    console.error("\ncopy-lint: user copy carries a governance id. See docs/contributing/copy.md.");
   }
   return code;
 }

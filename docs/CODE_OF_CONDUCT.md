@@ -1,10 +1,13 @@
 ---
+title: How this repo works
 summary: How collaboration on this repository is expected to feel, written by the solo maintainer
+section: contributing
+nav: 80
+audience: contributor
 type: policy
 tags: [community]
 compiled_from: normalised
 ---
-
 # How this repo works
 
 I maintain PatterStage solo. This is not a corporate handbook: it is how I want collaboration to feel. I welcome all feedback, please reach out to me any any time.

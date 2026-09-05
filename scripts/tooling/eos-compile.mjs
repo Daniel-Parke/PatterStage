@@ -131,7 +131,7 @@ function rewriteFrontMatter(text, templatePath) {
 // ── Run ─────────────────────────────────────────────────────────────────────
 
 const VALUES = JSON.parse(
-  readFileSync(join(OUT, "docs", "eos-session0", "fills.json"), "utf-8"),
+  readFileSync(join(OUT, "org", "eos-session0", "fills.json"), "utf-8"),
 );
 
 VENTURE_NAME = VALUES.VENTURE_NAME || VENTURE_NAME;
@@ -150,10 +150,14 @@ const matrix = readMatrix();
 //
 // The repair is NOT to make the regex match. Doing that would immediately
 // regenerate 32 files from the sibling repo's templates, including AGENTS.md,
-// CLAUDE.md, OPERATORS_GUIDE.md, org/CONSTITUTION.md, org/START.md and
-// docs/LOCKBOOK.md, discarding every hand correction in them, and would write
-// docs/policy.json and docs/TASKS.md at paths this repo does not use (they live
-// under org/). That is an operator decision about seed ancestry, not a lint fix.
+// CLAUDE.md, org/CONSTITUTION.md and org/START.md, discarding every hand
+// correction in them, and would write docs/policy.json and docs/TASKS.md at
+// paths this repo does not use (they live under org/). Since ADR-0010 there is
+// a second way to lose: the matrix still names the seed's old homes for the
+// lock-book, the venture brief and the EOS operators guide, which now live
+// under org/, so a repaired compile would write a stale second copy of each
+// back into docs/ and at the repository root. That is an operator decision
+// about seed ancestry, not a lint fix.
 //
 // So: fail loudly instead of pretending. A tool that cannot fail is not a check.
 if (matrix.length === 0) {
@@ -168,7 +172,7 @@ if (matrix.length === 0) {
 ` +
       `Repairing the parse REGENERATES 32 files from sibling-repo templates and
 ` +
-      `overwrites hand-edited governance. See docs/EOS_FEEDBACK.md before changing it.`,
+      `overwrites hand-edited governance. See org/EOS_FEEDBACK.md before changing it.`,
   );
   process.exit(1);
 }
@@ -190,7 +194,10 @@ for (const row of matrix) {
   // Files Session 0 wrote by hand are never regenerated. Checked BEFORE compiling
   // so --check reports the same outcome as a real run; doing it after made the
   // dry-run list slots that would never be filled because the file is not written.
-  const HAND_WRITTEN = ["docs/VENTURE_BRIEF.md", "docs/EOS_FEEDBACK.md"];
+  // The paths follow the files to org/ (ADR-0010). The matrix rows that name them
+  // still say docs/, and moving those rows is the estate's to do, so the refusal
+  // above is what stands between a repaired parse and a stale second copy.
+  const HAND_WRITTEN = ["org/VENTURE_BRIEF.md", "org/EOS_FEEDBACK.md"];
   if (HAND_WRITTEN.includes(row.path) && existsSync(join(OUT, row.path))) {
     report.push({ path: row.path, action: "kept", note: "written by hand at Session 0" });
     continue;

@@ -24,7 +24,7 @@ bad rollout.
 
 One Next.js process, one SQLite file, one optional agent alongside it.
 
-- App data: `PS_DATA_DIR` (see `docs/ENV_REFERENCE.md`), holding `patterstage.db`
+- App data: `PS_DATA_DIR` (see `docs/running/env-reference.md`), holding `patterstage.db`
   and the auth token.
 - The agent's own files are separate and not PatterStage's to manage.
 - Nothing is remote. No account, no service, no telemetry.
@@ -105,4 +105,4 @@ availability promise to anyone. The health endpoint exists for the update script
 and for a user who wants to check the process is up, not for a pager.
 
 If PatterStage ever gains a hosted surface, this file is wrong and the venture has
-tripped a rescale condition (`docs/VENTURE_BRIEF.md`).
+tripped a rescale condition (`org/VENTURE_BRIEF.md`).

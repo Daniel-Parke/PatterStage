@@ -27,7 +27,7 @@ import {
 
 /** A committed baseline, in the shape the real file uses. */
 const COMMITTED = {
-  "no-em-dash::docs/API.md": 17,
+  "no-em-dash::docs/reference/api.md": 17,
   "no-raw-colour-in-tsx::src/components/viz/RadialActivityClock.tsx": 4,
   "sql-outside-repository::src/lib/session-sync.ts": 3,
 };
@@ -39,10 +39,10 @@ const allow = (reason: string) => ({ present: true, reason });
 
 describe("design-lint ratchet: growth is detected, both kinds", () => {
   it("sees a single key going up", () => {
-    const planted = { ...COMMITTED, "no-em-dash::docs/API.md": 18 };
+    const planted = { ...COMMITTED, "no-em-dash::docs/reference/api.md": 18 };
     const growth = baselineGrowth(planted, COMMITTED);
     expect(growth.grew).toBe(true);
-    expect(growth.grown).toEqual([{ key: "no-em-dash::docs/API.md", was: 17, now: 18 }]);
+    expect(growth.grown).toEqual([{ key: "no-em-dash::docs/reference/api.md", was: 17, now: 18 }]);
     expect(growth.totalWas).toBe(24);
     expect(growth.totalNow).toBe(25);
   });
@@ -59,7 +59,7 @@ describe("design-lint ratchet: growth is detected, both kinds", () => {
     // identical, so a totals-only ratchet would wave this through.
     const shuffled = {
       ...COMMITTED,
-      "no-em-dash::docs/API.md": 15,
+      "no-em-dash::docs/reference/api.md": 15,
       "sql-outside-repository::src/lib/session-sync.ts": 5,
     };
     const growth = baselineGrowth(shuffled, COMMITTED);
@@ -72,7 +72,7 @@ describe("design-lint ratchet: growth is detected, both kinds", () => {
 
   it("says no growth when nothing moved, and none when everything shrank", () => {
     expect(baselineGrowth(COMMITTED, COMMITTED).grew).toBe(false);
-    const cleaned = { ...COMMITTED, "no-em-dash::docs/API.md": 9 };
+    const cleaned = { ...COMMITTED, "no-em-dash::docs/reference/api.md": 9 };
     const growth = baselineGrowth(cleaned, COMMITTED);
     expect(growth.grew).toBe(false);
     expect(growth.totalNow).toBeLessThan(growth.totalWas);
@@ -81,7 +81,7 @@ describe("design-lint ratchet: growth is detected, both kinds", () => {
 
 describe("design-lint ratchet: --update-baseline REFUSES to grow", () => {
   it("refuses a planted regression, and produces nothing to write", () => {
-    const planted = { ...COMMITTED, "no-em-dash::docs/API.md": 18 };
+    const planted = { ...COMMITTED, "no-em-dash::docs/reference/api.md": 18 };
     const plan = planBaselineWrite({ counts: planted, committed: COMMITTED, when: WHEN });
     expect(plan.ok).toBe(false);
     // Nothing to write is the point: the caller has no file to hand writeFileSync.
@@ -95,7 +95,7 @@ describe("design-lint ratchet: --update-baseline REFUSES to grow", () => {
   });
 
   it("refuses a reason-shaped flag that carries no reason", () => {
-    const planted = { ...COMMITTED, "no-em-dash::docs/API.md": 18 };
+    const planted = { ...COMMITTED, "no-em-dash::docs/reference/api.md": 18 };
     const plan = planBaselineWrite({
       counts: planted,
       committed: COMMITTED,
@@ -109,7 +109,7 @@ describe("design-lint ratchet: --update-baseline REFUSES to grow", () => {
 
 describe("design-lint ratchet: a genuine cleanup is ACCEPTED", () => {
   it("writes the smaller counts and records nothing, because nothing was excused", () => {
-    const cleaned = { ...COMMITTED, "no-em-dash::docs/API.md": 9 };
+    const cleaned = { ...COMMITTED, "no-em-dash::docs/reference/api.md": 9 };
     const plan = planBaselineWrite({ counts: cleaned, committed: COMMITTED, when: WHEN });
     expect(plan.ok).toBe(true);
     expect(plan.file).toEqual(cleaned);
@@ -136,7 +136,7 @@ describe("design-lint ratchet: a genuine cleanup is ACCEPTED", () => {
 
 describe("design-lint ratchet: the escape hatch, and its price", () => {
   it("lets growth through with a written reason and records it in the baseline", () => {
-    const planted = { ...COMMITTED, "no-em-dash::docs/API.md": 18 };
+    const planted = { ...COMMITTED, "no-em-dash::docs/reference/api.md": 18 };
     const plan = planBaselineWrite({
       counts: planted,
       committed: COMMITTED,
@@ -148,11 +148,11 @@ describe("design-lint ratchet: the escape hatch, and its price", () => {
       when: WHEN,
       reason: REASON,
       total: "24 -> 25",
-      grew: ["no-em-dash::docs/API.md: 17 -> 18"],
+      grew: ["no-em-dash::docs/reference/api.md: 17 -> 18"],
     });
     // The reason lives where the baseline lives, next to the number it excuses.
     expect(plan.file?.[GROWTH_LOG_KEY]).toEqual([plan.recorded]);
-    expect(plan.file?.["no-em-dash::docs/API.md"]).toBe(18);
+    expect(plan.file?.["no-em-dash::docs/reference/api.md"]).toBe(18);
   });
 
   it("keeps every earlier reason, so the log is a history rather than a slot", () => {
@@ -160,9 +160,9 @@ describe("design-lint ratchet: the escape hatch, and its price", () => {
       when: "2026-08-01",
       reason: "the first one, kept to prove the log is append-only",
       total: "20 -> 24",
-      grew: ["no-em-dash::docs/API.md: 13 -> 17"],
+      grew: ["no-em-dash::docs/reference/api.md: 13 -> 17"],
     };
-    const planted = { ...COMMITTED, "no-em-dash::docs/API.md": 18 };
+    const planted = { ...COMMITTED, "no-em-dash::docs/reference/api.md": 18 };
     const plan = planBaselineWrite({
       counts: planted,
       committed: COMMITTED,
@@ -178,9 +178,9 @@ describe("design-lint ratchet: the escape hatch, and its price", () => {
       when: "2026-08-01",
       reason: "the first one, kept to prove the log is append-only",
       total: "20 -> 24",
-      grew: ["no-em-dash::docs/API.md: 13 -> 17"],
+      grew: ["no-em-dash::docs/reference/api.md: 13 -> 17"],
     };
-    const cleaned = { ...COMMITTED, "no-em-dash::docs/API.md": 9 };
+    const cleaned = { ...COMMITTED, "no-em-dash::docs/reference/api.md": 9 };
     const plan = planBaselineWrite({
       counts: cleaned,
       committed: COMMITTED,

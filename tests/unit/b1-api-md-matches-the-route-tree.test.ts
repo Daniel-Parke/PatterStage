@@ -1,5 +1,5 @@
 /**
- * B1 (T-0095), D129: docs/API.md says "Every route.ts under src/app/api has a
+ * B1 (T-0095), D129: docs/reference/api.md says "Every route.ts under src/app/api has a
  * row ... A route absent from all four does not exist", and three routes were
  * absent: GET /api/status/subsystems, DELETE /api/credentials/[id] (the same
  * table still said "No per-id route"), and POST /api/composer/runs/[id]/cancel.
@@ -10,7 +10,7 @@ import { join, relative, sep } from "node:path";
 
 const ROOT = join(__dirname, "..", "..");
 const API_ROOT = join(ROOT, "src", "app", "api");
-const API_MD = readFileSync(join(ROOT, "docs", "API.md"), "utf-8");
+const API_MD = readFileSync(join(ROOT, "docs", "reference", "api.md"), "utf-8");
 
 function routePaths(dir = API_ROOT, out: string[] = []): string[] {
   for (const entry of readdirSync(dir)) {
@@ -28,7 +28,7 @@ function documentedPaths(): string[] {
   return [...API_MD.matchAll(/^\| `(\/api\/[^`]+)` \|/gm)].map((m) => m[1]).sort();
 }
 
-describe("docs/API.md and src/app/api agree", () => {
+describe("docs/reference/api.md and src/app/api agree", () => {
   const tree = routePaths();
   const documented = documentedPaths();
 

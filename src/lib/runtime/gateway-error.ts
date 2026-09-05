@@ -139,7 +139,7 @@ export function describeGatewayFailure(
 
   return new RuntimeRequestError(
     `Hermes gateway at ${ctx.baseUrl} is not responding (${code}). ` +
-      // design-lint-disable-next-line hermes-outside-adapter -- this file IS the Hermes adapter's error surface, and the remedy is the one docs/RUNTIME_ARCHITECTURE.md prescribes. A message that said "start the backend" would not be a remedy.
+      // design-lint-disable-next-line hermes-outside-adapter -- this file IS the Hermes adapter's error surface, and the remedy is the one docs/reference/runtime-architecture.md prescribes. A message that said "start the backend" would not be a remedy.
       `Start it with: hermes gateway start — or set HERMES_GATEWAY_URL if it listens elsewhere.`,
     UNREACHABLE_STATUS,
   );

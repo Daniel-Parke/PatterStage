@@ -123,7 +123,14 @@ describe("B15 · every inbound reference moves in the same commit (ADR-0010 §2)
   it.each(MOVES.map(([from]) => from))("nothing outside org/ still names %s", (from) => {
     const hits: string[] = [];
     for (const file of files) {
-      if (readFileSync(file, "utf-8").includes(from)) hits.push(rel(file));
+      // Blank out every NEW home before looking for an old one. This was a
+      // substring sweep, and "org/EOS_OPERATORS_GUIDE.md" contains
+      // "OPERATORS_GUIDE.md": the sweep refused the very reference the move is
+      // supposed to produce, so this case and the docs/README.md case below
+      // could not both pass (T-0109).
+      let text = readFileSync(file, "utf-8");
+      for (const [, to] of MOVES) text = text.split(to).join("");
+      if (text.includes(from)) hits.push(rel(file));
     }
     expect(hits).toEqual([]);
   });

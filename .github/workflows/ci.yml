@@ -78,6 +78,13 @@ jobs:
         run: npm run prebuild
       - name: ESLint
         run: npm run lint
+      # `npm run lint` already runs docs:check, which reads the front matter and
+      # the registry. This runs the GENERATOR, which is the half a checker cannot
+      # speak for: a build that throws on a page docs:check was happy with would
+      # otherwise be discovered by docs-pages.yml, after the merge to main, with
+      # the published site as the error message.
+      - name: Docs site builds
+        run: npm run docs:build
       # The output canary (WO-0008). Blocking, and cheap: it reads files and
       # runs the seed-pack validator, no build required. It fails when the URL
       # surface, next.config's redirects, the seed pack or a generated artefact

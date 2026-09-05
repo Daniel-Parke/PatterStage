@@ -547,7 +547,7 @@ done
 
 echo ""
 # Note: full ps-deploy restart / port-free / fixture-git smoke is not in this harness
-# (see docs/TESTING.md — CI docker-image job + manual staging checks).
+# (see docs/contributing/testing.md — CI docker-image job + manual staging checks).
 echo "All shell custom checks passed."
 if ! report; then
   exit 1

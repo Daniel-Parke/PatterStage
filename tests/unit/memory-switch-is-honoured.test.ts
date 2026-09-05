@@ -8,7 +8,7 @@
 // PUT /api/memory/config, reload, and the page still reports hindsight with the
 // same facts. The QA pass diagnosed it as GET /api/memory re-parsing the agent's
 // config.yaml. That is not it — and the distinction matters, because the
-// config.yaml read is DELIBERATE and documented: docs/MEMORY.md says the file is
+// config.yaml read is DELIBERATE and documented: docs/guides/memory.md says the file is
 // consulted for exactly one thing, recognising a holographic install, and
 // "does not decide where Hindsight is reached". Migration 022's own header says
 // PatterStage is "the source of truth for WHICH memory provider is active and

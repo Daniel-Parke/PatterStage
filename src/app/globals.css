@@ -11,7 +11,7 @@
   --color-cherenkov-400: #008bd1;
   --color-cherenkov-500: #0071c2;
 
-  /* Accent slots — semantic roles (see docs/design-tokens.md) */
+  /* Accent slots — semantic roles (see docs/contributing/design-tokens.md) */
   --color-neon-cyan: #00bfff;
   /* Brightened from #8b5cff on 2026-08-23. The original measured 4.78:1 on
      --color-dark-950 flat, and 4.03:1 as actually painted on a card, so it
@@ -74,7 +74,7 @@
   /* ── Surface ladder ────────────────────────────────────────────────────────
      The semantic layer the lock-book's Tokens section owed, ruled at the
      first-build lock-in sitting of 2026-08-24. The five `--color-dark-*` rungs
-     above are named for how they LOOK; docs/design-tokens.md forbids that as
+     above are named for how they LOOK; docs/contributing/design-tokens.md forbids that as
      the only layer, because "dark-900" says nothing about whether a surface is
      a panel or a well and so nothing stops the two diverging.
 
@@ -174,7 +174,7 @@
   --spacing-ps-block: 1.5rem;
 }
 
-/* Shell + RGB mirrors for effects (keep aligned with @theme / docs/design-tokens.md) */
+/* Shell + RGB mirrors for effects (keep aligned with @theme / docs/contributing/design-tokens.md) */
 :root {
   --ps-shell-header-min-height: 5rem;
   --ps-mobile-header-min-height: 3rem;

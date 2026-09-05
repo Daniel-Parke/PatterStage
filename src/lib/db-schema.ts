@@ -26,7 +26,7 @@ const SCHEMA_VERSION_KEY = "schema_version";
  * the highest-numbered file in `src/lib/db/migrations/`.
  *
  * Raising the head means bumping this in the same commit as the applier that
- * raises it. `docs/MIGRATION.md` carries the full going-forward rule.
+ * raises it. `docs/running/migration.md` carries the full going-forward rule.
  */
 export const MIGRATION_HEAD_SCHEMA_VERSION = 41;
 

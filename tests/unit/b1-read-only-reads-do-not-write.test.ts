@@ -2,7 +2,7 @@
 /**
  * B1 (T-0095), D124: three GET handlers write.
  *
- * `PS_READ_ONLY` is enforced by method in src/proxy.ts, and docs/API.md said
+ * `PS_READ_ONLY` is enforced by method in src/proxy.ts, and docs/reference/api.md said
  * that made it apply "to every route uniformly: there is nothing a route can
  * forget to call". Three reads disagreed. GET /api/stats appends a progression
  * snapshot, GET /api/agent/profiles/[id]/toolsets persists normalised JSON, and

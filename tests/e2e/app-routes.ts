@@ -6,7 +6,7 @@
  * the navigation matrix silently stopped covering a whole page. Deriving it
  * removes the class of bug rather than the instance.
  */
-import { allModuleRoutes } from "../../src/lib/modules/registry";
+import { allModuleRoutes, documentedRoutes } from "../../src/lib/modules/registry";
 
 export const APP_NAV_ROUTES: readonly string[] = allModuleRoutes();
 
@@ -15,7 +15,10 @@ export const CONFIG_SECTION_ROUTES: readonly string[] = APP_NAV_ROUTES.filter(
   (p) => p === "/agent/settings" || p.startsWith("/agent/settings/")
 );
 
-/** Routes for navigation-matrix (avoids duplicating every `/agent/settings/*` visit; see `config-sections.spec.ts`). */
-export const APP_MATRIX_ROUTES: readonly string[] = APP_NAV_ROUTES.filter(
-  (p) => p === "/agent/settings" || !p.startsWith("/agent/settings/")
-);
+/**
+ * Routes for navigation-matrix (avoids duplicating every `/agent/settings/*`
+ * visit; see `config-sections.spec.ts`). Identical to the set `docs:check`
+ * demands a guide for, so it is taken from the registry rather than filtered
+ * again here: two copies of the same filter is how the two sets drift.
+ */
+export const APP_MATRIX_ROUTES: readonly string[] = documentedRoutes();

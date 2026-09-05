@@ -98,7 +98,7 @@ describe("the tree, after the fix", () => {
   });
 
   it("no longer tells contributors the token does not exist", () => {
-    const doc = readFileSync(join(ROOT, "docs", "design-tokens.md"), "utf-8");
+    const doc = readFileSync(join(ROOT, "docs", "contributing", "design-tokens.md"), "utf-8");
     expect(doc).not.toMatch(/`neon-red` or `neon-blue`: neither exists/);
   });
 });

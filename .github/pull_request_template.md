@@ -21,7 +21,7 @@ compiled_from: normalised
 - [ ] `npm run lint:knip`
 - [ ] `npm run canary:check`
 - [ ] `npm run build`
-- [ ] If the PR changes UI or navigation: `npm run prebuild && npm run build && npm run test:e2e` (or smoke as appropriate). Do NOT hand-edit `tests/e2e/app-routes.ts` -- it is DERIVED from the module registry (`allModuleRoutes()`, ADR-0005). It used to be hand-maintained and had already drifted, silently dropping a whole page from the navigation matrix. Add the route to `src/lib/modules/registry.ts` and the matrix follows. See [TESTING.md](../docs/TESTING.md).
+- [ ] If the PR changes UI or navigation: `npm run prebuild && npm run build && npm run test:e2e` (or smoke as appropriate). Do NOT hand-edit `tests/e2e/app-routes.ts` -- it is DERIVED from the module registry (`allModuleRoutes()`, ADR-0005). It used to be hand-maintained and had already drifted, silently dropping a whole page from the navigation matrix. Add the route to `src/lib/modules/registry.ts` and the matrix follows. See [TESTING.md](../docs/contributing/testing.md).
 - [ ] Docs / API tables updated when behaviour or env vars changed ([docs index](../docs/README.md)).
 
 ## Related

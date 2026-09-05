@@ -243,7 +243,7 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
 
   // The head is stated in three places: the constant, the last applier's gate and
   // the migrations directory. Nothing forces them to agree, and for a long time
-  // they did not: docs/MIGRATION.md claimed 13 and 11 while the chain climbed to
+  // they did not: docs/running/migration.md claimed 13 and 11 while the chain climbed to
   // 30. These two assertions are what stop that happening again. They are cheap,
   // they need no database, and they fail on the commit that introduces the drift
   // rather than on the install that trips over it.
@@ -253,7 +253,7 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
     });
 
     // schema_version strictly increases and a gate is claimed once, which is
-    // docs/MIGRATION.md's going-forward rule. The head moving by exactly one
+    // docs/running/migration.md's going-forward rule. The head moving by exactly one
     // above the applier that used to hold it is what that rule looks like from
     // the outside, and it catches a new migration that reuses or skips a number.
     it("sits exactly one above the gate it displaced", () => {

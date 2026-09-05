@@ -24,7 +24,7 @@ The following are reserved and may not be used in a way that suggests affiliatio
 The following are reserved for official PatterStage and PatterTech use:
 
 - Logos, icons, and brand assets in [`branding/assets/`](branding/assets/)
-- The Cherenkov colour palette and related visual identity described in [`branding/guidelines/COLORS.md`](branding/guidelines/COLORS.md) — including the neon-glow treatment used as part of the Patter look. The canonical implementation lives in [`docs/design-tokens.md`](docs/design-tokens.md), [`src/lib/theme.ts`](src/lib/theme.ts), and [`src/app/globals.css`](src/app/globals.css).
+- The Cherenkov colour palette and related visual identity described in [`branding/guidelines/COLORS.md`](branding/guidelines/COLORS.md) — including the neon-glow treatment used as part of the Patter look. The canonical implementation lives in [`docs/contributing/design-tokens.md`](docs/contributing/design-tokens.md), [`src/lib/theme.ts`](src/lib/theme.ts), and [`src/app/globals.css`](src/app/globals.css).
 
 Files under [`branding/`](branding/) are **not** licensed under Apache 2.0. See [`branding/LICENSE.md`](branding/LICENSE.md).
 

@@ -51,7 +51,7 @@ describe("output canary: the standing contract gate", () => {
     // moduleGraph and prerender change on any ordinary edit. Pinning them to a
     // committed file would train everyone to re-bless without reading, which is
     // how a gate becomes decoration. They are compared against a captured
-    // baseline instead, see docs/OUTPUT_CANARY.md.
+    // baseline instead, see docs/contributing/output-canary.md.
     expect(GOLDEN_SURFACES).not.toContain("moduleGraph");
     expect(GOLDEN_SURFACES).not.toContain("prerender");
     expect(report.surfaces.moduleGraph).toEqual(expect.any(String));

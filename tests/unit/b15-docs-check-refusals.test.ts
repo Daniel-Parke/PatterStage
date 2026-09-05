@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports -- scripts/docs/lib.mjs is loaded by a COMPUTED path, deliberately: a static import of it from a test would be a typecheck error while the module was still unwritten, and typecheck:tests runs inside npm run lint */
 /**
  * B15 (T-0109), decision 3 — `docs:check`, the doc-coverage gate.
  *

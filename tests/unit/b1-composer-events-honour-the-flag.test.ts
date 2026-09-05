@@ -2,7 +2,7 @@
 /**
  * B1 (T-0095), D5: every Composer route answers 503 when PS_COMPOSER is off,
  * except the SSE stream, which served an existing run regardless. A feature
- * that is off should not have one door left open, and docs/API.md described
+ * that is off should not have one door left open, and docs/reference/api.md described
  * the exception rather than closing it.
  */
 let composerOn = true;

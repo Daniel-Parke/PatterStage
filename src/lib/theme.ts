@@ -10,7 +10,7 @@ export const shellHeaderBarClasses =
 
 // ═══════════════════════════════════════════════════════════════
 // The surface ladder and the measures — the code mirror of the tokens ruled at
-// the first-build lock-in sitting of 2026-08-24 (docs/LOCKBOOK.md, Tokens).
+// the first-build lock-in sitting of 2026-08-24 (org/LOCKBOOK.md, Tokens).
 //
 // The lock-book names two homes for a token, globals.css @theme and this file,
 // and says they must agree. Two homes with nothing holding them together is how

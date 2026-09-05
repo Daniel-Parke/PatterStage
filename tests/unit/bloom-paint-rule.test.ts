@@ -111,7 +111,7 @@ describe("the [data-bloom] paint rule", () => {
   });
 
   it("stays below the alpha this console reserves for live state", () => {
-    // docs/design-tokens.md reserves pulse-glow / glow-surface for live and
+    // docs/contributing/design-tokens.md reserves pulse-glow / glow-surface for live and
     // active state; glow-surface sits at 0.15. Bloom has to read as ambient or
     // "glow means running" stops being true. In a color-mix against
     // transparent, the percentage IS the alpha.

@@ -1,7 +1,7 @@
 /**
  * Documentation screenshot regeneration (opt-in).
  *
- * Captures the pages embedded in docs/USER_WALKTHROUGH_GUIDE.md + README.md
+ * Captures the pages embedded in docs/README.md + README.md
  * into docs/images/*. Reuses the standard e2e harness (playwright.config.ts
  * starts the app on an isolated data dir that tests/e2e/prepare-data-dir.mjs
  * wipes before boot; the app seeds the catalog itself during boot). Seeds a few

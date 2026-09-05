@@ -1,10 +1,13 @@
 ---
+title: Decisions
 summary: Public pointer to the ADR home, which is org/decisions/ since the ADR-0008 cutover
+section: contributing
+nav: 70
+audience: contributor
 type: venture
 tags: [process, governance]
 compiled_from: authored
 ---
-
 # Decisions
 
 Architecture decision records for PatterStage live in
@@ -34,7 +37,7 @@ itself. Do not build on a proposed ADR without saying that is what you are doing
 ## Relationship to the EOS
 
 PatterStage ran EOS Session 0 on 2026-07-25 and recompiled to the v2 kernel at ORG
-scale under ADR-0008. The seed lives in `docs/LOCKBOOK.md`, `docs/RULINGS.json` and
+scale under ADR-0008. The seed lives in `org/LOCKBOOK.md`, `org/RULINGS.json` and
 `org/`. These ADRs use the EOS `decision` type and its front-matter schema, and the
 constitution's protected set names `org/decisions/` directly, so the path in the law
 and the path on disk are now the same path.

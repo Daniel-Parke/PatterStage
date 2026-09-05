@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 //
 // Field-by-field whitelist, not a spread: an unknown key in the body must
-// never reach disk (docs/REPO_GUIDE.md, "no mass assignment").
+// never reach disk (docs/contributing/repo-guide.md, "no mass assignment").
 
 import { NextResponse } from "next/server";
 

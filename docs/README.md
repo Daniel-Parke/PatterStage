@@ -1,89 +1,90 @@
 ---
-summary: Index of the technical documentation for PatterStage, one row per document
+title: Documentation
+summary: "The reading path: what PatterStage is, the first hour, one guide per screen, and where the governing corpus lives"
+section: start-here
+nav: 0
 type: index
 tags: [product, docs]
 compiled_from: normalised
 ---
 
-# Documentation index
+# Documentation
 
-Technical reference for PatterStage. Tone elsewhere in this folder is deliberately plain: I maintain the project solo and would rather you get accurate answers than corporate filler.
+Six tiers, in reading order. Start at the top and stop when you have what you
+came for.
 
-| Document | Description |
-|----------|-------------|
-| [adr/](adr/) | **Decisions, pointer.** The ADRs live in `org/decisions/`; this page forwards to them. A recorded decision wins over anything you infer from the code |
-| [REPO_GUIDE.md](REPO_GUIDE.md) | Repo layout, conventions, shared utilities, design tokens, deploy |
-| [USER_WALKTHROUGH_GUIDE.md](USER_WALKTHROUGH_GUIDE.md) | Operator guide: one section per sidebar page and the common actions on it, Dashboard through Rec Room, including Composer and the whole Laboratory (Insights, provider spend, Deep Research, Artifacts) |
-| [MISSIONS.md](MISSIONS.md) | Mission board, dispatch, cancellation, templates (simple single/recurring runs) |
-| [COMPOSER.md](COMPOSER.md) | Composer: the graph orchestrator for multi-stage workflows with loops + HIL gates |
-| [LABORATORY.md](LABORATORY.md) | Laboratory section: Insights, Deep Research, Artifacts |
-| [DEEP_RESEARCH.md](DEEP_RESEARCH.md) | Native iterative web research (provider-flexible, free/local-first search) |
-| [CHAT.md](CHAT.md) | Agent chat: server-persisted conversations, run-event streaming, tools + HITL approvals, Agent/Fast modes |
-| [MEMORY.md](MEMORY.md) | Agent long-term memory (Hindsight): how it connects, the mock, Docker + native setup |
-| [design-tokens.md](design-tokens.md) | UI colour tokens and theme conventions, the focus ring, the overlay and confirm contracts |
-| [COPY.md](COPY.md) | The copy law: three registers, one status vocabulary, no governance ids in user copy |
-| [API.md](API.md) | REST endpoints |
-| [ANALYTICS.md](ANALYTICS.md) | Interaction event log, `/api/analytics`, achievements, and the Insights page |
-| [SPEND.md](SPEND.md) | Provider spend: how it is estimated, the optional budget, and the hard stop that ships off |
-| [CATALOG_AND_PROFILES.md](CATALOG_AND_PROFILES.md) | Seed pack, SQLite catalog, Hermes profile sync |
-| [TOOLS_AND_MISSIONS.md](TOOLS_AND_MISSIONS.md) | Profile `platform_toolsets`, Tools UI, mission tool hints |
-| [ENV_REFERENCE.md](ENV_REFERENCE.md) | Environment variables, dual DB paths, install flags |
-| [DEPLOY.md](DEPLOY.md) | Deploy, **`ps-deploy`**, TLS, Docker, ports, scripts layout |
-| [CROSS_PLATFORM.md](CROSS_PLATFORM.md) | The Linux-first ruling: Linux is the supported target, macOS is a dev tier, Windows runs under WSL2. Host scheduling is the Unix `crontab` and nothing else; bundled `.mjs` scripts |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | Development workflow and standards |
-| [TESTING.md](TESTING.md) | Jest, Playwright, CI, and navigation-matrix upkeep |
-| [OUTPUT_CANARY.md](OUTPUT_CANARY.md) | The output canary: what it hashes, proving a move neutral, re-blessing the golden |
-| [SYSTEM-CRON.md](SYSTEM-CRON.md) | Scripts page + host cron presets (`scripts/hardware/`), including Hindsight backup |
-| [SUPPORT.md](SUPPORT.md) | Where to get help; upstream vs this repo |
-| [SECURITY.md](SECURITY.md) | **The access model**, and the one document to read before exposing an install: the single boundary in `src/proxy.ts`, the minted token and its file, the `ps_token` to cookie handoff, same-origin write checks, read-only, the container env vars, and what the 401 discloses. Vulnerability reporting is at the top |
-| [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) | How collaboration works here (people-wise) |
-| [MIGRATION.md](MIGRATION.md) | Migrations, backups, and the runtime upgrade path for existing installs |
-| [HERMES_CONFIG_INTEGRATION.md](HERMES_CONFIG_INTEGRATION.md) | Hermes `config.yaml` integration |
-| [PLATFORM_VISION.md](PLATFORM_VISION.md) | Architecture and product direction |
-| [RUNTIME_ARCHITECTURE.md](RUNTIME_ARCHITECTURE.md) | How a dispatch becomes a run: the runtime adapter, the scheduler, and who owns "when" |
-| [DATA_STORAGE.md](DATA_STORAGE.md) | What is stored where: SQLite tables, the data directory, and what is on disk vs in the DB |
-| [QA_NOTES.md](QA_NOTES.md) | **Read this before a QA pass.** Known-deliberate behaviour, so a tester does not re-file it as a bug |
-| [UX_AUDIT.md](UX_AUDIT.md) | A point-in-time UI/UX audit and its findings |
-| [Pull request template](../.github/pull_request_template.md) | PR checklist (GitHub prefill) |
-## Governance (EOS)
+## Start here
 
-These are compiled seed artefacts of the PatterTech EOS, not product documentation.
-Their **paths are set by an external scale matrix** (`PatterTech_EOS/kernel/SCALE_MATRIX.md`)
-and rewritten by `scripts/tooling/eos-compile.mjs` on every compile, so they cannot be
-moved or renamed from this repo. They are listed here so the corpus is reachable in one
-hop, not because a reader of the product docs needs them. The human's door into this
-layer is [OPERATORS_GUIDE.md](../OPERATORS_GUIDE.md); an agent's is [org/START.md](../org/START.md).
+New to PatterStage. What it is, how to install it, and one hour that takes you
+from a fresh boot to a mission you dispatched, watched and read the output of.
 
-| Document | Description |
-|----------|-------------|
-| [LOCKBOOK.md](LOCKBOOK.md) | The stack decision and its ratchets; load-bearing, cited by several live docs |
-| [RULINGS.json](RULINGS.json) | Recorded rulings, machine-readable |
-| [VENTURE_BRIEF.md](VENTURE_BRIEF.md) | What this venture is for |
-| [ACCEPTANCE_SPINE.md](ACCEPTANCE_SPINE.md) | The acceptance spine the seed was compiled against |
-| [PRODUCT_MAP.md](PRODUCT_MAP.md) | **A blank form until Genesis runs**, as it says of itself. Not an oversight; not yet filled in |
-| [COMPILE_REPORT.md](COMPILE_REPORT.md) | Provenance record proving what the seed compiled from. Contains no links; it is a manifest, not an index |
-| [EOS_FEEDBACK.md](EOS_FEEDBACK.md) | Append-only channel back to the EOS pack. Friction found in the tooling itself |
-| [genesis/](genesis/) | Genesis form templates (`LENS`, `RESEARCH_PACKET`, `WORK_PACKAGE`); their paths are placeholders by design |
+- [What PatterStage is](start-here/index.md)
+- [Installing](start-here/install.md)
+- [The first hour](start-here/first-hour.md)
+- [Quests](start-here/quests.md)
+- [Getting help](start-here/getting-help.md)
+- [Support](SUPPORT.md)
 
-## Mission and template schemas
+## Concepts
 
-Versioned Zod schemas live under [`src/lib/schema/`](../src/lib/schema/). JSON Schema mirrors live in `src/lib/schema/json/`. Maintainer notes:
+The nouns you meet on the screens, one page each: what it is, what it is not,
+where you meet it, and the idea behind it. Written for someone who has never
+run an agent before.
 
-- [SCHEMA_VERSIONING.md](schema/SCHEMA_VERSIONING.md): versioning and bump policy
-- [CHANGELOG.md](schema/CHANGELOG.md): schema contract history
+Start with [agent](concepts/agent.md), [mission](concepts/mission.md) and
+[run](concepts/run.md); the rest are there when a screen uses a word you have
+not met.
 
-After changing Zod definitions, regenerate JSON from the repo root (runs [`scripts/tooling/generate-json-schema.ts`](../scripts/tooling/generate-json-schema.ts) via npm):
+## Guides
 
-```bash
-npm run generate:schema-json
-```
+One page per screen: what you see, what you typically do there, and the notes
+that only matter once. The in-app Help section renders these same pages, and
+every screen's header carries a link straight to its own.
 
-## Scripts and deploy
+## Running it
 
-- **`scripts/bootstrap/`**: install, setup, stop, Hindsight bootstrap.
-- **`scripts/application/ps-deploy.sh`**: unified **`update`** / **`restart`** / **`rebuild`** for CLI and **`POST /api/update`** (backs up + migrates the DB on update/rebuild).
-- **`scripts/maintenance/ps-migrate.sh`**: backup + full DB migration (schema + legacy data); interactive, `--yes` to skip prompts.
-- **`scripts/tooling/`**: DB migrate (`migrate-db.ts` → `runMigrations`), runtime data migration, agent discovery, JSON Schema emit.
-- **`scripts/lib/`** (shared bash incl. `ps-log.sh` logging/prompt helpers + `ps-migrate.sh`), **`scripts/hardware/`** (host cron presets), **`data/seed/`** (catalog).
+Keeping it up: [deploying](running/deploy.md),
+[configuration](running/env-reference.md),
+[where your data lives](running/data-storage.md),
+[backup and restore](running/backup.md),
+[upgrades](running/migration.md),
+[host scheduling](running/host-scheduling.md),
+[platforms](running/cross-platform.md),
+[troubleshooting](running/troubleshooting.md) and [security](SECURITY.md).
 
-Details: **[DEPLOY.md](DEPLOY.md)**.
+## Reference
+
+The facts, not the path: the [HTTP API](reference/api.md), the
+[database schema](reference/schema.md), [spend](reference/spend.md),
+[profiles and the skills catalogue](reference/catalog-and-profiles.md), and the
+[runtime architecture](reference/runtime-architecture.md).
+
+## Contributing
+
+Working on PatterStage itself: [contributing](CONTRIBUTING.md), the
+[repository guide](contributing/repo-guide.md),
+[testing](contributing/testing.md), the
+[output canary](contributing/output-canary.md),
+[design tokens](contributing/design-tokens.md), the
+[copy law](contributing/copy.md), and [decisions](adr/README.md).
+
+## The governing corpus
+
+PatterStage is built under a governance system with its own vocabulary: tasks,
+rulings, tiers, a lock-book. None of it is needed to run the product, and it is
+not written for someone who wants to. It lives under `../org/`, starting at
+`org/START.md`, with its operator manual at `org/EOS_OPERATORS_GUIDE.md`;
+[`../AGENTS.md`](../AGENTS.md) is the entry point an AI coding session reads.
+
+`AGENTS.md` and `CLAUDE.md` are instructions for AI coding sessions working on
+this repository. They are not documentation for you.
+
+## How this documentation is built
+
+`docs/**/*.md` is the single source. Every page opens with a front-matter block
+naming its title, its summary, its tier and its position; a page that documents
+a screen names that screen, and the build turns that into the in-app link.
+[`docs/manifest.json`](manifest.json) is derived from those blocks and is never
+hand-edited. `npm run docs:build` renders the static site, `npm run docs:check`
+refuses a screen with no guide, a link to a route that does not exist, a missing
+screenshot, an undefined concept and a stale generated block.

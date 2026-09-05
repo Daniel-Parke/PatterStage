@@ -22,7 +22,7 @@ interface Ctx {
 
 export async function GET(request: NextRequest, ctx: Ctx) {
   // The same guard every other composer route carries. This one served an
-  // existing run with the feature off, and docs/API.md described the exception
+  // existing run with the feature off, and docs/reference/api.md described the exception
   // rather than closing it (T-0095, D5).
   if (!isFeatureEnabled("composer")) {
     return serviceUnavailable("Composer is not enabled. Set PS_COMPOSER=1 to enable workflows.");

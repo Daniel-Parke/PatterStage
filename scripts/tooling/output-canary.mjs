@@ -84,7 +84,7 @@
  *                                                           output-neutral (CI)
  *   --no-prerender    skip the build-dependent surface even if .next/ exists
  *
- * See docs/OUTPUT_CANARY.md for the workflow and for what to do when the
+ * See docs/contributing/output-canary.md for the workflow and for what to do when the
  * canary legitimately changes.
  */
 
@@ -176,7 +176,7 @@ const STRIPPABLE_EXTENSIONS = [
  *
  * Repointing an import at a DIFFERENT module changes the name, so that is
  * still caught. The residual blind spot is two same-named modules in different
- * directories swapping places; see docs/OUTPUT_CANARY.md.
+ * directories swapping places; see docs/contributing/output-canary.md.
  *
  * Package specifiers are kept verbatim: swapping "zod" for "yup" is a
  * behaviour change and must show up.
@@ -640,7 +640,7 @@ function assertMoveNeutral(baseRef) {
   if (failed > 0) {
     console.error("");
     console.error(`${failed} commit(s) claimed [move] and changed the output. Split the behaviour`);
-    console.error("change out of the move commit, or drop the [move] claim. See docs/OUTPUT_CANARY.md.");
+    console.error("change out of the move commit, or drop the [move] claim. See docs/contributing/output-canary.md.");
     return 1;
   }
   console.log(`Output canary: ${moves.length} [move] commit(s) proved output-neutral.`);
@@ -716,7 +716,7 @@ function main(argv) {
       }
     }
     console.error("");
-    console.error("If this was meant to be a pure move, it was not one. See docs/OUTPUT_CANARY.md.");
+    console.error("If this was meant to be a pure move, it was not one. See docs/contributing/output-canary.md.");
     return 1;
   }
 
@@ -734,7 +734,7 @@ function main(argv) {
     console.error("");
     console.error("This is not a lint rule to silence. Either the change was unintended, in which");
     console.error("case fix it, or it was intended, in which case re-bless the golden in the same");
-    console.error("commit with: npm run canary:bless. See docs/OUTPUT_CANARY.md.");
+    console.error("commit with: npm run canary:bless. See docs/contributing/output-canary.md.");
     return 1;
   }
 

@@ -184,11 +184,11 @@ export function getModule(id: string): ProductModule | undefined {
  * The module-to-accent map. WG-WEB-009 (B) rules ONE registered map of four
  * entries, and until now there was no map at all: five accents were applied
  * decoratively and a module's colour was whatever its links happened to grow.
- * Ruled at the first-build lock-in sitting of 2026-08-24 (docs/LOCKBOOK.md).
+ * Ruled at the first-build lock-in sitting of 2026-08-24 (org/LOCKBOOK.md).
  *
  * Five accents, four modules, so one accent leaves, and it is green:
  * `--color-neon-green` and `--color-semantic-success` are the same hex
- * (#a3ff12), and docs/design-tokens.md gives green the role "Success / online".
+ * (#a3ff12), and docs/contributing/design-tokens.md gives green the role "Success / online".
  * A hue that already means "this finished" cannot also mean "this is the
  * Laboratory". That is the arithmetic behind the ruling's four entries.
  *
@@ -233,6 +233,24 @@ export function allModuleRoutes(): string[] {
   for (const mod of MODULES) for (const route of moduleRoutes(mod)) routes.add(route);
   for (const route of settingsRoutes()) routes.add(route);
   return [...routes].sort();
+}
+
+/**
+ * The routes documentation is answerable for: every module route except the
+ * generated `/agent/settings/<section>` editors.
+ *
+ * `allModuleRoutes()` is the e2e answer to "what can be visited"; this is the
+ * docs answer to "what needs a guide". The twenty-seven section editors are one
+ * page rendered twenty-seven times from src/lib/config-sections.ts, and the
+ * fields each one carries are already documented where they are declared.
+ * Demanding a guide per section would buy twenty-seven near-identical pages and
+ * a gate everybody learns to satisfy with a stub, so the index stands for them.
+ *
+ * `docs:check` reads this, and tests/e2e/app-routes.ts derives its navigation
+ * matrix from it, so the two sets cannot drift apart.
+ */
+export function documentedRoutes(): string[] {
+  return allModuleRoutes().filter((p) => p === "/agent/settings" || !p.startsWith("/agent/settings/"));
 }
 
 /** Every (href, label) pair the registry names, sub-links included. */

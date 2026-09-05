@@ -19,9 +19,9 @@ It owns its own state (SQLite under `PS_DATA_DIR`) and talks to the agent over H
 
 > A [PatterTech](https://www.pattertech.com) venture.
 
-**Docs:** [Doc index](docs/README.md) · [Platform vision](docs/PLATFORM_VISION.md) · [Runtime architecture](docs/RUNTIME_ARCHITECTURE.md) · [Missions](docs/MISSIONS.md) · [User walkthrough](docs/USER_WALKTHROUGH_GUIDE.md) · [Cross-platform](docs/CROSS_PLATFORM.md) · [Deploy](docs/DEPLOY.md) · [Migration](docs/MIGRATION.md)
+**Docs:** [Doc index](docs/README.md) · [Platform vision](docs/reference/runtime-architecture.md) · [Runtime architecture](docs/reference/runtime-architecture.md) · [Missions](docs/guides/missions.md) · [User walkthrough](docs/README.md) · [Cross-platform](docs/running/cross-platform.md) · [Deploy](docs/running/deploy.md) · [Migration](docs/running/migration.md)
 
-> **Renamed:** this repo was `hermes-control-hub` and is now `PatterStage`. Existing clones and forks keep working via GitHub's automatic redirect — optionally run `git remote set-url origin https://github.com/Daniel-Parke/PatterStage.git` to repoint. Full details: [docs/MIGRATION.md](docs/MIGRATION.md#repository-renamed-hermes-control-hub--patterstage).
+> **Renamed:** this repo was `hermes-control-hub` and is now `PatterStage`. Existing clones and forks keep working via GitHub's automatic redirect — optionally run `git remote set-url origin https://github.com/Daniel-Parke/PatterStage.git` to repoint. Full details: [docs/running/migration.md](docs/running/migration.md#repository-renamed-hermes-control-hub--patterstage).
 
 ---
 
@@ -40,7 +40,7 @@ It owns its own state (SQLite under `PS_DATA_DIR`) and talks to the agent over H
 | **Models** | SQLite-backed model/credential registry with write-through to Hermes `config.yaml` / `.env`. |
 | **Story Weaver** | Rec Room interactive-fiction tool. |
 
-How the pieces fit together: [docs/RUNTIME_ARCHITECTURE.md](docs/RUNTIME_ARCHITECTURE.md).
+How the pieces fit together: [docs/reference/runtime-architecture.md](docs/reference/runtime-architecture.md).
 
 ---
 
@@ -48,7 +48,7 @@ How the pieces fit together: [docs/RUNTIME_ARCHITECTURE.md](docs/RUNTIME_ARCHITE
 
 | Requirement | Notes |
 |-------------|--------|
-| **Linux** (or macOS for dev) | PatterStage is **Linux-first** — the supported/tested target (and the [PatterOS](https://github.com/Daniel-Parke/PatterOS) home); macOS works for development. On **Windows, use WSL2 (Ubuntu)**. See [Cross-platform](docs/CROSS_PLATFORM.md). |
+| **Linux** (or macOS for dev) | PatterStage is **Linux-first** — the supported/tested target (and the [PatterOS](https://github.com/Daniel-Parke/PatterOS) home); macOS works for development. On **Windows, use WSL2 (Ubuntu)**. See [Cross-platform](docs/running/cross-platform.md). |
 | **Node.js 20+** | Matches [CI](.github/workflows/ci.yml). On macOS install Xcode Command Line Tools if `npm install` fails building native modules. |
 | **Hermes Agent** | [Install Hermes](https://hermes-agent.nousresearch.com/docs/getting-started/installation) for full missions, runs, and gateway features. PatterStage can start without it, but agent paths stay limited until `~/.hermes` is configured. The runtime needs Hermes' **API Server** enabled (the installer/setup does this for you). |
 | **git** | For clone-based install and the in-app updater. |
@@ -67,7 +67,7 @@ How the pieces fit together: [docs/RUNTIME_ARCHITECTURE.md](docs/RUNTIME_ARCHITE
    ```
    Fresh machine without a clone yet: `bash scripts/bootstrap/install.sh` (clones to `~/patterstage`, then runs setup).
 
-   **Windows** — run under **WSL2 (Ubuntu)**: `wsl --install -d Ubuntu` (one-time, elevated PowerShell), then open Ubuntu and follow the Linux steps above. See [Cross-platform](docs/CROSS_PLATFORM.md).
+   **Windows** — run under **WSL2 (Ubuntu)**: `wsl --install -d Ubuntu` (one-time, elevated PowerShell), then open Ubuntu and follow the Linux steps above. See [Cross-platform](docs/running/cross-platform.md).
 
 3. **Start the server:**
    ```bash
@@ -104,18 +104,18 @@ The bootstrap and deploy scripts prompt by default and **skip every prompt** whe
 
 ## Using the dashboard
 
-**Page-by-page tour with screenshots:** [docs/USER_WALKTHROUGH_GUIDE.md](docs/USER_WALKTHROUGH_GUIDE.md).
+**Page-by-page tour with screenshots:** [docs/README.md](docs/README.md).
 
 | Sidebar area | What to do there |
 |--------------|------------------|
 | **Dashboard** | One-glance situational awareness: analytics, active missions, health, sync. Earns **achievements** as you work. |
-| **Orchestration → Missions** | Compose, dispatch, **schedule**, and **cancel** missions ([details](docs/MISSIONS.md)). The **Scheduled missions** section lists recurring missions with pause/resume/run-now. |
-| **Orchestration → Composer** | Build and run staged workflows: conditional and looping edges, human-in-the-loop gates ([details](docs/COMPOSER.md)). |
+| **Orchestration → Missions** | Compose, dispatch, **schedule**, and **cancel** missions ([details](docs/guides/missions.md)). The **Scheduled missions** section lists recurring missions with pause/resume/run-now. |
+| **Orchestration → Composer** | Build and run staged workflows: conditional and looping edges, human-in-the-loop gates ([details](docs/guides/composer.md)). |
 | **Orchestration → Scripts** | Host shell scripts on a timer (system crontab) — backups, cleanups, health checks. |
 | **Orchestration → Chat** | Gateway-backed chat (separate from mission dispatch). |
 | **Main → Sessions / Memory / Logs** | Transcripts, memory store, Hermes log tail. |
-| **Laboratory → Insights** | Interaction analytics + achievements: activity over time, per-category breakdown, streaks, the full achievement grid ([details](docs/ANALYTICS.md)), and the **provider spend** panel with its budget and hard stop ([details](docs/SPEND.md)). |
-| **Laboratory → Deep Research / Artifacts** | Run the iterative research loop and read the cited report; collect every deliverable it and Composer produced ([details](docs/LABORATORY.md)). |
+| **Laboratory → Insights** | Interaction analytics + achievements: activity over time, per-category breakdown, streaks, the full achievement grid ([details](docs/guides/insights.md)), and the **provider spend** panel with its budget and hard stop ([details](docs/reference/spend.md)). |
+| **Laboratory → Deep Research / Artifacts** | Run the iterative research loop and read the cited report; collect every deliverable it and Composer produced ([details](docs/guides/research.md)). |
 | **Operations → Agents / Skills / Tools / Personalities** | Profile-aware configuration + per-agent performance analytics. |
 | **Config → Models / HERMES.md / Environment** | Model registry, `.env` editor, and below the pinned three, the grouped Hermes `config.yaml` section editors. |
 | **Sidebar (bottom)** | **Check** compares to remote; **Update** pulls, backs up + migrates, rebuilds, and restarts; **Rebuild** builds the current tree and restarts. |
@@ -131,7 +131,7 @@ The bootstrap and deploy scripts prompt by default and **skip every prompt** whe
 | **`~/.hermes`** (`HERMES_HOME`) | Hermes data: `config.yaml`, `profiles/`, sessions, the agent package (`~/.hermes/hermes-agent/`). |
 | **`~/patterstage/data`** (`PS_DATA_DIR`, default) | PatterStage SQLite (`patterstage.db`), missions, templates, stories, logs — not committed to git. |
 
-Set `PS_DATA_DIR` / `HERMES_HOME` in `.env.local` for non-default paths. Full reference: [docs/ENV_REFERENCE.md](docs/ENV_REFERENCE.md).
+Set `PS_DATA_DIR` / `HERMES_HOME` in `.env.local` for non-default paths. Full reference: [docs/running/env-reference.md](docs/running/env-reference.md).
 
 ---
 
@@ -146,9 +146,9 @@ bash scripts/application/ps-deploy.sh restart    # restart the server only
 bash scripts/maintenance/ps-migrate.sh           # database migration only (interactive; --yes to skip prompts)
 ```
 
-**Your data is migrated, not wiped.** Every update/migration **backs up `patterstage.db` first** (`patterstage.db.pre-migrate-<timestamp>.bak` under `PS_DATA_DIR`), then applies the full schema migration (the same applier chain the app runs at boot) and converts legacy recurring cron jobs into PatterStage schedules. The schema change is additive — existing missions, models, sessions, and credentials are preserved. If a database is ever too old/incompatible to upgrade in place, it is rebuilt from baseline with preserved tables re-imported, and anything that couldn't be carried over **remains in the backup with a logged warning** — nothing is silently lost. Details: [docs/MIGRATION.md](docs/MIGRATION.md).
+**Your data is migrated, not wiped.** Every update/migration **backs up `patterstage.db` first** (`patterstage.db.pre-migrate-<timestamp>.bak` under `PS_DATA_DIR`), then applies the full schema migration (the same applier chain the app runs at boot) and converts legacy recurring cron jobs into PatterStage schedules. The schema change is additive — existing missions, models, sessions, and credentials are preserved. If a database is ever too old/incompatible to upgrade in place, it is rebuilt from baseline with preserved tables re-imported, and anything that couldn't be carried over **remains in the backup with a logged warning** — nothing is silently lost. Details: [docs/running/migration.md](docs/running/migration.md).
 
-See [docs/DEPLOY.md](docs/DEPLOY.md) for Docker, TLS, ports, and the LAN relay.
+See [docs/running/deploy.md](docs/running/deploy.md) for Docker, TLS, ports, and the LAN relay.
 
 ---
 
@@ -161,8 +161,8 @@ See [docs/DEPLOY.md](docs/DEPLOY.md) for Docker, TLS, ports, and the LAN relay.
 | **Hermes not found / missions fail** | Install Hermes; set `HERMES_HOME` in `.env.local`; confirm `hermes` is on `PATH` and the API Server is enabled. |
 | **Schedules / scripts not firing** | The scheduler boots with the server (`src/instrumentation.ts`); confirm the server is running and check Main → Logs. |
 | **Catalog seed warning during setup** | Run `npx tsx scripts/tooling/seed-catalog.ts --merge` or use Config → Seed. |
-| **Cancel didn't stop the agent** | See [Missions → Cancellation](docs/MISSIONS.md); cancellation stops the backend run over HTTP. |
-| **Optional LAN relay (`PS_SOCAT_RELAY`)** | On macOS: `brew install socat`. See [docs/DEPLOY.md](docs/DEPLOY.md). |
+| **Cancel didn't stop the agent** | See [Missions → Cancellation](docs/guides/missions.md); cancellation stops the backend run over HTTP. |
+| **Optional LAN relay (`PS_SOCAT_RELAY`)** | On macOS: `brew install socat`. See [docs/running/deploy.md](docs/running/deploy.md). |
 
 ---
 
@@ -178,10 +178,10 @@ npm run test:e2e-hermes   # full-stack against a real Hermes container — the m
 App pages live under `src/app/`; API routes under `src/app/api/`. Orchestration core (missions, scheduler, run reconcile) is `src/lib/orchestration/`; the one seam to the agent is `src/lib/runtime/` (`AgentRuntime` → `HermesRuntime`).
 
 - **Contributing & branches:** [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md)
-- **Testing & CI:** [docs/TESTING.md](docs/TESTING.md)
-- **REST API:** [docs/API.md](docs/API.md)
-- **Analytics & achievements:** [docs/ANALYTICS.md](docs/ANALYTICS.md)
-- **Agent entry point:** [AGENTS.md](AGENTS.md) · **repo tree & conventions:** [docs/REPO_GUIDE.md](docs/REPO_GUIDE.md)
+- **Testing & CI:** [docs/contributing/testing.md](docs/contributing/testing.md)
+- **REST API:** [docs/reference/api.md](docs/reference/api.md)
+- **Analytics & achievements:** [docs/guides/insights.md](docs/guides/insights.md)
+- **Agent entry point:** [AGENTS.md](AGENTS.md) · **repo tree & conventions:** [docs/contributing/repo-guide.md](docs/contributing/repo-guide.md)
 - **Decisions:** [org/decisions/](org/decisions/)
 
 ---
@@ -197,7 +197,7 @@ App pages live under `src/app/`; API routes under `src/app/api/`. Orchestration 
 | `scripts/bootstrap/stop.sh` | Stop listeners on `PORT`. |
 | `scripts/lib/ps-log.sh` | Shared logging + prompt helpers (`ps_info/ok/warn/err` + `ps_confirm`). |
 
-Professional seeds: `data/seed/`. Full layout + flags: [docs/DEPLOY.md](docs/DEPLOY.md).
+Professional seeds: `data/seed/`. Full layout + flags: [docs/running/deploy.md](docs/running/deploy.md).
 
 ---
 

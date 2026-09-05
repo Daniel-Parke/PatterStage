@@ -317,8 +317,8 @@ describe("(8) GET still says no, and now says what to use instead", () => {
 });
 
 describe("what the gates read", () => {
-  it("(9) the docs/API.md row for /api/credentials/[id] lists PATCH", () => {
-    const apiMd = readFileSync(join(ROOT, "docs", "API.md"), "utf-8");
+  it("(9) the docs/reference/api.md row for /api/credentials/[id] lists PATCH", () => {
+    const apiMd = readFileSync(join(ROOT, "docs", "reference", "api.md"), "utf-8");
     const row = apiMd.match(/^\| `\/api\/credentials\/\[id\]` \|([^\n]*)/m);
 
     expect(row).not.toBeNull();

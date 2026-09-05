@@ -156,7 +156,7 @@ export const RULES = [
   },
   {
     id: "no-raw-colour-in-tsx",
-    law: "Colour comes from a token, never a literal. Design tokens are in globals.css @theme + src/lib/theme.ts (docs/design-tokens.md).",
+    law: "Colour comes from a token, never a literal. Design tokens are in globals.css @theme + src/lib/theme.ts (docs/contributing/design-tokens.md).",
     files: (f) => f.startsWith("src/") && f.endsWith(".tsx"),
     pattern: /#[0-9a-fA-F]{3,8}\b|\brgba?\(\s*\d/,
   },

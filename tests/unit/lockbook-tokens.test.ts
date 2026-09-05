@@ -2,7 +2,7 @@
 // ═══════════════════════════════════════════════════════════════
 // The tokens the first-build lock-in sitting ruled (T-0028, 2026-08-24).
 //
-// docs/LOCKBOOK.md's Tokens section names two homes for a design token, the
+// org/LOCKBOOK.md's Tokens section names two homes for a design token, the
 // @theme block in src/app/globals.css and the code mirror in src/lib/theme.ts,
 // and states that the two must agree. Two homes and a promise is not a contract:
 // a class string in theme.ts naming a token nobody declared compiles, passes
@@ -155,7 +155,7 @@ describe("the RGB mirror tokens are usable by the rules that consume them", () =
    * That is not theoretical. Until 2026-08-24 all six mirrors held comma lists,
    * so eighteen paint rules in this stylesheet rendered NOTHING: every
    * .text-glow-*, every .glow-* box-shadow, .scanlines and .grid-bg, plus
-   * GlowSurface through --glow-surface-rgb. docs/design-tokens.md reserves
+   * GlowSurface through --glow-surface-rgb. docs/contributing/design-tokens.md reserves
    * those for LIVE state and the lock-book's motif is "the only bright things
    * are live state", so the entire liveness signal was invisible and a running
    * session looked exactly like a finished one. Nothing failed, because a

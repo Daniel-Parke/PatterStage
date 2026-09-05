@@ -1,10 +1,13 @@
 ---
+title: Contributing
 summary: The quick path to a merged pull request, the code standards and the checks CI runs
+section: contributing
+nav: 10
+audience: contributor
 type: policy
 tags: [community, process]
 compiled_from: normalised
 ---
-
 # Contributing
 
 If you've got this far thank you for considering to pitch in.
@@ -28,7 +31,7 @@ If you've got this far thank you for considering to pitch in.
    `npm run lint` is nine gates chained, not just eslint: agent files, doc links,
    derived views, read-only guards, design lint, contrast, coverage floors,
    `eslint --max-warnings 0`, then `typecheck:tests`. `canary:check` (the output
-   canary, see [OUTPUT_CANARY.md](OUTPUT_CANARY.md)) and `lint:knip` are **not**
+   canary, see [OUTPUT_CANARY.md](contributing/output-canary.md)) and `lint:knip` are **not**
    in that chain and block CI separately, which is why they are listed here.
 
 4. **Open a PR into `dev`** with a clear title and what/why in the description.
@@ -56,8 +59,8 @@ If your change touches behaviour or config, **update docs in the same PR**. Stal
 
 | Folder pattern | Appears in URL? | Example |
 |----------------|-----------------|---------|
-| `(main)` | **No**, organizational only | `src/app/(main)/sessions/page.tsx` → **`/sessions`** |
-| `orchestration` | **Yes** | `src/app/orchestration/missions/page.tsx` → **`/orchestration/missions`** |
+| `(main)` | **No**, organizational only | `src/app/(main)/results/sessions/page.tsx` → **`/results/sessions`** |
+| `work` | **Yes** | `src/app/work/missions/page.tsx` → **`/work/missions`** |
 | `[id]`, `[key]`, `[name]` | **Yes** (dynamic segment) | `src/app/api/models/[id]/route.ts` → `/api/models/:id` |
 | `[...path]` | **Yes** (catch-all) | `src/app/api/skills/[...path]/route.ts` → `/api/skills/a/b/c` |
 
@@ -74,14 +77,14 @@ page from the navigation matrix; deriving them removed the class of bug. Do not 
 - First-time setup: `bash scripts/bootstrap/setup.sh` (writes `.env.local`, picks a free **PORT** in **42069–42100**, sets LAN dev origins).
 - `npm run dev` / `npm run start` read `PORT` from the environment; the UI uses same-origin `/api/...` so it does not hardcode a port.
 - **Playwright:** the 3000 pin is in the npm script, not in CI. `npm run test:e2e` is `cross-env PORT=3000 playwright test`, so it forces 3000 locally and in CI alike, over any `PORT` you exported. `.env.local`'s `PORT` never reaches the E2E suite: nothing in that chain loads it, and `playwright.config.ts` additionally passes `-p` to the server it starts so the `next start` child cannot pick up a different one either. To use another port, run `npx playwright test` directly with `PORT` set.
-- Fresh DB before E2E: `npm run prebuild`. Full detail: **[TESTING.md](TESTING.md)** (Jest layout, smoke flag, and why `tests/e2e/app-routes.ts` needs no syncing).
+- Fresh DB before E2E: `npm run prebuild`. Full detail: **[TESTING.md](contributing/testing.md)** (Jest layout, smoke flag, and why `tests/e2e/app-routes.ts` needs no syncing).
 
 ## Git hooks and CI
 
 - Optional **pre-push hook** ([`scripts/git-hooks/pre-push`](../scripts/git-hooks/pre-push)): blocks direct pushes to `main`. Install with `git config core.hooksPath scripts/git-hooks` from the repo root.
 - **Branch protection on `main`** is the real gate (PR + checks).
 - **[`ci.yml`](../.github/workflows/ci.yml)**, on a PR into `dev`: lint, **output canary**, **knip**, the Hermes-path gate, types, tests + coverage, build, E2E smoke (Ubuntu), build+test (macOS), `boot-smoke` (Ubuntu + macOS), shell script tests, the Docker **install harness**, and the Docker deploy smoke. The canary, knip and install-harness are the ones people trip on, because none of them is reachable from `npm run lint`.
-- **Main only.** `e2e-full` (the whole Playwright suite) and `acceptance-gate` run on PRs targeting `main` and on manual dispatch; `real-hermes-integration` also runs on every push. They will not fire on your `dev` PR. Full detail in [TESTING.md](TESTING.md).
+- **Main only.** `e2e-full` (the whole Playwright suite) and `acceptance-gate` run on PRs targeting `main` and on manual dispatch; `real-hermes-integration` also runs on every push. They will not fire on your `dev` PR. Full detail in [TESTING.md](contributing/testing.md).
 - **[`gitleaks.yml`](../.github/workflows/gitleaks.yml)**: please do not commit API keys. I will be grumpy.
 
 ## License
@@ -93,9 +96,9 @@ By contributing, you agree your contributions are licensed under the [Apache Lic
 | Topic | Doc |
 |-------|-----|
 | Operator install | [README.md](../README.md) |
-| UI walkthrough | [USER_WALKTHROUGH_GUIDE.md](USER_WALKTHROUGH_GUIDE.md) |
-| Deploy / `ps-deploy` | [DEPLOY.md](DEPLOY.md) |
-| API reference | [API.md](API.md) |
+| UI walkthrough | [USER_WALKTHROUGH_GUIDE.md](README.md) |
+| Deploy / `ps-deploy` | [DEPLOY.md](running/deploy.md) |
+| API reference | [API.md](reference/api.md) |
 | Doc index | [README.md](README.md) |
 
 Questions? Open an issue or ask in the PR. Concrete repro steps beat "it broke."

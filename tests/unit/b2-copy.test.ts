@@ -4,7 +4,7 @@
  *
  * The review found three registers of copy on the product's screens (novice,
  * operator, Hermes-internal) and the last two dominating; an ADR reference on
- * the Agents page; task ids in tooltips. docs/COPY.md says which register each
+ * the Agents page; task ids in tooltips. docs/contributing/copy.md says which register each
  * surface speaks and what may never appear in user copy. copy-lint.mjs measures
  * the debt in --report mode; it becomes a gate once the sweep in B18 lands.
  */
@@ -16,8 +16,8 @@ import { decide, findCopyDebt } from "../../scripts/tooling/copy-lint.mjs";
 
 const ROOT = join(__dirname, "..", "..");
 
-describe("docs/COPY.md", () => {
-  const path = join(ROOT, "docs", "COPY.md");
+describe("docs/contributing/copy.md", () => {
+  const path = join(ROOT, "docs", "contributing", "copy.md");
   it("exists and names the three registers and the forbidden references", () => {
     expect(existsSync(path)).toBe(true);
     const doc = readFileSync(path, "utf-8");

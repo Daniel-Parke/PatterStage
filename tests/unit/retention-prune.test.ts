@@ -451,7 +451,7 @@ describe("the failure modes that must not become half-deletions", () => {
 
   it("refuses when migration 032 has not seeded a policy row", () => {
     // The state a database is in if the applier were ever unwired, which
-    // docs/MIGRATION.md warns is silent by construction. Refusing beats guessing
+    // docs/running/migration.md warns is silent by construction. Refusing beats guessing
     // a window from a default nobody chose.
     event("2019-01-01 00:00:00");
     testDb!.prepare("DELETE FROM retention_policy").run();

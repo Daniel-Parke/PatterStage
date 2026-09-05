@@ -14,7 +14,7 @@
 // name in their own headers — resolves its repo root from the module's own
 // location, not the working directory. Run from a venture it reports
 // `{"regenerated": [...]}`, exits 0, and regenerates the EOS checkout's views
-// rather than the venture's. Filed as friction in docs/EOS_FEEDBACK.md.
+// rather than the venture's. Filed as friction in org/EOS_FEEDBACK.md.
 //
 // WHAT THIS DOES NOT DO. It does not re-derive TASKS.md. A checker carrying its
 // own copy of a generator's rule is how the two come to disagree, and the EOS's
@@ -24,12 +24,18 @@
 // formatting, ordering, prose, or org/STATE.md, all of which belong to the
 // generator alone.
 //
-// Dependency-free, per WG-WEB-013. Run by `npm run lint`; exits non-zero on
-// drift.
+// SECOND VIEW, added in B15: docs/manifest.json, at the foot of this file. The
+// two halves are independent and the org/TASKS.md half is unchanged by it.
+//
+// No dependency of its own, per WG-WEB-013 — the docs half imports
+// scripts/docs/lib.mjs, which imports js-yaml, a runtime dependency of this repo
+// since long before B15. `npm run lint` only ever runs after `npm ci`. Run by
+// `npm run lint`; exits non-zero on drift.
 
 import { readFileSync, existsSync, readdirSync } from "fs";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
+
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const TASKS_DIR = join(ROOT, "org", "tasks");
@@ -119,3 +125,83 @@ if (failures.length > 0) {
 }
 
 console.log(`derived views: org/TASKS.md matches all ${readView(readFileSync(VIEW, "utf-8")).size} records.`);
+
+// ── the second view: docs/manifest.json (B15, decision 3) ─────
+//
+// docs/**/*.md is the one source; docs/manifest.json is the sidebar, the reading
+// order, the screen -> guide map and the concept list derived from its front
+// matter. Three surfaces read it — the published site, the in-app Help section
+// and the screenshot spec — so a stale copy misroutes all three at once.
+//
+// Unlike org/TASKS.md, this view IS re-derived here, and the objection recorded
+// above does not apply: the rule is not copied, it is imported. buildManifest
+// and serialiseManifest are the same functions build-site.mjs calls, so there is
+// one implementation and nothing for a second one to drift away from.
+
+const DOCS_DIR = join(ROOT, "docs");
+const DOCS_VIEW = join(DOCS_DIR, "manifest.json");
+
+/** Every .md under docs/, as "/"-joined paths relative to it. */
+function markdownUnder(dir, prefix = "") {
+  const found = [];
+  for (const entry of readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+    const rel = prefix ? `${prefix}/${entry.name}` : entry.name;
+    if (entry.isDirectory()) found.push(...markdownUnder(join(dir, entry.name), rel));
+    else if (/\.md$/i.test(entry.name)) found.push(rel);
+  }
+  return found;
+}
+
+const docsFailures = [];
+let pageCount = 0;
+
+if (!existsSync(DOCS_DIR)) {
+  // Not a refusal. A tree with no docs/ has no second derived view, and this
+  // script's job is to catch a view that DISAGREES with its source, not to
+  // assert which directories a repository has. A docs/ that went missing in the
+  // real tree is caught by check-doc-links, docs:check and the build, all three
+  // of which run beside this one.
+  console.log("derived views: no docs/ in this tree, so there is no manifest to compare.");
+} else {
+  // Imported here rather than at the top, so a tree with no docs/ never loads
+  // it. That is not hypothetical: derived-views-drift.test.ts runs this script
+  // against fixture repos that hold only org/, and a top-level import would
+  // make every one of those cases fail on a module resolution instead of on the
+  // thing it is asking about.
+  const { buildManifest, parseDocFrontMatter, serialiseManifest, slugFor } = await import(
+    "../docs/lib.mjs"
+  );
+  const pages = [];
+  for (const rel of markdownUnder(DOCS_DIR)) {
+    const path = `docs/${rel}`;
+    const parsed = parseDocFrontMatter(readFileSync(join(DOCS_DIR, rel), "utf-8"), path);
+    // A page whose front matter is refused cannot appear in the manifest, so the
+    // manifest cannot be compared until it is fixed. Reported here rather than
+    // guessed past, and `npm run docs:check` is where the same refusal is
+    // explained at length.
+    if (parsed.ok) pages.push({ path, slug: slugFor(path), data: parsed.data, body: parsed.body });
+    else docsFailures.push(...parsed.errors);
+  }
+  pageCount = pages.length;
+
+  if (docsFailures.length === 0) {
+    const expected = serialiseManifest(buildManifest(pages));
+    if (!existsSync(DOCS_VIEW)) {
+      docsFailures.push("docs/manifest.json is missing");
+    } else if (readFileSync(DOCS_VIEW, "utf-8") !== expected) {
+      docsFailures.push("docs/manifest.json does not match the front matter under docs/");
+    }
+  }
+}
+
+if (docsFailures.length > 0) {
+  console.error("derived views: docs/manifest.json disagrees with the front matter under docs/.\n");
+  for (const f of docsFailures) console.error(`  ${f}`);
+  console.error(
+    "\nDo NOT hand-edit docs/manifest.json — it is derived. Regenerate it:" +
+      "\n\n  npm run docs:build -- --manifest-only\n",
+  );
+  process.exit(1);
+}
+
+console.log(`derived views: docs/manifest.json matches the front matter of all ${pageCount} pages.`);

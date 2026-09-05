@@ -34,7 +34,7 @@ export interface ModuleEntry {
 }
 
 /** The surfaces held against the committed golden. Deliberately excludes the
- *  noisy ones (moduleGraph, prerender); see docs/OUTPUT_CANARY.md. */
+ *  noisy ones (moduleGraph, prerender); see docs/contributing/output-canary.md. */
 export const GOLDEN_SURFACES: readonly string[];
 
 /** Matches a commit message that declares itself a pure move. */

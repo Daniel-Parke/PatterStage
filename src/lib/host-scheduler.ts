@@ -6,7 +6,7 @@
 // (readRaw/writeRaw), so its parse/serialise/disabled logic is OS-agnostic.
 //
 // PatterStage targets Linux (and macOS for development); on Windows, run it
-// under WSL2 (Ubuntu) — see docs/CROSS_PLATFORM.md. There is no native-Windows
+// under WSL2 (Ubuntu) — see docs/running/cross-platform.md. There is no native-Windows
 // Task Scheduler backend, and that is now a REASON rather than a dead end:
 // `hostSchedulerAvailability` below says so in a sentence the Scripts page
 // shows, and PatterStage's own tick carries the schedule instead (T-0107,

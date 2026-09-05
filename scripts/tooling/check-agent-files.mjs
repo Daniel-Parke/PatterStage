@@ -7,7 +7,7 @@
 // Why the cap: AGENTS.md reached 183 lines of project detail, went stale, and
 // agents followed it anyway — it told them to write `--ch-*` CSS variables that
 // do not exist and to use a component that had been deleted. A router that stays
-// short stays read; the detail belongs in docs/REPO_GUIDE.md where being wrong is
+// short stays read; the detail belongs in docs/contributing/repo-guide.md where being wrong is
 // survivable.
 //
 // Run by `npm run lint`. Exits non-zero on a violation.
@@ -34,7 +34,7 @@ if (!existsSync(agentsPath)) {
   const lines = agents.toString("utf-8").replace(/\r?\n$/, "").split(/\r?\n/).length;
   if (lines > ROUTER_CAP) {
     failures.push(
-      `AGENTS.md is ${lines} lines, cap ${ROUTER_CAP}. Move detail into docs/REPO_GUIDE.md.`,
+      `AGENTS.md is ${lines} lines, cap ${ROUTER_CAP}. Move detail into docs/contributing/repo-guide.md.`,
     );
   }
 

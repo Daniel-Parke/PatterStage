@@ -40,6 +40,9 @@ function runIn(root: string): Run {
   const dir = join(root, "scripts", "tooling");
   mkdirSync(dir, { recursive: true });
   cpSync(SCRIPT, join(dir, "check-derived-views.mjs"));
+  // No scripts/docs/lib.mjs here on purpose. The script grew a second derived
+  // view in T-0109, and it imports that module LAZILY, only where docs/ exists.
+  // These fixtures hold only org/, which is the shape these cases are about.
   try {
     const out = execFileSync(process.execPath, [join(dir, "check-derived-views.mjs")], {
       encoding: "utf-8",

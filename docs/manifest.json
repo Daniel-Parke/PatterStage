@@ -1,0 +1,709 @@
+{
+  "generatedBy": "scripts/docs/build-site.mjs",
+  "sections": [
+    {
+      "id": "start-here",
+      "label": "Start here",
+      "pages": [
+        {
+          "slug": "index",
+          "title": "Documentation",
+          "summary": "The reading path: what PatterStage is, the first hour, one guide per screen, and where the governing corpus lives",
+          "nav": 0
+        },
+        {
+          "slug": "start-here/index",
+          "title": "What PatterStage is",
+          "summary": "What PatterStage is: what it is and what to do there",
+          "nav": 10,
+          "concepts": [
+            "agent"
+          ]
+        },
+        {
+          "slug": "start-here/install",
+          "title": "Installing",
+          "summary": "Installing: what it is and what to do there",
+          "nav": 20
+        },
+        {
+          "slug": "start-here/first-hour",
+          "title": "The first hour",
+          "summary": "The first hour: what it is and what to do there",
+          "nav": 30,
+          "concepts": [
+            "mission",
+            "run",
+            "session",
+            "artifact"
+          ]
+        },
+        {
+          "slug": "start-here/quests",
+          "title": "Quests",
+          "summary": "Quests: what it is and what to do there",
+          "nav": 40
+        },
+        {
+          "slug": "start-here/getting-help",
+          "title": "Getting help",
+          "summary": "Getting help: what it is and what to do there",
+          "nav": 50
+        },
+        {
+          "slug": "support",
+          "title": "Support",
+          "summary": "Where to get help, and which questions belong to Hermes rather than to this repository",
+          "nav": 60
+        }
+      ]
+    },
+    {
+      "id": "concepts",
+      "label": "Concepts",
+      "pages": [
+        {
+          "slug": "concepts/agent",
+          "title": "Agent",
+          "summary": "Agent: what it is and what to do there",
+          "nav": 10
+        },
+        {
+          "slug": "concepts/prompt",
+          "title": "Prompt",
+          "summary": "Prompt: what it is and what to do there",
+          "nav": 20
+        },
+        {
+          "slug": "concepts/model",
+          "title": "Model",
+          "summary": "Model: what it is and what to do there",
+          "nav": 30
+        },
+        {
+          "slug": "concepts/provider",
+          "title": "Provider",
+          "summary": "Provider: what it is and what to do there",
+          "nav": 40
+        },
+        {
+          "slug": "concepts/api-key",
+          "title": "API key",
+          "summary": "API key: what it is and what to do there",
+          "nav": 50
+        },
+        {
+          "slug": "concepts/profile",
+          "title": "Profile",
+          "summary": "Profile: what it is and what to do there",
+          "nav": 60
+        },
+        {
+          "slug": "concepts/personality",
+          "title": "Personality",
+          "summary": "Personality: what it is and what to do there",
+          "nav": 70
+        },
+        {
+          "slug": "concepts/skill",
+          "title": "Skill",
+          "summary": "Skill: what it is and what to do there",
+          "nav": 80
+        },
+        {
+          "slug": "concepts/tool",
+          "title": "Tool",
+          "summary": "Tool: what it is and what to do there",
+          "nav": 90
+        },
+        {
+          "slug": "concepts/toolset",
+          "title": "Toolset",
+          "summary": "Toolset: what it is and what to do there",
+          "nav": 100
+        },
+        {
+          "slug": "concepts/memory",
+          "title": "Memory",
+          "summary": "Memory: what it is and what to do there",
+          "nav": 110
+        },
+        {
+          "slug": "concepts/session",
+          "title": "Session",
+          "summary": "Session: what it is and what to do there",
+          "nav": 120
+        },
+        {
+          "slug": "concepts/transcript",
+          "title": "Transcript",
+          "summary": "Transcript: what it is and what to do there",
+          "nav": 130
+        },
+        {
+          "slug": "concepts/mission",
+          "title": "Mission",
+          "summary": "Mission: what it is and what to do there",
+          "nav": 140
+        },
+        {
+          "slug": "concepts/run",
+          "title": "Run",
+          "summary": "Run: what it is and what to do there",
+          "nav": 150
+        },
+        {
+          "slug": "concepts/schedule",
+          "title": "Schedule",
+          "summary": "Schedule: what it is and what to do there",
+          "nav": 160
+        },
+        {
+          "slug": "concepts/workflow",
+          "title": "Workflow",
+          "summary": "Workflow: what it is and what to do there",
+          "nav": 170
+        },
+        {
+          "slug": "concepts/gate",
+          "title": "Gate",
+          "summary": "Gate: what it is and what to do there",
+          "nav": 180
+        },
+        {
+          "slug": "concepts/artifact",
+          "title": "Artifact",
+          "summary": "Artifact: what it is and what to do there",
+          "nav": 190
+        },
+        {
+          "slug": "concepts/spend",
+          "title": "Spend",
+          "summary": "Spend: what it is and what to do there",
+          "nav": 200
+        }
+      ]
+    },
+    {
+      "id": "guides",
+      "label": "Guides",
+      "pages": [
+        {
+          "slug": "guides/dashboard",
+          "title": "Dashboard",
+          "summary": "Dashboard: what it is and what to do there",
+          "nav": 10,
+          "screen": "/",
+          "concepts": [
+            "agent",
+            "mission",
+            "run"
+          ]
+        },
+        {
+          "slug": "guides/chat",
+          "title": "Chat",
+          "summary": "The Chat page, its Agent and Fast modes, and how a turn becomes a real agent run",
+          "nav": 20,
+          "screen": "/work/chat",
+          "concepts": [
+            "agent",
+            "prompt",
+            "model"
+          ]
+        },
+        {
+          "slug": "guides/missions",
+          "title": "Missions",
+          "summary": "How missions are stored, dispatched and cancelled, and how the stored prompt is built",
+          "nav": 30,
+          "screen": "/work/missions",
+          "concepts": [
+            "mission",
+            "run",
+            "schedule"
+          ]
+        },
+        {
+          "slug": "guides/composer",
+          "title": "Composer",
+          "summary": "Composer, the graph orchestrator: staged agent runs, conditional edges and human-in-the-loop gates",
+          "nav": 40,
+          "screen": "/work/composer",
+          "concepts": [
+            "workflow",
+            "gate",
+            "run"
+          ]
+        },
+        {
+          "slug": "guides/research",
+          "title": "Deep Research",
+          "summary": "The native Deep Research engine, its plan, search, reason and synthesize loop, and where inference comes from",
+          "nav": 50,
+          "screen": "/work/research",
+          "concepts": [
+            "artifact",
+            "model",
+            "spend"
+          ]
+        },
+        {
+          "slug": "guides/scripts",
+          "title": "Scripts",
+          "summary": "Scripts: what it is and what to do there",
+          "nav": 60,
+          "screen": "/work/scripts",
+          "concepts": [
+            "schedule"
+          ]
+        },
+        {
+          "slug": "guides/sessions",
+          "title": "Sessions",
+          "summary": "Sessions: what it is and what to do there",
+          "nav": 70,
+          "screen": "/results/sessions",
+          "concepts": [
+            "session",
+            "transcript",
+            "run"
+          ]
+        },
+        {
+          "slug": "guides/artifacts",
+          "title": "Artifacts",
+          "summary": "Artifacts: what it is and what to do there",
+          "nav": 80,
+          "screen": "/results/artifacts",
+          "concepts": [
+            "artifact"
+          ]
+        },
+        {
+          "slug": "guides/insights",
+          "title": "Insights",
+          "summary": "How PatterStage logs interactions, turns them into achievements and surfaces them on the Insights page",
+          "nav": 90,
+          "screen": "/results/insights",
+          "concepts": [
+            "spend",
+            "run"
+          ]
+        },
+        {
+          "slug": "guides/logs",
+          "title": "Logs",
+          "summary": "Logs: what it is and what to do there",
+          "nav": 100,
+          "screen": "/results/logs"
+        },
+        {
+          "slug": "guides/agents",
+          "title": "Agents",
+          "summary": "Agents: what it is and what to do there",
+          "nav": 110,
+          "screen": "/agent/profiles",
+          "concepts": [
+            "agent",
+            "profile",
+            "personality"
+          ]
+        },
+        {
+          "slug": "guides/skills",
+          "title": "Skills",
+          "summary": "Skills: what it is and what to do there",
+          "nav": 120,
+          "screen": "/agent/skills",
+          "concepts": [
+            "skill",
+            "toolset"
+          ]
+        },
+        {
+          "slug": "guides/tools",
+          "title": "Tools",
+          "summary": "Tools: what it is and what to do there",
+          "nav": 130,
+          "screen": "/agent/tools",
+          "concepts": [
+            "tool",
+            "toolset"
+          ]
+        },
+        {
+          "slug": "guides/memory",
+          "title": "Memory",
+          "summary": "The Memory page and the Hindsight provider behind it, and how the agent's long-term memory is browsed",
+          "nav": 140,
+          "screen": "/agent/memory",
+          "concepts": [
+            "memory"
+          ]
+        },
+        {
+          "slug": "guides/models",
+          "title": "Models",
+          "summary": "Models: what it is and what to do there",
+          "nav": 150,
+          "screen": "/agent/models",
+          "concepts": [
+            "model",
+            "provider",
+            "api-key"
+          ]
+        },
+        {
+          "slug": "guides/settings",
+          "title": "Settings",
+          "summary": "Settings: what it is and what to do there",
+          "nav": 160,
+          "screen": "/agent/settings"
+        },
+        {
+          "slug": "guides/story-weaver",
+          "title": "Story Weaver",
+          "summary": "Story Weaver: what it is and what to do there",
+          "nav": 170,
+          "screen": "/recroom/story-weaver",
+          "concepts": [
+            "spend"
+          ]
+        },
+        {
+          "slug": "guides/story-create",
+          "title": "Create a story",
+          "summary": "Create a story: what it is and what to do there",
+          "nav": 180,
+          "screen": "/recroom/story-weaver/create",
+          "concepts": [
+            "model"
+          ]
+        },
+        {
+          "slug": "guides/story-library",
+          "title": "Story library",
+          "summary": "Story library: what it is and what to do there",
+          "nav": 190,
+          "screen": "/recroom/story-weaver/library"
+        },
+        {
+          "slug": "guides/story-characters",
+          "title": "Characters",
+          "summary": "Characters: what it is and what to do there",
+          "nav": 200,
+          "screen": "/recroom/story-weaver/characters"
+        },
+        {
+          "slug": "guides/story-themes",
+          "title": "Themes",
+          "summary": "Themes: what it is and what to do there",
+          "nav": 210,
+          "screen": "/recroom/story-weaver/themes"
+        },
+        {
+          "slug": "guides/quests",
+          "title": "Quests",
+          "summary": "Quests: what it is and what to do there",
+          "nav": 220,
+          "screen": "/quests"
+        },
+        {
+          "slug": "guides/help",
+          "title": "Help",
+          "summary": "Help: what it is and what to do there",
+          "nav": 230,
+          "screen": "/help"
+        }
+      ]
+    },
+    {
+      "id": "running",
+      "label": "Running it",
+      "pages": [
+        {
+          "slug": "running/deploy",
+          "title": "Deploying",
+          "summary": "The one supported deployment model, the native host install, plus ports, scripts and the deploy buttons",
+          "nav": 10
+        },
+        {
+          "slug": "running/env-reference",
+          "title": "Environment reference",
+          "summary": "Every environment variable PatterStage reads, plus the Hermes paths and keys it needs, with defaults and what consumes them",
+          "nav": 20
+        },
+        {
+          "slug": "running/data-storage",
+          "title": "Where your data lives",
+          "summary": "Where PatterStage keeps its data, and why the legacy control-hub names are still read",
+          "nav": 30
+        },
+        {
+          "slug": "running/backup",
+          "title": "Backup and restore",
+          "summary": "Backup and restore: what it is and what to do there",
+          "nav": 40
+        },
+        {
+          "slug": "running/migration",
+          "title": "Upgrades and migrations",
+          "summary": "How data survives upgrades, the rule for adding a schema change, and what the repository rename means for existing clones and forks",
+          "nav": 50
+        },
+        {
+          "slug": "running/host-scheduling",
+          "title": "Host scheduling",
+          "summary": "The host-level cron scripts PatterStage ships, the Hindsight backup in detail, and how the Scripts page registers jobs",
+          "nav": 60,
+          "concepts": [
+            "schedule"
+          ]
+        },
+        {
+          "slug": "running/cross-platform",
+          "title": "Platforms",
+          "summary": "The Linux-first platform ruling, and what Linux, macOS and Windows under WSL2 each get",
+          "nav": 70
+        },
+        {
+          "slug": "running/troubleshooting",
+          "title": "Troubleshooting",
+          "summary": "Troubleshooting: what it is and what to do there",
+          "nav": 80
+        },
+        {
+          "slug": "security",
+          "title": "Security",
+          "summary": "How to report a vulnerability in PatterStage privately, and what to include",
+          "nav": 90
+        }
+      ]
+    },
+    {
+      "id": "reference",
+      "label": "Reference",
+      "pages": [
+        {
+          "slug": "reference/api",
+          "title": "HTTP API",
+          "summary": "REST route inventory and the response envelope every PatterStage API handler returns",
+          "nav": 10
+        },
+        {
+          "slug": "reference/schema",
+          "title": "Database schema",
+          "summary": "The versioned schema artifacts, the bump policy, and how the JSON Schema files are generated",
+          "nav": 20
+        },
+        {
+          "slug": "reference/spend",
+          "title": "Spend",
+          "summary": "Provider spend in PatterStage, how it is estimated, the optional budget, and the hard stop that is off until you turn it on",
+          "nav": 30,
+          "concepts": [
+            "spend",
+            "model"
+          ]
+        },
+        {
+          "slug": "reference/catalog-and-profiles",
+          "title": "Profiles and the skills catalogue",
+          "summary": "How SQLite holds agent profiles and the skills catalog, and how push and pull mirror them to Hermes on disk",
+          "nav": 40,
+          "concepts": [
+            "profile",
+            "skill",
+            "toolset"
+          ]
+        },
+        {
+          "slug": "reference/runtime-architecture",
+          "title": "Runtime architecture",
+          "summary": "How PatterStage executes and schedules agent work, and the single adapter seam to the backend",
+          "nav": 50,
+          "concepts": [
+            "run",
+            "session"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "contributing",
+      "label": "Contributing",
+      "pages": [
+        {
+          "slug": "contributing",
+          "title": "Contributing",
+          "summary": "The quick path to a merged pull request, the code standards and the checks CI runs",
+          "nav": 10
+        },
+        {
+          "slug": "contributing/repo-guide",
+          "title": "Repository guide",
+          "summary": "Repository layout, conventions, gates and shared utilities: the working detail the router no longer carries",
+          "nav": 20
+        },
+        {
+          "slug": "contributing/testing",
+          "title": "Testing",
+          "summary": "The map of Jest, Playwright and shell harnesses, and the gotchas each one hides",
+          "nav": 30
+        },
+        {
+          "slug": "contributing/output-canary",
+          "title": "The output canary",
+          "summary": "The output canary, what it proves, how to read a failure and how to re-bless the golden honestly",
+          "nav": 40
+        },
+        {
+          "slug": "contributing/design-tokens",
+          "title": "Design tokens",
+          "summary": "The Cherenkov palette, the semantic colour layer, and how TypeScript maps to CSS tokens",
+          "nav": 50
+        },
+        {
+          "slug": "contributing/copy",
+          "title": "Copy",
+          "summary": "The copy law for the product's screens, three registers, one status vocabulary, and the words that never reach a user",
+          "nav": 60
+        },
+        {
+          "slug": "adr/readme",
+          "title": "Decisions",
+          "summary": "Public pointer to the ADR home, which is org/decisions/ since the ADR-0008 cutover",
+          "nav": 70
+        },
+        {
+          "slug": "code-of-conduct",
+          "title": "How this repo works",
+          "summary": "How collaboration on this repository is expected to feel, written by the solo maintainer",
+          "nav": 80
+        }
+      ]
+    }
+  ],
+  "screens": {
+    "/": "guides/dashboard",
+    "/agent/memory": "guides/memory",
+    "/agent/models": "guides/models",
+    "/agent/profiles": "guides/agents",
+    "/agent/settings": "guides/settings",
+    "/agent/skills": "guides/skills",
+    "/agent/tools": "guides/tools",
+    "/help": "guides/help",
+    "/quests": "guides/quests",
+    "/recroom/story-weaver": "guides/story-weaver",
+    "/recroom/story-weaver/characters": "guides/story-characters",
+    "/recroom/story-weaver/create": "guides/story-create",
+    "/recroom/story-weaver/library": "guides/story-library",
+    "/recroom/story-weaver/themes": "guides/story-themes",
+    "/results/artifacts": "guides/artifacts",
+    "/results/insights": "guides/insights",
+    "/results/logs": "guides/logs",
+    "/results/sessions": "guides/sessions",
+    "/work/chat": "guides/chat",
+    "/work/composer": "guides/composer",
+    "/work/missions": "guides/missions",
+    "/work/research": "guides/research",
+    "/work/scripts": "guides/scripts"
+  },
+  "concepts": [
+    "agent",
+    "api-key",
+    "artifact",
+    "gate",
+    "memory",
+    "mission",
+    "model",
+    "personality",
+    "profile",
+    "prompt",
+    "provider",
+    "run",
+    "schedule",
+    "session",
+    "skill",
+    "spend",
+    "tool",
+    "toolset",
+    "transcript",
+    "workflow"
+  ],
+  "order": [
+    "index",
+    "start-here/index",
+    "start-here/install",
+    "start-here/first-hour",
+    "start-here/quests",
+    "start-here/getting-help",
+    "support",
+    "concepts/agent",
+    "concepts/prompt",
+    "concepts/model",
+    "concepts/provider",
+    "concepts/api-key",
+    "concepts/profile",
+    "concepts/personality",
+    "concepts/skill",
+    "concepts/tool",
+    "concepts/toolset",
+    "concepts/memory",
+    "concepts/session",
+    "concepts/transcript",
+    "concepts/mission",
+    "concepts/run",
+    "concepts/schedule",
+    "concepts/workflow",
+    "concepts/gate",
+    "concepts/artifact",
+    "concepts/spend",
+    "guides/dashboard",
+    "guides/chat",
+    "guides/missions",
+    "guides/composer",
+    "guides/research",
+    "guides/scripts",
+    "guides/sessions",
+    "guides/artifacts",
+    "guides/insights",
+    "guides/logs",
+    "guides/agents",
+    "guides/skills",
+    "guides/tools",
+    "guides/memory",
+    "guides/models",
+    "guides/settings",
+    "guides/story-weaver",
+    "guides/story-create",
+    "guides/story-library",
+    "guides/story-characters",
+    "guides/story-themes",
+    "guides/quests",
+    "guides/help",
+    "running/deploy",
+    "running/env-reference",
+    "running/data-storage",
+    "running/backup",
+    "running/migration",
+    "running/host-scheduling",
+    "running/cross-platform",
+    "running/troubleshooting",
+    "security",
+    "reference/api",
+    "reference/schema",
+    "reference/spend",
+    "reference/catalog-and-profiles",
+    "reference/runtime-architecture",
+    "contributing",
+    "contributing/repo-guide",
+    "contributing/testing",
+    "contributing/output-canary",
+    "contributing/design-tokens",
+    "contributing/copy",
+    "adr/readme",
+    "code-of-conduct"
+  ]
+}

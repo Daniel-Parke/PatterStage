@@ -8,7 +8,7 @@
 // target. This is the security-critical half of the route, so it lives in
 // one module where it can be read and tested as a unit.
 //
-// See docs/REPO_GUIDE.md for why `canonicaliseScriptsCommand` rebuilds the
+// See docs/contributing/repo-guide.md for why `canonicaliseScriptsCommand` rebuilds the
 // command instead of validating it.
 
 import { NextResponse } from "next/server";
