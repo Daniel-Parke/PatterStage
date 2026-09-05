@@ -81,9 +81,19 @@ claiming the pack itself is empty.
 | `POST /api/agent/profiles/sync/pull` | `{ slug?, all?, root?, skills?, importDiscovered? }` |
 | `GET /api/agent/profiles/sync/import` | List discovered local profiles |
 | `POST /api/agent/profiles/sync/import` | Import profile or skills catalog into SQLite |
-| `GET /api/agent/profiles` | List profiles + per-row `syncStatus` |
+| `GET /api/agent/profiles` | List profiles + per-row `syncStatus`, `syncError` and `syncedAt` |
+| `POST /api/agent/profiles` | Create one. `cloneFrom: "default"` copies the root agent's files; any other slug copies that profile; an empty value starts from the boilerplate |
+| `PUT /api/agent/profiles/[id]` | Rename a profile and change its description. A rename moves the slug and the profile directory with it |
+| `PUT /api/agent/root` | Rename the root agent. This is PatterStage's own label; nothing is written into the agent's home |
 
-**Operations → Agents:** drift banner, push/pull all, per-profile push/pull (including Bob).
+**Agent → Agents:** drift banner, push/pull all, per-profile push/pull (including the root
+agent), **Edit profile** on the selected card, and the per-row sync line: the stored
+`syncError` in full, then `Last pushed <when>` or `Never pushed`.
+
+A behaviour file lives in SQLite until the first push, so the file list counts a file as
+present when the database holds it, whether or not it has reached the disk yet.
+`HERMES.md` is the exception: it belongs to the root agent alone, and a PUT of it against a
+named profile is a 400 rather than a 200 that wrote nothing.
 
 **Models:** separate `GET/POST /api/models/sync/*` routes. Seeds do **not** set `model.default`. After **Push Bob** (root), PatterStage runs `finalizeRootConfigOnDisk()` so `model.*` / `auxiliary.*` from the Models registry are re-applied to `~/.hermes/config.yaml` and stored back in `agent_root.config_yaml` (prevents chat wiping the model block).
 

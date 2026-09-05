@@ -21,6 +21,7 @@ import { detectProfileDrift, detectRootDrift } from "@/modules/hermes/lib/profil
 import { countProfileSkills, countProfileToolsets } from "@/modules/hermes/lib/profile-counts";
 import { slugifyDisplayName, validateProfileDisplayName, DEFAULT_PROFILE_SLUG } from "@/lib/profile-slug";
 import { buildProfileHermesPathBundle } from "@/modules/hermes/lib/profile-paths";
+import { isManagedKey, readManagedFileContent } from "@/modules/hermes/lib/agent-file-store";
 import type { AgentProfile, ProfileFile } from "@/types/console";
 import { badRequest, conflict, ok, serverError } from "@/lib/api-response";
 
@@ -42,8 +43,15 @@ function getProfileFilesForSlug(slug: string): ProfileFile[] {
     : PROFILE_FILE_DEFS;
   return defs.map((def) => {
     const path = def.getPath(bundle);
-    const exists = existsSync(path);
-    const st = exists ? safeStat(path) : null;
+    const onDisk = existsSync(path);
+    // A managed file lives in the database until the first push, and the
+    // editor reads it from there. Reporting "missing" for a file the editor
+    // opens full of content is the file list disagreeing with the door beside
+    // it (T-0102, D26).
+    const exists =
+      onDisk ||
+      (isManagedKey(def.key) && (readManagedFileContent(slug, def.key)?.content ?? "").trim().length > 0);
+    const st = onDisk ? safeStat(path) : null;
     return {
       key: def.key,
       name: def.name,
@@ -171,8 +179,8 @@ export async function POST(request: NextRequest) {
     // USER.md and MEMORY.md with boilerplate and answered 200 (T-0061).
     if (slug === DEFAULT_PROFILE_SLUG) {
       return conflict(
-        `"${name.trim()}" resolves to the slug "default", which is the root agent rather than a ` +
-          `profile. Rename the root agent from Operations, or choose a different name.`,
+        `"${name.trim()}" resolves to the slug "default", which is reserved for the root agent. ` +
+          `Rename the root agent with Edit profile on its own card, or choose a different name here.`,
       );
     }
 
@@ -188,7 +196,18 @@ export async function POST(request: NextRequest) {
     let configYaml = defaultConfigYaml("technical");
     let personality = "technical";
 
-    if (cloneFrom && cloneFrom !== "default") {
+    // "Default (Bob)" is what the modal offers first, and it used to be the one
+    // value this branch skipped: `cloneFrom !== "default"` meant the most-used
+    // path silently wrote the boilerplate above over the clone the operator
+    // asked for, and answered 200 (T-0102, D18). The root agent is not in
+    // agent_profiles, so it is read from its own row.
+    if (cloneFrom === DEFAULT_PROFILE_SLUG) {
+      const root = getAgentRoot();
+      soulMd = root.soulMd;
+      agentsMd = root.agentsMd;
+      configYaml = root.configYaml;
+      personality = root.personality;
+    } else if (cloneFrom) {
       const source = getProfile(cloneFrom);
       if (source) {
         soulMd = source.soulMd;

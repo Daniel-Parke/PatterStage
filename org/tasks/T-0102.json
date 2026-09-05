@@ -2,18 +2,38 @@
   "id": "T-0102",
   "intent": "B8 of the final-release programme: Agents. Clone From: Default actually clones the root files (D18, blocker); silent refetch after first load, error card with Retry, empty state only on a successful empty read (D21, D22); a discard guard on select, open file and close (D23); Edit profile name and description through the existing PUT and a PatterStage display name for the root agent, decision 16 (D24, D25); missing never shown for a file the editor opens, syncError and Last pushed rendered, PUT of HERMES.md for a named profile answers 400 (D26 to D28); the explanatory paragraph in the novice register with the file names and the ADR reference behind a disclosure; the level card's not-implemented sentence removed.",
   "declared": {
-    "capabilities": ["edit-code", "filesystem"],
+    "capabilities": [
+      "edit-code",
+      "filesystem"
+    ],
     "side_effects": []
   },
   "mode": "standard",
   "tier_proposed": "R1",
   "tier_ruled": "R1",
   "reasons": [
-    {"factor": "size-threshold", "tier_floor": "R1", "source": "derived:diff-size", "evidence": "the profiles route and page"}
+    {
+      "factor": "size-threshold",
+      "tier_floor": "R1",
+      "source": "derived:diff-size",
+      "evidence": "the profiles route and page"
+    }
   ],
-  "status": "proposed",
-  "owner_session": "unassigned",
-  "claims": ["src/app/api/agent/", "src/app/agent/profiles/", "src/components/agents/", "src/modules/hermes/lib/profiles-repository.ts", "src/lib/db/", "tests/"],
+  "status": "in_progress",
+  "owner_session": "session-b8",
+  "claims": [
+    "src/app/api/agent/",
+    "src/app/agent/profiles/",
+    "src/components/agents/",
+    "src/modules/hermes/lib/agent-file-store.ts",
+    "src/modules/hermes/lib/profiles-repository.ts",
+    "src/lib/agent-root-repository.ts",
+    "docs/",
+    "tests/"
+  ],
   "programme": "B8, depends on B4 (T-0098) and B6 (T-0100). Route and page tests per defect; mutation sweep on the clone branch and the discard guard.",
-  "timestamps": {"opened": "2026-09-05T10:30:00Z", "updated": "2026-09-05T10:30:00Z"}
+  "timestamps": {
+    "opened": "2026-09-05T10:30:00Z",
+    "updated": "2026-09-05T16:00:00Z"
+  }
 }

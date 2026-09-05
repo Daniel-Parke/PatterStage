@@ -29,9 +29,10 @@ Every `route.ts` under `src/app/api` has a row, here or in the Chat / Composer /
 
 | Route | Methods | Purpose |
 |---|---|---|
-| `/api/agent/files/[key]` | `GET`, `PUT` | Read/update one behavior file (`soul`, `hermes`, `user`, `memory`, `agent`, `env`, `config`). Any other key is a **400** (`Unknown file key`). Optional `?profile=` for non-default profiles. |
+| `/api/agent/files/[key]` | `GET`, `PUT` | Read/update one behavior file (`soul`, `hermes`, `user`, `memory`, `agent`, `env`, `config`). Any other key is a **400** (`Unknown file key`). Optional `?profile=` for non-default profiles. `PUT hermes` on a named profile is a **400**: HERMES.md exists only on the root agent. |
 | `/api/agent/personality` | `PUT` | Set personality for one agent profile (Operations → Agents). |
-| `/api/agent/profiles` | `GET`, `POST` | Professional profiles (SQLite source of truth; each row includes `syncStatus` for drift). |
+| `/api/agent/root` | `GET`, `PUT` | The root agent's PatterStage-side label. `PUT { displayName?, description? }` renames it; a blank name is a **400**, and nothing is written into the agent's own files. `POST` is a **405**. |
+| `/api/agent/profiles` | `GET`, `POST` | Professional profiles (SQLite source of truth; each row includes `syncStatus` for drift). `POST { cloneFrom: "default" }` copies the root agent's SOUL.md, AGENTS.md, config.yaml and personality. |
 | `/api/agent/profiles/[id]` | `PUT`, `DELETE` | Update or delete one profile (no `GET`, use list + id). |
 | `/api/agent/profiles/sync/drift` | `GET` | Full drift report (root, named profiles, skills catalog). Returns the per-resource sync state that the drift banner reads. |
 | `/api/agent/profiles/sync/push` | `POST` | Push to `HERMES_HOME/profiles/<slug>/`. Body is a bag of optional flags, first match wins: `{ root }`, `{ skills }`, `{ skillKey }`, `{ all }` / `{ missingOnly }` / `{ onlyOutOfSync }`, else `{ slug }`. |

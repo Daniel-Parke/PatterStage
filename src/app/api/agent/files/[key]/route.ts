@@ -312,7 +312,18 @@ export async function PUT(
         // + 1 instanceof check. writeManagedFileContent has already
         // updated the managed-files table; we just need the post-
         // write push to mirror to Hermes.
-        writeManagedFileContent(profileSlug, key as ManagedFileKey, content);
+        // The write answers whether it happened. HERMES.md exists only on the
+        // root agent, so on a named profile this returns false and used to be
+        // discarded: the route pushed, audited and answered 200 over a save
+        // that wrote nothing, and the editor showed the operator's text back
+        // to them from its own state (T-0102, D28).
+        if (!writeManagedFileContent(profileSlug, key as ManagedFileKey, content)) {
+          return badRequest(
+            key === "hermes"
+              ? `HERMES.md belongs to the root agent — the profile "${profileSlug}" has no framework file to save.`
+              : `${key} could not be saved for the profile "${profileSlug}".`,
+          );
+        }
         const result = pushProfileOrRootOrFail(
           profileSlug,
           "Failed to sync profile to Hermes",

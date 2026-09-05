@@ -124,20 +124,28 @@ async function openProfileFile(name: string): Promise<void> {
   await screen.findByRole("button", { name: /^Save$/ });
 }
 
-/** Leave preview mode and return the textarea the editor card then shows. */
+/**
+ * Leave preview mode and return the textarea the editor card then shows.
+ *
+ * Every existing file's row carries an "Edit" button too, and clicking those
+ * opens a DIFFERENT file, so walking the list of them raced an in-flight open
+ * against the buffer this helper is here to hand back. The editor card is
+ * rendered after the file list, so its own preview toggle is the last one.
+ */
 async function leavePreview(): Promise<HTMLElement> {
   const toggles = await screen.findAllByRole("button", { name: /^Edit$/ });
-  for (const toggle of toggles) {
-    fireEvent.click(toggle);
-    const box = screen.queryByLabelText("File content");
-    if (box) return box;
-  }
-  throw new Error("no Edit control revealed the file content textarea");
+  fireEvent.click(toggles[toggles.length - 1]);
+  const box = screen.queryByLabelText("File content");
+  if (!box) throw new Error("the editor's Edit toggle did not reveal the file content textarea");
+  return box;
 }
 
 async function renderLoaded() {
   render(withQuery(<AgentsPage />));
   await screen.findByText("QA Engineer");
+  // The list arrives one render before the auto-selection does, and the
+  // detail column is what most of this file is about.
+  await waitFor(() => expect(screen.queryByText("Select a profile")).toBeNull());
 }
 
 beforeEach(() => {
@@ -153,7 +161,9 @@ describe("a refetch after a mutation is silent", () => {
   it("saving a file leaves the list, the selection and the editor on screen", async () => {
     await renderLoaded();
     await openProfileFile("SOUL.md");
-    await screen.findByRole("button", { name: /^Save$/ });
+    // Save is disabled until there is something to save, so type first.
+    const box = await leavePreview();
+    fireEvent.change(box, { target: { value: "# Bob, edited before saving" } });
 
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: /^Save$/ }));

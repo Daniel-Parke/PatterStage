@@ -50,12 +50,26 @@ export default function AgentProfilesOverview({
 
   return (
     <>
-      <p className="text-xs text-ps-text-muted font-mono mb-4 max-w-3xl">
-        Agent identity lives in <strong className="text-ps-text-secondary">SOUL.md</strong>. Runtime policy
-        (skills.disabled, platform_toolsets, model blocks) is in each profile&apos;s{" "}
-        <strong className="text-ps-text-secondary">config.yaml</strong>. Pull imports from Hermes disk into
-        SQLite; push writes PatterStage back to disk.
-      </p>
+      {/* An operator meeting this page for the first time read five file
+          names and two storage engines before they read what a profile is
+          (T-0102, the copy). The mechanics are unchanged and one click away. */}
+      <div className="mb-4 max-w-3xl">
+        <p className="text-sm text-ps-text-muted">
+          A profile is one agent: its voice, the skills it may use and the tools it may reach.
+          Pick one on the left to read it or change it.
+        </p>
+        <details className="mt-1">
+          <summary className="cursor-pointer text-xs text-neon-cyan hover:underline">
+            Where a profile is stored
+          </summary>
+          <p className="mt-2 text-xs text-ps-text-muted font-mono">
+            Agent identity lives in <strong className="text-ps-text-secondary">SOUL.md</strong>. Runtime policy
+            (skills.disabled, platform_toolsets, model blocks) is in each profile&apos;s{" "}
+            <strong className="text-ps-text-secondary">config.yaml</strong>. Pull imports from Hermes disk into
+            SQLite; push writes PatterStage back to disk.
+          </p>
+        </details>
+      </div>
 
       <AgentPerformanceStrip />
 

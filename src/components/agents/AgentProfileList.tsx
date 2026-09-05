@@ -10,6 +10,7 @@
 
 import { Users } from "lucide-react";
 import Badge from "@/components/ui/Badge";
+import { timeAgo } from "@/lib/utils";
 import type { AgentProfile } from "@/types/console";
 
 export default function AgentProfileList({
@@ -57,11 +58,20 @@ export default function AgentProfileList({
               <p className="text-xs font-mono text-ps-text-faint mb-1">{profile.id}</p>
             )}
             <p className="text-xs text-ps-text-muted line-clamp-2 mb-2">{profile.description}</p>
+            {/* The reason, not just the word. syncError was computed, stored
+                and returned on every row, and the operator saw an orange
+                badge with nothing behind it (T-0102, D27). */}
+            {profile.syncError && (
+              <p className="text-xs text-semantic-warning mb-2 break-words">{profile.syncError}</p>
+            )}
             <div className="flex items-center gap-2 text-xs text-ps-text-muted font-mono">
               <span>{profile.skillsCount} skills</span>
               <span>·</span>
               <span>{profile.files.length} files</span>
             </div>
+            <p className="text-xs text-ps-text-faint mt-1">
+              {profile.syncedAt ? `Last pushed ${timeAgo(profile.syncedAt)}` : "Never pushed"}
+            </p>
           </button>
         );
       })}

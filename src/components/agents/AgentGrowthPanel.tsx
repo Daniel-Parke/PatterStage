@@ -55,8 +55,7 @@ export default function AgentGrowthPanel({ profileId }: { profileId: string }) {
         ))}
       </dl>
       <p className="text-xs text-ps-text-muted">
-        {entry.experience.xp.toLocaleString()} XP from work done and equipment acquired. Capability
-        measurement is not implemented; see ADR-0004.
+        {entry.experience.xp.toLocaleString()} XP from work done and equipment acquired.
       </p>
     </div>
   );

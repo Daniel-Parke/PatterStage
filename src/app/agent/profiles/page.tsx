@@ -30,6 +30,7 @@ import { API_FETCH_BULK_TIMEOUT_MS, apiFetch, toastError } from "@/lib/api-fetch
 import { profileSyncBody } from "@/lib/profile-sync-body";
 import { runSyncAction } from "@/lib/operation-sync-action";
 import { agentFileUrl } from "@/components/agents/agent-file-url";
+import { slugifyDisplayName } from "@/lib/profile-slug";
 import AgentsPageHeader from "@/components/agents/AgentsPageHeader";
 import AgentSetupNotice from "@/components/agents/AgentSetupNotice";
 import AgentProfilesOverview from "@/components/agents/AgentProfilesOverview";
@@ -37,7 +38,14 @@ import AgentProfileList from "@/components/agents/AgentProfileList";
 import AgentProfileDetail from "@/components/agents/AgentProfileDetail";
 import type { EditorState } from "@/components/agents/AgentFileEditor";
 import CreateProfileModal from "@/components/agents/CreateProfileModal";
+import EditProfileModal from "@/components/agents/EditProfileModal";
 import DeleteProfileModal from "@/components/agents/DeleteProfileModal";
+
+/** An action the operator asked for while the editor held unsaved work. */
+type PendingDiscard =
+  | { kind: "select"; profile: AgentProfile }
+  | { kind: "open"; profileId: string; file: ProfileFile }
+  | { kind: "close" };
 
 export default function BehaviourPage() {
   const [profiles, setProfiles] = useState<AgentProfile[]>([]);
@@ -60,6 +68,20 @@ export default function BehaviourPage() {
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [syncBusy, setSyncBusy] = useState(false);
+
+  const [editTarget, setEditTarget] = useState<AgentProfile | null>(null);
+  const [savingProfile, setSavingProfile] = useState(false);
+
+  // What the operator asked for while an edit was unsaved. Held here rather
+  // than acted on: selecting another profile closed the editor and opening
+  // another file overwrote the buffer, both in silence, next to a dirty flag
+  // that was already driving an "Unsaved" badge two lines away (T-0102, D23).
+  const [pendingDiscard, setPendingDiscard] = useState<PendingDiscard | null>(null);
+
+  // The first read is worth a spinner; every one after it is a refetch behind
+  // work the operator just did. Making them watch the page blank out after
+  // every save was the single loudest thing on this screen (T-0102, D21).
+  const loadedOnceRef = useRef(false);
 
   // saveResetTimerRef — handleSave's "auto-clear the saved status
   // after 2s" setTimeout could fire on an unmounted component if
@@ -161,7 +183,7 @@ export default function BehaviourPage() {
     );
 
   const loadProfiles = useCallback(async () => {
-    setLoading(true);
+    if (!loadedOnceRef.current) setLoading(true);
     try {
       const data = await apiFetch("/api/agent/profiles");
       setProfiles(data.data?.profiles || []);
@@ -169,6 +191,7 @@ export default function BehaviourPage() {
     } catch (err) {
       setLoadError(err instanceof Error && err.message ? err.message : "Failed to load profiles");
     } finally {
+      loadedOnceRef.current = true;
       setLoading(false);
     }
   }, []);
@@ -253,7 +276,7 @@ export default function BehaviourPage() {
     });
   };
 
-  const openFile = async (profileId: string, file: ProfileFile) => {
+  const doOpenFile = async (profileId: string, file: ProfileFile) => {
     try {
       const data = await apiFetch(agentFileUrl(profileId, file.key));
       const content = data.data?.content || "";
@@ -301,7 +324,7 @@ export default function BehaviourPage() {
     }
   };
 
-  const handleSelectProfile = (profile: AgentProfile) => {
+  const doSelectProfile = (profile: AgentProfile) => {
     setSelectedProfileId(profile.id);
     if (editor && editor.profileId !== profile.id) {
       closeEditor();
@@ -309,6 +332,75 @@ export default function BehaviourPage() {
   };
 
   const hasChanges = editor ? editor.content !== editor.original : false;
+
+  /** Would this action throw away work the operator has not saved? */
+  const wouldDiscard = (next: PendingDiscard): boolean => {
+    if (!editor || !hasChanges) return false;
+    if (next.kind === "close") return true;
+    if (next.kind === "select") return editor.profileId !== next.profile.id;
+    return editor.profileId !== next.profileId || editor.fileKey !== next.file.key;
+  };
+
+  const handleSelectProfile = (profile: AgentProfile) => {
+    const next: PendingDiscard = { kind: "select", profile };
+    if (wouldDiscard(next)) {
+      setPendingDiscard(next);
+      return;
+    }
+    doSelectProfile(profile);
+  };
+
+  const openFile = (profileId: string, file: ProfileFile) => {
+    const next: PendingDiscard = { kind: "open", profileId, file };
+    if (wouldDiscard(next)) {
+      setPendingDiscard(next);
+      return;
+    }
+    void doOpenFile(profileId, file);
+  };
+
+  const handleCloseEditor = () => {
+    if (wouldDiscard({ kind: "close" })) {
+      setPendingDiscard({ kind: "close" });
+      return;
+    }
+    closeEditor();
+  };
+
+  const keepEditing = () => setPendingDiscard(null);
+
+  const confirmDiscard = async () => {
+    const next = pendingDiscard;
+    setPendingDiscard(null);
+    if (!next) return;
+    if (next.kind === "select") doSelectProfile(next.profile);
+    else if (next.kind === "open") await doOpenFile(next.profileId, next.file);
+    else closeEditor();
+  };
+
+  const handleSaveProfile = async ({ name, description }: { name: string; description: string }) => {
+    const target = editTarget;
+    if (!target || savingProfile) return;
+    // The root agent is not a row in agent_profiles, so the profile route
+    // refuses its slug outright; it has its own route and its own field name.
+    await runSyncAction({
+      setBusy: setSavingProfile,
+      showToast,
+      url: target.isDefault ? "/api/agent/root" : `/api/agent/profiles/${target.id}`,
+      method: "PUT",
+      body: target.isDefault ? { displayName: name, description } : { name, description },
+      successMessage: target.isDefault ? `Renamed to "${name}"` : `Profile "${name}" updated`,
+      errorMessage: "Failed to update profile",
+      onSuccess: async () => {
+        setEditTarget(null);
+        // A rename moves the slug, so the id on screen is about to stop
+        // existing. Follow it rather than letting the selection fall back to
+        // the first profile in the list.
+        if (!target.isDefault) setSelectedProfileId(slugifyDisplayName(name) || target.id);
+        await loadProfiles();
+      },
+    });
+  };
   const selectedProfile = profiles.find((p) => p.id === selectedProfileId) ?? null;
   // The file open in the editor FOR THE SELECTED PROFILE, or null. Same
   // condition the file list used inline before the split.
@@ -360,7 +452,13 @@ export default function BehaviourPage() {
 
           <AgentProfileDetail
             profile={selectedProfile}
+            onEdit={setEditTarget}
             onDelete={setDeleteTarget}
+            pendingDiscard={
+              pendingDiscard && editor
+                ? { fileName: editor.fileName, onDiscard: () => void confirmDiscard(), onKeep: keepEditing }
+                : null
+            }
             openFileKey={openFileKey}
             onOpenFile={openFile}
             editor={editor}
@@ -372,7 +470,7 @@ export default function BehaviourPage() {
             onResetEditor={() => editor && setEditor({ ...editor, content: editor.original })}
             onEditorContentChange={(content) => editor && setEditor({ ...editor, content })}
             onSaveEditor={handleSave}
-            onCloseEditor={closeEditor}
+            onCloseEditor={handleCloseEditor}
           />
         </div>
 
@@ -389,6 +487,14 @@ export default function BehaviourPage() {
           onClose={closeCreate}
           onCancel={() => setShowCreate(false)}
           onCreate={handleCreate}
+        />
+
+        <EditProfileModal
+          open={editTarget !== null}
+          profile={editTarget}
+          saving={savingProfile}
+          onClose={() => setEditTarget(null)}
+          onSave={(values) => void handleSaveProfile(values)}
         />
 
         <DeleteProfileModal

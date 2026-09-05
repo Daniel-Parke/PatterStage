@@ -203,7 +203,10 @@ jest.mock("@/modules/hermes/handlers/profile-patch", () => ({
   pushProfileOrRootOrFail: (...a: unknown[]) => mockPushOrFail(...a),
 }));
 
-const mockWriteManaged = jest.fn();
+// The real writeManagedFileContent answers whether the write happened, and
+// the route reads that answer now (T-0102, D28), so the double has to give
+// the same shape or every managed PUT here is a 400.
+const mockWriteManaged = jest.fn().mockReturnValue(true);
 jest.mock("@/modules/hermes/lib/agent-file-store", () => ({
   isManagedKey: (key: string) =>
     ["soul", "agent", "user", "memory", "config", "hermes"].includes(key),

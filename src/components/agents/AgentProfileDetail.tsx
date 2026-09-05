@@ -9,6 +9,7 @@
 
 "use client";
 
+import Button from "@/components/ui/Button";
 import AgentProfileHeader from "@/components/agents/AgentProfileHeader";
 import AgentProfileFiles from "@/components/agents/AgentProfileFiles";
 import AgentFileEditor, {
@@ -17,9 +18,18 @@ import AgentFileEditor, {
 } from "@/components/agents/AgentFileEditor";
 import type { AgentProfile, ProfileFile } from "@/types/console";
 
+/** The unsaved-work prompt, when one is standing. */
+interface PendingDiscardPrompt {
+  fileName: string;
+  onDiscard: () => void;
+  onKeep: () => void;
+}
+
 export interface AgentProfileDetailProps {
   profile: AgentProfile | null;
+  onEdit: (profile: AgentProfile) => void;
   onDelete: (profileId: string) => void;
+  pendingDiscard?: PendingDiscardPrompt | null;
   openFileKey: string | null;
   onOpenFile: (profileId: string, file: ProfileFile) => void;
   editor: EditorState | null;
@@ -36,7 +46,9 @@ export interface AgentProfileDetailProps {
 
 export default function AgentProfileDetail({
   profile,
+  onEdit,
   onDelete,
+  pendingDiscard = null,
   openFileKey,
   onOpenFile,
   editor,
@@ -58,7 +70,24 @@ export default function AgentProfileDetail({
         </div>
       ) : (
         <>
-          <AgentProfileHeader profile={profile} onDelete={onDelete} />
+          <AgentProfileHeader profile={profile} onEdit={onEdit} onDelete={onDelete} />
+
+          {/* The work is still in the editor below; this asks before it goes. */}
+          {pendingDiscard && (
+            <div className="m-4 rounded-lg border border-semantic-warning/40 bg-semantic-warning/10 p-3">
+              <p className="text-sm text-ps-text-primary">
+                You have unsaved changes to {pendingDiscard.fileName}.
+              </p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <Button variant="ghost" size="sm" color="orange" onClick={pendingDiscard.onDiscard}>
+                  Discard changes
+                </Button>
+                <Button variant="primary" size="sm" color="cyan" onClick={pendingDiscard.onKeep}>
+                  Keep editing
+                </Button>
+              </div>
+            </div>
+          )}
 
           <AgentProfileFiles
             files={profile.files}
