@@ -59,6 +59,7 @@ interface Manifest {
 
 interface DocsLib {
   relativeHref(fromSlug: string, toSlug: string): string;
+  stripLeadingH1(html: string): string;
   relativeAsset(fromSlug: string, repoRelPath: string): string;
   buildManifest(pages: readonly DocPage[]): Manifest;
   renderPage(page: DocPage, html: string, manifest: Manifest): string;
@@ -237,8 +238,35 @@ describe("B15 · renderFragment is the in-app half", () => {
     expect(fragment).toContain('<h2 id="dispatch">Dispatch</h2>');
   });
 
+  it("is the body and nothing else: no title, no summary", () => {
+    // The app renders a page's title and summary in its own PageHeader. A
+    // fragment that carried them too printed both twice, one under the other,
+    // and put a second h1 on a screen that already had one (T-0110, found by
+    // the browser walk and invisible to a jsdom render).
+    const fragment = lib().renderFragment(MISSIONS, HTML, lib().buildManifest(PAGES));
+    expect(fragment).toBe(HTML);
+    expect(fragment).not.toContain("<h1");
+    expect(fragment).not.toContain(MISSIONS.data.summary);
+  });
+
   it("carries no root-relative link either, so Help can rebase them", () => {
     const fragment = lib().renderFragment(MISSIONS, HTML, lib().buildManifest(PAGES));
     expect(attrs(fragment).filter((a) => a.startsWith("/"))).toEqual([]);
+  });
+});
+
+describe("B15 · stripLeadingH1", () => {
+  it("drops a body's own opening title, which the front matter already gave", () => {
+    expect(lib().stripLeadingH1(`<h1 id="missions">Missions</h1>\n<p>Prose.</p>`)).toBe("<p>Prose.</p>");
+  });
+
+  it("leaves an h1 that is not the first thing, because that one is deliberate", () => {
+    const html = `<p>Intro.</p>\n<h1>A second title</h1>`;
+    expect(lib().stripLeadingH1(html)).toBe(html);
+  });
+
+  it("leaves a body that opens with anything else alone", () => {
+    const html = `<h2 id="dispatch">Dispatch</h2>\n<p>Press it.</p>`;
+    expect(lib().stripLeadingH1(html)).toBe(html);
   });
 });

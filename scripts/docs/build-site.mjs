@@ -35,6 +35,7 @@ import {
   relativeAsset,
   relativeHref,
   renderFragment,
+  stripLeadingH1,
   renderPage,
   serialiseManifest,
   slugFor,
@@ -261,6 +262,10 @@ function main(argv) {
   }
 
   const html = new Map(ordered.map((page) => [page.slug, renderMarkdown(page)]));
+  // Both renderers put the title on the page from the front matter, so the
+  // body's own opening H1 would say it a second time. Stripped once here rather
+  // than in each renderer, so the site and the app cannot disagree about it.
+  const body = (page) => stripLeadingH1(html.get(page.slug));
   const search = buildSearchIndex(ordered);
   const searchJson = `${JSON.stringify(search, null, 2)}\n`;
 
@@ -270,7 +275,7 @@ function main(argv) {
     // search index has forgotten and a reader can land on.
     rmSync(args.out, { recursive: true, force: true });
     for (const page of ordered) {
-      write(join(args.out, `${page.slug}.html`), withCanonical(renderPage(page, html.get(page.slug), manifest), page, args.base));
+      write(join(args.out, `${page.slug}.html`), withCanonical(renderPage(page, body(page), manifest), page, args.base));
     }
     copyAssets(docsDir, args.out);
     write(join(args.out, "manifest.json"), manifestBytes);
@@ -325,7 +330,7 @@ function main(argv) {
   write(join(help, "concepts.json"), `${JSON.stringify({ generatedAt, concepts }, null, 2)}\n`);
 
   for (const page of ordered) {
-    write(join(help, "fragments", `${page.slug}.html`), `${renderFragment(page, html.get(page.slug), manifest)}\n`);
+    write(join(help, "fragments", `${page.slug}.html`), `${renderFragment(page, body(page), manifest)}\n`);
   }
   // The fragments reference images by an app path, so the same files have to
   // sit under public/help/ as well as under site/.

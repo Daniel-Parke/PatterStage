@@ -467,6 +467,20 @@ function pagerHtml(page, manifest) {
   return `<div class="pager">${left}${right}</div>`;
 }
 
+/**
+ * Drop a body's own leading H1.
+ *
+ * Every page's markdown opens with `# Title`, and both renderers already put
+ * the title on the page from the front matter, which is where the manifest
+ * and the sidebar read it from too. Left in, the title appears twice on the
+ * site and twice again inside the app, the second time as a second h1 on a
+ * screen that already has one. Only the FIRST element is dropped, and only
+ * when it is an h1: an h1 later in a body is the author saying something.
+ */
+export function stripLeadingH1(html) {
+  return String(html).replace(/^\s*<h1\b[^>]*>[\s\S]*?<\/h1>\s*/, "");
+}
+
 /** A complete HTML document: rail, prose, pager, inline CSS, relative script. */
 export function renderPage(page, html, manifest) {
   return [
@@ -506,10 +520,14 @@ export function renderPage(page, html, manifest) {
  * is root-relative.
  */
 export function renderFragment(page, html, manifest) {
+  void page;
   void manifest;
-  return [`<h1>${escapeHtml(page.data.title)}</h1>`, `<p class="summary">${escapeHtml(page.data.summary)}</p>`, html].join(
-    "\n",
-  );
+  // The BODY only: no title, no summary, no chrome. The app renders a page's
+  // title and summary in its own PageHeader, so a fragment that carried them
+  // too printed both twice, one under the other, and put two h1s on one
+  // screen. renderPage still carries them, because on the site nothing else
+  // does.
+  return html;
 }
 
 // ── search ────────────────────────────────────────────────────
