@@ -47,6 +47,10 @@ jest.mock("@/lib/fs/log-files", () => ({
 
 jest.mock("@/lib/log-line-format", () => ({ injectMissingTimestamps: (l: string[]) => l }));
 jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn(), serverErrorFromCatch: jest.fn() }));
+// The handler records logs.opened on the path that returns a file (T-0111).
+// Doubled here so this suite keeps mocking `fs` down to four functions: the real
+// recorder reaches the database, which reaches the rest of `fs`.
+jest.mock("@/lib/analytics/record-event", () => ({ recordEvent: jest.fn() }));
 
 import { GET } from "@/app/api/logs/route";
 

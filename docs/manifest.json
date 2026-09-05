@@ -498,6 +498,12 @@
           "nav": 20
         },
         {
+          "slug": "reference/quests",
+          "title": "Quests",
+          "summary": "A guided path through PatterStage, ticked off by what you actually did rather than by what you read",
+          "nav": 25
+        },
+        {
           "slug": "reference/spend",
           "title": "Spend",
           "summary": "Provider spend in PatterStage, how it is estimated, the optional budget, and the hard stop that is off until you turn it on",
@@ -694,6 +700,7 @@
     "security",
     "reference/api",
     "reference/schema",
+    "reference/quests",
     "reference/spend",
     "reference/catalog-and-profiles",
     "reference/runtime-architecture",

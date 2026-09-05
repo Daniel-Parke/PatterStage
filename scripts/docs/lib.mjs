@@ -60,7 +60,7 @@ export const GENERATED_BLOCK_IDS = [
   "seed-manifests",
   "api-routes",
   "schema-head",
-  "quest-defs",
+  "quests",
   "env-table",
 ];
 

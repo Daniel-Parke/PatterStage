@@ -216,11 +216,60 @@ function schemaHeadBlock(): string {
  * rather than throwing. A gate that cannot run because one of nine facts is not
  * in the tree yet stops gating the other eight.
  */
-function questDefsBlock(): string {
-  return (
-    "_Quests have no definitions in the tree yet: B17 lands `src/lib/quests/` and the seven chains. " +
-    "This block regenerates from them once it does — `npm run docs:generate`._"
+/**
+ * The quest ledger, from the defs themselves.
+ *
+ * Generated rather than typed out because a quest's proof is the one thing a
+ * reader most needs to trust: a page that SAYS a quest is proved by
+ * `mission.dispatched` while the code reads `mission.completed` is worse than a
+ * page that says nothing. The proof is rendered in plain words, because
+ * "proved by the mission.dispatched event, twice" is what an operator can
+ * check against their own history and `{kind:"event",target:2}` is not.
+ */
+async function questsBlock(): Promise<string> {
+  const { QUEST_CHAPTERS, QUEST_DEFS, CONCEPT_LABELS, HOST_REQUIREMENT_COPY } = await import(
+    "../../src/lib/quests/quest-defs.ts"
   );
+
+  const proofWords = (proof: { kind: string; event?: string; fact?: string; target: number }): string => {
+    if (proof.kind === "event") {
+      const times = proof.target === 1 ? "once" : proof.target === 2 ? "twice" : `${proof.target} times`;
+      return `proved by the \`${proof.event}\` event, ${times}`;
+    }
+    return proof.target === 1
+      ? `proved by the store: \`${proof.fact}\``
+      : `proved by the store: ${proof.target} or more \`${proof.fact}\``;
+  };
+
+  const lines: string[] = [];
+  for (const chapter of QUEST_CHAPTERS) {
+    lines.push(`### ${chapter.number}. ${chapter.title}`, "", chapter.blurb, "");
+    lines.push("| Quest | What to do | Proof | Screen | Teaches | Earns |");
+    lines.push("| --- | --- | --- | --- | --- | --- |");
+    for (const q of QUEST_DEFS.filter((d) => d.chapter === chapter.number)) {
+      const teaches = q.teaches.length
+        ? q.teaches.map((t) => CONCEPT_LABELS[t]).join(", ")
+        : "-";
+      const cells = [
+        `**${q.id}** ${q.title}`,
+        q.action,
+        proofWords(q.proof),
+        `\`${q.screen}\``,
+        teaches,
+        q.earns ? `\`${q.earns}\`` : "-",
+      ];
+      lines.push(`| ${cells.join(" | ")} |`);
+    }
+    lines.push("");
+    const gated = QUEST_DEFS.filter((d) => d.chapter === chapter.number && d.requires);
+    for (const q of gated) {
+      lines.push(`On a host without it, **${q.id}** says: ${HOST_REQUIREMENT_COPY[q.requires!]}`, "");
+    }
+    for (const also of chapter.seeAlso ?? []) {
+      lines.push(`See also, untracked: [${also.label}](${also.href}).`, "");
+    }
+  }
+  return lines.join("\n").trimEnd();
 }
 
 /**
@@ -290,8 +339,8 @@ export async function generateBlock(id: string): Promise<string> {
       return apiRoutesBlock();
     case "schema-head":
       return schemaHeadBlock();
-    case "quest-defs":
-      return questDefsBlock();
+    case "quests":
+      return questsBlock();
     case "env-table":
       return envTableBlock();
     default:

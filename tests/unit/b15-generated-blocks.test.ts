@@ -82,7 +82,10 @@ describe("B15 · the nine generated blocks", () => {
       "env-table",
       "event-types",
       "lint-steps",
-      "quest-defs",
+      // Renamed from "quest-defs" when B17 landed the block it fences: its
+      // own oracle names the marker `<!-- generated:quests -->`, and one
+      // marker name is better than a page and a generator disagreeing.
+      "quests",
       "schema-head",
       "seed-manifests",
     ]);

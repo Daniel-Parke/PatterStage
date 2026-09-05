@@ -130,6 +130,16 @@ be able to forge achievement progress).
 The aggregations live in `src/lib/analytics/analytics-repository.ts` (all reads
 defensive → zeros on an empty/pre-v12 DB).
 
+## 3a. The events that prove a quest
+
+The same ledger drives Quests. Every quest is completed by one event type
+reaching a count, or by one row-count in the store, and which event proves which
+quest is listed in full in [the quest ledger](../reference/quests.md). Nothing
+about a quest is stored except the moment it was first seen complete.
+
+Two of the types exist only for that: `artifact.opened` and `logs.opened` are
+the only READ events here. Everything else records a write.
+
 ## 4. Achievements
 
 Still **derived live** (no persistence) in `src/lib/stats/derive.ts`:

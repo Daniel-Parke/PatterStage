@@ -21,7 +21,7 @@ from a fresh boot to a mission you dispatched, watched and read the output of.
 - [What PatterStage is](start-here/index.md)
 - [Installing](start-here/install.md)
 - [The first hour](start-here/first-hour.md)
-- [Quests](start-here/quests.md)
+- [Quests](start-here/quests.md) and [the ledger of all thirty-two](reference/quests.md)
 - [Getting help](start-here/getting-help.md)
 - [Support](SUPPORT.md)
 

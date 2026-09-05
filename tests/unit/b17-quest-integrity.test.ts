@@ -336,7 +336,11 @@ describe("the four chain achievements", () => {
 // ═══════════════════════════════════════════════════════════════
 
 describe("docs/quests.md carries a generated block", () => {
-  const path = join(ROOT, "docs", "quests.md");
+  // docs/reference/quests.md, not docs/quests.md. This contract was written
+  // before B15's re-tier landed, and that batch's own oracle allows exactly
+  // five files at the top of docs/: the index and the four GitHub looks for.
+  // The ledger is a reference page, so it lives in the reference tier.
+  const path = join(ROOT, "docs", "reference", "quests.md");
 
   it("exists", () => {
     expect(existsSync(path)).toBe(true);
