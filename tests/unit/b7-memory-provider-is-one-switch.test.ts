@@ -144,6 +144,15 @@ describe("getMemoryProviderType answers from the database, not the file", () => 
     expect(getMemoryProviderType()).toBe("hindsight");
   });
 
+  it("an empty providers table still answers hindsight, which is the ruled default", () => {
+    // Sweep survivor `type-no-default-row`. Every other case seeds a row, so
+    // nothing pinned the branch the operator's zero-config ruling lives in
+    // (T-0077): with no row at all the product still connects, and says so.
+    testDb!.prepare("DELETE FROM memory_providers").run();
+
+    expect(getMemoryProviderType()).toBe("hindsight");
+  });
+
   it("the module no longer reads a file to answer it", () => {
     const source = readFileSync(
       join(process.cwd(), "src", "lib", "memory", "memory-providers", "index.ts"),
@@ -180,6 +189,25 @@ describe("writeMemoryProviderToHermesConfig", () => {
 
     expect(writeMemoryProviderToHermesConfig()("hindsight").written).toBe(true);
     expect(diskDoc().memory.provider).toBe("hindsight");
+  });
+
+  it("keeps the other keys inside the memory section", () => {
+    // Sweep survivor `sync-drops-other-memory-keys`. Every fixture above has a
+    // `memory` block holding nothing but `provider`, so replacing the section
+    // wholesale looked identical to editing one key of it. A real install has
+    // memory_enabled, char limits and a nudge interval in there.
+    writeFileSync(
+      configPath(),
+      ["memory:", "  provider: hindsight", "  memory_enabled: true", "  nudge_interval: 7", ""].join("\n"),
+      "utf-8",
+    );
+
+    expect(writeMemoryProviderToHermesConfig()("holographic").written).toBe(true);
+    expect(diskDoc().memory).toEqual({
+      provider: "holographic",
+      memory_enabled: true,
+      nudge_interval: 7,
+    });
   });
 
   it("refuses an unparseable file, byte for byte, and says why", () => {

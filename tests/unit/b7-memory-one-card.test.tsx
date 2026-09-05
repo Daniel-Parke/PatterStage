@@ -228,6 +228,19 @@ describe("Save edits the active provider, it does not replace it", () => {
     expect(putBodies()[0].makeActive).toBe(true);
   });
 
+  it("Save and Test wait until the card has read the row", async () => {
+    // Sweep survivor `card-acts-before-it-reads`. Every other case waits for
+    // the button to go live, so a card that was live from the first frame
+    // looked the same: it would act on the fallback row, which is D65 again in
+    // a smaller window. Here the read never lands.
+    mockSafeApiCall.mockReset();
+    mockSafeApiCall.mockImplementation(() => new Promise(() => {}));
+    render(<MemoryProviderSettings />);
+
+    expect(await screen.findByRole("button", { name: /^Save$/ })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /Test connection/i })).toBeDisabled();
+  });
+
   it("the header names the active provider rather than a hardcoded one", async () => {
     answerWith(configPayload(HOLOGRAPHIC_ACTIVE));
     render(<MemoryProviderSettings />);

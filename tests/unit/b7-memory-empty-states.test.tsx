@@ -22,7 +22,7 @@
 // the branch look reasonable cannot come back.
 // ═══════════════════════════════════════════════════════════════
 
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 jest.mock("lucide-react", () => {
   const icon = (name: string) =>
@@ -113,6 +113,65 @@ describe("Enter runs the search the label promises", () => {
 
     await waitFor(() => expect(calls.some((c) => c.includes("action=recall"))).toBe(true));
     expect(calls.find((c) => c.includes("action=recall"))).toContain("reports");
+  });
+});
+
+describe("the browser hands the search down to the list", () => {
+  it("a recall that matched nothing names the query on the page", async () => {
+    // Sweep survivor `browser-sends-no-query`. The tab's own tests pass
+    // activeQuery in by hand, so nothing proved the browser passes it at all
+    // and a search that missed still read as an empty store.
+    global.fetch = jest.fn(async (input: RequestInfo | URL) => {
+      const url = typeof input === "string" ? input : input.toString();
+      const body = url.includes("action=health")
+        ? { data: { available: true, mode: "ok" } }
+        : { data: { memories: [], total: 0, mode: "ok" } };
+      return { ok: true, status: 200, json: async () => body, text: async () => "{}" } as unknown as Response;
+    }) as unknown as typeof fetch;
+
+    render(<HindsightBrowser />);
+    const box = await screen.findByPlaceholderText(/Search memories/i);
+    fireEvent.change(box, { target: { value: "quantum" } });
+    fireEvent.keyDown(box, { key: "Enter" });
+
+    expect(await screen.findByText('No memories matched "quantum"')).toBeInTheDocument();
+  });
+
+  it("Enter twice while a recall is in flight runs it once", async () => {
+    // Sweep survivor `browser-recalls-a-blank-query`: the guard is two
+    // conditions and only the blank half is covered by runRecall's own check.
+    let release: ((v: unknown) => void) | null = null;
+    const calls: string[] = [];
+    global.fetch = jest.fn(async (input: RequestInfo | URL) => {
+      const url = typeof input === "string" ? input : input.toString();
+      calls.push(url);
+      const answer = {
+        ok: true,
+        status: 200,
+        json: async () => ({ data: { memories: [], total: 0, mode: "ok" } }),
+        text: async () => "{}",
+      } as unknown as Response;
+      if (url.includes("action=recall")) {
+        return new Promise((resolve) => {
+          release = () => resolve(answer);
+        }) as unknown as Response;
+      }
+      return answer;
+    }) as unknown as typeof fetch;
+
+    render(<HindsightBrowser />);
+    const box = await screen.findByPlaceholderText(/Search memories/i);
+    fireEvent.change(box, { target: { value: "reports" } });
+    fireEvent.keyDown(box, { key: "Enter" });
+    await waitFor(() => expect(calls.filter((c) => c.includes("action=recall"))).toHaveLength(1));
+
+    fireEvent.keyDown(box, { key: "Enter" });
+    fireEvent.keyDown(box, { key: "Enter" });
+
+    expect(calls.filter((c) => c.includes("action=recall"))).toHaveLength(1);
+    await act(async () => {
+      release?.(null);
+    });
   });
 });
 

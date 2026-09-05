@@ -73,7 +73,7 @@ const LooseNumberInput = NumberInput as unknown as React.ComponentType<LooseNumb
 
 const AGENT = CONFIG_SECTIONS.agent;
 const DISPLAY = CONFIG_SECTIONS.display;
-const fieldOf = (sectionId: "agent" | "display", key: string) => {
+const fieldOf = (sectionId: "agent" | "display" | "memory", key: string) => {
   const f = CONFIG_SECTIONS[sectionId].fields.find((x) => x.key === key);
   if (!f) throw new Error(`no field ${sectionId}.${key}`);
   return f;
@@ -325,6 +325,58 @@ describe("ConfigField: an unset value is said, not coerced", () => {
     fireEvent.change(screen.getByDisplayValue("mono"), { target: { value: "" } });
     expect(onUpdate).toHaveBeenCalledWith("skin", null);
     expect(onUpdate).not.toHaveBeenCalledWith("skin", "");
+  });
+});
+
+describe("ConfigField: a field another surface owns is shown, not offered", () => {
+  // Sweep survivor `managed-field-renders-a-control` (T-0101). The schema
+  // declares who manages memory.provider and the PUT refuses it, and nothing
+  // proved the page stopped drawing an editable control for it.
+  const managed = fieldOf("memory", "provider");
+
+  it("renders the value read-only, with no control and no Clear", () => {
+    const onUpdate = jest.fn();
+    render(
+      <ConfigField
+        field={managed}
+        value="hindsight"
+        sectionDef={CONFIG_SECTIONS.memory}
+        onUpdate={onUpdate}
+      />,
+    );
+
+    expect(screen.getByText("hindsight")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Clear Provider" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Provider" })).toBeNull();
+    expect(onUpdate).not.toHaveBeenCalled();
+  });
+
+  it("says where it IS set, and links there", () => {
+    render(
+      <ConfigField
+        field={managed}
+        value="hindsight"
+        sectionDef={CONFIG_SECTIONS.memory}
+        onUpdate={jest.fn()}
+      />,
+    );
+
+    const link = screen.getByRole("link", { name: "Memory" });
+    expect(link).toHaveAttribute("href", "/agent/memory");
+    expect(screen.getByText(/Set this on the/)).toBeInTheDocument();
+  });
+
+  it("an unset managed field says Not set rather than nothing", () => {
+    render(
+      <ConfigField
+        field={managed}
+        value={undefined}
+        sectionDef={CONFIG_SECTIONS.memory}
+        onUpdate={jest.fn()}
+      />,
+    );
+
+    expect(screen.getByText("Not set")).toBeInTheDocument();
   });
 });
 
