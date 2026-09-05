@@ -16,6 +16,9 @@ import { labelFor } from "@/lib/modules/registry";
 
 let pathname = "/";
 jest.mock("next/navigation", () => ({ usePathname: () => pathname }));
+jest.mock("next/headers", () => ({ headers: async () => new Headers({ "x-ps-pathname": pathname }) }));
+jest.mock("next/font/local", () => () => ({ variable: "--font-test" }));
+jest.mock("@/app/globals.css", () => ({}));
 jest.mock("next/link", () => ({
   __esModule: true,
   default: ({ href, children, ...rest }: { href: string; children: React.ReactNode }) => (
@@ -96,5 +99,25 @@ describe("a page that passes a literal title passes the registry's word", () => 
   it("the dashboard names the agent framework from data, not a literal (D56)", () => {
     const src = readFileSync(join(ROOT, "src", "app", "page.tsx"), "utf-8");
     expect(/>\s*Hermes\s*</.test(src)).toBe(false);
+  });
+});
+
+describe("the tab title is set on the server, from the path the proxy passes", () => {
+  it("generateMetadata resolves the registry's word for the request path", async () => {
+    const { generateMetadata } = await import("@/app/layout");
+    pathname = "/work/missions";
+    expect((await generateMetadata()).title).toBe("Missions · PatterStage");
+    pathname = "/results/sessions/abc";
+    expect((await generateMetadata()).title).toBe("Sessions · PatterStage");
+    pathname = "/nowhere";
+    expect((await generateMetadata()).title).toBe("PatterStage");
+  });
+
+  it("every pass-through in the proxy carries the path header", () => {
+    const src = readFileSync(join(ROOT, "src", "proxy.ts"), "utf-8");
+    expect(src).toMatch(/x-ps-pathname/);
+    // A bare NextResponse.next() would let a request through without the
+    // header, and that page's tab would read "PatterStage".
+    expect(src.match(/NextResponse\.next\(\)/g) ?? []).toEqual([]);
   });
 });

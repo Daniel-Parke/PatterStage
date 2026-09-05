@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import localFont from "next/font/local";
+import { labelFor } from "@/lib/modules/registry";
 import { SidebarProvider } from "@/components/layout/SidebarContext";
 import Sidebar from "@/components/layout/Sidebar";
 import MobileHeader from "@/components/layout/MobileHeader";
@@ -30,13 +32,24 @@ const jetbrainsMono = localFont({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  // Per-page titles are set client-side by <PageTitle> (most pages are client
-  // components and can't export their own metadata); this template/default is
-  // the SSR baseline before that effect runs.
-  title: { default: "PatterStage", template: "%s · PatterStage" },
-  description: "Monitor, update, and control your AI agent",
-};
+/**
+ * The tab title, from the registry, on the server (T-0097, D55).
+ *
+ * Most pages are client components and cannot export metadata, and a client
+ * effect setting document.title is not enough: Next streams the layout's
+ * metadata after hydration and React re-applies its <title>, so on a fresh
+ * load the tab read "PatterStage" whatever the effect had set. The proxy
+ * passes the request path in `x-ps-pathname`; labelFor turns it into the
+ * rail's word. <PageTitle> still runs on the client for the transitions.
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  const h = await headers();
+  const label = labelFor(h.get("x-ps-pathname") ?? "/");
+  return {
+    title: label ? `${label} · PatterStage` : "PatterStage",
+    description: "Monitor, update, and control your AI agent",
+  };
+}
 
 export default function RootLayout({
   children,

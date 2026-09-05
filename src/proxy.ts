@@ -91,6 +91,22 @@ function refuseReadOnly(): NextResponse {
   return NextResponse.json({ error: readOnlyMessage() }, { status: 503 });
 }
 
+/**
+ * Let the request through, telling the root layout which path it is for.
+ *
+ * generateMetadata in src/app/layout.tsx reads `x-ps-pathname` to set the tab
+ * title from the registry (T-0097, D55). It has to come from here: a client
+ * effect setting document.title is overwritten when Next streams the layout's
+ * metadata after hydration, so on a fresh load every tab read "PatterStage".
+ * Every pass-through below goes through this, and
+ * tests/unit/b3-titles-from-registry.test.ts refuses a bare next() call.
+ */
+function pass(request: NextRequest, pathname: string): NextResponse {
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-ps-pathname", pathname);
+  return NextResponse.next({ request: { headers: requestHeaders } });
+}
+
 function isApiPath(pathname: string): boolean {
   return pathname.startsWith("/api/");
 }
@@ -217,14 +233,14 @@ export function proxy(request: NextRequest): NextResponse {
   // to return here, above the read-only branch, so any non-safe method added to
   // a public path would have punched straight through the mode. /api/health is
   // GET-only today, so this was a latent hole rather than a live one (T-0048).
-  if (PUBLIC_PATHS.has(pathname) && isSafe) return NextResponse.next();
+  if (PUBLIC_PATHS.has(pathname) && isSafe) return pass(request, pathname);
 
   const readOnlyRefusal = !isSafe && isReadOnly();
 
   if (getAuthMode() === "none") {
     if (readOnlyRefusal) return refuseReadOnly();
     if (isHostSideEffectWrite(pathname, isSafe)) return refuseHostWrite();
-    return NextResponse.next();
+    return pass(request, pathname);
   }
 
   // FAILED-AUTH THROTTLE (T-0083, operator ruling 2). Checked before the token
@@ -284,7 +300,7 @@ export function proxy(request: NextRequest): NextResponse {
       return unauthorized(request);
     }
     clearAuthFailures(clientKey);
-    return readOnlyRefusal ? refuseReadOnly() : NextResponse.next();
+    return readOnlyRefusal ? refuseReadOnly() : pass(request, pathname);
   }
 
   const cookie = request.cookies.get(SESSION_COOKIE)?.value;
@@ -304,7 +320,7 @@ export function proxy(request: NextRequest): NextResponse {
     );
   }
 
-  return readOnlyRefusal ? refuseReadOnly() : NextResponse.next();
+  return readOnlyRefusal ? refuseReadOnly() : pass(request, pathname);
 }
 
 export const config = {
