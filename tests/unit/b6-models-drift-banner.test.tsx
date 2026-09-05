@@ -378,6 +378,9 @@ describe("ModelsDriftBanner offers Pull / Push per line", () => {
     expect(pushButtons()).toHaveLength(0);
     expect(pullButtons()).toHaveLength(0);
     expect(screen.getByText(DB_ONLY_LINE.text)).toBeTruthy();
+    // Found on the proof walk: a line with no safe remedy still has to say why
+    // it is offering nothing, or the banner is a complaint with no action.
+    expect(screen.getByText("Make it the agent default to push it")).toBeTruthy();
   });
 
   it("all three lines together: two Pulls, two Pushes, and no 'Sync Now'", () => {

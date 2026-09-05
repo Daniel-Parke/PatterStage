@@ -68,6 +68,15 @@ export default function ModelsDriftBanner({
               <li key={key} className="flex items-center justify-between gap-3">
                 <span className="min-w-0 flex-1 text-xs font-mono text-ps-text-muted">{line.text}</span>
                 <div className="flex flex-shrink-0 items-center gap-1.5">
+                  {!canPull && !canPush && (
+                    // A line with no safe remedy is not a line with no
+                    // explanation: a push writes config.model, which is the
+                    // agent default and nothing else, so this row is waiting on
+                    // a decision the operator takes on the table above.
+                    <span className="text-xs font-mono text-ps-text-faint">
+                      Make it the agent default to push it
+                    </span>
+                  )}
                   {canPull && (
                     <button
                       type="button"

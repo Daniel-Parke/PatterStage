@@ -133,13 +133,21 @@ export default function ConfigField({ field, value, sectionDef, onUpdate }: Conf
 
   return (
     <div className="space-y-1.5">
-      <div className="flex items-center justify-end gap-2">
-        {unset && (
+      {control}
+      {/* Under the control, never above it: the state and the Clear belong to
+          the field they follow, and a row of chrome above a block reads as the
+          previous field's (found on the T-0100 proof walk). */}
+      <div className="flex items-center justify-between gap-2">
+        {unset ? (
+          <p className="text-xs text-ps-text-faint">Hermes uses its own default</p>
+        ) : (
+          <span />
+        )}
+        {unset ? (
           <span className="text-xs font-mono text-ps-text-faint bg-white/5 px-1.5 py-0.5 rounded">
             Not set
           </span>
-        )}
-        {!unset && (
+        ) : (
           <button
             type="button"
             aria-label={`Clear ${field.label}`}
@@ -150,10 +158,6 @@ export default function ConfigField({ field, value, sectionDef, onUpdate }: Conf
           </button>
         )}
       </div>
-      {control}
-      {unset && (
-        <p className="text-xs text-ps-text-faint">Hermes uses its own default</p>
-      )}
       {typeNote && <p className="text-xs text-neon-orange">{typeNote}</p>}
     </div>
   );
