@@ -1,0 +1,367 @@
+/**
+ * B15 (T-0109), decision 3 — `docs:check`, the doc-coverage gate.
+ *
+ * The plan gives this gate six refusals: a registry route with no guide, a
+ * `screen:` that is not a registry route, a missing referenced image, an
+ * undefined concept id, a stale generated block, and a leftover old group name.
+ * Four documentation audits found the same failure over and over — a doc that
+ * reads as verified while naming something that no longer exists — so the gate
+ * is the point of the whole pipeline, not a nicety on top of it.
+ *
+ * The refusals are pinned as PURE data: `checkDocs()` takes its pages, its
+ * routes, an `imageExists` probe and the freshly generated block bodies, and
+ * returns refusal records. The CLI (`scripts/docs/check.mts`, run by `npm run
+ * lint` through `npx tsx`) gathers those four inputs from the registry, the
+ * filesystem and `scripts/docs/extract.ts` and prints them. Keeping the judgement
+ * pure is what lets this file test it without a docs tree, a build, or tsx.
+ *
+ * Red today because `scripts/docs/lib.mjs` does not exist.
+ */
+import { existsSync } from "node:fs";
+import { join } from "node:path";
+
+const ROOT = join(__dirname, "..", "..");
+const LIB_PATH = join(ROOT, "scripts", "docs", "lib.mjs");
+
+type DocSection = "start-here" | "concepts" | "guides" | "running" | "reference" | "contributing";
+
+interface DocFrontMatter {
+  title: string;
+  summary: string;
+  section: DocSection;
+  nav: number;
+  audience?: string;
+  screen?: string;
+  concepts?: string[];
+  shots?: string[];
+}
+
+interface DocPage {
+  path: string;
+  slug: string;
+  data: DocFrontMatter;
+  body: string;
+}
+
+type RefusalCode =
+  | "route-without-guide"
+  | "screen-not-a-route"
+  | "missing-image"
+  | "undefined-concept"
+  | "stale-generated-block"
+  | "retired-path";
+
+interface Refusal {
+  code: RefusalCode;
+  path: string;
+  subject: string;
+  message: string;
+}
+
+interface CheckInput {
+  pages: readonly DocPage[];
+  routes: readonly string[];
+  imageExists: (repoRelPath: string) => boolean;
+  freshBlocks: Readonly<Record<string, string>>;
+}
+
+interface DocsLib {
+  REFUSAL_CODES: readonly RefusalCode[];
+  RETIRED_PATHS: readonly string[];
+  checkDocs(input: CheckInput): Refusal[];
+}
+
+let cached: DocsLib | undefined;
+
+function lib(): DocsLib {
+  if (!existsSync(LIB_PATH)) {
+    throw new Error(
+      "B15 contract: scripts/docs/lib.mjs does not exist. checkDocs() lives there, pure, so " +
+        "that scripts/docs/check.mts is a thin CLI and this oracle needs no docs tree.",
+    );
+  }
+  if (!cached) cached = require(LIB_PATH) as DocsLib;
+  return cached;
+}
+
+const ROUTES = ["/work/chat", "/work/missions"];
+
+function makePage(over: Partial<DocPage> & { slug: string; data: DocFrontMatter }): DocPage {
+  return { path: `docs/${over.slug}.md`, body: "", ...over };
+}
+
+/** Every route covered, every reference resolvable, every block fresh. */
+function cleanInput(): CheckInput {
+  return {
+    pages: [
+      makePage({
+        slug: "guides/chat",
+        data: {
+          title: "Chat",
+          summary: "Talk to the agent",
+          section: "guides",
+          nav: 10,
+          screen: "/work/chat",
+        },
+      }),
+      makePage({
+        slug: "guides/missions",
+        body: "Open the board at /work/missions and dispatch one.",
+        data: {
+          title: "Missions",
+          summary: "Dispatch work",
+          section: "guides",
+          nav: 20,
+          screen: "/work/missions",
+          concepts: ["mission"],
+          shots: ["docs/images/work-missions.png"],
+        },
+      }),
+      makePage({
+        slug: "concepts/mission",
+        data: { title: "Mission", summary: "A unit of work", section: "concepts", nav: 1 },
+      }),
+    ],
+    routes: [...ROUTES],
+    imageExists: (p) => p === "docs/images/work-missions.png",
+    freshBlocks: {},
+  };
+}
+
+const API_PAGE = (body: string): DocPage =>
+  makePage({
+    slug: "reference/api",
+    body,
+    data: { title: "API", summary: "REST endpoints", section: "reference", nav: 1 },
+  });
+
+describe("B15 · docs:check refuses nothing when the corpus is whole", () => {
+  it("is a GREEN CONTROL: a complete fixture produces no refusals", () => {
+    // Without this, every red below could be a checker that refuses everything.
+    expect(lib().checkDocs(cleanInput())).toEqual([]);
+  });
+
+  it("declares its six refusal codes", () => {
+    expect([...lib().REFUSAL_CODES].sort()).toEqual([
+      "missing-image",
+      "retired-path",
+      "route-without-guide",
+      "screen-not-a-route",
+      "stale-generated-block",
+      "undefined-concept",
+    ]);
+  });
+});
+
+describe("B15 · docs:check refusal 1 — a registry route with no guide", () => {
+  it("names the route and says what would satisfy it", () => {
+    const input = cleanInput();
+    const refusals = lib().checkDocs({
+      ...input,
+      pages: input.pages.filter((p) => p.slug !== "guides/chat"),
+    });
+    expect(refusals.map((r) => r.code)).toEqual(["route-without-guide"]);
+    expect(refusals[0].subject).toBe("/work/chat");
+    expect(refusals[0].message).toBe(
+      "docs:check: the registry route /work/chat has no guide (no page declares screen: /work/chat)",
+    );
+  });
+
+  it("reports the routes in the order the registry gives them", () => {
+    const input = cleanInput();
+    const refusals = lib().checkDocs({ ...input, pages: [input.pages[2]] });
+    expect(refusals.filter((r) => r.code === "route-without-guide").map((r) => r.subject)).toEqual([
+      "/work/chat",
+      "/work/missions",
+    ]);
+  });
+});
+
+describe("B15 · docs:check refusal 2 — a screen: that is not a registry route", () => {
+  it("names the page and the route it invented", () => {
+    const input = cleanInput();
+    const ghost = makePage({
+      slug: "guides/ghost",
+      data: {
+        title: "Ghost",
+        summary: "A page for a screen that is not there",
+        section: "guides",
+        nav: 99,
+        screen: "/orchestration/missions",
+      },
+    });
+    const refusals = lib()
+      .checkDocs({ ...input, pages: [...input.pages, ghost] })
+      .filter((r) => r.code === "screen-not-a-route");
+    expect(refusals).toHaveLength(1);
+    expect(refusals[0].path).toBe("docs/guides/ghost.md");
+    expect(refusals[0].subject).toBe("/orchestration/missions");
+    expect(refusals[0].message).toBe(
+      "docs:check: docs/guides/ghost.md declares screen: /orchestration/missions, " +
+        "which is not a registry route",
+    );
+  });
+});
+
+describe("B15 · docs:check refusal 3 — a referenced image that is not on disk", () => {
+  it("names the page and the image", () => {
+    const input = cleanInput();
+    const refusals = lib()
+      .checkDocs({ ...input, imageExists: () => false })
+      .filter((r) => r.code === "missing-image");
+    expect(refusals).toHaveLength(1);
+    expect(refusals[0].path).toBe("docs/guides/missions.md");
+    expect(refusals[0].subject).toBe("docs/images/work-missions.png");
+    expect(refusals[0].message).toBe(
+      "docs:check: docs/guides/missions.md references docs/images/work-missions.png, " +
+        "which does not exist",
+    );
+  });
+});
+
+describe("B15 · docs:check refusal 4 — an undefined concept id", () => {
+  it("names the page and the concept nothing defines", () => {
+    const input = cleanInput();
+    const pages = input.pages.map((p) =>
+      p.slug === "guides/missions"
+        ? { ...p, data: { ...p.data, concepts: ["mission", "widget"] } }
+        : p,
+    );
+    const refusals = lib()
+      .checkDocs({ ...input, pages })
+      .filter((r) => r.code === "undefined-concept");
+    expect(refusals).toHaveLength(1);
+    expect(refusals[0].path).toBe("docs/guides/missions.md");
+    expect(refusals[0].subject).toBe("widget");
+    expect(refusals[0].message).toBe(
+      'docs:check: docs/guides/missions.md names concept "widget", ' +
+        "which no page under docs/concepts/ defines",
+    );
+  });
+
+  it("takes the concept id from the concepts page's own basename", () => {
+    // No `defines:` key: a concept's id IS its slug under docs/concepts/, so the
+    // id and the file cannot drift apart.
+    const input = cleanInput();
+    const pages = input.pages.map((p) =>
+      p.slug === "concepts/mission"
+        ? { ...p, slug: "concepts/task", path: "docs/concepts/task.md" }
+        : p,
+    );
+    const refusals = lib()
+      .checkDocs({ ...input, pages })
+      .filter((r) => r.code === "undefined-concept");
+    expect(refusals.map((r) => r.subject)).toEqual(["mission"]);
+  });
+});
+
+describe("B15 · docs:check refusal 5 — a stale generated block", () => {
+  const fenced = (body: string) =>
+    `Intro.\n\n<!-- generated:api-routes -->\n${body}\n<!-- /generated:api-routes -->\n`;
+
+  it("refuses a block whose body is not what the extractor produces now", () => {
+    const input = cleanInput();
+    const refusals = lib()
+      .checkDocs({
+        ...input,
+        pages: [...input.pages, API_PAGE(fenced("| `/api/old` |"))],
+        freshBlocks: { "api-routes": "| `/api/new` |" },
+      })
+      .filter((r) => r.code === "stale-generated-block");
+    expect(refusals).toHaveLength(1);
+    expect(refusals[0].path).toBe("docs/reference/api.md");
+    expect(refusals[0].subject).toBe("api-routes");
+    expect(refusals[0].message).toBe(
+      'docs:check: docs/reference/api.md generated block "api-routes" is stale ' +
+        "(run npm run docs:generate)",
+    );
+  });
+
+  it("passes a block whose body already matches", () => {
+    const input = cleanInput();
+    const refusals = lib()
+      .checkDocs({
+        ...input,
+        pages: [...input.pages, API_PAGE(fenced("| `/api/new` |"))],
+        freshBlocks: { "api-routes": "| `/api/new` |" },
+      })
+      .filter((r) => r.code === "stale-generated-block");
+    expect(refusals).toEqual([]);
+  });
+
+  it("refuses an opening marker with no closing marker, rather than reading it as absent", () => {
+    const input = cleanInput();
+    const refusals = lib()
+      .checkDocs({
+        ...input,
+        pages: [
+          ...input.pages,
+          API_PAGE("Intro.\n\n<!-- generated:api-routes -->\n| `/api/new` |\n"),
+        ],
+        freshBlocks: { "api-routes": "| `/api/new` |" },
+      })
+      .filter((r) => r.code === "stale-generated-block");
+    expect(refusals).toHaveLength(1);
+    expect(refusals[0].message).toBe(
+      'docs:check: docs/reference/api.md generated block "api-routes" has no closing marker',
+    );
+  });
+});
+
+describe("B15 · docs:check refusal 6 — a leftover old group name", () => {
+  it("refuses a body still pointing at a retired path", () => {
+    const input = cleanInput();
+    const pages = input.pages.map((p) =>
+      p.slug === "guides/missions"
+        ? { ...p, body: "Open the board at /orchestration/missions and dispatch one." }
+        : p,
+    );
+    const refusals = lib()
+      .checkDocs({ ...input, pages })
+      .filter((r) => r.code === "retired-path");
+    expect(refusals).toHaveLength(1);
+    expect(refusals[0].path).toBe("docs/guides/missions.md");
+    expect(refusals[0].subject).toBe("/orchestration/missions");
+    expect(refusals[0].message).toBe(
+      'docs:check: docs/guides/missions.md names the retired path "/orchestration/missions"',
+    );
+  });
+
+  it("lists the three retired groups the regroup replaced", () => {
+    expect([...lib().RETIRED_PATHS]).toEqual(
+      expect.arrayContaining(["/orchestration/", "/operations/", "/laboratory/"]),
+    );
+  });
+
+  it("GREEN CONTROL: the new paths are not refused", () => {
+    // /work/missions is in the clean fixture's body. A matcher that refuses the
+    // replacement as well as the thing it replaced is worse than no matcher.
+    expect(lib().checkDocs(cleanInput()).filter((r) => r.code === "retired-path")).toEqual([]);
+  });
+});
+
+describe("B15 · every refusal prints under one prefix", () => {
+  it("starts every message with docs:check: and names its subject", () => {
+    const input = cleanInput();
+    const refusals = lib().checkDocs({
+      ...input,
+      pages: input.pages
+        .filter((p) => p.slug !== "guides/chat")
+        .map((p) =>
+          p.slug === "guides/missions"
+            ? {
+                ...p,
+                body: "See /operations/agents.",
+                data: { ...p.data, concepts: ["widget"], screen: "/nope" },
+              }
+            : p,
+        ),
+      imageExists: () => false,
+    });
+    expect(refusals.length).toBeGreaterThanOrEqual(5);
+    for (const r of refusals) {
+      expect(r.message.startsWith("docs:check: ")).toBe(true);
+      expect(r.message).toContain(r.subject);
+    }
+  });
+});
