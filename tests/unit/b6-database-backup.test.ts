@@ -115,7 +115,8 @@ describe("backupFileName", () => {
   });
 
   it("defaults the timestamp to fs-helpers' backupTimestamp() form", () => {
-    jest.useFakeTimers({ now: new Date("2026-06-11T11:08:35.585Z") });
+    // .getTime(): this fake-timers wants milliseconds (fs-helpers.test.ts:110).
+    jest.useFakeTimers({ now: new Date("2026-06-11T11:08:35.585Z").getTime() });
     try {
       expect(helper.backupFileName("/srv/ps/data/patterstage.db", "pre-clean")).toBe(
         "patterstage.pre-clean.2026-06-11T11-08-35-585Z.db",

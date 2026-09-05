@@ -81,6 +81,7 @@ import { applyComposerRejectedMigration } from "./apply-composer-rejected-migrat
 import { applyResearchGatherMigration } from "./apply-research-gather-migration";
 import { applyComposerNodeCancelledMigration } from "./apply-composer-node-cancelled-migration";
 import { applyOperatorPrefsMigration } from "./apply-operator-prefs-migration";
+import { applyModelsOriginMigration } from "./apply-models-origin-migration";
 
 // ── Ensure data directory exists ───────────────────────────────
 
@@ -330,6 +331,11 @@ export function runMigrations(database: Database.Database): void {
   // quests done, the guide hidden), one JSON value per allow-listed key, so it
   // survives a browser and retention cannot un-complete a quest. CREATE at v38.
   applyOperatorPrefsMigration(database, migrationsDir);
+
+  // Where a model row came from, and what the last import wrote into it, so an
+  // operator's rename or proxy base URL is not undone by the next import.
+  // ALTER at v39.
+  applyModelsOriginMigration(database, migrationsDir);
 }
 
 // ── Bootstrap: ensure DB + schema exist ───────────────────────

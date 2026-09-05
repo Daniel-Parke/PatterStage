@@ -228,6 +228,7 @@ describe("proxy — read-only reads, refuses writes, and authenticates first", (
     "/api/stories",
     "/api/credentials",
     "/api/update",
+    "/api/backup",
   ];
 
   it.each(FORMERLY_SELF_GUARDED)("refuses a write to %s under PS_READ_ONLY", async (path) => {

@@ -63,13 +63,13 @@ Research and the Composer and so the quests have a ledger to read.
 | Chat | `chat.message_sent` |
 | Help | `help.opened` |
 
-Three types have no emitter yet and arrive with their feature:
-`research.cancelled` (the Research cancel, B14), `backup.taken` (Settings ›
-System backups, B6) and `help.opened` (the Help section, B16). The
-**Completionist** achievement is measured against `COMPLETIONIST_EVENT_TYPES`,
-the curated list of every type an operator can trigger by doing something:
-those three are not on it until they can be, and the three failure types never
-are.
+Two types have no emitter yet and arrive with their feature:
+`research.cancelled` (the Research cancel, B14) and `help.opened` (the Help
+section, B16). `backup.taken` joined them in B6, when `POST /api/backup`
+began writing one. The **Completionist** achievement is measured against
+`COMPLETIONIST_EVENT_TYPES`, the curated list of every type an operator can
+trigger by doing something: those two are not on it until they can be, and the
+three failure types never are.
 
 ## 2. Emitting events
 

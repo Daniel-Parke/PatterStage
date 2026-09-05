@@ -67,8 +67,8 @@ const ADDED = [
   "help.opened",
 ] as const;
 
-/** Types with no emitter until a later batch (B14, B6, B16). */
-const NOT_YET_EMITTED = ["research.cancelled", "backup.taken", "help.opened"] as const;
+/** Types with no emitter until a later batch (B14, B16). backup.taken got one in B6. */
+const NOT_YET_EMITTED = ["research.cancelled", "help.opened"] as const;
 
 /** Failures: recorded, charted, never required of anyone. */
 const FAILURES = ["mission.failed", "research.failed", "composer.run_failed"] as const;

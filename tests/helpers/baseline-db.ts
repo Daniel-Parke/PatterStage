@@ -2,6 +2,7 @@ import { readFileSync } from "fs";
 import { join } from "path";
 import { applyModelsApiStyleMigration } from "../../src/lib/db/apply-models-api-style-migration";
 import { applyNeutralColumnNames } from "../../src/lib/db/apply-neutral-column-names";
+import { applyModelsOriginMigration } from "../../src/lib/db/apply-models-origin-migration";
 
 const migrationsDir = join(__dirname, "..", "..", "src", "lib", "db", "migrations");
 
@@ -31,6 +32,10 @@ export function execBaselineSchema(database: import("better-sqlite3").Database):
   // rather than editing the historical baseline, which is a record of what
   // happened and not a description of the current schema.
   applyNeutralColumnNames(database);
+  // models.origin and the last-imported pair are added post-baseline (v39) and
+  // written by createModel/upsertModel, so a baseline-only fixture would hand
+  // the repository a schema no running install has. Same rule as api_style.
+  applyModelsOriginMigration(database, migrationsDir);
   database
     .prepare("INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)")
     .run("schema_version", "3");

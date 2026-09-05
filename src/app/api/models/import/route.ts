@@ -74,10 +74,16 @@ export async function POST(_request: NextRequest) {
           defaultSlots: model.defaultSlots,
         });
         modelKeyToId.set(key, result.id);
+        // Say when the import deferred to an edit rather than writing over it,
+        // so "updated" does not read as "overwrote everything" (T-0100, D10).
+        // `?? []` because a caller's double may predate the field.
+        const kept = result.preserved ?? [];
         details.push({
           name: model.name,
           action: result.action,
-          reason: `provider=${model.provider} model=${model.modelId}`,
+          reason:
+            `provider=${model.provider} model=${model.modelId}` +
+            (kept.length > 0 ? ` (kept operator edits: ${kept.join(", ")})` : ""),
         });
       } catch (err) {
         logApiError("POST /api/models/import", `upsert model ${model.name}`, err);

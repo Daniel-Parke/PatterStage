@@ -136,7 +136,7 @@ export default function ModelsPage() {
               // design-lint-disable-next-line hermes-outside-adapter -- tooltip copy. It names the two files Refresh reads so the operator knows what a refresh will and will not pick up; a button that hid the files it reads would be less honest, not better layered.
               title="Sync models from ~/.hermes/config.yaml and ~/.hermes/.env"
             >
-              {refreshing ? "Refreshing…" : "Refresh Models"}
+              {refreshing ? "Re-importing…" : "Re-import from config"}
             </Button>
             <Button
               variant="primary"
@@ -177,6 +177,8 @@ export default function ModelsPage() {
               defaults={defaults}
               busyTaskType={busyTaskType}
               onAddModel={openAddModel}
+              onReimport={handleRefresh}
+              reimporting={refreshing}
               onEdit={setEditing}
               onDelete={handleDelete}
               onPush={handlePush}

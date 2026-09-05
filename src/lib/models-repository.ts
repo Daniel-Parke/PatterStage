@@ -42,6 +42,16 @@ export interface ModelRecord {
    * call time (see {@link inferApiStyle}).
    */
   apiStyle: ApiStyle | null;
+  /** `import` when a config.yaml import created the row, `user` when a person did. */
+  origin: ModelOrigin;
+  /**
+   * What the last import wrote into `name` / `baseUrl`. The comparison that
+   * tells an operator's edit from a value the import itself put there: when
+   * the row still equals these, the import may overwrite; when it differs, the
+   * operator changed it and the import leaves it alone (T-0100, D10).
+   */
+  lastImportedName: string | null;
+  lastImportedBaseUrl: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -87,7 +97,18 @@ export interface UpdateModelInput {
 export interface UpsertModelResult {
   id: string;
   action: "inserted" | "updated";
+  /**
+   * Fields the import left alone because the operator had changed them since
+   * the last import. Empty when the import wrote everything it wanted to.
+   */
+  preserved: ModelEditableField[];
 }
+
+/** A field an operator can edit that an import also writes. */
+export type ModelEditableField = "name" | "baseUrl";
+
+/** Where a row came from: an import of config.yaml, or the operator. */
+export type ModelOrigin = "import" | "user";
 
 // ── Row shape ──────────────────────────────────────────────────
 
@@ -100,6 +121,9 @@ interface ModelRow {
   context_length: number | null;
   credentials_id: string | null;
   api_style: string | null;
+  origin: string | null;
+  last_imported_name: string | null;
+  last_imported_base_url: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -114,6 +138,9 @@ function rowToModel(row: ModelRow): ModelRecord {
     contextLength: row.context_length,
     credentialsId: row.credentials_id,
     apiStyle: normalizeApiStyle(row.api_style),
+    origin: row.origin === "import" ? "import" : "user",
+    lastImportedName: row.last_imported_name ?? null,
+    lastImportedBaseUrl: row.last_imported_base_url ?? null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -210,8 +237,8 @@ export function createModel(input: CreateModelInput): ModelRecord {
     .prepare(
       `INSERT INTO models (
          id, name, provider, model_id, base_url, context_length, credentials_id,
-         api_style, created_at, updated_at
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+         api_style, origin, created_at, updated_at
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'user', ?, ?)`
     )
     .run(
       id,
@@ -372,19 +399,53 @@ export function upsertModel(input: {
 
   // Match by (provider, model_id) — import_key column may not exist
   const existing = getDb()
-    .prepare("SELECT id FROM models WHERE provider = ? AND model_id = ? LIMIT 1")
-    .get(input.provider, input.modelId) as { id: string } | undefined;
+    .prepare(
+      "SELECT id, name, base_url, last_imported_name, last_imported_base_url FROM models WHERE provider = ? AND model_id = ? LIMIT 1",
+    )
+    .get(input.provider, input.modelId) as
+    | {
+        id: string;
+        name: string;
+        base_url: string | null;
+        last_imported_name: string | null;
+        last_imported_base_url: string | null;
+      }
+    | undefined;
 
   const apiStyle = inferApiStyle(input.provider, input.baseUrl);
 
   if (existing) {
-    // Update existing row (preserve credentials_id + a user-set api_style:
-    // COALESCE only fills it when still NULL).
+    // Keep what the operator changed. The row still equal to what the last
+    // import wrote is the import's own value and may be overwritten; a row
+    // that differs was edited by hand. A row this import has never seen
+    // (last_imported_name NULL, so a createModel row or a pre-039 one the
+    // backfill judged the operator's) keeps both fields: the import may learn
+    // what it wanted, but it does not get to claim a row it never wrote.
+    // COALESCE on api_style is unchanged; context_length and credentials_id
+    // are still absent from the UPDATE, so they are spared as they always were.
+    const neverImported = existing.last_imported_name === null;
+    const keepName = neverImported || existing.name !== existing.last_imported_name;
+    const keepBaseUrl = neverImported || existing.base_url !== existing.last_imported_base_url;
+    const preserved: ModelEditableField[] = [];
+    if (keepName && existing.name !== input.name) preserved.push("name");
+    if (keepBaseUrl && existing.base_url !== input.baseUrl) preserved.push("baseUrl");
+
     getDb()
       .prepare(
-        "UPDATE models SET name = ?, base_url = ?, api_style = COALESCE(api_style, ?), updated_at = ? WHERE id = ?"
+        `UPDATE models
+            SET name = ?, base_url = ?, api_style = COALESCE(api_style, ?),
+                last_imported_name = ?, last_imported_base_url = ?, updated_at = ?
+          WHERE id = ?`,
       )
-      .run(input.name, input.baseUrl, apiStyle, ts, existing.id);
+      .run(
+        keepName ? existing.name : input.name,
+        keepBaseUrl ? existing.base_url : input.baseUrl,
+        apiStyle,
+        input.name,
+        input.baseUrl,
+        ts,
+        existing.id,
+      );
 
     // Validate all task types upfront — failures are programmer errors
     // in internal callers, not user input, so throw rather than silently skip.
@@ -399,7 +460,7 @@ export function upsertModel(input: {
       setDefaultModel(slot, existing.id);
     }
 
-    return { id: existing.id, action: "updated" };
+    return { id: existing.id, action: "updated", preserved };
   }
 
   // Insert new row
@@ -409,8 +470,8 @@ export function upsertModel(input: {
     .prepare(
       `INSERT INTO models (
          id, name, provider, model_id, base_url, context_length, credentials_id,
-         created_at, updated_at
-       ) VALUES (?, ?, ?, ?, ?, ?, NULL, ?, ?)`
+         origin, last_imported_name, last_imported_base_url, created_at, updated_at
+       ) VALUES (?, ?, ?, ?, ?, ?, NULL, 'import', ?, ?, ?, ?)`
     )
     .run(
       id,
@@ -419,6 +480,8 @@ export function upsertModel(input: {
       input.modelId.trim(),
       input.baseUrl ?? null,
       input.contextLength ?? null,
+      input.name.trim(),
+      input.baseUrl ?? null,
       ts,
       ts
     );
@@ -436,5 +499,5 @@ export function upsertModel(input: {
     setDefaultModel(slot, id);
   }
 
-  return { id, action: "inserted" };
+  return { id, action: "inserted", preserved: [] };
 }

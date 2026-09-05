@@ -38,26 +38,31 @@ const DB_PATH = `${DATA_DIR}/control-hub.db`;
 const BACKUPS_DIR = `${DATA_DIR}/backups/db`;
 
 jest.mock("@/lib/paths", () => {
+  // The literals live INSIDE the factory: jest hoists this above the consts
+  // below, and the module graph pulls @/lib/paths in through api-auth while
+  // those consts are still in their temporal dead zone.
+  const dataDir = "/srv/ps/data";
+  const dbPath = `${dataDir}/control-hub.db`;
   const actual = jest.requireActual("@/lib/paths") as typeof import("@/lib/paths");
   return {
     // readEnv is the real one: isReadOnly() reads PS_READ_ONLY through it,
     // and the read-only tests below are about the real environment variable.
     readEnv: actual.readEnv,
-    PS_DATA_DIR: DATA_DIR,
-    getPsDataDir: () => DATA_DIR,
-    getDbPath: () => DB_PATH,
-    getPsScriptsDir: () => `${DATA_DIR}/scripts`,
-    getPsHardwareLogDir: () => `${DATA_DIR}/logs`,
+    PS_DATA_DIR: dataDir,
+    getPsDataDir: () => dataDir,
+    getDbPath: () => dbPath,
+    getPsScriptsDir: () => `${dataDir}/scripts`,
+    getPsHardwareLogDir: () => `${dataDir}/logs`,
     PATHS: {
-      patterStageDb: DB_PATH,
-      missions: `${DATA_DIR}/missions`,
-      templates: `${DATA_DIR}/templates`,
-      stories: `${DATA_DIR}/stories`,
-      recroom: `${DATA_DIR}/recroom`,
-      workspaces: `${DATA_DIR}/workspaces`,
-      auditLog: `${DATA_DIR}/audit`,
-      psScripts: `${DATA_DIR}/scripts`,
-      psHardwareLogs: `${DATA_DIR}/logs`,
+      patterStageDb: dbPath,
+      missions: `${dataDir}/missions`,
+      templates: `${dataDir}/templates`,
+      stories: `${dataDir}/stories`,
+      recroom: `${dataDir}/recroom`,
+      workspaces: `${dataDir}/workspaces`,
+      auditLog: `${dataDir}/audit`,
+      psScripts: `${dataDir}/scripts`,
+      psHardwareLogs: `${dataDir}/logs`,
     },
   };
 });

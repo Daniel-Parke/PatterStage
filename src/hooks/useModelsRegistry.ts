@@ -20,7 +20,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { API_FETCH_BULK_TIMEOUT_MS, safeApiCallData, apiFetch, messageFromError, setErrorFromCaught } from "@/lib/api-fetch";
+import { safeApiCallData, apiFetch, setErrorFromCaught } from "@/lib/api-fetch";
 import type { DefaultsModelOption } from "@/components/models/DefaultsGrid";
 import { type TaskType } from "@/lib/models/task-types";
 import type { FallbackChainEntry, FallbackConfig } from "@/types/console";
@@ -49,20 +49,11 @@ export function useModelsRegistry() {
     setLoading(true);
     setError(null);
     try {
-      // First, sync models from ~/.hermes/config.yaml — ensures we show
-      // live data even if the user changed defaults externally via hermes CLI
-      await apiFetch("/api/models/import", {
-        method: "POST",
-        // Bulk: walks the whole catalogue (T-0047).
-        timeoutMs: API_FETCH_BULK_TIMEOUT_MS,
-      }).catch((err) => {
-        // `messageFromError` falls back to `String(err)` when the caught
-        // value has no `message` — equivalent to the verbose
-        // `toError(err).message || String(err)` form, with a name + JSDoc.
-        const msg = messageFromError(err, String(err));
-        console.warn("Model auto-import failed — showing cached data:", msg);
-      });
-
+      // A READ, and only a read. This used to import config.yaml first, so
+      // every page load and every post-mutation reload wrote to the registry:
+      // a rename saved a moment earlier was overwritten by the reload that
+      // followed it, and a cleared default came straight back (T-0100, D9/D10).
+      // Re-importing is an act the operator asks for now, on the header button.
       const [m, c, d, drift, fb, fbCfg] = await Promise.all([
         apiFetch("/api/models"),
         apiFetch("/api/credentials"),

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { Database, Edit3, Plus } from "lucide-react";
+import { Database, Edit3, Plus, RefreshCw } from "lucide-react";
 
 import Button from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/LoadingSpinner";
@@ -20,6 +20,9 @@ interface ModelsTableSectionProps {
   defaults: Record<TaskType, string | null>;
   busyTaskType: TaskType | null;
   onAddModel: () => void;
+  /** The header's re-import, offered again on the empty state. */
+  onReimport?: () => void;
+  reimporting?: boolean;
   onEdit: (record: ModelEditorRecord) => void;
   onDelete: (model: ApiModel) => void;
   onPush: (
@@ -147,6 +150,8 @@ export default function ModelsTableSection({
   defaults,
   busyTaskType,
   onAddModel,
+  onReimport,
+  reimporting,
   onEdit,
   onDelete,
   onPush,
@@ -185,16 +190,31 @@ export default function ModelsTableSection({
         <EmptyState
           icon={Database}
           title="No models yet"
-          description="Add your first model to start dispatching missions with custom defaults."
+          description="Add your first model to start dispatching missions with custom defaults, or bring across the ones your agent's config.yaml already names."
           action={
-            <Button
-              variant="primary"
-              color="purple"
-              icon={Plus}
-              onClick={onAddModel}
-            >
-              Add Model
-            </Button>
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <Button
+                variant="primary"
+                color="purple"
+                icon={Plus}
+                onClick={onAddModel}
+              >
+                Add Model
+              </Button>
+              {/* The page no longer imports on load (T-0100), so a fresh
+                  install needs a way in from the state that shows it. */}
+              {onReimport && (
+                <Button
+                  variant="secondary"
+                  color="purple"
+                  icon={RefreshCw}
+                  onClick={onReimport}
+                  disabled={reimporting}
+                >
+                  {reimporting ? "Re-importing…" : "Re-import from config"}
+                </Button>
+              )}
+            </div>
           }
         />
       ) : (

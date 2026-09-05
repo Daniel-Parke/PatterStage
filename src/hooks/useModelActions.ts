@@ -267,7 +267,7 @@ export function useModelActions({
       const modelsImported = result?.modelsImported ?? 0;
       const creds = result?.credentialsUpdated ?? 0;
       showToast(
-        `Synced: ${modelsImported} model${pluralise(modelsImported)} ${modelsImported > 0 ? "(updated)" : "(no change)"}${creds > 0 ? `, ${creds} credential${pluralise(creds)} updated` : ""} from Hermes`,
+        `Re-imported ${modelsImported} model${pluralise(modelsImported)} from config.yaml${creds > 0 ? `, ${creds} credential${pluralise(creds)} updated` : ""}`,
         "success"
       );
       await loadAll();
