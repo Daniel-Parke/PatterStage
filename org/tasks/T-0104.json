@@ -2,18 +2,39 @@
   "id": "T-0104",
   "intent": "B10 of the final-release programme: Missions. Cancel and Remove-from-queue confirmable on the B2 primitive (D66, blocker); per-row two-step confirm on scheduled-mission delete with failures surfaced (D73); category rename and delete failures surfaced (D71); a failed fetch renders an error with Retry, never the first-run state (D67); the API sends the schedule and sessionId so the panel card and badge light up, View sessions links into /results/sessions?missionId=, a why-is-it-not-firing line on the schedule card (D68, D69); the template editor gets its own draft state and Save-as-Template cannot overwrite the last-open template (D70); the insights strip agrees with the board under decision 13 labels (D72).",
   "declared": {
-    "capabilities": ["edit-code"],
+    "capabilities": [
+      "edit-code"
+    ],
     "side_effects": []
   },
   "mode": "standard",
   "tier_proposed": "R1",
   "tier_ruled": "R1",
   "reasons": [
-    {"factor": "size-threshold", "tier_floor": "R1", "source": "derived:diff-size", "evidence": "the missions page, hook and route"}
+    {
+      "factor": "size-threshold",
+      "tier_floor": "R1",
+      "source": "derived:diff-size",
+      "evidence": "the missions page, hook and route"
+    }
   ],
-  "status": "proposed",
-  "owner_session": "unassigned",
-  "claims": ["src/components/missions/", "src/hooks/useMissionsPage.ts", "src/app/api/missions/", "src/app/work/missions/", "tests/"],
+  "status": "in_progress",
+  "owner_session": "session-b10",
+  "claims": [
+    "src/lib/missions/",
+    "src/lib/status-labels.ts",
+    "src/lib/schedules-repository.ts",
+    "src/app/api/missions/",
+    "src/app/work/missions/",
+    "src/app/results/sessions/page.tsx",
+    "src/components/missions/",
+    "src/hooks/",
+    "docs/",
+    "tests/"
+  ],
   "programme": "B10, depends on B2 (T-0096) and B4 (T-0098). Hook and route tests; the Playwright missions specs.",
-  "timestamps": {"opened": "2026-09-05T10:30:00Z", "updated": "2026-09-05T10:30:00Z"}
+  "timestamps": {
+    "opened": "2026-09-05T10:30:00Z",
+    "updated": "2026-09-05T21:00:00Z"
+  }
 }
