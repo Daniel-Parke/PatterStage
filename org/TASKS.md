@@ -115,7 +115,7 @@ The records under org/tasks/ are canonical.
 | T-0100 | standard | R2 | done | t0100-models-config-restore-backups-2026-09-05 |
 | T-0101 | standard | R1 | done | t0101-memory-and-logs-2026-09-05 |
 | T-0102 | standard | R1 | done | session-b8 |
-| T-0103 | standard | R2 | proposed | unassigned |
+| T-0103 | standard | R2 | in_progress | session-b9 |
 | T-0104 | standard | R1 | proposed | unassigned |
 | T-0105 | standard | R1 | proposed | unassigned |
 | T-0106 | standard | R1 | proposed | unassigned |

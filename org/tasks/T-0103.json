@@ -2,18 +2,49 @@
   "id": "T-0103",
   "intent": "B9 of the final-release programme: Skills, Tools and the Personalities fold. The Tools grid is bundle-aware so a granular toolset covered by an enabled hermes-* bundle reads pressed-and-disabled with the reason, normalisation dedupes only on write, enabled and disabled chips differ, unsaved changes guarded on profile switch, advanced-JSON edits kept (D80 blocker, D84, D82); the skill viewer tolerates the thin payload and becomes the catalogue's destination, disk-only skills toggle, Re-import from Hermes in the header, sharing across profiles stated where the edit happens (D81, D82). Decision 11: Personalities becomes the Identity tab on /agent/profiles writing through the same patch path; /operations/personalities answers 307; the page, nav entry, /api/personalities and the caller-less PUT /api/agent/personality go.",
   "declared": {
-    "capabilities": ["edit-code", "filesystem"],
+    "capabilities": [
+      "edit-code",
+      "filesystem"
+    ],
     "side_effects": []
   },
   "mode": "standard",
   "tier_proposed": "R2",
   "tier_ruled": "R2",
   "reasons": [
-    {"factor": "public-contract", "tier_floor": "R2", "source": "derived:public-api-delta", "evidence": "/api/personalities and PUT /api/agent/personality are removed; canary httpSurface changes"}
+    {
+      "factor": "public-contract",
+      "tier_floor": "R2",
+      "source": "derived:public-api-delta",
+      "evidence": "/api/personalities and PUT /api/agent/personality are removed; canary httpSurface changes"
+    }
   ],
-  "status": "proposed",
-  "owner_session": "unassigned",
-  "claims": ["src/modules/hermes/lib/toolset-normalize.ts", "src/app/agent/skills/", "src/app/agent/tools/", "src/app/agent/profiles/", "src/app/api/personalities/", "src/app/api/agent/personality/", "src/components/skills/", "src/components/tools/", "src/lib/modules/registry.ts", "next.config.ts", "tests/"],
+  "status": "in_progress",
+  "owner_session": "session-b9",
+  "claims": [
+    "src/modules/hermes/lib/toolset-normalize.ts",
+    "src/modules/hermes/lib/toolset-coverage.ts",
+    "src/modules/hermes/lib/profiles-repository.ts",
+    "src/lib/skills-known.ts",
+    "src/app/agent/skills/",
+    "src/app/agent/tools/",
+    "src/app/agent/profiles/",
+    "src/app/agent/personalities/",
+    "src/app/api/skills/",
+    "src/app/api/personalities/",
+    "src/app/api/agent/personality/",
+    "src/components/skills/",
+    "src/components/tools/",
+    "src/components/agents/",
+    "src/components/personalities/",
+    "src/lib/modules/registry.ts",
+    "next.config.ts",
+    "docs/",
+    "tests/"
+  ],
   "programme": "B9, depends on B8 (T-0102). toolset-normalize tests; page tests; the redirect test; the Shapeshifter oracle on the Identity tab.",
-  "timestamps": {"opened": "2026-09-05T10:30:00Z", "updated": "2026-09-05T10:30:00Z"}
+  "timestamps": {
+    "opened": "2026-09-05T10:30:00Z",
+    "updated": "2026-09-05T18:00:00Z"
+  }
 }
