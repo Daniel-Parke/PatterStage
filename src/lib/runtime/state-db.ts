@@ -58,10 +58,12 @@ interface HermesMessageRow {
   timestamp: number;
 }
 
-/** One session plus its full message history, read in a single open. */
+/** One session plus its message history, read in a single open. */
 export interface HermesSessionDetail {
   session: HermesSessionRow;
   messages: HermesMessageRow[];
+  /** True when older messages were left behind by `messageLimit`. */
+  truncated: boolean;
 }
 
 /** Absolute path to the active agent's session database. */
@@ -130,7 +132,13 @@ export function readHermesSessionsFromStateDb(): HermesSessionRow[] {
  * the transcript route did inline: two opens would double the lock
  * contention with a live agent for no benefit.
  */
-export function readAgentSessionDetail(sessionId: string): HermesSessionDetail | null {
+/**
+ * @param messageLimit  Keep only the newest N messages. Omit for all of them.
+ */
+export function readAgentSessionDetail(
+  sessionId: string,
+  messageLimit?: number,
+): HermesSessionDetail | null {
   const path = stateDbPath();
   if (!existsSync(path)) return null;
 
@@ -144,6 +152,22 @@ export function readAgentSessionDetail(sessionId: string): HermesSessionDetail |
 
     if (!session) return null;
 
+    const capped = typeof messageLimit === "number" && Number.isFinite(messageLimit) && messageLimit > 0;
+    if (capped) {
+      // Newest first, one more than asked for, so "there are more" is a fact
+      // rather than a guess; then reversed, because a transcript reads
+      // oldest-first (T-0105, D40).
+      // design-lint-disable-next-line sql-outside-repository -- foreign database: the agent's own state.db, not PatterStage's schema, so the adapter layer owns it and a *repository* filename would only hide it behind the /repository/i exemption
+      const newestFirst = hermesDb.prepare(
+          `SELECT role, content, tool_name, tool_calls, tool_call_id, finish_reason, reasoning, timestamp
+               FROM messages WHERE session_id = ? ORDER BY timestamp DESC LIMIT ?`,
+        )
+        .all(sessionId, messageLimit + 1) as HermesMessageRow[];
+      const truncated = newestFirst.length > messageLimit;
+      const kept = truncated ? newestFirst.slice(0, messageLimit) : newestFirst;
+      return { session, messages: kept.reverse(), truncated };
+    }
+
     // design-lint-disable-next-line sql-outside-repository -- foreign database: the agent's own state.db, not PatterStage's schema, so the adapter layer owns it and a *repository* filename would only hide it behind the /repository/i exemption
     const messages = hermesDb.prepare(
         `SELECT role, content, tool_name, tool_calls, tool_call_id, finish_reason, reasoning, timestamp
@@ -151,7 +175,7 @@ export function readAgentSessionDetail(sessionId: string): HermesSessionDetail |
       )
       .all(sessionId) as HermesMessageRow[];
 
-    return { session, messages };
+    return { session, messages, truncated: false };
   } finally {
     if (hermesDb) { try { hermesDb.close(); } catch { /* already closed */ } }
   }

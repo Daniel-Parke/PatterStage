@@ -21,6 +21,8 @@
 import { existsSync } from "fs";
 import { join } from "path";
 
+import type { SessionStatus } from "@/lib/sessions/session-repository";
+
 /**
  * Standard shape returned by every branch of GET /api/sessions/[id].
  * Each field beyond `id`/`format`/`filename`/`messages`/`size` is
@@ -40,6 +42,16 @@ export interface SessionData {
   created?: string | null;
   missionId?: string | null;
   note?: string;
+  /**
+   * How the session ended, with the reason. All three were stored, sent
+   * nowhere and rendered nowhere, so a failed session looked exactly like a
+   * successful one (T-0105, D30).
+   */
+  status?: SessionStatus;
+  exitCode?: number | null;
+  error?: string | null;
+  /** True when older messages were left behind by the message cap (D40). */
+  truncated?: boolean;
   [key: string]: unknown;
 }
 
@@ -100,6 +112,10 @@ export interface DbSessionEnvelope {
   modelId: string | null;
   source: string;
   startedAt: string | null;
+  /** How it ended, and why. Present on every PatterStage row (T-0105, D30). */
+  status?: SessionStatus;
+  exitCode?: number | null;
+  error?: string | null;
 }
 
 /**
@@ -112,12 +128,24 @@ export interface DbSessionEnvelope {
 export function dbSessionFields(
   dbSession: DbSessionEnvelope,
   sanitizedId: string,
-): { title: string; model: string; source: string; created: string | null } {
+): {
+  title: string;
+  model: string;
+  source: string;
+  created: string | null;
+  status?: SessionStatus;
+  exitCode?: number | null;
+  error?: string | null;
+} {
   return {
     title: dbSession.title || sanitizedId,
     model: dbSession.modelId || "",
     source: dbSession.source,
     created: dbSession.startedAt,
+    // How it ended travels with it now (T-0105, D30).
+    status: dbSession.status,
+    exitCode: dbSession.exitCode ?? null,
+    error: dbSession.error ?? null,
   };
 }
 

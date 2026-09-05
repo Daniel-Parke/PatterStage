@@ -16,10 +16,12 @@
 import type { SessionRecord } from "@/lib/sessions/session-repository";
 
 /** Threshold (in bytes) below which an api-source session is considered "noise". */
-const API_NOISE_MAX_BYTES = 1024;
+/** @public The size below which an api session is chatter. Shared with the SQL. */
+export const API_NOISE_MAX_BYTES = 1024;
 
 /** Age (in milliseconds) below which a short-lived session is considered "noise". */
-const API_NOISE_MAX_AGE_MS = 60_000;
+/** @public How long an api session may LIVE and still be chatter. Shared with the SQL. */
+export const API_NOISE_MAX_DURATION_MS = 60_000;
 
 /**
  * Free-text search across a session's title, id, profile, and mission
@@ -66,7 +68,12 @@ export function isApiNoiseSession(
 ): boolean {
   if (session.source !== "api") return false;
   if (session.size >= API_NOISE_MAX_BYTES) return false;
-  const ageMs = now - new Date(session.startedAt).getTime();
-  if (ageMs > API_NOISE_MAX_AGE_MS) return false;
+  // How long it LIVED, not how long ago it started. Measuring the age hid a
+  // five-hour api session for its first minute and showed it for ever after
+  // (T-0105, D31). The SQL in listSessions is the one that runs in the
+  // product; this stays as the same rule, testable without a database.
+  const endMs = session.endedAt ? Date.parse(session.endedAt) : now;
+  const durationMs = endMs - Date.parse(session.startedAt);
+  if (durationMs > API_NOISE_MAX_DURATION_MS) return false;
   return true;
 }

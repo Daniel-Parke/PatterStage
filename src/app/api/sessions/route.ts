@@ -65,6 +65,8 @@ export async function GET(request: NextRequest) {
     const result = listSessions({
       agentType: q.agentType,
       source: q.source,
+      status: q.status,
+      excludeApiNoise: q.excludeApiNoise,
       missionId: q.missionId,
       search: q.search,
       limit: q.limit,
@@ -83,6 +85,10 @@ export async function GET(request: NextRequest) {
       // page rather than being recomputed from it: `totals.total` IS `total`,
       // which is what stops a tile contradicting the header above it (T-0042).
       totals: result.totals,
+      // Every source this filter can still reach. The page built its filter
+      // buttons from a constant, so a session from any other source could not
+      // be found by what started it (T-0105, D29).
+      sources: result.sources,
     });
   } catch (error) {
     return serverErrorFromCatch("GET /api/sessions", "listing sessions", error, "Failed to load sessions");

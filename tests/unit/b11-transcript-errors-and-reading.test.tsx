@@ -43,8 +43,12 @@ jest.mock("@/hooks/useSessionDetail", () => ({
 
 import SessionDetailPage from "@/app/results/sessions/[id]/page";
 
-const LONG_ANSWER =
-  "The queue drained cleanly. " + "Every job was retried with the same backoff. ".repeat(12);
+// Trimmed on purpose: testing-library normalises an element's text before
+// comparing, so a fixture with a trailing space can never be matched by
+// getByText and the case would fail whatever the product did.
+const LONG_ANSWER = (
+  "The queue drained cleanly. " + "Every job was retried with the same backoff. ".repeat(12)
+).trim();
 
 const MESSAGES = [
   { index: 0, role: "user", content: "Please triage the queue and tell me about the needle" },

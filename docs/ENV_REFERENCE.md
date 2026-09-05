@@ -97,6 +97,7 @@ Read straight from the process environment; `setup.sh` writes no `.env.local` en
 | `PS_GATEWAY_MAX_QUEUE` | `32` | Callers allowed to wait for a slot, per endpoint. `0` refuses at once. Beyond it a call answers **503** naming the gate and the endpoint. |
 | `PS_GATEWAY_QUEUE_TIMEOUT_MS` | `10000` | How long a queued caller waits before it is refused with the same 503. |
 | `MAX_SESSION_FILE_BYTES` | `67108864` (64 MiB) | `GET /api/sessions/[id]` answers **413** rather than loading a transcript bigger than this. |
+| `MAX_SESSION_MESSAGES` | `2000` | How many messages one transcript answer carries. Over it, the newest N are sent and the page says so. |
 | `SESSIONS_API_RATE_LIMIT_MAX` | `120` | Reads of `/api/sessions*` allowed per client per rolling 60 second window. Over it the route answers **429**. |
 | `PS_PULL_RECONCILE_DISK` / `CH_PULL_RECONCILE_DISK` | unset | `1`: `POST /api/agent/profiles/sync/pull` reconciles against disk on every call, as if the request body had set `reconcileDisk`. |
 

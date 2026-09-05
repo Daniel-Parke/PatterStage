@@ -89,8 +89,8 @@ Every `route.ts` under `src/app/api` has a row, here or in the Chat / Composer /
 | `/api/runs/reconcile` | `POST` | Force an immediate reconcile pass over active runs, rather than waiting for the ~15s BackgroundScheduler tick. Idempotent. |
 | `/api/seed` | `GET`, `POST` | `GET` answers `{ state, pack }`, where `pack` counts what the shipped starter set contains, read from disk. `POST` restores; `mode: "replace"` takes a `pre-restore` database snapshot first and refuses outright if it cannot, and the answer carries `imported` and `backup`. |
 | `/api/seed/clean` | `GET`, `POST` | `GET` previews the throwaway test data a purge would remove; `POST` takes a `pre-clean` database snapshot, purges, writes an audit line, and answers `{ removed, counts, backup }`. |
-| `/api/sessions` | `GET`, `POST` | List sessions; `POST` for dispatch pipeline (see [RPC-style routes](#rpc-style-routes)). |
-| `/api/sessions/[id]` | `GET` | Read one session transcript. |
+| `/api/sessions` | `GET` | List sessions. Query: `source` (any value the column holds, not only the named ones), `status` (`active`, `completed`, `failed`), `hideApiNoise=1` (drop api sessions under 1KB that lived under a minute, in SQL), `missionId`, `search`, `limit` (max 100), `offset`. Answers `{ sessions, total, totals, sources }`, where `sources` is every source the same filter can still reach. |
+| `/api/sessions/[id]` | `GET` | Read one session transcript. Carries `status`, `exitCode`, `error`, and `truncated` when only the newest `MAX_SESSION_MESSAGES` messages were loaded. |
 | `/api/admin/sessions/backfill-status` | `POST` | One-shot orphan-close sweep over stuck session rows, running the same logic as the recurring 15s sync as an explicit operator action. `{ dryRun: true }` (the default) returns the counts that *would* change. See [MISSIONS.md](MISSIONS.md). |
 | `/api/skills` | `GET` | List skills inventory. |
 | `/api/skills/[name]` | `GET`, `PUT` | Read or update one skill document. |

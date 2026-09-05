@@ -13,6 +13,23 @@ const DEFAULT_RATE_MAX = 120;
 
 const windowHits = new Map<string, number[]>();
 
+/** Default max messages a transcript response carries. Override with MAX_SESSION_MESSAGES. */
+const DEFAULT_MAX_SESSION_MESSAGES = 2000;
+
+/**
+ * How many messages one transcript answer may carry.
+ *
+ * The byte ceiling above is a refusal: over it, the route answers 413 and the
+ * operator sees nothing. A long-but-legal transcript still arrived whole and
+ * was rendered whole, one bubble per message with no virtualisation
+ * (T-0105, D40). The cap is the middle answer: the newest N, and a line saying
+ * so.
+ */
+export function getMaxSessionMessages(): number {
+  const n = Number(process.env.MAX_SESSION_MESSAGES);
+  return Number.isFinite(n) && n > 0 ? Math.floor(n) : DEFAULT_MAX_SESSION_MESSAGES;
+}
+
 export function getMaxSessionFileBytes(): number {
   const n = Number(process.env.MAX_SESSION_FILE_BYTES);
   return Number.isFinite(n) && n > 0 ? n : DEFAULT_MAX_SESSION_BYTES;

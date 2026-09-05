@@ -158,7 +158,7 @@ describe("findFileWithExtension", () => {
 });
 
 describe("dbSessionFields", () => {
-  it("returns the 4 envelope fields verbatim when the row is fully populated", () => {
+  it("returns the envelope fields verbatim when the row is fully populated", () => {
     const result = dbSessionFields(
       {
         title: "My mission",
@@ -173,6 +173,12 @@ describe("dbSessionFields", () => {
       model: "gpt-4",
       source: "mission",
       created: "2026-06-01T12:00:00Z",
+      // How it ended travels with it now (T-0105, D30); a row that carries
+      // none of the three answers with the absent shape rather than omitting
+      // the keys, so a caller never has to tell "unknown" from "not sent".
+      status: undefined,
+      exitCode: null,
+      error: null,
     });
   });
 
@@ -212,12 +218,14 @@ describe("dbSessionFields", () => {
     expect(result.created).toBeNull();
   });
 
-  it("is byte-equivalent to the pre-refactor inline branch for every row shape", () => {
+  it("derives the four envelope fields the same way for every row shape", () => {
     // The pre-refactor inline form was:
     //   title: dbSession.title || sanitizedId,
     //   model: dbSession.modelId || "",
     //   source: dbSession.source,
     //   created: dbSession.startedAt,
+    // The three ending fields joined it in T-0105 (D30) and are asserted by
+    // the case above; these four must still be derived the same way.
     const inline = (row: { title: string | null; modelId: string | null; source: string; startedAt: string | null }) => ({
       title: row.title || "s-1",
       model: row.modelId || "",
@@ -232,7 +240,11 @@ describe("dbSessionFields", () => {
       { title: "A", modelId: "m", source: "mission", startedAt: "2026-01-01T00:00:00Z" },
     ];
     for (const row of cases) {
-      expect(dbSessionFields(row, "s-1")).toEqual(inline(row));
+      const { status, exitCode, error, ...envelope } = dbSessionFields(row, "s-1");
+      void status;
+      void exitCode;
+      void error;
+      expect(envelope).toEqual(inline(row));
     }
   });
 });

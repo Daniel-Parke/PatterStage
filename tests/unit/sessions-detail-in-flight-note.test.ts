@@ -73,6 +73,8 @@ jest.mock("@/lib/sessions/session-mission-links", () => ({
 
 jest.mock("@/lib/sessions/sessions-api-guard", () => ({
   getMaxSessionFileBytes: jest.fn(() => 50 * 1024 * 1024),
+  // The route caps the transcript now (T-0105, D40).
+  getMaxSessionMessages: jest.fn(() => 2000),
   sessionsRateLimitResponse: jest.fn(() => null),
 }));
 

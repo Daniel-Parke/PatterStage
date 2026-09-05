@@ -19,13 +19,23 @@ import { parseListBounds } from "@/lib/list-bounds";
 import { ensureSyncLayer } from "@/lib/sync";
 import type {
   AgentType,
-  SessionSource,
+  SessionStatus,
 } from "@/lib/sessions/session-repository";
 
 // ── Type constants ──────────────────────────────────────────────
 
 export const ALL_AGENT_TYPES = ["hermes"] as const;
-export const ALL_SOURCES = ["cli", "cron", "mission", "api"] as const;
+/** The sources PatterStage has a word for. Not the set that can occur. */
+export const ALL_SOURCES = ["cli", "cron", "mission", "api", "chat", "subagent", "tui"] as const;
+const ALL_STATUSES = ["active", "completed", "failed"] as const;
+
+/**
+ * A source is free text in the column, so the filter accepts anything that
+ * looks like one rather than only the names above: running it through
+ * pickEnum silently dropped the filter for every other source, so asking for
+ * subagent sessions returned all of them (T-0105, D29).
+ */
+const SOURCE_SHAPE = /^[a-z0-9][a-z0-9_.-]{0,31}$/i;
 
 // ── Enum picker ────────────────────────────────────────────────
 
@@ -77,7 +87,10 @@ export function _resetSyncDebounceForTests(): void {
 
 export interface ParsedSessionQuery {
   agentType?: AgentType;
-  source?: SessionSource;
+  source?: string;
+  status?: SessionStatus;
+  /** Drop short-lived api chatter, in SQL (T-0105, D31). */
+  excludeApiNoise?: boolean;
   /** Undefined when the key is missing; the string value otherwise (empty string for `?missionId=`). */
   missionId?: string;
   /** Free-text search over the full table (title / id / profile / mission). */
@@ -97,7 +110,10 @@ export function parseSessionQuery(req: NextRequest): ParsedSessionQuery {
   const u = new URL(req.url);
   const id = u.searchParams.get("id") ?? undefined;
   const agentType = pickEnum(u.searchParams.get("agentType"), ALL_AGENT_TYPES);
-  const source = pickEnum(u.searchParams.get("source"), ALL_SOURCES);
+  const rawSource = u.searchParams.get("source");
+  const source = rawSource && SOURCE_SHAPE.test(rawSource) ? rawSource : undefined;
+  const status = pickEnum(u.searchParams.get("status"), ALL_STATUSES);
+  const excludeApiNoise = u.searchParams.get("hideApiNoise") === "1";
   const missionIdParam = u.searchParams.get("missionId");
   // `searchParams.get` returns `null` when the key is missing;
   // coalesce to undefined so callers can use a single optional check.
@@ -108,5 +124,5 @@ export function parseSessionQuery(req: NextRequest): ParsedSessionQuery {
   const { limit, offset } = parseListBounds(u.searchParams, { defaultLimit: 50, maxLimit: 100 });
   const searchParam = u.searchParams.get("search")?.trim();
   const search = searchParam ? searchParam : undefined;
-  return { agentType, source, missionId, search, limit, offset, id };
+  return { agentType, source, status, excludeApiNoise, missionId, search, limit, offset, id };
 }

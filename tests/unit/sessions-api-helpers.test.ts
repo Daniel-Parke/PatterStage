@@ -90,12 +90,19 @@ describe("parseSessionQuery", () => {
     expect(result.source).toBe("cron");
   });
 
-  it("ignores unknown enum values rather than throwing", () => {
-    const result = parseSessionQuery(
-      makeRequest("agentType=nope&source=not-a-source"),
-    );
+  it("ignores an unknown agent type rather than throwing", () => {
+    const result = parseSessionQuery(makeRequest("agentType=nope"));
+
     expect(result.agentType).toBeUndefined();
-    expect(result.source).toBeUndefined();
+  });
+
+  it("accepts a source the UI has no word for, and refuses one that is not a source", () => {
+    // The column is free text: running it through an enum silently dropped
+    // the filter, so asking for subagent sessions returned all of them
+    // (T-0105, D29). Shape is what is checked now, not membership.
+    expect(parseSessionQuery(makeRequest("source=subagent")).source).toBe("subagent");
+    expect(parseSessionQuery(makeRequest("source=not a source")).source).toBeUndefined();
+    expect(parseSessionQuery(makeRequest("source=")).source).toBeUndefined();
   });
 
   it("caps limit at 100 to prevent unbounded queries", () => {

@@ -4,7 +4,7 @@
 
 "use client";
 
-import { useState, useCallback, useMemo, useRef } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -17,6 +17,12 @@ import { useSessionDetail } from "@/hooks/useSessionDetail";
 import { ROLE_META, getMessageRole } from "@/components/session/constants";
 import { MessageBubble, type SessionMessage } from "@/components/session/MessageBubble";
 import { isSessionStillRunning } from "@/lib/sessions/session-title";
+import { sessionLoadErrorHeading } from "@/lib/sessions/session-load-error";
+import { SESSIONS_LIVE_POLL_MS } from "@/hooks/useSessions";
+import { SESSION_STATUS_LABELS } from "@/lib/status-labels";
+import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
+import { SearchInput } from "@/components/ui/Input";
+import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 import { MISSIONS_PATH } from "@/lib/missions/mission-deep-link";
 
 // ── Page ────────────────────────────────────────────────────
@@ -28,9 +34,21 @@ export default function SessionDetailPage() {
   // `refetch()` powers the "⟳ Refresh" button for still-running sessions
   // as a background re-fetch (cached data stays on screen — no full-page
   // LoadingSpinner flash, no scroll reset).
-  const { data, isLoading: loading, error, refetch } = useSessionDetail(sessionId);
+  // Poll while the session is running, and not otherwise (T-0105, D36). The
+  // first render has no data, so the first poll decision is made on the first
+  // answer, which is when there is something to poll about.
+  const [live, setLive] = useState(false);
+  const { data, isLoading: loading, error, errorStatus, refetch } = useSessionDetail(sessionId, {
+    refetchIntervalMs: live ? SESSIONS_LIVE_POLL_MS : false,
+  });
   const [roleFilter, setRoleFilter] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [expandAll, setExpandAll] = useState<boolean | null>(null);
   const messageRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+  const [copied, copy] = useCopyToClipboard({ resetMs: 2000 });
+  useEffect(() => {
+    setLive(data?.status === "active");
+  }, [data?.status]);
 
   // Count messages by role
   const roleCounts = useMemo(() => {
@@ -48,15 +66,23 @@ export default function SessionDetailPage() {
   // Filtered messages — use original index directly when no filter (avoids creating wrapper objects)
   const filteredMessages: Array<{ msg: SessionMessage; originalIndex: number }> = useMemo(() => {
     if (!data?.messages) return [];
-    if (!roleFilter) return data.messages.map((msg, i) => ({ msg, originalIndex: i }));
+    const term = search.trim().toLowerCase();
     const result: Array<{ msg: SessionMessage; originalIndex: number }> = [];
     for (let i = 0; i < data.messages.length; i++) {
-      if (getMessageRole(data.messages[i]) === roleFilter) {
-        result.push({ msg: data.messages[i], originalIndex: i });
+      const msg = data.messages[i] as SessionMessage;
+      if (roleFilter && getMessageRole(msg) !== roleFilter) continue;
+      if (term) {
+        // Whatever the bubble would show: the body, or the tool it names.
+        const haystack = [msg.content, msg.tool_name, (msg as { name?: string }).name]
+          .filter((v): v is string => typeof v === "string")
+          .join(" ")
+          .toLowerCase();
+        if (!haystack.includes(term)) continue;
       }
+      result.push({ msg, originalIndex: i });
     }
     return result;
-  }, [data?.messages, roleFilter]);
+  }, [data?.messages, roleFilter, search]);
 
   // Scroll to next message of a given role from current scroll position
   const scrollToNextRole = useCallback((role: string) => {
@@ -118,9 +144,14 @@ export default function SessionDetailPage() {
     return (
       <AppPageShell>
         <div className="min-h-[60vh] flex items-center justify-center">
-          <div className="text-center">
-            <h2 className="text-xl font-bold text-white mb-2">Session Not Found</h2>
-            <p className="text-ps-text-muted font-mono mb-4">{error || "Unknown error"}</p>
+          <div className="text-center max-w-md">
+            {/* Every failure used to read "Session Not Found": a malformed id,
+                a transcript over the ceiling and a rate limit all told the
+                operator the same untrue thing (T-0105, D33). */}
+            <h2 className="text-xl font-bold text-white mb-2">
+              {sessionLoadErrorHeading(errorStatus)}
+            </h2>
+            <LoadErrorBanner error={error ?? "Unknown error"} onRetry={() => void refetch()} />
             <Link
               href="/results/sessions"
               className="text-neon-orange text-sm font-mono hover:underline"
@@ -142,10 +173,19 @@ export default function SessionDetailPage() {
   // by the data.note text containing the "still running" hint. We use
   // a simple heuristic that works without changing the API contract:
   // if messages are empty AND note mentions running, show a refresh CTA.
-  const isRunning = isSessionStillRunning(
-    data.messages.length,
-    typeof data.note === "string" ? data.note : null,
-  );
+  // A running session with a transcript had no Refresh at all: the note
+  // heuristic requires ZERO messages (T-0105, D36).
+  const isRunning =
+    data.status === "active" ||
+    isSessionStillRunning(
+      data.messages.length,
+      typeof data.note === "string" ? data.note : null,
+    );
+  const shownCount = filteredMessages.length;
+  const isNarrowed = Boolean(roleFilter) || search.trim().length > 0;
+  const transcriptText = filteredMessages
+    .map(({ msg }) => `${getMessageRole(msg).toUpperCase()}: ${msg.content ?? ""}`)
+    .join(String.fromCharCode(10, 10));
 
   return (
     <AppPageShell>
@@ -167,6 +207,21 @@ export default function SessionDetailPage() {
                 ↗ Mission
               </a>
             )}
+            <button
+              type="button"
+              onClick={() => setExpandAll((v) => (v === true ? false : true))}
+              className="text-xs font-mono px-2 py-1 rounded bg-white/5 text-ps-text-muted hover:text-white transition-colors"
+            >
+              {expandAll === true ? "Collapse all" : "Expand all"}
+            </button>
+            <button
+              type="button"
+              onClick={() => void copy(transcriptText)}
+              className="text-xs font-mono px-2 py-1 rounded bg-white/5 text-ps-text-muted hover:text-white transition-colors"
+              title="Copy the messages currently shown"
+            >
+              {copied ? "Copied" : "Copy transcript"}
+            </button>
             {isRunning && (
               <button
                 type="button"
@@ -212,14 +267,50 @@ export default function SessionDetailPage() {
 
       {/* Messages */}
       <div className="max-w-4xl mx-auto px-6 py-6 flex-1 w-full">
-        {roleFilter && (
+        {data.status === "failed" && (
+          <div
+            role="alert"
+            className="mb-4 rounded-lg border border-semantic-danger/40 bg-semantic-danger/10 p-3"
+          >
+            <p className="text-sm font-semibold text-semantic-danger">
+              {SESSION_STATUS_LABELS.failed}
+              {typeof data.exitCode === "number" ? ` · exit ${data.exitCode}` : ""}
+            </p>
+            {data.error && (
+              <p className="mt-1 text-xs font-mono text-semantic-danger/90 whitespace-pre-wrap break-words">
+                {data.error}
+              </p>
+            )}
+          </div>
+        )}
+        {data.truncated && (
+          <p className="mb-3 text-xs font-mono text-ps-text-muted">
+            Showing the most recent {data.messages.length} messages. Older messages were not loaded.
+          </p>
+        )}
+        <div className="mb-3">
+          <SearchInput
+            value={search}
+            onChange={setSearch}
+            placeholder="Search this transcript"
+            ariaLabel="Search transcript"
+            accentColor="orange"
+          />
+        </div>
+        {isNarrowed && (
           <div className="text-xs text-ps-text-muted font-mono mb-3">
-            Showing {filteredMessages.length} {roleFilter} messages of {data.messages.length} total
+            Showing {shownCount} of {data.messages.length} messages
           </div>
         )}
         <div className="space-y-3">
           {filteredMessages.map(({ msg, originalIndex }) => (
-            <MessageBubble key={originalIndex} msg={msg} index={originalIndex} messageRefs={messageRefs} />
+            <MessageBubble
+              key={originalIndex}
+              msg={msg}
+              index={originalIndex}
+              messageRefs={messageRefs}
+              expandAll={expandAll}
+            />
           ))}
         </div>
 

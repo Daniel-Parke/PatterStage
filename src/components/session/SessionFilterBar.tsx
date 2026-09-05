@@ -8,19 +8,22 @@
 
 "use client";
 
-import { Activity, EyeOff, Filter, Layers } from "lucide-react";
+import { Activity, AlertTriangle, EyeOff, Filter, Layers } from "lucide-react";
 import { SearchInput } from "@/components/ui/Input";
 import { LiveDot } from "@/components/ui/LiveDot";
-import { SOURCE_META } from "@/components/session/constants";
-import type { SessionSource } from "@/lib/sessions/session-repository";
+import { sourceMeta } from "@/components/session/constants";
+import { SESSION_STATUS_LABELS } from "@/lib/status-labels";
 
 export interface SessionFilterBarProps {
   search: string;
   onSearchChange: (value: string) => void;
-  sources: SessionSource[];
-  sourceFilter: SessionSource | null;
+  /** Every source the current filter can still reach, from the API. */
+  sources: string[];
+  sourceFilter: string | null;
   onClearSourceFilter: () => void;
-  onSelectSourceFilter: (src: SessionSource) => void;
+  onSelectSourceFilter: (src: string) => void;
+  failedOnly: boolean;
+  onToggleFailedOnly: () => void;
   groupByMission: boolean;
   onToggleGroupByMission: () => void;
   hideApiNoise: boolean;
@@ -34,6 +37,8 @@ export default function SessionFilterBar({
   sourceFilter,
   onClearSourceFilter,
   onSelectSourceFilter,
+  failedOnly,
+  onToggleFailedOnly,
   groupByMission,
   onToggleGroupByMission,
   hideApiNoise,
@@ -75,10 +80,24 @@ export default function SessionFilterBar({
                     : "text-ps-text-muted hover:text-ps-text-secondary"
                 }`}
               >
-                {SOURCE_META[src]?.icon}
-                {SOURCE_META[src]?.label ?? src}
+                {sourceMeta(src).icon}
+                {sourceMeta(src).label}
               </button>
             ))}
+            {/* The one question the list could not be asked (T-0105, D30). */}
+            <button
+              type="button"
+              onClick={onToggleFailedOnly}
+              aria-pressed={failedOnly}
+              className={`text-xs font-mono px-2 py-1 rounded transition-colors flex items-center gap-1 ${
+                failedOnly
+                  ? "bg-semantic-danger/20 text-semantic-danger"
+                  : "text-ps-text-muted hover:text-ps-text-secondary"
+              }`}
+            >
+              <AlertTriangle className="w-3 h-3" />
+              {SESSION_STATUS_LABELS.failed}
+            </button>
           </div>
         )}
       </div>
@@ -108,7 +127,7 @@ export default function SessionFilterBar({
               ? "bg-neon-purple/10 text-neon-purple"
               : "text-ps-text-muted hover:text-ps-text-secondary"
           }`}
-          title="Hide short-lived api-source sessions (< 1KB, < 1 min) that dominate the list during stress testing"
+          title="Hide api-source sessions under a kilobyte that lived less than a minute"
         >
           <EyeOff className="w-3 h-3" />
           Hide API noise

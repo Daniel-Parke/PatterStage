@@ -50,6 +50,12 @@ export interface SessionData {
    * The detail page links to the mission page when this is present.
    */
   missionId?: string | null;
+  /** How it ended, and why (T-0105, D30). */
+  status?: string;
+  exitCode?: number | null;
+  error?: string | null;
+  /** True when older messages were left behind by the message cap (D40). */
+  truncated?: boolean;
 }
 
 // ── MessageBubble ────────────────────────────────────────────
@@ -58,12 +64,27 @@ export function MessageBubble({
   msg,
   index,
   messageRefs,
+  expandAll = null,
 }: {
   msg: SessionMessage;
   index: number;
   messageRefs: React.MutableRefObject<Map<number, HTMLDivElement>>;
+  /**
+   * Expand or collapse every bubble at once. A non-null change sets this
+   * bubble's own state; toggling one afterwards still works, because reading a
+   * transcript is not an all-or-nothing act (T-0105, D38).
+   */
+  expandAll?: boolean | null;
 }) {
   const [expanded, setExpanded] = useState(false);
+  // Adjusted during render rather than in an effect: React's own pattern for
+  // "a prop changed and this state follows it", and the one that has the new
+  // value on screen in the same commit as the click that asked for it.
+  const [lastExpandAll, setLastExpandAll] = useState<boolean | null>(null);
+  if (expandAll !== null && expandAll !== lastExpandAll) {
+    setLastExpandAll(expandAll);
+    setExpanded(expandAll);
+  }
   // Use the shared `useCopyToClipboard` hook (sister to the
   // PersonalityCard migration in operations/personalities/page.tsx) so
   // the "[copied, setCopied] + useRef<setTimeout> + unmount cleanup"

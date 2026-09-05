@@ -23,30 +23,52 @@ import Badge from "@/components/ui/Badge";
 import { LedgerRow } from "@/components/dashboard/LedgerRow";
 import { LiveDot } from "@/components/ui/LiveDot";
 import { timeAgo, formatElapsed, pluralise } from "@/lib/utils";
-import { SOURCE_META } from "@/components/session/constants";
+import { sourceMeta } from "@/components/session/constants";
+import { SESSION_STATUS_LABELS } from "@/lib/status-labels";
 import { formatSessionTitle } from "@/lib/sessions/session-title";
 import type { SessionRecord } from "@/lib/sessions/session-repository";
 import { MISSIONS_PATH } from "@/lib/missions/mission-deep-link";
 
 export default function SessionCard({ session }: { session: SessionRecord }) {
   const title = formatSessionTitle(session);
-  const meta = SOURCE_META[session.source] ?? SOURCE_META.cli;
+  // Never SOURCE_META[source] ?? SOURCE_META.cli: that badged every source the
+  // UI had no word for as CLI (T-0105, D29).
+  const meta = sourceMeta(session.source);
   const isActive = session.status === "active";
+  const isFailed = session.status === "failed";
+  const failureTitle =
+    [session.error, session.exitCode !== null && session.exitCode !== undefined ? `exit ${session.exitCode}` : null]
+      .filter(Boolean)
+      .join(" · ") || SESSION_STATUS_LABELS.failed;
 
   return (
-    // `block` is load-bearing, not tidiness. An <a> defaults to display:inline,
-    // and the list's `divide-y` puts the divider on this element: a border on an
-    // inline box reserves no layout space, so the rule sat on top of the next
-    // row instead of between them, and would repeat per line box the moment the
-    // row wrapped. Read out of Chrome, not assumed.
-    <Link href={`/results/sessions/${session.id}`} className="block">
-      <LedgerRow hover padding="block" className="group cursor-pointer">
+    // The row used to be an <a> wrapping the whole ledger row, with the mission
+    // link inside it: an anchor inside an anchor, which is invalid and which
+    // assistive technology resolves however it likes (T-0105, D32). The row is
+    // a div now, and the title carries a stretched link that covers it.
+    <LedgerRow hover padding="block" className="group relative cursor-pointer">
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               {isActive && <LiveDot />}
               <MessageSquare className="w-4 h-4 text-neon-orange flex-shrink-0" />
-              <h3 className="font-semibold text-white truncate">{title}</h3>
+              <h3 className="font-semibold text-white truncate">
+                <Link
+                  href={`/results/sessions/${session.id}`}
+                  className="after:absolute after:inset-0 after:content-['']"
+                >
+                  {title}
+                </Link>
+              </h3>
+              {isFailed && (
+                <span title={failureTitle} className="relative z-10 shrink-0">
+                  <Badge color="red">
+                    {session.exitCode !== null && session.exitCode !== undefined
+                      ? `${SESSION_STATUS_LABELS.failed} · exit ${session.exitCode}`
+                      : SESSION_STATUS_LABELS.failed}
+                  </Badge>
+                </span>
+              )}
             </div>
             <div className="flex items-center gap-3 text-xs text-ps-text-muted font-mono flex-wrap">
               <span
@@ -85,8 +107,7 @@ export default function SessionCard({ session }: { session: SessionRecord }) {
               {session.missionId && (
                 <Link
                   href={`${MISSIONS_PATH}?mission=${session.missionId}`}
-                  onClick={(e) => e.stopPropagation()}
-                  className="z-10"
+                  className="relative z-10"
                   title="Open parent mission"
                 >
                   <Badge color="green">mission</Badge>
@@ -97,6 +118,5 @@ export default function SessionCard({ session }: { session: SessionRecord }) {
           <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-neon-orange group-hover:translate-x-0.5 transition-all flex-shrink-0 ml-4" />
         </div>
       </LedgerRow>
-    </Link>
   );
 }

@@ -18,6 +18,7 @@
 
 import { getDb, uuid, now } from "../db";
 import { syncHermesSessionsToDb } from "./session-sync";
+import { API_NOISE_MAX_BYTES, API_NOISE_MAX_DURATION_MS } from "./session-filters";
 import { hasSessionMessageCountColumn } from "./session-sync-repository";
 import { getActiveFrameworkConfig } from "../frameworks/repository";
 import type { FrameworkType } from "../frameworks/types";
@@ -33,7 +34,23 @@ import type { FrameworkType } from "../frameworks/types";
  * (org/decisions/ADR-0005-product-modules.md).
  */
 export type AgentType = FrameworkType;
-export type SessionSource = "cli" | "cron" | "mission" | "api";
+/** The sources PatterStage has a word for. */
+export type KnownSessionSource =
+  | "cli"
+  | "cron"
+  | "mission"
+  | "api"
+  | "chat"
+  | "subagent"
+  | "tui";
+
+/**
+ * The column is free text and the agent writes whatever it likes into it, so
+ * the union is the vocabulary we have words for, not the set of values that
+ * can occur. Badging an unrecognised source "CLI" is how a subagent session
+ * became a CLI one on screen and could not be filtered for at all (T-0105, D29).
+ */
+export type SessionSource = KnownSessionSource | (string & {});
 export type SessionStatus = "active" | "completed" | "failed";
 
 export interface SessionRecord {
@@ -113,8 +130,14 @@ export interface SessionTotals {
 
 export interface ListSessionsOptions {
   agentType?: AgentType;
-  source?: SessionSource;
+  source?: string;
+  status?: SessionStatus;
   missionId?: string | null;
+  /**
+   * Drop the API chatter: an api session under a kilobyte that lived less than
+   * a minute. In SQL, so the tiles and the rows describe the same set.
+   */
+  excludeApiNoise?: boolean;
   /** Free-text search over title / id / profile / mission (case-insensitive). */
   search?: string;
   limit?: number;
@@ -351,19 +374,48 @@ function readSessionTotals(
   return totals;
 }
 
+/**
+ * How long one burst of list requests may share a single inline state.db sync.
+ *
+ * Every list request used to run the whole sync inline, so opening the page,
+ * changing a filter and paging fired three full syncs of up to ten thousand
+ * rows in a couple of seconds (T-0105, D35).
+ */
+const INLINE_SYNC_MIN_INTERVAL_MS = 2_000;
+let lastInlineSyncAt = 0;
+
+/** @public Reset the inline-sync guard between tests. */
+export function _resetInlineSyncGuardForTests(): void {
+  lastInlineSyncAt = 0;
+}
+
 export function listSessions(opts: ListSessionsOptions = {}): {
   sessions: SessionRecord[];
   total: number;
   totals: SessionTotals;
+  sources: string[];
 } {
-  const { agentType, source, missionId, search, limit = 50, offset = 0, syncIfActive = false } = opts;
+  const {
+    agentType,
+    source,
+    status,
+    missionId,
+    search,
+    excludeApiNoise = false,
+    limit = 50,
+    offset = 0,
+    syncIfActive = false,
+  } = opts;
 
   // Optional one-shot sync from Hermes' state.db. Catches the currently-active
   // session before the periodic 15s sync cycle would have updated it. Wrapped
   // in try/catch because a failed sync must NEVER block the list response —
   // the user can still see whatever the last sync captured. The sync pipeline
   // itself lives in ./session-sync.
-  if (syncIfActive) {
+  if (syncIfActive && Date.now() - lastInlineSyncAt >= INLINE_SYNC_MIN_INTERVAL_MS) {
+    // Stamped BEFORE the call: a sync that throws must not re-arm itself on
+    // the very next request.
+    lastInlineSyncAt = Date.now();
     try {
       syncHermesSessionsToDb();
     } catch (e) {
@@ -378,9 +430,20 @@ export function listSessions(opts: ListSessionsOptions = {}): {
     conditions.push("agent_type = ?");
     params.push(agentType);
   }
+  // The source condition is held apart: the filter buttons are built from the
+  // DISTINCT sources over everything ELSE, so filtering to one source does not
+  // delete every other button and trap the operator on it (T-0105, D29).
+  const sourceConditions = [...conditions];
+  const sourceParams = [...params];
   if (source) {
     conditions.push("source = ?");
     params.push(source);
+  }
+  if (status) {
+    conditions.push("status = ?");
+    params.push(status);
+    sourceConditions.push("status = ?");
+    sourceParams.push(status);
   }
   if (missionId !== undefined) {
     conditions.push(missionId === null ? "mission_id IS NULL" : "mission_id = ?");
@@ -400,7 +463,20 @@ export function listSessions(opts: ListSessionsOptions = {}): {
     params.push(like, like, like, like);
   }
 
+  if (excludeApiNoise) {
+    // A duration, not an age. The client-side helper measured how long ago the
+    // session STARTED, so a five-hour api session was hidden for its first
+    // minute and shown for ever after (T-0105, D31). julianday parses the
+    // ISO-8601 Z strings this table stores, and 'now' is UTC.
+    const noise =
+      `NOT (source = 'api' AND size < ${API_NOISE_MAX_BYTES}` +
+      ` AND (julianday(COALESCE(ended_at, 'now')) - julianday(started_at)) * 86400000 <= ${API_NOISE_MAX_DURATION_MS})`;
+    conditions.push(noise);
+    sourceConditions.push(noise);
+  }
+
   const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+  const sourceWhere = sourceConditions.length > 0 ? `WHERE ${sourceConditions.join(" AND ")}` : "";
   const database = getDb();
   // The listing's count and the insight tiles' figures come out of one query
   // over one filter. `total` is returned alongside `totals` because callers
@@ -414,10 +490,19 @@ export function listSessions(opts: ListSessionsOptions = {}): {
     )
     .all(...params, limit, offset) as SessionRow[];
 
+  const sources = (
+    database
+      .prepare(`SELECT DISTINCT source FROM sessions ${sourceWhere} ORDER BY source ASC`)
+      .all(...sourceParams) as { source: string }[]
+  )
+    .map((r) => r.source)
+    .filter(Boolean);
+
   return {
     sessions: rows.map(rowToSession).filter(Boolean) as SessionRecord[],
     total: totals.total,
     totals,
+    sources,
   };
 }
 

@@ -4,11 +4,13 @@ import { basename } from "path";
 
 import { getAgentWorkspace } from "@/lib/runtime/workspace";
 import { readAgentSessionDetail } from "@/lib/runtime/state-db";
+import { getMaxSessionMessages } from "@/lib/sessions/sessions-api-guard";
 import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
 
 import { badRequest, notFound, ok, payloadTooLarge } from "@/lib/api-response";
 import { safeStat } from "@/lib/fs/fs-stats";
 import { getSession, estimateSessionSize } from "@/lib/sessions/session-repository";
+import type { SessionStatus } from "@/lib/sessions/session-repository";
 import { lookupMissionIdForCronSession } from "@/lib/sessions/session-mission-links";
 import { PATHS } from "@/lib/paths";
 import {
@@ -47,7 +49,9 @@ export async function GET(
   // agent's own database, not PatterStage's. A null detail means either
   // no state.db or no such session, and both fall through to Step 2.
   try {
-    const detail = readAgentSessionDetail(sanitizedId);
+    // Capped: a transcript with tens of thousands of messages used to be
+    // fetched whole and rendered whole (T-0105, D40).
+    const detail = readAgentSessionDetail(sanitizedId, getMaxSessionMessages());
 
     if (detail) {
       const sessionRow = detail.session;
@@ -135,6 +139,19 @@ export async function GET(
           // cron job id against the missions table. Lets the detail page
           // render a "Open Mission" link for cron-spawned sessions.
           missionId: lookupMissionIdForCronSession(sanitizedId),
+          // How it ended: the PatterStage row when there is one, otherwise
+          // derived from whether the agent has closed it (T-0105, D30).
+          ...(() => {
+            const row = getSession(sanitizedId);
+            return row
+              ? { status: row.status, exitCode: row.exitCode, error: row.error }
+              : {
+                  status: (sessionRow.ended_at === null ? "active" : "completed") as SessionStatus,
+                  exitCode: null,
+                  error: null,
+                };
+          })(),
+          truncated: detail.truncated,
           ...(inFlightNote ? { note: inFlightNote } : {}),
         }),
       );

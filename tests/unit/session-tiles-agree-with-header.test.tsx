@@ -47,6 +47,8 @@ interface Payload {
   sessions: SessionRecord[];
   total: number;
   totals: Totals;
+  /** The filter buttons come from the API now (T-0105, D29). */
+  sources: string[];
 }
 
 function pageRow(i: number): SessionRecord {
@@ -76,6 +78,7 @@ function payload(rows: number, totals: Totals): Payload {
     sessions: Array.from({ length: rows }, (_, i) => pageRow(i)),
     total: totals.total,
     totals,
+            sources: ["cli", "api"],
   };
 }
 

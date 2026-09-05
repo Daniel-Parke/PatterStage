@@ -128,7 +128,7 @@ describe("MissionGroupCard keeps its grouping behaviour", () => {
   it("starts collapsed and shows the group's own facts", () => {
     render(<MissionGroupCard group={group()} />);
     expect(screen.getByText("Run one")).toBeInTheDocument();
-    expect(screen.getByText("2 sessions")).toBeInTheDocument();
+    expect(screen.getByText("2 on this page")).toBeInTheDocument();
     expect(screen.queryByText("Run two")).not.toBeInTheDocument();
   });
 
