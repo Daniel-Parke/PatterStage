@@ -110,7 +110,7 @@ The records under org/tasks/ are canonical.
 | T-0095 | standard | R2 | done | t0095-security-and-truth-2026-09-05 |
 | T-0096 | standard | R1 | done | t0096-shell-primitives-2026-09-05 |
 | T-0097 | standard | R2 | done | t0097-registry-regroup-2026-09-05 |
-| T-0098 | standard | R1 | proposed | unassigned |
+| T-0098 | standard | R1 | done | t0098-analytics-taxonomy-2026-09-05 |
 | T-0099 | standard | R1 | proposed | unassigned |
 | T-0100 | standard | R2 | proposed | unassigned |
 | T-0101 | standard | R1 | proposed | unassigned |
