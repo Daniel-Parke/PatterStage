@@ -175,6 +175,42 @@ describe("a refetch after a mutation is silent", () => {
     expect(screen.queryByText(/Loading profiles/i)).toBeNull();
   });
 
+  it("nothing is replaced WHILE the refetch is in flight", async () => {
+    // The blank is a flash: by the time the second read has landed the page
+    // is whole again, so the only place to see it is mid-flight.
+    let releaseSecond: (() => void) | null = null;
+    let reads = 0;
+    mockApiFetch.mockImplementation(async (path: string, init?: { method?: string }) => {
+      if (path === "/api/agent/profiles" && !init?.method) {
+        reads += 1;
+        if (reads >= 2) {
+          await new Promise<void>((resolve) => {
+            releaseSecond = resolve;
+          });
+        }
+        return { data: { profiles: [BOB, QA] } };
+      }
+      if (path.startsWith("/api/agent/files/")) return { data: { content: "# Bob" } };
+      return { data: { success: true } };
+    });
+
+    await renderLoaded();
+    await openProfileFile("SOUL.md");
+    const box = await leavePreview();
+    fireEvent.change(box, { target: { value: "# Bob, about to be saved" } });
+    fireEvent.click(screen.getByRole("button", { name: /^Save$/ }));
+
+    await waitFor(() => expect(releaseSecond).not.toBeNull());
+    // The read is still open. Everything the operator was looking at is here.
+    expect(screen.queryByText(/Loading profiles/i)).toBeNull();
+    expect(screen.getByText("QA Engineer")).toBeInTheDocument();
+    expect(screen.getByLabelText("File content")).toBeInTheDocument();
+
+    await act(async () => {
+      releaseSecond!();
+    });
+  });
+
   it("GREEN CONTROL: the FIRST load still shows the spinner", async () => {
     let release: ((v: unknown) => void) | null = null;
     mockApiFetch.mockImplementation(
@@ -243,6 +279,25 @@ describe("a discard asks first", () => {
     expect(screen.queryByText(/unsaved changes/i)).toBeNull();
   });
 
+  it("the prompt names the file the work is in", async () => {
+    await openAndEdit();
+
+    fireEvent.click(screen.getByText("QA Engineer"));
+
+    expect(await screen.findByText(/unsaved changes to SOUL\.md/i)).toBeInTheDocument();
+  });
+
+  it("GREEN CONTROL: re-selecting the profile being edited discards nothing", async () => {
+    await openAndEdit();
+
+    // Bob is the profile the editor is open on. Clicking Bob throws nothing
+    // away, so there is nothing to ask about.
+    fireEvent.click(screen.getByText("Bob"));
+
+    expect(screen.queryByText(/unsaved changes/i)).toBeNull();
+    expect((screen.getByLabelText("File content") as HTMLTextAreaElement).value).toMatch(/edited and unsaved/);
+  });
+
   it("GREEN CONTROL: with nothing edited, selecting another profile just works", async () => {
     await renderLoaded();
     await openProfileFile("SOUL.md");
@@ -282,6 +337,30 @@ describe("a profile's name and description can be edited", () => {
     await waitFor(() => expect(puts()).toHaveLength(1));
     expect(puts()[0].path).toBe("/api/agent/profiles/qa");
     expect(puts()[0].body).toEqual({ name: "QA Lead", description: "Owns the gate" });
+  });
+
+  it("the dialog opens on what is stored, not on an empty form", async () => {
+    await renderLoaded();
+    fireEvent.click(screen.getByText("QA Engineer"));
+
+    fireEvent.click(await screen.findByRole("button", { name: /Edit profile/i }));
+    const dialog = await screen.findByRole("dialog");
+
+    expect((within(dialog).getByLabelText(/Name/i) as HTMLInputElement).value).toBe("QA Engineer");
+    expect((within(dialog).getByLabelText(/Description/i) as HTMLInputElement).value).toBe(
+      "Reproduction and test-driven fixes",
+    );
+  });
+
+  it("the root agent's field holds its name, not the list's label for it", async () => {
+    await renderLoaded();
+
+    fireEvent.click(await screen.findByRole("button", { name: /Edit profile/i }));
+    const dialog = await screen.findByRole("dialog");
+
+    // The API decorates the root row with "(local default)" for the list.
+    // Saving that back would store the decoration as the name.
+    expect((within(dialog).getByLabelText(/Name/i) as HTMLInputElement).value).toBe("Bob");
   });
 
   it("the root agent is renamed through its own route, which touches no files", async () => {

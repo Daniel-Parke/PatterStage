@@ -233,6 +233,19 @@ describe("the root agent's display name", () => {
     expect(rootRow?.name).toBe("Atlas");
   });
 
+  it("stores the name without its padding", async () => {
+    await putRoot({ displayName: "   Atlas   " });
+
+    expect(getAgentRoot().displayName).toBe("Atlas");
+  });
+
+  it("refuses a body that asks for nothing", async () => {
+    const { status } = await putRoot({});
+
+    expect(status).toBe(400);
+    expect(getAgentRoot().displayName).toBe("Bob");
+  });
+
   it("refuses a blank name rather than leaving the agent unnamed", async () => {
     const { status } = await putRoot({ displayName: "   " });
 
