@@ -170,7 +170,11 @@ export async function GET(
   if (!filePath) {
     // No file on disk — try the DB record for mission-born sessions
     const dbSession = getSession(sanitizedId);
-    if (dbSession && (dbSession.source === "mission" || dbSession.source === "cron")) {
+    // Any PatterStage row, not only the mission and cron ones. A CLI session
+    // that failed and left no transcript answered 404, so the one screen an
+    // operator opens to find out what went wrong told them the session did not
+    // exist (T-0105, D30). The row IS the answer when nothing else is.
+    if (dbSession) {
       // Check for a mission output file (try newer `.session` first,
       // then legacy `.output.log`). findFileWithExtension collapses
       // the 2x `existsSync` ladder into one call.
@@ -214,7 +218,9 @@ export async function GET(
             ? "This mission-spawned session has no output file yet. The agent may still be running, or the output was written to ~/.hermes/state.db — refresh to check."
             : dbSession.source === "cron"
               ? "This cron-spawned session is still running. Messages will appear here when the agent completes."
-              : "The agent ran but produced no output file.",
+              : dbSession.status === "failed"
+                ? "No transcript was written for this session. What is known about how it ended is above."
+                : "The agent ran but produced no output file.",
         }),
       );
     }
