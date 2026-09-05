@@ -277,6 +277,43 @@ function walk(dir, out = []) {
  *
  * @returns {{ found: Map<string, {line:number,text:string}[]>, counts: Record<string, number> }}
  */
+/**
+ * Every violation in one file's lines, keyed `rule::path`.
+ *
+ * Split out of scanTree so a test can plant a line and prove the scan SEES
+ * it: the B1 mutation sweep found that a scan which silently skipped the
+ * predicate rule still passed "the rule lands at a zero baseline", because
+ * zero offenders and a blind rule look identical from outside (T-0095).
+ *
+ * @returns {Map<string, {line:number,text:string}[]>}
+ */
+export function violationsIn(path, lines) {
+  const found = new Map();
+  for (const rule of RULES) {
+    if (!rule.files(path)) continue;
+    for (let i = 0; i < lines.length; i++) {
+      // A rule is a regex, or a predicate where a regex cannot answer alone
+      // (token-must-exist needs the declared set).
+      const hit = rule.test ? rule.test(lines[i]) : rule.pattern.test(lines[i]);
+      if (!hit) continue;
+      // A rule that flags prose about the anti-pattern makes documenting it
+      // impossible. Code rules ignore comment-only lines; the voice rule does not
+      // (a comment is still text a human reads).
+      if (rule.codeOnly !== false) {
+        const t = lines[i].trimStart();
+        if (t.startsWith("//") || t.startsWith("*") || t.startsWith("/*")) continue;
+      }
+      const prev = i > 0 ? lines[i - 1] : "";
+      const pragma = PRAGMA.exec(prev);
+      if (pragma && pragma[1] === rule.id) continue;
+      const key = `${rule.id}::${path}`;
+      if (!found.has(key)) found.set(key, []);
+      found.get(key).push({ line: i + 1, text: lines[i].trim().slice(0, 120) });
+    }
+  }
+  return found;
+}
+
 export function scanTree() {
   const files = SCAN_DIRS.filter((d) => existsSync(join(ROOT, d))).flatMap((d) =>
     walk(join(ROOT, d)),
@@ -288,28 +325,7 @@ export function scanTree() {
   for (const abs of files) {
     const path = rel(abs);
     const lines = readFileSync(abs, "utf-8").split(/\r?\n/);
-    for (const rule of RULES) {
-      if (!rule.files(path)) continue;
-      for (let i = 0; i < lines.length; i++) {
-        // A rule is a regex, or a predicate where a regex cannot answer alone
-        // (token-must-exist needs the declared set).
-        const hit = rule.test ? rule.test(lines[i]) : rule.pattern.test(lines[i]);
-        if (!hit) continue;
-        // A rule that flags prose about the anti-pattern makes documenting it
-        // impossible. Code rules ignore comment-only lines; the voice rule does not
-        // (a comment is still text a human reads).
-        if (rule.codeOnly !== false) {
-          const t = lines[i].trimStart();
-          if (t.startsWith("//") || t.startsWith("*") || t.startsWith("/*")) continue;
-        }
-        const prev = i > 0 ? lines[i - 1] : "";
-        const pragma = PRAGMA.exec(prev);
-        if (pragma && pragma[1] === rule.id) continue;
-        const key = `${rule.id}::${path}`;
-        if (!found.has(key)) found.set(key, []);
-        found.get(key).push({ line: i + 1, text: lines[i].trim().slice(0, 120) });
-      }
-    }
+    for (const [key, hits] of violationsIn(path, lines)) found.set(key, hits);
   }
 
   const counts = Object.fromEntries(

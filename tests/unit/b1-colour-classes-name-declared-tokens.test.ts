@@ -16,6 +16,7 @@ import {
   declaredColourTokens,
   scanTree,
   undeclaredColourClasses,
+  violationsIn,
 } from "../../scripts/tooling/design-lint.mjs";
 
 const ROOT = join(__dirname, "..", "..");
@@ -73,6 +74,27 @@ describe("the tree, after the fix", () => {
     const { counts } = scanTree();
     const offenders = Object.keys(counts).filter((k) => k.startsWith("token-must-exist::"));
     expect(offenders).toEqual([]);
+  });
+
+  // FOUND BY MUTATION. A scan that silently skipped the predicate rule still
+  // passed the assertion above: zero offenders and a blind rule look identical
+  // from outside. So the scan is made to see a planted line.
+  it("the scan SEES a planted undeclared class, through the same path the gate walks", () => {
+    const hits = violationsIn("src/components/Planted.tsx", [
+      'export const a = <div className="text-neon-nonexistent" />;',
+    ]);
+    expect([...hits.keys()]).toContain("token-must-exist::src/components/Planted.tsx");
+    expect(hits.get("token-must-exist::src/components/Planted.tsx")?.[0].line).toBe(1);
+  });
+
+  it("and stays quiet for a declared class, a comment, and a pragma'd line", () => {
+    const quiet = violationsIn("src/components/Quiet.tsx", [
+      'export const a = <div className="text-neon-cyan bg-ps-surface-panel" />;',
+      "// text-neon-nonexistent in prose is not a class",
+      "// design-lint-disable-next-line token-must-exist -- a fixture name, not a class",
+      'export const b = "text-neon-nonexistent";',
+    ]);
+    expect([...quiet.keys()].filter((k) => k.startsWith("token-must-exist::"))).toEqual([]);
   });
 
   it("no longer tells contributors the token does not exist", () => {

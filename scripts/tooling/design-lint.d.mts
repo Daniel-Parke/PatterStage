@@ -75,6 +75,9 @@ export function declaredColourTokens(css: string): Set<string>;
 /** The house colour tokens a line names that `declared` does not contain. */
 export function undeclaredColourClasses(line: string, declared: Set<string>): string[];
 
+/** Every violation in one file's lines, keyed `rule::path` (the unit scanTree walks). */
+export function violationsIn(path: string, lines: readonly string[]): Map<string, ViolationHit[]>;
+
 export function scanTree(): {
   found: Map<string, ViolationHit[]>;
   counts: Record<string, number>;
