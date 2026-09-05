@@ -343,6 +343,9 @@ describe("the scheduler tick, on a script schedule", () => {
       "sch-s1",
       expect.objectContaining({ lastStatus: "error: boom", incrementDone: true }),
     );
+    // And no event claims it ran. The ledger is what the operator reads to
+    // decide whether the backup happened.
+    expect(recordEvent).not.toHaveBeenCalledWith("script.run", expect.anything());
   });
 
   it("a script row that names no script disables itself, and says so", async () => {

@@ -209,6 +209,32 @@ describe("the schedules-kind migration (v41, real SQLite)", () => {
 // 2.3 the head constant moves with it
 // ═══════════════════════════════════════════════════════════════
 
+describe("the applier's own gate", () => {
+  it("refuses to run twice: it gates on >= 41", () => {
+    const db = migrated();
+    // `>` rather than `>=` would re-exec the file at exactly the head. Nothing
+    // breaks today, because this .sql carries no backfill and
+    // execMigrationFile swallows the duplicate-column error -- but the gate is
+    // the guarantee the NEXT migration leans on when it does carry one, and a
+    // gate that is off by one is not a gate.
+    expect(applier().applyScheduleKindMigration(db, migrationsDir)).toBe(41);
+    expect(getSchemaVersion(db)).toBe(41);
+    // The pre-041 row is still the row it was: a second exec that got through
+    // would have run whatever the file does to existing data.
+    expect(
+      db.prepare("SELECT kind, script_name FROM schedules WHERE id = 's-old'").get(),
+    ).toEqual({ kind: "mission", script_name: null });
+    db.close();
+  });
+
+  it("does not climb a database that is already past it", () => {
+    const db = migrated();
+    setSchemaVersion(db, 99);
+    expect(applier().applyScheduleKindMigration(db, migrationsDir)).toBe(99);
+    db.close();
+  });
+});
+
 describe("the head constant", () => {
   it("equals this applier's gate — it is now the last rung", () => {
     expect(MIGRATION_HEAD_SCHEMA_VERSION).toBe(41);
