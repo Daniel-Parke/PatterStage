@@ -68,24 +68,35 @@ export function scanTree() {
   return { filesScanned: files.length, byFile };
 }
 
+/**
+ * The exit code, from the mode and the count: `--report` is always 0, and
+ * `--check` is 1 on any hit. A walk that found too few files is 2 in either
+ * mode, because a scan of nothing passes everything.
+ */
+export function decide(mode, total, filesScanned) {
+  if (filesScanned < 100) return 2;
+  if (mode === "--check" && total > 0) return 1;
+  return 0;
+}
+
 function main(argv) {
   const mode = argv[0] ?? "--report";
   const { filesScanned, byFile } = scanTree();
   const total = [...byFile.values()].reduce((n, h) => n + h.length, 0);
-  if (filesScanned < 100) {
+  const code = decide(mode, total, filesScanned);
+  if (code === 2) {
     console.error(`copy-lint: scanned only ${filesScanned} files, which is too few to be a real walk.`);
-    return 2;
+    return code;
   }
   console.log(`copy-lint: ${total} governance reference${total === 1 ? "" : "s"} in user copy across ${byFile.size} of ${filesScanned} files.`);
   for (const [path, hits] of [...byFile.entries()].sort((a, b) => b[1].length - a[1].length)) {
     console.log(`  ${path}: ${hits.length}`);
     for (const h of hits.slice(0, 3)) console.log(`    :${h.line}  ${h.text}`);
   }
-  if (mode === "--check" && total > 0) {
+  if (code === 1) {
     console.error("\ncopy-lint: user copy carries a governance id. See docs/COPY.md.");
-    return 1;
   }
-  return 0;
+  return code;
 }
 
 const invokedDirectly =

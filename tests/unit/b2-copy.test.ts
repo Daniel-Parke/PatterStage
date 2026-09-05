@@ -12,7 +12,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { findCopyDebt } from "../../scripts/tooling/copy-lint.mjs";
+import { decide, findCopyDebt } from "../../scripts/tooling/copy-lint.mjs";
 
 const ROOT = join(__dirname, "..", "..");
 
@@ -39,9 +39,19 @@ describe("copy-lint", () => {
       'title="Ruled in WG-ARCH-003"',
       'showToast("Done (T-0089)", "success");',
       "// ADR-0004 in a comment is not copy",
-      'import { x } from "@/lib/adr-0004-helper";',
+      // An import line carrying an id in its exact form: the maintainer's
+      // business, never rendered.
+      'import { T0089 } from "@/lib/T-0089-fixture";',
     ]);
     expect(hits.map((h) => h.line)).toEqual([1, 2, 3]);
+  });
+
+  it("decides: --report never fails, --check fails on any hit, an empty walk fails either way", () => {
+    expect(decide("--report", 12, 400)).toBe(0);
+    expect(decide("--check", 0, 400)).toBe(0);
+    expect(decide("--check", 1, 400)).toBe(1);
+    expect(decide("--report", 0, 3)).toBe(2);
+    expect(decide("--check", 0, 3)).toBe(2);
   });
 
   it("reports without failing the build, for now", () => {

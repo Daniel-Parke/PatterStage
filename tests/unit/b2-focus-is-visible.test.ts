@@ -41,8 +41,10 @@ describe("the rule", () => {
       'className="w-full outline-none focus:border-neon-purple/40"',
       'className="w-full focus:outline-none focus:ring-2"',
       "// outline-none in a comment is prose",
+      // `focus:outline-none` is itself an outline-none, not a ring put back.
+      'className="w-full focus:outline-none"',
     ]);
-    expect(hits.get("no-bare-outline-none::src/app/x/page.tsx")?.map((h) => h.line)).toEqual([1]);
+    expect(hits.get("no-bare-outline-none::src/app/x/page.tsx")?.map((h) => h.line)).toEqual([1, 6]);
   });
 
   it("the tree carries none", () => {
