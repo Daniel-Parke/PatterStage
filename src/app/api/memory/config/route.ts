@@ -19,6 +19,7 @@ import {
   updateMemoryProvider,
 } from "@/lib/memory/memory-providers";
 import { HindsightMemoryProvider } from "@/lib/memory/memory-providers/hindsight-provider";
+import { recordEvent } from "@/lib/analytics/record-event";
 
 const configSchema = z.object({
   host: z.string().min(1),
@@ -60,6 +61,7 @@ export async function PUT(request: NextRequest) {
       makeActive: parsed.makeActive,
     });
     if (!row) return badRequest("Unknown provider");
+    recordEvent("memory.configured", { entityType: "memory", entityId: parsed.type });
     return ok({ provider: row });
   } catch (error) {
     return serverErrorFromCatch("PUT /api/memory/config", "update", error, "Failed to update memory config");

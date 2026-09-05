@@ -17,11 +17,25 @@ import {
   importDiscoveredProfile,
 } from "@/modules/hermes/lib/profile-discovery";
 import { answerBatch, answerSingle } from "@/modules/hermes/lib/sync-answer";
+import type { SyncResult } from "@/modules/hermes/lib/profile-sync-shared";
+import { recordEvent } from "@/lib/analytics/record-event";
 
 // Every branch answers through sync-answer.ts. This route used to return
 // `ok({ success: result.success, result })`, a 200 for a pull that did not
 // happen, with the reason where no client reads it (T-0095, D19).
 const VERB = "Pull from Hermes";
+
+// The ledger (T-0098), the twin of the push route's: a pull that happened is
+// recorded, a batch is one entry counting the profiles (root included) that
+// came across, and skill imports are not profiles.
+function answerProfilePull(entityId: string, result: SyncResult) {
+  if (result.success) recordEvent("profile.pulled", { entityType: "profile", entityId, profile: entityId });
+  return answerSingle(VERB, result);
+}
+function recordProfileBatch(results: SyncResult[]) {
+  const count = results.filter((r) => r.success).length;
+  if (count > 0) recordEvent("profile.pulled", { entityType: "profile", entityId: "all", metadata: { count } });
+}
 
 export async function POST(request: NextRequest) {
   // Body is a bag of optional flags (slug, all, root, skills,
@@ -61,6 +75,7 @@ export async function POST(request: NextRequest) {
         }
       }
       const skillResults = importAllSkillsFromDisk();
+      recordProfileBatch([...profileResults, rootResult]);
       return answerBatch("pull", [...profileResults, rootResult, ...skillResults], {
         root: rootResult,
         profiles: profileResults,
@@ -69,14 +84,14 @@ export async function POST(request: NextRequest) {
     }
 
     if (root || slug === "default") {
-      return answerSingle(VERB, pullRootFromHermes({ reconcileDisk }));
+      return answerProfilePull("default", pullRootFromHermes({ reconcileDisk }));
     }
 
     if (!slug) {
       return badRequest("slug, all, root, or skills required");
     }
 
-    return answerSingle(VERB, pullProfileFromHermes(slug, { reconcileDisk }));
+    return answerProfilePull(slug, pullProfileFromHermes(slug, { reconcileDisk }));
   }
   catch (error) {
     return serverErrorFromCatch(

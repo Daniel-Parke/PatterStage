@@ -13,6 +13,7 @@ import { logApiError } from "@/lib/api-logger";
 import { ok, notFound } from "@/lib/api-response";
 import { finaliseCancelledMission } from "@/lib/missions/cancel-finalise";
 import { stopBackendRunForMission } from "@/lib/orchestration";
+import { recordEvent } from "@/lib/analytics/record-event";
 
 import { requireMissionOrNotFound } from "./shared";
 
@@ -29,6 +30,9 @@ export function handleCancelMission(body: Record<string, unknown>): NextResponse
   const mission = finaliseCancelledMission(cancelId);
   if (!mission)
     return notFound("Mission not found");
+  // Both doors (this handler and POST /api/missions/[id]/cancel) come through
+  // here, so the ledger is written once per cancellation (T-0098).
+  recordEvent("mission.cancelled", { entityType: "mission", entityId: cancelId });
 
   const shouldKillProcess = existingMission.status === "dispatched";
   if (shouldKillProcess) {

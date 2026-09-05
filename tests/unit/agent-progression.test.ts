@@ -52,6 +52,8 @@ function metrics(over: Partial<RawMetrics> = {}): RawMetrics {
     chatMessages: 0,
     distinctProfiles: 0,
     distinctEventTypes: 0,
+    eventCounts: {},
+    facts: { profiles: 0, models: 0, credentials: 0, workflows: 0, memoryConfigured: false },
     ...over,
   };
 }

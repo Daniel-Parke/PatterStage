@@ -10,6 +10,7 @@ import { ok, badRequest, notFound, serviceUnavailable } from "@/lib/api-response
 import { readOnlyMessage } from "@/lib/read-only";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { runScriptFile } from "@/lib/scripts-manager";
+import { recordEvent } from "@/lib/analytics/record-event";
 
 export async function POST(request: NextRequest) {
   // This is the route that EXECUTES on the host. Its siblings that write the
@@ -27,6 +28,8 @@ export async function POST(request: NextRequest) {
   try {
     const result = await runScriptFile(name);
     if (!result.ok && result.exitCode === null) return notFound(result.error ?? "Script not found");
+    // The operator ran it; the exit code is what happened (T-0098).
+    recordEvent("script.run", { entityType: "script", entityId: name, metadata: { exitCode: result.exitCode } });
     return ok({ name, exitCode: result.exitCode, ok: result.ok });
   } catch (error) {
     return serverErrorFromCatch("POST /api/scripts/run", name, error, "Failed to run script");

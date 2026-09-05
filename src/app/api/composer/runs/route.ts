@@ -23,6 +23,7 @@ import {
   listComposerRuns,
 } from "@/lib/composer/composer-repository";
 import { advanceComposerRun } from "@/lib/composer/engine";
+import { recordEvent } from "@/lib/analytics/record-event";
 
 const startSchema = z
   .object({
@@ -65,6 +66,12 @@ export async function POST(request: NextRequest) {
       workflowId: workflow.id,
       input: parsed.input,
       profileName: parsed.profileName ?? null,
+    });
+    recordEvent("composer.run_started", {
+      entityType: "composer_run",
+      entityId: run.id,
+      profile: parsed.profileName ?? null,
+      metadata: { workflowId: workflow.id },
     });
     // Kick the engine so the first stage dispatches now (the tick is the backstop).
     void advanceComposerRun(run.id);

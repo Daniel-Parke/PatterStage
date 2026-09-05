@@ -47,10 +47,29 @@ inputs being kept.
 
 ### Taxonomy (`src/lib/analytics/event-types.ts`)
 
-`mission.dispatched` · `mission.completed` · `mission.failed` ·
-`story.created` · `story.chapter_generated` · `story.completed` ·
-`session.started` · `session.closed` · `skill.toggled` · `personality.changed` ·
-`schedule.created` · `schedule.fired` · `chat.message_sent` · `model.configured`
+Forty types in nine categories (`src/lib/analytics/categories.ts`). The
+taxonomy was extended once for the release (T-0098) so Insights can see
+Research and the Composer and so the quests have a ledger to read.
+
+| Category | Types |
+|---|---|
+| Missions | `mission.dispatched` · `mission.completed` · `mission.failed` · `mission.cancelled` · `template.saved` |
+| Workflows | `composer.run_started` · `composer.run_completed` · `composer.run_failed` · `composer.gate_approved` · `composer.workflow_saved` · `artifact.saved` |
+| Stories | `story.created` · `story.chapter_generated` · `story.completed` |
+| Research | `research.started` · `research.completed` · `research.failed` · `research.cancelled` |
+| Sessions | `session.started` · `session.closed` |
+| Automation | `schedule.created` · `schedule.fired` · `script.saved` · `script.run` · `script.scheduled` |
+| Config | `skill.toggled` · `personality.changed` · `model.configured` · `model.added` · `credential.added` · `profile.created` · `profile.pushed` · `profile.pulled` · `toolset.saved` · `config.saved` · `memory.configured` · `memory.retained` · `backup.taken` |
+| Chat | `chat.message_sent` |
+| Help | `help.opened` |
+
+Three types have no emitter yet and arrive with their feature:
+`research.cancelled` (the Research cancel, B14), `backup.taken` (Settings ›
+System backups, B6) and `help.opened` (the Help section, B16). The
+**Completionist** achievement is measured against `COMPLETIONIST_EVENT_TYPES`,
+the curated list of every type an operator can trigger by doing something:
+those three are not on it until they can be, and the three failure types never
+are.
 
 ## 2. Emitting events
 
@@ -62,15 +81,28 @@ One helper: **`recordEvent(type, { entityType, entityId, profile, metadata })`**
 - **no-ops in read-only mode** (`isReadOnly()`, from `src/lib/read-only.ts`),
 - logs failures via `logApiError` rather than surfacing them.
 
-Emit **after** the action succeeds. Mission terminal events are emitted from
-`run-reconcile.ts`'s live terminal transition (`finalizeAndRecord`), **not** the
-idempotent `finalizeMissionForRun` (which also runs on boot recovery). Otherwise
-a restart would double-count. Call sites, as of 2026-08-30:
-`src/lib/orchestration/dispatch.ts`, `run-reconcile.ts`, `chat-dispatch.ts`,
-`scheduler/tick.ts`; the `schedules` / `skills/[name]/toggle` / `agent/personality`
-/ `orchestration/chat` / `models/defaults` routes; and, for the `story.*` types,
+Emit **after** the action succeeds, and only from a write path: an event is a
+claim that the table holds the outcome, so a write that throws leaves no event.
+Mission terminal events are emitted from `run-reconcile.ts`'s live terminal
+transition (`finalizeAndRecord`), **not** the idempotent `finalizeMissionForRun`
+(which also runs on boot recovery). Otherwise a restart would double-count.
+Call sites, as of T-0098: `src/lib/orchestration/dispatch.ts`,
+`run-reconcile.ts`, `chat-dispatch.ts`, `scheduler/tick.ts`,
+`src/lib/composer/engine.ts` (every terminal status of a Composer run),
+`src/lib/laboratory/deep-research/run-job.ts` (a research run's outcome),
+`src/lib/missions/mission-handlers/cancel.ts` (both cancel doors),
+`src/lib/templates-handlers/{create,update}.ts`,
+`src/lib/hardware-cron-handlers/create.ts`; the `schedules`,
+`skills/[name]/toggle`, `agent/personality`, `agent/files/[key]` (SOUL.md),
+`agent/profiles` (create), `agent/profiles/sync/{push,pull}`,
+`agent/profiles/[id]/toolsets`, `config`, `memory/config`, `memory/hindsight`
+(retain), `orchestration/chat`, `models`, `models/defaults`, `credentials`,
+`artifacts`, `scripts/[name]`, `scripts/run`, `laboratory/research`,
+`composer/runs`, `composer/runs/[id]/nodes/[nodeId]/approve` and
+`composer/workflows` routes; and, for the `story.*` types,
 `src/modules/rec-room/handlers/create.ts` and `generate.ts`, which the `stories`
-route delegates to rather than emitting itself.
+route delegates to rather than emitting itself. `tests/unit/b4-emits-*.test.ts`
+hold every one of the T-0098 sites to "after the write, never before it".
 
 ## 3. The API (`/api/analytics`)
 
@@ -131,7 +163,7 @@ Top to bottom:
   money on the page and the only place it is reported,
 - a **stacked activity-by-category area** over the selected range, falling back to
   a plain area chart when the bundle is empty, beside the all-time **category
-  breakdown ring** (the 14 event types folded into 6 categories),
+  breakdown ring** (the 40 event types folded into 9 categories),
 - an **hour-of-day radial clock**, a **run-duration histogram** and a **mission
   success trend** (completed vs failed per day),
 - **tokens by model** (with estimated cost) and **top missions**. Both aggregate

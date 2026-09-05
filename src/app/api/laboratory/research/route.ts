@@ -16,6 +16,7 @@ import { ensureDb } from "@/lib/db";
 import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import { createResearchRun, listResearchRuns } from "@/lib/laboratory/deep-research/research-repository";
 import { runResearchJob } from "@/lib/laboratory/deep-research/run-job";
+import { recordEvent } from "@/lib/analytics/record-event";
 
 const configSchema = z
   .object({
@@ -51,6 +52,8 @@ export async function POST(request: NextRequest) {
     ensureDb();
     const config = parsed.config ?? {};
     const run = createResearchRun({ query: parsed.query, modelId: config.modelId ?? null, config });
+    // The row is the start; the outcome is recorded by the job when it ends (T-0098).
+    recordEvent("research.started", { entityType: "research", entityId: run.id });
     // Fire-and-forget: the engine runs in the background; the page polls.
     void runResearchJob(run.id, parsed.query, config);
     return created({ run });

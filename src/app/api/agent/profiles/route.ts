@@ -16,6 +16,7 @@ import {
 } from "@/modules/hermes/lib/profiles-repository";
 import { getAgentRoot } from "@/lib/agent-root-repository";
 import { pushProfileToHermes } from "@/modules/hermes/lib/profile-push";
+import { recordEvent } from "@/lib/analytics/record-event";
 import { detectProfileDrift, detectRootDrift } from "@/modules/hermes/lib/profile-drift";
 import { countProfileSkills, countProfileToolsets } from "@/modules/hermes/lib/profile-counts";
 import { slugifyDisplayName, validateProfileDisplayName, DEFAULT_PROFILE_SLUG } from "@/lib/profile-slug";
@@ -217,6 +218,7 @@ export async function POST(request: NextRequest) {
       resource: slug,
       ok: true,
     });
+    recordEvent("profile.created", { entityType: "profile", entityId: slug, profile: slug });
 
     return ok({ slug });
   } catch (error) {

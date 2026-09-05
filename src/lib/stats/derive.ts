@@ -6,6 +6,22 @@
 // renders what comes out.
 // ═══════════════════════════════════════════════════════════════
 
+import { COMPLETIONIST_EVENT_TYPES, type AnalyticsEventType } from "@/lib/analytics/event-types";
+
+/**
+ * What the store holds now: proofs that are a state rather than an action
+ * (the quest evaluator of B17 reads these beside the event ledger).
+ */
+export interface StoreFacts {
+  /** Named profiles in agent_profiles; the root agent is not one of them. */
+  profiles: number;
+  models: number;
+  credentials: number;
+  workflows: number;
+  /** A memory provider the operator saved: active, enabled, and not the seeded guess (T-0077). */
+  memoryConfigured: boolean;
+}
+
 /** Raw metrics the repository measures from the DB. */
 export interface RawMetrics {
   completedMissions: number;
@@ -36,6 +52,9 @@ export interface RawMetrics {
   distinctProfiles: number;
   /** Distinct event types ever recorded — for the breadth ladder. */
   distinctEventTypes: number;
+  /** Every event type counted all-time, 0 when never recorded: the ledger (T-0098). */
+  eventCounts: Partial<Record<AnalyticsEventType, number>>;
+  facts: StoreFacts;
 }
 
 export interface LevelInfo {
@@ -296,7 +315,18 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
   // ── Breadth ──
   { id: "polyglot", name: "Polyglot", description: "Use 3 different agent profiles", icon: "Boxes", color: "cyan", target: 3, measure: (m) => m.distinctProfiles },
   { id: "renaissance", name: "Renaissance", description: "Trigger 8 different event types", icon: "Compass", color: "green", target: 8, measure: (m) => m.distinctEventTypes },
-  { id: "completionist", name: "Completionist", description: "Trigger all 14 event types", icon: "Sparkles", color: "yellow", target: 14, measure: (m) => m.distinctEventTypes },
+  // Measured against the curated list, from the ledger: a type counts once it
+  // has been recorded at all, a failure never counts, and a type nothing emits
+  // yet is not on the list (T-0098).
+  {
+    id: "completionist",
+    name: "Completionist",
+    description: `Trigger all ${COMPLETIONIST_EVENT_TYPES.length} core event types`,
+    icon: "Sparkles",
+    color: "yellow",
+    target: COMPLETIONIST_EVENT_TYPES.length,
+    measure: (m) => COMPLETIONIST_EVENT_TYPES.filter((t) => (m.eventCounts[t] ?? 0) > 0).length,
+  },
 ];
 
 export function evaluateAchievements(m: RawMetrics): Achievement[] {

@@ -9,6 +9,7 @@ import {
   type RawMetrics,
 } from "@/lib/stats/derive";
 import { ICONS } from "@/components/achievements/AchievementBadge";
+import { COMPLETIONIST_EVENT_TYPES } from "@/lib/analytics/event-types";
 
 const baseMetrics = (over: Partial<RawMetrics> = {}): RawMetrics => ({
   completedMissions: 0,
@@ -34,6 +35,8 @@ const baseMetrics = (over: Partial<RawMetrics> = {}): RawMetrics => ({
   chatMessages: 0,
   distinctProfiles: 0,
   distinctEventTypes: 0,
+  eventCounts: {},
+  facts: { profiles: 0, models: 0, credentials: 0, workflows: 0, memoryConfigured: false },
   ...over,
 });
 
@@ -125,7 +128,8 @@ describe("evaluateAchievements", () => {
     ["chatterbox", { chatMessages: 1000 }],
     ["cron-lord", { schedulesFired: 500 }],
     ["polyglot", { distinctProfiles: 3 }],
-    ["completionist", { distinctEventTypes: 14 }],
+    // The ledger, not the distinct count: one of each curated type (T-0098).
+    ["completionist", { eventCounts: Object.fromEntries(COMPLETIONIST_EVENT_TYPES.map((t) => [t, 1])) }],
   ])("unlocks the event-derived achievement %s at its threshold", (id, over) => {
     const a = evaluateAchievements(baseMetrics(over as Partial<RawMetrics>)).find((x) => x.id === id);
     expect(a?.unlocked).toBe(true);

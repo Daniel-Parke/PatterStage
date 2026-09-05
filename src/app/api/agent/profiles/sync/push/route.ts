@@ -14,6 +14,7 @@ import {
 } from "@/modules/hermes/lib/profile-push";
 import { answerBatch as answerAnyBatch, answerSingle as answerAnySingle } from "@/modules/hermes/lib/sync-answer";
 import type { SyncResult } from "@/modules/hermes/lib/profile-sync-shared";
+import { recordEvent } from "@/lib/analytics/record-event";
 
 // The two answer shapes were written here first (QA finding 7, T-0082) and now
 // live in sync-answer.ts so the pull, import and models routes answer the same
@@ -22,6 +23,19 @@ import type { SyncResult } from "@/modules/hermes/lib/profile-sync-shared";
 const answerSingle = (result: SyncResult) => answerAnySingle("Push to Hermes", result);
 const answerBatch = (results: SyncResult[], extra: Record<string, unknown>) =>
   answerAnyBatch("push", results, extra);
+
+// The ledger (T-0098): a push that happened is recorded and one that did not
+// is not; a batch is one entry counting what succeeded, and only when
+// something did. Skills are not profiles and are not counted.
+function answerProfilePush(entityId: string, result: SyncResult) {
+  if (result.success) recordEvent("profile.pushed", { entityType: "profile", entityId, profile: entityId });
+  return answerSingle(result);
+}
+function answerProfileBatch(results: SyncResult[], extra: Record<string, unknown>) {
+  const count = results.filter((r) => r.success).length;
+  if (count > 0) recordEvent("profile.pushed", { entityType: "profile", entityId: "all", metadata: { count } });
+  return answerBatch(results, extra);
+}
 
 export async function POST(request: NextRequest) {
   // Body is a bag of optional flags (slug, all, root, skills, ...);
@@ -40,7 +54,7 @@ export async function POST(request: NextRequest) {
     ensureDb();
 
     if (root) {
-      return answerSingle(pushRootToHermes());
+      return answerProfilePush("default", pushRootToHermes());
     }
 
     if (skills) {
@@ -58,7 +72,7 @@ export async function POST(request: NextRequest) {
         onlyOutOfSync,
       });
       const rootResult = pushRootToHermes();
-      return answerBatch([...profileResults, rootResult], {
+      return answerProfileBatch([...profileResults, rootResult], {
         root: rootResult,
         results: profileResults,
       });
@@ -69,10 +83,10 @@ export async function POST(request: NextRequest) {
     }
 
     if (slug === "default") {
-      return answerSingle(pushRootToHermes());
+      return answerProfilePush("default", pushRootToHermes());
     }
 
-    return answerSingle(pushProfileToHermes(slug));
+    return answerProfilePush(slug, pushProfileToHermes(slug));
   }
   catch (error) {
     return serverErrorFromCatch(

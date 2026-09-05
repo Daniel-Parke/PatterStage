@@ -19,6 +19,7 @@ import {
 } from "./shared";
 import { isDispatchMode, DISPATCH_MODES } from "@/lib/dispatch-mode";
 import { badRequest } from "@/lib/api-response";
+import { recordEvent } from "@/lib/analytics/record-event";
 
 export function handleUpdateTemplate(body: TemplateActionBody): NextResponse {
   const { templateId } = body;
@@ -99,6 +100,7 @@ export function handleUpdateTemplate(body: TemplateActionBody): NextResponse {
 
   saveTemplate(template);
   invalidateTemplatesCache();
+  recordEvent("template.saved", { entityType: "template", entityId: template.id, metadata: { action: "updated" } });
   return NextResponse.json({
     data: enrichCustomTemplateFromDisk(template as unknown as Record<string, unknown>),
   });

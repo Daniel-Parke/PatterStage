@@ -45,7 +45,7 @@ describe("achievement tiers", () => {
     expect(achievementPoints("first-contact")).toBe(TIER_POINTS.common);
   });
   it("evaluateAchievements stamps tier + points on every DTO", () => {
-    const m = { completedMissions: 1, completionHours: [] } as unknown as RawMetrics;
+    const m = { completedMissions: 1, completionHours: [], eventCounts: {} } as unknown as RawMetrics;
     const list = evaluateAchievements(m);
     const fc = list.find((a) => a.id === "first-contact")!;
     expect(fc.tier).toBe("common");

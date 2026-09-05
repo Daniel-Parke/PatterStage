@@ -18,6 +18,7 @@ import {
   writeScriptContent,
   deleteScriptFile,
 } from "@/lib/scripts-manager";
+import { recordEvent } from "@/lib/analytics/record-event";
 
 type Ctx = { params: Promise<{ name: string }> };
 
@@ -49,6 +50,7 @@ export async function PUT(request: NextRequest, ctx: Ctx) {
     const exists = readScriptContent(name) !== null;
     const result = writeScriptContent(name, content, exists ? "update" : "create");
     if (!result.ok) return badRequest(result.error ?? "Failed to save script");
+    recordEvent("script.saved", { entityType: "script", entityId: name, metadata: { created: result.created === true } });
     return ok({ name, created: result.created === true });
   } catch (error) {
     return serverErrorFromCatch("PUT /api/scripts/[name]", name, error, "Failed to save script");

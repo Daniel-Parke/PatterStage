@@ -16,6 +16,7 @@ import {
 } from "@/modules/hermes/lib/toolset-unify";
 import { requireSafeProfileName } from "@/lib/fs/path-security";
 import { isReadOnly } from "@/lib/read-only";
+import { recordEvent } from "@/lib/analytics/record-event";
 
 export async function GET(
   request: NextRequest,
@@ -80,6 +81,7 @@ export async function PUT(
     );
     if (result instanceof NextResponse) return result;
 
+    recordEvent("toolset.saved", { entityType: "toolset", entityId: prof.profile, profile: prof.profile });
     return ok({ success: true, profile: result.profile, platformToolsets });
   }
   catch (error) {

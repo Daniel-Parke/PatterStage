@@ -84,16 +84,18 @@ describe("computeDashboard().raw.eventCounts", () => {
 describe("computeDashboard().raw.facts", () => {
   it("counts named profiles, models, credentials and workflows from the store", () => {
     testDb = openDb(true);
+    // Four different numbers, so a count read from the wrong table shows.
     testDb.prepare("INSERT INTO agent_profiles (slug, display_name) VALUES (?, ?)").run("scout", "Scout");
     testDb.prepare("INSERT INTO agent_profiles (slug, display_name) VALUES (?, ?)").run("writer", "Writer");
-    testDb.prepare("INSERT INTO models (id, name, provider, model_id) VALUES (?, ?, ?, ?)").run("m1", "GPT", "openai", "gpt-x");
+    for (const id of ["m1", "m2", "m3"]) {
+      testDb.prepare("INSERT INTO models (id, name, provider, model_id) VALUES (?, ?, ?, ?)").run(id, `Model ${id}`, "openai", "gpt-x");
+    }
     testDb.prepare("INSERT INTO credentials (id, label, provider, api_key) VALUES (?, ?, ?, ?)").run("c1", "key", "openai", "sk-test");
-    testDb.prepare("INSERT INTO composer_workflows (id, name) VALUES (?, ?)").run("w1", "Draft and review");
+    for (const id of ["w1", "w2", "w3", "w4"]) {
+      testDb.prepare("INSERT INTO composer_workflows (id, name) VALUES (?, ?)").run(id, `Workflow ${id}`);
+    }
     const { raw } = computeDashboard();
-    expect(raw.facts.profiles).toBe(2);
-    expect(raw.facts.models).toBe(1);
-    expect(raw.facts.credentials).toBe(1);
-    expect(raw.facts.workflows).toBe(1);
+    expect(raw.facts).toEqual({ profiles: 2, models: 3, credentials: 1, workflows: 4, memoryConfigured: false });
   });
 
   it("says memory is configured only once the operator saved the provider, active and enabled", () => {

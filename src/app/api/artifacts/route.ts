@@ -14,6 +14,7 @@ import {
   listArtifacts,
   type ArtifactSourceKind,
 } from "@/lib/artifacts-repository";
+import { recordEvent } from "@/lib/analytics/record-event";
 
 const SOURCE_KINDS = ["research", "composer", "mission", "chat", "manual"] as const;
 
@@ -62,6 +63,7 @@ export async function POST(request: NextRequest) {
       content: parsed.content,
       tags: parsed.tags,
     });
+    recordEvent("artifact.saved", { entityType: "artifact", entityId: artifact.id, metadata: { sourceKind: parsed.sourceKind } });
     return ok({ artifact });
   } catch (error) {
     return serverErrorFromCatch("POST /api/artifacts", "creating artifact", error, "Failed to save artifact");

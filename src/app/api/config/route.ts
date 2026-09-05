@@ -18,6 +18,7 @@ import { maskSecretsDeep } from "@/lib/secret-mask";
 import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import { backupFile } from "@/lib/fs/fs-helpers";
 import { deepMerge } from "@/lib/deep-merge";
+import { recordEvent } from "@/lib/analytics/record-event";
 
 // Dynamically derive writable sections from the schema
 // Only YAML sections with editable fields are writable
@@ -164,6 +165,7 @@ export async function PUT(request: NextRequest) {
     // how WO-0006's gap opened in the first place (WG-ARCH-003).
     const content = dumpYamlConfig(config);
     writeHermesConfigFile(paths.config, content);
+    recordEvent("config.saved", { entityType: "config", entityId: section });
 
     appendAuditLine({
       action: "config.put",

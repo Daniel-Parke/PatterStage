@@ -15,6 +15,7 @@ import { isFeatureEnabled } from "@/lib/feature-flags";
 import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import { createWorkflowFromDef, listWorkflows } from "@/lib/composer/composer-repository";
 import { workflowDefSchema } from "@/lib/composer/schema";
+import { recordEvent } from "@/lib/analytics/record-event";
 
 export async function GET() {
   if (!isFeatureEnabled("composer")) {
@@ -39,6 +40,7 @@ export async function POST(request: NextRequest) {
   try {
     ensureDb();
     const workflow = createWorkflowFromDef(parsed);
+    recordEvent("composer.workflow_saved", { entityType: "workflow", entityId: workflow.id, metadata: { action: "created" } });
     return created({ workflow });
   } catch (error) {
     return serverErrorFromCatch("POST /api/composer/workflows", "create", error, "Failed to create workflow");

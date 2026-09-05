@@ -14,6 +14,7 @@ import { appendAuditLine } from "@/lib/audit-log";
 import { credentialPostSchema } from "@/lib/api-schemas";
 import { created, ok } from "@/lib/api-response";
 import { syncCredentialToHermesEnv } from "@/modules/hermes/lib/hermes-env-sync";
+import { recordEvent } from "@/lib/analytics/record-event";
 
 export async function GET(_request: NextRequest) {
   try {
@@ -49,6 +50,8 @@ export async function POST(request: NextRequest) {
       apiKey: parsed.apiKey,
     });
     appendAuditLine({ action: "credential.create", resource: credential.id, ok: true });
+    // After the row AND the env write: a key the agent cannot read is not added (T-0098).
+    recordEvent("credential.added", { entityType: "credential", entityId: credential.id, metadata: { provider: parsed.provider } });
     return created({ credential });
   } catch (error) {
     if (createdId) {

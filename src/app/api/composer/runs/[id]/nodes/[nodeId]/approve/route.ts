@@ -21,6 +21,7 @@ import {
 } from "@/lib/composer/composer-repository";
 import { advanceComposerRun } from "@/lib/composer/engine";
 import { approvalActionSchema } from "@/lib/composer/schema";
+import { recordEvent } from "@/lib/analytics/record-event";
 
 const bodySchema = z.object({ action: approvalActionSchema, note: z.string().optional() }).strict();
 
@@ -93,6 +94,10 @@ export async function POST(request: NextRequest, ctx: Ctx) {
     if (!getNode(nodeId)) return notFound("Node not found");
 
     recordComposerApproval({ composerRunId: id, nodeId, action: parsed.action, note: parsed.note ?? null });
+    // The decision is the write; only an acceptance is a gate approved (T-0098).
+    if (parsed.action === "accept") {
+      recordEvent("composer.gate_approved", { entityType: "composer_run", entityId: id, metadata: { nodeId } });
+    }
     updateComposerRun(id, { status: "running" }); // resume so the engine advances
     await advanceComposerRun(id);
     return ok({ run: getComposerRun(id) });

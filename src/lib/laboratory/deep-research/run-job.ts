@@ -14,6 +14,7 @@ import { runDeepResearch, defaultLlm, defaultVisit } from "./engine";
 import { resolveSearchProvider } from "./search";
 import { insertResearchStep, updateResearchRun } from "./research-repository";
 import { captureArtifactOnce } from "@/lib/artifacts-repository";
+import { recordEvent } from "@/lib/analytics/record-event";
 import type { ResearchConfig } from "./types";
 
 /**
@@ -125,6 +126,13 @@ export async function runResearchJob(
         visitFailures: result.visitFailures,
       },
     });
+    // After the terminal row, never before it: a write that throws leaves no
+    // event claiming an outcome the table does not hold (T-0098).
+    recordEvent(searchDown ? "research.failed" : "research.completed", {
+      entityType: "research",
+      entityId: runId,
+      ...(searchDown ? { metadata: { reason: "search-unavailable" } } : {}),
+    });
     // Capture the report as an artifact (idempotent; best-effort — never fail
     // the run on a capture error).
     try {
@@ -150,5 +158,6 @@ export async function runResearchJob(
       error: messageFromError(err, "research failed"),
       completedAt: now(),
     });
+    recordEvent("research.failed", { entityType: "research", entityId: runId, metadata: { reason: "error" } });
   }
 }

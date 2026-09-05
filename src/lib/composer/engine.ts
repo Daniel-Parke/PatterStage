@@ -12,6 +12,7 @@
 import { now } from "@/lib/db";
 import { logApiError } from "@/lib/api-logger";
 import { captureArtifactOnce } from "@/lib/artifacts-repository";
+import { recordEvent } from "@/lib/analytics/record-event";
 import type { RunStatus } from "@/lib/runtime/types";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import { checkUnattendedSpend } from "@/lib/spend/spend-guard";
@@ -197,6 +198,19 @@ function applyGroupOutcome(
   }
 }
 
+/**
+ * The ledger's word for a run that ended, written after the terminal row and
+ * never before it (T-0098). A rejected gate is a failure to the ledger, with
+ * the status kept in the metadata so Insights can tell the two apart.
+ */
+function recordRunEnded(composerRunId: string, status: "completed" | "failed" | "rejected"): void {
+  recordEvent(status === "completed" ? "composer.run_completed" : "composer.run_failed", {
+    entityType: "composer_run",
+    entityId: composerRunId,
+    ...(status === "rejected" ? { metadata: { status } } : {}),
+  });
+}
+
 /** When a run terminates, nudge the parent group node-run's run to settle now. */
 function nudgeParentRun(composerRunId: string): void {
   const run = getComposerRun(composerRunId);
@@ -301,6 +315,7 @@ async function applyNext(
 ): Promise<void> {
   if (next.kind === "complete") {
     updateComposerRun(composerRunId, { status: "completed", completedAt: now() });
+    recordRunEnded(composerRunId, "completed");
     captureComposerArtifact(composerRunId, fromNodeRun);
     nudgeParentRun(composerRunId); // if this is a sub-workflow, settle its group stage
     return;
@@ -319,6 +334,7 @@ async function applyNext(
       updateNodeRun(fromNodeRun.id, { status: "rejected", completedAt: now() });
     }
     updateComposerRun(composerRunId, { status, error: next.error, completedAt: now() });
+    recordRunEnded(composerRunId, status);
     nudgeParentRun(composerRunId);
     return;
   }
@@ -326,6 +342,7 @@ async function applyNext(
   const target = getNode(next.nodeId);
   if (target?.isTerminal) {
     updateComposerRun(composerRunId, { status: "completed", currentNodeId: next.nodeId, completedAt: now() });
+    recordRunEnded(composerRunId, "completed");
     captureComposerArtifact(composerRunId, fromNodeRun);
     nudgeParentRun(composerRunId);
     return;
@@ -341,6 +358,7 @@ async function applyNext(
       error: `${target?.label ?? "Stage"} exceeded ${cap} attempts without passing${why} — stopped to avoid an unbounded loop.`,
       completedAt: now(),
     });
+    recordRunEnded(composerRunId, "failed");
     nudgeParentRun(composerRunId);
     return;
   }
@@ -364,6 +382,7 @@ export async function advanceComposerRun(composerRunId: string): Promise<void> {
       error: `This run hit the maximum of ${MAX_TOTAL_STEPS} stage executions and was stopped to avoid an unbounded loop.`,
       completedAt: now(),
     });
+    recordRunEnded(composerRunId, "failed");
     nudgeParentRun(composerRunId);
     return;
   }
@@ -372,6 +391,7 @@ export async function advanceComposerRun(composerRunId: string): Promise<void> {
     const start = getStartNode(run.workflowId);
     if (!start) {
       updateComposerRun(composerRunId, { status: "failed", error: "workflow has no start node", completedAt: now() });
+      recordRunEnded(composerRunId, "failed");
       return;
     }
     updateComposerRun(composerRunId, { status: "running", currentNodeId: start.id });
@@ -380,11 +400,13 @@ export async function advanceComposerRun(composerRunId: string): Promise<void> {
 
   if (!run.currentNodeId) {
     updateComposerRun(composerRunId, { status: "failed", error: "no current node", completedAt: now() });
+    recordRunEnded(composerRunId, "failed");
     return;
   }
   const node = getNode(run.currentNodeId);
   if (!node) {
     updateComposerRun(composerRunId, { status: "failed", error: "current node missing", completedAt: now() });
+    recordRunEnded(composerRunId, "failed");
     return;
   }
 

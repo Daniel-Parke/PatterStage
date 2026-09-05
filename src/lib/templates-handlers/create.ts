@@ -15,6 +15,7 @@ import {
   saveTemplate,
 } from "./shared";
 import { isDispatchMode } from "@/lib/dispatch-mode";
+import { recordEvent } from "@/lib/analytics/record-event";
 
 export function handleCreateTemplate(body: TemplateActionBody): NextResponse {
   const id = "ct_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 4);
@@ -75,5 +76,6 @@ export function handleCreateTemplate(body: TemplateActionBody): NextResponse {
 
   saveTemplate(template);
   invalidateTemplatesCache();
+  recordEvent("template.saved", { entityType: "template", entityId: id, metadata: { action: "created" } });
   return NextResponse.json({ data: enrichCustomTemplateFromDisk(template as unknown as Record<string, unknown>) });
 }

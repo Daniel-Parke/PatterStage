@@ -23,6 +23,7 @@ import {
   workflowHasActiveRuns,
 } from "@/lib/composer/composer-repository";
 import { workflowDefSchema } from "@/lib/composer/schema";
+import { recordEvent } from "@/lib/analytics/record-event";
 
 interface Ctx {
   params: Promise<{ id: string }>;
@@ -63,6 +64,7 @@ export async function PUT(request: NextRequest, ctx: Ctx) {
     if (!getWorkflowGraph(id)) return notFound("Workflow not found");
     if (workflowHasActiveRuns(id)) return badRequest(ACTIVE_EDIT_MSG);
     const workflow = replaceWorkflowGraph(id, parsed, { discardRunHistory });
+    recordEvent("composer.workflow_saved", { entityType: "workflow", entityId: id, metadata: { action: "replaced" } });
     return ok({ workflow });
   } catch (error) {
     if (error instanceof WorkflowHistoryWouldBeLost) {

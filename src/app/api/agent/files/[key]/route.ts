@@ -25,6 +25,7 @@ import {
 } from "@/modules/hermes/handlers/profile-patch";
 import { badRequest, notFound, ok } from "@/lib/api-response";
 import { maskEnvFileContent } from "@/lib/secret-mask";
+import { recordEvent } from "@/lib/analytics/record-event";
 import {
   configYamlToColumnValues,
   platformToolsetsFromJson,
@@ -317,6 +318,12 @@ export async function PUT(
           "Failed to sync profile to Hermes",
         );
         if (result instanceof NextResponse) return result;
+        // SOUL.md is the personality. The Identity tab (decision 11, B9)
+        // writes it through this door, so the Shapeshifter ledger lives here
+        // and not only on the personality route it replaces (T-0098).
+        if (key === "soul") {
+          recordEvent("personality.changed", { entityType: "personality", entityId: profileSlug, profile: profileSlug });
+        }
       }
     }
     else {

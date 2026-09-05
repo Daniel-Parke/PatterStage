@@ -15,6 +15,7 @@ import { appendAuditLine } from "@/lib/audit-log";
 import { modelPostSchema } from "@/lib/api-schemas";
 import { created, ok } from "@/lib/api-response";
 import { syncDefaultsToHermesConfig } from "@/modules/hermes/lib/config-sync";
+import { recordEvent } from "@/lib/analytics/record-event";
 
 export async function GET(request?: NextRequest) {
   try {
@@ -43,6 +44,7 @@ export async function POST(request: NextRequest) {
       syncDefaultsToHermesConfig();
     }
     appendAuditLine({ action: "model.create", resource: model.id, ok: true });
+    recordEvent("model.added", { entityType: "model", entityId: model.id, metadata: { provider: model.provider } });
     return created({ model });
   } catch (error) {
     if (createdId) {

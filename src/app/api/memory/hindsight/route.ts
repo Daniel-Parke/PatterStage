@@ -26,6 +26,7 @@ import { messageFromError } from "@/lib/api-fetch";
 
 import { badRequest, ok } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
+import { recordEvent } from "@/lib/analytics/record-event";
 import {
   defaultBank,
   isHindsightConnectionError,
@@ -146,6 +147,7 @@ export async function POST(request: NextRequest) {
           return badRequest("Content is required");
         }
         result = await handleRetain(bank, content.trim(), tags);
+        recordEvent("memory.retained", { entityType: "memory", entityId: bank, metadata: { bank } });
         break;
       }
       case "create-directive": {
