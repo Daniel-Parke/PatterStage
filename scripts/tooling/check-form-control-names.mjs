@@ -83,6 +83,19 @@ function literalValue(init) {
   return null;
 }
 
+/**
+ * The comparison key for "is this name just the placeholder": case-folded,
+ * trimmed, and stripped of a trailing ellipsis, full stop or colon, which is
+ * exactly how the twenty offenders differed from their placeholders.
+ */
+export function normaliseName(text) {
+  return String(text)
+    .toLowerCase()
+    .replace(/[\s.…:]+$/u, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 /** Does this subtree render text no matter which way its conditionals fall? */
 function rendersText(node) {
   if (ts.isJsxText(node)) return node.text.trim().length > 0;
@@ -169,8 +182,23 @@ export function classifyControls(sourceText, fileName = "x.tsx") {
         out.controls += 1;
         const line = sf.getLineAndCharacterOfPosition(opening.getStart(sf)).line + 1;
         const id = literalValue(attrs.get("id"));
+        // A placeholder pasted into aria-label is still a placeholder. Twenty
+        // controls satisfied this gate with aria-label="Search skills..."
+        // beside placeholder="Search skills...", and the gate's own first
+        // sentence says why that is not a name (T-0096, D118). A name
+        // attribute whose literal text is the placeholder's, give or take
+        // case and a trailing ellipsis, does not count; an expression we
+        // cannot read keeps the gate's usual optimism.
+        const placeholder = literalValue(attrs.get("placeholder"));
+        const namedByAttr = [...attrs.keys()].some((a) => {
+          if (!NAME_ATTRS.has(a)) return false;
+          if (a === "aria-labelledby" || placeholder === null) return true;
+          const value = literalValue(attrs.get(a));
+          if (value === null) return true;
+          return normaliseName(value) !== normaliseName(placeholder);
+        });
         const named =
-          [...attrs.keys()].some((a) => NAME_ATTRS.has(a)) ||
+          namedByAttr ||
           (id !== null && labelledIds.has(id)) ||
           insideTextLabel;
 
@@ -232,7 +260,13 @@ export function formatSummary(c) {
  * assertion green, because the tests all drove the CLASSIFIER and none drove
  * the verdict. A gate that reports and does not fail the build is decoration.
  */
+/** The exit code and the text to print, plus `ok` for a caller that reads the decision rather than the code. */
 export function verdict(counts, floors = { files: 150, controls: 40 }) {
+  const v = verdictCore(counts, floors);
+  return { ...v, ok: v.code === 0 };
+}
+
+function verdictCore(counts, floors) {
   if (counts.filesScanned < floors.files || counts.controlsSeen < floors.controls) {
     return {
       code: 1,

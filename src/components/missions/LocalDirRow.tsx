@@ -41,7 +41,7 @@ export default function LocalDirRow({
           onChange={(e) =>
             onChange({ ...entry, path: e.target.value, branch: entry.branch })
           }
-          placeholder="~/projects/my-app/" aria-label="~/projects/my-app/"
+          placeholder="~/projects/my-app/" aria-label="Local directory path"
           className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white placeholder-white/20 outline-none focus:border-neon-cyan/50 font-mono"
         />
       </div>

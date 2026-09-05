@@ -167,6 +167,8 @@ export function useMissionsPage() {
     openCreate,
     closeComposer,
     handleSaveAsTemplate: templateActions.handleSaveAsTemplate,
+    overwriteTemplateName: templateActions.overwriteTemplateName,
+    missionsLoadError: data.missionsLoadError,
     dispatching: dispatch.dispatching,
     cancellingMissionId: dispatch.cancellingMissionId,
     handleTemplateSelect: templateActions.handleTemplateSelect,

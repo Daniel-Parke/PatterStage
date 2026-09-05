@@ -102,7 +102,7 @@ export default function CategoryManagerModal({
                 void handleCreate();
               }
             }}
-            placeholder="Category name" aria-label="Category name"
+            placeholder="Category name" aria-label="New category name"
             className="flex-1 min-w-[140px] h-9 px-3 text-sm font-mono bg-dark-950 border border-white/10 rounded-lg text-ps-text-primary"
           />
           <select aria-label="Category colour"

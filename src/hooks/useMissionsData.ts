@@ -70,6 +70,10 @@ export function useMissionsData({
   const [missions, setMissions] = useState<MissionRow[]>([]);
   const [templates, setTemplates] = useState<MissionTemplate[]>([]);
   const [loading, setLoading] = useState(true);
+  // The missions read's failure, kept apart from the list. It used to be a
+  // toast that vanished after four seconds while the board rendered "No
+  // missions yet" over the failure (T-0096, D67, the read contract).
+  const [missionsLoadError, setMissionsLoadError] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [detail, setDetail] = useState<MissionDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
@@ -192,6 +196,7 @@ export function useMissionsData({
     try {
       const list = await fetchMissions();
       setMissions(list);
+      setMissionsLoadError(null);
       // `?mission=<id>` deep link, the destination of every "open the
       // parent mission" affordance on the sessions surface. Sibling of the
       // `?template=<id>` branch below, and latched the same way so the 15s
@@ -218,13 +223,12 @@ export function useMissionsData({
         }
       }
     } catch (error) {
-      // `toastError` is the user-facing surface; the pre-session-178
-      // `console.error` was the only error reporting and the user
-      // saw nothing. Surfaces the same string the sibling
-      // `fetchTemplates` catch block reports, and matches the
-      // `loadCategories` site — all three slices in `fetchData` now
-      // report failures via toast.
-      toastError(showToast, error, "Failed to load missions");
+      // Not a toast: the board reads this and shows the failure with a
+      // Retry in place of the list, so a failed read never looks like an
+      // empty install.
+      setMissionsLoadError(
+        error instanceof Error && error.message ? error.message : "Failed to load missions",
+      );
     }
 
     await loadCategories();
@@ -330,6 +334,7 @@ export function useMissionsData({
     missions,
     templates,
     loading,
+    missionsLoadError,
     expandedId,
     setExpandedId,
     deepLinkedMissionId,

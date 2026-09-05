@@ -64,6 +64,8 @@ export interface Rule {
   files: (path: string) => boolean;
   pattern?: RegExp;
   test?: (line: string) => boolean;
+  /** File-level: the index of the line to report, or null when the file is clean. */
+  fileTest?: (lines: readonly string[]) => number | null;
   codeOnly?: boolean;
 }
 

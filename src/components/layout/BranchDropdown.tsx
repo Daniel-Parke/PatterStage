@@ -76,7 +76,7 @@ export function BranchDropdown({
           type="text"
           value={customBranch}
           onChange={(e) => setCustomBranch(e.target.value)}
-          placeholder="e.g. feature/my-branch" aria-label="e.g. feature/my-branch"
+          placeholder="e.g. feature/my-branch" aria-label="Other branch name"
           className="w-full mt-0.5 px-2 py-1.5 rounded-md bg-dark-900 border border-white/10 text-white text-xs placeholder:text-ps-text-faint focus:outline-none focus:border-neon-cyan/50"
         />
       </div>

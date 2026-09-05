@@ -92,9 +92,9 @@ export default function ScriptsPage() {
     }
   }, [editorName, editorIsNew, editorContent, refetch, showToast]);
 
+  // The editor's ConfirmButton has already asked; this is the second click.
   const deleteEditor = useCallback(async () => {
     if (editorIsNew || !editorName) return;
-    if (!window.confirm(`Delete ${editorName}? This cannot be undone.`)) return;
     setEditorSaving(true);
     try {
       const res = await safeApiCall(`/api/scripts/${encodeURIComponent(editorName)}`, { method: "DELETE" });

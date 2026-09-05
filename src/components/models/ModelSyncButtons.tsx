@@ -10,6 +10,7 @@ import { ArrowDownToLine, ArrowUpToLine, X, Loader2 } from "lucide-react";
 import type { SyncActionResult } from "@/lib/models/sync-result";
 import { pluralise } from "@/lib/utils";
 import { apiFetch } from "@/lib/api-fetch";
+import { useDialogA11y } from "@/hooks/useDialogA11y";
 
 interface DiffEntry {
   id: string;
@@ -45,6 +46,8 @@ function SyncModal({
     ? "Export to Hermes"
     : "Import from Hermes";
   const [removed, setRemoved] = useState<Set<string>>(new Set());
+  // A dialog on the shared contract (T-0096, D116).
+  const panelRef = useDialogA11y({ open: true, onClose: onCancel });
 
   const subtitle = direction === "push"
     ? "Write these settings into your Hermes config as the primary agent model"
@@ -68,8 +71,16 @@ function SyncModal({
   const totalCount = diffs.length;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="w-full max-w-md mx-4 bg-dark-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onCancel} role="presentation">
+      <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="model-sync-title"
+        tabIndex={-1}
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-md mx-4 bg-dark-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden"
+      >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
           <div className="flex items-center gap-2">
@@ -78,7 +89,7 @@ function SyncModal({
             ) : (
               <ArrowDownToLine className="w-4 h-4 text-neon-cyan" />
             )}
-            <span className="text-sm font-semibold text-white">{title}</span>
+            <span id="model-sync-title" className="text-sm font-semibold text-white">{title}</span>
           </div>
           <button
             type="button"

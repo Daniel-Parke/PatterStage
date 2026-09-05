@@ -89,7 +89,7 @@ export default function EditPersonalityModal({
             type="text"
             value={name}
             readOnly
-            className="w-full bg-dark-900/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-ps-text-secondary outline-none font-mono opacity-70 cursor-not-allowed"
+            className="w-full bg-dark-900/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-ps-text-secondary outline-none focus:border-white/20 font-mono opacity-70 cursor-not-allowed"
           />
           <p className="text-xs text-ps-text-muted font-mono">
             The profile whose SOUL.md voice this is — create profiles on the Agents page
@@ -102,7 +102,7 @@ export default function EditPersonalityModal({
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             rows={6}
-            placeholder="You are a helpful assistant who..." aria-label="You are a helpful assistant who"
+            placeholder="You are a helpful assistant who..." aria-label="System prompt"
             className="w-full bg-dark-900/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 outline-none focus:border-neon-purple/50 transition-colors font-mono resize-y"
           />
           <p className="text-xs text-ps-text-muted font-mono">

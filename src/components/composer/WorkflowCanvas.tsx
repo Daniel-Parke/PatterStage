@@ -35,6 +35,7 @@ import "@xyflow/react/dist/style.css";
 import { Save, Trash2, Wand2 } from "lucide-react";
 
 import Button from "@/components/ui/Button";
+import ConfirmButton from "@/components/ui/ConfirmButton";
 import { Field, Input, Select, Textarea, Toggle } from "@/components/ui/field";
 import { safeApiCall } from "@/lib/api-fetch";
 import { useComposerWorkflowGraph } from "@/hooks/useComposer";
@@ -232,7 +233,12 @@ function CanvasInner({ workflows, onSaved }: { workflows: ComposerWorkflow[]; on
     };
   }
 
-  async function save() {
+  // The count of completed runs a save would delete, once the server has said
+  // so with a 409; null while no such question is open. The question is asked
+  // inline, under the toolbar, and answered by a second click (T-0096, D51).
+  const [pendingDiscard, setPendingDiscard] = useState<number | null>(null);
+
+  async function save(discardRunHistory = false) {
     if (saving) return;
     const state = currentCanvas();
     const errors = validateCanvas(state);
@@ -248,28 +254,20 @@ function CanvasInner({ workflows, onSaved }: { workflows: ComposerWorkflow[]; on
       const putUrl = (confirmed: boolean) =>
         `/api/composer/workflows/${selectedWorkflowId}${confirmed ? "?discardRunHistory=1" : ""}`;
 
-      let res = await safeApiCall<{ data?: { workflow?: { id: string } } }>(
-        isNew ? "/api/composer/workflows" : putUrl(false),
+      const res = await safeApiCall<{ data?: { workflow?: { id: string } } }>(
+        isNew ? "/api/composer/workflows" : putUrl(discardRunHistory),
         { method: isNew ? "POST" : "PUT", body },
       );
 
       // 409: saving would delete this workflow's completed run history. That used
-      // to happen silently on every structural edit, including a rename. Ask.
+      // to happen silently on every structural edit, including a rename. Ask,
+      // inline: the answer is `save(true)` from the prompt below.
       if (!res.ok && res.status === 409) {
         const runCount = (res.body as { runCount?: number } | undefined)?.runCount ?? 0;
-        const proceed = window.confirm(
-          `Saving this workflow will permanently delete ${runCount} completed run${runCount === 1 ? "" : "s"}, ` +
-            `including their stage outputs and approvals.\n\nSave anyway?`,
-        );
-        if (!proceed) {
-          setMessage("Not saved — run history kept.");
-          return;
-        }
-        res = await safeApiCall<{ data?: { workflow?: { id: string } } }>(putUrl(true), {
-          method: "PUT",
-          body,
-        });
+        setPendingDiscard(runCount);
+        return;
       }
+      setPendingDiscard(null);
 
       if (res.ok) {
         setMessage("Saved.");
@@ -323,9 +321,47 @@ function CanvasInner({ workflows, onSaved }: { workflows: ComposerWorkflow[]; on
         </div>
         <Button variant="secondary" color="cyan" onClick={relayout}><Wand2 className="h-4 w-4" /> Auto-layout</Button>
         <Button variant="primary" color="cyan" loading={saving} onClick={() => void save()}><Save className="h-4 w-4" /> {selectedWorkflowId === NEW ? "Create" : "Save"}</Button>
-        {selectedWorkflowId !== NEW ? <Button variant="secondary" color="pink" onClick={() => void removeWorkflow()} disabled={saving}><Trash2 className="h-4 w-4" /> Delete</Button> : null}
+        {selectedWorkflowId !== NEW ? (
+          <ConfirmButton
+            variant="secondary"
+            color="pink"
+            onConfirm={() => void removeWorkflow()}
+            disabled={saving}
+            confirmLabel={<><Trash2 className="h-4 w-4" /> Delete workflow?</>}
+            armedClassName="ring-1 ring-neon-pink/60"
+          >
+            <Trash2 className="h-4 w-4" /> Delete
+          </ConfirmButton>
+        ) : null}
         {message ? <span className="text-xs text-ps-text-muted">{message}</span> : null}
       </div>
+
+      {pendingDiscard !== null ? (
+        <div
+          role="alert"
+          className="flex flex-wrap items-center gap-3 rounded-xl border border-neon-orange/40 bg-neon-orange/10 px-4 py-3 text-xs text-ps-text-primary"
+        >
+          <span>
+            Saving this workflow will permanently delete {pendingDiscard} completed run{pendingDiscard === 1 ? "" : "s"},
+            including their stage outputs and approvals.
+          </span>
+          <div className="ml-auto flex gap-2">
+            <Button variant="secondary" color="pink" size="sm" loading={saving} onClick={() => void save(true)}>
+              Delete {pendingDiscard} run{pendingDiscard === 1 ? "" : "s"} and save
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setPendingDiscard(null);
+                setMessage("Not saved. Run history kept.");
+              }}
+            >
+              Keep history
+            </Button>
+          </div>
+        </div>
+      ) : null}
 
       {/* Full-width canvas with floating palette + inspector overlays (so
           react-flow always gets a sized parent — a grid `1fr` cell collapses). */}

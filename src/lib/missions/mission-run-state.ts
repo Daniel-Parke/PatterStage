@@ -17,6 +17,8 @@
 // to do date arithmetic in JSX.
 // ═══════════════════════════════════════════════════════════════
 
+import { missionStatusLabel, type StatusLabel } from "@/lib/status-labels";
+
 /**
  * The slice of a run row the console needs, plus the deadline the
  * reconciler will enforce. Built server-side by `buildMissionRunView`
@@ -56,8 +58,8 @@ export type MissionRunTone =
 
 export interface MissionRunState {
   tone: MissionRunTone;
-  /** What the duration measures: "Running", "Waiting", "Draft", "Finished", "Failed". */
-  label: string;
+  /** The mission's word from the one vocabulary (src/lib/status-labels.ts): Draft, Queued, Running, Completed, Failed or Cancelled. */
+  label: StatusLabel;
   /** The duration itself, e.g. "12s", "2h 14m". */
   duration: string;
   /** One short timing sentence the operator can act on, or null when there is nothing honest to say. */
@@ -138,7 +140,7 @@ export function describeMissionRunState(
     const waiting = mission.queuedForRun === true;
     return {
       tone: waiting ? "waiting" : "idle",
-      label: waiting ? "Waiting to run" : "Draft",
+      label: missionStatusLabel({ status, queuedForRun: waiting }),
       duration: since(mission.createdAt, now) ?? "—",
       note: null,
     };
@@ -180,7 +182,7 @@ export function describeMissionRunState(
 
   return {
     tone: status === "successful" ? "good" : "bad",
-    label: status === "successful" ? "Finished" : "Failed",
+    label: missionStatusLabel({ status }),
     duration: ago ? `${ago} ago` : "—",
     note: null,
   };

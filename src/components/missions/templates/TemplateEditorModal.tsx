@@ -209,7 +209,7 @@ export function TemplateEditorModal({
             <input
               value={templateName}
               onChange={(e) => onTemplateNameChange(e.target.value)}
-              placeholder="e.g., My Custom Review" aria-label="e.g., My Custom Review"
+              placeholder="e.g., My Custom Review" aria-label="Template name"
               className={inputFieldClasses("cyan")}
             />
           </div>
@@ -220,7 +220,7 @@ export function TemplateEditorModal({
             <input
               value={templateDescription}
               onChange={(e) => onTemplateDescriptionChange(e.target.value)}
-              placeholder="What this template does" aria-label="What this template does"
+              placeholder="What this template does" aria-label="Template description"
               className={inputFieldClasses("cyan")}
             />
           </div>
@@ -356,7 +356,7 @@ export function TemplateEditorModal({
                     }
                   }
                 }}
-                placeholder="URL or file path…" aria-label="URL or file path"
+                placeholder="URL or file path…" aria-label="Reference to add"
                 className={`flex-1 ${inputFieldClasses("pink")} py-1.5 text-xs`}
               />
               <button

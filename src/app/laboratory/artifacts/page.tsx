@@ -87,7 +87,7 @@ export default function ArtifactsPage() {
         color="orange"
       />
 
-      {error ? <LoadErrorBanner error={error} /> : null}
+      {error ? <LoadErrorBanner error={error} onRetry={() => void refetch()} /> : null}
 
       <Card padding="sm">
         <div className="flex items-center gap-2 px-1">
@@ -98,7 +98,8 @@ export default function ArtifactsPage() {
         </div>
       </Card>
 
-      {list.length === 0 ? (
+      {/* The empty state only after a read that succeeded (T-0096). */}
+      {error ? null : list.length === 0 ? (
         <Card padding="md">
           <div className="flex flex-col items-center justify-center gap-2 py-10 text-center">
             <FileStack className="h-6 w-6 text-white/15" />

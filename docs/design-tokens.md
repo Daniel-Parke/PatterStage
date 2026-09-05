@@ -169,6 +169,31 @@ update `GLOW_RGBS` and the matching `--ps-rgb-*` in the same PR.
 
 Prefer `inputFieldClasses(accent)` from `src/lib/theme.ts` (wraps `baseInputStyles` + `focusColorMap`) for text inputs and selects instead of duplicating `bg-dark-*` / `focus:border-*` strings in TSX.
 
+## Focus
+
+One visible focus ring for the whole console, declared once in `globals.css`:
+`:focus-visible { outline: 2px solid var(--color-neon-cyan); outline-offset: 2px }`.
+It paints on keyboard focus only. A control may remove it (`outline-none`)
+only on a line that puts a ring back (`focus:border-*`, `focus:ring-*`,
+`focus-visible:ring-*`); `design-lint`'s `no-bare-outline-none` rule fails
+the build on a bare one. The root layout carries a skip link to `#main`.
+
+## Overlays and confirms
+
+- Anything that paints a `fixed inset-0` overlay calls `useDialogA11y`
+  (role, `aria-modal`, Escape, the Tab trap, focus returned to the trigger,
+  scroll lock). `Modal` and `Sheet` already do; a bespoke overlay must too, or
+  `overlay-uses-dialog-a11y` fails the build.
+- A destructive click is two clicks on `ConfirmButton`
+  (`src/components/ui/ConfirmButton.tsx`): arm, then act, disarming on its
+  own, never disabled by being armed. `no-native-confirm` refuses
+  `window.confirm`.
+- Feedback is the shell's: `FeedbackProvider` in the root layout owns the
+  toast stack (three at most; a success never evicts an error) and the
+  achievement toast. `useToast()` keeps its API on every page.
+- A list read that failed shows `LoadErrorBanner` with a Retry, never the
+  page's empty state; `EmptyState` renders only after a successful read.
+
 ## Shell chrome
 
 Declared on `:root` in `globals.css`, below the `@theme` block:

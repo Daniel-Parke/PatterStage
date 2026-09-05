@@ -92,7 +92,7 @@ export default function ComposerPage() {
   const [forceForm, setForceForm] = useState(false);
 
   const { data: workflows, error: workflowsError, refetch: refetchWorkflows } = useComposerWorkflows();
-  const { data: runs, refetch } = useComposerRuns();
+  const { data: runs, error: runsError, refetch } = useComposerRuns();
   const { data: profiles } = useProfiles();
   const { data: detail } = useComposerRun(selectedId);
   const { data: live, error: liveError } = useEventStream<{ run: ComposerRun; nodeRuns: ComposerNodeRun[] }>(
@@ -227,7 +227,7 @@ export default function ComposerPage() {
         color="cyan"
       />
 
-      {workflowsError ? <LoadErrorBanner error={workflowsError} /> : null}
+      {workflowsError ? <LoadErrorBanner error={workflowsError} onRetry={() => void refetchWorkflows()} /> : null}
       {/* A failed live read, as distinct from a dropped socket. The run
           detail below still renders from the polled copy (T-0046). */}
       {liveError ? <LoadErrorBanner error={`Live updates: ${liveError}`} /> : null}
@@ -292,7 +292,12 @@ export default function ComposerPage() {
               <Select value={statusFilter} onChange={setStatusFilter} options={STATUS_FILTERS} />
             </div>
           </div>
-          {visibleRuns.length === 0 ? (
+          {/* The read contract (T-0096): a failed list read is an error with
+              Retry, never "no runs yet". The hook's fallback is [] on failure,
+              which is exactly the false empty state this guards against. */}
+          {runsError ? (
+            <LoadErrorBanner compact error={runsError} onRetry={() => void refetch()} className="mx-1" />
+          ) : visibleRuns.length === 0 ? (
             <p className="px-1 py-4 text-xs text-ps-text-muted">
               {(runs ?? []).length === 0 ? "No workflow runs yet." : "No runs match this filter."}
             </p>

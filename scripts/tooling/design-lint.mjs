@@ -104,6 +104,34 @@ const rel = (p) => relative(ROOT, p).split(sep).join("/");
 
 export const RULES = [
   {
+    id: "no-native-confirm",
+    law: "A destructive click is two clicks on a ConfirmButton (src/components/ui/ConfirmButton.tsx): arm, then act, disarming on its own. The native window.confirm blocks the thread with an OS dialog the product cannot style, and it is the pattern five sites still used beside eleven that did not (T-0096, D51).",
+    files: (f) => f.startsWith("src/") && (f.endsWith(".ts") || f.endsWith(".tsx")),
+    // Not `.confirm(`: the two-step hook's own method is called that way.
+    pattern: /(?<![\w.$])(?:window\.|globalThis\.)?confirm\(/,
+  },
+  {
+    id: "no-bare-outline-none",
+    law: "outline-none removes the one focus ring the console has (globals.css :focus-visible). A control may remove it only on a line that puts a focus ring, border or outline back (T-0096, D117).",
+    files: (f) => f.startsWith("src/") && (f.endsWith(".ts") || f.endsWith(".tsx")),
+    // `focus:outline-none` is itself an outline-none, not a ring put back.
+    test: (line) =>
+      /\boutline-none\b/.test(line) &&
+      !/focus(?:-visible|-within)?:(?:ring|border|shadow|bg|text|outline-(?!none))/.test(line),
+  },
+  {
+    id: "overlay-uses-dialog-a11y",
+    law: "A file that paints a `fixed inset-0` overlay must call useDialogA11y (role, aria-modal, Escape, the Tab trap, focus restored to the trigger, scroll lock). Modal and Sheet already do; twelve bespoke overlays did not, and a keyboard user could not close them (T-0096, D116).",
+    files: (f) => f.startsWith("src/") && f.endsWith(".tsx"),
+    // File-level: reported at the first overlay line when nothing in the
+    // file calls the hook.
+    fileTest: (lines) => {
+      const at = lines.findIndex((l) => /\bfixed inset-0\b/.test(l));
+      if (at < 0) return null;
+      return lines.some((l) => /useDialogA11y\(/.test(l)) ? null : at;
+    },
+  },
+  {
     id: "token-must-exist",
     law: "A house colour class (text-, bg-, border-, ring- and friends carrying a neon-, semantic- or ps- token) must name a token declared in src/app/globals.css @theme. Tailwind generates nothing for an unknown class and says nothing, so the element renders with no colour (T-0095, D114).",
     files: (f) => f.startsWith("src/") && (f.endsWith(".ts") || f.endsWith(".tsx")),
@@ -291,6 +319,17 @@ export function violationsIn(path, lines) {
   const found = new Map();
   for (const rule of RULES) {
     if (!rule.files(path)) continue;
+    // A file-level rule answers once per file with the line to report, or
+    // null. The pragma on the line above that line excuses it, like any other.
+    if (rule.fileTest) {
+      const at = rule.fileTest(lines);
+      if (at === null || at === undefined || at < 0) continue;
+      const prev = at > 0 ? lines[at - 1] : "";
+      const pragma = PRAGMA.exec(prev);
+      if (pragma && pragma[1] === rule.id) continue;
+      found.set(`${rule.id}::${path}`, [{ line: at + 1, text: lines[at].trim().slice(0, 120) }]);
+      continue;
+    }
     for (let i = 0; i < lines.length; i++) {
       // A rule is a regex, or a predicate where a regex cannot answer alone
       // (token-must-exist needs the declared set).
@@ -301,8 +340,10 @@ export function violationsIn(path, lines) {
       // (a comment is still text a human reads).
       if (rule.codeOnly !== false) {
         const t = lines[i].trimStart();
-        if (t.startsWith("//") || t.startsWith("*") || t.startsWith("/*")) continue;
+        if (t.startsWith("//") || t.startsWith("*") || t.startsWith("/*") || t.startsWith("{/*")) continue;
       }
+      // A pragma line names the rule it excuses; it is never itself a hit.
+      if (PRAGMA.test(lines[i])) continue;
       const prev = i > 0 ? lines[i - 1] : "";
       const pragma = PRAGMA.exec(prev);
       if (pragma && pragma[1] === rule.id) continue;

@@ -61,6 +61,7 @@ export default function Sheet({
       />
       <div
         ref={panelRef}
+        // design-lint-disable-next-line no-bare-outline-none -- the sheet panel takes programmatic focus on open so its title is announced; a ring around the whole panel is noise
         className={`${panelClass} flex flex-col bg-dark-950 shadow-2xl outline-none`}
         role="dialog"
         aria-modal="true"

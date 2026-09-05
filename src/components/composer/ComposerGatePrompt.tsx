@@ -38,7 +38,7 @@ export default function ComposerGatePrompt({
         value={note}
         onChange={(e) => setNote(e.target.value)}
         rows={2}
-        placeholder="Optional note (e.g. what to change on reject)…" aria-label="Optional note (e.g. what to change on reject)"
+        placeholder="Optional note (e.g. what to change on reject)…" aria-label="Gate note"
         className="w-full rounded border border-white/10 bg-dark-950/60 px-2 py-1 text-xs text-ps-text-primary placeholder:text-ps-text-faint focus:border-neon-yellow/40 focus:outline-none"
       />
       <div className="flex items-center gap-2">

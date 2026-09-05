@@ -11,7 +11,8 @@ import Link from "next/link";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
 import Button from "@/components/ui/Button";
-import { LoadingSpinner, ErrorBanner } from "@/components/ui/LoadingSpinner";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import {
   CONFIG_SECTIONS,
   getSectionDef,
@@ -359,7 +360,7 @@ export default function ConfigSectionPage() {
             />
           </div>
         )}
-        {error && <ErrorBanner message={error} />}
+        {error && <LoadErrorBanner error={error} />}
 
         {/* File editor for file-type sections */}
         {isFileSection && (

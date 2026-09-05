@@ -115,11 +115,6 @@ export function formatModelName(id: string): string {
 
 // ── /api/chat client ────────────────────────────────────────────
 
-export async function fetchConversations(): Promise<ChatConversation[]> {
-  const data = await safeApiCallData<{ conversations: ChatConversation[] }>("/api/chat");
-  return data?.conversations ?? [];
-}
-
 export async function fetchConversation(
   id: string,
 ): Promise<{ conversation: ChatConversation; messages: ChatMessage[] } | null> {

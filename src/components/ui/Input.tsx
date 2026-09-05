@@ -45,6 +45,7 @@ export function SearchInput({
         onChange={(e) => onChange(e.target.value)}
         aria-label={ariaLabel ?? placeholder ?? "Search"}
         placeholder={placeholder}
+        // design-lint-disable-next-line no-bare-outline-none -- the accent focus border comes from focusBorder on this same line; every entry is a focus:border-* class
         className={`w-full bg-dark-900/50 border border-white/10 rounded-lg pl-10 pr-4 py-2.5 text-sm text-white placeholder-white/30 outline-none transition-colors font-mono ${focusBorder[accentColor] || focusBorder.cyan}`}
       />
     </div>

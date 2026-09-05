@@ -10,6 +10,7 @@
 
 import { FileCode, Save, Trash2 } from "lucide-react";
 import Button from "@/components/ui/Button";
+import ConfirmButton from "@/components/ui/ConfirmButton";
 import Modal from "@/components/ui/Modal";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
@@ -51,9 +52,19 @@ export default function ScriptEditorModal({
       footer={
         <>
           {!isNew && (
-            <Button variant="ghost" size="sm" icon={Trash2} onClick={onDelete} disabled={saving}>
+            // Two clicks in the modal's own footer, not a native confirm over it
+            // (T-0096, D51). A scheduled script loses its schedule with the file.
+            <ConfirmButton
+              variant="ghost"
+              size="sm"
+              icon={Trash2}
+              onConfirm={onDelete}
+              disabled={saving}
+              confirmLabel="Delete for good?"
+              armedClassName="text-red-400 bg-red-500/10 ring-1 ring-red-500/30"
+            >
               Delete
-            </Button>
+            </ConfirmButton>
           )}
           <div className="flex-1" />
           <Button variant="ghost" size="sm" onClick={onClose} disabled={saving}>
@@ -68,11 +79,12 @@ export default function ScriptEditorModal({
       <div className="space-y-3">
         {isNew && (
           <div>
-            <label className="mb-1 block font-mono text-xs text-ps-text-muted">Filename</label>
+            <label htmlFor="script-filename" className="mb-1 block font-mono text-xs text-ps-text-muted">Filename</label>
             <input
+              id="script-filename"
               value={name}
               onChange={(e) => onNameChange(e.target.value)}
-              placeholder="my-script.sh" aria-label="my-script.sh"
+              placeholder="my-script.sh"
               spellCheck={false}
               className="w-full rounded-lg border border-white/10 bg-dark-800 px-3 py-2 font-mono text-sm text-ps-text-primary outline-none focus:border-neon-cyan/50"
             />

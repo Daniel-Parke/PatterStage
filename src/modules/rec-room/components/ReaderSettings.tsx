@@ -2,6 +2,7 @@
 "use client";
 import { useState, useCallback } from "react";
 import { Settings, X } from "lucide-react";
+import { useDialogA11y } from "@/hooks/useDialogA11y";
 
 export interface ReadingSettings {
   fontSize: number;       // 12-28
@@ -106,6 +107,9 @@ export default function ReaderSettings({ settings, onChange }: {
   onChange: (s: ReadingSettings) => void;
 }) {
   const [open, setOpen] = useState(false);
+  // A dialog on the shared contract (T-0096, D116): Escape closes it and
+  // focus returns to the Aa button.
+  const panelRef = useDialogA11y({ open, onClose: () => setOpen(false) });
 
   const update = useCallback((patch: Partial<ReadingSettings>) => {
     const next = { ...settings, ...patch };
@@ -116,9 +120,10 @@ export default function ReaderSettings({ settings, onChange }: {
   return (
     <>
       {/* Toggle Button */}
-      <button onClick={() => setOpen(!open)}
+      <button type="button" onClick={() => setOpen(!open)}
         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 text-xs font-mono text-ps-text-muted hover:text-ps-text-secondary hover:bg-white/5 transition-colors"
         aria-label="Reading settings (font, size, theme)"
+        aria-expanded={open}
         title="Reading settings">
         <span className="text-sm">Aa</span>
         <Settings className="w-3.5 h-3.5" />
@@ -127,11 +132,18 @@ export default function ReaderSettings({ settings, onChange }: {
       {/* Settings Panel — fixed position to avoid overflow clipping */}
       {open && (
         <>
-          <div className="fixed inset-0 z-[55]" onClick={() => setOpen(false)} />
-          <div className="fixed top-[52px] right-4 w-72 rounded-xl border border-white/10 bg-dark-900/95 backdrop-blur-xl p-5 z-[60] shadow-2xl max-h-[80vh] overflow-y-auto">
+          <div className="fixed inset-0 z-[55]" onClick={() => setOpen(false)} role="presentation" />
+          <div
+            ref={panelRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="reading-settings-title"
+            tabIndex={-1}
+            className="fixed top-[52px] right-4 w-72 rounded-xl border border-white/10 bg-dark-900/95 backdrop-blur-xl p-5 z-[60] shadow-2xl max-h-[80vh] overflow-y-auto"
+          >
           <div className="flex items-center justify-between mb-4">
-            <span className="text-xs font-mono text-ps-text-muted uppercase tracking-widest">Reading Settings</span>
-            <button onClick={() => setOpen(false)} aria-label="Close reading settings" className="p-1 text-ps-text-muted hover:text-ps-text-muted"><X className="w-3.5 h-3.5" /></button>
+            <span id="reading-settings-title" className="text-xs font-mono text-ps-text-muted uppercase tracking-widest">Reading settings</span>
+            <button type="button" onClick={() => setOpen(false)} aria-label="Close reading settings" className="p-1 text-ps-text-muted hover:text-ps-text-muted"><X className="w-3.5 h-3.5" /></button>
           </div>
 
           {/* Font Size */}

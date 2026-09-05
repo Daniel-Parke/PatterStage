@@ -305,7 +305,7 @@ export default function LogsPage() {
                       type="text"
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
-                      placeholder="Filter log lines…" aria-label="Filter log lines"
+                      placeholder="Filter log lines…" aria-label="Log line filter"
                       autoFocus
                       className="w-full bg-dark-900/50 border border-white/10 rounded-lg pl-10 pr-4 py-2 text-sm text-white placeholder-white/30 outline-none focus:border-neon-cyan/50 transition-colors font-mono"
                     />

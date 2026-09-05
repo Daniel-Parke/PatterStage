@@ -22,6 +22,7 @@ import { safeApiCall, toastError } from "@/lib/api-fetch";
 import { toastFromResult } from "@/lib/dashboard/toast-from-result";
 import type { useMissionComposer } from "@/hooks/useMissionComposer";
 import type { useMissionTemplatesState } from "@/hooks/useMissionTemplatesState";
+import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
 import type { MissionTemplate } from "@/components/missions/TemplateModals";
 import { buildTemplatePayload } from "@/lib/missions/mission-form-utils";
 
@@ -117,6 +118,15 @@ export function useMissionTemplateActions({
     [showToast, fetchData, setTemplateSaving],
   );
 
+  // Overwriting a template that already exists is two clicks (T-0096, D51):
+  // the first arms the Save-as-template button with the template's name, the
+  // second writes. It used to be a native window.confirm over the sheet.
+  const overwrite = useTwoStepConfirm({ autoDismissMs: 6000 });
+  const overwriteTemplateName =
+    overwrite.armedKey === null
+      ? null
+      : (templates.find((t) => t.id === overwrite.armedKey)?.name ?? null);
+
   const handleSaveAsTemplate = useCallback(async () => {
     if (!newInstruction.trim()) return;
 
@@ -138,12 +148,11 @@ export function useMissionTemplateActions({
             t.isCustom !== false,
         );
 
-    if (existingTemplate) {
-      const confirmed = window.confirm(
-        `Overwrite template "${existingTemplate.name}"?`,
-      );
-      if (!confirmed) return;
+    if (existingTemplate && !overwrite.isArmedFor(existingTemplate.id)) {
+      overwrite.arm(existingTemplate.id);
+      return;
     }
+    overwrite.cancel();
 
     const payload = buildTemplatePayload({
       action: existingTemplate ? "update" : "create",
@@ -169,7 +178,7 @@ export function useMissionTemplateActions({
     });
 
     await persistTemplate(payload, () => setEditingTemplateId(null));
-  }, [newInstruction, newName, editingTemplateId, templates, templateIcon, templateColor, templateDescription, newContext, newOutputFormat, newConstraints, newGoals, newLocalDirs, newReferences, newSkills, newToolsets, newProfile, newModel, newProvider, newTimeout, newCategoryId, persistTemplate, setEditingTemplateId]);
+  }, [newInstruction, newName, editingTemplateId, templates, overwrite, templateIcon, templateColor, templateDescription, newContext, newOutputFormat, newConstraints, newGoals, newLocalDirs, newReferences, newSkills, newToolsets, newProfile, newModel, newProvider, newTimeout, newCategoryId, persistTemplate, setEditingTemplateId]);
 
   const handleCreateNewTemplate = useCallback(() => {
     setEditingTemplateId(null);
@@ -306,6 +315,7 @@ export function useMissionTemplateActions({
 
   return {
     handleSaveAsTemplate,
+    overwriteTemplateName,
     handleCreateNewTemplate,
     handleTemplateSave,
     handleEditTemplate,

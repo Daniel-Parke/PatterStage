@@ -74,7 +74,11 @@ export default function GenerateOverlay({ title, visible, done, onComplete }: Ge
   if (!visible) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-dark-950/90 backdrop-blur-sm">
+    // Not a dialog: there is nothing to focus and nothing to close. It is a
+    // live status the screen reader should announce as it changes, and the
+    // Stop control that B14 adds will make it one (T-0096, D116).
+    // design-lint-disable-next-line overlay-uses-dialog-a11y -- a progress status with no controls, announced via role=status rather than trapped as a dialog
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-dark-950/90 backdrop-blur-sm" role="status" aria-live="polite" aria-busy={phase === "generating"}>
       <div className="rounded-2xl border border-neon-purple/20 bg-dark-900/80 p-10 text-center max-w-md w-full mx-4">
         {phase === "generating" ? (
           <>

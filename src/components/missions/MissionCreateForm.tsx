@@ -72,6 +72,11 @@ export interface MissionCreateFormProps {
   onRetryCategories?: () => void;
   onSubmit: () => void;
   onSaveAsTemplate: () => void;
+  /**
+   * The name of the template the next Save-as-template click would overwrite,
+   * once the first click has armed it; null otherwise (T-0096, D51).
+   */
+  overwriteTemplateName?: string | null;
   onClose: () => void;
   dispatching: boolean;
   dispatchAcknowledged?: boolean;
@@ -200,6 +205,7 @@ export function MissionComposerActions({
   formState,
   onSubmit,
   onSaveAsTemplate,
+  overwriteTemplateName = null,
   onClose,
   dispatching,
   dispatchAcknowledged = true,
@@ -210,6 +216,7 @@ export function MissionComposerActions({
   | "formState"
   | "onSubmit"
   | "onSaveAsTemplate"
+  | "overwriteTemplateName"
   | "onClose"
   | "dispatching"
   | "dispatchAcknowledged"
@@ -262,8 +269,16 @@ export function MissionComposerActions({
           {submitLabel}
         </Button>
         {formState.newInstruction.trim() && (
-          <Button variant="secondary" onClick={onSaveAsTemplate}>
-            <Save className="w-3.5 h-3.5" /> Save as Template
+          // Two clicks when the name already exists: the first arms this
+          // button with the template it would overwrite, the second writes.
+          <Button
+            variant="secondary"
+            onClick={onSaveAsTemplate}
+            data-armed={overwriteTemplateName ? "true" : undefined}
+            className={overwriteTemplateName ? "ring-1 ring-neon-orange/60 text-neon-orange" : undefined}
+          >
+            <Save className="w-3.5 h-3.5" />{" "}
+            {overwriteTemplateName ? `Overwrite "${overwriteTemplateName}"?` : "Save as template"}
           </Button>
         )}
         <Button variant="ghost" onClick={onClose}>
@@ -289,6 +304,7 @@ export default function MissionCreateForm({
   onRetryCategories,
   onSubmit,
   onSaveAsTemplate,
+  overwriteTemplateName = null,
   onClose,
   dispatching,
   dispatchAcknowledged = false,
@@ -418,7 +434,7 @@ export default function MissionCreateForm({
         <input
           value={formState.newName}
           onChange={(e) => setFormField("newName", e.target.value)}
-          placeholder="e.g., Research quantum computing trends" aria-label="e.g., Research quantum computing trends"
+          placeholder="e.g., Research quantum computing trends" aria-label="Mission name"
           className="w-full h-9 bg-dark-800/50 border border-white/10 rounded-lg px-3 text-sm text-white placeholder-white/20 outline-none focus:border-neon-cyan/50 font-mono"
         />
       </div>
@@ -572,7 +588,7 @@ export default function MissionCreateForm({
                     addReferenceFromInput();
                   }
                 }}
-                placeholder="URL, doc path..." aria-label="URL, doc path"
+                placeholder="URL, doc path..." aria-label="Reference to add"
                 className="flex-1 h-9 bg-dark-800/50 border border-white/10 rounded-lg px-3 text-xs text-white placeholder-white/20 outline-none focus:border-neon-pink/50 font-mono"
               />
               <button
@@ -695,6 +711,7 @@ export default function MissionCreateForm({
           formState={formState}
           onSubmit={onSubmit}
           onSaveAsTemplate={onSaveAsTemplate}
+          overwriteTemplateName={overwriteTemplateName}
           onClose={onClose}
           dispatching={dispatching}
           dispatchAcknowledged={dispatchAcknowledged}

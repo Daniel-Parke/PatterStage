@@ -112,6 +112,18 @@ function isButtonTag(name) {
 }
 
 /**
+ * A link is named by the same rule as a button. The collapsed sidebar
+ * rendered thirty <Link>s as a bare icon, and this gate saw none of them
+ * because it looked at buttons alone; a screen reader announced "link"
+ * thirty times with no destination (T-0096, D119). The nesting check below
+ * stays button-only: an <a> around a <button> is the sessions rows' defect
+ * (D32) and it is fixed in its own batch, not by a gate going red here.
+ */
+function isLinkTag(name) {
+  return name === "Link" || name === "a";
+}
+
+/**
  * Classify one file. Exported so the companion test can drive it with fixtures
  * rather than only over the tree: floors catch "the walk found nothing", and
  * fixtures catch "the matcher stopped matching".
@@ -119,7 +131,7 @@ function isButtonTag(name) {
 export function classifyButtons(sourceText, fileName = "x.tsx") {
   const sf = ts.createSourceFile(fileName, sourceText, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
   const lines = sourceText.split(/\r?\n/);
-  const out = { buttons: 0, iconOnly: 0, unnamed: [], nested: [] };
+  const out = { buttons: 0, links: 0, iconOnly: 0, unnamed: [], nested: [] };
 
   const exempt = (line1) => {
     const prev = lines[line1 - 2] ?? "";
@@ -145,10 +157,12 @@ export function classifyButtons(sourceText, fileName = "x.tsx") {
     }
 
     const isButton = opening && isButtonTag(tagNameOf(opening));
-    if (isButton) {
-      out.buttons += 1;
+    const isLink = opening && isLinkTag(tagNameOf(opening));
+    if (isButton || isLink) {
+      if (isButton) out.buttons += 1;
+      else out.links += 1;
       const line = sf.getLineAndCharacterOfPosition(opening.getStart(sf)).line + 1;
-      if (insideButton) out.nested.push({ line, tag: tagNameOf(opening) });
+      if (isButton && insideButton) out.nested.push({ line, tag: tagNameOf(opening) });
       if (!children.some(rendersText)) {
         out.iconOnly += 1;
         const named = [...attrsOf(opening)].some((a) => NAME_ATTRS.has(a));
@@ -175,6 +189,7 @@ function walk(dir, acc = []) {
 export function scanTree() {
   const files = walk(SRC);
   let buttonsSeen = 0;
+  let linksSeen = 0;
   let iconOnlySeen = 0;
   let filesWithButtons = 0;
   const offenders = [];
@@ -183,20 +198,21 @@ export function scanTree() {
   for (const file of files) {
     const r = classifyButtons(readFileSync(file, "utf-8"), file);
     buttonsSeen += r.buttons;
+    linksSeen += r.links;
     iconOnlySeen += r.iconOnly;
     if (r.buttons > 0) filesWithButtons += 1;
     const rel = file.slice(ROOT.length + 1).split(sep).join("/");
     for (const u of r.unnamed) offenders.push(`${rel}:${u.line} <${u.tag}>`);
     for (const n of r.nested) nested.push(`${rel}:${n.line} <${n.tag}>`);
   }
-  return { filesScanned: files.length, filesWithButtons, buttonsSeen, iconOnlySeen, offenders, nested };
+  return { filesScanned: files.length, filesWithButtons, buttonsSeen, linksSeen, iconOnlySeen, offenders, nested };
 }
 
 export function formatSummary(c) {
   return (
-    `icon-button names: ${c.iconOnlySeen} icon-only buttons, ${c.offenders.length} unnamed, ` +
+    `icon-button names: ${c.iconOnlySeen} icon-only buttons and links, ${c.offenders.length} unnamed, ` +
     `${c.nested.length} nested ` +
-    `(${c.buttonsSeen} button elements across ${c.filesWithButtons} of ${c.filesScanned} .tsx files).`
+    `(${c.linksSeen ?? 0} link elements, ${c.buttonsSeen} button elements across ${c.filesWithButtons} of ${c.filesScanned} .tsx files).`
   );
 }
 

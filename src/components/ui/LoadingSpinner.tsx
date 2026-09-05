@@ -19,6 +19,13 @@ export function LoadingSpinner({
   );
 }
 
+/**
+ * The empty state. Only after a SUCCESSFUL read: a page that renders this over
+ * a failed fetch is lying, and the read contract (T-0096) says the failure is
+ * a LoadErrorBanner with a Retry instead. `ErrorBanner` used to live beside
+ * this, a message with no way to retry; it is gone, and LoadErrorBanner is the
+ * one error surface.
+ */
 export function EmptyState({
   icon: Icon,
   title,
@@ -38,14 +45,6 @@ export function EmptyState({
         <p className="text-xs text-ps-text-faint mt-1">{description}</p>
       )}
       {action && <div className="mt-4">{action}</div>}
-    </div>
-  );
-}
-
-export function ErrorBanner({ message }: { message: string }) {
-  return (
-    <div className="rounded-xl border border-red-500/30 bg-red-500/5 p-4 mb-4">
-      <p className="text-red-400 text-sm font-mono">{message}</p>
     </div>
   );
 }

@@ -140,6 +140,8 @@ export function useChatPage() {
     handleNewChat: conversations.handleNewChat,
     handleDeleteConversation: conversations.handleDeleteConversation,
     handleDownloadConversation: conversations.handleDownloadConversation,
+    conversationsError: conversations.listError,
+    reloadConversations: conversations.loadConversations,
     // gateway banners
     //
     // The page renders `bannerStates`; the three raw fields stay exported

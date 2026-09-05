@@ -13,6 +13,7 @@ import { MessageCircle, Send, Plus, X, Download, Square, Check } from "lucide-re
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
 import Button from "@/components/ui/Button";
+import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import { timeAgo } from "@/lib/utils";
 import TypingIndicator from "@/components/chat/TypingIndicator";
 import GatewayBanner from "@/components/chat/GatewayBanner";
@@ -42,6 +43,8 @@ export default function ChatPage() {
     handleNewChat,
     handleDeleteConversation,
     handleDownloadConversation,
+    conversationsError,
+    reloadConversations,
     gatewayUrl,
     bannerStates,
     messages,
@@ -166,7 +169,19 @@ export default function ChatPage() {
                   </div>
                 </div>
               ))}
-              {conversations.length === 0 && (
+              {/* The read contract (T-0096): a failed list read is this, with
+                  a Retry, and never "No conversations yet" under it. */}
+              {conversationsError && (
+                <div className="p-2">
+                  <LoadErrorBanner
+                    compact
+                    error={conversationsError}
+                    onRetry={() => void reloadConversations()}
+                    className="mb-0"
+                  />
+                </div>
+              )}
+              {conversations.length === 0 && !conversationsError && (
                 <div className="p-3 text-xs text-ps-text-faint italic">No conversations yet</div>
               )}
             </div>

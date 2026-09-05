@@ -113,12 +113,12 @@ export default function ScheduledMissions() {
                   ))}
                 </select>
               ) : (
-                <input className={inputCls} placeholder="mission id" aria-label="mission id" value={missionId} onChange={(e) => setMissionId(e.target.value)} />
+                <input className={inputCls} placeholder="mission id" aria-label="Mission to schedule, by id" value={missionId} onChange={(e) => setMissionId(e.target.value)} />
               )}
             </div>
             <div>
               <label className="text-xs font-mono uppercase tracking-wider text-ps-text-muted">Name (optional)</label>
-              <input className={inputCls} placeholder="daily digest" aria-label="daily digest" value={name} onChange={(e) => setName(e.target.value)} />
+              <input className={inputCls} placeholder="daily digest" aria-label="Schedule name" value={name} onChange={(e) => setName(e.target.value)} />
             </div>
           </div>
           <div>

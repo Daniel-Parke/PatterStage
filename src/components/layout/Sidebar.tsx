@@ -3,6 +3,13 @@
 // The branch dropdown, version/deploy footer, and collapsible config group
 // are extracted to sibling files (BranchDropdown / VersionFooter /
 // ConfigGroupSection); this file owns the layout + link rendering.
+//
+// Two things a keyboard user meets here (T-0096):
+//   D119: every link carries its label as an accessible name, so the
+//         collapsed rail is thirty named links rather than thirty "link"s.
+//   D120: the mobile drawer is `inert` while closed (a transform only moves
+//         it off screen and leaves every link in the tab order), and a dialog
+//         on the shared contract while open, above the header it slides over.
 // ═══════════════════════════════════════════════════════════════
 
 "use client";
@@ -13,6 +20,7 @@ import { usePathname } from "next/navigation";
 import { ChevronRight, ChevronLeft, Terminal, Settings } from "lucide-react";
 
 import { useSidebar } from "./SidebarContext";
+import { useDialogA11y } from "@/hooks/useDialogA11y";
 import { iconColorMap } from "@/lib/theme";
 import { useFeatureFlags } from "@/hooks/useFeatureFlags";
 import { mainSections, configSettingsPinnedLinks, configGroups } from "./sidebar-config";
@@ -31,6 +39,7 @@ export default function Sidebar() {
   const { mobileOpen, setMobileOpen } = useSidebar();
   const { data: flags } = useFeatureFlags();
   const closeMobile = useCallback(() => setMobileOpen(false), [setMobileOpen]);
+  const drawerRef = useDialogA11y({ open: mobileOpen, onClose: closeMobile });
 
   // Flags default ON: hide a link only when its flag is explicitly disabled,
   // so the nav never flashes while flags load (or if the fetch fails).
@@ -48,6 +57,9 @@ export default function Sidebar() {
         <div key={link.href}>
           <Link
             href={link.href}
+            aria-label={link.label}
+            title={collapsed ? link.label : undefined}
+            aria-current={active ? "page" : undefined}
             className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
               active ? "bg-white/10 text-white" : "text-ps-text-muted hover:bg-white/5 hover:text-ps-text-primary"
             }`}
@@ -84,7 +96,7 @@ export default function Sidebar() {
     <div className="flex flex-col h-full">
       {/* Logo — min-height matches main app chrome (see --ps-shell-header-min-height) */}
       <div className="px-4 min-h-[var(--ps-shell-header-min-height)] flex items-center border-b border-white/10">
-        <Link href="/" className="flex items-center gap-2">
+        <Link href="/" aria-label="PatterStage home" className="flex items-center gap-2" onClick={closeMobile}>
           <div className="w-8 h-8 rounded-lg animated-border p-[1.5px]">
             <div className="w-full h-full bg-dark-900 rounded-[5px] flex items-center justify-center">
               <Terminal className="w-4 h-4 text-neon-cyan" />
@@ -105,7 +117,7 @@ export default function Sidebar() {
       </div>
 
       {/* Main Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto" aria-label="Main">
         {/* Main + Agent sections */}
         {mainSections.map((section) => (
           <div key={section.label}>
@@ -146,6 +158,7 @@ export default function Sidebar() {
       <div className="px-3 py-3 border-t border-white/10 space-y-2 flex-shrink-0">
         <VersionFooter collapsed={collapsed} />
         <button
+          type="button"
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           aria-expanded={!collapsed}
           onClick={() => setCollapsed(!collapsed)}
@@ -166,11 +179,14 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Mobile overlay */}
+      {/* Mobile backdrop: a real control with a name, not a div with a click
+          handler, so it is reachable and announced. Above the header (z-50). */}
       {mobileOpen && (
-        <div
-          className="lg:hidden fixed inset-0 bg-black/60 z-40"
-          onClick={() => setMobileOpen(false)}
+        <button
+          type="button"
+          aria-label="Close navigation"
+          onClick={closeMobile}
+          className="lg:hidden fixed inset-0 bg-black/60 z-[55] cursor-default"
         />
       )}
 
@@ -183,9 +199,17 @@ export default function Sidebar() {
         {sidebarContent}
       </aside>
 
-      {/* Sidebar — mobile drawer */}
+      {/* Sidebar — mobile drawer. `inert` while closed takes its thirty links
+          out of the tab order; open, it is the dialog the hook governs. */}
       <aside
-        className={`lg:hidden fixed inset-y-0 left-0 z-50 w-56 bg-dark-950 border-r border-white/10 transform transition-transform h-screen ${
+        ref={drawerRef as React.RefObject<HTMLElement | null>}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Navigation"
+        tabIndex={-1}
+        inert={!mobileOpen}
+        aria-hidden={!mobileOpen}
+        className={`lg:hidden fixed inset-y-0 left-0 z-[60] w-56 bg-dark-950 border-r border-white/10 transform transition-transform h-screen ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >

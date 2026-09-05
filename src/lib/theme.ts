@@ -145,6 +145,7 @@ export const badgeBgMap: Record<AccentColor, ColorEntry> = {
 
 // ── Base Input Styles ─────────────────────────────────────────
 export const baseInputStyles =
+  // design-lint-disable-next-line no-bare-outline-none -- inputFieldClasses appends the accent focus border to this base; it is never used bare
   "w-full bg-dark-900/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 outline-none transition-colors font-mono";
 
 /** Canonical text input / select classes with accent focus ring. */

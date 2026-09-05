@@ -12,6 +12,13 @@
 //   - "Session Not Found" full-page placeholder (no way to retry without
 //     manually navigating back)
 //
+// THE READ CONTRACT (T-0096). A list read that failed shows THIS, with a
+// Retry, and never the page's empty state. Nine pages rendered "no X yet"
+// over a 500, because their hooks swallowed the failure into an empty array;
+// the page owns the conditional and gates its empty state on `!error`. The
+// `compact` variant is for a sidebar or a list column, where the full banner
+// is wider than the column.
+//
 // Component contract:
 //   - `error`: the actual error string from `useApiData`'s `error` field
 //   - `onRetry`: optional retry click handler; when provided, a "Retry"
@@ -20,6 +27,7 @@
 //     short — the banner is meant to fit on one line at desktop width)
 //   - `className`: optional container class extension (lets the page add
 //     margin-bottom / max-width without forking the component)
+//   - `compact`: the smaller variant
 //
 // The component is purely presentational; it never calls `useApiData` or
 // any fetch. The page is the source of truth for `refetch`, the banner
@@ -53,6 +61,8 @@ interface LoadErrorBannerProps {
   className?: string;
   /** Optional button label (default: "Retry"). */
   retryLabel?: string;
+  /** The smaller variant, for a sidebar or a list column. */
+  compact?: boolean;
 }
 
 export default function LoadErrorBanner({
@@ -61,13 +71,17 @@ export default function LoadErrorBanner({
   hint,
   className,
   retryLabel = "Retry",
+  compact = false,
 }: LoadErrorBannerProps) {
+  const chrome = compact
+    ? "mb-2 gap-2 rounded-lg px-3 py-2 text-xs"
+    : "mb-4 gap-3 rounded-xl px-4 py-3 text-sm";
   return (
     <div
       role="alert"
-      className={`mb-4 flex items-start gap-3 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200 ${className ?? ""}`}
+      className={`flex items-start border border-red-500/30 bg-red-500/10 text-red-200 ${chrome} ${className ?? ""}`}
     >
-      <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
+      <AlertTriangle className={`${compact ? "w-4 h-4" : "w-5 h-5"} shrink-0 mt-0.5`} />
       <div className="flex-1 min-w-0">
         <div>{error}</div>
         {hint && (
@@ -78,7 +92,7 @@ export default function LoadErrorBanner({
         <button
           type="button"
           onClick={onRetry}
-          className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono border border-red-500/40 text-red-200 hover:bg-red-500/20 transition-colors shrink-0"
+          className={`flex items-center gap-1.5 rounded-lg text-xs font-mono border border-red-500/40 text-red-200 hover:bg-red-500/20 transition-colors shrink-0 ${compact ? "px-2 py-0.5" : "px-2.5 py-1"}`}
         >
           <RefreshCw className="w-3 h-3" />
           {retryLabel}

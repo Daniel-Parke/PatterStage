@@ -123,7 +123,7 @@ export default function DeepResearchPage() {
         color="cyan"
       />
 
-      {runsError ? <LoadErrorBanner error={runsError} /> : null}
+      {runsError ? <LoadErrorBanner error={runsError} onRetry={() => void refetch()} /> : null}
       {/* A failed live read, as distinct from a dropped socket. The run
           detail below still renders from the polled copy (T-0046). */}
       {liveError ? <LoadErrorBanner error={`Live updates: ${liveError}`} /> : null}
@@ -203,7 +203,8 @@ export default function DeepResearchPage() {
         {/* Runs list */}
         <Card padding="sm">
           <h2 className="mb-2 px-1 text-xs font-mono uppercase tracking-widest text-ps-text-muted">Runs</h2>
-          {(runs ?? []).length === 0 ? (
+          {/* The empty state only after a read that succeeded (T-0096). */}
+          {runsError ? null : (runs ?? []).length === 0 ? (
             <p className="px-1 py-4 text-xs text-ps-text-muted">No research runs yet.</p>
           ) : (
             <ul className="space-y-1">

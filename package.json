@@ -18,6 +18,7 @@
     "lint": "node scripts/tooling/check-agent-files.mjs && node scripts/tooling/check-doc-links.mjs && node scripts/tooling/check-derived-views.mjs && node scripts/tooling/check-read-only-guards.mjs && node scripts/tooling/check-icon-button-names.mjs && node scripts/tooling/check-form-control-names.mjs && node scripts/tooling/design-lint.mjs && node scripts/tooling/contrast-check.mjs && node scripts/tooling/coverage-floor-check.mjs && eslint . --max-warnings 0 && npm run typecheck:tests",
     "lint:design": "node scripts/tooling/design-lint.mjs --report",
     "lint:coverage-floors": "node scripts/tooling/coverage-floor-check.mjs",
+    "lint:copy": "node scripts/tooling/copy-lint.mjs --report",
     "typecheck:tests": "tsc --noEmit -p tsconfig.tests.json",
     "lint:knip": "knip --include files,dependencies,unlisted,unresolved,exports,types,duplicates,binaries --no-config-hints",
     "start:network": "next start -H 0.0.0.0",

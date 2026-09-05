@@ -96,7 +96,7 @@ export default function Dashboard() {
   const [errorSev, setErrorSev] = useState<"all" | "error" | "warning">("all");
   const [syncNowBusy, setSyncNowBusy] = useState(false);
   const { showToast, toastElement } = useToast();
-  const { isArmedFor, arm, confirm } = useTwoStepConfirm({ autoDismissMs: 4000 });
+  const { isArmedFor, arm, confirm: confirmArmed } = useTwoStepConfirm({ autoDismissMs: 4000 });
 
   const handleSyncNow = useCallback(
     () =>
@@ -174,8 +174,8 @@ export default function Dashboard() {
       arm(missionId);
       return;
     }
-    await confirm(doCancel);
-  }, [showToast, refetchMissions, isArmedFor, arm, confirm]);
+    await confirmArmed(doCancel);
+  }, [showToast, refetchMissions, isArmedFor, arm, confirmArmed]);
 
   const handleRefreshProcesses = useCallback(async () => {
     await refetchProcesses();

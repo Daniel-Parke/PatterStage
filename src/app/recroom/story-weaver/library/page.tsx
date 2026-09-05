@@ -7,37 +7,50 @@ import Link from "next/link";
 import { BookOpen, Sparkles, Clock, CheckCircle2, Loader2, BookMarked, Trash2 } from "lucide-react";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
+import ConfirmButton from "@/components/ui/ConfirmButton";
+import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
+import { safeApiCall } from "@/lib/api-fetch";
 import { timeAgo } from "@/lib/utils";
+import { storyStatusLabel } from "@/modules/rec-room/lib/story-status-labels";
 import type { StorySummary } from "@/modules/rec-room/types";
+
+type Filter = "all" | "complete" | "waiting";
 
 export default function LibraryPage() {
   const router = useRouter();
   const [stories, setStories] = useState<StorySummary[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<"all" | "complete" | "in-progress">("all");
+  const [error, setError] = useState<string | null>(null);
+  const [filter, setFilter] = useState<Filter>("all");
 
   const fetchStories = useCallback(async () => {
-    try {
-      const res = await fetch("/api/stories", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "list" }),
-      });
-      const d = await res.json();
-      setStories(d.data?.stories || []);
-    } catch {} finally { setLoading(false); }
+    setLoading(true);
+    const res = await safeApiCall<{ data?: { stories?: StorySummary[] } }>("/api/stories", {
+      method: "POST",
+      body: { action: "list" },
+    });
+    if (!res.ok) {
+      setError(res.error ?? "Failed to load stories");
+    } else {
+      setError(null);
+      setStories(res.data?.data?.stories ?? []);
+    }
+    setLoading(false);
   }, []);
 
   useEffect(() => { fetchStories(); }, [fetchStories]);
 
+  // The row's ConfirmButton has already asked; this is the second click.
   const handleDelete = async (id: string) => {
-    if (!confirm("Delete this story?")) return;
-    try {
-      await fetch("/api/stories", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "delete", storyId: id }),
-      });
-      setStories(prev => prev.filter(s => s.id !== id));
-    } catch {}
+    const res = await safeApiCall("/api/stories", {
+      method: "POST",
+      body: { action: "delete", storyId: id },
+    });
+    if (!res.ok) {
+      setError(res.error ?? "Failed to delete story");
+      return;
+    }
+    setStories(prev => prev.filter(s => s.id !== id));
   };
 
   const isComplete = (s: StorySummary) => {
@@ -48,13 +61,22 @@ export default function LibraryPage() {
 
   const filtered = stories.filter(s => {
     if (filter === "complete") return isComplete(s);
-    if (filter === "in-progress") return !isComplete(s);
+    if (filter === "waiting") return !isComplete(s);
     return true;
   });
 
   const totalWords = stories.reduce((sum, s) =>
     sum + (s.chapters || []).reduce((ws, c) => ws + (c.wordCount || 0), 0), 0);
   const completedCount = stories.filter(isComplete).length;
+
+  // One vocabulary (decision 13). A story is Completed when every chapter is,
+  // whatever its row says; otherwise it reads its own status word.
+  const FILTERS: Array<{ id: Filter; label: string }> = [
+    { id: "all", label: `All (${stories.length})` },
+    { id: "complete", label: `Completed (${completedCount})` },
+    { id: "waiting", label: `Waiting for you (${stories.length - completedCount})` },
+  ];
+  const filterWord = FILTERS.find((f) => f.id === filter)?.label.replace(/ \(\d+\)$/, "") ?? "";
 
   return (
     <AppPageShell variant="scanlines">
@@ -68,12 +90,14 @@ export default function LibraryPage() {
       />
 
       <div className="max-w-5xl mx-auto px-6 py-8 space-y-6 flex-1 w-full">
+        {error && <LoadErrorBanner error={error} onRetry={fetchStories} />}
+
         {/* Stats */}
         <div className="grid grid-cols-3 gap-4">
           {[
-            { label: "Total Stories", value: stories.length, icon: BookOpen },
+            { label: "Stories", value: stories.length, icon: BookOpen },
             { label: "Completed", value: completedCount, icon: CheckCircle2 },
-            { label: "Words Written", value: totalWords.toLocaleString(), icon: Sparkles },
+            { label: "Words", value: totalWords.toLocaleString(), icon: Sparkles },
           ].map((stat) => (
             <div key={stat.label} className="rounded-xl border border-white/5 bg-dark-900/30 p-4 text-center">
               <stat.icon className="w-4 h-4 text-neon-purple mx-auto mb-2" />
@@ -84,13 +108,9 @@ export default function LibraryPage() {
         </div>
 
         {/* Filters */}
-        <div className="flex gap-2">
-          {[
-            { id: "all" as const, label: `All (${stories.length})` },
-            { id: "complete" as const, label: `Completed (${completedCount})` },
-            { id: "in-progress" as const, label: `In Progress (${stories.length - completedCount})` },
-          ].map((f) => (
-            <button key={f.id} onClick={() => setFilter(f.id)}
+        <div className="flex gap-2" role="group" aria-label="Filter stories">
+          {FILTERS.map((f) => (
+            <button key={f.id} type="button" onClick={() => setFilter(f.id)} aria-pressed={filter === f.id}
               className={`px-3 py-1.5 rounded-lg text-xs font-mono border transition-all ${
                 filter === f.id
                   ? "border-neon-purple/40 bg-neon-purple/15 text-neon-purple"
@@ -101,16 +121,16 @@ export default function LibraryPage() {
           ))}
         </div>
 
-        {/* Stories */}
+        {/* Stories. The empty state only after a read that succeeded. */}
         {loading ? (
           <div className="text-center py-16">
             <Loader2 className="w-8 h-8 text-neon-purple animate-spin mx-auto" />
           </div>
-        ) : filtered.length === 0 ? (
+        ) : error ? null : filtered.length === 0 ? (
           <div className="text-center py-16">
             <BookOpen className="w-12 h-12 text-white/10 mx-auto mb-4" />
             <h3 className="text-lg font-serif text-ps-text-muted mb-2">
-              {filter === "all" ? "Your bookshelf is empty" : `No ${filter} stories`}
+              {filter === "all" ? "Your bookshelf is empty" : `No stories are ${filterWord.toLowerCase()}`}
             </h3>
             <p className="text-sm text-ps-text-faint mb-6">
               {filter === "all"
@@ -118,9 +138,9 @@ export default function LibraryPage() {
                 : "Stories will appear here once they match this filter."}
             </p>
             {filter === "all" && (
-              <button onClick={() => router.push("/recroom/story-weaver/create")}
+              <button type="button" onClick={() => router.push("/recroom/story-weaver/create")}
                 className="px-6 py-3 rounded-xl border border-neon-purple/30 text-sm font-mono text-neon-purple hover:bg-neon-purple/10">
-                Create a Story
+                Create a story
               </button>
             )}
           </div>
@@ -132,6 +152,7 @@ export default function LibraryPage() {
               const completeChapters = chapters.filter(c => c.status === "complete").length;
               const totalChapterWords = chapters.reduce((s, c) => s + (c.wordCount || 0), 0);
               const readingTime = Math.max(1, Math.round(totalChapterWords / 250));
+              const word = complete ? "Completed" : storyStatusLabel(story.status);
 
               return (
                 <div
@@ -155,7 +176,7 @@ export default function LibraryPage() {
                           <div className="flex items-center gap-3 mt-1 text-xs font-mono text-ps-text-faint">
                             <span>{story.config?.genre || "General"}</span>
                             <span>·</span>
-                            <span>{chapters.length} chapters</span>
+                            <span>{completeChapters}/{chapters.length} chapters</span>
                             <span>·</span>
                             <span>{totalChapterWords.toLocaleString()} words</span>
                             <span>·</span>
@@ -165,17 +186,28 @@ export default function LibraryPage() {
                         </div>
 
                         <div className="flex items-center gap-2 flex-shrink-0">
-                          <button onClick={(e) => { e.stopPropagation(); handleDelete(story.id); }}
-                            className="p-1 text-ps-text-faint hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity" title="Delete story">
+                          {/* Two clicks, inline, and reachable by keyboard: the
+                              old button was opacity-0 until hovered. */}
+                          <ConfirmButton
+                            variant="ghost"
+                            size="sm"
+                            aria-label={`Delete story ${story.title}`}
+                            title="Delete story"
+                            confirmLabel="Delete?"
+                            onClick={(e) => e.stopPropagation()}
+                            onConfirm={() => handleDelete(story.id)}
+                            className="text-ps-text-faint hover:text-red-400 focus-visible:opacity-100 opacity-60 group-hover:opacity-100"
+                            armedClassName="opacity-100 text-red-400 bg-red-500/10 ring-1 ring-red-500/30"
+                          >
                             <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          </ConfirmButton>
                           <div className={`text-xs font-mono px-2.5 py-1 rounded-full ${
-                          complete
-                            ? "bg-green-500/10 text-neon-green"
-                            : "bg-neon-purple/10 text-neon-purple"
-                        }`}>
-                          {complete ? "Complete" : `${completeChapters}/${chapters.length}`}
-                        </div>
+                            complete
+                              ? "bg-green-500/10 text-neon-green"
+                              : "bg-neon-purple/10 text-neon-purple"
+                          }`}>
+                            {word}
+                          </div>
                         </div>
                       </div>
 
@@ -199,7 +231,7 @@ export default function LibraryPage() {
 
                       {/* Last updated */}
                       <div className="mt-2 text-xs font-mono text-ps-text-faint">
-                        {complete ? "Finished" : "Last updated"} {timeAgo(story.updatedAt || story.createdAt || "")}
+                        {complete ? "Completed" : "Last updated"} {timeAgo(story.updatedAt || story.createdAt || "")}
                       </div>
                     </div>
 

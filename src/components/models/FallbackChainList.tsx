@@ -157,7 +157,7 @@ function AddCustomForm({ onConfirm, onCancel }: AddCustomFormProps) {
             type="text"
             value={modelId}
             onChange={(e) => setModelId(e.target.value)}
-            placeholder="My Custom Model" aria-label="My Custom Model"
+            placeholder="My Custom Model" aria-label="Model name"
             className="w-full h-8 bg-dark-800 border border-white/10 rounded px-2 text-xs text-white font-mono outline-none focus:border-neon-purple/50"
             required
           />
@@ -170,7 +170,7 @@ function AddCustomForm({ onConfirm, onCancel }: AddCustomFormProps) {
             type="text"
             value={provider}
             onChange={(e) => setProvider(e.target.value)}
-            placeholder="openai" aria-label="openai"
+            placeholder="openai" aria-label="Provider"
             className="w-full h-8 bg-dark-800 border border-white/10 rounded px-2 text-xs text-white font-mono outline-none focus:border-neon-purple/50"
             required
           />
@@ -184,7 +184,7 @@ function AddCustomForm({ onConfirm, onCancel }: AddCustomFormProps) {
           type="text"
           value={modelIdString}
           onChange={(e) => setModelIdString(e.target.value)}
-          placeholder="gpt-4o" aria-label="gpt-4o"
+          placeholder="gpt-4o" aria-label="Model ID"
           className="w-full h-8 bg-dark-800 border border-white/10 rounded px-2 text-xs text-white font-mono outline-none focus:border-neon-purple/50"
           required
         />
@@ -197,7 +197,7 @@ function AddCustomForm({ onConfirm, onCancel }: AddCustomFormProps) {
           type="text"
           value={baseUrl}
           onChange={(e) => setBaseUrl(e.target.value)}
-          placeholder="https://api.openai.com/v1" aria-label="https://api.openai.com/v1"
+          placeholder="https://api.openai.com/v1" aria-label="Base URL"
           className="w-full h-8 bg-dark-800 border border-white/10 rounded px-2 text-xs text-white font-mono outline-none focus:border-neon-purple/50"
         />
       </div>

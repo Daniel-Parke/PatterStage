@@ -296,15 +296,17 @@ export function useVersionFooter(): VersionFooterState {
 
   // Rebuild + Restart take the app down — require a second click to confirm
   // (two-step, auto-dismissing) rather than firing on a single mis-click.
-  const { isArmedFor, arm, confirm } = useTwoStepConfirm({ autoDismissMs: 4000 });
+  // `confirm` is renamed on the way in so the two-step hook's method never
+  // reads as the native window.confirm the design-lint rule forbids.
+  const { isArmedFor, arm, confirm: confirmArmed } = useTwoStepConfirm({ autoDismissMs: 4000 });
   const onRebuildClick = useCallback(() => {
-    if (isArmedFor("rebuild")) void confirm(doRebuild);
+    if (isArmedFor("rebuild")) void confirmArmed(doRebuild);
     else arm("rebuild");
-  }, [isArmedFor, confirm, arm, doRebuild]);
+  }, [isArmedFor, confirmArmed, arm, doRebuild]);
   const onRestartClick = useCallback(() => {
-    if (isArmedFor("restart")) void confirm(handleRestart);
+    if (isArmedFor("restart")) void confirmArmed(handleRestart);
     else arm("restart");
-  }, [isArmedFor, confirm, arm, handleRestart]);
+  }, [isArmedFor, confirmArmed, arm, handleRestart]);
 
   const clearDeployBusy = useCallback(() => {
     setUpdating(false);

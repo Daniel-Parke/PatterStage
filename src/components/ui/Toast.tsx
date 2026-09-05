@@ -28,13 +28,21 @@
 // anyone was looking. A success is safe to auto-dismiss because the operator
 // asked for it and it happened. A failure is the opposite: it is news, it is
 // the only place the reason appears, and it now waits to be dismissed.
+//
+// AND THEN A SUCCESS DESTROYED THE ERROR ANYWAY (T-0096, D122). The hook held
+// one slot, so the persisted error was replaced by the next routine success
+// before it was read. The stack now lives in FeedbackProvider, mounted once in
+// the shell; useToast() keeps its API and reads the provider. Without a
+// provider (a unit test) it falls back to the single slot below.
 // ═══════════════════════════════════════════════════════════════
 
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useContext, useEffect, useState, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { Check, AlertCircle, Info, X } from "lucide-react";
+
+import { FeedbackContext } from "./feedback-context";
 
 export type ToastType = "success" | "error" | "info";
 
@@ -43,6 +51,8 @@ interface ToastProps {
   type?: ToastType;
   duration?: number;
   onClose: () => void;
+  /** Position in the stack, bottom-up. 0 is the lowest. */
+  index?: number;
 }
 
 const typeConfig = {
@@ -66,11 +76,15 @@ const typeConfig = {
   },
 };
 
-function Toast({
+/** Height of one toast plus its gap, the stride the stack climbs by. */
+const STACK_STRIDE_REM = 3.25;
+
+export function ToastView({
   message,
   type = "success",
   duration = 4000,
   onClose,
+  index = 0,
 }: ToastProps) {
   const [visible, setVisible] = useState(true);
   const [mounted, setMounted] = useState(false);
@@ -99,7 +113,9 @@ function Toast({
       // on the belief that the write landed.
       role={type === "error" ? "alert" : "status"}
       aria-live={type === "error" ? "assertive" : "polite"}
-      className={`fixed bottom-6 right-6 z-[80] flex items-center gap-2 ${config.bg} border ${config.border} ${config.text} text-sm font-mono px-4 py-2.5 rounded-xl shadow-lg transition-all duration-200 ${
+      data-testid="toast"
+      style={{ bottom: `calc(1.5rem + ${index * STACK_STRIDE_REM}rem)` }}
+      className={`fixed right-6 z-[80] flex items-center gap-2 ${config.bg} border ${config.border} ${config.text} text-sm font-mono px-4 py-2.5 rounded-xl shadow-lg transition-all duration-200 ${
         visible ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"
       }`}
     >
@@ -161,22 +177,35 @@ interface ToastState {
   id: number;
 }
 
-/** Prefer destructuring `{ showToast, toastElement }` — the returned object is not referentially stable when toasts mount/unmount. */
+/**
+ * Prefer destructuring `{ showToast, toastElement }` — the returned object is
+ * not referentially stable when toasts mount/unmount.
+ *
+ * Under the shell, `toastElement` is always null: FeedbackProvider renders the
+ * stack, and a page that still renders `{toastElement}` renders nothing, which
+ * is what keeps the 73 call sites source-compatible. `lastResult` stays per
+ * hook, because it is the settings page's own line, not the shell's.
+ */
 export function useToast(duration = 4000) {
+  const shell = useContext(FeedbackContext);
   const [toast, setToast] = useState<ToastState | null>(null);
   const [lastResult, setLastResult] = useState<ToastResult | null>(null);
 
-  const showToast = useCallback((message: string, type: ToastType = "success") => {
-    setToast({ message, type, id: Date.now() });
-    setLastResult({ message, type, at: new Date() });
-  }, []);
+  const showToast = useCallback(
+    (message: string, type: ToastType = "success") => {
+      setLastResult({ message, type, at: new Date() });
+      if (shell) shell.showToast(message, type);
+      else setToast({ message, type, id: Date.now() });
+    },
+    [shell],
+  );
 
   const handleClose = useCallback(() => setToast(null), []);
 
   const toastElement = useMemo(
     () =>
-      toast ? (
-        <Toast
+      !shell && toast ? (
+        <ToastView
           key={toast.id}
           message={toast.message}
           type={toast.type}
@@ -184,11 +213,11 @@ export function useToast(duration = 4000) {
           onClose={handleClose}
         />
       ) : null,
-    [toast, handleClose, duration]
+    [shell, toast, handleClose, duration],
   );
 
   return useMemo(
     () => ({ showToast, toastElement, lastResult }),
-    [showToast, toastElement, lastResult]
+    [showToast, toastElement, lastResult],
   );
 }

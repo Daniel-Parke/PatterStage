@@ -16,7 +16,8 @@ import { Globe, Loader2, Plus, RefreshCw } from "lucide-react";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
 import Button from "@/components/ui/Button";
-import { LoadingSpinner, ErrorBanner } from "@/components/ui/LoadingSpinner";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import ModelEditor from "@/components/models/ModelEditor";
 
 import ModelsAgentDefaultSection from "@/components/models/ModelsAgentDefaultSection";
@@ -157,7 +158,7 @@ export default function ModelsPage() {
           (imported via Operations → Agents pull, or <code className="text-ps-text-muted">hermes model</code>).
           Seeds never set <code className="text-ps-text-muted">model.default</code>.
         </p>
-        {error && <ErrorBanner message={error} />}
+        {error && <LoadErrorBanner error={error} />}
 
         {drift && <ModelsDriftBanner drift={drift} onSyncNow={handleRefresh} syncing={refreshing} />}
 

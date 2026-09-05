@@ -23,6 +23,7 @@ import { Users } from "lucide-react";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import { LastResult, useToast } from "@/components/ui/Toast";
 import type { AgentProfile, ProfileFile } from "@/types/console";
 import { API_FETCH_BULK_TIMEOUT_MS, apiFetch, toastError } from "@/lib/api-fetch";
@@ -41,6 +42,9 @@ import DeleteProfileModal from "@/components/agents/DeleteProfileModal";
 export default function BehaviourPage() {
   const [profiles, setProfiles] = useState<AgentProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  // The profiles read's failure, kept apart from the list: a failed load
+  // looked like an empty install with no way to retry (T-0096, D22).
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
   const [editor, setEditor] = useState<EditorState | null>(null);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
@@ -161,12 +165,13 @@ export default function BehaviourPage() {
     try {
       const data = await apiFetch("/api/agent/profiles");
       setProfiles(data.data?.profiles || []);
+      setLoadError(null);
     } catch (err) {
-      toastError(showToast, err, "Failed to load profiles");
+      setLoadError(err instanceof Error && err.message ? err.message : "Failed to load profiles");
     } finally {
       setLoading(false);
     }
-  }, [showToast]);
+  }, []);
 
   // Close the New Agent Profile modal. The same 4-setter block appears
   // at 2 sites — the modal's `onClose` (X-button / overlay click) and
@@ -332,6 +337,9 @@ export default function BehaviourPage() {
       <AgentSetupNotice what="Pushing and pulling profiles" />
 
       <div className="px-6 py-6">
+        {/* The read contract (T-0096, D22): a failed profiles read is this,
+            with a Retry, and the list under it is not an empty install. */}
+        {loadError && <LoadErrorBanner error={loadError} onRetry={() => void loadProfiles()} />}
         <AgentProfilesOverview
           profiles={profiles}
           selectedProfileId={selectedProfileId}

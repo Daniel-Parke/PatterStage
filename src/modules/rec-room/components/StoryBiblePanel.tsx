@@ -11,6 +11,7 @@
 
 import { X, BookMarked, MapPin, Users, ListOrdered, Sparkles } from "lucide-react";
 import { safeArc } from "@/modules/rec-room/handlers/shared";
+import { useDialogA11y } from "@/hooks/useDialogA11y";
 
 function Section({
   icon: Icon,
@@ -43,19 +44,27 @@ export default function StoryBiblePanel({
   open: boolean;
   onClose: () => void;
 }) {
+  // The hook runs on every render, open or not: hooks cannot sit below an
+  // early return. It is a dialog on the shared contract (T-0096, D116).
+  const panelRef = useDialogA11y({ open, onClose });
   if (!open) return null;
   const arc = safeArc(storyArc);
 
   return (
-    <div className="fixed inset-0 z-[55] flex justify-end bg-dark-950/70 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-[55] flex justify-end bg-dark-950/70 backdrop-blur-sm" onClick={onClose} role="presentation">
       <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="story-bible-title"
+        tabIndex={-1}
         className="h-full w-full max-w-md overflow-y-auto border-l border-neon-purple/20 bg-dark-900 p-5 space-y-5"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-white/10 pb-3">
           <div className="flex items-center gap-2">
             <BookMarked className="h-4 w-4 text-neon-purple" />
-            <h3 className="text-sm font-semibold text-white">Story Bible</h3>
+            <h3 id="story-bible-title" className="text-sm font-semibold text-white">Story bible</h3>
           </div>
           <button
             onClick={onClose}

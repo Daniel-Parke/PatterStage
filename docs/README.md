@@ -20,7 +20,8 @@ Technical reference for PatterStage. Tone elsewhere in this folder is deliberate
 | [DEEP_RESEARCH.md](DEEP_RESEARCH.md) | Native iterative web research (provider-flexible, free/local-first search) |
 | [CHAT.md](CHAT.md) | Agent chat: server-persisted conversations, run-event streaming, tools + HITL approvals, Agent/Fast modes |
 | [MEMORY.md](MEMORY.md) | Agent long-term memory (Hindsight): how it connects, the mock, Docker + native setup |
-| [design-tokens.md](design-tokens.md) | UI colour tokens and theme conventions |
+| [design-tokens.md](design-tokens.md) | UI colour tokens and theme conventions, the focus ring, the overlay and confirm contracts |
+| [COPY.md](COPY.md) | The copy law: three registers, one status vocabulary, no governance ids in user copy |
 | [API.md](API.md) | REST endpoints |
 | [ANALYTICS.md](ANALYTICS.md) | Interaction event log, `/api/analytics`, achievements, and the Insights page |
 | [SPEND.md](SPEND.md) | Provider spend: how it is estimated, the optional budget, and the hard stop that ships off |

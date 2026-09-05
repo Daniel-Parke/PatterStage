@@ -8,7 +8,7 @@
 // and an achievements shelf. Drops into the dashboard as <CommandCenter />.
 // ═══════════════════════════════════════════════════════════════
 
-import { useCallback, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import Link from "next/link";
 import {
   Activity,
@@ -28,9 +28,6 @@ import { useCountUp } from "@/hooks/useCountUp";
 import { AreaTrend, ActivityHeatmap, Donut, Sparkline, ProgressRing } from "@/components/viz";
 import { neon, neonAlpha, type NeonColor } from "@/components/viz/colors";
 import { StreakFlame, AchievementShowcase, AgentLevelBadge } from "@/components/achievements";
-import { useToast } from "@/components/ui/Toast";
-import { useAchievementUnlocks } from "@/hooks/useAchievementUnlocks";
-import type { Achievement } from "@/lib/stats/derive";
 
 function fmtNum(n: number): string {
   return Math.round(n).toLocaleString();
@@ -121,17 +118,9 @@ export default function CommandCenter() {
   // Agent Rating axis (distinct from operator XP): show the top-rated agent.
   const { entries: agentsByGrowth } = useAgentExperience();
   const topAgent = agentsByGrowth[0] ?? null;
-  // The dashboard is always-on, so CommandCenter is the SOLE owner of the
-  // achievement-unlock toast (the Insights grid renders read-only). First poll
-  // seeds silently; each id fires once.
-  const { showToast, toastElement } = useToast();
-  useAchievementUnlocks(
-    stats?.achievements,
-    useCallback(
-      (a: Achievement) => showToast(`🏆 Achievement unlocked — ${a.name}`, "success"),
-      [showToast],
-    ),
-  );
+  // The achievement-unlock toast used to be this component's, which meant it
+  // fired only while the dashboard was open. It belongs to the shell now:
+  // FeedbackProvider reads the same stats poll on every page (T-0096).
 
   if (!stats) {
     return isLoading ? <Skeleton /> : null;
@@ -144,7 +133,6 @@ export default function CommandCenter() {
 
   return (
     <section className="space-y-4">
-      {toastElement}
       {/* ── Hero ── */}
       <Card accent="cyan" className="relative overflow-hidden">
         <div

@@ -78,6 +78,7 @@ export default function MissionsPage() {
     setFormField,
     handleCreate,
     handleSaveAsTemplate,
+    overwriteTemplateName,
     dispatching,
     dispatchAcknowledged,
     setDispatchAcknowledged,
@@ -237,6 +238,7 @@ export default function MissionsPage() {
             formState={formState}
             onSubmit={handleCreate}
             onSaveAsTemplate={handleSaveAsTemplate}
+            overwriteTemplateName={overwriteTemplateName}
             onClose={handleCloseCreate}
             dispatching={dispatching}
             dispatchAcknowledged={dispatchAcknowledged}
@@ -259,6 +261,7 @@ export default function MissionsPage() {
             onRetryCategories={() => void loadCategories()}
             onSubmit={handleCreate}
             onSaveAsTemplate={handleSaveAsTemplate}
+            overwriteTemplateName={overwriteTemplateName}
             onClose={handleCloseCreate}
             dispatching={dispatching}
             dispatchAcknowledged={dispatchAcknowledged}

@@ -20,8 +20,8 @@ import type { Dispatch, MouseEvent, RefObject, SetStateAction } from "react";
 
 import type { ToastType } from "@/components/ui/Toast";
 import type { ChatConversation, ChatMessage } from "@/types/chat";
+import { safeApiCall } from "@/lib/api-fetch";
 import {
-  fetchConversations,
   fetchConversation,
   createConversationApi,
   deleteConversationApi,
@@ -61,10 +61,20 @@ export function useChatConversations({
 }: UseChatConversationsArgs) {
   const [conversations, setConversations] = useState<ChatConversation[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
+  // The list read's failure, kept apart from the list: the sidebar rendered
+  // "No conversations yet" over a 500 because the reader swallowed the
+  // failure into an empty array (T-0096, the read contract).
+  const [listError, setListError] = useState<string | null>(null);
 
   // ── Load conversations on mount ─────────────────────────────
   const loadConversations = useCallback(async () => {
-    const list = await fetchConversations();
+    const res = await safeApiCall<{ data?: { conversations?: ChatConversation[] } }>("/api/chat");
+    if (!res.ok) {
+      setListError(res.error ?? "Failed to load conversations");
+      return [] as ChatConversation[];
+    }
+    const list = res.data?.data?.conversations ?? [];
+    setListError(null);
     setConversations(list);
     return list;
   }, []);
@@ -164,6 +174,7 @@ export function useChatConversations({
   return {
     conversations,
     setConversations,
+    listError,
     activeId,
     setActiveId,
     activeConversation,

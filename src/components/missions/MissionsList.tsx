@@ -11,6 +11,7 @@ import {
   Zap,
 } from "lucide-react";
 import { StatusDot } from "@/components/ui/Card";
+import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import { Panel } from "@/components/dashboard/Panel";
 import { LedgerRowButton } from "@/components/dashboard/LedgerRow";
 import CategoryAccordion from "@/components/ui/CategoryAccordion";
@@ -72,6 +73,8 @@ export default function MissionsList({ vm }: MissionsListProps) {
     handleCancel,
     handleDuplicateMission,
     cancellingMissionId,
+    missionsLoadError,
+    fetchData,
   } = vm;
 
   const categoryMap = buildCategoryMap(categories);
@@ -244,7 +247,7 @@ export default function MissionsList({ vm }: MissionsListProps) {
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search missions..." aria-label="Search missions"
+              placeholder="Search missions..." aria-label="Mission search"
               className="w-full bg-dark-900/50 border border-white/10 rounded-lg pl-9 pr-8 py-1.5 text-xs text-white placeholder-white/20 outline-none focus:border-neon-cyan/50 font-mono"
             />
             {search && (
@@ -261,7 +264,12 @@ export default function MissionsList({ vm }: MissionsListProps) {
         </div>
       </div>
 
-      {filtered.length === 0 ? (
+      {/* The read contract (T-0096, D67): a failed read is this banner with a
+          Retry, never the first-run empty state under it. */}
+      {missionsLoadError && (
+        <LoadErrorBanner error={missionsLoadError} onRetry={() => void fetchData()} />
+      )}
+      {missionsLoadError ? null : filtered.length === 0 ? (
         <div className="text-center py-12">
           <Rocket className="w-10 h-10 text-white/10 mx-auto mb-3" />
           <div className="text-sm text-ps-text-muted">

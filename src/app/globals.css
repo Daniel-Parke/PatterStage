@@ -546,3 +546,19 @@
     display: none;
   }
 }
+
+/* ── Focus, once ──────────────────────────────────────────────────────────
+   One visible focus ring for the whole console, from a token. Sixteen Story
+   Weaver controls set `outline-none` with nothing to replace it, and in
+   Tailwind v4 that is outline-style:none unconditionally, so tabbing through
+   those forms showed no focus at all (T-0096, D117). This rule is what a
+   control gets when it does not paint its own ring; design-lint's
+   no-bare-outline-none refuses a control that removes it without putting a
+   focus ring back on the same line. :focus-visible, not :focus, so a mouse
+   click does not draw it. */
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--color-neon-cyan);
+    outline-offset: 2px;
+  }
+}

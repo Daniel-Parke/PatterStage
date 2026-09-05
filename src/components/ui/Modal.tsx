@@ -59,6 +59,7 @@ export default function Modal({
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
+        // design-lint-disable-next-line no-bare-outline-none -- the dialog panel takes programmatic focus on open so its title is announced; a ring around the whole panel is noise
         className={`w-full ${sizeMap[size]} mx-4 rounded-xl border border-white/10 bg-dark-950 shadow-2xl max-h-[85vh] flex flex-col outline-none`}
       >
         {/* Header */}

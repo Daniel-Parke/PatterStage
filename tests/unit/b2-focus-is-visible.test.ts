@@ -16,7 +16,9 @@ const ROOT = join(__dirname, "..", "..");
 describe("one focus ring, from a token", () => {
   it("globals.css declares a :focus-visible outline in a house colour", () => {
     const css = readFileSync(join(ROOT, "src", "app", "globals.css"), "utf-8");
-    expect(css).toMatch(/:focus-visible\s*\{[^}]*outline:[^;]*var\(--color-(neon|semantic|ps)-[a-z-]+\)/s);
+    // No `s` flag: tsconfig.tests.json targets below es2018, and the negated
+    // classes already cross newlines.
+    expect(css).toMatch(/:focus-visible\s*\{[^}]*outline:[^;]*var\(--color-(neon|semantic|ps)-[a-z-]+\)/);
   });
 
   it("the shell carries a skip link to the main region", () => {
