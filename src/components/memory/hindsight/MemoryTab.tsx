@@ -111,8 +111,10 @@ export default function MemoryTab({
     <div className="space-y-3">
       {/* Above the empty branch, not inside the list: the button that reveals
           the hidden facts used to be unreachable on exactly the store that
-          needed it (T-0101, D61). */}
-      {showStaleToggle && (
+          needed it (T-0101, D61). It appears only when it has something to
+          say: "Hiding 0 memories" on an empty store is noise, and it is not
+          even true (found on the proof walk). */}
+      {showStaleToggle && (showStaleToggle.hiddenCount > 0 || showStaleToggle.showStale) && (
         <div className="flex items-center justify-between gap-3 px-4 py-2 rounded-lg border border-white/10 bg-dark-900/30 text-xs text-ps-text-secondary">
           <div className="flex items-center gap-2">
             <Clock className="w-3.5 h-3.5 text-ps-text-muted" />

@@ -5,6 +5,11 @@
 // and the scroll handler stay with the page, which owns auto-scroll.
 // Presentation only.
 //
+// AND IT IS BOUNDED AT EVERY WIDTH. `lg:max-h-none` let the pane grow past the
+// viewport on a wide screen, so the PAGE scrolled and the pane never did: the
+// ref would have been on the right element and still read a scrollTop of 0.
+// Found on the T-0101 proof walk, at 1280x900, with the fix already in.
+//
 // THE REF GOES ON THE DIV THAT SCROLLS. It used to go on <Panel>, whose outer
 // div carries overflow-hidden, while the element that actually scrolls is the
 // inner overflow-auto one below. So scrollTop was permanently 0: the page's
@@ -70,7 +75,7 @@ export default function LogTerminal({
       <div
         ref={scrollRef}
         onScroll={onScroll}
-        className="p-3 sm:p-4 text-xs overflow-auto flex-1 min-h-0 max-h-[calc(100vh-320px)] lg:max-h-none"
+        className="p-3 sm:p-4 text-xs overflow-auto flex-1 min-h-0 max-h-[calc(100vh-320px)]"
       >
         {lines.length > 0 ? (
           lines.map((line, i) => (
