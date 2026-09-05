@@ -76,3 +76,42 @@ describe("a rename the server refused", () => {
     expect(screen.queryByDisplayValue("Operations")).toBeNull();
   });
 });
+
+describe("a delete the server refused", () => {
+  /** Arm the delete panel on the "Ops" row. */
+  function openDeletePanel() {
+    fireEvent.click(screen.getByRole("button", { name: "Delete category Ops" }));
+    return screen.getByLabelText("Reassign missions to category") as HTMLSelectElement;
+  }
+
+  it("leaves the panel open, with the reassign choice still made", async () => {
+    const props = renderModal({ onDelete: jest.fn(async () => false) });
+    const select = openDeletePanel();
+    fireEvent.change(select, { target: { value: "eng" } });
+
+    fireEvent.click(screen.getByRole("button", { name: /Delete category$/i }));
+
+    await waitFor(() => expect(props.onDelete).toHaveBeenCalledWith("ops", "eng"));
+    expect(screen.getByLabelText("Reassign missions to category")).toHaveValue("eng");
+    expect(props.onRefresh).not.toHaveBeenCalled();
+  });
+
+  it("sends Uncategorized as null, which is the choice that used to 400", async () => {
+    const props = renderModal({ onDelete: jest.fn(async () => true) });
+    openDeletePanel();
+
+    fireEvent.click(screen.getByRole("button", { name: /Delete category$/i }));
+
+    await waitFor(() => expect(props.onDelete).toHaveBeenCalledWith("ops", null));
+  });
+
+  it("GREEN CONTROL: a delete that landed closes the panel and refreshes", async () => {
+    const props = renderModal({ onDelete: jest.fn(async () => true) });
+    openDeletePanel();
+
+    fireEvent.click(screen.getByRole("button", { name: /Delete category$/i }));
+
+    await waitFor(() => expect(props.onRefresh).toHaveBeenCalled());
+    expect(screen.queryByLabelText("Reassign missions to category")).toBeNull();
+  });
+});
