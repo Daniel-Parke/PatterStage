@@ -1,0 +1,20 @@
+{
+  "id": "T-0097",
+  "intent": "B3 of the final-release programme: the registry regroup and the URL renames of decisions 8, 11, 12 and 14. Pages move under src/app/{work,results,agent} per the plan's map; every old path answers 307 from next.config.ts redirects(); the registry is regrouped WORK / RESULTS / AGENT / REC ROOM with an order field and becomes the single source of every page title and document.title (D55, D56 and the seven typed mismatches); the deploy buttons leave the rail; Quests and Help rows land with placeholder pages. Migration 038 operator_prefs with PUT /api/prefs under a Zod allow-list. GET /api/status/runtime and the /agent/settings/system page (D109). The Settings index derived from a React-free src/lib/config-sections.ts with field search (D79). One sidebar, portalled into the drawer, collapse persisted. Canary httpSurface changes wholesale and is blessed once from a reviewed diff.",
+  "declared": {
+    "capabilities": ["edit-code", "database"],
+    "side_effects": ["migrates-schema"]
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [
+    {"factor": "schema-change", "tier_floor": "R2", "source": "declared", "evidence": "migration 038 adds operator_prefs; no data loss"},
+    {"factor": "public-contract", "tier_floor": "R2", "source": "derived:public-api-delta", "evidence": "every page URL changes; /api/* unchanged"}
+  ],
+  "status": "proposed",
+  "owner_session": "unassigned",
+  "claims": ["src/app/", "src/lib/modules/", "src/lib/config-sections.ts", "src/lib/db/migrations/038_operator_prefs.sql", "src/lib/db/", "src/components/shell/", "next.config.ts", "tests/e2e/", "tests/unit/"],
+  "programme": "B3, depends on B2 (T-0096). Reserved: migration 038. Redirect tests for every old path; navigation matrix regenerated from the registry; a no-scroll rail assertion at 1280x720.",
+  "timestamps": {"opened": "2026-09-05T10:30:00Z", "updated": "2026-09-05T10:30:00Z"}
+}

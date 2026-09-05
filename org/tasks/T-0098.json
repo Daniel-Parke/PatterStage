@@ -1,0 +1,19 @@
+{
+  "id": "T-0098",
+  "intent": "B4 of the final-release programme: the analytics taxonomy extended once. ANALYTICS_EVENT_TYPES gains research.*, composer.*, profile.*, toolset.saved, config.saved, memory.configured, memory.retained, template.saved, mission.cancelled, script.*, artifact.saved, backup.taken, credential.added, model.added and help.opened, each emitted only after its write succeeds and only from a write path; categories updated; personality.changed re-homed to the Identity tab's write path (D86 noted uncertain); Completionist reads a curated list; RawMetrics gains per-type counters and the store facts the quest evaluator reads.",
+  "declared": {
+    "capabilities": ["edit-code"],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {"factor": "size-threshold", "tier_floor": "R1", "source": "derived:diff-size", "evidence": "twenty-six emit sites across the API"}
+  ],
+  "status": "proposed",
+  "owner_session": "unassigned",
+  "claims": ["src/lib/analytics/", "src/lib/stats/", "src/app/api/", "tests/unit/"],
+  "programme": "B4, depends on B1 (T-0095). One emit-site test per type; the categories map is exhaustive by type.",
+  "timestamps": {"opened": "2026-09-05T10:30:00Z", "updated": "2026-09-05T10:30:00Z"}
+}

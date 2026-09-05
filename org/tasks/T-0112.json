@@ -1,0 +1,19 @@
+{
+  "id": "T-0112",
+  "intent": "B18 of the final-release programme: documentation content, README and screenshots. The 160 KB walkthrough split into one guide per registry route (What you see, Typical use, Notes, internals behind a disclosure) merging CHAT, TOOLS_AND_MISSIONS, COMPOSER, MISSIONS, MEMORY, DEEP_RESEARCH, LABORATORY and CATALOG_AND_PROFILES, with new guides for Logs and Sessions; running/ (operating, configuration from .env.example, platforms including the native-Windows boundary, security, backup and upgrade, troubleshooting symptom-first, limitations); reference/ (API with the generated inventory, data storage, schema, analytics events, achievements, quests); contributing/ (repo guide, testing, canary, design tokens, COPY.md). README as the front door. Screenshots driven by each guide's shots against the isolated mock instance with seed-demo.mjs, a fixed clock and masking, one PNG per guide, the build failing on a missing image. CHANGELOG.md from T-0086 onward in user language.",
+  "declared": {
+    "capabilities": ["edit-docs", "edit-code"],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {"factor": "size-threshold", "tier_floor": "R1", "source": "derived:diff-size", "evidence": "every guide rewritten; docs/ is a reversible path"}
+  ],
+  "status": "proposed",
+  "owner_session": "unassigned",
+  "claims": ["docs/", "README.md", "CHANGELOG.md", "tests/e2e/screenshots.spec.ts", "tests/e2e/seed-demo.mjs", "docs/images/"],
+  "programme": "B18, depends on B15, B16 and B17. docs:check, check-doc-links and copy-lint --report green; npm run screenshots produces every PNG; the site opens from file:// and under /PatterStage/; the operator's novice read of Start Here through chapter 1.",
+  "timestamps": {"opened": "2026-09-05T10:30:00Z", "updated": "2026-09-05T10:30:00Z"}
+}

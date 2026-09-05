@@ -1,0 +1,20 @@
+{
+  "id": "T-0109",
+  "intent": "B15 of the final-release programme: the documentation pipeline, the re-tier of docs/, Start Here and Concepts. Executes ADR-0010: the governance corpus moves under org/ with git mv, inbound references updated in the same commit, docs/README.md becomes the six-tier reading path with one pointer to org/. docs/ re-tiered into start-here, concepts, guides, running, reference and contributing with kebab-case slugs and front matter; docs/manifest.json generated and held by check-derived-views. scripts/docs/build-site.mjs (markdown-it and gray-matter, two devDependencies) builds site/ and public/help/; scripts/docs/serve.mjs; scripts/docs/extract.ts for the generated blocks; scripts/docs/check.mts joins npm run lint. .github/workflows/docs-pages.yml publishes to GitHub Pages on push to main (decision 9) and ci.yml gains a docs-build step. Start Here (what it is, install per decision 10, the first hour, quests, getting help) and Concepts (the eleven nouns) written here.",
+  "declared": {
+    "capabilities": ["edit-docs", "edit-code", "filesystem"],
+    "side_effects": ["new-dependency", "ci-config"]
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [
+    {"factor": "ci-stateful-infra", "tier_floor": "R2", "source": "derived:ci-config", "evidence": ".github/workflows/docs-pages.yml is new and ci.yml changes"},
+    {"factor": "size-threshold", "tier_floor": "R1", "source": "derived:diff-size", "evidence": "the whole of docs/ moves or is re-tiered"}
+  ],
+  "status": "proposed",
+  "owner_session": "unassigned",
+  "claims": ["docs/", "org/", "OPERATORS_GUIDE.md", "scripts/docs/", "scripts/tooling/check-derived-views.mjs", "scripts/tooling/eos-compile.mjs", ".github/workflows/", "package.json", "public/help/", ".gitignore", "tests/"],
+  "programme": "B15, depends on B3 (T-0097) and B4 (T-0098). docs:check fixtures red then green; the built site opens from file://; fragments, manifest and concepts exist for every page. The two devDependencies are the durable-band decision the plan records (decision 3: a small in-repo generator, no new framework).",
+  "timestamps": {"opened": "2026-09-05T10:30:00Z", "updated": "2026-09-05T10:30:00Z"}
+}

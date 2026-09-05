@@ -1,0 +1,20 @@
+{
+  "id": "T-0108",
+  "intent": "B14 of the final-release programme: Story Weaver and Research. No generation on mount; Write chapter N and Keep writing with a Stop that aborts before the next call (D88, blocker). Migration 040 runs.story_id and runs.spend_source; story usage recorded from callLLM; SPEND_SOURCES gains story; the hard stop and the panel share one recorded-spend helper (D87, D104, blockers). A writing-model selector over the registry with the agent default preselected; the theme delete field name (D89); the length and count controls honoured or removed (D90, D91); premise on the wire (D92); error states on Library, Characters and Themes (D93); Save-to-Library reads the real response (D94); the ratified status words on the hub and library; the doubled chapter heading fixed. Research: cancel (D98); write errors surfaced (D99); confirmed artifact delete (D101); a run header (D102); the three pages on AppPageShell (D103).",
+  "declared": {
+    "capabilities": ["edit-code", "database"],
+    "side_effects": ["migrates-schema", "financial-impact"]
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [
+    {"factor": "schema-change", "tier_floor": "R2", "source": "declared", "evidence": "migration 040 adds story_id and spend_source to runs; no data loss"},
+    {"factor": "money", "tier_floor": "R2", "source": "declared", "evidence": "story spend joins the hard stop; financial-impact declared because a wrong helper under-counts money"}
+  ],
+  "status": "proposed",
+  "owner_session": "unassigned",
+  "claims": ["src/modules/rec-room/", "src/app/recroom/", "src/app/api/recroom/", "src/lib/spend/", "src/lib/db/migrations/040_runs_story_spend.sql", "src/lib/db/", "src/modules/laboratory/", "src/app/work/research/", "src/app/results/artifacts/", "src/app/api/research/", "src/app/api/artifacts/", "tests/"],
+  "programme": "B14, depends on B2 (T-0096), B4 (T-0098) and B5 (T-0099). Reserved: migration 040. A spend-parity test (summary total equals guard total across all sources); reader tests; edit-handler tests; the cancel test; create-page response-gate tests.",
+  "timestamps": {"opened": "2026-09-05T10:30:00Z", "updated": "2026-09-05T10:30:00Z"}
+}

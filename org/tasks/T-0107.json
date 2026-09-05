@@ -1,0 +1,20 @@
+{
+  "id": "T-0107",
+  "intent": "B13 of the final-release programme: Scripts and Chat. One SCRIPT_EXT_RE in src/lib/scripts/script-ext.ts used everywhere, seven extensions end to end, .mjs templates, no double extensions (D41 blocker, D46, D47, D48). Decision 10: GET /api/scripts returns scheduler {available, reason}, and where no crontab exists migration 041 adds schedules.kind ('mission'|'script') and script_name so PatterStage's own tick runs scripts, with the Schedule modal writing that row when the host scheduler is unavailable. Download exports the clicked conversation (D43, blocker); the CSV export reachable by keyboard (D52); conversation list and load errors surfaced (D49); ConfirmButton on script delete with a scheduled-job warning (D51).",
+  "declared": {
+    "capabilities": ["edit-code", "database", "filesystem"],
+    "side_effects": ["migrates-schema"]
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [
+    {"factor": "schema-change", "tier_floor": "R2", "source": "declared", "evidence": "migration 041 adds kind and script_name to schedules; no data loss"},
+    {"factor": "auth-surface", "tier_floor": "R2", "source": "paths:sensitive", "evidence": "the fallback scheduler executes host scripts; it inherits B1's requireAuthenticatedHostWrites path and runs only from the server tick"}
+  ],
+  "status": "proposed",
+  "owner_session": "unassigned",
+  "claims": ["src/lib/scripts/", "src/lib/scripts-manager.ts", "src/lib/scheduler/", "src/lib/db/migrations/041_schedules_kind.sql", "src/lib/db/", "src/app/api/scripts/", "src/app/work/scripts/", "src/components/scripts/", "src/components/chat/", "src/app/api/chat/", "tests/"],
+  "programme": "B13, depends on B2 (T-0096) and B4 (T-0098). Reserved: migration 041. Schedule-map and extension tests; the fallback scheduler test with a stubbed win32; a download-handler test; a native Windows browser walk.",
+  "timestamps": {"opened": "2026-09-05T10:30:00Z", "updated": "2026-09-05T10:30:00Z"}
+}

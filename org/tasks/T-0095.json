@@ -1,0 +1,20 @@
+{
+  "id": "T-0095",
+  "intent": "B1 of the final-release programme (org/plans/2026-09-final-release.md): security and truth. requireAuthenticatedHostWrites() first in POST /api/scripts/run and POST /api/update, with the host-side-effect paths listed in src/proxy.ts's PS_AUTH_MODE=none branch (D42, D123); recursive api_key masking in GET /api/config (D74); the three writing GETs skip their writes under PS_READ_ONLY (D124); fast-mode chat sends Authorization and stops double-counting (D44, D45); PS_COMPOSER guard on the composer SSE route (D5); one failure envelope for every sync endpoint via answerSingle/answerBatch in profile-sync-shared.ts (D125, D19, D11, D20); the second mission-cancel implementation deleted and the events route aborting upstream on disconnect (D128, D127); the deploy API honest and live by default, decision 17 (D53, D105, D107, D108, D111); install.sh Reinstall backs the database up and asks for a typed confirmation (D106); --color-neon-red declared with a token-must-exist design-lint rule (D114, D115); API.md pinned to the route tree by a test (D129).",
+  "declared": {
+    "capabilities": ["edit-code", "edit-docs", "filesystem"],
+    "side_effects": ["touches-auth"]
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [
+    {"factor": "auth-surface", "tier_floor": "R2", "source": "declared", "evidence": "src/proxy.ts and the host-write guards are touched"},
+    {"factor": "size-threshold", "tier_floor": "R1", "source": "derived:diff-size", "evidence": "eleven defect groups across routes, scripts and lint"}
+  ],
+  "status": "proposed",
+  "owner_session": "unassigned",
+  "claims": ["src/app/api/", "src/proxy.ts", "src/lib/api-auth.ts", "src/modules/hermes/lib/profile-sync-shared.ts", "scripts/bootstrap/install.sh", "scripts/tooling/design-lint.mjs", "docs/API.md", "tests/"],
+  "programme": "B1, depends on B0 (T-0094). Oracle first for every guard and envelope; Playwright unchanged; canary httpSurface unchanged.",
+  "timestamps": {"opened": "2026-09-05T10:30:00Z", "updated": "2026-09-05T10:30:00Z"}
+}

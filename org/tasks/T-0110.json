@@ -1,0 +1,19 @@
+{
+  "id": "T-0110",
+  "intent": "B16 of the final-release programme: in-app Help. src/app/help/[[...slug]]/page.tsx renders the built fragment and manifest inside AppPageShell with HelpNav, HelpSearch and prev/next, no iframe, behind the cookie. HelpLink on every PageHeader resolved from the pathname through the manifest's screen field, proved for every registry route by docs:check. ConceptHint popover fed by concepts.json where a term is first met. Decision 7: the Demo is the screen-by-screen tour under start-here/tour, rendered in Help; help.opened recorded.",
+  "declared": {
+    "capabilities": ["edit-code", "edit-docs"],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {"factor": "size-threshold", "tier_floor": "R1", "source": "derived:diff-size", "evidence": "a new page, three components and the tour pages"}
+  ],
+  "status": "proposed",
+  "owner_session": "unassigned",
+  "claims": ["src/app/help/", "src/components/help/", "src/components/ui/PageHeader.tsx", "src/lib/help/", "docs/start-here/tour/", "tests/"],
+  "programme": "B16, depends on B15 (T-0109). Resolver tests for every route; a render test; a ConceptHint a11y test; a Playwright spec that presses ? on Missions and lands on its guide.",
+  "timestamps": {"opened": "2026-09-05T10:30:00Z", "updated": "2026-09-05T10:30:00Z"}
+}

@@ -1,0 +1,19 @@
+{
+  "id": "T-0099",
+  "intent": "B5 of the final-release programme: the dashboard becomes an operations board and Insights the history page. CommandCenter cut to a Progress line; the Rec Room panel and LiveClock removed; six pills from real reads; the hero tiles, throughput, mix, run activity and trophy case live on Insights only. A failing /api/monitor renders an error with Retry, never skeletons forever, never a green pill on an unread panel; the first-run panel stable against partial facts (D54, D57). The fourth first-run step, a model the agent can call (D110). The Insights range switch drives every tile, one money number, Retry retries every query (D96, D97, D100).",
+  "declared": {
+    "capabilities": ["edit-code"],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {"factor": "size-threshold", "tier_floor": "R1", "source": "derived:diff-size", "evidence": "two pages rebuilt"}
+  ],
+  "status": "proposed",
+  "owner_session": "unassigned",
+  "claims": ["src/components/dashboard/", "src/components/insights/", "src/app/page.tsx", "src/app/results/insights/", "src/lib/first-run-steps.ts", "tests/"],
+  "programme": "B5, depends on B3 (T-0097) and B4 (T-0098). Dashboard render test with a rejecting fetch; first-run-steps tests; Insights tests; screenshots recaptured.",
+  "timestamps": {"opened": "2026-09-05T10:30:00Z", "updated": "2026-09-05T10:30:00Z"}
+}

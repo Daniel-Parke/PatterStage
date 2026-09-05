@@ -1,0 +1,19 @@
+{
+  "id": "T-0106",
+  "intent": "B12 of the final-release programme: Composer. DELETE answers 409 with the run count unless discardRunHistory=1 and the UI confirms naming the workflow and the count (D1, blocker); description round-trips (D2); runs-list and detail errors rendered (D3); success and failure in different tones (D6); unsaved Build-tab work guarded (D7); gate notes shown and fed into the retried stage's context (D8); two starter workflows seeded, Research then summarise and Draft and review, with Software Delivery kept third; Duplicate; the workflow name on run rows; waiting on a question distinguished from at a gate; the composer.* events of B4 emitted.",
+  "declared": {
+    "capabilities": ["edit-code", "database"],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {"factor": "size-threshold", "tier_floor": "R1", "source": "derived:diff-size", "evidence": "the composer routes, canvas and seed"}
+  ],
+  "status": "proposed",
+  "owner_session": "unassigned",
+  "claims": ["src/components/composer/", "src/app/api/composer/", "src/app/work/composer/", "src/lib/composer/", "data/seed/", "tests/"],
+  "programme": "B12, depends on B2 (T-0096) and B4 (T-0098). Route and canvas tests; a new composer Playwright spec against mock-hermes.",
+  "timestamps": {"opened": "2026-09-05T10:30:00Z", "updated": "2026-09-05T10:30:00Z"}
+}

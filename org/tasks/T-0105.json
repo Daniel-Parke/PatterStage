@@ -1,0 +1,19 @@
+{
+  "id": "T-0105",
+  "intent": "B11 of the final-release programme: Sessions, tier 1. Source vocabulary from the API's bySource with an unknown-source fallback (D29, blocker); a Failed badge with exit code on rows, the error on the transcript, a Failed filter (D30, blocker); API noise duration-based in SQL (D31); a guard on the inline state.db sync (D35); refetch while anything is live and Refresh on a running transcript (D36); valid interactive nesting via stretched-link rows (D32); a status-aware error with Retry instead of Session Not Found (D33); search, filter and page in the URL (D37); expand-all, in-transcript search, role chips, copy transcript (D38); First/Last and page size (D39); a payload cap with a truncated flag (D40); the group card says N on this page (D34). Tier 2 (SQL group-by, virtualisation, sync off the read path) is deferred by the plan.",
+  "declared": {
+    "capabilities": ["edit-code", "database"],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {"factor": "size-threshold", "tier_floor": "R1", "source": "derived:diff-size", "evidence": "the sessions list, card, transcript and route"}
+  ],
+  "status": "proposed",
+  "owner_session": "unassigned",
+  "claims": ["src/components/session/", "src/app/results/sessions/", "src/app/api/sessions/", "src/lib/sessions/", "tests/"],
+  "programme": "B11, depends on B2 (T-0096) and B10 (T-0104). Filter tests, card tests, a URL-state test, a jsdom nesting test; the Playwright sessions spec.",
+  "timestamps": {"opened": "2026-09-05T10:30:00Z", "updated": "2026-09-05T10:30:00Z"}
+}

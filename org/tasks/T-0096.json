@@ -1,0 +1,19 @@
+{
+  "id": "T-0096",
+  "intent": "B2 of the final-release programme: the shell primitives every later batch builds on. Toast becomes a stack owned by a shell-level feedback provider (D122); ConfirmButton on useTwoStepConfirm, never disabled while armed, with a no-native-confirm design-lint rule replacing the five window.confirm sites (D66, D51); an overlay-uses-dialog-a11y rule and the nine bypassing overlays onto useDialogA11y (D116); one global focus-visible token, a skip link and no bare outline-none (D117); the form-control gate rejects placeholder-shaped names, the icon-button gate sees collapsed sidebar links, the mobile drawer is inert when closed (D118, D119, D120); src/lib/status-labels.ts with the ratified vocabulary of decision 13; the read contract (LoadErrorBanner compact + onRetry, ErrorBanner retired, EmptyState only after a successful read) applied to the nine false-empty pages; docs/COPY.md and copy-lint.mjs in report mode.",
+  "declared": {
+    "capabilities": ["edit-code", "edit-docs"],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {"factor": "size-threshold", "tier_floor": "R1", "source": "derived:diff-size", "evidence": "shell components, three lint rules and nine pages"}
+  ],
+  "status": "proposed",
+  "owner_session": "unassigned",
+  "claims": ["src/components/ui/", "src/components/shell/", "src/hooks/", "src/lib/status-labels.ts", "src/app/layout.tsx", "scripts/tooling/", "docs/COPY.md", "tests/"],
+  "programme": "B2, depends on B1 (T-0095). Oracles per primitive; a11y fixture per overlay; Playwright gains a drawer spec.",
+  "timestamps": {"opened": "2026-09-05T10:30:00Z", "updated": "2026-09-05T10:30:00Z"}
+}

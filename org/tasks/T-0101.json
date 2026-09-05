@@ -1,0 +1,19 @@
+{
+  "id": "T-0101",
+  "intent": "B7 of the final-release programme: Memory and Logs. Test connection reads the real envelope (D58, blocker); Save keeps the loaded row's type and label (D65); one provider switch with the DB row as the truth and config.yaml memory.provider written on Save, the settings field read-only and pointing at Memory, the two stacked first-visit warnings collapsed into one Set up memory card (D64); Enter runs Recall, three distinguishable empty states, proof counts not relevance percentages (D60 to D63); log auto-scroll and Latest lines reattached, Delete All disabled on an empty page, confirm on directive and mental-model delete, per-file copy and download (D59).",
+  "declared": {
+    "capabilities": ["edit-code"],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {"factor": "size-threshold", "tier_floor": "R1", "source": "derived:diff-size", "evidence": "two pages and the provider switch"}
+  ],
+  "status": "proposed",
+  "owner_session": "unassigned",
+  "claims": ["src/components/memory/", "src/components/logs/", "src/app/agent/memory/", "src/app/results/logs/", "src/app/api/memory/", "src/app/api/logs/", "tests/"],
+  "programme": "B7, depends on B6 (T-0100). Component tests with the real double envelope; browser walk against mock-hindsight with Test connection green and Save round-tripping.",
+  "timestamps": {"opened": "2026-09-05T10:30:00Z", "updated": "2026-09-05T10:30:00Z"}
+}

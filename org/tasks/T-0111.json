@@ -1,0 +1,19 @@
+{
+  "id": "T-0111",
+  "intent": "B17 of the final-release programme: Quests. src/lib/quests/quest-defs.ts as content (id, chapter, title, action, proof, screen, teaches, requires, earns) and a pure evaluateQuests() run inside getDashboardStats() after evaluateAchievements, so the dashboard card, the /quests page, the rail badge and the toast all read the existing stats poll. Completion latched as completedAt in operator_prefs so retention cannot un-complete a quest; the first evaluation seeds silently; Skip and hide-the-guide through PUT /api/prefs; requires renders unavailable-on-this-host cards. Chapters 1 to 7 as the plan lists them; chapter 1 replaces FirstRunPanel with the NextQuest card on the same data; four chain achievements added to ACHIEVEMENT_DEFS; no operator XP or level (ADR-0004). The /quests page and the QuestTracker in the shell feedback provider. docs/quests.md carries a generated block.",
+  "declared": {
+    "capabilities": ["edit-code", "edit-docs", "database"],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {"factor": "size-threshold", "tier_floor": "R1", "source": "derived:diff-size", "evidence": "a new subsystem over existing tables; no schema change (038 carries the latch)"}
+  ],
+  "status": "proposed",
+  "owner_session": "unassigned",
+  "claims": ["src/lib/quests/", "src/lib/stats/", "src/app/quests/", "src/components/quests/", "src/components/dashboard/", "src/app/api/prefs/", "docs/reference/quests.md", "tests/"],
+  "programme": "B17, depends on B4, B5, B12, B13, B14 and B16. Quest-derive tests per proof from fixtures; the latch survives a metrics reset; an integrity test over screens, earns, teaches and proof events; a Playwright spec that dispatches a mission and sees quest 1.4 tick.",
+  "timestamps": {"opened": "2026-09-05T10:30:00Z", "updated": "2026-09-05T10:30:00Z"}
+}

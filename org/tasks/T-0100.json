@@ -1,0 +1,20 @@
+{
+  "id": "T-0100",
+  "intent": "B6 of the final-release programme: Models, credentials, restore and config. Migration 039 models.origin plus last-imported columns; no write on page load; edits survive re-import (D10); explicit re-import; per-line Pull/Push on the drift banner. Cleared defaults stay cleared (D9). A real diff and an Export modal that cannot silently do nothing (D12, D13). PATCH /api/credentials/[id] to rotate a key; keyless providers need no key (D14, D15). The Seed page becomes Restore, counting the shipped pack and showing results (D16, D17). GET/POST /api/backup and a Backups card on Settings > System, destructive restores snapshot first (D113). PUT /api/config refreshes agent_root.config_yaml when it wrote the root file so a Push cannot revert a Save (D76, blocker); the Settings index shows a parse error (D75); min/max enforced both ends (D77); an explicit unset state whose Clear deletes the key (D78).",
+  "declared": {
+    "capabilities": ["edit-code", "database", "filesystem"],
+    "side_effects": ["migrates-schema"]
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [
+    {"factor": "schema-change", "tier_floor": "R2", "source": "declared", "evidence": "migration 039 adds columns to models; no data loss"},
+    {"factor": "key-material", "tier_floor": "R3", "source": "derived:secret-patterns", "evidence": "NOT triggered: the rotate route stores through the existing credential path and no secret appears in the diff; recorded so the router sees it was considered"}
+  ],
+  "status": "proposed",
+  "owner_session": "unassigned",
+  "claims": ["src/lib/models-repository.ts", "src/lib/db/migrations/039_models_origin.sql", "src/lib/db/", "src/modules/hermes/lib/config-sync.ts", "src/app/api/config/", "src/app/api/credentials/", "src/app/api/backup/", "src/app/agent/models/", "src/app/agent/settings/", "src/components/config/", "tests/"],
+  "programme": "B6, depends on B3 (T-0097) and B4 (T-0098). Reserved: migration 039. Mutation sweep on models-repository and config-sync; browser walk of Models and Settings.",
+  "timestamps": {"opened": "2026-09-05T10:30:00Z", "updated": "2026-09-05T10:30:00Z"}
+}
