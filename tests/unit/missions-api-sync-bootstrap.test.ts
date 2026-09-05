@@ -28,15 +28,16 @@ jest.mock("next/server", () => {
 });
 
 jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
-jest.mock("@/lib/api-auth", () => ({ requireAuth: jest.fn(() => null), isChReadOnly: jest.fn(() => false) }));
+jest.mock("@/lib/api-auth", () => ({
+  // requireNotReadOnly is the honest name of what these routes call now;
+  // requireAuth stays mocked for the modules that have not been renamed yet.
+  requireNotReadOnly: jest.fn(() => null),
+  isReadOnly: jest.fn(() => false),
+}));
 jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
-jest.mock("@/lib/cron-repository", () => ({ importHermesJobs: jest.fn() }));
-jest.mock("@/lib/mission-repository", () => ({
+jest.mock("@/lib/missions/mission-repository", () => ({
   listMissions: jest.fn(() => []),
   getMission: jest.fn(),
-}));
-jest.mock("@/lib/mission-cron-sync", () => ({
-  enrichMissionCron: jest.fn((m: unknown) => m),
 }));
 
 const mockEnsureSyncLayer = jest.fn();

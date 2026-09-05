@@ -1,53 +1,55 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { requireAuth } from "@/lib/api-auth";
-import { logApiError } from "@/lib/api-logger";
+import { serverErrorFromCatch } from "@/lib/api-logger";
+import { methodNotAllowed, notFound, ok } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb } from "@/lib/db";
-import { applyProfileOrRootPatch, toPatchResponse } from "@/lib/apply-profile-or-root-patch";
-import { hydratePlatformToolsetsForSlug } from "@/lib/profiles-repository";
+import { applyProfileOrRootPatchOrFail } from "@/modules/hermes/handlers/profile-patch";
+import { hydratePlatformToolsetsForSlug } from "@/modules/hermes/lib/profiles-repository";
 import {
   normalizePlatformToolsetsFromInput,
   serializeJsonToolsets,
-} from "@/lib/profile-config-builder";
+} from "@/modules/hermes/lib/profile-config-builder";
 import {
   platformsDiffer,
   unionToolsetsFromPlatforms,
-} from "@/lib/hermes-toolset-unify";
-import { resolveSafeProfileName } from "@/lib/path-security";
+} from "@/modules/hermes/lib/toolset-unify";
+import { requireSafeProfileName } from "@/lib/fs/path-security";
+import { isReadOnly } from "@/lib/read-only";
+import { recordEvent } from "@/lib/analytics/record-event";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   const { id } = await params;
-  const prof = resolveSafeProfileName(id);
-  if (!prof.ok) return NextResponse.json({ error: prof.error }, { status: 400 });
+  const prof = requireSafeProfileName(id);
+  if (prof instanceof NextResponse) return prof;
 
   try {
     ensureDb();
-    const hydrated = hydratePlatformToolsetsForSlug(prof.profile, { persist: true });
+    // check-read-only-guards-disable-next-line -- hydrating may persist the normalised JSON, a write this GET skips under PS_READ_ONLY while still answering (T-0095, D124)
+    const hydrated = hydratePlatformToolsetsForSlug(prof.profile, { persist: !isReadOnly() });
     if (!hydrated) {
-      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+      return notFound("Profile not found");
     }
     const divergence = platformsDiffer(hydrated.toolsets);
-    return NextResponse.json({
-      data: {
-        profile: prof.profile,
-        platformToolsets: hydrated.toolsets,
-        source: hydrated.source,
-        unifiedEnabled: unionToolsetsFromPlatforms(hydrated.toolsets),
-        platformsDiverged: divergence.diverged,
-        divergedPlatforms: divergence.platforms,
-      },
+    return ok({
+      profile: prof.profile,
+      platformToolsets: hydrated.toolsets,
+      source: hydrated.source,
+      unifiedEnabled: unionToolsetsFromPlatforms(hydrated.toolsets),
+      platformsDiverged: divergence.diverged,
+      divergedPlatforms: divergence.platforms,
     });
   }
   catch (error) {
-    logApiError("GET /api/agent/profiles/[id]/toolsets", "reading toolsets", error);
-    return NextResponse.json({ error: "Failed to read toolsets" }, { status: 500 });
+    return serverErrorFromCatch(
+      "GET /api/agent/profiles/[id]/toolsets",
+      "reading toolsets",
+      error,
+      "Failed to read toolsets",
+    );
   }
 }
 
@@ -55,12 +57,9 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   const { id } = await params;
-  const prof = resolveSafeProfileName(id);
-  if (!prof.ok) return NextResponse.json({ error: prof.error }, { status: 400 });
+  const prof = requireSafeProfileName(id);
+  if (prof instanceof NextResponse) return prof;
 
   try {
     ensureDb();
@@ -69,26 +68,32 @@ export async function PUT(
     const platformToolsets = normalizePlatformToolsetsFromInput(bodyResult.platformToolsets);
     const platformToolsetsJson = serializeJsonToolsets(platformToolsets);
 
-    // applyProfileOrRootPatch handles default-vs-non-default dispatch,
-    // 404 on missing profile, and 500 on push failure — was previously
-    // a 16-line if/else here.
-    const result = applyProfileOrRootPatch(
+    // applyProfileOrRootPatchOrFail collapses the 4-line
+    // apply+toPatchResponse+assert+return-err dance into 1 call +
+    // 1 instanceof check. Byte-equivalent to the pre-migration shape
+    // (same 404 on not-found, same 500 on push-failed, same
+    // { success: true, profile, platformToolsets } success body).
+    const result = applyProfileOrRootPatchOrFail(
       prof.profile,
       { platformToolsetsJson },
       { platformToolsetsJson },
+      "Failed to sync profile to Hermes",
     );
-    const err = toPatchResponse(result, "Failed to sync profile to Hermes");
-    if (err) return err;
-    if (!result.ok) throw new Error("unreachable: toPatchResponse returned null on failure");
+    if (result instanceof NextResponse) return result;
 
-    return NextResponse.json({ data: { success: true, profile: result.profile, platformToolsets } });
+    recordEvent("toolset.saved", { entityType: "toolset", entityId: prof.profile, profile: prof.profile });
+    return ok({ success: true, profile: result.profile, platformToolsets });
   }
   catch (error) {
-    logApiError("PUT /api/agent/profiles/[id]/toolsets", "saving toolsets", error);
-    return NextResponse.json({ error: "Failed to save toolsets" }, { status: 500 });
+    return serverErrorFromCatch(
+      "PUT /api/agent/profiles/[id]/toolsets",
+      "saving toolsets",
+      error,
+      "Failed to save toolsets",
+    );
   }
 }
 
 export async function DELETE() {
-  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
+  return methodNotAllowed("Method not allowed", ["GET", "PUT"]);
 }

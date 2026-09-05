@@ -30,7 +30,7 @@ import {
   Wrench,
   Zap,
 } from "lucide-react";
-import type { AccentColor } from "@/types/hermes";
+import type { AccentColor } from "@/types/console";
 
 export interface FieldDef {
   key: string;
@@ -41,6 +41,13 @@ export interface FieldDef {
   min?: number;
   max?: number;
   placeholder?: string;
+  /**
+   * This field is owned by another surface, which writes it as a side effect of
+   * a decision made there. The section page renders it read-only and points at
+   * that surface, and the PUT refuses it: two controls writing one setting from
+   * two sources of truth is the defect this replaces (T-0101, D64).
+   */
+  managedBy?: { label: string; href: string };
 }
 
 export interface SectionDef {
@@ -105,7 +112,7 @@ export const CONFIG_SECTIONS: Record<string, SectionDef> = {
     color: "pink",
     fields: [
       { key: "memory_enabled", label: "Memory Enabled", type: "boolean", description: "Enable memory system" },
-      { key: "provider", label: "Provider", type: "select", options: ["holographic", "hindsight"], description: "Memory backend provider. Holographic = SQLite local, Hindsight = knowledge graph (local or cloud)" },
+      { key: "provider", label: "Provider", type: "select", options: ["holographic", "hindsight"], description: "Which memory backend the agent uses. PatterStage owns this: set it on the Memory page and this file is written to match.", managedBy: { label: "Memory", href: "/agent/memory" } },
       { key: "memory_char_limit", label: "Memory Char Limit", type: "number", min: 500, max: 10000, description: "Max characters per memory entry" },
       { key: "user_char_limit", label: "User Char Limit", type: "number", min: 500, max: 10000, description: "Max characters for user profile" },
       { key: "nudge_interval", label: "Nudge Interval", type: "number", min: 1, max: 100, description: "Turns between memory flush nudges" },
@@ -395,8 +402,105 @@ export const CONFIG_SECTIONS: Record<string, SectionDef> = {
   },
 };
 
+/**
+ * Common typo and alias redirects to the real config routes.
+ *
+ * Values are FULL paths rather than section ids, because an alias may point
+ * at a route that is not a CONFIG_SECTIONS entry at all: /config/models is
+ * its own page and there is no `models` section. Anything derived from
+ * CONFIG_SECTIONS therefore has to build `/agent/settings/<id>` itself rather than
+ * hand a bare id to the same consumer.
+ */
+export const SECTION_ALIASES: Record<string, string> = {
+  model: "/agent/models",
+};
+
+/**
+ * Own-key lookup.
+ *
+ * A plain object literal answers truthily to `constructor`, `toString` and
+ * every other Object.prototype key, so a bare `map[key]` reports those as
+ * sections and hands the caller a Function where a SectionDef was expected.
+ * /config/constructor took that path and crashed the render on
+ * `sectionDef.fields.length`.
+ */
+function ownValue<T>(map: Record<string, T>, key: string): T | undefined {
+  return Object.prototype.hasOwnProperty.call(map, key) ? map[key] : undefined;
+}
+
+/** Lowercase; each run of non-alphanumerics becomes one hyphen; ends trimmed. */
+function slugifyLabel(label: string): string {
+  return label
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+/, "")
+    .replace(/-+$/, "");
+}
+
+/**
+ * slugify(label) to section id, built once at module load. First writer wins,
+ * which is a formality: tests/unit/config-section-redirect.test.ts asserts
+ * that no two section labels slugify the same.
+ */
+const ID_BY_LABEL_SLUG: Record<string, string> = (() => {
+  const map: Record<string, string> = {};
+  for (const id of Object.keys(CONFIG_SECTIONS)) {
+    const slug = slugifyLabel(CONFIG_SECTIONS[id].label);
+    if (!Object.prototype.hasOwnProperty.call(map, slug)) map[slug] = id;
+  }
+  return map;
+})();
+
 export function getSectionDef(sectionId: string): SectionDef | null {
-  return CONFIG_SECTIONS[sectionId] || null;
+  return ownValue(CONFIG_SECTIONS, sectionId) ?? null;
+}
+
+/**
+ * Where an unknown `/agent/settings/<slug>` should be sent, or null to stay put and
+ * let the page offer the operator the whole list.
+ *
+ * The two ways this can do harm are both closed here rather than at the call
+ * site, because the call site is a useEffect that has already fired by the
+ * time anyone notices:
+ *
+ * - It never redirects a slug that IS a section. That is the first check.
+ * - It never sends a slug somewhere that redirects again. Every non-null
+ *   result is either a literal SECTION_ALIASES value or `/agent/settings/<id>` for a
+ *   known id, and a known id returns null on the next hop, so one replace
+ *   always terminates.
+ *
+ * Ambiguity is a deliberate non-answer. A slug prefixing several sections
+ * resolves to null, because guessing one of six is worse than showing all of
+ * them, which is what the page does with a null.
+ */
+export function resolveSectionRedirect(slug: string): string | null {
+  if (!slug) return null;
+  if (ownValue(CONFIG_SECTIONS, slug)) return null;
+
+  const alias = ownValue(SECTION_ALIASES, slug);
+  if (alias) return alias;
+
+  // 1. Hyphen to underscore. Section ids are snake_case and every link the
+  //    console renders is already correct, so a slug that reaches here was
+  //    typed or guessed, and kebab-case is the usual guess. This step alone
+  //    rescues session-reset, platform-toolsets, code-execution,
+  //    smart-model-routing, human-delay and hermes-md.
+  const underscored = slug.replace(/-/g, "_");
+  if (ownValue(CONFIG_SECTIONS, underscored)) return `/agent/settings/${underscored}`;
+
+  // 2. The label, slugified. "agent-settings" is exactly
+  //    slugify("Agent Settings"), and the label is what the operator read on
+  //    the card they were trying to reach; the id is the thing they never saw.
+  const byLabel = ownValue(ID_BY_LABEL_SLUG, slug);
+  if (byLabel) return `/agent/settings/${byLabel}`;
+
+  // 3. A unique id prefix. Uniqueness is the whole rule.
+  const prefixed = Object.keys(CONFIG_SECTIONS).filter((id) =>
+    id.startsWith(underscored),
+  );
+  if (prefixed.length === 1) return `/agent/settings/${prefixed[0]}`;
+
+  return null;
 }
 
 /**
@@ -407,4 +511,94 @@ export function getSectionDef(sectionId: string): SectionDef | null {
  */
 export function fileKeyForFilePath(filePath: string): string {
   return filePath === ".env" ? "env" : "hermes";
+}
+
+// ── Value validation ────────────────────────────────────────────
+
+/** One field, one reason it was refused. */
+export interface FieldProblem {
+  key: string;
+  message: string;
+}
+
+/**
+ * Check a section's submitted values against the field definitions.
+ *
+ * `min`/`max` used to be decorative: the number input carried them, the server
+ * merged whatever arrived, and `max_turns: 9999` or `threshold: 0.96` was
+ * written with a 200 for Hermes to choke on later (T-0100, D77). The same walk
+ * covers the other three declared types, because a boolean field holding the
+ * string "yes" is the same class of defect.
+ *
+ * Rules that matter:
+ *  - `null` is D78's unset sentinel and is skipped, never read as "not a
+ *    number"; `undefined` likewise.
+ *  - Keys with no `FieldDef` are ignored. `complexKeys` such as
+ *    `agent.personalities` are edited as nested objects and have no field
+ *    shape to check.
+ *  - Bounds are inclusive and fractional; there is no integer coercion.
+ *  - At most one problem per field: after a type failure the range check is
+ *    skipped, so a bad value is reported once and in its own terms.
+ */
+export function validateSectionValues(
+  sectionId: string,
+  values: Record<string, unknown>,
+): FieldProblem[] {
+  const section = CONFIG_SECTIONS[sectionId];
+  if (!section) return [];
+  const byKey = new Map(section.fields.map((f) => [f.key, f]));
+  const problems: FieldProblem[] = [];
+
+  for (const [key, value] of Object.entries(values)) {
+    const field = byKey.get(key);
+    if (!field) continue;
+    // A field another surface owns is not editable here at any value, null
+    // included: the write that sets it belongs to the page that decides it.
+    if (field.managedBy) {
+      problems.push({ key, message: `${field.label} is set on the ${field.managedBy.label} page` });
+      continue;
+    }
+    if (value === null || value === undefined) continue;
+
+    if (field.type === "number") {
+      if (typeof value !== "number" || !Number.isFinite(value)) {
+        problems.push({ key, message: `${field.label} must be a number` });
+        continue;
+      }
+      const belowMin = field.min !== undefined && value < field.min;
+      const aboveMax = field.max !== undefined && value > field.max;
+      if (belowMin || aboveMax) {
+        problems.push({
+          key,
+          message: `${field.label} must be between ${field.min} and ${field.max} (got ${value})`,
+        });
+      }
+      continue;
+    }
+
+    if (field.type === "boolean") {
+      if (typeof value !== "boolean") {
+        problems.push({ key, message: `${field.label} must be true or false` });
+      }
+      continue;
+    }
+
+    if (field.type === "select") {
+      const options = field.options ?? [];
+      if (typeof value !== "string" || !options.includes(value)) {
+        problems.push({
+          key,
+          message: `${field.label} must be one of: ${options.join(", ")}`,
+        });
+      }
+      continue;
+    }
+
+    // string | textarea
+    if (typeof value !== "string") {
+      problems.push({ key, message: `${field.label} must be text` });
+    }
+  }
+
+  return problems;
 }

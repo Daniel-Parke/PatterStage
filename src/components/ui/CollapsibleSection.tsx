@@ -50,14 +50,20 @@ export default function CollapsibleSection({
         type="button"
         onClick={() => setExpanded((v) => !v)}
         className="w-full flex items-center justify-between px-5 py-3 text-left hover:bg-white/5 transition-colors"
+        // A disclosure button that does not announce its state is a working
+        // control that reads as an inert one, to a screen reader and to any
+        // automated pass alike. The chevron below says "open" in pixels only.
+        // Same defect as Modal announcing itself as a plain div (T-0036), and
+        // MissionComposerLayout's accordion already does this correctly.
+        aria-expanded={expanded}
       >
         <div className="flex items-center gap-3">
-          <h2 className="text-sm font-bold text-white/70 uppercase tracking-wider">
+          <h2 className="text-sm font-bold text-ps-text-secondary uppercase tracking-wider">
             {title}
           </h2>
           {badge !== undefined && (
             <span
-              className={`text-[10px] font-mono px-1.5 py-0.5 rounded uppercase tracking-widest ${badgeColorMap[badgeColor]}`}
+              className={`text-xs font-mono px-1.5 py-0.5 rounded uppercase tracking-widest ${badgeColorMap[badgeColor]}`}
             >
               {badge}
             </span>
@@ -66,9 +72,9 @@ export default function CollapsibleSection({
         <div className="flex items-center gap-2">
           {headerRight}
           {expanded ? (
-            <ChevronUp className="w-4 h-4 text-white/30" />
+            <ChevronUp className="w-4 h-4 text-ps-text-muted" />
           ) : (
-            <ChevronDown className="w-4 h-4 text-white/30" />
+            <ChevronDown className="w-4 h-4 text-ps-text-muted" />
           )}
         </div>
       </button>
@@ -77,7 +83,7 @@ export default function CollapsibleSection({
       {expanded && (
         <div className="px-5 pb-5 pt-1 border-t border-white/5 space-y-4">
           {description && (
-            <p className="text-xs text-white/30 mt-0.5">{description}</p>
+            <p className="text-xs text-ps-text-muted mt-0.5">{description}</p>
           )}
           {children}
         </div>

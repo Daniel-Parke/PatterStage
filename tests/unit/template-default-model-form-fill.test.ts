@@ -38,7 +38,7 @@ jest.mock("fs", () => ({
 
 jest.mock("@/lib/paths", () => ({
   PATHS: { templates: "/tmp/ch/templates" },
-  CH_DATA_DIR: "/tmp/ch",
+  PS_DATA_DIR: "/tmp/ch",
 }));
 
 jest.mock("@/lib/db", () => ({

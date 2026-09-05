@@ -15,12 +15,11 @@ jest.mock("@/lib/api-logger", () => ({
 }));
 
 jest.mock("@/lib/api-auth", () => ({
-  requireAuth: jest.fn(() => null),
   requireNotReadOnly: jest.fn(() => null),
-  isChReadOnly: jest.fn(() => false),
+  isReadOnly: jest.fn(() => false),
 }));
 
-jest.mock("@/lib/session-repository", () => ({
+jest.mock("@/lib/sessions/session-repository", () => ({
   createSession: jest.fn(),
   updateSession: jest.fn(),
   getSession: jest.fn(),
@@ -31,7 +30,7 @@ jest.mock("@/lib/sync", () => ({
   ensureSyncLayer: jest.fn(),
 }));
 
-jest.mock("@/lib/hermes-agent-runtime", () => ({
+jest.mock("@/modules/hermes/lib/agent-runtime", () => ({
   getActiveHermesPaths: jest.fn(() => ({ logs: "/tmp/non-existent" })),
 }));
 

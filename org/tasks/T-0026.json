@@ -1,0 +1,20 @@
+{
+  "id": "T-0026",
+  "intent": "Run Genesis-lite: write the domain model and architecture sketch, an ADR for every judgement call, and re-order the queue against the sketch. Warrant: INCEPTION.md, M ventures run GENESIS-LITE after Session 0. Source row WO-0001. Acceptance as filed: (1) the domain model and architecture sketch written; (2) ADRs for every judgement call; (3) the queue re-ordered with the foundation items placed against the sketch. Done when the GENESIS-LITE launcher's outputs are complete and a cold session can take the new top item with zero questions. Discarded by operator ruling D1, 2026-08-22, at plan approval: the approved consolidation plan stands in place of the Genesis-lite queue re-order, and the operator signed or waived Session 0 phase E in the same ruling. The v1 row was retained in the queue for history under the append-only article, and its status superseded deliberately extended the v1 template's vocabulary; under v2 that maps to discarded with this note. Two facts travel with it rather than being lost: scale M no longer exists, PatterStage is ORG under ADR-0008, so the INCEPTION.md sentence that warranted this row no longer describes the venture; and acceptance item 2, an ADR for every judgement call, is not discarded but is now carried by the durable-band decision rule in the compiled policy, which requires a short-form ADR before merge for new dependencies, new schema elements, new public contracts, precedent-setting patterns and recorded deviations.",
+  "declared": {
+    "capabilities": [],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R0",
+  "reasons": [],
+  "status": "discarded",
+  "owner_session": "unassigned",
+  "claims": [],
+  "timestamps": {
+    "opened": "2026-07-25T00:00:00Z",
+    "updated": "2026-08-22T00:00:00Z",
+    "closed": "2026-08-22T00:00:00Z"
+  }
+}

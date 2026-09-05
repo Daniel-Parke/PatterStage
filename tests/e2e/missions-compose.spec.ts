@@ -4,7 +4,7 @@ test.describe("Missions composer", () => {
   test("sheet shows category combobox and create row for new category", async ({
     page,
   }) => {
-    await page.goto("/orchestration/missions");
+    await page.goto("/work/missions");
     await expect(
       page.getByRole("heading", { name: "Missions", exact: true }),
     ).toBeVisible();
@@ -33,7 +33,7 @@ test.describe("Missions composer", () => {
   });
 
   test("manage categories modal has create form", async ({ page }) => {
-    await page.goto("/orchestration/missions");
+    await page.goto("/work/missions");
     await page.getByRole("button", { name: /Manage categories/i }).click();
     await expect(
       page.getByRole("heading", { name: /Manage categories/i }),

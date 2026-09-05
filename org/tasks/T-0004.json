@@ -1,0 +1,21 @@
+{
+  "id": "T-0004",
+  "intent": "Make the install path a gate, so a change that breaks a fresh install cannot merge. Warrant WG-OPS-002 (A, one deployment model, the native host install) and death #1 in the venture brief, which the adopted scope made the gate on everything else. Source row WO-0011. Acceptance as originally filed: (1) the existing install harness wired into CI as a pull request gate; (2) its not-intended-for-CI disclaimer struck; (3) docker-image demoted out of the required checks; (4) DEPLOY.md cut to one supported model. The row was split on inspection 2026-07-26 because items 1 and 3 are GitHub branch-protection settings, not repository files: a workflow file can add a job, only branch protection decides which jobs block a merge, so the row as written could never reach done from inside the repository. Committable half DONE, session-1-2026-07-26: the install-harness job added to .github/workflows/ci.yml with a 45 minute timeout, scoped to four of the five scenarios because update fails on CI only and T-0019 owns that; the disclaimer struck in tests/integration/test_full_install_update_process.py:12 and docs/TESTING.md:68, each replaced with what is now true and why it changed; docs/DEPLOY.md cut to one supported model with the Docker section reframed as the CI parity rig. Verified locally first rather than assumed: 5 of 5 scenarios in 570.3s. Green on CI, run 30226331826, after three attempts, the first two recorded on T-0019 rather than glossed over. Correction 2026-08-22, plan session S-0002: branch protection on main has zero required status checks, verified via gh api with contexts empty, so the second click has nothing to remove and is void, and the lock-book's WG-OPS-002 body paragraph asserting docker-image sits in the required set is stale, its correction riding the rulings migration in T-0005. Remaining, operator only, outside any commit and outside any session's reach: add install-harness to the required checks in branch protection. Caution retained from the original second click: what WG-OPS-002 asks about docker-image must not become the reason it is never fixed; it has its ruling, D3, and its diagnosis, and T-0001 closed it. Done when a change that breaks a fresh install cannot merge. Tier proposal R2 for the half that landed, anticipated factor ci-stateful-infra from derived signal ci-config, evidence .github/workflows/ci.yml; nothing further merges under this record, so the declared facts are empty and the creation ruling is a clean R0.",
+  "declared": {
+    "capabilities": [
+      "github-settings"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R0",
+  "reasons": [],
+  "status": "active",
+  "owner_session": "session-1-2026-07-26",
+  "claims": [],
+  "timestamps": {
+    "opened": "2026-07-26T00:00:00Z",
+    "updated": "2026-08-22T21:00:00Z"
+  }
+}

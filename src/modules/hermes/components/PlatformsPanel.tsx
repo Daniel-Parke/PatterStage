@@ -1,0 +1,124 @@
+// ═══════════════════════════════════════════════════════════════
+// PlatformsPanel — dashboard gateway-platforms status + sync-now
+// ═══════════════════════════════════════════════════════════════
+//
+// Extracted from the dashboard god-page (src/app/page.tsx). Shows each
+// Hermes platform's configured state (token present in the .env) plus
+// the background-sync footer with a manual "Sync now" trigger.
+
+"use client";
+
+import Link from "next/link";
+import { Globe, RefreshCw } from "lucide-react";
+
+import { StatusDot } from "@/components/ui/Card";
+import { Panel, PanelHeader } from "@/components/dashboard/Panel";
+import { HERMES_PLATFORMS } from "../lib/toolset-catalog";
+import { timeAgo } from "@/lib/utils";
+import type { MonitorData } from "@/types/console";
+
+export interface PlatformsPanelProps {
+  monitor: MonitorData | null;
+  syncNowBusy: boolean;
+  onSyncNow: () => void;
+}
+
+/**
+ * The sources whose last sync failed, each with the reason if the scheduler
+ * kept one.
+ *
+ * A source can be in `sourceStatuses` as "error" with no message (a failure
+ * that produced no text, or a process restarted since), and that case must
+ * still be named: the defect being fixed here is a silent failure, so falling
+ * back to silence for the harder half would be the same defect with a smaller
+ * blast radius (T-0034).
+ */
+function failingSources(sync: MonitorData["sync"]): Array<{ name: string; reason: string | null }> {
+  return Object.entries(sync.sourceStatuses)
+    .filter(([, status]) => status === "error")
+    .map(([name]) => ({ name, reason: sync.sourceErrors?.[name] ?? null }));
+}
+
+export default function PlatformsPanel({ monitor, syncNowBusy, onSyncNow }: PlatformsPanelProps) {
+  const failures = monitor ? failingSources(monitor.sync) : [];
+
+  return (
+    <Panel accent="cyan">
+      <PanelHeader icon={Globe} label="Platforms" accent="cyan" />
+      <div
+        className="px-4 py-3 space-y-2"
+        title="Token present in Hermes .env; gateway must be running for live messaging."
+      >
+        {HERMES_PLATFORMS.map((p) => {
+          const configured = monitor?.gateway.platforms[p.id] ?? false;
+          return (
+            <div key={p.id} className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <StatusDot status={configured ? "online" : "idle"} pulse={configured} />
+                <span className="text-xs text-ps-text-secondary capitalize">{p.id}</span>
+              </div>
+              <span className={`text-xs font-mono ${configured ? "text-neon-green" : "text-ps-text-faint"}`}>
+                {configured ? "Configured" : "Not configured"}
+              </span>
+            </div>
+          );
+        })}
+        {monitor && monitor.gateway.connectedCount === 0 && (
+          // "No platforms configured" on its own is the emptiest kind of
+          // empty state: it restates the seven "Not configured" rows above it
+          // and gives the reader nowhere to go. A platform is configured by
+          // its token in the agent .env, and /config/env is the screen that
+          // shows that file, so the sentence now ends somewhere.
+          <div className="text-xs text-ps-text-muted text-center py-2">
+            No platforms configured. Each one is a token in the agent&apos;s{" "}
+            <Link href="/agent/settings/env" className="text-neon-cyan hover:underline">
+              .env
+            </Link>
+            .
+          </div>
+        )}
+      </div>
+      <div className="px-4 py-2 border-t border-white/10 flex items-center justify-between gap-2">
+        <div className="text-xs text-ps-text-muted font-mono flex items-center gap-2 min-w-0">
+          <RefreshCw className="w-3 h-3 shrink-0" />
+          {monitor?.sync.lastRun ? (
+            <>
+              Sync: {timeAgo(monitor.sync.lastRun)}
+              {monitor.sync.allSuccessful ? (
+                <span className="text-neon-green">✓</span>
+              ) : (
+                <span className="text-red-400">✗</span>
+              )}
+            </>
+          ) : (
+            <span>Background sync idle</span>
+          )}
+        </div>
+        <button
+          type="button"
+          disabled={syncNowBusy}
+          onClick={onSyncNow}
+          className="shrink-0 px-2 py-1 text-xs font-mono rounded border border-neon-cyan/30 text-neon-cyan/80 hover:bg-neon-cyan/10 disabled:opacity-50"
+        >
+          {syncNowBusy ? "Syncing…" : "Sync now"}
+        </button>
+      </div>
+      {failures.length > 0 && (
+        // The cross above says something broke. This says what, which is the
+        // only version of that sentence an operator can act on. The message is
+        // the scheduler's own, so it names the source's real failure (a missing
+        // crontab, a refused socket) rather than a re-worded summary of it.
+        <div className="px-4 pb-3 space-y-1">
+          {failures.map((f) => (
+            <div key={f.name} className="text-xs font-mono leading-snug">
+              <span className="text-red-400">{f.name}</span>{" "}
+              <span className="text-ps-text-muted break-words">
+                {f.reason ?? "failed on its last run, with no message recorded."}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </Panel>
+  );
+}

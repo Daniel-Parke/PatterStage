@@ -1,7 +1,7 @@
 /**
  * @jest-environment jsdom
  */
-import { renderHook } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
 import { useInterval } from "@/hooks/useInterval";
 
 describe("useInterval", () => {
@@ -88,5 +88,72 @@ describe("useInterval", () => {
     jest.advanceTimersByTime(1000);
     // Promise is fire-and-forget — the test just needs to not throw
     expect(fn).toHaveBeenCalledTimes(1);
+  });
+
+  describe("hidden tabs", () => {
+    // jsdom reports `visibilityState: "visible"` and has no way to change it,
+    // so the tests below redefine the getter and fire the same
+    // `visibilitychange` event the browser fires. That is exactly the signal
+    // the hook subscribes to.
+    const setVisibility = (state: "visible" | "hidden") => {
+      Object.defineProperty(document, "visibilityState", {
+        configurable: true,
+        get: () => state,
+      });
+      act(() => {
+        document.dispatchEvent(new Event("visibilitychange"));
+      });
+    };
+
+    afterEach(() => {
+      setVisibility("visible");
+    });
+
+    it("stops ticking while the document is hidden", () => {
+      const fn = jest.fn();
+      renderHook(() => useInterval(fn, { ms: 1000 }));
+
+      jest.advanceTimersByTime(2000);
+      expect(fn).toHaveBeenCalledTimes(2);
+
+      setVisibility("hidden");
+      jest.advanceTimersByTime(60_000);
+      // A whole minute of hidden time buys zero ticks.
+      expect(fn).toHaveBeenCalledTimes(2);
+    });
+
+    it("fires one catch-up tick when the document becomes visible again", () => {
+      const fn = jest.fn();
+      renderHook(() => useInterval(fn, { ms: 1000 }));
+
+      setVisibility("hidden");
+      jest.advanceTimersByTime(60_000);
+      expect(fn).not.toHaveBeenCalled();
+
+      setVisibility("visible");
+      // Immediately, without waiting out another period: the data the operator
+      // is looking at was up to a full period stale.
+      expect(fn).toHaveBeenCalledTimes(1);
+
+      jest.advanceTimersByTime(2000);
+      expect(fn).toHaveBeenCalledTimes(3);
+    });
+
+    it("does not fire a tick on mount", () => {
+      // The catch-up tick must be distinguishable from mounting: callers load
+      // their own initial data and a mount-time tick would double it.
+      const fn = jest.fn();
+      renderHook(() => useInterval(fn, { ms: 1000 }));
+      expect(fn).not.toHaveBeenCalled();
+    });
+
+    it("keeps ticking while hidden when pauseWhenHidden is false", () => {
+      const fn = jest.fn();
+      renderHook(() => useInterval(fn, { ms: 1000, pauseWhenHidden: false }));
+
+      setVisibility("hidden");
+      jest.advanceTimersByTime(3000);
+      expect(fn).toHaveBeenCalledTimes(3);
+    });
   });
 });

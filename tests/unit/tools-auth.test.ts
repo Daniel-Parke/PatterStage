@@ -1,9 +1,12 @@
 /** @jest-environment node */
 
-// These tests verify auth middleware is correctly wired on tool routes.
 // /api/tools only has GET and POST — PUT is tested via POST(action="configure").
-
-const mockRequireAuth = jest.fn();
+//
+// These used to verify that auth middleware was wired on the tool routes. It
+// never was: `requireAuth` checked the read-only flag and authenticated
+// nothing, and authentication has lived in src/proxy.ts since the security
+// hotfix. T-0048 deleted the function; what remains here is the route's own
+// behaviour.
 const mockReadFileSync = jest.fn();
 const mockWriteFileSync = jest.fn();
 const mockExistsSync = jest.fn();
@@ -14,7 +17,7 @@ jest.mock("fs", () => ({
   existsSync: mockExistsSync,
 }));
 
-jest.mock("@/lib/hermes-agent-runtime", () => ({
+jest.mock("@/modules/hermes/lib/agent-runtime", () => ({
   getActiveHermesPaths: jest.fn(() => ({
     root: "/tmp/test-hermes",
     config: "/tmp/test-hermes/config.yaml",
@@ -38,20 +41,20 @@ jest.mock("@/lib/hermes-agent-runtime", () => ({
 }));
 
 jest.mock("@/lib/paths", () => ({
-  CH_DATA_DIR: "/tmp/ch-data",
+  PS_DATA_DIR: "/tmp/ch-data",
   PATHS: {
     missions: "/tmp/ch-data/missions",
-    controlHubDb: "/tmp/ch-data/control-hub.db",
+    patterStageDb: "/tmp/ch-data/control-hub.db",
     templates: "/tmp/ch-data/templates",
     stories: "/tmp/ch-data/stories",
     recroom: "/tmp/ch-data/recroom",
     workspaces: "/tmp/ch-data/workspaces",
     auditLog: "/tmp/ch-data/audit",
-    chScripts: "/tmp/ch-data/scripts",
-    chHardwareLogs: "/tmp/ch-data/logs",
+    psScripts: "/tmp/ch-data/scripts",
+    psHardwareLogs: "/tmp/ch-data/logs",
   },
-  getChScriptsDir: () => "/tmp/ch-data/scripts",
-  getChHardwareLogDir: () => "/tmp/ch-data/logs",
+  getPsScriptsDir: () => "/tmp/ch-data/scripts",
+  getPsHardwareLogDir: () => "/tmp/ch-data/logs",
 }));
 
 jest.mock("@/lib/api-logger", () => ({
@@ -59,9 +62,8 @@ jest.mock("@/lib/api-logger", () => ({
 }));
 
 jest.mock("@/lib/api-auth", () => ({
-  requireAuth: mockRequireAuth,
   requireNotReadOnly: jest.fn(() => null),
-  isChReadOnly: jest.fn(() => false),
+  isReadOnly: jest.fn(() => false),
 }));
 
 import { NextRequest } from "next/server";
@@ -72,46 +74,26 @@ describe("POST /api/tools configure action auth", () => {
     mockExistsSync.mockReturnValue(true);
   });
 
-  it("rejects when read-only mode is active", async () => {
-    const readOnlyResponse = new Response("Read only", { status: 403 });
-    mockRequireAuth.mockReturnValue(readOnlyResponse);
+  // Read-only refusal is no longer asserted here, because it is no longer
+  // enforced here. T-0048 deleted the per-route guard: `src/proxy.ts` refuses
+  // every unsafe method under PS_READ_ONLY before a handler runs, so a test that
+  // calls this handler directly bypasses the thing it means to check. The
+  // guarantee is asserted per route, in both directions, in
+  // tests/unit/read-only-actually-reads.test.ts.
 
+
+  // Restored from the T-0048 sweep. The mock plumbing this was entangled with is
+  // gone; the 405 it asserts is real behaviour and worth keeping: the tools
+  // registry is a read-only catalogue and POST is not a verb it supports.
+  it("returns 405: the tool registry is a read-only catalogue", async () => {
     const req = new NextRequest("http://localhost/api/tools", {
       method: "POST",
       body: JSON.stringify({ action: "configure", id: "terminal", enabled: true }),
     });
     const res = await POST(req);
-
-    expect(res.status).toBe(403);
-    expect(mockRequireAuth).toHaveBeenCalled();
-  });
-
-  it("rejects when API key is missing/invalid", async () => {
-    mockRequireAuth.mockReturnValue(null);
-    const authResponse = new Response("Unauthorized", { status: 401 });
-    mockRequireAuth.mockReturnValue(authResponse);
-
-    const req = new NextRequest("http://localhost/api/tools", {
-      method: "POST",
-      body: JSON.stringify({ action: "configure", id: "terminal", enabled: true }),
-    });
-    const res = await POST(req);
-
-    expect(res.status).toBe(401);
-    expect(mockRequireAuth).toHaveBeenCalled();
-  });
-
-  it("returns 405 when auth passes (POST not allowed on read-only tool registry)", async () => {
-    mockRequireAuth.mockReturnValue(null);
-
-    const req = new NextRequest("http://localhost/api/tools", {
-      method: "POST",
-      body: JSON.stringify({ action: "configure", id: "terminal", enabled: true }),
-    });
-    const res = await POST(req);
-
     expect(res.status).toBe(405);
   });
+
 });
 
 // Helper to call POST /api/tools

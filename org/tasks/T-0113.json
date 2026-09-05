@@ -1,0 +1,20 @@
+{
+  "id": "T-0113",
+  "intent": "B19 of the final-release programme: the release. Full gate, Playwright, mutation survivors reconciled, a browser walk of every screen at 1280x720 and 390x844 on the isolated instance, docs built; package.json to 1.0.0-rc.1 and the tag v1.0.0-rc.1 on dev. The real-Hermes round natively on this machine (decisions 10 and 18): the operator configures the API-key provider in Hermes and on the Models page, hermes gateway run, HERMES_GATEWAY_URL pointed at it, the quest ledger chapters 1 to 7 driven end to end, then the round-6 confirm list, then the Docker profiles. Every finding a defect with the same verify-then-fix loop; rc.2 if any blocker. Then v1.0.0, dev merged to main by the operator's gated release PR (ADR-0006), docs-pages.yml publishing, the operator enabling Pages, README hero and docs/images recaptured.",
+  "declared": {
+    "capabilities": ["edit-code", "edit-docs", "network"],
+    "side_effects": ["sends-external", "publishes"]
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [
+    {"factor": "boundary-contact", "tier_floor": "R1", "source": "declared", "evidence": "the real-Hermes round calls a paid provider through the operator's own key; tags and the release PR are pushed"},
+    {"factor": "ci-stateful-infra", "tier_floor": "R2", "source": "derived:infra-state", "evidence": "the Pages deployment is state outside the repository"}
+  ],
+  "status": "proposed",
+  "owner_session": "unassigned",
+  "claims": ["package.json", "CHANGELOG.md", "docs/images/", "README.md", "org/reviews/", "org/tasks/"],
+  "programme": "B19, depends on B18 (T-0112). Publishing to a new external destination (Pages) and the merge to main are the operator's, per the constitution's approver rule; the session prepares and the operator clicks.",
+  "timestamps": {"opened": "2026-09-05T10:30:00Z", "updated": "2026-09-05T10:30:00Z"}
+}

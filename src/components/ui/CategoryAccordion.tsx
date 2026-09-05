@@ -44,8 +44,8 @@ export default function CategoryAccordion({
       >
         <div className="flex items-center gap-2">
           <div className={`w-1.5 h-1.5 rounded-full ${dotColor}`} />
-          <span className="text-[11px] font-medium text-white/50 uppercase tracking-wider">{name}</span>
-          <span className="text-[10px] font-mono text-white/20">
+          <span className="text-xs font-medium text-ps-text-muted uppercase tracking-wider">{name}</span>
+          <span className="text-xs font-mono text-ps-text-faint">
             {count}
           </span>
         </div>

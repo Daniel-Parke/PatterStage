@@ -14,7 +14,7 @@ jest.mock("@/lib/models-repository", () => ({
 
 const mockReadHermesConfigModels = jest.fn();
 
-jest.mock("@/lib/hermes-config-sync", () => ({
+jest.mock("@/modules/hermes/lib/hermes-config-read", () => ({
   readHermesConfigModels: () => mockReadHermesConfigModels(),
 }));
 

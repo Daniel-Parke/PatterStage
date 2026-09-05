@@ -5,253 +5,61 @@
 // fetch() calls to the Hindsight HTTP server on localhost:9177.
 // This eliminates Python path resolution, subprocess spawning,
 // and JSON serialization overhead on every request.
+//
+// This file is the transport shell: authenticate, read the action off
+// the query string or body, dispatch, and shape the answer. The actions
+// themselves live in src/lib/memory/:
+//
+//   hindsight-request.ts        provider transport + connection-error test
+//   hindsight-read-actions.ts   list, recall, reflect, directives, models,
+//                               health, count
+//   hindsight-write-actions.ts  retain plus the directive/model mutations
+//
+// Authentication is enforced once in src/proxy.ts, and so is read-only mode,
+// which refuses unsafe methods before any handler runs. This route carries
+// neither check (T-0048).
 // ═══════════════════════════════════════════════════════════════
 
 import { NextRequest, NextResponse } from "next/server";
 import { logApiError } from "@/lib/api-logger";
-import { requireAuth } from "@/lib/api-auth";
-import { badRequest } from "@/lib/api-response";
+import { messageFromError } from "@/lib/api-fetch";
+
+import { badRequest, ok } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
-import type { ApiResponse } from "@/types/hermes";
+import { recordEvent } from "@/lib/analytics/record-event";
 import {
-  mapMemoryItem,
-  mapDirectiveItem,
-  mapMentalModelItem,
-  normalizeTags,
-} from "@/lib/hindsight-bridge";
-
-// ── Connection-error detection ─────────────────────────────────
-
-/**
- * Heuristic for "is this a connection-level failure?" — used to
- * downgrade the catch-branch response status from 500 to 503 (the
- * Hindsight server isn't responding, so it's not really a code bug).
- * The original `requestWithTimeout` error message already includes
- * the upstream status + body, so the match must look at substrings
- * of `error.message`, not at `error.name` or a typed `code` field.
- */
-export function isHindsightConnectionError(error: unknown): boolean {
-  if (!(error instanceof Error)) return false;
-  const msg = error.message;
-  return (
-    msg.includes("connect") ||
-    msg.includes("ECONNREFUSED") ||
-    msg.includes("refused") ||
-    msg.includes("timed out")
-  );
-}
-
-// ── Constants ────────────────────────────────────────────────
-
-const HINDSIGHT_BASE_URL = "http://localhost:9177";
-const DEFAULT_BANK = "hermes";
-const DEFAULT_TIMEOUT_MS = 15_000;
-
-// ── Direct HTTP helpers ──────────────────────────────────────
-
-interface ApiOptions {
-  method?: string;
-  body?: Record<string, unknown>;
-  timeoutMs?: number;
-}
-
-async function requestWithTimeout<T = Record<string, unknown>>(
-  path: string,
-  { method = "GET", body, timeoutMs = DEFAULT_TIMEOUT_MS }: ApiOptions = {},
-): Promise<T> {
-  const url = `${HINDSIGHT_BASE_URL}${path}`;
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  const init: RequestInit = { method, signal: controller.signal };
-  if (body) {
-    init.headers = { "Content-Type": "application/json" };
-    init.body = JSON.stringify(body);
-  }
-  try {
-    const res = await fetch(url, init);
-    if (!res.ok) {
-      const text = await res.text().catch(() => "");
-      throw new Error(`Hindsight ${method} ${path}: ${res.status} ${text}`);
-    }
-    return (await res.json()) as T;
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
-// ── Action handlers ──────────────────────────────────────────
-
-async function handleList(bank: string, search?: string, limit?: number) {
-  let params = `?limit=${limit || 100}`;
-  if (search) params += `&search=${encodeURIComponent(search)}`;
-  const result = await requestWithTimeout<{ items?: Record<string, unknown>[]; total?: number }>(
-    `/v1/default/banks/${bank}/memories/list${params}`,
-  );
-  const memories = (result.items || []).map(mapMemoryItem);
-  return { memories, count: memories.length, total: result.total || 0 };
-}
-
-async function handleRetain(bank: string, content: string, tags?: string[]) {
-  const result = await requestWithTimeout<{ success?: boolean; operation_id?: string }>(
-    `/v1/default/banks/${bank}/memories`,
-    { method: "POST", body: { items: [{ content, tags: tags || [] }] }, timeoutMs: 30_000 },
-  );
-  return { success: result.success || false, operation_id: result.operation_id };
-}
-
-async function handleRecall(bank: string, query: string) {
-  const result = await requestWithTimeout<{ items?: Record<string, unknown>[] }>(
-    `/v1/default/banks/${bank}/memories/list?limit=20&search=${encodeURIComponent(query)}`,
-  );
-  const memories = (result.items || []).map(mapMemoryItem);
-  return { memories, count: memories.length };
-}
-
-async function handleReflect(bank: string, query: string, budget?: string) {
-  try {
-    const result = await requestWithTimeout<{ response?: string; facts?: unknown[] }>(
-      `/v1/default/banks/${bank}/reflect`,
-      { method: "POST", body: { query, budget: budget || "mid" }, timeoutMs: 60_000 },
-    );
-    return { response: result.response || String(result), facts: result.facts || [] };
-  } catch {
-    // Fallback: search
-    const listResult = await handleRecall(bank, query);
-    const facts = listResult.memories.map((m) => m.content);
-    return { response: `Found ${facts.length} relevant memories.`, facts };
-  }
-}
-
-async function handleDirectives(bank: string) {
-  const result = await requestWithTimeout<Record<string, unknown>[] | { items?: Record<string, unknown>[] }>(
-    `/v1/default/banks/${bank}/directives`,
-  );
-  const items = Array.isArray(result) ? result : (result.items || []);
-  const directives = items.map(mapDirectiveItem);
-  return { directives, count: directives.length };
-}
-
-async function handleCreateDirective(
-  bank: string,
-  name: string,
-  content: string,
-  priority?: number,
-  tags?: string[],
-) {
-  const body: Record<string, unknown> = { name, content };
-  if (priority !== undefined) body.priority = priority;
-  if (tags) body.tags = tags;
-  const result = await requestWithTimeout(`/v1/default/banks/${bank}/directives`, { method: "POST", body });
-  return { success: true, directive: result };
-}
-
-async function handleDeleteDirective(bank: string, id: string) {
-  await requestWithTimeout(`/v1/default/banks/${bank}/directives/${id}`, { method: "DELETE" });
-  return { success: true, id };
-}
-
-async function handleUpdateDirective(
-  bank: string,
-  id: string,
-  updates: Record<string, unknown>,
-) {
-  const body: Record<string, unknown> = {};
-  if (updates.name !== undefined) body.name = updates.name;
-  if (updates.content !== undefined) body.content = updates.content;
-  if (updates.priority !== undefined) body.priority = updates.priority;
-  if (updates.is_active !== undefined) body.is_active = String(updates.is_active) === "true";
-  if (updates.tags !== undefined) body.tags = normalizeTags(updates.tags);
-  const result = await requestWithTimeout(`/v1/default/banks/${bank}/directives/${id}`, { method: "PATCH", body });
-  return { success: true, directive: result };
-}
-
-async function handleMentalModels(bank: string) {
-  const result = await requestWithTimeout<Record<string, unknown>[] | { items?: Record<string, unknown>[] }>(
-    `/v1/default/banks/${bank}/mental-models`,
-  );
-  const items = Array.isArray(result) ? result : (result.items || []);
-  const models = items.map(mapMentalModelItem);
-  return { models, count: models.length };
-}
-
-async function handleCreateMentalModel(
-  bank: string,
-  name: string,
-  query: string,
-  tags?: string[],
-) {
-  const body: Record<string, unknown> = { name, source_query: query };
-  if (tags) body.tags = tags;
-  const result = await requestWithTimeout<{ mental_model_id?: string; operation_id?: string }>(
-    `/v1/default/banks/${bank}/mental-models`,
-    { method: "POST", body },
-  );
-  return { success: true, mental_model_id: result.mental_model_id, operation_id: result.operation_id };
-}
-
-async function handleDeleteMentalModel(bank: string, id: string) {
-  await requestWithTimeout(`/v1/default/banks/${bank}/mental-models/${id}`, { method: "DELETE" });
-  return { success: true, id };
-}
-
-async function handleRefreshMentalModel(bank: string, id: string) {
-  const result = await requestWithTimeout<{ operation_id?: string }>(
-    `/v1/default/banks/${bank}/mental-models/${id}/refresh`,
-    { method: "POST", body: {} },
-  );
-  return { success: true, operation_id: result.operation_id };
-}
-
-async function handleUpdateMentalModel(
-  bank: string,
-  id: string,
-  updates: Record<string, unknown>,
-) {
-  const body: Record<string, unknown> = {};
-  if (updates.name !== undefined) body.name = updates.name;
-  if (updates.query !== undefined) body.source_query = updates.query;
-  if (updates.tags !== undefined) body.tags = normalizeTags(updates.tags);
-  const result = await requestWithTimeout(`/v1/default/banks/${bank}/mental-models/${id}`, { method: "PATCH", body });
-  return { success: true, model: result };
-}
-
-async function handleHealth() {
-  try {
-    const result = await requestWithTimeout<{ ok?: boolean; status?: string }>("/health", { timeoutMs: 3000 });
-    return { available: true, mode: "external", status: result.status ?? "healthy" };
-  } catch (e) {
-    return {
-      available: false,
-      error: e instanceof Error ? e.message : "Connection refused",
-    };
-  }
-}
-
-async function handleCount(bank: string) {
-  try {
-    const result = await requestWithTimeout<{ total?: number }>(
-      `/v1/default/banks/${bank}/memories/list?limit=1`,
-    );
-    return { count: result.total || 0, bank };
-  } catch (e) {
-    return {
-      count: 0,
-      bank,
-      error: e instanceof Error ? e.message : "Unknown error",
-    };
-  }
-}
+  defaultBank,
+  isHindsightConnectionError,
+} from "@/lib/memory/hindsight-request";
+import {
+  handleCount,
+  handleDirectives,
+  handleHealth,
+  handleList,
+  handleMentalModels,
+  handleRecall,
+  handleReflect,
+} from "@/lib/memory/hindsight-read-actions";
+import {
+  handleCreateDirective,
+  handleCreateMentalModel,
+  handleDeleteDirective,
+  handleDeleteMentalModel,
+  handleRefreshMentalModel,
+  handleRetain,
+  handleUpdateDirective,
+  handleUpdateMentalModel,
+} from "@/lib/memory/hindsight-write-actions";
+import { hindsightErrorFromCatch } from "@/lib/memory/hindsight-route-helpers";
 
 // ── Routes ───────────────────────────────────────────────────
 
 // GET — List memories, recall, reflect, health check
 export async function GET(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
   const action = request.nextUrl.searchParams.get("action") || "list";
   const query = request.nextUrl.searchParams.get("query") || undefined;
   const budget = request.nextUrl.searchParams.get("budget") || undefined;
-  const bank = request.nextUrl.searchParams.get("bank") || DEFAULT_BANK;
+  const bank = request.nextUrl.searchParams.get("bank") || defaultBank();
   const limitStr = request.nextUrl.searchParams.get("limit") || undefined;
   const limit = limitStr ? parseInt(limitStr, 10) : undefined;
 
@@ -290,14 +98,14 @@ export async function GET(request: NextRequest) {
         return badRequest(`Unknown action: ${action}`);
     }
 
-    return NextResponse.json<ApiResponse<Record<string, unknown>>>({ data: result });
+    return ok(result);
   } catch (error) {
     logApiError("GET /api/memory/hindsight", `action=${action}`, error);
     return NextResponse.json(
       {
         data: {
           available: false,
-          error: error instanceof Error ? error.message : "Hindsight error",
+          error: messageFromError(error, "Hindsight error"),
           memories: [],
         },
       },
@@ -308,8 +116,6 @@ export async function GET(request: NextRequest) {
 
 // POST — Retain memory, create directive, create mental model
 export async function POST(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
   const bodyResult = await parseJsonBody(request);
   if (bodyResult instanceof NextResponse) return bodyResult;
 
@@ -330,7 +136,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const action = body.action || "retain";
-    const bank = body.bank || DEFAULT_BANK;
+    const bank = body.bank || defaultBank();
 
     let result: Record<string, unknown>;
 
@@ -341,6 +147,7 @@ export async function POST(request: NextRequest) {
           return badRequest("Content is required");
         }
         result = await handleRetain(bank, content.trim(), tags);
+        recordEvent("memory.retained", { entityType: "memory", entityId: bank, metadata: { bank } });
         break;
       }
       case "create-directive": {
@@ -387,31 +194,20 @@ export async function POST(request: NextRequest) {
         return badRequest(`Unknown action: ${action}`);
     }
 
-    return NextResponse.json<ApiResponse<Record<string, unknown>>>({ data: result });
+    return ok(result);
   } catch (error) {
-    logApiError("POST /api/memory/hindsight", "action", error);
-    return NextResponse.json(
-      {
-        data: {
-          available: false,
-          error: error instanceof Error ? error.message : "Unknown error",
-        },
-      },
-      { status: 500 },
-    );
+    return hindsightErrorFromCatch("POST /api/memory/hindsight", "action", error);
   }
 }
 
 // DELETE — Remove directive or mental model
 export async function DELETE(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
   const bodyResult = await parseJsonBody(request);
   if (bodyResult instanceof NextResponse) return bodyResult;
   const body = bodyResult;
 
   try {
-    const { type, id, bank = DEFAULT_BANK } = body as {
+    const { type, id, bank = defaultBank() } = body as {
       type?: string;
       id?: string;
       bank?: string;
@@ -428,17 +224,8 @@ export async function DELETE(request: NextRequest) {
       result = await handleDeleteMentalModel(bank, id);
     }
 
-    return NextResponse.json<ApiResponse<Record<string, unknown>>>({ data: result });
+    return ok(result);
   } catch (error) {
-    logApiError("DELETE /api/memory/hindsight", "delete", error);
-    return NextResponse.json(
-      {
-        data: {
-          available: false,
-          error: error instanceof Error ? error.message : "Unknown error",
-        },
-      },
-      { status: 500 },
-    );
+    return hindsightErrorFromCatch("DELETE /api/memory/hindsight", "delete", error);
   }
 }

@@ -1,10 +1,22 @@
 // ═══════════════════════════════════════════════════════════════
 // llm.ts — Configurable LLM endpoint for Story Weaver and other
-// agent-agnostic LLM calls made by Control Hub.
+// agent-agnostic LLM calls made by PatterStage.
 // ═══════════════════════════════════════════════════════════════
 
-import { getAgentLlmEndpoints } from "./hermes-agent-runtime";
+import { getAgentGateway } from "./runtime/gateway";
+import { normaliseUsage } from "./usage-shape";
 import { getModelWithKey, type ModelWithKey } from "./models-repository";
+import { getGatewayKey } from "./runtime/secrets";
+import { buildDirectRequest, inferApiStyle, type ApiStyle } from "./llm-endpoint";
+import { createSpendRun } from "./runs-repository";
+import type { SpendSource } from "./spend/spend-law";
+
+/**
+ * Fast-fail timeout for the direct-provider path. A misconfigured endpoint
+ * (wrong baseUrl / api_style) should surface in seconds, not hang the UI for
+ * minutes — the resilient gateway path keeps its own longer retry budget.
+ */
+const DIRECT_PROVIDER_TIMEOUT_MS = 45_000;
 
 export interface LLMMessage {
   role: "system" | "user" | "assistant";
@@ -22,6 +34,26 @@ export interface LLMOptions {
    * to the Hermes Gateway path.
    */
   modelId?: string;
+  /**
+   * Override the direct-provider fast-fail timeout (ms). Interactive callers
+   * keep the snappy 45s default; benchmark brain-only runs pass the agent's
+   * per-item budget (~120s) so a slow provider isn't unfairly timed out —
+   * the agentic path gets that budget via the gateway, so the baseline must
+   * get it too for a fair comparison.
+   */
+  timeoutMs?: number;
+  /**
+   * When set, this call's reported usage is recorded as spend under this
+   * source, so a feature that drives callLLM directly stops being invisible to
+   * the console and the hard stop (T-0108, D87).
+   */
+  spend?: { source: SpendSource; storyId?: string | null };
+  /**
+   * Abort the provider call. The reader's Stop passes its controller here, so
+   * a stopped chapter stops being written rather than finishing and being
+   * thrown away (T-0108, D88).
+   */
+  signal?: AbortSignal;
 }
 
 export interface LLMResponse {
@@ -38,7 +70,7 @@ export interface LLMResponse {
  * Thrown when the Hermes Gateway is unreachable.
  * Provides a user-facing message with actionable steps.
  */
-export class GatewayUnavailableError extends Error {
+class GatewayUnavailableError extends Error {
   constructor(message: string) {
     super(message);
     this.name = "GatewayUnavailableError";
@@ -50,11 +82,11 @@ export class GatewayUnavailableError extends Error {
  * with a descriptive message if the gateway is not responding.
  */
 async function probeGatewayHealth(): Promise<void> {
-  const { gatewayBase } = getAgentLlmEndpoints();
+  const { baseUrl } = getAgentGateway();
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 5000);
-    const resp = await fetch(gatewayBase + "/health", {
+    const resp = await fetch(baseUrl + "/health", {
       signal: controller.signal,
     });
     clearTimeout(timeout);
@@ -96,7 +128,18 @@ export async function callLLM(
     maxTokens = 4096,
     model: optModel,
     modelId,
+    timeoutMs,
+    signal,
   } = opts;
+
+  // A caller who has already stopped gets no call at all. Relying on fetch to
+  // notice the signal makes "stopped" depend on how far the request had got
+  // (T-0108, D88).
+  if (signal?.aborted) {
+    const err = new Error("The call was stopped before it was made.");
+    err.name = "AbortError";
+    throw err;
+  }
 
   let resolved: ModelWithKey | null = null;
   if (modelId) {
@@ -109,30 +152,70 @@ export async function callLLM(
 
   // ── Direct-provider path ──────────────────────────────────
   if (resolved && resolved.baseUrl && resolved.apiKey) {
-    return callDirectProvider({
+    const direct = await callDirectProvider({
       messages,
       temperature,
       maxTokens,
       model: resolved.modelId,
       baseUrl: resolved.baseUrl,
       apiKey: resolved.apiKey,
+      apiStyle: resolved.apiStyle ?? inferApiStyle(resolved.provider, resolved.baseUrl),
+      timeoutMs,
+      signal,
     });
+    recordSpend(opts, direct);
+    return direct;
   }
 
   // ── Gateway path ──────────────────────────────────────────
   const gatewayModel =
     resolved?.modelId ?? optModel ?? "hermes";
 
-  const { apiUrl } = getAgentLlmEndpoints();
+  const { chatCompletionsUrl: apiUrl } = getAgentGateway();
 
   await probeGatewayHealth();
-  return callGateway({
+  const viaGateway = await callGateway({
     messages,
     temperature,
     maxTokens,
     model: gatewayModel,
     apiUrl,
+    signal,
   });
+  recordSpend(opts, viaGateway);
+  return viaGateway;
+}
+
+/**
+ * Record what this call cost, when the caller asked for it.
+ *
+ * A provider that reported NO usage writes NO row. Null is not zero: a
+ * zero-token row would report a real cost as free, which is the doctrine the
+ * spend console holds everywhere else.
+ */
+function recordSpend(opts: LLMOptions, response: LLMResponse): void {
+  if (!opts.spend || !response.usage) return;
+  const { promptTokens, completionTokens, totalTokens } = response.usage;
+  if (!(promptTokens > 0 || completionTokens > 0)) return;
+  createSpendRun({
+    source: opts.spend.source,
+    storyId: opts.spend.storyId ?? null,
+    usage: {
+      inputTokens: promptTokens,
+      outputTokens: completionTokens,
+      totalTokens,
+    },
+  });
+}
+
+/** Abort this path's controller when the caller's signal aborts, now or later. */
+function linkAbort(signal: AbortSignal | undefined, controller: AbortController): void {
+  if (!signal) return;
+  if (signal.aborted) {
+    controller.abort();
+    return;
+  }
+  signal.addEventListener("abort", () => controller.abort(), { once: true });
 }
 
 interface CallParams {
@@ -144,45 +227,80 @@ interface CallParams {
 
 interface CallGatewayInput extends CallParams {
   apiUrl: string;
+  /** The caller's abort, linked to this path's own timeout controller. */
+  signal?: AbortSignal;
 }
 
 interface CallDirectInput extends CallParams {
   baseUrl: string;
   apiKey: string;
+  apiStyle: ApiStyle;
+  /** Optional fast-fail override (ms); defaults to DIRECT_PROVIDER_TIMEOUT_MS. */
+  timeoutMs?: number;
+  /** The caller's abort, linked to this path's own timeout controller. */
+  signal?: AbortSignal;
 }
 
 async function callDirectProvider(input: CallDirectInput): Promise<LLMResponse> {
-  const url = input.baseUrl.replace(/\/$/, "") + "/chat/completions";
+  const req = buildDirectRequest({
+    baseUrl: input.baseUrl,
+    apiKey: input.apiKey,
+    model: input.model,
+    messages: input.messages,
+    temperature: input.temperature,
+    maxTokens: input.maxTokens,
+    style: input.apiStyle,
+  });
+
+  const timeoutMs = input.timeoutMs ?? DIRECT_PROVIDER_TIMEOUT_MS;
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 300_000);
+  linkAbort(input.signal, controller);
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    const resp = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${input.apiKey}`,
-      },
-      body: JSON.stringify({
-        model: input.model,
-        messages: input.messages,
-        temperature: input.temperature,
-        max_tokens: input.maxTokens,
-      }),
-      signal: controller.signal,
-    });
+    let resp: Response;
+    try {
+      resp = await fetch(req.url, {
+        method: "POST",
+        headers: req.headers,
+        body: req.body,
+        signal: controller.signal,
+      });
+    } catch (err) {
+      if (err instanceof Error && err.name === "AbortError") {
+        throw new Error(
+          `LLM provider timed out after ${Math.round(timeoutMs / 1000)}s — ` +
+            `check the model's base URL / API style (endpoint / registry config).`
+        );
+      }
+      throw err;
+    }
 
     if (!resp.ok) {
+      const detail = (await resp.text().catch(() => "")).trim();
       throw new Error(
-        `LLM provider error ${resp.status}: ${resp.statusText}`
+        `LLM provider error ${resp.status}: ${detail ? detail.slice(0, 200) : resp.statusText}`
       );
     }
 
     const data = await resp.json();
+
+    // Anthropic-style: { content: [{ text }], usage: { input_tokens, output_tokens } }
+    if (input.apiStyle === "anthropic") {
+      const blocks = Array.isArray(data?.content) ? (data.content as { text?: string }[]) : [];
+      const content = blocks.map((b) => b?.text ?? "").join("").trim();
+      // This branch was the only one that normalised, because an explicit cast
+      // forced its author to name the wire shape. It now shares the one
+      // normaliser rather than keeping a private copy of the same knowledge.
+      const usage = normaliseUsage(data?.usage);
+      return { content, model: data?.model ?? input.model, usage };
+    }
+
+    // OpenAI-compatible: { choices: [{ message: { content } }], usage }
     return {
       content: data.choices?.[0]?.message?.content?.trim() ?? "",
       model: data.model ?? input.model,
-      usage: data.usage,
+      usage: normaliseUsage(data.usage),
     };
   } finally {
     clearTimeout(timeout);
@@ -201,12 +319,19 @@ async function callGateway(input: CallGatewayInput): Promise<LLMResponse> {
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     const controller = new AbortController();
+    linkAbort(input.signal, controller);
     const timeout = setTimeout(() => controller.abort(), 300_000); // 5 min
 
     try {
+      const gatewayKey = getGatewayKey();
       const resp = await fetch(apiUrl, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          // The Hermes API Server requires a bearer key when API_SERVER_KEY is
+          // set; without this every gateway call 401s once auth is enabled.
+          ...(gatewayKey ? { Authorization: `Bearer ${gatewayKey}` } : {}),
+        },
         body: JSON.stringify({
           model,
           messages,
@@ -242,7 +367,11 @@ async function callGateway(input: CallGatewayInput): Promise<LLMResponse> {
       return {
         content,
         model: data.model ?? model,
-        usage: data.usage,
+        // Through the normaliser, not straight through. `data` is `any` (
+        // Response.json() is typed Promise<any>), so assigning the provider's
+        // snake_case object into this camelCase field type-checked cleanly and
+        // silently zeroed every Deep Research run (T-0068).
+        usage: normaliseUsage(data.usage),
       };
     } catch (err) {
       lastError = err instanceof Error ? err : new Error(String(err));

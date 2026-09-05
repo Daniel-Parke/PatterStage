@@ -2,14 +2,14 @@ blank_issues_enabled: true
 
 contact_links:
   - name: Documentation index
-    url: https://github.com/Daniel-Parke/hermes-control-hub/blob/main/docs/README.md
+    url: https://github.com/Daniel-Parke/PatterStage/blob/main/docs/README.md
     about: Technical docs and where to read next.
   - name: Support
-    url: https://github.com/Daniel-Parke/hermes-control-hub/blob/main/docs/SUPPORT.md
+    url: https://github.com/Daniel-Parke/PatterStage/blob/main/docs/SUPPORT.md
     about: Where to ask questions and how this repo relates to Hermes Agent.
   - name: Security
-    url: https://github.com/Daniel-Parke/hermes-control-hub/blob/main/docs/SECURITY.md
+    url: https://github.com/Daniel-Parke/PatterStage/blob/main/docs/SECURITY.md
     about: Report vulnerabilities privately (not via public issues).
   - name: Code of Conduct
-    url: https://github.com/Daniel-Parke/hermes-control-hub/blob/main/docs/CODE_OF_CONDUCT.md
+    url: https://github.com/Daniel-Parke/PatterStage/blob/main/docs/CODE_OF_CONDUCT.md
     about: Community standards and enforcement.

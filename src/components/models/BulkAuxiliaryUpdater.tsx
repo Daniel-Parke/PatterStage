@@ -6,10 +6,9 @@
 
 import { useState, useCallback } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import {
-  AUXILIARY_TASK_TYPES,
-  type TaskType,
-} from "@/lib/hermes-providers";
+import { AUXILIARY_TASK_TYPES, type TaskType } from "@/lib/models/task-types";
+import { pluralise } from "@/lib/utils";
+import ModelSelectDropdown from "@/components/models/ModelSelectDropdown";
 
 interface BulkAuxiliaryUpdaterProps {
   models: Array<{ id: string; name: string; provider: string; modelId: string }>;
@@ -64,44 +63,35 @@ export default function BulkAuxiliaryUpdater({
         className="w-full flex items-center justify-between px-4 py-2.5 text-left hover:bg-white/5 transition-colors disabled:opacity-50"
       >
         <div className="flex items-center gap-2">
-          <span className="text-xs font-mono text-white/70 uppercase tracking-widest">
+          <span className="text-xs font-mono text-ps-text-secondary uppercase tracking-widest">
             Bulk Set Auxiliaries
           </span>
-          <span className="text-[10px] font-mono text-white/30">
+          <span className="text-xs font-mono text-ps-text-muted">
             ({AUXILIARY_TASK_TYPES.length} slots)
           </span>
         </div>
         {expanded ? (
-          <ChevronUp className="w-4 h-4 text-white/30" />
+          <ChevronUp className="w-4 h-4 text-ps-text-muted" />
         ) : (
-          <ChevronDown className="w-4 h-4 text-white/30" />
+          <ChevronDown className="w-4 h-4 text-ps-text-muted" />
         )}
       </button>
 
       {/* Expanded panel */}
       {expanded && (
         <div className="px-4 pb-4 pt-1 border-t border-white/5 space-y-3">
-          {/* Model selector */}
+          {/* Model selector — shared chrome with DefaultsGrid via ModelSelectDropdown */}
           <div>
-            <label className="block text-[10px] font-mono text-white/40 uppercase tracking-widest mb-1">
+            <label className="block text-xs font-mono text-ps-text-muted uppercase tracking-widest mb-1">
               Target Model
             </label>
-            <div className="relative">
-              <select
-                value={targetModelId}
-                onChange={(e) => setTargetModelId(e.target.value)}
-                disabled={disabled}
-                className="w-full h-9 min-h-9 bg-dark-800 border border-white/10 rounded-lg px-3 pr-8 text-sm text-white font-mono outline-none cursor-pointer transition-colors hover:border-white/20 focus:border-neon-purple/50 disabled:opacity-50 truncate appearance-none"
-              >
-                <option value="">— Select model —</option>
-                {models.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.name} ({m.provider}/{m.modelId})
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 pointer-events-none" />
-            </div>
+            <ModelSelectDropdown
+              value={targetModelId}
+              disabled={disabled}
+              placeholder="— Select model —"
+              options={models}
+              onChange={setTargetModelId}
+            />
           </div>
 
           {/* Mode selector */}
@@ -118,7 +108,7 @@ export default function BulkAuxiliaryUpdater({
                 disabled={disabled}
                 className="accent-neon-purple"
               />
-              <span className="text-xs font-mono text-white/70">ALL</span>
+              <span className="text-xs font-mono text-ps-text-secondary">ALL</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
               <input
@@ -129,7 +119,7 @@ export default function BulkAuxiliaryUpdater({
                 disabled={disabled}
                 className="accent-neon-purple"
               />
-              <span className="text-xs font-mono text-white/70">CUSTOM</span>
+              <span className="text-xs font-mono text-ps-text-secondary">CUSTOM</span>
             </label>
           </div>
 
@@ -148,7 +138,7 @@ export default function BulkAuxiliaryUpdater({
                     disabled={disabled}
                     className="accent-neon-purple w-3 h-3"
                   />
-                  <span className="text-xs font-mono text-white/60 truncate">
+                  <span className="text-xs font-mono text-ps-text-secondary truncate">
                     {taskType}
                   </span>
                 </label>
@@ -163,7 +153,7 @@ export default function BulkAuxiliaryUpdater({
             disabled={disabled || applying || !targetModelId}
             className="w-full h-9 bg-neon-purple/10 border border-neon-purple/30 text-neon-purple text-xs font-mono rounded-lg hover:bg-neon-purple/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {applying ? "Applying…" : `Apply to ${selected.size} slot${selected.size !== 1 ? "s" : ""}`}
+            {applying ? "Applying…" : `Apply to ${selected.size} slot${pluralise(selected.size)}`}
           </button>
         </div>
       )}

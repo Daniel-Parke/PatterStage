@@ -3,7 +3,7 @@
 # Hermes Config Backup Script
 # ═══════════════════════════════════════════════════════════════
 # Backs up your Hermes agent configuration, skills, memory, and
-# Control Hub data to a portable directory or git repo.
+# PatterStage data to a portable directory or git repo.
 #
 # Usage:
 #   bash scripts/bootstrap/backup-hermes-config.sh [target_dir]
@@ -76,10 +76,10 @@ if [ -d "$HERMES_HOME/skills" ]; then
     echo "  ✓ skills/ ($SKILL_COUNT skills)"
 fi
 
-# 6. Control Hub data (default ~/control-hub/data; legacy ~/.hermes/control-hub/data)
-echo "Backing up Control Hub data..."
-CH_DATA_ROOT="${CH_DATA_DIR:-$HOME/control-hub/data}"
-backup_ch_data() {
+# 6. PatterStage data (default ~/control-hub/data; legacy ~/.hermes/control-hub/data)
+echo "Backing up PatterStage data..."
+PS_DATA_ROOT="${PS_DATA_DIR:-${CH_DATA_DIR:-${CONTROL_HUB_DATA_DIR:-$( [ ! -d "$HOME/patterstage/data" ] && [ -d "$HOME/control-hub/data" ] && echo "$HOME/control-hub/data" || echo "$HOME/patterstage/data" )}}}"
+backup_ps_data() {
     local SRC="$1"
     local LABEL="$2"
     if [ ! -d "$SRC" ]; then
@@ -95,10 +95,10 @@ backup_ch_data() {
     TEMPLATE_COUNT=$(find "$TARGET/control-hub/data/templates" -name "*.json" 2>/dev/null | wc -l)
     echo "  ✓ $LABEL ($MISSION_COUNT missions, $TEMPLATE_COUNT templates)"
 }
-if [ -d "$CH_DATA_ROOT" ]; then
-    backup_ch_data "$CH_DATA_ROOT" "control-hub data ($CH_DATA_ROOT)"
+if [ -d "$PS_DATA_ROOT" ]; then
+    backup_ps_data "$PS_DATA_ROOT" "PatterStage data ($PS_DATA_ROOT)"
 elif [ -d "$HERMES_HOME/control-hub/data" ]; then
-    backup_ch_data "$HERMES_HOME/control-hub/data" "control-hub data (legacy under HERMES_HOME)"
+    backup_ps_data "$HERMES_HOME/control-hub/data" "PatterStage data (legacy under HERMES_HOME)"
 fi
 
 # 7. Channel directory

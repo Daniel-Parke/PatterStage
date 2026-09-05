@@ -8,6 +8,7 @@
  * This test suite documents current behavior.
  */
 
+import type { NextRequest } from "next/server";
 jest.mock("next/server", () => {
   // NextResponse as a real class so `bodyResult instanceof NextResponse`
   // (used by parseJsonBody's callsite) works. See session-37 findings.
@@ -54,30 +55,24 @@ jest.mock("next/server", () => {
 jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
 
 jest.mock("@/lib/api-auth", () => ({
-  requireAuth: jest.fn(() => null),
-  requireAuth: jest.fn(() => null),
-  isChReadOnly: jest.fn(() => false),
+  // requireNotReadOnly is the honest name of what these routes call now;
+  // requireAuth stays mocked for the modules that have not been renamed yet.
+  requireNotReadOnly: jest.fn(() => null),
+  isReadOnly: jest.fn(() => false),
 }));
 jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
 
-jest.mock("@/lib/backends", () => ({
-  agentBackend: {
-    dispatchMission: jest.fn(),
-    pauseMission: jest.fn(),
-    resumeMission: jest.fn(),
-    cancelMission: jest.fn(),
-    getMissionStatus: jest.fn(),
-  },
+jest.mock("@/lib/orchestration", () => ({
+  cancelMissionRun: jest.fn(() => Promise.resolve({ ok: true })),
+  dispatchMissionRun: jest.fn(() => Promise.resolve({ ok: true })),
 }));
 
-jest.mock("@/lib/mission-cron-sync", () => ({
-  enrichMissionCron: jest.fn((m: unknown) => m),
-  syncMissionToCronJob: jest.fn(),
-  pauseMissionCron: jest.fn(),
-  deleteMissionCron: jest.fn(),
+jest.mock("@/lib/schedules-repository", () => ({
+  createSchedule: jest.fn(),
+  deleteSchedulesForMission: jest.fn(),
 }));
 
-jest.mock("@/lib/mission-repository", () => {
+jest.mock("@/lib/missions/mission-repository", () => {
   const getMission = jest.fn();
   const deleteMission = jest.fn();
 
@@ -93,7 +88,7 @@ jest.mock("@/lib/mission-repository", () => {
   };
 });
 
-const repo = require("@/lib/mission-repository") as Record<string, jest.Mock>;
+const repo = require("@/lib/missions/mission-repository") as Record<string, jest.Mock>;
 const mockDeleteMission = repo.__deleteMission;
 const mockGetMission = repo.__getMission;
 
@@ -113,7 +108,7 @@ async function postRoute(body: Record<string, unknown>) {
     headers: new Headers({ "content-type": "application/json" }),
     body: JSON.stringify(body),
     json: async () => body,
-  } as unknown as Request;
+  } as unknown as NextRequest;
   return route.POST(req) as unknown as { status: number; json(): Promise<Record<string, unknown>> };
 }
 

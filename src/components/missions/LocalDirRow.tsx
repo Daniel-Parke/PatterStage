@@ -1,18 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { FolderOpen, Plus, Trash2 } from "lucide-react";
 
-import type { LocalDirEntry } from "@/types/hermes";
-import { safeApiCall } from "@/lib/api-fetch";
+import type { LocalDirEntry } from "@/types/console";
+import { useGitBranches } from "@/hooks/useGitBranches";
 
 import DirectoryPickerModal from "./DirectoryPickerModal";
-
-interface GitBranchesData {
-  isGitRepo: boolean;
-  branches: string[];
-  current: string | null;
-}
 
 interface LocalDirRowProps {
   mode: "draft" | "saved";
@@ -30,32 +24,7 @@ export default function LocalDirRow({
   onDelete,
 }: LocalDirRowProps) {
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [git, setGit] = useState<GitBranchesData | null>(null);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    const p = entry.path.trim();
-    if (!p) {
-      setGit(null);
-      return;
-    }
-    if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => {
-      safeApiCall<{ data: { isGitRepo: boolean; branches: string[]; current: string | null } }>(
-        "/api/fs/git/branches?path=" + encodeURIComponent(p),
-      )
-        .then((j) => {
-          if (j.ok) {
-            setGit(j.data?.data ?? { isGitRepo: false, branches: [], current: null });
-          } else {
-            setGit({ isGitRepo: false, branches: [], current: null });
-          }
-        });
-    }, 400);
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
-  }, [entry.path]);
+  const git = useGitBranches(entry.path);
 
   const branchValue =
     entry.branch !== undefined && entry.branch !== null && entry.branch !== ""
@@ -72,12 +41,12 @@ export default function LocalDirRow({
           onChange={(e) =>
             onChange({ ...entry, path: e.target.value, branch: entry.branch })
           }
-          placeholder="~/projects/my-app/"
+          placeholder="~/projects/my-app/" aria-label="Local directory path"
           className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white placeholder-white/20 outline-none focus:border-neon-cyan/50 font-mono"
         />
       </div>
       {git?.isGitRepo && git.branches.length > 0 && (
-        <select
+        <select aria-label="Git branch"
           value={branchValue}
           onChange={(e) =>
             onChange({
@@ -85,7 +54,7 @@ export default function LocalDirRow({
               branch: e.target.value === "" ? null : e.target.value,
             })
           }
-          className="bg-dark-800/50 border border-white/10 rounded-lg px-2 py-1.5 text-[10px] text-white font-mono outline-none focus:border-neon-cyan/50 max-w-[140px]"
+          className="bg-dark-800/50 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white font-mono outline-none focus:border-neon-cyan/50 max-w-[140px]"
         >
           <option value="">branch</option>
           {git.branches.map((b) => (
@@ -99,7 +68,7 @@ export default function LocalDirRow({
         type="button"
         title="Browse"
         onClick={() => setPickerOpen(true)}
-        className="p-1.5 rounded-lg border border-white/10 text-white/50 hover:text-neon-cyan hover:border-neon-cyan/30 transition-colors"
+        className="p-1.5 rounded-lg border border-white/10 text-ps-text-muted hover:text-neon-cyan hover:border-neon-cyan/30 transition-colors"
       >
         <FolderOpen className="w-4 h-4" />
       </button>
@@ -117,7 +86,7 @@ export default function LocalDirRow({
         <button
           type="button"
           onClick={onDelete}
-          className="p-1.5 rounded-lg border border-white/10 text-white/40 hover:text-red-400 hover:border-red-500/30 transition-colors"
+          className="p-1.5 rounded-lg border border-white/10 text-ps-text-muted hover:text-red-400 hover:border-red-500/30 transition-colors"
           title="Remove"
         >
           <Trash2 className="w-4 h-4" />

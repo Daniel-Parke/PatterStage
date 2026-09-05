@@ -1,10 +1,8 @@
 import { z } from "zod";
 
-export const TEMPLATE_PACK_SCHEMA_VERSION = "1.0.0" as const;
-
 const accentSchema = z.enum(["cyan", "purple", "green", "pink", "orange"]);
 
-export const templatePackEntrySchema = z.object({
+const templatePackEntrySchema = z.object({
   id: z.string().min(1),
   name: z.string(),
   icon: z.string(),
@@ -18,7 +16,7 @@ export const templatePackEntrySchema = z.object({
   suggestedToolsets: z.array(z.string()).optional(),
   // defaultModel + defaultProvider are pre-fill hints for the mission
   // form. Both are optional — when omitted, the dispatch falls back to
-  // Control Hub DB's `agent` default (see src/lib/models-repository.ts).
+  // PatterStage DB's `agent` default (see src/lib/models-repository.ts).
   defaultModel: z.string().optional(),
   defaultProvider: z.string().optional(),
   timeoutMinutes: z.number().int().min(1).max(120),

@@ -48,7 +48,7 @@ export function setupFsMocks() {
 
 /**
  * @deprecated jest.mock inside a function is not hoisted — do not use for new tests.
- * Prefer top-of-file `jest.mock("@/lib/hermes-agent-runtime", ...)` and `jest.mock("@/lib/paths", ...)`.
+ * Prefer top-of-file `jest.mock("@/modules/hermes/lib/agent-runtime", ...)` and `jest.mock("@/lib/paths", ...)`.
  */
 export function setupRouteMocks() {
   const root = "/tmp/test-hermes";
@@ -67,7 +67,7 @@ export function setupRouteMocks() {
     cronJobs: root + "/cron/jobs.json",
     memoryDb: root + "/memory_store.db",
   };
-  jest.mock("@/lib/hermes-agent-runtime", () => ({
+  jest.mock("@/modules/hermes/lib/agent-runtime", () => ({
     getActiveHermesPaths: () => hp,
     getActiveHermesHome: () => root,
     getAgentLlmEndpoints: () => ({
@@ -77,20 +77,20 @@ export function setupRouteMocks() {
   }));
 
   jest.mock("@/lib/paths", () => ({
-    CH_DATA_DIR: "/tmp/ch-data",
+    PS_DATA_DIR: "/tmp/ch-data",
     PATHS: {
-      controlHubDb: "/tmp/ch-data/control-hub.db",
+      patterStageDb: "/tmp/ch-data/patterstage.db",
       missions: "/tmp/ch-data/missions",
       templates: "/tmp/ch-data/templates",
       stories: "/tmp/ch-data/stories",
       recroom: "/tmp/ch-data/recroom",
       workspaces: "/tmp/ch-data/workspaces",
       auditLog: "/tmp/ch-data/audit",
-      chScripts: "/tmp/ch-data/scripts",
-      chHardwareLogs: "/tmp/ch-data/logs",
+      psScripts: "/tmp/ch-data/scripts",
+      psHardwareLogs: "/tmp/ch-data/logs",
     },
-    getChScriptsDir: () => "/tmp/ch-data/scripts",
-    getChHardwareLogDir: () => "/tmp/ch-data/logs",
+    getPsScriptsDir: () => "/tmp/ch-data/scripts",
+    getPsHardwareLogDir: () => "/tmp/ch-data/logs",
   }));
 
   jest.mock("@/lib/api-logger", () => ({
@@ -99,13 +99,25 @@ export function setupRouteMocks() {
     safeReadJsonFile: jest.fn(() => ({ ok: true, data: {} })),
   }));
 
+  // The REAL module, with only the signing check stubbed.
+  //
+  // This used to replace the whole module, including `isReadOnly: () => false`.
+  // That is how a read-only defect reached 34 route handlers with the suite
+  // green throughout: every test that touched a route ran with the mode
+  // hard-wired off, so no test could observe the bug even in principle
+  // (T-0048, T-0049).
+  //
+  // `isReadOnly` and `requireNotReadOnly` now read the real environment, which
+  // is unset in a normal test run and therefore behaves exactly as the old stub
+  // did. The difference is that a test which SETS PS_READ_ONLY now gets the
+  // truth instead of a decision made for it.
+  //
+  // `requireSignedRequest` stays stubbed: it needs an HMAC over a shared secret
+  // that no route test is about, and leaving it real would make every one of
+  // them carry signing headers to test something else entirely.
   jest.mock("@/lib/api-auth", () => ({
-    requireMcApiKey: jest.fn(() => null),
-    requireChApiKey: jest.fn(() => null),
-    requireAuth: jest.fn(() => null),
-    requireNotReadOnly: jest.fn(() => null),
+    ...jest.requireActual("@/lib/api-auth"),
     requireSignedRequest: jest.fn(() => null),
-    isChReadOnly: jest.fn(() => false),
   }));
 
   jest.mock("@/lib/parse-json-body", () => ({

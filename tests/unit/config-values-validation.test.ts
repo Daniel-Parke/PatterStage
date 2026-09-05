@@ -8,15 +8,22 @@ const mockWriteFileSync = jest.fn();
 const mockExistsSync = jest.fn();
 const mockMkdirSync = jest.fn();
 const mockRequireAuth = jest.fn();
+// The route writes config.yaml through `writeHermesConfigFile`, which stages to
+// a tmpfile and renames. A mock without these two is a route that throws 500 on
+// the success path, so they belong to the write, not to any one assertion.
+const mockRenameSync = jest.fn();
+const mockUnlinkSync = jest.fn();
 
 jest.mock("fs", () => ({
   readFileSync: mockReadFileSync,
   writeFileSync: mockWriteFileSync,
   existsSync: mockExistsSync,
   mkdirSync: mockMkdirSync,
+  renameSync: mockRenameSync,
+  unlinkSync: mockUnlinkSync,
 }));
 
-jest.mock("@/lib/hermes-agent-runtime", () => ({
+jest.mock("@/modules/hermes/lib/agent-runtime", () => ({
   getActiveHermesPaths: jest.fn(() => ({
     root: "/tmp/test-hermes",
     config: "/tmp/test-hermes/config.yaml",
@@ -40,20 +47,20 @@ jest.mock("@/lib/hermes-agent-runtime", () => ({
 }));
 
 jest.mock("@/lib/paths", () => ({
-  CH_DATA_DIR: "/tmp/ch-data",
+  PS_DATA_DIR: "/tmp/ch-data",
   PATHS: {
     missions: "/tmp/ch-data/missions",
-    controlHubDb: "/tmp/ch-data/control-hub.db",
+    patterStageDb: "/tmp/ch-data/control-hub.db",
     templates: "/tmp/ch-data/templates",
     stories: "/tmp/ch-data/stories",
     recroom: "/tmp/ch-data/recroom",
     workspaces: "/tmp/ch-data/workspaces",
     auditLog: "/tmp/ch-data/audit",
-    chScripts: "/tmp/ch-data/scripts",
-    chHardwareLogs: "/tmp/ch-data/logs",
+    psScripts: "/tmp/ch-data/scripts",
+    psHardwareLogs: "/tmp/ch-data/logs",
   },
-  getChScriptsDir: () => "/tmp/ch-data/scripts",
-  getChHardwareLogDir: () => "/tmp/ch-data/logs",
+  getPsScriptsDir: () => "/tmp/ch-data/scripts",
+  getPsHardwareLogDir: () => "/tmp/ch-data/logs",
 }));
 
 jest.mock("@/lib/api-logger", () => ({
@@ -61,7 +68,6 @@ jest.mock("@/lib/api-logger", () => ({
 }));
 
 jest.mock("@/lib/api-auth", () => ({
-  requireAuth: mockRequireAuth,
 }));
 
 jest.mock("@/lib/audit-log", () => ({
@@ -79,6 +85,10 @@ describe("PUT /api/config values validation regression", () => {
     mockRequireAuth.mockReturnValue(null);
   });
 
+  // PUT body is now zod-validated (session 121 migration to
+  // parseAndValidateJsonBody). Bad `values` shape → 400 "Invalid
+  // request body" with the per-field zod issue list. We assert on the
+  // status code + that the zod details point at the `values` field.
   it("rejects when values is a string", async () => {
     const { PUT } = await import("@/app/api/config/route");
     const req = new NextRequest("http://localhost/api/config", {
@@ -89,7 +99,8 @@ describe("PUT /api/config values validation regression", () => {
     const body = await res.json();
 
     expect(res.status).toBe(400);
-    expect(body.error).toMatch(/values must be an object/i);
+    expect(body.error).toMatch(/invalid request body/i);
+    expect(JSON.stringify(body.details)).toMatch(/values/);
   });
 
   it("rejects when values is an array", async () => {
@@ -102,7 +113,8 @@ describe("PUT /api/config values validation regression", () => {
     const body = await res.json();
 
     expect(res.status).toBe(400);
-    expect(body.error).toMatch(/values must be an object/i);
+    expect(body.error).toMatch(/invalid request body/i);
+    expect(JSON.stringify(body.details)).toMatch(/values/);
   });
 
   it("rejects when values is null", async () => {
@@ -115,7 +127,8 @@ describe("PUT /api/config values validation regression", () => {
     const body = await res.json();
 
     expect(res.status).toBe(400);
-    expect(body.error).toMatch(/values/i);
+    expect(body.error).toMatch(/invalid request body/i);
+    expect(JSON.stringify(body.details)).toMatch(/values/);
   });
 
   it("accepts when values is a valid object", async () => {

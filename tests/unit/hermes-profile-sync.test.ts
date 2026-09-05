@@ -17,7 +17,7 @@ function loadRealBetterSqlite3(): typeof import("better-sqlite3") {
 jest.mock("@/lib/db", () => {
   const actualCrypto = jest.requireActual("crypto") as typeof import("crypto");
   return {
-    db: () => testDb!,
+    getDb: () => testDb!,
     inTransaction: <T,>(fn: () => T) => testDb!.transaction(fn)(),
     uuid: () => actualCrypto.randomUUID(),
     now: () => new Date().toISOString(),
@@ -25,8 +25,8 @@ jest.mock("@/lib/db", () => {
   };
 });
 
-jest.mock("@/lib/hermes-profile-paths", () => {
-  const actual = jest.requireActual("@/lib/hermes-profile-paths") as typeof import("@/lib/hermes-profile-paths");
+jest.mock("@/modules/hermes/lib/profile-paths", () => {
+  const actual = jest.requireActual("@/modules/hermes/lib/profile-paths") as typeof import("@/modules/hermes/lib/profile-paths");
   return {
     ...actual,
     getHermesDefaultRoot: () => hermesRoot,
@@ -50,14 +50,12 @@ afterEach(() => {
   testDb = null;
 });
 
-describe("hermes-profile-sync", () => {
+describe("profile push / pull / drift", () => {
   it("push writes SOUL.md and pull reads it back", () => {
-    const { upsertProfile } = require("@/lib/profiles-repository") as typeof import("@/lib/profiles-repository");
-    const {
-      pushProfileToHermes,
-      pullProfileFromHermes,
-      detectProfileDrift,
-    } = require("@/lib/hermes-profile-sync") as typeof import("@/lib/hermes-profile-sync");
+    const { upsertProfile } = require("@/modules/hermes/lib/profiles-repository") as typeof import("@/modules/hermes/lib/profiles-repository");
+    const { pushProfileToHermes } = require("@/modules/hermes/lib/profile-push") as typeof import("@/modules/hermes/lib/profile-push");
+    const { pullProfileFromHermes } = require("@/modules/hermes/lib/profile-pull") as typeof import("@/modules/hermes/lib/profile-pull");
+    const { detectProfileDrift } = require("@/modules/hermes/lib/profile-drift") as typeof import("@/modules/hermes/lib/profile-drift");
 
     upsertProfile({
       slug: "qa",
@@ -78,13 +76,13 @@ describe("hermes-profile-sync", () => {
 
     const pull = pullProfileFromHermes("qa");
     expect(pull.success).toBe(true);
-    const { getProfile } = require("@/lib/profiles-repository") as typeof import("@/lib/profiles-repository");
+    const { getProfile } = require("@/modules/hermes/lib/profiles-repository") as typeof import("@/modules/hermes/lib/profiles-repository");
     expect(getProfile("qa")?.soulMd).toBe("# On disk");
   });
 
   it("pushAllProfiles onlyMissing skips profiles with existing SOUL on disk", () => {
-    const { upsertProfile } = require("@/lib/profiles-repository") as typeof import("@/lib/profiles-repository");
-    const { pushAllProfiles } = require("@/lib/hermes-profile-sync") as typeof import("@/lib/hermes-profile-sync");
+    const { upsertProfile } = require("@/modules/hermes/lib/profiles-repository") as typeof import("@/modules/hermes/lib/profiles-repository");
+    const { pushAllProfiles } = require("@/modules/hermes/lib/profile-push") as typeof import("@/modules/hermes/lib/profile-push");
 
     const soulPath = join(hermesRoot, "profiles", "qa", "SOUL.md");
     const agentsPath = join(hermesRoot, "profiles", "qa", "AGENTS.md");
@@ -106,11 +104,9 @@ describe("hermes-profile-sync", () => {
   });
 
   it("pull normalizes granular cli toolsets into compact hermes-cli", () => {
-    const { upsertProfile, getProfile } = require("@/lib/profiles-repository") as typeof import("@/lib/profiles-repository");
-    const {
-      pullProfileFromHermes,
-      detectProfileDrift,
-    } = require("@/lib/hermes-profile-sync") as typeof import("@/lib/hermes-profile-sync");
+    const { upsertProfile, getProfile } = require("@/modules/hermes/lib/profiles-repository") as typeof import("@/modules/hermes/lib/profiles-repository");
+    const { pullProfileFromHermes } = require("@/modules/hermes/lib/profile-pull") as typeof import("@/modules/hermes/lib/profile-pull");
+    const { detectProfileDrift } = require("@/modules/hermes/lib/profile-drift") as typeof import("@/modules/hermes/lib/profile-drift");
 
     const profileDir = join(hermesRoot, "profiles", "bob");
     mkdirSync(profileDir, { recursive: true });
@@ -145,5 +141,24 @@ describe("hermes-profile-sync", () => {
     expect(json.cli).toEqual(["hermes-cli"]);
     const drift = detectProfileDrift("bob");
     expect(drift.fields).not.toContain("config.yaml");
+  });
+});
+
+describe("pull refuses a corrupt root config.yaml and names the repair (T-0086)", () => {
+  it("leaves the row alone and points at the newest parseable backup", () => {
+    const rootRepo = require("@/lib/agent-root-repository") as typeof import("@/lib/agent-root-repository");
+    const pull = require("@/modules/hermes/lib/profile-pull") as typeof import("@/modules/hermes/lib/profile-pull");
+    rootRepo.updateAgentRoot({ configYaml: "skills:\n  disabled: []\nversion: 1\n" });
+    const before = rootRepo.getAgentRoot().configYaml;
+    mkdirSync(join(hermesRoot, "backups"), { recursive: true });
+    writeFileSync(join(hermesRoot, "backups", "config.yaml.2026-08-30T10-00-00-000Z.bak"), "version: 1\n");
+    writeFileSync(join(hermesRoot, "config.yaml"), "model:\n  a: 1\nmodel:\n  b: 2\n");
+
+    const result = pull.pullRootFromHermes();
+
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/did not parse/);
+    expect(result.error).toMatch(/Restore .*2026-08-30T10-00-00-000Z.*then Pull again/);
+    expect(rootRepo.getAgentRoot().configYaml).toBe(before);
   });
 });

@@ -1,0 +1,39 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": [
+    "src/instrumentation.ts",
+    "scripts/**/*.{ts,mjs}",
+    "mock-hermes/server.mjs",
+    "mock-hindsight/server.mjs",
+    "mock-llm/server.mjs",
+    "tests/integration/runtime/*.mjs",
+    "tests/**/*.test.{ts,tsx}"
+  ],
+  "project": [
+    "src/**/*.{ts,tsx}",
+    "scripts/**/*.{ts,mjs}",
+    "mock-hermes/**/*.mjs",
+    "mock-hindsight/**/*.mjs",
+    "mock-llm/**/*.mjs"
+  ],
+  "ignoreDependencies": [
+    "ts-jest",
+    "tailwindcss",
+    "@jest/globals",
+    "jsdom"
+  ],
+  "ignoreBinaries": [
+    "python",
+    "crontab",
+    "systemctl",
+    "which",
+    "ps",
+    "sqlite3",
+    "tasklist",
+    "taskkill",
+    "netstat",
+    "ss",
+    "lsof",
+    "where"
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "version": 1,
+  "assigned": "2026-08-22",
+  "lanes": [],
+  "note": "Seeded empty at the ADR-0008 cutover. PatterStage has never run a parallel lane, and org/policy.json caps max_lanes at 2 until a run record exists to argue it higher. An integrator writes and commits this file before any dispatch; lanes receive claims and never acquire or mutate them."
+}

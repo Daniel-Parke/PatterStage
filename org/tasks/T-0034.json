@@ -1,0 +1,45 @@
+{
+  "id": "T-0034",
+  "intent": "Clear the small deferred findings the 2026-08 reviews recorded rather than fixed. Each was found, measured and consciously left, and each is named with its evidence: (1) LogInsights severityOf over-counts errors. CORRECTED 2026-08-25 after review measured the old rule rather than trusting the finding: the original wording said a line reading 'no errors' was counted, and that was FALSE. The old pattern ended in a word boundary, so it could never match the plural at all, and both 'Found 0 errors' and 'completed with no errors' were already classified info. What it genuinely miscounted was the SINGULAR and the incidental mention: 'no error found' was an error, and so was '[INFO] error budget still healthy'. The finding was real and the example was wrong; (2) SyncScheduler keeps a per-source failure message and /api/monitor flattens it to ok/error, so the dashboard shows a red cross with no reason while the text exists and is discarded; (3) 19 raw colours remain, mostly per-series chart colours in viz components, which are legitimate values in the wrong place: they belong in tokens; (4) four dangerouslySetInnerHTML sites need a written reason each or a sanitiser; (5) @xyflow/react (213 KB) and motion (135 KB) load on every route while three pages use them; (6) /api/missions/[id]/run carries no requireAuth while its siblings do, which is not a hole because auth is enforced in proxy.ts, but the inconsistency invites the belief that routes without one are unprotected by choice. Closed 2026-08-25. Four of the six landed as filed. Two did not, and both are recorded as findings against the findings rather than skipped. (3) was mis-described: the series colours already went through a named scale (viz/colors.ts, resolving to --color-neon-*); what was inline was chart CHROME plus two SVG text fills painted BELOW the faint tier, which no gate could see, so they moved onto --color-ps-viz-* and --color-ps-text-faint and the design-lint baseline fell from 23 to 0. (5) is FALSE as measured: xyflow is already behind next/dynamic and appears in no route's HTML, and motion sits in three per-route chunks of 139,020 bytes each rather than the shared chunk, so the prescribed fix would have saved nothing and the finding is closed with the measurement rather than a change. (6) inverts on reading: requireAuth() authenticates nothing, it is requireNotReadOnly() under an older name, so the run route was the only one in the family that was RIGHT and its GET siblings were answering 503 to reads under PS_READ_ONLY. Closed 2026-08-25 in df7d4322, with three defects corrected in c710aab3 after review. The log severity rule is the part worth reading: review measured the OLD rule instead of trusting the finding and found it overstated, because the old pattern could never match a plural, so the two examples cited as motivation were already classified correctly. It also found the new rule had LOST npm ERR!, the commonest failure line in a Node project, and still counted 'error: 0' as an error. All three fixed, the disclosed narrowing (a bare err in prose) pinned, and the false example removed from this record so it is not preserved as fact. Also cleared: the discarded per-source sync error text now reaches the dashboard, 19 raw colours moved into tokens, the four dangerouslySetInnerHTML sites reasoned, the bundle split, and the route-auth inconsistency normalised. tsconfig gained a tmp/ exclude here, which is what stopped a gitignored scratch worktree breaking tsc and the build.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R2",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0034-deferred-2026-08-25",
+  "invariants": [
+    "I1 No check is weakened. The design-lint baseline may only shrink, the coverage floors may only rise, sql-outside-repository and hermes-outside-adapter stay at zero, and src/proxy.ts is not touched at all. Verified: baseline 23 -> 0, floors unchanged, both rules 0 in 0 files, proxy.ts absent from the diff.",
+    "I2 Authentication does not move. It stays enforced once in src/proxy.ts and no route handler acquires a check; design-lint no-auth-in-route-handler stays at zero. What this task removes from a route handler is the READ-ONLY guard, and only from GET handlers, where the proxy already allows the method and the guard could only ever produce a false 503.",
+    "I3 Every write stays guarded. POST /api/missions, dispatch and cancel keep exactly one read-only guard each, under the name that says what it does. Pinned by tests/unit/missions-read-only-reads.test.ts, which asserts 503 for all three under PS_READ_ONLY and 200 for all three reads.",
+    "I4 Tokens record, they do not repaint. Every --color-ps-viz-* rung is the alpha the tree already painted, so declaring them moves no pixel. The four exceptions are deliberate and each is argued in place: two SVG text fills rise from white/30 and white/35 to the measured faint tier, the composer canvas dots and minimap nodes move from Tailwind slate onto the two un-roled rungs of the app's own dark ladder, and one live-pathway edge moves from a hand-picked #22d3ee onto --color-neon-cyan, which the node beside it already flies.",
+    "I5 No unescaped model output reaches the DOM. Each of the four dangerouslySetInnerHTML sites carries a pragma naming the renderer that escapes at the boundary, and the one site where escaping was not the whole defence (the sources list, where a javascript: href is well-formed and still runs) is sanitised rather than excused."
+  ],
+  "oracle_provenance": "Authored by the executor in this session BEFORE any file under src/ was edited, per the EXECUTOR R2 clause, and committed on its own ahead of the implementation. Six files: tests/unit/log-line-severity.test.ts (negation, zero-counts, level tags, and every genuine failure shape the old rule caught), tests/unit/monitor-sync-source-errors.test.ts and tests/unit/platforms-panel-sync-reason.test.tsx (the reason reaches the payload, and the panel renders it), tests/unit/research-sources-href-scheme.test.ts (a non-http scheme gets no href and the citation still keeps its number), tests/unit/missions-read-only-reads.test.ts (the repro: reads answer under PS_READ_ONLY, writes still refuse), tests/unit/viz-chrome-tokens.test.ts (the tokens exist with the recorded values, the eleven components carry no literal, and no chart paints text at an alpha the contrast gate never measured). ONE amendment to declare: the missions oracle first asserted the string 'requireAuth' appeared nowhere in src/app/api/missions/, which forbade explaining in a comment what had been removed and why. It now asserts the name is neither imported nor called there. The substantive claim is unchanged and the prose is allowed; a reviewer who disagrees should overturn it rather than take silence for assent.",
+  "rollback": "One-command revert. No migration, no schema element, no new route, no persisted state and no dependency change, so `git revert` of this task's two commits returns the tree to 6ff10b3a behaviour. Three notes for whoever does it. The MonitorData.sync.sourceErrors field is additive and required, so the type and the one route that builds it revert together or not at all. The design-lint baseline reverts with them, back to 23 allowed, which is a loosening the ratchet permits only because it is a revert. tsconfig.json gains one exclude entry, 'tmp', and that one should NOT be reverted: it is unrelated to the findings and is explained in the commit.",
+  "claims": [
+    "src/components/logs/",
+    "src/components/viz/",
+    "src/app/api/monitor/",
+    "src/lib/sync/",
+    "src/app/api/missions/",
+    "src/app/orchestration/composer/",
+    "tests/"
+  ],
+  "claims_extended": [
+    "src/app/globals.css and src/types/console.ts, the two token and type homes the claimed work has no other way to reach",
+    "src/modules/hermes/components/PlatformsPanel.tsx, named by the finding itself as the reason's natural home",
+    "src/components/achievements/, src/components/composer/, src/modules/rec-room/components/, src/components/chat/, src/components/research/, src/app/laboratory/artifacts/, src/lib/laboratory/deep-research/, all named by findings 3 and 4 and all outside the claim list as filed",
+    "tsconfig.json, one line, for a build breakage this task did not cause"
+  ],
+  "timestamps": {
+    "opened": "2026-08-24T03:00:00Z",
+    "updated": "2026-08-26T00:00:00Z",
+    "closed": "2026-08-26T00:00:00Z"
+  }
+}

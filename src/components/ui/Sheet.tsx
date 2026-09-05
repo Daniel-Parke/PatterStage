@@ -4,6 +4,8 @@ import { useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 
+import { useDialogA11y } from "@/hooks/useDialogA11y";
+
 export interface SheetProps {
   open: boolean;
   onClose: () => void;
@@ -26,19 +28,11 @@ export default function Sheet({
 }: SheetProps) {
   const [isMobile, setIsMobile] = useState(false);
 
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", onKey);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prev;
-    };
-  }, [open, onClose]);
+  // Escape, the body scroll lock and, new with T-0036, the focus trap and
+  // focus restoration. This used to be an inline effect here; Modal needed
+  // the same behaviour, so it moved to a hook both components call rather
+  // than being written a second time. Sheet's props are unchanged.
+  const panelRef = useDialogA11y({ open, onClose });
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 767px)");
@@ -66,10 +60,13 @@ export default function Sheet({
         onClick={onClose}
       />
       <div
-        className={`${panelClass} flex flex-col bg-dark-950 shadow-2xl`}
+        ref={panelRef}
+        // design-lint-disable-next-line no-bare-outline-none -- the sheet panel takes programmatic focus on open so its title is announced; a ring around the whole panel is noise
+        className={`${panelClass} flex flex-col bg-dark-950 shadow-2xl outline-none`}
         role="dialog"
         aria-modal="true"
         aria-label={title ?? "Panel"}
+        tabIndex={-1}
       >
         {title && (
           <div className="flex items-start justify-between gap-3 px-6 py-4 border-b border-white/10 shrink-0">
@@ -78,7 +75,7 @@ export default function Sheet({
                 {title}
               </h2>
               {subtitle && (
-                <p className="text-xs text-white/40 font-mono mt-1 leading-relaxed">
+                <p className="text-xs text-ps-text-muted font-mono mt-1 leading-relaxed">
                   {subtitle}
                 </p>
               )}
@@ -86,7 +83,7 @@ export default function Sheet({
             <button
               type="button"
               onClick={onClose}
-              className="p-1 rounded text-white/40 hover:text-white/80 shrink-0"
+              className="p-1 rounded text-ps-text-muted hover:text-ps-text-primary shrink-0"
               aria-label="Close panel"
             >
               <X className="w-4 h-4" />

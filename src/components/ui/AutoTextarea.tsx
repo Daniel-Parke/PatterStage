@@ -11,6 +11,12 @@ interface AutoTextareaProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  /**
+   * The accessible name. A placeholder is not one: it vanishes the moment the
+   * box has content, which is exactly when somebody re-reading what they wrote
+   * needs to know what they are writing (T-0083 / the form-control gate).
+   */
+  ariaLabel?: string;
   minRows?: number;
   maxRows?: number;
   className?: string;
@@ -21,6 +27,7 @@ export default function AutoTextarea({
   value,
   onChange,
   placeholder = "",
+  ariaLabel,
   minRows = 2,
   maxRows = 20,
   className = "",
@@ -54,6 +61,7 @@ export default function AutoTextarea({
   return (
     <textarea
       ref={textareaRef}
+      aria-label={ariaLabel ?? placeholder ?? undefined}
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}

@@ -11,7 +11,7 @@ jest.mock("fs", () => ({
   statSync: mockStatSync,
 }));
 
-jest.mock("@/lib/hermes-agent-runtime", () => ({
+jest.mock("@/modules/hermes/lib/agent-runtime", () => ({
   getActiveHermesHome: jest.fn(() => "/tmp/test-hermes"),
 }));
 
@@ -23,12 +23,11 @@ jest.mock("@/lib/audit-log", () => ({
   appendAuditLine: jest.fn(),
 }));
 
-const mockRequireAuth = jest.fn(() => null);
+const mockRequireAuth = jest.fn((..._a: unknown[]): NextResponse | null => null);
 
 jest.mock("@/lib/api-auth", () => ({
-  requireAuth: (...args: unknown[]) => mockRequireAuth(...args),
   requireNotReadOnly: jest.fn(() => null),
-  isChReadOnly: jest.fn(() => false),
+  isReadOnly: jest.fn(() => false),
 }));
 
 const mockEnsureDb = jest.fn();
@@ -47,8 +46,10 @@ jest.mock("@/lib/skills-repository", () => ({
   getSkill: jest.fn(),
 }));
 
-const mockPushSkillToHermes = jest.fn(() => ({ success: true }));
-jest.mock("@/lib/hermes-profile-sync", () => ({
+const mockPushSkillToHermes = jest.fn(
+  (..._a: unknown[]): { success: boolean; error?: string } => ({ success: true }),
+);
+jest.mock("@/modules/hermes/lib/profile-push", () => ({
   pushSkillToHermes: (...args: unknown[]) => mockPushSkillToHermes(...args),
 }));
 
@@ -81,21 +82,12 @@ describe("PUT /api/skills/[name]", () => {
     expect(mockPushSkillToHermes).toHaveBeenCalledWith("demo");
   });
 
-  it("rejects when requireAuth returns a response", async () => {
-    const readOnlyResponse = NextResponse.json({ error: "Read-only" }, { status: 403 });
-    mockRequireAuth.mockReturnValue(readOnlyResponse);
-
-    const { PUT } = await import("@/app/api/skills/[name]/route");
-    const req = new NextRequest("http://localhost/api/skills/demo", {
-      method: "PUT",
-      body: JSON.stringify({ content: "x" }),
-      headers: { "content-type": "application/json" },
-    });
-
-    const res = await PUT(req, { params: Promise.resolve({ name: "demo" }) });
-    expect(res.status).toBe(403);
-    expect(mockUpsertSkill).not.toHaveBeenCalled();
-  });
+  // Read-only refusal is no longer asserted here, because it is no longer
+  // enforced here. T-0048 deleted the per-route guard: `src/proxy.ts` refuses
+  // every unsafe method under PS_READ_ONLY before a handler runs, so a test that
+  // calls this handler directly bypasses the thing it means to check. The
+  // guarantee is asserted per route, in both directions, in
+  // tests/unit/read-only-actually-reads.test.ts.
 
   it("returns 500 when skill push fails", async () => {
     mockPushSkillToHermes.mockReturnValue({ success: false, error: "Push failed" });

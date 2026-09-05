@@ -43,15 +43,17 @@ jest.mock("fs", () => ({
 }));
 
 let deployApiEnabled = true;
-let readOnlyGate: { status: number; json: () => Promise<unknown> } | null = null;
 
 jest.mock("@/lib/api-auth", () => ({
   getCorrelationId: () => "cid-test",
-  requireAuth: () => readOnlyGate,
+  isDeployApiEnabled: () => deployApiEnabled,
   requireDeployApiEnabled: () =>
     deployApiEnabled
       ? null
       : { status: 403, json: () => Promise.resolve({ error: "off" }) },
+  // The host-write guard is this route's since T-0095; its own behaviour is
+  // pinned in b1-host-writes-need-a-token.test.ts against the real module.
+  requireAuthenticatedHostWrites: () => null,
   requireSignedRequest: () => null,
 }));
 
@@ -66,6 +68,14 @@ jest.mock("@/lib/deploy-status", () => ({
   writeDeployStatusRunning: (...args: unknown[]) =>
     mockWriteDeployStatusRunning(...args),
   tailLogHint: (...args: unknown[]) => mockTailLogHint(...args),
+}));
+
+// The detached spawn + liveness probe lives in @/lib/deploy-spawn and is
+// unit-tested in deploy-spawn-probe.test.ts. Mock it here so these tests
+// focus on the route's concerns (gating, dispatch, status writes).
+const mockSpawnChDeploy = jest.fn();
+jest.mock("@/lib/deploy-spawn", () => ({
+  spawnDeploy: (...args: unknown[]) => mockSpawnChDeploy(...args),
 }));
 
 function getReq(url: string): { url: string } {
@@ -204,10 +214,10 @@ describe("POST /api/update", () => {
     mockWriteDeployStatusRunning.mockReset();
     mockTailLogHint.mockReset();
     deployApiEnabled = true;
-    readOnlyGate = null;
     mockIsDeployInProgress.mockReturnValue(false);
     mockGitForDeploy(mockExecFileSync);
-    mockSpawn.mockReturnValue({ pid: 4242, unref: jest.fn() });
+    mockSpawnChDeploy.mockReset();
+    mockSpawnChDeploy.mockResolvedValue({ ok: true, pid: 4242 });
   });
 
   function postReq(body: Record<string, unknown>) {
@@ -226,18 +236,18 @@ describe("POST /api/update", () => {
     expect(res.status).toBe(403);
   });
 
-  it("returns 503 when read-only", async () => {
-    readOnlyGate = {
-      status: 503,
-      json: () => Promise.resolve({ error: "read only" }),
-    };
-    const { POST } = await import("@/app/api/update/route");
-    const res = await POST(postReq({ action: "restart" }));
-    expect(res.status).toBe(503);
-  });
+  // Read-only refusal is no longer asserted here, because it is no longer
+  // enforced here. T-0048 deleted the per-route guard: src/proxy.ts refuses
+  // every unsafe method under PS_READ_ONLY before a handler runs, so a test that
+  // calls this handler directly bypasses the thing it means to check. The
+  // guarantee is asserted for /api/update, in both directions, in
+  // tests/unit/read-only-actually-reads.test.ts.
 
-  it("returns 500 when spawn yields no pid", async () => {
-    mockSpawn.mockReturnValue({ pid: undefined, unref: jest.fn() });
+  it("returns 500 when the deploy fails to start", async () => {
+    mockSpawnChDeploy.mockResolvedValue({
+      ok: false,
+      error: "nohup spawn returned no pid",
+    });
     const { POST } = await import("@/app/api/update/route");
     const res = await POST(postReq({ action: "restart" }));
     expect(res.status).toBe(500);
@@ -266,7 +276,7 @@ describe("POST /api/update", () => {
     expect(res.status).toBe(409);
     const body = await res.json();
     expect(String(body.error)).toMatch(/in progress/i);
-    expect(mockSpawn).not.toHaveBeenCalled();
+    expect(mockSpawnChDeploy).not.toHaveBeenCalled();
   });
 
   it("POST rebuild spawns without --branch when branch omitted", async () => {
@@ -278,7 +288,7 @@ describe("POST /api/update", () => {
       "build",
       expect.stringMatching(/queued/i),
     );
-    const spawnArgs = mockSpawn.mock.calls[0];
+    const spawnArgs = mockSpawnChDeploy.mock.calls[0];
     const flat = JSON.stringify(spawnArgs);
     expect(flat).toContain("rebuild");
     expect(flat).not.toContain("--branch");
@@ -288,8 +298,50 @@ describe("POST /api/update", () => {
     const { POST } = await import("@/app/api/update/route");
     const res = await POST(postReq({ action: "rebuild", branch: "dev" }));
     expect(res.status).toBe(200);
-    const flat = JSON.stringify(mockSpawn.mock.calls[0]);
+    const flat = JSON.stringify(mockSpawnChDeploy.mock.calls[0]);
     expect(flat).toContain("--branch");
     expect(flat).toContain("dev");
+  });
+
+  // ── Probe failures are surfaced as 500 by the route ─────────────
+  // The deep liveness-probe behaviour (systemd unit vs. nohup PID, status
+  // file as source of truth) lives in src/lib/deploy-spawn.ts and is
+  // unit-tested in deploy-spawn-probe.test.ts. Here we only assert the route
+  // turns a probe failure into a 500 and a healthy start into a 200.
+
+  it("returns 500 when the deploy exits immediately", async () => {
+    mockSpawnChDeploy.mockResolvedValue({
+      ok: false,
+      error:
+        "Deploy script exited immediately (PID 4242 no longer alive after 215ms). Check ~/.hermes/logs/ch-update.log for the cause.",
+    });
+    const { POST } = await import("@/app/api/update/route");
+    const res = await POST(postReq({ action: "rebuild" }));
+    expect(res.status).toBe(500);
+    const body = await res.json();
+    expect(String(body.error)).toMatch(/exited immediately/i);
+  });
+
+  it("returns 500 with the lock message on lock contention", async () => {
+    mockSpawnChDeploy.mockResolvedValue({
+      ok: false,
+      error:
+        "Deploy already in progress (lock held by another process). Wait for the current deploy to finish or run: rm -f /tmp/ch-deploy.lock",
+    });
+    const { POST } = await import("@/app/api/update/route");
+    const res = await POST(postReq({ action: "rebuild" }));
+    expect(res.status).toBe(500);
+    const body = await res.json();
+    expect(String(body.error)).toMatch(/lock held|already in progress/i);
+  });
+
+  it("returns 200 when the deploy starts cleanly", async () => {
+    mockSpawnChDeploy.mockResolvedValue({ ok: true, pid: 4242 });
+    const { POST } = await import("@/app/api/update/route");
+    const res = await POST(postReq({ action: "rebuild" }));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.data.action).toBe("rebuild");
+    expect(body.data.status).toBe("started");
   });
 });

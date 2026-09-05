@@ -1,41 +1,51 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 
-import { requireAuth } from "@/lib/api-auth";
-import { logApiError } from "@/lib/api-logger";
+import { badRequest, ok } from "@/lib/api-response";
+// `ok` is still the GET's answer; every POST branch answers through sync-answer.
+import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ensureDb } from "@/lib/db";
 import { parseOptionalJsonBody } from "@/lib/parse-optional-json-body";
+import { booleanFlag, stringFlag } from "@/lib/parse-bag-flags";
 import {
   discoverLocalProfiles,
   importDiscoveredProfile,
   importAllSkillsFromDisk,
-} from "@/lib/hermes-profile-sync";
+} from "@/modules/hermes/lib/profile-discovery";
 import { isValidProfileSlug } from "@/lib/profile-slug";
+import { answerBatch, answerSingle } from "@/modules/hermes/lib/sync-answer";
 
-export async function GET(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
+// Answers through sync-answer.ts, like push and pull: a 500 for the one
+// profile that did not import, a 200 that says so for a batch (T-0095, D19).
+const VERB = "Import from Hermes";
 
+export async function GET(_request: NextRequest) {
   try {
     ensureDb();
     const discovered = discoverLocalProfiles();
-    return NextResponse.json({ data: { profiles: discovered } });
+    return ok({ profiles: discovered });
   }
   catch (error) {
-    logApiError("GET /api/agent/profiles/sync/import", "discover", error);
-    return NextResponse.json({ error: "Failed to discover profiles" }, { status: 500 });
+    return serverErrorFromCatch(
+      "GET /api/agent/profiles/sync/import",
+      "discover",
+      error,
+      "Failed to discover profiles",
+    );
   }
 }
 
 export async function POST(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   // Body is a bag of optional flags (slug, importSkills,
   // importAllDiscovered); missing or malformed body is treated as {}.
   const body = await parseOptionalJsonBody(request);
-  const slug = typeof body.slug === "string" ? body.slug.trim() : undefined;
-  const importSkills = body.importSkills === true;
-  const importAllDiscovered = body.importAllDiscovered === true;
+  // .trim() here is intentional: pre-refactor form was
+  //   const slug = typeof body.slug === "string" ? body.slug.trim() : undefined;
+  // — the trim is part of the route's slug-validity contract, not a
+  // nice-to-have, so the helper's opt-in `trim` is required to keep
+  // byte equivalence.
+  const slug = stringFlag(body, "slug", { trim: true });
+  const importSkills = booleanFlag(body, "importSkills");
+  const importAllDiscovered = booleanFlag(body, "importAllDiscovered");
 
   try {
     ensureDb();
@@ -43,12 +53,7 @@ export async function POST(request: NextRequest) {
 
     if (importSkills) {
       const skillResults = importAllSkillsFromDisk();
-      return NextResponse.json({
-        data: {
-          success: skillResults.every((r) => r.success),
-          skills: skillResults,
-        },
-      });
+      return answerBatch("import", skillResults, { skills: skillResults });
     }
 
     if (importAllDiscovered) {
@@ -56,28 +61,21 @@ export async function POST(request: NextRequest) {
         const r = importDiscoveredProfile(d.slug);
         results.push({ slug: d.slug, success: r.success, error: r.error });
       }
-      return NextResponse.json({
-        data: {
-          success: results.every((r) => r.success),
-          results,
-        },
-      });
+      return answerBatch("import", results, { results });
     }
 
     if (!slug || !isValidProfileSlug(slug)) {
-      return NextResponse.json({ error: "Valid slug is required" }, { status: 400 });
+      return badRequest("Valid slug is required");
     }
 
-    const result = importDiscoveredProfile(slug);
-    return NextResponse.json({
-      data: {
-        success: result.success,
-        result,
-      },
-    });
+    return answerSingle(VERB, importDiscoveredProfile(slug));
   }
   catch (error) {
-    logApiError("POST /api/agent/profiles/sync/import", "import", error);
-    return NextResponse.json({ error: "Failed to import profile" }, { status: 500 });
+    return serverErrorFromCatch(
+      "POST /api/agent/profiles/sync/import",
+      "import",
+      error,
+      "Failed to import profile",
+    );
   }
 }

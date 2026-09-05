@@ -17,6 +17,10 @@ import { runSyncAction, type RunSyncActionOptions } from "@/lib/operation-sync-a
 
 jest.mock("@/lib/api-fetch", () => ({
   apiFetch: jest.fn(),
+  toastError: jest.fn(
+    (showToast: (message: string, variant?: string) => void, err: unknown, fallback: string) =>
+      showToast(err instanceof Error ? err.message : fallback, "error"),
+  ),
 }));
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { apiFetch } = require("@/lib/api-fetch") as { apiFetch: jest.Mock };
@@ -62,7 +66,12 @@ describe("runSyncAction", () => {
     expect(onSuccess).toHaveBeenCalledTimes(1);
   });
 
-  it("shows the error toast and skips onSuccess when the response says success:false (checkSuccess=true)", async () => {
+  it("shows the error toast AND still reloads when the response says success:false (checkSuccess=true)", async () => {
+    // B1 (T-0095), D20. A batch that partly failed is a real outcome: eleven
+    // profiles pushed, one did not. Skipping the reload left the page showing
+    // the pre-push state for all twelve, so the operator could not see which
+    // eleven had actually moved. The toast names the failure; the reload shows
+    // the truth.
     apiFetch.mockResolvedValue({ data: { success: false, error: "disk full" } });
     const showToast = jest.fn();
     const onSuccess = jest.fn();
@@ -72,7 +81,8 @@ describe("runSyncAction", () => {
     );
 
     expect(showToast).toHaveBeenCalledWith("disk full", "error");
-    expect(onSuccess).not.toHaveBeenCalled();
+    expect(showToast).not.toHaveBeenCalledWith("ok", "success");
+    expect(onSuccess).toHaveBeenCalledTimes(1);
   });
 
   it("falls back to errorMessage when success:false has no error string", async () => {
@@ -198,5 +208,50 @@ describe("runSyncAction", () => {
       "/api/test",
       expect.objectContaining({ method: "DELETE" }),
     );
+  });
+
+  // Session 170: `setBusy` became optional. Callers that want no
+  // spinner (e.g. sub-100ms actions like switching the active
+  // personality) omit the key entirely. The helper's default
+  // `setBusy = () => undefined` is a no-op, so omitting is
+  // byte-equivalent to the prior `setBusy: () => undefined` smell.
+  it("tolerates a missing setBusy (no spinner for sub-100ms actions)", async () => {
+    apiFetch.mockResolvedValue({ data: { success: true } });
+    const showToast = jest.fn();
+    const onSuccess = jest.fn();
+
+    // Strip setBusy from the base options — this is the canonical
+    // "I don't want a spinner" call shape.
+    const { setBusy: _setBusy, ...rest } = baseOptions({ showToast, onSuccess });
+    void _setBusy;
+    await runSyncAction(rest as RunSyncActionOptions);
+
+    expect(showToast).toHaveBeenCalledWith("ok", "success");
+    expect(onSuccess).toHaveBeenCalledTimes(1);
+  });
+
+  it("default setBusy is a no-op (no throw, no state mutation) when omitted", async () => {
+    // Direct test of the default-fallback behaviour: a missing
+    // setBusy should be filled by a no-op setter that does nothing
+    // visible. We assert by NOT passing setBusy and confirming the
+    // success path runs to completion (no throw, success toast
+    // called, onSuccess invoked).
+    apiFetch.mockResolvedValue({ data: { success: true } });
+    const showToast = jest.fn();
+    const onSuccess = jest.fn();
+
+    const { setBusy: _setBusy, ...rest } = baseOptions({ showToast, onSuccess });
+    void _setBusy;
+    await expect(runSyncAction(rest as RunSyncActionOptions)).resolves.toBeUndefined();
+  });
+
+  it("tolerates a missing setBusy in the failure path (no throw, error toast still shown)", async () => {
+    apiFetch.mockRejectedValue(new Error("network down"));
+    const showToast = jest.fn();
+
+    const { setBusy: _setBusy, ...rest } = baseOptions({ showToast });
+    void _setBusy;
+    await expect(runSyncAction(rest as RunSyncActionOptions)).resolves.toBeUndefined();
+    expect(showToast).toHaveBeenCalledWith("network down", "error");
   });
 });

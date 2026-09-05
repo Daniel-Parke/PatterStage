@@ -1,6 +1,7 @@
 /** @jest-environment jsdom */
 
-import { render, waitFor } from "@testing-library/react";
+import { waitFor } from "@testing-library/react";
+import { renderWithQuery } from "../helpers/render-with-query";
 import SkillSelector from "@/components/ui/SkillSelector";
 
 describe("SkillSelector profile refetch", () => {
@@ -38,7 +39,7 @@ describe("SkillSelector profile refetch", () => {
   });
 
   it("refetches when profileId changes without opening dropdown", async () => {
-    const { rerender } = render(
+    const { rerender } = renderWithQuery(
       <SkillSelector value={[]} onChange={() => {}} profileId="alpha" max={10} />,
     );
     await waitFor(() => {

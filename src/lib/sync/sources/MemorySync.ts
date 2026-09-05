@@ -7,55 +7,17 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { existsSync, statSync } from "fs";
-import Database from "better-sqlite3";
-import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
-import { setMultipleStats, setSystemStatBoolean } from "@/lib/system-repository";
-import { getMemoryProviderType } from "@/lib/memory-providers";
+import { getAgentWorkspace } from "@/lib/runtime/workspace";
+import { readHolographicFactCount } from "@/lib/runtime/memory-db";
+import { setMultipleStats } from "@/lib/system-repository";
+import { getMemoryProviderType, getActiveMemoryProvider } from "@/lib/memory/memory-providers";
 import { logApiError } from "@/lib/api-logger";
 import type { SyncSource, SyncResult } from "@/lib/sync/types";
-
-const HINDSIGHT_BASE_URL = "http://localhost:9177/v1/default/banks";
-const DEFAULT_BANK = "hermes";
-
-/** Get fact count from Hindsight server via direct HTTP call. */
-async function fetchHindsightFactCount(): Promise<number> {
-  try {
-    const res = await fetch(
-      `${HINDSIGHT_BASE_URL}/${DEFAULT_BANK}/memories/list?limit=1`,
-      { signal: AbortSignal.timeout(3000) }
-    );
-    if (!res.ok) return 0;
-    const data = (await res.json()) as { total?: number };
-    return data.total ?? 0;
-  } catch {
-    return 0;
-  }
-}
-
-/** Get fact count from local SQLite (holographic provider). */
-function getHolographicFactCount(): number {
-  try {
-    const dbPath = getActiveHermesPaths().memoryDb;
-    if (!existsSync(dbPath)) return 0;
-
-    const memDb = new Database(dbPath, { readonly: true });
-    try {
-      const row = memDb
-        .prepare("SELECT COUNT(*) as count FROM facts")
-        .get() as { count: number };
-      return row.count;
-    } finally {
-      memDb.close();
-    }
-  } catch {
-    return 0;
-  }
-}
 
 /** Get memory database file size. */
 function getMemoryDbSize(): string {
   try {
-    const dbPath = getActiveHermesPaths().memoryDb;
+    const dbPath = getAgentWorkspace().memoryDb;
     if (!existsSync(dbPath)) return "N/A";
     const stats = statSync(dbPath);
     const sizeKB = Math.round(stats.size / 1024);
@@ -77,15 +39,22 @@ export class MemorySync implements SyncSource {
 
       let factCount = 0;
       let dbSize = "N/A";
-      let provider = providerType === "none" ? "Not Installed" : providerType;
+      let provider = "Not Installed";
 
       if (providerType === "holographic") {
-        factCount = getHolographicFactCount();
+        provider = "Holographic";
+        factCount = readHolographicFactCount();
         dbSize = getMemoryDbSize();
-      } else if (providerType === "hindsight") {
-        provider = "Hindsight (embedded)";
-        dbSize = "In-agent";
-        factCount = await fetchHindsightFactCount();
+      } else {
+        // hindsight OR none: probe the active provider (DB-owned endpoint)
+        // directly so a blank config.yaml `memory.provider` doesn't hide a live
+        // install, and so a custom host/port set in /config/memory is honoured.
+        const hs = await getActiveMemoryProvider().stats();
+        if (hs.available) {
+          provider = "Hindsight";
+          dbSize = hs.dbSize ?? "In-agent";
+          factCount = hs.factCount;
+        }
       }
 
       // Write to meta table
@@ -94,12 +63,14 @@ export class MemorySync implements SyncSource {
         "memory.db_size": dbSize,
         "memory.provider": provider,
       });
-      setSystemStatBoolean("memory.available", factCount > 0);
+      // `memory.available` was written here on every tick and read by nobody.
+      // It is also derivable from `memory.provider`, which IS read: "Not
+      // Installed" is exactly the unavailable case (T-0081).
 
       return {
         sourceName: this.name,
         success: true,
-        syncedCount: 4,
+        syncedCount: 3,
         durationMs: Math.round(performance.now() - start),
       };
     } catch (err) {

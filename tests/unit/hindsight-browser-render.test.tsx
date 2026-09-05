@@ -38,6 +38,14 @@ function mockHindsightFetch(handlers: {
 }) {
   global.fetch = jest.fn(async (input: RequestInfo | URL) => {
     const url = typeof input === "string" ? input : input.toString();
+    // The on-the-wire envelope is `{ data: <inner> }` for every
+    // /api/memory/hindsight action. The `safeApiCall<T>` helper does
+    // NOT unwrap (see api-fetch.ts:85-98) — it returns `{ ok, data:
+    // <body> }` where `data` is the whole envelope. The post-fix
+    // production code in HindsightBrowser types the calls as
+    // `safeApiCall<{ data?: { ... } }>` and reads fields via
+    // `result.data?.data?.x` (two indirections). The mock body
+    // therefore matches the on-the-wire envelope shape.
     if (url.includes("action=health")) {
       return jsonResponse({ data: { available: true, mode: "ok" } }) as unknown as Response;
     }
@@ -85,21 +93,33 @@ describe("HindsightBrowser", () => {
 
   it("renders fact-type badges, read-only tag badges, and relative time", async () => {
     const threeMinAgo = new Date(Date.now() - 3 * 60 * 1000).toISOString();
+    // The modern Hindsight HTTP server returns plain JSON objects
+    // (not Python `repr()` strings). The `mapMemoryItem` bridge
+    // produces `{ id, content, type, tags, created_at, proofCount }` and
+    // the MemoryTab reads those fields directly — see
+    // `tests/unit/memory-tab-render.test.tsx` for the underlying
+    // render contract. This test verifies the end-to-end
+    // HindsightBrowser render: a memory with these fields is
+    // shown to the user with a coloured fact-type badge, the
+    // tag list, the relevance/proof-count label, and a relative
+    // timestamp.
     mockHindsightFetch({
       memories: [
         {
           id: "m1",
-          content:
-            "{'id': 'm1', 'text': 'Alpha note', 'fact_type': 'observation', 'tags': ['org:acme', 'team:eng']}",
+          content: "Alpha note",
+          type: "observation",
+          tags: ["org:acme", "team:eng"],
           created_at: threeMinAgo,
-          score: 2,
+          proofCount: 2,
         },
         {
           id: "m2",
-          content:
-            "{'id': 'm2', 'text': 'World fact', 'fact_type': 'world', 'tags': []}",
+          content: "World fact",
+          type: "world",
+          tags: [],
           created_at: threeMinAgo,
-          score: 0.5,
+          proofCount: 5,
         },
       ],
     });
@@ -119,8 +139,11 @@ describe("HindsightBrowser", () => {
     expect(screen.getByText("org:acme")).toBeInTheDocument();
     expect(screen.getByText("team:eng")).toBeInTheDocument();
 
-    expect(screen.getByText(/Proof count: 2/)).toBeInTheDocument();
-    expect(screen.getByText(/Relevance: 50%/)).toBeInTheDocument();
+    // Amended for T-0101 (D63): the second row used to carry 0.5 and render
+    // "Relevance: 50%", a similarity figure the bridge has never produced. A
+    // proof count is a count, and it is the only thing this line says.
+    expect(screen.getByText("Proof count: 2")).toBeInTheDocument();
+    expect(screen.getByText("Proof count: 5")).toBeInTheDocument();
 
     const times = screen.getAllByText(/3m ago/);
     expect(times.length).toBeGreaterThanOrEqual(1);

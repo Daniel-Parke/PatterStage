@@ -1,0 +1,39 @@
+{
+  "id": "T-0036",
+  "intent": "Modal gets the accessibility contract Sheet already has. src/components/ui/Modal.tsx sets no role, no aria-modal, no aria-labelledby, no focus trap and no Escape handler, while its sibling Sheet.tsx has all of them. This is not cosmetic: QA counted [role=dialog], got 0 twice, and reported three WORKING controls as dead buttons (Manage categories, Edit Templates, Composer Review and run). A screen-reader user gets the same experience. Port the Escape handler from Sheet.tsx:32 rather than writing a second one. Acceptance: after clicking those controls, [role=dialog] is at least 1; Escape closes; focus is trapped. Source: the operator's live Hermes QA pass on dev@43d16c30, 2026-08-26. Root cause traced by three read-only investigations and re-verified independently; NOT a regression from the consolidation work, which only put a QA pass in front of pages nobody had text-scraped before. Closed 2026-08-26. Modal now carries role=dialog, aria-modal=true and aria-labelledby pointing at the h2 that was already in its header, plus a focus trap, focus restoration to the trigger, Escape and the body scroll lock. None of that behaviour is written in Modal.tsx: rather than a second Escape handler beside Sheet's, the shared half moved into src/hooks/useDialogA11y.ts and BOTH components call it, so there is one implementation. Sheet's props and its aria-label fallback are untouched; it gains the focus trap it never had. One correction to the filing worth recording: the record says Sheet 'has all of them', and it did not. Sheet had the role, aria-modal, aria-label, Escape and the scroll lock, but NO focus trap and NO focus restoration, so half the contract this task ports had to be written rather than moved, and it landed in the shared hook where Sheet gets it too.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R2",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0036-modal-dialog-2026-08-26",
+  "claims": [
+    "src/components/ui/Modal.tsx",
+    "tests/"
+  ],
+  "timestamps": {
+    "opened": "2026-08-26T09:00:00Z",
+    "updated": "2026-08-26T12:00:00Z",
+    "closed": "2026-08-26T12:00:00Z"
+  },
+  "invariants": [
+    "I1 No check is weakened. design-lint stays at 0 in 0 files across all eleven rules, the coverage floors are untouched, and no test is skipped, deleted or loosened. Verified: design-lint reports 0 baselined 0 allowed, coverage-floor-check reports 3 bands held at baseline, and the suite went from 2983 to 2995 passing with nothing removed.",
+    "I2 Sheet's public API does not move. SheetProps is byte-identical, the aria-label fallback to 'Panel' still resolves, the overlay and the header X still close, and the bottom/right side selection is untouched. Pinned by the six characterisation tests in tests/unit/sheet-a11y.test.tsx, which were run green against HEAD's pre-change Sheet as well as against the extracted one.",
+    "I3 A trapped dialog stays usable. Modal has fourteen callers and several render a form, so focus must not be pulled back onto the panel when the component re-renders. The hook reads onClose through a ref and depends on `open` ALONE for exactly this reason; with onClose in the dependency array every parent re-render would re-run the effect and re-focus the panel. Pinned by the CategoryManagerModal case, which asserts the input keeps focus and its value across a change event.",
+    "I4 The dialog's accessible name is the string the user reads. aria-labelledby points at the EXISTING h2, not at a duplicate label, and the id comes from useId so two open modals never collide. Pinned by two tests: one asserts the target is the h2 that getByRole('heading') returns, the other asserts two open modals get distinct ids.",
+    "I5 Nothing listens while closed. No Escape handler, no scroll lock and no dialog node exist when open is false, so a closed modal cannot swallow a key meant for the page behind it. Calibrated by mutation, not by the pre-fix tree, because these three assertions pass trivially against a Modal that has no handler at all."
+  ],
+  "oracle_provenance": "Authored by the executor in this session BEFORE any file under src/ was edited, per the EXECUTOR R2 clause, and committed on its own at db4dc449 ahead of the implementation so the ordering is checkable from history. Two files. tests/unit/modal-a11y.test.tsx is the bug repro and carries QA's own one-liner unchanged; it ran 9 of 12 red against the Modal in that commit's tree. tests/unit/sheet-a11y.test.tsx is characterisation for a component that had no tests and that this task refactors; its six behaviour-preserving tests ran green against HEAD's Sheet and its two focus tests ran red. The three modal assertions that passed pre-fix are negative-space guards, so they were calibrated by five mutations of the shipped code instead, each reverted byte-identical after: drop the open guard, widen the Escape check to any key, mount the panel while closed, drop focus restoration, drop the focus-in move. Every one produced a red suite. No oracle was amended after the implementation existed.",
+  "rollback": "One-command revert. No migration, no schema element, no route, no persisted state, no dependency and no config change, so `git revert` of this task's two commits returns the tree to 43d16c30 behaviour. One ordering note: src/hooks/useDialogA11y.ts is imported by both Modal.tsx and Sheet.tsx, so the three files revert together or not at all. Reverting the fix without the oracle leaves a red suite, which is the correct signal rather than a problem to work around.",
+  "claims_extended": [
+    "src/hooks/useDialogA11y.ts, new. The claim list names only Modal.tsx, but the task directs that the two components must not end up with two implementations, and the shared behaviour has to live somewhere. Placed in src/hooks/ to match the tree's existing convention.",
+    "src/components/ui/Sheet.tsx, to call the extracted hook instead of its own inline effect. Held by no other lane: no task record in org/tasks/ claims src/components/ui/, and the file was clean at HEAD when this session started. Its public API is unchanged, per I2.",
+    "tests/unit/sheet-a11y.test.tsx, new, inside the claimed tests/ path. Sheet had no tests and this task refactors it."
+  ]
+}

@@ -42,24 +42,24 @@ describe("parseLogLine", () => {
   describe("watchdog / hardware-cron format: [TIMESTAMP] LEVEL [SOURCE] message", () => {
     it("parses watchdog INFO entry — timestamp extracted, level from message", () => {
       // Format: [YYYY-MM-DD HH:MM:SS] INFO [WATCHDOG] OK: ...
-      const result = parseLogLine("[2026-05-09 01:34:37] INFO [WATCHDOG] OK: Control Hub is running on port 3000");
+      const result = parseLogLine("[2026-05-09 01:34:37] INFO [WATCHDOG] OK: PatterStage is running on port 3000");
       expect(result.timestamp).toBe("2026-05-09 01:34:37");
       expect(result.level).toBe("info");
-      expect(result.message).toBe("OK: Control Hub is running on port 3000");
+      expect(result.message).toBe("OK: PatterStage is running on port 3000");
     });
 
     it("parses watchdog WARN entry", () => {
-      const result = parseLogLine("[2026-05-09 01:34:37] WARN [WATCHDOG] Control Hub NOT responding on port 3000");
+      const result = parseLogLine("[2026-05-09 01:34:37] WARN [WATCHDOG] PatterStage NOT responding on port 3000");
       expect(result.timestamp).toBe("2026-05-09 01:34:37");
       expect(result.level).toBe("warn");
-      expect(result.message).toBe("Control Hub NOT responding on port 3000");
+      expect(result.message).toBe("PatterStage NOT responding on port 3000");
     });
 
     it("parses watchdog ERROR entry", () => {
-      const result = parseLogLine("[2026-05-09 01:34:37] ERROR [WATCHDOG] FAIL: Control Hub restart failed");
+      const result = parseLogLine("[2026-05-09 01:34:37] ERROR [WATCHDOG] FAIL: PatterStage restart failed");
       expect(result.timestamp).toBe("2026-05-09 01:34:37");
       expect(result.level).toBe("error");
-      expect(result.message).toBe("FAIL: Control Hub restart failed");
+      expect(result.message).toBe("FAIL: PatterStage restart failed");
     });
 
     it("parses ch-health stub format with INFO prefix", () => {

@@ -1,0 +1,25 @@
+{
+  "id": "T-0029",
+  "intent": "Route the config PUT's config.yaml write through writeHermesConfigFile. Warrant WG-ARCH-003 (B for the config read) and the lock-book's enforced contract 'One writer per fact, and the config cache is a cache'. Found 2026-08-22 by the independent review of T-0011, not by a failing test, which is the point. src/app/api/config/route.ts:131 writes paths.config with a raw writeFileSync and then calls invalidateConfigCache() on the next line, so it is CORRECT TODAY and no user is affected. It is filed because it is a fifth writer that has to remember, and WO-0006 closed this same gap by attaching the invalidation to the act of writing precisely so nobody would have to: 'an enumerated list of writers is how this gap opened'. A sixth writer that forgets is a stale-config bug with a 15 second window and no failing test. Acceptance: (1) the route writes through writeHermesConfigFile and drops its manual invalidateConfigCache call, with behaviour unchanged; (2) a test in tests/unit/config-cache-invalidation.test.ts covers this writer, so removing the invalidation fails it, matching the four writer tests already there; (3) the two control tests still pass, including the one pinning that the invalidation stays OUT of atomicWriteFile, which also writes .env. Not folded into T-0011: it is outside that row's scope and discovered work becomes a task, never silent scope creep. Closed 2026-08-23 in 58d6b2ba. The route writes through writeHermesConfigFile and its manual invalidateConfigCache call is gone; the write is now atomic as a side effect. No contract was traded for another: design-lint's core-imports-no-module rule excludes src/app/ by construction, and this route already imported from the hermes module, so the module-import count from it is unchanged at one. Review perturbed both directions: bypassing the helper fails the new writer test, and pushing invalidation down into atomicWriteFile fails the control test that pins it OUT of the .env writer.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R0",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "phase7-config-writer-2026-08-23",
+  "claims": [
+    "src/app/api/config/route.ts",
+    "tests/unit/config-cache-invalidation.test.ts"
+  ],
+  "timestamps": {
+    "opened": "2026-08-22T23:30:00Z",
+    "updated": "2026-08-23T03:00:00Z",
+    "closed": "2026-08-23T03:00:00Z"
+  }
+}

@@ -34,7 +34,7 @@ const testHermesPaths = {
   memoryDb: testHermesRoot + "/memory_store.db",
 };
 
-jest.mock("@/lib/hermes-agent-runtime", () => ({
+jest.mock("@/modules/hermes/lib/agent-runtime", () => ({
   getActiveHermesPaths: jest.fn(() => testHermesPaths),
   getActiveHermesHome: jest.fn(() => testHermesRoot),
   getAgentLlmEndpoints: jest.fn(() => ({
@@ -44,21 +44,21 @@ jest.mock("@/lib/hermes-agent-runtime", () => ({
 }));
 
 jest.mock("@/lib/paths", () => ({
-  CH_DATA_DIR: "/tmp/ch-data",
-  getChDataDir: () => "/tmp/ch-data",
+  PS_DATA_DIR: "/tmp/ch-data",
+  getPsDataDir: () => "/tmp/ch-data",
   PATHS: {
-    controlHubDb: "/tmp/ch-data/control-hub.db",
+    patterStageDb: "/tmp/ch-data/control-hub.db",
     missions: "/tmp/ch-data/missions",
     templates: "/tmp/ch-data/templates",
     stories: "/tmp/ch-data/stories",
     recroom: "/tmp/ch-data/recroom",
     workspaces: "/tmp/ch-data/workspaces",
     auditLog: "/tmp/ch-data/audit",
-    chScripts: "/tmp/ch-data/scripts",
-    chHardwareLogs: "/tmp/ch-data/logs",
+    psScripts: "/tmp/ch-data/scripts",
+    psHardwareLogs: "/tmp/ch-data/logs",
   },
-  getChScriptsDir: () => "/tmp/ch-data/scripts",
-  getChHardwareLogDir: () => "/tmp/ch-data/logs",
+  getPsScriptsDir: () => "/tmp/ch-data/scripts",
+  getPsHardwareLogDir: () => "/tmp/ch-data/logs",
 }));
 
 jest.mock("@/lib/api-logger", () => ({
@@ -66,8 +66,24 @@ jest.mock("@/lib/api-logger", () => ({
 }));
 
 jest.mock("@/lib/api-auth", () => ({
-  requireAuth: jest.fn(() => null),
-  requireAuth: jest.fn(() => null),
+}));
+
+// /api/memory now probes the DB-owned active provider (like MemorySync) instead
+// of regex-parsing config.yaml. Mock the provider so the GET test controls stats.
+const mockMemoryStats = jest.fn();
+jest.mock("@/lib/memory/memory-providers", () => ({
+  getMemoryProviderType: jest.fn(() => "hindsight"),
+  // `type` is part of the MemoryProvider contract and the route now reports
+  // it rather than a hardcoded literal, so a stand-in that omits it is a
+  // provider that cannot say what it is. Before T-0077 this mock passed only
+  // because the route answered "hindsight" whatever it was handed.
+  getActiveMemoryProvider: jest.fn(() => ({ type: "hindsight", stats: mockMemoryStats })),
+  // The route reads the DB-owned config on the unreachable path so it can name
+  // WHICH backend failed and at what address.
+  getActiveMemoryConfig: jest.fn(() => ({
+    type: "hindsight",
+    config: { host: "127.0.0.1", port: 9177, bank: "hermes" },
+  })),
 }));
 
 jest.mock("@/lib/audit-log", () => ({
@@ -75,7 +91,15 @@ jest.mock("@/lib/audit-log", () => ({
 }));
 
 jest.mock("@/lib/skills-repository", () => ({
+  // An empty catalog, read four ways. The route reads the metadata-only shape
+  // and resolveEffectiveDisabledSkills reads the keys, so a mock that offers
+  // only listSkills leaves the route calling `undefined()` and reports the
+  // resulting throw as a 500 rather than the empty 200 this suite asserts.
   listSkills: jest.fn(() => []),
+  listSkillCatalog: jest.fn(() => []),
+  listSkillKeys: jest.fn(() => []),
+  countSkills: jest.fn(() => 0),
+  deriveCategory: jest.fn(() => "uncategorized"),
 }));
 
 jest.mock("@/lib/agent-root-repository", () => ({
@@ -84,38 +108,23 @@ jest.mock("@/lib/agent-root-repository", () => ({
   })),
 }));
 
-jest.mock("@/lib/profiles-repository", () => ({
+jest.mock("@/modules/hermes/lib/profiles-repository", () => ({
   getDisabledSkills: jest.fn(() => []),
   getProfile: jest.fn(() => null),
 }));
 
-jest.mock("@/lib/sessions-api-guard", () => ({
+jest.mock("@/lib/sessions/sessions-api-guard", () => ({
   sessionsRateLimitResponse: jest.fn(() => null),
 }));
 
-import { NextRequest } from "next/server";
-
-describe("GET /api/cron", () => {
-  beforeEach(() => jest.clearAllMocks());
-
-  it("returns list of cron jobs", async () => {
-    const { GET } = await import("@/app/api/cron/route");
-    const req = new NextRequest("http://localhost/api/cron");
-    const res = await GET(req as unknown as Request);
-    const data = await res.json();
-
-    expect(res.status).toBe(200);
-    expect(data.data.jobs).toHaveLength(0);
-  });
-});
+import { mockRequest } from "../helpers/api-test-helpers";
 
 describe("GET /api/tools", () => {
   beforeEach(() => jest.clearAllMocks());
 
   it("returns Hermes toolset catalog", async () => {
-    const request = new NextRequest("http://localhost/api/tools");
     const { GET } = await import("@/app/api/tools/route");
-    const res = await GET(request);
+    const res = await GET();
     const data = await res.json();
 
     expect(res.status).toBe(200);
@@ -135,7 +144,7 @@ describe("GET /api/config", () => {
     );
 
     const { GET } = await import("@/app/api/config/route");
-    const res = await GET();
+    const res = await GET(mockRequest("http://127.0.0.1/api/test"));
     const data = await res.json();
 
     expect(res.status).toBe(200);
@@ -154,7 +163,7 @@ describe("GET /api/config", () => {
     );
 
     const { GET } = await import("@/app/api/config/route");
-    const res = await GET();
+    const res = await GET(mockRequest("http://127.0.0.1/api/test"));
     const data = await res.json();
 
     // The original keys must NOT appear in the response.
@@ -215,15 +224,37 @@ describe("GET /api/templates", () => {
 describe("GET /api/memory", () => {
   beforeEach(() => jest.clearAllMocks());
 
-  it("returns memory data with provider info", async () => {
-    mockExistsSync.mockReturnValue(false);
+  it("reports a live Hindsight install from the provider probe (not config.yaml)", async () => {
+    mockMemoryStats.mockResolvedValue({ available: true, factCount: 17638 });
 
     const { GET } = await import("@/app/api/memory/route");
-    const res = await GET();
+    const res = await GET(mockRequest("http://127.0.0.1/api/test"));
     const data = await res.json();
 
     expect(res.status).toBe(200);
-    expect(data.data).toBeDefined();
-    expect(data.data.provider).toBeDefined();
+    expect(data.data.provider).toBe("hindsight");
+    expect(data.data.available).toBe(true);
+    expect(data.data.total).toBe(17638);
+  });
+
+  it("names the unreachable provider rather than flattening it to 'none'", async () => {
+    // CHANGED DELIBERATELY at T-0077. This asserted a flat "none" for every
+    // unreachable case, which collapsed two different problems into one word:
+    // "nothing is configured" and "the provider you chose is configured and not
+    // answering". The operator cannot act on the second without being told
+    // WHICH backend is meant, so the route now reports the active type and the
+    // endpoint it tried. `available: false` is unchanged — the honesty about
+    // reachability was never the problem.
+    mockMemoryStats.mockResolvedValue({ available: false, factCount: 0 });
+
+    const { GET } = await import("@/app/api/memory/route");
+    const res = await GET(mockRequest("http://127.0.0.1/api/test"));
+    const data = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(data.data.available).toBe(false);
+    expect(data.data.provider).toBe("hindsight");
+    expect(data.data.message).toMatch(/hindsight/i);
+    expect(data.data.message).toMatch(/127\.0\.0\.1:9177/);
   });
 });

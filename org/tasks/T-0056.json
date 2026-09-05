@@ -1,0 +1,29 @@
+{
+  "id": "T-0056",
+  "intent": "The five features the 2026-08-29 product review reached for and did not find, recorded with the reviewer's own reasoning so the roadmap keeps the argument and not just the title. Operator ruled 2026-08-29 that D's features are in scope; this record is the queue they come off, in the order the review argues for.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [],
+  "status": "proposed",
+  "owner_session": "unassigned",
+  "claims": [],
+  "items": [
+    "1. PRE-DISPATCH COST ESTIMATE. The spend console is retrospective only, and the model registry already holds per-model pricing (src/lib/analytics/model-cost.ts). An estimate on the mission dispatch sheet is cheap and, in the reviewer's words, 'would be used constantly'. First because the inputs already exist: this is arithmetic on data the app has, not a new source.",
+    "2. PER-STAGE RUN LOGS. The missions board shows status; understanding WHY a run failed means leaving the app for ~/.hermes/logs. The Composer already models per-node output, so the shape exists to copy.",
+    "3. A WHAT-IS-RUNNING-NOW SURFACE. /api/monitor exists and no page answers 'is anything executing at this moment' at a glance. The Dashboard's ActiveMissionsPanel is the nearest thing and is mission-scoped.",
+    "4. SEARCH ACROSS SESSION TRANSCRIPTS. Today's search covers title, id, profile and mission server-side over the whole table, which is better than the report assumed, but it does not reach message CONTENT. That needs FTS over chat_messages and a decision about index size on an install with tens of thousands of sessions.",
+    "5. A MISSION DRY RUN. The assembled-prompt preview already exists; the ask is to send it with tools disabled for a one-token sanity check before committing a 15-minute run."
+  ],
+  "naming_note": "The review also raised two naming quibbles worth keeping with the features rather than losing: 'Laboratory' undersells that Insights is the analytics surface, and operators will look for 'Analytics' and not find it; and 'PT/Hermes' in the sidebar footer is cryptic. Both are cheap and both are operator decisions.",
+  "timestamps": {
+    "opened": "2026-08-30T07:00:00Z",
+    "updated": "2026-08-30T07:00:00Z"
+  }
+}

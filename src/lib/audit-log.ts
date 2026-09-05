@@ -2,15 +2,13 @@
 // Lightweight audit trail (no secrets)
 // ═══════════════════════════════════════════════════════════════
 
-import { appendFileSync, existsSync, mkdirSync } from "fs";
+import { appendFileSync } from "fs";
 
 import { PATHS } from "@/lib/paths";
+import { ensureDir } from "@/lib/fs/fs-helpers";
 
 function ensureLogsDir(): void {
-  const dir = PATHS.auditLog;
-  if (!existsSync(dir)) {
-    mkdirSync(dir, { recursive: true });
-  }
+  ensureDir(PATHS.auditLog);
 }
 
 /**
@@ -30,7 +28,7 @@ export function appendAuditLine(entry: {
         ts: new Date().toISOString(),
         ...entry,
       }) + "\n";
-    appendFileSync(PATHS.auditLog + "/ch-audit.log", line, "utf-8");
+    appendFileSync(PATHS.auditLog + "/ps-audit.log", line, "utf-8");
   } catch {
     // never throw from audit
   }

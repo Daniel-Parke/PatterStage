@@ -1,0 +1,143 @@
+{
+  "version": 1,
+  "venture": "PatterStage",
+  "capability_profile": "org/capability-profile.json",
+  "risk": {
+    "factors": [
+      {"id": "protected-set-contact", "summary": "the diff touches the protected set", "tier_floor": "R3", "sources": ["paths:protected"]},
+      {"id": "irreversible-action", "summary": "an action that cannot be rolled back, or one whose rollback cost the owner had to declare", "tier_floor": "R3", "sources": ["irreversible-action", "rollback-cost", "derived:no-rollback"]},
+      {"id": "destructive-migration", "summary": "a schema change that can lose data", "tier_floor": "R3", "sources": ["migrates-schema", "derived:ddl-destructive"]},
+      {"id": "key-material", "summary": "secret patterns in the diff or environment", "tier_floor": "R3", "sources": ["derived:secret-patterns"]},
+      {"id": "data-deletion", "summary": "deletion beyond the working tree", "tier_floor": "R3", "sources": ["writes-production-data", "derived:deletion-beyond-worktree"]},
+      {"id": "auth-surface", "summary": "authentication or authorisation touched", "tier_floor": "R2", "sources": ["touches-auth", "paths:sensitive"]},
+      {"id": "money", "summary": "financial impact or payment surfaces", "tier_floor": "R2", "sources": ["financial-impact", "paths:sensitive"]},
+      {"id": "schema-change", "summary": "schema migration without data loss", "tier_floor": "R2", "sources": ["migrates-schema", "derived:ddl"]},
+      {"id": "public-contract", "summary": "public API surface or exported interface delta", "tier_floor": "R2", "sources": ["derived:public-api-delta"]},
+      {"id": "ci-stateful-infra", "summary": "CI configuration or infrastructure with state", "tier_floor": "R2", "sources": ["derived:ci-config", "derived:infra-state"]},
+      {"id": "pii-handling", "summary": "personal data handled or exposed", "tier_floor": "R2", "sources": ["handles-pii", "derived:pii-fields"]},
+      {"id": "boundary-contact", "summary": "egress beyond the repository", "tier_floor": "R1", "denies_express": true, "sources": ["sends-external"]},
+      {"id": "size-threshold", "summary": "diff size over the express limits", "tier_floor": "R1", "denies_express": true, "sources": ["derived:diff-size"]}
+    ],
+    "path_patterns": {
+      "reversible": [
+        "docs/",
+        "README.md",
+        "REBRANDING.md",
+        "TRADEMARK.md",
+        "branding/",
+        "org/QUESTIONS.md",
+        "org/plans/"
+      ],
+      "sensitive": [
+        "src/proxy.ts",
+        "src/instrumentation.ts",
+        "src/lib/api-auth.ts",
+        "src/lib/auth-token.ts",
+        "src/lib/secret-mask.ts",
+        "src/lib/runtime/secrets.ts",
+        "src/lib/db*",
+        "src/lib/db/migrations/",
+        "scripts/tooling/migrate-db.ts",
+        "scripts/tooling/db-schema-ensure.mjs",
+        "scripts/tooling/prebuild-db.mjs",
+        ".github/workflows/",
+        "Dockerfile",
+        "docker/",
+        "docker-compose*.yml",
+        "install.ps1",
+        "scripts/bootstrap/",
+        "scripts/application/",
+        "ops/runbooks/"
+      ],
+      "protected": [
+        "org/CONSTITUTION.md",
+        "org/roles/",
+        "org/policy.json",
+        "org/decisions/"
+      ]
+    }
+  },
+  "express": {
+    "max_diff_lines": 100,
+    "max_files": 5,
+    "denied_by_factors": ["boundary-contact"]
+  },
+  "modes": {
+    "express": {
+      "context_pack": {"max_lines": 60},
+      "artefacts": ["commit-message"],
+      "test_timing": "alongside",
+      "verification": "targeted-checks",
+      "budgets": {"boot_lines": 60},
+      "stop_conditions": [
+        "a durable-band decision arises: convert to standard",
+        "a derived risk fact changes mid-run: re-route",
+        "diagnosis needs a hypothesis ledger: convert to standard"
+      ]
+    },
+    "standard": {
+      "context_pack": {"max_lines": 300},
+      "artefacts": ["commit-message", "task-record"],
+      "test_timing": "per-profile",
+      "verification": "sampled-review",
+      "budgets": {"boot_lines": 550},
+      "stop_conditions": [
+        "the circuit breaker fires",
+        "gate-time recomputation rules above R1"
+      ]
+    },
+    "exploration": {
+      "context_pack": {"max_lines": 150},
+      "artefacts": ["task-record"],
+      "test_timing": "hardening-gate",
+      "verification": "targeted-checks",
+      "budgets": {"wall_clock_min": 120},
+      "stop_conditions": [
+        "the timebox or budget is spent",
+        "the question is answered: exit discard-or-harden"
+      ]
+    },
+    "high-assurance": {
+      "context_pack": {"max_lines": 300},
+      "artefacts": ["task-record", "oracle-provenance", "rollback-plan", "review-verdict"],
+      "test_timing": "acceptance-first",
+      "verification": "independent-review",
+      "budgets": {"boot_lines": 550},
+      "stop_conditions": [
+        "any invariant is unclear",
+        "an oracle amendment is needed",
+        "an irreversible action awaits operator approval"
+      ]
+    },
+    "parallel": {
+      "context_pack": {"max_lines": 300},
+      "artefacts": ["task-record"],
+      "test_timing": "per-profile",
+      "verification": "rolling-integration",
+      "budgets": {},
+      "stop_conditions": [
+        "the diff reaches outside assigned claims",
+        "the claim nears expiry without renewal"
+      ]
+    }
+  },
+  "parallelism": {
+    "max_lanes": 2,
+    "claim_expiry_hours": 24,
+    "renewal_window_hours": 2
+  },
+  "decision_budget": {
+    "free": ["naming", "decomposition", "test structure", "patterns already present in the tree", "dependencies already installed", "copy per the applicable voice scope", "file placement in existing schemes"],
+    "durable": ["new dependency", "new schema element", "new public contract", "precedent-setting pattern", "recorded deviation from a standard"],
+    "escalation": ["money", "legal", "personal-data ambiguity", "protected set", "spend beyond budget", "weakening any check", "conflict with stated intent"]
+  },
+  "approvals": {
+    "always_human": ["money-movement", "production-data", "deletion", "irreversible", "secrets", "protected-set-contact"]
+  },
+  "guard": {
+    "adapter": "claude-code",
+    "mapping_ref": "org/guard-mapping.json",
+    "validated": false
+  },
+  "protected_pointers": ["/risk", "/approvals", "/guard"]
+}

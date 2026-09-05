@@ -15,25 +15,19 @@ jest.mock("@/lib/api-logger", () => ({
 }));
 
 jest.mock("@/lib/api-auth", () => ({
-  requireAuth: jest.fn(() => null),
-  isChReadOnly: jest.fn(() => false),
+  // requireNotReadOnly is the honest name of what these routes call now;
+  // requireAuth stays mocked for the modules that have not been renamed yet.
+  requireNotReadOnly: jest.fn(() => null),
+  isReadOnly: jest.fn(() => false),
 }));
 
 jest.mock("@/lib/sync", () => ({
   ensureSyncLayer: jest.fn(),
 }));
 
-jest.mock("@/lib/mission-repository", () => ({
+jest.mock("@/lib/missions/mission-repository", () => ({
   listMissions: jest.fn(() => []),
   getMission: jest.fn(),
-}));
-
-jest.mock("@/lib/cron-repository", () => ({
-  importHermesJobs: jest.fn(() => ({ imported: [], errors: [] })),
-}));
-
-jest.mock("@/lib/mission-cron-sync", () => ({
-  enrichMissionCron: jest.fn((m: unknown) => m),
 }));
 
 function makeInvalidJsonRequest(url: string) {

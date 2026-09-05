@@ -1,9 +1,9 @@
 /** @jest-environment node */
-import { getChScriptsDir, getChHardwareLogDir, CH_DATA_DIR } from "@/lib/paths";
+import { getPsScriptsDir, getPsHardwareLogDir, PS_DATA_DIR } from "@/lib/paths";
 
 describe("system cron paths (CH-owned)", () => {
-  it("uses CH_DATA_DIR/scripts and CH_DATA_DIR/logs by default", () => {
-    expect(getChScriptsDir()).toBe(CH_DATA_DIR + "/scripts");
-    expect(getChHardwareLogDir()).toBe(CH_DATA_DIR + "/logs");
+  it("uses PS_DATA_DIR/scripts and PS_DATA_DIR/logs by default", () => {
+    expect(getPsScriptsDir()).toBe(PS_DATA_DIR + "/scripts");
+    expect(getPsHardwareLogDir()).toBe(PS_DATA_DIR + "/logs");
   });
 });

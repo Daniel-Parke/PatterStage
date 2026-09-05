@@ -49,6 +49,7 @@ pnpm-lock.yaml
 pnpm-workspace.yaml
 a.out
 .npmrc
+!/.npmrc
 
 # Vercel
 .vercel
@@ -57,13 +58,39 @@ a.out
 *.tsbuildinfo
 next-env.d.ts
 
+# The documentation pipeline's two outputs (B15, decision 3). Both are built
+# from docs/**/*.md by scripts/docs/build-site.mjs: site/ is what GitHub Pages
+# publishes, public/help/ is what the in-app Help section reads and is rebuilt
+# by `prebuild` before every `next build`. docs/manifest.json IS committed —
+# it is the derived view check-derived-views.mjs holds against the front matter.
+/site/
+/public/help/
+
 # Build artifacts
 a.out
 pnpm-lock.yaml
 pnpm-workspace.yaml
-.npmrc
+!/.npmrc
 
 # Session-scoped audit artifacts (pre-merge dogfood reports, server stdout from local runs)
 dogfood-output/
 runtime.log
 *.audit.md
+
+# Hermes Agent scratch written into the project root during LLM sessions.
+# Real Hermes state lives under ~/.hermes/; nothing inside any project repo
+# should be tracked. /workspace/.hermes/ is the upstream agent's own
+# scratch-root convention and is the same shape we see leak in here.
+.hermes/
+/.hermes
+
+# real-Hermes test harness runtime artifacts
+test-harness/.work/
+
+# Playwright isolated E2E data dir
+tmp/
+
+# Agent/editor session config. .claude/launch.json was committed by accident in
+# 32bb881 (a `git add -A` sweep); it is a local dev-server preview config, not
+# project state. Kept on disk, out of the repo.
+.claude/

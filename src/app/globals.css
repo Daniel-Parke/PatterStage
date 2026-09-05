@@ -11,12 +11,18 @@
   --color-cherenkov-400: #008bd1;
   --color-cherenkov-500: #0071c2;
 
-  /* Accent slots — semantic roles (see docs/design-tokens.md) */
+  /* Accent slots — semantic roles (see docs/contributing/design-tokens.md) */
   --color-neon-cyan: #00bfff;
-  --color-neon-purple: #8b5cff;
+  /* Brightened from #8b5cff on 2026-08-23. The original measured 4.78:1 on
+     --color-dark-950 flat, and 4.03:1 as actually painted on a card, so it
+     failed WCAG AA as text even at FULL opacity: no opacity rule could rescue
+     it. This value keeps the hue (257deg) and saturation (1.00) exactly and
+     raises only lightness, to 6.68:1. It is the one accent that needed the
+     token changed rather than its usage. */
+  --color-neon-purple: #a480ff;
   --color-neon-pink: #e879f9;
   --color-neon-green: #a3ff12;
-  --color-neon-orange: #ff9f1c;
+  --color-neon-orange: #ff6622;
   --color-neon-yellow: #facc15;
 
   /* Blue-tinted surfaces */
@@ -31,18 +37,193 @@
   --color-semantic-warning: #fbbf24;
   --color-semantic-danger: #f87171;
   --color-semantic-info: #00a1e6;
+  /* The danger colour under its accent-slot name. Thirteen sites reached for
+     `neon-red` before any token declared it and rendered with no colour at
+     all, the global error fallback among them (T-0095, D114). Same value as
+     --color-semantic-danger, by intent; design-lint's token-must-exist rule
+     now fails the build on the next undeclared house colour. */
+  --color-neon-red: #f87171;
+
+  /* ── Text tiers ───────────────────────────────────────────────────────────
+     The semantic layer WG-WEB-003 asks for and the lock-book deferred as "set
+     at first build". Before this, hierarchy was written as ad-hoc white
+     opacities (text-white/20 through /90) chosen by eye, and 2,377 rendered
+     elements failed WCAG AA as a result.
+
+     These four are DERIVED, not picked. Measured against --color-dark-950
+     (#040b12), the app's actual painted background, white at 45% is exactly
+     the 4.5:1 AA floor for normal text and white at 34% the 3:1 floor for
+     large or bold text. Every tier below therefore sits at 50% or above, so
+     all four pass AA for body text with headroom rather than balancing on the
+     boundary.
+
+       tier        alpha   contrast   use
+       primary      92%     16.7:1    headings, the number you came to read
+       secondary    70%      9.7:1    body copy, most labels
+       muted        55%      6.3:1    supporting detail, timestamps, units
+       faint        50%      5.3:1    the quietest thing still meant to be READ
+
+     There is deliberately no tier below `faint`. Anything quieter than this is
+     decoration, not text, and it should be a border, a background or absent.
+     Re-derive with scripts/tooling/contrast-check.mjs if the background moves. */
+  --color-ps-text-primary: rgb(255 255 255 / 0.92);
+  --color-ps-text-secondary: rgb(255 255 255 / 0.70);
+  --color-ps-text-muted: rgb(255 255 255 / 0.55);
+  --color-ps-text-faint: rgb(255 255 255 / 0.50);
+
+  /* ── Surface ladder ────────────────────────────────────────────────────────
+     The semantic layer the lock-book's Tokens section owed, ruled at the
+     first-build lock-in sitting of 2026-08-24. The five `--color-dark-*` rungs
+     above are named for how they LOOK; docs/contributing/design-tokens.md forbids that as
+     the only layer, because "dark-900" says nothing about whether a surface is
+     a panel or a well and so nothing stops the two diverging.
+
+     No colour is minted here. Each role is an alias for the primitive the tree
+     already paints in that role, counted across the tsx tree on 2026-08-24:
+
+       role      alias         uses   what it is
+       ground    dark-950       50    the page itself (src/app/layout.tsx body)
+       panel     dark-900      160    a raised card, panel or bar
+       well      dark-800       68    a sunken field, code block or table row
+       hairline  white / 10%   280    the rule between two surfaces
+
+     `hairline` is the one role with no `--color-dark-*` behind it, and naming
+     one would be inventing rather than recording: the tree draws its rules as
+     `border-white/10`, which over the ground resolves to #1e232a and matches no
+     rung. dark-700 (#1c2d40) and dark-600 (#263d54) stay un-roled on purpose:
+     four backgrounds and the scrollbar thumb between them is not a role.
+
+     These name what exists; they do not repaint anything. Migrating the 278
+     appearance-named usages onto them is separate work, and until it happens
+     both spellings are live and mean the same pixels. */
+  --color-ps-surface-ground: var(--color-dark-950);
+  --color-ps-surface-panel: var(--color-dark-900);
+  --color-ps-surface-well: var(--color-dark-800);
+  --color-ps-surface-hairline: rgb(255 255 255 / 0.10);
+
+  /* ── Viz chrome ────────────────────────────────────────────────────────────
+     The furniture a chart is drawn ON, as opposed to the data drawn IN it.
+     Series colour was never the problem: it already goes through a named scale
+     in src/components/viz/colors.ts, which resolves to the --color-neon-*
+     tokens. What stayed inline was the chrome, and design-lint counted it as
+     nineteen raw colours across eleven files (T-0034).
+
+     Every rung is the value the tree already painted, read off the components
+     on 2026-08-25. Naming is not repainting: not one pixel moves by declaring
+     these, and re-valuing a rung is a design decision for the lock-book's
+     Tokens section rather than something a refactor may do quietly.
+
+       role        alpha  what it is                          where it was
+       empty       4%     the disc behind a locked badge or   AchievementBadge,
+                          a cold streak: nothing here yet     StreakFlame
+       guide       5%     a ring or cell marking where data   RadialActivityClock
+                          would be, if there were any         (x2), ActivityHeatmap
+       track       6%     the unfilled remainder of a gauge,  Donut,
+                          and the rule round an unearned badge AchievementBadge
+       axis        8%     the baseline a chart is measured    DistributionHistogram,
+                          against, and its quadrant ticks     StackedAreaTrend,
+                                                              RadialActivityClock
+       inert      15%     a graph edge that is not on the     WorkflowRunCanvas
+                          live path
+       glyph-idle 22%     a locked achievement's icon. NOT a  AchievementBadge
+                          text tier: the badge's name is text
+                          and already reads at ps-text-muted,
+                          with a lock glyph beside it, so this
+                          carries state and not meaning
+       scrim      black   the veil the minimap draws over the WorkflowCanvas
+                  at 60%  canvas it is not showing
+
+     There is deliberately no rung here for chart TEXT. An axis label is text,
+     it reads through --color-ps-text-*, and scripts/tooling/contrast-check.mjs
+     measures those four and nothing else. The tick labels used to be painted
+     white at 30 and 35 percent, below the 50 percent floor the `faint` tier
+     sets; they are on the tier now. */
+  --color-ps-viz-empty: rgb(255 255 255 / 0.04);
+  --color-ps-viz-guide: rgb(255 255 255 / 0.05);
+  --color-ps-viz-track: rgb(255 255 255 / 0.06);
+  --color-ps-viz-axis: rgb(255 255 255 / 0.08);
+  --color-ps-viz-inert: rgb(255 255 255 / 0.15);
+  --color-ps-viz-glyph-idle: rgb(255 255 255 / 0.22);
+  --color-ps-viz-scrim: rgb(0 0 0 / 0.6);
+
+  /* ── Measures ──────────────────────────────────────────────────────────────
+     Three column widths and one block rhythm, also owed by the Tokens section
+     and ruled in the same sitting. Read off the tree's own page shells rather
+     than chosen: every `mx-auto` page container under src/app was measured on
+     2026-08-24, sixteen in all.
+
+       reading  48rem  the longform column, already set during the UX pass on
+                       the Story Weaver reader, the research report and the
+                       artifact viewer, and cited to WG-WEB-014 in two of them.
+                       This records that number; it does not mint a second one.
+       wide     56rem  the modal page shell, 7 of the 16 (sessions, seed,
+                       personalities, skills, three Story Weaver surfaces).
+       full     80rem  the widest shell in the tree, 4 of the 16: the two dense
+                       boards (dashboard, config index) and the missions board,
+                       which spells the same width `max-w-screen-xl`.
+       block   1.5rem  the gap between blocks on a page shell: `space-y-6` on 3
+                       shells against `space-y-8` on 3, broken by the shells'
+                       own `px-6 py-6` gutter, which is 1.5rem on 7 of them. One
+                       step for the gutter and the rhythm, not two.
+
+     Tailwind reads `--container-*` for max-w-* and `--spacing-*` for gap,
+     padding and space-y, so these are utilities the moment they are declared. */
+  --container-ps-reading: 48rem;
+  --container-ps-wide: 56rem;
+  --container-ps-full: 80rem;
+  --spacing-ps-block: 1.5rem;
 }
 
-/* Shell + RGB mirrors for effects (keep aligned with @theme / docs/design-tokens.md) */
+/* Shell + RGB mirrors for effects (keep aligned with @theme / docs/contributing/design-tokens.md) */
 :root {
-  --ch-shell-header-min-height: 5rem;
-  --ch-mobile-header-min-height: 3rem;
-  --ch-rgb-neon-cyan: 0, 191, 255;
-  --ch-rgb-neon-purple: 139, 92, 255;
-  --ch-rgb-neon-green: 163, 255, 18;
-  --ch-rgb-neon-pink: 232, 121, 249;
-  --ch-rgb-neon-orange: 255, 159, 28;
-  --ch-rgb-cherenkov-glow: 51, 221, 255;
+  --ps-shell-header-min-height: 5rem;
+  --ps-mobile-header-min-height: 3rem;
+  --ps-rgb-neon-cyan: 0 191 255;
+  --ps-rgb-neon-purple: 164 128 255;
+  --ps-rgb-neon-green: 163 255 18;
+  --ps-rgb-neon-pink: 232 121 249;
+  --ps-rgb-neon-orange: 255 102 34;
+  --ps-rgb-cherenkov-glow: 51 221 255;
+
+  /* Story Weaver reading register (WG-WEB-001: dark-first, one register, no
+     exception; WO-0005). Two page tints, dark and black, and nothing else. The
+     `light` and `sepia` themes were removed: a light reading register is a fork
+     of the design system, not a setting, and it needs a dated deviation and a
+     second QC surface before it can exist.
+
+     Held here rather than as hex in the component so the values are tokens the
+     lint can see. They belong in the vendored @pattertech/ui kit; that move is
+     WO-0017, and this is the interim home the design-lint law already names
+     (globals.css @theme + src/lib/theme.ts). */
+  --ps-reader-dark-bg: #0f0d0b;
+  --ps-reader-dark-text: #e8dcc8;
+  --ps-reader-dark-panel: #1a1816;
+  --ps-reader-black-bg: #000000;
+  --ps-reader-black-text: #cccccc;
+  --ps-reader-black-panel: #111111;
+  /* Both registers share the console accent and the panel rule. */
+  --ps-reader-accent: #a855f7;
+  --ps-reader-rule: #2a2520;
+
+  /* Chapter-dot states, shared by ReaderHeader and ReaderNavigation, which
+     carried the same five-branch conditional as inline hex twice over
+     (T-0034). Values read off those components on 2026-08-25.
+
+     `idle` mints nothing: the dot for a chapter that does not exist yet was
+     already the panel rule's own colour, and saying so is better than
+     repeating the hex. The other four are warm tints belonging to the reading
+     register, which is why they live here beside it rather than in @theme.
+
+     Open, and not this task's to rule: writing / pending / failed are a
+     status ladder, and the app HAS one (--color-semantic-info / -warning /
+     -danger). Moving them onto it is a visible repaint of the reader's warm
+     register with the console's cold one, so it is a design decision for the
+     lock-book, not a side effect of moving a value out of a component. */
+  --ps-reader-chapter-done: #4a3f35;
+  --ps-reader-chapter-writing: #3b82f6;
+  --ps-reader-chapter-pending: #f59e0b;
+  --ps-reader-chapter-failed: #7f1d1d;
+  --ps-reader-chapter-idle: var(--ps-reader-rule);
 }
 
 /* Scrollbar styling */
@@ -58,34 +239,122 @@
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgb(var(--ch-rgb-neon-cyan) / 0.35);
+  background: rgb(var(--ps-rgb-neon-cyan) / 0.35);
 }
 
-/* Glow effects — legacy classes used across the app */
+/* Glow effects — restrained, deep-space Cherenkov. Glow reads as a subtle
+   luminescence on cards, not a flat light source; the brand's "reactor core"
+   signature lives in the stronger pulse-glow / glow-surface reserved for
+   live/active states (running process, live session). */
 .glow-cyan {
   box-shadow:
-    0 0 20px rgb(var(--ch-rgb-neon-cyan) / 0.15),
-    0 0 40px rgb(var(--ch-rgb-neon-cyan) / 0.05);
+    0 0 14px rgb(var(--ps-rgb-neon-cyan) / 0.08),
+    0 0 28px rgb(var(--ps-rgb-neon-cyan) / 0.025);
 }
 .glow-purple {
   box-shadow:
-    0 0 20px rgb(var(--ch-rgb-neon-purple) / 0.15),
-    0 0 40px rgb(var(--ch-rgb-neon-purple) / 0.05);
+    0 0 14px rgb(var(--ps-rgb-neon-purple) / 0.08),
+    0 0 28px rgb(var(--ps-rgb-neon-purple) / 0.025);
 }
 .glow-green {
   box-shadow:
-    0 0 20px rgb(var(--ch-rgb-neon-green) / 0.15),
-    0 0 40px rgb(var(--ch-rgb-neon-green) / 0.05);
+    0 0 14px rgb(var(--ps-rgb-neon-green) / 0.08),
+    0 0 28px rgb(var(--ps-rgb-neon-green) / 0.025);
 }
 .glow-pink {
   box-shadow:
-    0 0 20px rgb(var(--ch-rgb-neon-pink) / 0.15),
-    0 0 40px rgb(var(--ch-rgb-neon-pink) / 0.05);
+    0 0 14px rgb(var(--ps-rgb-neon-pink) / 0.08),
+    0 0 28px rgb(var(--ps-rgb-neon-pink) / 0.025);
 }
 .glow-orange {
   box-shadow:
-    0 0 20px rgb(var(--ch-rgb-neon-orange) / 0.15),
-    0 0 40px rgb(var(--ch-rgb-neon-orange) / 0.05);
+    0 0 14px rgb(var(--ps-rgb-neon-orange) / 0.08),
+    0 0 28px rgb(var(--ps-rgb-neon-orange) / 0.025);
+}
+
+/* ── Motion (transform/opacity only — GPU-friendly) ──────────── */
+@keyframes ch-flame {
+  0%, 100% { transform: scale(1) rotate(-1deg); opacity: 1; }
+  25% { transform: scale(1.08) rotate(2deg); opacity: 0.9; }
+  50% { transform: scale(0.96) rotate(-2deg); opacity: 1; }
+  75% { transform: scale(1.05) rotate(1deg); opacity: 0.95; }
+}
+.animate-flame { animation: ch-flame 1.6s ease-in-out infinite; transform-origin: center bottom; }
+
+@keyframes ch-pulse-glow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+.animate-pulse-glow { animation: ch-pulse-glow 2s ease-in-out infinite; }
+
+@keyframes ch-float-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-float-in { animation: ch-float-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+@keyframes ch-shimmer {
+  100% { transform: translateX(100%); }
+}
+.animate-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.animate-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgb(var(--ps-rgb-neon-cyan) / 0.08), transparent);
+  animation: ch-shimmer 2.2s ease-in-out infinite;
+}
+
+/* SVG line draw-in: pair with pathLength={1} on the <path>. Reduced-motion
+   users skip the animation (the line renders fully via the override below). */
+@keyframes viz-draw {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}
+.viz-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: viz-draw 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Composer active-pathway "flow": cyan energy dashes travelling down a vertical
+   connector so the live route through a workflow reads as electrified. */
+@keyframes ps-rail-flow {
+  to { background-position: 0 12px; }
+}
+.ps-rail-flow {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgb(34 211 238 / 0.95) 0 3px,
+    transparent 3px 9px
+  );
+  animation: ps-rail-flow 0.5s linear infinite;
+  box-shadow: 0 0 5px rgb(34 211 238 / 0.6);
+}
+.ps-rail-done { background: rgb(74 222 128 / 0.45); }
+
+/* Active edge on the live run canvas (react-flow): cyan glow on the stroke. */
+.ps-edge-glow .react-flow__edge-path { filter: drop-shadow(0 0 3px rgb(34 211 238 / 0.7)); }
+
+/* Electrified routing chip — the edge the live run is leaving / traversing. */
+@keyframes ps-electrify {
+  0%, 100% { box-shadow: 0 0 0 0 rgb(34 211 238 / 0); }
+  50% { box-shadow: 0 0 9px 1px rgb(34 211 238 / 0.55); }
+}
+.ps-electrified { animation: ps-electrify 1.1s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-flame,
+  .animate-pulse-glow,
+  .animate-float-in,
+  .ps-electrified,
+  .animate-shimmer::after { animation: none; }
+  .viz-draw { stroke-dasharray: none; stroke-dashoffset: 0; animation: none; }
+  .ps-rail-flow { animation: none; }
 }
 
 /* Variable-driven surface glow (see GlowSurface.tsx); --glow-surface-rgb set inline */
@@ -115,10 +384,10 @@
 }
 
 .text-glow-cyan {
-  text-shadow: 0 0 10px rgb(var(--ch-rgb-neon-cyan) / 0.55);
+  text-shadow: 0 0 10px rgb(var(--ps-rgb-neon-cyan) / 0.55);
 }
 .text-glow-purple {
-  text-shadow: 0 0 10px rgb(var(--ch-rgb-neon-purple) / 0.55);
+  text-shadow: 0 0 10px rgb(var(--ps-rgb-neon-purple) / 0.55);
 }
 
 /* Animated gradient border */
@@ -156,8 +425,8 @@
     0deg,
     transparent,
     transparent 2px,
-    rgb(var(--ch-rgb-cherenkov-glow) / 0.015) 2px,
-    rgb(var(--ch-rgb-cherenkov-glow) / 0.015) 4px
+    rgb(var(--ps-rgb-cherenkov-glow) / 0.015) 2px,
+    rgb(var(--ps-rgb-cherenkov-glow) / 0.015) 4px
   );
   pointer-events: none;
 }
@@ -183,8 +452,8 @@
 /* Grid background */
 .grid-bg {
   background-image:
-    linear-gradient(rgb(var(--ch-rgb-neon-cyan) / 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(var(--ch-rgb-neon-cyan) / 0.03) 1px, transparent 1px);
+    linear-gradient(rgb(var(--ps-rgb-neon-cyan) / 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(var(--ps-rgb-neon-cyan) / 0.03) 1px, transparent 1px);
   background-size: 40px 40px;
 }
 
@@ -205,4 +474,208 @@
 }
 .animate-spin-slow {
   animation: spin-slow 3s linear infinite;
+}
+
+/* ── Bloom tier: the field answering presence ────────────────────────────────
+   WG-WEB-011 ruled C (field-reactive) and WG-WEB-005 ruled C (full). The brand
+   physics is a field: brightness is a readout of energy in the system, not
+   decoration, so an idle console is dim and a working one is not.
+
+   src/kit/BloomField.tsx (vendored, one delegated listener, mounted once in
+   layout.tsx) sets --bx/--by/--bloom on the [data-bloom] element under the
+   cursor. This is the paint half. Ported from PatterTech_Website's globals.css
+   with one substitution: the literal rgba(51, 221, 255, a) becomes a mix of
+   --color-cherenkov-100, which is #33ddff, which IS 51, 221, 255. Same colour,
+   existing token, nothing minted.
+
+   Why not --ps-rgb-cherenkov-glow, which holds that triplet and which the task
+   named. Because a rule written that way paints NOTHING, and this was measured
+   in Chrome against a production build taken from 11c9d296, the commit this work branched from, rather than reasoned
+   about. The token holds a COMMA list, "51, 221, 255", so rgb(var(token) / a)
+   expands to rgb(51, 221, 255 / 0.07), which mixes a comma list with a slash
+   alpha and is invalid: the declaration is dropped. Authoring the legacy form
+   rgba(var(token), a) does not save it either, because Lightning CSS
+   normalises rgba(x, a) to rgb(x / a) during minification and hands back the
+   same dead declaration. There is no spelling of that token that survives this
+   build pipeline.
+
+   That is a live defect with nineteen other sites in this file, including
+   .scanlines, .grid-bg, .text-glow-* and every .glow-* box-shadow, all of
+   which currently paint nothing. It is pre-existing, it is much wider than
+   this task, and it is filed separately rather than quietly fixed here.
+   color-mix keeps the bloom out of it. Do not "simplify" these two lines onto
+   the --ps-rgb-* triplet; that is a straight revert to invisible.
+
+   The 0.07 alpha under a 0.4s fade sits far below the pulse-glow / glow-surface
+   threshold this console reserves for live and active state, so the bloom does
+   not compete with "glow means running".
+
+   Both opt-outs are carried across from the source exactly. The fine-pointer
+   guard wraps the whole paint rule, because a touch device has no cursor to
+   answer and would otherwise be left with a permanently lit ::after. The
+   reduced-motion guard removes the pseudo-element outright: the field IS the
+   motion, so there is nothing left to soften once it is off. */
+@media (hover: hover) and (pointer: fine) {
+  [data-bloom] {
+    position: relative;
+  }
+  [data-bloom]::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: radial-gradient(
+      200px circle at var(--bx, 50%) var(--by, 50%),
+      color-mix(in srgb, var(--color-cherenkov-100) 7%, transparent),
+      transparent 70%
+    );
+    opacity: var(--bloom, 0);
+    transition: opacity 0.4s ease;
+  }
+  [data-bloom="tight"]::after {
+    background: radial-gradient(
+      90px circle at var(--bx, 50%) var(--by, 50%),
+      color-mix(in srgb, var(--color-cherenkov-100) 10%, transparent),
+      transparent 70%
+    );
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-bloom]::after {
+    display: none;
+  }
+}
+
+/* ── In-app Help prose ─────────────────────────────────────────────────────
+   The Help fragments are markdown-it output: bare h2/h3, p, ul, ol, pre, code,
+   table, blockquote, img and a, with not one class between them. They cannot
+   carry utilities, so the one class the article does carry has to style its
+   descendants, and this is the only place in the tree that earns that.
+
+   Every value is a declared token. token-must-exist only reads .tsx, so nothing
+   would have caught a colour invented here, which is exactly why it must not be.
+
+   The two overflow rules are the mobile answer. A wide table or a long shell
+   command scrolls inside its own box; without them the whole page scrolls
+   sideways at 390px and the rail goes with it. */
+.ps-help-prose {
+  color: var(--color-ps-text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.7;
+}
+.ps-help-prose > * + * {
+  margin-top: 1rem;
+}
+.ps-help-prose h2,
+.ps-help-prose h3,
+.ps-help-prose h4 {
+  color: var(--color-ps-text-primary);
+  font-weight: 700;
+  line-height: 1.3;
+  margin-top: 2rem;
+}
+.ps-help-prose h2 {
+  font-size: 1.125rem;
+  border-bottom: 1px solid var(--color-ps-surface-hairline);
+  padding-bottom: 0.375rem;
+}
+.ps-help-prose h3 {
+  font-size: 1rem;
+}
+.ps-help-prose h4 {
+  font-size: 0.875rem;
+  color: var(--color-ps-text-secondary);
+}
+.ps-help-prose a {
+  color: var(--color-neon-cyan);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.ps-help-prose strong {
+  color: var(--color-ps-text-primary);
+  font-weight: 700;
+}
+.ps-help-prose ul,
+.ps-help-prose ol {
+  padding-left: 1.25rem;
+  list-style-position: outside;
+}
+.ps-help-prose ul {
+  list-style-type: disc;
+}
+.ps-help-prose ol {
+  list-style-type: decimal;
+}
+.ps-help-prose li + li {
+  margin-top: 0.375rem;
+}
+.ps-help-prose code {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--color-ps-text-primary);
+  background: var(--color-ps-surface-well);
+  border-radius: 0.25rem;
+  padding: 0.0625rem 0.25rem;
+}
+.ps-help-prose pre {
+  overflow-x: auto;
+  background: var(--color-ps-surface-well);
+  border: 1px solid var(--color-ps-surface-hairline);
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+}
+.ps-help-prose pre code {
+  background: transparent;
+  padding: 0;
+}
+.ps-help-prose blockquote {
+  border-left: 2px solid var(--color-neon-cyan);
+  padding-left: 0.75rem;
+  color: var(--color-ps-text-muted);
+}
+.ps-help-prose table {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+.ps-help-prose th,
+.ps-help-prose td {
+  border: 1px solid var(--color-ps-surface-hairline);
+  padding: 0.375rem 0.625rem;
+  text-align: left;
+  vertical-align: top;
+}
+.ps-help-prose th {
+  color: var(--color-ps-text-primary);
+  font-weight: 700;
+  background: var(--color-ps-surface-well);
+}
+.ps-help-prose hr {
+  border: 0;
+  border-top: 1px solid var(--color-ps-surface-hairline);
+}
+.ps-help-prose img {
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--color-ps-surface-hairline);
+  border-radius: 0.5rem;
+}
+
+/* ── Focus, once ──────────────────────────────────────────────────────────
+   One visible focus ring for the whole console, from a token. Sixteen Story
+   Weaver controls set `outline-none` with nothing to replace it, and in
+   Tailwind v4 that is outline-style:none unconditionally, so tabbing through
+   those forms showed no focus at all (T-0096, D117). This rule is what a
+   control gets when it does not paint its own ring; design-lint's
+   no-bare-outline-none refuses a control that removes it without putting a
+   focus ring back on the same line. :focus-visible, not :focus, so a mouse
+   click does not draw it. */
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--color-neon-cyan);
+    outline-offset: 2px;
+  }
 }

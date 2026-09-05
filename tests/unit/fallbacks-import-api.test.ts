@@ -4,6 +4,7 @@ import { existsSync, mkdirSync, writeFileSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 import * as yaml from "js-yaml";
+import type { NextRequest } from "next/server";
 
 jest.mock("next/server", () => ({
   NextRequest: class NextRequest {
@@ -43,6 +44,24 @@ jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
 jest.mock("@/lib/api-auth", () => ({ requireAuth: jest.fn(() => null) }));
 jest.mock("@/lib/parse-json-body", () => ({
   parseJsonBody: jest.fn(async (req: { json: () => Promise<unknown> }) => req.json()),
+  // parseAndValidateJsonBody composes parseJsonBody + zod schema.safeParse.
+  // Re-expose the real one so the route's validation step is exercised
+  // end-to-end (otherwise the mock would short-circuit the schema and
+  // the test would lose coverage of the strict zod object in the route).
+  parseAndValidateJsonBody: jest.fn(
+    async (req: unknown, schema: { safeParse: (b: unknown) => { success: boolean; data?: unknown; error?: unknown } }) => {
+      const body = await (req as { json: () => Promise<unknown> }).json();
+      const result = schema.safeParse(body);
+      if (!result.success) {
+        // Mirror the real helper's 400 response shape.
+        return {
+          status: 400,
+          body: { error: "Invalid request body", details: (result.error as { flatten: () => unknown })?.flatten?.() },
+        };
+      }
+      return result.data;
+    },
+  ),
 }));
 
 const mockUpdateBatch = jest.fn();
@@ -59,7 +78,7 @@ jest.mock("@/lib/fallbacks-repository", () => ({
   updateFallbackConfigBatch: (...args: unknown[]) => mockUpdateBatch(...args),
 }));
 
-jest.mock("@/lib/fallback-sync-helpers", () => ({
+jest.mock("@/modules/hermes/lib/fallback-sync", () => ({
   syncEnabledFallbackChainToHermes: (...args: unknown[]) => mockSync(...args),
 }));
 
@@ -69,7 +88,7 @@ jest.mock("@/lib/models-repository", () => ({
 
 let fakeRoot: string;
 
-jest.mock("@/lib/hermes-agent-runtime", () => ({
+jest.mock("@/modules/hermes/lib/agent-runtime", () => ({
   getActiveHermesPaths: () => ({
     root: fakeRoot,
     config: join(fakeRoot, "config.yaml"),
@@ -100,13 +119,13 @@ beforeEach(() => {
 
 describe("POST /api/models/fallbacks/import", () => {
   it("imports agent settings from config.yaml into SQLite before re-sync", async () => {
-    const { POST } = await import("@/app/api/models/fallbacks/import/route");
+    const { POST } = await import("@/app/api/models/fallbacks/route");
     const req = new (jest.requireMock("next/server").NextRequest as new (
       url: string,
       init?: RequestInit,
-    ) => unknown)("http://localhost/api/models/fallbacks/import", {
+    ) => NextRequest)("http://localhost/api/models/fallbacks/import", {
       method: "POST",
-      body: JSON.stringify({}),
+      body: JSON.stringify({ action: "import" }),
     });
     const res = (await POST(req)) as { status: number };
     expect(res.status).toBe(200);
@@ -124,13 +143,13 @@ describe("POST /api/models/fallbacks/import", () => {
     const missingRoot = join(tmpdir(), `ch-fb-missing-${Date.now()}`);
     mkdirSync(missingRoot, { recursive: true });
     fakeRoot = missingRoot;
-    const { POST } = await import("@/app/api/models/fallbacks/import/route");
+    const { POST } = await import("@/app/api/models/fallbacks/route");
     const req = new (jest.requireMock("next/server").NextRequest as new (
       url: string,
       init?: RequestInit,
-    ) => unknown)("http://localhost/api/models/fallbacks/import", {
+    ) => NextRequest)("http://localhost/api/models/fallbacks/import", {
       method: "POST",
-      body: JSON.stringify({}),
+      body: JSON.stringify({ action: "import" }),
     });
     const res = (await POST(req)) as { status: number };
     expect(res.status).toBe(404);

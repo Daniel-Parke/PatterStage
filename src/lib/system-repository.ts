@@ -1,56 +1,81 @@
 // ═══════════════════════════════════════════════════════════════
-// system-repository.ts — Key-value system stat management
+// system-repository.ts — the `meta` table
 //
-// Wraps the `meta` table for reading/writing system-level
-// key-value pairs. Used by the sync sources to cache computed
-// stats (memory fact count, skills count, etc.) so API routes
-// read from the DB instead of performing filesystem operations.
+// The ONE repository for `meta`. Three unrelated features keep rows in
+// it and each used to prepare its own statements: the sync sources'
+// computed stats (memory fact count, uptime, config presence), the
+// config cache's JSON blob and timestamp, and the background
+// scheduler's ownership lease. Three writers to one table meant three
+// versions of "how do you upsert a meta row", and they did not agree.
+//
+// They still do not agree, and that is on purpose: INSERT OR REPLACE
+// and INSERT ... ON CONFLICT DO UPDATE differ in what happens to the
+// row (replace deletes and reinserts, so the rowid moves). Both forms
+// are kept, named for what they do, rather than merged into one and
+// hoping nothing depended on the difference.
+//
+// Nothing here swallows. The config cache treats every failure as a
+// miss and the scheduler treats every failure as "no lease info", and
+// those are policies about the caller, not about the table.
 // ═══════════════════════════════════════════════════════════════
 
-import { db } from "./db";
+import { getDb } from "./db";
 
 // ── Read ─────────────────────────────────────────────────────
 
 /** Get a single system stat from the `meta` table. Returns null if unset. */
 export function getSystemStat(key: string): string | null {
-  const row = db()
+  const row = getDb()
     .prepare("SELECT value FROM meta WHERE key = ?")
     .get(key) as { value: string } | undefined;
   return row?.value ?? null;
+}
+
+/** Read two `meta` keys in one query. Missing keys are simply absent from the result. */
+export function getMetaPair(keyA: string, keyB: string): Array<{ key: string; value: string }> {
+  return getDb()
+    .prepare(
+      `SELECT key, value FROM meta WHERE key IN (?, ?)`,
+    )
+    .all(keyA, keyB) as { key: string; value: string }[];
 }
 
 // ── Write ────────────────────────────────────────────────────
 
 /** Set a single system stat in the `meta` table. Upserts if key exists. */
 export function setSystemStat(key: string, value: string): void {
-  db()
+  getDb()
     .prepare("INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)")
     .run(key, value);
 }
 
-// ── Batch ────────────────────────────────────────────────────
-
-/** Get multiple system stats at once using a single query. Returns a map of key → value. */
-export function getMultipleStats(keys: string[]): Record<string, string | null> {
-  if (keys.length === 0) return {};
-  const placeholders = keys.map(() => "?").join(", ");
-  const rows = db()
-    .prepare(`SELECT key, value FROM meta WHERE key IN (${placeholders})`)
-    .all(...keys) as Array<{ key: string; value: string }>;
-
-  const result: Record<string, string | null> = {};
-  for (const key of keys) {
-    result[key] = null;
-  }
-  for (const row of rows) {
-    result[row.key] = row.value;
-  }
-  return result;
+/**
+ * Upsert one `meta` row in place, keeping the existing row.
+ *
+ * Distinct from setSystemStat's INSERT OR REPLACE, which deletes and
+ * reinserts. The scheduler lease uses this form and the difference is
+ * not cosmetic, so the two are separate functions rather than one.
+ */
+export function upsertMetaValue(key: string, value: string): void {
+  getDb()
+    .prepare(
+      "INSERT INTO meta (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+    )
+    .run(key, value);
 }
+
+/** Delete two `meta` keys (the config cache invalidates its blob and timestamp together). */
+export function deleteMetaPair(keyA: string, keyB: string): void {
+  getDb()
+    .prepare(`DELETE FROM meta WHERE key IN (?, ?)`)
+    .run(keyA, keyB);
+}
+
+// ── Batch ────────────────────────────────────────────────────
 
 /** Set multiple system stats in a single transaction. */
 export function setMultipleStats(entries: Record<string, string>): void {
-  const database = db();
+  const database = getDb();
   const stmt = database.prepare(
     "INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)"
   );
@@ -72,21 +97,7 @@ export function getSystemStatNumber(key: string, defaultVal = 0): number {
   return isNaN(n) ? defaultVal : n;
 }
 
-/** Set a numeric system stat. */
-export function setSystemStatNumber(key: string, value: number): void {
-  setSystemStat(key, String(value));
-}
-
-// ── Boolean helpers ──────────────────────────────────────────
-
-/** Get a system stat as a boolean. Returns `defaultVal` if unset. */
-export function getSystemStatBoolean(key: string, defaultVal = false): boolean {
-  const val = getSystemStat(key);
-  if (val === null) return defaultVal;
-  return val === "true" || val === "1";
-}
-
-/** Set a boolean system stat. */
-export function setSystemStatBoolean(key: string, value: boolean): void {
-  setSystemStat(key, value ? "true" : "false");
-}
+// The boolean pair went with its only key. `setSystemStatBoolean` had exactly
+// one caller -- MemorySync writing `memory.available`, which nothing read
+// (T-0081) -- and there has never been a getSystemStatBoolean to pair with it.
+// Callers that want a boolean compare the string, as `config.present` does.

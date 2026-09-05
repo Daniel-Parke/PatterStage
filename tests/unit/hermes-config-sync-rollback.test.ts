@@ -15,7 +15,7 @@ import { join } from "path";
 
 let fakeRoot: string;
 
-jest.mock("@/lib/hermes-agent-runtime", () => ({
+jest.mock("@/modules/hermes/lib/agent-runtime", () => ({
   getActiveHermesPaths: () => {
     const root = (global as { __FAKE_HERMES_ROOT__?: string }).__FAKE_HERMES_ROOT__!;
     return {
@@ -47,7 +47,7 @@ afterEach(() => {
 
 describe("atomicWriteFile rollback", () => {
   it("does not leave a tmp file when the rename fails", () => {
-    const { atomicWriteFile } = require("@/lib/hermes-config-sync") as typeof import("@/lib/hermes-config-sync");
+    const { atomicWriteFile } = require("@/modules/hermes/lib/hermes-config-write") as typeof import("@/modules/hermes/lib/hermes-config-write");
     // Spy on fs.renameSync and force a failure inside the same require graph.
     const fs = require("fs") as typeof import("fs");
     const orig = fs.renameSync;
@@ -69,7 +69,7 @@ describe("atomicWriteFile rollback", () => {
   });
 
   it("cleans up tmpfile even if writeFileSync throws on the staged file", () => {
-    const { atomicWriteFile } = require("@/lib/hermes-config-sync") as typeof import("@/lib/hermes-config-sync");
+    const { atomicWriteFile } = require("@/modules/hermes/lib/hermes-config-write") as typeof import("@/modules/hermes/lib/hermes-config-write");
     const fs = require("fs") as typeof import("fs");
 
     const target = join(fakeRoot, "config.yaml");

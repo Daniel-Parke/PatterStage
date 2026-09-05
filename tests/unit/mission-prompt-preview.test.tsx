@@ -17,6 +17,7 @@ describe("MissionPromptPreview", () => {
     skills: [],
     missionTimeMinutes: 15,
     timeoutMinutes: 10,
+    toolsets: [],
   };
 
   it("defaults to human view without nested collapse", () => {

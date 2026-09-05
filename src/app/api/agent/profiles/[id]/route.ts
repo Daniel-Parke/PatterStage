@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { renameSync, existsSync } from "fs";
 
-import { logApiError } from "@/lib/api-logger";
+import { serverErrorFromCatch } from "@/lib/api-logger";
 import { parseJsonBody } from "@/lib/parse-json-body";
-import { resolveSafeProfileName } from "@/lib/path-security";
-import { requireAuth } from "@/lib/api-auth";
+import { resolveSafeProfileName, requireSafeProfileName } from "@/lib/fs/path-security";
+
 import { appendAuditLine } from "@/lib/audit-log";
 import { ensureDb } from "@/lib/db";
 import {
@@ -12,35 +12,28 @@ import {
   renameProfileSlug,
   deleteProfile,
   updateProfileContent,
-} from "@/lib/profiles-repository";
-import { pushProfileToHermes, removeProfileFromDisk } from "@/lib/hermes-profile-sync";
-import { resolveProfileHermesHome } from "@/lib/hermes-profile-paths";
-import { slugifyDisplayName } from "@/lib/profile-slug";
-import type { ApiResponse } from "@/types/hermes";
+} from "@/modules/hermes/lib/profiles-repository";
+import { pushProfileToHermes } from "@/modules/hermes/lib/profile-push";
+import { removeProfileFromDisk } from "@/modules/hermes/lib/profile-discovery";
+import { resolveProfileHermesHome } from "@/modules/hermes/lib/profile-paths";
+import { slugifyDisplayName, validateProfileDisplayName, DEFAULT_PROFILE_SLUG } from "@/lib/profile-slug";
+import { badRequest, conflict, notFound, ok, serverError, methodNotAllowed } from "@/lib/api-response";
 
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   const { id } = await params;
-  const prof = resolveSafeProfileName(id);
-  if (!prof.ok) {
-    return NextResponse.json({ error: prof.error }, { status: 400 });
-  }
+  const prof = requireSafeProfileName(id);
+  if (prof instanceof NextResponse) return prof;
 
   if (prof.profile === "default") {
-    return NextResponse.json(
-      { error: "Cannot modify the default profile slug" },
-      { status: 400 },
-    );
+    return badRequest("Cannot modify the default profile slug");
   }
 
   const existing = getProfile(prof.profile);
   if (!existing) {
-    return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+    return notFound("Profile not found");
   }
 
   try {
@@ -50,19 +43,30 @@ export async function PUT(
     const { name, description } = bodyResult as { name?: string; description?: string };
 
     let slug = prof.profile;
-    if (name && typeof name === "string" && name.trim().length >= 2) {
+    if (name && typeof name === "string") {
+      // Same laundering as the create path, and the same fix: judge the name.
+      const nameCheck = validateProfileDisplayName(name);
+      if (!nameCheck.ok) return badRequest(nameCheck.error);
+
       const newSlug = slugifyDisplayName(name);
+
+      // The guard above rejects renaming the default profile; this rejects
+      // renaming any profile INTO it. Without both, a rename reaches the root
+      // agent's directory by the same route a create did.
+      if (newSlug === DEFAULT_PROFILE_SLUG) {
+        return conflict(
+          `"${name.trim()}" resolves to the slug "default", which is the root agent rather than ` +
+            `a profile. Choose a different name.`,
+        );
+      }
 
       if (newSlug && newSlug !== prof.profile) {
         const newProf = resolveSafeProfileName(newSlug);
         if (!newProf.ok) {
-          return NextResponse.json({ error: newProf.error }, { status: 400 });
+          return badRequest(newProf.error);
         }
         if (getProfile(newSlug)) {
-          return NextResponse.json(
-            { error: `Profile "${newSlug}" already exists` },
-            { status: 409 },
-          );
+          return conflict(`Profile "${newSlug}" already exists`);
         }
 
         const oldDir = resolveProfileHermesHome(prof.profile);
@@ -73,7 +77,7 @@ export async function PUT(
 
         const renamed = renameProfileSlug(prof.profile, newSlug);
         if (!renamed) {
-          return NextResponse.json({ error: "Failed to rename profile" }, { status: 500 });
+          return serverError("Failed to rename profile");
         }
         slug = newSlug;
       } else if (newSlug === prof.profile) {
@@ -88,10 +92,7 @@ export async function PUT(
 
     const push = pushProfileToHermes(slug);
     if (!push.success) {
-      return NextResponse.json(
-        { error: push.error ?? "Failed to sync profile to Hermes" },
-        { status: 500 },
-      );
+      return serverError(push.error ?? "Failed to sync profile to Hermes");
     }
 
     appendAuditLine({
@@ -100,12 +101,14 @@ export async function PUT(
       ok: true,
     });
 
-    return NextResponse.json<ApiResponse<{ success: true; slug: string }>>({
-      data: { success: true, slug },
-    });
+    return ok({ success: true, slug });
   } catch (error) {
-    logApiError("PUT /api/agent/profiles/[id]", "updating profile", error);
-    return NextResponse.json({ error: "Failed to update profile" }, { status: 500 });
+    return serverErrorFromCatch(
+      "PUT /api/agent/profiles/[id]",
+      "updating profile",
+      error,
+      "Failed to update profile",
+    );
   }
 }
 
@@ -113,26 +116,18 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   const { id } = await params;
-  const prof = resolveSafeProfileName(id);
-  if (!prof.ok) {
-    return NextResponse.json({ error: prof.error }, { status: 400 });
-  }
+  const prof = requireSafeProfileName(id);
+  if (prof instanceof NextResponse) return prof;
 
   if (prof.profile === "default") {
-    return NextResponse.json(
-      { error: "Cannot delete the default profile" },
-      { status: 400 },
-    );
+    return badRequest("Cannot delete the default profile");
   }
 
   try {
     ensureDb();
     if (!deleteProfile(prof.profile)) {
-      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+      return notFound("Profile not found");
     }
     removeProfileFromDisk(prof.profile);
 
@@ -142,11 +137,20 @@ export async function DELETE(
       ok: true,
     });
 
-    return NextResponse.json<ApiResponse<{ success: true }>>({
-      data: { success: true },
-    });
+    return ok({ success: true });
   } catch (error) {
-    logApiError("DELETE /api/agent/profiles/[id]", "deleting profile", error);
-    return NextResponse.json({ error: "Failed to delete profile" }, { status: 500 });
+    return serverErrorFromCatch(
+      "DELETE /api/agent/profiles/[id]",
+      "deleting profile",
+      error,
+      "Failed to delete profile",
+    );
   }
+}
+
+// GET is not supported on a single profile: the list route returns every
+// profile in full, so there is nothing this could add.
+export async function GET() {
+  return methodNotAllowed(
+    "GET is not supported here — /api/agent/profiles returns every profile in full", ["PUT", "DELETE"]);
 }

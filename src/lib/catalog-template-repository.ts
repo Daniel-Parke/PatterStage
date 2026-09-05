@@ -2,7 +2,8 @@
 // catalog-template-repository.ts — Seeded mission templates in SQLite
 // ═══════════════════════════════════════════════════════════════
 
-import { db, now } from "./db";
+import { getDb, now } from "./db";
+import { parseStringArrayOrEmpty } from "./db/parse-json";
 
 export interface CatalogTemplateRow {
   id: string;
@@ -48,15 +49,6 @@ interface DbRow {
   timeout_minutes: number;
 }
 
-function parseJsonArray(raw: string): string[] {
-  try {
-    const parsed = JSON.parse(raw) as unknown;
-    return Array.isArray(parsed) ? parsed.filter((x): x is string => typeof x === "string") : [];
-  } catch {
-    return [];
-  }
-}
-
 function rowToTemplate(row: DbRow): CatalogTemplateRow {
   return {
     id: row.id,
@@ -69,27 +61,27 @@ function rowToTemplate(row: DbRow): CatalogTemplateRow {
     description: row.description,
     instruction: row.instruction,
     context: row.context,
-    goals: parseJsonArray(row.goals),
+    goals: parseStringArrayOrEmpty(row.goals),
     outputFormat: row.output_format,
     constraints: row.constraints,
-    suggestedSkills: parseJsonArray(row.suggested_skills),
-    suggestedToolsets: parseJsonArray(row.suggested_toolsets ?? "[]"),
-    localDirs: parseJsonArray(row.local_dirs),
-    references: parseJsonArray(row.references_json),
+    suggestedSkills: parseStringArrayOrEmpty(row.suggested_skills),
+    suggestedToolsets: parseStringArrayOrEmpty(row.suggested_toolsets ?? "[]"),
+    localDirs: parseStringArrayOrEmpty(row.local_dirs),
+    references: parseStringArrayOrEmpty(row.references_json),
     missionTimeMinutes: row.mission_time_minutes,
     timeoutMinutes: row.timeout_minutes,
   };
 }
 
 export function listCatalogTemplates(): CatalogTemplateRow[] {
-  const rows = db()
+  const rows = getDb()
     .prepare("SELECT * FROM catalog_templates ORDER BY name COLLATE NOCASE")
     .all() as DbRow[];
   return rows.map(rowToTemplate);
 }
 
 export function getCatalogTemplate(id: string): CatalogTemplateRow | null {
-  const row = db()
+  const row = getDb()
     .prepare("SELECT * FROM catalog_templates WHERE id = ?")
     .get(id) as DbRow | undefined;
   return row ? rowToTemplate(row) : null;
@@ -99,7 +91,7 @@ export function upsertCatalogTemplate(
   row: CatalogTemplateRow & { seedKey?: string | null },
 ): CatalogTemplateRow {
   const ts = now();
-  db()
+  getDb()
     .prepare(
       `INSERT INTO catalog_templates (
         id, seed_key, name, icon, color, category_id, profile_slug, description,
@@ -152,9 +144,4 @@ export function upsertCatalogTemplate(
       ts,
     );
   return getCatalogTemplate(row.id)!;
-}
-
-export function deleteCatalogTemplate(id: string): boolean {
-  const result = db().prepare("DELETE FROM catalog_templates WHERE id = ?").run(id);
-  return result.changes > 0;
 }

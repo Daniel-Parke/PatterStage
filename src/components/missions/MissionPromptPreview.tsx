@@ -5,8 +5,8 @@ import { Copy } from "lucide-react";
 import {
   buildMissionPrompt,
   buildMissionPromptHuman,
-} from "@/lib/build-mission-prompt";
-import type { LocalDirEntry } from "@/types/hermes";
+} from "@/lib/missions/build-mission-prompt";
+import type { LocalDirEntry } from "@/types/console";
 
 export type PromptPreviewMode = "human" | "ai";
 
@@ -84,7 +84,7 @@ export default function MissionPromptPreview(props: MissionPromptPreviewProps) {
             className={`px-3 py-1.5 text-xs font-mono rounded-md transition-colors ${
               mode === "human"
                 ? "bg-white/10 text-white"
-                : "text-white/40 hover:text-white/60"
+                : "text-ps-text-muted hover:text-ps-text-secondary"
             }`}
           >
             Human
@@ -95,7 +95,7 @@ export default function MissionPromptPreview(props: MissionPromptPreviewProps) {
             className={`px-3 py-1.5 text-xs font-mono rounded-md transition-colors ${
               mode === "ai"
                 ? "bg-white/10 text-white"
-                : "text-white/40 hover:text-white/60"
+                : "text-ps-text-muted hover:text-ps-text-secondary"
             }`}
           >
             AI
@@ -114,13 +114,13 @@ export default function MissionPromptPreview(props: MissionPromptPreviewProps) {
               : "Copy agent prompt"}
         </button>
       </div>
-      <p className="text-[10px] font-mono text-white/25 leading-relaxed">
+      <p className="text-xs font-mono text-ps-text-faint leading-relaxed">
         Profile personality (SOUL/AGENTS) comes from Hermes at ~/.hermes.{" "}
         {mode === "human"
           ? "Human view mirrors your form fields."
           : "AI view is the XML prompt stored and sent to the agent."}
       </p>
-      <pre className="rounded-lg border border-white/10 bg-dark-950/50 px-3 py-3 text-[11px] font-mono text-white/60 whitespace-pre-wrap max-h-72 overflow-y-auto">
+      <pre className="rounded-lg border border-white/10 bg-dark-950/50 px-3 py-3 text-xs font-mono text-ps-text-secondary whitespace-pre-wrap max-h-72 overflow-y-auto">
         {activePreview || "(empty)"}
       </pre>
     </div>

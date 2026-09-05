@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { Clock, Loader2, CheckCircle2, XCircle } from "lucide-react";
+import type { MissionRunTone } from "@/lib/missions/mission-run-state";
 
 export interface StatusConfig {
   dot: "online" | "warning" | "error" | "idle";
@@ -15,8 +16,8 @@ export const STATUS_CONFIG: Record<string, StatusConfig> = {
   draft: {
     dot: "idle",
     bg: "bg-white/5",
-    text: "text-white/50",
-    icon: <Clock className="w-3.5 h-3.5 text-white/40" />,
+    text: "text-ps-text-muted",
+    icon: <Clock className="w-3.5 h-3.5 text-ps-text-muted" />,
     columnDot: "bg-white/30",
   },
   queued: {
@@ -51,3 +52,22 @@ export const STATUS_CONFIG: Record<string, StatusConfig> = {
 
 /** Fallback active class for unknown category colors */
 export const FALLBACK_CATEGORY_ACTIVE = "bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/40";
+
+/**
+ * Text colour per run tone (see describeMissionRunState). The board card and
+ * the detail panel both render a duration and must agree on what "overdue"
+ * looks like, so the mapping lives here rather than in either component.
+ * Static strings, not an interpolated class: Tailwind only compiles what it
+ * can see in the source.
+ */
+export const RUN_TONE_TEXT: Record<MissionRunTone, string> = {
+  idle: "text-ps-text-muted",
+  waiting: "text-neon-orange/90",
+  running: "text-neon-cyan",
+  overdue: "text-neon-orange",
+  good: "text-ps-text-secondary",
+  bad: "text-red-400",
+  // Not red. See MissionRunTone -- a cancellation is the operator's own action,
+  // not a fault report.
+  stopped: "text-neon-orange",
+};

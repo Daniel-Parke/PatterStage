@@ -1,0 +1,77 @@
+{
+  "id": "T-0108",
+  "intent": "B14 of the final-release programme: Story Weaver and Research. No generation on mount; Write chapter N and Keep writing with a Stop that aborts before the next call (D88, blocker). Migration 040 runs.story_id and runs.spend_source; story usage recorded from callLLM; SPEND_SOURCES gains story; the hard stop and the panel share one recorded-spend helper (D87, D104, blockers). A writing-model selector over the registry with the agent default preselected; the theme delete field name (D89); the length and count controls honoured or removed (D90, D91); premise on the wire (D92); error states on Library, Characters and Themes (D93); Save-to-Library reads the real response (D94); the ratified status words on the hub and library; the doubled chapter heading fixed. Research: cancel (D98); write errors surfaced (D99); confirmed artifact delete (D101); a run header (D102); the three pages on AppPageShell (D103).",
+  "declared": {
+    "capabilities": [
+      "edit-code",
+      "database"
+    ],
+    "side_effects": [
+      "migrates-schema",
+      "financial-impact"
+    ]
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [
+    {
+      "factor": "schema-change",
+      "tier_floor": "R2",
+      "source": "declared",
+      "evidence": "migration 040 adds story_id and spend_source to runs; no data loss"
+    },
+    {
+      "factor": "money",
+      "tier_floor": "R2",
+      "source": "declared",
+      "evidence": "story spend joins the hard stop; financial-impact declared because a wrong helper under-counts money"
+    }
+  ],
+  "status": "done",
+  "owner_session": "session-b14",
+  "claims": [
+    "src/lib/db/",
+    "src/lib/db-schema.ts",
+    "src/lib/runs-repository.ts",
+    "src/lib/llm.ts",
+    "src/lib/spend/",
+    "src/lib/laboratory/deep-research/",
+    "src/app/api/stories/",
+    "src/app/api/laboratory/",
+    "src/modules/rec-room/",
+    "src/app/recroom/",
+    "src/app/work/research/",
+    "src/app/results/artifacts/",
+    "src/app/results/insights/",
+    "docs/",
+    "tests/"
+  ],
+  "programme": "B14, depends on B2 (T-0096), B4 (T-0098) and B5 (T-0099). Reserved: migration 040. A spend-parity test (summary total equals guard total across all sources); reader tests; edit-handler tests; the cancel test; create-page response-gate tests.",
+  "timestamps": {
+    "opened": "2026-09-05T10:30:00Z",
+    "updated": "2026-09-06T09:00:00Z",
+    "closed": "2026-09-06T09:00:00Z"
+  },
+  "invariants": [
+    "I1 Nothing is written unless it is asked for. Opening a half-finished story generates nothing; the reader offers Write chapter N (one chapter, once), and Keep writing (N chapters left) when more than one is pending; while a call is in flight the only control is Stop.",
+    "I2 Stop stops. It aborts the request on the wire AND disarms the loop, so a provider that ignores the abort and answers anyway still starts no further call. A Stop is not a failure: it shows no error and burns none of the three retries the ceiling counts.",
+    "I3 A call that has already been stopped is never made. callLLM throws an AbortError before it reaches the provider, so 'stopped' does not depend on how far the request had got.",
+    "I4 Every model call a story makes writes a runs row that says whose money it was: spend_source 'story' and story_id linking it back. A provider that reported no usage, or zero tokens, writes NO row, because null is not zero.",
+    "I5 The panel and the hard stop price the same window through one helper. A source added to the console is a source the ceiling holds, and the parity is asserted rather than described.",
+    "I6 The operator chooses the writing model. The agent default is preselected the first time it arrives and never again, and 'Agent default model' sends no model at all.",
+    "I7 A theme delete posts the field the handler reads, and the optimistic removal runs on success only, so a row still in the database is still on the screen.",
+    "I8 Save to Library reads the answer the handler actually sends, confirms the save, and re-lists so the picker is not stale.",
+    "I9 The Chapter Length and Chapters to Regenerate controls are read. An edit sizes its rewrite and invalidates only the chapters the count names; a continue rewrites the frozen master prompt's chapter-length line so the control is not dead for everything the continuation produces.",
+    "I10 A chapter heading never says its number twice.",
+    "I11 A research run can be stopped, in two clicks, only while it is pending or running. The row the route writes is the final word: the job bails out at its next step and before its terminal write, records no report, captures no artifact and emits no research.failed.",
+    "I12 Research, Artifacts and Insights carry the app's own shell; their writes surface their failures instead of refetching over them; an artifact delete takes two clicks; and the run detail says which model, search provider, depth, breadth, duration and token count the run actually used, with 'not recorded' where nothing was."
+  ],
+  "commits": "f7dd6aa2 the oracle alone (10 files, 98 cases, measured red); a76a2235 the implementation (migration 040 and its applier wired last, spend-window as the one priced window, createSpendRun, the callLLM spend and signal plumbing, every story handler threaded, the reader's write controls, the edit and continue controls, the premise, the chapter heading, the writing- model selector, the theme-delete field, Save to Library, the research cancel route and its bail-out, the three pages on AppPageShell, the write- error banners, the artifact confirm, the run header, and the docs); aac5d9dd eight sharper oracles the sweep asked for.",
+  "verification": "Gate on the implementation tree by exit code: lint 0 (agent-files, doc-links, derived views, read-only guards, icon-button names, form-control names, design-lint 0 baselined, contrast, coverage floors, eslint, typecheck:tests), tsc 0, jest 0 (547 suites, 5263 tests), knip 0, canary 0 after one blessing, build 0, Playwright 132 passed 9 skipped. The canary bless was diffed first against a worktree of the last blessed commit: exactly two surfaces moved, generatedArtefacts by +migration:040_runs_spend_source.sql and httpSurface by +route /api/laboratory/research/[id]/cancel [POST], both predicted.",
+  "mutation": "61 mutants against the committed tree, 52 killed on the first pass and 61 after the sharper oracles. The gaps were all places where a mock stood in for the thing being asserted. createSpendRun was mocked by every oracle that reached it, so a version that dropped story_id and wrote an unattributable row passed all of them; the zero-token guard beside the no-usage guard had no case at all; and both abort behaviours were only ever seen through the page, where the page's own state made either one look the same. The reader had two of its own: Stop was only ever pressed while the loop was armed, so a Stop that read only the loop flag survived, and the abort always fired in the double, so a stopWriting that re-armed the loop was undone by the abort handler before anything could see it. The answer is a provider double that ignores the abort, which is what a gateway that does not honour the header does. One mutant was retired rather than killed: CreateRunInput.spendSource had no caller, so it was a branch no code could reach, and it is deleted.",
+  "proof": "Isolated instance (production build of aac5d9dd, e2e-b1 data dir, mock-hermes 8747), four scenes, 28 checks, all PASS. (1) A half-written story opens and generates nothing in two and a half seconds; Write chapter 3 and Keep writing (2 chapters left) are both offered and no Stop is; asking once makes exactly one call and offers a Stop for it; the heading never repeats the number. (2) The create page offers a Writing Model select whose first option is Agent default model, and a theme delete removes the row from the screen AND from the database, which is the defect. (3) The research page's own heading sits inside the app shell; a completed run's header reads Model: anthropic/claude-sonnet-4, Search: searxng, Depth: 5 rounds, Breadth: 9 results/query, Duration: 2m 5s and Tokens: 1,234, and offers no Stop; a running run offers Stop run, is still running after the first click, and is cancelled with 'Cancelled by the operator.' after the second. (4) An artifact arms on the first Delete and is still readable; the second click 404s it. Screenshots: scratchpad walk-b14/{reader-idle,reader-writing,create-model,research-header,research-armed,artifact-armed}.png.",
+  "deviation": "(1) handleExtend takes no options object. It appends pending chapter rows and calls no model, so a spend-and-abort context on it would be a promise it cannot keep. (2) The create page's write failures use their own banner rather than the existing genError one, whose headline reads 'Story generation failed' -- true of a create, false of a theme delete. (3) runs.spend_source is written by createRun from the composer link it already carries rather than from an input field: no caller passed one, and story spend does not come through createRun at all. (4) The B6 oracle's two head-equality assertions were retired to the ladder form. 039 was the head when they were written; the head now belongs to 040's oracle, and what stays in B6's file is the part that is about 039.",
+  "harness_amendments": "Six, each recorded because it is a fixture catching up with a real change rather than a check being weakened. tests/helpers/baseline-db.ts applies 040, and adds runs.composer_node_run_id first because 001_baseline does not carry it (it is a guarded ALTER inside the v21 applier) and 040's backfill reads it. spend-law, spend-summary and research-spend-counted assert four sources instead of three, with 'story' last. spend-guard's spend-repository mock gains readResearchUsageSince, which the shared window now reaches. research-gather-is-persisted and b4-emits-research-composer add getResearchRun to their repository mocks, which the job reads to notice a cancel. composer-spend-is-counted's hand-written runs fixture carries the two new columns. run-migrations-upgrade points its head assertion at 040's gate. And the reader oracle's final assertion counts the write controls rather than insisting on one, because the contract renders two when more than one chapter is pending.",
+  "deferred": "Story export and reading-position memory stay deferred by the plan, as does the four-serif fork and the Themes-into-Create merge. Chapters written before 040 left no row and stay absent from the spend console: unlike a research run with null token columns there is nothing to fold in, and docs/SPEND.md says so. The reader's three-consecutive-failure ceiling is unchanged; it now counts only real failures, because an abort no longer reaches it. Research run and preset management, deep-link selection and the Artifacts detail pane remain on the candidate list."
+}

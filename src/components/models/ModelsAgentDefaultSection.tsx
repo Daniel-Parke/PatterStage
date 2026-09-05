@@ -3,9 +3,11 @@
 import { CheckCircle2, Star } from "lucide-react";
 
 import GlowSurface from "@/components/ui/GlowSurface";
+import { Select } from "@/components/ui/field";
 import BulkAuxiliaryUpdater from "@/components/models/BulkAuxiliaryUpdater";
+import ModelsSectionHeader from "@/components/models/ModelsSectionHeader";
 import type { DefaultsModelOption } from "@/components/models/DefaultsGrid";
-import type { TaskType } from "@/lib/hermes-providers";
+import type { TaskType } from "@/lib/models/task-types";
 
 import type { ApiModel } from "./types";
 
@@ -34,10 +36,7 @@ export default function ModelsAgentDefaultSection({
     : null;
   return (
     <section data-section="agent-default" className="space-y-4">
-      <h2 className="text-sm font-bold text-white/70 uppercase tracking-wider flex items-center gap-2">
-        <Star className="w-4 h-4 text-neon-orange" />
-        Agent Default
-      </h2>
+      <ModelsSectionHeader icon={Star} title="Agent Default" color="orange" />
 
       <GlowSurface accent="orange">
         <div className="rounded-xl border border-neon-orange/20 bg-dark-900/40 p-6">
@@ -49,34 +48,27 @@ export default function ModelsAgentDefaultSection({
             />
 
             <div className="flex flex-col justify-center gap-3">
-              <label className="block text-xs font-mono text-white/50 uppercase tracking-wider">
+              <label className="block text-xs font-mono text-ps-text-muted uppercase tracking-wider">
                 Default Model
               </label>
               <div className="flex items-center gap-3 flex-wrap">
-                <select
-                  className="flex-shrink-0 w-full max-w-xs bg-dark-800 border border-white/10 rounded-lg px-3 py-2 text-white font-mono text-sm h-9 min-w-0 focus:outline-none focus:border-neon-orange/50 transition-colors truncate appearance-none"
-                  value={defaults.agent ?? ""}
-                  onChange={(e) => {
-                    const val = e.target.value || null;
-                    void onSetDefault("agent", val);
-                  }}
-                  disabled={busyTaskType === "agent"}
-                  title="Primary model used for all agent missions"
-                >
-                  <option value="">— None —</option>
-                  {modelOptions.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.name}
-                    </option>
-                  ))}
-                </select>
+                <div className="w-full max-w-xs shrink-0" title="Primary model used for all agent missions">
+                  <Select
+                    ariaLabel="Default agent model"
+                    value={defaults.agent ?? ""}
+                    onChange={(v) => void onSetDefault("agent", v || null)}
+                    disabled={busyTaskType === "agent"}
+                    placeholder="— None —"
+                    options={[{ value: "", label: "— None —" }, ...modelOptions.map((m) => ({ value: m.id, label: m.name }))]}
+                  />
+                </div>
 
                 {activeModel && (
                   <div className="min-w-0 flex-1">
-                    <span className="text-xs text-white/40 font-mono">
+                    <span className="text-xs text-ps-text-muted font-mono">
                       {" "}
                       {activeModel.provider}/
-                      <span className="text-white/60">{activeModel.modelId}</span>
+                      <span className="text-ps-text-secondary">{activeModel.modelId}</span>
                     </span>
                     {" "}
                     <span className="inline-flex items-center gap-1 text-green-400 text-xs font-mono">
@@ -85,7 +77,7 @@ export default function ModelsAgentDefaultSection({
                   </div>
                 )}
                 {!defaults.agent && (
-                  <span className="text-xs text-white/30 font-mono">No default set</span>
+                  <span className="text-xs text-ps-text-muted font-mono">No default set</span>
                 )}
               </div>
             </div>

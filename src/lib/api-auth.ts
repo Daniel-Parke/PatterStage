@@ -2,27 +2,35 @@ import { createHmac, randomUUID, timingSafeEqual } from "crypto";
 
 import { NextRequest, NextResponse } from "next/server";
 
-function firstEnvFlag(keys: string[]): string | undefined {
-  for (const key of keys) {
-    const value = process.env[key];
-    if (value !== undefined && String(value).trim() !== "") return String(value).trim();
-  }
-  return undefined;
-}
+import { serviceUnavailable } from "@/lib/api-response";
+import { getAuthMode } from "@/lib/auth-token";
+import { readEnv } from "@/lib/paths";
+import { isReadOnly, readOnlyMessage } from "@/lib/read-only";
 
+/**
+ * Whether POST /api/update may spawn the deploy script.
+ *
+ * Exported, and the ONLY copy of the rule: boot-diagnostics used to carry its
+ * own mirror of these six lines "so the line cannot claim a state the guard
+ * does not enforce", which is the argument for one function, not two. The
+ * footer reads the answer on GET /api/update so it can say "off" before the
+ * click (T-0095, D53). Setup writes `PS_ENABLE_DEPLOY_API=true` on a fresh
+ * install (decision 17), so the production fallback below is for installs
+ * that predate it.
+ */
 export function isDeployApiEnabled(): boolean {
-  const raw = firstEnvFlag(["CH_ENABLE_DEPLOY_API"]);
+  const raw = readEnv("PS_ENABLE_DEPLOY_API", "CH_ENABLE_DEPLOY_API");
   const value = raw?.toLowerCase();
   if (value === "1" || value === "true" || value === "yes") return true;
   if (value === "0" || value === "false" || value === "no") return false;
   return process.env.NODE_ENV !== "production";
 }
 
-export function isChReadOnly(): boolean {
-  const raw = firstEnvFlag(["CH_READ_ONLY"]);
-  const value = raw?.toLowerCase();
-  return value === "1" || value === "true";
-}
+/**
+ * Re-exported from `@/lib/read-only` so the route layer and the proxy read the
+ * same function, not two implementations of the same sentence (T-0048).
+ */
+export { isReadOnly };
 
 export function getCorrelationId(request: NextRequest): string {
   return (
@@ -33,10 +41,10 @@ export function getCorrelationId(request: NextRequest): string {
 }
 
 export function requireSignedRequest(request: NextRequest): NextResponse | null {
-  const secret = process.env.CH_REQUEST_SIGNING_SECRET || "";
+  const secret = readEnv("PS_REQUEST_SIGNING_SECRET", "CH_REQUEST_SIGNING_SECRET") || "";
   if (!secret) return null;
-  const ts = request.headers.get("x-ch-ts") || "";
-  const sig = request.headers.get("x-ch-signature") || "";
+  const ts = request.headers.get("x-ps-ts") || request.headers.get("x-ch-ts") || "";
+  const sig = request.headers.get("x-ps-signature") || request.headers.get("x-ch-signature") || "";
   if (!ts || !sig) {
     return NextResponse.json({ error: "Missing signature headers" }, { status: 401 });
   }
@@ -55,53 +63,58 @@ export function requireSignedRequest(request: NextRequest): NextResponse | null 
 }
 
 /**
- * Guard for write endpoints. Returns a 503 NextResponse (to be returned
- * from the route handler) if the control hub is in read-only mode, or
- * `null` if writes are allowed.
+ * Guard for a WRITE endpoint that needs its own resource-specific wording.
  *
- * Optional `context` is appended to the default message as a
- * resource-specific hint (e.g. "skill toggles are disabled",
- * "tool mutations are disabled"). When omitted, the canonical default
- * message including the env-var hint is used.
+ * ⚠️ Almost nothing should call this. `src/proxy.ts` refuses every unsafe method
+ * under read-only before a handler runs, so a route-level call is redundant. It
+ * survives only for the handful of endpoints that are not simply "a write":
+ * a GET that performs a side effect, or a route whose refusal is more useful
+ * with a resource named in it.
+ *
+ * NEVER call it from a GET, HEAD or OPTIONS handler. That is the defect T-0048
+ * removed: `requireAuth()` was a thin alias for this function, 34 read handlers
+ * called it, and `PS_READ_ONLY` therefore 503'd the dashboard it exists to
+ * enable. `scripts/tooling/check-read-only-guards.mjs` fails the build on it.
+ *
+ * The message is `readOnlyMessage()` so the operator sees one sentence whichever
+ * layer refused. The wording here used to say "set PS_READ_ONLY=true to allow
+ * writes", which is the opposite of the fix.
  */
 export function requireNotReadOnly(context?: string): NextResponse | null {
-  if (!isChReadOnly()) return null;
-  if (!context) {
-    return NextResponse.json(
-      { error: "Control Hub is in read-only mode (set CH_READ_ONLY=true to allow writes)." },
-      { status: 503 },
-    );
-  }
-  return NextResponse.json(
-    {
-      error: `Control Hub is in read-only mode — ${context}`,
-    },
-    { status: 503 },
-  );
+  if (!isReadOnly()) return null;
+  return serviceUnavailable(readOnlyMessage(context));
 }
 
 export function requireDeployApiEnabled(): NextResponse | null {
   if (isDeployApiEnabled()) return null;
   return NextResponse.json(
-    { error: "Deploy API disabled. Set CH_ENABLE_DEPLOY_API=true to allow update/restart." },
+    { error: "Deploy API disabled. Set PS_ENABLE_DEPLOY_API=true to allow update/restart." },
     { status: 403 }
   );
 }
 
 /**
- * Combined write-access guard: checks the read-only mode flag.
- * Returns a NextResponse (to return) if write access is denied, or null if allowed.
+ * Refuse an endpoint that can cause host-level side effects (writing a script
+ * that will later be executed, running one, installing a crontab line, spawning
+ * the deploy script) when authentication has been switched off with
+ * `PS_AUTH_MODE=none`.
  *
- * NOTE: Despite the name, this function does NOT perform authentication — it only
- * checks the read-only env flag (CH_READ_ONLY). The `_request` parameter is
- * intentionally ignored. For new code, prefer the explicit `requireNotReadOnly()`
- * or the dedicated signed-request check `requireSignedRequest()`.
+ * With authentication on (the default), these endpoints are fine: the operator
+ * holding the token already has shell access to the machine running the server,
+ * so an authenticated script editor is a feature, not an escalation. With
+ * authentication off, the same endpoints are an unauthenticated RCE, which is
+ * exactly how this application shipped before `src/proxy.ts` existed.
  *
- * Historical: this helper was originally named `requireAuth` because every route
- * that called it was also a write route, so the read-only check was sufficient.
- * The misnomer persists across ~30 call sites; renaming to `requireWriteAccess()`
- * is a separate, larger refactor (deferred).
+ * `src/proxy.ts` now refuses the same paths first, from a list, so a route
+ * that forgets this call is still covered. This stays as defence in depth.
  */
-export function requireAuth(_request: NextRequest): NextResponse | null {
-  return requireNotReadOnly();
+export function requireAuthenticatedHostWrites(): NextResponse | null {
+  if (getAuthMode() !== "none") return null;
+  return NextResponse.json(
+    {
+      error:
+        "Host-affecting writes are disabled while PS_AUTH_MODE=none. Re-enable the access token to edit, schedule or run scripts, or to deploy.",
+    },
+    { status: 403 },
+  );
 }

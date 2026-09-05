@@ -47,17 +47,15 @@ jest.mock("@/lib/api-logger", () => ({
   logApiError: jest.fn(),
 }));
 
-jest.mock("@/lib/story-weaver/prompts", () => ({
+jest.mock("@/modules/rec-room/lib/prompts", () => ({
   getStoryPrompt: jest.fn(() => "system prompt"),
 }));
 
 jest.mock("@/lib/api-auth", () => ({
-  requireAuth: jest.fn(() => null),
-  requireAuth: jest.fn(() => null),
 }));
 
 // Mock story-repository (NOT stories-repository - the file is story-repository.ts)
-jest.mock("@/lib/story-repository", () => {
+jest.mock("@/modules/rec-room/lib/story-repository", () => {
   const listStories = jest.fn();
   const getStory = jest.fn();
   const saveStory = jest.fn();
@@ -81,7 +79,7 @@ jest.mock("@/lib/story-repository", () => {
 });
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const storyRepo = require("@/lib/story-repository") as Record<string, unknown>;
+const storyRepo = require("@/modules/rec-room/lib/story-repository") as Record<string, unknown>;
 const mockGetStory = storyRepo.__getStory as jest.Mock;
 const mockSaveStory = storyRepo.__saveStory as jest.Mock;
 const mockUpdateStory = storyRepo.__updateStory as jest.Mock;

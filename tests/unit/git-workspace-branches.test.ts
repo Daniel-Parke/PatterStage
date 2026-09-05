@@ -1,6 +1,6 @@
 /** @jest-environment node */
 
-import { readGitBranchMetadataForWorkspacePath } from "@/lib/git-workspace-branches";
+import { readGitBranchMetadataForWorkspacePath } from "@/lib/git/git-workspace-branches";
 
 jest.mock("@/lib/api-logger", () => ({
   logApiError: jest.fn(),

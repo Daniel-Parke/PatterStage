@@ -2,13 +2,14 @@
 // GET /api/fs/list — list one directory level under allowed roots
 // ═══════════════════════════════════════════════════════════════
 
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { readdirSync, statSync, existsSync } from "fs";
 import { homedir } from "os";
 import { resolve as pathResolve } from "path";
 
-import { logApiError } from "@/lib/api-logger";
-import { resolveAllowedWorkspacePath } from "@/lib/path-security";
+import { serverErrorFromCatch } from "@/lib/api-logger";
+import { badRequest, ok } from "@/lib/api-response";
+import { resolveAllowedWorkspacePath } from "@/lib/fs/path-security";
 
 export async function GET(request: NextRequest) {
   try {
@@ -19,12 +20,12 @@ export async function GET(request: NextRequest) {
     const rootInput = pathParam && pathParam.length > 0 ? pathParam : homedir();
     const resolved = resolveAllowedWorkspacePath(rootInput);
     if (!resolved.ok) {
-      return NextResponse.json({ error: resolved.error }, { status: 400 });
+      return badRequest(resolved.error);
     }
     const abs = resolved.absolute;
 
     if (!existsSync(abs) || !statSync(abs).isDirectory()) {
-      return NextResponse.json({ error: "Not a directory" }, { status: 400 });
+      return badRequest("Not a directory");
     }
 
     const entries: { name: string; isDir: boolean; isFile: boolean }[] = [];
@@ -53,11 +54,13 @@ export async function GET(request: NextRequest) {
       parent = parentResolved.absolute;
     }
 
-    return NextResponse.json({
-      data: { path: abs, parent, entries },
-    });
+    return ok({ path: abs, parent, entries });
   } catch (error) {
-    logApiError("GET /api/fs/list", "listing path", error);
-    return NextResponse.json({ error: "Failed to list directory" }, { status: 500 });
+    return serverErrorFromCatch(
+      "GET /api/fs/list",
+      "listing path",
+      error,
+      "Failed to list directory",
+    );
   }
 }

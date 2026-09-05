@@ -1,0 +1,29 @@
+{
+  "id": "T-0074",
+  "intent": "POST /api/missions carries five verbs behind one endpoint -- dispatch, promote, update, cancel, delete -- each with its own eligibility rules, its own body shape and its own refusals. Three separate QA findings across two passes are downstream of that one decision. This is an ADR, not a patch.",
+  "declared": {
+    "capabilities": [],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R0",
+  "tier_ruled": "R0",
+  "reasons": [],
+  "status": "proposed",
+  "owner_session": "t0074-missions-actions-adr-2026-08-31",
+  "claims": [
+    "src/app/api/missions/route.ts",
+    "src/lib/missions/mission-handlers/"
+  ],
+  "the_evidence_it_costs_something": [
+    "T-0067: the route validated its OUTER vocabulary (a default 400 on an unknown `action`) and handed an unvalidated inner enum to a handler that treated unrecognised as run-it-now. The shape of the endpoint is what put a validated and an unvalidated switch one level apart.",
+    "T-0071 / F6: which verb applies depends on mission status, and the refusals said which WORD to use rather than what to send. An operator reading them experienced it as a loop. The messages are fixed; the underlying need to explain a verb-selection rule at all is the endpoint's shape.",
+    "T-0070: two cancel entry points existed -- the action here and POST /api/missions/[id]/cancel -- and they wrote different state for years. A resource route and an action route for the same verb is how that happened."
+  ],
+  "why_it_is_not_being_patched_now": "Splitting five verbs into REST resources changes the public HTTP surface, every client hook that calls it, the canary's httpSurface golden and the integration smokes. That is a deliberate design decision with a migration cost, and it belongs to the operator rather than to a QA-remediation batch. Nothing here is a live defect: each individual symptom has been fixed.",
+  "what_the_adr_has_to_decide": "Whether the five verbs become resources (POST /api/missions, PATCH /api/missions/[id], POST /api/missions/[id]/dispatch, .../cancel, DELETE /api/missions/[id]), whether the action form is kept as a deprecated alias and for how long, and whether the eligibility rules move into one declared table so a refusal can be generated rather than written five times.",
+  "timestamps": {
+    "opened": "2026-08-31T20:30:00Z",
+    "updated": "2026-08-31T20:30:00Z"
+  }
+}

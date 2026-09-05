@@ -4,10 +4,11 @@
 
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { Copy, Check, ChevronDown, ChevronRight } from "lucide-react";
 import { messageSummary } from "@/lib/utils";
-import { ROLE_META } from "@/components/session/constants";
+import { ROLE_META, getMessageRole } from "@/components/session/constants";
+import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -45,10 +46,16 @@ export interface SessionData {
    */
   note?: string;
   /**
-   * Control-Hub mission id for sessions spawned by the dispatch pipeline.
+   * PatterStage mission id for sessions spawned by the dispatch pipeline.
    * The detail page links to the mission page when this is present.
    */
   missionId?: string | null;
+  /** How it ended, and why (T-0105, D30). */
+  status?: string;
+  exitCode?: number | null;
+  error?: string | null;
+  /** True when older messages were left behind by the message cap (D40). */
+  truncated?: boolean;
 }
 
 // ── MessageBubble ────────────────────────────────────────────
@@ -57,36 +64,48 @@ export function MessageBubble({
   msg,
   index,
   messageRefs,
+  expandAll = null,
 }: {
   msg: SessionMessage;
   index: number;
   messageRefs: React.MutableRefObject<Map<number, HTMLDivElement>>;
+  /**
+   * Expand or collapse every bubble at once. A non-null change sets this
+   * bubble's own state; toggling one afterwards still works, because reading a
+   * transcript is not an all-or-nothing act (T-0105, D38).
+   */
+  expandAll?: boolean | null;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const copiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const role = (msg.role || "unknown").toLowerCase();
+  // Adjusted during render rather than in an effect: React's own pattern for
+  // "a prop changed and this state follows it", and the one that has the new
+  // value on screen in the same commit as the click that asked for it.
+  const [lastExpandAll, setLastExpandAll] = useState<boolean | null>(null);
+  if (expandAll !== null && expandAll !== lastExpandAll) {
+    setLastExpandAll(expandAll);
+    setExpanded(expandAll);
+  }
+  // Use the shared `useCopyToClipboard` hook (sister to the
+  // PersonalityCard migration in operations/personalities/page.tsx) so
+  // the "[copied, setCopied] + useRef<setTimeout> + unmount cleanup"
+  // pattern lives in exactly one place. The 1500ms reset matches the
+  // pre-refactor inline timer (the Personalities site uses 2000ms — a
+  // different value passed via the hook's `resetMs` option).
+  const [copied, copy] = useCopyToClipboard({ resetMs: 1500 });
+  // Use the shared `getMessageRole` helper so the "missing/empty role
+  // → unknown" defensive default lives in exactly one place. The
+  // session detail page and the helper itself both consume it, so any
+  // future change (e.g. handling a "tool_call_only" sentinel) lands
+  // here once, not in N+1 inline copies.
+  const role = getMessageRole(msg);
   const content =
     typeof msg.content === "string"
       ? msg.content
       : JSON.stringify(msg.content, null, 2);
   const summary = messageSummary(content);
 
-  // Cleanup the copied-state timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
-    };
-  }, []);
-
   const handleCopy = () => {
-    if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
-    navigator.clipboard.writeText(content || "");
-    setCopied(true);
-    copiedTimerRef.current = setTimeout(() => {
-      copiedTimerRef.current = null;
-      setCopied(false);
-    }, 1500);
+    copy(content || "");
   };
 
   const config = ROLE_META[role] || ROLE_META.system;
@@ -110,7 +129,7 @@ export function MessageBubble({
             {config.label}
           </span>
           {msg.tool_call_id && (
-            <span className="text-[10px] font-mono text-white/30 bg-white/5 px-1.5 py-0.5 rounded">
+            <span className="text-xs font-mono text-ps-text-muted bg-white/5 px-1.5 py-0.5 rounded">
               {msg.tool_call_id.slice(0, 12)}
             </span>
           )}
@@ -120,21 +139,21 @@ export function MessageBubble({
             </span>
           )}
           {!expanded && (
-            <span className="text-xs text-white/30 font-mono truncate ml-1">
+            <span className="text-xs text-ps-text-muted font-mono truncate ml-1">
               {summary}
             </span>
           )}
         </div>
         <div className="flex items-center gap-1 flex-shrink-0 ml-2">
           {isLong && (
-            <span className="text-[10px] font-mono text-white/20 mr-1">
+            <span className="text-xs font-mono text-ps-text-faint mr-1">
               {(content.length / 1024).toFixed(1)}KB
             </span>
           )}
           {expanded ? (
-            <ChevronDown className="w-3.5 h-3.5 text-white/30" />
+            <ChevronDown className="w-3.5 h-3.5 text-ps-text-muted" />
           ) : (
-            <ChevronRight className="w-3.5 h-3.5 text-white/30" />
+            <ChevronRight className="w-3.5 h-3.5 text-ps-text-muted" />
           )}
         </div>
       </button>
@@ -143,7 +162,7 @@ export function MessageBubble({
           <div className="flex justify-end mb-2">
             <button
               onClick={handleCopy}
-              className="p-1 rounded text-white/30 hover:text-white/60 transition-colors"
+              className="p-1 rounded text-ps-text-muted hover:text-ps-text-secondary transition-colors"
               title="Copy"
             >
               {copied ? (
@@ -153,12 +172,12 @@ export function MessageBubble({
               )}
             </button>
           </div>
-          <pre className="text-sm text-white/80 font-mono whitespace-pre-wrap break-words">
+          <pre className="text-sm text-ps-text-primary font-mono whitespace-pre-wrap break-words">
             {content || "(no content)"}
           </pre>
           {Array.isArray(msg.tool_calls) && msg.tool_calls.length > 0 && (
             <div className="mt-3 pt-3 border-t border-white/5 space-y-2">
-              <div className="text-[10px] font-mono text-white/30 uppercase tracking-widest">
+              <div className="text-xs font-mono text-ps-text-muted uppercase tracking-widest">
                 Tool Calls ({msg.tool_calls.length})
               </div>
               {msg.tool_calls.map((tc: unknown, i: number) => {
@@ -173,10 +192,8 @@ export function MessageBubble({
                     key={tcKey}
                     className="bg-dark-900/50 rounded-lg p-3 text-xs font-mono"
                   >
-                    <span className="text-neon-green">
-                      {String(fn?.name || "unknown")}
-                    </span>
-                    <pre className="mt-1 text-white/40 whitespace-pre-wrap">
+                    <span className="text-neon-green">{fnName}</span>
+                    <pre className="mt-1 text-ps-text-muted whitespace-pre-wrap">
                       {typeof fn?.arguments === "string"
                         ? fn.arguments
                         : JSON.stringify(fn?.arguments, null, 2)}

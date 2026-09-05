@@ -1,0 +1,69 @@
+{
+  "id": "T-0103",
+  "intent": "B9 of the final-release programme: Skills, Tools and the Personalities fold. The Tools grid is bundle-aware so a granular toolset covered by an enabled hermes-* bundle reads pressed-and-disabled with the reason, normalisation dedupes only on write, enabled and disabled chips differ, unsaved changes guarded on profile switch, advanced-JSON edits kept (D80 blocker, D84, D82); the skill viewer tolerates the thin payload and becomes the catalogue's destination, disk-only skills toggle, Re-import from Hermes in the header, sharing across profiles stated where the edit happens (D81, D82). Decision 11: Personalities becomes the Identity tab on /agent/profiles writing through the same patch path; /operations/personalities answers 307; the page, nav entry, /api/personalities and the caller-less PUT /api/agent/personality go.",
+  "declared": {
+    "capabilities": [
+      "edit-code",
+      "filesystem"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [
+    {
+      "factor": "public-contract",
+      "tier_floor": "R2",
+      "source": "derived:public-api-delta",
+      "evidence": "/api/personalities and PUT /api/agent/personality are removed; canary httpSurface changes"
+    }
+  ],
+  "status": "done",
+  "owner_session": "session-b9",
+  "claims": [
+    "src/modules/hermes/lib/toolset-normalize.ts",
+    "src/modules/hermes/lib/toolset-coverage.ts",
+    "src/modules/hermes/lib/profiles-repository.ts",
+    "src/lib/skills-known.ts",
+    "src/app/agent/skills/",
+    "src/app/agent/tools/",
+    "src/app/agent/profiles/",
+    "src/app/agent/personalities/",
+    "src/app/api/skills/",
+    "src/app/api/personalities/",
+    "src/app/api/agent/personality/",
+    "src/components/skills/",
+    "src/components/tools/",
+    "src/components/agents/",
+    "src/components/personalities/",
+    "src/lib/modules/registry.ts",
+    "next.config.ts",
+    "docs/",
+    "tests/"
+  ],
+  "programme": "B9, depends on B8 (T-0102). toolset-normalize tests; page tests; the redirect test; the Shapeshifter oracle on the Identity tab.",
+  "timestamps": {
+    "opened": "2026-09-05T10:30:00Z",
+    "updated": "2026-09-05T20:30:00Z",
+    "closed": "2026-09-05T20:30:00Z"
+  },
+  "invariants": [
+    "I1 A toolset a bundle already provides is shown as on and is not a control, with the bundle named. The covered set is derived from the constant the normaliser uses, so the grid and the write path can never disagree about what a bundle contains.",
+    "I2 Normalisation is a write-path job. A platform_toolsets value that came out of the database is read back unchanged; only a value hydrated from config.yaml or the seed pack is canonicalised, so a GET no longer rewrites the row.",
+    "I3 On and off are not colour alone: an enabled chip carries a state marker as well as aria-pressed.",
+    "I4 Hand-edited advanced JSON is the payload from the moment it is typed into until it is saved or discarded. While it stands the grid is out of play and the page says why, and there is a control that gives the grid back.",
+    "I5 Switching profile with unsaved toolset changes asks first, and the profile on screen stays the one holding the work until the operator answers.",
+    "I6 A skill is toggleable when the catalogue holds it or the agent's disk does, which is the same set the list the operator clicked from shows; a name in neither place is still a 404.",
+    "I7 There is one skill payload, built in one place, disk first and catalogue second, and BOTH routes send it. A single-segment key is matched by [name] and a nested one by [...path]; answering different shapes is what made the viewer throw for every top-level skill key.",
+    "I8 The viewer renders what it is handed. Frontmatter, linked files, raw content and the timestamp are optional, so the thinnest payload the route can send is a page rather than a crash.",
+    "I9 There is one page and one route that write a profile's voice. Personalities is the Identity tab on the agent's own card; both old paths answer 307 to it; the SOUL.md door on /api/agent/files is the write path, and it is the one that records personality.changed."
+  ],
+  "commits": "8ffcf605 the oracle alone (3 files, 31 cases, measured red: 26 failing, 5 green controls); 028e91f5 the implementation (the coverage rule, the read that stops rewriting, the bundle-aware grid, the JSON guard, the profile-switch guard, skillIsKnown, the viewer's catalogue answer, the Identity tab, the two redirects, four deletions and the docs); then the sharper oracles the sweep asked for, and the one payload the walk asked for.",
+  "verification": "Gate b9 on the implementation tree by exit code: lint 0 (agent-files, doc-links, derived views, read-only guards, icon-button names, form-control names, design-lint 0 baselined, contrast, coverage floors, eslint, typecheck:tests), tsc 0, jest 0 (512 suites, 4857 tests), knip 0, canary blessed once on appConfig and httpSurface, the diff against a worktree of fe82e148 showing the two redirects and exactly three removed surfaces (page /agent/personalities, route /api/agent/personality, route /api/personalities), build 0, Playwright 127 passed 8 skipped.",
+  "mutation": "34 mutants against the committed tree, 28 killed on the first pass and 32 after four sharper oracles. The four real gaps were all the same mistake: the skills cases were structural, so a mutant that keeps the shape and removes the behaviour walked through them. Two new files answer with facts instead, on a real in-memory database and a real temp skills tree. Two survivors are equivalent: coverage-covers-a-bundle-itself, because no hermes-* name is in HERMES_CLI_SUBSUMED, so the prefix guard changes no answer today and is there for the bundle that one day collides; and toggle-lets-a-covered-one-through, because a covered chip is rendered disabled, so the guard inside the handler is the second lock on the same door and only a caller that is not the grid could reach it.",
+  "proof": "Isolated instance (production build of the implementation tree, e2e-b1 data dir, mock-hermes 8747), five scenes, 24 checks, all PASS. (1) With the profile on hermes-cli, Terminal reads aria-pressed true and disabled, the page says 'included in Hermes CLI', and a save round-trips [\"hermes-cli\"] unchanged. (2) Off the bundle the same chip is a control again; typing into the advanced JSON put 'source of truth' on the page, disabled the grid, and the edit survived hiding the panel: the saved list came back [\"custom-walk-toolset\",\"web\"]. (3) With an unsaved change, picking another profile asked, Keep editing took the prompt away and left the change in place. (4) /agent/personalities and /operations/personalities both answer 307 to /agent/profiles?tab=identity; arriving there the Identity tab is selected, the voice is on it, SOUL.md is open, the rail carries no Personalities row, and Files still lists the behaviour files. (5) The viewer route answers 200 for a listed skill, says source disk, and the page renders it rather than 'Skill Not Found'.",
+  "deviation": "(1) skillIsKnown lives under modules/hermes rather than lib/: knowing where an agent keeps its skills is adapter knowledge and ADR-0005 forbids core importing a module. The oracle's import path was amended for that reason and no other. (2) The proof walk found what the unit oracle could not: /api/skills/writing is matched by [name]/route.ts and only /api/skills/office/pdf reaches the catch-all, so the catalogue fallback built into [...path] was unreachable for exactly the top-level keys D81 names. The payload moved into one reader, skill-view.ts, and both routes send it. That is a wider change than the defect text asked for and a smaller one than leaving two shapes behind. (3) The copy fix from T-0102 is unchanged here; the header's note still links to /agent/personalities, which now redirects to the tab beside it.",
+  "harness_amendments": "b9-identity-tab's renderLoaded waited only for 'Select a profile' to disappear, and that sentence is absent during loading too, so it waited for nothing; it waits for the list and then the auto-selection. Its Files assertion was scoped to the file list, because config.yaml is also named inside the header's disclosure. b9-tools-and-skills-routes' viewer case moved from the catch-all's source to skill-view.ts and gained the case that both routes use it. Four existing suites were re-aimed at the fold rather than weakened: b3-registry-regroup (no seventh Agent row, no sub-link), b3-old-paths-redirect and its e2e twin (the new destination, and a destination check that compares paths because one now carries a query), tools-personalities.spec (its third case opened the page that is a tab now; the redirect matrix covers the path), and use-copy-to-clipboard (five cases named two deleted files; MessageBubble keeps the invariant they shared). Three suites were deleted with the routes they pinned: personalities-route, personality-security, personalities-have-no-active-control.",
+  "deferred": "The five remaining raw navigator.clipboard.writeText call sites are pre-existing and not a regression from the fold; moving them onto useCopyToClipboard is not this batch's. ProfileSelector is still a bespoke dropdown whose entries are plain buttons rather than role=\"option\", which is one of the six the design review deferred past 1.0; the walk picks a row by name because of it. Field's label association does not reach Select, so a custom dropdown's label points at nothing (recorded in T-0102, still open). The Tools page still offers no way to see which platform diverged from which, only that they have."
+}

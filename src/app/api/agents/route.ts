@@ -5,12 +5,11 @@
 // instead of running execSync on every request.
 // ═══════════════════════════════════════════════════════════════
 
-import { NextResponse } from "next/server";
-
-import { db } from "@/lib/db";
+import { readAgentProcesses } from "@/lib/sync/sync-repository";
 import { ensureSyncLayer } from "@/lib/sync";
-import { logApiError } from "@/lib/api-logger";
-import type { HermesProcess } from "@/types/hermes";
+import { serverErrorFromCatch } from "@/lib/api-logger";
+import { ok } from "@/lib/api-response";
+import type { HermesProcess } from "@/types/console";
 
 export async function GET() {
   try {
@@ -18,21 +17,7 @@ export async function GET() {
     ensureSyncLayer();
 
     // Read from the agent_processes table
-    const rows = db()
-      .prepare(
-        "SELECT id, type, name, status, pid, model, turns, last_activity, last_seen_at FROM agent_processes ORDER BY type, name"
-      )
-      .all() as Array<{
-      id: string;
-      type: string;
-      name: string;
-      status: string;
-      pid: number | null;
-      model: string;
-      turns: number;
-      last_activity: string | null;
-      last_seen_at: string;
-    }>;
+    const rows = readAgentProcesses();
 
     const processes: HermesProcess[] = rows.map((r) => ({
       id: r.id,
@@ -49,19 +34,22 @@ export async function GET() {
     const runningCount = processes.filter((p) => p.status === "running").length;
     const idleCount = processes.filter((p) => p.status === "idle").length;
 
-    return NextResponse.json({
-      data: {
-        processes,
-        total: processes.length,
-        running: runningCount,
-        idle: idleCount,
-      },
+    return ok({
+      processes,
+      total: processes.length,
+      running: runningCount,
+      idle: idleCount,
     });
   } catch (err) {
-    logApiError("GET /api/agents", "querying Hermes processes", err);
-    return NextResponse.json(
-      { error: "Failed to query Hermes processes: " + String(err) },
-      { status: 500 }
+    // serverErrorFromCatch wraps `logApiError(...) + NextResponse.json({error}, {status:500})`
+    // — same wire shape (the helper's body is literally that composition).
+    // Migrated from the inline form in session 172 to match every other
+    // List 3 API route's catch-block convention (sessions 70, 72, 76, 80).
+    return serverErrorFromCatch(
+      "GET /api/agents",
+      "querying Hermes processes",
+      err,
+      "Failed to query Hermes processes",
     );
   }
 }

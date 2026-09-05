@@ -1,6 +1,7 @@
 "use client";
 
-import type { FallbackChainEntry } from "@/types/hermes";
+import type { FallbackChainEntry } from "@/types/console";
+import { useDialogA11y } from "@/hooks/useDialogA11y";
 
 interface FallbackUrlEditModalProps {
   entry: FallbackChainEntry | null;
@@ -19,6 +20,9 @@ export default function FallbackUrlEditModal({
   onClose,
   onSave,
 }: FallbackUrlEditModalProps) {
+  // Hooks before the early return. A dialog on the shared contract
+  // (T-0096, D116): Escape closes, Tab stays inside, focus returns.
+  const panelRef = useDialogA11y({ open: entry !== null, onClose });
   if (!entry) return null;
 
   return (
@@ -28,6 +32,8 @@ export default function FallbackUrlEditModal({
       role="presentation"
     >
       <div
+        ref={panelRef}
+        tabIndex={-1}
         className="w-full max-w-md bg-dark-900 border border-white/10 rounded-xl overflow-hidden"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
@@ -36,14 +42,15 @@ export default function FallbackUrlEditModal({
       >
         <div className="px-4 py-3 border-b border-white/10">
           <h3 id="fallback-url-edit-title" className="text-sm font-semibold text-white">
-            Edit override Base URL: {entry.modelName}
+            Edit override base URL: {entry.modelName}
           </h3>
         </div>
         <div className="p-4">
-          <label className="block text-[10px] font-mono text-white/40 uppercase mb-1.5">
-            Override Base URL
+          <label htmlFor="fallback-url-edit-input" className="block text-xs font-mono text-ps-text-muted uppercase mb-1.5">
+            Override base URL
           </label>
           <input
+            id="fallback-url-edit-input"
             type="text"
             value={url}
             onChange={(e) => onUrlChange(e.target.value)}
@@ -51,7 +58,7 @@ export default function FallbackUrlEditModal({
             className="w-full bg-dark-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white font-mono outline-none focus:border-neon-purple/50 transition-colors"
             autoFocus
           />
-          <p className="text-[10px] text-white/30 font-mono mt-1.5">
+          <p className="text-xs text-ps-text-muted font-mono mt-1.5">
             Leave empty to use the model&apos;s default base URL
           </p>
         </div>
@@ -59,7 +66,7 @@ export default function FallbackUrlEditModal({
           <button
             type="button"
             onClick={onClose}
-            className="px-3 py-1.5 text-xs font-mono text-white/50 hover:text-white rounded-lg hover:bg-white/5 transition-colors"
+            className="px-3 py-1.5 text-xs font-mono text-ps-text-muted hover:text-white rounded-lg hover:bg-white/5 transition-colors"
           >
             Cancel
           </button>

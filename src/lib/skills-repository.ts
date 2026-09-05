@@ -2,9 +2,9 @@
 // skills-repository.ts — Global skills catalog in SQLite
 // ═══════════════════════════════════════════════════════════════
 
-import { db, now } from "./db";
+import { getDb, now } from "./db";
 
-export type SkillSource = "bundled" | "custom" | "hub";
+type SkillSource = "bundled" | "custom" | "hub";
 
 export interface SkillRow {
   skillKey: string;
@@ -37,6 +37,22 @@ const SELECT_COLS = `
   synced_at, sync_error, created_at, updated_at
 `;
 
+// The same columns MINUS `content`, with the body's length computed in SQLite
+// instead. `content` is the whole SKILL.md body: across a real catalog that is
+// megabytes of text, and three of the five `listSkills()` callers never read a
+// single character of it (they want the keys, the count, or the size). Reading
+// it anyway cost 5.5 ms per call at 178 skills and grows linearly with the
+// catalog, so the metadata-only shape below exists for those callers.
+//
+// `LENGTH(content)` counts CHARACTERS, where the old `row.content.length`
+// counted UTF-16 code units. The two differ only for astral-plane characters
+// (emoji), and only in `contentLength`, which is a fallback used to show a
+// skill's size when its disk file is missing. Nothing branches on it.
+const SELECT_META_COLS = `
+  skill_key, display_name, description, category, LENGTH(content) AS content_length,
+  source, synced_at, sync_error, created_at, updated_at
+`;
+
 function rowToSkill(row: DbRow): SkillRow {
   return {
     skillKey: row.skill_key,
@@ -53,14 +69,62 @@ function rowToSkill(row: DbRow): SkillRow {
 }
 
 export function listSkills(): SkillRow[] {
-  const rows = db()
+  const rows = getDb()
     .prepare(`SELECT ${SELECT_COLS} FROM skills ORDER BY skill_key COLLATE NOCASE`)
     .all() as DbRow[];
   return rows.map(rowToSkill);
 }
 
+/** A catalog row with the body's LENGTH in place of the body itself. */
+export interface SkillCatalogEntry extends Omit<SkillRow, "content"> {
+  /** Character length of the stored SKILL.md body. */
+  contentLength: number;
+}
+
+interface DbMetaRow extends Omit<DbRow, "content"> {
+  content_length: number;
+}
+
+/**
+ * Every skill's metadata, in the same order as `listSkills()`, without the
+ * SKILL.md bodies. Use this whenever the body is not going to be read.
+ */
+export function listSkillCatalog(): SkillCatalogEntry[] {
+  const rows = getDb()
+    .prepare(`SELECT ${SELECT_META_COLS} FROM skills ORDER BY skill_key COLLATE NOCASE`)
+    .all() as DbMetaRow[];
+  return rows.map((row) => ({
+    skillKey: row.skill_key,
+    displayName: row.display_name,
+    description: row.description,
+    category: row.category,
+    contentLength: row.content_length,
+    source: row.source as SkillSource,
+    syncedAt: row.synced_at,
+    syncError: row.sync_error,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }));
+}
+
+/** Just the catalog keys, in `listSkills()` order. */
+export function listSkillKeys(): string[] {
+  const rows = getDb()
+    .prepare("SELECT skill_key FROM skills ORDER BY skill_key COLLATE NOCASE")
+    .all() as Array<{ skill_key: string }>;
+  return rows.map((r) => r.skill_key);
+}
+
+/** How many skills the catalog holds. */
+export function countSkills(): number {
+  const row = getDb().prepare("SELECT COUNT(*) AS n FROM skills").get() as
+    | { n: number }
+    | undefined;
+  return row?.n ?? 0;
+}
+
 export function getSkill(skillKey: string): SkillRow | null {
-  const row = db()
+  const row = getDb()
     .prepare(`SELECT ${SELECT_COLS} FROM skills WHERE skill_key = ?`)
     .get(skillKey) as DbRow | undefined;
   return row ? rowToSkill(row) : null;
@@ -78,7 +142,7 @@ export interface UpsertSkillInput {
 export function upsertSkill(input: UpsertSkillInput): SkillRow {
   const ts = now();
   const existing = getSkill(input.skillKey);
-  db()
+  getDb()
     .prepare(
       `INSERT INTO skills (
         skill_key, display_name, description, category, content, source,
@@ -105,17 +169,12 @@ export function upsertSkill(input: UpsertSkillInput): SkillRow {
   return getSkill(input.skillKey)!;
 }
 
-export function deleteSkill(skillKey: string): boolean {
-  const result = db().prepare("DELETE FROM skills WHERE skill_key = ?").run(skillKey);
-  return result.changes > 0;
-}
-
 export function setSkillSyncStatus(
   skillKey: string,
   syncedAt: string | null,
   syncError: string | null,
 ): void {
-  db()
+  getDb()
     .prepare(
       "UPDATE skills SET synced_at = ?, sync_error = ?, updated_at = ? WHERE skill_key = ?",
     )

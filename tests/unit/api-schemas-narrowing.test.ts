@@ -24,7 +24,8 @@ import {
   credentialPostSchema,
   setDefaultPutSchema,
 } from "@/lib/api-schemas";
-import { HERMES_PROVIDERS, TASK_TYPES } from "@/lib/hermes-providers";
+import { HERMES_PROVIDERS } from "@/modules/hermes/lib/providers";
+import { TASK_TYPES } from "@/lib/models/task-types";
 
 describe("providerSchema narrows parsed type to HermesProvider (session 53)", () => {
   it("accepts every value in the canonical HERMES_PROVIDERS list", () => {

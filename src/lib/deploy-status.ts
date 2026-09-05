@@ -1,14 +1,14 @@
-import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "fs";
+import { existsSync, readFileSync, renameSync, writeFileSync } from "fs";
+import { dirname } from "path";
 
-import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
+import { getAgentWorkspace } from "@/lib/runtime/workspace";
+import { ensureDir } from "@/lib/fs/fs-helpers";
 
 function deployStatusDir(): string {
-  const p = deployStatusPath();
-  const slash = p.lastIndexOf("/");
-  return slash >= 0 ? p.slice(0, slash) : p;
+  return dirname(deployStatusPath());
 }
 
-export type DeployState = "idle" | "running" | "success" | "failed";
+type DeployState = "idle" | "running" | "success" | "failed";
 
 export interface DeployStatus {
   state: DeployState;
@@ -21,11 +21,22 @@ export interface DeployStatus {
   logHint: string;
 }
 
-const DEPLOY_STATUS_BASENAME = "ch-deploy.status";
+const DEPLOY_STATUS_BASENAME = "ps-deploy.status";
+const LEGACY_DEPLOY_STATUS_BASENAME = "ch-deploy.status";
 const STALE_RUNNING_MS = 45 * 60 * 1000;
 
+/** Canonical (write) path for the deploy status file. */
 function deployStatusPath(): string {
-  return getActiveHermesPaths().logs + "/" + DEPLOY_STATUS_BASENAME;
+  return getAgentWorkspace().logs + "/" + DEPLOY_STATUS_BASENAME;
+}
+
+/** Read path: prefer the new ps- file; fall back to a legacy ch- file written
+ *  by a pre-rename deploy still in flight during the first update. */
+function deployStatusReadPath(): string {
+  const p = deployStatusPath();
+  if (existsSync(p)) return p;
+  const legacy = getAgentWorkspace().logs + "/" + LEGACY_DEPLOY_STATUS_BASENAME;
+  return existsSync(legacy) ? legacy : p;
 }
 
 function parseStatusFile(raw: string): DeployStatus {
@@ -57,7 +68,7 @@ function isStaleRunning(status: DeployStatus): boolean {
 }
 
 export function readDeployStatus(): DeployStatus {
-  const path = deployStatusPath();
+  const path = deployStatusReadPath();
   if (!existsSync(path)) {
     return {
       state: "idle",
@@ -73,12 +84,36 @@ export function readDeployStatus(): DeployStatus {
   try {
     const status = parseStatusFile(readFileSync(path, "utf-8"));
     if (isStaleRunning(status)) {
-      return {
+      const stale: DeployStatus = {
         ...status,
         state: "failed",
-        message: "Deploy status stale (timed out) — check ch-restart.log",
-        logHint: "ch-restart.log",
+        message: "Deploy status stale (timed out) — check ps-restart.log",
+        logHint: "ps-restart.log",
+        finishedAt: new Date().toISOString(),
+        exitCode: "1",
       };
+      // Persist the rewrite so subsequent reads see the terminal state.
+      // Without this, isDeployInProgress() (which reads the same file)
+      // would keep reporting "running" until 45 min after the original
+      // startedAt, blocking the user from issuing a new deploy.
+      try {
+        const body = [
+          `state=${stale.state}`,
+          `action=${stale.action}`,
+          `phase=${stale.phase}`,
+          `message=${stale.message.replace(/\n/g, " ")}`,
+          `startedAt=${stale.startedAt}`,
+          `finishedAt=${stale.finishedAt}`,
+          `exitCode=${stale.exitCode}`,
+          `logHint=${stale.logHint}`,
+        ].join("\n");
+        const tmp = path + ".tmp";
+        writeFileSync(tmp, body, "utf-8");
+        renameSync(tmp, path);
+      } catch {
+        // non-fatal — the in-memory return value is still correct
+      }
+      return stale;
     }
     return status;
   } catch {
@@ -96,10 +131,22 @@ export function readDeployStatus(): DeployStatus {
 }
 
 export function isDeployInProgress(): boolean {
-  return readDeployStatus().state === "running";
+  const status = readDeployStatus();
+  if (status.state !== "running") return false;
+  // Honor the stale-running detection. A status file stuck in "running" for
+  // longer than STALE_RUNNING_MS means the deploy script crashed/was killed
+  // and never wrote a terminal state. Without this, a stuck status from a
+  // silent failure (e.g. lock contention with a stuck process) permanently
+  // blocks the user from issuing a new deploy until they manually clear the
+  // status file. See skills/devops/patterstage-scripts "stale deploy lock"
+  // pitfall (discovered 2026-06-08).
+  if (!status.startedAt) return true;
+  const started = Date.parse(status.startedAt);
+  if (Number.isNaN(started)) return true;
+  return Date.now() - started <= STALE_RUNNING_MS;
 }
 
-/** Optimistic status before detached ch-deploy starts (bridges spawn sleep). */
+/** Optimistic status before detached ps-deploy starts (bridges spawn sleep). */
 export function writeDeployStatusRunning(
   action: string,
   phase: string,
@@ -107,7 +154,7 @@ export function writeDeployStatusRunning(
 ): void {
   const path = deployStatusPath();
   try {
-    mkdirSync(deployStatusDir(), { recursive: true });
+    ensureDir(deployStatusDir());
     const startedAt = new Date().toISOString();
     const tmp = path + ".tmp";
     const body = [
@@ -118,7 +165,7 @@ export function writeDeployStatusRunning(
       `startedAt=${startedAt}`,
       "finishedAt=",
       "exitCode=",
-      "logHint=ch-restart.log",
+      "logHint=ps-restart.log",
     ].join("\n");
     writeFileSync(tmp, body, "utf-8");
     renameSync(tmp, path);
@@ -130,7 +177,7 @@ export function writeDeployStatusRunning(
 export function tailLogHint(logHint: string, maxLines = 20): string[] {
   if (!logHint) return [];
   const base = logHint.replace(/\.log$/i, "");
-  const path = getActiveHermesPaths().logs + "/" + base + ".log";
+  const path = getAgentWorkspace().logs + "/" + base + ".log";
   if (!existsSync(path)) return [];
   try {
     const lines = readFileSync(path, "utf-8").split("\n");

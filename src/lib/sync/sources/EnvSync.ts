@@ -7,8 +7,8 @@
 
 import { access, constants } from "fs/promises";
 import { readFile } from "fs/promises";
-import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
-import { db } from "@/lib/db";
+import { getAgentWorkspace } from "@/lib/runtime/workspace";
+import { upsertGatewayPlatforms } from "@/lib/sync/sync-repository";
 import { logApiError } from "@/lib/api-logger";
 import type { SyncSource, SyncResult } from "@/lib/sync/types";
 
@@ -38,7 +38,7 @@ export class EnvSync implements SyncSource {
   async sync(): Promise<SyncResult> {
     const start = performance.now();
     try {
-      const envPath = getActiveHermesPaths().env;
+      const envPath = getAgentWorkspace().env;
       let envExists = false;
       try {
         await access(envPath, constants.F_OK);
@@ -94,17 +94,7 @@ export class EnvSync implements SyncSource {
       ];
 
       const now = new Date().toISOString();
-      const database = db();
-      const upsert = database.prepare(
-        `INSERT OR REPLACE INTO gateway_platforms (platform, enabled, bot_token_present, last_synced_at)
-         VALUES (?, ?, ?, ?)`
-      );
-      const tx = database.transaction(() => {
-        for (const p of platforms) {
-          upsert.run(p.platform, p.enabled, p.bot_token_present, now);
-        }
-      });
-      tx();
+      upsertGatewayPlatforms(platforms, now);
 
       return {
         sourceName: this.name,

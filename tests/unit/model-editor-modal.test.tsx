@@ -86,6 +86,7 @@ describe("ModelEditor", () => {
       <ModelEditor
         model={null}
         credentials={[]}
+        providers={["anthropic", "openrouter", "openai"]}
         onClose={onClose}
         onSaved={onSaved}
       />
@@ -135,6 +136,7 @@ describe("ModelEditor", () => {
       <ModelEditor
         model={null}
         credentials={[ANTHROPIC_KEY]}
+        providers={["anthropic", "openrouter", "openai"]}
         onClose={jest.fn()}
         onSaved={onSaved}
       />
@@ -147,9 +149,9 @@ describe("ModelEditor", () => {
       target: { value: "anthropic/claude-sonnet-4" },
     });
 
-    // Pick the existing credential row
-    const credentialSelect = screen.getByLabelText(/Credential/i) as HTMLSelectElement;
-    fireEvent.change(credentialSelect, { target: { value: ANTHROPIC_KEY.id } });
+    // Pick the existing credential row (Field Kit Select: open, then click the option)
+    fireEvent.click(screen.getByLabelText(/Credential/i));
+    fireEvent.click(screen.getByText(ANTHROPIC_KEY.label));
 
     fireEvent.click(screen.getByRole("button", { name: /Create Model/i }));
 
@@ -184,6 +186,7 @@ describe("ModelEditor", () => {
       <ModelEditor
         model={existing}
         credentials={[ANTHROPIC_KEY]}
+        providers={["anthropic", "openrouter", "openai"]}
         onClose={jest.fn()}
         onSaved={onSaved}
       />

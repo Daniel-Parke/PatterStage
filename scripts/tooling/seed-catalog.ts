@@ -1,6 +1,6 @@
 #!/usr/bin/env npx tsx
 /**
- * Seed Control Hub professional catalog into SQLite and push profiles to Hermes.
+ * Seed PatterStage professional catalog into SQLite and push profiles to Hermes.
  * Usage: npx tsx scripts/tooling/seed-catalog.ts [--merge|--replace]
  */
 
@@ -35,8 +35,8 @@ function loadEnvLocal(): void {
 
 async function main(): Promise<void> {
   loadEnvLocal();
-  if (!process.env.CH_DATA_DIR) {
-    process.env.CH_DATA_DIR = join(homedir(), "control-hub", "data");
+  if (!process.env.PS_DATA_DIR && !process.env.CH_DATA_DIR && !process.env.CONTROL_HUB_DATA_DIR) {
+    process.env.PS_DATA_DIR = join(homedir(), "patterstage", "data");
   }
 
   const args = process.argv.slice(2);

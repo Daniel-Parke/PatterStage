@@ -1,0 +1,716 @@
+{
+  "generatedBy": "scripts/docs/build-site.mjs",
+  "sections": [
+    {
+      "id": "start-here",
+      "label": "Start here",
+      "pages": [
+        {
+          "slug": "index",
+          "title": "Documentation",
+          "summary": "The reading path: what PatterStage is, the first hour, one guide per screen, and where the governing corpus lives",
+          "nav": 0
+        },
+        {
+          "slug": "start-here/index",
+          "title": "What PatterStage is",
+          "summary": "A control plane for one AI agent on your own machine: what it does, what it needs, and what it is not",
+          "nav": 10,
+          "concepts": [
+            "agent"
+          ]
+        },
+        {
+          "slug": "start-here/install",
+          "title": "Installing",
+          "summary": "Getting PatterStage onto Linux, macOS, or Windows under WSL2, and what the installer does for you",
+          "nav": 20
+        },
+        {
+          "slug": "start-here/first-hour",
+          "title": "The first hour",
+          "summary": "One path end to end: the agent installed, the browser signed in, a model chosen, a mission dispatched and its output read",
+          "nav": 30,
+          "concepts": [
+            "mission",
+            "run",
+            "session",
+            "artifact"
+          ]
+        },
+        {
+          "slug": "start-here/quests",
+          "title": "Quests",
+          "summary": "A guided path through the product, ticked off by what you actually did rather than by what you read",
+          "nav": 40
+        },
+        {
+          "slug": "start-here/getting-help",
+          "title": "Getting help",
+          "summary": "Where the answer probably is, and where to ask when it is not",
+          "nav": 50
+        },
+        {
+          "slug": "support",
+          "title": "Support",
+          "summary": "Where to get help, and which questions belong to Hermes rather than to this repository",
+          "nav": 60
+        }
+      ]
+    },
+    {
+      "id": "concepts",
+      "label": "Concepts",
+      "pages": [
+        {
+          "slug": "concepts/agent",
+          "title": "Agent",
+          "summary": "The thing that does the work: a program that reads a goal, decides on steps, and uses tools to take them",
+          "nav": 10
+        },
+        {
+          "slug": "concepts/prompt",
+          "title": "Prompt",
+          "summary": "The text you hand the agent, and the standing text it always carries with it",
+          "nav": 20
+        },
+        {
+          "slug": "concepts/model",
+          "title": "Model",
+          "summary": "The language model that does the reasoning, and why PatterStage keeps a registry of them",
+          "nav": 30
+        },
+        {
+          "slug": "concepts/provider",
+          "title": "Provider",
+          "summary": "Who serves the model: a cloud API, a local server, or the agent's own gateway",
+          "nav": 40
+        },
+        {
+          "slug": "concepts/api-key",
+          "title": "API key",
+          "summary": "The secret that pays for a provider's models, where PatterStage keeps it, and where it never appears",
+          "nav": 50
+        },
+        {
+          "slug": "concepts/profile",
+          "title": "Profile",
+          "summary": "A named set of behaviour files and enabled tools, so one agent can work several ways",
+          "nav": 60
+        },
+        {
+          "slug": "concepts/personality",
+          "title": "Personality",
+          "summary": "The voice and standing instructions a profile writes into SOUL.md",
+          "nav": 70
+        },
+        {
+          "slug": "concepts/skill",
+          "title": "Skill",
+          "summary": "A written procedure the agent can follow, kept in the catalogue and enabled per profile",
+          "nav": 80
+        },
+        {
+          "slug": "concepts/tool",
+          "title": "Tool",
+          "summary": "One capability the agent can invoke: read a file, search the web, run a command",
+          "nav": 90
+        },
+        {
+          "slug": "concepts/toolset",
+          "title": "Toolset",
+          "summary": "A named bundle of tools, which is what you actually switch on and off",
+          "nav": 100
+        },
+        {
+          "slug": "concepts/memory",
+          "title": "Memory",
+          "summary": "What the agent remembers between runs, and the separate service that holds it",
+          "nav": 110
+        },
+        {
+          "slug": "concepts/session",
+          "title": "Session",
+          "summary": "One conversation with the agent, however it was started",
+          "nav": 120
+        },
+        {
+          "slug": "concepts/transcript",
+          "title": "Transcript",
+          "summary": "The turns inside a session, which is what you read to find out what actually happened",
+          "nav": 130
+        },
+        {
+          "slug": "concepts/mission",
+          "title": "Mission",
+          "summary": "A stored piece of work you can dispatch, schedule and repeat",
+          "nav": 140
+        },
+        {
+          "slug": "concepts/run",
+          "title": "Run",
+          "summary": "One execution of a mission, with its own status, output and token cost",
+          "nav": 150
+        },
+        {
+          "slug": "concepts/schedule",
+          "title": "Schedule",
+          "summary": "A mission or script on a timer, and who is holding the clock",
+          "nav": 160
+        },
+        {
+          "slug": "concepts/workflow",
+          "title": "Workflow",
+          "summary": "Several agent runs wired together, with edges that decide what happens next",
+          "nav": 170
+        },
+        {
+          "slug": "concepts/gate",
+          "title": "Gate",
+          "summary": "A stage in a workflow that waits for you, so a long chain cannot run past a decision",
+          "nav": 180
+        },
+        {
+          "slug": "concepts/artifact",
+          "title": "Artifact",
+          "summary": "A deliverable the agent produced, collected in one place to read and download",
+          "nav": 190
+        },
+        {
+          "slug": "concepts/spend",
+          "title": "Spend",
+          "summary": "What the models cost, how PatterStage estimates it, and the ceiling you can put on it",
+          "nav": 200
+        }
+      ]
+    },
+    {
+      "id": "guides",
+      "label": "Guides",
+      "pages": [
+        {
+          "slug": "guides/dashboard",
+          "title": "Dashboard",
+          "summary": "The operations board: what is healthy, what is running, and what to do first",
+          "nav": 10,
+          "screen": "/",
+          "concepts": [
+            "agent",
+            "mission",
+            "run"
+          ]
+        },
+        {
+          "slug": "guides/chat",
+          "title": "Chat",
+          "summary": "The Chat page, its Agent and Fast modes, and how a turn becomes a real agent run",
+          "nav": 20,
+          "screen": "/work/chat",
+          "concepts": [
+            "agent",
+            "prompt",
+            "model"
+          ]
+        },
+        {
+          "slug": "guides/missions",
+          "title": "Missions",
+          "summary": "How missions are stored, dispatched and cancelled, and how the stored prompt is built",
+          "nav": 30,
+          "screen": "/work/missions",
+          "concepts": [
+            "mission",
+            "run",
+            "schedule"
+          ]
+        },
+        {
+          "slug": "guides/composer",
+          "title": "Composer",
+          "summary": "Composer, the graph orchestrator: staged agent runs, conditional edges and human-in-the-loop gates",
+          "nav": 40,
+          "screen": "/work/composer",
+          "concepts": [
+            "workflow",
+            "gate",
+            "run"
+          ]
+        },
+        {
+          "slug": "guides/research",
+          "title": "Deep Research",
+          "summary": "The native Deep Research engine, its plan, search, reason and synthesize loop, and where inference comes from",
+          "nav": 50,
+          "screen": "/work/research",
+          "concepts": [
+            "artifact",
+            "model",
+            "spend"
+          ]
+        },
+        {
+          "slug": "guides/scripts",
+          "title": "Scripts",
+          "summary": "Host scripts under your data directory: write one, run it, put it on a timer",
+          "nav": 60,
+          "screen": "/work/scripts",
+          "concepts": [
+            "schedule"
+          ]
+        },
+        {
+          "slug": "guides/sessions",
+          "title": "Sessions",
+          "summary": "Every conversation the agent has had, filtered, searched and read back",
+          "nav": 70,
+          "screen": "/results/sessions",
+          "concepts": [
+            "session",
+            "transcript",
+            "run"
+          ]
+        },
+        {
+          "slug": "guides/artifacts",
+          "title": "Artifacts",
+          "summary": "The deliverables your agents produced, collected to view and download",
+          "nav": 80,
+          "screen": "/results/artifacts",
+          "concepts": [
+            "artifact"
+          ]
+        },
+        {
+          "slug": "guides/insights",
+          "title": "Insights",
+          "summary": "How PatterStage logs interactions, turns them into achievements and surfaces them on the Insights page",
+          "nav": 90,
+          "screen": "/results/insights",
+          "concepts": [
+            "spend",
+            "run"
+          ]
+        },
+        {
+          "slug": "guides/logs",
+          "title": "Logs",
+          "summary": "The log files PatterStage and its scripts write, and how to read them",
+          "nav": 100,
+          "screen": "/results/logs"
+        },
+        {
+          "slug": "guides/agents",
+          "title": "Agents",
+          "summary": "Agent profiles, their behaviour files, and pushing and pulling them to the agent on disk",
+          "nav": 110,
+          "screen": "/agent/profiles",
+          "concepts": [
+            "agent",
+            "profile",
+            "personality"
+          ]
+        },
+        {
+          "slug": "guides/skills",
+          "title": "Skills",
+          "summary": "The skills catalogue, and which skills each profile is allowed to use",
+          "nav": 120,
+          "screen": "/agent/skills",
+          "concepts": [
+            "skill",
+            "toolset"
+          ]
+        },
+        {
+          "slug": "guides/tools",
+          "title": "Tools",
+          "summary": "The toolsets a profile may reach for, and which bundles cover which tools",
+          "nav": 130,
+          "screen": "/agent/tools",
+          "concepts": [
+            "tool",
+            "toolset"
+          ]
+        },
+        {
+          "slug": "guides/memory",
+          "title": "Memory",
+          "summary": "The Memory page and the Hindsight provider behind it, and how the agent's long-term memory is browsed",
+          "nav": 140,
+          "screen": "/agent/memory",
+          "concepts": [
+            "memory"
+          ]
+        },
+        {
+          "slug": "guides/models",
+          "title": "Models",
+          "summary": "The model registry, the default for each task, and the fallback chain behind it",
+          "nav": 150,
+          "screen": "/agent/models",
+          "concepts": [
+            "model",
+            "provider",
+            "api-key"
+          ]
+        },
+        {
+          "slug": "guides/settings",
+          "title": "Settings",
+          "summary": "Every configuration section the agent reads, plus this install's own facts",
+          "nav": 160,
+          "screen": "/agent/settings"
+        },
+        {
+          "slug": "guides/story-weaver",
+          "title": "Story Weaver",
+          "summary": "The Rec Room's long-form writer: the hub, its stats and its recent stories",
+          "nav": 170,
+          "screen": "/recroom/story-weaver",
+          "concepts": [
+            "spend"
+          ]
+        },
+        {
+          "slug": "guides/story-create",
+          "title": "Create a story",
+          "summary": "Setting up a story: premise, characters, parameters and the model that writes it",
+          "nav": 180,
+          "screen": "/recroom/story-weaver/create",
+          "concepts": [
+            "model"
+          ]
+        },
+        {
+          "slug": "guides/story-library",
+          "title": "Story library",
+          "summary": "Every story you have started, with its status and its progress",
+          "nav": 190,
+          "screen": "/recroom/story-weaver/library"
+        },
+        {
+          "slug": "guides/story-characters",
+          "title": "Characters",
+          "summary": "Reusable characters, saved once and dropped into any story",
+          "nav": 200,
+          "screen": "/recroom/story-weaver/characters"
+        },
+        {
+          "slug": "guides/story-themes",
+          "title": "Themes",
+          "summary": "Reusable premises and tags, saved as a theme you can load later",
+          "nav": 210,
+          "screen": "/recroom/story-weaver/themes"
+        },
+        {
+          "slug": "guides/quests",
+          "title": "Quests",
+          "summary": "A guided path from a first mission to a backup, proved by what you actually did",
+          "nav": 220,
+          "screen": "/quests"
+        },
+        {
+          "slug": "guides/help",
+          "title": "Help",
+          "summary": "This documentation, rendered inside the app, with a link on every screen",
+          "nav": 230,
+          "screen": "/help"
+        }
+      ]
+    },
+    {
+      "id": "running",
+      "label": "Running it",
+      "pages": [
+        {
+          "slug": "running/deploy",
+          "title": "Deploying",
+          "summary": "The one supported deployment model, the native host install, plus ports, scripts and the deploy buttons",
+          "nav": 10
+        },
+        {
+          "slug": "running/env-reference",
+          "title": "Environment reference",
+          "summary": "Every environment variable PatterStage reads, plus the Hermes paths and keys it needs, with defaults and what consumes them",
+          "nav": 20
+        },
+        {
+          "slug": "running/data-storage",
+          "title": "Where your data lives",
+          "summary": "Where PatterStage keeps its data, and why the legacy control-hub names are still read",
+          "nav": 30
+        },
+        {
+          "slug": "running/backup",
+          "title": "Backup and restore",
+          "summary": "The three stores worth copying, how to take a snapshot safely while the app is running, and how to restore one",
+          "nav": 40
+        },
+        {
+          "slug": "running/migration",
+          "title": "Upgrades and migrations",
+          "summary": "How data survives upgrades, the rule for adding a schema change, and what the repository rename means for existing clones and forks",
+          "nav": 50
+        },
+        {
+          "slug": "running/host-scheduling",
+          "title": "Host scheduling",
+          "summary": "The host-level cron scripts PatterStage ships, the Hindsight backup in detail, and how the Scripts page registers jobs",
+          "nav": 60,
+          "concepts": [
+            "schedule"
+          ]
+        },
+        {
+          "slug": "running/cross-platform",
+          "title": "Platforms",
+          "summary": "The Linux-first platform ruling, and what Linux, macOS and Windows under WSL2 each get",
+          "nav": 70
+        },
+        {
+          "slug": "running/troubleshooting",
+          "title": "Troubleshooting",
+          "summary": "Symptom first: what a stuck run, a silent schedule, a dark memory page and a refused sign-in each mean",
+          "nav": 80
+        },
+        {
+          "slug": "security",
+          "title": "Security",
+          "summary": "How to report a vulnerability in PatterStage privately, and what to include",
+          "nav": 90
+        }
+      ]
+    },
+    {
+      "id": "reference",
+      "label": "Reference",
+      "pages": [
+        {
+          "slug": "reference/api",
+          "title": "HTTP API",
+          "summary": "REST route inventory and the response envelope every PatterStage API handler returns",
+          "nav": 10
+        },
+        {
+          "slug": "reference/schema",
+          "title": "Database schema",
+          "summary": "The versioned schema artifacts, the bump policy, and how the JSON Schema files are generated",
+          "nav": 20
+        },
+        {
+          "slug": "reference/quests",
+          "title": "Quests",
+          "summary": "A guided path through PatterStage, ticked off by what you actually did rather than by what you read",
+          "nav": 25
+        },
+        {
+          "slug": "reference/spend",
+          "title": "Spend",
+          "summary": "Provider spend in PatterStage, how it is estimated, the optional budget, and the hard stop that is off until you turn it on",
+          "nav": 30,
+          "concepts": [
+            "spend",
+            "model"
+          ]
+        },
+        {
+          "slug": "reference/catalog-and-profiles",
+          "title": "Profiles and the skills catalogue",
+          "summary": "How SQLite holds agent profiles and the skills catalog, and how push and pull mirror them to Hermes on disk",
+          "nav": 40,
+          "concepts": [
+            "profile",
+            "skill",
+            "toolset"
+          ]
+        },
+        {
+          "slug": "reference/runtime-architecture",
+          "title": "Runtime architecture",
+          "summary": "How PatterStage executes and schedules agent work, and the single adapter seam to the backend",
+          "nav": 50,
+          "concepts": [
+            "run",
+            "session"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "contributing",
+      "label": "Contributing",
+      "pages": [
+        {
+          "slug": "contributing",
+          "title": "Contributing",
+          "summary": "The quick path to a merged pull request, the code standards and the checks CI runs",
+          "nav": 10
+        },
+        {
+          "slug": "contributing/repo-guide",
+          "title": "Repository guide",
+          "summary": "Repository layout, conventions, gates and shared utilities: the working detail the router no longer carries",
+          "nav": 20
+        },
+        {
+          "slug": "contributing/testing",
+          "title": "Testing",
+          "summary": "The map of Jest, Playwright and shell harnesses, and the gotchas each one hides",
+          "nav": 30
+        },
+        {
+          "slug": "contributing/output-canary",
+          "title": "The output canary",
+          "summary": "The output canary, what it proves, how to read a failure and how to re-bless the golden honestly",
+          "nav": 40
+        },
+        {
+          "slug": "contributing/design-tokens",
+          "title": "Design tokens",
+          "summary": "The Cherenkov palette, the semantic colour layer, and how TypeScript maps to CSS tokens",
+          "nav": 50
+        },
+        {
+          "slug": "contributing/copy",
+          "title": "Copy",
+          "summary": "The copy law for the product's screens, three registers, one status vocabulary, and the words that never reach a user",
+          "nav": 60
+        },
+        {
+          "slug": "adr/readme",
+          "title": "Decisions",
+          "summary": "Public pointer to the ADR home, which is org/decisions/ since the ADR-0008 cutover",
+          "nav": 70
+        },
+        {
+          "slug": "code-of-conduct",
+          "title": "How this repo works",
+          "summary": "How collaboration on this repository is expected to feel, written by the solo maintainer",
+          "nav": 80
+        }
+      ]
+    }
+  ],
+  "screens": {
+    "/": "guides/dashboard",
+    "/agent/memory": "guides/memory",
+    "/agent/models": "guides/models",
+    "/agent/profiles": "guides/agents",
+    "/agent/settings": "guides/settings",
+    "/agent/skills": "guides/skills",
+    "/agent/tools": "guides/tools",
+    "/help": "guides/help",
+    "/quests": "guides/quests",
+    "/recroom/story-weaver": "guides/story-weaver",
+    "/recroom/story-weaver/characters": "guides/story-characters",
+    "/recroom/story-weaver/create": "guides/story-create",
+    "/recroom/story-weaver/library": "guides/story-library",
+    "/recroom/story-weaver/themes": "guides/story-themes",
+    "/results/artifacts": "guides/artifacts",
+    "/results/insights": "guides/insights",
+    "/results/logs": "guides/logs",
+    "/results/sessions": "guides/sessions",
+    "/work/chat": "guides/chat",
+    "/work/composer": "guides/composer",
+    "/work/missions": "guides/missions",
+    "/work/research": "guides/research",
+    "/work/scripts": "guides/scripts"
+  },
+  "concepts": [
+    "agent",
+    "api-key",
+    "artifact",
+    "gate",
+    "memory",
+    "mission",
+    "model",
+    "personality",
+    "profile",
+    "prompt",
+    "provider",
+    "run",
+    "schedule",
+    "session",
+    "skill",
+    "spend",
+    "tool",
+    "toolset",
+    "transcript",
+    "workflow"
+  ],
+  "order": [
+    "index",
+    "start-here/index",
+    "start-here/install",
+    "start-here/first-hour",
+    "start-here/quests",
+    "start-here/getting-help",
+    "support",
+    "concepts/agent",
+    "concepts/prompt",
+    "concepts/model",
+    "concepts/provider",
+    "concepts/api-key",
+    "concepts/profile",
+    "concepts/personality",
+    "concepts/skill",
+    "concepts/tool",
+    "concepts/toolset",
+    "concepts/memory",
+    "concepts/session",
+    "concepts/transcript",
+    "concepts/mission",
+    "concepts/run",
+    "concepts/schedule",
+    "concepts/workflow",
+    "concepts/gate",
+    "concepts/artifact",
+    "concepts/spend",
+    "guides/dashboard",
+    "guides/chat",
+    "guides/missions",
+    "guides/composer",
+    "guides/research",
+    "guides/scripts",
+    "guides/sessions",
+    "guides/artifacts",
+    "guides/insights",
+    "guides/logs",
+    "guides/agents",
+    "guides/skills",
+    "guides/tools",
+    "guides/memory",
+    "guides/models",
+    "guides/settings",
+    "guides/story-weaver",
+    "guides/story-create",
+    "guides/story-library",
+    "guides/story-characters",
+    "guides/story-themes",
+    "guides/quests",
+    "guides/help",
+    "running/deploy",
+    "running/env-reference",
+    "running/data-storage",
+    "running/backup",
+    "running/migration",
+    "running/host-scheduling",
+    "running/cross-platform",
+    "running/troubleshooting",
+    "security",
+    "reference/api",
+    "reference/schema",
+    "reference/quests",
+    "reference/spend",
+    "reference/catalog-and-profiles",
+    "reference/runtime-architecture",
+    "contributing",
+    "contributing/repo-guide",
+    "contributing/testing",
+    "contributing/output-canary",
+    "contributing/design-tokens",
+    "contributing/copy",
+    "adr/readme",
+    "code-of-conduct"
+  ]
+}

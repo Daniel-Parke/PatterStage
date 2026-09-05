@@ -1,18 +1,36 @@
 /** @jest-environment node */
 
 jest.mock("@/lib/api-auth", () => ({
-  requireAuth: jest.fn(() => null),
+  // T-0100: POST /api/seed refuses under read-only before it touches anything.
+  requireNotReadOnly: () => null,
 }));
 
-jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
+jest.mock("@/lib/api-logger", () => ({
+  logApiError: jest.fn(),
+  serverErrorFromCatch: jest.requireActual("@/lib/api-logger").serverErrorFromCatch,
+}));
 
-const mockImportHermesState = jest.fn(() => null);
+jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
 
-jest.mock("@/lib/hermes-state-import", () => ({
+// A replace snapshots the database first (T-0100, D113); these cases are merges,
+// so it never fires, but the route imports it either way.
+jest.mock("@/lib/db/backup", () => ({
+  snapshotDatabase: jest.fn(async () => ({
+    name: "patterstage.pre-restore.db",
+    path: "/tmp/patterstage.pre-restore.db",
+    bytes: 1,
+    takenAt: "2026-09-05T00:00:00.000Z",
+    kind: "snapshot",
+  })),
+}));
+
+const mockImportHermesState = jest.fn((..._a: unknown[]) => null);
+
+jest.mock("@/modules/hermes/lib/state-import", () => ({
   importHermesStateFromDisk: (...args: unknown[]) => mockImportHermesState(...args),
 }));
 
-const mockRunCatalogSeed = jest.fn(() => ({
+const mockRunCatalogSeed = jest.fn((..._a: unknown[]) => ({
   profiles: 6,
   templates: 12,
   categories: 6,
@@ -21,9 +39,21 @@ const mockRunCatalogSeed = jest.fn(() => ({
 
 const mockGetSeedState = jest.fn(() => ({ lastRun: "2026-05-15T00:00:00.000Z" }));
 
+const mockReadShippedPackCounts = jest.fn(() => ({
+  catalogVersion: "patterstage-professional-v1",
+  root: 1,
+  profiles: 7,
+  templates: 12,
+  categories: 8,
+  skills: 4,
+  tools: 5,
+  memories: 5,
+}));
+
 jest.mock("@/lib/seed/catalog-seed", () => ({
   runCatalogSeed: (...args: unknown[]) => mockRunCatalogSeed(...args),
   getSeedState: () => mockGetSeedState(),
+  readShippedPackCounts: () => mockReadShippedPackCounts(),
 }));
 
 describe("/api/seed", () => {

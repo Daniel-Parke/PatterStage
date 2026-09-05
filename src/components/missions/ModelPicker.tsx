@@ -1,36 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { safeApiCall } from "@/lib/api-fetch";
-
-/** Minimal shape of a model returned by /api/models. */
-interface ApiModel {
-  id: string;
-  name: string;
-  provider: string;
-  modelId: string;
-  baseUrl: string | null;
-  contextLength: number | null;
-  credentialsId: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-/** Shape of defaults returned by /api/models/defaults. */
-interface ApiDefaults {
-  agent: string | null;
-  hindsight: string | null;
-  compression: string | null;
-  vision: string | null;
-  web_extract: string | null;
-  session_search: string | null;
-  title_generation: string | null;
-  skills_hub: string | null;
-  mcp: string | null;
-  triage_specifier: string | null;
-  approval: string | null;
-  delegation: string | null;
-}
+import { useEffect, useMemo, useRef } from "react";
+import { useModels, useModelDefaults } from "@/hooks/useModels";
 
 interface ModelPickerProps {
   /** Hermes CLI model id (e.g. anthropic/claude-sonnet-4). */
@@ -61,10 +32,10 @@ export default function ModelPicker({
   id = "mission-model-picker",
   helperPlacement = "below",
 }: ModelPickerProps) {
-  const [models, setModels] = useState<ApiModel[]>([]);
-  const [defaults, setDefaults] = useState<ApiDefaults | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: modelsData, isLoading: modelsLoading, error } = useModels();
+  const { data: defaults, isLoading: defaultsLoading } = useModelDefaults();
+  const models = useMemo(() => modelsData ?? [], [modelsData]);
+  const loading = modelsLoading || defaultsLoading;
   const didAutoFill = useRef(false);
   const onChangeRef = useRef(onChange);
 
@@ -77,29 +48,6 @@ export default function ModelPicker({
       didAutoFill.current = false;
     }
   }, [modelId, provider]);
-
-  const load = useCallback(() => {
-    setLoading(true);
-    setError(null);
-    Promise.all([
-      safeApiCall<{ data: { models?: ApiModel[] } }>("/api/models"),
-      safeApiCall<{ data: { defaults?: ApiDefaults } }>("/api/models/defaults"),
-    ])
-      .then(([mRes, dRes]) => {
-        const list = mRes.data?.data?.models ?? [];
-        const def = dRes.data?.data?.defaults ?? null;
-        setModels(list);
-        setDefaults(def);
-      })
-      .catch(() => {
-        setError("Failed to load models");
-      })
-      .finally(() => setLoading(false));
-  }, []);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
 
   const selectedValue = (() => {
     const m = models.find((x) => x.modelId === modelId && x.provider === provider);
@@ -130,10 +78,10 @@ export default function ModelPicker({
 
   if (loading) {
     return (
-      <select
+      <select aria-label="Model"
         id={id}
         disabled
-        className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-white/40 font-mono"
+        className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-ps-text-muted font-mono"
       >
         <option>Loading models…</option>
       </select>
@@ -155,7 +103,7 @@ export default function ModelPicker({
               ? `${optionLabel}\n\n${EMPTY_DEFAULT_HINT}`
               : String(error ?? "Models unavailable")
           }
-          className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-white/40 font-mono"
+          className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-ps-text-muted font-mono"
         >
           <option>{optionLabel}</option>
         </select>
@@ -163,20 +111,20 @@ export default function ModelPicker({
     }
     return (
       <div className="space-y-1">
-        <select
+        <select aria-label="Model"
           id={id}
           disabled
-          className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-white/40 font-mono"
+          className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-ps-text-muted font-mono"
         >
           <option>{optionLabel}</option>
         </select>
-        <p className="text-[10px] text-white/25 font-mono">{EMPTY_DEFAULT_HINT}</p>
+        <p className="text-xs text-ps-text-faint font-mono">{EMPTY_DEFAULT_HINT}</p>
       </div>
     );
   }
 
   return (
-    <select
+    <select aria-label="Model"
       id={id}
       value={selectedValue}
       onChange={(e) => handleSelect(e.target.value)}

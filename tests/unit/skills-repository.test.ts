@@ -10,13 +10,16 @@ function loadRealBetterSqlite3(): typeof import("better-sqlite3") {
 }
 
 jest.mock("@/lib/db", () => ({
-  db: () => testDb!,
+  getDb: () => testDb!,
   ensureDb: () => undefined,
   now: () => "2026-01-01T00:00:00.000Z",
 }));
 
 import {
+  countSkills,
   getSkill,
+  listSkillCatalog,
+  listSkillKeys,
   listSkills,
   parseSkillFrontmatter,
   stripSkillFrontmatter,
@@ -48,6 +51,64 @@ describe("skills-repository", () => {
     const row = getSkill("github/git-workflow");
     expect(row?.displayName).toBe("Git Workflow");
     expect(listSkills().some((s) => s.skillKey === "github/git-workflow")).toBe(true);
+  });
+});
+
+describe("skills-repository metadata reads", () => {
+  // These three exist so callers that never read a SKILL.md body do not drag
+  // every body out of SQLite. They must therefore agree with listSkills() on
+  // everything EXCEPT the body, or a caller that switches changes behaviour.
+  const seed = () => {
+    upsertSkill({
+      skillKey: "beta/second",
+      displayName: "Second",
+      description: "second skill",
+      category: "beta",
+      content: "0123456789",
+      source: "custom",
+    });
+    upsertSkill({
+      skillKey: "alpha/first",
+      displayName: "First",
+      description: "first skill",
+      category: "alpha",
+      content: "abc",
+      source: "bundled",
+    });
+  };
+
+  it("listSkillCatalog matches listSkills on order, keys and metadata", () => {
+    seed();
+    const full = listSkills();
+    const meta = listSkillCatalog();
+
+    expect(meta.map((s) => s.skillKey)).toEqual(full.map((s) => s.skillKey));
+    expect(meta.map((s) => s.category)).toEqual(full.map((s) => s.category));
+    expect(meta.map((s) => s.description)).toEqual(full.map((s) => s.description));
+    expect(meta.map((s) => s.source)).toEqual(full.map((s) => s.source));
+    expect(meta.map((s) => s.updatedAt)).toEqual(full.map((s) => s.updatedAt));
+  });
+
+  it("listSkillCatalog reports the body length and not the body", () => {
+    seed();
+    const meta = listSkillCatalog();
+    const byKey = Object.fromEntries(meta.map((s) => [s.skillKey, s]));
+
+    expect(byKey["alpha/first"].contentLength).toBe("abc".length);
+    expect(byKey["beta/second"].contentLength).toBe("0123456789".length);
+    expect(meta[0]).not.toHaveProperty("content");
+  });
+
+  it("listSkillKeys and countSkills agree with listSkills", () => {
+    seed();
+    expect(listSkillKeys()).toEqual(listSkills().map((s) => s.skillKey));
+    expect(countSkills()).toBe(listSkills().length);
+  });
+
+  it("countSkills is 0 and listSkillKeys empty on an empty catalog", () => {
+    expect(countSkills()).toBe(0);
+    expect(listSkillKeys()).toEqual([]);
+    expect(listSkillCatalog()).toEqual([]);
   });
 });
 

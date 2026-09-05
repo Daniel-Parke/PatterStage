@@ -1,0 +1,59 @@
+{
+  "id": "T-0110",
+  "intent": "B16 of the final-release programme: in-app Help. src/app/help/[[...slug]]/page.tsx renders the built fragment and manifest inside AppPageShell with HelpNav, HelpSearch and prev/next, no iframe, behind the cookie. HelpLink on every PageHeader resolved from the pathname through the manifest's screen field, proved for every registry route by docs:check. ConceptHint popover fed by concepts.json where a term is first met. Decision 7: the Demo is the screen-by-screen tour under start-here/tour, rendered in Help; help.opened recorded.",
+  "declared": {
+    "capabilities": [
+      "edit-code",
+      "edit-docs"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {
+      "factor": "size-threshold",
+      "tier_floor": "R1",
+      "source": "derived:diff-size",
+      "evidence": "a new page, three components and the tour pages"
+    }
+  ],
+  "status": "done",
+  "owner_session": "unassigned",
+  "claims": [
+    "src/app/help/",
+    "src/components/help/",
+    "src/components/ui/PageHeader.tsx",
+    "src/lib/help/",
+    "docs/start-here/tour/",
+    "tests/"
+  ],
+  "programme": "B16, depends on B15 (T-0109). Resolver tests for every route; a render test; a ConceptHint a11y test; a Playwright spec that presses ? on Missions and lands on its guide.",
+  "timestamps": {
+    "opened": "2026-09-05T10:30:00Z",
+    "updated": "2026-09-07T09:00:00Z",
+    "closed": "2026-09-07T09:00:00Z"
+  },
+  "invariants": [
+    "I1 Help renders the SAME corpus B15 generates, inside the app's own shell: no iframe, no second copy of any prose, and no second renderer.",
+    "I2 /help is the first page of the reading path, whatever that page turns out to be. Nothing holds a slug as a literal.",
+    "I3 The Help rail is the six tiers in reading order, and its guides are ordered by the app's own rail rather than by their nav numbers, because the order a reader already knows is the one on the left of every screen.",
+    "I4 A slug that is not [a-z0-9-] segments never reaches the filesystem, and a resolved path outside the fragments directory is refused. Both belts stay, though each is unreachable while the other holds.",
+    "I5 Nothing throws on a missing or half-written corpus. An absent public/help/ renders the panel that says how to build it: no notFound(), no analytics event, no stack trace.",
+    "I6 Every page header carries a ?, always rendered, with no prop to opt out of. It resolves from the pathname exactly the way the h1 resolves its title, so a detail page and its guide cannot drift apart, and it is never dead: no guide, or no corpus, lands on the Help index.",
+    "I7 Pressing ? does the same thing, unless a modifier is held, the event was already handled, or the keystroke is a question mark someone is typing into a field.",
+    "I8 The ? does not appear on Help itself.",
+    "I9 A ConceptHint with no entry is plain text: no button, no dead control, no console noise. That is the state of a fresh clone before its first build.",
+    "I10 An open hint describes its trigger and its panel is in the DOM; a closed one does neither. Escape closes it and returns focus to the trigger, and it is not a modal: no focus trap, no scroll lock, no fixed inset-0.",
+    "I11 help.opened is recorded server-side, after the page is known to exist, so a 404 and a traversal attempt leave no trace in the ledger B17's quests read. There is still no POST on /api/analytics.",
+    "I12 docs:check refuses a rail route documented by anything other than a guide, and a concept id that either side of the table does not have: a declared attachment nobody rendered, or a rendered id nobody declared."
+  ],
+  "commits": "31d13d33 the oracle alone (4 files, 80 cases, measured red: 74 failing, 6 named controls); c634498d the pure half (help-manifest, help-source, railOrder, the public/help/ shapes, the two docs:check assertions); 8f585d4f the screen, the ?, the seventeen hints and the taxonomy change; d6de9238 the loader oracle the sweep asked for; 74805cba the fragment fix the walk found.",
+  "verification": "Gate on the implementation tree by exit code: lint 0 (with docs:check in the chain), tsc 0, jest 0 (5629 tests), knip 0, canary 0 after one blessing, build 0, Playwright 133 passed 9 skipped, one more spec than before: pressing ? on Missions in a real browser. The canary bless was diffed first: `page /help` becomes `page /help/[[...slug]] {dynamic}` plus a `not-found`, and nothing else moved.",
+  "mutation": "37 mutants against the committed tree, 28 killed on the first pass and 34 after a new oracle. The four gaps were one shape: the render oracle points PS_HELP_DIR at a real corpus and asks what the PAGE SHOWS, which is the right question for a page and the wrong one for a guard, so it could not tell a loader that refuses a traversal from one that does not, nor a JSON reader that survives a half-written file from one that throws into a server render. The new file uses a real directory and a slug that genuinely climbs out of it to a file that genuinely exists. One mutant was retired rather than killed: the `route === \"/\"` branch in `owns` was a no-op, because \"/\" plus \"/\" cannot prefix a real path, so the branch is deleted and the reason is written where it was. Two are recorded as EQUIVALENT and kept: each is the second of two belts and unreachable while the first holds. Both stay, in the source, with the reason: each is one edit away from mattering, and 'currently redundant' is not 'unnecessary'.",
+  "proof": "Isolated instance (production build, e2e-b1 data dir), six scenes, 23 checks, all PASS. /help renders inside the app's shell with no iframe, its own six-tier rail, and the app's sidebar still beside it; a guide renders 10,915 characters of its own prose with prev/next; the search finds 94 links for 'mission' and makes no network request to do it; Missions carries a ? pointing at /help/guides/missions and pressing ? lands there; the mission hint opens, describes its trigger, says what the word means, links to the page that says more, and Escape closes it, clears the description and takes the panel out of the DOM; Help itself carries no ?. Screenshots: scratchpad walk-b16/{help-index,help-guide,help-search,missions-help-link,concept-hint-open}.png.",
+  "deviation": "(1) HelpHeader exists because the Help page is the console's only SERVER page and PageHeader is a client component that takes its icon as a component reference. A component is a function, so the server page handing one across the boundary made Next refuse the whole render: /help returned 500 in the real app while every unit test passed, because a jsdom render has no boundary to break. The icon is now chosen one module inside the line and the server page passes only strings. (2) Fragments carry the body and nothing else, and stripLeadingH1 drops a body's opening H1 once in the build: every guide was saying its own name three times. Both were found by the walk. (3) HelpLink reads the router through a try/catch, because next/navigation's useRouter throws rather than answering null with no app-router context above it, and the keystroke is a shortcut on top of a link that already works. (4) The corpus shapes under public/help/ are NOT a copy of docs/manifest.json: that file is grouped by tier for the site's rail and gated byte for byte, and the app's resolver wants a flat list it can index by screen and by slug, with every entry standing alone so a half-written file costs one entry rather than a section. (5) The 'not built' panel's command sits in a selectable <pre> rather than behind a copy control: the tree has the hook and no shared component, and an eleventh file for one button was not worth it.",
+  "harness_amendments": "Five. tests/unit/module-registry.test.ts teaches pageRoutes that an optional catch-all serves its parent prefix, which is the honest fix for deleting src/app/help/page.tsx; an exemption entry would not have been. tests/unit/b4-taxonomy.test.ts and tests/unit/b4-completionist-reads-a-ledger.test.ts drop help.opened from their own not-yet-emitted literals, the second swapping in research.cancelled as the example of a type outside the curated list. tests/unit/b3-system-page-and-rail.test.tsx drops its Help placeholder smoke test, which B16's render oracle covers far better. And tests/e2e/b16-help-deep-link.spec.ts waits for the page's own h1 before looking for the control inside it: the shell is server-rendered but every screen is a client component, so its header does not exist until hydration, and under parallel workers that is slower than the five seconds an assertion waits.",
+  "deferred": "The tour pages (start-here/tour/<screen>) are a corpus question and B18 writes them; B16 renders them like any other page and orders them by the Start here section's nav, so no tour route, tour player or tour state exists. The guides themselves are still B15's stubs with real front matter and real summaries: B18 writes their prose and inserts the generated-block markers. Screenshots are re-captured in B18, so no page carries a shots: key. A public unauthenticated /help stays deferred by the plan; /help* is behind the cookie like everything else."
+}

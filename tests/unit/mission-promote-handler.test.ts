@@ -2,34 +2,24 @@
 /** @jest-environment node */
 
 jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
-jest.mock("@/lib/mission-cron-sync", () => ({
-  enrichMissionCron: jest.fn((m: unknown) => m),
-  syncMissionToCronJob: jest.fn(),
+jest.mock("@/lib/schedules-repository", () => ({
+  createSchedule: jest.fn(() => ({ id: "sched1" })),
 }));
-jest.mock("@/lib/cron-repository", () => ({
-  createCronJob: jest.fn(),
-  deleteCronJob: jest.fn(),
-  pushJobToHermes: jest.fn(),
-}));
-jest.mock("@/lib/backends", () => ({
-  agentBackend: { syncMission: jest.fn() },
-}));
-
 const mockDispatchMissionNow = jest.fn().mockResolvedValue({ ok: true });
 const mockRunMissionQueueTick = jest.fn();
 
-jest.mock("@/lib/mission-dispatch", () => ({
+jest.mock("@/lib/missions/mission-dispatch", () => ({
   dispatchMissionNow: (...args: unknown[]) => mockDispatchMissionNow(...args),
 }));
 
-jest.mock("@/lib/mission-queue-tick", () => ({
+jest.mock("@/lib/missions/mission-queue-tick", () => ({
   runMissionQueueTick: (...args: unknown[]) => mockRunMissionQueueTick(...args),
 }));
 
 const mockGetMission = jest.fn();
 const mockUpdateMission = jest.fn();
 
-jest.mock("@/lib/mission-repository", () => ({
+jest.mock("@/lib/missions/mission-repository", () => ({
   getMission: (...args: unknown[]) => mockGetMission(...args),
   updateMission: (...args: unknown[]) => mockUpdateMission(...args),
 }));
@@ -55,7 +45,7 @@ beforeEach(() => {
 
 describe("promoteMission", () => {
   it("sets queuedForRun false for save promote", async () => {
-    const { promoteMission } = require("@/lib/mission-promote-handler") as {
+    const { promoteMission } = require("@/lib/missions/mission-promote-handler") as {
       promoteMission: (input: { missionId: string; dispatchMode: string }) => Promise<{ ok: boolean }>;
     };
     const result = await promoteMission({
@@ -71,7 +61,7 @@ describe("promoteMission", () => {
   });
 
   it("sets queuedForRun true and ticks queue for queue promote", async () => {
-    const { promoteMission } = require("@/lib/mission-promote-handler") as {
+    const { promoteMission } = require("@/lib/missions/mission-promote-handler") as {
       promoteMission: (input: { missionId: string; dispatchMode: string }) => Promise<{ ok: boolean }>;
     };
     const result = await promoteMission({
@@ -88,7 +78,7 @@ describe("promoteMission", () => {
   });
 
   it("dispatches immediately for now promote", async () => {
-    const { promoteMission } = require("@/lib/mission-promote-handler") as {
+    const { promoteMission } = require("@/lib/missions/mission-promote-handler") as {
       promoteMission: (input: { missionId: string; dispatchMode: string }) => Promise<{ ok: boolean }>;
     };
     const result = await promoteMission({
@@ -108,7 +98,7 @@ describe("promoteMission", () => {
       status: "dispatched",
       queuedForRun: false,
     });
-    const { promoteMission } = require("@/lib/mission-promote-handler") as {
+    const { promoteMission } = require("@/lib/missions/mission-promote-handler") as {
       promoteMission: (input: { missionId: string; dispatchMode: string }) => Promise<{
         ok: boolean;
         status?: number;

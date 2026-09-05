@@ -15,7 +15,7 @@ jest.mock("@/lib/audit-log", () => ({
   appendAuditLine: (...args: unknown[]) => mockAppendAuditLine(...args),
 }));
 
-jest.mock("@/lib/hermes-config-sync", () => ({
+jest.mock("@/modules/hermes/lib/hermes-fallback-config", () => ({
   syncFallbacksToHermesConfig: jest.fn(() => ({
     backupPath: null,
     configPath: "/tmp/test-hermes/config.yaml",
@@ -23,7 +23,7 @@ jest.mock("@/lib/hermes-config-sync", () => ({
   })),
 }));
 
-import { commitFallbackChange } from "@/lib/fallback-sync-helpers";
+import { commitFallbackChange } from "@/modules/hermes/lib/fallback-sync";
 
 describe("commitFallbackChange", () => {
   beforeEach(() => {

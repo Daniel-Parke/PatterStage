@@ -5,7 +5,7 @@ const repoRoot = join(__dirname, "..", "..");
 const manifestPath = join(repoRoot, "data/seed/profiles/manifest.json");
 const packPath = join(
   repoRoot,
-  "data/seed/template-packs/control-hub-professional-v1.json",
+  "data/seed/template-packs/patterstage-professional-v1.json",
 );
 
 describe("shipped professional catalog (data/seed)", () => {
@@ -14,13 +14,14 @@ describe("shipped professional catalog (data/seed)", () => {
     expect(existsSync(packPath)).toBe(true);
   });
 
-  it("manifest lists six professional profiles", () => {
+  it("manifest lists the professional profiles plus the benchmarking baseline", () => {
     const manifest = JSON.parse(readFileSync(manifestPath, "utf-8")) as {
       profiles: Array<{ slug: string; seedKey: string }>;
     };
-    expect(manifest.profiles).toHaveLength(6);
+    expect(manifest.profiles).toHaveLength(7);
     const slugs = manifest.profiles.map((p) => p.slug).sort();
     expect(slugs).toEqual([
+      "baseline",
       "creative-lead",
       "data-scientist",
       "devops",
@@ -37,7 +38,11 @@ describe("shipped professional catalog (data/seed)", () => {
       expect(existsSync(config)).toBe(true);
       const yaml = readFileSync(config, "utf-8");
       expect(yaml).toContain("platform_toolsets:");
-      expect(yaml).toMatch(/hermes-cli|hermes-discord|hermes-telegram/);
+      // The professional profiles ship Hermes toolsets; the Baseline is
+      // intentionally brain-only (empty toolsets) — exclude it from that check.
+      if (p.slug !== "baseline") {
+        expect(yaml).toMatch(/hermes-cli|hermes-discord|hermes-telegram/);
+      }
     }
   });
 

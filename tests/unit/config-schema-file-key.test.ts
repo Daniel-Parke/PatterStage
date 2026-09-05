@@ -4,7 +4,7 @@
 // This helper maps a SectionDef's `filePath` (e.g. ".env") to the file
 // key used by /api/agent/files/[key] (e.g. "env"). The mapping mirrors
 // the keys in behavior-files.ts (src/lib/behavior-files.ts) so the
-// two file sections in this schema (hermes_md, env) and any future
+// two file sections in this schema (framework_md, env) and any future
 // file sections stay in sync with the behavior-files key namespace.
 
 import { fileKeyForFilePath } from "@/lib/config-schema";

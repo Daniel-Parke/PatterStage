@@ -2,7 +2,7 @@ import type Database from "better-sqlite3";
 import { existsSync, readFileSync } from "fs";
 import { join } from "path";
 import { getSchemaVersion, setSchemaVersion } from "@/lib/db-schema";
-export const MISSION_QUEUE_SCHEMA_VERSION = 5;
+const MISSION_QUEUE_SCHEMA_VERSION = 5;
 
 function columnExists(database: Database.Database, table: string, column: string): boolean {
   const rows = database.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[];

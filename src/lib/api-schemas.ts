@@ -5,17 +5,72 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { HERMES_PROVIDERS, TASK_TYPES } from "./hermes-providers";
+// The last core->module edge in the repo, and it is deliberate.
+//
+// The obvious "fix" is to move the provider list into core as PatterStage's own
+// supported-provider registry. That would be WORSE. The list's own comment says
+// its first fourteen entries must stay in lock-step with the agent CLI's
+// --provider choices, so the coupling is real; moving the list would keep the
+// coupling and make it invisible, which is the failure mode this whole boundary
+// exists to prevent.
+//
+// The other reviewed option was widening providerSchema to z.string().min(1) and
+// relocating the guard into one route. That weakens validation on every other
+// caller to buy a boundary, which is a product change nobody asked for.
+//
+// So the edge stays, visible and gated. See org/decisions/ADR-0005-product-modules.md.
+// design-lint-disable-next-line core-imports-no-module -- the provider list is genuinely the agent CLI's; moving it to core would hide the coupling rather than remove it
+import { HERMES_PROVIDERS } from "@/modules/hermes/lib/providers";
+import { TASK_TYPES, type TaskType } from "./models/task-types";
+import { ANALYTICS_EVENT_TYPES } from "./analytics/event-types";
 
 // ── Zod schemas for API request bodies ─────────────────────────
 
 const nonEmpty = z.string().min(1);
 
+/**
+ * Query schema for GET /api/analytics/timeseries. `days` is clamped 1–365 to
+ * bound the `datetime('now','-N days')` interpolation in the repository (the
+ * only place a request value reaches a SQL interval), and `bucket` is a
+ * forward-compatible enum (only "day" today).
+ */
+export const analyticsTimeseriesQuerySchema = z
+  .object({
+    type: z.enum(ANALYTICS_EVENT_TYPES).optional(),
+    days: z.coerce.number().int().min(1).max(365).default(30),
+    bucket: z.enum(["day"]).default("day"),
+  })
+  .strict();
+
+/**
+ * Build the `defaults` schema for the Models registry. Each entry is a
+ * task slot (one of `TASK_TYPES`) → boolean (whether the model claims
+ * that slot as a default). The shape used to be hand-listed with 12
+ * `z.boolean().optional()` lines that drifted from the canonical
+ * `TASK_TYPES` array in `@/lib/models/task-types`. Deriving it from
+ * `TASK_TYPES` makes the schema a single source of truth: adding a new
+ * task slot is a one-line edit in `@/lib/models/task-types`, and the
+ * Models POST/PUT body shape tracks automatically.
+ *
+ * `.strict()` is preserved from the inline form so unknown task-slot
+ * keys are still rejected (e.g. `defaults: { typo: true }` → 400).
+ */
+function buildModelDefaultsSchema(): z.ZodType<Partial<Record<TaskType, boolean>>> {
+  const shape: Record<TaskType, z.ZodOptional<z.ZodBoolean>> = {} as Record<
+    TaskType,
+    z.ZodOptional<z.ZodBoolean>
+  >;
+  for (const taskType of TASK_TYPES) {
+    shape[taskType] = z.boolean().optional();
+  }
+  return z.object(shape).strict();
+}
+
 // ── Models registry ────────────────────────────────────────────
 
 /**
  * Provider name validated against the canonical list in
- * src/lib/hermes-providers.ts. Adding a new provider is a single edit
+ * src/modules/hermes/lib/providers.ts. Adding a new provider is a single edit
  * to that file.
  *
  * Inferred as `HermesProvider` (a literal union) so consumers like
@@ -33,36 +88,13 @@ export const providerSchema = z.enum(HERMES_PROVIDERS);
  */
 export const taskTypeSchema = z.enum(TASK_TYPES);
 
-const modelDefaultsSchema = z
-  .object({
-    agent: z.boolean().optional(),
-    hindsight: z.boolean().optional(),
-    compression: z.boolean().optional(),
-    vision: z.boolean().optional(),
-    web_extract: z.boolean().optional(),
-    session_search: z.boolean().optional(),
-    title_generation: z.boolean().optional(),
-    skills_hub: z.boolean().optional(),
-    mcp: z.boolean().optional(),
-    triage_specifier: z.boolean().optional(),
-    approval: z.boolean().optional(),
-    delegation: z.boolean().optional(),
-  })
-  .strict();
+const modelDefaultsSchema = buildModelDefaultsSchema();
 
 export const credentialPostSchema = z.object({
   label: nonEmpty,
   provider: providerSchema,
   apiKey: nonEmpty,
 });
-
-export const credentialPutSchema = z
-  .object({
-    label: z.string().min(1).optional(),
-    provider: providerSchema.optional(),
-    apiKey: z.string().optional(),
-  })
-  .strict();
 
 export const modelPostSchema = z.object({
   name: nonEmpty,
@@ -95,127 +127,42 @@ export const setDefaultPutSchema = z
   })
   .strict();
 
-/** Hermes-style schedule object (minimal contract for tests and validation). */
-export const hermesScheduleObjectSchema = z
+/**
+ * POST /api/seed body shape. All four fields are optional; the
+ * route applies defaults (`target: "all"`, `mode: "merge"`).
+ *
+ * The `id` key is a legacy alias for `templateId` — kept so old
+ * clients / scripts that send `{ id: "..." }` (instead of the
+ * modern `{ templateId: "..." }`) continue to work. The route's
+ * pre-refactor inline form used `typeof body.id === "string" ? body.id`
+ * to fold the alias back to `templateId`; the same logic is preserved
+ * via zod's `.transform()` so the downstream `runCatalogSeed` still
+ * receives a single `templateId` field.
+ *
+ * Pre-refactor the route did `body.target as SeedTarget["target"]`
+ * with no validation, so a foreign value (e.g. `target: "xss"`)
+ * would silently reach `runCatalogSeed` and surface as a less
+ * actionable runtime error. With the schema in place, a 400 with
+ * the `details: error.flatten()` payload is returned at the
+ * request-validation layer — strict improvement, aligned with the
+ * `parseAndValidateJsonBody` migration that swept the rest of the
+ * Models/Config surface in sessions 121 + 122.
+ */
+export const seedPostSchema = z
   .object({
-    kind: z.string(),
-    minutes: z.number().optional(),
-    expr: z.string().optional(),
-    run_at: z.string().optional(),
-    display: z.string().optional(),
+    target: z
+      .enum(["all", "root", "profiles", "templates", "categories"])
+      .optional(),
+    mode: z.enum(["merge", "replace"]).optional(),
+    slug: z.string().min(1).optional(),
+    templateId: z.string().min(1).optional(),
+    // Legacy alias — folded back to `templateId` by the .transform below.
+    id: z.string().min(1).optional(),
   })
-  .passthrough();
-
-/** Single persisted cron job shape aligned with Hermes `jobs.json` entries. */
-export const hermesCronJobRecordSchema = z
-  .object({
-    id: nonEmpty,
-    name: nonEmpty,
-    prompt: z.string(),
-    skills: z.array(z.string()),
-    model: z.string(),
-    schedule: z.union([hermesScheduleObjectSchema, z.string()]),
-    schedule_display: z.string().optional(),
-    repeat: z.union([
-      z.object({
-        times: z.number().nullable(),
-        completed: z.number(),
-      }),
-      z.boolean(),
-    ]),
-    enabled: z.boolean(),
-    state: z.string().optional(),
-    deliver: z.string().optional(),
-    script: z.string().nullable().optional(),
-    created_at: z.string().optional(),
-    next_run_at: z.string().nullable().optional(),
-    last_run_at: z.string().nullable().optional(),
-    last_status: z.string().nullable().optional(),
-    mission_id: z.string().optional(),
-    provider: z.string().optional(),
-    base_url: z.string().optional(),
-    profile: z.string().optional(),
-    timeout: z.number().optional(),
-  })
-  .passthrough();
-
-export const hermesJobsFileSchema = z.object({
-  jobs: z.array(hermesCronJobRecordSchema),
-  updated_at: z.string().optional(),
-});
-
-export type HermesJobsFile = z.infer<typeof hermesJobsFileSchema>;
-
-export const cronPostBodySchema = z.union([
-  z.object({ action: z.literal("pauseAll") }),
-  z.object({
-    name: nonEmpty,
-    schedule: nonEmpty,
-    prompt: nonEmpty,
-    deliver: z.string().optional(),
-    model: z.string().optional(),
-    repeat: z.boolean().optional(),
-    skills: z.array(z.string()).optional(),
-    script: z.union([z.string(), z.null()]).optional(),
-  }),
-]);
-
-export type CronPostBody = z.infer<typeof cronPostBodySchema>;
-
-export const cronPutBodySchema = z.object({
-  id: nonEmpty,
-  action: z.enum(["pause", "resume", "run"]).optional(),
-  name: z.string().optional(),
-  prompt: z.string().optional(),
-  skills: z.array(z.string()).optional(),
-  model: z.string().optional(),
-  deliver: z.string().optional(),
-  enabled: z.boolean().optional(),
-  schedule: z.string().optional(),
-  schedule_display: z.string().optional(),
-});
-
-export type CronPutBody = z.infer<typeof cronPutBodySchema>;
-
-export const missionPostBodySchema = z.discriminatedUnion("action", [
-  z.object({
-    action: z.literal("create"),
-    name: z.string().optional(),
-    prompt: z.string().optional(),
-    goals: z.array(z.string()).optional(),
-    skills: z.array(z.string()).optional(),
-    model: z.string().optional(),
-    profile: z.string().optional(),
-    missionTimeMinutes: z.number().optional(),
-    timeoutMinutes: z.number().optional(),
-    schedule: z.string().optional(),
-    dispatchMode: z.enum(["save", "now", "cron"]).optional(),
-    templateId: z.string().optional(),
-    base_url: z.string().optional(),
-  }),
-  z.object({
-    action: z.literal("delete"),
-    missionId: nonEmpty,
-  }),
-  z.object({
-    action: z.literal("cancel"),
-    missionId: nonEmpty,
-  }),
-  z.object({
-    action: z.literal("update"),
-    missionId: nonEmpty,
-    name: z.string().optional(),
-    prompt: z.string().optional(),
-    goals: z.array(z.string()).optional(),
-    skills: z.array(z.string()).optional(),
-    profile: z.string().optional(),
-    missionTimeMinutes: z.number().optional(),
-    timeoutMinutes: z.number().optional(),
-    schedule: z.string().optional(),
-  }),
-]);
-
-export type MissionPostBody = z.infer<typeof missionPostBodySchema>;
+  .transform((value) => {
+    const { id, templateId, ...rest } = value;
+    return { ...rest, templateId: templateId ?? id };
+  });
 
 // ── Helper ─────────────────────────────────────────────────────
 

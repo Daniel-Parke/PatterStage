@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // /api/sessions — Unified session registry
 //
-// Control Hub is the source of truth for ALL agent sessions.
+// PatterStage is the source of truth for ALL agent sessions.
 // Hermes session files on disk are synced into the DB on every
 // GET. Agent-native sessions (mission, cron) are written
 // directly by the dispatch pipeline.
@@ -14,9 +14,10 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextRequest, NextResponse } from "next/server";
-import { logApiError } from "@/lib/api-logger";
-import { requireAuth, isChReadOnly } from "@/lib/api-auth";
-import { badRequest } from "@/lib/api-response";
+import { serverErrorFromCatch } from "@/lib/api-logger";
+import { sessionsRateLimitResponse } from "@/lib/sessions/sessions-api-guard";
+import { isReadOnly } from "@/lib/api-auth";
+import { badRequest, created, notFound, ok, serviceUnavailable } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import {
   listSessions,
@@ -26,15 +27,20 @@ import {
   type AgentType,
   type SessionSource,
   type SessionStatus,
-} from "@/lib/session-repository";
+} from "@/lib/sessions/session-repository";
 import {
   parseSessionQuery,
   triggerSyncOnce,
-} from "@/lib/sessions-api-helpers";
+} from "@/lib/sessions/sessions-api-helpers";
 
 export async function GET(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
+  // The limiter has existed since the sessions API was written and was wired
+  // only to /api/sessions/[id] — not to the LIST route, which is the one a QA
+  // pass hit 130 times without ever seeing a 429 (finding 13). The list is
+  // also the more expensive read of the two: it syncs from Hermes and scans
+  // the table, where the [id] route reads one row.
+  const limited = sessionsRateLimitResponse(request, "GET /api/sessions");
+  if (limited) return limited;
 
   try {
     const q = parseSessionQuery(request);
@@ -42,48 +48,56 @@ export async function GET(request: NextRequest) {
     if (q.id) {
       const session = getSession(q.id);
       if (!session) {
-        return NextResponse.json({ error: "Session not found" }, { status: 404 });
+        return notFound("Session not found");
       }
-      return NextResponse.json({ data: { session } });
+      return ok({ session });
     }
 
+    // Both syncs below write state.db rows into the sessions table. Under
+    // PS_READ_ONLY the list is still served from what is already there; the
+    // writes are what the mode exists to stop (T-0095, D124).
+    // check-read-only-guards-disable-next-line -- this GET syncs Hermes sessions into the table, a write it skips under the mode while still answering
+    const writesAllowed = !isReadOnly();
+
     // Sync layer handles background syncing of Hermes sessions (debounced — at most once per 30s)
-    triggerSyncOnce();
+    if (writesAllowed) triggerSyncOnce();
 
     const result = listSessions({
       agentType: q.agentType,
       source: q.source,
+      status: q.status,
+      excludeApiNoise: q.excludeApiNoise,
       missionId: q.missionId,
+      search: q.search,
       limit: q.limit,
       offset: q.offset,
       // Force an immediate sync from state.db so the active session shows
       // fresh messageCount, title, and status. The periodic sync is
       // debounced at 30s; without this the user sees a stale "0 msgs"
       // for the session they're currently in.
-      syncIfActive: true,
+      syncIfActive: writesAllowed,
     });
 
-    return NextResponse.json({
-      data: {
-        sessions: result.sessions,
-        total: result.total,
-      },
+    return ok({
+      sessions: result.sessions,
+      total: result.total,
+      // The whole-table figures behind the insight tiles. They travel with the
+      // page rather than being recomputed from it: `totals.total` IS `total`,
+      // which is what stops a tile contradicting the header above it (T-0042).
+      totals: result.totals,
+      // Every source this filter can still reach. The page built its filter
+      // buttons from a constant, so a session from any other source could not
+      // be found by what started it (T-0105, D29).
+      sources: result.sources,
     });
   } catch (error) {
-    logApiError("GET /api/sessions", "listing sessions", error);
-    return NextResponse.json({ error: "Failed to load sessions" }, { status: 500 });
+    return serverErrorFromCatch("GET /api/sessions", "listing sessions", error, "Failed to load sessions");
   }
 }
 
 export async function POST(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
-  if (isChReadOnly()) {
-    return NextResponse.json(
-      { error: "Control Hub is in read-only mode" },
-      { status: 503 }
-    );
+  if (isReadOnly()) {
+    return serviceUnavailable("PatterStage is in read-only mode");
   }
 
   const bodyResult = await parseJsonBody(request);
@@ -111,7 +125,7 @@ export async function POST(request: NextRequest) {
         return badRequest("source is required");
       }
       const session = createSession({
-        agentType: body.agentType ?? "hermes",
+        agentType: body.agentType,
         source: body.source,
         missionId: body.missionId,
         profileName: body.profileName,
@@ -120,7 +134,7 @@ export async function POST(request: NextRequest) {
         title: body.title,
         status: body.status ?? "active",
       });
-      return NextResponse.json({ data: { session } }, { status: 201 });
+      return created({ session });
     }
 
     // action=update — used by dispatch pipeline on mission complete/fail
@@ -135,14 +149,13 @@ export async function POST(request: NextRequest) {
         error: body.error,
       });
       if (!session) {
-        return NextResponse.json({ error: "Session not found" }, { status: 404 });
+        return notFound("Session not found");
       }
-      return NextResponse.json({ data: { session } });
+      return ok({ session });
     }
 
     return badRequest("Unknown action");
   } catch (error) {
-    logApiError("POST /api/sessions", "session action", error);
-    return NextResponse.json({ error: "Failed to process session action" }, { status: 500 });
+    return serverErrorFromCatch("POST /api/sessions", "session action", error, "Failed to process session action");
   }
 }

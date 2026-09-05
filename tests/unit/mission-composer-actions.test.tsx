@@ -21,8 +21,6 @@ const baseFormState: MissionFormState = {
   newGoals: "",
   newDispatch: "save",
   newSchedule: "every 5m",
-  scheduleType: "interval",
-  scheduleStartTime: "00:00",
   newMissionTime: 15,
   newTimeout: 10,
   newProfile: "",
@@ -33,6 +31,9 @@ const baseFormState: MissionFormState = {
   newReferences: [],
   referenceInput: "",
   newSkills: [],
+  newOutputFormat: "",
+  newConstraints: "",
+  newToolsets: [],
 };
 
 describe("dispatch modes", () => {
@@ -74,6 +75,58 @@ describe("dispatch modes", () => {
     expect(
       dispatchSubmitLabel("now", { isQueuedEdit: true }),
     ).toBe("Dispatch now");
+  });
+});
+
+/**
+ * Edit-context helper — exercises the resolveEditContext() private helper
+ * (defined in MissionCreateForm.tsx) indirectly through the public
+ * `dispatchSubmitLabel` surface. The pre-refactor MissionComposerActions
+ * computed the same 4 booleans (`isReDispatch` / `isRunningEdit` /
+ * `isDraftEdit` / `isQueuedEdit`) inline. After the refactor, both
+ * `MissionComposerActions` and the default-exported `MissionCreateForm`
+ * share the helper — these tests lock the public-label surface so a
+ * future change to the helper is flagged if it diverges.
+ */
+describe("edit-context resolution (via dispatchSubmitLabel)", () => {
+  it("isReDispatch wins over all other context flags", () => {
+    expect(
+      dispatchSubmitLabel("save", { isReDispatch: true }),
+    ).toBe("Re-Dispatch Now");
+    expect(
+      dispatchSubmitLabel("save", {
+        isReDispatch: true,
+        isRunningEdit: true,
+        isDraftEdit: true,
+        isQueuedEdit: true,
+      }),
+    ).toBe("Re-Dispatch Now");
+  });
+
+  it("isRunningEdit wins over draft/queued context flags", () => {
+    expect(
+      dispatchSubmitLabel("now", {
+        isRunningEdit: true,
+        isDraftEdit: true,
+        isQueuedEdit: true,
+      }),
+    ).toBe("Update Mission");
+  });
+
+  it("isQueuedEdit is ignored when isDraftEdit is also set (precedence: draft first, byte-equivalent)", () => {
+    // The pre-refactor code checked isDraftEdit BEFORE isQueuedEdit, so if
+    // both flags are true, the draft branch wins and returns the default
+    // label. The post-refactor preserves this precedence. (The two flags
+    // are by-construction mutually exclusive — a mission is either a
+    // plain-queued draft OR a queued-for-run mission, never both — so this
+    // case never fires in practice; the precedence is preserved to keep
+    // the helper's contract 1:1 with the pre-refactor inline code.)
+    expect(
+      dispatchSubmitLabel("now", { isQueuedEdit: true, isDraftEdit: true }),
+    ).toBe("Dispatch now");
+    expect(
+      dispatchSubmitLabel("save", { isQueuedEdit: true, isDraftEdit: true }),
+    ).toBe("Save draft");
   });
 });
 

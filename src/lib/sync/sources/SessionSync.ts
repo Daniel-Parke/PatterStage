@@ -6,9 +6,9 @@
 // reads from the DB.
 // ═══════════════════════════════════════════════════════════════
 
-import { syncHermesSessionsToDb } from "@/lib/session-repository";
+import { syncHermesSessionsToDb } from "@/lib/sessions/session-sync";
 import { logApiError } from "@/lib/api-logger";
-import { db } from "@/lib/db";
+import { recordSyncFailure, recordSyncSuccess } from "@/lib/sync/sync-repository";
 import type { SyncSource, SyncResult } from "@/lib/sync/types";
 
 export class SessionSync implements SyncSource {
@@ -20,15 +20,14 @@ export class SessionSync implements SyncSource {
       const result = syncHermesSessionsToDb();
 
       // Record sync status in sync_registry
-      db().prepare(/* sql */ `
-        INSERT OR REPLACE INTO sync_registry (source_name, last_synced_at, status, synced_count, error)
-        VALUES (?, datetime('now'), 'ok', ?, NULL)
-      `).run(this.name, result.synced);
+      recordSyncSuccess(this.name, result.synced);
 
-      if (result.skipped > 0) {
-        logApiError("SessionSync", `${result.skipped} sessions skipped (FK violations)`, new Error(`${result.skipped} skipped`));
-      }
-
+      // No second line here. syncHermesSessionsToDb already reports skips, with
+      // the actual causes and a signature gate. This used to log the same fact
+      // through logApiError, at ERROR level, having SYNTHESISED an Error from
+      // the count, so the only thing it could print was the number already in
+      // its own context string. Two lines per tick, four times a minute, for a
+      // stable non-actionable condition, and an ERROR for a sync that succeeded.
       return {
         sourceName: this.name,
         success: true,
@@ -40,10 +39,7 @@ export class SessionSync implements SyncSource {
 
       // Record failure in sync_registry
       try {
-        db().prepare(/* sql */ `
-          INSERT OR REPLACE INTO sync_registry (source_name, last_synced_at, status, synced_count, error)
-          VALUES (?, datetime('now'), 'error', 0, ?)
-        `).run(this.name, String(err));
+        recordSyncFailure(this.name, String(err));
       } catch { /* best-effort */ }
 
       return {

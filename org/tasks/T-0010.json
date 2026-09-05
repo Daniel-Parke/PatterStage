@@ -1,0 +1,27 @@
+{
+  "id": "T-0010",
+  "intent": "Phase 3: group the flat src/lib into domain folders. Warrant WG-ARCH-006 plus the approved-plan warrant. Source row WO-0024. Depends on T-0009: the canary must exist before any move commit, and this task stays proposed until T-0009 closes. Scope: the six domain file lists in the committed plan's Appendix A, missions 22, sessions 9, memory 7, git 3, fs 5, dashboard 6. Operator ruling D10, 2026-08-22: dashboard-helpers.ts, 11 lines, merges into its callers as its own non-move commit inside this task. Acceptance: (1) one move commit per domain, containing ONLY moves plus mechanical import updates plus the mandatory riders, which are baseline re-keys at identical counts, check-doc-links fixes, the docs/REPO_GUIDE.md directory map, and tests/e2e/app-routes.ts if routes are touched; (2) the dashboard-helpers merge is a separate non-move commit; (3) the canary proves every move commit output-neutral; (4) tripwires held, no Hermes-touching file enters a lint-exempt prefix, Turbopack-traced paths stay string-concatenated, and nothing merges into src/lib/modules/; (5) Phase 3b by name, skills/ taking skills-grouping, skills-page-helpers and skills-repository, and chat/ taking chat-repository and chat-utils, with the remaining top-level *-repository.ts files moving only WITH their domain and never as a repositories/ bucket; (6) src/lib/db.ts does not move, because that relocation is T-0012's final commit. Done when the six domains are complete, the top level is about 64 files before 3b, every move is proved neutral, and baselines are re-keyed rather than grown. Tier proposal R1, anticipated factor size-threshold from derived signal diff-size, evidence 45 top-level moves plus two directories across six commits; public-contract also activates on the commits whose import updates reach src/app/api. Closed 2026-08-22 in 658ce4fc through 1241b469, plus the comment repair bbccf812. Six domains, one [move] commit each, every one proved output-neutral by the canary (canary:move-neutral over the range: 6 of 6 NEUTRAL). src/lib top level fell from 109 to 64. The memory domain failed its first assert because the import rewriter edited two prose comments; that was reverted rather than blessed, which is the canary doing exactly its job.",
+  "declared": {
+    "capabilities": [
+      "filesystem"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R0",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "phase3-domains-2026-08-22",
+  "claims": [
+    "src/lib/",
+    "docs/REPO_GUIDE.md",
+    "tests/e2e/app-routes.ts",
+    "scripts/tooling/design-lint.baseline.json"
+  ],
+  "timestamps": {
+    "opened": "2026-08-22T00:00:00Z",
+    "updated": "2026-08-22T22:45:00Z",
+    "closed": "2026-08-22T22:30:00Z"
+  }
+}

@@ -2,7 +2,7 @@
 // useTwoStepConfirm — Two-click confirmation hook
 // ═══════════════════════════════════════════════════════════════
 //
-// The Control Hub dashboard has a few destructive actions that should
+// The PatterStage dashboard has a few destructive actions that should
 // require a second click to confirm (cancel a mission, delete all logs,
 // etc.). The pattern was duplicated verbatim across at least two pages:
 //

@@ -5,33 +5,41 @@ import { useRouter } from "next/navigation";
 import { BookOpen, Plus, ChevronRight, Sparkles, Library, Users, FileText } from "lucide-react";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
-import StoryCard from "@/components/story-weaver/StoryCard";
-import type { StorySummary } from "@/types/recroom";
+import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
+import StoryCard from "@/modules/rec-room/components/StoryCard";
+import { safeApiCall } from "@/lib/api-fetch";
+import type { StorySummary } from "@/modules/rec-room/types";
 
 export default function StoryWeaverDashboard() {
   const router = useRouter();
   const [stories, setStories] = useState<StorySummary[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchStories = useCallback(async () => {
-    try {
-      const res = await fetch("/api/stories", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "list" }),
-      });
-      const d = await res.json();
-      setStories(d.data?.stories || []);
-    } catch {} finally { setLoading(false); }
+    setLoading(true);
+    const res = await safeApiCall<{ data?: { stories?: StorySummary[] } }>("/api/stories", {
+      method: "POST",
+      body: { action: "list" },
+    });
+    if (!res.ok) {
+      setError(res.error ?? "Failed to load stories");
+    } else {
+      setError(null);
+      setStories(res.data?.data?.stories ?? []);
+    }
+    setLoading(false);
   }, []);
 
   useEffect(() => { fetchStories(); }, [fetchStories]);
 
+  // The card's ConfirmButton has already asked; this is the second click.
   const handleDelete = async (id: string) => {
-    if (!confirm("Delete this story?")) return;
-    await fetch("/api/stories", {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "delete", storyId: id }),
+    const res = await safeApiCall("/api/stories", {
+      method: "POST",
+      body: { action: "delete", storyId: id },
     });
+    if (!res.ok) setError(res.error ?? "Failed to delete story");
     fetchStories();
   };
 
@@ -51,38 +59,43 @@ export default function StoryWeaverDashboard() {
       />
 
       <div className="max-w-5xl mx-auto px-6 py-8 space-y-8 flex-1 w-full">
-        {/* Stats */}
-        <div className="grid grid-cols-3 md:grid-cols-5 gap-4">
+        {error && <LoadErrorBanner error={error} onRetry={fetchStories} />}
+
+        {/* Stats, in the one status vocabulary (decision 13): a story is
+            Running while a chapter is being written, Waiting for you between
+            chapters, Completed when done. */}
+        <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
           {[
             { label: "Stories", value: stories.length },
-            { label: "Complete", value: stories.filter(s => s.status === "complete").length },
-            { label: "In Progress", value: stories.filter(s => s.status === "active" || s.status === "generating").length },
+            { label: "Completed", value: stories.filter(s => s.status === "complete").length },
+            { label: "Waiting for you", value: stories.filter(s => s.status === "active").length },
+            { label: "Running", value: stories.filter(s => s.status === "generating").length },
             { label: "Chapters", value: totalChapters },
-            { label: "Words Written", value: totalWords.toLocaleString() },
+            { label: "Words", value: totalWords.toLocaleString() },
           ].map((stat) => (
             <div key={stat.label} className="rounded-xl border border-white/5 bg-dark-900/30 p-4 text-center">
-              <div className="text-2xl font-bold text-white/80">{stat.value}</div>
-              <div className="text-[10px] font-mono text-white/25 uppercase tracking-wider mt-1">{stat.label}</div>
+              <div className="text-2xl font-bold text-ps-text-primary">{stat.value}</div>
+              <div className="text-xs font-mono text-ps-text-faint uppercase tracking-wider mt-1">{stat.label}</div>
             </div>
           ))}
         </div>
 
         {/* Actions */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          <button onClick={() => router.push("/recroom/story-weaver/create")}
-            className="flex items-center justify-center gap-2 px-6 py-4 rounded-xl border border-neon-purple/30 bg-neon-purple/10 text-sm font-mono text-neon-purple hover:bg-neon-purple/20 transition-all shadow-[0_0_20px_rgb(var(--ch-rgb-neon-purple)_/_0.1)]">
+          <button type="button" onClick={() => router.push("/recroom/story-weaver/create")}
+            className="flex items-center justify-center gap-2 px-6 py-4 rounded-xl border border-neon-purple/30 bg-neon-purple/10 text-sm font-mono text-neon-purple hover:bg-neon-purple/20 transition-all shadow-[0_0_20px_rgb(var(--ps-rgb-neon-purple)_/_0.1)]">
             <Plus className="w-4 h-4" /> Create
           </button>
-          <button onClick={() => router.push("/recroom/story-weaver/library")}
-            className="flex items-center justify-center gap-2 px-6 py-4 rounded-xl border border-white/10 text-sm font-mono text-white/50 hover:text-white/70 hover:bg-white/5 transition-all">
+          <button type="button" onClick={() => router.push("/recroom/story-weaver/library")}
+            className="flex items-center justify-center gap-2 px-6 py-4 rounded-xl border border-white/10 text-sm font-mono text-ps-text-muted hover:text-ps-text-secondary hover:bg-white/5 transition-all">
             <Library className="w-4 h-4" /> Library
           </button>
-          <button onClick={() => router.push("/recroom/story-weaver/characters")}
-            className="flex items-center justify-center gap-2 px-6 py-4 rounded-xl border border-white/10 text-sm font-mono text-white/50 hover:text-white/70 hover:bg-white/5 transition-all">
+          <button type="button" onClick={() => router.push("/recroom/story-weaver/characters")}
+            className="flex items-center justify-center gap-2 px-6 py-4 rounded-xl border border-white/10 text-sm font-mono text-ps-text-muted hover:text-ps-text-secondary hover:bg-white/5 transition-all">
             <Users className="w-4 h-4" /> Characters
           </button>
-          <button onClick={() => router.push("/recroom/story-weaver/themes")}
-            className="flex items-center justify-center gap-2 px-6 py-4 rounded-xl border border-white/10 text-sm font-mono text-white/50 hover:text-white/70 hover:bg-white/5 transition-all">
+          <button type="button" onClick={() => router.push("/recroom/story-weaver/themes")}
+            className="flex items-center justify-center gap-2 px-6 py-4 rounded-xl border border-white/10 text-sm font-mono text-ps-text-muted hover:text-ps-text-secondary hover:bg-white/5 transition-all">
             <FileText className="w-4 h-4" /> Themes
           </button>
         </div>
@@ -91,10 +104,10 @@ export default function StoryWeaverDashboard() {
         {recent.length > 0 && (
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-mono text-white/40 uppercase tracking-widest">Recent Stories</h2>
+              <h2 className="text-sm font-mono text-ps-text-muted uppercase tracking-widest">Recent stories</h2>
               {stories.length > 3 && (
-                <button onClick={() => router.push("/recroom/story-weaver/library")}
-                  className="text-[10px] font-mono text-neon-purple hover:underline flex items-center gap-1">
+                <button type="button" onClick={() => router.push("/recroom/story-weaver/library")}
+                  className="text-xs font-mono text-neon-purple hover:underline flex items-center gap-1">
                   View all <ChevronRight className="w-3 h-3" />
                 </button>
               )}
@@ -109,12 +122,12 @@ export default function StoryWeaverDashboard() {
           </div>
         )}
 
-        {/* Empty state */}
-        {stories.length === 0 && !loading && (
+        {/* Empty state: only after a read that succeeded (the read contract). */}
+        {stories.length === 0 && !loading && !error && (
           <div className="text-center py-16">
             <Sparkles className="w-12 h-12 text-white/10 mx-auto mb-4" />
-            <h3 className="text-lg font-serif text-white/50 mb-2">Your story awaits</h3>
-            <p className="text-sm text-white/25">Create your first story and let the adventure begin.</p>
+            <h3 className="text-lg font-serif text-ps-text-muted mb-2">Your story awaits</h3>
+            <p className="text-sm text-ps-text-faint">Create your first story and let the adventure begin.</p>
           </div>
         )}
       </div>

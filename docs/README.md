@@ -1,46 +1,90 @@
-# Documentation index
+---
+title: Documentation
+summary: "The reading path: what PatterStage is, the first hour, one guide per screen, and where the governing corpus lives"
+section: start-here
+nav: 0
+type: index
+tags: [product, docs]
+compiled_from: normalised
+---
 
-Technical reference for Control Hub. Tone elsewhere in this folder is deliberately plain—I maintain the project solo and would rather you get accurate answers than corporate filler.
+# Documentation
 
-| Document | Description |
-|----------|-------------|
-| [CONTROL_HUB.md](CONTROL_HUB.md) | What this repo is and where to read next |
-| [USER_WALKTHROUGH_GUIDE.md](USER_WALKTHROUGH_GUIDE.md) | Operator guide with UI screenshots (dashboard, missions, chat, cron, profiles, …) |
-| [MISSIONS.md](MISSIONS.md) | Mission board, dispatch, cancellation, templates |
-| [design-tokens.md](design-tokens.md) | UI colour tokens and theme conventions |
-| [API.md](API.md) | REST endpoints |
-| [CATALOG_AND_PROFILES.md](CATALOG_AND_PROFILES.md) | Seed pack, SQLite catalog, Hermes profile sync |
-| [TOOLS_AND_MISSIONS.md](TOOLS_AND_MISSIONS.md) | Profile `platform_toolsets`, Tools UI, mission tool hints |
-| [ENV_REFERENCE.md](ENV_REFERENCE.md) | Environment variables, dual DB paths, install flags |
-| [DEPLOY.md](DEPLOY.md) | Deploy, **`ch-deploy`**, TLS, Docker, ports, scripts layout |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | Development workflow and standards |
-| [TESTING.md](TESTING.md) | Jest, Playwright, CI, and navigation-matrix upkeep |
-| [SYSTEM-CRON.md](SYSTEM-CRON.md) | System cron presets (`scripts/hardware/`), including Hindsight backup |
-| [SUPPORT.md](SUPPORT.md) | Where to get help; upstream vs this repo |
-| [SECURITY.md](SECURITY.md) | Vulnerability reporting |
-| [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) | How collaboration works here (people-wise) |
-| [MIGRATION.md](MIGRATION.md) | Data directory and migrations |
-| [HERMES_CONFIG_INTEGRATION.md](HERMES_CONFIG_INTEGRATION.md) | Hermes `config.yaml` integration |
-| [PLATFORM_VISION.md](PLATFORM_VISION.md) | Architecture and product direction |
-| [Pull request template](../.github/pull_request_template.md) | PR checklist (GitHub prefill) |
-## Mission and template schemas
+Six tiers, in reading order. Start at the top and stop when you have what you
+came for.
 
-Versioned Zod schemas live under [`src/lib/schema/`](../src/lib/schema/). JSON Schema mirrors live in `src/lib/schema/json/`. Maintainer notes:
+## Start here
 
-- [SCHEMA_VERSIONING.md](schema/SCHEMA_VERSIONING.md) — versioning and bump policy
-- [CHANGELOG.md](schema/CHANGELOG.md) — schema contract history
+New to PatterStage. What it is, how to install it, and one hour that takes you
+from a fresh boot to a mission you dispatched, watched and read the output of.
 
-After changing Zod definitions, regenerate JSON from the repo root (runs [`scripts/tooling/generate-json-schema.ts`](../scripts/tooling/generate-json-schema.ts) via npm):
+- [What PatterStage is](start-here/index.md)
+- [Installing](start-here/install.md)
+- [The first hour](start-here/first-hour.md)
+- [Quests](start-here/quests.md) and [the ledger of all thirty-two](reference/quests.md)
+- [Getting help](start-here/getting-help.md)
+- [Support](SUPPORT.md)
 
-```bash
-npm run generate:schema-json
-```
+## Concepts
 
-## Scripts and deploy
+The nouns you meet on the screens, one page each: what it is, what it is not,
+where you meet it, and the idea behind it. Written for someone who has never
+run an agent before.
 
-- **`scripts/bootstrap/`** — install, setup, stop, backup, Hindsight bootstrap.
-- **`scripts/application/ch-deploy.sh`** — unified **`update`** / **`restart`** / **`rebuild`** for CLI and **`POST /api/update`**.
-- **`scripts/tooling/`** — DB prep, agent discovery, JSON Schema emit (`npm run prebuild`, `discover-hermes`, `generate:schema-json`).
-- **`scripts/lib/`**, **`scripts/hardware/`**, **`data/seed/`** — shared bash, hardware cron presets, professional catalog seeds.
+Start with [agent](concepts/agent.md), [mission](concepts/mission.md) and
+[run](concepts/run.md); the rest are there when a screen uses a word you have
+not met.
 
-Details: **[DEPLOY.md](DEPLOY.md)**.
+## Guides
+
+One page per screen: what you see, what you typically do there, and the notes
+that only matter once. The in-app Help section renders these same pages, and
+every screen's header carries a link straight to its own.
+
+## Running it
+
+Keeping it up: [deploying](running/deploy.md),
+[configuration](running/env-reference.md),
+[where your data lives](running/data-storage.md),
+[backup and restore](running/backup.md),
+[upgrades](running/migration.md),
+[host scheduling](running/host-scheduling.md),
+[platforms](running/cross-platform.md),
+[troubleshooting](running/troubleshooting.md) and [security](SECURITY.md).
+
+## Reference
+
+The facts, not the path: the [HTTP API](reference/api.md), the
+[database schema](reference/schema.md), [spend](reference/spend.md),
+[profiles and the skills catalogue](reference/catalog-and-profiles.md), and the
+[runtime architecture](reference/runtime-architecture.md).
+
+## Contributing
+
+Working on PatterStage itself: [contributing](CONTRIBUTING.md), the
+[repository guide](contributing/repo-guide.md),
+[testing](contributing/testing.md), the
+[output canary](contributing/output-canary.md),
+[design tokens](contributing/design-tokens.md), the
+[copy law](contributing/copy.md), and [decisions](adr/README.md).
+
+## The governing corpus
+
+PatterStage is built under a governance system with its own vocabulary: tasks,
+rulings, tiers, a lock-book. None of it is needed to run the product, and it is
+not written for someone who wants to. It lives under `../org/`, starting at
+`org/START.md`, with its operator manual at `org/EOS_OPERATORS_GUIDE.md`;
+[`../AGENTS.md`](../AGENTS.md) is the entry point an AI coding session reads.
+
+`AGENTS.md` and `CLAUDE.md` are instructions for AI coding sessions working on
+this repository. They are not documentation for you.
+
+## How this documentation is built
+
+`docs/**/*.md` is the single source. Every page opens with a front-matter block
+naming its title, its summary, its tier and its position; a page that documents
+a screen names that screen, and the build turns that into the in-app link.
+[`docs/manifest.json`](manifest.json) is derived from those blocks and is never
+hand-edited. `npm run docs:build` renders the static site, `npm run docs:check`
+refuses a screen with no guide, a link to a route that does not exist, a missing
+screenshot, an undefined concept and a stale generated block.

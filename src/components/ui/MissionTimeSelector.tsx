@@ -32,30 +32,35 @@ export default function MissionTimeSelector({ value, onChange, compact = false }
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  // Trigger and menu as SIBLINGS in a positioned wrapper, matching the
+  // non-compact branch below. This branch rendered the menu inside the trigger,
+  // making every option a button inside a button (T-0071).
   if (compact) {
     return (
-      <button
-        onClick={() => setOpen(!open)}
-        className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] font-mono text-white/60 hover:border-neon-cyan/50 hover:text-neon-cyan transition-colors relative"
-        title={`Mission time: ${selected.label} (${selected.minutes}m ≈ ${selected.devHours} dev work)`}
-      >
-        <Clock className="w-3 h-3" />
-        {selected.minutes}m
+      <span ref={ref} className="relative inline-flex">
+        <button
+          onClick={() => setOpen(!open)}
+          className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-white/5 border border-white/10 text-xs font-mono text-ps-text-secondary hover:border-neon-cyan/50 hover:text-neon-cyan transition-colors"
+          title={`Mission time: ${selected.label} (${selected.minutes}m ≈ ${selected.devHours} dev work)`}
+        >
+          <Clock className="w-3 h-3" />
+          {selected.minutes}m
+        </button>
         {open && (
-          <div ref={ref} className="absolute top-full left-0 mt-1 z-50 w-48 bg-dark-900 border border-white/10 rounded-lg shadow-xl overflow-hidden">
+          <div className="absolute top-full left-0 mt-1 z-50 w-48 bg-dark-900 border border-white/10 rounded-lg shadow-xl overflow-hidden">
             {PRESETS.map((p) => (
               <button
                 key={p.minutes}
                 onClick={(e) => { e.stopPropagation(); onChange(p.minutes); setOpen(false); }}
-                className={`w-full text-left px-3 py-2 text-xs hover:bg-white/5 flex items-center justify-between ${value === p.minutes ? "text-neon-cyan" : "text-white/60"}`}
+                className={`w-full text-left px-3 py-2 text-xs hover:bg-white/5 flex items-center justify-between ${value === p.minutes ? "text-neon-cyan" : "text-ps-text-secondary"}`}
               >
                 <span>{p.label} ({p.minutes}m)</span>
-                <span className="text-[10px] text-white/30">≈ {p.devHours}</span>
+                <span className="text-xs text-ps-text-muted">≈ {p.devHours}</span>
               </button>
             ))}
           </div>
         )}
-      </button>
+      </span>
     );
   }
 
@@ -68,9 +73,9 @@ export default function MissionTimeSelector({ value, onChange, compact = false }
         <div className="flex items-center gap-2">
           <Clock className="w-4 h-4 text-neon-cyan" />
           <span className="font-medium">{selected.label}</span>
-          <span className="text-xs text-white/40">({selected.minutes}m ≈ {selected.devHours} dev)</span>
+          <span className="text-xs text-ps-text-muted">({selected.minutes}m ≈ {selected.devHours} dev)</span>
         </div>
-        <ChevronDown className={`w-4 h-4 text-white/30 transition-transform ${open ? "rotate-180" : ""}`} />
+        <ChevronDown className={`w-4 h-4 text-ps-text-muted transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
         <div className="absolute top-full left-0 right-0 mt-1 z-50 bg-dark-900 border border-white/10 rounded-lg shadow-xl overflow-hidden">
@@ -78,14 +83,14 @@ export default function MissionTimeSelector({ value, onChange, compact = false }
             <button
               key={p.minutes}
               onClick={() => { onChange(p.minutes); setOpen(false); }}
-              className={`w-full text-left px-3 py-2.5 text-sm hover:bg-white/5 flex items-center justify-between ${value === p.minutes ? "text-neon-cyan bg-neon-cyan/5" : "text-white/70"}`}
+              className={`w-full text-left px-3 py-2.5 text-sm hover:bg-white/5 flex items-center justify-between ${value === p.minutes ? "text-neon-cyan bg-neon-cyan/5" : "text-ps-text-secondary"}`}
             >
               <div className="flex items-center gap-2">
                 <div className={`w-2 h-2 rounded-full ${value === p.minutes ? "bg-neon-cyan" : "bg-white/20"}`} />
                 <span>{p.label}</span>
-                <span className="text-xs text-white/30">({p.minutes}m)</span>
+                <span className="text-xs text-ps-text-muted">({p.minutes}m)</span>
               </div>
-              <span className="text-[10px] text-white/30">≈ {p.devHours} dev work</span>
+              <span className="text-xs text-ps-text-muted">≈ {p.devHours} dev work</span>
             </button>
           ))}
         </div>

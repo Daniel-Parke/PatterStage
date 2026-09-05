@@ -1,0 +1,45 @@
+{
+  "id": "T-0048",
+  "intent": "Finish the read-only migration T-0034 started. requireAuth() in src/lib/api-auth.ts was a thin alias for requireNotReadOnly() that authenticated nothing, and 34 GET handlers across 33 files called it, so PS_READ_ONLY=1 returned 503 on /api/config, /api/models, /api/skills, /api/sessions, /api/monitor and /api/logs. The mode blanked the dashboard it exists to enable, against the claim src/proxy.ts has carried since the security hotfix that enforcing there means read-only actually reads. Source: the operator's second live Hermes QA pass, 2026-08-29, finding A1, which reported it as roughly 70 read endpoints. That is the count of FILES importing requireAuth, not of broken handlers; measured here as 108 call sites of which 34 are in read handlers, with zero HEAD handlers anywhere in the tree. Closed 2026-08-29. requireAuth is deleted along with every call site, one isReadOnly and one message live in the new src/lib/read-only.ts, the proxy authenticates before it refuses, and a public path is no longer exempt from the mode.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0048-read-only-reads-2026-08-29",
+  "invariants": [
+    "I1 Every read answers under PS_READ_ONLY. Asserted structurally (no read handler carries a guard) and behaviourally (the proxy serves a GET of each of the ten formerly self-guarded routes), and verified on a real server: 20 of 20 reads answer.",
+    "I2 Every write is still refused. The proxy refuses by method for every route rather than for the ones that remembered to ask, which is strictly stronger than what it replaces. Six writes verified 503 on a real server.",
+    "I3 An unauthenticated write learns nothing. It gets 401, not the 503 that would tell any caller who can reach the port whether this instance is read-only. start:network binds 0.0.0.0.",
+    "I4 One message, and it points the right way. Four wordings existed; the api-auth one said 'set PS_READ_ONLY=true to allow writes', which is the opposite of the fix."
+  ],
+  "oracle_provenance": "Authored BEFORE any production file was opened for edit and committed on its own at f19baf60, ahead of the implementation at e21e5c2e. One file, tests/unit/read-only-actually-reads.test.ts, measured against dev@98a3deaa: 6 red, 5 green. The reds were all behavioural: 36 guard calls in read handlers, 74 route files referencing requireAuth, requireAuth still exported, an anonymous write getting 503 rather than 401, a public path bypassing the mode, and 3 files carrying the backwards wording. The greens are deliberate no-regression guards, including one asserting the route walk finds a tree so an empty scan cannot read as a pass.",
+  "pinned_defect_corrected": "23 tests across 11 files asserted the deleted mechanism: either mocking requireAuth and checking the handler forwards its response, or setting the real flag and calling a handler directly. The second shape cannot work after this change at all, because calling a handler directly bypasses the proxy that enforces the rule. They were not removed on a judgement call: the guarantee was FIRST relocated into the oracle, which now asserts per route and in both directions that a write to each of the ten formerly self-guarded paths is refused and a read of it is served. Three blocks that turned out to assert real behaviour (a 405, a 200 create, a non-500 toggle) were restored without the mock plumbing they were entangled with. api-auth.test.ts's three message assertions were corrected in place with the reason written beside them.",
+  "verification": "Five mutations against the committed implementation, tree restored and confirmed clean after each: putting a guard back into a GET handler turns 1 red; stopping the proxy refusing writes turns 13 red; refusing before authenticating turns 1 red; restoring the backwards message turns 1 red; letting a public path bypass the mode turns 1 red. Beyond jest, a real server was booted with PS_READ_ONLY=1 on an isolated data dir and every claim checked end to end, including the Sessions, Skills and Models pages rendering rather than erroring.",
+  "false_503_noted": "/api/memory/hindsight still answers 503 under read-only and is NOT a residual of this defect. It carries no guard; the body reads {\"available\":false,\"error\":\"fetch failed: connect ECONNREFUSED 127.0.0.1:9177\"}, which is the route's own honest degradation with Hindsight not running. Recorded so a future pass does not refile it.",
+  "rollback": "Revert e21e5c2e. The oracle at f19baf60 then goes red again, which is the point. No schema or data change is involved.",
+  "claims": [
+    "src/lib/api-auth.ts",
+    "src/lib/read-only.ts",
+    "src/proxy.ts",
+    "src/app/api/",
+    "docs/API.md",
+    "tests/"
+  ],
+  "deferred": [
+    "The ratchets that stop this recurring are T-0049, deliberately a separate record: the shared test helper still mocks @/lib/api-auth wholesale with isReadOnly returning false, so read-only does not exist in most of the unit suite, and there is no lint rule that would fail the build on a guard reappearing in a GET handler. That mock is why this defect reached 33 routes.",
+    "requireNotReadOnly survives for the handful of endpoints that are not simply a write, and its new docstring says never to call it from a read handler. Nothing enforces that yet; T-0049 does.",
+    "zodErrorResponse returns error.flatten() to the client, which is field-level schema disclosure. Out of scope here and unreachable under read-only because the proxy refuses first, but it is one choke point in src/lib/api-schemas.ts:169 if it is ever ruled a problem."
+  ],
+  "timestamps": {
+    "opened": "2026-08-29T09:00:00Z",
+    "updated": "2026-08-29T12:00:00Z",
+    "closed": "2026-08-29T12:00:00Z"
+  }
+}

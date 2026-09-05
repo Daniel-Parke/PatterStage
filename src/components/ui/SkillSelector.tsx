@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Cpu, Loader2, X, ChevronDown, Search } from "lucide-react";
-import type { Skill } from "@/types/hermes";
+import { pluralise } from "@/lib/utils";
+import { useProfileSkills } from "@/hooks/useProfileAttachables";
 
 interface SkillSelectorProps {
   value: string[];
@@ -18,27 +19,10 @@ export default function SkillSelector({
   max = 10,
 }: SkillSelectorProps) {
   const [open, setOpen] = useState(false);
-  const [skills, setSkills] = useState<Skill[]>([]);
-  const [loading, setLoading] = useState(false);
+  const { data: skillsData, isLoading: loading } = useProfileSkills(profileId);
+  const skills = skillsData ?? [];
   const [search, setSearch] = useState("");
   const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    setLoading(true);
-    fetch(
-      `/api/skills?profile=${encodeURIComponent(profileId ?? "default")}`,
-      { signal: controller.signal }
-    )
-      .then((r) => r.json())
-      .then((d) => {
-        const raw = (d.data?.skills ?? []) as Skill[];
-        setSkills(raw.filter((s) => s.enabled));
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-    return () => controller.abort();
-  }, [profileId]);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -74,22 +58,22 @@ export default function SkillSelector({
       >
         <Cpu className="w-4 h-4 text-neon-purple flex-shrink-0" />
         {value.length === 0 ? (
-          <span className="text-white/40 text-xs font-mono">
+          <span className="text-ps-text-muted text-xs font-mono">
             Attach skills (enabled for profile, max {max})...
           </span>
         ) : (
           <span className="text-xs font-mono text-neon-purple">
-            {value.length} skill{value.length !== 1 ? "s" : ""} attached
+            {value.length} skill{pluralise(value.length)} attached
           </span>
         )}
         <ChevronDown
-          className={`w-4 h-4 text-white/30 ml-auto flex-shrink-0 transition-transform ${
+          className={`w-4 h-4 text-ps-text-muted ml-auto flex-shrink-0 transition-transform ${
             open ? "rotate-180" : ""
           }`}
         />
       </button>
 
-      <p className="text-[10px] text-white/25 font-mono mt-1 px-0.5">
+      <p className="text-xs text-ps-text-faint font-mono mt-1 px-0.5">
         Showing only skills enabled for this profile.
       </p>
 
@@ -98,11 +82,12 @@ export default function SkillSelector({
           {value.map((name) => (
             <span
               key={name}
-              className="flex items-center gap-1 pl-2 pr-1.5 py-0.5 rounded-full bg-neon-purple/10 border border-neon-purple/30 text-[10px] text-neon-purple font-mono"
+              className="flex items-center gap-1 pl-2 pr-1.5 py-0.5 rounded-full bg-neon-purple/10 border border-neon-purple/30 text-xs text-neon-purple font-mono"
             >
               {name}
               <button
                 type="button"
+                aria-label={`Remove skill ${name}`}
                 onClick={() => remove(name)}
                 className="hover:text-red-400 transition-colors"
               >
@@ -121,7 +106,7 @@ export default function SkillSelector({
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search skills..."
+                placeholder="Search skills..." aria-label="Skill search"
                 autoFocus
                 className="w-full bg-dark-800/50 border border-white/10 rounded-lg pl-8 pr-3 py-1.5 text-xs text-white placeholder-white/20 outline-none focus:border-neon-purple/50 font-mono"
               />
@@ -133,7 +118,7 @@ export default function SkillSelector({
                 <Loader2 className="w-4 h-4 animate-spin text-neon-purple" />
               </div>
             ) : filtered.length === 0 ? (
-              <div className="text-xs text-white/30 text-center py-4">
+              <div className="text-xs text-ps-text-muted text-center py-4">
                 {search ? "No skills match your search" : "No skills available"}
               </div>
             ) : (
@@ -151,12 +136,12 @@ export default function SkillSelector({
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-medium text-white/80">{skill.name}</span>
-                    <span className="text-[9px] font-mono text-white/20">
+                    <span className="font-medium text-ps-text-primary">{skill.name}</span>
+                    <span className="text-xs font-mono text-ps-text-faint">
                       {skill.category}
                     </span>
                   </div>
-                  <div className="text-white/30 text-[10px] mt-0.5 line-clamp-1">
+                  <div className="text-ps-text-muted text-xs mt-0.5 line-clamp-1">
                     {skill.description || "No description"}
                   </div>
                 </button>

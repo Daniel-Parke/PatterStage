@@ -1,22 +1,36 @@
 /** @jest-environment node */
 
 jest.mock("@/lib/api-auth", () => ({
-  requireAuth: jest.fn(() => null),
 }));
 
-jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
+jest.mock("@/lib/api-logger", () => ({
+  logApiError: jest.fn(),
+  serverErrorFromCatch: jest.fn(),
+}));
 jest.mock("@/lib/db", () => ({ ensureDb: jest.fn() }));
 
-const mockPushProfile = jest.fn(() => ({ success: true, slug: "qa", backupPath: null, error: null }));
-const mockPushAll = jest.fn(() => [{ success: true, slug: "qa", backupPath: null, error: null }]);
-const mockPullProfile = jest.fn(() => ({ success: true, slug: "qa", backupPath: null, error: null }));
-const mockDetectDrift = jest.fn(() => [{ slug: "qa", drifted: false, fields: [], syncError: null }]);
+const mockPushProfile = jest.fn((..._a: unknown[]) => ({ success: true, slug: "qa", backupPath: null, error: null }));
+const mockPushAll = jest.fn((..._a: unknown[]) => [{ success: true, slug: "qa", backupPath: null, error: null }]);
+const mockPullProfile = jest.fn((..._a: unknown[]) => ({ success: true, slug: "qa", backupPath: null, error: null }));
 
-jest.mock("@/lib/hermes-profile-sync", () => ({
+jest.mock("@/modules/hermes/lib/profile-push", () => ({
   pushProfileToHermes: (...args: unknown[]) => mockPushProfile(...args),
   pushAllProfiles: (...args: unknown[]) => mockPushAll(...args),
+  pushRootToHermes: jest.fn(),
+  pushAllSkillsToHermes: jest.fn(),
+  pushSkillToHermes: jest.fn(),
+}));
+
+jest.mock("@/modules/hermes/lib/profile-pull", () => ({
   pullProfileFromHermes: (...args: unknown[]) => mockPullProfile(...args),
-  detectAllProfileDrift: (...args: unknown[]) => mockDetectDrift(...args),
+  pullRootFromHermes: jest.fn(),
+  pullSkillFromHermes: jest.fn(),
+}));
+
+jest.mock("@/modules/hermes/lib/profile-discovery", () => ({
+  discoverLocalProfiles: jest.fn(() => []),
+  importDiscoveredProfile: jest.fn(),
+  importAllSkillsFromDisk: jest.fn(() => []),
 }));
 
 describe("profile sync API routes", () => {

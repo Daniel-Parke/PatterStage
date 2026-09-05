@@ -2,14 +2,14 @@ import { test, expect } from "@playwright/test";
 
 test.describe("Missions page", () => {
   test("loads missions list", async ({ page }) => {
-    await page.goto("/orchestration/missions");
+    await page.goto("/work/missions");
     await expect(
       page.getByRole("heading", { name: "Missions", exact: true })
     ).toBeVisible();
   });
 
   test("shows quick deploy template region", async ({ page }) => {
-    await page.goto("/orchestration/missions");
+    await page.goto("/work/missions");
     await expect(
       page.getByRole("heading", { name: "Missions", exact: true })
     ).toBeVisible();
@@ -19,36 +19,32 @@ test.describe("Missions page", () => {
   });
 
   test("can open create mission form", async ({ page }) => {
-    await page.goto("/orchestration/missions");
-    const createBtn = page.getByRole("button", { name: /Create|New Mission|Draft/i });
-    if (await createBtn.isVisible()) {
-      await createBtn.click();
-      await expect(page.getByText(/Mission Name|Name/i).first()).toBeVisible();
-    }
-  });
-});
+    await page.goto("/work/missions");
 
-test.describe("Cron page", () => {
-  test("loads cron jobs list", async ({ page }) => {
-    await page.goto("/orchestration/cron");
-    await expect(
-      page.getByRole("heading", { name: /Cron Jobs/i })
-    ).toBeVisible();
-  });
+    // EXACT name, not /Create|New Mission|Draft/i. That pattern also matched the
+    // "draft" status-filter chip, so once both had rendered the locator resolved
+    // to two elements and `isVisible()` threw a strict-mode violation. Under
+    // fullyParallel the chips sometimes rendered after the check and sometimes
+    // before, which is why it passed alone and failed in the full run. Retries
+    // are zero here by policy (WG-DEL-004, determinism first), so the fix is to
+    // remove the ambiguity rather than to paper over the race.
+    const createBtn = page.getByRole("button", { name: "New Mission", exact: true });
 
-  test("shows create job button", async ({ page }) => {
-    await page.goto("/orchestration/cron");
-    await expect(
-      page.getByRole("button", { name: /Create|New|Add/i }).first()
-    ).toBeVisible();
+    // Unconditional. This was `if (await createBtn.isVisible()) { ... }`, which
+    // meant that whenever the button had not rendered yet the test passed having
+    // asserted NOTHING — the same shape of hole T-0044 closed elsewhere. An
+    // auto-retrying expect waits for the button instead of sampling for it.
+    await expect(createBtn).toBeVisible();
+    await createBtn.click();
+    await expect(page.getByText(/Mission Name|Name/i).first()).toBeVisible();
   });
 });
 
 test.describe("Sessions page", () => {
   test("loads sessions list", async ({ page }) => {
-    await page.goto("/sessions");
+    await page.goto("/results/sessions");
     await expect(
-      page.getByRole("heading", { name: /Session History/i })
+      page.getByRole("heading", { level: 1, name: "Sessions", exact: true })
     ).toBeVisible();
   });
 
@@ -62,32 +58,32 @@ test.describe("Sessions page", () => {
       return;
     }
     const id = sessions[0].id;
-    await page.goto(`/sessions/${encodeURIComponent(id)}`);
-    await expect(page.getByTestId("ch-app-shell")).toBeVisible();
+    await page.goto(`/results/sessions/${encodeURIComponent(id)}`);
+    await expect(page.getByTestId("ps-app-shell")).toBeVisible();
     await expect(page.locator("main")).toBeVisible({ timeout: 30_000 });
   });
 });
 
 test.describe("Chat page", () => {
   test("loads chat shell", async ({ page }) => {
-    await page.goto("/orchestration/chat");
+    await page.goto("/work/chat");
     await expect(
       page.getByRole("heading", { name: "Chat", exact: true })
     ).toBeVisible();
-    await expect(page.getByTestId("ch-app-shell")).toBeVisible();
+    await expect(page.getByTestId("ps-app-shell")).toBeVisible();
   });
 });
 
 test.describe("Config page", () => {
   test("loads config sections", async ({ page }) => {
-    await page.goto("/config");
+    await page.goto("/agent/settings");
     await expect(
       page.getByRole("heading", { name: /Config|Settings/i }).first()
     ).toBeVisible();
   });
 
   test("shows config section cards", async ({ page }) => {
-    await page.goto("/config");
+    await page.goto("/agent/settings");
     // Should show at least Agent and Model sections
     await expect(page.getByText("Agent").first()).toBeVisible();
   });
@@ -95,9 +91,9 @@ test.describe("Config page", () => {
 
 test.describe("Skills page", () => {
   test("loads skills browser", async ({ page }) => {
-    await page.goto("/operations/skills");
+    await page.goto("/agent/skills");
     await expect(
-      page.getByRole("heading", { name: /Skills Manager/i })
+      page.getByRole("heading", { level: 1, name: "Skills", exact: true })
     ).toBeVisible();
   });
 
@@ -112,32 +108,42 @@ test.describe("Skills page", () => {
       return;
     }
     const skill = skills[0];
-    const segments =
-      skill.category && skill.category !== "uncategorized"
-        ? [skill.category, skill.name]
-        : [skill.name];
+    // `name` is the catalog key and already carries its category ("engineering/
+    // code-review"); `category` is derived from it (deriveCategory splits on the
+    // first "/"). Prefixing the category again built
+    // /operations/skills/engineering/engineering%2Fcode-review, and that encoded
+    // slash is precisely what the route's path guard refuses: the page rendered
+    // "Skill Not Found · Invalid skill path" from
+    // resolveSkillDirUnderRoot in src/lib/fs/path-security.ts. The guard is
+    // right; the URL the test built was wrong. One key segment, one path
+    // segment.
+    const segments = skill.name.split("/").filter(Boolean);
     const path = segments.map((s) => encodeURIComponent(s)).join("/");
-    const detailRes = await page.goto(`/operations/skills/${path}`, {
+    const detailRes = await page.goto(`/agent/skills/${path}`, {
       waitUntil: "domcontentloaded",
     });
     expect(detailRes?.status() ?? 0).toBeLessThan(500);
-    await expect(page.getByTestId("ch-app-shell")).toBeVisible();
+    await expect(page.getByTestId("ps-app-shell")).toBeVisible();
     await expect(page.locator("h1").first()).toBeVisible({ timeout: 30_000 });
   });
 });
 
 test.describe("Memory page", () => {
   test("loads memory page", async ({ page }) => {
-    await page.goto("/memory");
+    await page.goto("/agent/memory");
+    // The page title, not any heading containing "Memory": the memory-provider
+    // tile added a second one ("Memory provider", an h2), so the unqualified
+    // regex became a strict-mode violation. Level 1 names the page heading the
+    // test was always about.
     await expect(
-      page.getByRole("heading", { name: /Memory/i })
+      page.getByRole("heading", { level: 1, name: /Memory/i })
     ).toBeVisible();
   });
 });
 
 test.describe("Logs page", () => {
   test("loads logs viewer", async ({ page }) => {
-    await page.goto("/logs");
+    await page.goto("/results/logs");
     await expect(
       page.getByRole("heading", { name: /Logs/i })
     ).toBeVisible();

@@ -2,11 +2,12 @@
 // Hindsight Mental Models Tab — Cached reflect results
 // ═══════════════════════════════════════════════════════════════
 
-import { Settings, Plus, Pencil, Zap, Trash2, RefreshCw, Clock } from "lucide-react";
+import { Settings, Plus, Zap, RefreshCw, Clock } from "lucide-react";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import { LoadingSpinner, EmptyState } from "@/components/ui/LoadingSpinner";
-import { timeAgo } from "@/lib/utils";
+import { pluralise, timeAgo } from "@/lib/utils";
+import { RowEditButton, RowDeleteButton } from "./RowActionButtons";
 import type { MentalModel } from "./types";
 
 interface MentalModelsTabProps {
@@ -33,8 +34,8 @@ export default function MentalModelsTab({
   return (
     <>
       <div className="flex justify-between items-center mb-4">
-        <div className="text-xs text-white/30">
-          {models.length} mental model{models.length !== 1 ? "s" : ""} — cached reflect results with auto-refresh
+        <div className="text-xs text-ps-text-muted">
+          {models.length} mental model{pluralise(models.length)} — cached reflect results with auto-refresh
         </div>
         <div className="flex gap-2">
           <Button variant="ghost" size="sm" icon={RefreshCw} onClick={onRefresh} disabled={loading}>
@@ -69,15 +70,15 @@ export default function MentalModelsTab({
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-sm font-medium text-white/90">{m.name}</span>
+                    <span className="text-sm font-medium text-ps-text-primary">{m.name}</span>
                     {m.content && <Badge color="green" size="sm">Ready</Badge>}
                     {!m.content && <Badge color="orange" size="sm">Generating</Badge>}
                   </div>
-                  <p className="text-xs text-white/40 mb-2 font-mono">Query: {m.source_query}</p>
+                  <p className="text-xs text-ps-text-muted mb-2 font-mono">Query: {m.source_query}</p>
                   {m.content && (
-                    <p className="text-sm text-white/60 leading-relaxed line-clamp-3">{m.content}</p>
+                    <p className="text-sm text-ps-text-secondary leading-relaxed line-clamp-3">{m.content}</p>
                   )}
-                  <div className="flex items-center gap-3 mt-2 text-xs text-white/30">
+                  <div className="flex items-center gap-3 mt-2 text-xs text-ps-text-muted">
                     {m.last_refreshed_at && (
                       <span className="flex items-center gap-1">
                         <Clock className="w-3 h-3" />
@@ -92,28 +93,16 @@ export default function MentalModelsTab({
                   </div>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
-                  <button
-                    onClick={() => onEdit(m)}
-                    className="p-1.5 rounded-lg hover:bg-white/5 text-white/40 hover:text-white/70 transition-colors"
-                    title="Edit"
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </button>
+                  <RowEditButton onClick={() => onEdit(m)} />
                   <button
                     onClick={() => onRefreshModel(m.id)}
                     disabled={refreshingModelId === m.id}
-                    className="p-1.5 rounded-lg hover:bg-white/5 text-white/40 hover:text-white/70 transition-colors disabled:opacity-30"
+                    className="p-1.5 rounded-lg hover:bg-white/5 text-ps-text-muted hover:text-ps-text-secondary transition-colors disabled:opacity-30"
                     title="Refresh (re-run reflect)"
                   >
                     <Zap className={`w-4 h-4 ${refreshingModelId === m.id ? "animate-pulse text-yellow-400" : ""}`} />
                   </button>
-                  <button
-                    onClick={() => onDelete(m.id)}
-                    className="p-1.5 rounded-lg hover:bg-red-500/10 text-white/40 hover:text-red-400 transition-colors"
-                    title="Delete"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  <RowDeleteButton onClick={() => onDelete(m.id)} label={m.name} />
                 </div>
               </div>
             </div>

@@ -1,0 +1,27 @@
+{
+  "id": "T-0008",
+  "intent": "Phase 1f: retire the ch-* shim references the repository still exercises. Warrant WG-OPS-002; CI's install proof executes a file marked Remove later. Source row WO-0023. Operator ruling D4, 2026-08-22: keep scripts/application/ch-deploy.sh through v1.0 with a deprecation warning line and delete it after; scripts/maintenance/ch-migrate.sh has zero references repository-wide and is deleted now. Acceptance: (1) tests/integration/test_full_install_update_process.py:826 and :942 invoke ps-deploy.sh directly; (2) that file's line-27 docstring, which names the nonexistent scripts/lib/ch-deploy-impl.sh, and its remaining ch-deploy mentions at lines 6, 418, 926, 1013, 1053 and 1315 swept; (3) tests/scripts/README.md:12 updated, including the stale ch-hermes-profile-templates.sh whose real file is scripts/lib/ps-hermes-profile-templates.sh; (4) ch-deploy.sh gains its deprecation warning line and ch-migrate.sh is deleted; (5) left alone with reasons recorded here: docs/MIGRATION.md:31, which is rename history, src/lib/deploy-status.ts:25, runtime back-compat with its own tests, and tests/unit/update-api.test.ts:331, a mocked message. Done when nothing in the repository executes or documents a ch-* path except the sanctioned back-compat strings. Tier proposal R1, anticipated factor size-threshold from derived signal diff-size, evidence a sweep across the install harness, two READMEs and two shell scripts exceeds the express file and line limits; ci-stateful-infra may also activate, because the file being swept is the install harness that the CI install-harness job executes. Closed 2026-08-22 in 966d8dc4. The install harness calls ps-deploy.sh directly, stale docstrings swept, ch-migrate.sh deleted (zero references), ch-deploy.sh kept through v1.0 with a stderr deprecation warning per operator ruling D4. The three sanctioned back-compat strings are untouched.",
+  "declared": {
+    "capabilities": [
+      "filesystem"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R0",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "phase1-shims-2026-08-22",
+  "claims": [
+    "tests/integration/test_full_install_update_process.py",
+    "tests/scripts/README.md",
+    "scripts/application/ch-deploy.sh",
+    "scripts/maintenance/ch-migrate.sh"
+  ],
+  "timestamps": {
+    "opened": "2026-08-22T00:00:00Z",
+    "updated": "2026-08-22T22:45:00Z",
+    "closed": "2026-08-22T19:20:00Z"
+  }
+}

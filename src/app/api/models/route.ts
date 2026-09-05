@@ -7,48 +7,45 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { listModels, createModel, deleteModel } from "@/lib/models-repository";
-import { logApiError } from "@/lib/api-logger";
-import { requireAuth } from "@/lib/api-auth";
-import { parseJsonBody } from "@/lib/parse-json-body";
+import { boundsFrom, MODEL_LIST_BOUNDS } from "@/lib/list-bounds";
+import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
+
+import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import { appendAuditLine } from "@/lib/audit-log";
-import { zodErrorResponse, modelPostSchema } from "@/lib/api-schemas";
-import { syncDefaultsToHermesConfig } from "@/lib/hermes-config-sync";
+import { modelPostSchema } from "@/lib/api-schemas";
+import { created, ok } from "@/lib/api-response";
+import { syncDefaultsToHermesConfig } from "@/modules/hermes/lib/config-sync";
+import { recordEvent } from "@/lib/analytics/record-event";
 
-export async function GET(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
+export async function GET(request?: NextRequest) {
   try {
-    return NextResponse.json({ data: { models: listModels() } });
+    return ok({ models: listModels({ limit: boundsFrom(request, MODEL_LIST_BOUNDS).limit }) });
   } catch (error) {
-    logApiError("GET /api/models", "listing models", error);
-    return NextResponse.json({ error: "Failed to list models" }, { status: 500 });
+    return serverErrorFromCatch(
+      "GET /api/models",
+      "listing models",
+      error,
+      "Failed to list models",
+    );
   }
 }
 
 export async function POST(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
-  const bodyResult = await parseJsonBody(request);
-  if (bodyResult instanceof NextResponse) return bodyResult;
-
-  const parsed = modelPostSchema.safeParse(bodyResult);
-  if (!parsed.success) {
-    return zodErrorResponse(parsed.error);
-  }
+  const parsed = await parseAndValidateJsonBody(request, modelPostSchema);
+  if (parsed instanceof NextResponse) return parsed;
 
   let createdId: string | null = null;
   try {
-    const model = createModel(parsed.data);
+    const model = createModel(parsed);
     createdId = model.id;
     // Only re-sync config.yaml if this model claims a default slot;
     // otherwise nothing in Hermes config needs to change.
-    if (parsed.data.defaults && Object.values(parsed.data.defaults).some(Boolean)) {
+    if (parsed.defaults && Object.values(parsed.defaults).some(Boolean)) {
       syncDefaultsToHermesConfig();
     }
     appendAuditLine({ action: "model.create", resource: model.id, ok: true });
-    return NextResponse.json({ data: { model } }, { status: 201 });
+    recordEvent("model.added", { entityType: "model", entityId: model.id, metadata: { provider: model.provider } });
+    return created({ model });
   } catch (error) {
     if (createdId) {
       try {
@@ -57,7 +54,11 @@ export async function POST(request: NextRequest) {
         logApiError("POST /api/models", "rolling back model after sync failure", cleanupErr);
       }
     }
-    logApiError("POST /api/models", "creating model", error);
-    return NextResponse.json({ error: "Failed to create model" }, { status: 500 });
+    return serverErrorFromCatch(
+      "POST /api/models",
+      "creating model",
+      error,
+      "Failed to create model",
+    );
   }
 }

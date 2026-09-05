@@ -16,8 +16,7 @@ jest.mock("fs", () => ({
 }));
 
 jest.mock("@/lib/api-auth", () => ({
-  requireAuth: jest.fn(() => null),
-  isChReadOnly: jest.fn(() => false),
+  isReadOnly: jest.fn(() => false),
 }));
 
 jest.mock("@/lib/hardware-cron", () => ({
@@ -25,16 +24,17 @@ jest.mock("@/lib/hardware-cron", () => ({
 }));
 
 jest.mock("@/lib/paths", () => ({
-  CH_DATA_DIR: "/tmp/ch-data",
-  getChScriptsDir: () => "/tmp/ch-data/scripts",
-  getChHardwareLogDir: () => "/tmp/ch-data/logs",
+  PS_DATA_DIR: "/tmp/ch-data",
+  getPsScriptsDir: () => "/tmp/ch-data/scripts",
+  getPsHardwareLogDir: () => "/tmp/ch-data/logs",
 }));
 
 import { GET } from "@/app/api/cron/hardware/route";
+import { mockRequest } from "../helpers/api-test-helpers";
 
 describe("GET /api/cron/hardware", () => {
   it("returns job list shape", async () => {
-    const res = await GET();
+    const res = await GET(mockRequest("http://127.0.0.1/api/test"));
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.data).toBeDefined();

@@ -8,7 +8,7 @@
  *   - gateway fallback when modelId is unknown
  */
 
-jest.mock("@/lib/hermes-agent-runtime", () => ({
+jest.mock("@/modules/hermes/lib/agent-runtime", () => ({
   getAgentLlmEndpoints: jest.fn(() => ({
     apiUrl: "http://gateway/v1/chat/completions",
     gatewayBase: "http://gateway",

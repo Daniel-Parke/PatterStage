@@ -7,15 +7,13 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { SyncScheduler } from "./SyncScheduler";
+import { SERVER_MODULES } from "@/lib/modules/server";
 import type { SyncCycleResult } from "./types";
-import { CronSync } from "./sources/CronSync";
 import { SessionSync } from "./sources/SessionSync";
-import { ConfigSync } from "./sources/ConfigSync";
 import { EnvSync } from "./sources/EnvSync";
 import { LogSync } from "./sources/LogSync";
 import { ProcessSync } from "./sources/ProcessSync";
 import { MemorySync } from "./sources/MemorySync";
-import { MissionSync } from "./sources/MissionSync";
 import { MissionQueueSync } from "./sources/MissionQueueSync";
 
 // ── Singleton ────────────────────────────────────────────────
@@ -43,15 +41,22 @@ export function ensureSyncLayer(): void {
   const scheduler = getSyncScheduler();
 
   // Register all sync sources
-  scheduler.register(new CronSync());
   scheduler.register(new SessionSync());
-  scheduler.register(new ConfigSync());
   scheduler.register(new EnvSync());
   scheduler.register(new LogSync());
   scheduler.register(new ProcessSync());
   scheduler.register(new MemorySync());
-  scheduler.register(new MissionSync());
+  // Mission run reconciliation now lives in the orchestration BackgroundScheduler
+  // (RunSync). MissionQueueSync still dispatches queued missions (via the runtime).
   scheduler.register(new MissionQueueSync());
+
+  // Module-contributed sources. ConfigSync is the hermes module's: it parses a
+  // Hermes config.yaml schema and probes SOUL.md, which is protocol knowledge
+  // rather than a file path. The four above needed only paths, which
+  // AgentWorkspace already gives them neutrally, so they stay core.
+  for (const source of SERVER_MODULES.flatMap((m) => m.syncSources?.() ?? [])) {
+    scheduler.register(source);
+  }
 
   scheduler.start();
 }
@@ -60,14 +65,4 @@ export function ensureSyncLayer(): void {
 export async function runFullSync(): Promise<SyncCycleResult> {
   const scheduler = getSyncScheduler();
   return scheduler.forceSync();
-}
-
-/** Get the current scheduler (for read-only access). */
-export function getScheduler(): SyncScheduler | null {
-  return _scheduler;
-}
-
-/** Check if sync layer has been initialized. */
-export function isSyncLayerInitialized(): boolean {
-  return _initialized;
 }

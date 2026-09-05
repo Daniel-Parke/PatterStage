@@ -7,19 +7,7 @@ export const fallbackConfigPutSchema = z.object({
   apiMaxRetries: z.number().int().min(0).max(10).optional(),
 });
 
-export const fallbackSyncPostSchema = z.object({
-  config: fallbackConfigPutSchema.optional(),
-});
-
-/** Shared input schema for creating a fallback chain entry. */
-export const fallbackInputSchema = z.object({
-  modelId: z.string().min(1),
-  position: z.number().int().min(0).optional(),
-  enabled: z.boolean().optional(),
-  overrideBaseUrl: z.string().nullable().optional(),
-});
-
-/** Shared input schema for updating a fallback chain entry. */
+/** Shared input schema for updating a fallback chain entry (PUT /[id]). */
 export const fallbackEntryPutSchema = z.object({
   modelId: z.string().min(1).optional(),
   position: z.number().int().min(0).optional(),
@@ -27,29 +15,58 @@ export const fallbackEntryPutSchema = z.object({
   overrideBaseUrl: z.string().nullable().optional(),
 });
 
-/** Shared input schema for toggling a fallback entry. */
-export const fallbackToggleSchema = z.object({
-  id: z.string(),
-  enabled: z.boolean(),
-});
+// The former per-action schemas (fallbackInputSchema / fallbackToggleSchema /
+// fallbackReorderSchema / customFallbackInputSchema / fallbackSyncPostSchema)
+// were folded into the single `fallbackActionSchema` discriminated union
+// below when the 5 POST sub-routes were consolidated into one action route.
 
-/** Shared input schema for reordering a fallback entry. */
-export const fallbackReorderSchema = z.object({
-  entryId: z.string().min(1),
-  direction: z.enum(["up", "down"]),
-});
-
-/** Input schema for adding a custom (non-registry) fallback model. */
-export const customFallbackInputSchema = z.object({
-  modelName: z.string().min(1),
-  provider: z.string().min(1),
-  modelIdString: z.string().min(1),
-  position: z.number().int().min(0).optional(),
-  enabled: z.boolean().optional(),
-  overrideBaseUrl: z.string().nullable().optional(),
-});
+/**
+ * Consolidated POST body for /api/models/fallbacks. The five former
+ * sub-routes (add/toggle/reorder/custom/import/sync) collapse into a
+ * single `action`-discriminated union validated here.
+ *
+ * Two field names are fixed vs. the old per-route schemas to match what
+ * the sole consumer (useModelsPage) actually sends — the old routes were
+ * unreachable 400s:
+ *   • toggle uses `entryId` (the old fallbackToggleSchema required `id`)
+ *   • custom uses `name` + `baseUrl` (the old customFallbackInputSchema
+ *     required `modelName` + `overrideBaseUrl`)
+ */
+export const fallbackActionSchema = z.discriminatedUnion("action", [
+  z.object({
+    action: z.literal("add"),
+    modelId: z.string().min(1),
+    position: z.number().int().min(0).optional(),
+    enabled: z.boolean().optional(),
+    overrideBaseUrl: z.string().nullable().optional(),
+  }),
+  z.object({
+    action: z.literal("toggle"),
+    entryId: z.string().min(1),
+    enabled: z.boolean(),
+  }),
+  z.object({
+    action: z.literal("reorder"),
+    entryId: z.string().min(1),
+    direction: z.enum(["up", "down"]),
+  }),
+  z.object({
+    action: z.literal("custom"),
+    name: z.string().min(1),
+    provider: z.string().min(1),
+    modelIdString: z.string().min(1),
+    position: z.number().int().min(0).optional(),
+    enabled: z.boolean().optional(),
+    baseUrl: z.string().nullable().optional(),
+  }),
+  z.object({
+    action: z.literal("import"),
+    overwrite: z.boolean().optional(),
+  }),
+  z.object({
+    action: z.literal("sync"),
+    config: fallbackConfigPutSchema.optional(),
+  }),
+]);
 
 export type FallbackConfigPutInput = z.infer<typeof fallbackConfigPutSchema>;
-export type FallbackInput = z.infer<typeof fallbackInputSchema>;
-export type FallbackEntryPut = z.infer<typeof fallbackEntryPutSchema>;
-export type FallbackToggle = z.infer<typeof fallbackToggleSchema>;

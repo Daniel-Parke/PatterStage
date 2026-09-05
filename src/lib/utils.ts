@@ -91,17 +91,6 @@ export function formatElapsed(startedAt: string, now: number = Date.now()): stri
 }
 
 /**
- * Safely format a Unix timestamp as a relative time string.
- * Returns "never" for null, undefined, NaN, or negative values.
- * Use this instead of `timeAgo(new Date(unixTs * 1000).toISOString())`
- * to avoid RangeError when the timestamp is invalid.
- */
-export function safeTimeAgo(unixTs: number | null | undefined): string {
-  if (unixTs == null || typeof unixTs !== "number" || isNaN(unixTs) || unixTs <= 0) return "never";
-  return timeAgo(new Date(unixTs * 1000).toISOString());
-}
-
-/**
  * Format bytes as human-readable size string
  */
 export function formatBytes(bytes: number): string {
@@ -124,17 +113,31 @@ export function truncate(str: string, maxLen: number): string {
 }
 
 /**
- * Debounce a function call
+ * English noun pluralisation: appends `"s"` when `count !== 1`.
+ *
+ * This is the *suffix*-only variant — the canonical English rule for
+ * "1 message / 2 messages" and the rule used at 6 sites across the
+ * codebase (chat page session count, SkillSelector, MentalModelsTab,
+ * DirectivesTab, ModelSyncButtons, useModelsPage). Returns `""` for
+ * `count === 1` and `"s"` otherwise. Callers compose it into JSX as
+ * `{count} thing{pluralise(count)}` or into template strings as
+ * `` `${count} thing${pluralise(count)}` ``.
+ *
+ * The helper is intentionally minimal (no irregulars, no `y → ies`):
+ * all 6 call sites use the simple `s`-suffix rule, and any future
+ * irregular-plural site should adopt a domain-specific helper rather
+ * than overloading this one. If a "child/children" or "person/people"
+ * call site appears, promote that to a separate `pluraliseIrregular`
+ * or to a per-domain helper at the call site.
+ *
+ * Byte-equivalent to the inline `${n} foo${n !== 1 ? "s" : ""}` form
+ * for all 6 current call sites — see
+ * `tests/unit/pluralise-helper.test.ts` for the truth-table coverage
+ * and `tests/unit/pluralise-source-patterns.test.ts` for the
+ * adoption locks.
  */
-export function debounce<T extends (...args: unknown[]) => void>(
-  fn: T,
-  delay: number
-): (...args: Parameters<T>) => void {
-  let timer: ReturnType<typeof setTimeout>;
-  return (...args: Parameters<T>) => {
-    clearTimeout(timer);
-    timer = setTimeout(() => fn(...args), delay);
-  };
+export function pluralise(count: number): "" | "s" {
+  return count !== 1 ? "s" : "";
 }
 
 // ── Session Message Summary ────────────────────────────────────
@@ -153,19 +156,14 @@ export function messageSummary(content: string | undefined): string {
   return trimmed + (firstNonEmpty.length > 120 || hasMoreContent ? "..." : "");
 }
 
-// Re-exports from schedule module
-export { parseSchedule } from "@/lib/schedule/parse-schedule";
-export type { ParsedSchedule } from "@/lib/schedule/types";
-export { describeSchedule, parseCronExpression } from "@/lib/schedule/types";
-
 // ── Model Defaults ───────────────────────────────────────────
 
-import { TASK_TYPES, type TaskType } from "@/lib/hermes-providers";
+import { TASK_TYPES, type TaskType } from "@/lib/models/task-types";
 
 /**
  * Empty task-defaults map — initialises all 12 slots to null.
  * Client-safe (no DB dependency), shared between server and UI.
- * Uses TASK_TYPES from hermes-providers as the single source of truth.
+ * Uses TASK_TYPES from `@/lib/models/task-types` as the single source of truth.
  */
 export function emptyModelDefaults(): Record<TaskType, string | null> {
   return TASK_TYPES.reduce<Record<TaskType, string | null>>(

@@ -2,7 +2,7 @@
 // sync/sources/MissionQueueSync.ts — Background dispatch for queued missions
 // ═══════════════════════════════════════════════════════════════
 
-import { runMissionQueueTick } from "@/lib/mission-queue-tick";
+import { runMissionQueueTick } from "@/lib/missions/mission-queue-tick";
 import { logApiError } from "@/lib/api-logger";
 import type { SyncSource, SyncResult } from "@/lib/sync/types";
 
@@ -15,10 +15,14 @@ export class MissionQueueSync implements SyncSource {
     try {
       const tick = await runMissionQueueTick();
       if (!tick.ran) {
+        // `blocked` is the operator's hard spend stop refusing an unattended
+        // dispatch. That is a deliberate refusal, not a failure, so success
+        // stays true and the reason rides along for the monitor surface.
         return {
           sourceName: this.name,
           success: true,
           syncedCount: 0,
+          error: tick.blocked,
           durationMs: Math.round(performance.now() - start),
         };
       }
