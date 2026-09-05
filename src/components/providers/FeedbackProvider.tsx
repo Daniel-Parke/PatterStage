@@ -12,7 +12,8 @@
 //   - the stack: three toasts at most, and a success never evicts an error;
 //   - the achievement-unlock toast, on any page, from the same stats poll
 //     the dashboard already runs (react-query dedupes the request);
-//   - later, the quest tracker (B17).
+//   - the quest tracker (T-0111, B17), which is a child rather than a hook
+//     because it reads the context this provider supplies.
 //
 // useToast() reads the context and keeps its API, so the 73 call sites are
 // untouched. A component rendered without the shell falls back to the old
@@ -23,6 +24,7 @@
 
 import { useCallback, useMemo, useState, type ReactNode } from "react";
 
+import QuestTracker from "@/components/quests/QuestTracker";
 import { FeedbackContext } from "@/components/ui/feedback-context";
 import { ToastView, type ToastType } from "@/components/ui/Toast";
 import { useAchievementUnlocks } from "@/hooks/useAchievementUnlocks";
@@ -74,6 +76,9 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
 
   return (
     <FeedbackContext.Provider value={value}>
+      {/* Inside the context, so it can ask for a toast the way a page does.
+          It renders nothing and reads the stats poll above it. */}
+      <QuestTracker />
       {children}
       {toasts.map((t, index) => (
         <ToastView key={t.id} index={index} message={t.message} type={t.type} onClose={() => dismiss(t.id)} />

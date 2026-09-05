@@ -168,6 +168,10 @@ describe("achievement scope", () => {
   it("marks the story achievements as Rec Room, not agent progression", () => {
     const recroom = ACHIEVEMENT_DEFS.filter((d) => achievementScope(d) === "recroom");
     expect(recroom.map((d) => d.id).sort()).toEqual([
+      // Curriculum is every quest, and chapter 6 of the programme is the Rec
+      // Room, so an agent scope would let a story written for fun move the
+      // Body's record (B17).
+      "curriculum",
       "epic-scribe",
       "novelist",
       "saga-weaver",

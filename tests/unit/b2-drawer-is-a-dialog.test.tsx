@@ -36,6 +36,19 @@ jest.mock("lucide-react", () => {
 });
 jest.mock("@/hooks/useFeatureFlags", () => ({ useFeatureFlags: () => ({ data: {} }) }));
 jest.mock("@/components/layout/RailFooter", () => ({ RailFooter: () => null }));
+// B17 hung a quest counter on the Quests row. It reads the stats poll through
+// react-query, and this file mounts the rail bare, with no query client, so
+// the read is doubled here. It answers with a programme in progress rather
+// than nothing, because the point below is that the rail's links keep their
+// accessible names WITH the badge rendered beside one of them.
+jest.mock("@/hooks/useStats", () => ({
+  useStats: () => ({
+    stats: { quests: { completed: 3, total: 32 } },
+    isLoading: false,
+    error: null,
+    refetch: jest.fn(),
+  }),
+}));
 jest.mock("@/lib/api-fetch", () => ({ safeApiCall: jest.fn(async () => ({ ok: false, error: "offline" })) }));
 
 import Sidebar from "@/components/layout/Sidebar";

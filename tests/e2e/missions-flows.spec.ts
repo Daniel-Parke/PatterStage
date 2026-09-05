@@ -15,7 +15,11 @@ const uniq = (p: string) => `${p}-${Date.now()}-${Math.floor(Math.random() * 1e4
 
 async function openComposer(page: import("@playwright/test").Page) {
   await page.goto("/work/missions");
-  await expect(page.getByRole("heading", { name: "Missions", exact: true })).toBeVisible();
+  // See seed-catalog.spec.ts: the heading is client-rendered, so this waits for
+  // hydration rather than racing it.
+  await expect(page.getByRole("heading", { name: "Missions", exact: true })).toBeVisible({
+    timeout: 30_000,
+  });
   await page.getByRole("button", { name: /New Mission/i }).click();
   await expect(page.getByPlaceholder("e.g., Research quantum computing trends")).toBeVisible({
     timeout: 15_000,

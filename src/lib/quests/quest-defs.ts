@@ -25,6 +25,11 @@ import type { RawMetrics, StoreFacts } from "@/lib/stats/derive";
  * The nouns a quest can teach, from the vocabulary decision 5 fixed and B15
  * wrote a page for. Each id is the basename of a page under docs/concepts/, so
  * a Teaches chip can become a ConceptHint with no second list.
+ *
+ * @public The list is what makes ConceptId a closed type, so a quest cannot
+ * teach a noun the corpus does not define. Read at compile time by every
+ * `teaches:` array below rather than at run time, which is exactly the point:
+ * the check happens before anything ships.
  */
 export const CONCEPT_IDS = [
   "agent",

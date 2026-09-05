@@ -30,7 +30,7 @@ import PageTitle from "@/components/layout/PageTitle";
 import HelpLink from "@/components/help/HelpLink";
 import { StatPill, StatPillSkeleton } from "@/components/dashboard/StatPill";
 import DispatchStrip from "@/components/dashboard/DispatchStrip";
-import FirstRunPanel from "@/components/dashboard/FirstRunPanel";
+import NextQuestCard from "@/components/dashboard/NextQuestCard";
 import ProgressLine from "@/components/dashboard/ProgressLine";
 import SubsystemsPanel from "@/components/dashboard/SubsystemsPanel";
 import ActiveMissionsPanel from "@/components/dashboard/ActiveMissionsPanel";
@@ -53,6 +53,8 @@ import type { AccentColor } from "@/types/console";
 import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
 import { useInterval } from "@/hooks/useInterval";
 import { useDashboard } from "@/hooks/useDashboard";
+import { useOperatorPrefs } from "@/hooks/useOperatorPrefs";
+import { useQuestHost } from "@/hooks/useQuestHost";
 import { useStats } from "@/hooks/useStats";
 import { useAgentExperience } from "@/hooks/useAgentExperience";
 import { useSpend } from "@/hooks/useSpend";
@@ -112,6 +114,13 @@ export default function Dashboard() {
   const { stats, error: statsError, refetch: refetchStats } = useStats();
   const { entries: agentsByGrowth } = useAgentExperience();
   const { spend } = useSpend();
+  // The Start here card: which quest is next comes off the stats poll above,
+  // what this host can attempt from the three status reads, and whether the
+  // operator has put the guide away from their own preferences.
+  const questHost = useQuestHost();
+  const { prefs, setPref } = useOperatorPrefs();
+  const guideHidden = prefs["guide.hidden"] === true;
+  const hideGuide = useCallback(() => setPref("guide.hidden", true), [setPref]);
 
   // The dispatch panel's collapsed/expanded state + template grouping
   // now live inside <DispatchStrip/>; the page just hands it templates.
@@ -214,9 +223,12 @@ export default function Dashboard() {
   const gatewayRow = subsystems?.subsystems.find((s) => s.id === "gateway") ?? null;
   const memoryRow = subsystems?.subsystems.find((s) => s.id === "memory") ?? null;
   const gatewayReachable = gatewayRow?.state === "ok";
-  // The checklist waits for both reads before it speaks, and a gateway that
-  // has answered once stays reachable for it: the headline used to change
-  // its story twice while loading and flip on a blip (T-0099, D57).
+  // The Start here card waits for both reads before it speaks, and the
+  // header's agent badge reads a gateway that has answered ONCE as reachable:
+  // the story used to change twice while loading and flip on a single failed
+  // probe (T-0099, D57). The Gateway pill below is deliberately not latched —
+  // it reports the check that was actually just made, "Checking…" and
+  // "Unknown" included, which is the other half of the same ruling.
   const readingsSettled = monitorSettled && subsystemsSettled;
   const rawFirstRunFacts = useMemo<FirstRunFacts>(
     () => ({
@@ -237,7 +249,9 @@ export default function Dashboard() {
   if (!latched || latched.raw !== rawFirstRunFacts) {
     setLatched({ raw: rawFirstRunFacts, settled: settleFirstRunFacts(latched?.settled ?? null, rawFirstRunFacts) });
   }
-  const firstRunFacts = latched?.settled ?? rawFirstRunFacts;
+  const settledFacts = latched?.settled ?? rawFirstRunFacts;
+  const gatewaySettledReachable = settledFacts.gatewayReachable === true;
+  const gatewaySettledUrl = settledFacts.gatewayUrl ?? "the configured address";
 
   const activeProcesses = useMemo(() => processes.filter((p) => p.status === "running"), [processes]);
   const activeMissions = useMemo(
@@ -300,8 +314,8 @@ export default function Dashboard() {
               <span className="text-xs text-ps-text-secondary font-mono">ONLINE</span>
             </div>
           ) : (
-            gatewayReachable ? (
-              <div className="flex items-center gap-2" title={`${agentName} runs through the gateway at ${gatewayRow?.url ?? "the configured address"}`}>
+            gatewaySettledReachable ? (
+              <div className="flex items-center gap-2" title={`${agentName} runs through the gateway at ${gatewaySettledUrl}`}>
                 <div className="w-2 h-2 rounded-full bg-neon-cyan" />
                 <span className="text-xs text-neon-cyan font-mono">REMOTE</span>
               </div>
@@ -323,10 +337,19 @@ export default function Dashboard() {
         </div>
       ) : (
         <div className="max-w-7xl mx-auto px-6 py-6 space-y-6">
-        {/* First run: an empty install gets a checklist before it gets widgets.
-            Renders nothing once there is an agent and any activity, and
-            nothing at all until both reads it depends on have answered. */}
-        {readingsSettled && <FirstRunPanel facts={firstRunFacts} />}
+        {/* Start here: the next quest, before the widgets. Renders nothing once
+            every quest is done or the operator has hidden the guide, and
+            nothing at all until both reads it depends on have answered — a
+            card that speaks before the monitor and the subsystems have settled
+            is D57 again (T-0099). */}
+        {readingsSettled && (
+          <NextQuestCard
+            quests={stats?.quests}
+            host={questHost}
+            hidden={guideHidden}
+            onHide={hideGuide}
+          />
+        )}
         {/* Malformed config.yaml — one actionable alert (ConfigSync sets the
             stat; the sync no longer spams the log). */}
         {monitor?.system?.configYamlError ? (

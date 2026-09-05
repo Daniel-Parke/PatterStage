@@ -7,6 +7,9 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { COMPLETIONIST_EVENT_TYPES, type AnalyticsEventType } from "@/lib/analytics/event-types";
+// A value import, and safe: quest-defs.ts imports RawMetrics from here TYPE-only,
+// and a type import erases, so the two modules never close a runtime cycle.
+import { QUEST_DEFS, questsInChapter, questsMet, questsMetInChapter } from "@/lib/quests/quest-defs";
 
 /**
  * What the store holds now: proofs that are a state rather than an action
@@ -248,6 +251,12 @@ const ACHIEVEMENT_TIER: Record<string, AchievementTier> = {
   "on-a-roll": "rare",
   polyglot: "rare",
   shapeshifter: "rare",
+  // The quest chains (B17): a chapter finished is worth more than any single
+  // step in it, and the whole programme is the rarest thing on the board.
+  "first-hour": "rare",
+  "agent-shaper": "epic",
+  clockmaker: "epic",
+  curriculum: "legendary",
   // Common (default): first-contact, storyteller, automator, first-words,
   // night-owl, early-bird.
 };
@@ -327,6 +336,24 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
     target: COMPLETIONIST_EVENT_TYPES.length,
     measure: (m) => COMPLETIONIST_EVENT_TYPES.filter((t) => (m.eventCounts[t] ?? 0) > 0).length,
   },
+
+  // ── Quest chains (B17) ──
+  // Each measures the quest PROOFS rather than the quest latch: this function
+  // runs before the latch is read, and an achievement that depended on it would
+  // be reading a value that does not exist yet. Their own high-water mark is
+  // the progression ledger, exactly as it is for every achievement above.
+  //
+  // Each target is COUNTED from the catalogue rather than typed out: a chapter
+  // that gains a step would otherwise start awarding "Finish chapter 4" to an
+  // operator who had not.
+  { id: "first-hour", name: "First Hour", description: "Finish chapter 1: Get running", icon: "Flag", color: "cyan", target: questsInChapter(1).length, measure: (m) => questsMetInChapter(m, 1) },
+  { id: "agent-shaper", name: "Agent Shaper", description: "Finish chapter 3: Shape your agent", icon: "Wand2", color: "purple", target: questsInChapter(3).length, measure: (m) => questsMetInChapter(m, 3) },
+  { id: "clockmaker", name: "Clockmaker", description: "Finish chapter 4: Automate and watch", icon: "Cog", color: "green", target: questsInChapter(4).length, measure: (m) => questsMetInChapter(m, 4) },
+  // Rec Room scope, and not because finishing every quest is play: chapter 6 is
+  // Rec Room, so an agent-scoped Curriculum would let a story the operator wrote
+  // for fun move the Body's record. ADR-0004 decision 5 keeps those apart, and
+  // `recroom` is the bucket that means "never feeds agent XP".
+  { id: "curriculum", name: "Curriculum", description: "Finish every quest", icon: "GraduationCap", color: "yellow", target: QUEST_DEFS.length, measure: (m) => questsMet(m), scope: "recroom" },
 ];
 
 export function evaluateAchievements(m: RawMetrics): Achievement[] {

@@ -37,6 +37,10 @@ import {
   Boxes,
   Compass,
   Sparkles,
+  Flag,
+  Wand2,
+  Cog,
+  GraduationCap,
   Lock,
   type LucideIcon,
 } from "lucide-react";
@@ -80,6 +84,11 @@ export const ICONS: Record<string, LucideIcon> = {
   Boxes,
   Compass,
   Sparkles,
+  // The quest chains.
+  Flag,
+  Wand2,
+  Cog,
+  GraduationCap,
 };
 
 function fmt(n: number): string {

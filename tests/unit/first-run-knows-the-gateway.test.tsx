@@ -4,54 +4,172 @@
 
 // T-0092, finding D from this device's browser pass: "Hermes is not installed
 // on this machine, nothing will actually run" was shown while a gateway was
-// configured, answering, and running missions fine. The install is remote;
-// the sentence has to say so.
+// configured, answering, and running missions fine. The install is remote; the
+// screen has to say so.
+//
+// That sentence used to be FirstRunPanel's headline, and B17 (T-0111) removed
+// the panel: the quests are the first-run checklist now. The finding did not
+// go with it. What answers it today is the dashboard's own agent badge, which
+// reads REMOTE and names the gateway, and which is fed by the settled facts
+// rather than the newest probe (T-0099, D57) — so a single failed probe can no
+// longer flip it back to NOT INSTALLED. This file follows the finding to where
+// it lives.
 
-import { render } from "@testing-library/react";
-import { firstRunSteps, shouldShowFirstRun, type FirstRunFacts } from "@/lib/dashboard/first-run-steps";
-import FirstRunPanel from "@/components/dashboard/FirstRunPanel";
+import { render, screen } from "@testing-library/react";
+import type { ReactNode } from "react";
 
-const remote: FirstRunFacts = {
-  frameworkName: "Hermes",
-  frameworkAvailable: false,
-  gatewayReachable: true,
-  gatewayUrl: "http://192.168.1.50:8642",
-  sessionCount: 0,
-  missionCount: 0,
-};
+import type { UseDashboardResult } from "@/hooks/useDashboard";
+import type { SubsystemSummary } from "@/lib/status/subsystems";
+import type { MonitorData } from "@/types/console";
+
+jest.mock("next/navigation", () => ({
+  usePathname: () => "/",
+  useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
+}));
+jest.mock("next/link", () => ({
+  __esModule: true,
+  default: ({ href, children, ...rest }: { href: string; children: ReactNode }) => (
+    <a href={href} {...rest}>
+      {children}
+    </a>
+  ),
+}));
+jest.mock("@/components/motion", () => ({
+  FadeIn: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  Stagger: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  StaggerItem: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  Collapse: ({ open, children }: { open: boolean; children: ReactNode }) => (open ? <div>{children}</div> : null),
+}));
+jest.mock("@/components/dashboard/DispatchStrip", () => ({
+  __esModule: true,
+  default: () => <div data-testid="dispatch-strip" />,
+}));
+jest.mock("@/modules/hermes/components/PlatformsPanel", () => ({
+  __esModule: true,
+  default: () => <div data-testid="platforms-panel" />,
+}));
+
+const mockUseDashboard = jest.fn();
+jest.mock("@/hooks/useDashboard", () => ({ useDashboard: () => mockUseDashboard() }));
+jest.mock("@/hooks/useStats", () => ({
+  useStats: () => ({ stats: null, isLoading: false, error: null, refetch: jest.fn() }),
+}));
+jest.mock("@/hooks/useAgentExperience", () => ({
+  useAgentExperience: () => ({ entries: [], isLoading: false, error: null, refetch: jest.fn() }),
+}));
+jest.mock("@/hooks/useSpend", () => ({
+  useSpend: () => ({ spend: null, isLoading: false, error: null, saving: false, saveBudget: jest.fn() }),
+}));
+jest.mock("@/hooks/useQuestHost", () => ({
+  useQuestHost: () => ({ gateway: true, memory: true, composer: true, hostScheduler: true }),
+}));
+jest.mock("@/hooks/useOperatorPrefs", () => ({
+  useOperatorPrefs: () => ({
+    prefs: {},
+    isLoading: false,
+    error: null,
+    refetch: jest.fn(),
+    setPref: jest.fn(),
+    saving: false,
+    saveError: null,
+  }),
+}));
+
+import Dashboard from "@/app/page";
+
+const GATEWAY_URL = "http://192.168.1.50:8642";
+
+function subsystems(gateway: "ok" | "down"): SubsystemSummary {
+  return {
+    checkedAt: "2026-09-05T10:00:00.000Z",
+    subsystems: [
+      {
+        id: "gateway",
+        label: "Gateway",
+        state: gateway,
+        reason: gateway === "ok" ? `reachable at ${GATEWAY_URL}` : "connection refused",
+        url: gateway === "ok" ? GATEWAY_URL : undefined,
+      },
+      { id: "memory", label: "Memory", state: "ok", reason: "sqlite" },
+    ],
+  };
+}
+
+/** No local agent, nothing has run: the install the finding was written about. */
+function monitor(): MonitorData {
+  return {
+    sessions: { total: 0, recent: [] },
+    gateway: { platforms: {}, connectedCount: 0 },
+    memory: { factCount: 0, dbSize: "0 B", provider: "sqlite" },
+    errors: [],
+    system: { uptime: "1h", configPresent: true, soulPresent: false, configYamlError: null },
+    sync: { lastRun: null, allSuccessful: true, sourceStatuses: {}, sourceErrors: {} },
+    scheduler: {
+      ownerPid: 4242,
+      lastTickAt: new Date().toISOString(),
+      stale: false,
+      staleAfterMs: 60_000,
+      selfPid: 4242,
+    },
+    framework: { type: "hermes", name: "Hermes", available: false },
+  };
+}
+
+function dash(gateway: "ok" | "down"): UseDashboardResult {
+  return {
+    status: null,
+    monitor: monitor(),
+    processes: [],
+    missions: [],
+    config: null,
+    templates: [],
+    categories: [],
+    registryAgentModelLabel: null,
+    sessionTrend: [],
+    subsystems: subsystems(gateway),
+    ready: true,
+    refetchMonitor: jest.fn(async () => undefined),
+    refetchMissions: jest.fn(async () => undefined),
+    refetchProcesses: jest.fn(async () => undefined),
+    monitorError: null,
+    monitorSettled: true,
+    subsystemsError: null,
+    subsystemsSettled: true,
+  } as unknown as UseDashboardResult;
+}
 
 describe("a reachable gateway with no local install", () => {
-  it("the agent step is done, and says where the work runs", () => {
-    const agent = firstRunSteps(remote).find((s) => s.id === "agent")!;
+  it("says the work runs remotely instead of claiming nothing will run", () => {
+    mockUseDashboard.mockReturnValue(dash("ok"));
+    const { container } = render(<Dashboard />);
 
-    expect(agent.done).toBe(true);
-    expect(agent.title).toMatch(/gateway/i);
-    expect(agent.detail).toContain("http://192.168.1.50:8642");
-    expect(agent.detail).toMatch(/missions will run there/i);
+    expect(screen.getByText("REMOTE")).toBeInTheDocument();
+    expect(screen.queryByText("NOT INSTALLED")).toBeNull();
+    // The badge's own tooltip is where the address is said.
+    expect(container.querySelector(`[title*="${GATEWAY_URL}"]`)).not.toBeNull();
+    const text = container.textContent ?? "";
+    expect(text).not.toMatch(/nothing will actually run/i);
+    expect(text).not.toMatch(/is not installed on this machine/i);
   });
 
-  it("the panel headline names the gateway instead of saying nothing will run", () => {
-    const { container } = render(<FirstRunPanel facts={remote} />);
+  it("D57: one failed probe does not turn a remote install back into an absent one", () => {
+    mockUseDashboard.mockReturnValue(dash("ok"));
+    const view = render(<Dashboard />);
+    expect(screen.getByText("REMOTE")).toBeInTheDocument();
 
-    // The phrase only the headline carries. The checklist step below also
-    // names the URL, which let a headline that ignored the gateway pass
-    // (found by mutation).
-    expect(container.textContent).toMatch(
-      /isn't installed on this machine, but a gateway at http:\/\/192\.168\.1\.50:8642 is configured and reachable/,
-    );
-    expect(container.textContent).not.toMatch(/nothing will actually run/i);
-    expect(container.textContent).not.toMatch(/is not installed on this machine yet/);
+    // The gateway is probed every fifteen seconds. A blip is a blip.
+    mockUseDashboard.mockReturnValue(dash("down"));
+    view.rerender(<Dashboard />);
+
+    expect(screen.getByText("REMOTE")).toBeInTheDocument();
+    expect(screen.queryByText("NOT INSTALLED")).toBeNull();
   });
 
-  it("still shows the checklist until something has run", () => {
-    expect(shouldShowFirstRun(remote)).toBe(true);
-    expect(shouldShowFirstRun({ ...remote, missionCount: 1 })).toBe(false);
-  });
+  it("GREEN CONTROL: no local install and no gateway still reads NOT INSTALLED", () => {
+    mockUseDashboard.mockReturnValue(dash("down"));
+    render(<Dashboard />);
 
-  it("GREEN CONTROL: no local install and no gateway still leads with installing", () => {
-    const agent = firstRunSteps({ ...remote, gatewayReachable: false, gatewayUrl: null }).find((s) => s.id === "agent")!;
-
-    expect(agent.done).toBe(false);
-    expect(agent.title).toMatch(/Install Hermes/);
+    expect(screen.getByText("NOT INSTALLED")).toBeInTheDocument();
+    expect(screen.queryByText("REMOTE")).toBeNull();
   });
 });

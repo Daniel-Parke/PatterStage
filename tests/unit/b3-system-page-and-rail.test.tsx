@@ -76,6 +76,43 @@ const RUNTIME = {
   platform: "linux",
 };
 
+// The quest programme rides in on the dashboard poll (B17, contract §3), so
+// /quests is a stats reader like any other page. One chapter and one quest is
+// enough to prove the page renders what the poll carries; the whole programme
+// is held by tests/unit/b17-quests-page.test.tsx.
+const QUESTS = {
+  chapters: [
+    {
+      number: 1,
+      id: "get-running",
+      title: "Get running",
+      blurb: "An agent that can answer, and one piece of work you gave it, finished.",
+      total: 1,
+      completed: 0,
+    },
+  ],
+  quests: [
+    {
+      id: "1.1",
+      chapter: 1,
+      title: "Add a model",
+      action: "Add a model on the Models page, so the agent has something to think with.",
+      screen: "/agent/models",
+      teaches: ["model"],
+      proof: { kind: "event", event: "model.added", target: 1 },
+      met: false,
+      completed: false,
+      completedAt: null,
+      skipped: false,
+    },
+  ],
+  completed: 0,
+  total: 1,
+  nextCompletedAt: {},
+  latchChanged: false,
+  seeding: false,
+};
+
 type Answer = { status?: number; body: unknown };
 let answers: Record<string, Answer> = {};
 const calls: Array<{ url: string; method: string; body: unknown }> = [];
@@ -135,6 +172,17 @@ beforeEach(() => {
           dir: "/home/me/patterstage/data/backups/db",
           backups: [],
           restoreCommand: "# stop the server first",
+        },
+      },
+    },
+    // /quests reads these three (B17). The feature flags it also wants come
+    // from this file's module mock above, so there is no route to stub for it.
+    "/api/stats": { body: { data: { stats: { quests: QUESTS } } } },
+    "/api/status/subsystems": {
+      body: {
+        data: {
+          checkedAt: "2026-09-05T12:00:00.000Z",
+          subsystems: [{ id: "gateway", label: "Gateway", state: "ok", reason: "reachable" }],
         },
       },
     },
@@ -281,17 +329,24 @@ describe("Settings > System", () => {
   });
 });
 
-describe("the placeholder pages exist so the rail has nowhere dead", () => {
-  // Help was the other half of this test. It is no longer a placeholder and no
-  // longer a client component: B16 replaced src/app/help/page.tsx with the
-  // async server route src/app/help/[[...slug]]/page.tsx, which a sibling
-  // page.tsx could not have coexisted with. What it renders is held by
-  // tests/unit/b16-help-page-renders.test.tsx against a real corpus on disk,
-  // which is a great deal more than a smoke test of a placeholder was.
-  it("Quests renders a header with the registry's word", async () => {
+describe("the rail's Home entries lead somewhere that takes its name from the registry", () => {
+  // Both of these started as placeholders, and neither is one now, which is
+  // why this describe no longer says so.
+  //
+  // Help went first: B16 replaced src/app/help/page.tsx with the async server
+  // route src/app/help/[[...slug]]/page.tsx, which a sibling page.tsx could not
+  // have coexisted with. What it renders is held by
+  // tests/unit/b16-help-page-renders.test.tsx against a real corpus on disk.
+  //
+  // Quests went second: B17 gave it the seven chapters, off the same /api/stats
+  // poll the dashboard runs. The reason to keep a test here is unchanged and is
+  // the whole of what it still asserts: the h1 is the registry's word, so the
+  // rail entry, the heading and the tab title cannot drift apart (D55).
+  it("Quests renders a header with the registry's word, and then the poll's chapters", async () => {
     pathname = "/quests";
     const { default: Quests } = await import("@/app/quests/page");
     render(withQuery(<Quests />));
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Quests");
+    expect(await screen.findByText("Get running")).toBeInTheDocument();
   });
 });

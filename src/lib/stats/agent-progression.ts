@@ -87,7 +87,7 @@ import {
  * different answers are the second case; without this number they are
  * indistinguishable from each other and the record stops being evidence.
  */
-export const AGENT_PROGRESSION_COMPUTATION_VERSION = 2;
+export const AGENT_PROGRESSION_COMPUTATION_VERSION = 3;
 
 // VERSION HISTORY
 //   1 → 2  (T-0081) The `runsCompleted` signal stopped counting every run and

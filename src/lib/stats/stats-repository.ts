@@ -7,6 +7,8 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { getDb } from "@/lib/db";
+import * as questEval from "@/lib/quests/evaluate";
+import { readQuestLatch } from "@/lib/quests/quest-latch";
 import {
   computeStreaks,
   evaluateAchievements,
@@ -75,6 +77,8 @@ export interface DashboardStats {
   errors24h: number;
   streak: { current: number; longest: number };
   achievements: Achievement[];
+  /** The quest programme, evaluated from the same metrics as the achievements. */
+  quests: questEval.QuestProgress;
   agents: AgentPerformance[];
   throughput: ThroughputPoint[]; // last 30 days
   runActivity: DailyPoint[]; // last 91 days (heatmap)
@@ -354,6 +358,11 @@ export function computeDashboard(): { stats: DashboardStats; raw: RawMetrics } {
     facts,
   };
   const achievements = evaluateAchievements(raw);
+  // The quests come second and read the same `raw`, so the whole programme
+  // costs this poll one extra preference read and no extra request. The order
+  // matters: the four chain achievements measure the quest PROOFS, so they must
+  // be evaluated before anything consults the latch.
+  const quests = questEval.evaluateQuests(raw, readQuestLatch(), new Date().toISOString());
 
   const stats: DashboardStats = {
     generatedAt: new Date().toISOString(),
@@ -365,6 +374,7 @@ export function computeDashboard(): { stats: DashboardStats; raw: RawMetrics } {
     errors24h,
     streak,
     achievements,
+    quests,
     agents: getAgentPerformance(),
     throughput: lastNDates(30).map((date) => ({
       date,

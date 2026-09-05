@@ -45,7 +45,14 @@ describe("achievement tiers", () => {
     expect(achievementPoints("first-contact")).toBe(TIER_POINTS.common);
   });
   it("evaluateAchievements stamps tier + points on every DTO", () => {
-    const m = { completedMissions: 1, completionHours: [], eventCounts: {} } as unknown as RawMetrics;
+    // `facts` is part of the shape too: B17's chain achievements measure the
+    // quest proofs, and two of those proofs are store facts rather than events.
+    const m = {
+      completedMissions: 1,
+      completionHours: [],
+      eventCounts: {},
+      facts: { profiles: 0, models: 0, credentials: 0, workflows: 0, memoryConfigured: false },
+    } as unknown as RawMetrics;
     const list = evaluateAchievements(m);
     const fc = list.find((a) => a.id === "first-contact")!;
     expect(fc.tier).toBe("common");

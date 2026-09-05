@@ -2,31 +2,25 @@
 // ═══════════════════════════════════════════════════════════════
 // B5 oracle, group first-run-and-bundle (T-0099).
 //
-// Written before the product code moved. Two modules, four contracts:
+// Written before the product code moved. It held four contracts; two of them
+// have since been outlived rather than broken, and what is left is:
 //
-//   (A) the first-run checklist gains a "model" step between agent and
-//       mission, done only when a model is configured, pointed at
-//       /agent/models;
-//   (B) the model fact never decides whether the panel shows at all;
 //   (C) settleFirstRunFacts latches a gateway that was once reachable so a
-//       single failed probe cannot flip the headline (D57), while every
-//       other fact follows the newest reading;
+//       single failed probe cannot flip the dashboard's story (D57), while
+//       every other fact follows the newest reading;
 //   (D) getInsightsBundle reports activeDays for the same clamped window
 //       it uses for everything else, read from distinctActiveDays(n).
 //
-// Reds here are the implementation's to-do list. The few GREEN CONTROLs pin
-// what B5 keeps: the agent step still leads and points at the docs, the
-// other three hrefs survive, the panel still hides once a mission exists and
-// still ignores the model fact when deciding to show.
+// (A) and (B) were retired by B17 (T-0111). They pinned the four-step
+// first-run checklist and the rule that the model fact never decided whether
+// it showed. The quests replaced that checklist wholesale, so `firstRunSteps`
+// and `shouldShowFirstRun` no longer exist to test; what the dashboard now
+// shows in their place is pinned by group G of
+// b5-dashboard-is-an-operations-board.test.tsx. The gateway latch stayed, and
+// so does the group that proves it.
 //
-// Type-tolerance: `npm run lint` type-checks tests/ (tsconfig.tests.json), and
-// this file must not red that gate while it waits for B5. So the three shapes
-// the contract adds (modelConfigured on the facts, "model" in the step id
-// union, activeDays on the bundle, settleFirstRunFacts as an export) are read
-// through loose intersection aliases and one cast each. Every runtime
-// assertion is exactly what the contract says; only the compile-time view is
-// loosened. Once B5 lands, strip `Facts`, `stepById`'s cast, `settle`'s
-// namespace read and `activeDaysOf` so the file re-tightens to the real types.
+// The pre-B5 type shims this file carried are gone with them: B5 landed, and
+// the two groups below read the real exported types.
 // ═══════════════════════════════════════════════════════════════
 
 const distinctActiveDays = jest.fn<string[], [number?]>();
@@ -44,37 +38,13 @@ jest.mock("@/lib/analytics/run-aggregates", () => ({
   getTopMissions: jest.fn(() => []),
 }));
 
-import * as firstRun from "@/lib/dashboard/first-run-steps";
 import {
-  AGENT_INSTALL_DOCS,
-  firstRunSteps,
-  shouldShowFirstRun,
-  type FirstRunFacts,
-  type FirstRunStep,
+  settleFirstRunFacts as settle,
+  type FirstRunFacts as Facts,
 } from "@/lib/dashboard/first-run-steps";
 import { getInsightsBundle, type InsightsBundle } from "@/lib/analytics/insights-bundle";
 
-// ── pre-B5 type shims (see header) ──────────────────────────────
-
-/** FirstRunFacts plus the fact B5 adds. Identical to FirstRunFacts after B5. */
-type Facts = FirstRunFacts & { modelConfigured?: boolean };
-
-type Settle = (prev: Facts | null, next: Facts) => Facts;
-
-/** The new export, read off the namespace so the import compiles before B5. */
-const settle: Settle = (
-  firstRun as typeof firstRun & { settleFirstRunFacts?: Settle }
-).settleFirstRunFacts!;
-
-const stepsOf = (facts: Facts): FirstRunStep[] => firstRunSteps(facts);
-const show = (facts: Facts): boolean => shouldShowFirstRun(facts);
-
-/** Step lookup by an id the union does not carry yet. */
-const stepById = (steps: FirstRunStep[], id: string): FirstRunStep =>
-  steps.find((s) => (s.id as string) === id)!;
-
-const activeDaysOf = (bundle: InsightsBundle): number | undefined =>
-  (bundle as InsightsBundle & { activeDays?: number }).activeDays;
+const activeDaysOf = (bundle: InsightsBundle): number => bundle.activeDays;
 
 // ── fixtures ────────────────────────────────────────────────────
 
@@ -91,107 +61,6 @@ const LIVE: Facts = {
   sessionCount: 35,
   missionCount: 4,
 };
-
-// ───────────────────────────────────────────────────────────────
-// (A) the model step
-// ───────────────────────────────────────────────────────────────
-
-describe("firstRunSteps: the model step (A)", () => {
-  it("has four steps in the order agent, model, mission, sessions", () => {
-    expect(stepsOf(FRESH).map((s) => s.id)).toEqual([
-      "agent",
-      "model",
-      "mission",
-      "sessions",
-    ]);
-  });
-
-  it("the model step is an in-app link to /agent/models", () => {
-    const model = stepById(stepsOf(FRESH), "model");
-    expect(model).toBeDefined();
-    expect(model.href).toBe("/agent/models");
-    expect(model.external).toBe(false);
-  });
-
-  it("reads as not done, titled 'Give your agent a model', when no model is configured", () => {
-    const model = stepById(stepsOf({ ...FRESH, modelConfigured: false }), "model");
-    expect(model.done).toBe(false);
-    expect(model.title).toBe("Give your agent a model");
-  });
-
-  it("reads as not done when the model fact is missing altogether", () => {
-    const model = stepById(stepsOf(FRESH), "model");
-    expect(model.done).toBe(false);
-    expect(model.title).toBe("Give your agent a model");
-  });
-
-  it("reads as done, titled 'A model is configured', once a model is configured", () => {
-    const model = stepById(stepsOf({ ...LIVE, modelConfigured: true }), "model");
-    expect(model.done).toBe(true);
-    expect(model.title).toBe("A model is configured");
-  });
-
-  it.each([
-    ["not configured", false],
-    ["configured", true],
-  ])("gives the model step one sentence of why (%s), and that sentence says 'model'", (_label, configured) => {
-    const model = stepById(stepsOf({ ...FRESH, modelConfigured: configured }), "model");
-    expect(model.detail.length).toBeGreaterThan(20);
-    expect(model.detail).toMatch(/model/i);
-  });
-
-  it("ticks all four off against the facts", () => {
-    const steps = stepsOf({
-      frameworkName: "Hermes",
-      frameworkAvailable: true,
-      modelConfigured: true,
-      sessionCount: 0,
-      missionCount: 2,
-    });
-    expect(steps.map((s) => [s.id, s.done])).toEqual([
-      ["agent", true],
-      ["model", true],
-      ["mission", true],
-      ["sessions", false],
-    ]);
-  });
-
-  it("GREEN CONTROL: the agent step still leads, pointed at the install docs", () => {
-    const [agent] = stepsOf(FRESH);
-    expect(agent.id).toBe("agent");
-    expect(agent.done).toBe(false);
-    expect(agent.external).toBe(true);
-    expect(agent.href).toBe(AGENT_INSTALL_DOCS);
-    expect(agent.title).toContain("Hermes");
-  });
-
-  it("GREEN CONTROL: the other three steps keep their hrefs", () => {
-    const steps = stepsOf(FRESH);
-    const agent = stepById(steps, "agent");
-    const mission = stepById(steps, "mission");
-    const sessions = stepById(steps, "sessions");
-    expect(agent.href).toBe(AGENT_INSTALL_DOCS);
-    expect(agent.external).toBe(true);
-    expect(mission.href).toBe("/work/missions");
-    expect(sessions.href).toBe("/results/sessions");
-  });
-});
-
-// ───────────────────────────────────────────────────────────────
-// (B) the model fact does not decide visibility
-// ───────────────────────────────────────────────────────────────
-
-describe("shouldShowFirstRun ignores the model fact (B)", () => {
-  it("GREEN CONTROL: a live install hides the panel with modelConfigured true, false or undefined", () => {
-    expect(show({ ...LIVE, modelConfigured: true })).toBe(false);
-    expect(show({ ...LIVE, modelConfigured: false })).toBe(false);
-    expect(show({ ...LIVE, modelConfigured: undefined })).toBe(false);
-  });
-
-  it("GREEN CONTROL: hides once a mission exists, even before the first transcript lands", () => {
-    expect(show({ ...LIVE, sessionCount: 0, missionCount: 1 })).toBe(false);
-  });
-});
 
 // ───────────────────────────────────────────────────────────────
 // (C) settleFirstRunFacts latches the gateway

@@ -31,6 +31,7 @@ import { useFeatureFlags } from "@/hooks/useFeatureFlags";
 import { mainSections } from "./sidebar-config";
 import type { SidebarLink } from "./sidebar-config";
 import { RailFooter } from "./RailFooter";
+import QuestBadge from "@/components/quests/QuestBadge";
 
 function isActive(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";
@@ -194,7 +195,11 @@ export default function Sidebar() {
           ))}
         </nav>
 
-        {/* Footer: Quests and Help, then Collapse with the version or the update badge. */}
+        {/* Footer: Quests and Help, then Collapse with the version or the update badge.
+            The two utility cells size to their content (flex-auto) rather than
+            splitting the row in half: Quests carries a count beside its label
+            and half a 200px row is not enough for icon, word and "12/32"
+            together, so equal halves would push the row past the rail's width. */}
         <div className="px-3 py-2 border-t border-white/10 space-y-1 flex-shrink-0">
           <div className={`flex ${iconsOnly ? "flex-col items-center gap-1" : "gap-1"}`}>
             {utilityLinks.map((link) => (
@@ -207,10 +212,14 @@ export default function Sidebar() {
                 onClick={closeMobile}
                 className={`flex items-center justify-center gap-1.5 rounded-md text-xs font-mono transition-colors ${
                   isActive(pathname, link.href) ? "bg-white/10 text-white" : "text-ps-text-muted hover:bg-white/5 hover:text-ps-text-primary"
-                } ${iconsOnly ? "p-1.5" : "flex-1 px-2 py-1"}`}
+                } ${iconsOnly ? "p-1.5" : "flex-auto px-2 py-1"}`}
               >
                 <link.icon className="w-3.5 h-3.5 flex-shrink-0" />
                 {!iconsOnly && <span>{link.label}</span>}
+                {/* Quests carries how many are left; Help carries nothing.
+                    The badge is null until the stats poll answers, so this
+                    adds no request and the rail never waits. */}
+                {link.href === "/quests" && <QuestBadge collapsed={iconsOnly} />}
               </Link>
             ))}
           </div>

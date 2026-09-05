@@ -98,6 +98,9 @@ function buildStats(overrides: Partial<DashboardStats> = {}): DashboardStats {
     sessions: { total: 5, active: 1 },
     streak: { current: 3, longest: 5 },
     achievements: Array.from({ length: 36 }, (_, i) => achievement(i, i < 4)),
+    // B17 rides the same payload; Insights does not read it, so an empty
+    // programme keeps the fixture honest about what this page uses.
+    quests: { chapters: [], quests: [], completed: 0, total: 0, nextCompletedAt: {}, latchChanged: false, seeding: false },
     automations: { schedulesTotal: 2, schedulesEnabled: 1, scriptsTotal: 1, scriptsEnabled: 1, nextRun: null },
     stories: 0,
     errors24h: 0,

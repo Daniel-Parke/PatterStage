@@ -142,7 +142,13 @@ describe("A. a completed quest never un-completes", () => {
     expect(out.nextCompletedAt["9.9"]).toBe(FIRST);
     expect(out.nextCompletedAt["1.4"]).toBe(FIRST);
     expect(out.nextCompletedAt["1.3"]).toBe(LATER);
-    for (const id of Object.keys(latch.completedAt)) expect(out.nextCompletedAt).toHaveProperty(id);
+    // Object.keys, not toHaveProperty: a quest id contains a dot, and
+    // toHaveProperty reads "1.4" as the PATH obj["1"]["4"]. The two assertions
+    // above already read the values by key and pass; this one is about the map
+    // keeping every id it started with.
+    for (const id of Object.keys(latch.completedAt)) {
+      expect(Object.keys(out.nextCompletedAt)).toContain(id);
+    }
   });
 
   it("says whether the caller has anything to persist", () => {

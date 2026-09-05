@@ -154,3 +154,104 @@ describe("achievement unlocks belong to the shell", () => {
     expect(layout).toMatch(/<FeedbackProvider>/);
   });
 });
+
+// B17 (T-0111) hung the second of the shell's two automatic toasts here, on
+// the same poll and the same rules. It is a child of the provider rather than
+// a hook inside it, because it asks for a toast the way a page does.
+describe("quest completions belong to the shell too", () => {
+  interface Quest {
+    id: string;
+    title: string;
+    completed: boolean;
+    skipped: boolean;
+  }
+
+  const quest = (over: Partial<Quest> = {}): Quest => ({
+    id: "1.1",
+    title: "Add a model",
+    completed: false,
+    skipped: false,
+    ...over,
+  });
+
+  function poll(quests: Quest[], seeding = false) {
+    mockUseStats.mockReturnValue({ stats: { quests: { quests, seeding } } });
+  }
+
+  function shell() {
+    return render(
+      <FeedbackProvider>
+        <div>page</div>
+      </FeedbackProvider>,
+    );
+  }
+
+  it("says nothing on the first poll, whatever is already finished", () => {
+    poll([quest({ completed: true }), quest({ id: "1.2", title: "Add a credential", completed: true })]);
+    shell();
+    expect(toasts()).toHaveLength(0);
+  });
+
+  it("toasts the quest that finished since the last poll, once, by name", () => {
+    poll([quest({ completed: true }), quest({ id: "1.2", title: "Add a credential" })]);
+    const view = shell();
+
+    poll([quest({ completed: true }), quest({ id: "1.2", title: "Add a credential", completed: true })]);
+    view.rerender(
+      <FeedbackProvider>
+        <div>page</div>
+      </FeedbackProvider>,
+    );
+    expect(toasts().map((t) => t.textContent)).toEqual([
+      expect.stringContaining("Quest complete: Add a credential"),
+    ]);
+
+    // The same answer arriving again is the same quest, not a second one.
+    view.rerender(
+      <FeedbackProvider>
+        <div>page</div>
+      </FeedbackProvider>,
+    );
+    expect(toasts()).toHaveLength(1);
+  });
+
+  it("says nothing at all on a seeding poll, so a fresh install is not greeted with five toasts", () => {
+    poll([quest()]);
+    const view = shell();
+
+    poll([quest({ completed: true }), quest({ id: "1.2", title: "Add a credential", completed: true })], true);
+    view.rerender(
+      <FeedbackProvider>
+        <div>page</div>
+      </FeedbackProvider>,
+    );
+    expect(toasts()).toHaveLength(0);
+  });
+
+  it("never congratulates an operator for a quest they skipped", () => {
+    poll([quest({ id: "1.2", title: "Add a credential", skipped: true })]);
+    const view = shell();
+
+    poll([quest({ id: "1.2", title: "Add a credential", completed: true, skipped: true })]);
+    view.rerender(
+      <FeedbackProvider>
+        <div>page</div>
+      </FeedbackProvider>,
+    );
+    expect(toasts()).toHaveLength(0);
+  });
+
+  it("carries no emoji and no dash in its copy", () => {
+    poll([quest()]);
+    const view = shell();
+    poll([quest({ completed: true })]);
+    view.rerender(
+      <FeedbackProvider>
+        <div>page</div>
+      </FeedbackProvider>,
+    );
+    const text = toasts()[0]?.textContent ?? "";
+    expect(text).toContain("Quest complete: Add a model");
+    expect(text).not.toMatch(/[–—\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/u);
+  });
+});

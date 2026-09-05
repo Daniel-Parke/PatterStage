@@ -15,12 +15,13 @@
 //
 // The source-shape half of this oracle is b5-dashboard-source-shape.test.ts.
 
-import { fireEvent, render, renderHook, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, renderHook, screen, waitFor, within } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 
 import type { UseDashboardResult } from "@/hooks/useDashboard";
 import type { AgentExperienceEntry } from "@/hooks/useAgentExperience";
+import type { QuestState } from "@/lib/quests/evaluate";
 import type { DashboardStats } from "@/lib/stats/stats-repository";
 import type { SpendSummary } from "@/lib/spend/spend-summary";
 import type { SubsystemSummary } from "@/lib/status/subsystems";
@@ -62,10 +63,17 @@ const mockUseDashboard = jest.fn();
 const mockUseStats = jest.fn();
 const mockUseAgentExperience = jest.fn();
 const mockUseSpend = jest.fn();
+// B17: the Start here card asks what this host can attempt and whether the
+// operator has put the guide away. Both are their own reads, and neither is
+// this file's subject, so both are doubled.
+const mockUseQuestHost = jest.fn();
+const mockUseOperatorPrefs = jest.fn();
 jest.mock("@/hooks/useDashboard", () => ({ useDashboard: () => mockUseDashboard() }));
 jest.mock("@/hooks/useStats", () => ({ useStats: () => mockUseStats() }));
 jest.mock("@/hooks/useAgentExperience", () => ({ useAgentExperience: () => mockUseAgentExperience() }));
 jest.mock("@/hooks/useSpend", () => ({ useSpend: () => mockUseSpend() }));
+jest.mock("@/hooks/useQuestHost", () => ({ useQuestHost: () => mockUseQuestHost() }));
+jest.mock("@/hooks/useOperatorPrefs", () => ({ useOperatorPrefs: () => mockUseOperatorPrefs() }));
 
 // The wire, for the one describe that runs the REAL useDashboard (A). Every
 // other export of api-fetch stays real: the page imports toastError and the
@@ -200,6 +208,10 @@ function stats(over: Partial<DashboardStats> = {}): DashboardStats {
     errors24h: 3,
     streak: { current: 3, longest: 5 },
     achievements: achievements(36, 4),
+    // B17 puts the quest programme on this same payload. These cases are about
+    // the operations board, so they carry an empty programme rather than the
+    // real catalogue: the shape is what the board needs, not the content.
+    quests: { chapters: [], quests: [], completed: 0, total: 0, nextCompletedAt: {}, latchChanged: false, seeding: false },
     agents: [],
     throughput: [
       { date: "2026-09-04", completed: 2, failed: 0 },
@@ -249,6 +261,16 @@ beforeEach(() => {
   mockUseStats.mockReturnValue({ stats: stats(), isLoading: false, error: null, refetch: jest.fn() });
   mockUseAgentExperience.mockReturnValue({ entries: [TOP_AGENT], isLoading: false, error: null, refetch: jest.fn() });
   mockUseSpend.mockReturnValue({ spend: SPEND, isLoading: false, error: null, saving: false, saveBudget: jest.fn() });
+  mockUseQuestHost.mockReturnValue({ gateway: true, memory: true, composer: true, hostScheduler: true });
+  mockUseOperatorPrefs.mockReturnValue({
+    prefs: {},
+    isLoading: false,
+    error: null,
+    refetch: jest.fn(),
+    setPref: jest.fn(),
+    saving: false,
+    saveError: null,
+  });
 });
 
 // ── Helpers ──────────────────────────────────────────────────────
@@ -667,16 +689,71 @@ describe("F. what the dashboard no longer carries", () => {
 });
 
 // ═══════════════════════════════════════════════════════════════
-// (G) The first-run checklist waits for both answers
+// (G) The "Start here" card waits for both answers
 // ═══════════════════════════════════════════════════════════════
+//
+// B17 (T-0111) replaced FirstRunPanel with NextQuestCard on the same spot and
+// the same gate. The header word is unchanged, and so is the rule this group
+// was written for: a card that speaks before the monitor and the subsystems
+// have settled is D57 again. Only the assertions about the four checklist
+// steps moved, to the one quest the card now names.
 
-describe("G. the first-run checklist", () => {
+describe("G. the Start here card", () => {
   const fresh = () =>
     monitor({
       framework: { type: "hermes", name: "Hermes", available: false },
       sessions: { total: 0, recent: [] },
       errors: [],
     });
+
+  function quest(over: Partial<QuestState> = {}): QuestState {
+    return {
+      id: "1.1",
+      chapter: 1,
+      title: "Add a model",
+      action: "Add a model on the Models page, so the agent has something to think with.",
+      screen: "/agent/models",
+      teaches: ["model"],
+      proof: { kind: "event", event: "model.added", target: 1 },
+      met: false,
+      completed: false,
+      completedAt: null,
+      skipped: false,
+      ...over,
+    };
+  }
+
+  /** A programme with one open quest, so silence can only be the gate's doing. */
+  function programme(quests: QuestState[]): DashboardStats["quests"] {
+    return {
+      chapters: [],
+      quests,
+      completed: quests.filter((q) => q.completed).length,
+      total: quests.length,
+      nextCompletedAt: {},
+      latchChanged: false,
+      seeding: false,
+    };
+  }
+
+  function withQuests(quests: QuestState[]) {
+    mockUseStats.mockReturnValue({
+      stats: stats({ quests: programme(quests) }),
+      isLoading: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+  }
+
+  const settled = () => ({
+    monitor: fresh(),
+    monitorSettled: true,
+    missions: [],
+    subsystems: subsystemsWith("down"),
+    subsystemsSettled: true,
+  });
+
+  beforeEach(() => withQuests([quest()]));
 
   it("does not speak while the monitor has not settled", () => {
     mockUseDashboard.mockReturnValue(
@@ -695,30 +772,87 @@ describe("G. the first-run checklist", () => {
   });
 
   it("GREEN CONTROL: speaks once both have settled and the install is fresh", () => {
-    mockUseDashboard.mockReturnValue(
-      dash({ monitor: fresh(), monitorSettled: true, missions: [], subsystems: subsystemsWith("down"), subsystemsSettled: true }),
-    );
+    mockUseDashboard.mockReturnValue(dash(settled()));
     render(<Dashboard />);
     expect(screen.getByText("Start here")).toBeInTheDocument();
   });
 
-  // The model fact comes from config.yaml's default or the registry's agent
-  // slot; a page that hard-codes it would tick the step off on a fresh
-  // install (found by the sweep, T-0099).
-  it("offers the model step until a model is configured, from config.yaml or the registry", () => {
-    const base = { monitor: fresh(), monitorSettled: true, missions: [], subsystems: subsystemsWith("down"), subsystemsSettled: true };
-    mockUseDashboard.mockReturnValue(dash({ ...base, config: { model: {} }, registryAgentModelLabel: null }));
-    const none = render(<Dashboard />);
-    expect(screen.getByText("Give your agent a model")).toBeInTheDocument();
-    none.unmount();
-
-    mockUseDashboard.mockReturnValue(dash({ ...base, config: { model: {} }, registryAgentModelLabel: "GPT-4o" }));
-    const registry = render(<Dashboard />);
-    expect(screen.getByText("A model is configured")).toBeInTheDocument();
-    registry.unmount();
-
-    mockUseDashboard.mockReturnValue(dash({ ...base, config: { model: { default: "gpt-4o", provider: "openai" } }, registryAgentModelLabel: null }));
+  // What the four checklist steps used to say, said by one quest: the first
+  // one that is not done, its own sentence, and the screen it points at.
+  it("names the first open quest, its action and its screen", () => {
+    mockUseDashboard.mockReturnValue(dash(settled()));
     render(<Dashboard />);
-    expect(screen.getByText("A model is configured")).toBeInTheDocument();
+
+    expect(screen.getByText("Add a model")).toBeInTheDocument();
+    expect(
+      screen.getByText("Add a model on the Models page, so the agent has something to think with."),
+    ).toBeInTheDocument();
+    const go = screen.getByRole("link", { name: /^Go$/ });
+    expect(go).toHaveAttribute("href", "/agent/models");
+  });
+
+  it("skips past what is already done, and past what this host cannot attempt", () => {
+    mockUseDashboard.mockReturnValue(dash(settled()));
+    mockUseQuestHost.mockReturnValue({ gateway: false, memory: true, composer: true, hostScheduler: true });
+    withQuests([
+      quest({ id: "1.1", met: true, completed: true, completedAt: NOW_ISO }),
+      quest({ id: "1.2", title: "Skipped one", skipped: true }),
+      quest({ id: "1.3", title: "Send a first message", requires: "gateway" }),
+      quest({ id: "1.4", title: "Save a template", action: "Save a mission you would write again as a template of your own.", screen: "/work/missions" }),
+    ]);
+    render(<Dashboard />);
+
+    expect(screen.getByText("Save a template")).toBeInTheDocument();
+    expect(screen.queryByText("Send a first message")).toBeNull();
+    expect(screen.queryByText("Skipped one")).toBeNull();
+  });
+
+  it("carries the count and a way into the full programme", () => {
+    mockUseDashboard.mockReturnValue(dash(settled()));
+    withQuests([quest({ id: "1.1", met: true, completed: true, completedAt: NOW_ISO }), quest({ id: "1.2" })]);
+    render(<Dashboard />);
+
+    const card = screen.getByText("Start here").closest("section")!;
+    expect(within(card).getByText("1/2")).toBeInTheDocument();
+    expect(within(card).getByRole("link", { name: /all quests/i })).toHaveAttribute("href", "/quests");
+  });
+
+  it("says nothing once every quest is done", () => {
+    mockUseDashboard.mockReturnValue(dash(settled()));
+    withQuests([quest({ met: true, completed: true, completedAt: NOW_ISO })]);
+    render(<Dashboard />);
+    expect(screen.queryByText("Start here")).toBeNull();
+  });
+
+  it("says nothing once the operator has hidden the guide", () => {
+    mockUseDashboard.mockReturnValue(dash(settled()));
+    mockUseOperatorPrefs.mockReturnValue({
+      prefs: { "guide.hidden": true },
+      isLoading: false,
+      error: null,
+      refetch: jest.fn(),
+      setPref: jest.fn(),
+      saving: false,
+      saveError: null,
+    });
+    render(<Dashboard />);
+    expect(screen.queryByText("Start here")).toBeNull();
+  });
+
+  it("hides the guide through the preference, not through local state", () => {
+    const setPref = jest.fn();
+    mockUseDashboard.mockReturnValue(dash(settled()));
+    mockUseOperatorPrefs.mockReturnValue({
+      prefs: {},
+      isLoading: false,
+      error: null,
+      refetch: jest.fn(),
+      setPref,
+      saving: false,
+      saveError: null,
+    });
+    render(<Dashboard />);
+    fireEvent.click(screen.getByRole("button", { name: /hide this guide/i }));
+    expect(setPref).toHaveBeenCalledWith("guide.hidden", true);
   });
 });
