@@ -324,6 +324,21 @@ describe("POST /api/memory/hindsight retain records memory.retained", () => {
     expect(mockFetch).not.toHaveBeenCalled();
     expect(emitted).not.toHaveBeenCalled();
   });
+
+  // The POST verb carries seven actions; only "retain" is a memory retained.
+  // A directive created through the same switch answers 200 and is not one
+  // (the sweep's survivor emitted after every action: T-0098).
+  it("a directive created through the same POST answers 200 and records nothing", async () => {
+    mockFetch.mockResolvedValueOnce(jsonResponse({ id: "d-1", name: "Be brief" }));
+
+    const res = await postHindsight(
+      jsonRequest(URL, "POST", { action: "create-directive", bank: "notes", name: "Be brief", content: "Answer in one line" }),
+    );
+
+    expect(res.status).toBe(200);
+    expect(mockFetch.mock.calls[0][0]).toBe("http://127.0.0.1:9177/v1/default/banks/notes/directives");
+    expect(emitted).not.toHaveBeenCalled();
+  });
 });
 
 // ═══════════════════════════════════════════════════════════════
