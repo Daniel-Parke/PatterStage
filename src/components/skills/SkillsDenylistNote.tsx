@@ -2,6 +2,8 @@
 // Extracted verbatim from app/operations/skills/page.tsx. Static copy,
 // no props, no state.
 
+import ConceptHint from "@/components/help/ConceptHint";
+
 export default function SkillsDenylistNote() {
   return (
     <p className="text-xs text-ps-text-muted font-mono mb-4 max-w-3xl">
@@ -10,7 +12,7 @@ export default function SkillsDenylistNote() {
       are matched to catalog paths (e.g. <code className="text-ps-text-muted">apple-notes</code> →{" "}
       <code className="text-ps-text-muted">apple/apple-notes</code>). If you edited disk config,
       use <strong className="text-ps-text-secondary">Operations → Agents → Pull</strong> for that profile
-      before toggling skills here.
+      before toggling <ConceptHint id="skill">skills</ConceptHint> here.
     </p>
   );
 }

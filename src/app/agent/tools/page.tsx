@@ -36,6 +36,7 @@ import { bundleCovering } from "@/modules/hermes/lib/toolset-coverage";
 import ToolsInsights from "@/modules/hermes/components/ToolsInsights";
 import { Panel } from "@/components/dashboard/Panel";
 import ToolsetReferenceTable from "@/components/tools/ToolsetReferenceTable";
+import ConceptHint from "@/components/help/ConceptHint";
 
 export default function ToolsPage() {
   const [selectedProfile, setSelectedProfile] = useState("default");
@@ -406,6 +407,15 @@ export default function ToolsPage() {
                     <h3 className="text-xs font-mono text-ps-text-muted uppercase tracking-widest mb-2">
                       Enabled toolsets
                     </h3>
+                    {/* The grid below is bundles, not capabilities, and the
+                        difference is the whole of D80: switching a bundle on
+                        switches on everything inside it. Say which word is
+                        which where the chips are. */}
+                    <p className="mb-2 text-xs text-ps-text-muted">
+                      A <ConceptHint id="toolset">toolset</ConceptHint> is a named bundle of{" "}
+                      <ConceptHint id="tool">tools</ConceptHint>; turning one on turns on everything
+                      in it.
+                    </p>
                     <div className="flex flex-wrap gap-2">
                       {HERMES_CONFIGURABLE_TOOLSETS.map((toolset) => {
                         const coveredBy = bundleCovering(unifiedEnabled, toolset.id);

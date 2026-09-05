@@ -61,7 +61,17 @@ describe("Completionist", () => {
 
   it("does not credit failures, types recorded zero times, or types outside the list", () => {
     const failures = measure(
-      base({ eventCounts: { "mission.failed": 5, "research.failed": 2, "composer.run_failed": 1, "help.opened": 3 } }),
+      // The fourth is the not-yet-emitted example. It was help.opened until
+      // T-0110 wired the Help page to emit it, which promoted it into the
+      // curated list; research.cancelled is what is left outside.
+      base({
+        eventCounts: {
+          "mission.failed": 5,
+          "research.failed": 2,
+          "composer.run_failed": 1,
+          "research.cancelled": 3,
+        },
+      }),
     );
     expect(failures.current).toBe(0);
     expect(measure(base({ eventCounts: counts(COMPLETIONIST_EVENT_TYPES, 0) })).current).toBe(0);

@@ -7,7 +7,7 @@
  * the drawer on a phone and the rail on a desktop, with its collapsed state
  * persisted through /api/prefs.
  */
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 let pathname = "/";
@@ -282,16 +282,16 @@ describe("Settings > System", () => {
 });
 
 describe("the placeholder pages exist so the rail has nowhere dead", () => {
-  it("Quests and Help render a header with the registry's word", async () => {
+  // Help was the other half of this test. It is no longer a placeholder and no
+  // longer a client component: B16 replaced src/app/help/page.tsx with the
+  // async server route src/app/help/[[...slug]]/page.tsx, which a sibling
+  // page.tsx could not have coexisted with. What it renders is held by
+  // tests/unit/b16-help-page-renders.test.tsx against a real corpus on disk,
+  // which is a great deal more than a smoke test of a placeholder was.
+  it("Quests renders a header with the registry's word", async () => {
     pathname = "/quests";
     const { default: Quests } = await import("@/app/quests/page");
     render(withQuery(<Quests />));
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Quests");
-    act(() => {
-      pathname = "/help";
-    });
-    const { default: Help } = await import("@/app/help/page");
-    render(withQuery(<Help />));
-    expect(screen.getAllByRole("heading", { level: 1 }).some((h) => h.textContent === "Help")).toBe(true);
   });
 });

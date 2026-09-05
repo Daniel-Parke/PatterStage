@@ -37,6 +37,7 @@ import {
 import { MISSION_COLUMN_LABELS } from "@/lib/status-labels";
 import { describeMissionRunState } from "@/lib/missions/mission-run-state";
 import MissionEditorPanel from "./MissionEditorPanel";
+import ConceptHint from "@/components/help/ConceptHint";
 
 // The board's columns are the board module's, and so are its counts: a second
 // list here is how the strip beside it ended up in a second vocabulary
@@ -106,7 +107,8 @@ export default function MissionsList({ vm }: MissionsListProps) {
                 Quick load template
               </h2>
               <p className="text-xs text-ps-text-muted mt-1 font-mono">
-                Prefill the mission form — review and dispatch when ready
+                Prefill the <ConceptHint id="mission">mission</ConceptHint> form — review and dispatch
+                when ready
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-3 shrink-0">

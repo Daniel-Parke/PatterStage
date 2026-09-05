@@ -12,6 +12,8 @@
 import { useState } from "react";
 import { ShieldQuestion } from "lucide-react";
 
+import ConceptHint from "@/components/help/ConceptHint";
+
 export type GateDecision = "accept" | "reject";
 
 export default function ComposerGatePrompt({
@@ -30,8 +32,11 @@ export default function ComposerGatePrompt({
     <div className="space-y-2 rounded-lg border border-neon-yellow/30 bg-neon-yellow/[0.08] px-3 py-2.5">
       <div className="flex items-center gap-2">
         <ShieldQuestion className="h-4 w-4 shrink-0 text-neon-yellow" />
+        {/* The one moment the word costs something: the chain is stopped here
+            until the operator answers, so this is where it is explained. */}
         <span className="text-xs text-ps-text-secondary">
-          Gate at <span className="font-mono text-neon-yellow">{nodeLabel}</span> — your call:
+          <ConceptHint id="gate">Gate</ConceptHint> at{" "}
+          <span className="font-mono text-neon-yellow">{nodeLabel}</span> — your call:
         </span>
       </div>
       <textarea

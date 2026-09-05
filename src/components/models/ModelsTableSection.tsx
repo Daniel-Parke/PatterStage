@@ -9,6 +9,7 @@ import GlowSurface from "@/components/ui/GlowSurface";
 import ModelSyncButtons from "@/components/models/ModelSyncButtons";
 import ModelsSectionHeader from "@/components/models/ModelsSectionHeader";
 import PerRowDeleteButton from "@/components/models/PerRowDeleteButton";
+import ConceptHint from "@/components/help/ConceptHint";
 import type { ModelEditorRecord } from "@/components/models/ModelEditor";
 import { TASK_TYPES, type TaskType } from "@/lib/models/task-types";
 import type { SyncActionResult } from "@/lib/models/sync-result";
@@ -224,7 +225,9 @@ export default function ModelsTableSection({
               <thead>
                 <tr className="text-left text-xs font-mono uppercase tracking-widest text-ps-text-muted border-b border-white/5">
                   <th className="px-4 py-2">Name</th>
-                  <th className="px-4 py-2">Provider</th>
+                  {/* The column an operator asks about first: who serves this
+                      model, and what that costs them. */}
+                  <th className="px-4 py-2"><ConceptHint id="provider">Provider</ConceptHint></th>
                   <th className="px-4 py-2">Model ID</th>
                   <th className="px-4 py-2" title="Direct-provider wire protocol (how PatterStage calls this model directly)">Protocol</th>
                   <th className="px-4 py-2" title="Model context window (tokens)">Context</th>

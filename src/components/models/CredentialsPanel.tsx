@@ -27,6 +27,7 @@ import { useState } from "react";
 import { KeyRound, Trash2, Check } from "lucide-react";
 
 import { Input } from "@/components/ui/field";
+import ConceptHint from "@/components/help/ConceptHint";
 import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
 import type { ApiCredential } from "./types";
 
@@ -58,8 +59,10 @@ export default function CredentialsPanel({
     <section className="mb-6 rounded-xl border border-white/10 bg-white/[0.02] p-4">
       <div className="mb-3 flex items-center gap-2">
         <KeyRound className="h-4 w-4 text-ps-text-muted" />
+        {/* "Credentials" is this screen's word for the thing the corpus calls
+            an API key, and this card is where it is met. */}
         <h2 className="font-mono text-xs uppercase tracking-widest text-ps-text-muted">
-          Credentials
+          <ConceptHint id="api-key">Credentials</ConceptHint>
         </h2>
       </div>
 

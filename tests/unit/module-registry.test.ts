@@ -10,7 +10,7 @@
  * The last test here closes that class of bug: every top-level page in the app
  * must be reachable from the registry, or be listed as a deliberate exception.
  */
-import { readdirSync, statSync } from "fs";
+import { existsSync, readdirSync, statSync } from "fs";
 import { join } from "path";
 
 import { MODULES, allModuleRoutes, getModule } from "@/lib/modules/registry";
@@ -78,6 +78,14 @@ describe("every page is reachable from the registry", () => {
       if (statSync(full).isDirectory()) {
         // Dynamic segments are detail views, not nav destinations.
         if (entry.startsWith("[") || entry.startsWith("(")) {
+          // An OPTIONAL catch-all serves its own parent prefix as well as
+          // everything under it: src/app/help/[[...slug]]/page.tsx IS the page
+          // for /help, and a sibling src/app/help/page.tsx beside it would be a
+          // route conflict the build refuses (B16). Counting it keeps this
+          // guard's teeth; exempting /help would have blunted them.
+          if (entry.startsWith("[[...") && existsSync(join(full, "page.tsx"))) {
+            out.push(prefix === "" ? "/" : prefix);
+          }
           const nested = entry.startsWith("(") ? prefix : null;
           if (nested !== null) out.push(...pageRoutes(full, nested));
           continue;

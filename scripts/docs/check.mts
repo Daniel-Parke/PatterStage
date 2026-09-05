@@ -28,6 +28,7 @@ import { GENERATED_BLOCK_IDS, checkDocs, findGeneratedBlocks, parseDocFrontMatte
 import type { DocPage } from "./lib.mjs";
 import { generateBlock } from "./extract.ts";
 import { documentedRoutes, railOrder } from "../../src/lib/modules/registry.ts";
+import { CONCEPT_ATTACHMENTS } from "../../src/lib/help/concept-attachments.ts";
 
 const ROOT = fileURLToPath(new URL("../..", import.meta.url));
 const DOCS = join(ROOT, "docs");
@@ -91,15 +92,31 @@ function conceptHintRefusals(pages: DocPage[]): string[] {
   );
   const out: string[] = [];
   const seen = new Set<string>();
+  const used = new Set<string>();
   for (const file of sourceFiles(join(ROOT, "src"))) {
     const source = readFileSync(file, "utf-8");
     for (const match of source.matchAll(/<ConceptHint\s[^>]*id=["']([^"']+)["']/g)) {
       const id = match[1];
+      used.add(id);
       if (defined.has(id)) continue;
       const key = `${rel(file)}:${id}`;
       if (seen.has(key)) continue;
       seen.add(key);
       out.push(`docs:check: ${rel(file)} names concept "${id}", which no page under docs/concepts/ defines`);
+    }
+  }
+
+  // The declared table and the screens have to agree in BOTH directions. A
+  // declared attachment nobody rendered is a hint the plan promised and the
+  // screen never got; an id rendered but undeclared is a hint no gate is
+  // watching, which is how the first kind happens next time.
+  for (const attachment of CONCEPT_ATTACHMENTS) {
+    for (const id of attachment.conceptIds) {
+      if (used.has(id)) continue;
+      out.push(
+        `docs:check: concept-attachments.ts declares "${id}" on ${attachment.screen}, ` +
+          "and no screen renders a ConceptHint for it",
+      );
     }
   }
   return out;

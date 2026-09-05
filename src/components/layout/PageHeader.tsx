@@ -10,6 +10,7 @@ import type { AccentColor } from "@/types/console";
 import { shellHeaderBarClasses, iconColorMap } from "@/lib/theme";
 import { StatusDot } from "@/components/ui/Card";
 import PageTitle, { useRegistryTitle } from "@/components/layout/PageTitle";
+import HelpLink from "@/components/help/HelpLink";
 
 interface PageHeaderProps {
   icon: React.ComponentType<{ className?: string }>;
@@ -80,9 +81,16 @@ export default function PageHeader({
           </div>
         </div>
       </div>
-      {actions && (
-        <div className="flex items-center gap-3 flex-shrink-0">{actions}</div>
-      )}
+      {/*
+        The ? is here rather than on each page, and the wrapper is always
+        rendered rather than conditional on `actions`, so a page that passes no
+        actions is not also a page with no way into its guide. There is no prop
+        to opt out with: an opt-out is how a screen quietly loses its guide.
+      */}
+      <div className="flex items-center gap-3 flex-shrink-0">
+        <HelpLink />
+        {actions}
+      </div>
     </header>
   );
 }

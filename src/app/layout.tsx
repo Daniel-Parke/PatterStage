@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import localFont from "next/font/local";
 import { labelFor } from "@/lib/modules/registry";
+import { helpScreenIndex } from "@/lib/help/help-manifest";
+import { loadHelpConcepts, loadHelpManifest } from "@/lib/help/help-source";
+import { HelpProvider } from "@/components/help/HelpProvider";
 import { SidebarProvider } from "@/components/layout/SidebarContext";
 import Sidebar from "@/components/layout/Sidebar";
 import MobileHeader from "@/components/layout/MobileHeader";
@@ -90,6 +93,15 @@ export default function RootLayout({
           Inside QueryProvider because it reads the stats poll.
         */}
         <FeedbackProvider>
+        {/*
+          Help's two indexes, read off disk here and passed down once. This is
+          the only place they are read: both loaders memoise per process, so a
+          request costs no syscall, and every ? and every concept popover under
+          this tree answers from props rather than a fetch. An unbuilt corpus
+          reads as two empty objects, which is what makes the ? land on the
+          Help index instead of a 404.
+        */}
+        <HelpProvider screens={helpScreenIndex(loadHelpManifest())} concepts={loadHelpConcepts()}>
         <SidebarProvider>
           <div className="h-full flex flex-col lg:flex-row">
             <div className="border-r border-white/10 flex-shrink-0">
@@ -104,6 +116,7 @@ export default function RootLayout({
             </div>
           </div>
         </SidebarProvider>
+        </HelpProvider>
         </FeedbackProvider>
         </QueryProvider>
       </body>

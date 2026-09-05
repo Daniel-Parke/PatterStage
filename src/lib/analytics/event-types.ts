@@ -91,12 +91,13 @@ export type AnalyticsEntityType = (typeof ANALYTICS_ENTITY_TYPES)[number];
 
 /**
  * Types in the taxonomy that nothing emits yet. Each is removed from this list
- * by the batch that lands its emitter: research.cancelled (B14) and
- * help.opened (B16). backup.taken left it in B6, when POST /api/backup began
- * writing one. Until then they are charted if they ever appear and asked of
+ * by the batch that lands its emitter: backup.taken left it in B6, when
+ * POST /api/backup began writing one, and help.opened in B16, when the Help
+ * page began recording the guide it rendered. research.cancelled (B14) is the
+ * one left. Until then they are charted if they ever appear and asked of
  * nobody.
  */
-const NOT_YET_EMITTED: readonly string[] = ["research.cancelled", "help.opened"];
+const NOT_YET_EMITTED: readonly string[] = ["research.cancelled"];
 
 /** Failures are recorded and charted; they are never something to collect. */
 const FAILURE_TYPES: readonly string[] = ["mission.failed", "research.failed", "composer.run_failed"];

@@ -17,7 +17,13 @@
 
 import { railOrder } from "@/lib/modules/registry";
 
-/** The six tiers, in reading order. */
+/**
+ * The six tiers, in reading order.
+ *
+ * @public The order IS the reading path, and it is the same list docs:check,
+ * the generator and this resolver all sort by. A second copy anywhere would be
+ * a second answer to what comes after Concepts.
+ */
 export const HELP_SECTIONS = [
   "start-here",
   "concepts",
@@ -27,8 +33,16 @@ export const HELP_SECTIONS = [
   "contributing",
 ] as const;
 
+/** One of the six tiers. @public The type every page's `section` field has. */
 export type HelpSection = (typeof HELP_SECTIONS)[number];
 
+/**
+ * What each tier is called on screen.
+ *
+ * @public Read through `helpNavOrder`, which stamps the label onto each section
+ * so a renderer never has to know the map; exported because the label for a
+ * tier is a fact about the corpus rather than about the rail that shows it.
+ */
 export const HELP_SECTION_LABELS: Record<HelpSection, string> = {
   "start-here": "Start here",
   concepts: "Concepts",
@@ -56,11 +70,19 @@ export interface HelpManifest {
   pages: HelpPageMeta[];
 }
 
+/**
+ * What every parser answers when there is nothing to read.
+ *
+ * @public A named constant rather than an inline literal so a caller can
+ * compare against it, and so "no corpus" is one value in one place rather than
+ * a shape three functions each rebuild.
+ */
 export const EMPTY_HELP_MANIFEST: HelpManifest = { generatedAt: "", pages: [] };
 
 /** registry route -> help slug. Small enough to hand to the client. */
 export type HelpScreenIndex = Record<string, string>;
 
+/** One concept, as the popover shows it. @public The element type of ConceptIndex. */
 export interface ConceptEntry {
   id: string;
   term: string;

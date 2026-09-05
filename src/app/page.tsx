@@ -27,6 +27,7 @@ import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageTitle from "@/components/layout/PageTitle";
+import HelpLink from "@/components/help/HelpLink";
 import { StatPill, StatPillSkeleton } from "@/components/dashboard/StatPill";
 import DispatchStrip from "@/components/dashboard/DispatchStrip";
 import FirstRunPanel from "@/components/dashboard/FirstRunPanel";
@@ -284,28 +285,35 @@ export default function Dashboard() {
           </h1>
           <p className="text-xs text-ps-text-muted font-mono">{modelSubtitle}</p>
         </div>
-        {/* The badge used to be a hardcoded green ONLINE, sitting directly
-            under the agent-framework heading. On an install with no agent it
-            claimed the agent was up. It now reports what the monitor actually
-            found. */}
-        {agentConfigured ? (
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-neon-green pulse-glow" />
-            <span className="text-xs text-ps-text-secondary font-mono">ONLINE</span>
-          </div>
-        ) : (
-          gatewayReachable ? (
-            <div className="flex items-center gap-2" title={`${agentName} runs through the gateway at ${gatewayRow?.url ?? "the configured address"}`}>
-              <div className="w-2 h-2 rounded-full bg-neon-cyan" />
-              <span className="text-xs text-neon-cyan font-mono">REMOTE</span>
+        {/* The dashboard paints its own header bar instead of rendering
+            PageHeader, so it is the one screen that has to hang the ? itself.
+            Leaving it off would put the guide on every screen but the first
+            one an operator ever sees. */}
+        <div className="flex items-center gap-3 flex-shrink-0">
+          {/* The badge used to be a hardcoded green ONLINE, sitting directly
+              under the agent-framework heading. On an install with no agent it
+              claimed the agent was up. It now reports what the monitor actually
+              found. */}
+          {agentConfigured ? (
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-neon-green pulse-glow" />
+              <span className="text-xs text-ps-text-secondary font-mono">ONLINE</span>
             </div>
           ) : (
-          <div className="flex items-center gap-2" title={`${agentName} is not installed on this machine`}>
-            <div className="w-2 h-2 rounded-full bg-neon-orange" />
-            <span className="text-xs text-neon-orange font-mono">NOT INSTALLED</span>
-          </div>
-          )
-        )}
+            gatewayReachable ? (
+              <div className="flex items-center gap-2" title={`${agentName} runs through the gateway at ${gatewayRow?.url ?? "the configured address"}`}>
+                <div className="w-2 h-2 rounded-full bg-neon-cyan" />
+                <span className="text-xs text-neon-cyan font-mono">REMOTE</span>
+              </div>
+            ) : (
+            <div className="flex items-center gap-2" title={`${agentName} is not installed on this machine`}>
+              <div className="w-2 h-2 rounded-full bg-neon-orange" />
+              <span className="text-xs text-neon-orange font-mono">NOT INSTALLED</span>
+            </div>
+            )
+          )}
+          <HelpLink />
+        </div>
       </div>
       {toastElement}
 

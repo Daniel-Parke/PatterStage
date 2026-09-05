@@ -18,6 +18,7 @@ import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 import { Field, Textarea, Select } from "@/components/ui/field";
+import ConceptHint from "@/components/help/ConceptHint";
 import { useComposerWorkflowGraph } from "@/hooks/useComposer";
 import { getInputSpec } from "@/lib/composer/schema";
 import type { ComposerWorkflow } from "@/lib/composer/schema";
@@ -78,6 +79,11 @@ export default function ComposerRunForm({
       {/* Orientation: what this workflow is + the stages it runs */}
       {workflow ? (
         <div className="mb-3 rounded-lg border border-white/10 bg-dark-900/40 px-3 py-2.5">
+          {/* Named the way the review below names it, so the word an operator
+              is about to launch one of is defined where they first read it. */}
+          <p className="text-xs font-mono uppercase tracking-widest text-ps-text-muted">
+            <ConceptHint id="workflow">Workflow</ConceptHint>
+          </p>
           <div className="flex items-baseline justify-between gap-2">
             <span className="text-sm font-semibold text-ps-text-primary">{workflow.name}</span>
             {stages.length > 0 ? (

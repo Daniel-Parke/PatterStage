@@ -19,6 +19,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { safeApiCall } from "@/lib/api-fetch";
 import RunProgress from "@/components/schedule/RunProgress";
+import ConceptHint from "@/components/help/ConceptHint";
 
 /** Either the run id (null while dispatch has not created one) or the reason we could not ask. */
 interface RunLookup {
@@ -55,7 +56,11 @@ export default function MissionLiveProgress({ missionId }: { missionId: string }
 
   return (
     <div>
-      <div className="text-xs font-mono text-ps-text-muted uppercase mb-1">Live run</div>
+      {/* Where the word "run" is actually met on this screen: one dispatch of
+          this mission, streaming underneath. */}
+      <div className="text-xs font-mono text-ps-text-muted uppercase mb-1">
+        Live <ConceptHint id="run">run</ConceptHint>
+      </div>
       <RunProgress runId={data.runId} />
     </div>
   );

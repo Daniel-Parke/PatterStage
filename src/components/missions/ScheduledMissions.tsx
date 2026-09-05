@@ -16,6 +16,7 @@ import { CalendarClock, Plus, Play, Trash2, ChevronDown } from "lucide-react";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import ConfirmButton from "@/components/ui/ConfirmButton";
 import RunProgress from "@/components/schedule/RunProgress";
+import ConceptHint from "@/components/help/ConceptHint";
 import { useSchedules, useMissionOptions } from "@/hooks/useSchedules";
 import { timeUntil } from "@/lib/utils";
 
@@ -85,7 +86,9 @@ export default function ScheduledMissions() {
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <CalendarClock className="h-4 w-4 text-neon-orange" />
-          <h2 className="font-mono text-sm uppercase tracking-wider text-ps-text-secondary">Scheduled missions</h2>
+          <h2 className="font-mono text-sm uppercase tracking-wider text-ps-text-secondary">
+            <ConceptHint id="schedule">Scheduled</ConceptHint> missions
+          </h2>
           {schedules.length > 0 && (
             <span className="font-mono text-xs text-ps-text-muted">
               {enabledCount} active{pausedCount > 0 ? ` · ${pausedCount} paused` : ""}

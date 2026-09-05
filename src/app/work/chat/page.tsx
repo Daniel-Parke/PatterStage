@@ -21,6 +21,7 @@ import MessageBubble from "@/components/chat/MessageBubble";
 import { ChatModelSelector } from "@/components/chat/ChatModelSelector";
 import { ChatModeToggle } from "@/components/chat/ChatModeToggle";
 import ApprovalPrompt from "@/components/chat/ApprovalPrompt";
+import ConceptHint from "@/components/help/ConceptHint";
 import { useChatPage } from "@/hooks/useChatPage";
 import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
 
@@ -222,9 +223,20 @@ export default function ChatPage() {
                     {hasActiveConversation ? activeConversation?.title || "New Chat" : "Chat with your agent"}
                   </h2>
                   <p className="text-sm text-ps-text-muted mb-2 max-w-md">
-                    {mode === "agent"
-                      ? "Agent mode: the assistant can use tools and remembers this conversation."
-                      : "Fast mode: a quick raw-model reply with no tools."}
+                    {mode === "agent" ? (
+                      <>
+                        <ConceptHint id="agent">Agent</ConceptHint> mode: the assistant can use tools
+                        and remembers this conversation.
+                      </>
+                    ) : (
+                      "Fast mode: a quick raw-model reply with no tools."
+                    )}
+                  </p>
+                  {/* The two words this screen is built on, where a first-time
+                      operator meets them: the box they are about to type in,
+                      and the thing that answers. */}
+                  <p className="text-xs text-ps-text-faint max-w-md">
+                    Your message is the <ConceptHint id="prompt">prompt</ConceptHint>.
                   </p>
                 </div>
               ) : (

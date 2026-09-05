@@ -25,6 +25,7 @@ import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import { Field, Input } from "@/components/ui/field";
 import { safeApiCall } from "@/lib/api-fetch";
+import ConceptHint from "@/components/help/ConceptHint";
 
 import HealthBanner from "./hindsight/HealthBanner";
 import type { HealthState } from "./hindsight/types";
@@ -181,7 +182,9 @@ export default function MemoryProviderSettings({
       <div className="mb-3 flex items-center gap-2">
         <Plug className="h-4 w-4 text-neon-pink" />
         <h2 className="text-sm font-semibold text-white">
-          {storeUnreachable ? "Set up memory" : "Memory provider"}
+          {/* The card is the first thing on the screen and the heading is the
+              first place the word appears, in either of its two states. */}
+          <ConceptHint id="memory">{storeUnreachable ? "Set up memory" : "Memory provider"}</ConceptHint>
         </h2>
         <span className="rounded bg-white/5 px-1.5 py-0.5 text-xs font-mono uppercase tracking-wider text-ps-text-muted">
           {row?.label ?? "Memory"}

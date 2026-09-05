@@ -14,6 +14,7 @@
 "use client";
 
 import AgentPerformanceStrip from "@/components/agents/AgentPerformanceStrip";
+import ConceptHint from "@/components/help/ConceptHint";
 import ProfilesDriftBanner from "@/components/profiles/ProfilesDriftBanner";
 import ProfileSyncBar from "@/components/profiles/ProfileSyncBar";
 import type { AgentProfile } from "@/types/console";
@@ -54,9 +55,13 @@ export default function AgentProfilesOverview({
           names and two storage engines before they read what a profile is
           (T-0102, the copy). The mechanics are unchanged and one click away. */}
       <div className="mb-4 max-w-3xl">
+        {/* Both of this screen's words are in this one sentence, which is
+            where an operator meets them: "voice" is what the product calls a
+            personality everywhere else on the page. */}
         <p className="text-sm text-ps-text-muted">
-          A profile is one agent: its voice, the skills it may use and the tools it may reach.
-          Pick one on the left to read it or change it.
+          A <ConceptHint id="profile">profile</ConceptHint> is one agent: its{" "}
+          <ConceptHint id="personality">voice</ConceptHint>, the skills it may use and the tools it
+          may reach. Pick one on the left to read it or change it.
         </p>
         <details className="mt-1">
           <summary className="cursor-pointer text-xs text-neon-cyan hover:underline">

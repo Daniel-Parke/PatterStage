@@ -15,7 +15,6 @@ import { existsSync, readFileSync } from "fs";
 import { join, resolve, sep } from "path";
 
 import {
-  EMPTY_HELP_MANIFEST,
   isSafeHelpSlug,
   parseConcepts,
   parseHelpManifest,
@@ -31,6 +30,9 @@ import {
  * PS_HELP_DIR overrides it, read at call time rather than at module load, so a
  * test or the isolated instance can point at a built corpus without a public/
  * in the checkout, and can move it between cases.
+ *
+ * @public Exported so a caller can say WHERE it looked when it found nothing:
+ * "no corpus" and "no corpus at this path" are different sentences to read.
  */
 export function helpRoot(): string {
   const override = process.env.PS_HELP_DIR;
@@ -55,7 +57,13 @@ function cacheFor(): Cache {
   return cache;
 }
 
-/** Forget what was read. For tests, and for a dev watcher after a rebuild. */
+/**
+ * Forget what was read.
+ *
+ * @public For tests, which move PS_HELP_DIR between cases, and for a dev
+ * watcher after a rebuild. Without it a process that read an empty corpus once
+ * would go on reporting it empty for the rest of its life.
+ */
 export function resetHelpCache(): void {
   cache = { root: "" };
 }
@@ -90,7 +98,13 @@ export function loadHelpSearchIndex(): HelpSearchEntry[] {
   return c.search;
 }
 
-/** True when there is a corpus worth rendering. */
+/**
+ * True when there is a corpus worth rendering.
+ *
+ * @public The question a caller asks before deciding between the Help screen
+ * and the "not built yet" panel, phrased once here rather than as
+ * `.pages.length > 0` in each place that asks.
+ */
 export function helpIsBuilt(): boolean {
   return loadHelpManifest().pages.length > 0;
 }
@@ -118,4 +132,3 @@ export function loadHelpFragment(slug: string): string | null {
   }
 }
 
-export { EMPTY_HELP_MANIFEST };

@@ -20,6 +20,7 @@ import ConfirmButton from "@/components/ui/ConfirmButton";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import { Field, Textarea, Select, Input } from "@/components/ui/field";
 import ResearchReport from "@/components/research/ResearchReport";
+import ConceptHint from "@/components/help/ConceptHint";
 import { safeApiCall } from "@/lib/api-fetch";
 import { useResearchRuns, useResearchRun, useResearchPresets } from "@/hooks/useDeepResearch";
 import { useModels } from "@/hooks/useModels";
@@ -281,7 +282,12 @@ export default function DeepResearchPage() {
         {/* Detail */}
         <Card padding="md">
           {!detail ? (
-            <p className="text-xs text-ps-text-muted">Select a run to read its report, sources, and timeline.</p>
+            /* The report IS this screen's artifact: the thing a run produced,
+               kept to read and to download. */
+            <p className="text-xs text-ps-text-muted">
+              Select a run to read its <ConceptHint id="artifact">report</ConceptHint>, sources, and
+              timeline.
+            </p>
           ) : (
             <div className="space-y-4">
               <div className="flex items-start justify-between gap-3">
