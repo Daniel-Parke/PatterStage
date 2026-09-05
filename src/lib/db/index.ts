@@ -82,6 +82,7 @@ import { applyResearchGatherMigration } from "./apply-research-gather-migration"
 import { applyComposerNodeCancelledMigration } from "./apply-composer-node-cancelled-migration";
 import { applyOperatorPrefsMigration } from "./apply-operator-prefs-migration";
 import { applyModelsOriginMigration } from "./apply-models-origin-migration";
+import { applyRunsSpendSourceMigration } from "./apply-runs-spend-source-migration";
 
 // ── Ensure data directory exists ───────────────────────────────
 
@@ -336,6 +337,9 @@ export function runMigrations(database: Database.Database): void {
   // operator's rename or proxy base URL is not undone by the next import.
   // ALTER at v39.
   applyModelsOriginMigration(database, migrationsDir);
+  // LAST rung, T-0108: runs.story_id and runs.spend_source, so a run row says
+  // which feature spent the money.
+  applyRunsSpendSourceMigration(database, migrationsDir);
 }
 
 // ── Bootstrap: ensure DB + schema exist ───────────────────────

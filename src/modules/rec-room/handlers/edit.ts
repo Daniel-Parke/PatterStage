@@ -11,10 +11,20 @@ import { callLLM } from "@/lib/llm";
 import { getStory, updateStory } from "@/modules/rec-room/lib/story-repository";
 import type { ChapterOutline } from "@/modules/rec-room/types";
 
-import { safeArc, validateChapterOutput, focusArcForChapter } from "./shared";
+import {
+  focusArcForChapter,
+  safeArc,
+  storyModelId,
+  type StoryCallOptions,
+  validateChapterOutput,
+  wordRange,
+} from "./shared";
 
-export async function handleEditChapter(body: Record<string, unknown>): Promise<NextResponse> {
-  const { storyId, chapterNumber, editPrompt } = body;
+export async function handleEditChapter(
+  body: Record<string, unknown>,
+  opts: StoryCallOptions = {},
+): Promise<NextResponse> {
+  const { storyId, chapterNumber, editPrompt, wordCountRange, count } = body;
   if (!storyId || !chapterNumber || !editPrompt) {
     return NextResponse.json({ error: "Missing storyId, chapterNumber, or editPrompt" }, { status: 400 });
   }
@@ -42,11 +52,13 @@ export async function handleEditChapter(body: Record<string, unknown>): Promise<
     "===MASTER PROMPT===", story.masterPrompt ?? "", "",
     "===STORY ARC (focused for this chapter)===", arcText, "",
     "===CHAPTER OUTLINE===", `Title: ${outline.title}\nPurpose: ${outline.purpose}`,
+    // The modal's Chapter Length control was read by nobody (T-0108, D90).
+    "", `Target length: ${wordRange(wordCountRange)} words.`,
     "", "Rewrite this chapter, preserving continuity and the fixed plot points above. Return ONLY prose.",
   ].join("\n");
 
   try {
-    const raw = (await callLLM([{ role: "system", content: editSystem }, { role: "user", content: editUser }], { temperature: 0.85, maxTokens: 4096 })).content;
+    const raw = (await callLLM([{ role: "system", content: editSystem }, { role: "user", content: editUser }], { temperature: 0.85, maxTokens: 4096, modelId: storyModelId(story), spend: { source: "story", storyId: storyId as string }, signal: opts.signal })).content;
     const content = validateChapterOutput(raw);
 
     const updatedChapters = [...story.chapters];
@@ -57,8 +69,15 @@ export async function handleEditChapter(body: Record<string, unknown>): Promise<
       generatedAt: new Date().toISOString(),
     };
 
-    // Invalidate downstream
-    for (let i = chIdx + 1; i < updatedChapters.length; i++) {
+    // Invalidate downstream, bounded by the modal's "Chapters to Regenerate"
+    // control, which was also read by nobody (T-0108, D90). The edited chapter
+    // is the first of the `count`, so `count - 1` follow it. An absent count
+    // keeps the documented default: everything after it.
+    const downstreamLimit =
+      typeof count === "number" && Number.isFinite(count)
+        ? Math.max(0, Math.min(count, updatedChapters.length - chIdx) - 1)
+        : updatedChapters.length - chIdx - 1;
+    for (let i = chIdx + 1; i <= chIdx + downstreamLimit; i++) {
       updatedChapters[i] = { ...updatedChapters[i], status: "pending", wordCount: 0, generatedAt: undefined };
     }
 
@@ -74,7 +93,7 @@ export async function handleEditChapter(body: Record<string, unknown>): Promise<
         .join("\n\n");
       rollingSummary = ((await callLLM(
         [{ role: "system", content: summarySystem }, { role: "user", content: `Create a rolling summary:\n\n${chaptersUpToN}` }],
-        { temperature: 0.7, maxTokens: 1024 }
+        { temperature: 0.7, maxTokens: 1024, modelId: storyModelId(story), spend: { source: "story", storyId: storyId as string }, signal: opts.signal }
       )).content);
     } catch (err) {
       logApiError("POST /api/stories", "rolling summary rebuild", err);
@@ -94,7 +113,11 @@ export async function handleEditChapter(body: Record<string, unknown>): Promise<
   }
 }
 
-export async function handleExtend(body: Record<string, unknown>): Promise<NextResponse> {
+// No `opts`: extending a story only appends pending chapter rows. It calls no
+// model, so there is nothing to bill and nothing to abort.
+export async function handleExtend(
+  body: Record<string, unknown>,
+): Promise<NextResponse> {
   const { storyId, additionalChapters } = body;
   if (!storyId || !additionalChapters) {
     return NextResponse.json({ error: "Missing storyId or additionalChapters" }, { status: 400 });
@@ -119,8 +142,20 @@ export async function handleExtend(body: Record<string, unknown>): Promise<NextR
   return NextResponse.json({ data: updated });
 }
 
-export async function handleContinue(body: Record<string, unknown>): Promise<NextResponse> {
-  const { storyId, direction, count } = body;
+/** Replace the master prompt's Chapter Length line, or append it when it has none. */
+function withChapterLength(prompt: string, range: string): string {
+  const line = `Chapter Length: ${range} words per chapter`;
+  return /^Chapter Length: .*$/m.test(prompt)
+    ? prompt.replace(/^Chapter Length: .*$/m, line)
+    : `${prompt}
+${line}`;
+}
+
+export async function handleContinue(
+  body: Record<string, unknown>,
+  opts: StoryCallOptions = {},
+): Promise<NextResponse> {
+  const { storyId, direction, count, wordCountRange } = body;
   if (!storyId || !direction) {
     return NextResponse.json({ error: "Missing storyId or direction" }, { status: 400 });
   }
@@ -143,7 +178,7 @@ export async function handleContinue(body: Record<string, unknown>): Promise<Nex
   ].join("\n");
 
   try {
-    const raw = (await callLLM([{ role: "system", content: continueSystem }, { role: "user", content: continueUser }], { temperature: 0.8, maxTokens: 2048 })).content;
+    const raw = (await callLLM([{ role: "system", content: continueSystem }, { role: "user", content: continueUser }], { temperature: 0.8, maxTokens: 2048, modelId: storyModelId(story), spend: { source: "story", storyId: storyId as string }, signal: opts.signal })).content;
     let outlines: ChapterOutline[] = [];
     const jsonMatch = raw.match(/\[[\s\S]*\]/);
     if (jsonMatch) { try { outlines = JSON.parse(jsonMatch[0]); } catch {} }
@@ -165,7 +200,19 @@ export async function handleContinue(body: Record<string, unknown>): Promise<Nex
       updatedChapters.push({ number: outline.number, title: outline.title, status: "pending", wordCount: 0 });
     }
 
-    const updated = updateStory(storyId as string, { chapters: updatedChapters, storyArc: arc, status: "active" });
+    // handleGenerateChapter builds every later prompt from the FROZEN master
+    // prompt, so a new chapter length has to be written into it or the control
+    // is dead for everything the continuation produces.
+    const masterPrompt = wordCountRange
+      ? withChapterLength(story.masterPrompt ?? "", wordRange(wordCountRange))
+      : undefined;
+
+    const updated = updateStory(storyId as string, {
+      chapters: updatedChapters,
+      storyArc: arc,
+      status: "active",
+      ...(masterPrompt === undefined ? {} : { masterPrompt }),
+    });
     return NextResponse.json({ data: updated });
   } catch (err) {
     logApiError("POST /api/stories", "continue", err);

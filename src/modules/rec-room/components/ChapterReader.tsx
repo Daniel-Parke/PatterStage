@@ -11,6 +11,7 @@ import type { RefObject } from "react";
 import { AlertTriangle, PenLine, RefreshCw, Sparkles } from "lucide-react";
 import type { ReadingSettings } from "@/modules/rec-room/components/ReaderSettings";
 import type { Chapter, ReaderTheme } from "@/modules/rec-room/components/story-reader-types";
+import { chapterHeading } from "@/modules/rec-room/lib/chapter-title";
 
 export interface ChapterReaderProps {
   contentRef: RefObject<HTMLDivElement | null>;
@@ -48,7 +49,7 @@ export default function ChapterReader({
               fontSize: `${settings.fontSize + 6}px`,
               fontWeight: 600,
             }}>
-              Chapter {currentChapter}: {currentMeta?.title}
+              {chapterHeading(currentChapter, currentMeta?.title)}
             </h2>
             {/* Edit button on completed chapters */}
             {currentMeta?.status === "complete" && (

@@ -37,15 +37,18 @@ export async function POST(request: NextRequest) {
     // OUTSIDE this try, so serverErrorFromCatch never saw it and the client got
     // an empty 500. Fourteen actions shared that hole (T-0087).
     switch (action) {
-      case "create":            return await handleCreate(body);
+      // The generating actions get the request's own signal, so a browser that
+      // stops listening stops the provider call rather than paying for a
+      // chapter nobody will read (T-0108, D88).
+      case "create":            return await handleCreate(body, { signal: request.signal });
       case "list":              return await handleList();
       case "load":              return await handleLoad(body);
-      case "generate-chapter":  return await handleGenerateChapter(body);
-      case "retry-chapter":     return await handleRetryChapter(body);
-      case "rewrite-chapter":   return await handleRewriteChapter(body);
-      case "edit-chapter":      return await handleEditChapter(body);
-      case "extend":            return await handleExtend(body);
-      case "continue":          return await handleContinue(body);
+      case "generate-chapter":        return await handleGenerateChapter(body, { signal: request.signal });
+      case "retry-chapter":           return await handleRetryChapter(body, { signal: request.signal });
+      case "rewrite-chapter":         return await handleRewriteChapter(body, { signal: request.signal });
+      case "edit-chapter":            return await handleEditChapter(body, { signal: request.signal });
+      case "extend":                  return await handleExtend(body);
+      case "continue":                return await handleContinue(body, { signal: request.signal });
       case "update":            return await handleUpdate(body);
       // The reusable library the Characters/Themes pages have always posted to.
       case "characters":        return await handleCharacters(body);

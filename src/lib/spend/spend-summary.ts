@@ -49,7 +49,6 @@
 // discovering it from a number that was quietly wrong.
 // ═══════════════════════════════════════════════════════════════
 
-import { estimateCost } from "@/lib/analytics/model-cost";
 import {
   SPEND_PERIODS,
   evaluateSpend,
@@ -57,33 +56,15 @@ import {
   periodStart,
   type SpendPeriod,
   type SpendPolicy,
-  type SpendSource,
   type SpendVerdict,
 } from "./spend-law";
-import {
-  readResearchUsageSince,
-  readRunUsageSince,
-  readSpendPolicy,
-  type ResearchUsageRow,
-  type SpendUsageRow,
-} from "./spend-repository";
+import { readSpendPolicy } from "./spend-repository";
+import { emptyWindow, recordedSpendSince, type SpendWindowSource } from "./spend-window";
 
 // Module-private on purpose. Reachable structurally through the exported
 // parent type, so a caller can still read the field; nothing imports the
 // NAME, and an export nothing imports is what the widened knip gate exists
 // to catch. Export it again the moment a caller genuinely needs to name it.
-interface SpendSourceRow {
-  source: SpendSource;
-  label: string;
-  runs: number;
-  inputTokens: number;
-  outputTokens: number;
-  /** Estimated USD, or NULL when this database never recorded the usage. */
-  costUsd: number | null;
-  /** False means "we do not know", never "it was free". */
-  recorded: boolean;
-}
-
 // Module-private on purpose. Reachable structurally through the exported
 // parent type, so a caller can still read the field; nothing imports the
 // NAME, and an export nothing imports is what the widened knip gate exists
@@ -95,7 +76,7 @@ interface SpendPeriodRow {
   since: string;
   /** Sum of the RECORDED sources only. */
   totalUsd: number;
-  sources: SpendSourceRow[];
+  sources: SpendWindowSource[];
   /**
    * Research runs in this period whose token columns are NULL.
    *
@@ -121,12 +102,6 @@ export interface SpendSummary {
   generatedAt: string;
 }
 
-const SOURCE_LABELS: Record<SpendSource, string> = {
-  agent: "Agent runs",
-  composer: "Composer stages",
-  research: "Deep Research",
-};
-
 function safeRead<T>(fn: () => T, fallback: T): T {
   try {
     return fn();
@@ -135,99 +110,20 @@ function safeRead<T>(fn: () => T, fallback: T): T {
   }
 }
 
-function emptySource(source: SpendSource, recorded: boolean): SpendSourceRow {
-  return {
-    source,
-    label: SOURCE_LABELS[source],
-    runs: 0,
-    inputTokens: 0,
-    outputTokens: 0,
-    costUsd: recorded ? 0 : null,
-    recorded,
-  };
-}
-
-/** Fold the priced-run rows into the two recorded source totals. */
-function foldUsage(rows: SpendUsageRow[]): Record<"agent" | "composer", SpendSourceRow> {
-  const acc = {
-    agent: emptySource("agent", true),
-    composer: emptySource("composer", true),
-  };
-
-  for (const row of rows) {
-    let input = 0;
-    let output = 0;
-    try {
-      const u = JSON.parse(row.usage) as { inputTokens?: number; outputTokens?: number };
-      input = Number(u.inputTokens ?? 0);
-      output = Number(u.outputTokens ?? 0);
-    } catch {
-      // A run whose usage JSON will not parse recorded no usable counts. It is
-      // skipped rather than guessed at: inventing a number here would be the
-      // same lie as pricing Deep Research at zero, in a smaller place.
-      continue;
-    }
-    if (!Number.isFinite(input)) input = 0;
-    if (!Number.isFinite(output)) output = 0;
-
-    const target = acc[row.source === "composer" ? "composer" : "agent"];
-    target.runs += 1;
-    target.inputTokens += input;
-    target.outputTokens += output;
-    // A null model (every Composer stage) resolves to model-cost's DEFAULT_RATE,
-    // which is deliberately non-zero. Unknown must never read as free.
-    target.costUsd = (target.costUsd ?? 0) + estimateCost(row.model, input, output);
-  }
-
-  return acc;
-}
-
-/**
- * Deep Research, folded the same way the other two sources are, plus a count of
- * the runs whose usage was NEVER recorded.
- *
- * The second number is the reason this cannot just call `foldUsage`. Every run
- * before migration 034 has NULL token columns, and NULL is not zero: it means
- * the cost is unknown. Those runs stay OUT of the priced total and stay
- * declared in `unmeasured`. Folding them in at zero would take a real,
- * uncounted cost and paint it as free, which is the same misreporting T-0030
- * removed, one layer further down.
- */
-function foldResearch(rows: ResearchUsageRow[]): { row: SpendSourceRow; unrecorded: number } {
-  const row = emptySource("research", true);
-  let unrecorded = 0;
-
-  for (const r of rows) {
-    row.runs += 1;
-    if (r.promptTokens === null && r.completionTokens === null) {
-      unrecorded += 1;
-      continue;
-    }
-    const input = Number.isFinite(r.promptTokens) ? (r.promptTokens as number) : 0;
-    const output = Number.isFinite(r.completionTokens) ? (r.completionTokens as number) : 0;
-    row.inputTokens += input;
-    row.outputTokens += output;
-    // A null model means the Hermes default, which resolves to model-cost's
-    // DEFAULT_RATE. Deliberately non-zero: unknown must never read as free.
-    row.costUsd = (row.costUsd ?? 0) + estimateCost(r.model, input, output);
-  }
-
-  return { row, unrecorded };
-}
-
 function periodRow(period: SpendPeriod, nowIso: string): SpendPeriodRow {
   const since = periodStart(period, nowIso);
-  const folded = foldUsage(safeRead(() => readRunUsageSince(since), []));
-  const research = foldResearch(safeRead(() => readResearchUsageSince(since), []));
+  // The one window helper, which the hard stop also calls, so the console and
+  // the stop cannot total different money again (T-0108, D104). The summary
+  // degrades to zeros; the guard does not, and must not.
+  const w = safeRead(() => recordedSpendSince(since), emptyWindow(since));
 
   return {
     period,
     label: periodLabel(period),
     since,
-    totalUsd:
-      (folded.agent.costUsd ?? 0) + (folded.composer.costUsd ?? 0) + (research.row.costUsd ?? 0),
-    sources: [folded.agent, folded.composer, research.row],
-    unrecordedResearchRuns: research.unrecorded,
+    totalUsd: w.totalUsd,
+    sources: w.sources,
+    unrecordedResearchRuns: w.unrecordedResearchRuns,
   };
 }
 

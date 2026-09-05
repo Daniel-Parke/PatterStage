@@ -41,11 +41,12 @@ import {
   asSpendPeriod,
   type SpendPeriod,
   type SpendPolicy,
+  type SpendSource,
 } from "./spend-law";
 
 /** One priced-run row: which source it belongs to, its model, its raw usage JSON. */
 export interface SpendUsageRow {
-  source: "agent" | "composer";
+  source: SpendSource;
   model: string | null;
   usage: string;
 }
@@ -67,7 +68,11 @@ export function readRunUsageSince(sinceExpr: string): SpendUsageRow[] {
   return getDb()
     .prepare(
       `SELECT
-         CASE WHEN r.composer_node_run_id IS NOT NULL THEN 'composer' ELSE 'agent' END AS source,
+         CASE
+    WHEN r.spend_source IS NOT NULL AND r.spend_source <> 'agent' THEN r.spend_source
+    WHEN r.composer_node_run_id IS NOT NULL THEN 'composer'
+    ELSE 'agent'
+  END AS source,
          m.model_id AS model,
          r.usage_json AS usage
        FROM runs r

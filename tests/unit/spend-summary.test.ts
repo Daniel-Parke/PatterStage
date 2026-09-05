@@ -56,7 +56,7 @@ describe("getSpendSummary: clause 1, per period and per source", () => {
     expect(s.periods.map((p) => p.period)).toEqual(["day", "week", "month"]);
     for (const p of s.periods) {
       expect(p.since).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/);
-      expect(p.sources.map((r) => r.source)).toEqual(["agent", "composer", "research"]);
+      expect(p.sources.map((r) => r.source)).toEqual(["agent", "composer", "research", "story"]);
     }
   });
 

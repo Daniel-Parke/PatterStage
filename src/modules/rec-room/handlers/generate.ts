@@ -13,9 +13,18 @@ import { getStory, updateStory } from "@/modules/rec-room/lib/story-repository";
 import { recordEvent } from "@/lib/analytics/record-event";
 import type { ChapterOutline } from "@/modules/rec-room/types";
 
-import { buildChapterPrompt, safeArc, validateChapterOutput } from "./shared";
+import {
+  buildChapterPrompt,
+  safeArc,
+  storyModelId,
+  type StoryCallOptions,
+  validateChapterOutput,
+} from "./shared";
 
-export async function handleGenerateChapter(body: Record<string, unknown>): Promise<NextResponse> {
+export async function handleGenerateChapter(
+  body: Record<string, unknown>,
+  opts: StoryCallOptions = {},
+): Promise<NextResponse> {
   const { storyId } = body;
   if (!storyId) return NextResponse.json({ error: "Missing storyId" }, { status: 400 });
 
@@ -64,7 +73,7 @@ export async function handleGenerateChapter(body: Record<string, unknown>): Prom
   );
 
   try {
-    const raw = (await callLLM([{ role: "system", content: system }, { role: "user", content: userMessage }], { temperature: 0.85, maxTokens: 4096 })).content;
+    const raw = (await callLLM([{ role: "system", content: system }, { role: "user", content: userMessage }], { temperature: 0.85, maxTokens: 4096, modelId: storyModelId(story), spend: { source: "story", storyId: storyId as string }, signal: opts.signal })).content;
     const content = validateChapterOutput(raw);
 
     // Extract a descriptive chapter title from the generated content
@@ -77,7 +86,7 @@ export async function handleGenerateChapter(body: Record<string, unknown>): Prom
     };
     try {
       const titleSystem = "You are a story editor. Extract a short, evocative title (3-7 words) for this chapter. Return ONLY the title text, nothing else.";
-      const titleRaw = (await callLLM([{ role: "system", content: titleSystem }, { role: "user", content: `Chapter content:\n${content.slice(0, 500)}` }], { temperature: 0.3, maxTokens: 32 })).content;
+      const titleRaw = (await callLLM([{ role: "system", content: titleSystem }, { role: "user", content: `Chapter content:\n${content.slice(0, 500)}` }], { temperature: 0.3, maxTokens: 32, modelId: storyModelId(story), spend: { source: "story", storyId: storyId as string }, signal: opts.signal })).content;
       const extracted = titleRaw.trim().replace(/^["']|["']$/g, "").slice(0, 80);
       if (extracted.length > 5) {
         generatedTitle = extracted;
@@ -115,7 +124,7 @@ export async function handleGenerateChapter(body: Record<string, unknown>): Prom
       const summarySystem = getStoryPrompt("summary");
       rollingSummary = ((await callLLM(
         [{ role: "system", content: summarySystem }, { role: "user", content: `PREVIOUS SUMMARY:\n${rollingSummary}\n\nNEW CHAPTER (Chapter ${nextNum}):\n${content}\n\nUpdate the rolling summary.` }],
-        { temperature: 0.7, maxTokens: 1024 }
+        { temperature: 0.7, maxTokens: 1024, modelId: storyModelId(story), spend: { source: "story", storyId: storyId as string }, signal: opts.signal }
       )).content);
     } catch (err) {
       logApiError("POST /api/stories", "rolling summary after chapter", err);
@@ -154,7 +163,10 @@ export async function handleGenerateChapter(body: Record<string, unknown>): Prom
   }
 }
 
-export async function handleRetryChapter(body: Record<string, unknown>): Promise<NextResponse> {
+export async function handleRetryChapter(
+  body: Record<string, unknown>,
+  opts: StoryCallOptions = {},
+): Promise<NextResponse> {
   const { storyId, chapterNumber } = body;
   if (!storyId || !chapterNumber) {
     return NextResponse.json({ error: "Missing storyId or chapterNumber" }, { status: 400 });
@@ -177,10 +189,13 @@ export async function handleRetryChapter(body: Record<string, unknown>): Promise
   updatedChapters[chIdx] = { ...updatedChapters[chIdx], status: "pending", error: undefined };
   updateStory(storyId as string, { chapters: updatedChapters as typeof story.chapters });
 
-  return handleGenerateChapter({ storyId });
+  return handleGenerateChapter({ storyId }, opts);
 }
 
-export async function handleRewriteChapter(body: Record<string, unknown>): Promise<NextResponse> {
+export async function handleRewriteChapter(
+  body: Record<string, unknown>,
+  opts: StoryCallOptions = {},
+): Promise<NextResponse> {
   const { storyId, chapterNumber } = body;
   if (!storyId || !chapterNumber) {
     return NextResponse.json({ error: "Missing storyId or chapterNumber" }, { status: 400 });
@@ -201,5 +216,5 @@ export async function handleRewriteChapter(body: Record<string, unknown>): Promi
   );
   updateStory(storyId as string, { chapters: updatedChapters as typeof story.chapters });
 
-  return handleGenerateChapter({ storyId });
+  return handleGenerateChapter({ storyId }, opts);
 }

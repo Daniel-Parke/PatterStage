@@ -7,7 +7,9 @@
 // the runtime (see orchestration/RunSync), never by reading status.json files.
 // ═══════════════════════════════════════════════════════════════
 
-import { getDb, inTransaction, now } from "./db";
+import { getDb, inTransaction, now, uuid } from "./db";
+import { logApiError } from "./api-logger";
+import type { SpendSource } from "./spend/spend-law";
 import { buildUpdate } from "./db/build-update";
 import type { RunStatus, RunUsage } from "@/lib/runtime/types";
 
@@ -89,6 +91,8 @@ export interface CreateRunInput {
   scheduleId?: string | null;
   composerNodeRunId?: string | null;
   profileName?: string | null;
+  /** Which feature is spending. Derived from the composer link when omitted. */
+  spendSource?: SpendSource;
 }
 
 /**
@@ -101,8 +105,8 @@ export function createRun(input: CreateRunInput): boolean {
   const result = getDb()
     .prepare(
       `INSERT OR IGNORE INTO runs
-         (id, mission_id, schedule_id, composer_node_run_id, profile_name, status, submitted_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, 'started', ?, ?)`,
+         (id, mission_id, schedule_id, composer_node_run_id, profile_name, spend_source, status, submitted_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, 'started', ?, ?)`,
     )
     .run(
       input.id,
@@ -110,10 +114,38 @@ export function createRun(input: CreateRunInput): boolean {
       input.scheduleId ?? null,
       input.composerNodeRunId ?? null,
       input.profileName ?? null,
+      input.spendSource ?? (input.composerNodeRunId ? "composer" : "agent"),
       ts,
       ts,
     );
   return result.changes > 0;
+}
+
+/**
+ * Record what a direct LLM call cost, as a completed run row.
+ *
+ * Story Weaver drives callLLM itself: no mission, no schedule, no Composer
+ * node, and so no runs row and no spend (T-0108, D87). This is that row.
+ * Best-effort by contract, because bookkeeping must never fail the chapter the
+ * operator is waiting for: it swallows and logs rather than throwing.
+ */
+export function createSpendRun(input: {
+  source: SpendSource;
+  storyId?: string | null;
+  usage: RunUsage;
+}): void {
+  try {
+    const ts = now();
+    getDb()
+      .prepare(
+        `INSERT INTO runs
+           (id, story_id, spend_source, status, usage_json, submitted_at, completed_at, updated_at)
+         VALUES (?, ?, ?, 'completed', ?, ?, ?, ?)`,
+      )
+      .run(uuid(), input.storyId ?? null, input.source, JSON.stringify(input.usage), ts, ts, ts);
+  } catch (err) {
+    logApiError("spend.createSpendRun", input.source, err);
+  }
 }
 
 // ── Read ─────────────────────────────────────────────────────

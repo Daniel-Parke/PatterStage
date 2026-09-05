@@ -13,8 +13,10 @@ import { useState } from "react";
 import { FileStack, Telescope, GitBranch, Rocket, MessageCircle, FileText, Download, Trash2 } from "lucide-react";
 
 import PageHeader from "@/components/layout/PageHeader";
+import AppPageShell from "@/components/layout/AppPageShell";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
+import ConfirmButton from "@/components/ui/ConfirmButton";
 import Sheet from "@/components/ui/Sheet";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import { Select } from "@/components/ui/field";
@@ -63,9 +65,14 @@ export default function ArtifactsPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const { data: artifacts, error, refetch } = useArtifacts(kind || undefined);
   const { data: detail } = useArtifact(selectedId);
+  /** A failed write on this page. It used to refetch straight over its own
+   *  failure, so a refused delete left the screen exactly as it was (D99). */
+  const [writeError, setWriteError] = useState<string | null>(null);
 
   async function remove(id: string) {
-    await safeApiCall(`/api/artifacts/${id}`, { method: "DELETE" });
+    const res = await safeApiCall(`/api/artifacts/${id}`, { method: "DELETE" });
+    if (!res.ok) { setWriteError(res.error ?? "Could not delete that artifact"); return; }
+    setWriteError(null);
     if (selectedId === id) setSelectedId(null);
     await refetch();
   }
@@ -79,6 +86,7 @@ export default function ArtifactsPage() {
   const isMarkup = detail && (detail.mimeType.includes("markdown") || detail.mimeType.includes("html"));
 
   return (
+    <AppPageShell>
     <div className="mx-auto max-w-5xl space-y-4 p-4">
       <PageHeader
         icon={FileStack}
@@ -88,6 +96,7 @@ export default function ArtifactsPage() {
       />
 
       {error ? <LoadErrorBanner error={error} onRetry={() => void refetch()} /> : null}
+      {writeError ? <LoadErrorBanner error={writeError} /> : null}
 
       <Card padding="sm">
         <div className="flex items-center gap-2 px-1">
@@ -146,9 +155,17 @@ export default function ArtifactsPage() {
               <Button variant="primary" color="cyan" size="sm" onClick={download}>
                 <Download className="h-3.5 w-3.5" /> Download .{extForMime(detail.mimeType)}
               </Button>
-              <Button variant="ghost" color="pink" size="sm" onClick={() => void remove(detail.id)}>
+              {/* The artifact may be the only surviving copy of a 40-minute
+                  report, and this DELETE is permanent (D101). */}
+              <ConfirmButton
+                variant="ghost"
+                color="pink"
+                size="sm"
+                confirmLabel="Confirm delete?"
+                onConfirm={() => void remove(detail.id)}
+              >
                 <Trash2 className="h-3.5 w-3.5" /> Delete
-              </Button>
+              </ConfirmButton>
             </div>
           ) : null
         }
@@ -173,5 +190,6 @@ export default function ArtifactsPage() {
         </div>
       </Sheet>
     </div>
+    </AppPageShell>
   );
 }

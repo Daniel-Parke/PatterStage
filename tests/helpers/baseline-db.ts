@@ -3,6 +3,7 @@ import { join } from "path";
 import { applyModelsApiStyleMigration } from "../../src/lib/db/apply-models-api-style-migration";
 import { applyNeutralColumnNames } from "../../src/lib/db/apply-neutral-column-names";
 import { applyModelsOriginMigration } from "../../src/lib/db/apply-models-origin-migration";
+import { applyRunsSpendSourceMigration } from "../../src/lib/db/apply-runs-spend-source-migration";
 
 const migrationsDir = join(__dirname, "..", "..", "src", "lib", "db", "migrations");
 
@@ -36,6 +37,18 @@ export function execBaselineSchema(database: import("better-sqlite3").Database):
   // written by createModel/upsertModel, so a baseline-only fixture would hand
   // the repository a schema no running install has. Same rule as api_style.
   applyModelsOriginMigration(database, migrationsDir);
+  // runs.spend_source and runs.story_id are added post-baseline (v40) and
+  // written by createRun, so the same rule applies again. 040 classifies the
+  // rows already there from runs.composer_node_run_id, which 001_baseline does
+  // not create -- it is a guarded ALTER inside the v21 composer applier -- so
+  // the column has to exist before 040 runs. Adding just the column keeps this
+  // fixture's surface unchanged; pulling in the whole composer migration would
+  // create four tables no baseline-only test asked for.
+  const runsCols = database.prepare("PRAGMA table_info(runs)").all() as { name: string }[];
+  if (!runsCols.some((c) => c.name === "composer_node_run_id")) {
+    database.exec("ALTER TABLE runs ADD COLUMN composer_node_run_id TEXT");
+  }
+  applyRunsSpendSourceMigration(database, migrationsDir);
   database
     .prepare("INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)")
     .run("schema_version", "3");

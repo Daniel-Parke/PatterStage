@@ -8,7 +8,11 @@ import { NextResponse } from "next/server";
 import { callLLM } from "@/lib/llm";
 import { listStories, getStory, updateStory, deleteStory } from "@/modules/rec-room/lib/story-repository";
 
-import { safeArc } from "./shared";
+import {
+  safeArc,
+  storyModelId,
+  type StoryCallOptions,
+} from "./shared";
 
 export async function handleList(): Promise<NextResponse> {
   try {
@@ -81,7 +85,10 @@ export async function handleUpdate(body: Record<string, unknown>): Promise<NextR
 // generated before safeArc correctly parsed nested StoryArc data. Re-extracts
 // titles via LLM and updates both chapters[N].title and
 // storyArc.chapterOutlines[N].title in the DB.
-export async function handleSyncTitles(body: Record<string, unknown>): Promise<NextResponse> {
+export async function handleSyncTitles(
+  body: Record<string, unknown>,
+  opts: StoryCallOptions = {},
+): Promise<NextResponse> {
   const { storyId } = body;
   if (!storyId) return NextResponse.json({ error: "Missing storyId" }, { status: 400 });
 
@@ -115,7 +122,7 @@ export async function handleSyncTitles(body: Record<string, unknown>): Promise<N
       const titleRaw = (await callLLM(
         [{ role: "system", content: titleSystem },
          { role: "user", content: `Chapter content:\n${String(content).slice(0, 800)}` }],
-        { temperature: 0.3, maxTokens: 32 }
+        { temperature: 0.3, maxTokens: 32, modelId: storyModelId(story), spend: { source: "story", storyId: storyId as string }, signal: opts.signal }
       )).content.trim().replace(/^["']|["']$/g, "").slice(0, 80);
 
       if (titleRaw.length > 5) title = titleRaw;

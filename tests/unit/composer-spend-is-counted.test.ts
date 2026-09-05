@@ -51,7 +51,13 @@ beforeAll(() => {
     CREATE TABLE runs (
       id TEXT PRIMARY KEY, mission_id TEXT, composer_node_run_id TEXT,
       status TEXT, output TEXT, usage_json TEXT, error TEXT, session_id TEXT,
-      submitted_at TEXT NOT NULL, updated_at TEXT NOT NULL
+      submitted_at TEXT NOT NULL, updated_at TEXT NOT NULL,
+      -- Added by migration 040 (T-0108). This hand-written fixture is the
+      -- schema the read walks, so it carries the column with the same default
+      -- the migration gives existing rows; the composer CASE fallback below is
+      -- what these cases are actually about, and it still classifies rows that
+      -- predate the column.
+      story_id TEXT, spend_source TEXT NOT NULL DEFAULT 'agent'
     );
     CREATE TABLE missions (id TEXT PRIMARY KEY, model_id TEXT);
   `);

@@ -15,6 +15,10 @@ export interface ReaderView {
   nextChapter: Chapter | null;
   anyFailed: boolean;
   allComplete: boolean;
+  /** Chapters still to write. */
+  pendingCount: number;
+  /** The next one's number, or null when there is none. */
+  nextPending: number | null;
 }
 
 export function deriveReaderView(story: StoryState, currentChapter: number): ReaderView {
@@ -26,5 +30,17 @@ export function deriveReaderView(story: StoryState, currentChapter: number): Rea
   const nextChapter = nextComplete ? chapters[nextComplete.number - 1] : null;
   const anyFailed = chapters.some((c: Chapter) => c.status === "failed");
   const allComplete = chapters.length > 0 && chapters.every((c: Chapter) => c.status === "complete");
-  return { chapters, chapterContent, currentMeta, nextComplete, prevChapter, nextChapter, anyFailed, allComplete };
+  const pending = chapters.filter((c: Chapter) => c.status === "pending");
+  return {
+    chapters,
+    chapterContent,
+    currentMeta,
+    nextComplete,
+    prevChapter,
+    nextChapter,
+    anyFailed,
+    allComplete,
+    pendingCount: pending.length,
+    nextPending: pending.length > 0 ? pending[0].number : null,
+  };
 }

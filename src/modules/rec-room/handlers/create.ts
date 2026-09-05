@@ -13,11 +13,22 @@ import { createStory, updateStory } from "@/modules/rec-room/lib/story-repositor
 import { recordEvent } from "@/lib/analytics/record-event";
 import type { StoryArc as StoryArcType, ChapterOutline } from "@/modules/rec-room/types";
 
-import { buildMasterPrompt, getChapterCount, normaliseMood, safeArc, validateChapterOutput } from "./shared";
+import {
+  buildMasterPrompt,
+  getChapterCount,
+  normaliseMood,
+  safeArc,
+  storyModelId,
+  type StoryCallOptions,
+  validateChapterOutput,
+} from "./shared";
 
 import { chapterTitle } from "../lib/chapter-title";
 import { normaliseStoryCharacters } from "../lib/characters";
-export async function handleCreate(body: Record<string, unknown>): Promise<NextResponse> {
+export async function handleCreate(
+  body: Record<string, unknown>,
+  opts: StoryCallOptions = {},
+): Promise<NextResponse> {
   const { title, config } = body;
   // The boundary, whole (T-0087). T-0079 guarded characters; mood, title and
   // premise sat one field away, cast and unguarded. A string mood crashed with
@@ -58,7 +69,7 @@ export async function handleCreate(body: Record<string, unknown>): Promise<NextR
       "\n\nNumber of chapters: " + getChapterCount(cfg.length as string) +
       "\n\nGenerate the story arc and write Chapter 1 now.";
 
-    const raw = (await callLLM([{ role: "system", content: system }, { role: "user", content: userMessage }], { temperature: 0.85, maxTokens: 4096 })).content;
+    const raw = (await callLLM([{ role: "system", content: system }, { role: "user", content: userMessage }], { temperature: 0.85, maxTokens: 4096, modelId: storyModelId({ config: cfg }), spend: { source: "story", storyId: draft.id }, signal: opts.signal })).content;
     let storyArc: StoryArcType | null = null;
     let chapter1 = "";
 
@@ -93,7 +104,7 @@ export async function handleCreate(body: Record<string, unknown>): Promise<NextR
           chapter1 = validateChapterOutput(
             (await callLLM(
               [{ role: "system", content: system }, { role: "user", content: regenUser }],
-              { temperature: 0.85, maxTokens: 4096 }
+              { temperature: 0.85, maxTokens: 4096, modelId: storyModelId({ config: cfg }), spend: { source: "story", storyId: draft.id }, signal: opts.signal }
             )).content
           )
         } catch {}
@@ -136,7 +147,7 @@ export async function handleCreate(body: Record<string, unknown>): Promise<NextR
       const summarySystem = getStoryPrompt("summary");
       rollingSummary = ((await callLLM(
         [{ role: "system", content: summarySystem }, { role: "user", content: `NEW CHAPTER (Chapter 1):\n${chapter1}\n\nCreate the initial rolling summary.` }],
-        { temperature: 0.7, maxTokens: 1024 }
+        { temperature: 0.7, maxTokens: 1024, modelId: storyModelId({ config: cfg }), spend: { source: "story", storyId: draft.id }, signal: opts.signal }
       )).content);
     } catch {
       rollingSummary = `Chapter 1 introduces the story. ${chapter1.slice(0, 200)}...`;

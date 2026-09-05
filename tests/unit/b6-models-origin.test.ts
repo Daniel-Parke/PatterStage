@@ -319,10 +319,15 @@ describe("migration 039: models.origin and the last-imported pair", () => {
       expect(applier?.MODELS_ORIGIN_SCHEMA_VERSION).toBe(39);
     });
 
-    it("the head equals MODELS_ORIGIN_SCHEMA_VERSION", () => {
+    it("039 is on the ladder at or below the head", () => {
+      // 039 was the head when this oracle was written; 040 displaced it in
+      // T-0108. The head-equality assertion moved with it, to
+      // b14-runs-spend-source-migration.test.ts, which is where the head is now
+      // pinned. What stays here is the part that is about 039: its gate is a
+      // real rung, and the ladder never walks backwards past it.
       const applier = loadOriginApplier();
-      expect(MIGRATION_HEAD_SCHEMA_VERSION).toBe(applier?.MODELS_ORIGIN_SCHEMA_VERSION);
-      expect(MIGRATION_HEAD_SCHEMA_VERSION).toBe(39);
+      expect(applier?.MODELS_ORIGIN_SCHEMA_VERSION).toBe(39);
+      expect(MIGRATION_HEAD_SCHEMA_VERSION).toBeGreaterThanOrEqual(39);
     });
 
     it("sits exactly one above the gate it displaced", () => {
@@ -336,12 +341,12 @@ describe("migration 039: models.origin and the last-imported pair", () => {
       expect(OPERATOR_PREFS_SCHEMA_VERSION).toBe(COMPOSER_NODE_CANCELLED_SCHEMA_VERSION + 1);
     });
 
-    it("the highest-numbered migration file on disk is 039", () => {
+    it("039_models_origin.sql is on disk, at or below the highest number", () => {
       const numbers = readdirSync(migrationsDir)
         .filter((f) => /^\d{3}_.*\.sql$/.test(f))
         .map((f) => parseInt(f.slice(0, 3), 10));
       expect(numbers.length).toBeGreaterThan(20);
-      expect(Math.max(...numbers)).toBe(39);
+      expect(Math.max(...numbers)).toBeGreaterThanOrEqual(39);
       expect(readdirSync(migrationsDir)).toContain("039_models_origin.sql");
     });
   });
@@ -362,14 +367,14 @@ describe("migration 039: models.origin and the last-imported pair", () => {
       return db;
     }
 
-    it("adds the three columns and reaches 39", () => {
+    it("adds the three columns and climbs to the head", () => {
       const db = legacyDbWithRows();
       runMigrations(db);
 
       expect(cols(db, "models")).toEqual(
         expect.arrayContaining(["origin", "last_imported_name", "last_imported_base_url"]),
       );
-      expect(getSchemaVersion(db)).toBe(39);
+      expect(getSchemaVersion(db)).toBe(MIGRATION_HEAD_SCHEMA_VERSION);
       expect(tableNames(db)).toContain("operator_prefs");
       db.close();
     });
@@ -416,7 +421,7 @@ describe("migration 039: models.origin and the last-imported pair", () => {
       expect(before.origin).toBe("import");
 
       expect(() => runMigrations(db)).not.toThrow();
-      expect(getSchemaVersion(db)).toBe(39);
+      expect(getSchemaVersion(db)).toBe(MIGRATION_HEAD_SCHEMA_VERSION);
       expect(rawRow(db, "A")).toEqual(before);
       db.close();
     });
@@ -439,7 +444,7 @@ describe("migration 039: models.origin and the last-imported pair", () => {
         last = next;
       }
 
-      expect(getSchemaVersion(db)).toBe(39);
+      expect(getSchemaVersion(db)).toBe(MIGRATION_HEAD_SCHEMA_VERSION);
       expect(rawRow(db, "P").origin).toBe("import");
       expect(rawRow(db, "P").last_imported_name).toBe(SONNET);
       db.close();
@@ -459,6 +464,8 @@ describe("migration 039: models.origin and the last-imported pair", () => {
 
       expect(applier!.applyModelsOriginMigration(db, migrationsDir)).toBe(39);
       expect(cols(db, "models")).toContain("origin");
+      // 039 alone, not the whole chain: this case is about the applier's own
+      // gate, so the version afterwards is 39 however far the ladder now goes.
       expect(getSchemaVersion(db)).toBe(39);
       db.close();
     });

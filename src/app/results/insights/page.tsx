@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 
 import PageHeader from "@/components/layout/PageHeader";
+import AppPageShell from "@/components/layout/AppPageShell";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import {
@@ -139,6 +140,9 @@ export default function InsightsPage() {
   };
 
   return (
+    // B3 split the Laboratory into two route groups, so its single layout no
+    // longer reached these three pages and they lost the app's grid (D103).
+    <AppPageShell>
     <div className="flex h-full flex-col">
       <PageHeader
         icon={BarChart3}
@@ -374,5 +378,6 @@ export default function InsightsPage() {
         )}
       </div>
     </div>
+    </AppPageShell>
   );
 }

@@ -33,6 +33,12 @@ export interface ReaderBodyProps {
   onBack: () => void;
   onContinue: () => void;
   onRetryFailed: () => void;
+  /** The write controls (T-0108, D88), passed straight to the header. */
+  writing: boolean;
+  generating: boolean;
+  onWriteNext: () => void;
+  onKeepWriting: () => void;
+  onStop: () => void;
   onOpenBible: () => void;
   onToggleSidebar: () => void;
   onCloseSidebar: () => void;
@@ -56,6 +62,11 @@ export default function ReaderBody({
   onBack,
   onContinue,
   onRetryFailed,
+  writing,
+  generating,
+  onWriteNext,
+  onKeepWriting,
+  onStop,
   onOpenBible,
   onToggleSidebar,
   onCloseSidebar,
@@ -83,6 +94,13 @@ export default function ReaderBody({
         onBack={onBack}
         onContinue={onContinue}
         onRetryFailed={onRetryFailed}
+        writing={writing}
+        generating={generating}
+        pendingCount={view.pendingCount}
+        nextPending={view.nextPending}
+        onWriteNext={onWriteNext}
+        onKeepWriting={onKeepWriting}
+        onStop={onStop}
         onOpenBible={onOpenBible}
         onToggleSidebar={onToggleSidebar}
         onSelectChapter={onSelectChapter}

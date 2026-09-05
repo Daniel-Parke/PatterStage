@@ -12,6 +12,9 @@ import GenerateOverlay from "@/modules/rec-room/components/GenerateOverlay";
 import { WORD_COUNT_OPTIONS } from "@/modules/rec-room/components/ReaderSettings";
 import Tags from "@/modules/rec-room/components/Tags";
 import CharacterCard from "@/modules/rec-room/components/CharacterCard";
+import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
+import { safeApiCall } from "@/lib/api-fetch";
+import { useModels, useModelDefaults } from "@/hooks/useModels";
 
 const DEFAULT_GENRES = ["Sci-Fi", "Mystery", "Fantasy", "Romance", "Crime", "Horror", "Adventure", "Historical"];
 const DEFAULT_ERAS = ["Ancient", "Medieval", "Modern", "Near Future", "Far Future", "Timeless"];
@@ -39,6 +42,8 @@ interface Draft {
   pov: string;
   length: string;
   wordCountRange: string;
+  /** The registry row id of the model that writes the story; "" = agent default. */
+  modelId: string;
   characters: StoryCharacter[];
   savedAt: string;
 }
@@ -59,6 +64,8 @@ function CreateStoryPage() {
   const [genDone, setGenDone] = useState(false);
   const [genStoryId, setGenStoryId] = useState<string | null>(null);
   const [genError, setGenError] = useState<string | null>(null);
+  /** A failed write on this page (theme delete, save to library), never swallowed. */
+  const [writeError, setWriteError] = useState<string | null>(null);
 
   const [title, setTitle] = useState("");
   const [titleManuallyEdited, setTitleManuallyEdited] = useState(false);
@@ -70,6 +77,10 @@ function CreateStoryPage() {
   const [pov, setPov] = useState<string>(STORY_TEMPLATES[0].pov);
   const [length, setLength] = useState<string>(STORY_TEMPLATES[0].length);
   const [wordCountRange, setWordCountRange] = useState("standard");
+  // Story Weaver used to write with whatever the gateway happened to default to,
+  // which is also why its spend had no model dimension (T-0108, D87).
+  const [modelId, setModelId] = useState("");
+  const [touchedModel, setTouchedModel] = useState(false);
   const [characters, setCharacters] = useState<StoryCharacter[]>([...STORY_TEMPLATES[0].characters]);
   const [selectedTheme, setSelectedTheme] = useState("cosmic-voyager");
   const [expandedChars, setExpandedChars] = useState<Record<number, boolean>>({});
@@ -84,6 +95,16 @@ function CreateStoryPage() {
   const [savedThemes, setSavedThemes] = useState<StoryTheme[]>([]);
   const [showCharPicker, setShowCharPicker] = useState(false);
   const [hasDraft, setHasDraft] = useState(false);
+
+  const { data: models } = useModels();
+  const { data: modelDefaults } = useModelDefaults();
+
+  // Preselect the agent's own default the first time it arrives, and never
+  // again: an operator who chose a model keeps it.
+  useEffect(() => {
+    if (touchedModel) return;
+    if (modelDefaults?.agent) setModelId(modelDefaults.agent);
+  }, [modelDefaults, touchedModel]);
 
   // Save as theme
   const [showSaveTheme, setShowSaveTheme] = useState(false);
@@ -142,9 +163,9 @@ function CreateStoryPage() {
   // Auto-save draft
   useEffect(() => {
     if (generating) return;
-    const draft: Draft = { title, premise, genres, era, moods, setting, pov, length, wordCountRange, characters, savedAt: new Date().toISOString() };
+    const draft: Draft = { title, premise, genres, era, moods, setting, pov, length, wordCountRange, modelId, characters, savedAt: new Date().toISOString() };
     localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
-  }, [title, premise, genres, era, moods, setting, pov, length, wordCountRange, characters, generating]);
+  }, [title, premise, genres, era, moods, setting, pov, length, wordCountRange, modelId, characters, generating]);
 
   const loadDraft = () => {
     const raw = localStorage.getItem(DRAFT_KEY);
@@ -156,6 +177,7 @@ function CreateStoryPage() {
       setEra(d.era); setMoods(d.moods);
       setSetting(d.setting); setPov(d.pov);
       setLength(d.length); setWordCountRange(d.wordCountRange || "standard");
+    if (d.modelId) { setModelId(d.modelId); setTouchedModel(true); }
       setCharacters(d.characters);
       setSelectedTheme("");
       setHasDraft(false);
@@ -205,34 +227,31 @@ function CreateStoryPage() {
 
   const saveCharacter = async (char: StoryCharacter) => {
     if (!char.name.trim() || !char.description.trim()) return;
-    try {
-      const res = await fetch("/api/stories", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "characters", subAction: "create",
-          name: char.name, role: char.role, description: char.description,
-          personality: char.personality ? [char.personality] : [],
-          appearance: char.appearance || "",
-          backstory: char.backstory || "",
-          speechPatterns: char.speechPatterns || "",
-          relationships: char.relationships || "",
-          tags: [],
-        }),
-      });
-      const d = await res.json();
-      if (d.data?.id) {
-        // Mark as saved for feedback
-        setSavedChars(prev => ({ ...prev, [characters.indexOf(char)]: true }));
-        setTimeout(() => setSavedChars(prev => { const n = { ...prev }; delete n[characters.indexOf(char)]; return n; }), 2000);
-        // Refresh saved characters list
-        const listRes = await fetch("/api/stories", {
-          method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "characters", subAction: "list" }),
-        });
-        const listD = await listRes.json();
-        if (listD.data?.characters) setSavedCharacters(listD.data.characters);
-      }
-    } catch {}
+    // The gate used to read `d.data.id`; the handler answers `{data:{character}}`,
+    // so the save always worked and nothing on screen ever said so (T-0108, D94).
+    const res = await safeApiCall("/api/stories", {
+      method: "POST",
+      body: {
+        action: "characters", subAction: "create",
+        name: char.name, role: char.role, description: char.description,
+        personality: char.personality ? [char.personality] : [],
+        appearance: char.appearance || "",
+        backstory: char.backstory || "",
+        speechPatterns: char.speechPatterns || "",
+        relationships: char.relationships || "",
+        tags: [],
+      },
+    });
+    if (!res.ok) { setWriteError(res.error ?? "Could not save that character"); return; }
+    setWriteError(null);
+    const idx = characters.indexOf(char);
+    setSavedChars(prev => ({ ...prev, [idx]: true }));
+    setTimeout(() => setSavedChars(prev => { const n = { ...prev }; delete n[idx]; return n; }), 2000);
+    const list = await safeApiCall<{ data?: { characters?: CharacterSheet[] } }>("/api/stories", {
+      method: "POST",
+      body: { action: "characters", subAction: "list" },
+    });
+    if (list.ok && list.data?.data?.characters) setSavedCharacters(list.data.data.characters);
   };
 
   const toggleCharExpand = (idx: number) => {
@@ -241,38 +260,39 @@ function CreateStoryPage() {
 
   const saveAsTheme = async () => {
     if (!newThemeName.trim() || !premise.trim()) return;
-    try {
-      const res = await fetch("/api/stories", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "themes", subAction: "create",
-          name: newThemeName.trim(), premise, genre: genres, era, setting, mood: moods,
-          notes: `Characters: ${characters.map(c => c.name).filter(Boolean).join(", ")}`,
-        }),
-      });
-      const d = await res.json();
-      if (d.data?.id) {
-        const listRes = await fetch("/api/stories", {
-          method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "themes", subAction: "list" }),
-        });
-        const listD = await listRes.json();
-        if (listD.data?.themes) setSavedThemes(listD.data.themes);
-      }
-      setShowSaveTheme(false);
-      setNewThemeName("");
-    } catch {}
+    // Same gate, same defect: the handler answers `{data:{theme}}` (D94).
+    const res = await safeApiCall("/api/stories", {
+      method: "POST",
+      body: {
+        action: "themes", subAction: "create",
+        name: newThemeName.trim(), premise, genre: genres, era, setting, mood: moods,
+        notes: `Characters: ${characters.map(c => c.name).filter(Boolean).join(", ")}`,
+      },
+    });
+    if (!res.ok) { setWriteError(res.error ?? "Could not save that theme"); return; }
+    setWriteError(null);
+    const list = await safeApiCall<{ data?: { themes?: StoryTheme[] } }>("/api/stories", {
+      method: "POST",
+      body: { action: "themes", subAction: "list" },
+    });
+    if (list.ok && list.data?.data?.themes) setSavedThemes(list.data.data.themes);
+    setShowSaveTheme(false);
+    setNewThemeName("");
   };
 
   const deleteTheme = async (id: string) => {
-    try {
-      await fetch("/api/stories", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "themes", subAction: "delete", promptId: id }),
-      });
-      setSavedThemes(prev => prev.filter(t => t.id !== id));
-      if (selectedTheme === id) setSelectedTheme("");
-    } catch {}
+    // The field is `themeId`; this posted `promptId`, the handler 400d, and the
+    // catch swallowed it while the row was filtered off the screen anyway, so a
+    // theme that was still in the database looked deleted (T-0108, D89). The
+    // optimistic filter now runs on success only.
+    const res = await safeApiCall("/api/stories", {
+      method: "POST",
+      body: { action: "themes", subAction: "delete", themeId: id },
+    });
+    if (!res.ok) { setWriteError(res.error ?? "Could not delete that theme"); return; }
+    setWriteError(null);
+    setSavedThemes(prev => prev.filter(t => t.id !== id));
+    if (selectedTheme === id) setSelectedTheme("");
   };
 
   const clearAllInputs = () => {
@@ -302,7 +322,7 @@ function CreateStoryPage() {
         body: JSON.stringify({
           action: "create",
           title: finalTitle,
-          config: { title: finalTitle, premise, genre: genres.join(", "), era, setting, mood: moods, pov, length, characters, wordCountRange },
+          config: { title: finalTitle, premise, genre: genres.join(", "), era, setting, mood: moods, pov, length, characters, wordCountRange, modelId: modelId || undefined },
         }),
       });
       const d = await res.json().catch(() => null);
@@ -324,7 +344,7 @@ function CreateStoryPage() {
       setGenerating(false);
       setGenError(err instanceof Error ? err.message : "Unknown error");
     }
-  }, [title, premise, genres, era, setting, moods, pov, length, characters, wordCountRange]);
+  }, [title, premise, genres, era, setting, moods, pov, length, characters, wordCountRange, modelId]);
 
   const handleGenComplete = useCallback(() => {
     if (genStoryId) router.push("/recroom/story-weaver/" + genStoryId);
@@ -345,6 +365,8 @@ function CreateStoryPage() {
           <button onClick={() => setGenError(null)} aria-label="Dismiss this error" className="text-red-400/50 hover:text-red-400"><X className="w-4 h-4" /></button>
         </div>
       )}
+
+      {writeError && <LoadErrorBanner error={writeError} className="mx-4 mt-4" />}
 
       {/* Character Picker Modal */}
       {showCharPicker && (
@@ -567,6 +589,17 @@ function CreateStoryPage() {
                 <option value="long">Long (8-12 chapters)</option>
               </select>
             </div>
+          </div>
+          <div>
+            <label className="text-xs font-mono text-ps-text-muted uppercase tracking-wider block mb-2">Writing Model</label>
+            <select aria-label="Writing model" value={modelId}
+              onChange={(e) => { setTouchedModel(true); setModelId(e.target.value); }}
+              className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-neon-purple/40 font-mono">
+              <option value="">Agent default model</option>
+              {(models ?? []).map((m) => (
+                <option key={m.id} value={m.id}>{m.name} · {m.provider}</option>
+              ))}
+            </select>
           </div>
           <div>
             <label className="text-xs font-mono text-ps-text-muted uppercase tracking-wider block mb-2">Chapter Length (words per chapter)</label>

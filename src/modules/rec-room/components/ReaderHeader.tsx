@@ -24,6 +24,14 @@ export interface ReaderHeaderProps {
   onBack: () => void;
   onContinue: () => void;
   onRetryFailed: () => void;
+  /** The operator's standing intent to keep writing (T-0108, D88). */
+  writing: boolean;
+  generating: boolean;
+  pendingCount: number;
+  nextPending: number | null;
+  onWriteNext: () => void;
+  onKeepWriting: () => void;
+  onStop: () => void;
   onOpenBible: () => void;
   onToggleSidebar: () => void;
   onSelectChapter: (num: number) => void;
@@ -42,6 +50,13 @@ export default function ReaderHeader({
   onBack,
   onContinue,
   onRetryFailed,
+  writing,
+  generating,
+  pendingCount,
+  nextPending,
+  onWriteNext,
+  onKeepWriting,
+  onStop,
   onOpenBible,
   onToggleSidebar,
   onSelectChapter,
@@ -58,6 +73,51 @@ export default function ReaderHeader({
           <h1 className="text-sm font-semibold text-white truncate">{title}</h1>
         </div>
         <div className="flex items-center gap-1.5 flex-shrink-0">
+          {/* Nothing is written unless it is asked for. This header used to
+              offer no way to start OR stop: an effect wrote the next chapter
+              the moment the page opened (T-0108, D88). */}
+          {writing || generating ? (
+            <button
+              onClick={onStop}
+              title="Stop"
+              aria-label="Stop"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-red-500/30 text-xs font-bold text-red-300 hover:bg-red-500/10 transition-colors min-h-[44px]"
+            >
+              <span className="hidden md:inline">Stop</span>
+              <span className="md:hidden">Stop</span>
+            </button>
+          ) : nextPending !== null && pendingCount === 1 ? (
+            <button
+              onClick={onWriteNext}
+              title={`Write chapter ${nextPending}`}
+              aria-label={`Write chapter ${nextPending}`}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-cyan-500/20 text-xs font-bold text-cyan-300 hover:bg-cyan-500/10 transition-colors min-h-[44px]"
+            >
+              <span className="hidden md:inline">Write chapter {nextPending}</span>
+              <span className="md:hidden">Write</span>
+            </button>
+          ) : nextPending !== null && pendingCount > 1 ? (
+            <>
+              <button
+                onClick={onWriteNext}
+                title={`Write chapter ${nextPending}`}
+                aria-label={`Write chapter ${nextPending}`}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-cyan-500/20 text-xs font-bold text-cyan-300 hover:bg-cyan-500/10 transition-colors min-h-[44px]"
+              >
+                <span className="hidden md:inline">Write chapter {nextPending}</span>
+                <span className="md:hidden">Write</span>
+              </button>
+              <button
+                onClick={onKeepWriting}
+                title={`Keep writing (${pendingCount} chapters left)`}
+                aria-label={`Keep writing (${pendingCount} chapters left)`}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-cyan-500/20 text-xs font-bold text-cyan-300 hover:bg-cyan-500/10 transition-colors min-h-[44px]"
+              >
+                <span className="hidden md:inline">Keep writing ({pendingCount} chapters left)</span>
+                <span className="md:hidden">Keep writing</span>
+              </button>
+            </>
+          ) : null}
           {/* Continue button for complete stories */}
           {allComplete && (
             <button onClick={onContinue}

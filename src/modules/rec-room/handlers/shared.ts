@@ -10,6 +10,11 @@ import type { StoryArc as StoryArcType, ChapterOutline } from "@/modules/rec-roo
 
 import { normaliseStoryCharacters } from "../lib/characters";
 /** A mood is a list of words. A word is a one-item list; anything else is none. */
+/** How this call is billed, and how it is stopped. Threaded from the route. */
+export interface StoryCallOptions {
+  signal?: AbortSignal;
+}
+
 export function normaliseMood(mood: unknown): string[] {
   if (typeof mood === "string") return mood.trim() ? [mood.trim()] : [];
   if (Array.isArray(mood)) return mood.filter((m): m is string => typeof m === "string" && m.trim().length > 0);
@@ -108,12 +113,35 @@ export function validateChapterOutput(raw: string): string {
   return content.trim();
 }
 
+/**
+ * The chapter-length bands the create form offers.
+ *
+ * Read through `wordRange` below, which is what the edit and continue handlers
+ * call: the table was inline in buildMasterPrompt, so those two ignored what the
+ * operator picked (T-0108, D90/D91).
+ */
+const WORD_RANGES: Record<string, string> = {
+  short: "800-1200",
+  medium: "1200-1800",
+  standard: "1800-2500",
+  long: "2500-3500",
+  epic: "3500-5000",
+  marathon: "5000+",
+};
+
+/** The band for an id, or the standard one. */
+export function wordRange(id: unknown): string {
+  return WORD_RANGES[(id as string) || "standard"] ?? "1800-2500";
+}
+
+/** The writing model the operator chose, or undefined = the agent default. */
+export function storyModelId(story: { config?: Record<string, unknown> }): string | undefined {
+  const v = story.config?.modelId;
+  return typeof v === "string" && v.trim() ? v : undefined;
+}
+
 export function buildMasterPrompt(config: Record<string, unknown>): string {
-  const wordRanges: Record<string, string> = {
-    short: "800-1200", medium: "1200-1800", standard: "1800-2500",
-    long: "2500-3500", epic: "3500-5000", marathon: "5000+",
-  };
-  const wcRange = wordRanges[(config.wordCountRange as string) || "standard"] || "1800-2500";
+  const wcRange = wordRange(config.wordCountRange);
 
   // Normalised, not cast. A caller writing `characters: ["QA-Bot"]` -- which
   // reads as perfectly reasonable, and which nothing validates -- used to reach

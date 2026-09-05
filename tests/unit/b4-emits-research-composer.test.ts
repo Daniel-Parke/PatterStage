@@ -44,6 +44,9 @@ jest.mock("@/lib/laboratory/deep-research/research-repository", () => ({
   updateResearchRun: (...a: unknown[]) => mockUpdateResearchRun(...a),
   insertResearchStep: jest.fn(),
   listResearchRuns: jest.fn(() => []),
+  // See research-gather-is-persisted.test.ts: the job reads the row back to
+  // notice a cancel (T-0108, D98), and nothing here is ever cancelled.
+  getResearchRun: jest.fn(() => ({ status: "running" })),
   getResearchRunByComposerNodeRunId: (...a: unknown[]) => mockGetResearchRunByComposerNodeRunId(...(a as [])),
 }));
 const mockRunDeepResearch = jest.fn();

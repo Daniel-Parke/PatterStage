@@ -48,10 +48,12 @@ export const SPEND_PERIODS = ["day", "week", "month"] as const;
 export type SpendPeriod = (typeof SPEND_PERIODS)[number];
 
 /**
- * The three things that spend provider tokens. Scope comes straight off the
- * task row: agent runs, Composer stages and Deep Research.
+ * The things that spend provider tokens. Scope comes off the task row for
+ * three of them; Story Weaver drives callLLM directly and was invisible to
+ * this list, and therefore to the console and the hard stop, until it wrote
+ * its own runs row (T-0108, D87).
  */
-export const SPEND_SOURCES = ["agent", "composer", "research"] as const;
+export const SPEND_SOURCES = ["agent", "composer", "research", "story"] as const;
 export type SpendSource = (typeof SPEND_SOURCES)[number];
 
 /** The operator's budget, as the rest of the app sees it. */

@@ -157,6 +157,29 @@ export interface UpdateResearchRunInput {
   gather?: ResearchGatherHealth | null;
 }
 
+/**
+ * Stop a run the operator no longer wants.
+ *
+ * `cancelled` has been a legal ResearchStatus, a colour on the page and a member
+ * of the SSE terminal set since the feature shipped, and nothing ever wrote it:
+ * a Depth 8 run against a slow endpoint could only be waited out, spending the
+ * whole time (T-0108, D98).
+ *
+ * The status filter is in the WHERE clause, not a read-then-write, so a run that
+ * reached a terminal state one millisecond earlier cannot have its report
+ * relabelled. Returns the row when it moved, null when it did not — including
+ * for an id that is not a run at all.
+ */
+export function cancelResearchRun(id: string): ResearchRun | null {
+  const res = getDb()
+    .prepare(
+      `UPDATE research_runs SET status = 'cancelled', error = ?, completed_at = ?
+        WHERE id = ? AND status IN ('pending', 'running')`,
+    )
+    .run("Cancelled by the operator.", now(), id);
+  return res.changes > 0 ? getResearchRun(id) : null;
+}
+
 export function updateResearchRun(id: string, input: UpdateResearchRunInput): ResearchRun | null {
   const sets: string[] = [];
   const vals: unknown[] = [];

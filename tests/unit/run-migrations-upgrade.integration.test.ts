@@ -18,6 +18,7 @@ import {
 // the real numbers the chain ends on.
 import { OPERATOR_PREFS_SCHEMA_VERSION } from "@/lib/db/apply-operator-prefs-migration";
 import { MODELS_ORIGIN_SCHEMA_VERSION } from "@/lib/db/apply-models-origin-migration";
+import { RUNS_SPEND_SOURCE_SCHEMA_VERSION } from "@/lib/db/apply-runs-spend-source-migration";
 import { COMPOSER_NODE_CANCELLED_SCHEMA_VERSION } from "@/lib/db/apply-composer-node-cancelled-migration";
 import { RESEARCH_GATHER_SCHEMA_VERSION } from "@/lib/db/apply-research-gather-migration";
 import { COMPOSER_REJECTED_SCHEMA_VERSION } from "@/lib/db/apply-composer-rejected-migration";
@@ -247,7 +248,7 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
   // rather than on the install that trips over it.
   describe("the head constant cannot drift from the chain", () => {
     it("equals the last applier's version gate", () => {
-      expect(MIGRATION_HEAD_SCHEMA_VERSION).toBe(MODELS_ORIGIN_SCHEMA_VERSION);
+      expect(MIGRATION_HEAD_SCHEMA_VERSION).toBe(RUNS_SPEND_SOURCE_SCHEMA_VERSION);
     });
 
     // schema_version strictly increases and a gate is claimed once, which is
@@ -255,6 +256,7 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
     // above the applier that used to hold it is what that rule looks like from
     // the outside, and it catches a new migration that reuses or skips a number.
     it("sits exactly one above the gate it displaced", () => {
+      expect(RUNS_SPEND_SOURCE_SCHEMA_VERSION).toBe(MODELS_ORIGIN_SCHEMA_VERSION + 1);
       expect(MODELS_ORIGIN_SCHEMA_VERSION).toBe(OPERATOR_PREFS_SCHEMA_VERSION + 1);
       expect(OPERATOR_PREFS_SCHEMA_VERSION).toBe(COMPOSER_NODE_CANCELLED_SCHEMA_VERSION + 1);
       expect(COMPOSER_NODE_CANCELLED_SCHEMA_VERSION).toBe(RESEARCH_GATHER_SCHEMA_VERSION + 1);

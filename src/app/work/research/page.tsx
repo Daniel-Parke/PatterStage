@@ -10,17 +10,20 @@
 "use client";
 
 import { useState } from "react";
-import { Telescope, Send, Save } from "lucide-react";
+import { Telescope, Send, Save, Square } from "lucide-react";
 
 import PageHeader from "@/components/layout/PageHeader";
+import AppPageShell from "@/components/layout/AppPageShell";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
+import ConfirmButton from "@/components/ui/ConfirmButton";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import { Field, Textarea, Select, Input } from "@/components/ui/field";
 import ResearchReport from "@/components/research/ResearchReport";
 import { safeApiCall } from "@/lib/api-fetch";
 import { useResearchRuns, useResearchRun, useResearchPresets } from "@/hooks/useDeepResearch";
 import { useModels } from "@/hooks/useModels";
+import { formatElapsed } from "@/lib/utils";
 import { useEventStream } from "@/hooks/useEventStream";
 import type { ResearchConfig, ResearchRun, ResearchStep } from "@/lib/laboratory/deep-research/types";
 
@@ -46,12 +49,42 @@ const DEFAULT_CFG: ResearchConfig = {
   visitsPerRound: 2,
 };
 
+/**
+ * The six facts a finished run is judged on.
+ *
+ * All of them were persisted and none was shown: the detail pane rendered the
+ * query, a status word, the error and the report, so two runs of the same
+ * question at different depths read identically (T-0108, D102).
+ *
+ * `Tokens: not recorded` rather than `0`, because null is not zero — the same
+ * rule the spend console holds for a run that crashed before it could total.
+ */
+function runMeta(run: ResearchRun): string[] {
+  const cfg = (run.config ?? {}) as ResearchConfig;
+  return [
+    `Model: ${run.modelId || "Agent default"}`,
+    `Search: ${run.provider ?? cfg.searchProvider ?? "duckduckgo"}`,
+    `Depth: ${cfg.rounds ?? 3} rounds`,
+    `Breadth: ${cfg.resultsPerQuery ?? 6} results/query`,
+    run.completedAt
+      ? `Duration: ${formatElapsed(run.createdAt, Date.parse(run.completedAt))}`
+      : "Duration: running",
+    run.usage ? `Tokens: ${run.usage.totalTokens.toLocaleString()}` : "Tokens: not recorded",
+  ];
+}
+
+/** A run the operator can still stop. */
+const STOPPABLE = new Set(["pending", "running"]);
+
 export default function DeepResearchPage() {
   const [query, setQuery] = useState("");
   const [cfg, setCfg] = useState<ResearchConfig>(DEFAULT_CFG);
   const [submitting, setSubmitting] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [presetName, setPresetName] = useState("");
+  /** A failed write on this page. Every one of them used to be fire-and-forget:
+   *  a 400 left the screen exactly as it was (D99). */
+  const [writeError, setWriteError] = useState<string | null>(null);
 
   const { data: runs, refetch, error: runsError } = useResearchRuns();
   const { data: polled } = useResearchRun(selectedId);
@@ -86,12 +119,15 @@ export default function DeepResearchPage() {
         method: "POST",
         body: { query: q, config },
       });
+      if (!res.ok) { setWriteError(res.error ?? "Could not start that run"); return; }
       const id = res.data?.data?.run?.id;
-      if (id) {
-        setQuery("");
-        setSelectedId(id);
-        await refetch();
-      }
+      // A 200 with no id is still a failure: nothing is running, and the form
+      // would otherwise clear itself as though something were.
+      if (!id) { setWriteError("The run started but no id came back, so there is nothing to follow."); return; }
+      setWriteError(null);
+      setQuery("");
+      setSelectedId(id);
+      await refetch();
     } finally {
       setSubmitting(false);
     }
@@ -106,16 +142,30 @@ export default function DeepResearchPage() {
   async function savePreset() {
     const name = presetName.trim();
     if (!name) return;
-    await safeApiCall("/api/laboratory/research/presets", {
+    const res = await safeApiCall("/api/laboratory/research/presets", {
       method: "POST",
       body: { name, config: { ...cfg, modelId: cfg.modelId || undefined } },
     });
+    if (!res.ok) { setWriteError(res.error ?? "Could not save that preset"); return; }
+    setWriteError(null);
     setPresetName("");
     await refetchPresets();
   }
 
+  /** Stop a run in flight. The row the route writes is the final word; the job
+   *  bails out rather than overwriting it (D98). */
+  async function cancelRun(id: string) {
+    const res = await safeApiCall(`/api/laboratory/research/${id}/cancel`, { method: "POST" });
+    if (!res.ok) { setWriteError(res.error ?? "Could not stop that run"); return; }
+    setWriteError(null);
+    await refetch();
+  }
+
   return (
-    <div className="space-y-4">
+    // B3 split the Laboratory into two route groups, so its single layout no
+    // longer reached this page and it lost the app's grid (D103).
+    <AppPageShell>
+    <div className="mx-auto w-full max-w-6xl space-y-4 p-4">
       <PageHeader
         icon={Telescope}
         subtitle="Provider-flexible iterative research → an interactive, cited report"
@@ -126,6 +176,7 @@ export default function DeepResearchPage() {
       {/* A failed live read, as distinct from a dropped socket. The run
           detail below still renders from the polled copy (T-0046). */}
       {liveError ? <LoadErrorBanner error={`Live updates: ${liveError}`} /> : null}
+      {writeError ? <LoadErrorBanner error={writeError} /> : null}
 
       {/* Launch form */}
       <Card padding="md" glow="cyan">
@@ -235,9 +286,30 @@ export default function DeepResearchPage() {
             <div className="space-y-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="text-sm font-medium text-ps-text-primary">{detail.run.query}</div>
-                <div className={`shrink-0 font-mono text-xs uppercase ${STATUS_COLOR[detail.run.status] ?? "text-ps-text-muted"}`}>
-                  {detail.run.status}
+                <div className="flex shrink-0 items-center gap-2">
+                  <div className={`font-mono text-xs uppercase ${STATUS_COLOR[detail.run.status] ?? "text-ps-text-muted"}`}>
+                    {detail.run.status}
+                  </div>
+                  {STOPPABLE.has(detail.run.status) ? (
+                    <ConfirmButton
+                      variant="ghost"
+                      color="pink"
+                      size="sm"
+                      confirmLabel="Confirm stop?"
+                      onConfirm={() => void cancelRun(detail.run.id)}
+                    >
+                      <Square className="h-3.5 w-3.5" /> Stop run
+                    </ConfirmButton>
+                  ) : null}
                 </div>
+              </div>
+              <div className="flex flex-wrap gap-x-2 gap-y-1 font-mono text-xs text-ps-text-muted">
+                {runMeta(detail.run).map((f, i) => (
+                  <span key={f}>
+                    {i > 0 ? <span className="mr-2 text-ps-text-faint">·</span> : null}
+                    {f}
+                  </span>
+                ))}
               </div>
               {detail.run.error ? <p className="text-xs text-neon-pink">{detail.run.error}</p> : null}
               <ResearchReport run={detail.run} steps={detail.steps} />
@@ -246,5 +318,6 @@ export default function DeepResearchPage() {
         </Card>
       </div>
     </div>
+    </AppPageShell>
   );
 }

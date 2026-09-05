@@ -35,6 +35,9 @@ export default function StoryReaderPage() {
   const [loading, setLoading] = useState(true);
   const [currentChapter, setCurrentChapter] = useState(1);
   const [generating, setGenerating] = useState(false);
+  /** The operator's standing intent to keep writing. NEVER true on mount. */
+  const [writing, setWriting] = useState(false);
+  const abortRef = useRef<AbortController | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [bibleOpen, setBibleOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -105,12 +108,15 @@ export default function StoryReaderPage() {
 
   const generateNext = useCallback(async () => {
     if (!story) return;
+    const controller = new AbortController();
+    abortRef.current = controller;
     setGenerating(true);
     setError(null);
     try {
       const res = await fetch("/api/stories", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "generate-chapter", storyId }),
+        signal: controller.signal,
       });
       const d = await res.json();
       if (d.data?.story) {
@@ -121,10 +127,28 @@ export default function StoryReaderPage() {
         setError(d.error);
       }
     } catch (e) {
+      // A Stop is not a failure, and does not count toward the ceiling.
+      if (e instanceof Error && e.name === "AbortError") {
+        setWriting(false);
+        return;
+      }
       autoFailuresRef.current += 1;
       setError(e instanceof Error ? e.message : "Generation failed");
-    } finally { setGenerating(false); }
+    } finally {
+      abortRef.current = null;
+      setGenerating(false);
+    }
   }, [story, storyId]);
+
+  /** Write exactly the next pending chapter, once. Does not arm the loop. */
+  const writeNextChapter = useCallback(() => { void generateNext(); }, [generateNext]);
+  /** Arm the loop: write chapters until none are pending or Stop is pressed. */
+  const keepWriting = useCallback(() => setWriting(true), []);
+  /** Stop before the next call, and abort the one in flight. */
+  const stopWriting = useCallback(() => {
+    setWriting(false);
+    abortRef.current?.abort();
+  }, []);
 
   /**
    * Auto-generate the next pending chapter.
@@ -139,6 +163,10 @@ export default function StoryReaderPage() {
    * cannot itself re-trigger the effect). Any successful chapter re-arms it.
    */
   useEffect(() => {
+    // Nothing is written unless the operator asked for it. This effect used to
+    // fire on mount, so opening a half-finished story to re-read it billed a
+    // chapter (T-0108, D88).
+    if (!writing) return;
     if (!story || generating) return;
     if (autoFailuresRef.current >= MAX_AUTO_FAILURES) return;
     const firstPending = story.chapters?.find((c: Chapter) => c.status === "pending");
@@ -146,7 +174,7 @@ export default function StoryReaderPage() {
     if (firstPending && !anyWriting) {
       generateNext();
     }
-  }, [story, story?.chapters, generating, generateNext]);
+  }, [writing, story, story?.chapters, generating, generateNext]);
 
   const autoPaused = autoFailuresRef.current >= MAX_AUTO_FAILURES;
 
@@ -371,6 +399,11 @@ export default function StoryReaderPage() {
           const failed = view.chapters.find((c: Chapter) => c.status === "failed");
           if (failed) retryChapter(failed.number);
         }}
+        writing={writing}
+        generating={generating}
+        onWriteNext={writeNextChapter}
+        onKeepWriting={keepWriting}
+        onStop={stopWriting}
         onOpenBible={() => setBibleOpen(true)}
         onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
         onCloseSidebar={() => setSidebarOpen(false)}

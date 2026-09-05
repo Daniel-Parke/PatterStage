@@ -63,3 +63,16 @@ Research is also a **Composer node kind** (`research`). Orchestrate it as one st
 ## Verification
 
 `npm test` covers the IterResearch loop (rounds, budget, LLM-only, failure) and the search module (SearXNG parse, visit extraction, resolver) with injected deps. End-to-end: run a query against (a) the Hermes default and (b) a local-endpoint registry model; confirm a cited report + streamed steps.
+
+## Stopping a run
+
+A run you no longer want can be stopped from the detail pane: **Stop run**, then
+a second click to confirm. It is offered only while the run is pending or
+running, so a finished report can never be relabelled.
+
+The row is written by `POST /api/laboratory/research/[id]/cancel` and the job
+notices at its next step and bails out, rather than finishing and overwriting
+your decision with `completed`. A cancelled run keeps whatever steps it had
+reached, records no report, and captures no artifact: half a report is not a
+deliverable. Its tokens up to that point are already recorded against it, so
+stopping a run does not make what it already spent disappear.

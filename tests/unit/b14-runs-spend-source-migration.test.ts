@@ -86,6 +86,10 @@ function legacyDbWithRows(seed: (db: RealDb) => void = () => {}): RealDb {
   const db = openMemoryDb();
   db.exec("CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);");
   db.exec(readFileSync(join(migrationsDir, "001_baseline.sql"), "utf-8"));
+  // 021 adds this one in TypeScript, as a guarded ALTER, so the baseline file
+  // does not carry it. A pre-040 database has it; a pre-021 one does not, and
+  // seeding rows that name it needs the column to exist first.
+  db.exec("ALTER TABLE runs ADD COLUMN composer_node_run_id TEXT");
   setSchemaVersion(db, 2);
   seed(db);
   return db;

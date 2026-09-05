@@ -113,10 +113,12 @@ describe("Deep Research spend is counted once it is recorded", () => {
 
   // ── no-regression guards ──
 
-  it("still reports three sources in a stable order", async () => {
+  it("still reports every source in a stable order", async () => {
     const summary = await summaryWith([]);
     const period = summary.periods.find((p) => p.period === summary.budgetPeriod)!;
-    expect(period.sources.map((s) => s.source)).toEqual(["agent", "composer", "research"]);
+    // `story` is fourth and last, added by T-0108; the first three keep their
+    // order, which is the part this guard is about.
+    expect(period.sources.map((s) => s.source)).toEqual(["agent", "composer", "research", "story"]);
   });
 
   it("still says nothing is unmeasured on an install with no research at all", async () => {

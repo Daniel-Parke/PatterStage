@@ -38,3 +38,16 @@ export function chapterTitle(raw: unknown, index: number): string {
   const lastSpace = cut.lastIndexOf(" ");
   return `${(lastSpace > MAX_TITLE / 2 ? cut.slice(0, lastSpace) : cut).trimEnd()}…`;
 }
+
+/**
+ * The reader's heading for one chapter.
+ *
+ * `chapterTitle` falls back to "Chapter N", which the heading then prefixed
+ * with "Chapter N: " (T-0108). A title that is only the chapter's own name is
+ * not a title.
+ */
+export function chapterHeading(number: number, title: string | undefined | null): string {
+  const t = (title ?? "").trim();
+  if (!t || t.toLowerCase() === `chapter ${number}`.toLowerCase()) return `Chapter ${number}`;
+  return `Chapter ${number}: ${t}`;
+}

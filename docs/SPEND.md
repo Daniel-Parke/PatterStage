@@ -19,13 +19,14 @@ The short version: **spend is always visible, a budget is optional, a budget onl
 
 Three period totals, always: today, this week, this month. Calendar periods, in UTC, not rolling windows. A person who budgets forty dollars a month means the month, and wants it to reset on the first.
 
-Under them, the same period split by the three things that spend tokens:
+Under them, the same period split by the four things that spend tokens:
 
 | Source | What it is | Recorded? |
 |---|---|---|
 | Agent runs | A mission dispatched by you, a schedule or the queue | Yes |
 | Composer stages | One node of a Composer workflow, executed as a run | Yes, since T-0058 |
 | Deep Research | A research run from the Laboratory | Yes, since schema 34 |
+| Story Weaver | A chapter, outline or edit written in the Rec Room | Yes, since schema 40 |
 
 ### Deep Research runs from before the upgrade are still not counted
 
@@ -34,6 +35,18 @@ Deep Research used to drive the model directly and throw the token counts away, 
 Runs that finished **before** that upgrade keep NULL token columns, and they stay out of the totals. That is deliberate. Their cost is genuinely unknown, and folding them in at zero would take a real cost and report it as free, which is the whole thing this section used to warn about. The panel counts them separately and says so, and the note disappears on its own as those runs age out of the period you are looking at.
 
 One case still records nothing: a run that **crashes mid-way**. The engine throws before it can return a total, so the tokens it burned are unknowable and the run is recorded as unmeasured rather than as free.
+
+### Story Weaver chapters written before the upgrade are not counted
+
+Story Weaver drove the model directly and created no run row at all, so the whole
+feature spent money off the books: a fifteen-chapter novel could cost more than
+every mission on the install and the panel would show none of it. Migration `040`
+gave a run row a `spend_source`, and Story Weaver now records one per call, the
+same way an agent run does.
+
+Chapters written **before** that upgrade left no row to count and stay absent.
+There is nothing to fold in: unlike a research run with NULL token columns, no
+record of them exists.
 
 ### It is an estimate, not an invoice
 
@@ -69,11 +82,19 @@ They pause. They do not fail, cancel or drop anything. A schedule keeps its plac
 
 You cannot arm the stop without a figure. The interface refuses it and so does the database, because a stop with no ceiling would refuse every unattended dispatch forever with no number anybody could raise.
 
-### The stop counts less than the panel does
+### The stop and the panel now count the same rows
 
-The figure on screen and the figure the stop checks are not built from the same rows. The panel totals all three sources: agent runs, Composer stages and Deep Research. The guard that pauses unattended dispatch ([`spend-guard.ts`](../src/lib/spend/spend-guard.ts)) reads recorded run usage only, which is agent runs and Composer stages, and never reads the research table at all.
+They used to not. The panel totalled every source; the guard that pauses
+unattended dispatch read recorded run usage only, and never opened the research
+table at all. On an install that spent most of its money on Deep Research the
+panel could show the meter full and print the over-budget sentence while
+unattended dispatch carried on, because the number the guard measured was
+smaller than the number on screen.
 
-So on an install that spends most of its money on Deep Research, the panel can show the meter full and print the over-budget sentence while unattended dispatch carries on, because the number the guard measured is smaller than the number you are looking at. Read the stop as a ceiling on dispatched runs rather than on every dollar the panel reports. This is a gap in the code, not a design decision, and it is worth checking whether it has been closed before leaning on the checkbox.
+Both now price one window through one helper, `recordedSpendSince` in
+[`spend-window.ts`](../src/lib/spend/spend-window.ts), so a source added to the
+panel is a source the ceiling holds. A unit test asserts the two totals are
+equal across every source, which is what stops the two drifting apart again.
 
 ### One case where it stops without a breach
 
@@ -89,7 +110,7 @@ In your database, in the `spend_policy` table, added by migration `033`. It is a
 
 | Route | What it does |
 |---|---|
-| `GET /api/spend` | The full summary: three periods, three sources each, your policy, and the verdict. |
+| `GET /api/spend` | The full summary: three periods, four sources each, your policy, and the verdict. |
 | `PUT /api/spend` | Set `limitUsd` (a positive number, or `null` to remove it), `period` (`day`, `week` or `month`), or `hardStop` (boolean). |
 
 Clearing `limitUsd` disarms the stop in the same write, so the forbidden pair never exists.

@@ -42,8 +42,8 @@
 
 import { logApiError } from "@/lib/api-logger";
 import { evaluateSpend, periodNoun, periodStart } from "./spend-law";
-import { readRunUsageSince, readSpendPolicy } from "./spend-repository";
-import { estimateCost } from "@/lib/analytics/model-cost";
+import { readSpendPolicy } from "./spend-repository";
+import { recordedSpendSince } from "./spend-window";
 
 export interface UnattendedSpendVerdict {
   allowed: boolean;
@@ -54,18 +54,6 @@ export interface UnattendedSpendVerdict {
 const ALLOWED: UnattendedSpendVerdict = { allowed: true, reason: null };
 
 /** Recorded spend inside a window. Throws; the caller decides what that means. */
-function spentSince(since: string): number {
-  let total = 0;
-  for (const row of readRunUsageSince(since)) {
-    try {
-      const u = JSON.parse(row.usage) as { inputTokens?: number; outputTokens?: number };
-      total += estimateCost(row.model, Number(u.inputTokens ?? 0), Number(u.outputTokens ?? 0));
-    } catch {
-      continue;
-    }
-  }
-  return total;
-}
 
 /**
  * May unattended work dispatch right now?
@@ -91,7 +79,7 @@ export function checkUnattendedSpend(): UnattendedSpendVerdict {
   const since = periodStart(policy.period, new Date().toISOString());
   let spent: number;
   try {
-    spent = spentSince(since);
+    spent = recordedSpendSince(since).totalUsd;
   } catch (err) {
     // A stop IS armed and we cannot show we are under it. See the header: this
     // direction fails closed, and says which failure it is.

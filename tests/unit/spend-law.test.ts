@@ -33,8 +33,11 @@ describe("spend law: the shape of the settings", () => {
     expect([...SPEND_PERIODS]).toEqual(["day", "week", "month"]);
   });
 
-  it("names the three sources the operator's row scopes spend to", () => {
-    expect([...SPEND_SOURCES]).toEqual(["agent", "composer", "research"]);
+  it("names the four sources the operator's row scopes spend to", () => {
+    // `story` joined them in T-0108: Story Weaver drives callLLM directly, and
+    // until 040 gave a runs row a spend_source its chapters were spent off the
+    // books entirely (D87).
+    expect([...SPEND_SOURCES]).toEqual(["agent", "composer", "research", "story"]);
   });
 
   // Clause 2 and clause 4, stated as data. This is the single most important

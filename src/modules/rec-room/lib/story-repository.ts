@@ -8,6 +8,14 @@ export interface Story {
   id: string;
   title: string;
   config: Record<string, unknown>;
+  /**
+   * Derived from config.premise; never written back.
+   *
+   * StoryCard and the library row have always rendered it, and nothing ever
+   * set it, so every card read blank (T-0108, D92). updateStory writes
+   * `config`, so the derived field cannot drift from its source.
+   */
+  premise?: string;
   masterPrompt?: string;
   storyArc?: Record<string, unknown>;
   rollingSummary?: string;
@@ -46,10 +54,12 @@ interface StoryRow {
 
 function rowToStory(row: StoryRow | undefined): Story | null {
   if (!row || row.deleted_at) return null;
+  const config = JSON.parse(row.config || "{}") as Record<string, unknown>;
   return {
     id: row.id,
     title: row.title,
-    config: JSON.parse(row.config || "{}"),
+    config,
+    premise: typeof config.premise === "string" ? config.premise : undefined,
     masterPrompt: row.master_prompt ?? undefined,
     storyArc: row.story_arc ? JSON.parse(row.story_arc) : undefined,
     rollingSummary: row.rolling_summary ?? undefined,
@@ -83,6 +93,14 @@ export function getStory(id: string): Story | null {
 export function createStory(data: {
   title: string;
   config: Record<string, unknown>;
+  /**
+   * Derived from config.premise; never written back.
+   *
+   * StoryCard and the library row have always rendered it, and nothing ever
+   * set it, so every card read blank (T-0108, D92). updateStory writes
+   * `config`, so the derived field cannot drift from its source.
+   */
+  premise?: string;
   masterPrompt?: string;
   storyArc?: Record<string, unknown>;
   chapters: StoryChapter[];

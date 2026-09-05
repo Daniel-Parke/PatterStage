@@ -15,10 +15,15 @@ import { UNSET_SPEND_POLICY } from "@/lib/spend/spend-law";
 
 const readSpendPolicy = jest.fn();
 const readRunUsageSince = jest.fn();
+const readResearchUsageSince = jest.fn((_since: string) => [] as unknown[]);
 
 jest.mock("@/lib/spend/spend-repository", () => ({
   readSpendPolicy: () => readSpendPolicy(),
   readRunUsageSince: (since: string) => readRunUsageSince(since),
+  // The guard and the console now price the same window through one helper
+  // (T-0108, D104), so the guard reaches research too. Empty here: these cases
+  // are about the runs figure, and the parity is proven in spend-summary.
+  readResearchUsageSince: (since: string) => readResearchUsageSince(since),
   writeSpendPolicy: jest.fn(),
 }));
 

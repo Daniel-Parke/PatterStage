@@ -8,6 +8,8 @@ import { normaliseUsage } from "./usage-shape";
 import { getModelWithKey, type ModelWithKey } from "./models-repository";
 import { getGatewayKey } from "./runtime/secrets";
 import { buildDirectRequest, inferApiStyle, type ApiStyle } from "./llm-endpoint";
+import { createSpendRun } from "./runs-repository";
+import type { SpendSource } from "./spend/spend-law";
 
 /**
  * Fast-fail timeout for the direct-provider path. A misconfigured endpoint
@@ -40,6 +42,18 @@ export interface LLMOptions {
    * get it too for a fair comparison.
    */
   timeoutMs?: number;
+  /**
+   * When set, this call's reported usage is recorded as spend under this
+   * source, so a feature that drives callLLM directly stops being invisible to
+   * the console and the hard stop (T-0108, D87).
+   */
+  spend?: { source: SpendSource; storyId?: string | null };
+  /**
+   * Abort the provider call. The reader's Stop passes its controller here, so
+   * a stopped chapter stops being written rather than finishing and being
+   * thrown away (T-0108, D88).
+   */
+  signal?: AbortSignal;
 }
 
 export interface LLMResponse {
@@ -115,7 +129,17 @@ export async function callLLM(
     model: optModel,
     modelId,
     timeoutMs,
+    signal,
   } = opts;
+
+  // A caller who has already stopped gets no call at all. Relying on fetch to
+  // notice the signal makes "stopped" depend on how far the request had got
+  // (T-0108, D88).
+  if (signal?.aborted) {
+    const err = new Error("The call was stopped before it was made.");
+    err.name = "AbortError";
+    throw err;
+  }
 
   let resolved: ModelWithKey | null = null;
   if (modelId) {
@@ -128,7 +152,7 @@ export async function callLLM(
 
   // ── Direct-provider path ──────────────────────────────────
   if (resolved && resolved.baseUrl && resolved.apiKey) {
-    return callDirectProvider({
+    const direct = await callDirectProvider({
       messages,
       temperature,
       maxTokens,
@@ -137,7 +161,10 @@ export async function callLLM(
       apiKey: resolved.apiKey,
       apiStyle: resolved.apiStyle ?? inferApiStyle(resolved.provider, resolved.baseUrl),
       timeoutMs,
+      signal,
     });
+    recordSpend(opts, direct);
+    return direct;
   }
 
   // ── Gateway path ──────────────────────────────────────────
@@ -147,13 +174,48 @@ export async function callLLM(
   const { chatCompletionsUrl: apiUrl } = getAgentGateway();
 
   await probeGatewayHealth();
-  return callGateway({
+  const viaGateway = await callGateway({
     messages,
     temperature,
     maxTokens,
     model: gatewayModel,
     apiUrl,
+    signal,
   });
+  recordSpend(opts, viaGateway);
+  return viaGateway;
+}
+
+/**
+ * Record what this call cost, when the caller asked for it.
+ *
+ * A provider that reported NO usage writes NO row. Null is not zero: a
+ * zero-token row would report a real cost as free, which is the doctrine the
+ * spend console holds everywhere else.
+ */
+function recordSpend(opts: LLMOptions, response: LLMResponse): void {
+  if (!opts.spend || !response.usage) return;
+  const { promptTokens, completionTokens, totalTokens } = response.usage;
+  if (!(promptTokens > 0 || completionTokens > 0)) return;
+  createSpendRun({
+    source: opts.spend.source,
+    storyId: opts.spend.storyId ?? null,
+    usage: {
+      inputTokens: promptTokens,
+      outputTokens: completionTokens,
+      totalTokens,
+    },
+  });
+}
+
+/** Abort this path's controller when the caller's signal aborts, now or later. */
+function linkAbort(signal: AbortSignal | undefined, controller: AbortController): void {
+  if (!signal) return;
+  if (signal.aborted) {
+    controller.abort();
+    return;
+  }
+  signal.addEventListener("abort", () => controller.abort(), { once: true });
 }
 
 interface CallParams {
@@ -165,6 +227,8 @@ interface CallParams {
 
 interface CallGatewayInput extends CallParams {
   apiUrl: string;
+  /** The caller's abort, linked to this path's own timeout controller. */
+  signal?: AbortSignal;
 }
 
 interface CallDirectInput extends CallParams {
@@ -173,6 +237,8 @@ interface CallDirectInput extends CallParams {
   apiStyle: ApiStyle;
   /** Optional fast-fail override (ms); defaults to DIRECT_PROVIDER_TIMEOUT_MS. */
   timeoutMs?: number;
+  /** The caller's abort, linked to this path's own timeout controller. */
+  signal?: AbortSignal;
 }
 
 async function callDirectProvider(input: CallDirectInput): Promise<LLMResponse> {
@@ -188,6 +254,7 @@ async function callDirectProvider(input: CallDirectInput): Promise<LLMResponse> 
 
   const timeoutMs = input.timeoutMs ?? DIRECT_PROVIDER_TIMEOUT_MS;
   const controller = new AbortController();
+  linkAbort(input.signal, controller);
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
@@ -252,6 +319,7 @@ async function callGateway(input: CallGatewayInput): Promise<LLMResponse> {
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     const controller = new AbortController();
+    linkAbort(input.signal, controller);
     const timeout = setTimeout(() => controller.abort(), 300_000); // 5 min
 
     try {

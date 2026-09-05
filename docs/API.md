@@ -146,6 +146,7 @@ Deep Research and the artifacts registry. See [LABORATORY.md](LABORATORY.md) and
 |---|---|---|
 | `/api/laboratory/research` | `GET`, `POST` | List recent research runs; start one (`{ query, config? }`), which creates the row and fires the engine as fire-and-forget. |
 | `/api/laboratory/research/[id]` | `GET` | One research run + its steps. |
+| `/api/laboratory/research/[id]/cancel` | `POST` | Stop a run in flight. `404` unknown id, `409` a run that already finished; otherwise the cancelled run. The job bails out rather than overwriting the row. |
 | `/api/laboratory/research/[id]/events` | `GET` | Live **SSE** (`{ run, steps }` snapshots), closing when the run is terminal. |
 | `/api/laboratory/research/[id]/export` | `GET` | The standalone interactive HTML report. Raw `text/html` with a `Content-Disposition: inline` header, not the JSON envelope. |
 | `/api/laboratory/research/presets` | `GET`, `POST`, `DELETE` | Saved Deep Research configurations; `DELETE` takes `?id=`. |

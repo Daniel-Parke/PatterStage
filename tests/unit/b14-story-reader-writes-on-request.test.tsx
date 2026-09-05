@@ -260,8 +260,10 @@ describe("Stop aborts before the next call", () => {
       await Promise.resolve();
     });
     expect(generateCalls()).toHaveLength(1);
-    // And a Stop is not a failure: the reader offers to start again.
-    expect(await screen.findByRole("button", { name: /Write chapter|Keep writing/ })).toBeInTheDocument();
+    // And a Stop is not a failure: the reader offers to start again. With two
+    // chapters still pending it offers BOTH ways to, so this counts rather than
+    // insisting on exactly one.
+    expect((await screen.findAllByRole("button", { name: /Write chapter|Keep writing/ })).length).toBeGreaterThan(0);
   });
 });
 
