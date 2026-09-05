@@ -54,7 +54,7 @@
     "test:e2e-bench-gateway": "bash tests/scripts/bench-gateway-itest.sh"
   },
   "dependencies": {
-    "@dagrejs/dagre": "^3.0.0",
+    "@dagrejs/dagre": "^3.1.1",
     "@tanstack/react-query": "^5.101.0",
     "@types/js-yaml": "^4.0.9",
     "@xyflow/react": "^12.11.0",
