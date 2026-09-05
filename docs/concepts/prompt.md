@@ -1,6 +1,6 @@
 ---
 title: Prompt
-summary: "Prompt: what it is and what to do there"
+summary: "The text you hand the agent, and the standing text it always carries with it"
 section: concepts
 nav: 20
 audience: operator

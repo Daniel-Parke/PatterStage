@@ -1,6 +1,6 @@
 ---
 title: Model
-summary: "Model: what it is and what to do there"
+summary: "The language model that does the reasoning, and why PatterStage keeps a registry of them"
 section: concepts
 nav: 30
 audience: operator

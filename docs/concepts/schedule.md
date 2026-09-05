@@ -1,6 +1,6 @@
 ---
 title: Schedule
-summary: "Schedule: what it is and what to do there"
+summary: "A mission or script on a timer, and who is holding the clock"
 section: concepts
 nav: 160
 audience: operator

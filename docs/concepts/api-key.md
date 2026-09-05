@@ -1,6 +1,6 @@
 ---
 title: API key
-summary: "API key: what it is and what to do there"
+summary: "The secret that pays for a provider's models, where PatterStage keeps it, and where it never appears"
 section: concepts
 nav: 50
 audience: operator

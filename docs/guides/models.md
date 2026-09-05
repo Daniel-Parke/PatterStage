@@ -1,6 +1,6 @@
 ---
 title: Models
-summary: "Models: what it is and what to do there"
+summary: "The model registry, the default for each task, and the fallback chain behind it"
 section: guides
 nav: 150
 audience: operator
@@ -10,7 +10,7 @@ concepts: [model, provider, api-key]
 
 # Models
 
-Models: what it is and what to do there.
+The model registry, the default for each task, and the fallback chain behind it.
 
 ## What you see
 

@@ -1,6 +1,6 @@
 ---
 title: Tool
-summary: "Tool: what it is and what to do there"
+summary: "One capability the agent can invoke: read a file, search the web, run a command"
 section: concepts
 nav: 90
 audience: operator

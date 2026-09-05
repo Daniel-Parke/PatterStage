@@ -1,6 +1,6 @@
 ---
 title: Getting help
-summary: "Getting help: what it is and what to do there"
+summary: "Where the answer probably is, and where to ask when it is not"
 section: start-here
 nav: 50
 audience: operator

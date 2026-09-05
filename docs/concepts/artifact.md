@@ -1,6 +1,6 @@
 ---
 title: Artifact
-summary: "Artifact: what it is and what to do there"
+summary: "A deliverable the agent produced, collected in one place to read and download"
 section: concepts
 nav: 190
 audience: operator

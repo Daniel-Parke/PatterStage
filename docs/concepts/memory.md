@@ -1,6 +1,6 @@
 ---
 title: Memory
-summary: "Memory: what it is and what to do there"
+summary: "What the agent remembers between runs, and the separate service that holds it"
 section: concepts
 nav: 110
 audience: operator

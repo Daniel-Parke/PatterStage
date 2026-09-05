@@ -1,6 +1,6 @@
 ---
 title: Scripts
-summary: "Scripts: what it is and what to do there"
+summary: "Host scripts under your data directory: write one, run it, put it on a timer"
 section: guides
 nav: 60
 audience: operator
@@ -10,7 +10,7 @@ concepts: [schedule]
 
 # Scripts
 
-Scripts: what it is and what to do there.
+Host scripts under your data directory: write one, run it, put it on a timer.
 
 ## What you see
 

@@ -1,6 +1,6 @@
 ---
 title: Story library
-summary: "Story library: what it is and what to do there"
+summary: "Every story you have started, with its status and its progress"
 section: guides
 nav: 190
 audience: operator
@@ -9,7 +9,7 @@ screen: /recroom/story-weaver/library
 
 # Story library
 
-Story library: what it is and what to do there.
+Every story you have started, with its status and its progress.
 
 ## What you see
 

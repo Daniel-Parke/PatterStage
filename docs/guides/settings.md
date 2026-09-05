@@ -1,6 +1,6 @@
 ---
 title: Settings
-summary: "Settings: what it is and what to do there"
+summary: "Every configuration section the agent reads, plus this install's own facts"
 section: guides
 nav: 160
 audience: operator
@@ -9,7 +9,7 @@ screen: /agent/settings
 
 # Settings
 
-Settings: what it is and what to do there.
+Every configuration section the agent reads, plus this install's own facts.
 
 ## What you see
 

@@ -1,6 +1,6 @@
 ---
 title: Quests
-summary: "Quests: what it is and what to do there"
+summary: "A guided path from a first mission to a backup, proved by what you actually did"
 section: guides
 nav: 220
 audience: operator
@@ -9,7 +9,7 @@ screen: /quests
 
 # Quests
 
-Quests: what it is and what to do there.
+A guided path from a first mission to a backup, proved by what you actually did.
 
 ## What you see
 

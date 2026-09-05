@@ -1,6 +1,6 @@
 ---
 title: Sessions
-summary: "Sessions: what it is and what to do there"
+summary: "Every conversation the agent has had, filtered, searched and read back"
 section: guides
 nav: 70
 audience: operator
@@ -10,7 +10,7 @@ concepts: [session, transcript, run]
 
 # Sessions
 
-Sessions: what it is and what to do there.
+Every conversation the agent has had, filtered, searched and read back.
 
 ## What you see
 

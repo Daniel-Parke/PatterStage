@@ -1,6 +1,6 @@
 ---
 title: Provider
-summary: "Provider: what it is and what to do there"
+summary: "Who serves the model: a cloud API, a local server, or the agent's own gateway"
 section: concepts
 nav: 40
 audience: operator

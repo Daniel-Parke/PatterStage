@@ -1,6 +1,6 @@
 ---
 title: Characters
-summary: "Characters: what it is and what to do there"
+summary: "Reusable characters, saved once and dropped into any story"
 section: guides
 nav: 200
 audience: operator
@@ -9,7 +9,7 @@ screen: /recroom/story-weaver/characters
 
 # Characters
 
-Characters: what it is and what to do there.
+Reusable characters, saved once and dropped into any story.
 
 ## What you see
 

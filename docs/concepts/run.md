@@ -1,6 +1,6 @@
 ---
 title: Run
-summary: "Run: what it is and what to do there"
+summary: "One execution of a mission, with its own status, output and token cost"
 section: concepts
 nav: 150
 audience: operator

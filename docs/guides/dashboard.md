@@ -1,6 +1,6 @@
 ---
 title: Dashboard
-summary: "Dashboard: what it is and what to do there"
+summary: "The operations board: what is healthy, what is running, and what to do first"
 section: guides
 nav: 10
 audience: operator
@@ -10,7 +10,7 @@ concepts: [agent, mission, run]
 
 # Dashboard
 
-Dashboard: what it is and what to do there.
+The operations board: what is healthy, what is running, and what to do first.
 
 ## What you see
 

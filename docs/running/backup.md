@@ -1,6 +1,6 @@
 ---
 title: Backup and restore
-summary: "Backup and restore: what it is and what to do there"
+summary: "The three stores worth copying, how to take a snapshot safely while the app is running, and how to restore one"
 section: running
 nav: 40
 audience: operator
@@ -90,9 +90,11 @@ else.
 - Set `PS_DB_BACKUP_DIR` to a mounted volume or a synced directory, and both the
   button and the bundled script write there instead.
 - Schedule `ps-db-backup.mjs` from the [Scripts](../guides/scripts.md) page for
-  an unattended copy. It keeps the newest `PS_DB_BACKUP_KEEP` snapshots in that
-  directory, fourteen by default, and deletes the rest, so anything you intend
-  to keep permanently should be copied somewhere the rotation does not reach.
+  an unattended copy. It keeps the newest `PS_DB_BACKUP_KEEP` of its own
+  snapshots, fourteen by default, and deletes the rest. It rotates only the
+  files it wrote itself, so a backup you took with the button, or one taken
+  before a restore or a purge, stays put however old it gets. A copy off this
+  machine is still the one that survives the disk.
 - Copy the file yourself. It is one ordinary file, and that is the point.
 
 ## The other two stores
@@ -113,7 +115,7 @@ else.
 |---|---|---|
 | The Backups card says "No backups yet" | Nothing has written one; the directory is created on the first write, not at install | Press **Back up now** |
 | The button is disabled and the card says read-only is on | `PS_READ_ONLY=1` rejects unsafe methods | Unset it and restart, or copy the database file by hand with the server stopped |
-| The list is missing a backup you know exists | It is not a backup of *this* database, or the rotation reached it | Check which file the server actually opened, on Settings > System under **Database** |
+| The list is missing a backup you know exists | It is not a backup of *this* database, or it was a scheduled snapshot and the rotation reached it | Check which file the server actually opened, on Settings > System under **Database** |
 | A restore appears to have lost recent work | A stale `-wal` sidecar was replayed onto the restored file | Restore again, including the `rm -f` of both sidecars |
 | The database will not open after a restore | The copy came from a different install, or was taken with `cp` while the server ran | Use a snapshot taken through the button, and see [upgrades](migration.md) for the baseline rebuild path |
 

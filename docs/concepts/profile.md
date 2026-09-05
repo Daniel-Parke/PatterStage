@@ -1,6 +1,6 @@
 ---
 title: Profile
-summary: "Profile: what it is and what to do there"
+summary: "A named set of behaviour files and enabled tools, so one agent can work several ways"
 section: concepts
 nav: 60
 audience: operator

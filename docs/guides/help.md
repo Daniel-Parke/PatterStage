@@ -1,6 +1,6 @@
 ---
 title: Help
-summary: "Help: what it is and what to do there"
+summary: "This documentation, rendered inside the app, with a link on every screen"
 section: guides
 nav: 230
 audience: operator
@@ -9,7 +9,7 @@ screen: /help
 
 # Help
 
-Help: what it is and what to do there.
+This documentation, rendered inside the app, with a link on every screen.
 
 ## What you see
 

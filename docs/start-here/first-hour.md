@@ -1,6 +1,6 @@
 ---
 title: The first hour
-summary: "The first hour: what it is and what to do there"
+summary: "One path end to end: the agent installed, the browser signed in, a model chosen, a mission dispatched and its output read"
 section: start-here
 nav: 30
 audience: operator

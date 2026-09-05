@@ -1,6 +1,6 @@
 ---
 title: Quests
-summary: "Quests: what it is and what to do there"
+summary: "A guided path through the product, ticked off by what you actually did rather than by what you read"
 section: start-here
 nav: 40
 audience: operator

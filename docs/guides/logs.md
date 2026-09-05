@@ -1,6 +1,6 @@
 ---
 title: Logs
-summary: "Logs: what it is and what to do there"
+summary: "The log files PatterStage and its scripts write, and how to read them"
 section: guides
 nav: 100
 audience: operator
@@ -9,7 +9,7 @@ screen: /results/logs
 
 # Logs
 
-Logs: what it is and what to do there.
+The log files PatterStage and its scripts write, and how to read them.
 
 ## What you see
 

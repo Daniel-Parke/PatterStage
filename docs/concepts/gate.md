@@ -1,6 +1,6 @@
 ---
 title: Gate
-summary: "Gate: what it is and what to do there"
+summary: "A stage in a workflow that waits for you, so a long chain cannot run past a decision"
 section: concepts
 nav: 180
 audience: operator

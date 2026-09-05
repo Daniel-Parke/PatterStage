@@ -1,6 +1,6 @@
 ---
 title: Skill
-summary: "Skill: what it is and what to do there"
+summary: "A written procedure the agent can follow, kept in the catalogue and enabled per profile"
 section: concepts
 nav: 80
 audience: operator

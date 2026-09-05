@@ -1,6 +1,6 @@
 ---
 title: Agents
-summary: "Agents: what it is and what to do there"
+summary: "Agent profiles, their behaviour files, and pushing and pulling them to the agent on disk"
 section: guides
 nav: 110
 audience: operator
@@ -10,7 +10,7 @@ concepts: [agent, profile, personality]
 
 # Agents
 
-Agents: what it is and what to do there.
+Agent profiles, their behaviour files, and pushing and pulling them to the agent on disk.
 
 ## What you see
 

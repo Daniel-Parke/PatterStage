@@ -1,6 +1,6 @@
 ---
 title: Spend
-summary: "Spend: what it is and what to do there"
+summary: "What the models cost, how PatterStage estimates it, and the ceiling you can put on it"
 section: concepts
 nav: 200
 audience: operator

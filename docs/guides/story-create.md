@@ -1,6 +1,6 @@
 ---
 title: Create a story
-summary: "Create a story: what it is and what to do there"
+summary: "Setting up a story: premise, characters, parameters and the model that writes it"
 section: guides
 nav: 180
 audience: operator
@@ -10,7 +10,7 @@ concepts: [model]
 
 # Create a story
 
-Create a story: what it is and what to do there.
+Setting up a story: premise, characters, parameters and the model that writes it.
 
 ## What you see
 

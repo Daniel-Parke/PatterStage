@@ -1,6 +1,6 @@
 ---
 title: Personality
-summary: "Personality: what it is and what to do there"
+summary: "The voice and standing instructions a profile writes into SOUL.md"
 section: concepts
 nav: 70
 audience: operator

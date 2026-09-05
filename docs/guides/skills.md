@@ -1,6 +1,6 @@
 ---
 title: Skills
-summary: "Skills: what it is and what to do there"
+summary: "The skills catalogue, and which skills each profile is allowed to use"
 section: guides
 nav: 120
 audience: operator
@@ -10,7 +10,7 @@ concepts: [skill, toolset]
 
 # Skills
 
-Skills: what it is and what to do there.
+The skills catalogue, and which skills each profile is allowed to use.
 
 ## What you see
 

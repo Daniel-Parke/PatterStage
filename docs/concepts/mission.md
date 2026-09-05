@@ -1,6 +1,6 @@
 ---
 title: Mission
-summary: "Mission: what it is and what to do there"
+summary: "A stored piece of work you can dispatch, schedule and repeat"
 section: concepts
 nav: 140
 audience: operator

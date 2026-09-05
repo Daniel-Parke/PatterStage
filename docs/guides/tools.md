@@ -1,6 +1,6 @@
 ---
 title: Tools
-summary: "Tools: what it is and what to do there"
+summary: "The toolsets a profile may reach for, and which bundles cover which tools"
 section: guides
 nav: 130
 audience: operator
@@ -10,7 +10,7 @@ concepts: [tool, toolset]
 
 # Tools
 
-Tools: what it is and what to do there.
+The toolsets a profile may reach for, and which bundles cover which tools.
 
 ## What you see
 

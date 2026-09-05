@@ -1,6 +1,6 @@
 ---
 title: Artifacts
-summary: "Artifacts: what it is and what to do there"
+summary: "The deliverables your agents produced, collected to view and download"
 section: guides
 nav: 80
 audience: operator
@@ -10,7 +10,7 @@ concepts: [artifact]
 
 # Artifacts
 
-Artifacts: what it is and what to do there.
+The deliverables your agents produced, collected to view and download.
 
 ## What you see
 

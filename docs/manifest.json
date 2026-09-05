@@ -14,7 +14,7 @@
         {
           "slug": "start-here/index",
           "title": "What PatterStage is",
-          "summary": "What PatterStage is: what it is and what to do there",
+          "summary": "A control plane for one AI agent on your own machine: what it does, what it needs, and what it is not",
           "nav": 10,
           "concepts": [
             "agent"
@@ -23,13 +23,13 @@
         {
           "slug": "start-here/install",
           "title": "Installing",
-          "summary": "Installing: what it is and what to do there",
+          "summary": "Getting PatterStage onto Linux, macOS, or Windows under WSL2, and what the installer does for you",
           "nav": 20
         },
         {
           "slug": "start-here/first-hour",
           "title": "The first hour",
-          "summary": "The first hour: what it is and what to do there",
+          "summary": "One path end to end: the agent installed, the browser signed in, a model chosen, a mission dispatched and its output read",
           "nav": 30,
           "concepts": [
             "mission",
@@ -41,13 +41,13 @@
         {
           "slug": "start-here/quests",
           "title": "Quests",
-          "summary": "Quests: what it is and what to do there",
+          "summary": "A guided path through the product, ticked off by what you actually did rather than by what you read",
           "nav": 40
         },
         {
           "slug": "start-here/getting-help",
           "title": "Getting help",
-          "summary": "Getting help: what it is and what to do there",
+          "summary": "Where the answer probably is, and where to ask when it is not",
           "nav": 50
         },
         {
@@ -65,121 +65,121 @@
         {
           "slug": "concepts/agent",
           "title": "Agent",
-          "summary": "Agent: what it is and what to do there",
+          "summary": "The thing that does the work: a program that reads a goal, decides on steps, and uses tools to take them",
           "nav": 10
         },
         {
           "slug": "concepts/prompt",
           "title": "Prompt",
-          "summary": "Prompt: what it is and what to do there",
+          "summary": "The text you hand the agent, and the standing text it always carries with it",
           "nav": 20
         },
         {
           "slug": "concepts/model",
           "title": "Model",
-          "summary": "Model: what it is and what to do there",
+          "summary": "The language model that does the reasoning, and why PatterStage keeps a registry of them",
           "nav": 30
         },
         {
           "slug": "concepts/provider",
           "title": "Provider",
-          "summary": "Provider: what it is and what to do there",
+          "summary": "Who serves the model: a cloud API, a local server, or the agent's own gateway",
           "nav": 40
         },
         {
           "slug": "concepts/api-key",
           "title": "API key",
-          "summary": "API key: what it is and what to do there",
+          "summary": "The secret that pays for a provider's models, where PatterStage keeps it, and where it never appears",
           "nav": 50
         },
         {
           "slug": "concepts/profile",
           "title": "Profile",
-          "summary": "Profile: what it is and what to do there",
+          "summary": "A named set of behaviour files and enabled tools, so one agent can work several ways",
           "nav": 60
         },
         {
           "slug": "concepts/personality",
           "title": "Personality",
-          "summary": "Personality: what it is and what to do there",
+          "summary": "The voice and standing instructions a profile writes into SOUL.md",
           "nav": 70
         },
         {
           "slug": "concepts/skill",
           "title": "Skill",
-          "summary": "Skill: what it is and what to do there",
+          "summary": "A written procedure the agent can follow, kept in the catalogue and enabled per profile",
           "nav": 80
         },
         {
           "slug": "concepts/tool",
           "title": "Tool",
-          "summary": "Tool: what it is and what to do there",
+          "summary": "One capability the agent can invoke: read a file, search the web, run a command",
           "nav": 90
         },
         {
           "slug": "concepts/toolset",
           "title": "Toolset",
-          "summary": "Toolset: what it is and what to do there",
+          "summary": "A named bundle of tools, which is what you actually switch on and off",
           "nav": 100
         },
         {
           "slug": "concepts/memory",
           "title": "Memory",
-          "summary": "Memory: what it is and what to do there",
+          "summary": "What the agent remembers between runs, and the separate service that holds it",
           "nav": 110
         },
         {
           "slug": "concepts/session",
           "title": "Session",
-          "summary": "Session: what it is and what to do there",
+          "summary": "One conversation with the agent, however it was started",
           "nav": 120
         },
         {
           "slug": "concepts/transcript",
           "title": "Transcript",
-          "summary": "Transcript: what it is and what to do there",
+          "summary": "The turns inside a session, which is what you read to find out what actually happened",
           "nav": 130
         },
         {
           "slug": "concepts/mission",
           "title": "Mission",
-          "summary": "Mission: what it is and what to do there",
+          "summary": "A stored piece of work you can dispatch, schedule and repeat",
           "nav": 140
         },
         {
           "slug": "concepts/run",
           "title": "Run",
-          "summary": "Run: what it is and what to do there",
+          "summary": "One execution of a mission, with its own status, output and token cost",
           "nav": 150
         },
         {
           "slug": "concepts/schedule",
           "title": "Schedule",
-          "summary": "Schedule: what it is and what to do there",
+          "summary": "A mission or script on a timer, and who is holding the clock",
           "nav": 160
         },
         {
           "slug": "concepts/workflow",
           "title": "Workflow",
-          "summary": "Workflow: what it is and what to do there",
+          "summary": "Several agent runs wired together, with edges that decide what happens next",
           "nav": 170
         },
         {
           "slug": "concepts/gate",
           "title": "Gate",
-          "summary": "Gate: what it is and what to do there",
+          "summary": "A stage in a workflow that waits for you, so a long chain cannot run past a decision",
           "nav": 180
         },
         {
           "slug": "concepts/artifact",
           "title": "Artifact",
-          "summary": "Artifact: what it is and what to do there",
+          "summary": "A deliverable the agent produced, collected in one place to read and download",
           "nav": 190
         },
         {
           "slug": "concepts/spend",
           "title": "Spend",
-          "summary": "Spend: what it is and what to do there",
+          "summary": "What the models cost, how PatterStage estimates it, and the ceiling you can put on it",
           "nav": 200
         }
       ]
@@ -191,7 +191,7 @@
         {
           "slug": "guides/dashboard",
           "title": "Dashboard",
-          "summary": "Dashboard: what it is and what to do there",
+          "summary": "The operations board: what is healthy, what is running, and what to do first",
           "nav": 10,
           "screen": "/",
           "concepts": [
@@ -251,7 +251,7 @@
         {
           "slug": "guides/scripts",
           "title": "Scripts",
-          "summary": "Scripts: what it is and what to do there",
+          "summary": "Host scripts under your data directory: write one, run it, put it on a timer",
           "nav": 60,
           "screen": "/work/scripts",
           "concepts": [
@@ -261,7 +261,7 @@
         {
           "slug": "guides/sessions",
           "title": "Sessions",
-          "summary": "Sessions: what it is and what to do there",
+          "summary": "Every conversation the agent has had, filtered, searched and read back",
           "nav": 70,
           "screen": "/results/sessions",
           "concepts": [
@@ -273,7 +273,7 @@
         {
           "slug": "guides/artifacts",
           "title": "Artifacts",
-          "summary": "Artifacts: what it is and what to do there",
+          "summary": "The deliverables your agents produced, collected to view and download",
           "nav": 80,
           "screen": "/results/artifacts",
           "concepts": [
@@ -294,14 +294,14 @@
         {
           "slug": "guides/logs",
           "title": "Logs",
-          "summary": "Logs: what it is and what to do there",
+          "summary": "The log files PatterStage and its scripts write, and how to read them",
           "nav": 100,
           "screen": "/results/logs"
         },
         {
           "slug": "guides/agents",
           "title": "Agents",
-          "summary": "Agents: what it is and what to do there",
+          "summary": "Agent profiles, their behaviour files, and pushing and pulling them to the agent on disk",
           "nav": 110,
           "screen": "/agent/profiles",
           "concepts": [
@@ -313,7 +313,7 @@
         {
           "slug": "guides/skills",
           "title": "Skills",
-          "summary": "Skills: what it is and what to do there",
+          "summary": "The skills catalogue, and which skills each profile is allowed to use",
           "nav": 120,
           "screen": "/agent/skills",
           "concepts": [
@@ -324,7 +324,7 @@
         {
           "slug": "guides/tools",
           "title": "Tools",
-          "summary": "Tools: what it is and what to do there",
+          "summary": "The toolsets a profile may reach for, and which bundles cover which tools",
           "nav": 130,
           "screen": "/agent/tools",
           "concepts": [
@@ -345,7 +345,7 @@
         {
           "slug": "guides/models",
           "title": "Models",
-          "summary": "Models: what it is and what to do there",
+          "summary": "The model registry, the default for each task, and the fallback chain behind it",
           "nav": 150,
           "screen": "/agent/models",
           "concepts": [
@@ -357,14 +357,14 @@
         {
           "slug": "guides/settings",
           "title": "Settings",
-          "summary": "Settings: what it is and what to do there",
+          "summary": "Every configuration section the agent reads, plus this install's own facts",
           "nav": 160,
           "screen": "/agent/settings"
         },
         {
           "slug": "guides/story-weaver",
           "title": "Story Weaver",
-          "summary": "Story Weaver: what it is and what to do there",
+          "summary": "The Rec Room's long-form writer: the hub, its stats and its recent stories",
           "nav": 170,
           "screen": "/recroom/story-weaver",
           "concepts": [
@@ -374,7 +374,7 @@
         {
           "slug": "guides/story-create",
           "title": "Create a story",
-          "summary": "Create a story: what it is and what to do there",
+          "summary": "Setting up a story: premise, characters, parameters and the model that writes it",
           "nav": 180,
           "screen": "/recroom/story-weaver/create",
           "concepts": [
@@ -384,35 +384,35 @@
         {
           "slug": "guides/story-library",
           "title": "Story library",
-          "summary": "Story library: what it is and what to do there",
+          "summary": "Every story you have started, with its status and its progress",
           "nav": 190,
           "screen": "/recroom/story-weaver/library"
         },
         {
           "slug": "guides/story-characters",
           "title": "Characters",
-          "summary": "Characters: what it is and what to do there",
+          "summary": "Reusable characters, saved once and dropped into any story",
           "nav": 200,
           "screen": "/recroom/story-weaver/characters"
         },
         {
           "slug": "guides/story-themes",
           "title": "Themes",
-          "summary": "Themes: what it is and what to do there",
+          "summary": "Reusable premises and tags, saved as a theme you can load later",
           "nav": 210,
           "screen": "/recroom/story-weaver/themes"
         },
         {
           "slug": "guides/quests",
           "title": "Quests",
-          "summary": "Quests: what it is and what to do there",
+          "summary": "A guided path from a first mission to a backup, proved by what you actually did",
           "nav": 220,
           "screen": "/quests"
         },
         {
           "slug": "guides/help",
           "title": "Help",
-          "summary": "Help: what it is and what to do there",
+          "summary": "This documentation, rendered inside the app, with a link on every screen",
           "nav": 230,
           "screen": "/help"
         }
@@ -443,7 +443,7 @@
         {
           "slug": "running/backup",
           "title": "Backup and restore",
-          "summary": "Backup and restore: what it is and what to do there",
+          "summary": "The three stores worth copying, how to take a snapshot safely while the app is running, and how to restore one",
           "nav": 40
         },
         {
@@ -470,7 +470,7 @@
         {
           "slug": "running/troubleshooting",
           "title": "Troubleshooting",
-          "summary": "Troubleshooting: what it is and what to do there",
+          "summary": "Symptom first: what a stuck run, a silent schedule, a dark memory page and a refused sign-in each mean",
           "nav": 80
         },
         {

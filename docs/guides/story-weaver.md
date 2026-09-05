@@ -1,6 +1,6 @@
 ---
 title: Story Weaver
-summary: "Story Weaver: what it is and what to do there"
+summary: "The Rec Room's long-form writer: the hub, its stats and its recent stories"
 section: guides
 nav: 170
 audience: operator
@@ -10,7 +10,7 @@ concepts: [spend]
 
 # Story Weaver
 
-Story Weaver: what it is and what to do there.
+The Rec Room's long-form writer: the hub, its stats and its recent stories.
 
 ## What you see
 

@@ -1,6 +1,6 @@
 ---
 title: Session
-summary: "Session: what it is and what to do there"
+summary: "One conversation with the agent, however it was started"
 section: concepts
 nav: 120
 audience: operator

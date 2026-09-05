@@ -1,6 +1,6 @@
 ---
 title: Transcript
-summary: "Transcript: what it is and what to do there"
+summary: "The turns inside a session, which is what you read to find out what actually happened"
 section: concepts
 nav: 130
 audience: operator

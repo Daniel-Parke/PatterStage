@@ -1,6 +1,6 @@
 ---
 title: Agent
-summary: "Agent: what it is and what to do there"
+summary: "The thing that does the work: a program that reads a goal, decides on steps, and uses tools to take them"
 section: concepts
 nav: 10
 audience: operator

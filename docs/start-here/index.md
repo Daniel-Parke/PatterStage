@@ -1,6 +1,6 @@
 ---
 title: What PatterStage is
-summary: "What PatterStage is: what it is and what to do there"
+summary: "A control plane for one AI agent on your own machine: what it does, what it needs, and what it is not"
 section: start-here
 nav: 10
 audience: operator

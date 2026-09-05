@@ -1,6 +1,6 @@
 ---
 title: Workflow
-summary: "Workflow: what it is and what to do there"
+summary: "Several agent runs wired together, with edges that decide what happens next"
 section: concepts
 nav: 170
 audience: operator

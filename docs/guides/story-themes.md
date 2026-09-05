@@ -1,6 +1,6 @@
 ---
 title: Themes
-summary: "Themes: what it is and what to do there"
+summary: "Reusable premises and tags, saved as a theme you can load later"
 section: guides
 nav: 210
 audience: operator
@@ -9,7 +9,7 @@ screen: /recroom/story-weaver/themes
 
 # Themes
 
-Themes: what it is and what to do there.
+Reusable premises and tags, saved as a theme you can load later.
 
 ## What you see
 

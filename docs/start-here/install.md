@@ -1,6 +1,6 @@
 ---
 title: Installing
-summary: "Installing: what it is and what to do there"
+summary: "Getting PatterStage onto Linux, macOS, or Windows under WSL2, and what the installer does for you"
 section: start-here
 nav: 20
 audience: operator

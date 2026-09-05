@@ -1,6 +1,6 @@
 ---
 title: Toolset
-summary: "Toolset: what it is and what to do there"
+summary: "A named bundle of tools, which is what you actually switch on and off"
 section: concepts
 nav: 100
 audience: operator

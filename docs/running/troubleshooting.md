@@ -1,6 +1,6 @@
 ---
 title: Troubleshooting
-summary: "Troubleshooting: what it is and what to do there"
+summary: "Symptom first: what a stuck run, a silent schedule, a dark memory page and a refused sign-in each mean"
 section: running
 nav: 80
 audience: operator
