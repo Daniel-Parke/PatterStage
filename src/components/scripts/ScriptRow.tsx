@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// ScriptRow — one *.sh file with its size, schedule and actions
+// ScriptRow — one script file with its size, schedule and actions
 //
 // Extracted verbatim from app/orchestration/scripts/page.tsx. Every
 // action is a callback; the row owns no state. Presentation only.
@@ -47,6 +47,15 @@ export default function ScriptRow({
           {fmtSize(s.size)}
           {" · "}
           {s.schedule ? <span className="text-neon-orange/90">{s.schedule}</span> : "not scheduled"}
+          {/* The honest limit of a PatterStage-owned schedule, on the row rather
+              than in a help page: a crontab row fires whether the app is up or
+              not, and this one does not (T-0107, decision 10). */}
+          {s.scheduleSource === "patterstage" ? (
+            <>
+              {" · "}
+              <span className="text-ps-text-faint">Runs while PatterStage is running</span>
+            </>
+          ) : null}
           {s.lastRun ? ` · last run ${timeAgo(s.lastRun)}` : ""}
         </div>
       </div>

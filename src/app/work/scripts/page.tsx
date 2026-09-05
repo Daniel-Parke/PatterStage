@@ -1,11 +1,12 @@
 // ═══════════════════════════════════════════════════════════════
-// Scripts — host shell scripts under PS_DATA_DIR/scripts
+// Scripts — host scripts under PS_DATA_DIR/scripts
 //
-// File-aware manager: every *.sh file an operator drops under the scripts dir
-// appears here with its schedule (host crontab), last run, and actions —
-// Run now, view Logs, and Schedule/Unschedule. Running execs the script
-// server-side (path-validated, no shell); scheduling writes a host crontab entry
-// via /api/cron/hardware.
+// File-aware manager: every script file an operator drops under the scripts dir
+// appears here with its schedule, last run, and actions — Run now, view Logs,
+// and Schedule/Unschedule. Running execs the script server-side
+// (path-validated, no shell). A schedule goes to the host crontab where there
+// is one and to PatterStage's own table where there is not, so unscheduling
+// has to ask the row which of the two it is on (T-0107, decision 10).
 //
 // Thin page shell: the row, the template gallery and the three modals are
 // presentational components under src/components/scripts/.
@@ -16,6 +17,7 @@
 import { useCallback, useState } from "react";
 import { Terminal, RefreshCw, Plus } from "lucide-react";
 import AppPageShell from "@/components/layout/AppPageShell";
+import { SCRIPT_EXT_LIST, hasScriptExt, stripScriptExt } from "@/lib/scripts/script-ext";
 import PageHeader from "@/components/layout/PageHeader";
 import { LoadingSpinner, EmptyState } from "@/components/ui/LoadingSpinner";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
@@ -29,7 +31,7 @@ import ScriptLogsModal from "@/components/scripts/ScriptLogsModal";
 import ScheduleScriptModal from "@/components/scripts/ScheduleScriptModal";
 
 export default function ScriptsPage() {
-  const { scripts, isLoading, error, refetch, run } = useScripts();
+  const { scripts, scheduler, isLoading, error, refetch, run } = useScripts();
   const { showToast, toastElement } = useToast();
 
   const [logTarget, setLogTarget] = useState<ScriptFile | null>(null);
@@ -69,7 +71,10 @@ export default function ScriptsPage() {
 
   const saveEditor = useCallback(async () => {
     let name = editorName.trim();
-    if (editorIsNew && name && !name.endsWith(".sh")) name = `${name}.sh`;
+    // `.sh` stays the default for a bare name; what changed is that a name
+    // that already ends in one of the seven no longer gets a second extension,
+    // so `backup.mjs` stopped being saved as `backup.mjs.sh` (T-0107, D46).
+    if (editorIsNew && name && !hasScriptExt(name)) name = `${name}.sh`;
     if (!name) {
       showToast("Give the script a name", "error");
       return;
@@ -136,8 +141,16 @@ export default function ScriptsPage() {
 
   const unschedule = useCallback(
     async (s: ScriptFile) => {
-      const id = s.name.replace(/\.sh$/, "");
-      const res = await safeApiCall(`/api/cron/hardware?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+      // Whichever table holds it. The id was also stripped with a .sh-only
+      // regex, so unscheduling a .mjs asked the crontab to delete a job called
+      // "backup.mjs" and got nothing (T-0107, D48).
+      const res =
+        s.scheduleSource === "patterstage" && s.scheduleId
+          ? await safeApiCall(`/api/schedules/${encodeURIComponent(s.scheduleId)}`, { method: "DELETE" })
+          : await safeApiCall(
+              `/api/cron/hardware?id=${encodeURIComponent(stripScriptExt(s.name))}`,
+              { method: "DELETE" },
+            );
       showToast(res.ok ? `Unscheduled ${s.name}` : "Failed to unschedule", res.ok ? "success" : "error");
       if (res.ok) void refetch();
     },
@@ -173,7 +186,7 @@ export default function ScriptsPage() {
 
       <div className="px-6 py-6">
         <p className="mb-5 max-w-3xl font-mono text-xs text-ps-text-muted">
-          Drop a <span className="text-ps-text-secondary">.sh</span> file under{" "}
+          Drop a <span className="text-ps-text-secondary">{SCRIPT_EXT_LIST}</span> file under{" "}
           <span className="text-ps-text-secondary">PS_DATA_DIR/scripts</span> and it appears here — backups, cleanups, health
           checks. Scheduling agent work is on the{" "}
           <a href="/work/missions" className="text-neon-cyan hover:underline">Missions</a> page.
@@ -188,7 +201,7 @@ export default function ScriptsPage() {
             <EmptyState
               icon={Terminal}
               title="No scripts yet"
-              description="Create one with “New script”, install an example below, or drop a .sh file under PS_DATA_DIR/scripts."
+              description={`Create one with “New script”, install an example below, or drop a ${SCRIPT_EXT_LIST} file under PS_DATA_DIR/scripts.`}
             />
           </div>
         ) : (
@@ -225,6 +238,7 @@ export default function ScriptsPage() {
         onClose={() => setEditorOpen(false)}
         onSave={() => void saveEditor()}
         onDelete={() => void deleteEditor()}
+        scheduled={Boolean(scripts.find((s) => s.name === editorName)?.schedule)}
       />
 
       {/* Logs modal */}
@@ -239,6 +253,7 @@ export default function ScriptsPage() {
       {scheduleTarget && (
         <ScheduleScriptModal
           script={scheduleTarget}
+          scheduler={scheduler}
           onClose={() => setScheduleTarget(null)}
           onSaved={() => {
             setScheduleTarget(null);

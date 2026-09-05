@@ -44,11 +44,11 @@ Every `route.ts` under `src/app/api` has a row, here or in the Chat / Composer /
 | `/api/credentials/[id]` | `PATCH`, `DELETE` | `PATCH { apiKey }` rotates the stored key and rewrites the provider's Hermes `.env` variable; a failed `.env` write puts the old key back and answers **500**. `DELETE` removes the credential: its `.env` variable goes with it unless a same-provider sibling still uses it, and the models that pointed at it are unlinked; the answer says which happened. `GET` returns **405**. |
 | `/api/cron/hardware` | `GET`, `POST`, `PUT`, `DELETE` | Host **scripts** (system cron) under `PS_SCRIPTS_DIR` / `PS_HARDWARE_LOG_DIR`, powering the Scripts page. (The legacy `/api/cron` agent-cron bridge has been removed; recurring agent work uses `/api/schedules`.) |
 | `/api/cron/hardware/meta` | `GET` | `{ scriptsDir, logDir }`. |
-| `/api/scripts` | `GET` | List host script files under `PS_DATA_DIR/scripts` with schedule + last-run (powers the Scripts page). |
+| `/api/scripts` | `GET` | List host script files under `PS_DATA_DIR/scripts` with each file's schedule, where that schedule lives (`scheduleSource`: `host` or `patterstage`) and last-run hint, plus `scheduler: { available, reason }` saying whether this host schedules without PatterStage. |
 | `/api/scripts/[name]` | `GET`, `PUT`, `DELETE` | Read, upsert (`{ content }`) or delete one host script. Path-validated under `PS_DATA_DIR/scripts`; powers the in-app editor. |
 | `/api/scripts/run` | `POST` | Run a script on demand (`{ name }`). Path-validated, no shell. |
 | `/api/scripts/logs` | `GET` | Tail a script's log (`?name=&lines=`). |
-| `/api/schedules` | `GET`, `POST` | PatterStage-owned recurring missions (the scheduler fires these; no `jobs.json`). |
+| `/api/schedules` | `GET`, `POST` | PatterStage-owned recurring work (the scheduler fires these; no `jobs.json`). `POST` takes `kind`: a `mission` row needs `missionId`, a `script` row needs `scriptName`, and each is refused by name if its own id is missing. |
 | `/api/schedules/[id]` | `GET`, `PATCH`, `DELETE` | Read one schedule (404 when missing), pause/resume or edit it (`enabled`, `name`, `schedule`, `scheduleDisplay`, `catchUpPolicy`, `repeatTimes`, `profileName`), or delete it. |
 | `/api/schedules/[id]/run` | `POST` | Dispatch a scheduled mission immediately (run-now). |
 | `/api/stats` | `GET` | Dashboard analytics aggregate (throughput, mission mix, run activity, tokens, per-agent performance, derived progression + the ~36 achievements). Also appends a per-agent progression snapshot when an agent's recorded level or unlocked set has moved. |

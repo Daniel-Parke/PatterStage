@@ -9,15 +9,8 @@
  * the callback directly (the real one closes over the real singleton).
  */
 import type Database from "better-sqlite3";
-import { readFileSync } from "fs";
-import { join } from "path";
-
 import type * as SchedulesRepo from "@/lib/schedules-repository";
-
-const baselineSql = readFileSync(
-  join(__dirname, "..", "..", "src", "lib", "db", "migrations", "001_baseline.sql"),
-  "utf-8",
-);
+import { execBaselineSchema } from "../helpers/baseline-db";
 
 function loadRealBetterSqlite3(): typeof import("better-sqlite3") {
   return require("better-sqlite3/lib/index.js") as typeof import("better-sqlite3");
@@ -32,7 +25,10 @@ function makeTestDatabase(): TestDatabase {
   const RealDatabase = loadRealBetterSqlite3();
   const db = new (RealDatabase as unknown as new (path: string) => Database.Database)(":memory:");
   db.pragma("foreign_keys = ON");
-  db.exec(baselineSql);
+  // The shared helper rather than the raw baseline: createSchedule writes
+  // schedules.kind and schedules.script_name, which 041 adds, so a baseline-only
+  // fixture would hand the repository a schema no install has (T-0107).
+  execBaselineSchema(db);
   return { db, close: () => db.close() };
 }
 

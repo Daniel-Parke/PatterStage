@@ -94,11 +94,19 @@ deploy implementation; nothing in the repo starts `socat` now, so the
 > so the dev server (`npm run dev`) incidentally runs on a native-Windows box,
 > but that path is **not** tested or supported; use WSL2.
 
-## Host-script scheduling (crontab)
+## Host-script scheduling
 
 Host scripts (the **Scripts** page) are scheduled in the user **crontab** on
-Linux + macOS. There is no native-Windows backend. Under WSL2 the Ubuntu
-crontab is used like any Linux host.
+Linux + macOS, and under WSL2 the Ubuntu crontab is used like any Linux host.
+Those rows fire whether PatterStage is running or not, which is what a host
+scheduler buys you.
+
+Native Windows has no crontab, and there is still no Task Scheduler backend. It
+is no longer a dead end: the Schedule button writes a PatterStage `schedules`
+row instead and PatterStage's own timer runs the script, at the honest cost that
+it only fires while PatterStage is running. The page says which of the two it
+wrote, on the row and in the modal, so the difference is met before it is relied
+on. `GET /api/scripts` carries the answer as `scheduler: { available, reason }`.
 
 Schedule the cross-platform Node versions of the bundled hardware scripts:
 `ps-db-backup.mjs`, `ps-health-check.mjs`, `ps-log-rotate.mjs`,

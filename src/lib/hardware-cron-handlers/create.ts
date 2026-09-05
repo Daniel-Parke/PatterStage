@@ -13,13 +13,13 @@ import { badRequest, ok, serverErrorFromHelperResult } from "@/lib/api-response"
 import { getHostScheduler } from "@/lib/host-scheduler";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { recordEvent } from "@/lib/analytics/record-event";
+import { SCRIPT_EXT_RE } from "@/lib/scripts/script-ext";
 
 import {
   canonicaliseScriptsCommand,
   rejectIfBadSchedule,
   resolveCronLogFile,
   sanitiseCronName,
-  SCRIPT_EXT_RE,
 } from "./crontab-command";
 import {
   joinCrontabLines,

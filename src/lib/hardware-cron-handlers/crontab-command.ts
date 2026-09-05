@@ -17,20 +17,8 @@ import { badRequest } from "@/lib/api-response";
 import { expandHomeInString, normalizeHardwareCronPath } from "@/lib/hardware-cron";
 import { getPsScriptsDir, getPsHardwareLogDir } from "@/lib/paths";
 import { interpreterFor } from "@/lib/platform";
+import { SCRIPT_COMMAND_RE, SCRIPT_EXT_LIST } from "@/lib/scripts/script-ext";
 import { resolveScriptPath } from "@/lib/scripts-manager";
-
-export const SCRIPT_EXT_RE = /\.(?:sh|mjs|cjs|js|ps1|bat|cmd)$/i;
-
-/**
- * Extract the script basename (e.g. "ps-backup.mjs") from a command string, or
- * empty string if the command invokes no host script. Anchors on a path token
- * ending in a known script extension (any separator) so it doesn't pick up env
- * vars or the redirected log path.
- */
-export function extractScriptName(command: string): string {
-  const m = command.match(/(\S+[/\\][^/\\\s]+\.(?:sh|mjs|cjs|js|ps1|bat|cmd))\b/i);
-  return m ? m[1].split(/[/\\]/).pop()! : "";
-}
 
 /**
  * A job label becomes a `# <name>` comment line in the crontab, so a newline in
@@ -82,11 +70,15 @@ export function canonicaliseScriptsCommand(
   const scriptsDir = getPsScriptsDir();
   const bad = (msg: string) => ({ ok: false as const, response: badRequest(msg) });
 
-  // A path token ending in a script extension, or a bare basename.
-  const match = input.match(/(?:^|[\s'"])([^\s'"]*[/\\])?([^\s/\\'"]+\.(?:sh|mjs|cjs|js))\b/i);
+  // A path token ending in a script extension, or a bare basename. This used
+  // to name four of the seven extensions, so a .ps1, .bat or .cmd fell through
+  // to the refusal below and its Schedule button could never succeed (D47) —
+  // the page listed those scripts and offered to schedule them, and this line
+  // was the only thing saying no. It reads the shared rule now.
+  const match = input.match(SCRIPT_COMMAND_RE);
   const scriptName = match?.[2];
   if (!scriptName) {
-    return bad("Command must name a script (.sh, .mjs, .cjs or .js) from the PatterStage scripts directory.");
+    return bad(`Command must name a script (${SCRIPT_EXT_LIST}) from the PatterStage scripts directory.`);
   }
 
   // If the caller named a DIRECTORY, it must be the scripts dir. Rebuilding

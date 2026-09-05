@@ -57,7 +57,6 @@ export function useChatPage() {
 
   const conversations = useChatConversations({
     closeStream: transcript.closeStream,
-    messages: transcript.messages,
     setMessages: transcript.setMessages,
     setIsStreaming: transcript.setIsStreaming,
     setPendingApproval: transcript.setPendingApproval,
@@ -142,6 +141,11 @@ export function useChatPage() {
     handleDownloadConversation: conversations.handleDownloadConversation,
     conversationsError: conversations.listError,
     reloadConversations: conversations.loadConversations,
+    // The other half of the read contract: the LIST failing and the selected
+    // conversation's TRANSCRIPT failing are two different pieces of news, and
+    // the page renders each one where its own content would have gone.
+    conversationError: send.conversationError,
+    reloadActiveConversation: send.reloadActiveConversation,
     // gateway banners
     //
     // The page renders `bannerStates`; the three raw fields stay exported

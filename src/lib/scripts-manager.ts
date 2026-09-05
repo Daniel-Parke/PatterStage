@@ -1,16 +1,25 @@
 // ═══════════════════════════════════════════════════════════════
 // scripts-manager.ts — host script files under PS_DATA_DIR/scripts
 //
-// Powers the Scripts page's file-aware view: list the *.sh files an operator
-// has dropped under getPsScriptsDir(), cross-reference the host crontab for each
-// file's schedule, run a script on demand (path-validated, no shell), and tail
-// its log under getPsHardwareLogDir(). Scheduling itself stays with the existing
-// /api/cron/hardware crontab manager.
+// Powers the Scripts page's file-aware view: list the script files an operator
+// has dropped under getPsScriptsDir(), cross-reference their schedules, run one
+// on demand (path-validated, no shell), and tail its log under
+// getPsHardwareLogDir().
+//
+// Seven extensions, not one: .sh, .mjs, .cjs, .js, .ps1, .bat and .cmd, all
+// named once in @/lib/scripts/script-ext.ts. The header used to say ".sh only"
+// in four places while the product shipped .mjs scripts and ran .ps1 (T-0107).
+//
+// A schedule can live in two places. The host crontab is the first, and the
+// better one: those rows fire whether PatterStage is up or not. Where the host
+// has none (native Windows) a PatterStage `schedules` row carries it instead,
+// and a row says which of the two it is on so the difference is never silent.
 //
 // SECURITY: every operation resolves the script to an absolute path that MUST
-// live directly under getPsScriptsDir() (no traversal, no slashes, .sh only).
-// Execution uses execFile("/bin/bash", [absPath]) — no shell string, no
-// user-supplied arguments — so there is no command-injection surface.
+// live directly under getPsScriptsDir() (no traversal, no slashes, one of the
+// seven extensions). Execution goes through execFile with the interpreter the
+// extension names — no shell string, no user-supplied arguments — so there is
+// no command-injection surface.
 // ═══════════════════════════════════════════════════════════════
 
 import {
@@ -29,27 +38,27 @@ import { execFile } from "child_process";
 import { getPsScriptsDir, getPsHardwareLogDir } from "@/lib/paths";
 import { interpreterFor } from "@/lib/platform";
 import { getHostScheduler } from "@/lib/host-scheduler";
+import {
+  SCRIPT_EXT_LIST,
+  extractScriptName,
+  hasScriptExt,
+  stripScriptExt,
+} from "@/lib/scripts/script-ext";
+import { listScriptSchedules, type ScheduleRecord } from "@/lib/schedules-repository";
 
 /** Max script size accepted by the editor write API (256 KB). */
 const MAX_SCRIPT_BYTES = 256 * 1024;
-
-/** Script types we list, run, and schedule. node (.mjs) is the cross-platform
- *  default; .sh runs where bash is present, .ps1/.bat/.cmd on Windows. */
-const ALLOWED_SCRIPT_EXTS = [".sh", ".mjs", ".cjs", ".js", ".ps1", ".bat", ".cmd"] as const;
-function hasAllowedExt(name: string): boolean {
-  const lower = name.toLowerCase();
-  return ALLOWED_SCRIPT_EXTS.some((e) => lower.endsWith(e));
-}
-function stripScriptExt(name: string): string {
-  return name.replace(/\.(sh|mjs|cjs|js|ps1|bat|cmd)$/i, "");
-}
 
 export interface ScriptFile {
   name: string; // e.g. "ps-backup.sh"
   path: string; // absolute path under the scripts dir (for crontab scheduling)
   size: number;
   modified: string; // ISO mtime of the script file
-  schedule: string | null; // 5-field cron if registered on the host crontab
+  schedule: string | null; // 5-field cron, from whichever source owns it
+  /** Where this row's schedule lives. null when it has none. */
+  scheduleSource: "host" | "patterstage" | null;
+  /** The `schedules.id` when scheduleSource === "patterstage", else null. */
+  scheduleId: string | null;
   hasLog: boolean;
   lastRun: string | null; // ISO mtime of the log (a proxy for "last ran")
 }
@@ -68,13 +77,13 @@ function logPathFor(name: string): string {
 /**
  * Resolve a script name to an absolute path that lives DIRECTLY under the
  * scripts dir, or null if it is unsafe / missing. Rejects traversal, nested
- * paths, and non-.sh names.
+ * paths, and names that end in none of the seven script extensions.
  */
 export function resolveScriptPath(name: string): string | null {
   // The string checks alone prevent traversal: a name with no slash, no
-  // backslash and no ".." cannot escape the scripts dir. .sh only.
+  // backslash and no ".." cannot escape the scripts dir.
   if (!name || name.includes("/") || name.includes("\\") || name.includes("..")) return null;
-  if (!hasAllowedExt(name)) return null;
+  if (!hasScriptExt(name)) return null;
   const abs = join(getPsScriptsDir(), name);
   if (!existsSync(abs)) return null;
   return abs;
@@ -87,7 +96,7 @@ export function resolveScriptPath(name: string): string | null {
  */
 export function scriptPathForName(name: string): string | null {
   if (!name || name.includes("/") || name.includes("\\") || name.includes("..")) return null;
-  if (!hasAllowedExt(name)) return null;
+  if (!hasScriptExt(name)) return null;
   // basename sanity: letters, digits, dash, underscore, dot only.
   if (!/^[A-Za-z0-9._-]+$/.test(name)) return null;
   return join(getPsScriptsDir(), name);
@@ -117,7 +126,7 @@ export function writeScriptContent(
   mode: "create" | "update",
 ): WriteScriptResult {
   const abs = scriptPathForName(name);
-  if (!abs) return { ok: false, error: "Invalid script name (letters, digits, -, _, . and a .sh extension only)" };
+  if (!abs) return { ok: false, error: `Invalid script name (letters, digits, -, _, . and one of ${SCRIPT_EXT_LIST})` };
   if (typeof content !== "string") return { ok: false, error: "Missing script content" };
   if (Buffer.byteLength(content, "utf-8") > MAX_SCRIPT_BYTES) {
     return { ok: false, error: `Script exceeds the ${Math.round(MAX_SCRIPT_BYTES / 1024)} KB limit` };
@@ -158,7 +167,15 @@ function readHostCrontab(): Promise<string> {
   return getHostScheduler().readRaw();
 }
 
-/** Map script basename → its 5-field cron schedule from the host crontab. */
+/**
+ * Map script basename → its 5-field cron schedule from the host crontab.
+ *
+ * The match used to be a hand-rolled `/(\S+\.sh)\b/`, so a scheduled .mjs -- and
+ * every script PatterStage itself ships is .mjs -- was listed as unscheduled
+ * while its crontab line sat there firing (T-0107, D41). `extractScriptName`
+ * reads the one rule, and requires a directory separator, so a redirected log
+ * target on the same line is not mistaken for the script.
+ */
 function parseScheduleMap(crontab: string): Map<string, string> {
   const map = new Map<string, string>();
   for (const line of crontab.split("\n")) {
@@ -168,32 +185,43 @@ function parseScheduleMap(crontab: string): Map<string, string> {
     if (parts.length < 6) continue;
     const schedule = parts.slice(0, 5).join(" ");
     const cmd = parts.slice(5).join(" ");
-    const m = cmd.match(/(\S+\.sh)\b/);
-    if (m) {
-      const base = m[1].split("/").pop();
-      if (base && !map.has(base)) map.set(base, schedule);
-    }
+    const base = extractScriptName(cmd);
+    if (base && !map.has(base)) map.set(base, schedule);
   }
   return map;
 }
 
-/** List the *.sh files under the scripts dir, with schedule + last-run hints. */
+/** List the script files under the scripts dir, with schedule + last-run hints. */
 export async function listScriptFiles(): Promise<ScriptFile[]> {
   const dir = getPsScriptsDir();
   if (!existsSync(dir)) return [];
-  const schedules = parseScheduleMap(await readHostCrontab());
-  const files = readdirSync(dir).filter(hasAllowedExt).sort();
+  const hostSchedules = parseScheduleMap(await readHostCrontab());
+  // The host wins where both exist, so PatterStage's own rows are only read for
+  // the files the crontab said nothing about. The try/catch is not decoration:
+  // this runs on a route that must still list files before the database has
+  // been bootstrapped.
+  const own = new Map<string, ScheduleRecord>();
+  try {
+    for (const sc of listScriptSchedules()) if (sc.scriptName) own.set(sc.scriptName, sc);
+  } catch {
+    /* no database yet; the host crontab still answers */
+  }
+  const files = readdirSync(dir).filter(hasScriptExt).sort();
   return files.map((name) => {
     const abs = join(dir, name);
     const st = statSync(abs);
     const logFile = logPathFor(name);
     const hasLog = existsSync(logFile);
+    const host = hostSchedules.get(name) ?? null;
+    const mine = host ? null : own.get(name) ?? null;
     return {
       name,
       path: abs,
       size: st.size,
       modified: st.mtime.toISOString(),
-      schedule: schedules.get(name) ?? null,
+      schedule: host ?? mine?.schedule ?? null,
+      scheduleSource: host ? "host" : mine ? "patterstage" : null,
+      scheduleId: mine?.id ?? null,
       hasLog,
       lastRun: hasLog ? statSync(logFile).mtime.toISOString() : null,
     };

@@ -18,7 +18,7 @@
 
 "use client";
 
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { Dispatch, KeyboardEvent, RefObject, MutableRefObject, SetStateAction } from "react";
 
 import type { ToastType } from "@/components/ui/Toast";
@@ -95,23 +95,46 @@ export function useChatSend({
   gatewayOnline,
   showToast,
 }: UseChatSendArgs) {
+  // The active conversation's read, when it failed. Kept apart from the
+  // transcript for the same reason the list keeps `listError` apart from the
+  // list (T-0096, the read contract): the effect below used to return early on
+  // a failed read, which left the PREVIOUS conversation's turns on screen under
+  // the newly selected title and said nothing at all (D49). Now the transcript
+  // is cleared and the reason is rendered in its place.
+  const [conversationError, setConversationError] = useState<string | null>(null);
+  // Bumped by Retry. The read lives in an effect keyed on the active id, so
+  // re-running it for the SAME id needs a second key.
+  const [reloadNonce, setReloadNonce] = useState(0);
+
   // ── Load the active conversation's messages when it changes ──
   useEffect(() => {
     if (!activeId) {
       setMessages([]);
+      setConversationError(null);
       return;
     }
     let cancelled = false;
     void (async () => {
       const loaded = await fetchConversation(activeId);
-      if (cancelled || !loaded) return;
+      if (cancelled) return;
+      if (!loaded.ok || !loaded.messages || !loaded.conversation) {
+        setMessages([]); // never show another conversation's turns
+        setConversationError(loaded.error ?? "Failed to load conversation");
+        return;
+      }
+      setConversationError(null);
       setMessages(loaded.messages);
       setModel(loaded.conversation.model || CHAT_DEFAULT_MODEL);
     })();
     return () => {
       cancelled = true;
     };
-  }, [activeId, setMessages, setModel]);
+  }, [activeId, reloadNonce, setMessages, setModel]);
+
+  /** Re-run the read above for the conversation that is already selected. */
+  const reloadActiveConversation = useCallback(() => {
+    setReloadNonce((n) => n + 1);
+  }, []);
 
   // Auto-scroll on new/updated messages.
   useEffect(() => {
@@ -277,5 +300,7 @@ export function useChatSend({
     handleStop,
     handleApproval,
     handleKeyDown,
+    conversationError,
+    reloadActiveConversation,
   };
 }

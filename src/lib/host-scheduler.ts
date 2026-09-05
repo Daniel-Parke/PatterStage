@@ -7,13 +7,45 @@
 //
 // PatterStage targets Linux (and macOS for development); on Windows, run it
 // under WSL2 (Ubuntu) — see docs/CROSS_PLATFORM.md. There is no native-Windows
-// Task Scheduler backend.
+// Task Scheduler backend, and that is now a REASON rather than a dead end:
+// `hostSchedulerAvailability` below says so in a sentence the Scripts page
+// shows, and PatterStage's own tick carries the schedule instead (T-0107,
+// decision 10).
 
 import { writeFileSync, unlinkSync } from "fs";
 import { join } from "path";
 import { exec, execSync } from "child_process";
 
-import { tmpDir } from "@/lib/platform";
+import { isWindows, tmpDir } from "@/lib/platform";
+
+/** Whether this host has a scheduler of its own, and what that means. */
+export interface HostSchedulerAvailability {
+  available: boolean;
+  /** One sentence, shown to the operator verbatim. */
+  reason: string;
+}
+
+/**
+ * Can this host run a scheduled script without PatterStage?
+ *
+ * The answer changes what the Schedule modal writes: a crontab row where there
+ * is a crontab, a PatterStage `schedules` row where there is not. The reason is
+ * the honest trade in both directions, because "runs while PatterStage is
+ * running" is a real limitation an operator should meet before they rely on it.
+ */
+export function hostSchedulerAvailability(): HostSchedulerAvailability {
+  if (isWindows) {
+    return {
+      available: false,
+      reason:
+        "No host scheduler on native Windows. PatterStage runs script schedules itself, while PatterStage is running.",
+    };
+  }
+  return {
+    available: true,
+    reason: "Host crontab. Scheduled scripts run whether PatterStage is up or not.",
+  };
+}
 
 export interface HostScheduler {
   /** The managed schedule as crontab-format text (one job per line). */

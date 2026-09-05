@@ -91,7 +91,13 @@ jest.mock("@/hooks/useGatewayHealth", () => ({
 // ── chat-utils mock: the server-API surface the hook imports ──
 jest.mock("@/lib/chat-utils", () => ({
   fetchConversations: jest.fn().mockResolvedValue([]),
-  fetchConversation: jest.fn().mockResolvedValue(null),
+  // fetchConversation answers `{ ok, error?, conversation?, messages? }` since
+  // B13 (D43/D49) — it used to answer `… | null`, which could not tell an empty
+  // transcript from a failed read. No conversation is ever selected in this
+  // suite, so the value is never read; it is corrected here so the mock keeps
+  // describing the real module rather than becoming a trap for the next test
+  // that does select one.
+  fetchConversation: jest.fn().mockResolvedValue({ ok: false, error: "not used by this suite" }),
   createConversationApi: jest.fn().mockResolvedValue(null),
   deleteConversationApi: jest.fn().mockResolvedValue({ ok: true }),
   sendMessageApi: jest.fn().mockResolvedValue({ ok: true, result: { userMessageId: "u", assistantMessageId: "a" } }),

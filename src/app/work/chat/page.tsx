@@ -45,6 +45,8 @@ export default function ChatPage() {
     handleDownloadConversation,
     conversationsError,
     reloadConversations,
+    conversationError,
+    reloadActiveConversation,
     gatewayUrl,
     bannerStates,
     messages,
@@ -134,15 +136,19 @@ export default function ChatPage() {
                     <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity shrink-0">
                       <div className="relative group/download">
                         <button
-                          onClick={(e) => handleDownloadConversation(c, "json", e)}
+                          onClick={(e) => void handleDownloadConversation(c, "json", e)}
                           className="w-7 h-7 flex items-center justify-center rounded hover:bg-neon-cyan/20 hover:text-neon-cyan text-ps-text-muted"
                           title="Download as JSON"
                         >
                           <Download className="w-4 h-4" />
                         </button>
-                        <div className="absolute right-0 top-full mt-0.5 hidden group-hover/download:block z-50">
+                        {/* focus-within as well as hover: gated on hover alone,
+                            the CSV option was unreachable by keyboard and by
+                            touch — you could Tab to the JSON button and the
+                            second format never appeared (D52). */}
+                        <div className="absolute right-0 top-full mt-0.5 hidden group-hover/download:block group-focus-within/download:block z-50">
                           <button
-                            onClick={(e) => handleDownloadConversation(c, "csv", e)}
+                            onClick={(e) => void handleDownloadConversation(c, "csv", e)}
                             className="whitespace-nowrap text-xs font-mono px-2 py-1 rounded bg-dark-900 border border-white/10 text-ps-text-secondary hover:text-white hover:bg-white/5 transition-colors shadow-lg"
                           >
                             as CSV
@@ -193,7 +199,16 @@ export default function ChatPage() {
               {bannerStates.map((state) => (
                 <GatewayBanner key={state} status={state} gatewayUrl={gatewayUrl} />
               ))}
-              {messages.length === 0 ? (
+              {/* The read contract again, one level in: a transcript that would
+                  not load is this, with a Retry, and never the "start a
+                  conversation" empty state — which reads as "this conversation
+                  has no turns" and is a different, false claim (D49). */}
+              {conversationError ? (
+                <LoadErrorBanner
+                  error={conversationError}
+                  onRetry={() => void reloadActiveConversation()}
+                />
+              ) : messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-center py-24">
                   <div className="w-16 h-16 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mb-4">
                     <MessageCircle className="w-8 h-8 text-ps-text-muted" />

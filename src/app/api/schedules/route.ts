@@ -19,7 +19,12 @@ import { recordEvent } from "@/lib/analytics/record-event";
 
 const scheduleCreateSchema = z
   .object({
-    missionId: z.string().min(1),
+    // A schedule row can name a script instead of a mission (T-0107, decision
+    // 10), so neither id is required by the schema; which one is required is a
+    // function of `kind`, and the handler answers that below in words.
+    kind: z.enum(["mission", "script"]).optional(),
+    missionId: z.string().min(1).optional(),
+    scriptName: z.string().min(1).optional(),
     name: z.string().optional(),
     schedule: z.string().min(1),
     scheduleDisplay: z.string().optional(),
@@ -43,6 +48,15 @@ export async function POST(request: NextRequest) {
   if (parsed instanceof NextResponse) return parsed;
 
   try {
+    // Before the schedule-shape checks: a row with nothing to fire is refused
+    // on the thing that is actually missing, not on its cron.
+    const kind = parsed.kind ?? "mission";
+    if (kind === "mission" && !parsed.missionId) {
+      return badRequest("missionId is required for a mission schedule");
+    }
+    if (kind === "script" && !parsed.scriptName) {
+      return badRequest("scriptName is required for a script schedule");
+    }
     if (parseSchedule(parsed.schedule).kind === "invalid") {
       return badRequest(`Unrecognized schedule: ${parsed.schedule}`);
     }
@@ -58,7 +72,9 @@ export async function POST(request: NextRequest) {
     }
     const next = computeNextRun(parsed.schedule, new Date());
     const schedule = createSchedule({
-      missionId: parsed.missionId,
+      kind,
+      missionId: parsed.missionId ?? null,
+      scriptName: parsed.scriptName ?? null,
       name: parsed.name,
       schedule: parsed.schedule,
       scheduleDisplay: parsed.scheduleDisplay ?? parsed.schedule,

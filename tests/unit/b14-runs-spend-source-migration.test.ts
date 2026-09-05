@@ -119,19 +119,24 @@ function insertStory(db: RealDb, id: string): void {
 // (A) the ladder
 // ═══════════════════════════════════════════════════════════════
 
-describe("the ladder reaches 40, and 040 is the rung", () => {
-  it("the head is 40 and it is RUNS_SPEND_SOURCE_SCHEMA_VERSION, one above models-origin", () => {
+describe("040 is a rung on the ladder", () => {
+  // 040 was the head when this file was written; 041 displaced it in T-0107,
+  // which this file's own contract said would happen. What is left here is the
+  // part that is about 040: its gate is one above models-origin, and the ladder
+  // never walks backwards past it. The head belongs to whichever oracle owns
+  // the last rung.
+  it("its gate sits one above models-origin, at or below the head", () => {
     const applier = loadApplier();
     expect(applier).not.toBeNull();
-    expect(MIGRATION_HEAD_SCHEMA_VERSION).toBe(40);
-    expect(applier!.RUNS_SPEND_SOURCE_SCHEMA_VERSION).toBe(MIGRATION_HEAD_SCHEMA_VERSION);
+    expect(applier!.RUNS_SPEND_SOURCE_SCHEMA_VERSION).toBe(40);
     expect(applier!.RUNS_SPEND_SOURCE_SCHEMA_VERSION).toBe(MODELS_ORIGIN_SCHEMA_VERSION + 1);
+    expect(MIGRATION_HEAD_SCHEMA_VERSION).toBeGreaterThanOrEqual(40);
   });
 
-  it("the highest-numbered file on disk is 040_runs_spend_source.sql", () => {
+  it("040_runs_spend_source.sql is on disk, at or below the highest number", () => {
     const files = readdirSync(migrationsDir);
     const numbers = files.filter((f) => /^\d{3}_.*\.sql$/.test(f)).map((f) => parseInt(f.slice(0, 3), 10));
-    expect(Math.max(...numbers)).toBe(40);
+    expect(Math.max(...numbers)).toBeGreaterThanOrEqual(40);
     expect(files).toContain("040_runs_spend_source.sql");
   });
 
@@ -152,12 +157,12 @@ describe("the ladder reaches 40, and 040 is the rung", () => {
 // ═══════════════════════════════════════════════════════════════
 
 describe("runMigrations on a v2 database", () => {
-  it("adds story_id and spend_source to runs and reaches 40", () => {
+  it("adds story_id and spend_source to runs and climbs to the head", () => {
     const db = legacyDbWithRows();
     runMigrations(db);
 
     expect(cols(db, "runs")).toEqual(expect.arrayContaining(["story_id", "spend_source"]));
-    expect(getSchemaVersion(db)).toBe(40);
+    expect(getSchemaVersion(db)).toBe(MIGRATION_HEAD_SCHEMA_VERSION);
     db.close();
   });
 
@@ -184,7 +189,7 @@ describe("runMigrations on a v2 database", () => {
     expect(before.spend_source).toBe("composer");
 
     expect(() => runMigrations(db)).not.toThrow();
-    expect(getSchemaVersion(db)).toBe(40);
+    expect(getSchemaVersion(db)).toBe(MIGRATION_HEAD_SCHEMA_VERSION);
     expect(rawRun(db, "R-composer")).toEqual(before);
     db.close();
   });

@@ -4,6 +4,7 @@ import { applyModelsApiStyleMigration } from "../../src/lib/db/apply-models-api-
 import { applyNeutralColumnNames } from "../../src/lib/db/apply-neutral-column-names";
 import { applyModelsOriginMigration } from "../../src/lib/db/apply-models-origin-migration";
 import { applyRunsSpendSourceMigration } from "../../src/lib/db/apply-runs-spend-source-migration";
+import { applyScheduleKindMigration } from "../../src/lib/db/apply-schedule-kind-migration";
 
 const migrationsDir = join(__dirname, "..", "..", "src", "lib", "db", "migrations");
 
@@ -49,6 +50,9 @@ export function execBaselineSchema(database: import("better-sqlite3").Database):
     database.exec("ALTER TABLE runs ADD COLUMN composer_node_run_id TEXT");
   }
   applyRunsSpendSourceMigration(database, migrationsDir);
+  // schedules.kind and schedules.script_name are added post-baseline (v41) and
+  // written by createSchedule, so the same rule applies once more.
+  applyScheduleKindMigration(database, migrationsDir);
   database
     .prepare("INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)")
     .run("schema_version", "3");

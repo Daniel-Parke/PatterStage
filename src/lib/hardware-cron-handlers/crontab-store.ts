@@ -10,8 +10,8 @@
 import { crontabLineUsesScriptsDir } from "@/lib/hardware-cron";
 import { getHostScheduler } from "@/lib/host-scheduler";
 import { getPsScriptsDir } from "@/lib/paths";
+import { extractScriptName, SCRIPT_EXT_RE } from "@/lib/scripts/script-ext";
 
-import { extractScriptName, SCRIPT_EXT_RE } from "./crontab-command";
 import { loadDisabledIds } from "./disabled-state";
 
 /**

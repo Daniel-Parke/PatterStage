@@ -37,6 +37,10 @@ const NOW = new Date("2026-06-15T10:00:00.000Z");
 function makeSchedule(over: Partial<ScheduleRecord> = {}): ScheduleRecord {
   return {
     id: "sch1",
+    // Required since 041 (T-0107): every row says what it fires. These cases
+    // are all about missions, which is what every row was before it.
+    kind: "mission",
+    scriptName: null,
     missionId: "m1",
     name: "S",
     schedule: "every 30m",

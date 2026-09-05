@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// ScriptEditorModal — write or edit a *.sh file
+// ScriptEditorModal — write or edit a script file
 //
 // Extracted verbatim from app/orchestration/scripts/page.tsx. The
 // editor's state and its save/delete calls stay on the page; this
@@ -26,6 +26,8 @@ export interface ScriptEditorModalProps {
   onClose: () => void;
   onSave: () => void;
   onDelete: () => void;
+  /** True when this script has a schedule that the delete would take with it. */
+  scheduled?: boolean;
 }
 
 export default function ScriptEditorModal({
@@ -40,6 +42,7 @@ export default function ScriptEditorModal({
   onClose,
   onSave,
   onDelete,
+  scheduled = false,
 }: ScriptEditorModalProps) {
   return (
     <Modal
@@ -53,7 +56,9 @@ export default function ScriptEditorModal({
         <>
           {!isNew && (
             // Two clicks in the modal's own footer, not a native confirm over it
-            // (T-0096, D51). A scheduled script loses its schedule with the file.
+            // (T-0096, D51). The warning beside it is the other half: a
+            // scheduled script loses its schedule with the file, and that was
+            // said only in this comment (T-0107).
             <ConfirmButton
               variant="ghost"
               size="sm"
@@ -65,6 +70,11 @@ export default function ScriptEditorModal({
             >
               Delete
             </ConfirmButton>
+          )}
+          {!isNew && scheduled && (
+            <span className="ml-2 font-mono text-xs text-semantic-warning">
+              Deleting the file also removes its schedule.
+            </span>
           )}
           <div className="flex-1" />
           <Button variant="ghost" size="sm" onClick={onClose} disabled={saving}>
@@ -84,7 +94,7 @@ export default function ScriptEditorModal({
               id="script-filename"
               value={name}
               onChange={(e) => onNameChange(e.target.value)}
-              placeholder="my-script.sh"
+              placeholder="my-script.mjs"
               spellCheck={false}
               className="w-full rounded-lg border border-white/10 bg-dark-800 px-3 py-2 font-mono text-sm text-ps-text-primary outline-none focus:border-neon-cyan/50"
             />

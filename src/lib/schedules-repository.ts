@@ -14,9 +14,21 @@ import { buildUpdate } from "./db/build-update";
 
 export type CatchUpPolicy = "fire_once" | "skip";
 
+/**
+ * What a schedule row fires.
+ *
+ * Every row was a mission until T-0107. Native Windows has no crontab, so the
+ * Scripts page's Schedule button had nowhere to write; a 'script' row lets
+ * PatterStage's own tick carry a host script instead (decision 10).
+ */
+export type ScheduleKind = "mission" | "script";
+
 export interface ScheduleRecord {
   id: string;
+  kind: ScheduleKind;
   missionId: string | null;
+  /** The script this row runs, when `kind` is "script". Null otherwise. */
+  scriptName: string | null;
   name: string;
   /** Canonical 5-field cron or interval shorthand (e.g. "every 30m"). */
   schedule: string;
@@ -37,7 +49,9 @@ export interface ScheduleRecord {
 
 interface ScheduleRow {
   id: string;
+  kind: string;
   mission_id: string | null;
+  script_name: string | null;
   name: string;
   schedule: string;
   schedule_display: string;
@@ -58,7 +72,11 @@ function rowToSchedule(row: ScheduleRow | undefined): ScheduleRecord | null {
   if (!row) return null;
   return {
     id: row.id,
+    // A row written before 041 has no kind; it is a mission, which is what
+    // every row was.
+    kind: (row.kind as ScheduleKind) ?? "mission",
     missionId: row.mission_id,
+    scriptName: row.script_name ?? null,
     name: row.name,
     schedule: row.schedule,
     scheduleDisplay: row.schedule_display,
@@ -79,7 +97,9 @@ function rowToSchedule(row: ScheduleRow | undefined): ScheduleRecord | null {
 // ── Create ───────────────────────────────────────────────────
 
 export interface CreateScheduleInput {
+  kind?: ScheduleKind;
   missionId?: string | null;
+  scriptName?: string | null;
   name?: string;
   schedule: string;
   scheduleDisplay?: string;
@@ -97,13 +117,16 @@ export function createSchedule(input: CreateScheduleInput): ScheduleRecord {
     getDb()
       .prepare(
         `INSERT INTO schedules
-           (id, mission_id, name, schedule, schedule_display, enabled, catch_up_policy,
-            repeat_times, repeat_done, profile_name, next_run_at, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?)`,
+           (id, kind, mission_id, script_name, name, schedule, schedule_display, enabled,
+            catch_up_policy, repeat_times, repeat_done, profile_name, next_run_at,
+            created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?)`,
       )
       .run(
         id,
+        input.kind ?? "mission",
         input.missionId ?? null,
+        input.scriptName ?? null,
         input.name ?? "",
         input.schedule,
         input.scheduleDisplay ?? "",
@@ -130,6 +153,19 @@ export function listSchedules(opts?: { limit?: number }): ScheduleRecord[] {
   const rows = getDb()
     .prepare("SELECT * FROM schedules ORDER BY created_at DESC LIMIT ?")
     .all(clampLimit(opts?.limit, SCHEDULE_LIST_BOUNDS)) as ScheduleRow[];
+  return rows.map(rowToSchedule).filter((s): s is ScheduleRecord => s !== null);
+}
+
+/**
+ * Every PatterStage-owned SCRIPT schedule, newest first.
+ *
+ * The Scripts page merges these with the host crontab so a row can say which
+ * of the two it is running on; the host wins where both exist.
+ */
+export function listScriptSchedules(): ScheduleRecord[] {
+  const rows = getDb()
+    .prepare("SELECT * FROM schedules WHERE kind = 'script' ORDER BY created_at DESC")
+    .all() as ScheduleRow[];
   return rows.map(rowToSchedule).filter((s): s is ScheduleRecord => s !== null);
 }
 

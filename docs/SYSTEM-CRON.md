@@ -7,20 +7,23 @@ compiled_from: normalised
 
 # System cron: Hindsight backup
 
-PatterStage's host-level cron scripts live in `scripts/hardware/`. During [`scripts/bootstrap/setup.sh`](../scripts/bootstrap/setup.sh) (or its Node twin `setup.mjs`), **every** `.sh` and `.mjs` in that directory is copied into **`PS_DATA_DIR/scripts`** when no file of that name is there yet (see [`getPsScriptsDir()`](../src/lib/paths.ts)). That is `ps-backup.sh`, an `.sh`/`.mjs` pair each for DB backup, disk report, health check, log rotate and system report, the `reconnect-hindsight.sh` recovery helper, and six pre-rename `ch-*.sh` shims. Register jobs from the **Orchestration → Scripts** page; each crontab line must invoke a script under that directory ([`POST /api/cron/hardware`](../src/app/api/cron/hardware/route.ts)).
+PatterStage's host-level cron scripts live in `scripts/hardware/`. During [`scripts/bootstrap/setup.sh`](../scripts/bootstrap/setup.sh) (or its Node twin `setup.mjs`), **every** `.sh` and `.mjs` in that directory is copied into **`PS_DATA_DIR/scripts`** when no file of that name is there yet (see [`getPsScriptsDir()`](../src/lib/paths.ts)). That is `ps-backup.sh`, an `.sh`/`.mjs` pair each for DB backup, disk report, health check, log rotate and system report, the `reconnect-hindsight.sh` recovery helper, and six pre-rename `ch-*.sh` shims. Register jobs from the **Work → Scripts** page; each crontab line must invoke a script under that directory ([`POST /api/cron/hardware`](../src/app/api/cron/hardware/route.ts)).
 
 This page documents **`ps-backup.sh`** (the Hindsight snapshot) in detail. For the rest, and for which version of a pair to schedule, see [CROSS_PLATFORM.md](CROSS_PLATFORM.md).
 
-What the Scripts page lists is not a curated preset list: it is every file with a runnable extension found in the scripts directory, via `listScriptFiles()` in [`src/lib/scripts-manager.ts`](../src/lib/scripts-manager.ts). The gallery's starter cards are three blank `.sh` skeletons in [`src/components/scripts/script-templates.ts`](../src/components/scripts/script-templates.ts). `HARDWARE_CRON_UI_PRESETS` in [`src/lib/hardware-cron.ts`](../src/lib/hardware-cron.ts) is **not** wired to any surface: only unit tests import it, so editing it changes nothing a user sees. Log output defaults to **`PS_HARDWARE_LOG_DIR`** (`PS_DATA_DIR/logs`).
+What the Scripts page lists is not a curated preset list: it is every file with a runnable extension found in the scripts directory, via `listScriptFiles()` in [`src/lib/scripts-manager.ts`](../src/lib/scripts-manager.ts). The gallery's starter cards are in [`src/components/scripts/script-templates.ts`](../src/components/scripts/script-templates.ts): two cross-platform `.mjs` starters first, then the three bash skeletons. `HARDWARE_CRON_UI_PRESETS` in [`src/lib/hardware-cron.ts`](../src/lib/hardware-cron.ts) is **not** wired to any surface: only unit tests import it, so editing it changes nothing a user sees. Log output defaults to **`PS_HARDWARE_LOG_DIR`** (`PS_DATA_DIR/logs`).
 
-> **Platforms:** scheduling has one backend, the user `crontab`
+> **Platforms:** the host backend is the user `crontab`
 > ([`src/lib/host-scheduler.ts`](../src/lib/host-scheduler.ts)), on Linux and
 > macOS. There is **no** native-Windows Task Scheduler backend: the `schtasks`
-> path an earlier version of this page described was dropped with the rest of the
-> native-Windows operational layer, and no translation table exists. On Windows,
-> run PatterStage under WSL2 (Ubuntu) and use the Linux path. `ps-backup.sh`
-> needs bash and a running Hindsight server, so it is Unix-only rather than
-> Linux-only: macOS is fine. See [CROSS_PLATFORM.md](CROSS_PLATFORM.md).
+> path an earlier version of this page described was dropped with the rest of
+> the native-Windows operational layer, and no translation table exists. Where
+> there is no host scheduler, the Schedule button writes a PatterStage
+> `schedules` row (`kind = 'script'`) and PatterStage's own timer runs it while
+> PatterStage is up; the row says so. WSL2 (Ubuntu) still gives you the Linux
+> path and its stronger guarantee. `ps-backup.sh` needs bash and a running
+> Hindsight server, so it is Unix-only rather than Linux-only: macOS is fine.
+> See [CROSS_PLATFORM.md](CROSS_PLATFORM.md).
 
 | Script | File | Purpose |
 |--------|------|---------|

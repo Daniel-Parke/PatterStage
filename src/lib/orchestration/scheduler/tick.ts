@@ -19,6 +19,7 @@ import { createRun } from "@/lib/runs-repository";
 import { hasDispatchedMission } from "@/lib/missions/mission-repository";
 import { computeNextRun } from "@/lib/schedule/next-run";
 import { dispatchMissionRun } from "@/lib/orchestration/dispatch";
+import { runScriptFile } from "@/lib/scripts-manager";
 import { logApiError } from "@/lib/api-logger";
 import { recordEvent } from "@/lib/analytics/record-event";
 import { checkUnattendedSpend } from "@/lib/spend/spend-guard";
@@ -55,7 +56,62 @@ function advanceToNext(
 }
 
 /** Fire (or skip) one due schedule. Returns true if a run was dispatched. */
+/**
+ * Run the host script a schedule row names.
+ *
+ * Deliberately NOT the mission path with a different verb at the end. A script
+ * run is not an agent run: it claims no `runs` row (those carry a mission), and
+ * it is not held behind the one-mission-at-a-time single flight, which is about
+ * the agent rather than about the host. What it does share is the catch-up
+ * policy and the advance, because those are statements about the schedule.
+ */
+async function fireScriptSchedule(sched: ScheduleRecord, nowDate: Date): Promise<boolean> {
+  // The same shape as the orphaned-mission branch: a row that names nothing
+  // can never fire, so it says so once and stops being selected.
+  if (!sched.scriptName) {
+    advanceSchedule(sched.id, {
+      nextRunAt: null,
+      lastRunAt: nowDate.toISOString(),
+      lastRunId: null,
+      lastStatus: "skipped: no script named",
+      enabled: false,
+    });
+    return false;
+  }
+
+  const dueAt = sched.nextRunAt ? new Date(sched.nextRunAt) : nowDate;
+  if (sched.catchUpPolicy === "skip" && nowDate.getTime() - dueAt.getTime() > CATCH_UP_GRACE_MS) {
+    advanceToNext(sched, nowDate, null, "skipped (catch-up)", false);
+    return false;
+  }
+
+  const result = await runScriptFile(sched.scriptName);
+  advanceToNext(
+    sched,
+    nowDate,
+    null,
+    result.ok ? "ran" : `error: ${result.error ?? "script exited non-zero"}`,
+    true,
+  );
+  // After the advance, never before it: no event claims a run the row does not
+  // record.
+  if (result.ok) {
+    recordEvent("script.run", {
+      entityType: "script",
+      entityId: sched.scriptName,
+      metadata: { source: "scheduler" },
+    });
+  }
+  return result.ok;
+}
+
 async function fireSchedule(sched: ScheduleRecord, nowDate: Date): Promise<boolean> {
+  // BEFORE the orphan check, and that order is the whole point. A script row
+  // has no mission, so the branch below would disable every row migration 041
+  // creates on the first tick that saw it, and the feature would be dead on
+  // arrival while looking perfectly wired (T-0107, decision 10).
+  if (sched.kind === "script") return fireScriptSchedule(sched, nowDate);
+
   // Orphaned schedule (mission deleted) — disable so it stops being selected.
   if (!sched.missionId) {
     advanceSchedule(sched.id, {

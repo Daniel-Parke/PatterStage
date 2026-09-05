@@ -1,9 +1,11 @@
 // ═══════════════════════════════════════════════════════════════
-// ScheduleScriptModal — put a *.sh file on the host crontab
+// ScheduleScriptModal — put a script on a timer
 //
-// Extracted verbatim from app/orchestration/scripts/page.tsx, where it
-// was a second component declared below the page. Its cron field and
-// validation are local to the modal, as they were before.
+// The host crontab where there is one; a PatterStage `schedules` row where
+// there is not, which is native Windows (T-0107, decision 10). The modal says
+// which, in the sentence the API sent it, so the difference is met before it is
+// relied on rather than discovered later. Its cron field and validation are
+// local to the modal, as they have always been.
 // ═══════════════════════════════════════════════════════════════
 
 "use client";
@@ -14,18 +16,21 @@ import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 import SchedulePicker from "@/components/schedule/SchedulePicker";
 import { safeApiCall } from "@/lib/api-fetch";
-import type { ScriptFile } from "@/hooks/useScripts";
+import { stripScriptExt } from "@/lib/scripts/script-ext";
+import type { ScriptFile, SchedulerAvailability } from "@/hooks/useScripts";
 
 export default function ScheduleScriptModal({
   script,
   onClose,
   onSaved,
   onError,
+  scheduler,
 }: {
   script: ScriptFile;
   onClose: () => void;
   onSaved: () => void;
   onError: (msg: string) => void;
+  scheduler: SchedulerAvailability;
 }) {
   const [schedule, setSchedule] = useState("0 3 * * *");
   const [scheduleError, setScheduleError] = useState<string | null>(null);
@@ -52,16 +57,30 @@ export default function ScheduleScriptModal({
       setScheduleError("Schedule must have exactly 5 fields: min hour dom mon dow");
       return;
     }
+    // The label was stripped with a .sh-only regex, so a scheduled .mjs was
+    // titled "Ps Db Backup.mjs" (T-0107, D48).
+    const label = stripScriptExt(script.name)
+      .replace(/[-_]/g, " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase());
     setSaving(true);
     try {
-      const res = await safeApiCall("/api/cron/hardware", {
-        method: "POST",
-        body: {
-          name: script.name.replace(/\.sh$/, "").replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
-          schedule: schedule.trim(),
-          command: script.path,
-        },
-      });
+      const res = scheduler.available
+        ? await safeApiCall("/api/cron/hardware", {
+            method: "POST",
+            body: { name: label, schedule: schedule.trim(), command: script.path },
+          })
+        : await safeApiCall("/api/schedules", {
+            method: "POST",
+            // No missionId key at all: the body schema is .strict(), and a
+            // script schedule has no mission to name.
+            body: {
+              kind: "script",
+              scriptName: script.name,
+              name: label,
+              schedule: schedule.trim(),
+              scheduleDisplay: schedule.trim(),
+            },
+          });
       if (!res.ok) {
         onError(res.error ?? "Failed to schedule");
         return;
@@ -91,8 +110,9 @@ export default function ScheduleScriptModal({
     >
       <div className="space-y-4">
         <p className="font-mono text-xs text-ps-text-muted">
-          Runs <span className="text-ps-text-secondary">{script.name}</span> on the host crontab.
+          Runs <span className="text-ps-text-secondary">{script.name}</span>.
         </p>
+        <p className="font-mono text-xs text-ps-text-faint">{scheduler.reason}</p>
         <SchedulePicker
           value={schedule}
           onChange={(v) => { setSchedule(v); setScheduleError(null); }}

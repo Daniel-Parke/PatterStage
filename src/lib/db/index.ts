@@ -83,6 +83,7 @@ import { applyComposerNodeCancelledMigration } from "./apply-composer-node-cance
 import { applyOperatorPrefsMigration } from "./apply-operator-prefs-migration";
 import { applyModelsOriginMigration } from "./apply-models-origin-migration";
 import { applyRunsSpendSourceMigration } from "./apply-runs-spend-source-migration";
+import { applyScheduleKindMigration } from "./apply-schedule-kind-migration";
 
 // ── Ensure data directory exists ───────────────────────────────
 
@@ -337,9 +338,13 @@ export function runMigrations(database: Database.Database): void {
   // operator's rename or proxy base URL is not undone by the next import.
   // ALTER at v39.
   applyModelsOriginMigration(database, migrationsDir);
-  // LAST rung, T-0108: runs.story_id and runs.spend_source, so a run row says
-  // which feature spent the money.
+  // T-0108: runs.story_id and runs.spend_source, so a run row says which
+  // feature spent the money.
   applyRunsSpendSourceMigration(database, migrationsDir);
+  // LAST rung, T-0107: schedules.kind and schedules.script_name, so a schedule
+  // row can name a host script and PatterStage's own tick can run it where the
+  // host has no crontab.
+  applyScheduleKindMigration(database, migrationsDir);
 }
 
 // ── Bootstrap: ensure DB + schema exist ───────────────────────

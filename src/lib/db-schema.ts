@@ -28,7 +28,7 @@ const SCHEMA_VERSION_KEY = "schema_version";
  * Raising the head means bumping this in the same commit as the applier that
  * raises it. `docs/MIGRATION.md` carries the full going-forward rule.
  */
-export const MIGRATION_HEAD_SCHEMA_VERSION = 40;
+export const MIGRATION_HEAD_SCHEMA_VERSION = 41;
 
 export function getSchemaVersion(database: { prepare: (sql: string) => { get: (key: string) => { value: string } | undefined } }): number {
   try {

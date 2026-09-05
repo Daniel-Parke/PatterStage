@@ -115,12 +115,31 @@ export function formatModelName(id: string): string {
 
 // ── /api/chat client ────────────────────────────────────────────
 
-export async function fetchConversation(
-  id: string,
-): Promise<{ conversation: ChatConversation; messages: ChatMessage[] } | null> {
-  return await safeApiCallData<{ conversation: ChatConversation; messages: ChatMessage[] }>(
+/**
+ * The result of reading one conversation's transcript.
+ *
+ * It used to be `… | null`, which cost the callers two different things. The
+ * export handler could not tell "this row has no turns" from "the read failed",
+ * so it fell back to the transcript already on screen and wrote another
+ * conversation's words into a file named after this one (D43). The load effect
+ * could not say anything at all, so a 500 left the previous conversation's
+ * turns under the new title, silently (D49). `ok` plus a reason answers both.
+ */
+export interface ConversationLoad {
+  ok: boolean;
+  conversation?: ChatConversation;
+  messages?: ChatMessage[];
+  error?: string;
+}
+
+export async function fetchConversation(id: string): Promise<ConversationLoad> {
+  const res = await safeApiCall<{ data?: { conversation: ChatConversation; messages: ChatMessage[] } }>(
     `/api/chat/${id}`,
   );
+  if (!res.ok) return { ok: false, error: res.error ?? "Failed to load conversation" };
+  const payload = res.data?.data;
+  if (!payload) return { ok: false, error: "Conversation response was empty" };
+  return { ok: true, conversation: payload.conversation, messages: payload.messages };
 }
 
 export async function createConversationApi(input: {

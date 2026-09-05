@@ -37,7 +37,10 @@ type ToastFn = (message: string, type?: ToastType) => void;
 export interface UseChatConversationsArgs {
   /** Tear down the live run-event stream / fast-mode fetch. */
   closeStream: () => void;
-  messages: ChatMessage[];
+  // No `messages` here on purpose: the export used to read the open
+  // conversation's turns rather than the clicked row's (D43), and the only way
+  // to make that mistake unrepeatable is to stop handing this hook the
+  // transcript at all.
   setMessages: Dispatch<SetStateAction<ChatMessage[]>>;
   setIsStreaming: Dispatch<SetStateAction<boolean>>;
   setPendingApproval: Dispatch<SetStateAction<PendingApproval | null>>;
@@ -50,7 +53,6 @@ export interface UseChatConversationsArgs {
 
 export function useChatConversations({
   closeStream,
-  messages,
   setMessages,
   setIsStreaming,
   setPendingApproval,
@@ -90,7 +92,9 @@ export function useChatConversations({
   const refreshActiveConversation = useCallback(async () => {
     if (!activeId) return;
     const loaded = await fetchConversation(activeId);
-    if (loaded) setMessages(loaded.messages);
+    // A reconciliation read that failed leaves the transcript as it is; the
+    // stream's own terminal state already says what happened.
+    if (loaded.ok && loaded.messages) setMessages(loaded.messages);
   }, [activeId, setMessages]);
 
   // ── New conversation ────────────────────────────────────────
@@ -152,20 +156,37 @@ export function useChatConversations({
   );
 
   // ── Download conversation ───────────────────────────────────
+  //
+  // This read is the fix for D43. The handler used to close over `messages` —
+  // the turns of whatever conversation was CURRENTLY OPEN — and serialise them
+  // under the CLICKED row's title and id. Every sidebar row carries the two
+  // download buttons and none of them selects the row first, so exporting any
+  // row but the active one handed the operator a different conversation's words
+  // in a file named after this one. Plausible, silent and wrong. So we fetch the
+  // row's own transcript, and say so when we cannot.
   const handleDownloadConversation = useCallback(
-    (conversation: ChatConversation, format: "json" | "csv", e?: MouseEvent) => {
+    async (conversation: ChatConversation, format: "json" | "csv", e?: MouseEvent) => {
       stopEvent(e);
+      const loaded = await fetchConversation(conversation.id);
+      if (!loaded.ok || !loaded.messages) {
+        showToast("Failed to export conversation", "error");
+        return;
+      }
       const safeTitle = sanitiseFilename(conversation.title);
       const ts = Date.now();
       if (format === "json") {
-        downloadFile(conversationToJson(conversation, messages), `${safeTitle}_${ts}.json`, "application/json");
+        downloadFile(
+          conversationToJson(conversation, loaded.messages),
+          `${safeTitle}_${ts}.json`,
+          "application/json",
+        );
         showToast("Conversation exported as JSON", "success");
       } else {
-        downloadFile(conversationToCsv(messages), `${safeTitle}_${ts}.csv`, "text/csv");
+        downloadFile(conversationToCsv(loaded.messages), `${safeTitle}_${ts}.csv`, "text/csv");
         showToast("Conversation exported as CSV", "success");
       }
     },
-    [messages, showToast],
+    [showToast],
   );
 
   const activeConversation = conversations.find((c) => c.id === activeId);
