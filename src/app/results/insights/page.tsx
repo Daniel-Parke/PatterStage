@@ -3,9 +3,10 @@
 //
 // A user-facing read-model over the analytics_events log (via /api/analytics)
 // plus the derived stats (/api/stats): activity over time, a per-category
-// breakdown, the level/streak/milestone strip, and the full achievement grid.
-// Read-only — the unlock toast lives on the dashboard (CommandCenter), so this
-// page intentionally does NOT use useAchievementUnlocks.
+// breakdown, the streak/milestone strip, the mission mix, and the full
+// achievement grid. This is the history page (T-0099, B5): what the dashboard
+// gave up lives here and nowhere else. Read-only; the unlock toast belongs to
+// the shell's FeedbackProvider, so this page does NOT use useAchievementUnlocks.
 // ═══════════════════════════════════════════════════════════════
 
 "use client";
@@ -14,7 +15,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import {
   BarChart3, Sparkles, Activity, CalendarRange, Rocket, Clock,
-  Timer, Cpu, TrendingUp, Info,
+  Timer, Cpu, TrendingUp, Info, Award,
 } from "lucide-react";
 
 import PageHeader from "@/components/layout/PageHeader";
@@ -24,7 +25,7 @@ import {
   AreaTrend, ActivityHeatmap, Donut, RadialActivityClock,
   DistributionHistogram, TopList, StackedAreaTrend,
 } from "@/components/viz";
-import { neonAlpha, type NeonColor } from "@/components/viz/colors";
+import { neon, neonAlpha, type NeonColor } from "@/components/viz/colors";
 import { AchievementShowcase, StreakFlame } from "@/components/achievements";
 import { Stagger, StaggerItem } from "@/components/motion";
 import { useStats } from "@/hooks/useStats";
@@ -76,8 +77,8 @@ export default function InsightsPage() {
   const [days, setDays] = useState<number>(30);
   const { stats, isLoading: statsLoading, error: statsError, refetch: refetchStats } = useStats();
   const { summary, error: summaryError, refetch: refetchSummary } = useAnalytics();
-  const { points } = useAnalyticsTimeseries(undefined, days);
-  const { insights, error: insightsError } = useInsights(days);
+  const { points, refetch: refetchTimeseries } = useAnalyticsTimeseries(undefined, days);
+  const { insights, error: insightsError, refetch: refetchInsights } = useInsights(days);
   // Provider spend is the one number here that is money rather than activity
   // (T-0021, WO-0014). It carries its own periods, so it does not follow the
   // 7/30/90 range switch above: a budget is a calendar month, not a window.
@@ -114,6 +115,29 @@ export default function InsightsPage() {
   const achievements = stats?.achievements ?? [];
   const unlocked = achievements.filter((a) => a.unlocked).length;
 
+  // The mission mix the dashboard gave up (T-0099). All-time, by status.
+  const missionMix = useMemo(() => {
+    const m = stats?.missions;
+    if (!m) return [];
+    return [
+      { label: "Successful", value: m.successful, color: "green" as NeonColor },
+      { label: "Failed", value: m.failed, color: "pink" as NeonColor },
+      { label: "Dispatched", value: m.dispatched, color: "yellow" as NeonColor },
+      { label: "Queued", value: m.queued, color: "cyan" as NeonColor },
+      { label: "Draft", value: m.draft, color: "purple" as NeonColor },
+    ];
+  }, [stats?.missions]);
+
+  // Retry retries EVERY query the page reads (T-0099, D100). It used to
+  // re-fetch stats and the summary and leave the bundle and the timeseries
+  // to their own polls, so the chart that failed stayed failed for 30s.
+  const retryAll = () => {
+    void refetchStats();
+    void refetchSummary();
+    void refetchInsights();
+    void refetchTimeseries();
+  };
+
   return (
     <div className="flex h-full flex-col">
       <PageHeader
@@ -143,10 +167,7 @@ export default function InsightsPage() {
         {error && (
           <LoadErrorBanner
             error={error}
-            onRetry={() => {
-              refetchStats();
-              refetchSummary();
-            }}
+            onRetry={retryAll}
             hint="Analytics start empty and fill in as you use PatterStage."
           />
         )}
@@ -184,7 +205,8 @@ export default function InsightsPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                   <MetricTile label="Interactions" value={totalEvents.toLocaleString()} color="cyan" />
-                  <MetricTile label={`Active days (${days}d)`} value={String(summary?.activeDays ?? 0)} color="green" />
+                  {/* From the window's bundle, so the number follows the switch the label names (D96). */}
+                  <MetricTile label={`Active days (${days}d)`} value={String(insights?.activeDays ?? 0)} color="green" />
                   <MetricTile label="Tokens" value={compactNum(stats?.runs.totalTokens ?? 0)} color="yellow" />
                   <MetricTile label="Achievements" value={`${unlocked}/${achievements.length}`} color="orange" />
                 </div>
@@ -272,17 +294,18 @@ export default function InsightsPage() {
                 </div>
               </StaggerItem>
 
-              {/* ── Per-model spend + top missions ── */}
+              {/* ── Tokens by model + top missions + mission mix ──
+                  One money number on this page, and it is the spend panel's
+                  (D97): the model list is tokens, nothing with a dollar sign. */}
               <StaggerItem>
-                <div className="grid gap-4 lg:grid-cols-2">
+                <div className="grid gap-4 lg:grid-cols-3">
                   <Card>
-                    <CardTitle icon={Cpu} hint="Total tokens used per model over the range, with estimated cost.">Tokens by model</CardTitle>
+                    <CardTitle icon={Cpu} hint="Total tokens used per model over the range. Spend is in the provider spend panel above.">Tokens by model</CardTitle>
                     <TopList
                       color="orange"
                       rows={(insights?.modelUsage ?? []).map((m) => ({
                         label: m.model,
                         value: m.totalTokens,
-                        sub: `$${m.costUsd.toFixed(2)}`,
                       }))}
                       format={compactNum}
                     />
@@ -298,6 +321,27 @@ export default function InsightsPage() {
                       }))}
                       format={(v) => `${v} run${v === 1 ? "" : "s"}`}
                     />
+                  </Card>
+                  <Card>
+                    <CardTitle icon={Award} hint="Every mission you have ever composed, by where it is now.">Mission mix (all-time)</CardTitle>
+                    <div className="flex items-center gap-4">
+                      <Donut
+                        size={120}
+                        thickness={14}
+                        segments={missionMix}
+                        center={stats?.missions.total ?? 0}
+                        centerSub="missions"
+                      />
+                      <ul className="flex-1 space-y-1.5 text-xs">
+                        {missionMix.map((s) => (
+                          <li key={s.label} className="flex items-center gap-2">
+                            <span className="h-2.5 w-2.5 rounded-full" style={{ background: neon(s.color), boxShadow: `0 0 6px ${neonAlpha(s.color, 60)}` }} />
+                            <span className="text-ps-text-muted">{s.label}</span>
+                            <span className="ml-auto font-mono text-ps-text-primary">{s.value}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   </Card>
                 </div>
               </StaggerItem>

@@ -129,6 +129,15 @@ export interface UseDashboardResult {
   sessionTrend: number[];
   /** The subsystem health summary (T-0091), null until the first check answers. */
   subsystems: SubsystemSummary | null;
+  /**
+   * "Not yet" and "failed" are different answers (T-0099, D54). The monitor
+   * query's last error, and whether it has answered at all: a page that only
+   * sees `monitor: null` shows skeletons forever when the read fails.
+   */
+  monitorError: string | null;
+  monitorSettled: boolean;
+  subsystemsError: string | null;
+  subsystemsSettled: boolean;
   /** True once the static bundle has resolved (gates first paint). */
   ready: boolean;
   refetchMonitor: () => Promise<unknown>;
@@ -184,6 +193,10 @@ export function useDashboard(): UseDashboardResult {
     registryAgentModelLabel: staticQuery.data?.registryAgentModelLabel ?? null,
     sessionTrend: sessionTrendQuery.data ?? [],
     subsystems: subsystemsQuery.data ?? null,
+    monitorError: monitorQuery.isError ? (monitorQuery.error as Error).message : null,
+    monitorSettled: monitorQuery.isFetched,
+    subsystemsError: subsystemsQuery.isError ? (subsystemsQuery.error as Error).message : null,
+    subsystemsSettled: subsystemsQuery.isFetched,
     ready: !staticQuery.isLoading,
     refetchMonitor: () => monitorQuery.refetch(),
     refetchMissions: () => missionsQuery.refetch(),

@@ -141,8 +141,12 @@ describe("achievement unlocks belong to the shell", () => {
   });
 
   it("the dashboard no longer owns it", () => {
-    const src = readFileSync(join(ROOT, "src", "components", "dashboard", "CommandCenter.tsx"), "utf-8");
-    expect(src).not.toMatch(/useAchievementUnlocks/);
+    // The Command Center left the dashboard with B5 (T-0099); the Progress
+    // line and the page itself are what could take the hook back.
+    for (const file of [["src", "app", "page.tsx"], ["src", "components", "dashboard", "ProgressLine.tsx"]]) {
+      const src = readFileSync(join(ROOT, ...file), "utf-8");
+      expect(src).not.toMatch(/useAchievementUnlocks/);
+    }
   });
 
   it("the shell mounts the provider once, in the root layout", () => {

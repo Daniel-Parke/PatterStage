@@ -166,7 +166,9 @@ Top to bottom:
   breakdown ring** (the 40 event types folded into 9 categories),
 - an **hour-of-day radial clock**, a **run-duration histogram** and a **mission
   success trend** (completed vs failed per day),
-- **tokens by model** (with estimated cost) and **top missions**. Both aggregate
+- **tokens by model** (tokens only; the spend panel is the one money number on
+  the page), **top missions**, and the all-time **mission mix** donut that
+  moved here from the dashboard (T-0099). The first two aggregate
   `runs` INNER JOINed to `missions`, because the model dimension lives on the
   mission, so a run without one (a Composer stage run, which carries a
   `composer_node_run_id` and no `mission_id`) is absent from them. That is a

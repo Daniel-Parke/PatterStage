@@ -36,7 +36,7 @@ export function useAnalyticsTimeseries(type?: AnalyticsEventType, days = 30) {
       staleTime: 15_000,
     },
   );
-  return { points: r.data ?? [], isLoading: r.isLoading, error: r.error };
+  return { points: r.data ?? [], isLoading: r.isLoading, error: r.error, refetch: r.refetch };
 }
 
 /** The composed Insights workbench bundle for a time window (days). */

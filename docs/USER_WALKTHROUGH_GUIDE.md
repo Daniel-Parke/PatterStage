@@ -314,20 +314,25 @@ intention and the code is the bug.
 
 *The dashboard with work in flight, showing the header bar, stat pills, Mission Dispatch strip and system monitor this section walks through.*
 
-The dashboard is your **status board**, not the primary place to launch missions. It is meant to answer "what is happening on this machine right now?" at a glance, and to give you one-click access into the deeper pages. Polls `/api/monitor` every 10 seconds, `/api/agents` every 15 seconds, and `/api/missions` every 15 seconds.
+The dashboard is your **operations board**, not the primary place to launch missions and not the place for history. It answers "what is happening on this machine right now?" at a glance and gives you one-click access into the deeper pages; the charts, the mission mix and the trophy case live on [Insights](#laboratory--insights). Polls `/api/monitor` every 10 seconds, `/api/agents` every 15 seconds, and `/api/missions` every 15 seconds.
 
 ### What you see
 
 **Header bar**
-- Live clock and weekday/date, updating every 1 second.
 - **ONLINE** status dot (green) when `/api/monitor` reports the agent framework is available; **NOT INSTALLED** (orange, with a tooltip naming the agent) when the monitor says it is not. A monitor that cannot tell either way is read as available, so this badge only ever goes orange on a definite answer.
 - Subtitle showing the active model, read from `~/.hermes/config.yaml` first and from the Models registry as a fallback. If the registry disagrees, a hint suggests "push Bob to write config.yaml".
 
-**Compact stat row (four pills)**
-- **Processes:** number of active Hermes processes. Shows "N Active" when there is at least one agent running, "Idle" when no agents are running, and "Offline" when the agent detector is unreachable.
-- **Sessions:** total session count plus "N active · M last 7d" to summarise recent activity.
-- **Memory:** fact count and provider name (Holographic, Hindsight, or whatever the active backend is).
-- **Scheduler:** the background scheduler's heartbeat, reading **Ticking**, **Stalled**, **Never started** or **Unknown**, with the age of the last tick and the pid holding the lease underneath. This is the only surface that tells you the scheduler has stopped: when it stops, schedules quietly do not fire and a dispatched mission stays "running" forever.
+**Stat row (six pills)**
+- **Gateway:** the gateway's state in the ratified words, **Healthy**, **Degraded** or **Not running**, from the same check the Subsystems panel shows; opens Settings › System.
+- **Memory:** the memory provider's state in the same words, with the fact count underneath; opens Memory.
+- **Scheduler:** the background scheduler's heartbeat, reading **Ticking**, **Stalled**, **Never started** or **Unknown**, with the age of the last tick and the pid holding the lease underneath; opens Settings › System. This is the only surface that tells you the scheduler has stopped: when it stops, schedules quietly do not fire and a dispatched mission stays "running" forever.
+- **Spend:** this month's estimated provider spend; opens Insights, where the spend panel and the budget live.
+- **Processes:** number of active Hermes processes. Shows "N Active" when there is at least one agent running, "Idle" when no agents are running, and "Offline" when the agent detector is unreachable; opens Agents.
+- **Errors:** how many recent error rows the monitor holds; opens Logs.
+- While the monitor has not answered yet the row shows six placeholders. If the monitor **fails**, the row is replaced by an error banner reading "Couldn't read monitor data" with a **Retry** button; nothing on this board shows green until it has actually been read. While the subsystems check is still in flight, Gateway and Memory read "Checking…"; if that check itself failed, they read "Unknown".
+
+**Progress line**
+- One row under the pills: the current streak (days, with your best), the top agent's level badge (opens Agents), your achievements as unlocked/total (opens Insights), the next automation due (or "No automation scheduled"), and a **Quests** link. If the stats read fails, the row shows "Couldn't read stats" with a Retry.
 
 **Continue work card**
 - A link to the most recent session with "open transcript" and "X minutes ago".
@@ -352,13 +357,12 @@ The dashboard is your **status board**, not the primary place to launch missions
 - Cards for each process: name, status, type, model (when known), turn count, last activity timestamp.
 - Empty: "No Active Processes Detected".
 
-**Rec Room card** (bottom)
-- A link into `/recroom/story-weaver`.
+There is no Rec Room card and no clock on the board any more: Story Weaver is one click away in the sidebar, and the charts that used to sit under the monitor are on Insights.
 
 ### Typical use
 
 1. Open PatterStage after install and confirm **ONLINE** is showing, the model name matches what you expect, and Hermes paths resolve.
-2. Glance at the four stat pills; if Memory shows 0 and you expected facts, see [Main → Memory](#main--memory) to investigate.
+2. Glance at the six stat pills; if Memory reads Degraded or shows 0 facts when you expected some, see [Main → Memory](#main--memory) to investigate.
 3. Check **Running Hermes Processes** if a mission feels stuck: the list tells you what is actually executing.
 4. Use **Sync now** on the Platforms panel when you have changed Hermes config outside the UI (via `hermes config edit` on the host, for example). Otherwise the next 5-minute background sync will pick it up.
 5. Follow **Continue work** to the latest session, or click **Sessions** in the sidebar for the full history.
@@ -853,16 +857,16 @@ Conversations are stored **server-side** in SQLite (`chat_conversations` and `ch
 **Header** (`PageHeader`)
 - Title "Insights", subtitle "Interaction analytics & achievements".
 - A range switch on the right with three buttons: "7d", "30d", "90d". Default is 30.
-- The range drives `useAnalyticsTimeseries(undefined, days)` and `useInsights(days)` only. The "Interactions" tile, the donut, the heatmap, the streak, the token tile, the spend panel and the achievements ignore it, and so does the *value* under "Active days" despite its label. See the Notes.
+- The range drives `useAnalyticsTimeseries(undefined, days)` and `useInsights(days)`, and the "Active days" tile reads its number from that window's bundle. The "Interactions" tile, the donut, the heatmap, the streak, the token tile, the spend panel and the achievements ignore it.
 
 **Load and error states**
 - While the first stats poll is in flight: a spinner reading "Loading insights…".
-- On any failure from stats, summary or the insights bundle: a `LoadErrorBanner` carrying the hint "Analytics start empty and fill in as you use PatterStage." Its retry re-fetches stats and the analytics summary; the insights bundle is not re-fetched by that button and refreshes on its own poll.
+- On any failure from stats, summary or the insights bundle: a `LoadErrorBanner` carrying the hint "Analytics start empty and fill in as you use PatterStage." Its retry re-fetches every query on the page: stats, the analytics summary, the timeseries and the insights bundle.
 - First run, when no events have been recorded at all: a card headed "No activity yet", body copy suggesting you dispatch a mission, write a Story Weaver chapter or fire a schedule, and a "Go to Missions" link pointing at `/orchestration/missions`.
 
 **Metric strip**
 - `StreakFlame`: the current streak in days plus "best N" underneath. At a streak of 0 the flame is grey and unlit; it is cyan at 1 to 2 days, yellow from 3, orange from 7. Its tooltip reads "Current streak: N day(s) · Best: M".
-- Four tiles: "Interactions" (all-time event count), "Active days (30d)" where the number in the label follows the range switch, "Tokens", and "Achievements" showing unlocked over total, for example `0/36`. Tile labels and card titles are set in capitals by the stylesheet, so on screen they read "INTERACTIONS", "ACTIVE DAYS (30D)" and so on.
+- Four tiles: "Interactions" (all-time event count), "Active days (30d)" whose label and number both follow the range switch, "Tokens", and "Achievements" showing unlocked over total, for example `0/36`. Tile labels and card titles are set in capitals by the stylesheet, so on screen they read "INTERACTIONS", "ACTIVE DAYS (30D)" and so on.
 - There is no operator level or XP bar on this page. ADR-0004 moved level onto the agent profile, so it now lives with the agent that earned it at [Operations → Agents](#operations--agents).
 
 **Provider spend**
@@ -878,8 +882,9 @@ Conversations are stored **server-side** in SQLite (`chat_conversations` and `ch
 - **Mission success trend**: completed against failed missions per day, green for "completed" and pink for "failed", with a legend using those two words.
 
 **Charts, third row**
-- **Tokens by model**: a ranked list of models by total tokens over the range, each row subtitled with an estimated dollar cost from `estimateCost`. Empty state: "No data yet."
+- **Tokens by model**: a ranked list of models by total tokens over the range. No dollar figure here: the spend panel above is the one money number on the page. Empty state: "No data yet."
 - **Top missions**: your missions with the most *completed* runs over the range, at most 6, formatted as "1 run" or "N runs" with a token subtotal.
+- **Mission mix (all-time)**: a donut of your missions by status, Successful, Failed, Dispatched, Queued and Draft, with the total in the middle. This moved here from the dashboard.
 
 **Run activity heatmap**
 - A GitHub-style contribution grid whose title carries the last-91-days window, with a summary on the right of the title reading "N active days · M runs" and the tooltip "Days with at least one run · total runs in the window".
@@ -895,7 +900,7 @@ Conversations are stored **server-side** in SQLite (`chat_conversations` and `ch
 
 1. Use PatterStage normally for a while: dispatch a few missions, write a Story Weaver chapter, create and fire a schedule. Nothing on this page is worth opening until events exist.
 2. Open **Laboratory → Insights**. If the first-run card is still showing, no events have been recorded yet; click **Go to Missions** and dispatch one.
-3. Pick a window with **7d**, **30d** or **90d**. The stacked area, the hour clock, the duration histogram, the success trend, "Tokens by model" and "Top missions" all re-query at that range.
+3. Pick a window with **7d**, **30d** or **90d**. The stacked area, the hour clock, the duration histogram, the success trend, "Tokens by model", "Top missions" and the "Active days" tile all re-query at that range.
 4. Read the strip for the headline numbers, then use **Mission success trend** and **Run duration** to answer the two questions that usually matter: are runs failing, and are they getting slower.
 5. Check **Tokens by model** and **Top missions** to see which mission and which model are consuming the tokens.
 6. Expand the achievements case with **Show all 36** and filter to **Locked** to see what is close. Progress is recomputed on every poll, so there is nothing to save or claim.
@@ -904,14 +909,14 @@ Conversations are stored **server-side** in SQLite (`chat_conversations` and `ch
 ### Notes
 
 - **Route and nav.** The page is `/laboratory/insights`, under the **Laboratory** sidebar group, alongside Deep Research and Artifacts. It is registered in `src/lib/modules/registry.ts` as the laboratory module's first nav link. There is no `/insights` route; an earlier version of this guide filed the page under **Main** and gave that path, and both were wrong.
-- **"Active days" does not follow the range switch.** The label is built from the selected range, but the value comes from `getAnalyticsSummary()`, which is hard-coded to `distinctActiveDays(30)`. Switch to 7d or 90d and the label changes while the number stays a 30-day figure.
+- **"Active days" follows the range switch.** The number comes from the insights bundle's `activeDays` for the selected window; `getAnalyticsSummary()` still reports a fixed 30-day `activeDays` for the API, which the page no longer reads.
 - **"Tokens" is a 91-day figure.** The tile reads `stats.runs.totalTokens`, and the stats repository only selects runs with `submitted_at >= datetime('now', '-91 days')`, summing usage across every one of them regardless of status. It is neither all-time nor tied to the range switch.
 - **The hour-of-day tooltip overstates its window.** It says all-time, but the bundle calls `countByHourAllTypes(n)` with the selected range. The "all types" in that function name refers to event types, not to time.
 - **"Tokens by model" is structurally incomplete.** The model dimension lives on the mission, so `getModelUsage` reads runs joined to their mission and any run without one, chat runs included, is excluded. Do not treat this card as a billing total; the spend panel is the number to trust for money.
 - **The heatmap counts completed runs, not events.** `runActivity` is built from runs whose status is `completed`, bucketed by `completed_at`. Activity that never produces a run is what pulls the two apart: skill toggles, personality changes and Story Weaver chapters (`src/modules/rec-room/handlers/generate.ts` records its event and creates no run) can fill the donut and leave the heatmap cell empty. Chat is not an example of this, because `dispatchChatTurn` does create a run.
 - **Events are written server-side only.** `/api/analytics` exposes `GET` and deliberately no `POST`; events are emitted by `recordEvent()` inside the server. A client cannot forge achievement progress.
 - **Achievements are derived, never stored.** `ACHIEVEMENT_DEFS` currently holds 36 definitions across missions, stories, sessions, automation, config, chat, tokens, streaks, timing and breadth, and `evaluateAchievements` recomputes every one of them from raw metrics on each stats poll, one achievement per definition. The strip renders `unlocked/achievements.length` over that derived list, so the denominator moves if definitions are added. Points come from the tier: common 10, rare 25, epic 50, legendary 100.
-- **The unlock toast fires on the Dashboard, not here.** `CommandCenter` is the sole owner of `useAchievementUnlocks` and shows the trophy toast; this page intentionally does not use that hook, so the grid never double-fires it. The first poll after a page load seeds the baseline silently, and each achievement id toasts at most once per mount.
+- **The unlock toast belongs to the shell, not to this page.** The root layout's `FeedbackProvider` is the sole owner of `useAchievementUnlocks` and shows the trophy toast on whichever page you are on; this page intentionally does not use that hook, so the grid never double-fires it. The first poll after a page load seeds the baseline silently, and each achievement id toasts at most once per mount.
 - **Achievement scope.** Story Weaver achievements carry `scope: "recroom"` and are excluded from an agent's own progression record, per ADR-0004. They still appear in this grid.
 - Full reference for the event catalogue and the aggregate queries is in [ANALYTICS.md](ANALYTICS.md).
 

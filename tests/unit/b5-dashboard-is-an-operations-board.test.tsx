@@ -600,7 +600,8 @@ describe("E. the Progress line", () => {
     expectInProgressLine(label);
     expectInProgressLine(name);
     if (name === label) {
-      expect(ownText(label)).toMatch(/^Next automation.*Nightly digest/s);
+      // No `s` flag: tests/tsconfig targets a level below es2018 (B2 learned this).
+      expect(ownText(label)).toMatch(/^Next automation[\s\S]*Nightly digest/);
     } else {
       expect(isBefore(label, name)).toBe(true);
     }

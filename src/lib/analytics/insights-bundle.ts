@@ -7,6 +7,7 @@
 import {
   countByHourAllTypes,
   dailyCountsByType,
+  distinctActiveDays,
 } from "./analytics-repository";
 import {
   getRunDurationBuckets,
@@ -22,6 +23,8 @@ import type { AreaPoint } from "@/components/viz/AreaTrend";
 
 export interface InsightsBundle {
   days: number;
+  /** Distinct days with any event inside this window (the Active days tile, T-0099 D96). */
+  activeDays: number;
   /** 24-length all-events hour-of-day histogram. */
   hourOfDay: number[];
   /** Per-category daily counts (stacked-area input). */
@@ -66,6 +69,7 @@ export function getInsightsBundle(days: number): InsightsBundle {
 
   return {
     days: n,
+    activeDays: distinctActiveDays(n).length,
     hourOfDay: countByHourAllTypes(n),
     categorySeries,
     categoryDaily,

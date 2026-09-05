@@ -1,35 +1,36 @@
 // ═══════════════════════════════════════════════════════════════
-// Dashboard - PatterStage Home (Redesigned)
+// Dashboard - PatterStage Home, the operations board
 // ═══════════════════════════════════════════════════════════════
-// Lean operational overview. No nav cards, no fake terminals.
-// One-glance situational awareness → one-click actions.
+// What is happening on this machine right now, and one click into the
+// surface that answers each question in full. History (the charts, the
+// mission mix, the trophy case) lives on Insights (T-0099, B5). Six pills, one
+// Progress line, the dispatch strip, the live panels. No clock, no Story
+// Weaver card, no hero charts.
 
 "use client";
 
-import { useState, useCallback, useMemo, memo as reactMemo } from "react";
+import { useState, useCallback, useMemo } from "react";
 import Link from "next/link";
 import {
-  // Dashboard icons
-  Activity,
+  AlertTriangle,
+  ChevronRight,
+  Globe,
   Layers,
   Radio,
-  ChevronRight,
-  Gamepad2,
-  BookOpen,
   Timer,
+  Wallet,
 } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 import { timeAgo } from "@/lib/utils";
 import { shellHeaderBarClasses } from "@/lib/theme";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageTitle from "@/components/layout/PageTitle";
 import { StatPill, StatPillSkeleton } from "@/components/dashboard/StatPill";
-import { Panel, PanelHeader } from "@/components/dashboard/Panel";
-import CommandCenter from "@/components/dashboard/CommandCenter";
-import { FadeIn } from "@/components/motion";
 import DispatchStrip from "@/components/dashboard/DispatchStrip";
 import FirstRunPanel from "@/components/dashboard/FirstRunPanel";
+import ProgressLine from "@/components/dashboard/ProgressLine";
 import SubsystemsPanel from "@/components/dashboard/SubsystemsPanel";
 import ActiveMissionsPanel from "@/components/dashboard/ActiveMissionsPanel";
 import PlatformsPanel from "@/modules/hermes/components/PlatformsPanel";
@@ -40,31 +41,43 @@ import { runMutation } from "@/lib/run-mutation";
 import { toastFromResult } from "@/lib/dashboard/toast-from-result";
 import { dispatchMissionAction } from "@/hooks/success-message-for-dispatch";
 import { isMissionActive } from "@/lib/missions/mission-board";
-import { countInWindow, ACTIVE_WINDOW_MS, RECENT_WINDOW_MS } from "@/lib/sessions/session-window";
 import { dedupErrors } from "@/lib/dashboard/dashboard-error-dedup";
 import { describeSchedulerHealth } from "@/lib/dashboard/scheduler-pill";
 import { formatModelSubtitle } from "@/lib/dashboard/dashboard-model-subtitle";
+import { settleFirstRunFacts, type FirstRunFacts } from "@/lib/dashboard/first-run-steps";
+import { SUBSYSTEM_STATE_LABELS } from "@/lib/status-labels";
+import { formatUsd } from "@/lib/spend/spend-law";
+import type { SubsystemRow } from "@/lib/status/subsystems";
+import type { AccentColor } from "@/types/console";
 import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
 import { useInterval } from "@/hooks/useInterval";
 import { useDashboard } from "@/hooks/useDashboard";
+import { useStats } from "@/hooks/useStats";
+import { useAgentExperience } from "@/hooks/useAgentExperience";
+import { useSpend } from "@/hooks/useSpend";
 import { ConfigYamlErrorAlert } from "@/components/config/ConfigYamlErrorAlert";
 
-// ── Live Clock (isolated re-render) ───────────────────────────
+const STATE_COLOR: Record<SubsystemRow["state"], AccentColor> = {
+  ok: "green",
+  degraded: "orange",
+  down: "pink",
+};
 
-const LiveClock = reactMemo(function LiveClock() {
-  const [time, setTime] = useState<Date>(new Date());
-  useInterval(() => setTime(new Date()), { ms: 1000 });
-  return (
-    <>
-      <div className="text-sm font-mono text-neon-cyan" suppressHydrationWarning>
-        {time.toLocaleTimeString("en-US", { hour12: false })}
-      </div>
-      <div className="text-xs text-ps-text-muted" suppressHydrationWarning>
-        {time.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
-      </div>
-    </>
-  );
-});
+/**
+ * A subsystem row as a pill: the ratified word for its state, in its colour.
+ * A row that has not been read yet is "Checking…" and a check that failed is
+ * "Unknown"; neither is green, because nothing on this board is green until
+ * it has actually been read (T-0099, D57).
+ */
+function subsystemPill(
+  row: SubsystemRow | null,
+  answered: boolean,
+  checkError: string | null,
+): { value: string; color: AccentColor } {
+  if (row) return { value: SUBSYSTEM_STATE_LABELS[row.state], color: STATE_COLOR[row.state] };
+  if (!answered && !checkError) return { value: "Checking…", color: "cyan" };
+  return { value: "Unknown", color: "orange" };
+}
 
 export default function Dashboard() {
   // All dashboard data comes from the TanStack Query layer
@@ -83,13 +96,21 @@ export default function Dashboard() {
     templates,
     categories,
     registryAgentModelLabel,
-    sessionTrend,
     subsystems,
     ready,
+    monitorError,
+    monitorSettled,
+    subsystemsError,
+    subsystemsSettled,
     refetchMonitor,
     refetchMissions,
     refetchProcesses,
   } = useDashboard();
+  // The Progress line reads the stats poll the shell already makes, the
+  // agents ranked by growth, and this month's spend for the Spend pill.
+  const { stats, error: statsError, refetch: refetchStats } = useStats();
+  const { entries: agentsByGrowth } = useAgentExperience();
+  const { spend } = useSpend();
 
   // The dispatch panel's collapsed/expanded state + template grouping
   // now live inside <DispatchStrip/>; the page just hands it templates.
@@ -129,13 +150,6 @@ export default function Dashboard() {
     return dedupErrors(filtered);
   }, [monitor, errorSev]);
 
-  // Severity selector for the Errors panel. Each severity pill in the
-  // .map() calls `() => setErrorSev(sev)` inline (line 791); promoting
-  // to a named useCallback with a parameter mirrors the
-  // `setSourceFilter(src)` / `setActiveLog(log.name)` / `setMissionFilter(id)`
-  // sibling pattern used across the List 1 + List 2 pages. The
-  // `setErrorSev` setter is stable per the `useState` contract, so the
-  // callback's identity is effectively constant per render cycle.
   const selectSeverity = useCallback(
     (sev: "all" | "error" | "warning") => setErrorSev(sev),
     [setErrorSev],
@@ -148,13 +162,8 @@ export default function Dashboard() {
   const handleCancelMission = useCallback(async (missionId: string, missionName: string) => {
     const doCancel = async () => {
       try {
-        // Migrated from the inline `safeApiCall<{ missions: MissionBrief[] }>("/api/missions", { method: "POST", body: { action: "cancel", missionId } })` form
-        // to the shared `dispatchMissionAction` helper. The pre-migration type
-        // annotation was wrong — the route returns `{ mission, cancel: { accepted, processKillPending } }`,
-        // NOT `{ missions: MissionBrief[] }` (that envelope belongs to the list endpoint, not the
-        // cancel action). The destructure only reads `ok`/`error` so the type mismatch was
-        // invisible at runtime, but it was a maintenance trap. The helper now owns the wire call
-        // and the envelope type. Byte-equivalent at the call site.
+        // The route returns `{ mission, cancel: { accepted, processKillPending } }`;
+        // dispatchMissionAction owns the wire call and the envelope type.
         const { ok, error } = await dispatchMissionAction("cancel", { missionId });
         toastFromResult(
           showToast,
@@ -202,18 +211,32 @@ export default function Dashboard() {
   const agentConfigured = monitor?.framework?.available !== false;
 
   const gatewayRow = subsystems?.subsystems.find((s) => s.id === "gateway") ?? null;
+  const memoryRow = subsystems?.subsystems.find((s) => s.id === "memory") ?? null;
   const gatewayReachable = gatewayRow?.state === "ok";
-  const firstRunFacts = useMemo(
+  // The checklist waits for both reads before it speaks, and a gateway that
+  // has answered once stays reachable for it: the headline used to change
+  // its story twice while loading and flip on a blip (T-0099, D57).
+  const readingsSettled = monitorSettled && subsystemsSettled;
+  const rawFirstRunFacts = useMemo<FirstRunFacts>(
     () => ({
       frameworkName: agentName,
       frameworkAvailable: agentConfigured,
       gatewayReachable,
       gatewayUrl: gatewayRow?.url ?? null,
+      modelConfigured: Boolean(diskModel || registryAgentModelLabel),
       sessionCount: monitor?.sessions.total ?? 0,
       missionCount: missions.length,
     }),
-    [agentName, agentConfigured, gatewayReachable, gatewayRow?.url, monitor?.sessions.total, missions.length],
+    [agentName, agentConfigured, gatewayReachable, gatewayRow?.url, diskModel, registryAgentModelLabel, monitor?.sessions.total, missions.length],
   );
+  // The previous reading is state, settled during render the way React
+  // documents for "information from previous renders": one guarded setState,
+  // no ref read in render, no effect lag on the first paint.
+  const [latched, setLatched] = useState<{ raw: FirstRunFacts; settled: FirstRunFacts } | null>(null);
+  if (!latched || latched.raw !== rawFirstRunFacts) {
+    setLatched({ raw: rawFirstRunFacts, settled: settleFirstRunFacts(latched?.settled ?? null, rawFirstRunFacts) });
+  }
+  const firstRunFacts = latched?.settled ?? rawFirstRunFacts;
 
   const activeProcesses = useMemo(() => processes.filter((p) => p.status === "running"), [processes]);
   const activeMissions = useMemo(
@@ -221,37 +244,25 @@ export default function Dashboard() {
     [missions],
   );
 
-  // Timestamp for session-window comparisons. We DO NOT compute
-  // `new Date().getTime()` directly in the render body, because that
-  // would make `now` a brand-new number on every render, which in
-  // turn would invalidate the `sessionWindowSubtitle`
-  // `useMemo` on every render and defeat the entire purpose of the
-  // memo. Instead, hold `now` in `useState` (initialised once on mount)
-  // and refresh it on a 30-second `useInterval`. The values stay
-  // stable for 30-second windows — close enough for a dashboard whose
-  // monitor already polls every 10s.
+  // Timestamp for the scheduler pill's tick age and the Progress line's
+  // "next automation". Held in state and refreshed every 30 seconds rather
+  // than read in the render body, so the memos below stay stable between
+  // ticks; the monitor already polls every 10s.
   const [now, setNow] = useState(() => new Date().getTime());
   useInterval(() => setNow(new Date().getTime()), { ms: 30_000 });
 
   // The background scheduler's heartbeat, which the console previously threw
   // away: a stalled loop is why a schedule did not fire and why a dispatched
-  // mission never resolves. `now` is the same 30s-refreshed reading the
-  // session windows use, so the age advances without its own timer.
+  // mission never resolves.
   const schedulerPill = useMemo(
     () => describeSchedulerHealth(monitor?.scheduler, now),
     [monitor?.scheduler, now],
   );
 
-  // Sessions stat-pill subtitle: "N active · M last 7d" derived from
-  // the 5 most recent sessions exposed by /api/monitor. The full
-  // window math lives in countInWindow (src/lib/sessions/session-window.ts) so
-  // it's unit-testable without rendering the dashboard.
-  const sessionWindowSubtitle = useMemo(() => {
-    const recent = monitor?.sessions.recent ?? [];
-    const active = countInWindow(recent, ACTIVE_WINDOW_MS, now);
-    const last7d = countInWindow(recent, RECENT_WINDOW_MS, now);
-    return `${active} active · ${last7d} last 7d`;
-  }, [monitor?.sessions.recent, now]);
+  const gatewayPill = subsystemPill(gatewayRow, subsystemsSettled, subsystemsError);
+  const memoryPill = subsystemPill(memoryRow, subsystemsSettled, subsystemsError);
+  const monthSpend = spend?.periods.find((p) => p.period === "month") ?? null;
+  const errorCount = monitor?.errors.length ?? 0;
 
   return (
     <AppPageShell variant="scanlines">
@@ -273,33 +284,28 @@ export default function Dashboard() {
           </h1>
           <p className="text-xs text-ps-text-muted font-mono">{modelSubtitle}</p>
         </div>
-        <div className="flex items-center gap-6">
-          <div className="text-right">
-            <LiveClock />
+        {/* The badge used to be a hardcoded green ONLINE, sitting directly
+            under the agent-framework heading. On an install with no agent it
+            claimed the agent was up. It now reports what the monitor actually
+            found. */}
+        {agentConfigured ? (
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-neon-green pulse-glow" />
+            <span className="text-xs text-ps-text-secondary font-mono">ONLINE</span>
           </div>
-          {/* The badge used to be a hardcoded green ONLINE, sitting directly
-              under the agent-framework heading. On an install with no agent it
-              claimed the agent was up. It now reports what the monitor actually
-              found. */}
-          {agentConfigured ? (
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-neon-green pulse-glow" />
-              <span className="text-xs text-ps-text-secondary font-mono">ONLINE</span>
+        ) : (
+          gatewayReachable ? (
+            <div className="flex items-center gap-2" title={`${agentName} runs through the gateway at ${gatewayRow?.url ?? "the configured address"}`}>
+              <div className="w-2 h-2 rounded-full bg-neon-cyan" />
+              <span className="text-xs text-neon-cyan font-mono">REMOTE</span>
             </div>
           ) : (
-            gatewayReachable ? (
-              <div className="flex items-center gap-2" title={`${agentName} runs through the gateway at ${gatewayRow?.url ?? "the configured address"}`}>
-                <div className="w-2 h-2 rounded-full bg-neon-cyan" />
-                <span className="text-xs text-neon-cyan font-mono">REMOTE</span>
-              </div>
-            ) : (
-            <div className="flex items-center gap-2" title={`${agentName} is not installed on this machine`}>
-              <div className="w-2 h-2 rounded-full bg-neon-orange" />
-              <span className="text-xs text-neon-orange font-mono">NOT INSTALLED</span>
-            </div>
-            )
-          )}
-        </div>
+          <div className="flex items-center gap-2" title={`${agentName} is not installed on this machine`}>
+            <div className="w-2 h-2 rounded-full bg-neon-orange" />
+            <span className="text-xs text-neon-orange font-mono">NOT INSTALLED</span>
+          </div>
+          )
+        )}
       </div>
       {toastElement}
 
@@ -310,8 +316,9 @@ export default function Dashboard() {
       ) : (
         <div className="max-w-7xl mx-auto px-6 py-6 space-y-6">
         {/* First run: an empty install gets a checklist before it gets widgets.
-            Renders nothing once there is an agent and any activity. */}
-        <FirstRunPanel facts={firstRunFacts} />
+            Renders nothing once there is an agent and any activity, and
+            nothing at all until both reads it depends on have answered. */}
+        {readingsSettled && <FirstRunPanel facts={firstRunFacts} />}
         {/* Malformed config.yaml — one actionable alert (ConfigSync sets the
             stat; the sync no longer spams the log). */}
         {monitor?.system?.configYamlError ? (
@@ -319,51 +326,86 @@ export default function Dashboard() {
         ) : null}
         {/* Is each thing this product depends on up, and why not (T-0091). */}
         <SubsystemsPanel subsystems={subsystems?.subsystems ?? null} checkedAt={subsystems?.checkedAt ?? null} />
-        {/* ═══ Compact Stat Row ═══ */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 min-w-0">
-          {monitor ? (
-            <>
-              <StatPill
-                icon={Radio}
-                label="Processes"
-                value={activeProcesses.length > 0 ? `${activeProcesses.length} Active` : status?.soulFile ? "Idle" : "Offline"}
-                color={activeProcesses.length > 0 ? "green" : status?.soulFile ? "cyan" : "pink"}
-                href="/agent/profiles"
-              />
-              <StatPill
-                icon={Activity}
-                label="Sessions"
-                value={monitor.sessions.total.toLocaleString()}
-                color="purple"
-                subtitle={sessionWindowSubtitle}
-                href="/results/sessions"
-                trend={sessionTrend}
-                trendColor="purple"
-              />
-              <StatPill
-                icon={Layers}
-                label={`Memory · ${monitor.memory.provider || "Not Installed"}`}
-                value={monitor.memory.factCount >= 0 ? `${monitor.memory.factCount} facts` : "0 facts"}
-                color="pink"
-                href="/agent/memory"
-              />
-              <StatPill
-                icon={Timer}
-                label="Scheduler"
-                value={schedulerPill.value}
-                color={schedulerPill.color}
-                subtitle={schedulerPill.subtitle}
-              />
-            </>
-          ) : (
-            <>
-              <StatPillSkeleton />
-              <StatPillSkeleton />
-              <StatPillSkeleton />
-              <StatPillSkeleton />
-            </>
-          )}
-        </div>
+
+        {/* ═══ Six pills: gateway, memory, scheduler, spend, processes, errors ═══
+            Three states for the monitor they hang off: not yet (skeletons),
+            failed (an alert with Retry, never skeletons forever), here. */}
+        {monitor ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 min-w-0">
+            <StatPill
+              icon={Globe}
+              label="Gateway"
+              value={gatewayPill.value}
+              color={gatewayPill.color}
+              subtitle={gatewayRow?.url ?? gatewayRow?.reason ?? (subsystemsError ? "check failed" : undefined)}
+              href="/agent/settings/system"
+            />
+            <StatPill
+              icon={Layers}
+              label="Memory"
+              value={memoryPill.value}
+              color={memoryPill.color}
+              subtitle={`${Math.max(0, monitor.memory.factCount)} facts · ${monitor.memory.provider || "no provider"}`}
+              href="/agent/memory"
+            />
+            <StatPill
+              icon={Timer}
+              label="Scheduler"
+              value={schedulerPill.value}
+              color={schedulerPill.color}
+              subtitle={schedulerPill.subtitle}
+              href="/agent/settings/system"
+            />
+            <StatPill
+              icon={Wallet}
+              label="Spend"
+              value={monthSpend ? formatUsd(monthSpend.totalUsd) : "—"}
+              color="yellow"
+              subtitle="this month"
+              href="/results/insights"
+            />
+            <StatPill
+              icon={Radio}
+              label="Processes"
+              value={activeProcesses.length > 0 ? `${activeProcesses.length} Active` : status?.soulFile ? "Idle" : "Offline"}
+              color={activeProcesses.length > 0 ? "green" : status?.soulFile ? "cyan" : "pink"}
+              href="/agent/profiles"
+            />
+            <StatPill
+              icon={AlertTriangle}
+              label="Errors"
+              value={String(errorCount)}
+              color={errorCount > 0 ? "pink" : "green"}
+              subtitle={errorCount === 1 ? "recent error" : "recent errors"}
+              href="/results/logs"
+            />
+          </div>
+        ) : monitorError ? (
+          <LoadErrorBanner
+            error={`Couldn't read monitor data: ${monitorError}`}
+            onRetry={() => void refetchMonitor()}
+            hint="The pills read from /api/monitor. Nothing here is shown until it answers."
+            className="mb-0"
+          />
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 min-w-0">
+            <StatPillSkeleton />
+            <StatPillSkeleton />
+            <StatPillSkeleton />
+            <StatPillSkeleton />
+            <StatPillSkeleton />
+            <StatPillSkeleton />
+          </div>
+        )}
+
+        {/* ═══ Progress: streak, level, achievements, next automation, Quests ═══ */}
+        <ProgressLine
+          stats={stats ?? null}
+          statsError={statsError}
+          onRetryStats={() => void refetchStats()}
+          topAgent={agentsByGrowth[0] ?? null}
+          now={now}
+        />
 
         {/* ═══ Handoff / continuation ═══ */}
         <div className="rounded-xl border border-white/10 bg-dark-900/40 px-4 py-3 flex flex-wrap items-center justify-between gap-3">
@@ -424,20 +466,6 @@ export default function Dashboard() {
           processes={processes}
           onRefresh={() => void handleRefreshProcesses()}
         />
-
-        {/* ═══ Rec Room ═══ */}
-        <Panel accent="purple">
-          <PanelHeader icon={Gamepad2} label="Rec Room" accent="purple" />
-          <Link href="/recroom/story-weaver" className="flex items-center justify-center gap-3 py-4 hover:bg-white/[0.02] transition-colors">
-            <BookOpen className="w-5 h-5 text-neon-purple" />
-            <span className="text-sm font-mono text-ps-text-secondary">Story Weaver</span>
-          </Link>
-        </Panel>
-
-        {/* ═══ Command Center (operator stats + data-viz) — below the live monitor ═══ */}
-        <FadeIn>
-          <CommandCenter />
-        </FadeIn>
       </div>
       )}
     </AppPageShell>

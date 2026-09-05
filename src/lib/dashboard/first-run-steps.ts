@@ -32,12 +32,19 @@ export interface FirstRunFacts {
    */
   gatewayReachable?: boolean;
   gatewayUrl?: string | null;
+  /**
+   * A model the agent can call is configured (config.yaml's default or the
+   * registry's agent slot). The step the checklist used to omit, and the one
+   * whose absence made "Dispatch your first mission" fail before it started
+   * (T-0099, D110).
+   */
+  modelConfigured?: boolean;
   sessionCount: number;
   missionCount: number;
 }
 
 export interface FirstRunStep {
-  id: "agent" | "mission" | "sessions";
+  id: "agent" | "model" | "mission" | "sessions";
   title: string;
   /** One sentence. The panel is a signpost, not documentation. */
   detail: string;
@@ -61,6 +68,27 @@ export function shouldShowFirstRun(facts: FirstRunFacts): boolean {
   return facts.sessionCount === 0 && facts.missionCount === 0;
 }
 
+/**
+ * Settle a new reading of the facts against the previous one.
+ *
+ * The gateway is probed every fifteen seconds and a single failed probe used to
+ * flip the headline from "runs through a gateway" to "is not installed on this
+ * machine" and back (T-0099, D57). A gateway that has answered once is a
+ * gateway this install has; it stays reachable for the checklist's purposes,
+ * and its address is kept when the next reading has none. Nothing else is
+ * latched: counts, the framework and the model follow the newest reading.
+ */
+export function settleFirstRunFacts(prev: FirstRunFacts | null, next: FirstRunFacts): FirstRunFacts {
+  if (!prev) return next;
+  const reachable = next.gatewayReachable === true || prev.gatewayReachable === true;
+  if (!reachable) return next;
+  return {
+    ...next,
+    gatewayReachable: true,
+    gatewayUrl: next.gatewayUrl ?? prev.gatewayUrl ?? null,
+  };
+}
+
 /** The checklist, in the order the steps actually have to happen. */
 export function firstRunSteps(facts: FirstRunFacts): FirstRunStep[] {
   const agent = facts.frameworkName || "your agent";
@@ -81,6 +109,17 @@ export function firstRunSteps(facts: FirstRunFacts): FirstRunStep[] {
       href: AGENT_INSTALL_DOCS,
       external: true,
       done: facts.frameworkAvailable || remote,
+    },
+    {
+      id: "model",
+      title: facts.modelConfigured === true ? "A model is configured" : "Give your agent a model",
+      detail:
+        facts.modelConfigured === true
+          ? "The agent has a model to call. Change it or add more on the Models page."
+          : "Pick the model the agent calls and the key it uses; without one, the first mission fails before it starts.",
+      href: "/agent/models",
+      external: false,
+      done: facts.modelConfigured === true,
     },
     {
       id: "mission",

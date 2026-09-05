@@ -18,30 +18,8 @@ function useReducedMotionSafe(): boolean {
   return useReducedMotion() ?? false;
 }
 
-interface MotionBoxProps {
-  children: ReactNode;
-  className?: string;
-  /** Stagger/sequence delay in seconds. */
-  delay?: number;
-  /** Initial vertical offset in px. */
-  y?: number;
-}
-
-/** Fade + rise on mount. No-op (plain div) under reduced motion. */
-export function FadeIn({ children, className, delay = 0, y = 8 }: MotionBoxProps) {
-  const reduce = useReducedMotionSafe();
-  if (reduce) return <div className={className}>{children}</div>;
-  return (
-    <motion.div
-      className={className}
-      initial={{ opacity: 0, y }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay, ease: EASE }}
-    >
-      {children}
-    </motion.div>
-  );
-}
+// FadeIn (fade + rise on mount) left with the dashboard's Command Center, its
+// only consumer (T-0099). Stagger/StaggerItem carry the same entrance for lists.
 
 const containerVariants = {
   hidden: {},

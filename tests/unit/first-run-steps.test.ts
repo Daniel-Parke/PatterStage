@@ -68,6 +68,7 @@ describe("firstRunSteps", () => {
     });
     expect(steps.map((s) => [s.id, s.done])).toEqual([
       ["agent", true],
+      ["model", false],
       ["mission", true],
       ["sessions", false],
     ]);
@@ -76,7 +77,7 @@ describe("firstRunSteps", () => {
   it("routes the in-app steps at real pages, not the docs", () => {
     const steps = firstRunSteps(FRESH);
     const inApp = steps.filter((s) => !s.external);
-    expect(inApp.map((s) => s.href)).toEqual(["/work/missions", "/results/sessions"]);
+    expect(inApp.map((s) => s.href)).toEqual(["/agent/models", "/work/missions", "/results/sessions"]);
   });
 
   it("survives a framework with no name rather than saying 'Install undefined'", () => {
