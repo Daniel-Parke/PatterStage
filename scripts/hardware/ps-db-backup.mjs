@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 // ps-db-backup.mjs — snapshot the PatterStage SQLite DB + rotate. Cross-platform.
 // Uses the `sqlite3` CLI `.backup` (consistent online copy) when available, else
-// a plain file copy. Only writes into the backups dir; deletes its OWN rotated
-// snapshots beyond the keep count.
+// a plain file copy. Only writes into the backups dir; deletes only the rotated
+// snapshots it wrote itself, recognised by their timestamp name, beyond the keep
+// count. The app's own `manual` / `pre-restore` / `pre-clean` backups share the
+// directory and are never touched.
 //   PS_DATA_DIR / PS_DB_BACKUP_DIR / PS_DB_BACKUP_KEEP (14)
 
 import { existsSync, mkdirSync, copyFileSync, readdirSync, statSync, unlinkSync } from "fs";
@@ -48,9 +50,21 @@ try {
 if (!viaSqlite) copyFileSync(DB, dest);
 log(`${viaSqlite ? "sqlite .backup" : "cp"} → ${dest}`);
 
-// Rotate: keep the newest KEEP snapshots for this DB, delete the rest.
+// Rotate: keep the newest KEEP snapshots this script wrote, delete the rest.
+//
+// The filter used to be `startsWith(DB_BASE + ".") && endsWith(".db")`, which
+// also swept up the `manual`, `pre-restore` and `pre-clean` snapshots the app
+// writes into this same directory: a backup an operator took by hand before a
+// risky change could be deleted by the next scheduled run for being the oldest
+// file present. Matching our own timestamp shape rather than tagging new files
+// with an infix is deliberate: an infix would only mark files written from here
+// on, and every snapshot already sitting on a running install would stop being
+// rotated and grow without bound. The shape below is what both this script and
+// its bash twin have always produced, so existing files keep rotating and the
+// app's labelled names (`<base>.<label>.<ts>.db`) fall outside it.
+const OWN_SNAPSHOT = new RegExp(`^${DB_BASE.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\.\\d{8}T\\d{6}Z\\.db$`);
 const snaps = readdirSync(BACKUP_DIR)
-  .filter((f) => f.startsWith(`${DB_BASE}.`) && f.endsWith(".db"))
+  .filter((f) => OWN_SNAPSHOT.test(f))
   .map((f) => ({ f, m: statSync(join(BACKUP_DIR, f)).mtimeMs }))
   .sort((a, b) => b.m - a.m);
 let pruned = 0;
