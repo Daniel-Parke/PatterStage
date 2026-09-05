@@ -546,7 +546,9 @@ describe("D. the monitor's three states", () => {
     const alert = screen.getByRole("alert");
     expect(alert).toHaveTextContent("Couldn't read monitor data");
     expect(container.querySelectorAll(".animate-pulse")).toHaveLength(0);
-    expect(screen.queryByText("Healthy")).toBeNull();
+    // No PILL says Healthy. The Subsystems panel was read (the fixture answers
+    // it) and may say so in its own row, a span; a pill's value is a div.
+    expect(screen.queryByText("Healthy", { selector: "div" })).toBeNull();
 
     fireEvent.click(screen.getByRole("button", { name: "Retry" }));
     expect(refetchMonitor).toHaveBeenCalledTimes(1);
@@ -698,5 +700,25 @@ describe("G. the first-run checklist", () => {
     );
     render(<Dashboard />);
     expect(screen.getByText("Start here")).toBeInTheDocument();
+  });
+
+  // The model fact comes from config.yaml's default or the registry's agent
+  // slot; a page that hard-codes it would tick the step off on a fresh
+  // install (found by the sweep, T-0099).
+  it("offers the model step until a model is configured, from config.yaml or the registry", () => {
+    const base = { monitor: fresh(), monitorSettled: true, missions: [], subsystems: subsystemsWith("down"), subsystemsSettled: true };
+    mockUseDashboard.mockReturnValue(dash({ ...base, config: { model: {} }, registryAgentModelLabel: null }));
+    const none = render(<Dashboard />);
+    expect(screen.getByText("Give your agent a model")).toBeInTheDocument();
+    none.unmount();
+
+    mockUseDashboard.mockReturnValue(dash({ ...base, config: { model: {} }, registryAgentModelLabel: "GPT-4o" }));
+    const registry = render(<Dashboard />);
+    expect(screen.getByText("A model is configured")).toBeInTheDocument();
+    registry.unmount();
+
+    mockUseDashboard.mockReturnValue(dash({ ...base, config: { model: { default: "gpt-4o", provider: "openai" } }, registryAgentModelLabel: null }));
+    render(<Dashboard />);
+    expect(screen.getByText("A model is configured")).toBeInTheDocument();
   });
 });

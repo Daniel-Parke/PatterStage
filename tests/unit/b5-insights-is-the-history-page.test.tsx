@@ -10,7 +10,8 @@
 //
 // Written before the page changed. Every red below is a red on that contract.
 
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, renderHook, screen, waitFor, within } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 
 import type { DashboardStats } from "@/lib/stats/stats-repository";
@@ -52,6 +53,14 @@ jest.mock("@/hooks/useAnalytics", () => ({
 
 const mockUseSpend = jest.fn();
 jest.mock("@/hooks/useSpend", () => ({ useSpend: () => mockUseSpend() }));
+
+// The wire, for the one describe that runs the REAL timeseries hook; every
+// other export of api-fetch stays real and nothing else here fetches.
+const mockSafeApiCall = jest.fn();
+jest.mock("@/lib/api-fetch", () => ({
+  ...jest.requireActual("@/lib/api-fetch"),
+  safeApiCall: (...a: unknown[]) => mockSafeApiCall(...a),
+}));
 
 import InsightsPage from "@/app/results/insights/page";
 
@@ -216,6 +225,29 @@ describe("retry retries every query", () => {
     const alert = screen.getByRole("alert");
     expect(alert).toHaveTextContent("Failed to load stats");
     expect(within(alert).getByRole("button", { name: /retry/i })).toBeInTheDocument();
+  });
+
+  // The page's Retry is only as good as the hook's refetch. A hook that handed
+  // back a resolved promise and never touched the wire survived the sweep
+  // (T-0099); this runs the real hook against a doubled wire.
+  it("useAnalyticsTimeseries hands back a refetch that reads the wire again for the same window", async () => {
+    const { useAnalyticsTimeseries: real } =
+      jest.requireActual<typeof import("@/hooks/useAnalytics")>("@/hooks/useAnalytics");
+    mockSafeApiCall.mockResolvedValue({ ok: true, data: { data: { timeseries: [{ date: "2026-09-05", value: 1 }] } } });
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={client}>{children}</QueryClientProvider>
+    );
+
+    const { result } = renderHook(() => real(undefined, 7), { wrapper });
+    await waitFor(() => expect(result.current.points).toHaveLength(1));
+    expect(mockSafeApiCall).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      await result.current.refetch();
+    });
+    expect(mockSafeApiCall).toHaveBeenCalledTimes(2);
+    expect(String(mockSafeApiCall.mock.calls[1][0])).toContain("days=7");
   });
 });
 

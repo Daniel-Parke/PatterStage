@@ -32,8 +32,10 @@ describe("SubsystemsPanel", () => {
 
     const states = Array.from(container.querySelectorAll("[data-state]")).map((el) => el.getAttribute("data-state"));
     expect(states).toEqual(["ok", "degraded", "ok", "down", "ok"]);
-    expect(container.textContent).toMatch(/down/i);
-    expect(container.textContent).toMatch(/degraded/i);
+    // The ratified words (decision 13), shared with the pills above (T-0099).
+    expect(container.textContent).toMatch(/Not running/);
+    expect(container.textContent).toMatch(/Degraded/);
+    expect(container.textContent).toMatch(/Healthy/);
   });
 
   it("has a calm state while the first check is in flight", () => {

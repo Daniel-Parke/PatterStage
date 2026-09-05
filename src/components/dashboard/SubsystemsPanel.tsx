@@ -11,6 +11,7 @@
 
 import { Activity } from "lucide-react";
 import { Panel, PanelHeader } from "@/components/dashboard/Panel";
+import { SUBSYSTEM_STATE_LABELS } from "@/lib/status-labels";
 import type { SubsystemRow, SubsystemState } from "@/lib/status/subsystems";
 
 const DOT: Record<SubsystemState, string> = {
@@ -19,11 +20,9 @@ const DOT: Record<SubsystemState, string> = {
   down: "bg-neon-pink",
 };
 
-const WORD: Record<SubsystemState, string> = {
-  ok: "ok",
-  degraded: "degraded",
-  down: "down",
-};
+// The ratified words (decision 13), the same ones the pills above this panel
+// use, so one screen never says "ok" and "Healthy" about the same gateway.
+const WORD: Record<SubsystemState, string> = SUBSYSTEM_STATE_LABELS;
 
 const WORD_COLOR: Record<SubsystemState, string> = {
   ok: "text-neon-green",
@@ -65,7 +64,7 @@ export default function SubsystemsPanel({
             <li key={row.id} role="listitem" data-state={row.state} className="flex items-start gap-3 text-xs">
               <span aria-hidden className={`mt-1 h-2 w-2 shrink-0 rounded-full ${DOT[row.state]}`} />
               <span className="w-24 shrink-0 font-mono text-ps-text-secondary">{row.label}</span>
-              <span className={`w-16 shrink-0 font-mono uppercase ${WORD_COLOR[row.state]}`}>{WORD[row.state]}</span>
+              <span className={`w-24 shrink-0 font-mono ${WORD_COLOR[row.state]}`}>{WORD[row.state]}</span>
               <span className="min-w-0 break-words text-ps-text-muted">{row.reason}</span>
             </li>
           ))}
