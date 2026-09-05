@@ -121,7 +121,7 @@ The records under org/tasks/ are canonical.
 | T-0106 | standard | R1 | done | session-b12 |
 | T-0107 | standard | R2 | done | unassigned |
 | T-0108 | standard | R2 | done | session-b14 |
-| T-0109 | standard | R2 | proposed | unassigned |
+| T-0109 | standard | R2 | done | unassigned |
 | T-0110 | standard | R1 | proposed | unassigned |
 | T-0111 | standard | R1 | proposed | unassigned |
 | T-0112 | standard | R1 | proposed | unassigned |
