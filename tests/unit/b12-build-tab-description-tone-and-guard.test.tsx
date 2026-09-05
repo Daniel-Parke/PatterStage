@@ -327,6 +327,20 @@ describe("the Build tab's message has a tone", () => {
 // ═══════════════════════════════════════════════════════════════
 
 describe("switching workflows with unsaved work asks first", () => {
+  it("a NEW board with work on it asks too, before it is thrown away", async () => {
+    // The seeded blank canvas has its own baseline. Without one, every fresh
+    // board reads as clean and a switch takes it silently, which is the same
+    // defect one screen along (T-0106, D7).
+    mount();
+    type("Name", "Something I was in the middle of");
+
+    await chooseWorkflow("Software Delivery");
+
+    const alert = await screen.findByRole("alert");
+    expect(alert.textContent).toContain("unsaved changes");
+    expect(alert.textContent).toContain("Something I was in the middle of");
+  });
+
   async function mountDirty(): Promise<ReturnType<typeof mount>> {
     const utils = mount();
     await chooseWorkflow("Software Delivery");

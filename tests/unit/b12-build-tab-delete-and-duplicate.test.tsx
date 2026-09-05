@@ -369,6 +369,24 @@ describe("a saved workflow can be duplicated", () => {
     expect(onSaved).not.toHaveBeenCalled();
   });
 
+  it("it validates the board first, and sends nothing when the board is broken", async () => {
+    // A duplicate of an invalid board is an invalid workflow, made without the
+    // operator ever being told. Save has always checked; Duplicate must too.
+    mockUseGraph.mockReturnValue({
+      data: {
+        ...GRAPH,
+        nodes: GRAPH.nodes.map((n) => ({ ...n, isStart: false })),
+      },
+    });
+    mount();
+    await chooseWorkflow("Research then summarise");
+
+    await click("Duplicate");
+
+    expect(requests().filter((r) => r.method === "POST")).toHaveLength(0);
+    expect(screen.getByText(/Mark one stage as the Start/)).toBeTruthy();
+  });
+
   it("GREEN CONTROL: Save still PUTs to the selected workflow", async () => {
     mount();
     await chooseWorkflow("Research then summarise");
