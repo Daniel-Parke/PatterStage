@@ -14,6 +14,7 @@ import {
 import { injectMissingTimestamps } from "@/lib/log-line-format";
 
 import { badRequest, notFound, notFoundWith, ok } from "@/lib/api-response";
+import { recordEvent } from "@/lib/analytics/record-event";
 import type { LogFileMeta } from "@/lib/fs/log-files";
 
 // ── Shared log directory resolution ──────────────────────────
@@ -107,6 +108,11 @@ export async function GET(request: NextRequest) {
     // Fallback timestamp must match RE_SPACE_TS so parseLogLine() recognises it.
     const fileMtime = mtime.toISOString().replace("T", " ").slice(0, 19);
     const linesWithTimestamp = injectMissingTimestamps(lines, fileMtime);
+
+    // The other read event (operator ruling, T-0111). Emitted only on the path
+    // that actually hands back a file's lines: a 404 for a missing directory or
+    // a rejected name is not somebody reading their logs.
+    recordEvent("logs.opened", { entityType: "log", entityId: safeName });
 
     return ok({
       name: safeName,

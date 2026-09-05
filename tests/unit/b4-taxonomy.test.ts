@@ -67,6 +67,16 @@ const ADDED = [
   "help.opened",
 ] as const;
 
+/**
+ * The two READ events T-0111 added, on the operator's ruling of 2026-09-06.
+ *
+ * Kept in their own list rather than folded into ADDED, because B4's list is a
+ * record of what B4 did and because the distinction is the point: everything
+ * above records a write, and these two are the deliberate exception a quest
+ * chapter needed. A third one is a decision, not a precedent.
+ */
+const READS = ["artifact.opened", "logs.opened"] as const;
+
 /** Types with no emitter until a later batch (B14). backup.taken got one in B6, help.opened in B16. */
 const NOT_YET_EMITTED = ["research.cancelled"] as const;
 
@@ -76,9 +86,9 @@ const FAILURES = ["mission.failed", "research.failed", "composer.run_failed"] as
 const keyOf = (t: string) => categoryForEventType(t)?.key ?? null;
 
 describe("the taxonomy after B4", () => {
-  it("keeps the original fourteen and adds the twenty-six, each once", () => {
-    for (const t of [...ORIGINAL, ...ADDED]) expect(ANALYTICS_EVENT_TYPES).toContain(t);
-    expect(ANALYTICS_EVENT_TYPES).toHaveLength(ORIGINAL.length + ADDED.length);
+  it("keeps the original fourteen, B4's twenty-six and T-0111's two reads, each once", () => {
+    for (const t of [...ORIGINAL, ...ADDED, ...READS]) expect(ANALYTICS_EVENT_TYPES).toContain(t);
+    expect(ANALYTICS_EVENT_TYPES).toHaveLength(ORIGINAL.length + ADDED.length + READS.length);
     expect(new Set(ANALYTICS_EVENT_TYPES).size).toBe(ANALYTICS_EVENT_TYPES.length);
   });
 

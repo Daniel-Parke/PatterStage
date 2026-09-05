@@ -57,6 +57,21 @@ export const ANALYTICS_EVENT_TYPES = [
   "credential.added",
   "model.added",
   "help.opened",
+  // The first two READ events in this taxonomy, and a deliberate exception
+  // rather than a new pattern (operator ruling, 2026-09-06, during T-0111).
+  //
+  // Everything above records a WRITE, which is what makes the ledger a record
+  // of what an operator did rather than of what they looked at. Two quest steps
+  // ask an operator to READ something, and the alternatives were to ship a
+  // shorter chapter or to swap the steps for writes that are not what they
+  // meant. The operator chose these. Both are emitted server-side from the GET
+  // handler the screen already calls; a client cannot write this ledger,
+  // because a client that could would be able to forge the quest progress that
+  // reads it.
+  //
+  // Adding a third read event is a decision, not a precedent.
+  "artifact.opened",
+  "logs.opened",
 ] as const;
 
 export type AnalyticsEventType = (typeof ANALYTICS_EVENT_TYPES)[number];
@@ -82,6 +97,10 @@ export const ANALYTICS_ENTITY_TYPES = [
   "template",
   "script",
   "artifact",
+  // A log FILE, named by its safe basename. The only entity here that is not a
+  // row in a table; logs.opened points at what was read, and there is nothing
+  // else to point it at (T-0111).
+  "log",
   "backup",
   "credential",
   "help",

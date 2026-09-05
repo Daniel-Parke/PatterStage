@@ -74,6 +74,9 @@ const TYPE_TO_KEY: Record<AnalyticsEventType, string> = {
   "composer.workflow_saved": "workflows",
   "artifact.saved": "workflows",
   "help.opened": "help",
+  // Reads, categorised where the thing being read lives.
+  "artifact.opened": "workflows",
+  "logs.opened": "automation",
 };
 
 const KEY_TO_CATEGORY = new Map(EVENT_CATEGORIES.map((c) => [c.key, c]));
