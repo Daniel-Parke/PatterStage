@@ -47,6 +47,18 @@ export interface ProfileConfigParts {
    */
   preservedSections: Record<string, unknown>;
   /**
+   * The children of `skills` PatterStage does not manage — today
+   * `creation_nudge_interval` (the Skills section's only field) and
+   * `external_dirs`. Optional so the hand-built parts literals elsewhere still
+   * typecheck; every one of them forwards it.
+   *
+   * Deliberately NOT part of `preservedSections`: carried there, the file's raw
+   * `disabled` list would ride along and overwrite the database's managed one,
+   * which is the opposite of what the round-trip contract says wins (T-0100,
+   * D76).
+   */
+  skillsExtras?: Record<string, unknown>;
+  /**
    * Set when the content did not parse as a YAML mapping. Deliberately a FACT
    * rather than a throw: drift detection renders a banner off these parts and
    * must not 500 on a poisoned row. The functions that would REBUILD from the
@@ -190,7 +202,28 @@ export function parseConfigYaml(content: string): ProfileConfigParts {
     platformDisabledSkills,
     platformToolsets: coerceToolsets(record.platform_toolsets),
     preservedSections,
+    skillsExtras: extractSkillsExtras(record.skills),
   };
+}
+
+/** The managed children of `skills`; every other child is the operator's. */
+const MANAGED_SKILLS_KEYS = new Set(["disabled", "platform_disabled", "enabled"]);
+
+/**
+ * The `skills` children a rebuild must not eat.
+ *
+ * `skills` is a managed top-level key, so the whole block was dropped and
+ * rewritten from the database — taking `creation_nudge_interval` with it, even
+ * though that is a field the Settings page offers to edit (T-0100, D76).
+ */
+function extractSkillsExtras(raw: unknown): Record<string, unknown> | undefined {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return undefined;
+  const out: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(raw as Record<string, unknown>)) {
+    if (MANAGED_SKILLS_KEYS.has(key)) continue;
+    out[key] = value;
+  }
+  return Object.keys(out).length > 0 ? out : undefined;
 }
 
 /** Assemble full config.yaml from DB-backed parts. */
@@ -206,6 +239,10 @@ export function buildConfigYaml(parts: ProfileConfigParts): string {
   const doc: Record<string, unknown> = {};
 
   const skills: Record<string, unknown> = {
+    // Extras first, managed keys after: the database's disabled list wins over
+    // whatever the file happened to carry, and the operator's own siblings ride
+    // along instead of being eaten by the rebuild.
+    ...(parts.skillsExtras ?? {}),
     disabled: [...parts.disabledSkills].sort(),
   };
   const platforms = Object.keys(parts.platformDisabledSkills).sort();
@@ -338,6 +375,35 @@ export function resolvePlatformToolsets(
   return { toolsets: {}, source: "database" };
 }
 
+/**
+ * Key order and YAML formatting are not policy, so they must not read as
+ * drift. Sorting every mapping recursively makes two files that say the same
+ * thing serialise to the same string.
+ */
+function canonical(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(canonical);
+  if (value !== null && typeof value === "object") {
+    const source = value as Record<string, unknown>;
+    const out: Record<string, unknown> = {};
+    for (const key of Object.keys(source).sort()) out[key] = canonical(source[key]);
+    return out;
+  }
+  return value;
+}
+
+/**
+ * `agent.personality` is compared as `personality` and injected by the
+ * builder, so counting it again here would report drift on every install with
+ * an agent block and no personality line.
+ */
+function stripPersonality(preserved: Record<string, unknown>): Record<string, unknown> {
+  const agent = preserved.agent;
+  if (!agent || typeof agent !== "object" || Array.isArray(agent)) return preserved;
+  const rest = { ...(agent as Record<string, unknown>) };
+  delete rest.personality;
+  return { ...preserved, agent: rest };
+}
+
 function partsForSemanticCompare(parts: ProfileConfigParts): string {
   const platformDisabled: Record<string, string[]> = {};
   for (const [platform, values] of Object.entries(parts.platformDisabledSkills)) {
@@ -348,6 +414,9 @@ function partsForSemanticCompare(parts: ProfileConfigParts): string {
     disabledSkills: [...parts.disabledSkills].sort(),
     platformDisabledSkills: platformDisabled,
     platformToolsets: normalizePlatformToolsets(parts.platformToolsets),
+    // Every non-managed section. Left out, a Settings save was invisible to
+    // the drift detector right up to the push that erased it (T-0100, D76).
+    preserved: canonical(stripPersonality(parts.preservedSections)),
   };
   return JSON.stringify(payload);
 }

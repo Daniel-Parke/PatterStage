@@ -39,9 +39,9 @@ Every `route.ts` under `src/app/api` has a row, here or in the Chat / Composer /
 | `/api/agent/profiles/sync/import` | `GET`, `POST` | `GET` lists profiles discovered on Hermes disk (each with an `inDatabase` flag); `POST` imports them into the DB (`{ importSkills }`, `{ importAllDiscovered }`, or `{ slug }`). |
 | `/api/agents` | `GET` | Inspect running Hermes agent processes (OS-dependent). Not the same as `agent/profiles`. |
 | `/api/agents/experience` | `GET` | Every profile's accumulated Agent Experience, ranked. Derived from completed runs, active days, enabled skills, attached toolsets and memory facts. The surviving half of the deleted benchmark subsystem (ADR-0004): no capability claim, only what the agent actually did or was given. |
-| `/api/config` | `GET`, `PUT` | Read/update parsed Hermes config content. |
+| `/api/config` | `GET`, `PUT` | Read/update parsed Hermes config content. `GET` masks every `api_key` and, when the file did not parse, carries `configError` beside the (empty) payload. `PUT` answers **400** when a value breaks its declared type, option list or min/max, and a `null` value deletes the key so Hermes falls back to its own default; the write refreshes `agent_root.config_yaml` so a later Push cannot revert it. |
 | `/api/credentials` | `GET`, `POST` | API key credentials (masked list; create via POST). |
-| `/api/credentials/[id]` | `DELETE` | Delete one credential: its Hermes `.env` variable goes with it unless a same-provider sibling still uses it, and the models that pointed at it are unlinked; the answer says which happened. `GET` returns **405**. |
+| `/api/credentials/[id]` | `PATCH`, `DELETE` | `PATCH { apiKey }` rotates the stored key and rewrites the provider's Hermes `.env` variable; a failed `.env` write puts the old key back and answers **500**. `DELETE` removes the credential: its `.env` variable goes with it unless a same-provider sibling still uses it, and the models that pointed at it are unlinked; the answer says which happened. `GET` returns **405**. |
 | `/api/cron/hardware` | `GET`, `POST`, `PUT`, `DELETE` | Host **scripts** (system cron) under `PS_SCRIPTS_DIR` / `PS_HARDWARE_LOG_DIR`, powering the Scripts page. (The legacy `/api/cron` agent-cron bridge has been removed; recurring agent work uses `/api/schedules`.) |
 | `/api/cron/hardware/meta` | `GET` | `{ scriptsDir, logDir }`. |
 | `/api/scripts` | `GET` | List host script files under `PS_DATA_DIR/scripts` with schedule + last-run (powers the Scripts page). |
@@ -88,8 +88,8 @@ Every `route.ts` under `src/app/api` has a row, here or in the Chat / Composer /
 | `/api/runs/[id]` | `GET` | Current state of one agent run. |
 | `/api/runs/[id]/events` | `GET` | Live **SSE** proxy for a run (`text/event-stream`). 404 when the run is unknown, 409 before it has been submitted to the backend. The Chat page and the mission board both stream from here. |
 | `/api/runs/reconcile` | `POST` | Force an immediate reconcile pass over active runs, rather than waiting for the ~15s BackgroundScheduler tick. Idempotent. |
-| `/api/seed` | `GET`, `POST` | Read seed state / run catalog seed. |
-| `/api/seed/clean` | `GET`, `POST` | `GET` previews the throwaway test data a purge would remove; `POST` purges it and writes an audit line. |
+| `/api/seed` | `GET`, `POST` | `GET` answers `{ state, pack }`, where `pack` counts what the shipped starter set contains, read from disk. `POST` restores; `mode: "replace"` takes a `pre-restore` database snapshot first and refuses outright if it cannot, and the answer carries `imported` and `backup`. |
+| `/api/seed/clean` | `GET`, `POST` | `GET` previews the throwaway test data a purge would remove; `POST` takes a `pre-clean` database snapshot, purges, writes an audit line, and answers `{ removed, counts, backup }`. |
 | `/api/sessions` | `GET`, `POST` | List sessions; `POST` for dispatch pipeline (see [RPC-style routes](#rpc-style-routes)). |
 | `/api/sessions/[id]` | `GET` | Read one session transcript. |
 | `/api/admin/sessions/backfill-status` | `POST` | One-shot orphan-close sweep over stuck session rows, running the same logic as the recurring 15s sync as an explicit operator action. `{ dryRun: true }` (the default) returns the counts that *would* change. See [MISSIONS.md](MISSIONS.md). |

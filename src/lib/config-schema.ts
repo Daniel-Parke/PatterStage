@@ -505,3 +505,87 @@ export function resolveSectionRedirect(slug: string): string | null {
 export function fileKeyForFilePath(filePath: string): string {
   return filePath === ".env" ? "env" : "hermes";
 }
+
+// ── Value validation ────────────────────────────────────────────
+
+/** One field, one reason it was refused. */
+export interface FieldProblem {
+  key: string;
+  message: string;
+}
+
+/**
+ * Check a section's submitted values against the field definitions.
+ *
+ * `min`/`max` used to be decorative: the number input carried them, the server
+ * merged whatever arrived, and `max_turns: 9999` or `threshold: 0.96` was
+ * written with a 200 for Hermes to choke on later (T-0100, D77). The same walk
+ * covers the other three declared types, because a boolean field holding the
+ * string "yes" is the same class of defect.
+ *
+ * Rules that matter:
+ *  - `null` is D78's unset sentinel and is skipped, never read as "not a
+ *    number"; `undefined` likewise.
+ *  - Keys with no `FieldDef` are ignored. `complexKeys` such as
+ *    `agent.personalities` are edited as nested objects and have no field
+ *    shape to check.
+ *  - Bounds are inclusive and fractional; there is no integer coercion.
+ *  - At most one problem per field: after a type failure the range check is
+ *    skipped, so a bad value is reported once and in its own terms.
+ */
+export function validateSectionValues(
+  sectionId: string,
+  values: Record<string, unknown>,
+): FieldProblem[] {
+  const section = CONFIG_SECTIONS[sectionId];
+  if (!section) return [];
+  const byKey = new Map(section.fields.map((f) => [f.key, f]));
+  const problems: FieldProblem[] = [];
+
+  for (const [key, value] of Object.entries(values)) {
+    const field = byKey.get(key);
+    if (!field) continue;
+    if (value === null || value === undefined) continue;
+
+    if (field.type === "number") {
+      if (typeof value !== "number" || !Number.isFinite(value)) {
+        problems.push({ key, message: `${field.label} must be a number` });
+        continue;
+      }
+      const belowMin = field.min !== undefined && value < field.min;
+      const aboveMax = field.max !== undefined && value > field.max;
+      if (belowMin || aboveMax) {
+        problems.push({
+          key,
+          message: `${field.label} must be between ${field.min} and ${field.max} (got ${value})`,
+        });
+      }
+      continue;
+    }
+
+    if (field.type === "boolean") {
+      if (typeof value !== "boolean") {
+        problems.push({ key, message: `${field.label} must be true or false` });
+      }
+      continue;
+    }
+
+    if (field.type === "select") {
+      const options = field.options ?? [];
+      if (typeof value !== "string" || !options.includes(value)) {
+        problems.push({
+          key,
+          message: `${field.label} must be one of: ${options.join(", ")}`,
+        });
+      }
+      continue;
+    }
+
+    // string | textarea
+    if (typeof value !== "string") {
+      problems.push({ key, message: `${field.label} must be text` });
+    }
+  }
+
+  return problems;
+}

@@ -177,7 +177,7 @@ for every install that follows the same runbook.
    snapshot from `PS_DATA_DIR/backups/db` restores to a working app
    inside fifteen minutes with no rows lost since the snapshot ran. A
    drill with no hypothesis cannot falsify anything and is not a drill.
-2. **Pick a real backup, not a fresh one.** Two writers exist and they
+2. **Pick a real backup, not a fresh one.** Four writers exist and they
    land in different places, so name the one you drilled. The archive is
    `PS_DATA_DIR/backups/db/patterstage.<timestamp>.db` (the stem is the
    database's own filename, so the literal `db/` directory and the stem
@@ -188,9 +188,14 @@ for every install that follows the same runbook.
    restore. The copy `ps-deploy.sh update` takes before a migration is a
    different artefact: it sits beside the database as
    `PS_DATA_DIR/<db>.pre-migrate-<timestamp>.bak`, nothing prunes it, and
-   it has no retention window at all. `PS_DATA_DIR/backups/` itself holds
-   no files, only the `db/` directory, and only once the backup job has
-   run. A backup taken minutes ago tests the writer, not the archive.
+   it has no retention window at all. The other two are the app's own:
+   the Back up now button on Settings > System writes a `manual` snapshot
+   into the archive directory, and a restore or a purge writes a
+   `pre-restore` or `pre-clean` one there before it overwrites anything.
+   Neither is pruned, and neither is what this drill is about.
+   `PS_DATA_DIR/backups/` itself holds no files, only the `db/`
+   directory, and only once a writer has run. A backup taken minutes ago
+   tests the writer, not the archive.
 3. **Restore into a fresh location, never over the live file.** Copy
    the backup to a scratch `PS_DATA_DIR` and start the app against it.
    Restoring over production to prove production restores is how a

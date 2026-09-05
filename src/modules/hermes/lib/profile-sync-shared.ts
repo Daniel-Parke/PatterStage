@@ -151,5 +151,7 @@ export function assembleRootConfig(row: AgentRootRow): string {
     platformDisabledSkills: parts.platformDisabledSkills,
     platformToolsets: toolsets,
     preservedSections: parts.preservedSections,
+    // Forwarded, or a root push still eats skills.creation_nudge_interval.
+    skillsExtras: parts.skillsExtras,
   });
 }

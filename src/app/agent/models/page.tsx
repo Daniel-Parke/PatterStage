@@ -31,7 +31,7 @@ import { pluralise } from "@/lib/utils";
 import { useModelsPage } from "@/hooks/useModelsPage";
 // app/ may consult a module; the editor component may not, so the provider list
 // is injected from here (ADR-0005).
-import { HERMES_PROVIDERS } from "@/modules/hermes/lib/providers";
+import { HERMES_PROVIDERS, KEYLESS_PROVIDERS } from "@/modules/hermes/lib/providers";
 
 export default function ModelsPage() {
   const {
@@ -43,6 +43,9 @@ export default function ModelsPage() {
     loading,
     error,
     drift,
+    handleDriftPull,
+    handleDriftPush,
+    busyDriftLine,
     refreshing,
     busyTaskType,
     fallbackChain,
@@ -67,6 +70,7 @@ export default function ModelsPage() {
     handleSaved,
     handleDelete,
     handleDeleteCredential,
+    handleRotateCredential,
     busyCredentialId,
     handleSetDefault,
     handleBulkAuxiliaryChange,
@@ -160,7 +164,15 @@ export default function ModelsPage() {
         </p>
         {error && <LoadErrorBanner error={error} />}
 
-        {drift && <ModelsDriftBanner drift={drift} onSyncNow={handleRefresh} syncing={refreshing} />}
+        {drift && (
+          <ModelsDriftBanner
+            drift={drift}
+            agentDefaultId={defaults.agent}
+            onPull={handleDriftPull}
+            onPush={handleDriftPush}
+            busyLine={busyDriftLine}
+          />
+        )}
 
         {loading ? (
           <LoadingSpinner text="Loading models..." />
@@ -170,6 +182,7 @@ export default function ModelsPage() {
             <CredentialsPanel
               credentials={credentials}
               onDelete={handleDeleteCredential}
+              onRotate={handleRotateCredential}
               busyId={busyCredentialId}
             />
             <ModelsTableSection
@@ -237,6 +250,7 @@ export default function ModelsPage() {
           model={editing}
           credentials={credentialOptions}
           providers={HERMES_PROVIDERS}
+          keylessProviders={KEYLESS_PROVIDERS}
           onClose={closeModelEditor}
           onSaved={handleSaved}
         />

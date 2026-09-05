@@ -80,7 +80,7 @@ export const SETTINGS_TOOLS: readonly SettingsTool[] = [
   {
     href: "/agent/settings/restore",
     label: "Restore",
-    description: "Reseed the shipped catalogue, restore an agent's defaults, clear throwaway test data",
+    description: "Put back the starter set, restore one agent's defaults, clear out test clutter",
     icon: "RotateCcw",
     color: "cyan",
   },

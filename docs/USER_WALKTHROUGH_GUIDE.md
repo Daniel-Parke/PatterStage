@@ -1494,6 +1494,7 @@ Today every artifact is inline text. The schema is already future-proofed for re
 
 **Per-section card**
 - Section icon, title, description, "N field(s)" pill, "configured" pill (if the section is present in `/api/config`), "+N advanced" pill for complex keys.
+- When `config.yaml` does not parse, an alert above the grid says so and the "configured" pills are suppressed: an unparseable file reads as an empty one otherwise, and this index is where an operator comes to repair it.
 
 **Pinned entries above the groups** (in the sidebar)
 - `/config/models`: models registry editor.
@@ -1524,7 +1525,7 @@ Today every artifact is inline text. The schema is already future-proofed for re
 ### What you see
 
 **Header actions**
-- **Refresh Models:** sync from `~/.hermes/config.yaml` and `~/.hermes/.env` into the registry.
+- **Re-import from config:** read `config.yaml` and `.env` into the registry. Nothing is imported when the page loads, and an import keeps any name or base URL you have edited yourself.
 - **Add Model:** opens the `ModelEditor` modal in create mode.
 
 **Four stacked sub-sections**
@@ -1592,48 +1593,74 @@ Today every artifact is inline text. The schema is already future-proofed for re
 
 ---
 
-## Config → Seed
+## Settings → Restore
 
-**Config → Seed** restores the **shipped professional catalog** (Bob + named profiles + mission templates + default categories). Two entry points: "merge missing defaults" (additive) or "replace" (full restore).
+**Settings → Restore** puts back the starter set PatterStage ships: Bob (the
+default agent), the professional agent profiles, the mission templates, the
+mission categories, the skills, the tool bundles and the memory facts. It is
+also where throwaway test data is cleared out.
 
 ### What you see
 
-**Two banners at the top**
-- **Import before seed:** if `~/.hermes` exists, run `npx tsx scripts/tooling/import-hermes-state.ts` (or `setup.sh` / `ps-deploy`) **before** merge seed: merge never overwrites imported Bob / profiles.
-- **About Bob:** what Bob is (the local default agent missions and chat use when no profile is chosen) and the promise that restoring the catalog re-creates him only if he is missing, never over a Bob you imported or customised.
+**One intro line and a disclosure**
+- A sentence naming exactly what the pack contains, with the counts read from
+  the files on disk rather than from the database, so a fresh install still
+  says what is in the box.
+- **How this works**, a collapsed disclosure holding the mechanics: where the
+  pack lives, that a restore reads your Hermes home folder first so existing
+  files are imported rather than overwritten, and the command line equivalent.
 
-**Reseed all section**
-- **Restore entire default catalog:** two-step confirm; replaces Bob + all bundled profiles + templates + categories.
-- **Restore Bob only:** single click; replaces only Bob (default).
-- "Last run: <timestamp>" line if a previous run is recorded.
+**Restore everything**
+- **Restore everything:** two clicks. Replaces Bob, every bundled profile, the
+  templates, the categories, the skills, the tool bundles and the memory facts.
+- **Restore Bob:** two clicks. Replaces only the default agent.
+- **Add what's missing:** one click. Installs only what is absent and leaves
+  everything you have edited alone.
+- "Installed now: n of 7 agents · m of 12 templates", and "Last restored:" with
+  a local time when a previous run is recorded.
 
-**Clean dev / test data section** (orange, destructive)
-- **Scan for test data:** the first click only scans. It lists, by name, the workflows, stories and missions whose names start with `Testy`, `Test …` or `Untitled Story`.
-- The button then becomes **Remove N items**, and only that second click deletes. If the scan found nothing it reads **Dismiss** instead.
-- Agent profiles are never touched by it.
+**Professional agents**
+- One row per bundled, non-default profile: name, sync status (In sync / Out of
+  sync / Failed, with the reason after it), and a two-click **Restore this
+  agent**.
 
-**Professional agents section**
-- One row per bundled, non-default profile: name, sync status (Synced / Drift / Sync error), **Restore this agent** two-step button.
+**Mission templates**
+- The seeded templates, each with a two-click **Restore**.
 
-**Mission templates section**
-- Scrollable list of seeded templates with per-row **Restore** button.
+**Categories**
+- **Restore categories**, two clicks.
 
-**Categories & advanced section**
-- **Restore categories:** replaces the category set.
-- **Merge missing defaults:** additive merge.
+**Clear test clutter**
+- **Look for test data** lists, by name, the workflows, stories and missions
+  whose names look like tests. The button then becomes **Remove N items**, and
+  only the second click on that deletes. Agents, templates and your own work
+  are never touched.
+
+**What happened**
+- Every action prints one line under the section that ran ("Done at 10:15:
+  Restored Bob, 7 agents, …") and raises the same sentence as a toast. A
+  failure reads "Restore failed: …" in the same place.
 
 ### Typical use
 
-1. Read the **Import before seed** banner. If `~/.hermes` exists, the merge seed will **not** overwrite your imported Bob / profiles. Run `import-hermes-state.ts` first if you want your disk state to be the source of truth.
-2. **Restore entire default catalog** if you have trashed the SQLite and want a clean re-seed. Two-step confirm.
-3. **Restore Bob only** if you just want to reset the default persona.
-4. Per-profile / per-template restore is for when you want to keep most things and just bring back one specific row.
-5. **Scan for test data** when a dogfooding session has littered the database with throwaway rows. Read the list it prints before the second click: that click is the delete.
+1. **Add what's missing** after an upgrade, to pick up anything new the release
+   ships without touching what you have changed.
+2. **Restore everything** when you want the shipped state back. Two clicks, and
+   the database is copied first.
+3. Per-agent or per-template restore when you want to keep everything else and
+   bring back one row.
+4. **Look for test data** after a session that littered the database. Read the
+   list before the second click: that click is the delete.
 
 ### Notes
 
-- Seed state is tracked at `PS_DATA_DIR/seed-state.json` so re-seeding is idempotent.
-- Catalog seeding happens automatically during `setup.sh` and on `ps-deploy update`. The "Last run" timestamp is updated by either.
+- Anything that overwrites takes a database snapshot first, under
+  `{PS_DATA_DIR}/backups/db`, and refuses to run if it cannot take one. The
+  snapshots are listed on **Settings → System**.
+- Seed state is tracked at `PS_DATA_DIR/seed-state.json` so re-seeding is
+  idempotent.
+- Catalog seeding also happens during `setup.sh` and on `ps-deploy update`; the
+  "Last restored" line is updated by either.
 
 ---
 
@@ -1992,8 +2019,8 @@ The three buttons (**Update**, **Restart**, and **Rebuild**) run the host's depl
 
 ### Restore the shipped catalog
 
-1. **Config → Seed** → **Restore entire default catalog** (two-step).
-2. Or per-profile / per-template restore for surgical resets.
+1. **Settings → Restore** → **Restore everything** (two clicks).
+2. Or per-agent / per-template restore for surgical resets.
 
 ### Diagnose a stuck mission
 

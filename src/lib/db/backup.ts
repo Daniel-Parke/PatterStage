@@ -26,7 +26,10 @@ import { PS_DATA_DIR, getDbPath, readEnv } from "@/lib/paths";
 import { getDb } from "./index";
 import type { BackupLabel, DatabaseBackup } from "./backup-types";
 
-export type { BackupLabel, DatabaseBackup, BackupList } from "./backup-types";
+// BackupList is deliberately not re-exported: the Settings page takes it from
+// ./backup-types, which is dependency-free, so a client component never reaches
+// a module that opens the database.
+export type { BackupLabel, DatabaseBackup } from "./backup-types";
 
 /**
  * Where snapshots live: `PS_DATA_DIR/backups/db`, which is already the
@@ -44,7 +47,14 @@ function dbBase(dbPath: string): string {
   return basename(dbPath).replace(/\.db$/, "");
 }
 
-/** `<dbBase>.<label>.<ts>.db` — sorts by name and by time alike, and stays a `.db` so a restore is a plain copy. */
+/**
+ * `<dbBase>.<label>.<ts>.db` — sorts by name and by time alike, and stays a
+ * `.db` so a restore is a plain copy.
+ *
+ * @public Kept exported for tests/unit/b6-database-backup.test.ts, which pins
+ * the name shape a restore command is written against. `snapshotDatabase`
+ * below is its only caller in the product.
+ */
 export function backupFileName(dbPath: string, label: string, ts: string = backupTimestamp()): string {
   return `${dbBase(dbPath)}.${label}.${ts}.db`;
 }

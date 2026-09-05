@@ -55,6 +55,12 @@ interface ModelEditorProps {
    * component may not.
    */
   providers: readonly string[];
+  /**
+   * The subset of `providers` that works without an API key, supplied by the
+   * page for the same ADR-0005 reason as `providers` itself. Empty by default,
+   * which is the behaviour every caller had before D15.
+   */
+  keylessProviders?: readonly string[];
   onClose: () => void;
   onSaved: () => void;
 }
@@ -100,10 +106,14 @@ function validateModelForm(
   form: FormState,
   isEdit: boolean,
   usingExisting: boolean,
+  keyless = false,
 ): string | null {
   if (!form.name.trim()) return "Name is required";
   if (!form.modelId.trim()) return "Model ID is required";
-  if (!isEdit && !usingExisting && !form.apiKey.trim()) {
+  // A local Ollama has no key to demand. Requiring one made the operator
+  // invent a string, which then got written into the agent's env file as
+  // though it meant something (T-0100, D15).
+  if (!isEdit && !usingExisting && !keyless && !form.apiKey.trim()) {
     return "API key is required when creating a new credential";
   }
   return null;
@@ -129,6 +139,7 @@ export default function ModelEditor({
   model,
   credentials,
   providers,
+  keylessProviders = [],
   onClose,
   onSaved,
 }: ModelEditorProps) {
@@ -146,6 +157,9 @@ export default function ModelEditor({
   );
 
   const usingExisting = form.credentialsId !== null;
+  // Read off the injected list rather than imported: this component is core
+  // and the provider vocabulary belongs to the agent framework (ADR-0005).
+  const keyless = keylessProviders.includes(form.provider);
 
   const handleSubmit = async () => {
     // Field-level validation — single guard against the pure helper
@@ -158,7 +172,7 @@ export default function ModelEditor({
     // and the credentialLabel auto-fill (still a state mutation)
     // lives between the validation guard and the saving state
     // transition so its position in the flow is explicit.
-    const validationError = validateModelForm(form, isEdit, usingExisting);
+    const validationError = validateModelForm(form, isEdit, usingExisting, keyless);
     if (validationError) {
       setError(validationError);
       return;
@@ -347,13 +361,19 @@ export default function ModelEditor({
           selected={form.credentialsId}
           onChange={(id) => update("credentialsId", id)}
           providerFilter={form.provider}
+          keyless={keyless}
         />
 
         {!usingExisting && (
           <div className="space-y-3 rounded-lg border border-neon-purple/15 bg-neon-purple/5 p-3">
             <p className="text-xs font-mono text-neon-purple uppercase tracking-widest">
-              New credential
+              {keyless ? "Credential (optional)" : "New credential"}
             </p>
+            {keyless && (
+              <p className="text-xs text-ps-text-muted">
+                {`${form.provider} needs no API key. Leave this blank, or paste one if your endpoint requires it.`}
+              </p>
+            )}
             <FieldRow label="Credential Label">
               <Input
                 type="text"
@@ -372,7 +392,13 @@ export default function ModelEditor({
                 autoComplete="off"
                 value={form.apiKey}
                 onChange={(e) => update("apiKey", e.target.value)}
-                placeholder={isEdit ? "Leave blank to keep existing" : "sk-..."}
+                placeholder={
+                  keyless
+                    ? "Leave blank, none needed"
+                    : isEdit
+                      ? "Leave blank to keep existing"
+                      : "sk-..."
+                }
               />
             </FieldRow>
           </div>

@@ -76,9 +76,16 @@ names is `org/PLAYBOOKS.md#restore-test`.
 # stop the app first: a live process holds the SQLite file
 # scheduled backups (scripts/hardware/ps-db-backup.mjs) land here, name first:
 cp "$PS_DATA_DIR/backups/db/patterstage.<timestamp>.db" "$PS_DATA_DIR/patterstage.db"
+rm -f "$PS_DATA_DIR/patterstage.db-wal" "$PS_DATA_DIR/patterstage.db-shm"
 # a pre-migration backup from ps-deploy sits BESIDE the db instead:
 #   cp "$PS_DATA_DIR/patterstage.db.pre-migrate-<timestamp>.bak" "$PS_DATA_DIR/patterstage.db"
 ```
+
+Three more writers land in the same directory, labelled in the file name:
+`manual` from the Back up now button on **Settings > System**, `pre-restore`
+from a restore that overwrites rows, and `pre-clean` from a purge of throwaway
+test data. Settings > System lists every one of them with its size and time, and
+prints this same copy command with the paths filled in.
 
 Then start the app and confirm the schema version and a known row:
 

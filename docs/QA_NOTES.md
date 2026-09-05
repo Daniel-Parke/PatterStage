@@ -155,7 +155,7 @@ Two related traps from the same pass:
 Some "bugs" are **data in the live DB**, not code or seed: a `Testy` workflow,
 duplicate `Test Story 2026`, a `Test description` profile, a `Personalities` typo
 in a *user-created* template. The seed catalog (`data/seed/**`) is clean. Use the
-**Seed → Clean dev / test data** tool to purge throwaway artifacts; profile copy
+**Settings > Restore > Clear test clutter** tool to purge throwaway artifacts; profile copy
 edits are made on the Agents page.
 
 See also [DATA_STORAGE.md](DATA_STORAGE.md) for where data lives and which legacy

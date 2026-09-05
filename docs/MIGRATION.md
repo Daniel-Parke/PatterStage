@@ -142,6 +142,7 @@ The version ladder is not a clean one-step-per-number run. The gaps are real his
 - **There is no `010`.** The files run 001 to 034 with 010 absent: it created the `game_*` tables and was deleted with the gamification dial-back. `011_drop_game_tables.sql` drops what it created and documents the removal. Thirty-three files, thirty-four numbers.
 - **`007` and `008` are inert markers.** Both are comment-only `.sql` files that exec nothing. Their logic is `applyCronScheduleCanonicalisation()` in TypeScript, and the pair is covered by the single v7 gate. They exist so the migration index increments.
 - **The file number does not always equal the gate.** `002` bumps to v3 and `008` bumps to v7. Going forward the two match, and the upgrade-path test asserts it for the head. Historically they do not, which is why the gate in the applier, not the filename, is the authority for any migration below 012.
+- **A backfill in a migration runs exactly once, and only because the applier's version guard says so.** `execMigrationFile` execs the whole `.sql` in a single call, and the "already applied" guard swallows the first duplicate-column error. Since `exec` stops at the first failing statement, re-running a file whose columns already exist would silently skip everything after the first `ALTER`, including a backfill `UPDATE`. `039_models_origin.sql` is the shape to copy from: three `ALTER`s and then the backfill, protected by `applyModelsOriginMigration`'s `>= 39` gate rather than by anything in the SQL.
 
 ### Ruling D6: session-sync's lazy self-heal is sanctioned
 
@@ -193,10 +194,18 @@ For a database too old or corrupted to upgrade incrementally, PatterStage falls 
 
 ## Backups
 
-| Backup file (under `PS_DATA_DIR`) | Written by |
-|-----------------------------------|------------|
-| `patterstage.db.pre-migrate-<ts>.bak` | Every `ps-migrate.sh` / deploy migration (before any change). |
-| `patterstage.db.pre-baseline-<ts>` | Only when a baseline rebuild is required. |
+| Backup file | Written by |
+|-------------|------------|
+| `<PS_DATA_DIR>/patterstage.db.pre-migrate-<ts>.bak` | Every `ps-migrate.sh` / deploy migration (before any change). |
+| `<PS_DATA_DIR>/patterstage.db.pre-baseline-<ts>` | Only when a baseline rebuild is required. |
+| `<PS_DB_BACKUP_DIR>/patterstage.manual.<ts>.db` | The Back up now button on **Settings > System**. |
+| `<PS_DB_BACKUP_DIR>/patterstage.pre-restore.<ts>.db` | A restore that overwrites rows (**Settings > Restore**). |
+| `<PS_DB_BACKUP_DIR>/patterstage.pre-clean.<ts>.db` | A purge of throwaway test data. |
+
+`PS_DB_BACKUP_DIR` defaults to `<PS_DATA_DIR>/backups/db`. The last three are
+taken through SQLite's own backup API, so they are consistent copies of a
+running database; the first two are file copies taken with the app stopped.
+Settings > System lists every one of them and prints the restore command.
 
 Hermes/Hindsight memory backups are separate (`scripts/hardware/ps-backup.sh`). General host backups should include `PS_DATA_DIR` and `HERMES_HOME`. See [DEPLOY.md](DEPLOY.md).
 

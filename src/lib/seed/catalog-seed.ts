@@ -364,3 +364,75 @@ export function getSeedState(): Record<string, unknown> | null {
     return null;
   }
 }
+
+// ── What the pack on disk contains ──────────────────────────────
+
+/** The shipped starter set, counted from the files rather than the database. */
+export interface ShippedPackCounts {
+  catalogVersion: string;
+  root: number;
+  profiles: number;
+  templates: number;
+  categories: number;
+  skills: number;
+  tools: number;
+  memories: number;
+}
+
+/** Length of an array under `key` in a JSON file, or 0 for anything unreadable. */
+function countInManifest(path: string, key: string): number {
+  try {
+    const parsed = JSON.parse(readFileSync(path, "utf-8")) as Record<string, unknown>;
+    const list = parsed[key];
+    return Array.isArray(list) ? list.length : 0;
+  } catch {
+    return 0;
+  }
+}
+
+/**
+ * What the app SHIPS, read from disk only.
+ *
+ * The Restore page used to count the database, so a fresh install with nothing
+ * seeded offered to restore "0 professional agents" and an operator could not
+ * tell an empty install from an empty pack (T-0100, D16). This answers the
+ * other question: what is in the box.
+ *
+ * Never throws and never opens the database. A missing file counts 0, because
+ * a packaging mistake should read as "nothing to restore here", not as a 500
+ * on the page that would tell you about it.
+ */
+export function readShippedPackCounts(): ShippedPackCounts {
+  let catalogVersion = "";
+  let templates = 0;
+  try {
+    const pack = JSON.parse(readFileSync(TEMPLATE_PACK, "utf-8")) as {
+      id?: string;
+      templates?: unknown[];
+    };
+    catalogVersion = typeof pack.id === "string" ? pack.id : "";
+    templates = Array.isArray(pack.templates) ? pack.templates.length : 0;
+  } catch {
+    // absent or malformed: nothing to restore from it
+  }
+
+  let categories = 0;
+  try {
+    const sql = readFileSync(join(REPO_ROOT, "src/lib/db/seeds/001_mission_categories.sql"), "utf-8");
+    categories = sql.split("ch.cat.").length - 1;
+  } catch {
+    categories = 0;
+  }
+
+  return {
+    catalogVersion,
+    // One agent root, and it is only there if its config.yaml is.
+    root: existsSync(join(REPO_ROOT, "data/seed/agent-root/config.yaml")) ? 1 : 0,
+    profiles: countInManifest(join(REPO_ROOT, "data/seed/profiles/manifest.json"), "profiles"),
+    templates,
+    categories,
+    skills: countInManifest(SKILLS_MANIFEST, "skills"),
+    tools: countInManifest(TOOLS_MANIFEST, "tools"),
+    memories: countInManifest(MEMORIES_MANIFEST, "facts"),
+  };
+}

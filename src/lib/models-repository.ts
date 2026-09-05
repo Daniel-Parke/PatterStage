@@ -105,9 +105,18 @@ export interface UpsertModelResult {
 }
 
 /** A field an operator can edit that an import also writes. */
+/**
+ * @public The fields an operator can edit that an import must not overwrite.
+ * Named on `UpsertModelResult.preserved`, so a caller reading that array has
+ * something to annotate it with.
+ */
 export type ModelEditableField = "name" | "baseUrl";
 
 /** Where a row came from: an import of config.yaml, or the operator. */
+/**
+ * @public Where a registry row came from. Named on `ModelRecord.origin`, which
+ * every read of the registry carries, and pinned by the migration 039 oracle.
+ */
 export type ModelOrigin = "import" | "user";
 
 // ── Row shape ──────────────────────────────────────────────────

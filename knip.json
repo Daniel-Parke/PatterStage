@@ -19,7 +19,8 @@
   "ignoreDependencies": [
     "ts-jest",
     "tailwindcss",
-    "@jest/globals"
+    "@jest/globals",
+    "jsdom"
   ],
   "ignoreBinaries": [
     "python",

@@ -10,10 +10,10 @@ import { toError } from "@/lib/api-fetch";
 import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
 
 import { appendAuditLine } from "@/lib/audit-log";
-import { conflict, forbidden, ok } from "@/lib/api-response";
+import { badRequest, conflict, forbidden, ok } from "@/lib/api-response";
 import { readCachedConfigResult } from "@/lib/config-cache";
 import { dumpYamlConfig } from "@/lib/yaml-config";
-import { CONFIG_SECTIONS } from "@/lib/config-schema";
+import { CONFIG_SECTIONS, validateSectionValues } from "@/lib/config-schema";
 import { maskSecretsDeep } from "@/lib/secret-mask";
 import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import { backupFile } from "@/lib/fs/fs-helpers";
@@ -94,6 +94,18 @@ export async function PUT(request: NextRequest) {
     );
   }
 
+  // The declared min/max, types and option lists, enforced on the server too.
+  // They were decorative: the browser knew the bounds and this route merged
+  // whatever arrived, so `max_turns: 9999` was written with a 200 and Hermes
+  // met it later (T-0100, D77). Before the backup and the read, because a
+  // refused value must leave the file and its backups untouched.
+  const problems = validateSectionValues(section, values as Record<string, unknown>);
+  if (problems.length > 0) {
+    return badRequest(
+      `Invalid values for '${section}': ${problems.map((p) => p.message).join("; ")}`,
+    );
+  }
+
   try {
     const paths = getAgentWorkspace();
 
@@ -154,8 +166,22 @@ export async function PUT(request: NextRequest) {
     // PUT that touched a nested object wiped its siblings because the
     // spread replaced the whole nested object. See
     // `src/lib/deep-merge.ts` for the contract and tests.
-    const current = (config[section] as Record<string, unknown>) || {};
-    config[section] = deepMerge(current, values as Record<string, unknown>);
+    // `null` on the wire means "unset this key", which deepMerge cannot
+    // express: it merges, so once a key existed nothing could remove it and
+    // the UI's coercions turned an emptied field into `0` or `''` instead of
+    // letting Hermes fall back to its own default (T-0100, D78). An explicit
+    // empty string still writes an empty string; only null deletes.
+    const current = { ...((config[section] as Record<string, unknown>) || {}) };
+    const toSet: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(values as Record<string, unknown>)) {
+      if (value === null) delete current[key];
+      else toSet[key] = value;
+    }
+    const merged = deepMerge(current, toSet);
+    // A section with nothing left in it is not an empty mapping in the file:
+    // `display: {}` would still read as "configured" on the index.
+    if (Object.keys(merged).length === 0) delete config[section];
+    else config[section] = merged;
 
     // Write back through the one config.yaml writer. It drops the read
     // cache in the same call, so the next GET sees this change instead of

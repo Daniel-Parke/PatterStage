@@ -15,12 +15,16 @@ import { messageFromError } from "@/lib/api-fetch";
 // ── Types ────────────────────────────────────────────────────
 
 import type { SyncActionResult } from "@/lib/models/sync-result";
+// The line shape is a UI contract, declared in core; the module reads it.
+import type { DriftLine } from "@/components/models/types";
 export type { SyncActionResult };
 
 export interface DriftReport {
   modelsInHermesNotInDb: Array<{ name: string; provider: string; modelId: string }>;
-  modelsInDbNotInHermes: Array<{ name: string; provider: string; modelId: string }>;
-  primaryDiffers: { dbModel: string; hermesModel: string } | null;
+  /** `registryId` is the row the line is about; optional so older fixtures still typecheck. */
+  modelsInDbNotInHermes: Array<{ name: string; provider: string; modelId: string; registryId?: string | null }>;
+  /** `registryId` is the row matching the Hermes primary, null when none does. */
+  primaryDiffers: { dbModel: string; hermesModel: string; registryId?: string | null } | null;
 }
 
 /**
@@ -75,9 +79,11 @@ export function detectConfigDrift(): DriftReport {
   );
 
   // 2. Models in DB but not in config.yaml (Hermes)
-  const modelsInDbNotInHermes = dbModels.filter(
-    (m) => !hermesKeySet.has(modelKey(m.provider, m.modelId))
-  );
+  const modelsInDbNotInHermes = dbModels
+    .filter((m) => !hermesKeySet.has(modelKey(m.provider, m.modelId)))
+    // The row id travels with the line so the banner can push exactly this
+    // model rather than re-running a whole sync (T-0100).
+    .map((m) => ({ name: m.name, provider: m.provider, modelId: m.modelId, registryId: m.id }));
 
   // 3. Primary model drift
   let primaryDiffers: DriftReport["primaryDiffers"] = null;
@@ -94,6 +100,7 @@ export function detectConfigDrift(): DriftReport {
           primaryDiffers = {
             dbModel: `${dbDefault.provider}/${dbDefault.modelId}`,
             hermesModel: `${matched.provider}/${matched.modelId}`,
+            registryId: matched.id,
           };
         }
       }
@@ -102,6 +109,8 @@ export function detectConfigDrift(): DriftReport {
       primaryDiffers = {
         dbModel: "none",
         hermesModel: `${hermesPrimary.provider}/${hermesPrimary.modelId}`,
+        // Nothing in the registry matches it: pulling has to import first.
+        registryId: null,
       };
     }
   }
@@ -131,19 +140,63 @@ export function detectConfigDrift(): DriftReport {
  * "details only").
  */
 export function buildDriftDetails(drift: DriftReport): string[] {
-  const details: string[] = [];
+  // Delegated so the sentence exists once. buildDriftLines emits the same
+  // three sections in the same order; taking the text off each line is what
+  // keeps the two from ever drifting apart (T-0100).
+  return buildDriftLines(drift).map((line) => line.text);
+}
+
+/**
+ * `hermesModel` is built as `${provider}/${modelId}`, and a provider name
+ * never contains a slash, so the first slash is the exact boundary. A model
+ * id may contain further slashes and keeps them.
+ */
+function splitModelRef(ref: string): { provider: string; modelId: string } {
+  const cut = ref.indexOf("/");
+  if (cut === -1) return { provider: "", modelId: ref };
+  return { provider: ref.slice(0, cut), modelId: ref.slice(cut + 1) };
+}
+
+/**
+ * The same three sentences, each with the handles the banner acts on.
+ *
+ * `buildDriftDetails` is this function's text column, so the two can never
+ * disagree about wording or order. What a line adds is the direction that
+ * resolves it: a Hermes-only model is pulled, a registry-only model is
+ * pushed, and a primary disagreement can go either way.
+ */
+export function buildDriftLines(drift: DriftReport): DriftLine[] {
+  const lines: DriftLine[] = [];
   if (drift.primaryDiffers) {
-    details.push(
-      `Primary model drift: DB has "${drift.primaryDiffers.dbModel}", Hermes has "${drift.primaryDiffers.hermesModel}"`,
-    );
+    const { provider, modelId } = splitModelRef(drift.primaryDiffers.hermesModel);
+    lines.push({
+      kind: "primary",
+      text: `Primary model drift: DB has "${drift.primaryDiffers.dbModel}", Hermes has "${drift.primaryDiffers.hermesModel}"`,
+      provider,
+      modelId,
+      registryId: drift.primaryDiffers.registryId ?? null,
+    });
   }
   for (const m of drift.modelsInHermesNotInDb) {
-    details.push(`Model "${m.modelId}" (${m.provider}) is in Hermes but not in PatterStage`);
+    lines.push({
+      kind: "hermes-only",
+      text: `Model "${m.modelId}" (${m.provider}) is in Hermes but not in PatterStage`,
+      provider: m.provider,
+      modelId: m.modelId,
+      // By definition there is no registry row yet; a pull creates one.
+      registryId: null,
+    });
   }
   for (const m of drift.modelsInDbNotInHermes) {
-    details.push(`Model "${m.modelId}" (${m.provider}) is in PatterStage but not pushed to Hermes`);
+    lines.push({
+      kind: "db-only",
+      text: `Model "${m.modelId}" (${m.provider}) is in PatterStage but not pushed to Hermes`,
+      provider: m.provider,
+      modelId: m.modelId,
+      registryId: m.registryId ?? null,
+    });
   }
-  return details;
+  return lines;
 }
 
 // ── Model push ───────────────────────────────────────────────

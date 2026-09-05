@@ -79,6 +79,27 @@ lose some toggles and, if one is open, an unsaved draft, and nothing more.
   `control-hub.db`, WAL/SHM, and `*.pre-baseline-*` backups. `.gitignore` has
   `/data/*` + `!/data/seed/**`, so **no database is ever committed** to the repo.
 
+## Database snapshots
+
+`{PS_DATA_DIR}/backups/db` holds copies of the database, listed on
+**Settings > System**. Three things write one:
+
+| When | Label in the file name |
+|------|------------------------|
+| The Back up now button on Settings > System | `manual` |
+| Before a restore that overwrites rows (Settings > Restore) | `pre-restore` |
+| Before a purge of throwaway test data | `pre-clean` |
+
+A snapshot is a consistent copy taken through SQLite's own backup API, so it is
+safe to take while the server is running. The migration runner's own
+`pre-migrate` and `pre-baseline` copies sit beside the database itself and are
+listed on the same card.
+
+Set `PS_DB_BACKUP_DIR` to put snapshots somewhere else, such as a mounted
+volume. Restoring one is a manual, deliberate act: stop the server, copy the
+file over the database, delete the `-wal` and `-shm` sidecars, start it again.
+Settings > System prints that exact sequence with the paths filled in.
+
 ## Intentional leftovers (do NOT "clean up" without a migration)
 
 These are deliberate and load-bearing; removing them breaks existing installs:

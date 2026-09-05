@@ -44,9 +44,13 @@ afterEach(() => {
 });
 
 describe("migration 038", () => {
-  it("is the head, and creates the table", () => {
+  it("is a rung the head counts, and creates the table", () => {
     expect(OPERATOR_PREFS_SCHEMA_VERSION).toBe(38);
-    expect(MIGRATION_HEAD_SCHEMA_VERSION).toBe(38);
+    // 038 was the head when B3 landed; T-0100's 039 moved it. The head is
+    // pinned to the newest applier by run-migrations-upgrade.integration,
+    // which is where that check belongs. What matters here is that 038 is
+    // still on the ladder the head counts to.
+    expect(MIGRATION_HEAD_SCHEMA_VERSION).toBeGreaterThanOrEqual(OPERATOR_PREFS_SCHEMA_VERSION);
     const cols = (testDb!.prepare("PRAGMA table_info(operator_prefs)").all() as { name: string }[]).map((c) => c.name);
     expect(cols).toEqual(expect.arrayContaining(["key", "value_json", "updated_at"]));
     expect(getSchemaVersion(testDb!)).toBe(38);

@@ -59,13 +59,18 @@ The `/api/tools` route exposes a **read-only catalog** of known Hermes toolset I
 
 | Action | How |
 |--------|-----|
-| **Merge** (default) | Upsert missing seed rows; skip profiles/templates that already exist by `seed_key`. |
-| **Replace** | Re-apply seed SQL/content for the selected target. |
+| **Merge** (default) | Upsert missing seed rows; skip profiles/templates that already exist by `seed_key`. On the Restore page this is **Add what's missing**. |
+| **Replace** | Re-apply seed SQL/content for the selected target. Every replace takes a `pre-restore` database snapshot first and refuses if it cannot take one. |
 | **CLI** | `npm run db:seed` → `scripts/tooling/import-hermes-state.ts` (when Hermes exists), then `scripts/tooling/seed-catalog.ts --merge` |
 | **Import disk** | `npx tsx scripts/tooling/import-hermes-state.ts` |
 | **Deploy** | `ps-deploy update` runs migrations, imports Hermes state when `HERMES_HOME/config.yaml` exists, then runs `seed-catalog.ts --merge` |
 
 Seed state: `PS_DATA_DIR/seed-state.json`.
+
+`GET /api/seed` also answers `pack`, the count of what the shipped set contains,
+read from `data/seed/**` rather than from the database. **Settings > Restore**
+renders those numbers, so a fresh install reads "0 of 7 agents" instead of
+claiming the pack itself is empty.
 
 ## Sync API
 

@@ -31,13 +31,17 @@ import {
   unlinkSync,
   writeFileSync,
 } from "fs";
-import { join } from "path";
+import { join, resolve } from "path";
 
 import * as yaml from "js-yaml";
 
+import { updateAgentRoot } from "@/lib/agent-root-repository";
 import { messageFromError } from "@/lib/api-fetch";
 import { invalidateConfigCache } from "@/lib/config-cache";
 import { backupFile as backupFileShared } from "@/lib/fs/fs-helpers";
+
+import { buildHermesPathBundle } from "./paths";
+import { getHermesDefaultRoot } from "./profile-paths";
 
 /**
  * Atomic write: stage to a sibling tmpfile, then rename. fs.rename on
@@ -91,6 +95,42 @@ export function writeHermesConfigFile(configPath: string, serialized: string): v
   assertParseableConfigYaml(serialized, configPath);
   atomicWriteFile(configPath, serialized);
   invalidateConfigCache();
+  refreshAgentRootFromWrite(configPath, serialized);
+}
+
+/**
+ * Keep `agent_root.config_yaml` equal to the file it mirrors.
+ *
+ * The row is what a root Push assembles the whole config.yaml from. A Settings
+ * save wrote the file and left the row alone, so the next push of the agent
+ * rebuilt the file from the stale row and the save was gone from disk AND
+ * database, with the drift banner unable to warn in between (T-0100, D76).
+ *
+ * Attached to the ACT of writing the root config.yaml, for the same reason the
+ * cache invalidation above is: an enumerated list of writers is exactly how
+ * the previous gap opened. Only the DEFAULT root is mirrored — a profile's own
+ * config.yaml is a different file, and copying it into this row would be a
+ * different corruption.
+ */
+function refreshAgentRootFromWrite(configPath: string, serialized: string): void {
+  let rootConfig: string;
+  try {
+    rootConfig = buildHermesPathBundle(getHermesDefaultRoot()).config;
+  } catch {
+    // No resolvable default root (an unconfigured environment): nothing to mirror.
+    return;
+  }
+  // resolve() on both sides: the bundle joins with "/" while callers pass
+  // path.join output, which is backslash-separated on Windows.
+  if (resolve(configPath) !== resolve(rootConfig)) return;
+  try {
+    updateAgentRoot({ configYaml: serialized });
+  } catch (err) {
+    throw new Error(
+      `${configPath} was written, but the agent record could not be refreshed ` +
+        `(${messageFromError(err, "unknown error")}). A push would revert the file.`,
+    );
+  }
 }
 
 /**

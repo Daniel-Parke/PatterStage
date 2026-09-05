@@ -52,6 +52,9 @@ jest.mock("@/lib/parse-json-body", () => {
 
 jest.mock("@/modules/hermes/lib/config-sync", () => ({
   syncDefaultsToHermesConfig: jest.fn(() => ({ backupPath: null })),
+  // The three models routes go through finalize now, so the yaml write and the
+  // agent_root refresh happen together (T-0100, D9).
+  finalizeRootConfigOnDisk: jest.fn(() => ({ appliedModelDefaults: false, backupPath: null })),
   syncCredentialToHermesEnv: jest.fn(() => ({ backupPath: null })),
   removeCredentialFromHermesEnv: jest.fn(() => ({ backupPath: null })),
 }));
@@ -87,6 +90,9 @@ jest.mock("@/modules/hermes/lib/sync-manager", () => ({
 // Mock hermes-config-sync for sync functions used in routes
 jest.mock("@/modules/hermes/lib/config-sync", () => ({
   syncDefaultsToHermesConfig: jest.fn(() => ({ backupPath: null })),
+  // The three models routes go through finalize now, so the yaml write and the
+  // agent_root refresh happen together (T-0100, D9).
+  finalizeRootConfigOnDisk: jest.fn(() => ({ appliedModelDefaults: false, backupPath: null })),
   syncCredentialToHermesEnv: jest.fn(() => ({ backupPath: null })),
   removeCredentialFromHermesEnv: jest.fn(() => ({ backupPath: null })),
   syncSingleCredentialToHermesEnv: jest.fn(() => ({ backupPath: null })),
@@ -255,6 +261,9 @@ describe("/api/models/[id]", () => {
   });
 
   it("DELETE returns 200 and audits", async () => {
+    // DELETE reads the defaults BEFORE the delete cascades them away, so the
+    // yaml writer can be told which sections to remove (T-0100, D9).
+    repo.__getModelDefaults.mockReturnValue({ agent: null });
     repo.__deleteModel.mockReturnValue(true);
     const res = await callRoute("DELETE", SAMPLE_MODEL.id);
     expect(res.status).toBe(200);
@@ -264,6 +273,7 @@ describe("/api/models/[id]", () => {
   });
 
   it("DELETE 404 when model missing", async () => {
+    repo.__getModelDefaults.mockReturnValue({ agent: null });
     repo.__deleteModel.mockReturnValue(false);
     const res = await callRoute("DELETE", "no-such");
     expect(res.status).toBe(404);

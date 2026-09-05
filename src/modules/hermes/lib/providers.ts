@@ -85,6 +85,35 @@ export function isHermesProvider(provider: string): provider is HermesProvider {
 
 
 /**
+ * Providers Hermes can drive with no API key at all.
+ *
+ * Four are local or self-hosted endpoints, and `nous` authenticates by OAuth
+ * through the Hermes CLI. The editor demanded a key for every new credential,
+ * so pointing PatterStage at a local Ollama meant inventing one (T-0100, D15).
+ *
+ * Deliberately NOT derived from `PROVIDER_ENV_VAR`: `ollama` and `vllm` DO
+ * have a variable, and an endpoint behind a proxy may want it set. Needing no
+ * key and having nowhere to put one are different facts, and only `nous` is
+ * the second.
+ */
+export const KEYLESS_PROVIDERS = ["ollama", "lmstudio", "vllm", "custom", "nous"] as const;
+
+/** @public The narrowed type of a member of KEYLESS_PROVIDERS. */
+export type KeylessProvider = (typeof KEYLESS_PROVIDERS)[number];
+
+/**
+ * True when this provider works without an API key.
+ *
+ * @public The membership test that goes with the exported list. The models
+ * page hands the list itself to the editor (core may not import a module), so
+ * the product asks the array; this is here so anything server-side asks the
+ * same question the same way rather than open-coding an `includes`.
+ */
+export function isKeylessProvider(provider: string): provider is KeylessProvider {
+  return (KEYLESS_PROVIDERS as readonly string[]).includes(provider);
+}
+
+/**
  * Returns the env var name for a given provider, or null if the provider
  * is not recognised by Hermes.
  */

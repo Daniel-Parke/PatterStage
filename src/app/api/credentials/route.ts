@@ -12,8 +12,9 @@ import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
 import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import { appendAuditLine } from "@/lib/audit-log";
 import { credentialPostSchema } from "@/lib/api-schemas";
-import { created, ok } from "@/lib/api-response";
+import { badRequest, created, ok } from "@/lib/api-response";
 import { syncCredentialToHermesEnv } from "@/modules/hermes/lib/hermes-env-sync";
+import { envVarForProvider } from "@/modules/hermes/lib/providers";
 import { recordEvent } from "@/lib/analytics/record-event";
 
 export async function GET(_request: NextRequest) {
@@ -35,6 +36,15 @@ export async function POST(request: NextRequest) {
   // other route in the Models/Config/Fallbacks surface.
   const parsed = await parseAndValidateJsonBody(request, credentialPostSchema);
   if (parsed instanceof NextResponse) return parsed;
+
+  // A provider with no variable to write has nowhere to keep a key. Before
+  // this the row was created, the env sync threw, and the rollback deleted it
+  // again -- a 500 for a request that was never going to work (T-0100, D15).
+  if (envVarForProvider(parsed.provider) === "") {
+    return badRequest(
+      `${parsed.provider} authenticates with OAuth (hermes model); it has no API key to store`,
+    );
+  }
 
   let createdId: string | null = null;
   try {

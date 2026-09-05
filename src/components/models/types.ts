@@ -33,9 +33,43 @@ export interface ApiCredential {
   updatedAt: string;
 }
 
+/**
+ * One drift sentence, with the handles needed to act on it.
+ *
+ * The banner used to offer a single "Sync Now" that ran a whole re-import,
+ * whichever way the drift actually pointed. A line says which side is ahead,
+ * so the banner can offer the one direction that resolves it (T-0100).
+ *
+ *  - `primary`      the agent default and config.yaml's primary disagree;
+ *                   `registryId` is the registry row matching the Hermes
+ *                   primary, or null when no row matches it
+ *  - `hermes-only`  config.yaml has a model the registry does not; pull adds it
+ *  - `db-only`      the registry has a model config.yaml does not
+ */
+export interface DriftLine {
+  kind: "primary" | "hermes-only" | "db-only";
+  /** The sentence, identical to the matching `driftDetails` entry. */
+  text: string;
+  provider: string;
+  modelId: string;
+  /** The registry row this line is about, when there is one. */
+  registryId: string | null;
+}
+
+/**
+ * A stable key for one line, so a busy flag can name the row it belongs to.
+ * Lines are not persisted and carry no id of their own; kind plus the model
+ * reference is unique within one report.
+ */
+export function driftLineKey(line: DriftLine): string {
+  return `${line.kind}:${line.provider}/${line.modelId}`;
+}
+
 export interface SyncDrift {
   hasDrift: boolean;
   driftDetails: string[];
+  /** Optional so a body cached before T-0100 still renders as plain sentences. */
+  lines?: DriftLine[];
 }
 
 /**

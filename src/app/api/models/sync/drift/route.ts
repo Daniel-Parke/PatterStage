@@ -6,16 +6,20 @@ import type { NextRequest } from "next/server";
 import { ok } from "@/lib/api-response";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 
-import { buildDriftDetails, detectConfigDrift } from "@/modules/hermes/lib/sync-manager";
+import { buildDriftDetails, buildDriftLines, detectConfigDrift } from "@/modules/hermes/lib/sync-manager";
 import type { SyncDrift } from "@/components/models/types";
 
 export async function GET(_request: NextRequest) {
   try {
-    const driftDetails = buildDriftDetails(detectConfigDrift());
+    // One report, read twice: the sentences the banner prints and the lines
+    // it hangs a Pull or a Push on. `lines[i].text === driftDetails[i]`.
+    const report = detectConfigDrift();
+    const driftDetails = buildDriftDetails(report);
 
     const syncDrift: SyncDrift = {
       hasDrift: driftDetails.length > 0,
       driftDetails,
+      lines: buildDriftLines(report),
     };
 
     return ok(syncDrift);

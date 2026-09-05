@@ -195,6 +195,8 @@ export function assembleConfigYamlForProfile(row: AgentProfileRow): string {
     platformDisabledSkills: parts.platformDisabledSkills,
     platformToolsets: resolvedPlatformToolsetsForProfile(row),
     preservedSections: parts.preservedSections,
+    // Forwarded, or a profile push eats skills.creation_nudge_interval.
+    skillsExtras: parts.skillsExtras,
   });
 }
 
@@ -225,6 +227,7 @@ export function upsertProfile(input: UpsertProfileInput): AgentProfileRow {
       platformDisabledSkills: parsed.platformDisabledSkills,
       platformToolsets: toolsets,
       preservedSections: parsed.preservedSections,
+      skillsExtras: parsed.skillsExtras,
     });
   }
   getDb()

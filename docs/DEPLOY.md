@@ -138,7 +138,7 @@ After **`npm run build`**, **`setup.sh`**, and **`ps-deploy update` / `rebuild`*
 1. **`npm run db:migrate`**: SQLite migrations on `PS_DATA_DIR/patterstage.db`
 2. **`npm run db:seed`**: upsert categories, catalog templates, and `agent_profiles`, then push profiles to **`HERMES_HOME/profiles/<slug>/`**
 
-PatterStage SQLite is the **source of truth** for professional profiles; Hermes disk is the **runtime target** for missions/cron. Restore defaults at **Config → Seed** (`/config/seed`).
+PatterStage SQLite is the **source of truth** for professional profiles; Hermes disk is the **runtime target** for missions/cron. Restore defaults at **Settings → Restore** (`/agent/settings/restore`), which snapshots the database before any overwrite.
 
 Shipped seeds: **`data/seed/profiles/`**, **`data/seed/template-packs/patterstage-professional-v1.json`**. Optional install-only bash copy from **`data/seed/profiles/`**: [`scripts/lib/ps-hermes-profile-templates.sh`](../scripts/lib/ps-hermes-profile-templates.sh) (`INSTALL_HERMES_PROFILE_TEMPLATES=yes` on non-interactive `install.sh`).
 

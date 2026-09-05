@@ -30,7 +30,14 @@ import * as yaml from "js-yaml";
 
 import { dumpYamlConfig } from "@/lib/yaml-config";
 import { getActiveHermesPaths } from "./agent-runtime";
-import { AUXILIARY_TASK_TYPES } from "@/lib/models/task-types";
+import { AUXILIARY_TASK_TYPES, type TaskType } from "@/lib/models/task-types";
+
+/** Which slots the caller has just emptied, and therefore which ones this
+ *  write may remove from config.yaml. Anything not named here is left
+ *  alone, so a primary the CLI set survives an empty registry. */
+export interface SyncDefaultsOptions {
+  cleared?: TaskType[];
+}
 import { updateAgentRoot } from "@/lib/agent-root-repository";
 import { getModelDefaults, getModel } from "@/lib/models-repository";
 import { toError } from "@/lib/api-fetch";
@@ -53,8 +60,17 @@ import { backupFile, findLatestParseableBackup, writeHermesConfigFile } from "./
  *
  * `model.api_key` and `auxiliary.<task>.api_key` are reset to the empty
  * string so Hermes resolves the key from .env (canonical posture).
+ *
+ * `cleared` names the slots the caller has just emptied. Only those are
+ * removed from the file. The removal has to be explicit: "absent in the
+ * database, so delete it from the yaml" would let finalizeRootConfigOnDisk,
+ * which runs after every profile push, strip a primary that `hermes model`
+ * set on any install whose registry is empty, which is every fresh one
+ * (T-0100, D9).
  */
-export function syncDefaultsToHermesConfig(): { backupPath: string | null; error?: string } {
+export function syncDefaultsToHermesConfig(
+  options: SyncDefaultsOptions = {},
+): { backupPath: string | null; error?: string } {
   const paths = getActiveHermesPaths();
   ensureDir(paths.root);
   const configPath = paths.config;
@@ -92,6 +108,7 @@ export function syncDefaultsToHermesConfig(): { backupPath: string | null; error
   }
 
   const defaults = getModelDefaults();
+  const cleared = new Set<TaskType>(options.cleared ?? []);
 
   // ── Primary agent model
   const agentDefault = defaults.agent ? getModel(defaults.agent) : null;
@@ -104,13 +121,27 @@ export function syncDefaultsToHermesConfig(): { backupPath: string | null; error
       api_key: "",
       context_length: agentDefault.contextLength ?? config.model?.context_length,
     };
+  } else if (cleared.has("agent") && config.model) {
+    // The operator has just emptied the slot: take the primary off the file
+    // too, or Hermes keeps running the model the console says is gone.
+    delete config.model.default;
+    delete config.model.provider;
+    delete config.model.base_url;
+    delete config.model.api_key;
+    delete config.model.context_length;
+    if (Object.keys(config.model).length === 0) delete config.model;
   }
 
   // ── 11 auxiliary slots
   const aux: Record<string, AuxiliarySection> = { ...(config.auxiliary ?? {}) };
   for (const slot of AUXILIARY_TASK_TYPES) {
     const modelId = defaults[slot];
-    if (!modelId) continue;
+    if (!modelId) {
+      // The spread above carried the old entry over; a cleared slot is the one
+      // case where it should not survive.
+      if (cleared.has(slot)) delete aux[slot];
+      continue;
+    }
     const m = getModel(modelId);
     if (!m) continue;
     aux[slot] = {
@@ -123,6 +154,8 @@ export function syncDefaultsToHermesConfig(): { backupPath: string | null; error
   }
   if (Object.keys(aux).length > 0) {
     config.auxiliary = aux;
+  } else {
+    delete config.auxiliary;
   }
 
   const serialized = dumpYamlConfig(config);
@@ -144,10 +177,14 @@ export interface FinalizeRootConfigResult {
  * to `model` / `auxiliary` on disk and refresh `agent_root.config_yaml` so the
  * next push does not strip the model section.
  */
-export function finalizeRootConfigOnDisk(): FinalizeRootConfigResult {
+export function finalizeRootConfigOnDisk(
+  options: SyncDefaultsOptions = {},
+): FinalizeRootConfigResult {
   const defaults = getModelDefaults();
   const appliedModelDefaults = Boolean(defaults.agent);
-  const { backupPath, error } = syncDefaultsToHermesConfig();
+  // `cleared` rides through, and the row refresh below is what stops a later
+  // agent-root Push putting the cleared primary back on disk from a stale copy.
+  const { backupPath, error } = syncDefaultsToHermesConfig(options);
 
   // THE LOOP-CLOSER, removed (T-0086). This copy used to run unconditionally:
   // the sync above would correctly REFUSE to touch a corrupt file, and then

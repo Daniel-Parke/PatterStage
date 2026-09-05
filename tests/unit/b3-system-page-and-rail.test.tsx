@@ -126,6 +126,18 @@ beforeEach(() => {
     "/api/prefs": { body: { data: { prefs: {} } } },
     "/api/status/runtime": { body: { data: RUNTIME } },
     "/api/update": { body: { data: { updateAvailable: false, behind: 0, deployEnabled: true } } },
+    // The Backups card reads this (T-0100, B6). Unstubbed it answered 404 and
+    // the card's own error banner became a second role="alert" on the page.
+    "/api/backup": {
+      body: {
+        data: {
+          dbPath: "/home/me/patterstage/data/patterstage.db",
+          dir: "/home/me/patterstage/data/backups/db",
+          backups: [],
+          restoreCommand: "# stop the server first",
+        },
+      },
+    },
   };
   installFetch();
   mockMedia(false);
@@ -253,10 +265,12 @@ describe("Settings > System", () => {
     versionState.deployEnabled = true;
   });
 
-  it("has a place for backups, saying they are not here yet", async () => {
+  it("has a backups card, which B6 filled in", async () => {
     render(withQuery(<SystemPage />));
     expect(screen.getByRole("heading", { name: /^backups$/i })).toBeInTheDocument();
-    expect(screen.getByText(/not here yet/i)).toBeInTheDocument();
+    // B3 shipped the heading over a "not here yet" line. T-0100 replaced it
+    // with the real card; what it does is held by b6-system-backups-card.
+    expect(screen.queryByText(/not here yet/i)).toBeNull();
   });
 
   it("renders the runtime read's failure as an error with Retry, never an empty card", async () => {

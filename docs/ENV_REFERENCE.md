@@ -27,6 +27,7 @@ Quick lookup for PatterStage and Hermes paths. Set values in `.env.local` (creat
 | `PS_DATA_DIR` / `CONTROL_HUB_DATA_DIR` | `~/patterstage/data` | PatterStage SQLite, missions JSON, templates, stories, hardware scripts |
 | `PS_SCRIPTS_DIR` | `{PS_DATA_DIR}/scripts` | System cron script prefix (must match crontab entries) |
 | `PS_HARDWARE_LOG_DIR` | `{PS_DATA_DIR}/logs` | Hardware cron log output |
+| `PS_DB_BACKUP_DIR` | `{PS_DATA_DIR}/backups/db` | Where database snapshots are written and listed from (Settings > System, and the snapshot taken before a restore or a purge) |
 | `PORT` | `42069` (or first free in 42069–42100 at setup) | Next.js listen port |
 
 ## Dual SQLite databases

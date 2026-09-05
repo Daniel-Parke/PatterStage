@@ -1,5 +1,13 @@
 // ═══════════════════════════════════════════════════════════════
-// DELETE /api/credentials/[id] — remove a provider credential
+// /api/credentials/[id] — rotate or remove one provider credential
+//
+// PATCH replaces the stored key. Before it existed the only way to change a
+// key that had leaked or expired was to delete the credential and add it
+// again, which unlinked every model pointing at it (T-0100, D14). The row and
+// the Hermes .env variable move together, and if the .env write fails the row
+// is put back: half a rotation is a credential nobody can use.
+//
+// DELETE removes a provider credential.
 //
 // Every piece of this existed before the route did. `deleteCredential` was the
 // rollback path of POST /api/credentials, `removeCredentialFromHermesEnv` was
@@ -22,7 +30,8 @@
 // to remove exactly when removing it matters most.
 // ═══════════════════════════════════════════════════════════════
 
-import type { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 
 import { serverErrorFromCatch, logApiError } from "@/lib/api-logger";
 import { notFound, ok, methodNotAllowed } from "@/lib/api-response";
@@ -30,14 +39,91 @@ import { appendAuditLine } from "@/lib/audit-log";
 import {
   deleteCredential,
   getCredential,
+  getCredentialWithKey,
   listCredentials,
+  updateCredential,
 } from "@/lib/credentials-repository";
 import { listModels } from "@/lib/models-repository";
-import { removeCredentialFromHermesEnv } from "@/modules/hermes/lib/hermes-env-sync";
-import { isHermesProvider } from "@/modules/hermes/lib/providers";
+import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
+import {
+  removeCredentialFromHermesEnv,
+  syncCredentialToHermesEnv,
+} from "@/modules/hermes/lib/hermes-env-sync";
+import { envVarForProvider, isHermesProvider } from "@/modules/hermes/lib/providers";
 
 interface Ctx {
   params: Promise<{ id: string }>;
+}
+
+// The key and nothing else. `.trim()` before `.min(1)` so "   " is refused
+// here rather than reaching updateCredential, which reads a blank key as
+// "leave it alone" and would answer 200 to a rotation that never happened.
+// No provider and no label: a rotation replaces the secret, and letting it
+// move the provider would silently orphan the .env variable it wrote before.
+const credentialPatchSchema = z
+  .object({
+    apiKey: z.string().trim().min(1),
+  })
+  .strict();
+
+// No auth or read-only call here, and that is deliberate: src/proxy.ts
+// authenticates every request and refuses unsafe methods under PS_READ_ONLY
+// before a handler runs.
+export async function PATCH(request: NextRequest, ctx: Ctx) {
+  const { id } = await ctx.params;
+  const parsed = await parseAndValidateJsonBody(request, credentialPatchSchema);
+  if (parsed instanceof NextResponse) return parsed;
+  const apiKey = parsed.apiKey;
+
+  try {
+    // The previous key is read first, because it is what the restore below
+    // needs and it stops existing the moment the row is rewritten.
+    const existing = getCredentialWithKey(id);
+    if (!existing) return notFound("Credential not found");
+
+    const credential = updateCredential(id, { apiKey });
+    if (!credential) return notFound("Credential not found");
+
+    const provider = existing.provider;
+    let envVarUpdated = false;
+    try {
+      // A provider Hermes does not know, or one that authenticates by OAuth
+      // (nous), has no variable to write. Guarded rather than caught, because
+      // the sync throws on both and a throw here would roll back a rotation
+      // that was entirely successful.
+      if (isHermesProvider(provider) && envVarForProvider(provider)) {
+        syncCredentialToHermesEnv({ provider, apiKey });
+        envVarUpdated = true;
+      }
+    } catch (error) {
+      // Put the old key back. Hermes still holds the previous key, so leaving
+      // the new one in the row would give the operator a credential that reads
+      // as rotated and authenticates as nothing.
+      try {
+        updateCredential(id, { apiKey: existing.apiKey });
+      } catch (restoreError) {
+        logApiError(
+          "PATCH /api/credentials/[id]",
+          "restoring the previous key after a failed .env write",
+          restoreError,
+        );
+      }
+      throw error;
+    }
+
+    appendAuditLine({ action: "credential.rotate", resource: id, ok: true });
+
+    // The summary, never the key: this route's whole reason for having no GET
+    // is that no response in this surface carries one.
+    return ok({ credential, envVarUpdated });
+  } catch (error) {
+    return serverErrorFromCatch(
+      "PATCH /api/credentials/[id]",
+      `id=${id}`,
+      error,
+      "Failed to rotate credential",
+    );
+  }
 }
 
 export async function DELETE(_request: NextRequest, ctx: Ctx) {
@@ -101,5 +187,5 @@ export async function DELETE(_request: NextRequest, ctx: Ctx) {
 // per-credential read would exist only to tempt one into being added.
 export async function GET() {
   return methodNotAllowed(
-    "GET is not supported here — /api/credentials lists credentials without their keys", ["DELETE"]);
+    "GET is not supported here — /api/credentials lists credentials without their keys", ["PATCH", "DELETE"]);
 }

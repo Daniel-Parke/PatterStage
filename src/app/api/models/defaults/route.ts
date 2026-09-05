@@ -11,7 +11,7 @@ import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import { appendAuditLine } from "@/lib/audit-log";
 import { setDefaultPutSchema } from "@/lib/api-schemas";
 import { notFound, ok } from "@/lib/api-response";
-import { syncDefaultsToHermesConfig } from "@/modules/hermes/lib/config-sync";
+import { finalizeRootConfigOnDisk } from "@/modules/hermes/lib/config-sync";
 import { recordEvent } from "@/lib/analytics/record-event";
 
 export async function GET(_request: NextRequest) {
@@ -43,7 +43,12 @@ export async function PUT(request: NextRequest) {
     // cast is needed. (Session 53 dropped the z.enum widening cast on
     // taskTypeSchema.)
     const defaults = setDefaultModel(parsed.taskType, parsed.modelId);
-    syncDefaultsToHermesConfig();
+    // Through finalize, not the bare sync: it refreshes agent_root.config_yaml
+    // as well, so the next agent-root Push cannot reinstate a primary this
+    // request just cleared from a stale copy of the file (T-0100, D9).
+    const result = finalizeRootConfigOnDisk(
+      parsed.modelId === null ? { cleared: [parsed.taskType] } : {},
+    );
     appendAuditLine({
       action: "model.default.set",
       resource: `${parsed.taskType}=${parsed.modelId ?? "null"}`,
@@ -54,7 +59,9 @@ export async function PUT(request: NextRequest) {
       entityId: parsed.modelId ?? parsed.taskType,
       metadata: { taskType: parsed.taskType },
     });
-    return ok({ defaults });
+    // 200, not a 500: the database change IS saved. A refused yaml write is
+    // reported beside it rather than hidden behind a success (T-0095, D19).
+    return ok({ defaults, error: result.error ?? null });
   } catch (error) {
     if (error instanceof Error && /Model not found/.test(error.message)) {
       return notFound(error.message);

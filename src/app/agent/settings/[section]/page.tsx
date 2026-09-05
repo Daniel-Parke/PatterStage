@@ -18,6 +18,7 @@ import {
   getSectionDef,
   fileKeyForFilePath,
   resolveSectionRedirect,
+  validateSectionValues,
 } from "@/lib/config-schema";
 import { apiFetch, setErrorFromCaught } from "@/lib/api-fetch";
 import { parseEnvLine, envLineKey } from "@/lib/env-line";
@@ -150,6 +151,37 @@ export default function ConfigSectionPage() {
   );
 
   const hasChanges = isFileSection ? fileHasChanges : yamlHasChanges;
+
+  /**
+   * The editable keys whose value differs from what the page loaded.
+   *
+   * Only these are sent. A section save used to post every editable key it
+   * held, so one field the operator had never touched could carry a value
+   * from disk that the server now refuses, and the save of an unrelated
+   * field failed with a message about a field that was not being edited
+   * (T-0100, D77).
+   */
+  const changedValues = useMemo(() => {
+    if (isFileSection || !sectionDef) return {};
+    const out: Record<string, unknown> = {};
+    for (const field of sectionDef.fields) {
+      if (!(field.key in values)) continue;
+      if (JSON.stringify(values[field.key]) === JSON.stringify(originalValues[field.key])) continue;
+      out[field.key] = values[field.key];
+    }
+    return out;
+  }, [isFileSection, sectionDef, values, originalValues]);
+
+  /**
+   * The declared bounds, types and option lists, checked here as well as on
+   * the server. Only against what is about to be sent, so a value already on
+   * disk that this page cannot represent never blocks an unrelated save.
+   */
+  const fieldProblems = useMemo(
+    () => (sectionDef ? validateSectionValues(sectionDef.id, changedValues) : []),
+    [sectionDef, changedValues],
+  );
+  const problemSummary = fieldProblems.map((p) => p.message).join("; ");
   // File sections (.env, HERMES.md) PUT to /api/agent/files, not to
   // /api/config, so a config.yaml parse error is none of their business.
   // Gating them would strand an operator on the very editor they might be
@@ -208,17 +240,21 @@ export default function ConfigSectionPage() {
         });
         setOriginalFileContent(fileContent);
       } else {
-        const editableKeys = sectionDef.fields.map((f) => f.key);
-        const editableValues: Record<string, unknown> = {};
-        for (const key of editableKeys) {
-          if (key in values) editableValues[key] = values[key];
-        }
         const res = await apiFetch("/api/config", {
           method: "PUT",
-          body: JSON.stringify({ section: sectionId, values: editableValues }),
+          body: JSON.stringify({ section: sectionId, values: changedValues }),
         });
         if (!res?.data) throw new Error("Failed to save");
-        setOriginalValues({ ...values });
+        // A null the route honoured is a key that no longer exists in the
+        // file, so it must not linger in state either: left behind, the
+        // field would render set-to-null and the next diff would keep
+        // offering to delete a key that is already gone (T-0100, D78).
+        const settled: Record<string, unknown> = {};
+        for (const [key, value] of Object.entries(values)) {
+          if (value !== null) settled[key] = value;
+        }
+        setValues(settled);
+        setOriginalValues({ ...settled });
       }
       setSaveStatus("saved");
       // Clear any in-flight save-status timer from a prior save so
@@ -239,7 +275,7 @@ export default function ConfigSectionPage() {
       setSaveStatus("error");
       setErrorFromCaught(setError, err, "Save failed");
     }
-  }, [sectionDef, isFileSection, fileKey, fileContent, sectionId, values]);
+  }, [sectionDef, isFileSection, fileKey, fileContent, sectionId, values, changedValues]);
 
   const handleReset = useCallback(() => {
     if (isFileSection) {
@@ -318,8 +354,12 @@ export default function ConfigSectionPage() {
                 color={sectionDef.color}
                 size="sm"
                 onClick={handleSave}
-                disabled={!hasChanges || yamlSaveBlocked}
-                title={yamlSaveBlocked ? `config.yaml did not parse: ${configError}` : undefined}
+                disabled={!hasChanges || yamlSaveBlocked || fieldProblems.length > 0}
+                title={
+                  yamlSaveBlocked
+                    ? `config.yaml did not parse: ${configError}`
+                    : problemSummary || undefined
+                }
                 loading={saving}
                 icon={saveStatus === "saved" ? Check : Save}
               >

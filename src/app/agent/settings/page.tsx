@@ -24,6 +24,7 @@ import { SETTINGS_GROUPS, SETTINGS_TOOLS, settingsSectionIds } from "@/lib/confi
 import { pluralise } from "@/lib/utils";
 import { iconColorMap, colorBorderMap, badgeBgMap } from "@/lib/theme";
 import { useConfig } from "@/hooks/useConfig";
+import { ConfigYamlErrorAlert } from "@/components/config/ConfigYamlErrorAlert";
 import type { AccentColor } from "@/types/console";
 
 const TOOL_ICONS = { Globe, RotateCcw, Settings } as const;
@@ -68,8 +69,21 @@ function sectionMatches(section: SectionDef, q: string): boolean {
   );
 }
 
-function SectionCard({ section, config, q }: { section: SectionDef; config: Record<string, unknown> | null; q: string }) {
-  const sectionData = config?.[section.id] as Record<string, unknown> | undefined;
+function SectionCard({
+  section,
+  config,
+  q,
+  unreadable,
+}: {
+  section: SectionDef;
+  config: Record<string, unknown> | null;
+  q: string;
+  /** True when config.yaml did not parse, so "configured" would be a guess. */
+  unreadable: boolean;
+}) {
+  const sectionData = unreadable
+    ? undefined
+    : (config?.[section.id] as Record<string, unknown> | undefined);
   const fieldCount = section.fields.length;
   const hits = q ? matchingFields(section, q) : [];
 
@@ -110,7 +124,7 @@ function SectionCard({ section, config, q }: { section: SectionDef; config: Reco
 }
 
 export default function SettingsIndexPage() {
-  const { data: config, isLoading: loading, error, refetch } = useConfig();
+  const { data: config, isLoading: loading, error, refetch, configError } = useConfig();
   const [query, setQuery] = useState("");
   const q = query.trim().toLowerCase();
   const sectionCount = settingsSectionIds().length;
@@ -152,6 +166,15 @@ export default function SettingsIndexPage() {
         </div>
 
         {error && <LoadErrorBanner error={error} onRetry={() => void refetch()} hint="The cards still open; the 'configured' badges need the file to read." />}
+        {/* An unparseable config.yaml answers 200 with an empty object, which
+            is byte-identical to a fresh install. Said here, above the grid,
+            because this index is where an operator comes to fix it. */}
+        {configError && (
+          <ConfigYamlErrorAlert
+            message={configError}
+            detail="The sections below read as unconfigured because the file could not be parsed, not because it is empty. Section saves are disabled until it is repaired."
+          />
+        )}
         {loading && !config && <LoadingSpinner text="Reading config.yaml…" />}
 
         {tools.length > 0 && (
@@ -180,7 +203,13 @@ export default function SettingsIndexPage() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {group.sections.map((section) => (
-                <SectionCard key={section.id} section={section} config={config ?? null} q={q} />
+                <SectionCard
+                  key={section.id}
+                  section={section}
+                  config={config ?? null}
+                  q={q}
+                  unreadable={Boolean(configError)}
+                />
               ))}
             </div>
           </div>

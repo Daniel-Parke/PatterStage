@@ -25,7 +25,7 @@ import { type TaskType } from "@/lib/models/task-types";
 import type { SyncActionResult } from "@/lib/models/sync-result";
 import { pluralise } from "@/lib/utils";
 
-import type { ApiModel, ApiCredential } from "@/components/models/types";
+import { driftLineKey, type ApiModel, type ApiCredential, type DriftLine } from "@/components/models/types";
 
 type ToastFn = (message: string, type?: ToastType) => void;
 
@@ -33,14 +33,18 @@ export interface UseModelActionsArgs {
   loadAll: () => Promise<void>;
   setDefaults: Dispatch<SetStateAction<Record<TaskType, string | null>>>;
   showToast: ToastFn;
+  /** The registry row that is the agent default; the only model a push may write. */
+  agentDefaultId?: string | null;
 }
 
 export function useModelActions({
   loadAll,
   setDefaults,
   showToast,
+  agentDefaultId = null,
 }: UseModelActionsArgs) {
   const [busyCredentialId, setBusyCredentialId] = useState<string | null>(null);
+  const [busyDriftLine, setBusyDriftLine] = useState<string | null>(null);
   const [editing, setEditing] = useState<ModelEditorRecord | null | undefined>(
     undefined
   );
@@ -179,20 +183,63 @@ export function useModelActions({
     [loadAll, showToast],
   );
 
+  /**
+   * Replace one credential's key, in the row and in the agent's env file.
+   *
+   * The only way to change a key used to be to delete the credential and add
+   * it again, which unlinked every model pointing at it: an expired key cost
+   * the operator their model wiring (T-0100, D14). The route keeps the two
+   * copies together, so the toast reports the new hint and whether the env
+   * file moved with it.
+   */
+  const handleRotateCredential = useCallback(
+    async (credential: ApiCredential, apiKey: string) => {
+      setBusyCredentialId(credential.id);
+      try {
+        const res = await apiFetch<{
+          data?: { credential?: { keyHint?: string }; envVarUpdated?: boolean };
+        }>(`/api/credentials/${encodeURIComponent(credential.id)}`, {
+          method: "PATCH",
+          body: JSON.stringify({ apiKey }),
+        });
+        const hint = res?.data?.credential?.keyHint ?? "";
+        // Only said when it happened: a provider that authenticates by OAuth
+        // has no variable to write, and claiming otherwise would send the
+        // operator looking for a change that was never made.
+        const envNote = res?.data?.envVarUpdated ? "; Hermes .env updated" : "";
+        showToast(`Rotated ${credential.label}: now ${hint}${envNote}`, "success");
+        await loadAll();
+      } catch (err) {
+        toastError(showToast, err, "Rotate failed");
+      } finally {
+        setBusyCredentialId(null);
+      }
+    },
+    [loadAll, showToast],
+  );
+
   const handleSetDefault = useCallback(
     async (taskType: TaskType, modelId: string | null) => {
       setBusyTaskType(taskType);
       setDefaults((prev) => ({ ...prev, [taskType]: modelId }));
       try {
-        await apiFetch("/api/models/defaults", {
+        const res = await apiFetch<{ data?: { error?: string | null } }>("/api/models/defaults", {
           method: "PUT",
           body: JSON.stringify({ taskType, modelId }),
         });
         await loadAll();
-        showToast(
-          modelId ? `Default updated for ${taskType}` : `Cleared default for ${taskType}`,
-          "success"
-        );
+        // The route answers 200 with the yaml writer's refusal beside the
+        // saved defaults: the database change happened, the file's did not,
+        // and saying "Cleared" over that is the lie this replaces (T-0100, D9).
+        const refusal = res?.data?.error;
+        if (refusal) {
+          showToast(refusal, "error");
+        } else {
+          showToast(
+            modelId ? `Default updated for ${taskType}` : `Cleared default for ${taskType}`,
+            "success"
+          );
+        }
       } catch (err) {
         toastError(showToast, err, "Default update failed");
         await loadAll();
@@ -278,6 +325,77 @@ export function useModelActions({
     }
   }, [loadAll, showToast]);
 
+  /**
+   * Resolve one drift line by taking Hermes' side of it.
+   *
+   * A model Hermes has and the registry does not is a re-import. A primary
+   * disagreement where the Hermes model IS in the registry is not: importing
+   * would not move the default, so the fix is to make that row the agent
+   * default, which is the same write the defaults selector performs.
+   */
+  const handleDriftPull = useCallback(
+    async (line: DriftLine) => {
+      setBusyDriftLine(driftLineKey(line));
+      try {
+        if (line.kind === "primary" && line.registryId) {
+          await apiFetch("/api/models/defaults", {
+            method: "PUT",
+            body: JSON.stringify({ taskType: "agent", modelId: line.registryId }),
+          });
+        } else {
+          await apiFetch("/api/models/import", {
+            method: "POST",
+            // Bulk: walks the whole catalogue (T-0047).
+            timeoutMs: API_FETCH_BULK_TIMEOUT_MS,
+          });
+        }
+        await loadAll();
+        showToast("Pulled from Hermes", "success");
+      } catch (err) {
+        toastError(showToast, err, "Pull failed");
+      } finally {
+        setBusyDriftLine(null);
+      }
+    },
+    [loadAll, showToast],
+  );
+
+  /**
+   * Resolve one drift line by taking the registry's side of it.
+   *
+   * The push writes `config.model`, which is the agent default and nothing
+   * else, so that is the only id this ever sends. Without one there is
+   * nothing to write, and a POST carrying `modelId: null` would be answered
+   * with a 400 the operator cannot act on.
+   */
+  const handleDriftPush = useCallback(
+    async (line: DriftLine) => {
+      if (!agentDefaultId) {
+        showToast("Set an agent default model first, then push it to Hermes", "error");
+        return;
+      }
+      setBusyDriftLine(driftLineKey(line));
+      try {
+        const res = await apiFetch<{ data?: Partial<SyncActionResult> }>("/api/models/sync/push", {
+          method: "POST",
+          body: JSON.stringify({ modelId: agentDefaultId, pushCredential: false }),
+        });
+        const outcome = res?.data;
+        if (outcome?.success === false) {
+          showToast(outcome.details?.[0]?.detail || "Push failed", "error");
+          return;
+        }
+        await loadAll();
+        showToast("Pushed to Hermes", "success");
+      } catch (err) {
+        toastError(showToast, err, "Push failed");
+      } finally {
+        setBusyDriftLine(null);
+      }
+    },
+    [agentDefaultId, loadAll, showToast],
+  );
+
   return {
     editing,
     setEditing,
@@ -288,9 +406,13 @@ export function useModelActions({
     handleSaved,
     handleDelete,
     handleDeleteCredential,
+    handleRotateCredential,
     busyCredentialId,
     handleSetDefault,
     handleBulkAuxiliaryChange,
     handleRefresh,
+    handleDriftPull,
+    handleDriftPush,
+    busyDriftLine,
   };
 }

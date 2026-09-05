@@ -72,12 +72,15 @@ function importKeyFor(provider: string, modelId: string): string {
 // ── Config YAML parser ───────────────────────────────────────
 
 /**
- * Shape of the `model:` section of `~/.hermes/config.yaml`. Exported
- * so consumers (e.g. the diff endpoint) don't redeclare the same
- * 4-field shape — the snake_case keys are stable on disk and the
- * field set is the canonical projection of what Hermes writes.
+ * Shape of the `model:` section of `~/.hermes/config.yaml`. The snake_case
+ * keys are stable on disk and the field set is the canonical projection of
+ * what Hermes writes.
+ *
+ * No longer exported: the diff endpoint was its one outside consumer, and
+ * after T-0100 it compares field by field against the parsed document rather
+ * than passing the section around.
  */
-export interface ConfigModelSection {
+interface ConfigModelSection {
   default?: string;
   provider?: string;
   base_url?: string;
