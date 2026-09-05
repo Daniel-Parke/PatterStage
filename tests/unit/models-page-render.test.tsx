@@ -8,7 +8,7 @@
 import "@testing-library/jest-dom";
 import { render, screen, waitFor, within } from "@testing-library/react";
 
-import ModelsPage from "@/app/config/models/page";
+import ModelsPage from "@/app/agent/models/page";
 import { TASK_TYPES } from "@/lib/models/task-types";
 
 interface FetchResponseInit {

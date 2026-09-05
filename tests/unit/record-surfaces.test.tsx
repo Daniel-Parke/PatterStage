@@ -86,13 +86,13 @@ describe("SessionCard is a ledger row, not a rounded box", () => {
   it("still links to the transcript", () => {
     render(<SessionCard session={session({ id: "sess-42" })} />);
     const link = screen.getByRole("link", { name: /Triage the queue/ });
-    expect(link.getAttribute("href")).toBe("/sessions/sess-42");
+    expect(link.getAttribute("href")).toBe("/results/sessions/sess-42");
   });
 
   it("still links a mission-born session to its parent mission", () => {
     render(<SessionCard session={session({ missionId: "m-7" })} />);
     const badge = screen.getByTitle("Open parent mission");
-    expect(badge.getAttribute("href")).toBe("/orchestration/missions?mission=m-7");
+    expect(badge.getAttribute("href")).toBe("/work/missions?mission=m-7");
   });
 
   it("hides the size when the record has none, exactly as before", () => {
@@ -147,7 +147,7 @@ describe("MissionGroupCard keeps its grouping behaviour", () => {
     render(<MissionGroupCard group={group()} />);
     const link = screen.getByTitle("Open the parent mission");
     expect(link.getAttribute("href")).toBe(
-      "/orchestration/missions?mission=m-7abcdef012345",
+      "/work/missions?mission=m-7abcdef012345",
     );
   });
 

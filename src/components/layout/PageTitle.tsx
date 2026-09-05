@@ -11,10 +11,23 @@
 "use client";
 
 import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 
-export default function PageTitle({ title }: { title: string }) {
+import { labelFor } from "@/lib/modules/registry";
+
+/**
+ * The page's name, from the registry when the page passes none (T-0097, D55):
+ * the rail entry and the tab title are then the same word by construction.
+ */
+export function useRegistryTitle(title?: string): string {
+  const pathname = usePathname();
+  return title ?? labelFor(pathname ?? "/") ?? "";
+}
+
+export default function PageTitle({ title }: { title?: string }) {
+  const resolved = useRegistryTitle(title);
   useEffect(() => {
-    if (title) document.title = `${title} · PatterStage`;
-  }, [title]);
+    if (resolved) document.title = `${resolved} · PatterStage`;
+  }, [resolved]);
   return null;
 }

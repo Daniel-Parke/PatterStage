@@ -65,7 +65,7 @@ jest.mock("@/lib/api-fetch", () => ({
   API_FETCH_BULK_TIMEOUT_MS: 300_000,
 }));
 
-import SkillsPage from "@/app/operations/skills/page";
+import SkillsPage from "@/app/agent/skills/page";
 
 // ── Fixture ─────────────────────────────────────────────────────────────────
 

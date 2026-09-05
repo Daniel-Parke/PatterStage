@@ -1,18 +1,33 @@
 // ═══════════════════════════════════════════════════════════════
 // modules/registry.ts — the modules PatterStage ships (ADR-0005)
 //
-// One list. The sidebar and the e2e route matrix are both DERIVED from it, so
-// adding a surface no longer means editing a hardcoded array in core and then
-// remembering to mirror it into a test file by hand. (That mirror had already
-// drifted: it was missing /laboratory/artifacts.)
+// One list. The sidebar, the e2e route matrix and every page title are DERIVED
+// from it, so adding a surface no longer means editing a hardcoded array in
+// core and then remembering to mirror it into a test file by hand. (That
+// mirror had already drifted: it was missing /laboratory/artifacts.)
 //
 // `core` is the console itself — the verbs that are PatterStage's own job.
 // Everything else is a module, including the Hermes surface, which is what makes
 // the framework-agnostic claim testable rather than aspirational: a boundary
 // check can assert that nothing outside the hermes module knows Hermes' layout.
+//
+// THE MAP (T-0097). Five sections, verb-first, and the URLs renamed to match:
+//
+//   Home      /            /quests            /help
+//   Work      /work/chat   /work/missions     /work/composer   /work/research   /work/scripts
+//   Results   /results/sessions   /results/artifacts   /results/insights   /results/logs
+//   Agent     /agent/profiles (+ /agent/personalities)  /agent/skills  /agent/tools
+//             /agent/memory   /agent/models   /agent/settings (+ /restore, /system)
+//   Rec Room  /recroom/story-weaver/*
+//
+// The old paths answer 307 from next.config.ts for one release. The config
+// tree is not rail data any more: /agent/settings is the index, derived from
+// src/lib/config-sections.ts, and this file derives the section routes from
+// the same list so the e2e matrix still visits each one.
 // ═══════════════════════════════════════════════════════════════
 
 import type { AccentColor } from "@/types/console";
+import { settingsRoutes } from "@/lib/config-sections";
 import type { ProductModule } from "./types";
 import { moduleRoutes } from "./types";
 
@@ -25,28 +40,39 @@ const coreModule: ProductModule = {
   title: "Console",
   nav: [
     {
-      label: "Main",
+      label: "Home",
       links: [
-        { icon: "Zap", label: "Dashboard", href: "/", color: "cyan" },
-        { icon: "Clock", label: "Sessions", href: "/sessions", color: "orange" },
-        { icon: "Database", label: "Memory", href: "/memory", color: "pink" },
-        { icon: "ScrollText", label: "Logs", href: "/logs", color: "cyan" },
+        { icon: "Zap", label: "Dashboard", href: "/", color: "cyan", order: 1 },
+        { icon: "Trophy", label: "Quests", href: "/quests", color: "orange", order: 2 },
+        { icon: "LifeBuoy", label: "Help", href: "/help", color: "cyan", order: 3 },
       ],
     },
     {
-      label: "Orchestration",
+      label: "Work",
       links: [
-        { icon: "Rocket", label: "Missions", href: "/orchestration/missions", color: "cyan" },
+        { icon: "MessageCircle", label: "Chat", href: "/work/chat", color: "cyan", order: 1 },
+        { icon: "Rocket", label: "Missions", href: "/work/missions", color: "cyan", order: 2 },
         {
           icon: "Workflow",
           label: "Composer",
-          href: "/orchestration/composer",
+          href: "/work/composer",
           color: "purple",
+          order: 3,
           featureFlag: "composer",
         },
-        { icon: "Terminal", label: "Scripts", href: "/orchestration/scripts", color: "cyan" },
-        { icon: "MessageCircle", label: "Chat", href: "/orchestration/chat", color: "cyan" },
+        { icon: "Terminal", label: "Scripts", href: "/work/scripts", color: "cyan", order: 5 },
       ],
+    },
+    {
+      label: "Results",
+      links: [
+        { icon: "Clock", label: "Sessions", href: "/results/sessions", color: "orange", order: 1 },
+        { icon: "ScrollText", label: "Logs", href: "/results/logs", color: "cyan", order: 4 },
+      ],
+    },
+    {
+      label: "Agent",
+      links: [{ icon: "Database", label: "Memory", href: "/agent/memory", color: "pink", order: 5 }],
     },
   ],
 };
@@ -62,76 +88,33 @@ const hermesModule: ProductModule = {
   title: "Hermes",
   nav: [
     {
-      label: "Operations",
+      label: "Agent",
       links: [
-        { icon: "Bot", label: "Agents", href: "/operations/agents", color: "purple" },
-        { icon: "FileText", label: "Skills", href: "/operations/skills", color: "green" },
-        { icon: "Wrench", label: "Tools", href: "/operations/tools", color: "purple" },
-        { icon: "Sparkles", label: "Personalities", href: "/operations/personalities", color: "purple" },
-      ],
-    },
-  ],
-  configPinned: [
-    { icon: "Globe", label: "Models", href: "/config/models", color: "purple" },
-    { icon: "Cpu", label: "HERMES.md", href: "/config/hermes_md", color: "cyan" },
-    { icon: "Lock", label: "Environment", href: "/config/env", color: "orange" },
-  ],
-  configGroups: [
-    {
-      label: "Core",
-      defaultOpen: false,
-      links: [
-        { icon: "Cpu", label: "Agent", href: "/config/agent", color: "cyan" },
-        { icon: "RotateCcw", label: "Seed", href: "/config/seed", color: "cyan" },
-        { icon: "Activity", label: "Display", href: "/config/display", color: "green" },
-        { icon: "Layers", label: "Memory", href: "/config/memory", color: "pink" },
-      ],
-    },
-    {
-      label: "Infrastructure",
-      links: [
-        { icon: "Terminal", label: "Terminal", href: "/config/terminal", color: "orange" },
-        { icon: "HardDrive", label: "Compression", href: "/config/compression", color: "cyan" },
-        { icon: "Globe2", label: "Browser", href: "/config/browser", color: "green" },
-        { icon: "Zap", label: "Checkpoints", href: "/config/checkpoints", color: "cyan" },
-        { icon: "Code", label: "Code Execution", href: "/config/code_execution", color: "green" },
-        { icon: "ScrollText", label: "Logging", href: "/config/logging", color: "green" },
-      ],
-    },
-    {
-      label: "Security",
-      links: [
-        { icon: "Shield", label: "Security", href: "/config/security", color: "cyan" },
-        { icon: "Lock", label: "Privacy", href: "/config/privacy", color: "cyan" },
-        { icon: "ShieldCheck", label: "Approvals", href: "/config/approvals", color: "purple" },
-      ],
-    },
-    {
-      label: "Voice & Audio",
-      links: [
-        { icon: "AudioLines", label: "Text-to-Speech", href: "/config/tts", color: "pink" },
-        { icon: "Mic", label: "Speech-to-Text", href: "/config/stt", color: "purple" },
-        { icon: "Volume2", label: "Voice", href: "/config/voice", color: "pink" },
-      ],
-    },
-    {
-      label: "Automation",
-      links: [
-        { icon: "GitBranch", label: "Delegation", href: "/config/delegation", color: "green" },
-        { icon: "ListTodo", label: "Cron", href: "/config/cron", color: "orange" },
-        { icon: "RotateCcw", label: "Session Reset", href: "/config/session_reset", color: "orange" },
-        { icon: "FileText", label: "Skills", href: "/config/skills", color: "green" },
-      ],
-    },
-    {
-      label: "Integrations",
-      links: [
-        { icon: "MessageCircle", label: "Discord", href: "/config/discord", color: "purple" },
-        { icon: "Activity", label: "Streaming", href: "/config/streaming", color: "cyan" },
-        { icon: "Network", label: "Web", href: "/config/web", color: "green" },
-        { icon: "Settings2", label: "Platform Toolsets", href: "/config/platform_toolsets", color: "purple" },
-        { icon: "GitBranch", label: "Smart Routing", href: "/config/smart_model_routing", color: "purple" },
-        { icon: "Clock", label: "Human Delay", href: "/config/human_delay", color: "orange" },
+        {
+          icon: "Bot",
+          label: "Agents",
+          href: "/agent/profiles",
+          color: "purple",
+          order: 1,
+          // Personalities folds into Agents as its Identity tab in B9 (decision
+          // 11); until then it is a sub-link, which also keeps the rail inside
+          // a 720px viewport (tests/e2e/rail-no-scroll.spec.ts).
+          subLinks: [{ label: "Personalities", href: "/agent/personalities" }],
+        },
+        { icon: "FileText", label: "Skills", href: "/agent/skills", color: "green", order: 3 },
+        { icon: "Wrench", label: "Tools", href: "/agent/tools", color: "purple", order: 4 },
+        { icon: "Globe", label: "Models", href: "/agent/models", color: "purple", order: 6 },
+        {
+          icon: "Settings",
+          label: "Settings",
+          href: "/agent/settings",
+          color: "orange",
+          order: 7,
+          subLinks: [
+            { label: "Restore", href: "/agent/settings/restore" },
+            { label: "System", href: "/agent/settings/system" },
+          ],
+        },
       ],
     },
   ],
@@ -143,11 +126,14 @@ const laboratoryModule: ProductModule = {
   title: "Laboratory",
   nav: [
     {
-      label: "Laboratory",
+      label: "Work",
+      links: [{ icon: "Telescope", label: "Research", href: "/work/research", color: "cyan", order: 4 }],
+    },
+    {
+      label: "Results",
       links: [
-        { icon: "BarChart3", label: "Insights", href: "/laboratory/insights", color: "green" },
-        { icon: "Telescope", label: "Deep Research", href: "/laboratory/research", color: "cyan" },
-        { icon: "FileStack", label: "Artifacts", href: "/laboratory/artifacts", color: "orange" },
+        { icon: "FileStack", label: "Artifacts", href: "/results/artifacts", color: "orange", order: 2 },
+        { icon: "BarChart3", label: "Insights", href: "/results/insights", color: "green", order: 3 },
       ],
     },
   ],
@@ -170,6 +156,7 @@ const recRoomModule: ProductModule = {
           label: "Story Weaver",
           href: "/recroom/story-weaver",
           color: "purple",
+          order: 1,
           subLinks: [
             { label: "Library", href: "/recroom/story-weaver/library" },
             { label: "Create", href: "/recroom/story-weaver/create" },
@@ -182,7 +169,7 @@ const recRoomModule: ProductModule = {
   ],
 };
 
-/** Registration order is display order. */
+/** Registration order is display order within a section, after `order`. */
 export const MODULES: readonly ProductModule[] = [
   coreModule,
   hermesModule,
@@ -238,11 +225,47 @@ export const MODULE_ACCENTS = {
 } as const satisfies Record<string, AccentColor>;
 
 /**
- * Every route every module contributes, plus the config index itself.
- * Deduplicated and sorted so the e2e matrix is stable across reorderings.
+ * Every route every module contributes, plus the settings section routes the
+ * catalogue derives. Deduplicated and sorted so the e2e matrix is stable
+ * across reorderings.
  */
 export function allModuleRoutes(): string[] {
-  const routes = new Set<string>(["/config"]);
+  const routes = new Set<string>();
   for (const mod of MODULES) for (const route of moduleRoutes(mod)) routes.add(route);
+  for (const route of settingsRoutes()) routes.add(route);
   return [...routes].sort();
+}
+
+/** Every (href, label) pair the registry names, sub-links included. */
+function namedRoutes(): Array<{ href: string; label: string }> {
+  const out: Array<{ href: string; label: string }> = [];
+  for (const mod of MODULES) {
+    for (const section of mod.nav ?? []) {
+      for (const link of section.links) {
+        out.push({ href: link.href, label: link.label });
+        for (const sub of link.subLinks ?? []) out.push({ href: sub.href, label: sub.label });
+      }
+    }
+  }
+  return out;
+}
+
+/**
+ * The name of the page at `pathname`, from the registry, or null when no
+ * module owns the path. The longest owning href wins, so a detail path
+ * (`/results/sessions/abc`) reads as its list page and a Settings section
+ * (`/agent/settings/agent`) reads as Settings, while `/agent/settings/system`
+ * finds its own sub-link. PageHeader and PageTitle read this when a page
+ * passes no title, which is what makes the rail entry and the h1 one word
+ * (T-0097, D55).
+ */
+export function labelFor(pathname: string): string | null {
+  const path = pathname.split(/[?#]/)[0].replace(/\/+$/, "") || "/";
+  let best: { href: string; label: string } | null = null;
+  for (const entry of namedRoutes()) {
+    const owns = entry.href === "/" ? path === "/" : path === entry.href || path.startsWith(entry.href + "/");
+    if (!owns) continue;
+    if (!best || entry.href.length > best.href.length) best = entry;
+  }
+  return best?.label ?? null;
 }

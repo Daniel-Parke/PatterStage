@@ -401,11 +401,11 @@ export const CONFIG_SECTIONS: Record<string, SectionDef> = {
  * Values are FULL paths rather than section ids, because an alias may point
  * at a route that is not a CONFIG_SECTIONS entry at all: /config/models is
  * its own page and there is no `models` section. Anything derived from
- * CONFIG_SECTIONS therefore has to build `/config/<id>` itself rather than
+ * CONFIG_SECTIONS therefore has to build `/agent/settings/<id>` itself rather than
  * hand a bare id to the same consumer.
  */
 export const SECTION_ALIASES: Record<string, string> = {
-  model: "/config/models",
+  model: "/agent/models",
 };
 
 /**
@@ -449,7 +449,7 @@ export function getSectionDef(sectionId: string): SectionDef | null {
 }
 
 /**
- * Where an unknown `/config/<slug>` should be sent, or null to stay put and
+ * Where an unknown `/agent/settings/<slug>` should be sent, or null to stay put and
  * let the page offer the operator the whole list.
  *
  * The two ways this can do harm are both closed here rather than at the call
@@ -458,7 +458,7 @@ export function getSectionDef(sectionId: string): SectionDef | null {
  *
  * - It never redirects a slug that IS a section. That is the first check.
  * - It never sends a slug somewhere that redirects again. Every non-null
- *   result is either a literal SECTION_ALIASES value or `/config/<id>` for a
+ *   result is either a literal SECTION_ALIASES value or `/agent/settings/<id>` for a
  *   known id, and a known id returns null on the next hop, so one replace
  *   always terminates.
  *
@@ -479,19 +479,19 @@ export function resolveSectionRedirect(slug: string): string | null {
   //    rescues session-reset, platform-toolsets, code-execution,
   //    smart-model-routing, human-delay and hermes-md.
   const underscored = slug.replace(/-/g, "_");
-  if (ownValue(CONFIG_SECTIONS, underscored)) return `/config/${underscored}`;
+  if (ownValue(CONFIG_SECTIONS, underscored)) return `/agent/settings/${underscored}`;
 
   // 2. The label, slugified. "agent-settings" is exactly
   //    slugify("Agent Settings"), and the label is what the operator read on
   //    the card they were trying to reach; the id is the thing they never saw.
   const byLabel = ownValue(ID_BY_LABEL_SLUG, slug);
-  if (byLabel) return `/config/${byLabel}`;
+  if (byLabel) return `/agent/settings/${byLabel}`;
 
   // 3. A unique id prefix. Uniqueness is the whole rule.
   const prefixed = Object.keys(CONFIG_SECTIONS).filter((id) =>
     id.startsWith(underscored),
   );
-  if (prefixed.length === 1) return `/config/${prefixed[0]}`;
+  if (prefixed.length === 1) return `/agent/settings/${prefixed[0]}`;
 
   return null;
 }

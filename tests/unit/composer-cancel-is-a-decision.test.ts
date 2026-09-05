@@ -428,10 +428,12 @@ describe("migration 037 rebuilds the node table without losing anything", () => 
     expect(sql).not.toMatch(/CREATE TABLE composer_runs_new/);
   });
 
-  it("the head constant moves with it", () => {
-    expect(
-      require("fs").readFileSync(join(process.cwd(), "src", "lib", "db-schema.ts"), "utf-8"),
-    ).toMatch(/MIGRATION_HEAD_SCHEMA_VERSION = 37/);
+  it("the head constant moved with it, and has not moved back", () => {
+    // 037 raised the head to 37; later migrations raise it further (038 did in
+    // T-0097). What this holds is that the head never sits below this gate.
+    const src = require("fs").readFileSync(join(process.cwd(), "src", "lib", "db-schema.ts"), "utf-8") as string;
+    const m = /MIGRATION_HEAD_SCHEMA_VERSION = (\d+)/.exec(src);
+    expect(Number(m?.[1])).toBeGreaterThanOrEqual(37);
   });
 
   it("refuses to rebuild a drifted table rather than truncating it", () => {
@@ -495,7 +497,7 @@ describe("migration 037 rebuilds the node table without losing anything", () => 
 
 describe("the UI shows the cancel and its refusal", () => {
   const page = require("fs").readFileSync(
-    join(process.cwd(), "src", "app", "orchestration", "composer", "page.tsx"),
+    join(process.cwd(), "src", "app", "work", "composer", "page.tsx"),
     "utf-8",
   ) as string;
 

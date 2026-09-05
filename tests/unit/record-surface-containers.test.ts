@@ -52,14 +52,14 @@ const BUTTON = "@/components/ui/Button";
  * another agent's, and naming it here would make this file fail on their work.
  */
 const RECORD_SURFACES: ReadonlyArray<{ file: string; through: readonly string[] }> = [
-  { file: "app/(main)/sessions/page.tsx", through: [PANEL] },
+  { file: "app/results/sessions/page.tsx", through: [PANEL] },
   { file: "components/session/SessionCard.tsx", through: [LEDGER] },
   { file: "components/session/MissionGroupCard.tsx", through: [LEDGER] },
   { file: "components/logs/LogFilePicker.tsx", through: [PANEL, LEDGER] },
   { file: "components/logs/LogTerminal.tsx", through: [PANEL] },
   { file: "components/logs/LogRow.tsx", through: [LEDGER] },
   { file: "components/missions/MissionsList.tsx", through: [PANEL, LEDGER] },
-  { file: "app/operations/tools/page.tsx", through: [PANEL, BUTTON] },
+  { file: "app/agent/tools/page.tsx", through: [PANEL, BUTTON] },
 ];
 
 describe("the record surfaces go through the shared containers", () => {
@@ -136,7 +136,7 @@ describe("a surface that is genuinely a table is a table", () => {
   });
 
   it("and the page renders the reference through it", () => {
-    expect(read("app/operations/tools/page.tsx")).toContain(
+    expect(read("app/agent/tools/page.tsx")).toContain(
       "@/components/tools/ToolsetReferenceTable",
     );
   });

@@ -57,15 +57,18 @@ describe("the five sections, in order", () => {
     expect(hrefs("Home")).toEqual(["/", "/quests", "/help"]);
     expect(hrefs("Work")).toEqual(["/work/chat", "/work/missions", "/work/composer", "/work/research", "/work/scripts"]);
     expect(hrefs("Results")).toEqual(["/results/sessions", "/results/artifacts", "/results/insights", "/results/logs"]);
+    // Personalities is a sub-link of Agents until B9 folds it in (decision 11):
+    // one row fewer, which is what keeps the rail inside 720px.
     expect(hrefs("Agent")).toEqual([
       "/agent/profiles",
-      "/agent/personalities",
       "/agent/skills",
       "/agent/tools",
       "/agent/memory",
       "/agent/models",
       "/agent/settings",
     ]);
+    const agents = mainSections.find((s) => s.label === "Agent")!.links.find((l) => l.href === "/agent/profiles")!;
+    expect(agents.subLinks?.map((s) => s.href)).toEqual(["/agent/personalities"]);
     expect(hrefs("Rec Room")).toEqual(["/recroom/story-weaver"]);
   });
 
@@ -135,6 +138,7 @@ describe("labelFor: the one source of a page's name", () => {
     ["/agent/settings/restore", "Restore"],
     ["/agent/settings/system", "System"],
     ["/agent/models", "Models"],
+    ["/agent/personalities", "Personalities"],
     ["/recroom/story-weaver/create", "Create"],
     ["/recroom/story-weaver", "Story Weaver"],
     ["/quests", "Quests"],

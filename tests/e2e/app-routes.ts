@@ -12,10 +12,10 @@ export const APP_NAV_ROUTES: readonly string[] = allModuleRoutes();
 
 /** Config hub and YAML/file-backed section editors (subset of `APP_NAV_ROUTES`). */
 export const CONFIG_SECTION_ROUTES: readonly string[] = APP_NAV_ROUTES.filter(
-  (p) => p === "/config" || p.startsWith("/config/")
+  (p) => p === "/agent/settings" || p.startsWith("/agent/settings/")
 );
 
-/** Routes for navigation-matrix (avoids duplicating every `/config/*` visit; see `config-sections.spec.ts`). */
+/** Routes for navigation-matrix (avoids duplicating every `/agent/settings/*` visit; see `config-sections.spec.ts`). */
 export const APP_MATRIX_ROUTES: readonly string[] = APP_NAV_ROUTES.filter(
-  (p) => p === "/config" || !p.startsWith("/config/")
+  (p) => p === "/agent/settings" || !p.startsWith("/agent/settings/")
 );

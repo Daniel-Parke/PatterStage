@@ -1,11 +1,11 @@
 // ═══════════════════════════════════════════════════════════════
-// mission-deep-link.ts: resolving `/orchestration/missions?mission=<id>`
+// mission-deep-link.ts: resolving `/work/missions?mission=<id>`
 // ═══════════════════════════════════════════════════════════════
 //
 // Sessions know which mission produced them, so a session row carries an
 // "open the parent mission" affordance. Those four link sites
 // (SessionCard, MissionGroupCard, and two on the session transcript page)
-// pointed at `/orchestration/missions/<id>`, a route that has never
+// pointed at `/work/missions/<id>`, a route that has never
 // existed in this repository. Every one of them 404'd.
 //
 // There is no mission detail PAGE because a mission's detail is an
@@ -31,7 +31,7 @@ export type MissionDeepLink =
   | { kind: "missing"; missionId: string };
 
 /** The board's own URL, used to strip a consumed query param. */
-export const MISSIONS_PATH = "/orchestration/missions";
+export const MISSIONS_PATH = "/work/missions";
 
 /**
  * Resolve a `?mission=<id>` deep link against the missions that loaded.

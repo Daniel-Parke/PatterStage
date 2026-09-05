@@ -57,7 +57,7 @@ export default function AgentProfileHeader({
           Edit <strong className="text-ps-text-secondary">SOUL.md</strong> for voice and identity.
           Use <strong className="text-ps-text-secondary">config.yaml</strong> for skills.disabled and
           platform_toolsets. Session display presets:{" "}
-          <a href="/operations/personalities" className="text-neon-cyan hover:underline">
+          <a href="/agent/personalities" className="text-neon-cyan hover:underline">
             Personalities
           </a>
           .

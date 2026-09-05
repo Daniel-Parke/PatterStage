@@ -152,7 +152,7 @@ export function useMissionsData({
    *      interactively; the last-category write is a "fresh start"
    *      affordance reserved for the deep-link path below).
    *   2. `fetchData`'s template-apply path (the `?template=<id>`
-   *      deep-link from `/orchestration/missions?template=...`). This
+   *      deep-link from `/work/missions?template=...`). This
    *      site passes the explicit `cid` and writes it via
    *      `rememberLastCategory`, plus it also fires
    *      `window.history.replaceState(...)` to strip the query param

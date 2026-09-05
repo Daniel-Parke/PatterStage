@@ -1,6 +1,6 @@
 // The `?mission=<id>` deep link is the destination of every "open the parent
 // mission" affordance on the sessions surface. Those links used to point at
-// `/orchestration/missions/<id>`, a route this repository has never had, so
+// `/work/missions/<id>`, a route this repository has never had, so
 // all four of them 404'd. These cases pin the replacement's three outcomes,
 // including the one that is easy to get wrong: a link to a mission that is
 // gone must be distinguishable from no link at all, or the affordance goes

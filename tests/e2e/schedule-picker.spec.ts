@@ -9,7 +9,7 @@ import { test, expect } from "@playwright/test";
 
 test.describe("SchedulePicker (missions page)", () => {
   test("the schedule picker renders in the mission composer", async ({ page }) => {
-    await page.goto("/orchestration/missions");
+    await page.goto("/work/missions");
     // Open the new-mission composer
     await page.getByRole("button", { name: /New Mission/i }).first().click();
 

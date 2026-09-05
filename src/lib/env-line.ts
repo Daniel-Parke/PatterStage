@@ -56,7 +56,7 @@ export function parseEnvLine(line: string): EnvLine {
  * key safe for React's `key` prop (no whitespace, no special chars
  * that would force React to warn about complex keys).
  *
- * Single call site today (`/config/[section]/page.tsx` .env preview),
+ * Single call site today (`/agent/settings/[section]/page.tsx` .env preview),
  * but co-located with `parseEnvLine` so any future surface that
  * maps over .env lines (editor, linter, formatter) reuses the
  * identical key shape — keys from one surface stay stable when

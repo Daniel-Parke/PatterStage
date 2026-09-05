@@ -27,7 +27,7 @@ const mockReplace = jest.fn();
 jest.mock("next/navigation", () => ({
   useParams: () => mockUseParams(),
   useRouter: () => ({ push: jest.fn(), replace: mockReplace, back: jest.fn() }),
-  usePathname: () => "/config",
+  usePathname: () => "/agent/settings",
   useSearchParams: () => new URLSearchParams(),
   notFound: jest.fn(),
 }));
@@ -38,7 +38,7 @@ jest.mock("@/lib/api-fetch", () => ({
   setErrorFromCaught: jest.fn(),
 }));
 
-import ConfigSectionPage from "@/app/config/[section]/page";
+import ConfigSectionPage from "@/app/agent/settings/[section]/page";
 
 const IDS = Object.keys(CONFIG_SECTIONS);
 
@@ -68,7 +68,7 @@ async function renderLoadedSection(slug: string) {
 
 /** Every anchor on the page that points at a section route. */
 const sectionLinks = (): string[] =>
-  Array.from(document.querySelectorAll('a[href^="/config/"]')).map(
+  Array.from(document.querySelectorAll('a[href^="/agent/settings/"]')).map(
     (a) => a.getAttribute("href") ?? "",
   );
 
@@ -78,7 +78,7 @@ describe("Unknown config section: INV-7 the page lists what the operator could h
     await screen.findByText(/Unknown Config Section/i);
 
     const hrefs = new Set(sectionLinks());
-    const missing = IDS.filter((id) => !hrefs.has(`/config/${id}`));
+    const missing = IDS.filter((id) => !hrefs.has(`/agent/settings/${id}`));
     expect(missing).toEqual([]);
   });
 
@@ -110,23 +110,23 @@ describe("Unknown config section: INV-7 the page lists what the operator could h
     renderAt("totally-unknown-section");
     await screen.findByText(/Unknown Config Section/i);
 
-    expect(document.querySelector('a[href="/config"]')).not.toBeNull();
+    expect(document.querySelector('a[href="/agent/settings"]')).not.toBeNull();
   });
 });
 
 describe("Unknown config section: the nearest match redirects", () => {
   it("sends the reported guess agent-settings to /config/agent", async () => {
     renderAt("agent-settings");
-    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith("/config/agent"));
+    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith("/agent/settings/agent"));
   });
 
   it.each([
-    ["session-reset", "/config/session_reset"],
-    ["platform-toolsets", "/config/platform_toolsets"],
-    ["code-execution", "/config/code_execution"],
-    ["smart-model-routing", "/config/smart_model_routing"],
-    ["human-delay", "/config/human_delay"],
-    ["hermes-md", "/config/hermes_md"],
+    ["session-reset", "/agent/settings/session_reset"],
+    ["platform-toolsets", "/agent/settings/platform_toolsets"],
+    ["code-execution", "/agent/settings/code_execution"],
+    ["smart-model-routing", "/agent/settings/smart_model_routing"],
+    ["human-delay", "/agent/settings/human_delay"],
+    ["hermes-md", "/agent/settings/hermes_md"],
   ])("sends the hyphenated id %s to %s", async (slug, target) => {
     renderAt(slug);
     await waitFor(() => expect(mockReplace).toHaveBeenCalledWith(target));
@@ -134,7 +134,7 @@ describe("Unknown config section: the nearest match redirects", () => {
 
   it("keeps the pre-existing alias working: model goes to the models page", async () => {
     renderAt("model");
-    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith("/config/models"));
+    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith("/agent/models"));
   });
 
   it("shows a redirecting notice, not the full list, while the redirect is in flight", async () => {
@@ -158,7 +158,7 @@ describe("Unknown config section: the guards that must not change", () => {
 
   it("does not loop: the target of a redirect stays put when rendered", async () => {
     renderAt("agent-settings");
-    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith("/config/agent"));
+    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith("/agent/settings/agent"));
 
     mockReplace.mockClear();
     mockApiFetch.mockClear();

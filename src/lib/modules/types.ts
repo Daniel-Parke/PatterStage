@@ -15,10 +15,22 @@
 // so icons are named as STRINGS and resolved to components by the sidebar. The
 // hand-mirrored copy in tests/e2e/app-routes.ts was already stale when this was
 // written: it had lost /laboratory/artifacts entirely.
+//
+// THE FIVE SECTIONS (T-0097, decisions 8, 11, 12 and 14). A module contributes
+// links to sections it does not own: Research is Work beside Chat and Missions
+// though it belongs to the laboratory module; Artifacts and Insights are
+// Results beside Sessions and Logs. So the section is named from a fixed list
+// and every link carries an `order`, and the rail merges by section and sorts
+// by order. The config tree is no longer rail data: it is the Settings index,
+// derived from src/lib/config-sections.ts.
 // ═══════════════════════════════════════════════════════════════
 
 import type { AccentColor } from "@/types/console";
 import type { FeatureFlag } from "@/lib/feature-flags";
+
+/** The rail's sections, in the order the rail shows them. Home has no heading. */
+export const NAV_SECTIONS = ["Home", "Work", "Results", "Agent", "Rec Room"] as const;
+export type NavSectionLabel = (typeof NAV_SECTIONS)[number];
 
 /**
  * Icon names, resolved to lucide components by the sidebar. A string keeps this
@@ -34,7 +46,8 @@ export type IconName =
   | "RotateCcw" | "Activity" | "Layers" | "HardDrive"
   | "Globe2" | "Code" | "Shield" | "ShieldCheck"
   | "AudioLines" | "Mic" | "Volume2" | "GitBranch"
-  | "ListTodo" | "Network" | "Settings2";
+  | "ListTodo" | "Network" | "Settings2"
+  | "Settings" | "LifeBuoy";
 
 interface NavSubLink {
   label: string;
@@ -46,20 +59,15 @@ export interface NavLink {
   href: string;
   icon: IconName;
   color: AccentColor;
+  /** Position within its section, across modules. Unique per section. */
+  order: number;
   /** Hidden while this flag is disabled. */
   featureFlag?: FeatureFlag;
   subLinks?: NavSubLink[];
 }
 
 interface NavSection {
-  label: string;
-  links: NavLink[];
-}
-
-/** A collapsible group in the Config tree. */
-interface ConfigGroup {
-  label: string;
-  defaultOpen?: boolean;
+  label: NavSectionLabel;
   links: NavLink[];
 }
 
@@ -70,10 +78,6 @@ export interface ProductModule {
   title: string;
   /** Sidebar sections this module contributes, in order. */
   nav?: NavSection[];
-  /** Pinned entries above the Config tree. */
-  configPinned?: NavLink[];
-  /** Collapsible groups in the Config tree. */
-  configGroups?: ConfigGroup[];
   /** When set, the whole module disappears while the flag is off. */
   featureFlag?: FeatureFlag;
 }
@@ -81,12 +85,11 @@ export interface ProductModule {
 /** Every route a module contributes, including sub-links. Order is preserved. */
 export function moduleRoutes(mod: ProductModule): string[] {
   const out: string[] = [];
-  const push = (link: NavLink) => {
-    out.push(link.href);
-    for (const sub of link.subLinks ?? []) out.push(sub.href);
-  };
-  for (const section of mod.nav ?? []) section.links.forEach(push);
-  (mod.configPinned ?? []).forEach(push);
-  for (const group of mod.configGroups ?? []) group.links.forEach(push);
+  for (const section of mod.nav ?? []) {
+    for (const link of section.links) {
+      out.push(link.href);
+      for (const sub of link.subLinks ?? []) out.push(sub.href);
+    }
+  }
   return out;
 }

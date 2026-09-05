@@ -45,7 +45,7 @@ describe("ErrorBanner is retired", () => {
   it("is no longer exported and no longer imported", async () => {
     const mod = await import("@/components/ui/LoadingSpinner");
     expect("ErrorBanner" in mod).toBe(false);
-    for (const f of ["src/app/config/[section]/page.tsx", "src/app/config/models/page.tsx", "src/components/memory/hindsight/HealthBanner.tsx"]) {
+    for (const f of ["src/app/agent/settings/[section]/page.tsx", "src/app/agent/models/page.tsx", "src/components/memory/hindsight/HealthBanner.tsx"]) {
       const src = readFileSync(join(ROOT, f), "utf-8");
       expect({ f, uses: /\bErrorBanner\b/.test(src) }).toEqual({ f, uses: false });
     }

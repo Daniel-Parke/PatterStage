@@ -1,45 +1,73 @@
 // ═══════════════════════════════════════════════════════════════
-// Sidebar Navigation — main nav + config groups + deploy footer.
-// The branch dropdown, version/deploy footer, and collapsible config group
-// are extracted to sibling files (BranchDropdown / VersionFooter /
-// ConfigGroupSection); this file owns the layout + link rendering.
+// Sidebar Navigation — the rail, rendered ONCE
 //
-// Two things a keyboard user meets here (T-0096):
-//   D119: every link carries its label as an accessible name, so the
-//         collapsed rail is thirty named links rather than thirty "link"s.
-//   D120: the mobile drawer is `inert` while closed (a transform only moves
-//         it off screen and leaves every link in the tab order), and a dialog
-//         on the shared contract while open, above the header it slides over.
+// One <aside>. On a desktop it is the rail beside the page; on a phone it is
+// the drawer that slides over the page, a dialog on the shared contract while
+// open and inert while closed. It used to be rendered twice (a hidden desktop
+// copy and a hidden mobile copy), which is why the icon-button gate once
+// counted the rail's links twice and why a tab order on a phone began with
+// thirty invisible links (T-0096, D120; T-0097).
+//
+// The sections come from the registry through sidebar-config (five, in a
+// fixed order; Home has no heading); the config tree and the deploy buttons
+// are not here any more (decision 12): Settings is one entry, System holds
+// the deploy block, and the footer is a version line with an update badge.
+// The collapsed state is the operator's preference, kept in /api/prefs.
 // ═══════════════════════════════════════════════════════════════
 
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronRight, ChevronLeft, Terminal, Settings } from "lucide-react";
+import { ChevronRight, ChevronLeft, Terminal } from "lucide-react";
 
 import { useSidebar } from "./SidebarContext";
 import { useDialogA11y } from "@/hooks/useDialogA11y";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { iconColorMap } from "@/lib/theme";
+import { safeApiCall } from "@/lib/api-fetch";
 import { useFeatureFlags } from "@/hooks/useFeatureFlags";
-import { mainSections, configSettingsPinnedLinks, configGroups } from "./sidebar-config";
+import { mainSections } from "./sidebar-config";
 import type { SidebarLink } from "./sidebar-config";
-import { VersionFooter } from "./VersionFooter";
-import { ConfigGroupSection } from "./ConfigGroupSection";
+import { RailFooter } from "./RailFooter";
 
 function isActive(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";
-  return pathname.startsWith(href);
+  return pathname === href || pathname.startsWith(href + "/");
 }
 
 export default function Sidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const { mobileOpen, setMobileOpen } = useSidebar();
+  const isMobile = useIsMobile();
   const { data: flags } = useFeatureFlags();
   const closeMobile = useCallback(() => setMobileOpen(false), [setMobileOpen]);
-  const drawerRef = useDialogA11y({ open: mobileOpen, onClose: closeMobile });
+
+  // The drawer is a dialog while it is open on a phone, and only then.
+  const drawerOpen = isMobile && mobileOpen;
+  const drawerRef = useDialogA11y({ open: drawerOpen, onClose: closeMobile });
+
+  // The collapsed state is a preference: read once, written on each toggle.
+  // A failed read or write (read-only, offline) leaves the rail where it is.
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const res = await safeApiCall<{ data?: { prefs?: Record<string, unknown> } }>("/api/prefs");
+      if (cancelled || !res.ok) return;
+      const stored = res.data?.data?.prefs?.["sidebar.collapsed"];
+      if (typeof stored === "boolean") setCollapsed(stored);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  const toggleCollapsed = useCallback(() => {
+    const next = !collapsed;
+    setCollapsed(next);
+    void safeApiCall("/api/prefs", { method: "PUT", body: { key: "sidebar.collapsed", value: next } });
+  }, [collapsed]);
 
   // Flags default ON: hide a link only when its flag is explicitly disabled,
   // so the nav never flashes while flags load (or if the fetch fails).
@@ -48,19 +76,25 @@ export default function Sidebar() {
     [flags],
   );
 
+  // Icons only on a desktop rail the operator collapsed; the drawer is always full.
+  const iconsOnly = collapsed && !isMobile;
+
+  // Home's rows other than Dashboard (Quests, Help) render in the footer.
+  const utilityLinks = (mainSections.find((s) => s.label === "Home")?.links ?? []).filter((l) => l.href !== "/");
+
   const renderLink = useCallback(
     (link: SidebarLink) => {
       const active = isActive(pathname, link.href);
-      const showSubs = active && link.subLinks && !collapsed;
+      const showSubs = active && link.subLinks && !iconsOnly;
 
       return (
         <div key={link.href}>
           <Link
             href={link.href}
             aria-label={link.label}
-            title={collapsed ? link.label : undefined}
+            title={iconsOnly ? link.label : undefined}
             aria-current={active ? "page" : undefined}
-            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+            className={`flex items-center gap-2.5 px-3 py-[3px] rounded-md text-sm transition-colors ${
               active ? "bg-white/10 text-white" : "text-ps-text-muted hover:bg-white/5 hover:text-ps-text-primary"
             }`}
             onClick={closeMobile}
@@ -68,7 +102,7 @@ export default function Sidebar() {
             <link.icon
               className={`w-4 h-4 flex-shrink-0 ${active ? iconColorMap[link.color] : ""}`}
             />
-            {!collapsed && <span>{link.label}</span>}
+            {!iconsOnly && <span>{link.label}</span>}
           </Link>
           {showSubs && (
             <div className="ml-7 mt-1 space-y-0.5 border-l border-white/5 pl-3">
@@ -89,99 +123,13 @@ export default function Sidebar() {
         </div>
       );
     },
-    [pathname, collapsed, closeMobile],
-  );
-
-  const sidebarContent = (
-    <div className="flex flex-col h-full">
-      {/* Logo — min-height matches main app chrome (see --ps-shell-header-min-height) */}
-      <div className="px-4 min-h-[var(--ps-shell-header-min-height)] flex items-center border-b border-white/10">
-        <Link href="/" aria-label="PatterStage home" className="flex items-center gap-2" onClick={closeMobile}>
-          <div className="w-8 h-8 rounded-lg animated-border p-[1.5px]">
-            <div className="w-full h-full bg-dark-900 rounded-[5px] flex items-center justify-center">
-              <Terminal className="w-4 h-4 text-neon-cyan" />
-            </div>
-          </div>
-          {!collapsed && (
-            <div className="leading-tight">
-              <div className="text-sm font-bold tracking-tight text-white">
-                PatterStage
-              </div>
-              <div className="text-xs text-ps-text-muted mt-0.5">
-                The Stage is{" "}
-                <span className="font-bold text-neon-cyan text-glow-cyan">Yours</span>
-              </div>
-            </div>
-          )}
-        </Link>
-      </div>
-
-      {/* Main Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto" aria-label="Main">
-        {/* Main + Agent sections */}
-        {mainSections.map((section) => (
-          <div key={section.label}>
-            {!collapsed && (
-              <div className="text-xs font-mono text-ps-text-muted uppercase tracking-widest px-3 mb-2 mt-4 first:mt-0">
-                {section.label}
-              </div>
-            )}
-            {section.links.filter(linkVisible).map(renderLink)}
-          </div>
-        ))}
-
-        {/* Config Settings section */}
-        {!collapsed && (
-          <div className="text-xs font-mono text-ps-text-muted uppercase tracking-widest px-3 mb-2 mt-4">
-            Config Settings
-          </div>
-        )}
-        {collapsed && <div className="my-2 border-t border-white/10" />}
-        {configSettingsPinnedLinks.map((link) => renderLink(link))}
-
-        {/* All Settings link */}
-        {renderLink({ icon: Settings, label: "All Settings", href: "/config", color: "purple" })}
-
-        {/* Grouped config sections */}
-        {configGroups.map((group) => (
-          <ConfigGroupSection
-            key={group.label}
-            group={group}
-            collapsed={collapsed}
-            renderLink={renderLink}
-            pathname={pathname}
-          />
-        ))}
-      </nav>
-
-      {/* Footer */}
-      <div className="px-3 py-3 border-t border-white/10 space-y-2 flex-shrink-0">
-        <VersionFooter collapsed={collapsed} />
-        <button
-          type="button"
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          aria-expanded={!collapsed}
-          onClick={() => setCollapsed(!collapsed)}
-          className="hidden lg:flex items-center gap-2 w-full px-3 py-2 rounded-lg text-xs text-ps-text-muted hover:text-ps-text-secondary hover:bg-white/5 transition-colors font-mono"
-        >
-          {collapsed ? (
-            <ChevronRight className="w-4 h-4" />
-          ) : (
-            <>
-              <ChevronLeft className="w-4 h-4" />
-              <span>Collapse</span>
-            </>
-          )}
-        </button>
-      </div>
-    </div>
+    [pathname, iconsOnly, closeMobile],
   );
 
   return (
     <>
-      {/* Mobile backdrop: a real control with a name, not a div with a click
-          handler, so it is reachable and announced. Above the header (z-50). */}
-      {mobileOpen && (
+      {/* Mobile backdrop: a real control with a name, above the header (z-50). */}
+      {drawerOpen && (
         <button
           type="button"
           aria-label="Close navigation"
@@ -190,30 +138,102 @@ export default function Sidebar() {
         />
       )}
 
-      {/* Sidebar — desktop */}
-      <aside
-        className={`hidden lg:flex flex-col bg-dark-900/80 border-r border-white/10 backdrop-blur-xl transition-all duration-200 h-screen ${
-          collapsed ? "w-16" : "w-56"
-        }`}
-      >
-        {sidebarContent}
-      </aside>
-
-      {/* Sidebar — mobile drawer. `inert` while closed takes its thirty links
-          out of the tab order; open, it is the dialog the hook governs. */}
       <aside
         ref={drawerRef as React.RefObject<HTMLElement | null>}
-        role="dialog"
-        aria-modal="true"
-        aria-label="Navigation"
-        tabIndex={-1}
-        inert={!mobileOpen}
-        aria-hidden={!mobileOpen}
-        className={`lg:hidden fixed inset-y-0 left-0 z-[60] w-56 bg-dark-950 border-r border-white/10 transform transition-transform h-screen ${
+        data-testid="app-rail"
+        role={drawerOpen ? "dialog" : undefined}
+        aria-modal={drawerOpen ? "true" : undefined}
+        aria-label={drawerOpen ? "Navigation" : undefined}
+        tabIndex={drawerOpen ? -1 : undefined}
+        inert={isMobile && !mobileOpen}
+        aria-hidden={isMobile && !mobileOpen ? true : undefined}
+        className={`flex flex-col h-screen border-r border-white/10 backdrop-blur-xl transition-all duration-200 fixed inset-y-0 left-0 z-[60] w-56 bg-dark-950 transform ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+        } lg:static lg:z-auto lg:translate-x-0 lg:bg-dark-900/80 ${iconsOnly ? "lg:w-16" : "lg:w-56"}`}
       >
-        {sidebarContent}
+        {/* Logo — min-height matches main app chrome (see --ps-shell-header-min-height) */}
+        <div className="px-4 min-h-[var(--ps-shell-header-min-height)] flex items-center border-b border-white/10">
+          <Link href="/" aria-label="PatterStage home" className="flex items-center gap-2" onClick={closeMobile}>
+            <div className="w-8 h-8 rounded-lg animated-border p-[1.5px]">
+              <div className="w-full h-full bg-dark-900 rounded-[5px] flex items-center justify-center">
+                <Terminal className="w-4 h-4 text-neon-cyan" />
+              </div>
+            </div>
+            {!iconsOnly && (
+              <div className="leading-tight">
+                <div className="text-sm font-bold tracking-tight text-white">
+                  PatterStage
+                </div>
+                <div className="text-xs text-ps-text-muted mt-0.5">
+                  The Stage is{" "}
+                  <span className="font-bold text-neon-cyan text-glow-cyan">Yours</span>
+                </div>
+              </div>
+            )}
+          </Link>
+        </div>
+
+        {/* The five sections. Home carries no heading: it is where the rail
+            starts, and its Quests and Help rows sit in the footer below as the
+            plan's utility rows. Every pixel here is budgeted: the rail must
+            fit 720px without scrolling (tests/e2e/rail-no-scroll.spec.ts). */}
+        <nav className="flex-1 px-3 py-2 overflow-y-auto" aria-label="Main">
+          {mainSections.map((section) => (
+            <div key={section.label}>
+              {section.label !== "Home" && !iconsOnly && (
+                <div className="text-xs leading-4 font-mono text-ps-text-muted uppercase tracking-widest px-3 mb-0.5 mt-1.5">
+                  {section.label}
+                </div>
+              )}
+              {section.label !== "Home" && iconsOnly && <div className="my-1.5 border-t border-white/10" />}
+              {section.links
+                .filter(linkVisible)
+                .filter((link) => section.label !== "Home" || link.href === "/")
+                .map(renderLink)}
+            </div>
+          ))}
+        </nav>
+
+        {/* Footer: Quests and Help, then Collapse with the version or the update badge. */}
+        <div className="px-3 py-2 border-t border-white/10 space-y-1 flex-shrink-0">
+          <div className={`flex ${iconsOnly ? "flex-col items-center gap-1" : "gap-1"}`}>
+            {utilityLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                aria-label={link.label}
+                title={iconsOnly ? link.label : undefined}
+                aria-current={isActive(pathname, link.href) ? "page" : undefined}
+                onClick={closeMobile}
+                className={`flex items-center justify-center gap-1.5 rounded-md text-xs font-mono transition-colors ${
+                  isActive(pathname, link.href) ? "bg-white/10 text-white" : "text-ps-text-muted hover:bg-white/5 hover:text-ps-text-primary"
+                } ${iconsOnly ? "p-1.5" : "flex-1 px-2 py-1"}`}
+              >
+                <link.icon className="w-3.5 h-3.5 flex-shrink-0" />
+                {!iconsOnly && <span>{link.label}</span>}
+              </Link>
+            ))}
+          </div>
+          <div className={`flex items-center ${iconsOnly ? "flex-col gap-1" : "justify-between gap-2"}`}>
+            <button
+              type="button"
+              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+              aria-expanded={!collapsed}
+              onClick={toggleCollapsed}
+              className="hidden lg:flex items-center gap-1.5 px-2 py-1 rounded-md text-xs text-ps-text-muted hover:text-ps-text-secondary hover:bg-white/5 transition-colors font-mono"
+            >
+              {collapsed ? (
+                <ChevronRight className="w-4 h-4" />
+              ) : (
+                <>
+                  <ChevronLeft className="w-4 h-4" />
+                  <span>Collapse</span>
+                </>
+              )}
+            </button>
+            <RailFooter collapsed={iconsOnly} />
+          </div>
+        </div>
       </aside>
     </>
   );

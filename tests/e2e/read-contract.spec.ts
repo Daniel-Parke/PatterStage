@@ -9,16 +9,16 @@ import { test, expect, type Page } from "@playwright/test";
 const READY = { timeout: 30_000 } as const;
 
 const PAGES: Array<{ path: string; api: string; empty: RegExp | null }> = [
-  { path: "/orchestration/composer", api: "**/api/composer/runs*", empty: /No workflow runs yet/ },
-  { path: "/orchestration/missions", api: "**/api/missions*", empty: /No missions yet/ },
-  { path: "/operations/agents", api: "**/api/agent/profiles", empty: null },
+  { path: "/work/composer", api: "**/api/composer/runs*", empty: /No workflow runs yet/ },
+  { path: "/work/missions", api: "**/api/missions*", empty: /No missions yet/ },
+  { path: "/agent/profiles", api: "**/api/agent/profiles", empty: null },
   { path: "/recroom/story-weaver", api: "**/api/stories", empty: /Your story awaits/ },
   { path: "/recroom/story-weaver/library", api: "**/api/stories", empty: /bookshelf is empty/ },
   { path: "/recroom/story-weaver/characters", api: "**/api/stories", empty: /No characters yet/ },
   { path: "/recroom/story-weaver/themes", api: "**/api/stories", empty: /No saved themes yet/ },
-  { path: "/laboratory/research", api: "**/api/laboratory/research", empty: /No research runs yet/ },
-  { path: "/laboratory/artifacts", api: "**/api/artifacts*", empty: /No artifacts yet/ },
-  { path: "/orchestration/chat", api: "**/api/chat", empty: /No conversations yet/ },
+  { path: "/work/research", api: "**/api/laboratory/research", empty: /No research runs yet/ },
+  { path: "/results/artifacts", api: "**/api/artifacts*", empty: /No artifacts yet/ },
+  { path: "/work/chat", api: "**/api/chat", empty: /No conversations yet/ },
 ];
 
 async function breakRead(page: Page, api: string) {

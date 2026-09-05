@@ -30,7 +30,7 @@ import type { ComponentProps } from "react";
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 
 import { renderWithQuery } from "../helpers/render-with-query";
-import SessionsPage from "@/app/(main)/sessions/page";
+import SessionsPage from "@/app/results/sessions/page";
 import SessionInsights from "@/components/session/SessionInsights";
 import type { SessionRecord } from "@/lib/sessions/session-repository";
 

@@ -52,13 +52,13 @@ describe("module registry", () => {
     const core = getModule("core")!;
     const composer = core.nav!
       .flatMap((s) => s.links)
-      .find((l) => l.href === "/orchestration/composer");
+      .find((l) => l.href === "/work/composer");
     expect(composer?.featureFlag).toBe("composer");
   });
 
   // The regression that motivated the registry.
   it("covers /laboratory/artifacts", () => {
-    expect(allModuleRoutes()).toContain("/laboratory/artifacts");
+    expect(allModuleRoutes()).toContain("/results/artifacts");
   });
 });
 
@@ -67,9 +67,9 @@ describe("every page is reachable from the registry", () => {
    * Pages that legitimately have no nav entry: dynamic detail routes reached by
    * clicking a row, and the config index which the sidebar renders itself.
    */
-  const EXEMPT = new Set<string>([
-    "/config", // rendered by the sidebar as "All Settings"
-  ]);
+  // Nothing is exempt any more: the Settings index is a registry route since
+  // the regroup (T-0097), so every static page has a rail entry.
+  const EXEMPT = new Set<string>([]);
 
   function pageRoutes(dir: string, prefix = ""): string[] {
     const out: string[] = [];
@@ -108,7 +108,7 @@ describe("every page is reachable from the registry", () => {
     const pages = new Set(pageRoutes(join(process.cwd(), "src", "app")));
     // /config/<section> is one dynamic page serving many sections.
     const orphans = allModuleRoutes().filter(
-      (r) => !pages.has(r) && !r.startsWith("/config/"),
+      (r) => !pages.has(r) && !r.startsWith("/agent/settings/"),
     );
     expect(orphans).toEqual([]);
   });

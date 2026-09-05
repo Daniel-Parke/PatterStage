@@ -255,7 +255,8 @@ describe("Settings > System", () => {
 
   it("has a place for backups, saying they are not here yet", async () => {
     render(withQuery(<SystemPage />));
-    expect(screen.getByText(/backups/i)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /^backups$/i })).toBeInTheDocument();
+    expect(screen.getByText(/not here yet/i)).toBeInTheDocument();
   });
 
   it("renders the runtime read's failure as an error with Retry, never an empty card", async () => {

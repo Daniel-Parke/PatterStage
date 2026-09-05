@@ -45,7 +45,7 @@ test.describe("Scheduling a mission", () => {
     });
     expect(saved.ok()).toBeTruthy();
 
-    await page.goto("/orchestration/missions");
+    await page.goto("/work/missions");
     await expect(page.getByRole("heading", { name: "Missions", exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: /New Mission/i })).toBeVisible();
 
@@ -116,10 +116,10 @@ test.describe("Scheduling a mission", () => {
     });
   });
 
-  test("reach Scripts from the Orchestration sidebar", async ({ page }) => {
-    await page.goto("/orchestration/missions");
+  test("reach Scripts from the Work section of the rail", async ({ page }) => {
+    await page.goto("/work/missions");
     await page.getByRole("link", { name: "Scripts", exact: true }).first().click();
-    await expect(page).toHaveURL(/\/orchestration\/scripts$/);
+    await expect(page).toHaveURL(/\/work\/scripts$/);
     await expect(page.getByRole("heading", { name: "Scripts", exact: true })).toBeVisible();
   });
 });

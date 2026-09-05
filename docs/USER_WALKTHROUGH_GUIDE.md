@@ -1882,7 +1882,9 @@ Today every artifact is inline text. The schema is already future-proofed for re
 
 ## Sidebar deploy buttons (Update / Rebuild / Restart)
 
-The three buttons at the bottom of the sidebar (**Update**, **Restart**, and **Rebuild**) run the host's deploy runner and rebuild / restart the running PatterStage process. That runner is `scripts/tooling/ps-deploy.mjs`, a cross-platform Node script; `scripts/application/ps-deploy.sh` still exists but is now a thin wrapper around it, and it is the `.mjs` path the API checks for and names when it is missing. The full deployment story is in [DEPLOY.md](DEPLOY.md); this section is the user-side walkthrough.
+> Since the final-release regroup these three buttons live on **Settings › System** (`/agent/settings/system`), not at the bottom of the sidebar; the sidebar keeps a version line and an "Update available" badge that links there. The behaviour below is unchanged.
+
+The three buttons (**Update**, **Restart**, and **Rebuild**) run the host's deploy runner and rebuild / restart the running PatterStage process. That runner is `scripts/tooling/ps-deploy.mjs`, a cross-platform Node script; `scripts/application/ps-deploy.sh` still exists but is now a thin wrapper around it, and it is the `.mjs` path the API checks for and names when it is missing. The full deployment story is in [DEPLOY.md](DEPLOY.md); this section is the user-side walkthrough.
 
 ### What you see
 

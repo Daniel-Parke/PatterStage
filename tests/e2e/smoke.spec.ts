@@ -8,14 +8,14 @@ test.describe("Smoke", () => {
   });
 
   test("missions page loads", async ({ page }) => {
-    await page.goto("/orchestration/missions");
+    await page.goto("/work/missions");
     await expect(
       page.getByRole("heading", { name: "Missions", exact: true })
     ).toBeVisible();
   });
 
   test("scripts page loads", async ({ page }) => {
-    await page.goto("/orchestration/scripts");
+    await page.goto("/work/scripts");
     await expect(
       page.getByRole("heading", { name: "Scripts", exact: true })
     ).toBeVisible();

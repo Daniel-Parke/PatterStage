@@ -16,13 +16,15 @@ jest.mock("@/lib/api-fetch", () => ({
   toastError: jest.fn(),
   safeApiCall: jest.fn(),
 }));
-jest.mock("next/navigation", () => ({ useRouter: () => ({ push: jest.fn() }) }));
+// usePathname as well: page headers read the registry's label for the current
+// path since T-0097, so a page render needs a path to be at.
+jest.mock("next/navigation", () => ({ useRouter: () => ({ push: jest.fn() }), usePathname: () => "/agent/personalities" }));
 jest.mock("@/components/ui/Toast", () => ({
   useToast: () => ({ showToast: jest.fn(), toasts: [], lastResult: null, dismiss: jest.fn() }),
   LastResult: () => null,
 }));
 
-import PersonalitiesPage from "@/app/operations/personalities/page";
+import PersonalitiesPage from "@/app/agent/personalities/page";
 
 beforeEach(() => {
   jest.clearAllMocks();

@@ -415,7 +415,6 @@ function CreateStoryPage() {
 
       <PageHeader
         icon={Sparkles}
-        title="Create Story"
         color="purple"
         backHref="/recroom/story-weaver"
         backLabel="STORY WEAVER"

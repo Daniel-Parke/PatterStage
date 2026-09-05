@@ -14,7 +14,7 @@ import { test, expect } from "@playwright/test";
 const uniq = (p: string) => `${p}-${Date.now()}-${Math.floor(Math.random() * 1e4)}`;
 
 async function openComposer(page: import("@playwright/test").Page) {
-  await page.goto("/orchestration/missions");
+  await page.goto("/work/missions");
   await expect(page.getByRole("heading", { name: "Missions", exact: true })).toBeVisible();
   await page.getByRole("button", { name: /New Mission/i }).click();
   await expect(page.getByPlaceholder("e.g., Research quantum computing trends")).toBeVisible({
@@ -87,7 +87,7 @@ test.describe("Missions page flows", () => {
 
   test("create a category via Manage categories", async ({ page }) => {
     const cat = uniq("e2e-cat");
-    await page.goto("/orchestration/missions");
+    await page.goto("/work/missions");
     await page.getByRole("button", { name: /Manage categories/i }).click();
     await expect(page.getByRole("heading", { name: /Manage categories/i })).toBeVisible();
     await page.getByPlaceholder("Category name").fill(cat);

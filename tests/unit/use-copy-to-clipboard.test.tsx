@@ -194,7 +194,7 @@ const PERSONALITIES_PATH = join(
   REPO_ROOT,
   "src",
   "app",
-  "operations",
+  "agent",
   "personalities",
   "page.tsx",
 );

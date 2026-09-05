@@ -14,7 +14,7 @@ test.describe("Missions stats strip at 1280px", () => {
     });
     expect(created.ok()).toBeTruthy();
 
-    await page.goto("/orchestration/missions");
+    await page.goto("/work/missions");
     await expect(page.getByRole("heading", { name: "Missions", exact: true })).toBeVisible();
 
     const labels = ["Total", "Active", "Done", "Failed"];

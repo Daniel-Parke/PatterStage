@@ -49,19 +49,45 @@ const nextConfig: NextConfig = {
   // unaffected: allowedDevOrigins applies to `next dev` only.
   allowedDevOrigins: ["localhost", "127.0.0.1", "[::1]", "*.local", ...extraOrigins],
 
-  // Insights moved under the Laboratory section. Keep the old top-level URL
-  // working (bookmarks, external links) via a permanent redirect.
+  // Every page path moved in the final-release regroup (T-0097, decision 8):
+  // WORK, RESULTS and AGENT replace orchestration, laboratory, operations, the
+  // config tree and the four top-level pages. Each old path answers a 307 to
+  // its new address for one release, query string intact.
   //
-  // There is deliberately NO /benchmarks entry. It used to redirect to
-  // /laboratory/benchmarks, and `4935ac31 feat!: delete the benchmark
-  // subsystem` deleted the page it pointed at, so the redirect had been
-  // sending every visitor to a 404. A 308 is the worst possible way to reach
-  // one: browsers cache a permanent redirect indefinitely, so the dead hop
-  // survives even after the URL is put back. An honest 404 at /benchmarks is
-  // strictly better than a permanent redirect into a 404.
+  // 307, NEVER 308. Browsers cache a permanent redirect indefinitely, and this
+  // repository has already shipped one into a 404: /benchmarks used to 308 to
+  // /laboratory/benchmarks, `4935ac31 feat!: delete the benchmark subsystem`
+  // deleted the page, and the dead hop outlived the URL. There is deliberately
+  // still no /benchmarks entry; an honest 404 beats a permanent redirect into
+  // one. tests/unit/b3-old-paths-redirect.test.ts holds every entry here to
+  // `permanent: false`.
+  //
+  // The specific /config paths sit ABOVE the generic /config/:section, because
+  // Next matches in order and Models and Seed do not live under Settings.
   async redirects() {
+    const temporary = (source: string, destination: string) => ({ source, destination, permanent: false });
     return [
-      { source: "/insights", destination: "/laboratory/insights", permanent: true },
+      temporary("/orchestration/chat", "/work/chat"),
+      temporary("/orchestration/missions", "/work/missions"),
+      temporary("/orchestration/composer", "/work/composer"),
+      temporary("/orchestration/scripts", "/work/scripts"),
+      temporary("/laboratory/research", "/work/research"),
+      temporary("/sessions", "/results/sessions"),
+      temporary("/sessions/:id", "/results/sessions/:id"),
+      temporary("/laboratory/artifacts", "/results/artifacts"),
+      temporary("/laboratory/insights", "/results/insights"),
+      temporary("/insights", "/results/insights"),
+      temporary("/logs", "/results/logs"),
+      temporary("/operations/agents", "/agent/profiles"),
+      temporary("/operations/skills", "/agent/skills"),
+      temporary("/operations/skills/:path*", "/agent/skills/:path*"),
+      temporary("/operations/tools", "/agent/tools"),
+      temporary("/operations/personalities", "/agent/personalities"),
+      temporary("/memory", "/agent/memory"),
+      temporary("/config/models", "/agent/models"),
+      temporary("/config/seed", "/agent/settings/restore"),
+      temporary("/config", "/agent/settings"),
+      temporary("/config/:section", "/agent/settings/:section"),
     ];
   },
 };

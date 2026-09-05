@@ -71,7 +71,7 @@ jest.mock("@/lib/api-fetch", () => ({
   toastError: jest.fn(),
 }));
 
-import SkillsPage from "@/app/operations/skills/page";
+import SkillsPage from "@/app/agent/skills/page";
 import { pageSlice } from "@/lib/skills-page-helpers";
 import type { Skill } from "@/types/console";
 

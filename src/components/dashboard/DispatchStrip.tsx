@@ -34,7 +34,7 @@ import type { AccentColor } from "@/types/console";
  * seam. Exported because it is the thing the unit test asserts.
  */
 export function composeTemplateUrl(templateId: string): string {
-  return `/orchestration/missions?template=${templateId}&compose=1`;
+  return `/work/missions?template=${templateId}&compose=1`;
 }
 
 export interface DispatchStripProps {
@@ -79,7 +79,7 @@ export default function DispatchStrip({ templates, categories }: DispatchStripPr
         </div>
         <div className="flex items-center gap-2">
           <Link
-            href="/orchestration/missions"
+            href="/work/missions"
             onClick={(e) => e.stopPropagation()}
             className="text-xs font-mono text-neon-cyan hover:underline flex items-center gap-1"
           >

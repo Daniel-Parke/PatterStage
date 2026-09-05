@@ -7,9 +7,9 @@
     "seedPack"
   ],
   "surfaces": {
-    "appConfig": "21a2a859930976a0ecf737d0edbc8bfdbba5dbc9232272bad467a5fc1a82b1c9",
-    "generatedArtefacts": "05d1e62efc44c5daeda9ba826c7c9b8b8dfaf2c5b9eed8df4a97ea1070efa21b",
-    "httpSurface": "f8cf673d72597481b72c24597a686e9a934cbd463584645a33fe7472bfc84940",
+    "appConfig": "ba8d7d0a96d603e5447c910e1fd2d9cc301192495800abcc0bb082c654a464ac",
+    "generatedArtefacts": "4af2fe336ea3acbb651dd3846d4107b1fd367f2bd53dbaddc2f2b15ff0ac5228",
+    "httpSurface": "4d632122dbb23e6b9db4b668b41c45f3b0afa1cc404ef63ed2046fb64314457a",
     "seedPack": "1b02d9fecf97d1fa06efb71b718c4d53d1c8368a4a3cae256a44c53b9f03ac65"
   }
 }

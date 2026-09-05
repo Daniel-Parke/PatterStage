@@ -43,7 +43,7 @@ export default function ActiveMissionsPanel({
         accent="cyan"
         count={`(${missions.length})`}
         rightSlot={
-          <Link href="/orchestration/missions" className="text-xs font-mono text-neon-cyan hover:underline flex items-center gap-1">
+          <Link href="/work/missions" className="text-xs font-mono text-neon-cyan hover:underline flex items-center gap-1">
             all missions <ChevronRight className="w-3 h-3" />
           </Link>
         }
@@ -60,11 +60,11 @@ export default function ActiveMissionsPanel({
                 status={m.status === "dispatched" ? "online" : "warning"}
                 pulse={m.status === "dispatched"}
               />
-              <Link href="/orchestration/missions" className="text-xs text-ps-text-primary truncate hover:text-neon-cyan transition-colors">{m.name}</Link>
+              <Link href="/work/missions" className="text-xs text-ps-text-primary truncate hover:text-neon-cyan transition-colors">{m.name}</Link>
               <span className="text-xs font-mono text-ps-text-muted capitalize">{m.dispatchMode}</span>
               {m.latestSession ? (
                 <Link
-                  href={`/sessions/${m.latestSession.id}`}
+                  href={`/results/sessions/${m.latestSession.id}`}
                   className="text-xs font-mono text-ps-text-faint hover:text-neon-cyan transition-colors"
                   title="View session"
                 >

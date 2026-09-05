@@ -35,7 +35,7 @@ jest.mock("@/lib/api-fetch", () => ({
   setErrorFromCaught: jest.fn(),
 }));
 
-import LogsPage from "@/app/(main)/logs/page";
+import LogsPage from "@/app/results/logs/page";
 
 const AVAILABLE = [
   { name: "hermes", size: 10, modified: "2026-08-31T11:00:00Z" },

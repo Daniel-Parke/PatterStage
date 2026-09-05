@@ -439,7 +439,7 @@ describe("the UI shows the refusal instead of swallowing it", () => {
     // canvas, and the behaviour that matters here (a 400 becomes visible text)
     // is asserted end-to-end by the route tests above plus this wiring check.
     const page = require("fs").readFileSync(
-      join(process.cwd(), "src", "app", "orchestration", "composer", "page.tsx"),
+      join(process.cwd(), "src", "app", "work", "composer", "page.tsx"),
       "utf-8",
     ) as string;
     const fn = page.slice(page.indexOf("async function decideGate"));

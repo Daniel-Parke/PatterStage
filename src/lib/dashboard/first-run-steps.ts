@@ -89,7 +89,7 @@ export function firstRunSteps(facts: FirstRunFacts): FirstRunStep[] {
         facts.missionCount > 0
           ? "Missions are how you give the agent work. Compose, schedule and cancel them here."
           : "Pick one of the bundled templates, review the prompt it fills in, and send it.",
-      href: "/orchestration/missions",
+      href: "/work/missions",
       external: false,
       done: facts.missionCount > 0,
     },
@@ -100,7 +100,7 @@ export function firstRunSteps(facts: FirstRunFacts): FirstRunStep[] {
         facts.sessionCount > 0
           ? "Every run leaves a transcript you can read back."
           : "Once a run finishes, its full transcript shows up in the session browser.",
-      href: "/sessions",
+      href: "/results/sessions",
       external: false,
       done: facts.sessionCount > 0,
     },

@@ -265,7 +265,8 @@ export default function Dashboard() {
               active agent framework (Hermes today — the sole AgentRuntime
               implementation, see src/lib/runtime/types.ts) plus the model. */}
           <h1 className="text-xl font-bold tracking-tight flex items-baseline gap-2">
-            <span className="text-neon-cyan text-glow-cyan">Hermes</span>
+            {/* The framework's name from the frameworks row, not a literal (T-0097, D56). */}
+            <span className="text-neon-cyan text-glow-cyan">{agentName}</span>
             <span className="hidden sm:inline text-xs font-normal font-mono text-ps-text-muted uppercase tracking-wider">
               Agent Framework
             </span>
@@ -327,7 +328,7 @@ export default function Dashboard() {
                 label="Processes"
                 value={activeProcesses.length > 0 ? `${activeProcesses.length} Active` : status?.soulFile ? "Idle" : "Offline"}
                 color={activeProcesses.length > 0 ? "green" : status?.soulFile ? "cyan" : "pink"}
-                href="/operations/agents"
+                href="/agent/profiles"
               />
               <StatPill
                 icon={Activity}
@@ -335,7 +336,7 @@ export default function Dashboard() {
                 value={monitor.sessions.total.toLocaleString()}
                 color="purple"
                 subtitle={sessionWindowSubtitle}
-                href="/sessions"
+                href="/results/sessions"
                 trend={sessionTrend}
                 trendColor="purple"
               />
@@ -344,7 +345,7 @@ export default function Dashboard() {
                 label={`Memory · ${monitor.memory.provider || "Not Installed"}`}
                 value={monitor.memory.factCount >= 0 ? `${monitor.memory.factCount} facts` : "0 facts"}
                 color="pink"
-                href="/memory"
+                href="/agent/memory"
               />
               <StatPill
                 icon={Timer}
@@ -375,7 +376,7 @@ export default function Dashboard() {
                 <>
                   Latest session {timeAgo(monitor.sessions.recent[0].modified)}{" "}
                   <Link
-                    href={"/sessions/" + monitor.sessions.recent[0].id}
+                    href={"/results/sessions/" + monitor.sessions.recent[0].id}
                     className="text-neon-cyan hover:underline font-mono text-xs"
                   >
                     open transcript
@@ -387,7 +388,7 @@ export default function Dashboard() {
             </div>
           </div>
           <Link
-            href="/sessions"
+            href="/results/sessions"
             className="text-xs font-mono text-neon-purple hover:underline inline-flex items-center gap-1"
           >
             Session browser <ChevronRight className="w-3 h-3" />

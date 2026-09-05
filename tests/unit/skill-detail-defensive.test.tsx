@@ -11,7 +11,7 @@ const mockUseParams = jest.fn();
 jest.mock("next/navigation", () => ({
   useParams: () => mockUseParams(),
   useRouter: () => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() }),
-  usePathname: () => "/operations/skills",
+  usePathname: () => "/agent/skills",
   useSearchParams: () => new URLSearchParams(),
   notFound: jest.fn(),
 }));
@@ -33,7 +33,7 @@ jest.mock("@/components/ui/LoadingSpinner", () => ({
   LoadingSpinner: () => <div data-testid="loading-spinner">Loading</div>,
 }));
 
-import SkillDetailPage from "@/app/operations/skills/[...path]/page";
+import SkillDetailPage from "@/app/agent/skills/[...path]/page";
 
 beforeEach(() => {
   mockUseParams.mockReset();

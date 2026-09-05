@@ -18,7 +18,7 @@ test.describe("Story Weaver", () => {
 
   test("create loads", async ({ page }) => {
     await page.goto("/recroom/story-weaver/create");
-    await expect(page.getByRole("heading", { name: "Create Story" })).toBeVisible({
+    await expect(page.getByRole("heading", { level: 1, name: "Create", exact: true })).toBeVisible({
       timeout: 30_000,
     });
   });
@@ -29,7 +29,7 @@ test.describe("Story Weaver", () => {
       timeout: 30_000,
     });
     await page.goto("/recroom/story-weaver/themes");
-    await expect(page.getByRole("heading", { name: "Story Themes" })).toBeVisible({
+    await expect(page.getByRole("heading", { level: 1, name: "Themes", exact: true })).toBeVisible({
       timeout: 30_000,
     });
   });

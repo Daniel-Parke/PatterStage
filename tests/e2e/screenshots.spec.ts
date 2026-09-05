@@ -21,12 +21,12 @@ const OUT = join(process.cwd(), "docs", "images");
 
 const SHOTS: Array<{ path: string; file: string }> = [
   { path: "/", file: "dashboard.png" },
-  { path: "/laboratory/insights", file: "insights.png" },
-  { path: "/orchestration/missions", file: "missions-board.png" },
-  { path: "/orchestration/chat", file: "chat.png" },
-  { path: "/operations/agents", file: "agent-profiles.png" },
-  { path: "/operations/skills", file: "skills-manager.png" },
-  { path: "/config/models", file: "models-config.png" },
+  { path: "/results/insights", file: "insights.png" },
+  { path: "/work/missions", file: "missions-board.png" },
+  { path: "/work/chat", file: "chat.png" },
+  { path: "/agent/profiles", file: "agent-profiles.png" },
+  { path: "/agent/skills", file: "skills-manager.png" },
+  { path: "/agent/models", file: "models-config.png" },
 ];
 
 test.describe("doc screenshots", () => {

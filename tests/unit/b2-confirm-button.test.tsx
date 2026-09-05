@@ -137,7 +137,7 @@ describe("the native confirm is gone", () => {
     for (const f of [
       "src/app/recroom/story-weaver/page.tsx",
       "src/app/recroom/story-weaver/library/page.tsx",
-      "src/app/orchestration/scripts/page.tsx",
+      "src/app/work/scripts/page.tsx",
       "src/components/composer/WorkflowCanvas.tsx",
     ]) {
       const src = readFileSync(join(ROOT, f), "utf-8");

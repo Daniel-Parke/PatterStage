@@ -80,6 +80,7 @@ import { applyResearchUsageMigration } from "./apply-research-usage-migration";
 import { applyComposerRejectedMigration } from "./apply-composer-rejected-migration";
 import { applyResearchGatherMigration } from "./apply-research-gather-migration";
 import { applyComposerNodeCancelledMigration } from "./apply-composer-node-cancelled-migration";
+import { applyOperatorPrefsMigration } from "./apply-operator-prefs-migration";
 
 // ── Ensure data directory exists ───────────────────────────────
 
@@ -324,6 +325,11 @@ export function runMigrations(database: Database.Database): void {
   // the deliberate act it is rather than as a crash. One table: composer_runs
   // has admitted `cancelled` since 021. REBUILD at v37.
   applyComposerNodeCancelledMigration(database, migrationsDir);
+
+  // What the operator has set about the console itself (the rail collapsed,
+  // quests done, the guide hidden), one JSON value per allow-listed key, so it
+  // survives a browser and retention cannot un-complete a quest. CREATE at v38.
+  applyOperatorPrefsMigration(database, migrationsDir);
 }
 
 // ── Bootstrap: ensure DB + schema exist ───────────────────────

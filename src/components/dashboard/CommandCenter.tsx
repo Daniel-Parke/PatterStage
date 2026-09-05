@@ -147,7 +147,7 @@ export default function CommandCenter() {
           <div className="flex items-center gap-5">
             <StreakFlame current={streak.current} longest={streak.longest} />
             <div className="hidden h-10 w-px bg-white/10 lg:block" />
-            <Link href="/operations/agents" className="transition hover:opacity-90" title="Agent Level — open Agents">
+            <Link href="/agent/profiles" className="transition hover:opacity-90" title="Agent Level — open Agents">
               <AgentLevelBadge
                 experience={topAgent ? topAgent.experience.level : null}
                 label={topAgent ? topAgent.targetLabel : "Agent"}

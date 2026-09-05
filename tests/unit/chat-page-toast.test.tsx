@@ -151,7 +151,7 @@ if (typeof Element !== "undefined" && !Element.prototype.scrollIntoView) {
   };
 }
 
-import ChatPage from "@/app/orchestration/chat/page";
+import ChatPage from "@/app/work/chat/page";
 
 describe("ChatPage — toast rendering regression", () => {
   it("renders the toast portal node in the DOM (toastElement is in the tree)", async () => {

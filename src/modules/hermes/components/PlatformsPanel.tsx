@@ -71,7 +71,7 @@ export default function PlatformsPanel({ monitor, syncNowBusy, onSyncNow }: Plat
           // shows that file, so the sentence now ends somewhere.
           <div className="text-xs text-ps-text-muted text-center py-2">
             No platforms configured. Each one is a token in the agent&apos;s{" "}
-            <Link href="/config/env" className="text-neon-cyan hover:underline">
+            <Link href="/agent/settings/env" className="text-neon-cyan hover:underline">
               .env
             </Link>
             .

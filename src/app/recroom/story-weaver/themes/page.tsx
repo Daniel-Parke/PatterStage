@@ -229,7 +229,6 @@ export default function PromptsPage() {
 
       <PageHeader
         icon={FileText}
-        title="Story themes"
         subtitle={`${themes.length} themes`}
         color="green"
         backHref="/recroom/story-weaver"

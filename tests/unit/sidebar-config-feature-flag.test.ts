@@ -11,13 +11,13 @@ describe("sidebar-config feature-flag tags", () => {
   const allLinks = mainSections.flatMap((s) => s.links);
 
   it("tags the Composer link with featureFlag: 'composer'", () => {
-    const composer = allLinks.find((l) => l.href === "/orchestration/composer");
+    const composer = allLinks.find((l) => l.href === "/work/composer");
     expect(composer).toBeDefined();
     expect(composer!.featureFlag).toBe("composer");
   });
 
   it("leaves always-on links untagged", () => {
-    const missions = allLinks.find((l) => l.href === "/orchestration/missions");
+    const missions = allLinks.find((l) => l.href === "/work/missions");
     expect(missions).toBeDefined();
     expect(missions!.featureFlag).toBeUndefined();
   });

@@ -19,7 +19,9 @@ jest.mock("@/lib/api-fetch", () => ({
 }));
 
 import { useVersionFooter, type VersionFooterState } from "@/hooks/useVersionFooter";
-import { VersionFooterExpanded } from "@/components/layout/VersionFooterViews";
+// The block moved from the rail to Settings > System in T-0097; the state
+// contract and every truth it tells are unchanged.
+import { DeployControls } from "@/components/system/DeployControls";
 
 const mockFetch = jest.fn();
 const originalFetch = globalThis.fetch;
@@ -52,7 +54,7 @@ describe("D53: the block knows before the click", () => {
   });
 
   it("the expanded view disables the three actions and says why", () => {
-    render(<VersionFooterExpanded state={stateWith({ deployEnabled: false })} />);
+    render(<DeployControls state={stateWith({ deployEnabled: false })} />);
     expect(screen.getByRole("button", { name: /check for updates/i })).toBeDisabled();
     expect(screen.getByRole("button", { name: /rebuild/i })).toBeDisabled();
     expect(screen.getByRole("button", { name: /restart/i })).toBeDisabled();
@@ -79,7 +81,7 @@ describe("D107: a failed check is a fourth state", () => {
   });
 
   it("the view paints it as a warning, not green", () => {
-    render(<VersionFooterExpanded state={stateWith({ checkState: "check-failed" as VersionFooterState["checkState"] })} />);
+    render(<DeployControls state={stateWith({ checkState: "check-failed" as VersionFooterState["checkState"] })} />);
     expect(screen.queryByText(/up to date/i)).toBeNull();
     expect(screen.getByRole("button", { name: /could not check|check failed|try again/i })).toBeInTheDocument();
   });
@@ -117,7 +119,7 @@ describe("D108: the failure tail reaches the footer", () => {
   });
 
   it("the view renders the tail lines", () => {
-    render(<VersionFooterExpanded state={stateWith({ message: "Restart failed", deployLogTail: ["npm ERR! code ELIFECYCLE"] })} />);
+    render(<DeployControls state={stateWith({ message: "Restart failed", deployLogTail: ["npm ERR! code ELIFECYCLE"] })} />);
     expect(screen.getByText(/npm ERR! code ELIFECYCLE/)).toBeInTheDocument();
   });
 });

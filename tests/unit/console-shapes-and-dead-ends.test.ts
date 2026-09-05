@@ -120,7 +120,7 @@ describe("the Chat sidebar stops nesting its controls", () => {
   it("has no nested buttons left", () => {
     // The defect itself, measured on the real file rather than described.
     const r = classifyButtons(
-      read("src", "app", "orchestration", "chat", "page.tsx"),
+      read("src", "app", "work", "chat", "page.tsx"),
       "chat/page.tsx",
     );
     expect(r.nested).toEqual([]);

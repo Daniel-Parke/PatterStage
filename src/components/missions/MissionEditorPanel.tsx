@@ -215,8 +215,8 @@ export default function MissionEditorPanel({
                   // link answered "which job is this?" with a 404.
                   href={
                     detail.cronJob.id
-                      ? `/config/cron?highlight=${encodeURIComponent(detail.cronJob.id)}`
-                      : "/config/cron"
+                      ? `/agent/settings/cron?highlight=${encodeURIComponent(detail.cronJob.id)}`
+                      : "/agent/settings/cron"
                   }
                   onClick={(e) => e.stopPropagation()}
                   className="text-xs font-mono text-neon-orange hover:underline flex items-center gap-0.5"

@@ -18,13 +18,14 @@ import {
   RotateCcw, ShieldCheck, Lock, Code,
   BookOpen, Bot, MessageCircle,
   AudioLines, Settings2, Network, BarChart3, Trophy, Telescope, Workflow,
-  FileStack,
+  FileStack, Settings, LifeBuoy,
 } from "lucide-react";
 
 import type { AccentColor } from "@/types/console";
 import type { FeatureFlag } from "@/lib/feature-flags";
 import { MODULES } from "@/lib/modules/registry";
-import type { IconName, NavLink as ModuleNavLink } from "@/lib/modules/types";
+import { NAV_SECTIONS } from "@/lib/modules/types";
+import type { IconName, NavLink as ModuleNavLink, NavSectionLabel } from "@/lib/modules/types";
 
 // ── Types ──────────────────────────────────────────────────────
 
@@ -39,13 +40,7 @@ export interface SidebarLink {
 }
 
 export interface SidebarSection {
-  label: string;
-  links: SidebarLink[];
-}
-
-export interface ConfigGroup {
-  label: string;
-  defaultOpen?: boolean;
+  label: NavSectionLabel;
   links: SidebarLink[];
 }
 
@@ -65,6 +60,7 @@ const ICONS: Record<IconName, React.ComponentType<{ className?: string }>> = {
   Globe2, Code, Shield, ShieldCheck,
   AudioLines, Mic, Volume2, GitBranch,
   ListTodo, Network, Settings2,
+  Settings, LifeBuoy,
 };
 
 function toSidebarLink(link: ModuleNavLink): SidebarLink {
@@ -81,34 +77,15 @@ function toSidebarLink(link: ModuleNavLink): SidebarLink {
 // ── Derived navigation ─────────────────────────────────────────
 
 /**
- * Sections in registration order. Modules may contribute to a section name that
- * another module also uses; those merge, so a future module can add a link to
- * "Orchestration" without core knowing about it.
+ * The five sections in their fixed order, each holding every module's links
+ * for that section sorted by `order`. A section no module contributes to is
+ * left out rather than rendered empty.
  */
-export const mainSections: SidebarSection[] = (() => {
-  const byLabel = new Map<string, SidebarLink[]>();
-  const order: string[] = [];
-  for (const mod of MODULES) {
-    for (const section of mod.nav ?? []) {
-      if (!byLabel.has(section.label)) {
-        byLabel.set(section.label, []);
-        order.push(section.label);
-      }
-      byLabel.get(section.label)!.push(...section.links.map(toSidebarLink));
-    }
-  }
-  return order.map((label) => ({ label, links: byLabel.get(label)! }));
-})();
-
-/** Shown under "Config Settings", above "All Settings" (file editors + env). */
-export const configSettingsPinnedLinks: SidebarLink[] = MODULES.flatMap((m) =>
-  (m.configPinned ?? []).map(toSidebarLink),
-);
-
-export const configGroups: ConfigGroup[] = MODULES.flatMap((m) =>
-  (m.configGroups ?? []).map((g) => ({
-    label: g.label,
-    ...(g.defaultOpen !== undefined ? { defaultOpen: g.defaultOpen } : {}),
-    links: g.links.map(toSidebarLink),
-  })),
-);
+export const mainSections: SidebarSection[] = NAV_SECTIONS.flatMap((label) => {
+  const links = MODULES.flatMap((mod) =>
+    (mod.nav ?? [])
+      .filter((section) => section.label === label)
+      .flatMap((section) => section.links),
+  ).sort((a, b) => a.order - b.order);
+  return links.length ? [{ label, links: links.map(toSidebarLink) }] : [];
+});

@@ -7,9 +7,10 @@ test.describe("Config section editors", () => {
       const res = await page.goto(path, { waitUntil: "domcontentloaded" });
       expect(res?.status() ?? 0).toBeLessThan(500);
       await expect(page.getByTestId("ps-app-shell")).toBeVisible();
-      if (path === "/config") {
+      if (path === "/agent/settings") {
+        // The registry's word, which is also the rail entry (T-0097).
         await expect(
-          page.getByRole("heading", { name: "Configuration", exact: true })
+          page.getByRole("heading", { level: 1, name: "Settings", exact: true })
         ).toBeVisible({ timeout: 30_000 });
       } else {
         await expect(page.locator("h1").first()).toBeVisible({ timeout: 30_000 });

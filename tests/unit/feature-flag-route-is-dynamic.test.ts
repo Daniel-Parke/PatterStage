@@ -8,7 +8,7 @@
  * envelope carries that render's status with it.
  *
  * Measured on a real server before the fix: with the flag off,
- * `/orchestration/composer` served the Next 404 PAGE with an HTTP **200**
+ * `/work/composer` served the Next 404 PAGE with an HTTP **200**
  * (`x-nextjs-cache: HIT`, `x-nextjs-prerender: 1`), while a genuinely
  * nonexistent route returned a real 404. A person saw the right thing; a
  * monitor, a crawler, an uptime check and this repo's own documentation did
@@ -23,7 +23,7 @@ import { readFileSync } from "fs";
 import { join } from "path";
 
 const LAYOUT = join(
-  __dirname, "..", "..", "src", "app", "orchestration", "composer", "layout.tsx",
+  __dirname, "..", "..", "src", "app", "work", "composer", "layout.tsx",
 );
 
 describe("the composer route", () => {
