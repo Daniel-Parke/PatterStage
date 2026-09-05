@@ -12,9 +12,10 @@
     {"factor": "schema-change", "tier_floor": "R2", "source": "declared", "evidence": "migration 039 adds columns to models; no data loss"},
     {"factor": "key-material", "tier_floor": "R3", "source": "derived:secret-patterns", "evidence": "NOT triggered: the rotate route stores through the existing credential path and no secret appears in the diff; recorded so the router sees it was considered"}
   ],
-  "status": "proposed",
-  "owner_session": "unassigned",
-  "claims": ["src/lib/models-repository.ts", "src/lib/db/migrations/039_models_origin.sql", "src/lib/db/", "src/modules/hermes/lib/config-sync.ts", "src/app/api/config/", "src/app/api/credentials/", "src/app/api/backup/", "src/app/agent/models/", "src/app/agent/settings/", "src/components/config/", "tests/"],
+  "status": "in_progress",
+  "owner_session": "t0100-models-config-restore-backups-2026-09-05",
+  "claims": ["src/lib/models-repository.ts", "src/lib/db/", "src/lib/seed/", "src/lib/config-schema.ts", "src/lib/config-sections.ts", "src/lib/api-schemas.ts", "src/lib/analytics/event-types.ts", "src/modules/hermes/lib/", "src/app/api/config/", "src/app/api/credentials/", "src/app/api/backup/", "src/app/api/models/", "src/app/api/seed/", "src/app/agent/models/", "src/app/agent/settings/", "src/components/config/", "src/components/models/", "src/components/ui/Input.tsx", "src/hooks/", "scripts/tooling/hermes-registry-import.mjs", "scripts/tooling/output-canary.golden.json", "data/seed/README.md", "docs/", "ops/runbooks/deploy.md", "org/PLAYBOOKS.md", "tests/"],
+  "claims_note": "Widened from the proposal before any edit (EXECUTOR: touch only claimed paths): the maps showed the batch reaching the models components and hooks, the api schemas, the providers catalogue, the seed library, the prebuild import script, the canary golden, the seed pack README, the docs and the runbook.",
   "programme": "B6, depends on B3 (T-0097) and B4 (T-0098). Reserved: migration 039. Mutation sweep on models-repository and config-sync; browser walk of Models and Settings.",
   "timestamps": {"opened": "2026-09-05T10:30:00Z", "updated": "2026-09-05T10:30:00Z"}
 }
