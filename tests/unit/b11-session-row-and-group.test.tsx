@@ -156,6 +156,20 @@ describe("a session row contains no interactive element inside another", () => {
     expect(container.querySelectorAll("a a")).toHaveLength(0);
   });
 
+  it("the row is still clickable across its whole area", () => {
+    // The row used to be an anchor wrapping everything, which is what made the
+    // whole row a click target. Taking that away without stretching the title's
+    // link would make only the words clickable, which is a worse row than the
+    // invalid one it replaced (T-0105, D32).
+    render(<SessionCard session={session()} />);
+
+    const rowLink = screen.getByRole("link", { name: /Triage the queue/ });
+    expect(rowLink.className).toMatch(/after:absolute/);
+    expect(rowLink.className).toMatch(/after:inset-0/);
+    // And the thing it covers is positioned, or the stretch covers the page.
+    expect(rowLink.closest("[class*='relative']")).not.toBeNull();
+  });
+
   it("the mission badge is its own link, not one buried in the row's link", () => {
     render(<SessionCard session={session({ missionId: "m-7" })} />);
 
