@@ -27,7 +27,7 @@ import process from "node:process";
 import { GENERATED_BLOCK_IDS, checkDocs, findGeneratedBlocks, parseDocFrontMatter, slugFor } from "./lib.mjs";
 import type { DocPage } from "./lib.mjs";
 import { generateBlock } from "./extract.ts";
-import { documentedRoutes } from "../../src/lib/modules/registry.ts";
+import { documentedRoutes, railOrder } from "../../src/lib/modules/registry.ts";
 
 const ROOT = fileURLToPath(new URL("../..", import.meta.url));
 const DOCS = join(ROOT, "docs");
@@ -42,6 +42,74 @@ function markdownFiles(dir: string, out: string[] = []): string[] {
     const full = join(dir, entry.name);
     if (entry.isDirectory()) markdownFiles(full, out);
     else if (entry.name.endsWith(".md")) out.push(full);
+  }
+  return out;
+}
+
+/**
+ * Every rail destination is documented by a GUIDE, not by whatever page
+ * happened to name it.
+ *
+ * `route-without-guide` in checkDocs asks only that some page claims the screen,
+ * which a tour page or a running-it note can satisfy. The `?` on a screen's
+ * header resolves to the guide, so a rail entry whose only claimant is a tour
+ * page would send the reader to a walkthrough instead of the reference.
+ */
+function railGuideRefusals(pages: DocPage[], routes: string[]): string[] {
+  const out: string[] = [];
+  // The rail routes that are also documented routes. The generated settings
+  // editors sit on the rail as sub-links but share the Settings index's guide,
+  // which is the same ruling documentedRoutes() makes.
+  const documented = new Set(routes);
+  for (const route of railOrder().filter((r) => documented.has(r))) {
+    const claimants = pages.filter((p) => p.data.screen === route);
+    const guides = claimants.filter((p) => p.data.section === "guides");
+    if (guides.length === 1) continue;
+    if (guides.length === 0) {
+      out.push(`docs:check: the rail route ${route} has no page under docs/guides/ (${claimants.length} other page(s) name it)`);
+    } else {
+      out.push(
+        `docs:check: the rail route ${route} is claimed by ${guides.length} guides ` +
+          `(${guides.map((g) => g.slug).join(", ")}); a screen has one guide`,
+      );
+    }
+  }
+  return out;
+}
+
+/**
+ * Every concept id a screen names is defined by the corpus.
+ *
+ * `<ConceptHint id="widget">` renders its children as plain text when the id is
+ * unknown, which is the right runtime behaviour and exactly why it needs a gate:
+ * a typo'd id is a hint that silently stops being a hint, and nothing on the
+ * screen says so.
+ */
+function conceptHintRefusals(pages: DocPage[]): string[] {
+  const defined = new Set(
+    pages.filter((p) => p.data.section === "concepts").map((p) => p.slug.split("/").pop()!),
+  );
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const file of sourceFiles(join(ROOT, "src"))) {
+    const source = readFileSync(file, "utf-8");
+    for (const match of source.matchAll(/<ConceptHint\s[^>]*id=["']([^"']+)["']/g)) {
+      const id = match[1];
+      if (defined.has(id)) continue;
+      const key = `${rel(file)}:${id}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(`docs:check: ${rel(file)} names concept "${id}", which no page under docs/concepts/ defines`);
+    }
+  }
+  return out;
+}
+
+function sourceFiles(dir: string, out: string[] = []): string[] {
+  for (const entry of readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+    const full = join(dir, entry.name);
+    if (entry.isDirectory()) sourceFiles(full, out);
+    else if (/\.tsx?$/.test(entry.name)) out.push(full);
   }
   return out;
 }
@@ -95,8 +163,14 @@ async function main(): Promise<void> {
     freshBlocks,
   });
 
-  if (refusals.length > 0) {
+  // Two more, checked here rather than inside checkDocs() because both read
+  // something the pure checker is not given: the rail's own order, and the
+  // application source. checkDocs stays a function of its pages and its routes.
+  const inAppRefusals = [...railGuideRefusals(pages, routes), ...conceptHintRefusals(pages)];
+
+  if (refusals.length > 0 || inAppRefusals.length > 0) {
     for (const refusal of refusals) console.error(refusal.message);
+    for (const line of inAppRefusals) console.error(line);
     process.exit(1);
   }
 

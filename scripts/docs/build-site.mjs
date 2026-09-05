@@ -281,19 +281,55 @@ function main(argv) {
     write(join(args.out, ".nojekyll"), "");
   }
 
+  // ── public/help/: the SAME corpus, in the shape the app reads ──
+  //
+  // Deliberately not a copy of docs/manifest.json. That file is the derived
+  // view a gate holds byte for byte, grouped by tier for the site's rail; the
+  // app's resolver wants a flat list it can index by screen and by slug, and it
+  // has to survive a half-written file, so it reads a shape whose every entry
+  // stands alone. Two shapes of one corpus, generated together, is the only way
+  // they cannot disagree.
   const help = join(ROOT, "public", "help");
   rmSync(help, { recursive: true, force: true });
-  write(join(help, "manifest.json"), manifestBytes);
-  write(join(help, "search.json"), searchJson);
-  const concepts = {};
-  for (const page of ordered) {
-    if (page.data.section !== "concepts") continue;
-    concepts[conceptIdFor(page)] = { title: page.data.title, summary: page.data.summary, slug: page.slug };
-  }
-  write(join(help, "concepts.json"), `${JSON.stringify(concepts, null, 2)}\n`);
+
+  const generatedAt = new Date().toISOString();
+  const helpPages = ordered.map((page) => {
+    const entry = {
+      slug: page.slug,
+      title: page.data.title,
+      summary: page.data.summary,
+      section: page.data.section,
+      nav: page.data.nav,
+    };
+    if (page.data.audience !== undefined) entry.audience = page.data.audience;
+    if (page.data.screen !== undefined) entry.screen = page.data.screen;
+    if (page.data.concepts !== undefined) entry.concepts = page.data.concepts;
+    if (page.data.shots !== undefined) entry.shots = page.data.shots;
+    return entry;
+  });
+  write(join(help, "manifest.json"), `${JSON.stringify({ generatedAt, pages: helpPages }, null, 2)}\n`);
+
+  write(join(help, "search.json"), `${JSON.stringify({ generatedAt, entries: search }, null, 2)}\n`);
+
+  // `short` is the concept page's own summary. One sentence written once, shown
+  // in the popover and under the title, rather than a second short form for an
+  // author to keep in step with the first.
+  const concepts = ordered
+    .filter((page) => page.data.section === "concepts")
+    .map((page) => ({
+      id: conceptIdFor(page),
+      term: page.data.title,
+      short: page.data.summary,
+      slug: page.slug,
+    }));
+  write(join(help, "concepts.json"), `${JSON.stringify({ generatedAt, concepts }, null, 2)}\n`);
+
   for (const page of ordered) {
     write(join(help, "fragments", `${page.slug}.html`), `${renderFragment(page, html.get(page.slug), manifest)}\n`);
   }
+  // The fragments reference images by an app path, so the same files have to
+  // sit under public/help/ as well as under site/.
+  copyAssets(docsDir, help);
 
   const where = args.helpOnly ? "public/help/" : `${toPosix(args.out)}/ and public/help/`;
   console.log(`docs:build: ${pages.length} pages, ${search.length} search rows -> ${where}`);

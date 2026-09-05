@@ -29,7 +29,7 @@
 import type { AccentColor } from "@/types/console";
 import { settingsRoutes } from "@/lib/config-sections";
 import type { ProductModule } from "./types";
-import { moduleRoutes } from "./types";
+import { NAV_SECTIONS, moduleRoutes } from "./types";
 
 /**
  * The console. Dispatch, schedule, gate and watch, plus the transcript and log
@@ -233,6 +233,36 @@ export function allModuleRoutes(): string[] {
   for (const mod of MODULES) for (const route of moduleRoutes(mod)) routes.add(route);
   for (const route of settingsRoutes()) routes.add(route);
   return [...routes].sort();
+}
+
+/**
+ * Every rail destination, in the order the rail shows it.
+ *
+ * The five sections in NAV_SECTIONS order, each section's links by `order`,
+ * each link followed by its sub-links as declared. This is the same walk
+ * `mainSections` in sidebar-config.ts does, kept HERE because the Help rail
+ * needs it too and sidebar-config imports React icons: a resolver that runs on
+ * the server, on the client and in a node script cannot reach through that.
+ *
+ * A feature-flagged link is included. A flag hides a rail entry; it does not
+ * un-document the screen behind it, and a guide that vanished with a flag would
+ * be a guide nobody could find the day the flag came back.
+ *
+ * The generated `/agent/settings/<section>` editors are NOT here: they are one
+ * page rendered many times and they are not rail destinations.
+ */
+export function railOrder(): string[] {
+  const out: string[] = [];
+  for (const label of NAV_SECTIONS) {
+    const links = MODULES.flatMap((mod) =>
+      (mod.nav ?? []).filter((section) => section.label === label).flatMap((section) => section.links),
+    ).sort((a, b) => a.order - b.order);
+    for (const link of links) {
+      out.push(link.href);
+      for (const sub of link.subLinks ?? []) out.push(sub.href);
+    }
+  }
+  return out;
 }
 
 /**
