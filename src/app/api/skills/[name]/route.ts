@@ -1,16 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { existsSync, readFileSync } from "fs";
-
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { requireNotReadOnly } from "@/lib/api-auth";
 import { badRequest, notFound, ok, serverError } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
-import { safeStat } from "@/lib/fs/fs-stats";
 import { appendAuditLine } from "@/lib/audit-log";
 import { ensureDb } from "@/lib/db";
-import { getSkill, upsertSkill, parseSkillFrontmatter } from "@/lib/skills-repository";
+import { upsertSkill, parseSkillFrontmatter } from "@/lib/skills-repository";
+import { readSkillView, skillsRoot } from "@/modules/hermes/lib/skill-view";
+import { resolveSkillDirUnderRoot } from "@/lib/fs/path-security";
 import { pushSkillToHermes } from "@/modules/hermes/lib/profile-push";
-import { skillFilePath, skillsRootForProfile } from "@/modules/hermes/lib/skills-config";
 
 export async function GET(
   request: NextRequest,
@@ -19,33 +17,19 @@ export async function GET(
   const { name } = await params;
   try {
     ensureDb();
-    const row = getSkill(name);
-    if (row) {
-      return ok({
-        name,
-        path: skillFilePath(skillsRootForProfile(), name),
-        content: row.content,
-        size: row.content.length,
-        lastModified: row.updatedAt,
-      });
+    // A single-segment key lands here and a nested one lands on
+    // [...path]; the two used to answer different shapes, and the viewer
+    // reached into the fields only the catch-all sent, so opening any
+    // top-level skill threw (T-0103, D81). One reader, one payload.
+    const resolved = resolveSkillDirUnderRoot(skillsRoot(), [name]);
+    if (!resolved.ok) {
+      return badRequest(resolved.error);
     }
-
-    const skillsRoot = skillsRootForProfile();
-    const filePath = skillFilePath(skillsRoot, name);
-    if (!existsSync(filePath)) {
+    const view = readSkillView([name], resolved.skillDir);
+    if (!view) {
       return notFound(`Skill not found: ${name}`);
     }
-
-    const content = readFileSync(filePath, "utf-8");
-    const st = safeStat(filePath)!; // file confirmed to exist above
-
-    return ok({
-      name,
-      path: filePath,
-      content,
-      size: st.size,
-      lastModified: st.mtime,
-    });
+    return ok(view);
   }
   catch (error) {
     return serverErrorFromCatch(

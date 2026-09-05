@@ -18,6 +18,9 @@ import { join } from "path";
 
 import { execBaselineSchema } from "../helpers/baseline-db";
 
+/** The shell that writes these files eats a backslash level; this does not. */
+const LF = String.fromCharCode(10);
+
 let testDb: import("better-sqlite3").Database | null = null;
 
 jest.mock("@/lib/db", () => {
@@ -188,6 +191,59 @@ describe("skillIsKnown", () => {
 // ═══════════════════════════════════════════════════════════════
 // D81: the viewer is the catalogue's destination
 // ═══════════════════════════════════════════════════════════════
+
+describe("GET /api/skills/[name] (the single-segment route the viewer actually hits)", () => {
+  async function readOne(name: string) {
+    const { GET } = await import("@/app/api/skills/[name]/route");
+    const res = await GET(
+      new NextRequest(`http://localhost/api/skills/${name}`),
+      { params: Promise.resolve({ name }) },
+    );
+    return {
+      status: res.status,
+      body: (await res.json()) as { data?: Record<string, unknown>; error?: string },
+    };
+  }
+
+  it("sends the same shape the catch-all does, for a skill on disk", async () => {
+    writeDiskSkill(
+      "writing",
+      ["---", "name: writing", "description: Prose", "---", "", "# Writing", "", "Be brief."].join(LF),
+    );
+
+    const { status, body } = await readOne("writing");
+
+    expect(status).toBe(200);
+    expect(body.data?.source).toBe("disk");
+    // The three fields the viewer reaches for, which this route never sent.
+    expect(body.data).toHaveProperty("frontmatter");
+    expect(body.data).toHaveProperty("rawContent");
+    expect(body.data).toHaveProperty("linkedFiles");
+  });
+
+  it("and for a skill that is only in the catalogue", async () => {
+    upsertSkill({
+      skillKey: "writing",
+      displayName: "Writing",
+      description: "Prose that lands",
+      category: "creative",
+      content: ["# Writing", "", "Be brief."].join(LF),
+      source: "bundled",
+    });
+
+    const { status, body } = await readOne("writing");
+
+    expect(status).toBe(200);
+    expect(body.data?.source).toBe("catalog");
+    expect(body.data?.linkedFiles).toEqual([]);
+  });
+
+  it("still 404s for a name neither place knows", async () => {
+    const { status } = await readOne("neither-place");
+
+    expect(status).toBe(404);
+  });
+});
 
 describe("GET /api/skills/[...path]", () => {
   it("answers from the catalogue when SKILL.md is not on disk", async () => {

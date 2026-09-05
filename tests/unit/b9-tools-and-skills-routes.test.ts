@@ -117,18 +117,31 @@ describe("toggling a skill that is on disk but not in the catalogue", () => {
 // D81: the viewer is the catalogue's destination
 // ═══════════════════════════════════════════════════════════════
 
-describe("GET /api/skills/[...path] when SKILL.md is not on disk", () => {
-  it("answers from the catalogue rather than 404, and says which source it used", () => {
+describe("the skill viewer's payload", () => {
+  it("is built in one place, disk first and catalogue second", () => {
     const src = readFileSync(
-      join(__dirname, "..", "..", "src", "app", "api", "skills", "[...path]", "route.ts"),
+      join(__dirname, "..", "..", "src", "modules", "hermes", "lib", "skill-view.ts"),
       "utf-8",
     );
 
     // The disk answer names its source too, so the page never has to guess.
     expect(src).toMatch(/source: "disk"/);
     expect(src).toMatch(/source: "catalog"/);
-    // The 404 stays for a name neither place knows.
-    expect(src).toMatch(/notFound\(/);
+  });
+
+  it("is the payload BOTH routes send, because a top-level key does not reach the catch-all", () => {
+    const base = join(__dirname, "..", "..", "src", "app", "api", "skills");
+    const catchAll = readFileSync(join(base, "[...path]", "route.ts"), "utf-8");
+    const single = readFileSync(join(base, "[name]", "route.ts"), "utf-8");
+
+    // /api/skills/writing is matched by [name]; /api/skills/office/pdf by the
+    // catch-all. Answering different shapes is what made the viewer throw for
+    // every top-level skill key (T-0103, D81).
+    expect(catchAll).toMatch(/readSkillView\(/);
+    expect(single).toMatch(/readSkillView\(/);
+    // Both still refuse a name neither place knows.
+    expect(catchAll).toMatch(/notFound\(/);
+    expect(single).toMatch(/notFound\(/);
   });
 });
 
