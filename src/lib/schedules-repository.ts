@@ -140,6 +140,30 @@ export function getScheduleForMission(missionId: string): ScheduleRecord | null 
   return rowToSchedule(row);
 }
 
+/**
+ * Latest schedule per mission, for the board's one-query-per-page read.
+ *
+ * The board shows a schedule badge per row, and asking per row is the same
+ * N+1 the run reader beside it was written to avoid (T-0104, D68).
+ */
+export function listSchedulesForMissions(missionIds: string[]): Map<string, ScheduleRecord> {
+  const out = new Map<string, ScheduleRecord>();
+  // `WHERE mission_id IN ()` is a syntax error, and an empty page has nothing
+  // to ask about.
+  if (missionIds.length === 0) return out;
+  const placeholders = missionIds.map(() => "?").join(",");
+  const rows = getDb()
+    .prepare(`SELECT * FROM schedules WHERE mission_id IN (${placeholders}) ORDER BY created_at ASC`)
+    .all(...missionIds) as ScheduleRow[];
+  for (const row of rows) {
+    const rec = rowToSchedule(row);
+    // Ascending order means the newest row is written last and therefore wins,
+    // which is what getScheduleForMission's DESC LIMIT 1 picks.
+    if (rec?.missionId) out.set(rec.missionId, rec);
+  }
+  return out;
+}
+
 /** Enabled schedules whose next_run_at is due at or before `asOf` (ISO). */
 export function getDueSchedules(asOf: string): ScheduleRecord[] {
   const rows = getDb()

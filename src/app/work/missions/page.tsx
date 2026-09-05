@@ -1,6 +1,5 @@
 "use client";
 
-import { useCallback } from "react";
 import { Loader2, Plus, RefreshCw, Rocket } from "lucide-react";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
@@ -35,9 +34,7 @@ export default function MissionsPage() {
     handleDeleteTemplate,
     categoryFilter,
     showTemplateEditor,
-    setShowTemplateEditor,
     editingTemplateId,
-    setEditingTemplateId,
     templateName,
     setTemplateName,
     templateDescription,
@@ -47,32 +44,34 @@ export default function MissionsPage() {
     templateColor,
     setTemplateColor,
     templateSaving,
+    templateInstruction,
+    setTemplateInstruction,
+    templateContext,
+    setTemplateContext,
+    templateGoals,
+    setTemplateGoals,
+    templateProfile,
+    setTemplateProfile,
+    templateModel,
+    templateProvider,
+    setTemplateModelAndProvider,
+    templateMissionTime,
+    setTemplateMissionTime,
+    templateTimeout,
+    setTemplateTimeout,
+    templateLocalDirs,
+    setTemplateLocalDirs,
+    templateLocalDirDraft,
+    setTemplateLocalDirDraft,
+    templateReferences,
+    setTemplateReferences,
+    templateReferenceInput,
+    setTemplateReferenceInput,
+    templateSkills,
+    setTemplateSkills,
+    templateCategoryId,
+    setTemplateCategoryId,
     handleTemplateSave,
-    newInstruction,
-    setNewInstruction,
-    newContext,
-    setNewContext,
-    newGoals,
-    setNewGoals,
-    newProfile,
-    setNewProfile,
-    newModel,
-    newProvider,
-    setModelAndProvider,
-    newMissionTime,
-    setNewMissionTime,
-    newTimeout,
-    setNewTimeout,
-    newLocalDirs,
-    setNewLocalDirs,
-    localDirDraft,
-    setLocalDirDraft,
-    newReferences,
-    setNewReferences,
-    referenceInput,
-    setReferenceInput,
-    newSkills,
-    setNewSkills,
     missions,
     formState,
     setFormField,
@@ -148,24 +147,12 @@ export default function MissionsPage() {
   // callback). The `useCallback` deps array is `[]` (the setter reference
   // is stable), matching the sibling close callbacks.
   const openCategoryManager = vm.openCategoryManager;
-  // The Template Editor has TWO close paths: `onClose` (X / overlay) which
-  // is a single-setter SOFT close, and `onCancel` (the Cancel button) which
-  // is a 2-setter HARD close that also clears `editingTemplateId`. This
-  // mirrors the HARD/SOFT discriminator pattern that the agents and
-  // missions modals use — see session-100-list2-cron-modal-setter-pair.md.
-  // They are NOT duplicates; they are a deliberate UX discriminator, and
-  // a future "migrate to a single setter" PR will break the cancel-then-
-  // reopen flow. Keep them as 2 separate callbacks. The SOFT close is
-  // now exposed by the hook as `vm.closeTemplateEditor` (sibling of the
-  // editor's open paths in `handleCreateNewTemplate` / `handleEditTemplate`),
-  // so the SOFT direction is consistent with the rest of the modal
-  // open/close pair pattern. The HARD cancel direction is the 2-setter
-  // outlier and stays page-local.
+  // One close path. The editor used to have two, a SOFT close that left
+  // editingTemplateId set and a HARD one that cleared it, described in a long
+  // comment as a deliberate discriminator. It was the defect: a soft close and
+  // then Save as Template on an unrelated mission sent action:"update" against
+  // whatever had last been open (T-0104, D70). closeTemplateEditor clears it.
   const closeTemplateEditor = vm.closeTemplateEditor;
-  const cancelTemplateEditor = useCallback(() => {
-    setShowTemplateEditor(false);
-    setEditingTemplateId(null);
-  }, [setShowTemplateEditor, setEditingTemplateId]);
 
   if (loading) {
     return (
@@ -300,7 +287,7 @@ export default function MissionsPage() {
       <TemplateEditorModal
         open={showTemplateEditor}
         onClose={closeTemplateEditor}
-        onCancel={cancelTemplateEditor}
+        onCancel={closeTemplateEditor}
         editingTemplateId={editingTemplateId}
         templateName={templateName}
         onTemplateNameChange={setTemplateName}
@@ -313,34 +300,34 @@ export default function MissionsPage() {
         templateSaving={templateSaving}
         onSave={handleTemplateSave}
         categories={mapCategories(categories)}
-        categoryId={newCategoryId}
-        onCategoryChange={setCategoryId}
+        categoryId={templateCategoryId}
+        onCategoryChange={setTemplateCategoryId}
         onCreateCategory={handleCreateCategory}
-        newInstruction={newInstruction}
-        onNewInstructionChange={setNewInstruction}
-        newContext={newContext}
-        onNewContextChange={setNewContext}
-        newGoals={newGoals}
-        onNewGoalsChange={setNewGoals}
-        newProfile={newProfile}
-        onNewProfileChange={setNewProfile}
-        newModel={newModel}
-        newProvider={newProvider}
-        onModelChange={setModelAndProvider}
-        newMissionTime={newMissionTime}
-        onNewMissionTimeChange={setNewMissionTime}
-        newTimeout={newTimeout}
-        onNewTimeoutChange={setNewTimeout}
-        newLocalDirs={newLocalDirs}
-        onNewLocalDirsChange={setNewLocalDirs}
-        localDirDraft={localDirDraft}
-        onLocalDirDraftChange={setLocalDirDraft}
-        newReferences={newReferences}
-        onNewReferencesChange={setNewReferences}
-        referenceInput={referenceInput}
-        onReferenceInputChange={setReferenceInput}
-        newSkills={newSkills}
-        onNewSkillsChange={setNewSkills}
+        newInstruction={templateInstruction}
+        onNewInstructionChange={setTemplateInstruction}
+        newContext={templateContext}
+        onNewContextChange={setTemplateContext}
+        newGoals={templateGoals}
+        onNewGoalsChange={setTemplateGoals}
+        newProfile={templateProfile}
+        onNewProfileChange={setTemplateProfile}
+        newModel={templateModel}
+        newProvider={templateProvider}
+        onModelChange={setTemplateModelAndProvider}
+        newMissionTime={templateMissionTime}
+        onNewMissionTimeChange={setTemplateMissionTime}
+        newTimeout={templateTimeout}
+        onNewTimeoutChange={setTemplateTimeout}
+        newLocalDirs={templateLocalDirs}
+        onNewLocalDirsChange={setTemplateLocalDirs}
+        localDirDraft={templateLocalDirDraft}
+        onLocalDirDraftChange={setTemplateLocalDirDraft}
+        newReferences={templateReferences}
+        onNewReferencesChange={setTemplateReferences}
+        referenceInput={templateReferenceInput}
+        onReferenceInputChange={setTemplateReferenceInput}
+        newSkills={templateSkills}
+        onNewSkillsChange={setTemplateSkills}
       />
     </AppPageShell>
   );

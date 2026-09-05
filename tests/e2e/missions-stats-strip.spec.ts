@@ -17,7 +17,9 @@ test.describe("Missions stats strip at 1280px", () => {
     await page.goto("/work/missions");
     await expect(page.getByRole("heading", { name: "Missions", exact: true })).toBeVisible();
 
-    const labels = ["Total", "Active", "Done", "Failed"];
+    // The ratified words (decision 13). "Active" and "Done" were the second
+    // vocabulary this strip spoke; B10 gave it the board's five (T-0104).
+    const labels = ["Total", "Running", "Completed", "Failed"];
     const boxes: { label: string; x: number; right: number; y: number; bottom: number }[] = [];
     for (const label of labels) {
       const el = page.getByText(label, { exact: true }).first();

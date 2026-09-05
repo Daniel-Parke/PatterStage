@@ -107,10 +107,15 @@ test.describe("Scheduling a mission", () => {
     await expect(row).toContainText("paused");
 
     // ── Remove ──────────────────────────────────────────────────────────────
-    // Positional, because the delete control is an unlabelled icon button: it
-    // renders a Trash2 glyph with no text and no aria-label, so it has no
-    // accessible name to ask for. Recorded rather than worked around silently.
-    await row.getByRole("button").last().click();
+    // The delete control has a name now, and takes two clicks: it is a
+    // ConfirmButton, per row, and the armed button is not disabled (T-0104,
+    // D73). The positional locator and the note about an unnamed icon button
+    // that used to be here are both obsolete.
+    const del = row.getByRole("button", { name: `Delete the schedule "${scheduleName}"` });
+    await del.click();
+    await expect(del).toContainText("Confirm?");
+    await expect(scheduled.getByText(scheduleName, { exact: true })).toHaveCount(1);
+    await del.click();
     await expect(scheduled.getByText(scheduleName, { exact: true })).toHaveCount(0, {
       timeout: 15_000,
     });

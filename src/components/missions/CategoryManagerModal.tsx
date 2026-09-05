@@ -21,11 +21,12 @@ export interface CategoryManagerModalProps {
   categoriesLoadError?: string | null;
   onRefresh: () => void;
   onCreateCategory: (name: string, color?: string) => Promise<string | null>;
+  /** Answers whether the write landed; a refused rename leaves the editor open. */
   onUpdate: (
     id: string,
     patch: { name?: string; color?: string },
-  ) => Promise<void>;
-  onDelete: (id: string, reassignToId: string | null) => Promise<void>;
+  ) => Promise<boolean>;
+  onDelete: (id: string, reassignToId: string | null) => Promise<boolean>;
 }
 
 const COLORS = ["cyan", "purple", "pink", "green", "orange", "blue", "red"];
@@ -57,14 +58,17 @@ export default function CategoryManagerModal({
 
   const saveEdit = async () => {
     if (!editingId) return;
-    await onUpdate(editingId, { name: editName, color: editColor });
+    // Only close what succeeded. A failed rename leaves the typed name in the
+    // input to retry, which is the difference between a silent no-op and a
+    // failure (T-0104, D71).
+    if (!(await onUpdate(editingId, { name: editName, color: editColor }))) return;
     setEditingId(null);
     onRefresh();
   };
 
   const confirmDelete = async () => {
     if (!deleteTarget) return;
-    await onDelete(deleteTarget, reassignId);
+    if (!(await onDelete(deleteTarget, reassignId))) return;
     setDeleteTarget(null);
     setReassignId(null);
     onRefresh();

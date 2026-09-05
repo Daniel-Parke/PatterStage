@@ -32,22 +32,45 @@ export function useSchedules() {
   const query = useQuery({ queryKey: ["schedules"], queryFn: fetchSchedules });
   const invalidate = () => qc.invalidateQueries({ queryKey: ["schedules"] });
 
+  // Every mutation throws on a failed call. Returning a failed safeApiCall
+  // result as if it were a success put the failure somewhere a caller had to
+  // remember to look, and three of the four callers did not: a delete, a pause
+  // and a Run now could all fail in silence (T-0104, D73).
   const create = useMutation({
-    mutationFn: (body: CreateScheduleBody) => safeApiCall("/api/schedules", { method: "POST", body }),
+    mutationFn: async (body: CreateScheduleBody) => {
+      const res = await safeApiCall("/api/schedules", { method: "POST", body });
+      if (!res.ok) throw new Error(res.error ?? "Failed to create the schedule");
+      return res;
+    },
     onSuccess: invalidate,
   });
   const remove = useMutation({
-    mutationFn: (id: string) => safeApiCall(`/api/schedules/${id}`, { method: "DELETE" }),
+    mutationFn: async (id: string) => {
+      const res = await safeApiCall(`/api/schedules/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error(res.error ?? "Failed to delete the schedule");
+      return res;
+    },
     onSuccess: invalidate,
   });
   const toggle = useMutation({
-    mutationFn: (vars: { id: string; enabled: boolean }) =>
-      safeApiCall(`/api/schedules/${vars.id}`, { method: "PATCH", body: { enabled: vars.enabled } }),
+    mutationFn: async (vars: { id: string; enabled: boolean }) => {
+      const res = await safeApiCall(`/api/schedules/${vars.id}`, {
+        method: "PATCH",
+        body: { enabled: vars.enabled },
+      });
+      if (!res.ok) throw new Error(res.error ?? "Failed to update the schedule");
+      return res;
+    },
     onSuccess: invalidate,
   });
   const runNow = useMutation({
-    mutationFn: (id: string) =>
-      safeApiCall<{ data?: { runId?: string } }>(`/api/schedules/${id}/run`, { method: "POST" }),
+    mutationFn: async (id: string) => {
+      const res = await safeApiCall<{ data?: { runId?: string } }>(`/api/schedules/${id}/run`, {
+        method: "POST",
+      });
+      if (!res.ok) throw new Error(res.error ?? "Failed to start the run");
+      return res;
+    },
   });
 
   return {

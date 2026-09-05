@@ -63,6 +63,12 @@ jest.mock("@/lib/runs-repository", () => ({
   listLatestRunsForMissions: jest.fn(() => new Map()),
 }));
 jest.mock("@/lib/orchestration/run-deadline", () => ({ buildMissionRunView: jest.fn(() => null) }));
+// GET /api/missions reads the schedule alongside the run now (T-0104, D68);
+// without these doubles the real repository reaches the real getDb.
+jest.mock("@/lib/schedules-repository", () => ({
+  getScheduleForMission: jest.fn(() => null),
+  listSchedulesForMissions: jest.fn(() => new Map()),
+}));
 
 // NOTE: @/lib/api-auth is deliberately NOT mocked. The whole point is the real
 // read-only guard reading the real environment variable.

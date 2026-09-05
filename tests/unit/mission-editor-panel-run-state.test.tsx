@@ -38,7 +38,7 @@ function mission(over: Partial<MissionRow> = {}): MissionRow {
 }
 
 function detailFor(m: MissionRow, run: MissionDetail["run"] = null): MissionDetail {
-  return { mission: m, run, cronJob: null, sessions: [] };
+  return { mission: m, run, schedule: null };
 }
 
 function renderPanel(m: MissionRow, run: MissionDetail["run"] = null) {

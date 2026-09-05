@@ -1,9 +1,13 @@
-export type MissionBoardColumn =
-  | "draft"
-  | "queued"
-  | "dispatched"
-  | "successful"
-  | "failed";
+/** The board's columns, in board order. */
+export const MISSION_BOARD_COLUMNS = [
+  "draft",
+  "queued",
+  "dispatched",
+  "successful",
+  "failed",
+] as const;
+
+export type MissionBoardColumn = (typeof MISSION_BOARD_COLUMNS)[number];
 
 type MissionBoardFields = {
   status: string;
@@ -31,6 +35,29 @@ export function missionBoardColumn(mission: MissionBoardFields): MissionBoardCol
     return mission.status;
   }
   return "queued";
+}
+
+/**
+ * One pass, five mutually exclusive buckets: the board's own column function,
+ * counted.
+ *
+ * The insights strip used to count `m.status` itself and disagreed with the
+ * board on the facts rather than the words: a saved draft is a Draft on the
+ * board and was Queued, and therefore Active, in the strip (T-0104, C126).
+ * There is one counter now, and both surfaces read it.
+ */
+export function countMissionsByColumn<M extends MissionBoardFields>(
+  missions: readonly M[],
+): Record<MissionBoardColumn, number> {
+  const counts: Record<MissionBoardColumn, number> = {
+    draft: 0,
+    queued: 0,
+    dispatched: 0,
+    successful: 0,
+    failed: 0,
+  };
+  for (const mission of missions) counts[missionBoardColumn(mission)] += 1;
+  return counts;
 }
 
 export function isMissionActive(mission: MissionBoardFields): boolean {

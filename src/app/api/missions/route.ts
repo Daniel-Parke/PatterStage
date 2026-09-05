@@ -14,6 +14,8 @@ import { listMissions } from "@/lib/missions/mission-repository";
 import { boundsFrom, MISSION_LIST_BOUNDS } from "@/lib/list-bounds";
 import { getLatestRunForMission, listLatestRunsForMissions } from "@/lib/runs-repository";
 import { buildMissionRunView } from "@/lib/orchestration/run-deadline";
+import { getScheduleForMission, listSchedulesForMissions } from "@/lib/schedules-repository";
+import { toMissionScheduleView } from "@/lib/missions/mission-schedule-view";
 import { requireNotReadOnly } from "@/lib/api-auth";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { parseJsonBody } from "@/lib/parse-json-body";
@@ -46,7 +48,12 @@ export async function GET(request: NextRequest) {
       // sent alongside it: it carries the only honest answer to "how long has
       // this been going and when does the reconciler give up on it", and the
       // detail panel was previously guessing from the mission's createdAt.
-      return ok({ mission, run: buildMissionRunView(mission, getLatestRunForMission(mission.id)) });
+      return ok({
+        mission,
+        run: buildMissionRunView(mission, getLatestRunForMission(mission.id)),
+        // The panel's schedule card had no source until now (T-0104, D68).
+        schedule: toMissionScheduleView(getScheduleForMission(mission.id)),
+      });
     }
 
     const categoryIdParam = url.searchParams.get("categoryId");
@@ -62,11 +69,14 @@ export async function GET(request: NextRequest) {
     // One extra query for the whole page, not one per row: the board needs the
     // run anchor to distinguish a mission that started ten seconds ago from one
     // that has been dispatched for two hours.
-    const runs = listLatestRunsForMissions(missions.map((m) => m.id));
+    const ids = missions.map((m) => m.id);
+    const runs = listLatestRunsForMissions(ids);
+    const schedules = listSchedulesForMissions(ids);
     return ok({
       missions: missions.map((m) => ({
         ...m,
         run: buildMissionRunView(m, runs.get(m.id) ?? null),
+        scheduleStatus: toMissionScheduleView(schedules.get(m.id) ?? null),
       })),
     });
   } catch (error) {

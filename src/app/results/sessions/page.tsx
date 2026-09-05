@@ -131,11 +131,21 @@ export default function SessionsPage() {
   // page + sourceFilter live in the query key (src/hooks/useSessions.ts),
   // so a page click or filter change triggers exactly one fetch and a
   // cached page re-displays instantly.
+  // A mission's panel links here with ?missionId= (T-0104, D69). Read from
+  // window rather than useSearchParams: this is a client page with no Suspense
+  // boundary, and useSearchParams needs one. B11 owns this page's URL state and
+  // will very likely reshape how it is read.
+  const [missionId, setMissionId] = useState<string | null>(null);
+  useEffect(() => {
+    setMissionId(new URLSearchParams(window.location.search).get("missionId"));
+  }, []);
+
   const { data, isLoading: loading, error: loadError, refetch } = useSessions(
     page,
     sourceFilter,
     PAGE_SIZE,
     debouncedSearch,
+    missionId,
   );
 
   // Surface API errors as a persistent <LoadErrorBanner> with a Retry

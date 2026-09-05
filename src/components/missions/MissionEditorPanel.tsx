@@ -13,7 +13,8 @@ import {
 import { ChevronRight } from "lucide-react";
 import Button from "@/components/ui/Button";
 import ConfirmButton from "@/components/ui/ConfirmButton";
-import { timeAgo, titleCase } from "@/lib/utils";
+import { timeAgo, timeUntil } from "@/lib/utils";
+import { describeScheduleFiring } from "@/lib/missions/mission-schedule-view";
 import type { MissionDetail, MissionRow } from "@/hooks/missions-page-types";
 import {
   isMissionDraft,
@@ -124,10 +125,15 @@ export default function MissionEditorPanel({
                 <span className="text-ps-text-secondary ml-2 text-right">{categoryLabel}</span>
               </div>
             )}
+            {/* Cadence, not Schedule: the card below is headed Schedule, and
+                two things by that name in one panel is what neither a reader
+                nor a test can tell apart (T-0104). */}
             <div className="flex justify-between">
-              <span className="text-ps-text-muted">Schedule</span>
+              <span className="text-ps-text-muted">Cadence</span>
               <span className="text-ps-text-secondary truncate ml-2 text-right">
-                {detail.mission.schedule || "One-shot"}
+                {detail.schedule
+                  ? detail.schedule.scheduleDisplay || detail.schedule.schedule
+                  : "One-shot"}
               </span>
             </div>
             <div className="flex justify-between">
@@ -200,64 +206,50 @@ export default function MissionEditorPanel({
             </div>
           )}
 
-          {detail.cronJob && (
+          {detail.schedule && (
             <div className="rounded-lg border border-neon-orange/20 bg-dark-900/50 p-2">
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-1">
                   <Zap className="w-3 h-3 text-neon-orange" />
-                  <span className="text-xs font-mono text-ps-text-secondary">
-                    Cron Job
-                  </span>
+                  <span className="text-xs font-mono text-ps-text-secondary">Schedule</span>
                 </div>
+                {/* The old "view" link pointed at the Hermes cron surface, which
+                    is not where this schedule lives. It lives on this page. */}
                 <Link
-                  // /orchestration/cron has never existed. The cron surface is
-                  // /config/cron (src/lib/modules/registry.ts), so this "view"
-                  // link answered "which job is this?" with a 404.
-                  href={
-                    detail.cronJob.id
-                      ? `/agent/settings/cron?highlight=${encodeURIComponent(detail.cronJob.id)}`
-                      : "/agent/settings/cron"
-                  }
+                  href="#scheduled-missions"
                   onClick={(e) => e.stopPropagation()}
                   className="text-xs font-mono text-neon-orange hover:underline flex items-center gap-0.5"
                 >
-                  view
+                  Edit schedule
                   {" "}
                   <ExternalLink className="w-2.5 h-2.5" />
                 </Link>
               </div>
               <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-xs font-mono">
                 <div className="flex justify-between">
-                  <span className="text-ps-text-faint">
-                    State
-                  </span>
-                  <span
-                    className={
-                      detail.cronJob.enabled
-                        ? "text-neon-green"
-                        : "text-ps-text-muted"
-                    }
-                  >
-                    {detail.cronJob.enabled
-                      ? titleCase(
-                          detail.cronJob.state,
-                        )
-                      : "Disabled"}
+                  <span className="text-ps-text-faint">Next</span>
+                  <span className="text-ps-text-muted">
+                    {detail.schedule.nextRunAt ? timeUntil(detail.schedule.nextRunAt) : "None"}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-ps-text-faint">
-                    Last
-                  </span>
+                  <span className="text-ps-text-faint">Last</span>
                   <span className="text-ps-text-muted">
-                    {detail.cronJob.lastRun
-                      ? timeAgo(
-                          detail.cronJob.lastRun,
-                        )
-                      : "Never"}
+                    {detail.schedule.lastRunAt ? timeAgo(detail.schedule.lastRunAt) : "Never"}
                   </span>
                 </div>
               </div>
+              {detail.schedule.lastStatus && (
+                <p className="mt-1 text-xs font-mono text-ps-text-muted">
+                  Last result: {detail.schedule.lastStatus}
+                </p>
+              )}
+              {/* Scheduled and going to happen are not the same thing. */}
+              {describeScheduleFiring(detail.schedule) && (
+                <p className="mt-1 rounded border border-neon-orange/30 bg-neon-orange/5 px-1.5 py-1 text-xs text-neon-orange">
+                  {describeScheduleFiring(detail.schedule)}
+                </p>
+              )}
             </div>
           )}
 
@@ -317,6 +309,18 @@ export default function MissionEditorPanel({
               >
                 Duplicate
               </Button>
+            )}
+            {/* Everything this mission produced. The mirror of
+                mission-deep-link.ts, which is how a session row opens its
+                parent mission (T-0104, D69). */}
+            {mission.sessionId && (
+              <Link
+                href={`/results/sessions?missionId=${encodeURIComponent(mission.id)}`}
+                onClick={(e) => e.stopPropagation()}
+                className="inline-flex items-center gap-1 rounded-lg border border-white/10 px-2.5 py-1.5 text-xs font-mono text-ps-text-secondary hover:border-white/20 hover:text-white transition-colors"
+              >
+                View sessions
+              </Link>
             )}
             {isMissionDraft(mission) ? (
               <Button

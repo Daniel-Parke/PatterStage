@@ -37,7 +37,9 @@ export function useMissionsApi() {
   // sets the header (see src/lib/api-fetch.ts), and `safeApiCallData` does
   // the stringification AND the envelope unwrap internally. `createCategory`
   // reads the inner `category` field to return the created row;
-  // `updateCategory` is fire-and-forget so the `result` is ignored.
+  // `updateCategory` RETURNS its result: calling it fire-and-forget is what
+  // made a refused rename look like a successful one the reload reverted
+  // (T-0104, D71).
   const createCategory = useCallback(async (name: string, color?: string) => {
     // The route returns `{ data: { category: {...} } }` (envelope).
     // `safeApiCallData<T>` unwraps the envelope internally and returns
@@ -56,19 +58,21 @@ export function useMissionsApi() {
     async (
       id: string,
       patch: { name?: string; color?: string; sortOrder?: number },
-    ) => {
-      await safeApiCall("/api/mission-categories", {
+    ) =>
+      safeApiCall("/api/mission-categories", {
         method: "PUT",
         body: { id, ...patch },
-      });
-    },
+      }),
     [],
   );
 
   const deleteCategory = useCallback(
     async (id: string, reassignToId: string | null) => {
-      const params = new URLSearchParams({ id });
-      if (reassignToId) params.set("reassignToId", reassignToId);
+      // Always send it. The route maps "" to null and treats only an ABSENT
+      // parameter as undefined, which is the branch that 400s with
+      // "reassignToId required when category is in use" — so omitting it is
+      // what made an explicit "Uncategorized" choice fail (T-0104, D71).
+      const params = new URLSearchParams({ id, reassignToId: reassignToId ?? "" });
       await apiFetch(`/api/mission-categories?${params.toString()}`, {
         method: "DELETE",
       });

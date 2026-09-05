@@ -87,7 +87,7 @@ describe("D66: the mission panel's Cancel can be confirmed", () => {
       ...over,
     } as MissionRow;
   }
-  const detailFor = (m: MissionRow): MissionDetail => ({ mission: m, run: null, cronJob: null, sessions: [] });
+  const detailFor = (m: MissionRow): MissionDetail => ({ mission: m, run: null, schedule: null });
 
   it("arms on the first click, stays enabled, and cancels on the second", () => {
     const onCancel = jest.fn();

@@ -3,7 +3,6 @@
 
 import {
   filterMissions,
-  computeMissionCounts,
   computeMissionCategoryPills,
   computeTemplateCategoryPills,
   filterGroupedTemplates,
@@ -85,24 +84,10 @@ describe("filterMissions", () => {
   });
 });
 
-describe("computeMissionCounts", () => {
-  it("counts non-mutually-exclusive buckets (queuedForRun → active AND queued)", () => {
-    const counts = computeMissionCounts([
-      m({ status: "dispatched" }),
-      m({ status: "successful" }),
-      m({ status: "failed" }),
-      m({ status: "queued", queuedForRun: false }), // draft
-      m({ status: "queued", queuedForRun: true }), // active + queued
-    ]);
-    expect(counts).toEqual({
-      active: 2, // dispatched + queuedForRun
-      completed: 1,
-      failed: 1,
-      drafts: 1,
-      queued: 1,
-    });
-  });
-});
+// computeMissionCounts was here. It was a third count set in a third
+// vocabulary, rendered by nothing, and it disagreed with the board about which
+// column a saved draft was in. The one counter lives in mission-board.ts now
+// and b10-board-and-insights-agree.test.tsx holds it (T-0104, C126).
 
 describe("computeMissionCategoryPills", () => {
   it("counts per-category + an Uncategorized bucket", () => {

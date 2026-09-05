@@ -18,7 +18,6 @@ import type { MissionTemplate } from "@/components/missions/TemplateModals";
 import type { MissionRow } from "@/hooks/missions-page-types";
 import {
   filterMissions,
-  computeMissionCounts,
   computeMissionCategoryPills,
   computeTemplateCategoryPills,
   filterGroupedTemplates,
@@ -77,12 +76,6 @@ export function useMissionsFiltering({
     [missions, filter, search, missionCategoryFilter],
   );
 
-  // Counts are a single .reduce() pass (see computeMissionCounts) whose 5
-  // buckets are intentionally NON-mutually-exclusive — a `status:"queued"
-  // && queuedForRun:true` mission increments both `active` and `queued`,
-  // matching the original 5 independent .filter().length passes.
-  const missionCounts = useMemo(() => computeMissionCounts(missions), [missions]);
-
   const templateCategoryPills = useMemo(
     () => computeTemplateCategoryPills(templates, categories),
     [templates, categories],
@@ -110,7 +103,6 @@ export function useMissionsFiltering({
     collapsedColumns,
     setCollapsedColumns,
     filtered,
-    missionCounts,
     templateCategoryPills,
     missionCategoryPills,
     filteredGrouped,

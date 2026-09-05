@@ -5,6 +5,8 @@ import { Rocket, Loader2, CheckCircle2, XCircle } from "lucide-react";
 import Donut from "@/components/viz/Donut";
 import ProgressRing from "@/components/viz/ProgressRing";
 import { neon, neonAlpha, type NeonColor } from "@/components/viz/colors";
+import { countMissionsByColumn } from "@/lib/missions/mission-board";
+import { MISSION_COLUMN_LABELS } from "@/lib/status-labels";
 import type { MissionRow } from "@/hooks/missions-page-types";
 
 function Tile({
@@ -35,18 +37,13 @@ function Tile({
  * it reflects exactly what's on screen. Hidden when there are no missions.
  */
 export default function MissionInsights({ missions }: { missions: MissionRow[] }) {
+  // This file does not count missions. It used to, over m.status, and
+  // disagreed with the board about which column a saved draft was in
+  // (T-0104, C126).
   const s = useMemo(() => {
-    const c = { queued: 0, dispatched: 0, successful: 0, failed: 0 };
-    for (const m of missions) {
-      if (m.status in c) c[m.status as keyof typeof c]++;
-    }
+    const c = countMissionsByColumn(missions);
     const terminal = c.successful + c.failed;
-    return {
-      ...c,
-      total: missions.length,
-      active: c.queued + c.dispatched,
-      successRate: terminal > 0 ? c.successful / terminal : 0,
-    };
+    return { ...c, total: missions.length, successRate: terminal > 0 ? c.successful / terminal : 0 };
   }, [missions]);
 
   if (missions.length === 0) return null;
@@ -59,10 +56,11 @@ export default function MissionInsights({ missions }: { missions: MissionRow[] }
           size={96}
           thickness={12}
           segments={[
-            { label: "Successful", value: s.successful, color: "green" },
-            { label: "Failed", value: s.failed, color: "pink" },
-            { label: "Dispatched", value: s.dispatched, color: "yellow" },
-            { label: "Queued", value: s.queued, color: "cyan" },
+            { label: MISSION_COLUMN_LABELS.draft, value: s.draft, color: "purple" },
+            { label: MISSION_COLUMN_LABELS.queued, value: s.queued, color: "orange" },
+            { label: MISSION_COLUMN_LABELS.dispatched, value: s.dispatched, color: "cyan" },
+            { label: MISSION_COLUMN_LABELS.successful, value: s.successful, color: "green" },
+            { label: MISSION_COLUMN_LABELS.failed, value: s.failed, color: "pink" },
           ]}
           center={s.total}
           centerSub="missions"
@@ -70,9 +68,9 @@ export default function MissionInsights({ missions }: { missions: MissionRow[] }
       </div>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-[repeat(auto-fit,minmax(7.5rem,1fr))]">
         <Tile icon={Rocket} label="Total" value={s.total} color="cyan" />
-        <Tile icon={Loader2} label="Active" value={s.active} color="yellow" />
-        <Tile icon={CheckCircle2} label="Done" value={s.successful} color="green" />
-        <Tile icon={XCircle} label="Failed" value={s.failed} color="pink" />
+        <Tile icon={Loader2} label={MISSION_COLUMN_LABELS.dispatched} value={s.dispatched} color="yellow" />
+        <Tile icon={CheckCircle2} label={MISSION_COLUMN_LABELS.successful} value={s.successful} color="green" />
+        <Tile icon={XCircle} label={MISSION_COLUMN_LABELS.failed} value={s.failed} color="pink" />
       </div>
       <div className="flex justify-center">
         <ProgressRing

@@ -21,7 +21,7 @@ import {
   resolveCategoryDisplay,
   buildCategoryMap,
 } from "@/lib/missions/mission-categories";
-import { titleCase } from "@/lib/utils";
+
 import type { MissionsPageViewModel } from "@/hooks/useMissionsPage";
 import type { MissionRow } from "@/hooks/missions-page-types";
 import {
@@ -29,12 +29,19 @@ import {
   RUN_TONE_TEXT,
   STATUS_CONFIG,
 } from "./mission-page-constants";
-import { missionBoardColumn } from "@/lib/missions/mission-board";
+import {
+  MISSION_BOARD_COLUMNS,
+  countMissionsByColumn,
+  missionBoardColumn,
+} from "@/lib/missions/mission-board";
+import { MISSION_COLUMN_LABELS } from "@/lib/status-labels";
 import { describeMissionRunState } from "@/lib/missions/mission-run-state";
 import MissionEditorPanel from "./MissionEditorPanel";
 
-const STATUS_FILTERS = ["all", "draft", "queued", "dispatched", "successful", "failed"] as const;
-const BOARD_COLUMNS = ["draft", "queued", "dispatched", "successful", "failed"] as const;
+// The board's columns are the board module's, and so are its counts: a second
+// list here is how the strip beside it ended up in a second vocabulary
+// (T-0104, C126).
+const STATUS_FILTERS = ["all", ...MISSION_BOARD_COLUMNS] as const;
 
 export interface MissionsListProps {
   vm: MissionsPageViewModel;
@@ -83,11 +90,13 @@ export default function MissionsList({ vm }: MissionsListProps) {
   // which is what advances these numbers.
   /* eslint-disable-next-line react-hooks/purity -- live durations read the wall clock; the 15s poll re-renders the board */
   const renderedAt = Date.now();
+  // One pass for the badges, and the same function the strip above reads.
+  const columnCounts = countMissionsByColumn(filtered);
 
   return (
     <div className="w-full max-w-none px-6 py-6">
-      {/* The status summary (Total / Active / Done / Failed) is rendered once by
-          <MissionInsights> above this list — no duplicate tile row here. */}
+      {/* The status summary is rendered once by <MissionInsights> above this
+          list, off the same countMissionsByColumn call this board uses. */}
       {!showCreate && (
         <div className="mb-6" data-testid="missions-quick-templates">
           <div className="flex flex-wrap justify-between items-start gap-4 mb-3">
@@ -231,13 +240,13 @@ export default function MissionsList({ vm }: MissionsListProps) {
                   type="button"
                   key={f}
                   onClick={() => setFilter(f)}
-                  className={`px-2.5 py-1 rounded-md text-xs font-mono capitalize transition-colors ${
+                  className={`px-2.5 py-1 rounded-md text-xs font-mono transition-colors ${
                     filter === f
                       ? "bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/30"
                       : "text-ps-text-muted hover:text-ps-text-muted border border-transparent"
                   }`}
                 >
-                  {f}
+                  {f === "all" ? "All" : MISSION_COLUMN_LABELS[f]}
                 </button>
               ),
             )}
@@ -280,7 +289,7 @@ export default function MissionsList({ vm }: MissionsListProps) {
         </div>
       ) : (
         <div className="flex flex-col lg:flex-row gap-4 overflow-x-auto pb-2">
-          {BOARD_COLUMNS.map(
+          {MISSION_BOARD_COLUMNS.map(
             (status) => {
               const columnMissions = filtered.filter(
                 (m) => missionBoardColumn(m) === status,
@@ -319,13 +328,7 @@ export default function MissionsList({ vm }: MissionsListProps) {
                         className={`w-2 h-2 rounded-full ${sc?.columnDot || "bg-white/20"}`}
                       />
                       <span className="text-xs font-mono text-ps-text-muted uppercase tracking-wider">
-                        {status === "successful"
-                          ? "Completed"
-                          : status === "failed"
-                            ? "Failed"
-                            : status === "draft"
-                              ? "Drafts"
-                              : titleCase(status)}
+                        {MISSION_COLUMN_LABELS[status]}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
@@ -342,7 +345,7 @@ export default function MissionsList({ vm }: MissionsListProps) {
                       <span
                         className={`text-xs font-mono px-2 py-0.5 rounded-full ${sc?.bg} ${sc?.text}`}
                       >
-                        {columnMissions.length}
+                        {columnCounts[status]}
                       </span>
                     </div>
                   </div>
@@ -426,16 +429,16 @@ export default function MissionsList({ vm }: MissionsListProps) {
                                             )}
                                           </span>
                                           {mission.status !== "queued" &&
-                                            mission.cronJob?.lastStatus && (
+                                            mission.scheduleStatus?.lastStatus && (
                                               <span
                                                 className={
-                                                  mission.cronJob.lastStatus ===
+                                                  mission.scheduleStatus.lastStatus ===
                                                   "ok"
                                                     ? "text-neon-green"
                                                     : "text-red-400"
                                                 }
                                               >
-                                                {mission.cronJob.lastStatus}
+                                                {mission.scheduleStatus.lastStatus}
                                               </span>
                                             )}
                                         </div>

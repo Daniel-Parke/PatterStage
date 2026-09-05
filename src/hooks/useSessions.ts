@@ -34,6 +34,12 @@ export function useSessions(
   source: SessionSource | null,
   pageSize: number,
   search?: string,
+  /**
+   * Show only the sessions one mission produced. The route and the repository
+   * have always accepted this; nothing ever sent it, so the mission panel had
+   * no way to link to its own output (T-0104, D69).
+   */
+  missionId?: string | null,
 ) {
   const params = new URLSearchParams({
     limit: String(pageSize),
@@ -42,8 +48,9 @@ export function useSessions(
   if (source) params.set("source", source);
   const trimmed = search?.trim();
   if (trimmed) params.set("search", trimmed);
+  if (missionId) params.set("missionId", missionId);
   return useApiResource<SessionsResponse>(
-    ["sessions", page, source, trimmed ?? ""],
+    ["sessions", page, source, trimmed ?? "", missionId ?? ""],
     `/api/sessions?${params}`,
     {
       select: (p) => p as SessionsResponse | undefined,

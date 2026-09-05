@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import { toastError, setErrorFromCaught } from "@/lib/api-fetch";
+import { toastFromResult } from "@/lib/dashboard/toast-from-result";
 import type { ManagedCategory } from "@/components/missions/CategoryManagerModal";
 import type { useMissionsApi } from "@/hooks/useMissionsApi";
 
@@ -84,22 +85,36 @@ export function useMissionCategories({
     [createCategory, loadCategories, showToast],
   );
 
+  // Both writes answer whether they landed. Reloading over a refused write is
+  // what made a rejected rename look like a successful one that got reverted
+  // (T-0104, D71), so on failure nothing reloads and the caller keeps the
+  // editor open with the operator's text still in it.
   const handleUpdateCategory = useCallback(
-    async (id: string, patch: { name?: string; color?: string }) => {
-      await updateCategory(id, patch);
+    async (id: string, patch: { name?: string; color?: string }): Promise<boolean> => {
+      const res = await updateCategory(id, patch);
+      toastFromResult(showToast, res, "Category updated", "Failed to update category");
+      if (!res.ok) return false;
       await loadCategories();
+      return true;
     },
-    [updateCategory, loadCategories],
+    [updateCategory, loadCategories, showToast],
   );
 
   const handleDeleteCategory = useCallback(
-    async (id: string, reassignToId: string | null) => {
-      await deleteCategory(id, reassignToId);
+    async (id: string, reassignToId: string | null): Promise<boolean> => {
+      try {
+        await deleteCategory(id, reassignToId);
+      } catch (error) {
+        toastError(showToast, error, "Failed to delete category");
+        return false;
+      }
+      showToast("Category deleted", "success");
       // Refresh all three affected slices in parallel: the category catalog
       // (own) plus the missions/templates the delete may have reassigned.
       await Promise.allSettled([loadCategories(), onMissionsReassigned()]);
+      return true;
     },
-    [deleteCategory, loadCategories, onMissionsReassigned],
+    [deleteCategory, loadCategories, onMissionsReassigned, showToast],
   );
 
   const openCategoryManager = useCallback(() => setShowCategoryManager(true), []);

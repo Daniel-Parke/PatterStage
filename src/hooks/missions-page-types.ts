@@ -10,14 +10,18 @@
 
 import type { Mission } from "@/types/console";
 import type { MissionRunView } from "@/lib/missions/mission-run-state";
+import type { MissionScheduleView } from "@/lib/missions/mission-schedule-view";
 
 export type MissionRow = Mission & {
-  cronJob?: {
-    state: string;
-    enabled: boolean;
-    lastRun: string | null;
-    lastStatus: string | null;
-  };
+  /**
+   * The mission's schedule, as the LIST branch of /api/missions publishes it.
+   *
+   * Not called `schedule`: `Mission.schedule` is already the stored cron
+   * string, and an intersection would give the property the unusable type
+   * `string & MissionScheduleView`. It replaces `cronJob`, which nothing has
+   * ever populated (T-0104, D68).
+   */
+  scheduleStatus?: MissionScheduleView | null;
   latestSession?: { id: string; modified: string } | null;
   /**
    * The mission's latest run, as /api/missions publishes it. Null for a
@@ -36,15 +40,14 @@ export interface MissionDetail {
   mission: MissionRow;
   /** The mission's latest run. See MissionRow.run. */
   run?: MissionRunView | null;
-  cronJob: {
-    id: string;
-    name: string;
-    state: string;
-    enabled: boolean;
-    lastRun: string | null;
-    nextRun: string | null;
-    lastStatus: string | null;
-    schedule: string;
-  } | null;
-  sessions: Array<{ id: string; modified: string; size: number }>;
+  /**
+   * Renamed from `cronJob`: the thing is a PatterStage schedule, not a Hermes
+   * cron job, and this is the first version of the field anything sends.
+   *
+   * `sessions` went with it. It was declared required and no route has ever
+   * sent it, so every MissionDetail in the tree was built with a `sessions: []`
+   * that was a lie; the mission-to-sessions affordance is the link on the
+   * panel.
+   */
+  schedule: MissionScheduleView | null;
 }

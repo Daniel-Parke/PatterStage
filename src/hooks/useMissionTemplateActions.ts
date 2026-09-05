@@ -67,8 +67,6 @@ export function useMissionTemplateActions({
     newSkills,
     newToolsets,
     newCategoryId,
-    clearMissionFormFields,
-    applyTemplateToForm,
   } = composer;
 
   const {
@@ -76,15 +74,24 @@ export function useMissionTemplateActions({
     editingTemplateId,
     setEditingTemplateId,
     templateName,
-    setTemplateName,
     templateDescription,
-    setTemplateDescription,
     templateIcon,
-    setTemplateIcon,
     templateColor,
-    setTemplateColor,
     setTemplateSaving,
     closeTemplateManager,
+    templateInstruction,
+    templateContext,
+    templateGoals,
+    templateProfile,
+    templateModel,
+    templateProvider,
+    templateTimeout,
+    templateLocalDirs,
+    templateReferences,
+    templateSkills,
+    templateCategoryId,
+    resetTemplateDraft,
+    seedTemplateDraft,
   } = templateState;
 
   const persistTemplate = useCallback(
@@ -132,10 +139,10 @@ export function useMissionTemplateActions({
 
     const name = newName.trim() || "Untitled Template";
 
-    // Check if we're overwriting an existing template
-    const existingTemplate = editingTemplateId
-      ? templates.find((t) => t.id === editingTemplateId)
-      : templates.find(
+    // The target is resolved BY NAME, never by editingTemplateId: a stale id
+    // left behind by a soft close is how a mission saved as a template
+    // overwrote whatever the operator last had open (T-0104, D70).
+    const existingTemplate = templates.find(
           (t) =>
             t.name === name &&
             // `isCustom` is already declared (optional) on the
@@ -158,9 +165,12 @@ export function useMissionTemplateActions({
       action: existingTemplate ? "update" : "create",
       templateId: existingTemplate?.id,
       name,
-      icon: templateIcon,
-      color: templateColor,
-      description: templateDescription,
+      // A template saved from the composer takes the defaults. The icon, the
+      // colour and the description belong to the editor draft, and reading
+      // them here is another way for one surface to write another surface.
+      icon: "Zap",
+      color: "cyan",
+      description: "",
       instruction: newInstruction,
       context: newContext,
       outputFormat: newOutputFormat,
@@ -178,15 +188,14 @@ export function useMissionTemplateActions({
     });
 
     await persistTemplate(payload, () => setEditingTemplateId(null));
-  }, [newInstruction, newName, editingTemplateId, templates, overwrite, templateIcon, templateColor, templateDescription, newContext, newOutputFormat, newConstraints, newGoals, newLocalDirs, newReferences, newSkills, newToolsets, newProfile, newModel, newProvider, newTimeout, newCategoryId, persistTemplate, setEditingTemplateId]);
+  }, [newInstruction, newName, templates, overwrite, newContext, newOutputFormat, newConstraints, newGoals, newLocalDirs, newReferences, newSkills, newToolsets, newProfile, newModel, newProvider, newTimeout, newCategoryId, persistTemplate, setEditingTemplateId]);
 
   const handleCreateNewTemplate = useCallback(() => {
     setEditingTemplateId(null);
-    setTemplateName("");
-    setTemplateDescription("");
-    setTemplateIcon("Zap");
-    setTemplateColor("cyan");
-    clearMissionFormFields();
+    // The editor own draft, not the composer form. Blanking the composer here
+    // destroyed whatever mission the operator was half way through writing
+    // (T-0104, D72).
+    resetTemplateDraft();
     // `closeTemplateManager` is the hook's stable close-callback for
     // the template-manager modal (sibling of `openTemplateManager`).
     // Pre-session-211: this site inlined `setShowTemplateManager
@@ -203,7 +212,7 @@ export function useMissionTemplateActions({
     // correctness no-op but keeps the linter happy).
     closeTemplateManager();
     setShowTemplateEditor(true);
-  }, [closeTemplateManager, clearMissionFormFields, setEditingTemplateId, setTemplateName, setTemplateDescription, setTemplateIcon, setTemplateColor, setShowTemplateEditor]);
+  }, [closeTemplateManager, resetTemplateDraft, setEditingTemplateId, setShowTemplateEditor]);
 
   const handleTemplateSave = useCallback(async () => {
     if (!templateName.trim()) return;
@@ -215,20 +224,23 @@ export function useMissionTemplateActions({
       icon: templateIcon,
       color: templateColor,
       description: templateDescription,
-      instruction: newInstruction,
-      context: newContext,
+      // Every body field comes from the editor own draft. Reading the composer
+      // here is what let a half-written mission leak into a template save
+      // (T-0104, D72).
+      instruction: templateInstruction,
+      context: templateContext,
       outputFormat: newOutputFormat,
       constraints: newConstraints,
-      goals: newGoals,
-      localDirs: newLocalDirs,
-      references: newReferences,
-      suggestedSkills: newSkills,
-      suggestedToolsets: newToolsets,
-      profile: newProfile,
-      defaultModel: newModel,
-      defaultProvider: newProvider,
-      timeoutMinutes: newTimeout,
-      categoryId: newCategoryId ?? null,
+      goals: templateGoals,
+      localDirs: templateLocalDirs,
+      references: templateReferences,
+      suggestedSkills: templateSkills,
+      suggestedToolsets: [],
+      profile: templateProfile,
+      defaultModel: templateModel,
+      defaultProvider: templateProvider,
+      timeoutMinutes: templateTimeout,
+      categoryId: templateCategoryId ?? null,
       dispatchMode: editingTemplateId ? undefined : newDispatch,
       schedule: editingTemplateId ? undefined : newSchedule,
     });
@@ -237,16 +249,14 @@ export function useMissionTemplateActions({
       setShowTemplateEditor(false);
       setEditingTemplateId(null);
     });
-  }, [templateName, editingTemplateId, templateIcon, templateColor, templateDescription, newInstruction, newContext, newOutputFormat, newConstraints, newGoals, newLocalDirs, newReferences, newSkills, newToolsets, newProfile, newModel, newProvider, newTimeout, newCategoryId, newDispatch, newSchedule, persistTemplate, setShowTemplateEditor, setEditingTemplateId]);
+  }, [templateName, editingTemplateId, templateIcon, templateColor, templateDescription, templateInstruction, templateContext, newOutputFormat, newConstraints, templateGoals, templateLocalDirs, templateReferences, templateSkills, templateProfile, templateModel, templateProvider, templateTimeout, templateCategoryId, newDispatch, newSchedule, persistTemplate, setShowTemplateEditor, setEditingTemplateId]);
 
   const handleEditTemplate = useCallback(
     (t: MissionTemplate) => {
       setEditingTemplateId(t.id);
-      setTemplateName(t.name);
-      setTemplateDescription(t.description || "");
-      setTemplateIcon(t.icon);
-      setTemplateColor(t.color);
-      applyTemplateToForm(t);
+      // Into the editor draft. applyTemplateToForm wrote the composer fields,
+      // which is the other half of D72.
+      seedTemplateDraft(t);
       // `closeTemplateManager` is the hook's stable close-callback for
       // the template-manager modal (sister migration to the same
       // pattern in `handleCreateNewTemplate` above and
@@ -261,7 +271,7 @@ export function useMissionTemplateActions({
       closeTemplateManager();
       setShowTemplateEditor(true);
     },
-    [applyTemplateToForm, closeTemplateManager, setEditingTemplateId, setTemplateName, setTemplateDescription, setTemplateIcon, setTemplateColor, setShowTemplateEditor],
+    [seedTemplateDraft, closeTemplateManager, setEditingTemplateId, setShowTemplateEditor],
   );
 
   const handleDeleteTemplate = useCallback(async (templateId: string) => {

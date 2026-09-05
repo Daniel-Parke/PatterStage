@@ -14,6 +14,7 @@
 import { useState } from "react";
 import { CalendarClock, Plus, Play, Trash2, ChevronDown } from "lucide-react";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
+import ConfirmButton from "@/components/ui/ConfirmButton";
 import RunProgress from "@/components/schedule/RunProgress";
 import { useSchedules, useMissionOptions } from "@/hooks/useSchedules";
 import { timeUntil } from "@/lib/utils";
@@ -30,7 +31,14 @@ export default function ScheduledMissions() {
   const [schedule, setSchedule] = useState("every 30m");
   const [catchUpPolicy, setCatchUpPolicy] = useState<"fire_once" | "skip">("fire_once");
   const [formError, setFormError] = useState<string | null>(null);
+  // Delete, pause and Run now used to fail in silence. This section has no
+  // toast provider of its own, so the house read-failure banner is also its
+  // write-failure banner (T-0104, D73).
+  const [actionError, setActionError] = useState<string | null>(null);
   const [activeRunId, setActiveRunId] = useState<string | null>(null);
+
+  const failWith = (fallback: string) => (err: unknown) =>
+    setActionError(err instanceof Error && err.message ? err.message : fallback);
 
   const enabledCount = schedules.filter((s) => s.enabled).length;
   const pausedCount = schedules.length - enabledCount;
@@ -45,24 +53,25 @@ export default function ScheduledMissions() {
     create.mutate(
       { missionId: missionId.trim(), name: name.trim() || undefined, schedule: schedule.trim(), catchUpPolicy },
       {
-        onSuccess: (res) => {
-          if (!res.ok) setFormError(res.error ?? "Failed to create schedule");
-          else {
-            setName("");
-            setMissionId("");
-            setShowForm(false);
-          }
+        onSuccess: () => {
+          setName("");
+          setMissionId("");
+          setShowForm(false);
         },
+        onError: (err) =>
+          setFormError(err instanceof Error && err.message ? err.message : "Failed to create schedule"),
       },
     );
   };
 
   const triggerRun = (id: string) => {
+    setActionError(null);
     runNow.mutate(id, {
       onSuccess: (res) => {
         const rid = res.data?.data?.runId;
         if (rid) setActiveRunId(rid);
       },
+      onError: failWith("Failed to start the run"),
     });
   };
 
@@ -70,7 +79,8 @@ export default function ScheduledMissions() {
     "w-full rounded-lg border border-white/10 bg-dark-900/60 px-3 py-2 text-sm text-ps-text-primary focus:border-neon-orange/50 focus:outline-none";
 
   return (
-    <section className="mt-6">
+    /* The panel's "Edit schedule" link targets this anchor. */
+    <section id="scheduled-missions" className="mt-6">
       {/* ── Section header ── */}
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
@@ -92,6 +102,7 @@ export default function ScheduledMissions() {
       </div>
 
       {error && <LoadErrorBanner error={error} onRetry={() => refetch()} />}
+      {actionError && <LoadErrorBanner error={actionError} onRetry={() => setActionError(null)} />}
 
       {/* ── Create form (collapsible) ── */}
       {showForm && (
@@ -189,7 +200,13 @@ export default function ScheduledMissions() {
               </div>
               <button
                 type="button"
-                onClick={() => toggle.mutate({ id: s.id, enabled: !s.enabled })}
+                onClick={() => {
+                  setActionError(null);
+                  toggle.mutate(
+                    { id: s.id, enabled: !s.enabled },
+                    { onError: failWith("Failed to update the schedule") },
+                  );
+                }}
                 className="rounded-lg border border-white/10 px-2.5 py-1 font-mono text-xs text-ps-text-muted hover:bg-white/5"
               >
                 {s.enabled ? "Pause" : "Resume"}
@@ -201,14 +218,20 @@ export default function ScheduledMissions() {
               >
                 <Play className="h-3 w-3" /> Run
               </button>
-              <button
-                type="button"
-                aria-label={`Delete the schedule "${s.name}"`}
-                onClick={() => remove.mutate(s.id)}
-                className="flex items-center gap-1 rounded-lg border border-red-500/30 px-2.5 py-1 font-mono text-xs text-red-300 hover:bg-red-500/10"
+              {/* Its own instance per row, so an arm on one row cannot fire on
+                  another, and the armed button is never disabled (D66). */}
+              <ConfirmButton
+                variant="danger"
+                size="sm"
+                aria-label={`Delete the schedule "${s.name || s.schedule}"`}
+                confirmLabel="Confirm?"
+                onConfirm={() => {
+                  setActionError(null);
+                  remove.mutate(s.id, { onError: failWith("Failed to delete the schedule") });
+                }}
               >
                 <Trash2 className="h-3 w-3" />
-              </button>
+              </ConfirmButton>
             </div>
           ))}
         </div>

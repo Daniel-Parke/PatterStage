@@ -21,6 +21,7 @@
 import type { ComposerRunStatus } from "@/lib/composer/schema";
 import type { SessionStatus } from "@/lib/sessions/session-repository";
 import type { SubsystemState } from "@/lib/status/subsystems";
+import type { MissionBoardColumn } from "@/lib/missions/mission-board";
 
 export const STATUS_VOCABULARY = [
   "Draft",
@@ -104,3 +105,17 @@ export const SYNC_STATUS_LABELS = {
   drift: "Out of sync",
   error: "Failed",
 } as const satisfies Record<SyncStatus, StatusLabel>;
+
+/**
+ * The board's five columns, in the ratified words (decision 13).
+ *
+ * `satisfies StatusLabel` is what makes an off-vocabulary word a compile error
+ * rather than a badge. It agrees with missionStatusLabel above.
+ */
+export const MISSION_COLUMN_LABELS = {
+  draft: "Draft",
+  queued: "Queued",
+  dispatched: "Running",
+  successful: "Completed",
+  failed: "Failed",
+} as const satisfies Record<MissionBoardColumn, StatusLabel>;
