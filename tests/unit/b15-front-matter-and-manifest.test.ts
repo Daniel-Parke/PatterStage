@@ -329,6 +329,51 @@ describe("B15 · buildManifest", () => {
     expect(guides?.pages.map((p) => p.slug)).toEqual(["guides/chat", "guides/missions"]);
   });
 
+  it("puts nav ahead of the slug, which is the whole reason nav exists", () => {
+    // chat/missions happen to be alphabetical as well as in nav order, so the
+    // case above cannot tell a nav sort from no sort at all. This one can: the
+    // rail's order is a decision the author makes, not one the alphabet makes.
+    const disagreeing: DocPage[] = [
+      {
+        path: "docs/guides/zebra.md",
+        slug: "guides/zebra",
+        body: "",
+        data: { title: "Zebra", summary: "Last alphabetically, first in the rail", section: "guides", nav: 1 },
+      },
+      {
+        path: "docs/guides/apple.md",
+        slug: "guides/apple",
+        body: "",
+        data: { title: "Apple", summary: "First alphabetically, last in the rail", section: "guides", nav: 2 },
+      },
+    ];
+    const manifest = lib().buildManifest(disagreeing);
+    expect(manifest.sections[0].pages.map((p) => p.slug)).toEqual(["guides/zebra", "guides/apple"]);
+    expect(manifest.order).toEqual(["guides/zebra", "guides/apple"]);
+  });
+
+  it("keeps a section's pages out of another section's list, whatever their nav", () => {
+    // The grouping loop walks SECTIONS, so a page can only land in its own
+    // section; this pins that rather than leaving it to the loop's shape.
+    const mixed: DocPage[] = [
+      {
+        path: "docs/concepts/late.md",
+        slug: "concepts/late",
+        body: "",
+        data: { title: "Late", summary: "A concept with a high nav", section: "concepts", nav: 900 },
+      },
+      {
+        path: "docs/guides/early.md",
+        slug: "guides/early",
+        body: "",
+        data: { title: "Early", summary: "A guide with a low nav", section: "guides", nav: 1 },
+      },
+    ];
+    const manifest = lib().buildManifest(mixed);
+    expect(manifest.sections.map((s) => s.id)).toEqual(["concepts", "guides"]);
+    expect(manifest.order).toEqual(["concepts/late", "guides/early"]);
+  });
+
   it("maps every screen to the slug that documents it", () => {
     const manifest = lib().buildManifest(pages);
     expect(manifest.screens).toEqual({

@@ -213,9 +213,10 @@ export function parseDocFrontMatter(source, path) {
  * that moves on every run trains everyone to re-bless it blind.
  */
 export function buildManifest(pages) {
+  // Within a section only. The grouping below walks SECTIONS itself, so a
+  // section key in this comparator would be a second answer to a question
+  // already settled, and a second answer is a place for the two to disagree.
   const sorted = [...pages].sort((a, b) => {
-    const s = SECTIONS.indexOf(a.data.section) - SECTIONS.indexOf(b.data.section);
-    if (s !== 0) return s;
     if (a.data.nav !== b.data.nav) return a.data.nav - b.data.nav;
     return a.slug.localeCompare(b.slug);
   });

@@ -20,7 +20,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { allModuleRoutes } from "@/lib/modules/registry";
+import { allModuleRoutes, documentedRoutes } from "@/lib/modules/registry";
 
 const ROOT = join(__dirname, "..", "..");
 
@@ -126,17 +126,28 @@ describe("B15 · docs/manifest.json is a derived view with a gate", () => {
 
 describe("B15 · the manifest covers every documented registry route", () => {
   /** Decision 8: the generated /agent/settings/<section> editors share one guide,
-   *  so the covered set is the rail's own routes plus the Settings index. The
-   *  same filter as APP_MATRIX_ROUTES in tests/e2e/app-routes.ts. */
-  const documented = allModuleRoutes().filter(
-    (p) => p === "/agent/settings" || !p.startsWith("/agent/settings/"),
-  );
+   *  so the covered set is the rail's own routes plus the Settings index. Read
+   *  from the SHIPPED function rather than recomputed here: a copy of the filter
+   *  in the test is a second definition, and the gate would go on passing while
+   *  documentedRoutes() drifted away from it. */
+  const documented = documentedRoutes();
 
   it("derives a non-trivial route set from the live registry", () => {
     expect(documented.length).toBeGreaterThan(15);
     expect(documented).toContain("/work/missions");
     expect(documented).toContain("/agent/settings");
     expect(documented).not.toContain("/agent/settings/agent");
+  });
+
+  it("is the rail's routes minus the generated settings editors, and nothing else", () => {
+    // The definition, pinned once against allModuleRoutes(). Without this the
+    // case above passes for any filter that happens to keep /work/missions and
+    // drop one settings section.
+    const all = allModuleRoutes();
+    expect(all.length).toBeGreaterThan(documented.length);
+    expect([...documented].sort()).toEqual(
+      all.filter((p) => p === "/agent/settings" || !p.startsWith("/agent/settings/")).sort(),
+    );
   });
 
   it("has a guide for each of them", () => {

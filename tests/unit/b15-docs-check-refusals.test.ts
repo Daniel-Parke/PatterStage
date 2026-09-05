@@ -240,6 +240,25 @@ describe("B15 · docs:check refusal 4 — an undefined concept id", () => {
     );
   });
 
+  it("does not let a page in another tier define a concept by its basename", () => {
+    // docs/guides/mission.md is a guide, not a definition. Reading its basename
+    // as a concept id would mean a concepts/ page could be deleted and every
+    // reference to it stay green.
+    const input = cleanInput();
+    const pages = input.pages
+      .filter((p) => p.slug !== "concepts/mission")
+      .concat(
+        makePage({
+          slug: "guides/mission",
+          data: { title: "Mission guide", summary: "Not a definition", section: "guides", nav: 25 },
+        }),
+      );
+    const refusals = lib()
+      .checkDocs({ ...input, pages })
+      .filter((r) => r.code === "undefined-concept");
+    expect(refusals.map((r) => r.subject)).toEqual(["mission"]);
+  });
+
   it("takes the concept id from the concepts page's own basename", () => {
     // No `defines:` key: a concept's id IS its slug under docs/concepts/, so the
     // id and the file cannot drift apart.
@@ -276,6 +295,22 @@ describe("B15 · docs:check refusal 5 — a stale generated block", () => {
       'docs:check: docs/reference/api.md generated block "api-routes" is stale ' +
         "(run npm run docs:generate)",
     );
+  });
+
+  it("says nothing about a fence the extractor does not know", () => {
+    // freshBlocks holds what the extractor can produce NOW. A fence for an id it
+    // has no generator for is not stale, it is unimplemented, and refusing it
+    // would make every page carrying a not-yet-wired fence red (quest-defs is
+    // exactly that until B17).
+    const refusals = lib()
+      .checkDocs({
+        ...cleanInput(),
+        pages: [API_PAGE("<!-- generated:quest-defs -->\n_pending_\n<!-- /generated:quest-defs -->")],
+        routes: [],
+        freshBlocks: {},
+      })
+      .filter((r) => r.code === "stale-generated-block");
+    expect(refusals).toEqual([]);
   });
 
   it("passes a block whose body already matches", () => {
@@ -332,6 +367,22 @@ describe("B15 · docs:check refusal 6 — a leftover old group name", () => {
     expect([...lib().RETIRED_PATHS]).toEqual(
       expect.arrayContaining(["/orchestration/", "/operations/", "/laboratory/"]),
     );
+  });
+
+  it("does not refuse a source file that happens to sit under one of those words", () => {
+    // src/app/(main)/sessions/page.tsx is a file, not a URL an operator types,
+    // and the guides are full of them. A matcher that refuses those would make
+    // every architecture note red for naming its own source.
+    const input = cleanInput();
+    const pages = input.pages.map((p) =>
+      p.slug === "guides/missions"
+        ? {
+            ...p,
+            body: "The board is `src/app/(main)/results/sessions/page.tsx`, and its logs go to `{PS_DATA_DIR}/logs`.",
+          }
+        : p,
+    );
+    expect(lib().checkDocs({ ...input, pages }).filter((r) => r.code === "retired-path")).toEqual([]);
   });
 
   it("GREEN CONTROL: the new paths are not refused", () => {
