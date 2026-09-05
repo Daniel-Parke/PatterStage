@@ -24,6 +24,13 @@ export interface VersionCache {
   /** Local checkout name (`git rev-parse --abbrev-ref HEAD`). */
   checkoutBranch: string;
   lastChecked: string;
+  /**
+   * True when the compare could not be made at all (git could not reach
+   * origin, or the checkout is not a git tree). The footer used to read only
+   * `updateAvailable`, which is false on that path too, and painted "Up to
+   * Date" over a failed fetch (T-0095, D107). Not knowing is its own state.
+   */
+  checkFailed: boolean;
 }
 
 function getCachedVersion(): VersionCache | null {
@@ -35,7 +42,9 @@ function getCachedVersion(): VersionCache | null {
     if (typeof raw.comparedBranch !== "string" || typeof raw.checkoutBranch !== "string") {
       return null;
     }
-    return raw as VersionCache;
+    // A cache written before the field existed is a successful compare, or it
+    // would not have been written: failures are never cached.
+    return { ...(raw as VersionCache), checkFailed: raw.checkFailed === true };
   } catch {
     return null;
   }
@@ -88,6 +97,7 @@ export function checkVersion(branch?: string): VersionCache {
       comparedBranch: targetBranch,
       checkoutBranch: currentBranch,
       lastChecked: new Date().toISOString(),
+      checkFailed: false,
     };
     saveVersionCache(cache);
     return cache;
@@ -102,6 +112,7 @@ export function checkVersion(branch?: string): VersionCache {
       comparedBranch: targetBranch,
       checkoutBranch: "unknown",
       lastChecked: new Date().toISOString(),
+      checkFailed: true,
     };
   }
 }

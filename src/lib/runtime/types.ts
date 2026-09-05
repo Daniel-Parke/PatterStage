@@ -156,7 +156,12 @@ export interface SessionInfo {
 export interface AgentRuntime {
   submitRun(input: RunSubmit): Promise<RunHandle>;
   getRun(runId: string, profile?: string): Promise<RunResult>;
-  streamRunEvents(runId: string, profile?: string): AsyncIterable<RunEvent>;
+  /**
+   * `signal` lets the caller end the upstream stream: the SSE proxy route
+   * aborts it when the browser goes away, so a run's event stream is not held
+   * open on the backend until the run ends (T-0095, D127).
+   */
+  streamRunEvents(runId: string, profile?: string, signal?: AbortSignal): AsyncIterable<RunEvent>;
   stopRun(runId: string, profile?: string): Promise<void>;
   resolveApproval(
     runId: string,

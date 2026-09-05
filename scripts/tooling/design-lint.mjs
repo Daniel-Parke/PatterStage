@@ -48,6 +48,50 @@ import { fileURLToPath } from "url";
 
 const ROOT = fileURLToPath(new URL("../..", import.meta.url));
 const BASELINE_PATH = join(ROOT, "scripts", "tooling", "design-lint.baseline.json");
+const GLOBALS_CSS = join(ROOT, "src", "app", "globals.css");
+
+// ── Declared colour tokens ──────────────────────────────────────────────────
+//
+// Tailwind generates nothing for a class it cannot resolve, and says nothing.
+// `text-neon-red` compiled to no rule at all for as long as no token declared
+// it, and thirteen sites, the global error fallback among them, rendered with
+// no colour (T-0095, D114). The rule below reads the @theme block once and
+// fails the build on the next house colour class without a token behind it.
+
+/** Every `--color-<name>` declared in a stylesheet, aliases included. */
+export function declaredColourTokens(css) {
+  const out = new Set();
+  for (const m of css.matchAll(/--color-([a-z0-9-]+)\s*:/g)) out.add(m[1]);
+  return out;
+}
+
+/**
+ * A house colour class: a colour utility carrying a `neon-`, `semantic-` or
+ * `ps-` token, with any variant prefix before it and any opacity after it.
+ * Tailwind's own palette (`text-red-400`, `bg-white/5`) is not a house token
+ * and is not this rule's business.
+ */
+const HOUSE_COLOUR_CLASS =
+  /(?:^|[^\w-])(?:text|bg|border(?:-[trblxyse])?|ring(?:-offset)?|shadow|from|via|to|fill|stroke|outline|decoration|accent|divide|placeholder|caret)-((?:neon|semantic|ps)-[a-z0-9]+(?:-[a-z0-9]+)*)(?:\/\d{1,3})?(?![\w-])/g;
+
+/** The house tokens named on a line that `declared` does not contain, in order. */
+export function undeclaredColourClasses(line, declared) {
+  const out = [];
+  for (const m of line.matchAll(HOUSE_COLOUR_CLASS)) {
+    if (!declared.has(m[1]) && !out.includes(m[1])) out.push(m[1]);
+  }
+  return out;
+}
+
+let declaredCache = null;
+function declaredTokens() {
+  if (!declaredCache) {
+    declaredCache = existsSync(GLOBALS_CSS)
+      ? declaredColourTokens(readFileSync(GLOBALS_CSS, "utf-8"))
+      : new Set();
+  }
+  return declaredCache;
+}
 
 const SCAN_DIRS = ["src", "docs"];
 const SCAN_EXTS = new Set([".ts", ".tsx", ".css", ".md"]);
@@ -58,7 +102,13 @@ const PRAGMA = /design-lint-disable-next-line\s+([\w-]+)\s+--\s+\S/;
 
 const rel = (p) => relative(ROOT, p).split(sep).join("/");
 
-const RULES = [
+export const RULES = [
+  {
+    id: "token-must-exist",
+    law: "A house colour class (text-, bg-, border-, ring- and friends carrying a neon-, semantic- or ps- token) must name a token declared in src/app/globals.css @theme. Tailwind generates nothing for an unknown class and says nothing, so the element renders with no colour (T-0095, D114).",
+    files: (f) => f.startsWith("src/") && (f.endsWith(".ts") || f.endsWith(".tsx")),
+    test: (line) => undeclaredColourClasses(line, declaredTokens()).length > 0,
+  },
   {
     id: "no-ch-custom-properties",
     law: "The shell/effect custom properties are --ps-*. There are no --ch-* variables; writing one produces CSS that silently does nothing.",
@@ -241,7 +291,10 @@ export function scanTree() {
     for (const rule of RULES) {
       if (!rule.files(path)) continue;
       for (let i = 0; i < lines.length; i++) {
-        if (!rule.pattern.test(lines[i])) continue;
+        // A rule is a regex, or a predicate where a regex cannot answer alone
+        // (token-must-exist needs the declared set).
+        const hit = rule.test ? rule.test(lines[i]) : rule.pattern.test(lines[i]);
+        if (!hit) continue;
         // A rule that flags prose about the anti-pattern makes documenting it
         // impossible. Code rules ignore comment-only lines; the voice rule does not
         // (a comment is still text a human reads).

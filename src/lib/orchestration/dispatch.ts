@@ -16,7 +16,6 @@ import {
   getLatestRunForMission,
 } from "@/lib/runs-repository";
 import { createSession, closeSessionForMission } from "@/lib/sessions/session-repository";
-import { finaliseCancelledMission } from "@/lib/missions/cancel-finalise";
 import { runtime } from "@/lib/runtime";
 import { uuid, now } from "@/lib/db";
 import { messageFromError } from "@/lib/api-fetch";
@@ -108,19 +107,16 @@ export async function dispatchMissionRun(
 }
 
 /**
- * Cancel a mission's current run. Stops the backend run over HTTP (no signals /
- * pkill), then marks the run, mission, and session terminal. Best-effort on the
- * backend stop — local state is always finalised so the UI never shows a stuck
- * "running" row.
- */
-/**
  * Ask the backend to stop a mission's run. The REMOTE half of a cancellation
  * only — it writes nothing locally.
  *
- * Split out of `cancelMissionRun` so the action handler, which has already
- * written the local record synchronously, can trigger the stop in the
- * background without finalising and auditing the cancellation a second time
- * (T-0070).
+ * The local half is `finaliseCancelledMission`, and the one place that puts the
+ * two together is the action handler in mission-handlers/cancel.ts: record
+ * first, synchronously, then this in the background. There used to be a second
+ * composition here (`cancelMissionRun`: stop first, then record) behind the
+ * REST route; the same click took a different order and answered a different
+ * envelope depending on the door (T-0070, T-0095 D128). The REST route now
+ * delegates to the handler, and this file keeps only the remote half.
  */
 export async function stopBackendRunForMission(missionId: string): Promise<void> {
   const run = getLatestRunForMission(missionId);
@@ -131,17 +127,4 @@ export async function stopBackendRunForMission(missionId: string): Promise<void>
     logApiError("orchestration.stopBackendRunForMission", missionId, err);
     // best-effort: the local record is the operator's answer either way
   }
-}
-
-export async function cancelMissionRun(
-  missionId: string,
-): Promise<{ ok: boolean; error?: string }> {
-  const mission = getMission(missionId);
-  if (!mission) return { ok: false, error: "mission not found" };
-
-  await stopBackendRunForMission(missionId);
-  // The same writer the action handler uses. This route used to leave
-  // queuedForRun set and write no audit line at all (T-0070).
-  finaliseCancelledMission(missionId);
-  return { ok: true };
 }

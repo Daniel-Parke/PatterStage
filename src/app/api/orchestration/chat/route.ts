@@ -14,8 +14,8 @@ import { parseJsonBody } from "@/lib/parse-json-body";
 import { badRequest, ok } from "@/lib/api-response";
 import { getAgentGateway } from "@/lib/runtime/gateway";
 import { describeGatewayFailure } from "@/lib/runtime/gateway-error";
+import { getGatewayKey } from "@/lib/runtime/secrets";
 import { CHAT_DEFAULT_MODEL } from "@/types/chat";
-import { recordEvent } from "@/lib/analytics/record-event";
 
 /** Shared gateway fetch — both streaming and non-streaming paths use this. */
 async function fetchGateway(
@@ -23,9 +23,17 @@ async function fetchGateway(
   gatewayBody: Record<string, unknown>,
   isStreaming: boolean,
 ): Promise<Response | NextResponse> {
+  // The same bearer HermesRuntime's two callers send. This was the one raw
+  // fetch to the gateway with no Authorization at all, so a gateway whose
+  // API_SERVER_KEY setup had written answered 401 to every fast turn
+  // (T-0095, D44).
+  const key = getGatewayKey();
   const response = await fetch(apiUrl, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...(key ? { Authorization: `Bearer ${key}` } : {}),
+    },
     body: JSON.stringify(gatewayBody),
   });
 
@@ -65,10 +73,9 @@ export async function POST(request: NextRequest) {
       return badRequest("messages array is required");
     }
     const isStreaming = stream !== false; // default to streaming
-    recordEvent("chat.message_sent", {
-      entityType: "chat",
-      metadata: { model: model || CHAT_DEFAULT_MODEL },
-    });
+    // No `chat.message_sent` here. The messages route the page calls first
+    // records the turn; this proxy recorded it a second time, so a fast turn
+    // counted twice in every chat achievement and on Insights (T-0095, D45).
     const { chatCompletionsUrl: apiUrl } = getAgentGateway();
 
     const gatewayBody = {

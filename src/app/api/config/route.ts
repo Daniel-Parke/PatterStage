@@ -14,7 +14,7 @@ import { conflict, forbidden, ok } from "@/lib/api-response";
 import { readCachedConfigResult } from "@/lib/config-cache";
 import { dumpYamlConfig } from "@/lib/yaml-config";
 import { CONFIG_SECTIONS } from "@/lib/config-schema";
-import { maskApiKey } from "@/lib/secret-mask";
+import { maskSecretsDeep } from "@/lib/secret-mask";
 import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import { backupFile } from "@/lib/fs/fs-helpers";
 import { deepMerge } from "@/lib/deep-merge";
@@ -43,33 +43,13 @@ const configPutSchema = z
   })
   .strict();
 
-// Mask sensitive values in config before returning to client
+// Mask sensitive values in config before returning to client.
+//
+// A walk over the whole document, not a list of shapes: the list here used to
+// name `model.api_key` and `auxiliary.<task>.api_key`, and the key under
+// `fallback_providers[].api_key` went to the browser in plaintext (T-0095, D74).
 function maskConfigSecrets(config: Record<string, unknown>): Record<string, unknown> {
-  const clone = structuredClone(config);
-  // Mask model.api_key
-  if (clone.model && typeof clone.model === "object") {
-    maskApiKeyField(clone.model as Record<string, unknown>, "api_key");
-  }
-  // Mask auxiliary.<task>.api_key — every task entry can carry a key
-  if (clone.auxiliary && typeof clone.auxiliary === "object") {
-    const aux = clone.auxiliary as Record<string, Record<string, unknown>>;
-    for (const task of Object.keys(aux)) {
-      maskApiKeyField(aux[task], "api_key");
-    }
-  }
-  return clone;
-}
-
-/**
- * In-place replace `record[key]` with its masked form, but only if it's a
- * non-empty string. Centralises the `typeof === "string" && length > 0`
- * guard that the two model/auxiliary branches used to repeat.
- */
-function maskApiKeyField(record: Record<string, unknown>, key: string): void {
-  const value = record[key];
-  if (typeof value === "string" && value.length > 0) {
-    record[key] = maskApiKey(value);
-  }
+  return maskSecretsDeep(config);
 }
 
 // GET /api/config — return full config (with secrets masked)

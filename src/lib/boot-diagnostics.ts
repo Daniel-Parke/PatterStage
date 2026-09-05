@@ -23,6 +23,7 @@
 // finding belonged to.
 // ═══════════════════════════════════════════════════════════════
 
+import { isDeployApiEnabled } from "@/lib/api-auth";
 import { readEnv } from "@/lib/paths";
 import { isReadOnly } from "@/lib/read-only";
 
@@ -33,17 +34,13 @@ function onOff(value: boolean): string {
 /**
  * The operational flags, as one line for the boot log.
  *
- * Deliberately mirrors `isDeployApiEnabled` in api-auth rather than re-reading
- * the variable, so the line cannot claim a state the guard does not enforce.
+ * `deploy-api` is read from the guard itself, `isDeployApiEnabled` in
+ * api-auth, so the line cannot claim a state the guard does not enforce. This
+ * file used to carry a mirror of that rule; two copies of one rule is how a
+ * boot line and a 403 come to disagree (T-0095).
  */
 export function describeOperationalFlags(): string {
-  const deployRaw = readEnv("PS_ENABLE_DEPLOY_API", "CH_ENABLE_DEPLOY_API")?.toLowerCase();
-  const deployApi =
-    deployRaw === "1" || deployRaw === "true" || deployRaw === "yes"
-      ? true
-      : deployRaw === "0" || deployRaw === "false" || deployRaw === "no"
-        ? false
-        : process.env.NODE_ENV !== "production";
+  const deployApi = isDeployApiEnabled();
 
   const authMode = readEnv("PS_AUTH_MODE")?.toLowerCase() === "none" ? "NONE" : "token";
   const composerRaw = readEnv("PS_COMPOSER")?.toLowerCase();

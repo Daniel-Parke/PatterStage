@@ -18,7 +18,7 @@ import { fileURLToPath } from "url";
 import { randomBytes } from "crypto";
 
 import { isWindows, portInUse } from "../tooling/_platform.mjs";
-import { readEnvFile, setEnvVar } from "./env-local.mjs";
+import { readEnvFile, setEnvVar, setEnvVarIfAbsent } from "./env-local.mjs";
 
 const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const args = process.argv.slice(2);
@@ -48,6 +48,7 @@ function tsx(scriptRel, scriptArgs, env = {}) {
 const ENV_FILE = join(REPO_ROOT, ".env.local");
 const readEnvLocal = () => readEnvFile(ENV_FILE);
 const setEnvLocal = (key, val) => setEnvVar(ENV_FILE, key, val);
+const setEnvLocalIfAbsent = (key, val) => setEnvVarIfAbsent(ENV_FILE, key, val);
 
 // ── data dir ────────────────────────────────────────────────────
 function resolveDataDir() {
@@ -94,6 +95,9 @@ async function main() {
 
   const HERMES_HOME = process.env.HERMES_HOME || readEnvLocal().HERMES_HOME || join(homedir(), ".hermes");
   setEnvLocal("HERMES_HOME", HERMES_HOME);
+  // The deploy buttons work on a fresh solo install (decision 17, T-0095);
+  // an operator who turned them off stays off.
+  setEnvLocalIfAbsent("PS_ENABLE_DEPLOY_API", "true");
 
   const hermesConfigured = existsSync(join(HERMES_HOME, "config.yaml"));
   if (hermesConfigured) {

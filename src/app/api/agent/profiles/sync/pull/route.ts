@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 
-import { badRequest, ok } from "@/lib/api-response";
+import { badRequest } from "@/lib/api-response";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ensureDb } from "@/lib/db";
 import { parseOptionalJsonBody } from "@/lib/parse-optional-json-body";
@@ -16,6 +16,12 @@ import {
   discoverLocalProfiles,
   importDiscoveredProfile,
 } from "@/modules/hermes/lib/profile-discovery";
+import { answerBatch, answerSingle } from "@/modules/hermes/lib/sync-answer";
+
+// Every branch answers through sync-answer.ts. This route used to return
+// `ok({ success: result.success, result })`, a 200 for a pull that did not
+// happen, with the reason where no client reads it (T-0095, D19).
+const VERB = "Pull from Hermes";
 
 export async function POST(request: NextRequest) {
   // Body is a bag of optional flags (slug, all, root, skills,
@@ -36,12 +42,11 @@ export async function POST(request: NextRequest) {
 
     if (skills) {
       const results = importAllSkillsFromDisk();
-      return ok({ success: results.every((r) => r.success), results },);
+      return answerBatch("pull", results, { results });
     }
 
     if (skillKey) {
-      const result = pullSkillFromHermes(skillKey);
-      return ok({ success: result.success, result });
+      return answerSingle(VERB, pullSkillFromHermes(skillKey));
     }
 
     if (all || importDiscovered) {
@@ -56,11 +61,7 @@ export async function POST(request: NextRequest) {
         }
       }
       const skillResults = importAllSkillsFromDisk();
-      return ok({
-        success:
-          profileResults.every((r) => r.success) &&
-          rootResult.success &&
-          skillResults.every((r) => r.success),
+      return answerBatch("pull", [...profileResults, rootResult, ...skillResults], {
         root: rootResult,
         profiles: profileResults,
         skills: skillResults,
@@ -68,19 +69,14 @@ export async function POST(request: NextRequest) {
     }
 
     if (root || slug === "default") {
-      const result = pullRootFromHermes({ reconcileDisk });
-      return ok({ success: result.success, result });
+      return answerSingle(VERB, pullRootFromHermes({ reconcileDisk }));
     }
 
     if (!slug) {
       return badRequest("slug, all, root, or skills required");
     }
 
-    const result = pullProfileFromHermes(slug, { reconcileDisk });
-    return ok({
-      success: result.success,
-      result,
-    });
+    return answerSingle(VERB, pullProfileFromHermes(slug, { reconcileDisk }));
   }
   catch (error) {
     return serverErrorFromCatch(

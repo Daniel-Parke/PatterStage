@@ -321,7 +321,11 @@ export class HermesRuntime implements AgentRuntime {
     return mapRunResult(runId, json);
   }
 
-  async *streamRunEvents(runId: string, profile?: string): AsyncIterable<RunEvent> {
+  async *streamRunEvents(
+    runId: string,
+    profile?: string,
+    signal?: AbortSignal,
+  ): AsyncIterable<RunEvent> {
     const ep = this.resolve(profile);
     let res: Response;
     try {
@@ -330,7 +334,9 @@ export class HermesRuntime implements AgentRuntime {
         {
           headers: { ...this.buildHeaders(ep, {}), Accept: "text/event-stream" },
           // No timeout: this is a long-lived stream. UX-only — getRun() polling
-          // remains the authoritative source of run state.
+          // remains the authoritative source of run state. The caller's signal
+          // is the one way it ends early (T-0095, D127).
+          signal,
         },
       );
     } catch (err) {

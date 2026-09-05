@@ -56,15 +56,26 @@ export function useModelActions({
     ): Promise<SyncActionResult> => {
       const label = action === "push" ? "Push" : "Pull";
       try {
-        await apiFetch(`/api/models/sync/${action}`, {
+        const res = await apiFetch<{ data?: Partial<SyncActionResult> }>(`/api/models/sync/${action}`, {
           method: "POST",
           body: JSON.stringify({ modelId, ...options }),
           // Bulk: work scales with the install, not the request (T-0047).
           timeoutMs: API_FETCH_BULK_TIMEOUT_MS,
         });
+        // Read the answer. A 2xx used to be enough for the success toast, so a
+        // body saying `success: false` toasted "Model pushed to Hermes" over a
+        // refusal (T-0095, D11). The push route now answers 500 for that, which
+        // the catch below handles; this is the other half, for any 200 that
+        // still carries a failed outcome.
+        const outcome = res?.data;
+        if (outcome?.success === false) {
+          const details = outcome.details ?? [];
+          showToast(details[0]?.detail || `${label} failed`, "error");
+          return { success: false, backupPath: outcome.backupPath ?? null, details };
+        }
         showToast(`Model ${action}ed to Hermes`, "success");
         void loadAll();
-        return { success: true, backupPath: null, details: [] };
+        return { success: true, backupPath: outcome?.backupPath ?? null, details: outcome?.details ?? [] };
       } catch (err) {
         toastError(showToast, err, `${label} failed`);
         return {

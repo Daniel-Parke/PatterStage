@@ -57,6 +57,24 @@ export const GROWTH_LOG_KEY: string;
 export const ALLOW_GROWTH_FLAG: string;
 export const MIN_REASON_LENGTH: number;
 
+/** One rule of the registry: a regex, or a predicate where a regex cannot answer alone. */
+export interface Rule {
+  id: string;
+  law: string;
+  files: (path: string) => boolean;
+  pattern?: RegExp;
+  test?: (line: string) => boolean;
+  codeOnly?: boolean;
+}
+
+export const RULES: readonly Rule[];
+
+/** Every `--color-<name>` declared in a stylesheet (T-0095, token-must-exist). */
+export function declaredColourTokens(css: string): Set<string>;
+
+/** The house colour tokens a line names that `declared` does not contain. */
+export function undeclaredColourClasses(line: string, declared: Set<string>): string[];
+
 export function scanTree(): {
   found: Map<string, ViolationHit[]>;
   counts: Record<string, number>;

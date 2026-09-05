@@ -67,7 +67,7 @@ PatterStage is a single-operator control plane, so authentication is one shared 
 |-----|--------|
 | `PS_AUTH_TOKEN` | Supply the token directly (containers). Wins over the token file. |
 | `PS_AUTH_TOKEN_FILE` | Move the token file off the default `PS_DATA_DIR/auth-token`. |
-| `PS_AUTH_MODE=none` | **Disable authentication entirely.** Only correct when something in front of PatterStage already authenticates. Logged loudly at boot, and endpoints that write host-executed content (the script editor, crontab installs) refuse to run in this mode. |
+| `PS_AUTH_MODE=none` | **Disable authentication entirely.** Only correct when something in front of PatterStage already authenticates. Logged loudly at boot, and the endpoints that reach the host (the script editor, running a script, crontab installs, the deploy actions) refuse with 403 in this mode, from a list in `src/proxy.ts` and again in each route. |
 
 Rotate by deleting the token file and restarting; the new token is picked up without a rebuild.
 

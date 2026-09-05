@@ -53,8 +53,14 @@ export async function GET(request: NextRequest) {
       return ok({ session });
     }
 
+    // Both syncs below write state.db rows into the sessions table. Under
+    // PS_READ_ONLY the list is still served from what is already there; the
+    // writes are what the mode exists to stop (T-0095, D124).
+    // check-read-only-guards-disable-next-line -- this GET syncs Hermes sessions into the table, a write it skips under the mode while still answering
+    const writesAllowed = !isReadOnly();
+
     // Sync layer handles background syncing of Hermes sessions (debounced — at most once per 30s)
-    triggerSyncOnce();
+    if (writesAllowed) triggerSyncOnce();
 
     const result = listSessions({
       agentType: q.agentType,
@@ -67,7 +73,7 @@ export async function GET(request: NextRequest) {
       // fresh messageCount, title, and status. The periodic sync is
       // debounced at 30s; without this the user sees a stale "0 msgs"
       // for the session they're currently in.
-      syncIfActive: true,
+      syncIfActive: writesAllowed,
     });
 
     return ok({

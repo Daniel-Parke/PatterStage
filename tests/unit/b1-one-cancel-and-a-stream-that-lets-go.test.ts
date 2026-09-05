@@ -31,7 +31,7 @@ jest.mock("@/lib/orchestration", () => ({
 }));
 jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn(), serverErrorFromCatch: jest.fn() }));
 
-const mockGetRun = jest.fn(() => ({ id: "r1", runId: "backend-1", profileName: null }));
+const mockGetRun = jest.fn((_id: string) => ({ id: "r1", runId: "backend-1", profileName: null }));
 jest.mock("@/lib/runs-repository", () => ({ getRun: (id: string) => mockGetRun(id) }));
 
 let receivedSignal: AbortSignal | undefined;

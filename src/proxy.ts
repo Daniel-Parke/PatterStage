@@ -49,6 +49,37 @@ const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 const PUBLIC_PATHS = new Set(["/api/health"]);
 
 /**
+ * The routes whose WRITES reach the host: a script the editor saves is executed
+ * later by cron and by /api/scripts/run, a crontab line is installed, the
+ * deploy script is spawned. With the token on, an authenticated operator
+ * already has a shell on this machine and these are features. With
+ * `PS_AUTH_MODE=none` they are unauthenticated remote code execution.
+ *
+ * `requireAuthenticatedHostWrites()` in src/lib/api-auth.ts is the same rule at
+ * the route level, and it was applied to the script editor and the crontab
+ * routes and forgotten on the two routes that EXECUTE (T-0095, D42/D123). A
+ * guard a route has to remember is not a boundary; this list is. The routes
+ * keep their own call as well, so a harness that bypasses the proxy is still
+ * not a hole.
+ */
+const HOST_SIDE_EFFECT_PREFIXES = ["/api/scripts/", "/api/cron/hardware", "/api/update"];
+
+function isHostSideEffectWrite(pathname: string, isSafe: boolean): boolean {
+  if (isSafe) return false;
+  return HOST_SIDE_EFFECT_PREFIXES.some((p) => pathname === p || pathname.startsWith(p));
+}
+
+function refuseHostWrite(): NextResponse {
+  return NextResponse.json(
+    {
+      error:
+        "Host-affecting writes are disabled while PS_AUTH_MODE=none. Re-enable the access token to edit, schedule or run scripts, or to deploy.",
+    },
+    { status: 403 },
+  );
+}
+
+/**
  * The read-only refusal.
  *
  * Deliberately raised only AFTER the caller has been authenticated. Refusing an
@@ -191,7 +222,9 @@ export function proxy(request: NextRequest): NextResponse {
   const readOnlyRefusal = !isSafe && isReadOnly();
 
   if (getAuthMode() === "none") {
-    return readOnlyRefusal ? refuseReadOnly() : NextResponse.next();
+    if (readOnlyRefusal) return refuseReadOnly();
+    if (isHostSideEffectWrite(pathname, isSafe)) return refuseHostWrite();
+    return NextResponse.next();
   }
 
   // FAILED-AUTH THROTTLE (T-0083, operator ruling 2). Checked before the token

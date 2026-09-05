@@ -119,9 +119,16 @@ so on:
 | `pink` | `#e879f9` | 232, 121, 249 | Cool magenta-fuchsia |
 | `orange` | `#ff6622` | 255, 102, 34 | Heat / Cherenkov complement (Sparrow's Fire) accent |
 
-The last three are status slots with no `neon-*` token behind them. The maps in
-`src/lib/theme.ts` spell them with Tailwind's own palette, written out
-literally, so do not reach for a `neon-red` or `neon-blue`: neither exists.
+The last three are status slots. `neon-red` is declared as the danger colour
+under its accent-slot name (the same value as `--color-semantic-danger`, by
+intent), so `text-neon-red` and `text-semantic-danger` paint the same pixel;
+there is no `neon-blue` and no `semantic-error`. The maps in `src/lib/theme.ts`
+spell the status slots with Tailwind's own palette, written out literally.
+Reaching for a house token that is not declared is a red build: design-lint's
+`token-must-exist` rule checks every `text-`, `bg-`, `border-` and friends class
+with a `neon-`, `semantic-` or `ps-` token against the `@theme` block, because
+Tailwind generates nothing for an unknown class and says nothing, and thirteen
+sites once rendered with no colour at all that way.
 
 | Slot | Icon / border / badge classes | Glow RGB | Role |
 |------|-------------------------------|----------|------|

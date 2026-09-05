@@ -1,16 +1,19 @@
 // ═══════════════════════════════════════════════════════════════
-// POST /api/missions/[id]/cancel — stop a running mission via the runtime
+// POST /api/missions/[id]/cancel — cancel a mission, REST-shaped
 //
-// Replaces SIGTERM/SIGKILL/pkill process-group killing with an HTTP
-// runtime.stopRun(). Local run/mission/session state is always finalised.
+// The same body as POST /api/missions { action: "cancel" }, under the URL a
+// REST client expects. It used to be a second implementation
+// (`cancelMissionRun`) that stopped the backend FIRST and answered a different
+// envelope, so the same click took two orders and two shapes depending on
+// which door it came through (T-0095, D128). Now there is one: the local
+// record is written synchronously, the backend stop runs in the background,
+// and the answer is `{ mission, cancel }` either way.
 // ═══════════════════════════════════════════════════════════════
 
 import { NextRequest } from "next/server";
 import { requireNotReadOnly } from "@/lib/api-auth";
 import { serverErrorFromCatch } from "@/lib/api-logger";
-import { ok, notFound, serverError } from "@/lib/api-response";
-import { getMission } from "@/lib/missions/mission-repository";
-import { cancelMissionRun } from "@/lib/orchestration";
+import { handleCancelMission } from "@/lib/missions/mission-handlers/cancel";
 
 interface Ctx {
   params: Promise<{ id: string }>;
@@ -27,10 +30,7 @@ export async function POST(_request: NextRequest, ctx: Ctx) {
 
   const { id } = await ctx.params;
   try {
-    if (!getMission(id)) return notFound("Mission not found");
-    const result = await cancelMissionRun(id);
-    if (!result.ok) return serverError(result.error ?? "Cancel failed");
-    return ok({ cancelled: true });
+    return handleCancelMission({ id });
   } catch (error) {
     return serverErrorFromCatch(
       "POST /api/missions/[id]/cancel",

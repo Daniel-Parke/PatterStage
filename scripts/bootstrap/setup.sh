@@ -88,6 +88,9 @@ if ! ps_noninteractive_install; then
 fi
 
 ps_env_set "$ENV_LOCAL" "HERMES_HOME" "$HERMES_HOME"
+# The deploy buttons work on a fresh solo install (decision 17, T-0095). Only
+# written when absent, so an operator who turned it off stays off.
+ps_env_set_if_absent "$ENV_LOCAL" "PS_ENABLE_DEPLOY_API" "true"
 ps_print_hermes_install_paths
 
 # ── Hermes / agent home (optional) ────────────────────────────

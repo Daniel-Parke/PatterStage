@@ -40,7 +40,8 @@ Every `route.ts` under `src/app/api` has a row, here or in the Chat / Composer /
 | `/api/agents` | `GET` | Inspect running Hermes agent processes (OS-dependent). Not the same as `agent/profiles`. |
 | `/api/agents/experience` | `GET` | Every profile's accumulated Agent Experience, ranked. Derived from completed runs, active days, enabled skills, attached toolsets and memory facts. The surviving half of the deleted benchmark subsystem (ADR-0004): no capability claim, only what the agent actually did or was given. |
 | `/api/config` | `GET`, `PUT` | Read/update parsed Hermes config content. |
-| `/api/credentials` | `GET`, `POST` | API key credentials (masked list; create via POST). No per-id route. |
+| `/api/credentials` | `GET`, `POST` | API key credentials (masked list; create via POST). |
+| `/api/credentials/[id]` | `DELETE` | Delete one credential: its Hermes `.env` variable goes with it unless a same-provider sibling still uses it, and the models that pointed at it are unlinked; the answer says which happened. `GET` returns **405**. |
 | `/api/cron/hardware` | `GET`, `POST`, `PUT`, `DELETE` | Host **scripts** (system cron) under `PS_SCRIPTS_DIR` / `PS_HARDWARE_LOG_DIR`, powering the Scripts page. (The legacy `/api/cron` agent-cron bridge has been removed; recurring agent work uses `/api/schedules`.) |
 | `/api/cron/hardware/meta` | `GET` | `{ scriptsDir, logDir }`. |
 | `/api/scripts` | `GET` | List host script files under `PS_DATA_DIR/scripts` with schedule + last-run (powers the Scripts page). |
@@ -97,6 +98,7 @@ Every `route.ts` under `src/app/api` has a row, here or in the Chat / Composer /
 | `/api/skills/[name]/toggle` | `PUT` | Enable/disable a skill for a profile. |
 | `/api/skills/[...path]` | `GET` | Read files under a skill tree (`SKILL.md`, etc.). |
 | `/api/status` | `GET` | Basic readiness endpoint, read from the `meta` table. Requires auth. |
+| `/api/status/subsystems` | `GET` | The dashboard's Subsystems panel: gateway (with its URL), memory, scheduler and database, each with a state and the reason for it. |
 | `/api/health` | `GET` | The one **unauthenticated** route (the `PUBLIC_PATHS` allow-list in `src/proxy.ts`). Returns a bare `{ ok: true }` and deliberately reports nothing about the system, so a container probe never needs the access token. Anything describing real state belongs on `/api/status`. |
 | `/api/feature-flags` | `GET` | Current feature-flag state (`{ flags }`), so client components can hide disabled surfaces without a rebuild. Flags default ON; today the only flag is `composer`. |
 | `/api/stories` | `POST` | Story Weaver: all operations via `action` (see [RPC-style routes](#rpc-style-routes)). |
@@ -104,7 +106,7 @@ Every `route.ts` under `src/app/api` has a row, here or in the Chat / Composer /
 | `/api/templates` | `GET`, `POST` | Mission templates; mutations via `action` on `POST`. |
 | `/api/tools` | `GET` | Read-only Hermes toolset ID catalog. `POST` returns **405** (writes not supported). |
 | `/api/agent/profiles/[id]/toolsets` | `GET`, `PUT` | Read or update `platform_toolsets` for a profile (`default` = agent root). `GET` hydrates from DB → yaml → seed and may persist normalized JSON. `PUT` saves and pushes to Hermes disk. `DELETE` returns **405**. |
-| `/api/update` | `GET`, `POST` | Deploy: compare branches, branch list, deploy status; `POST` `restart` \| `rebuild` \| `update`. `POST` is gated by `PS_ENABLE_DEPLOY_API` (see [Auth and safety notes](#auth-and-safety-notes)). |
+| `/api/update` | `GET`, `POST` | Deploy: compare branches, branch list, deploy status; `POST` `restart` \| `rebuild` \| `update`. `POST` is gated by `PS_ENABLE_DEPLOY_API` (see [Auth and safety notes](#auth-and-safety-notes)); both `GET` answers carry `deployEnabled` so the footer can say so before the click, and a compare that could not be made says `checkFailed: true` rather than "up to date". |
 
 ### Chat
 
@@ -121,7 +123,7 @@ Agent conversations. See [CHAT.md](CHAT.md).
 
 ### Composer
 
-Graph orchestration. Every route below returns **503** when `PS_COMPOSER` is falsy, with one exception: the SSE stream carries no flag check and still serves an existing run. See [COMPOSER.md](COMPOSER.md).
+Graph orchestration. Every route below, the SSE stream included, returns **503** when `PS_COMPOSER` is falsy. See [COMPOSER.md](COMPOSER.md).
 
 | Route | Methods | Purpose |
 |---|---|---|
@@ -129,7 +131,8 @@ Graph orchestration. Every route below returns **503** when `PS_COMPOSER` is fal
 | `/api/composer/workflows/[id]` | `GET`, `PUT`, `DELETE` | Read the full graph, replace it atomically, or delete it. Edits are blocked while the workflow has active runs. |
 | `/api/composer/runs` | `GET`, `POST` | List recent runs; start one (`{ workflowId \| workflowKey, input }`) and kick the engine so the first stage dispatches immediately. |
 | `/api/composer/runs/[id]` | `GET` | One run + its node-runs + the workflow graph. |
-| `/api/composer/runs/[id]/events` | `GET` | Live **SSE** (`{ run, nodeRuns }` snapshots), closing when the run is terminal. The one composer route with no `PS_COMPOSER` check. |
+| `/api/composer/runs/[id]/events` | `GET` | Live **SSE** (`{ run, nodeRuns }` snapshots), closing when the run is terminal. |
+| `/api/composer/runs/[id]/cancel` | `POST` | Cancel a run: the run and its live node-runs are marked cancelled and their backend runs are stopped. |
 | `/api/composer/runs/[id]/nodes/[nodeId]/approve` | `POST` | Resolve a human-in-the-loop gate (`accept` \| `reject` \| `review` \| `add_feature`) and advance the graph. |
 | `/api/composer/runs/[id]/clarify` | `POST` | Answer a stage's clarification question (`{ answer }`); the answer enriches the objective and re-dispatches the asking stage. |
 
@@ -246,11 +249,11 @@ Managed crontab lines must run a script **under** `scriptsDir` (default `PS_DATA
 
 ## Auth and safety notes
 
-- **`PS_READ_ONLY`** rejects unsafe HTTP **methods** with a 503, in `src/proxy.ts`, before any handler runs. Reads keep working, which is the point of the mode. It applies to every route uniformly: there is nothing a route can forget to call.
+- **`PS_READ_ONLY`** rejects unsafe HTTP **methods** with a 503, in `src/proxy.ts`, before any handler runs. Reads keep working, which is the point of the mode. It applies to every route uniformly by method. Three reads do bookkeeping writes of their own on every poll (the `/api/stats` progression capture, the toolsets normalisation, the `/api/sessions` state.db sync); each skips that write under the mode and still answers, and the linter that forbids a read-only guard in a GET accepts exactly those three, each with its reason on the line above.
 - The refusal happens **after** authentication, so an unauthenticated write gets a 401 rather than learning whether the instance is read-only.
 - Routes used to carry their own `requireAuth()` guard. It authenticated nothing, and because 34 GET handlers called it the mode blanked the dashboard it exists to enable. It was deleted in T-0048; `scripts/tooling/check-read-only-guards.mjs` fails the build if one comes back.
-- Deploy actions (`POST /api/update`) require `PS_ENABLE_DEPLOY_API` **in production only**. The gate falls back to `NODE_ENV !== "production"`, so with the variable unset the deploy API is *enabled* under `npm run dev` and in tests, and closed under `npm run start`. Set it explicitly falsy (`0`/`false`/`no`) to close it everywhere.
-- **Host-affecting writes** (`POST`/`PUT`/`DELETE /api/cron/hardware`, `PUT`/`DELETE /api/scripts/[name]`) return **403** while `PS_AUTH_MODE=none`. Writing a script that a crontab will later execute is unauthenticated RCE once the token is switched off; with the token on, the operator already has shell access to that host, so it is a feature.
+- Deploy actions (`POST /api/update`) require `PS_ENABLE_DEPLOY_API`. Setup writes it `true` on a fresh install (only when absent, so a choice survives a re-run); set it `0`/`false`/`no` to close the route, and the sidebar block says so before the click. Unset, the gate falls back to `NODE_ENV !== "production"`, so an install that predates setup writing it is *enabled* under `npm run dev` and closed under `npm run start`.
+- **Host-affecting writes** (`POST /api/scripts/run`, `PUT`/`DELETE /api/scripts/[name]`, `POST`/`PUT`/`DELETE /api/cron/hardware`, `POST /api/update`) return **403** while `PS_AUTH_MODE=none`. Writing a script that a crontab will later execute, running one, or spawning the deploy script is unauthenticated RCE once the token is switched off; with the token on, the operator already has shell access to that host, so it is a feature. The proxy refuses these from a list of paths before any handler runs, and the routes carry the same guard themselves.
 - The two notes below are **`POST /api/update` only**, not API-wide. Nothing else calls these helpers, so setting the secret or sending the headers hardens no other route.
 - Optional signed requests: `PS_REQUEST_SIGNING_SECRET`, with `x-ps-ts` + `x-ps-signature` headers over `METHOD:path:ts` and a 5-minute window. Unset means unsigned requests pass.
 - Correlation IDs: `x-correlation-id` or `x-request-id`; a UUID is generated when neither is sent.

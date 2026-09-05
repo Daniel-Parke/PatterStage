@@ -143,7 +143,9 @@ describe("D111: a deploy that never ends still lets go", () => {
     });
     expect(result.current.isBusy).toBe(false);
     expect(result.current.message).toMatch(/timed out/i);
-  });
+    // 451 polls, each a resolved fetch and a state update under fake timers:
+    // real work, not a hang, so the budget is the cap's, not jest's default.
+  }, 60_000);
 });
 
 function stateWith(over: Partial<VersionFooterState>): VersionFooterState {

@@ -70,6 +70,16 @@ jest.mock("@/modules/hermes/lib/agent-runtime", () => ({
 jest.mock("@/lib/paths", () => ({
   PS_DATA_DIR: "/tmp/ch-data",
   getPsDataDir: () => "/tmp/ch-data",
+  // The real reader, not a stub: GET /api/sessions now consults PS_READ_ONLY
+  // before it syncs (T-0095, D124), and a paths mock without readEnv turned
+  // that read into a 500 that had nothing to do with sessions.
+  readEnv: (...keys: string[]) => {
+    for (const k of keys) {
+      const v = process.env[k];
+      if (v && String(v).trim()) return String(v).trim();
+    }
+    return undefined;
+  },
   PATHS: {
     patterStageDb: "/tmp/ch-data/control-hub.db",
     missions: "/tmp/ch-data/missions",

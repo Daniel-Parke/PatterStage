@@ -15,6 +15,7 @@ import {
   unionToolsetsFromPlatforms,
 } from "@/modules/hermes/lib/toolset-unify";
 import { requireSafeProfileName } from "@/lib/fs/path-security";
+import { isReadOnly } from "@/lib/read-only";
 
 export async function GET(
   request: NextRequest,
@@ -26,7 +27,8 @@ export async function GET(
 
   try {
     ensureDb();
-    const hydrated = hydratePlatformToolsetsForSlug(prof.profile, { persist: true });
+    // check-read-only-guards-disable-next-line -- hydrating may persist the normalised JSON, a write this GET skips under PS_READ_ONLY while still answering (T-0095, D124)
+    const hydrated = hydratePlatformToolsetsForSlug(prof.profile, { persist: !isReadOnly() });
     if (!hydrated) {
       return notFound("Profile not found");
     }

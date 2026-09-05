@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { logApiError } from "@/lib/api-logger";
-import { getCorrelationId, requireDeployApiEnabled, requireSignedRequest } from "@/lib/api-auth";
+import {
+  getCorrelationId,
+  isDeployApiEnabled,
+  requireAuthenticatedHostWrites,
+  requireDeployApiEnabled,
+  requireSignedRequest,
+} from "@/lib/api-auth";
 import { isDeployInProgress, readDeployStatus, tailLogHint } from "@/lib/deploy-status";
 import { sanitizeGitBranch } from "@/lib/git/git-branch";
 import {
@@ -43,6 +49,12 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
 
+    // `deployEnabled` travels on both answers so the footer can say "the deploy
+    // API is off" BEFORE the click, instead of painting three enabled buttons
+    // that 403 (T-0095, D53). The deploy-status answer is the one it reads on
+    // mount.
+    const deployEnabled = isDeployApiEnabled();
+
     if (searchParams.get("deploy") === "1") {
       const deploy = readDeployStatus();
       const logTail =
@@ -50,7 +62,7 @@ export async function GET(request: NextRequest) {
           ? tailLogHint(deploy.logHint)
           : [];
       return NextResponse.json({
-        data: { deploy: { ...deploy, logTail } },
+        data: { deploy: { ...deploy, logTail }, deployEnabled },
       });
     }
 
@@ -68,7 +80,7 @@ export async function GET(request: NextRequest) {
       : UPDATE_BRANCH;
     const ver = checkVersion(branch);
     return NextResponse.json({
-      data: { ...ver, branch: ver.checkoutBranch },
+      data: { ...ver, branch: ver.checkoutBranch, deployEnabled },
     });
   } catch (error) {
     logApiError("GET /api/update", "checking version", error);
@@ -79,6 +91,11 @@ export async function GET(request: NextRequest) {
 // POST /api/update
 export async function POST(request: NextRequest) {
   const correlationId = getCorrelationId(request);
+  // Spawning the deploy script is a host write. The proxy refuses it under
+  // PS_AUTH_MODE=none before this runs; the route says so itself as well
+  // (T-0095, D123).
+  const hostWrites = requireAuthenticatedHostWrites();
+  if (hostWrites) return hostWrites;
   const gated = requireDeployApiEnabled();
   if (gated) return gated;
 

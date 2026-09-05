@@ -6,7 +6,9 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextRequest } from "next/server";
+import { serviceUnavailable } from "@/lib/api-response";
 import { ensureDb } from "@/lib/db";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 import { sseStream } from "@/lib/sse/event-stream";
 import { getComposerRun, listNodeRuns } from "@/lib/composer/composer-repository";
 import { isTerminalComposerRunStatus } from "@/lib/composer/schema";
@@ -19,6 +21,12 @@ interface Ctx {
 // leaves the stream open on a finished run forever. See schema.ts.
 
 export async function GET(request: NextRequest, ctx: Ctx) {
+  // The same guard every other composer route carries. This one served an
+  // existing run with the feature off, and docs/API.md described the exception
+  // rather than closing it (T-0095, D5).
+  if (!isFeatureEnabled("composer")) {
+    return serviceUnavailable("Composer is not enabled. Set PS_COMPOSER=1 to enable workflows.");
+  }
   const { id } = await ctx.params;
   ensureDb();
   return sseStream({

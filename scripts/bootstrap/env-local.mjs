@@ -62,3 +62,15 @@ export function setEnvVar(file, key, val) {
   kept.push(`${key}=${value}`);
   writeFileSync(file, kept.join("\n") + "\n");
 }
+
+/**
+ * Set `key=val` only when the file has no `key=` line yet. Returns true when it
+ * wrote. The bash twin is `ps_env_set_if_absent` in scripts/lib/ps-env.sh: a
+ * default a fresh install should get, and a choice a re-run must never undo
+ * (decision 17, T-0095).
+ */
+export function setEnvVarIfAbsent(file, key, val) {
+  if (Object.prototype.hasOwnProperty.call(readEnvFile(file), String(key))) return false;
+  setEnvVar(file, key, val);
+  return true;
+}

@@ -10,6 +10,7 @@ import { serverErrorFromCatch } from "@/lib/api-logger";
 import { pushModelToHermes, pushCredential } from "@/modules/hermes/lib/sync-manager";
 import { getModelWithKey } from "@/lib/models-repository";
 import { ok } from "@/lib/api-response";
+import { answerSingle } from "@/modules/hermes/lib/sync-answer";
 import { z } from "zod";
 
 export async function POST(request: NextRequest) {
@@ -33,7 +34,15 @@ export async function POST(request: NextRequest) {
   try {
     const modelResult = pushModelToHermes(modelId);
     if (!modelResult.success) {
-      return ok({ success: false, details: modelResult.details, backupPath: modelResult.backupPath });
+      // A 500 naming the model and the reason, the shape every sync route
+      // answers with. This was a 200 with `success: false`, and the hook
+      // toasted "Model pushed to Hermes" over an assembler refusal
+      // (T-0095, D125).
+      return answerSingle("Push to Hermes", {
+        success: false,
+        slug: modelId,
+        error: modelResult.details[0]?.detail ?? null,
+      });
     }
 
     const details = [...modelResult.details];

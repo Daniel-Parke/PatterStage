@@ -5,6 +5,11 @@
 // to the browser. UX-only: authoritative run state still comes from polling
 // (/api/runs/[id] + the background reconcile). If the stream drops, the
 // poller backfills within a tick.
+//
+// The proxy lets go when the client does. It used to ignore the request's
+// abort signal, so a browser that navigated away left the upstream stream open
+// on the gateway until the run ended (T-0095, D127). Now the request signal and
+// the stream's own cancel() both abort the upstream fetch.
 // ═══════════════════════════════════════════════════════════════
 
 import { NextRequest } from "next/server";
@@ -36,7 +41,7 @@ function wireEventName(type: string): string {
   return type === "error" ? RUN_ERROR_EVENT : type;
 }
 
-export async function GET(_request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
+export async function GET(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
   const run = getRun(id);
   if (!run) {
@@ -50,13 +55,30 @@ export async function GET(_request: NextRequest, ctx: { params: Promise<{ id: st
   const profile = run.profileName ?? undefined;
   const encoder = new TextEncoder();
 
+  // One controller for the upstream fetch, pulled by either end going away.
+  // `request` is optional-chained because a unit harness hands this handler a
+  // bare null; the stream's own cancel() is the other, always-present, pull.
+  const upstream = new AbortController();
+  const abortUpstream = () => upstream.abort();
+  const requestSignal: AbortSignal | null = request?.signal ?? null;
+  requestSignal?.addEventListener("abort", abortUpstream, { once: true });
+  let closed = false;
+
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
-      const emit = (event: string, data: unknown) =>
-        controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
+      const emit = (event: string, data: unknown) => {
+        if (closed) return;
+        try {
+          controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
+        } catch {
+          // The client cancelled between the check and the enqueue.
+          closed = true;
+        }
+      };
       try {
         emit("open", { runId: id, backendRunId });
-        for await (const ev of runtime.streamRunEvents(backendRunId, profile)) {
+        for await (const ev of runtime.streamRunEvents(backendRunId, profile, upstream.signal)) {
+          if (closed) break;
           emit(wireEventName(ev.type), ev.data);
         }
         emit("done", { runId: id });
@@ -64,11 +86,24 @@ export async function GET(_request: NextRequest, ctx: { params: Promise<{ id: st
         // messageFromError, not err.message: with the gateway stopped, undici
         // throws "TypeError: fetch failed" and hides "connect ECONNREFUSED
         // 127.0.0.1:8642" one level down in `cause`. The wrapper alone tells
-        // the user nothing they can act on.
-        emit(RUN_ERROR_EVENT, { message: messageFromError(err, "run event stream failed") });
+        // the user nothing they can act on. An abort we caused is not an error
+        // worth a frame: nobody is listening.
+        if (!upstream.signal.aborted) {
+          emit(RUN_ERROR_EVENT, { message: messageFromError(err, "run event stream failed") });
+        }
       } finally {
-        controller.close();
+        closed = true;
+        requestSignal?.removeEventListener("abort", abortUpstream);
+        try {
+          controller.close();
+        } catch {
+          // already cancelled by the client
+        }
       }
+    },
+    cancel() {
+      closed = true;
+      upstream.abort();
     },
   });
 

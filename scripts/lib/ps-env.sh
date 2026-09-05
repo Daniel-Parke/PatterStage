@@ -67,6 +67,21 @@ ps_env_set() {
   mv "$tmp" "$file"
 }
 
+# Set KEY=value only when the file has no KEY= line yet.
+#
+# A default a fresh install should get, and a choice a re-run of setup must
+# never undo. setup writes PS_ENABLE_DEPLOY_API=true this way (decision 17,
+# T-0095): an operator who turned the deploy API off keeps it off.
+ps_env_set_if_absent() {
+  local file="$1"
+  local key="$2"
+  local val="$3"
+  if [ -f "$file" ] && grep -q "^${key}=" "$file" 2>/dev/null; then
+    return 0
+  fi
+  ps_env_set "$file" "$key" "$val"
+}
+
 # Resolve the PatterStage data dir. Explicit env wins (PS_ → CH_ →
 # CONTROL_HUB_); otherwise prefer ~/patterstage/data but fall back to a
 # pre-existing ~/control-hub/data so an un-migrated install keeps reading its

@@ -7,7 +7,18 @@ import { getAuthMode } from "@/lib/auth-token";
 import { readEnv } from "@/lib/paths";
 import { isReadOnly, readOnlyMessage } from "@/lib/read-only";
 
-function isDeployApiEnabled(): boolean {
+/**
+ * Whether POST /api/update may spawn the deploy script.
+ *
+ * Exported, and the ONLY copy of the rule: boot-diagnostics used to carry its
+ * own mirror of these six lines "so the line cannot claim a state the guard
+ * does not enforce", which is the argument for one function, not two. The
+ * footer reads the answer on GET /api/update so it can say "off" before the
+ * click (T-0095, D53). Setup writes `PS_ENABLE_DEPLOY_API=true` on a fresh
+ * install (decision 17), so the production fallback below is for installs
+ * that predate it.
+ */
+export function isDeployApiEnabled(): boolean {
   const raw = readEnv("PS_ENABLE_DEPLOY_API", "CH_ENABLE_DEPLOY_API");
   const value = raw?.toLowerCase();
   if (value === "1" || value === "true" || value === "yes") return true;
@@ -84,21 +95,25 @@ export function requireDeployApiEnabled(): NextResponse | null {
 
 /**
  * Refuse an endpoint that can cause host-level side effects (writing a script
- * that will later be executed, installing a crontab line) when authentication
- * has been switched off with `PS_AUTH_MODE=none`.
+ * that will later be executed, running one, installing a crontab line, spawning
+ * the deploy script) when authentication has been switched off with
+ * `PS_AUTH_MODE=none`.
  *
  * With authentication on (the default), these endpoints are fine: the operator
  * holding the token already has shell access to the machine running the server,
  * so an authenticated script editor is a feature, not an escalation. With
  * authentication off, the same endpoints are an unauthenticated RCE, which is
  * exactly how this application shipped before `src/proxy.ts` existed.
+ *
+ * `src/proxy.ts` now refuses the same paths first, from a list, so a route
+ * that forgets this call is still covered. This stays as defence in depth.
  */
 export function requireAuthenticatedHostWrites(): NextResponse | null {
   if (getAuthMode() !== "none") return null;
   return NextResponse.json(
     {
       error:
-        "Host-affecting writes are disabled while PS_AUTH_MODE=none. Re-enable the access token to edit or schedule scripts.",
+        "Host-affecting writes are disabled while PS_AUTH_MODE=none. Re-enable the access token to edit, schedule or run scripts, or to deploy.",
     },
     { status: 403 },
   );

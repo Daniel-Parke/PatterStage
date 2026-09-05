@@ -185,6 +185,12 @@ export async function runSyncAction({
       const errMsg =
         typeof data.data.error === "string" ? data.data.error : errorMessage;
       showToast(errMsg, "error");
+      // Reload anyway. A batch that partly failed is a real outcome: eleven
+      // profiles pushed and one did not. Returning before the reload left the
+      // page showing the pre-push state for all twelve, so the operator could
+      // not see which eleven had moved (T-0095, D20). The toast names the
+      // failure; the reload shows the truth.
+      if (onSuccess) await onSuccess();
       return;
     }
     showToast(successMessage, "success");

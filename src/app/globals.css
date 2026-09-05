@@ -37,6 +37,12 @@
   --color-semantic-warning: #fbbf24;
   --color-semantic-danger: #f87171;
   --color-semantic-info: #00a1e6;
+  /* The danger colour under its accent-slot name. Thirteen sites reached for
+     `neon-red` before any token declared it and rendered with no colour at
+     all, the global error fallback among them (T-0095, D114). Same value as
+     --color-semantic-danger, by intent; design-lint's token-must-exist rule
+     now fails the build on the next undeclared house colour. */
+  --color-neon-red: #f87171;
 
   /* ── Text tiers ───────────────────────────────────────────────────────────
      The semantic layer WG-WEB-003 asks for and the lock-book deferred as "set

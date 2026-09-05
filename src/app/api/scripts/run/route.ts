@@ -4,7 +4,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextRequest, NextResponse } from "next/server";
-import { isReadOnly } from "@/lib/api-auth";
+import { isReadOnly, requireAuthenticatedHostWrites } from "@/lib/api-auth";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ok, badRequest, notFound, serviceUnavailable } from "@/lib/api-response";
 import { readOnlyMessage } from "@/lib/read-only";
@@ -12,6 +12,11 @@ import { parseJsonBody } from "@/lib/parse-json-body";
 import { runScriptFile } from "@/lib/scripts-manager";
 
 export async function POST(request: NextRequest) {
+  // This is the route that EXECUTES on the host. Its siblings that write the
+  // script carried this guard from the start; the one that runs it did not
+  // (T-0095, D42). The proxy refuses the same request first; this is the belt.
+  const hostWrites = requireAuthenticatedHostWrites();
+  if (hostWrites) return hostWrites;
   if (isReadOnly()) return serviceUnavailable(readOnlyMessage("scripts cannot be run"));
 
   const bodyResult = await parseJsonBody(request);

@@ -71,6 +71,7 @@ HERMES_INSTALL_URL="https://raw.githubusercontent.com/NousResearch/hermes-agent/
 
 # shellcheck source=../lib/ps-env.sh
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")/../lib" && pwd)/ps-env.sh"
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")/../lib" && pwd)/ps-reinstall.sh"
 
 echo ""
 echo "╔══════════════════════════════════════════╗"
@@ -231,11 +232,11 @@ Use one of:
 
 Or clone into a different INSTALL_DIR, or remove this directory and re-run the installer."
     fi
-    read -p "   Reinstall? This will DELETE the directory. (y/N): " -n 1 -r
-    echo ""
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        info "Removing existing installation..."
-        rm -rf "$INSTALL_DIR"
+    # The data directory is moved to $HOME/patterstage-data-backup-<stamp>
+    # before anything is removed, and the prompt takes a typed word (T-0095,
+    # D106). The function lives in scripts/lib/ps-reinstall.sh with its own
+    # checks.
+    if ps_reinstall_confirm_and_remove "$INSTALL_DIR" "$HOME"; then
         ok "Removed"
     else
         info "Using existing installation"

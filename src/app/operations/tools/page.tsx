@@ -281,8 +281,8 @@ export default function ToolsPage() {
           </div>
         )}
         {profileSyncStatus === "error" && (
-          <div className="mb-4 p-3 rounded-lg bg-semantic-error/10 border border-semantic-error/30">
-            <p className="text-xs text-semantic-error">
+          <div className="mb-4 p-3 rounded-lg bg-semantic-danger/10 border border-semantic-danger/30">
+            <p className="text-xs text-semantic-danger">
               Last sync failed. Check gateway logs, then retry Pull or Push.
             </p>
           </div>

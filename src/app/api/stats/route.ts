@@ -23,6 +23,7 @@
 import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
 import { ok } from "@/lib/api-response";
 import { ensureDb } from "@/lib/db";
+import { isReadOnly } from "@/lib/read-only";
 import { getDashboardStats } from "@/lib/stats/stats-repository";
 import { captureAgentProgressionSnapshots } from "@/lib/stats/agent-progression";
 
@@ -30,13 +31,16 @@ export async function GET() {
   try {
     ensureDb();
     const stats = getDashboardStats();
-    try {
-      captureAgentProgressionSnapshots({
-        agents: stats.agents,
-        achievements: stats.achievements,
-      });
-    } catch (error) {
-      logApiError("GET /api/stats", "capturing agent progression", error);
+    // check-read-only-guards-disable-next-line -- this GET appends a progression snapshot, which is a write; under PS_READ_ONLY the read is served and the bookkeeping is skipped (T-0095, D124)
+    if (!isReadOnly()) {
+      try {
+        captureAgentProgressionSnapshots({
+          agents: stats.agents,
+          achievements: stats.achievements,
+        });
+      } catch (error) {
+        logApiError("GET /api/stats", "capturing agent progression", error);
+      }
     }
     return ok({ stats });
   } catch (error) {

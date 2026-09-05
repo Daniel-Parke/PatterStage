@@ -56,7 +56,7 @@ Each workflow declares its own **input contract** on the start node's `config.in
 
 ## API
 
-Gated by `PS_COMPOSER` (on by default; `PS_COMPOSER=0` makes them return `503`), with one exception noted in the table: the SSE stream carries no flag check and still serves an existing run.
+Gated by `PS_COMPOSER` (on by default; `PS_COMPOSER=0` makes every one of them return `503`, the SSE stream included).
 
 | Method + path | Purpose |
 |---|---|

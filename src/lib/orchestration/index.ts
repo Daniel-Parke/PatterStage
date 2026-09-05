@@ -10,5 +10,5 @@
 // (BackgroundScheduler, RunSync, scheduler tick, boot reconcile) are imported
 // directly from their source modules by the server bootstrap.
 export { ensureBackgroundScheduler } from "./scheduler/BackgroundScheduler";
-export { dispatchMissionRun, cancelMissionRun, stopBackendRunForMission } from "./dispatch";
+export { dispatchMissionRun, stopBackendRunForMission } from "./dispatch";
 export { reconcileActiveRuns } from "./run-reconcile";

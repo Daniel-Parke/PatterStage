@@ -46,10 +46,14 @@ let deployApiEnabled = true;
 
 jest.mock("@/lib/api-auth", () => ({
   getCorrelationId: () => "cid-test",
+  isDeployApiEnabled: () => deployApiEnabled,
   requireDeployApiEnabled: () =>
     deployApiEnabled
       ? null
       : { status: 403, json: () => Promise.resolve({ error: "off" }) },
+  // The host-write guard is this route's since T-0095; its own behaviour is
+  // pinned in b1-host-writes-need-a-token.test.ts against the real module.
+  requireAuthenticatedHostWrites: () => null,
   requireSignedRequest: () => null,
 }));
 

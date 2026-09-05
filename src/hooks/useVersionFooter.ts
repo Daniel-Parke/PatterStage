@@ -15,6 +15,13 @@
 // string there to silence the rule would be laundering the exemption, not
 // paying the debt. The baselined crossing moves with the code and stays
 // visible at its original count.
+//
+// Four things it tells the truth about, since T-0095:
+//   - whether the deploy API is on at all, read on mount (D53);
+//   - a version check that could not be made, as its own state (D107);
+//   - the last lines of the deploy log after a failure (D108);
+//   - a deploy that never reaches a terminal state, released after the
+//     attempt cap on EVERY tick, not only on thrown ones (D111).
 
 "use client";
 
@@ -36,7 +43,12 @@ import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
 // the knip report.
 
 /** Where the "Check for updates" button is in its little state machine. */
-type VersionCheckState = "idle" | "checking" | "up-to-date" | "update-available";
+type VersionCheckState =
+  | "idle"
+  | "checking"
+  | "up-to-date"
+  | "update-available"
+  | "check-failed";
 
 interface VersionInfo {
   localHash: string;
@@ -49,6 +61,21 @@ interface VersionInfo {
   comparedBranch?: string;
   checkoutBranch?: string;
   lastChecked: string;
+  /** The compare could not be made; `updateAvailable` says nothing then. */
+  checkFailed?: boolean;
+}
+
+/** GET /api/update?deploy=1, the answer the mount read and the poll share. */
+interface DeployStatusAnswer {
+  deploy?: {
+    state?: string;
+    action?: string;
+    phase?: string;
+    message?: string;
+    logHint?: string;
+    logTail?: string[];
+  };
+  deployEnabled?: boolean;
 }
 
 export interface VersionFooterState {
@@ -62,6 +89,10 @@ export interface VersionFooterState {
   dropdownOpen: boolean;
   branches: string[];
   selectedBranch: string;
+  /** Whether POST /api/update is enabled on this install; null until known. */
+  deployEnabled: boolean | null;
+  /** The last lines of the deploy log after a failed action; empty otherwise. */
+  deployLogTail: string[];
   openCheckDropdown: () => Promise<void>;
   closeDropdown: () => void;
   handleDropdownConfirm: (branch: string) => Promise<void>;
@@ -71,6 +102,10 @@ export interface VersionFooterState {
   isArmedFor: (key: string) => boolean;
 }
 
+const POLL_INTERVAL_MS = 2000;
+/** 450 polls at 2s: fifteen minutes, the same cap as before, now on every tick. */
+const MAX_POLL_ATTEMPTS = 450;
+
 export function useVersionFooter(): VersionFooterState {
   const [version, setVersion] = useState<VersionInfo | null>(null);
   const [checkState, setCheckState] = useState<VersionCheckState>("idle");
@@ -78,6 +113,8 @@ export function useVersionFooter(): VersionFooterState {
   const [restarting, setRestarting] = useState(false);
   const [rebuilding, setRebuilding] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [deployEnabled, setDeployEnabled] = useState<boolean | null>(null);
+  const [deployLogTail, setDeployLogTail] = useState<string[]>([]);
   // Synchronous busy guard — ref, not state, so it updates immediately on click
   const busyRef = useRef(false);
 
@@ -109,6 +146,20 @@ export function useVersionFooter(): VersionFooterState {
     };
   }, []);
 
+  // Learn on mount whether the deploy API is on, so the block can say so
+  // before the click rather than 403 after it (D53).
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const data = await safeApiCallData<DeployStatusAnswer>("/api/update?deploy=1");
+      if (cancelled || !isMountedRef.current) return;
+      if (typeof data?.deployEnabled === "boolean") setDeployEnabled(data.deployEnabled);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const openCheckDropdown = async () => {
     setDropdownOpen(true);
     const pickBranch = (list: string[], apiDefault: unknown): string => {
@@ -137,12 +188,19 @@ export function useVersionFooter(): VersionFooterState {
       `/api/update?branch=${encodeURIComponent(branch)}`,
     );
     if (!data) {
-      setCheckState("idle");
-      setMessage("Check failed");
+      setCheckState("check-failed");
+      setMessage("Could not check for updates.");
       return;
     }
     setVersion(data);
     setDeployBranch(branch);
+    if (data.checkFailed) {
+      // A fourth state. "unknown" hashes with updateAvailable:false used to
+      // paint the button green (D107).
+      setCheckState("check-failed");
+      setMessage("Could not check for updates: git could not reach origin.");
+      return;
+    }
     setCheckState(data.updateAvailable ? "update-available" : "up-to-date");
   };
 
@@ -165,6 +223,7 @@ export function useVersionFooter(): VersionFooterState {
       setBusy(true);
       if (useBusyRef) busyRef.current = true;
       setMessage(startedMessage);
+      setDeployLogTail([]);
       try {
         const res = await fetch("/api/update", {
           method: "POST",
@@ -265,24 +324,29 @@ export function useVersionFooter(): VersionFooterState {
         pollIntervalRef.current = null;
       }
       let attempts = 0;
-      const maxAttempts = 450;
+      const stop = () => {
+        clearInterval(interval);
+        pollIntervalRef.current = null;
+      };
       const interval = setInterval(async () => {
         attempts++;
+        // The cap applies to every tick. It used to live inside the catch, so
+        // only thrown polls counted, and a status file stuck on "running"
+        // held the buttons for ever (D111).
+        if (attempts > MAX_POLL_ATTEMPTS) {
+          stop();
+          if (!isMountedRef.current) return;
+          clearDeployBusy();
+          setMessage("Timed out waiting for the deploy. Check ps-restart.log in Logs.");
+          return;
+        }
         try {
           const res = await fetch("/api/update?deploy=1", {
-            signal: AbortSignal.timeout(8000),
+            signal: typeof AbortSignal.timeout === "function" ? AbortSignal.timeout(8000) : undefined,
           });
           if (!res.ok) return;
-          const d = await res.json();
-          const deploy = d.data?.deploy as
-            | {
-                state?: string;
-                action?: string;
-                phase?: string;
-                message?: string;
-                logHint?: string;
-              }
-            | undefined;
+          const d = (await res.json()) as { data?: DeployStatusAnswer };
+          const deploy = d.data?.deploy;
           if (!deploy || !isMountedRef.current) return;
 
           if (deploy.state === "running") {
@@ -291,8 +355,7 @@ export function useVersionFooter(): VersionFooterState {
           }
 
           if (deploy.state === "success") {
-            clearInterval(interval);
-            pollIntervalRef.current = null;
+            stop();
             clearDeployBusy();
             setMessage(deployCompletionLabel(expectedAction));
             setTimeout(() => {
@@ -302,22 +365,18 @@ export function useVersionFooter(): VersionFooterState {
           }
 
           if (deploy.state === "failed") {
-            clearInterval(interval);
-            pollIntervalRef.current = null;
+            stop();
             clearDeployBusy();
             const hint = deploy.logHint ? ` — see Logs → ${deploy.logHint}` : "";
             setMessage((deploy.message || "Deploy failed") + hint);
+            // The route computes the tail on every failed read; keep it (D108).
+            setDeployLogTail(Array.isArray(deploy.logTail) ? deploy.logTail : []);
           }
         } catch {
-          if (attempts >= maxAttempts) {
-            clearInterval(interval);
-            pollIntervalRef.current = null;
-            if (!isMountedRef.current) return;
-            clearDeployBusy();
-            setMessage("Timed out — check ps-restart.log in Logs");
-          }
+          // A transient network error while the server restarts. The cap above
+          // ends the poll if it never comes back.
         }
-      }, 2000);
+      }, POLL_INTERVAL_MS);
       pollIntervalRef.current = interval;
     },
     [clearDeployBusy],
@@ -339,6 +398,8 @@ export function useVersionFooter(): VersionFooterState {
     dropdownOpen,
     branches,
     selectedBranch,
+    deployEnabled,
+    deployLogTail,
     openCheckDropdown,
     closeDropdown: () => setDropdownOpen(false),
     handleDropdownConfirm,

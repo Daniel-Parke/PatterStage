@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 
 import { badRequest, ok } from "@/lib/api-response";
+// `ok` is still the GET's answer; every POST branch answers through sync-answer.
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ensureDb } from "@/lib/db";
 import { parseOptionalJsonBody } from "@/lib/parse-optional-json-body";
@@ -11,6 +12,11 @@ import {
   importAllSkillsFromDisk,
 } from "@/modules/hermes/lib/profile-discovery";
 import { isValidProfileSlug } from "@/lib/profile-slug";
+import { answerBatch, answerSingle } from "@/modules/hermes/lib/sync-answer";
+
+// Answers through sync-answer.ts, like push and pull: a 500 for the one
+// profile that did not import, a 200 that says so for a batch (T-0095, D19).
+const VERB = "Import from Hermes";
 
 export async function GET(_request: NextRequest) {
   try {
@@ -47,10 +53,7 @@ export async function POST(request: NextRequest) {
 
     if (importSkills) {
       const skillResults = importAllSkillsFromDisk();
-      return ok({
-        success: skillResults.every((r) => r.success),
-        skills: skillResults,
-      });
+      return answerBatch("import", skillResults, { skills: skillResults });
     }
 
     if (importAllDiscovered) {
@@ -58,21 +61,14 @@ export async function POST(request: NextRequest) {
         const r = importDiscoveredProfile(d.slug);
         results.push({ slug: d.slug, success: r.success, error: r.error });
       }
-      return ok({
-        success: results.every((r) => r.success),
-        results,
-      });
+      return answerBatch("import", results, { results });
     }
 
     if (!slug || !isValidProfileSlug(slug)) {
       return badRequest("Valid slug is required");
     }
 
-    const result = importDiscoveredProfile(slug);
-    return ok({
-      success: result.success,
-      result,
-    });
+    return answerSingle(VERB, importDiscoveredProfile(slug));
   }
   catch (error) {
     return serverErrorFromCatch(
