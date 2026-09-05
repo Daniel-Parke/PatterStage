@@ -340,6 +340,43 @@ describe("Skip writes the preference B3 already allow-listed", () => {
   });
 });
 
+describe("a skip is visible before the poll that confirms it", () => {
+  // The walk found this: the page wrote `quests.skipped` and then rendered
+  // `quest.skipped` from the stats poll, which is up to twenty seconds behind.
+  // In both cases below the stats answer NEVER changes, so the only thing that
+  // can move the row is the preference the operator just wrote.
+  it("marks the row skipped as soon as the preference is written", async () => {
+    render(withQuery(<QuestsPage />));
+    await screen.findByText("Send a first message");
+
+    // The preferences re-read after the write is what the page reacts to.
+    answers["/api/prefs"] = { body: { data: { prefs: { "quests.skipped": ["1.3"] } } } };
+    const row = screen.getByText("Send a first message").closest("li")!;
+    fireEvent.click(within(row).getByRole("button", { name: /^skip$/i }));
+
+    await waitFor(() => expect(within(row).getByText(/skipped/i)).toBeInTheDocument());
+    expect(within(row).getByRole("button", { name: /unskip/i })).toBeInTheDocument();
+  });
+
+  it("un-marks it as soon as the preference is cleared, which a union could not do", async () => {
+    // The server still says skipped here, exactly as it would in the window
+    // between the write and the next poll. Folding the two together with a
+    // union makes an unskip impossible to see, because the stale server view
+    // keeps re-adding the id it has not been told about yet.
+    answers["/api/stats"] = { body: statsBody(QUESTS.map((x) => (x.id === "1.3" ? { ...x, skipped: true } : x))) };
+    answers["/api/prefs"] = { body: { data: { prefs: { "quests.skipped": ["1.3"] } } } };
+    render(withQuery(<QuestsPage />));
+    await screen.findByText("Send a first message");
+    const row = screen.getByText("Send a first message").closest("li")!;
+    expect(within(row).getByText(/skipped/i)).toBeInTheDocument();
+
+    answers["/api/prefs"] = { body: { data: { prefs: { "quests.skipped": [] } } } };
+    fireEvent.click(within(row).getByRole("button", { name: /unskip/i }));
+
+    await waitFor(() => expect(within(row).queryByText(/skipped/i)).not.toBeInTheDocument());
+  });
+});
+
 describe("a failed read says so", () => {
   it("shows the error with a Retry, and never a page of zeros over it", async () => {
     answers["/api/stats"] = { status: 500, body: { error: "the database is locked" } };

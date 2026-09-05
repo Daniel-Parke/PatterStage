@@ -45,12 +45,34 @@ export default function QuestsPage() {
    * click landing before the preferences read lands cannot erase what the
    * server's latch already holds.
    */
+  const stored = prefs["quests.skipped"];
+  const fromPrefs = useMemo(
+    () => (Array.isArray(stored) ? stored.filter((id): id is string => typeof id === "string") : null),
+    [stored],
+  );
+
   const skipped = useMemo(() => {
-    const stored = prefs["quests.skipped"];
-    const fromPrefs = Array.isArray(stored) ? stored.filter((id): id is string => typeof id === "string") : [];
     const fromServer = progress?.quests.filter((q) => q.skipped).map((q) => q.id) ?? [];
-    return [...new Set([...fromPrefs, ...fromServer])];
-  }, [prefs, progress]);
+    return [...new Set([...(fromPrefs ?? []), ...fromServer])];
+  }, [fromPrefs, progress]);
+
+  /**
+   * What the rows render, which is not always what the last stats poll said.
+   *
+   * A skip is written to preferences and only reaches `progress` on the next
+   * stats read, up to twenty seconds later. Rendering the server's flag alone
+   * made a click look ignored for that whole window. Once the preferences have
+   * loaded they are the honest answer -- that array is precisely what the
+   * server reads to decide `skipped` -- so they win here, in BOTH directions:
+   * the union above cannot express an unskip, because the server's stale view
+   * would keep re-adding the id it has not yet been told about.
+   */
+  const quests = useMemo(() => {
+    const rows = progress?.quests ?? [];
+    if (fromPrefs === null) return rows;
+    const chosen = new Set(fromPrefs);
+    return rows.map((q) => (q.skipped === chosen.has(q.id) ? q : { ...q, skipped: chosen.has(q.id) }));
+  }, [progress, fromPrefs]);
 
   const skip = useCallback(
     (id: string) => setPref("quests.skipped", [...skipped.filter((x) => x !== id), id]),
@@ -111,7 +133,7 @@ export default function QuestsPage() {
                 <QuestChapter
                   key={chapter.id}
                   chapter={chapter}
-                  quests={progress.quests.filter((q) => q.chapter === chapter.number)}
+                  quests={quests.filter((q) => q.chapter === chapter.number)}
                   available={available}
                   onSkip={skip}
                   onUnskip={unskip}
