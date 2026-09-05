@@ -66,7 +66,12 @@ describe("runSyncAction", () => {
     expect(onSuccess).toHaveBeenCalledTimes(1);
   });
 
-  it("shows the error toast and skips onSuccess when the response says success:false (checkSuccess=true)", async () => {
+  it("shows the error toast AND still reloads when the response says success:false (checkSuccess=true)", async () => {
+    // B1 (T-0095), D20. A batch that partly failed is a real outcome: eleven
+    // profiles pushed, one did not. Skipping the reload left the page showing
+    // the pre-push state for all twelve, so the operator could not see which
+    // eleven had actually moved. The toast names the failure; the reload shows
+    // the truth.
     apiFetch.mockResolvedValue({ data: { success: false, error: "disk full" } });
     const showToast = jest.fn();
     const onSuccess = jest.fn();
@@ -76,7 +81,8 @@ describe("runSyncAction", () => {
     );
 
     expect(showToast).toHaveBeenCalledWith("disk full", "error");
-    expect(onSuccess).not.toHaveBeenCalled();
+    expect(showToast).not.toHaveBeenCalledWith("ok", "success");
+    expect(onSuccess).toHaveBeenCalledTimes(1);
   });
 
   it("falls back to errorMessage when success:false has no error string", async () => {

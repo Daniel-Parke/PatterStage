@@ -81,9 +81,18 @@ function routeFiles(dir = API_ROOT, out: string[] = []): string[] {
  */
 let handlersSeen = 0;
 
+/**
+ * The one sanctioned exception, mirrored from check-read-only-guards.mjs: a
+ * read handler that genuinely performs a write may consult the mode to SKIP
+ * that write, and must say why on the line above (B1, T-0095: three GETs did
+ * bookkeeping writes on every poll, and the fix is a guarded skip, not a 503).
+ */
+const PRAGMA = /\/\/\s*check-read-only-guards-disable-next-line\s+--\s+\S/;
+
 function guardCallsByMethod(file: string): Array<{ method: string; line: number; text: string }> {
   const found: Array<{ method: string; line: number; text: string }> = [];
   let current = "";
+  let exempt = false;
   const lines = readFileSync(file, "utf-8").split(/\r?\n/);
   lines.forEach((raw, i) => {
     const handler = /^export (?:async )?function (GET|HEAD|OPTIONS|POST|PUT|DELETE|PATCH)\b/.exec(raw);
@@ -92,10 +101,18 @@ function guardCallsByMethod(file: string): Array<{ method: string; line: number;
       handlersSeen += 1;
     }
     const trimmed = raw.trim();
-    if (trimmed.startsWith("//") || trimmed.startsWith("*") || trimmed.startsWith("/*")) return;
+    if (trimmed.startsWith("//") || trimmed.startsWith("*") || trimmed.startsWith("/*")) {
+      exempt = PRAGMA.test(raw);
+      return;
+    }
     if (/\b(requireAuth|requireNotReadOnly|isReadOnly)\s*\(/.test(raw)) {
+      if (exempt) {
+        exempt = false;
+        return;
+      }
       found.push({ method: current, line: i + 1, text: trimmed });
     }
+    exempt = false;
   });
   return found;
 }

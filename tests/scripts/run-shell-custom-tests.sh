@@ -459,6 +459,71 @@ esac
 group_pass "ps-backup.sh stops when the interpreter cannot be resolved"
 rm -rf "$RP_EMPTY"
 
+# ── ps_env_set_if_absent (B1, T-0095, decision 17) ───────────────
+# setup writes PS_ENABLE_DEPLOY_API=true on a fresh install and must never
+# flip a value the operator set on purpose.
+echo ""
+echo "== ps-env.sh: ps_env_set_if_absent"
+IA_TMP=$(mktemp -d)
+IA_FILE="$IA_TMP/.env.local"
+# shellcheck source=../../scripts/lib/ps-env.sh
+source "$REPO_ROOT/scripts/lib/ps-env.sh"
+group_begin
+printf 'PORT=3000\nPS_ENABLE_DEPLOY_API=false\n' >"$IA_FILE"
+ps_env_set_if_absent "$IA_FILE" "PS_ENABLE_DEPLOY_API" "true"
+grep -q '^PS_ENABLE_DEPLOY_API=false$' "$IA_FILE" || fail "if_absent overwrote an existing value"
+grep -q '^PS_ENABLE_DEPLOY_API=true$' "$IA_FILE" && fail "if_absent appended a second line"
+group_pass "ps_env_set_if_absent leaves an existing value alone"
+group_begin
+printf 'PORT=3000\n' >"$IA_FILE"
+ps_env_set_if_absent "$IA_FILE" "PS_ENABLE_DEPLOY_API" "true"
+grep -q '^PS_ENABLE_DEPLOY_API=true$' "$IA_FILE" || fail "if_absent did not write a missing key"
+grep -q '^PORT=3000$' "$IA_FILE" || fail "if_absent lost a neighbouring line"
+group_pass "ps_env_set_if_absent writes a missing key"
+rm -rf "$IA_TMP"
+
+# ── ps-reinstall.sh (B1, T-0095, D106) ───────────────────────────
+# install.sh's Reinstall used to rm -rf the install directory, database and
+# all, on one keypress. The step is now a function: it moves the data
+# directory aside before anything is removed, and it takes a typed word.
+echo ""
+echo "== ps-reinstall.sh"
+# shellcheck source=../../scripts/lib/ps-reinstall.sh
+source "$REPO_ROOT/scripts/lib/ps-reinstall.sh"
+
+RI_TMP=$(mktemp -d)
+RI_INSTALL="$RI_TMP/patterstage"
+RI_BACKUPS="$RI_TMP/backups"
+mkdir -p "$RI_INSTALL/data" "$RI_INSTALL/src"
+printf 'not really sqlite' >"$RI_INSTALL/data/patterstage.db"
+printf 'code' >"$RI_INSTALL/src/x.ts"
+
+group_begin
+if printf 'y\n' | ps_reinstall_confirm_and_remove "$RI_INSTALL" "$RI_BACKUPS" >/dev/null 2>&1; then
+  fail "reinstall accepted 'y' as consent"
+fi
+[ -f "$RI_INSTALL/data/patterstage.db" ] || fail "reinstall removed the database on a refused confirmation"
+group_pass "reinstall refuses anything but the typed word"
+
+group_begin
+RI_OUT="$(printf 'DELETE\n' | ps_reinstall_confirm_and_remove "$RI_INSTALL" "$RI_BACKUPS" 2>&1)" || fail "reinstall failed on a valid confirmation: $RI_OUT"
+[ -d "$RI_INSTALL" ] && fail "install directory still present after reinstall"
+RI_MOVED="$(find "$RI_BACKUPS" -name patterstage.db 2>/dev/null | head -n1)"
+[ -n "$RI_MOVED" ] || fail "database was not moved aside before removal"
+[ "$(cat "$RI_MOVED")" = "not really sqlite" ] || fail "moved database is not the original"
+case "$RI_OUT" in
+  *"$RI_BACKUPS"*) ;;
+  *) fail "reinstall did not say where it put the data (got: $RI_OUT)" ;;
+esac
+group_pass "reinstall moves the data directory aside, removes the install, and says where"
+
+group_begin
+mkdir -p "$RI_INSTALL/src"
+printf 'DELETE\n' | ps_reinstall_confirm_and_remove "$RI_INSTALL" "$RI_BACKUPS" >/dev/null 2>&1 || fail "reinstall without a data dir failed"
+[ -d "$RI_INSTALL" ] && fail "install directory still present (no data dir case)"
+group_pass "reinstall with no data directory simply removes"
+rm -rf "$RI_TMP"
+
 # bash -n on touched scripts
 echo ""
 echo "== bash -n on scripts"
@@ -467,6 +532,7 @@ for f in \
   "$REPO_ROOT/scripts/bootstrap/install.sh" \
   "$REPO_ROOT/scripts/application/ps-deploy.sh" \
   "$REPO_ROOT/scripts/lib/ps-deploy-status.sh" \
+  "$REPO_ROOT/scripts/lib/ps-reinstall.sh" \
   "$REPO_ROOT/scripts/lib/ps-hermes-profile-templates.sh" \
   "$REPO_ROOT/scripts/lib/ps-dotenv-local.sh" \
   "$REPO_ROOT/scripts/lib/ps-port.sh" \
