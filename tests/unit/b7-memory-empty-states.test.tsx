@@ -222,6 +222,36 @@ describe("an empty list says which kind of empty it is", () => {
     expect(screen.getByText(/No memories yet/i)).toBeInTheDocument();
   });
 
+  it("the stale banner stays quiet when it is hiding nothing", () => {
+    // Found on the proof walk: hoisting the banner above the empty branch put
+    // "Hiding 0 memories older than 90 days" on a store with nothing in it,
+    // which is noise and is not true either.
+    render(
+      <Tab
+        memories={[]}
+        loading={false}
+        loadingInitial={false}
+        showStaleToggle={{ ...stale, hiddenCount: 0 }}
+      />,
+    );
+
+    expect(screen.queryByText(/Hiding 0 memories/i)).toBeNull();
+    expect(screen.getByText(/No memories yet/i)).toBeInTheDocument();
+  });
+
+  it("but says so while the filter is off, so it can be put back on", () => {
+    render(
+      <Tab
+        memories={[]}
+        loading={false}
+        loadingInitial={false}
+        showStaleToggle={{ ...stale, hiddenCount: 0, showStale: true }}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: /Hide stale/i })).toBeInTheDocument();
+  });
+
   it("the stale banner is above the list, not inside the non-empty branch", () => {
     render(<Tab memories={FRESH} loading={false} loadingInitial={false} showStaleToggle={stale} />);
 

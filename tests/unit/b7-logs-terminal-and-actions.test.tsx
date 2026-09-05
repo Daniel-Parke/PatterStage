@@ -116,6 +116,20 @@ describe("the log terminal's scroll container is the one that scrolls", () => {
     });
   });
 
+  it("it is bounded at every width, or it grows and the page scrolls instead", () => {
+    // Found on the proof walk at 1280x900: `lg:max-h-none` let the pane grow
+    // past the viewport, so scrollTop stayed 0 with the ref on the right
+    // element and the "Latest lines" pill still could not appear.
+    const ref = createRef<HTMLDivElement>();
+    renderTerminal(ref);
+
+    const className = ref.current!.className;
+    expect({
+      bounded: /max-h-\[calc\(100vh-/.test(className),
+      unboundedAtSomeWidth: /max-h-none/.test(className),
+    }).toEqual({ bounded: true, unboundedAtSomeWidth: false });
+  });
+
   it("the log rows are inside it, so scrolling them is what moves it", () => {
     const ref = createRef<HTMLDivElement>();
     renderTerminal(ref);
