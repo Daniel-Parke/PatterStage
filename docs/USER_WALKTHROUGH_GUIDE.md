@@ -30,7 +30,7 @@ The guide is written for the **Junior developer / operator**: every page is docu
 11. [Operations → Agents](#operations--agents)
 12. [Operations → Skills](#operations--skills)
 13. [Operations → Tools](#operations--tools)
-14. [Operations → Personalities](#operations--personalities)
+14. [Agent → Agents → Identity](#agent--agents--identity-was-operations--personalities)
 15. [Laboratory → Insights](#laboratory--insights)
 16. [Laboratory → Insights: provider spend](#laboratory--insights-provider-spend)
 17. [Laboratory → Deep Research](#laboratory--deep-research)
@@ -801,48 +801,29 @@ Conversations are stored **server-side** in SQLite (`chat_conversations` and `ch
 
 ---
 
-## Operations → Personalities
+## Agent → Agents → Identity (was Operations → Personalities)
 
-**Operations → Personalities** is the personality manager. It stores **SOUL-style identity prompts** per Hermes profile (the agent's voice and tone) as presets you can switch between at runtime. Editing the **raw SOUL.md** for a profile lives at **Operations → Agents**; this page is for managing the **presets** that can be applied to a profile.
+The separate Personalities page is gone. A personality was always a profile's
+SOUL.md voice, and editing it from two pages through two routes meant two
+places to look and two ways to be out of date. It is now the **Identity** tab
+on the agent's own card at `/agent/profiles`.
+
+`/operations/personalities` and `/agent/personalities` both answer 307 to
+`/agent/profiles?tab=identity`, so an old bookmark lands on the tab.
 
 ### What you see
 
-**Header**
-- Subtitle: "A personality is a profile's SOUL.md voice. Edit an existing profile's identity here; create profiles on the Agents page."
-- Active personality indicator line: "Active: <name>".
+- **Voice**: the personality recorded for the selected profile, read from the
+  same row the list shows.
+- **SOUL.md**, opened for you. Editing and saving here is the same save the
+  Files tab makes, through `PUT /api/agent/files/soul?profile=<slug>`, which is
+  also where the Shapeshifter ledger entry is recorded.
 
-**Toolbar**
-- Search only, placeholder "Search profiles...", purple accent.
-- There is **no "+ New" button, by design**: a personality IS a profile's identity, so a new one comes from creating a profile at **Operations → Agents**, not from here. This page edits the identities of profiles that already exist.
+### How to
 
-**List**
-- Sorted: active first, then alphabetical.
-- Per-personality card: emoji (from `getPersonalityEmoji(name)`), name, "ACTIVE" badge when active, prompt preview (collapsible expand for long prompts), action row (**expand toggle**, **copy-to-clipboard**, **Set as active** with a Sparkles icon, shown only when not active, and **edit**).
-- Empty state: "No personalities yet" or "No matches".
-
-**Edit modal** (size `lg`)
-- Name (lowercase identifier; used in `config.yaml` and the CLI).
-- System prompt (textarea, with character count and a live preview pane).
-- Validation: name and prompt both required.
-- Submit: POST (create) or PUT (edit) to `/api/personalities`.
-
-**Info panel at the bottom**
-- Explains how personalities work: SOUL.md for Bob and each profile; SQLite pushes to Hermes on save; `config.yaml` is for runtime policy (skills.disabled, platform_toolsets).
-
-### Typical use
-
-1. Create the profile first at **Operations → Agents** if it does not exist yet; its identity appears here.
-2. Click **edit** on the card and write a system prompt: the agent's voice for this profile.
-3. Save, then click **Set as active** on the card to make it the active personality.
-4. Use **copy-to-clipboard** to grab a prompt for use elsewhere.
-5. **edit** revises; **Set as active** is a single click and persists across the active Hermes install.
-
-### Notes
-
-- This page is for **presets**. The raw SOUL.md for a profile (its actual identity) is at **Operations → Agents**. The two are intentionally separate: presets are reusable across profiles; SOUL.md is per-profile identity.
-- Activating a personality writes through to `~/.hermes/config.yaml` on save.
-
----
+1. **Agent → Agents**, pick the profile on the left.
+2. **Identity**. SOUL.md opens; press **Edit** to leave preview, write, **Save**.
+3. **Push to Hermes** when you want it on disk.
 
 ## Laboratory → Insights
 
@@ -1484,7 +1465,6 @@ Today every artifact is inline text. The schema is already future-proofed for re
 ### What you see
 
 **Quick-link cards**
-- **Personalities** → /operations/personalities.
 - **Toolsets** → /operations/tools.
 
 **Six grouped categories** (from `lib/config-schema.ts` `CONFIG_SECTIONS`)
@@ -1508,7 +1488,7 @@ Today every artifact is inline text. The schema is already future-proofed for re
 
 1. Open **Config → All Settings** to see the full map of editable sections.
 2. Click a section card to open its editor at `/config/[section]`.
-3. Use the quick-link cards for **Personalities** and **Toolsets**, the only two on this page. Models is not a card here: it is the pinned sidebar entry `/config/models`.
+3. Use the quick-link card for **Toolsets**. Models is not a card here: it is the pinned sidebar entry `/config/models`.
 
 ### Notes
 
@@ -2005,9 +1985,10 @@ The three buttons (**Update**, **Restart**, and **Rebuild**) run the host's depl
 
 ### Edit a profile's voice (SOUL-style identity)
 
-1. **Operations → Personalities** → **edit** on the profile's card (or **Set as active** on an existing card). New personalities come from creating a profile at **Operations → Agents**.
-2. Write the system prompt and save.
-3. Verify in the profile detail at **Operations → Agents** that the active personality matches.
+1. **Agent → Agents** → pick the profile → **Identity**. SOUL.md opens there.
+2. Press **Edit**, write the voice, and **Save**.
+3. The Voice line on the same tab is read from the profile row, so it catches up
+   on the next pull or push.
 
 ### Push a freshly-edited profile to Hermes
 

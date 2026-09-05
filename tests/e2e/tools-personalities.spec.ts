@@ -1,6 +1,8 @@
 import { test, expect } from "@playwright/test";
 
-test.describe("Tools and Personalities", () => {
+// Personalities is the Agents card's Identity tab now (decision 11, T-0103);
+// its redirect is covered by b3-old-paths-redirect.spec.ts.
+test.describe("Tools", () => {
   test("Hermes toolsets page loads with sync actions", async ({ page }) => {
     await page.goto("/agent/tools");
     await expect(page.getByRole("heading", { level: 1, name: "Tools", exact: true })).toBeVisible();
@@ -16,13 +18,5 @@ test.describe("Tools and Personalities", () => {
     await expect(page.getByText(/hermes-cli|Web|CLI/i).first()).toBeVisible({
       timeout: 15_000,
     });
-  });
-
-  test("personalities page loads", async ({ page }) => {
-    await page.goto("/agent/personalities");
-    await expect(
-      page.getByRole("heading", { name: "Personalities", exact: true }),
-    ).toBeVisible();
-    await expect(page.getByTestId("ps-app-shell")).toBeVisible();
   });
 });

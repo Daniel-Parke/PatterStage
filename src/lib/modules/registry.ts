@@ -16,7 +16,7 @@
 //   Home      /            /quests            /help
 //   Work      /work/chat   /work/missions     /work/composer   /work/research   /work/scripts
 //   Results   /results/sessions   /results/artifacts   /results/insights   /results/logs
-//   Agent     /agent/profiles (+ /agent/personalities)  /agent/skills  /agent/tools
+//   Agent     /agent/profiles  /agent/skills  /agent/tools
 //             /agent/memory   /agent/models   /agent/settings (+ /restore, /system)
 //   Rec Room  /recroom/story-weaver/*
 //
@@ -96,10 +96,9 @@ const hermesModule: ProductModule = {
           href: "/agent/profiles",
           color: "purple",
           order: 1,
-          // Personalities folds into Agents as its Identity tab in B9 (decision
-          // 11); until then it is a sub-link, which also keeps the rail inside
-          // a 720px viewport (tests/e2e/rail-no-scroll.spec.ts).
-          subLinks: [{ label: "Personalities", href: "/agent/personalities" }],
+          // Personalities IS the Identity tab now (decision 11, T-0103). It was
+          // a sub-link here until the fold landed; the two old paths redirect
+          // to ?tab=identity, so nothing that was bookmarked is lost.
         },
         { icon: "FileText", label: "Skills", href: "/agent/skills", color: "green", order: 3 },
         { icon: "Wrench", label: "Tools", href: "/agent/tools", color: "purple", order: 4 },

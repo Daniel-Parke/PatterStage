@@ -25,10 +25,14 @@ interface PendingDiscardPrompt {
   onKeep: () => void;
 }
 
+export type ProfileTab = "identity" | "files";
+
 export interface AgentProfileDetailProps {
   profile: AgentProfile | null;
   onEdit: (profile: AgentProfile) => void;
   onDelete: (profileId: string) => void;
+  tab: ProfileTab;
+  onTabChange: (tab: ProfileTab) => void;
   pendingDiscard?: PendingDiscardPrompt | null;
   openFileKey: string | null;
   onOpenFile: (profileId: string, file: ProfileFile) => void;
@@ -48,6 +52,8 @@ export default function AgentProfileDetail({
   profile,
   onEdit,
   onDelete,
+  tab,
+  onTabChange,
   pendingDiscard = null,
   openFileKey,
   onOpenFile,
@@ -89,11 +95,58 @@ export default function AgentProfileDetail({
             </div>
           )}
 
-          <AgentProfileFiles
-            files={profile.files}
-            openFileKey={openFileKey}
-            onOpenFile={(file) => onOpenFile(profile.id, file)}
-          />
+          {/* Personalities was a second page editing the same SOUL.md through a
+              second route (decision 11, T-0103). It is this tab now. */}
+          <div className="px-4 pt-3 flex gap-1 border-b border-white/10" role="tablist" aria-label="Profile view">
+            {(["identity", "files"] as const).map((id) => (
+              <button
+                key={id}
+                type="button"
+                role="tab"
+                id={`profile-tab-${id}`}
+                aria-selected={tab === id}
+                aria-controls={`profile-panel-${id}`}
+                onClick={() => onTabChange(id)}
+                className={`px-3 py-2 text-sm rounded-t-lg border-b-2 transition-colors ${
+                  tab === id
+                    ? "border-neon-purple text-white"
+                    : "border-transparent text-ps-text-muted hover:text-ps-text-secondary"
+                }`}
+              >
+                {id === "identity" ? "Identity" : "Files"}
+              </button>
+            ))}
+          </div>
+
+          {tab === "identity" ? (
+            <div
+              id="profile-panel-identity"
+              role="tabpanel"
+              aria-labelledby="profile-tab-identity"
+              className="p-4 border-b border-white/10"
+            >
+              <h3 className="text-xs font-semibold text-ps-text-muted uppercase tracking-wider mb-2">
+                Voice
+              </h3>
+              <p className="text-sm text-ps-text-secondary">
+                {profile.personality?.trim()
+                  ? profile.personality
+                  : "No voice recorded yet. It is read from SOUL.md the next time this profile is pulled or saved."}
+              </p>
+              <p className="mt-3 text-xs text-ps-text-muted">
+                SOUL.md below is what the agent reads. Editing it here is the same save the
+                Files tab makes.
+              </p>
+            </div>
+          ) : (
+            <div id="profile-panel-files" role="tabpanel" aria-labelledby="profile-tab-files">
+              <AgentProfileFiles
+                files={profile.files}
+                openFileKey={openFileKey}
+                onOpenFile={(file) => onOpenFile(profile.id, file)}
+              />
+            </div>
+          )}
 
           {editor && editor.profileId === profile.id && (
             <AgentFileEditor

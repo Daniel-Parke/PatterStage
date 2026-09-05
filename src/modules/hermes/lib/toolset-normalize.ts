@@ -8,7 +8,7 @@ import type { PlatformToolsets } from "./profile-config-builder";
 import { sortedUnique } from "@/modules/hermes/lib/toolset-unify";
 
 /** Toolset names commonly expanded when hermes-cli is saved from `hermes tools`. */
-const HERMES_CLI_SUBSUMED = new Set([
+export const HERMES_CLI_SUBSUMED = new Set([
   "browser",
   "clarify",
   "code_execution",
@@ -26,7 +26,7 @@ const HERMES_CLI_SUBSUMED = new Set([
   "web",
 ]);
 
-const PLATFORM_BUNDLE_PREFIX = "hermes-";
+export const PLATFORM_BUNDLE_PREFIX = "hermes-";
 
 function normalizePlatformList(toolsets: string[]): string[] {
   const deduped = sortedUnique(toolsets);

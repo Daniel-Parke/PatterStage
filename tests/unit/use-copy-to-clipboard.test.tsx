@@ -190,25 +190,6 @@ const MESSAGE_BUBBLE_PATH = join(
   "session",
   "MessageBubble.tsx",
 );
-const PERSONALITIES_PATH = join(
-  REPO_ROOT,
-  "src",
-  "app",
-  "agent",
-  "personalities",
-  "page.tsx",
-);
-// The copy button moved here with PersonalityCard when T-0011 split the
-// page. The hook wiring is asserted against the card; the page keeps the
-// negative assertions below.
-const PERSONALITY_CARD_PATH = join(
-  REPO_ROOT,
-  "src",
-  "components",
-  "personalities",
-  "PersonalityCard.tsx",
-);
-
 // Strip block + line comments so JSDoc-style prose notes don't
 // false-positive the negative assertions. Same pre-filter pattern
 // as the other operation-page tests.
@@ -218,13 +199,12 @@ function stripComments(source: string): string {
     .replace(/\/\/.*$/gm, "");
 }
 
-describe("useCopyToClipboard — call-site source pattern (List 3 sister + MessageBubble)", () => {
+// PersonalityCard and the Personalities page were the other two call sites
+// these cases named. Both are gone with the Personalities fold (decision 11,
+// T-0103); MessageBubble carries the invariant they shared.
+describe("useCopyToClipboard — call-site source pattern (MessageBubble)", () => {
   const messageBubbleRaw = readFileSync(MESSAGE_BUBBLE_PATH, "utf-8");
-  const personalitiesRaw = readFileSync(PERSONALITIES_PATH, "utf-8");
-  const personalityCardRaw = readFileSync(PERSONALITY_CARD_PATH, "utf-8");
   const messageBubbleCode = stripComments(messageBubbleRaw);
-  const personalitiesCode = stripComments(personalitiesRaw);
-  const personalityCardCode = stripComments(personalityCardRaw);
 
   it("MessageBubble.tsx imports the hook", () => {
     expect(messageBubbleRaw).toContain("useCopyToClipboard");
@@ -244,31 +224,4 @@ describe("useCopyToClipboard — call-site source pattern (List 3 sister + Messa
     expect(messageBubbleCode).toMatch(/useCopyToClipboard\s*\(\s*\{\s*resetMs:\s*1500\s*\}\s*\)/);
   });
 
-  it("PersonalityCard.tsx imports the hook", () => {
-    expect(personalityCardRaw).toContain("useCopyToClipboard");
-  });
-
-  it("PersonalityCard.tsx no longer declares the inline copiedTimerRef", () => {
-    expect(personalityCardCode).not.toMatch(
-      /const\s+copiedTimerRef\s*=\s*useRef<ReturnType<typeof\s+setTimeout>/,
-    );
-  });
-
-  it("PersonalityCard.tsx no longer contains the inline navigator.clipboard.writeText", () => {
-    expect(personalityCardCode).not.toMatch(/navigator\.clipboard\.writeText/);
-  });
-
-  it("PersonalityCard.tsx wires the hook with the pre-refactor 2000ms reset", () => {
-    expect(personalityCardCode).toMatch(/useCopyToClipboard\s*\(\s*\{\s*resetMs:\s*2000\s*\}\s*\)/);
-  });
-
-  it("personalities/page.tsx does not declare the inline copiedTimerRef either", () => {
-    expect(personalitiesCode).not.toMatch(
-      /const\s+copiedTimerRef\s*=\s*useRef<ReturnType<typeof\s+setTimeout>/,
-    );
-  });
-
-  it("personalities/page.tsx does not contain the inline navigator.clipboard.writeText either", () => {
-    expect(personalitiesCode).not.toMatch(/navigator\.clipboard\.writeText/);
-  });
-});
+            });

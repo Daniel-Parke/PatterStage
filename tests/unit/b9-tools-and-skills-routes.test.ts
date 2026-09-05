@@ -102,11 +102,11 @@ describe("toggling a skill that is on disk but not in the catalogue", () => {
   });
 
   it("skillIsKnown answers for a catalogue row and for a directory on disk", async () => {
-    const mod = (await import("@/lib/skills-known" as string)) as {
+    const mod = (await import("@/modules/hermes/lib/skills-known" as string)) as {
       skillIsKnown?: (name: string) => boolean;
     };
     if (typeof mod.skillIsKnown !== "function") {
-      throw new Error("src/lib/skills-known.ts exports no skillIsKnown (contract D82)");
+      throw new Error("src/modules/hermes/lib/skills-known.ts exports no skillIsKnown (contract D82)");
     }
     // A name that is in neither place is still refused.
     expect(mod.skillIsKnown("definitely-not-a-skill-anywhere")).toBe(false);

@@ -30,7 +30,6 @@ Every `route.ts` under `src/app/api` has a row, here or in the Chat / Composer /
 | Route | Methods | Purpose |
 |---|---|---|
 | `/api/agent/files/[key]` | `GET`, `PUT` | Read/update one behavior file (`soul`, `hermes`, `user`, `memory`, `agent`, `env`, `config`). Any other key is a **400** (`Unknown file key`). Optional `?profile=` for non-default profiles. `PUT hermes` on a named profile is a **400**: HERMES.md exists only on the root agent. |
-| `/api/agent/personality` | `PUT` | Set personality for one agent profile (Operations → Agents). |
 | `/api/agent/root` | `GET`, `PUT` | The root agent's PatterStage-side label. `PUT { displayName?, description? }` renames it; a blank name is a **400**, and nothing is written into the agent's own files. `POST` is a **405**. |
 | `/api/agent/profiles` | `GET`, `POST` | Professional profiles (SQLite source of truth; each row includes `syncStatus` for drift). `POST { cloneFrom: "default" }` copies the root agent's SOUL.md, AGENTS.md, config.yaml and personality. |
 | `/api/agent/profiles/[id]` | `PUT`, `DELETE` | Update or delete one profile (no `GET`, use list + id). |
@@ -85,7 +84,6 @@ Every `route.ts` under `src/app/api` has a row, here or in the Chat / Composer /
 | `/api/models/sync/push` | `POST` | Push models from DB to Hermes. |
 | `/api/monitor` | `GET` | Aggregated dashboard snapshot (cron, sessions, gateway, sync, errors). |
 | `/api/orchestration/chat` | `POST` | Proxy chat to Hermes gateway. |
-| `/api/personalities` | `GET`, `POST`, `PUT` | Global personalities in the active Hermes `config.yaml`. `DELETE` returns **405**: a personality is a profile's SOUL.md identity, so delete the profile instead. |
 | `/api/runs/[id]` | `GET` | Current state of one agent run. |
 | `/api/runs/[id]/events` | `GET` | Live **SSE** proxy for a run (`text/event-stream`). 404 when the run is unknown, 409 before it has been submitted to the backend. The Chat page and the mission board both stream from here. |
 | `/api/runs/reconcile` | `POST` | Force an immediate reconcile pass over active runs, rather than waiting for the ~15s BackgroundScheduler tick. Idempotent. |
@@ -243,9 +241,9 @@ Each action body lives in its own handler under `src/lib/missions/mission-handle
 
 ## Naming notes
 
-- **`/api/agent/*`**: Hermes install config (profiles, behavior files, per-profile personality).
+- **`/api/agent/*`**: Hermes install config (profiles, the root agent's label, behavior files).
 - **`/api/agents`**: Running OS processes (gateways, `hermes chat`), not profile CRUD.
-- **`/api/personalities`** vs **`/api/agent/personality`**: global `config.yaml` personalities vs one profile’s selected personality.
+- **Personality**: a profile’s voice lives in its SOUL.md, so it is written through `PUT /api/agent/files/soul?profile=<slug>` and read back on `GET /api/agent/profiles`. The two routes that used to answer for it were retired with the Personalities page (decision 11, T-0103).
 
 ## System cron notes
 

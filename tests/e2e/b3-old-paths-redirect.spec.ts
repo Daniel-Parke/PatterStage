@@ -20,7 +20,9 @@ const OLD_TO_NEW: Array<[string, string]> = [
   ["/operations/skills", "/agent/skills"],
   ["/operations/skills/foo/SKILL.md", "/agent/skills/foo/SKILL.md"],
   ["/operations/tools", "/agent/tools"],
-  ["/operations/personalities", "/agent/personalities"],
+  // Personalities folded into the Agents card (decision 11, T-0103).
+  ["/operations/personalities", "/agent/profiles?tab=identity"],
+  ["/agent/personalities", "/agent/profiles?tab=identity"],
   ["/memory", "/agent/memory"],
   ["/config", "/agent/settings"],
   ["/config/models", "/agent/models"],

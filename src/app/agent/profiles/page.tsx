@@ -37,6 +37,7 @@ import AgentProfilesOverview from "@/components/agents/AgentProfilesOverview";
 import AgentProfileList from "@/components/agents/AgentProfileList";
 import AgentProfileDetail from "@/components/agents/AgentProfileDetail";
 import type { EditorState } from "@/components/agents/AgentFileEditor";
+import type { ProfileTab } from "@/components/agents/AgentProfileDetail";
 import CreateProfileModal from "@/components/agents/CreateProfileModal";
 import EditProfileModal from "@/components/agents/EditProfileModal";
 import DeleteProfileModal from "@/components/agents/DeleteProfileModal";
@@ -82,6 +83,17 @@ export default function BehaviourPage() {
   // work the operator just did. Making them watch the page blank out after
   // every save was the single loudest thing on this screen (T-0102, D21).
   const loadedOnceRef = useRef(false);
+
+  // Which half of the card is showing. The tab is in the URL because
+  // /agent/personalities and /operations/personalities redirect to
+  // ?tab=identity, and because a bookmark to one half should come back to it.
+  // Read from window rather than useSearchParams: this is a client page with
+  // no Suspense boundary, and useSearchParams needs one.
+  const [tab, setTab] = useState<ProfileTab>("files");
+  useEffect(() => {
+    const wanted = new URLSearchParams(window.location.search).get("tab");
+    if (wanted === "identity") setTab("identity");
+  }, []);
 
   // saveResetTimerRef — handleSave's "auto-clear the saved status
   // after 2s" setTimeout could fire on an unmounted component if
@@ -378,6 +390,14 @@ export default function BehaviourPage() {
     else closeEditor();
   };
 
+  const handleTabChange = (next: ProfileTab) => {
+    setTab(next);
+    const url = new URL(window.location.href);
+    if (next === "identity") url.searchParams.set("tab", "identity");
+    else url.searchParams.delete("tab");
+    window.history.replaceState({}, "", url.pathname + url.search);
+  };
+
   const handleSaveProfile = async ({ name, description }: { name: string; description: string }) => {
     const target = editTarget;
     if (!target || savingProfile) return;
@@ -406,6 +426,27 @@ export default function BehaviourPage() {
   // condition the file list used inline before the split.
   const openFileKey =
     editor && selectedProfile && editor.profileId === selectedProfile.id ? editor.fileKey : null;
+
+  // Identity IS the SOUL.md editor. The page it replaced opened the file for
+  // you; arriving on this tab and being asked to go and find it in a list
+  // would have been a worse product, not a smaller one (decision 11, T-0103).
+  // The ref keeps the effect's deps to the two facts that should retrigger it,
+  // rather than to a handler that changes identity on every keystroke.
+  const openFileRef = useRef(openFile);
+  openFileRef.current = openFile;
+  const autoOpenedRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (tab !== "identity" || !selectedProfile) {
+      if (tab !== "identity") autoOpenedRef.current = null;
+      return;
+    }
+    const key = `${selectedProfile.id}:soul`;
+    if (autoOpenedRef.current === key) return;
+    const soul = selectedProfile.files.find((f) => f.key === "soul");
+    if (!soul) return;
+    autoOpenedRef.current = key;
+    openFileRef.current(selectedProfile.id, soul);
+  }, [tab, selectedProfile]);
 
   if (loading) {
     return (
@@ -454,6 +495,8 @@ export default function BehaviourPage() {
             profile={selectedProfile}
             onEdit={setEditTarget}
             onDelete={setDeleteTarget}
+            tab={tab}
+            onTabChange={handleTabChange}
             pendingDiscard={
               pendingDiscard && editor
                 ? { fileName: editor.fileName, onDiscard: () => void confirmDiscard(), onKeep: keepEditing }

@@ -127,7 +127,12 @@ export function hydratePlatformToolsetsForSlug(
       row.configYaml,
       seedFallback,
     );
-    const toolsets = normalizePlatformToolsets(resolved.toolsets);
+    // Normalise what came from outside. A value already in the database was
+    // put there by the write path, which normalises; re-normalising it on every
+    // read made a GET rewrite the row, and a granular toolset the operator had
+    // enabled was gone for good (T-0103, D80).
+    const toolsets =
+      resolved.source === "database" ? resolved.toolsets : normalizePlatformToolsets(resolved.toolsets);
     const platformToolsetsJson = serializeJsonToolsets(toolsets);
     if (
       options?.persist &&
@@ -145,7 +150,8 @@ export function hydratePlatformToolsetsForSlug(
     row.configYaml,
     seedFallback,
   );
-  const toolsets = normalizePlatformToolsets(resolved.toolsets);
+  const toolsets =
+    resolved.source === "database" ? resolved.toolsets : normalizePlatformToolsets(resolved.toolsets);
   const platformToolsetsJson = serializeJsonToolsets(toolsets);
   if (
     options?.persist &&

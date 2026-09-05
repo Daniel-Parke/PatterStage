@@ -5,7 +5,8 @@ import { readFileSync, existsSync, readdirSync, statSync } from "fs";
 import { getActiveHermesPaths } from "@/modules/hermes/lib/agent-runtime";
 import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
 import { resolveSkillDirUnderRoot } from "@/lib/fs/path-security";
-import { parseSkillFrontmatter, stripSkillFrontmatter } from "@/lib/skills-repository";
+import { getSkill, parseSkillFrontmatter, stripSkillFrontmatter } from "@/lib/skills-repository";
+import { ensureDb } from "@/lib/db";
 
 import { badRequest, notFound, ok } from "@/lib/api-response";
 
@@ -22,8 +23,34 @@ export async function GET(
   const skillDir = resolved.skillDir;
   const skillMdPath = skillDir + "/SKILL.md";
 
+  // The catalogue is the destination this viewer is linked from, and a skill
+  // can be in the catalogue before it has ever been written to disk. Answering
+  // 404 there sent the operator to "Skill Not Found" for a row they were
+  // reading a description of one click earlier (T-0103, D81).
   if (!existsSync(skillMdPath)) {
-    return notFound(`Skill not found: ${path.join("/")}`);
+    ensureDb();
+    const row = getSkill(path.join("/"));
+    if (!row) {
+      return notFound(`Skill not found: ${path.join("/")}`);
+    }
+    const body = stripSkillFrontmatter(row.content);
+    const fm = parseSkillFrontmatter(row.content);
+    return ok({
+      name: path[path.length - 1],
+      path: path.join("/"),
+      source: "catalog",
+      frontmatter: {
+        name: fm.name || row.displayName,
+        description: fm.description || row.description,
+        category: fm.category || row.category,
+      },
+      content: body,
+      rawContent: row.content,
+      size: row.content.length,
+      lastModified: row.updatedAt,
+      // Linked files live beside SKILL.md, and there is no SKILL.md.
+      linkedFiles: [],
+    });
   }
 
   try {
@@ -68,6 +95,7 @@ export async function GET(
     return ok({
       name: path[path.length - 1],
       path: path.join("/"),
+      source: "disk",
       frontmatter,
       content: body,
       rawContent: content,

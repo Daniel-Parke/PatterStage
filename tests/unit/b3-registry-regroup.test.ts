@@ -7,7 +7,7 @@
  *   Home      Dashboard · Quests · Help          (no heading in the rail)
  *   Work      Chat · Missions · Composer · Research · Scripts
  *   Results   Sessions · Artifacts · Insights · Logs
- *   Agent     Agents · Personalities · Skills · Tools · Memory · Models · Settings
+ *   Agent     Agents · Skills · Tools · Memory · Models · Settings
  *   Rec Room  Story Weaver
  *
  * Module ids and MODULE_ACCENTS do not move (tests/unit/module-registry.test.ts
@@ -57,8 +57,8 @@ describe("the five sections, in order", () => {
     expect(hrefs("Home")).toEqual(["/", "/quests", "/help"]);
     expect(hrefs("Work")).toEqual(["/work/chat", "/work/missions", "/work/composer", "/work/research", "/work/scripts"]);
     expect(hrefs("Results")).toEqual(["/results/sessions", "/results/artifacts", "/results/insights", "/results/logs"]);
-    // Personalities is a sub-link of Agents until B9 folds it in (decision 11):
-    // one row fewer, which is what keeps the rail inside 720px.
+    // Personalities IS the Agents card's Identity tab now (decision 11,
+    // T-0103), which is why there is no seventh row here.
     expect(hrefs("Agent")).toEqual([
       "/agent/profiles",
       "/agent/skills",
@@ -68,7 +68,7 @@ describe("the five sections, in order", () => {
       "/agent/settings",
     ]);
     const agents = mainSections.find((s) => s.label === "Agent")!.links.find((l) => l.href === "/agent/profiles")!;
-    expect(agents.subLinks?.map((s) => s.href)).toEqual(["/agent/personalities"]);
+    expect(agents.subLinks ?? []).toEqual([]);
     expect(hrefs("Rec Room")).toEqual(["/recroom/story-weaver"]);
   });
 
@@ -138,7 +138,6 @@ describe("labelFor: the one source of a page's name", () => {
     ["/agent/settings/restore", "Restore"],
     ["/agent/settings/system", "System"],
     ["/agent/models", "Models"],
-    ["/agent/personalities", "Personalities"],
     ["/recroom/story-weaver/create", "Create"],
     ["/recroom/story-weaver", "Story Weaver"],
     ["/quests", "Quests"],

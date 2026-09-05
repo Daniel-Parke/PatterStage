@@ -23,7 +23,7 @@ import {
 import { applyProfileOrRootPatchOrFail } from "@/modules/hermes/handlers/profile-patch";
 import { requireSafeProfileName } from "@/lib/fs/path-security";
 import { serializeJsonArray } from "@/modules/hermes/lib/profile-config-builder";
-import { getSkill } from "@/lib/skills-repository";
+import { skillIsKnown } from "@/modules/hermes/lib/skills-known";
 import { recordEvent } from "@/lib/analytics/record-event";
 
 export async function PUT(
@@ -52,8 +52,11 @@ export async function PUT(
     if (profileResult instanceof NextResponse) return profileResult;
     const profile = profileResult.profile;
 
-    if (!getSkill(name)) {
-      return notFound(`Skill not in catalog: ${name}`);
+    // The list this row came from merges the catalogue with the agent's disk,
+    // so refusing on the catalogue alone denied skills the product had just
+    // shown (T-0103, D82).
+    if (!skillIsKnown(name)) {
+      return notFound(`Skill not found in the catalogue or on disk: ${name}`);
     }
 
     let currentDisabled: string[];

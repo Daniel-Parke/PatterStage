@@ -24,7 +24,9 @@ const EXPECTED: Array<[string, string]> = [
   ["/operations/skills", "/agent/skills"],
   ["/operations/skills/:path*", "/agent/skills/:path*"],
   ["/operations/tools", "/agent/tools"],
-  ["/operations/personalities", "/agent/personalities"],
+  // Personalities folded into the Agents card (decision 11, T-0103).
+  ["/operations/personalities", "/agent/profiles?tab=identity"],
+  ["/agent/personalities", "/agent/profiles?tab=identity"],
   ["/memory", "/agent/memory"],
   ["/config/models", "/agent/models"],
   ["/config/seed", "/agent/settings/restore"],
@@ -61,6 +63,11 @@ describe("old paths redirect, temporarily", () => {
   it("every literal destination is a route the registry owns", async () => {
     const routes = new Set(allModuleRoutes());
     const literal = (await redirects()).filter((r) => !r.destination.includes(":"));
-    for (const r of literal) expect({ to: r.destination, owned: routes.has(r.destination) }).toEqual({ to: r.destination, owned: true });
+    for (const r of literal) {
+      // A destination may carry a query (the Personalities fold lands on
+      // ?tab=identity); the registry owns paths, so compare the path.
+      const to = r.destination.split("?")[0];
+      expect({ to, owned: routes.has(to) }).toEqual({ to, owned: true });
+    }
   });
 });

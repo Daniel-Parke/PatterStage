@@ -82,7 +82,10 @@ const nextConfig: NextConfig = {
       temporary("/operations/skills", "/agent/skills"),
       temporary("/operations/skills/:path*", "/agent/skills/:path*"),
       temporary("/operations/tools", "/agent/tools"),
-      temporary("/operations/personalities", "/agent/personalities"),
+      // Personalities folded into the Agents card as its Identity tab
+      // (decision 11, T-0103). Both old paths land on that tab.
+      temporary("/operations/personalities", "/agent/profiles?tab=identity"),
+      temporary("/agent/personalities", "/agent/profiles?tab=identity"),
       temporary("/memory", "/agent/memory"),
       temporary("/config/models", "/agent/models"),
       temporary("/config/seed", "/agent/settings/restore"),

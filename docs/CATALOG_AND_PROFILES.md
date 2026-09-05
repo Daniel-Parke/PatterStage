@@ -97,6 +97,27 @@ named profile is a 400 rather than a 200 that wrote nothing.
 
 **Models:** separate `GET/POST /api/models/sync/*` routes. Seeds do **not** set `model.default`. After **Push Bob** (root), PatterStage runs `finalizeRootConfigOnDisk()` so `model.*` / `auxiliary.*` from the Models registry are re-applied to `~/.hermes/config.yaml` and stored back in `agent_root.config_yaml` (prevents chat wiping the model block).
 
+## Toolsets and skills, as the pages present them
+
+A toolset that an enabled `hermes-*` bundle already provides is shown pressed
+and not clickable, with the bundle named: turning it on as its own entry is
+exactly what the write path removes again, so the grid no longer offers a
+switch that turns itself off. Hand-edited advanced JSON is the payload from the
+moment it is typed into until it is saved or discarded, and the grid says so;
+switching profile with unsaved toolset changes asks first.
+
+Normalisation is a write-path job. A `platform_toolsets` value that came out of
+the database was normalised when it went in, so reading it back leaves it
+alone; only a value hydrated from `config.yaml` or the seed pack is
+canonicalised, because those carry whatever `hermes tools` last wrote.
+
+A skill can be toggled when the catalogue holds it **or** the agent's disk
+does, which is the same set `GET /api/skills` lists. The standalone viewer is
+the catalogue's destination: when `SKILL.md` is not on disk it answers from the
+catalogue row instead of 404, marks the answer `source: "catalog"`, and carries
+no linked files, because linked files live beside a `SKILL.md` that is not
+there.
+
 ## Bootstrap / update order
 
 1. Resolve `HERMES_HOME` from the environment, defaulting to `~/.hermes`.

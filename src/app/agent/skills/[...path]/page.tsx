@@ -17,15 +17,24 @@ import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { SimpleMarkdown } from "@/components/skills/SimpleMarkdown";
 import { apiFetch, setErrorFromCaught } from "@/lib/api-fetch";
 
+/**
+ * What the viewer renders.
+ *
+ * Everything but the name and the body is optional, because the route answers
+ * from the catalogue when SKILL.md is not on disk and that answer is thinner
+ * (T-0103, D81). The page used to reach straight into `frontmatter` and
+ * `linkedFiles` and threw for any payload that did not carry them.
+ */
 interface SkillData {
   name: string;
   path: string;
-  frontmatter: Record<string, string>;
+  source?: "disk" | "catalog";
+  frontmatter?: Record<string, string>;
   content: string;
-  rawContent: string;
-  size: number;
-  lastModified: string;
-  linkedFiles: { name: string; path: string; size: number }[];
+  rawContent?: string;
+  size?: number;
+  lastModified?: string | null;
+  linkedFiles?: { name: string; path: string; size: number }[];
 }
 
 export default function SkillDetailPage() {
@@ -98,7 +107,16 @@ export default function SkillDetailPage() {
     );
   }
 
-  const subtitle = `${data.path} · ${(data.size / 1024).toFixed(1)} KB · ${new Date(data.lastModified).toLocaleDateString()}`;
+  const parts = [data.path];
+  if (typeof data.size === "number") parts.push(`${(data.size / 1024).toFixed(1)} KB`);
+  if (data.lastModified) {
+    const when = new Date(data.lastModified);
+    if (!Number.isNaN(when.getTime())) parts.push(when.toLocaleDateString());
+  }
+  if (data.source === "catalog") parts.push("in the catalogue, not yet on disk");
+  const subtitle = parts.join(" · ");
+  const frontmatter = data.frontmatter ?? {};
+  const linkedFiles = data.linkedFiles ?? [];
 
   return (
     <AppPageShell>
@@ -127,7 +145,7 @@ export default function SkillDetailPage() {
             <div className="rounded-xl border border-white/10 bg-dark-900/50 p-6">
               {showRaw ? (
                 <pre className="text-sm font-mono text-ps-text-secondary whitespace-pre-wrap break-words">
-                  {data.rawContent}
+                  {data.rawContent ?? data.content}
                 </pre>
               ) : (
                 <SimpleMarkdown content={data.content} />
@@ -138,13 +156,13 @@ export default function SkillDetailPage() {
           {/* Sidebar */}
           <div className="w-56 flex-shrink-0 hidden lg:block space-y-4">
             {/* Frontmatter */}
-            {Object.keys(data.frontmatter).length > 0 && (
+            {Object.keys(frontmatter).length > 0 && (
               <div className="rounded-xl border border-white/10 bg-dark-900/50 p-4">
                 <h3 className="text-xs font-mono text-ps-text-muted uppercase tracking-widest mb-3">
                   Metadata
                 </h3>
                 <div className="space-y-2">
-                  {Object.entries(data.frontmatter).map(([key, value]) => (
+                  {Object.entries(frontmatter).map(([key, value]) => (
                     <div key={key}>
                       <div className="text-xs font-mono text-ps-text-muted uppercase">
                         {key}
@@ -159,13 +177,13 @@ export default function SkillDetailPage() {
             )}
 
             {/* Linked files */}
-            {data.linkedFiles.length > 0 && (
+            {linkedFiles.length > 0 && (
               <div className="rounded-xl border border-white/10 bg-dark-900/50 p-4">
                 <h3 className="text-xs font-mono text-ps-text-muted uppercase tracking-widest mb-3">
                   Linked Files
                 </h3>
                 <div className="space-y-1.5">
-                  {data.linkedFiles.map((file) => (
+                  {linkedFiles.map((file) => (
                     <div
                       key={file.path}
                       className="flex items-center justify-between text-xs"

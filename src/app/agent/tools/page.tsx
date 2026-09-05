@@ -11,6 +11,7 @@ import {
   RefreshCw,
   Upload,
   Download,
+  Check,
 } from "lucide-react";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
@@ -31,6 +32,7 @@ import {
   expandUnifiedToAllPlatforms,
   unionToolsetsFromPlatforms,
 } from "@/modules/hermes/lib/toolset-unify";
+import { bundleCovering } from "@/modules/hermes/lib/toolset-coverage";
 import ToolsInsights from "@/modules/hermes/components/ToolsInsights";
 import { Panel } from "@/components/dashboard/Panel";
 import ToolsetReferenceTable from "@/components/tools/ToolsetReferenceTable";
@@ -45,6 +47,14 @@ export default function ToolsPage() {
   const [unifiedEnabled, setUnifiedEnabled] = useState<string[]>([]);
   const [platformsDiverged, setPlatformsDiverged] = useState(false);
   const [showAdvancedJson, setShowAdvancedJson] = useState(false);
+  // The JSON has been typed into. It is the payload from then until it is
+  // saved or discarded: toggling a chip used to overwrite it and hiding the
+  // panel used to drop it, both without a word (T-0103, D82).
+  const [jsonDirty, setJsonDirty] = useState(false);
+  // What the last read gave us, so "changed" is a fact rather than a guess.
+  const [loadedEnabled, setLoadedEnabled] = useState<string[]>([]);
+  // A profile the operator asked for while changes were unsaved (D84).
+  const [pendingProfile, setPendingProfile] = useState<string | null>(null);
   const [profileSyncStatus, setProfileSyncStatus] = useState<AgentProfile["syncStatus"] | null>(null);
   const { showToast, toastElement, lastResult } = useToast();
 
@@ -99,12 +109,16 @@ export default function ToolsPage() {
       const unified = (data.data?.unifiedEnabled as string[] | undefined) ??
         unionToolsetsFromPlatforms(loaded);
       setUnifiedEnabled(unified);
+      setLoadedEnabled(unified);
+      setJsonDirty(false);
       setPlatformsDiverged(Boolean(data.data?.platformsDiverged));
       setToolsetsJson(JSON.stringify(loaded, null, 2));
       setToolsetsSource(data.data?.source ?? null);
     } catch (err) {
       setToolsetsJson("{}");
       setToolsetsSource(null);
+      setLoadedEnabled([]);
+      setJsonDirty(false);
       toastError(showToast, err, "Failed to load toolsets");
     } finally {
       setLoadingToolsets(false);
@@ -144,6 +158,9 @@ export default function ToolsPage() {
   }, [reloadAll]);
 
   const toggleUnifiedToolset = (toolsetId: string) => {
+    // A covered toolset is already on, through the bundle. Adding it as its
+    // own entry is exactly what the write path removes again.
+    if (jsonDirty || bundleCovering(unifiedEnabled, toolsetId)) return;
     setUnifiedEnabled((prev) => {
       const next = [...prev];
       const idx = next.indexOf(toolsetId);
@@ -160,7 +177,7 @@ export default function ToolsPage() {
 
   const saveToolsets = () => {
     let payload: PlatformToolsets;
-    if (showAdvancedJson) {
+    if (showAdvancedJson || jsonDirty) {
       const parsed = JSON.parse(toolsetsJson) as unknown;
       if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
         // Original behaviour: validation error shown via direct
@@ -217,6 +234,37 @@ export default function ToolsPage() {
   };
 
   const enabledCount = unifiedEnabled.length;
+
+  const listsDiffer =
+    unifiedEnabled.length !== loadedEnabled.length ||
+    unifiedEnabled.some((id) => !loadedEnabled.includes(id));
+  const toolsetsDirty = jsonDirty || listsDiffer;
+
+  const requestProfile = (next: string) => {
+    if (next === selectedProfile) return;
+    if (toolsetsDirty) {
+      setPendingProfile(next);
+      return;
+    }
+    setSelectedProfile(next);
+  };
+
+  const discardAndSwitch = () => {
+    const next = pendingProfile;
+    setPendingProfile(null);
+    if (next) setSelectedProfile(next);
+  };
+
+  // The toolsets a bundle is already providing, named once under the grid
+  // rather than repeated on every chip.
+  const coveredLabels = HERMES_CONFIGURABLE_TOOLSETS
+    .filter((t) => bundleCovering(unifiedEnabled, t.id) !== null)
+    .map((t) => t.label);
+
+  const discardJsonEdits = () => {
+    setJsonDirty(false);
+    setToolsetsJson(JSON.stringify(expandUnifiedToAllPlatforms(unifiedEnabled), null, 2));
+  };
 
   return (
     <AppPageShell>
@@ -319,9 +367,29 @@ export default function ToolsPage() {
               <h2 className="text-sm font-mono text-neon-orange mb-2">Profile</h2>
               <ProfileSelector
                 value={selectedProfile}
-                onChange={setSelectedProfile}
+                onChange={requestProfile}
                 subtitle="tooltip"
               />
+              {pendingProfile && (
+                <div className="mt-3 rounded-lg border border-semantic-warning/40 bg-semantic-warning/10 p-3">
+                  <p className="text-sm text-ps-text-primary">
+                    You have unsaved toolset changes on this profile.
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <Button variant="ghost" size="sm" color="orange" onClick={discardAndSwitch}>
+                      Discard changes
+                    </Button>
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      color="orange"
+                      onClick={() => setPendingProfile(null)}
+                    >
+                      Keep editing
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
             <div className="flex-1 min-w-0">
               {toolsetsSource && toolsetsSource !== "database" && (
@@ -340,7 +408,13 @@ export default function ToolsPage() {
                     </h3>
                     <div className="flex flex-wrap gap-2">
                       {HERMES_CONFIGURABLE_TOOLSETS.map((toolset) => {
-                        const on = isUnifiedEnabled(toolset.id);
+                        const coveredBy = bundleCovering(unifiedEnabled, toolset.id);
+                        // Covered means on: the bundle provides it. Saying so
+                        // and taking the click away is the whole of D80.
+                        const on = coveredBy !== null || isUnifiedEnabled(toolset.id);
+                        const coveringLabel = coveredBy
+                          ? HERMES_CONFIGURABLE_TOOLSETS.find((t) => t.id === coveredBy)?.label ?? coveredBy
+                          : null;
                         return (
                           // A toggle is a control, and the console has a
                           // control component: 36 files use Button against 313
@@ -353,7 +427,13 @@ export default function ToolsPage() {
                             color="orange"
                             size="sm"
                             aria-pressed={on}
-                            title={toolset.description}
+                            disabled={coveredBy !== null || jsonDirty}
+                            icon={on ? Check : undefined}
+                            title={
+                              coveringLabel
+                                ? `Included in ${coveringLabel}. Turn that bundle off to choose this one on its own.`
+                                : toolset.description
+                            }
                             onClick={() => toggleUnifiedToolset(toolset.id)}
                           >
                             {toolset.label}
@@ -361,6 +441,17 @@ export default function ToolsPage() {
                         );
                       })}
                     </div>
+                    {coveredLabels.length > 0 && (
+                      <p className="mt-2 text-xs text-ps-text-muted">
+                        {coveredLabels.join(", ")} {coveredLabels.length === 1 ? "is" : "are"} included
+                        in Hermes CLI. Turn that bundle off to choose them on their own.
+                      </p>
+                    )}
+                    {jsonDirty && (
+                      <p className="mt-2 text-xs text-semantic-warning">
+                        Advanced JSON is the source of truth until you save or discard it.
+                      </p>
+                    )}
                   </div>
                   <div className="mt-4 border-t border-white/10 pt-3">
                     <Button
@@ -372,10 +463,18 @@ export default function ToolsPage() {
                     >
                       {showAdvancedJson ? "Hide" : "Show"} advanced JSON
                     </Button>
+                    {jsonDirty && (
+                      <Button variant="ghost" size="sm" color="orange" onClick={discardJsonEdits}>
+                        Discard JSON edits
+                      </Button>
+                    )}
                     {showAdvancedJson && (
                       <textarea aria-label="Advanced toolsets JSON"
                         value={toolsetsJson}
-                        onChange={(event) => setToolsetsJson(event.target.value)}
+                        onChange={(event) => {
+                          setToolsetsJson(event.target.value);
+                          setJsonDirty(true);
+                        }}
                         className="mt-2 w-full min-h-32 rounded-lg bg-dark-950/80 border border-white/10 p-3 text-xs font-mono text-ps-text-primary outline-none focus:border-neon-orange/50"
                         spellCheck={false}
                       />
