@@ -378,7 +378,10 @@ describe("B15 · docs:check refusal 6 — a leftover old group name", () => {
       p.slug === "guides/missions"
         ? {
             ...p,
-            body: "The board is `src/app/(main)/results/sessions/page.tsx`, and its logs go to `{PS_DATA_DIR}/logs`.",
+            body:
+              "The board is `src/app/(main)/results/sessions/page.tsx`, its logs go to " +
+              "`{PS_DATA_DIR}/logs`, and before the regroup this page was " +
+              "/orchestration/missions/page.tsx.",
           }
         : p,
     );
