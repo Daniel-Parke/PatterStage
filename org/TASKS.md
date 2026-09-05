@@ -113,7 +113,7 @@ The records under org/tasks/ are canonical.
 | T-0098 | standard | R1 | done | t0098-analytics-taxonomy-2026-09-05 |
 | T-0099 | standard | R1 | done | t0099-operations-board-2026-09-05 |
 | T-0100 | standard | R2 | done | t0100-models-config-restore-backups-2026-09-05 |
-| T-0101 | standard | R1 | proposed | unassigned |
+| T-0101 | standard | R1 | in_progress | t0101-memory-and-logs-2026-09-05 |
 | T-0102 | standard | R1 | proposed | unassigned |
 | T-0103 | standard | R2 | proposed | unassigned |
 | T-0104 | standard | R1 | proposed | unassigned |
