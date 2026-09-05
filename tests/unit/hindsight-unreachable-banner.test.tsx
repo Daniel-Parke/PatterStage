@@ -9,11 +9,26 @@
  * HealthBanner never rendered, and the page told a first-time user "No memories
  * yet. Hermes will start storing them as you converse" while there was no
  * memory provider at all.
+ *
+ * Amended for T-0101: the sentence is still said, and still exactly once, but
+ * the browser no longer says it. It reports the health upward and the provider
+ * card at the top of the page renders it, inside the card carrying the host and
+ * port that fix it. The page is therefore what this file renders, and "exactly
+ * once" is now an assertion rather than a structural accident.
  */
 import "@testing-library/jest-dom";
 import { render, screen, waitFor } from "@testing-library/react";
 
-import HindsightBrowser from "@/components/memory/HindsightBrowser";
+jest.mock("next/navigation", () => ({
+  usePathname: () => "/agent/memory",
+  useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
+}));
+jest.mock("@/components/layout/AppPageShell", () => ({
+  __esModule: true,
+  default: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+}));
+
+import MemoryPage from "@/app/agent/memory/page";
 
 interface MinimalResponse {
   ok: boolean;
@@ -56,19 +71,28 @@ function mockUnreachableProvider() {
   }) as unknown as typeof fetch;
 }
 
-describe("HindsightBrowser with no memory provider running", () => {
+describe("the Memory page with no memory provider running", () => {
   it("says nothing is answering instead of implying an empty store", async () => {
     mockUnreachableProvider();
-    render(<HindsightBrowser />);
+    render(<MemoryPage />);
 
     await waitFor(() => {
       expect(screen.getByText(/No memory provider is answering/i)).toBeInTheDocument();
     });
   });
 
+  it("says it once, on the card that carries the endpoint", async () => {
+    mockUnreachableProvider();
+    render(<MemoryPage />);
+
+    const said = await screen.findAllByText(/No memory provider is answering/i);
+    expect(said).toHaveLength(1);
+    expect(screen.getByRole("heading", { name: "Set up memory" })).toBeInTheDocument();
+  });
+
   it("never renders the 'Hindsight undefined' string on that banner", async () => {
     mockUnreachableProvider();
-    const { container } = render(<HindsightBrowser />);
+    const { container } = render(<MemoryPage />);
 
     await waitFor(() => {
       expect(screen.getByText(/No memory provider is answering/i)).toBeInTheDocument();

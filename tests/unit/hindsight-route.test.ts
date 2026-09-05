@@ -56,7 +56,7 @@ describe("GET /api/memory/hindsight", () => {
     expect(mockFetch.mock.calls[0][0]).toBe(`${HS}/memories/list?limit=100`);
     expect(data).toEqual({
       memories: [
-        { id: "m1", content: "hello world", type: "preference", created_at: "2026-01-01", tags: ["a"], entities: "", score: 2 },
+        { id: "m1", content: "hello world", type: "preference", created_at: "2026-01-01", tags: ["a"], entities: "", proofCount: 2 },
       ],
       count: 1,
       total: 1,

@@ -93,24 +93,42 @@ function putBodies(): Array<Record<string, unknown>> {
     .map(([, init]) => (init as { body: Record<string, unknown> }).body);
 }
 
-/** Everything the fetch double answers, in order: GET first, then per call. */
+// The card and the memory browser both go through safeApiCall, so the double
+// routes by path: a queue for /api/memory/config, one standing answer for the
+// store itself.
+let configQueue: unknown[] = [];
+// What the store route really answers with nothing listening: 200 and an
+// honest body, which is what turns into the plain-English banner sentence.
+const STORE_DOWN = { ok: true, data: { data: { available: false, error: "fetch failed", memories: [] } } };
+let storeAnswer: unknown = STORE_DOWN;
+
+/** What /api/memory/config answers, in order. */
 function answerWith(...responses: unknown[]) {
-  mockSafeApiCall.mockReset();
-  for (const r of responses) mockSafeApiCall.mockResolvedValueOnce(r);
-  mockSafeApiCall.mockResolvedValue({ ok: true, data: { data: {} } });
+  configQueue = [...responses];
 }
+
+/** The store is up, and empty. */
+function storeIsUp() {
+  storeAnswer = { ok: true, data: { data: { memories: [], total: 0, mode: "ok", available: true } } };
+}
+
+/** A card button, once the card has read the row it is about to act on. */
+async function loadedButton(name: RegExp): Promise<HTMLElement> {
+  const button = await screen.findByRole("button", { name });
+  await waitFor(() => expect(button).not.toBeDisabled());
+  return button;
+}
+const loadedSaveButton = () => loadedButton(/^Save$/);
 
 beforeEach(() => {
   jest.clearAllMocks();
-  mockSafeApiCall.mockResolvedValue({ ok: true, data: { data: {} } });
-  // The Memory page's browser half talks over fetch; nothing answers here, so
-  // it settles as unreachable, which is the first-visit state under test.
-  global.fetch = jest.fn(async () => ({
-    ok: false,
-    status: 503,
-    json: async () => ({ data: { available: false, error: "fetch failed", memories: [] } }),
-    text: async () => "{}",
-  })) as unknown as typeof fetch;
+  configQueue = [];
+  // Nothing listening: the first-visit state most of this file is about.
+  storeAnswer = STORE_DOWN;
+  mockSafeApiCall.mockImplementation(async (path: unknown) => {
+    if (String(path).includes("/api/memory/hindsight")) return storeAnswer;
+    return configQueue.shift() ?? { ok: true, data: { data: {} } };
+  });
 });
 
 // ═══════════════════════════════════════════════════════════════
@@ -121,10 +139,10 @@ describe("Test connection believes a healthy answer", () => {
   it("reads health through both envelope levels and reports Connected", async () => {
     answerWith(configPayload(HINDSIGHT_ACTIVE), healthPayload(true, "ok"));
     render(<MemoryProviderSettings />);
-    await waitFor(() => expect(mockSafeApiCall).toHaveBeenCalled());
+    const probe = await loadedButton(/Test connection/i);
 
     await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: /Test connection/i }));
+      fireEvent.click(probe);
     });
 
     expect(await screen.findByText(/Connected \(ok\)/)).toBeInTheDocument();
@@ -137,10 +155,10 @@ describe("Test connection believes a healthy answer", () => {
       data: { data: { health: { available: false, error: "connection refused" } } },
     });
     render(<MemoryProviderSettings />);
-    await waitFor(() => expect(mockSafeApiCall).toHaveBeenCalled());
+    const probe = await loadedButton(/Test connection/i);
 
     await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: /Test connection/i }));
+      fireEvent.click(probe);
     });
 
     expect(await screen.findByText("connection refused")).toBeInTheDocument();
@@ -149,10 +167,10 @@ describe("Test connection believes a healthy answer", () => {
   it("GREEN CONTROL: a refused call still falls back to the route's error", async () => {
     answerWith(configPayload(HINDSIGHT_ACTIVE), { ok: false, error: "the database is locked" });
     render(<MemoryProviderSettings />);
-    await waitFor(() => expect(mockSafeApiCall).toHaveBeenCalled());
+    const probe = await loadedButton(/Test connection/i);
 
     await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: /Test connection/i }));
+      fireEvent.click(probe);
     });
 
     expect(await screen.findByText("the database is locked")).toBeInTheDocument();
@@ -167,10 +185,10 @@ describe("Save edits the active provider, it does not replace it", () => {
   it("a holographic install saves as holographic, with its own label", async () => {
     answerWith(configPayload(HOLOGRAPHIC_ACTIVE), { ok: true, data: { data: {} } }, healthPayload(true));
     render(<MemoryProviderSettings />);
-    await waitFor(() => expect(screen.getByLabelText("Host")).toHaveValue("127.0.0.1"));
+    const save = await loadedSaveButton();
 
     await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: /^Save$/ }));
+      fireEvent.click(save);
     });
 
     await waitFor(() => expect(putBodies()).toHaveLength(1));
@@ -183,10 +201,10 @@ describe("Save edits the active provider, it does not replace it", () => {
     // that is already active is a write nobody asked for.
     answerWith(configPayload(HOLOGRAPHIC_ACTIVE), { ok: true, data: { data: {} } }, healthPayload(true));
     render(<MemoryProviderSettings />);
-    await waitFor(() => expect(screen.getByLabelText("Host")).toHaveValue("127.0.0.1"));
+    const save = await loadedSaveButton();
 
     await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: /^Save$/ }));
+      fireEvent.click(save);
     });
 
     await waitFor(() => expect(putBodies()).toHaveLength(1));
@@ -200,10 +218,10 @@ describe("Save edits the active provider, it does not replace it", () => {
       healthPayload(true),
     );
     render(<MemoryProviderSettings />);
-    await waitFor(() => expect(screen.getByLabelText("Host")).toHaveValue("127.0.0.1"));
+    const save = await loadedSaveButton();
 
     await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: /^Save$/ }));
+      fireEvent.click(save);
     });
 
     await waitFor(() => expect(putBodies()).toHaveLength(1));
@@ -280,13 +298,7 @@ describe("a store that answered, on a row nobody confirmed", () => {
       configPayload([{ type: "hindsight", label: "Hindsight", isActive: true, confirmed: false }]),
       healthPayload(true),
     );
-    global.fetch = jest.fn(async (input: RequestInfo | URL) => {
-      const url = typeof input === "string" ? input : input.toString();
-      const body = url.includes("action=health")
-        ? { data: { available: true, mode: "ok" } }
-        : { data: { memories: [], total: 0, mode: "ok" } };
-      return { ok: true, status: 200, json: async () => body, text: async () => "{}" } as unknown as Response;
-    }) as unknown as typeof fetch;
+    storeIsUp();
 
     render(<MemoryPage />);
 

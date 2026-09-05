@@ -16,6 +16,7 @@ export function SearchInput({
   placeholder = "Search...",
   accentColor = "cyan",
   ariaLabel,
+  onSubmit,
 }: {
   value: string;
   onChange: (v: string) => void;
@@ -27,6 +28,12 @@ export function SearchInput({
    * specific should say so (T-0083 / the form-control gate).
    */
   ariaLabel?: string;
+  /**
+   * Run the search on Enter. There is no form around this input, so there is
+   * no implicit submit either: the Memory page printed "Press Enter to search"
+   * under a box where Enter did nothing at all (T-0101, D60).
+   */
+  onSubmit?: () => void;
 }) {
   const focusBorder: Record<string, string> = {
     cyan: "focus:border-neon-cyan/50",
@@ -43,6 +50,13 @@ export function SearchInput({
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        onKeyDown={
+          onSubmit
+            ? (e) => {
+                if (e.key === "Enter") onSubmit();
+              }
+            : undefined
+        }
         aria-label={ariaLabel ?? placeholder ?? "Search"}
         placeholder={placeholder}
         // design-lint-disable-next-line no-bare-outline-none -- the accent focus border comes from focusBorder on this same line; every entry is a focus:border-* class

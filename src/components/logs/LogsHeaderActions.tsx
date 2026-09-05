@@ -12,6 +12,8 @@ import { Play, RefreshCw, Trash2 } from "lucide-react";
 import Button from "@/components/ui/Button";
 
 export interface LogsHeaderActionsProps {
+  /** False when the directory holds no log file, so there is nothing to clear. */
+  hasLogs: boolean;
   autoRefresh: boolean;
   onToggleAutoRefresh: () => void;
   lineCount: number;
@@ -24,6 +26,7 @@ export interface LogsHeaderActionsProps {
 }
 
 export default function LogsHeaderActions({
+  hasLogs,
   autoRefresh,
   onToggleAutoRefresh,
   lineCount,
@@ -89,6 +92,8 @@ export default function LogsHeaderActions({
         variant="danger"
         size="sm"
         onClick={onDeleteAll}
+        disabled={!hasLogs}
+        title={hasLogs ? "Delete every log file" : "There is nothing to delete: no log file exists yet"}
         icon={Trash2}
       >
         {deleteArmed ? "Confirm Clear" : "Delete All"}

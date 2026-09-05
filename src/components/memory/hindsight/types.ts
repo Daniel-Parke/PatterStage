@@ -10,7 +10,12 @@ export interface Memory {
   // change can't blow up the page render. The MemoryTab runtime-
   // narrows the value with `Array.isArray` + `typeof t === "string"`.
   tags?: unknown;
-  score?: number;
+  /**
+   * How many proofs Hindsight holds for this fact. Named for what it is: it
+   * was called `score`, which made a percentage look like a reasonable render
+   * and produced "Relevance: 100%" for every single-proof fact (T-0101, D63).
+   */
+  proofCount?: number;
   created_at?: string;
   metadata?: Record<string, unknown>;
 }

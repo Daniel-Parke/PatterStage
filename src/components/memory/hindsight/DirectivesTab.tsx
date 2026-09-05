@@ -96,7 +96,7 @@ export default function DirectivesTab({
                   >
                     {d.is_active ? <ToggleRight className="w-4 h-4 text-green-400" /> : <ToggleLeft className="w-4 h-4" />}
                   </button>
-                  <RowDeleteButton onClick={() => onDelete(d.id)} />
+                  <RowDeleteButton onClick={() => onDelete(d.id)} label={d.name} />
                 </div>
               </div>
             </div>

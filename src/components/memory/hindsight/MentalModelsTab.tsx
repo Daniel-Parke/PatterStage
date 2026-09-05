@@ -102,7 +102,7 @@ export default function MentalModelsTab({
                   >
                     <Zap className={`w-4 h-4 ${refreshingModelId === m.id ? "animate-pulse text-yellow-400" : ""}`} />
                   </button>
-                  <RowDeleteButton onClick={() => onDelete(m.id)} />
+                  <RowDeleteButton onClick={() => onDelete(m.id)} label={m.name} />
                 </div>
               </div>
             </div>

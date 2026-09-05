@@ -62,7 +62,7 @@ describe("mapMemoryItem", () => {
       created_at: "2026-05-01",
       tags: ["hermes"],
       entities: "Hermes",
-      score: 3,
+      proofCount: 3,
     });
   });
 
@@ -81,7 +81,7 @@ describe("mapMemoryItem", () => {
       created_at: "",
       tags: [],
       entities: "",
-      score: 0,
+      proofCount: 0,
     });
   });
 

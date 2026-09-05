@@ -1383,27 +1383,28 @@ Today every artifact is inline text. The schema is already future-proofed for re
 ### What you see
 
 **Memory provider card** (pink, at the top of the page)
-- **Host**, **Port** and **Bank** inputs, holding the endpoint PatterStage talks to. These live in PatterStage's own database (the `memory_providers` table), not in any Hermes file.
+- The heading reads **Memory provider** normally, and **Set up memory** when nothing is answering. In that state the card also carries the one sentence explaining what happened, with its own Retry: the page says this once, here, beside the fields that fix it.
+- **Host**, **Port** and **Bank** inputs, holding the endpoint PatterStage talks to. These live in PatterStage's own database (the `memory_providers` table).
 - **Test connection** button: probes the endpoint and reports "Connected (‹status›)" in green or the error in pink.
-- **Save** button: writes the row.
+- **Save** button: writes the row, and writes `memory.provider` into the agent's `config.yaml` when it changes which provider is active. It saves the provider that is already active: editing a port on a Holographic install does not switch you to Hindsight.
+- Both buttons wait until the card has read the current row, so neither can act on a guess.
+- A separate warning appears when the store answered at an endpoint nobody has confirmed: PatterStage ships a default of `127.0.0.1:9177`, which is where a real Hindsight listens, so a second install on one machine can connect to the first one's memory.
 
 **Three tabs, below the provider card**
 - **Memories** (default): the fact list.
 - **Directives:** file-text icon.
 - **Mental Models:** settings icon.
 
-**HealthBanner at the top** (only when Hindsight is unavailable)
-- Error message and a **Retry** button.
-
 **Search bar (Memories tab)**
-- Search input (semantic).
+- Search input (semantic). Press **Enter** to run the search, or use the button.
 - **Recall** button: GET `/api/memory/hindsight?action=recall&query=…`. Runs semantic search and renders results.
 - **Reflect** button: GET `/api/memory/hindsight?action=reflect&query=…`. Renders an AI-reflection result panel using the matched facts.
 - **Add Memory** button: opens the `AddMemoryModal`.
 - On mount, the 50 most recent memories are auto-loaded.
 
 **Memories tab content**
-- `MemoryTab`: list of memories, each clickable to expand the fact.
+- `MemoryTab`: the fact list. Each fact shows its type, its tags, its age and, when it has any, its **proof count**: the number of proofs Hindsight holds for it. It is a count, never a percentage.
+- An empty list says which kind of empty it is: nothing is connected, nothing matched the search (with a **Clear search** button), every fact is older than the age filter (with the **Show stale** button above it), or the store is genuinely new.
 - **Refresh** button (re-runs recall or reloads).
 
 **Directives tab content**
@@ -1416,11 +1417,11 @@ Today every artifact is inline text. The schema is already future-proofed for re
 - **+ New Model** button → `MentalModelModal`.
 - `MentalModelModal`: name, source_query, tags (create + edit modes).
 - Per-row **Refresh** button to re-run model generation.
-- Per-row **Delete** (no two-step confirm, just an X).
+- Per-row **Delete**, two clicks: the first arms and names what it is about to remove, the second removes it. The same is true of a directive.
 
 ### Typical use
 
-1. If the health banner is showing, start at the **Memory provider** card: check host, port and bank, hit **Test connection**, then **Save**.
+1. If the card reads **Set up memory**, start there: check host, port and bank, hit **Test connection**, then **Save**.
 2. Land on the **Memories** tab.
 3. Type a question in the search bar and hit **Recall** for semantic search, or **Reflect** for a synthesised answer grounded in the matched facts.
 4. **Add Memory** when you want to seed the system with a fact the agent should remember.
@@ -1429,7 +1430,7 @@ Today every artifact is inline text. The schema is already future-proofed for re
 
 ### Notes
 
-- Memory is provided by **Hindsight**. If Hindsight is unavailable, the HealthBanner explains why. The most common cause is that no Hindsight server is answering at the host and port in the **Memory provider** card at the top of this page: fix it there and hit **Test connection**. The endpoint is PatterStage's, stored in the `memory_providers` table, so a `memory:` block in `~/.hermes/config.yaml` has no bearing on what this page connects to. After a deploy that strips Hindsight config, see [DEPLOY.md](DEPLOY.md#hindsight-memory----safe-reconnection-after-deploy) for recovery.
+- Memory is provided by **Hindsight**. When nothing is answering the card at the top says so and carries the fix. The endpoint is PatterStage's, stored in the `memory_providers` table; the agent's `config.yaml` is written to match when the active provider changes, and is never read back to decide anything. The **Provider** field on Settings > Memory is a read-only pointer at this page for the same reason. After a deploy that strips Hindsight config, see [DEPLOY.md](DEPLOY.md#hindsight-memory----safe-reconnection-after-deploy) for recovery.
 - The `/api/memory/hindsight` route uses an `action` field for `list`, `recall`, `reflect`, `directives`, `mental-models`, `health`, and `count` on GET; `retain`, `create-directive`, `create-model`, `update-directive`, `update-model`, and `refresh-model` on POST. See [API.md](API.md#hindsight-actions).
 
 ---
@@ -1444,7 +1445,7 @@ Today every artifact is inline text. The schema is already future-proofed for re
 - **Auto-refresh toggle** button (animated spin-slow icon when on).
 - **Line-count select:** 100, 200, 500, or 1000 lines.
 - **Refresh** button (manual, button-spinner when active).
-- **Delete All / Confirm Clear** button (two-step): deletes all log files; shows "Cleared N log file(s)." action message.
+- **Delete All / Confirm Clear** button (two-step): deletes all log files; shows "Cleared N log file(s)." action message. Disabled, with a reason, when no log file exists.
 - **Cancel** button (only when armed).
 
 **Layout (two columns)**
@@ -1452,10 +1453,11 @@ Today every artifact is inline text. The schema is already future-proofed for re
 - **Right:** terminal-style viewer.
   - "Traffic light" header.
   - "Filter lines" / search input (toggled via a Search pill).
+  - **Copy** and **Download**: Copy puts the lines currently on screen, filter included, on the clipboard; Download saves the whole file as `‹name›.log`. Both are disabled when there is nothing on screen.
   - "Latest lines" pill (only when auto-scroll is off).
   - Per-line `LogRow` with time, level, and message.
   - "Showing N/M" counter in the header.
-  - Auto-scroll: ON by default; flips OFF if you scroll down.
+  - Auto-scroll: ON by default; flips OFF if you scroll down, which is what makes the "Latest lines" pill appear. The scroll handler is attached to the pane that actually scrolls; it used to sit on the panel around it, which never moved, so neither the flip nor the pill could ever happen (T-0101).
 
 **Error banner** at the top if `loadError`. Action message banner ("Cleared N").
 
@@ -1465,7 +1467,8 @@ Today every artifact is inline text. The schema is already future-proofed for re
 2. Toggle **Auto-refresh** to keep the view live (5-second polling).
 3. Use the line-count select if the default 200 is too few. 100 is the first option in the list, not the default.
 4. Use the search input to filter lines (e.g. "ERROR").
-5. **Delete All** is a two-step action, useful when logs are getting unwieldy. The action message confirms how many files were cleared.
+5. **Copy** or **Download** when you want the lines somewhere else: a bug report, an editor, a colleague.
+6. **Delete All** is a two-step action, useful when logs are getting unwieldy. The action message confirms how many files were cleared.
 
 ### Notes
 

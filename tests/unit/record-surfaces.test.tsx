@@ -215,7 +215,7 @@ describe("the log terminal is a panel of ledger lines", () => {
   function terminal(lines: string[], searchTerm = "") {
     render(
       <LogTerminal
-        containerRef={{ current: null }}
+        scrollRef={{ current: null }}
         onScroll={() => {}}
         logName="agent"
         activeLog="agent"

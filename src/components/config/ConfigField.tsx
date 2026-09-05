@@ -17,6 +17,8 @@
 
 "use client";
 
+import Link from "next/link";
+
 import { Toggle, Select, NumberInput, TextInput } from "@/components/ui/Input";
 import type { FieldDef, SectionDef } from "@/lib/config-schema";
 
@@ -71,6 +73,28 @@ export default function ConfigField({ field, value, sectionDef, onUpdate }: Conf
         </div>
       );
     }
+  }
+
+  // A field another surface owns is shown, not offered: the value is real and
+  // worth reading, and the one control that may change it lives elsewhere
+  // (T-0101, D64).
+  if (field.managedBy) {
+    return (
+      <div className="space-y-1.5">
+        <label className="text-sm font-medium text-ps-text-secondary">{field.label}</label>
+        {field.description && <p className="text-xs text-ps-text-muted">{field.description}</p>}
+        <div className="rounded-lg border border-white/10 bg-dark-900/50 px-3 py-2 font-mono text-sm text-ps-text-muted">
+          {isUnset(value) ? "Not set" : String(value)}
+        </div>
+        <p className="text-xs text-ps-text-faint">
+          Set this on the{" "}
+          <Link href={field.managedBy.href} className="text-neon-pink hover:underline">
+            {field.managedBy.label}
+          </Link>{" "}
+          page.
+        </p>
+      </div>
+    );
   }
 
   const unset = isUnset(value);

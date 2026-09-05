@@ -10,12 +10,15 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { Terminal, Search, ChevronDown, X } from "lucide-react";
+import { Terminal, Search, ChevronDown, X, Copy, Check, Download } from "lucide-react";
 import PageHeader from "@/components/layout/PageHeader";
 import AppPageShell from "@/components/layout/AppPageShell";
+import Button from "@/components/ui/Button";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import { safeApiCallData, setErrorFromCaught } from "@/lib/api-fetch";
+import { downloadFile } from "@/lib/chat-utils";
+import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 import { useLogs } from "@/hooks/useLogs";
 import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
 import { formatBytes } from "@/lib/utils";
@@ -48,6 +51,9 @@ function errorAvailableLogs(errorBody: unknown): LogFileMeta[] | null {
   const logs = (errorBody as { availableLogs?: unknown }).availableLogs;
   return Array.isArray(logs) ? (logs as LogFileMeta[]) : null;
 }
+
+/** What separates one log line from the next, on the clipboard and on disk. */
+const LINE_BREAK = String.fromCharCode(10);
 
 export default function LogsPage() {
   const [activeLog, setActiveLog] = useState("agent");
@@ -187,6 +193,7 @@ export default function LogsPage() {
     void refetch();
   }, [refetch]);
 
+
   // Named sibling for the header's auto-refresh pill. Byte-equivalent to
   // the inline `() => setAutoRefresh(!autoRefresh)` arrow it replaces; the
   // captured boolean is listed in the deps array so the
@@ -212,6 +219,16 @@ export default function LogsPage() {
     const needle = search.toLowerCase();
     return allLines.filter((line) => line.toLowerCase().includes(needle));
   }, [allLines, search]);
+
+  // Copy takes what is on screen, filter included: a copy that quietly
+  // included the lines the filter is hiding would not be the thing the
+  // operator is looking at.
+  const [copied, copy] = useCopyToClipboard();
+
+  const handleDownload = useCallback(() => {
+    if (!data) return;
+    downloadFile(allLines.join(LINE_BREAK), `${data.name}.log`, "text/plain;charset=utf-8");
+  }, [data, allLines]);
 
   const searchMatches = search ? filteredLines.length : 0;
   // Recomputed on every poll tick (the query refetches every 5s while
@@ -241,6 +258,7 @@ export default function LogsPage() {
         color="cyan"
         actions={
           <LogsHeaderActions
+            hasLogs={(availableLogs?.length ?? 0) > 0}
             autoRefresh={autoRefresh}
             onToggleAutoRefresh={toggleAutoRefresh}
             lineCount={lineCount}
@@ -334,6 +352,33 @@ export default function LogsPage() {
                 </button>
               )}
 
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  icon={copied ? Check : Copy}
+                  disabled={filteredLines.length === 0}
+                  onClick={() => copy(filteredLines.join(LINE_BREAK))}
+                  title={
+                    filteredLines.length === 0
+                      ? "Nothing on screen to copy"
+                      : "Copy the lines on screen"
+                  }
+                >
+                  {copied ? "Copied" : "Copy"}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  icon={Download}
+                  disabled={!data || allLines.length === 0}
+                  onClick={handleDownload}
+                  title={data ? `Save ${data.name}.log` : "Nothing to download"}
+                >
+                  Download
+                </Button>
+              </div>
+
               {!autoScroll && (
                 <button
                   type="button"
@@ -351,7 +396,7 @@ export default function LogsPage() {
               <LoadingSpinner text="Loading logs..." />
             ) : data ? (
               <LogTerminal
-                containerRef={terminalRef}
+                scrollRef={terminalRef}
                 onScroll={handleScroll}
                 logName={data.name}
                 activeLog={activeLog}

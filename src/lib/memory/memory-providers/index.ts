@@ -1,19 +1,21 @@
 // ═══════════════════════════════════════════════════════════════
-// Memory Provider Factory — Detect and route to active provider
+// Memory Provider Factory — the active provider, and how to reach it
 // ═══════════════════════════════════════════════════════════════
 //
-// Reads ~/.hermes/config.yaml to determine which memory provider
-// is active, then delegates to the appropriate implementation.
+// The DATABASE says which provider is active. It used to be this module that
+// said so, by hand-scanning the agent's config.yaml for a `memory.provider:`
+// line, while the Memory page wrote a `memory_providers` row: two switches,
+// two truths, and a blank or malformed file reporting "none" over a live store
+// with thousands of facts (T-0101, D64). The file is now written to agree
+// rather than consulted to disagree; PUT /api/memory/config does that.
 //
 // Supported providers:
 //   - hindsight: PatterStage `/api/memory/hindsight` makes direct HTTP calls to the Hindsight HTTP server (port 9177)
 //   - none: Graceful degradation when no provider configured
 
-import { readFileSync, existsSync } from "fs";
-import { getAgentWorkspace } from "@/lib/runtime/workspace";
-
 // The pluggable provider interface + DB-owned config + active-provider resolver.
 import type { MemoryProviderType } from "./types";
+import { getActiveMemoryConfig } from "./repository";
 export type { MemoryProviderType } from "./types";
 export { getActiveMemoryProvider } from "./registry";
 export {
@@ -52,38 +54,16 @@ export interface MemoryReadResult {
   banks?: MemoryBank[];
 }
 
-// ── Provider Factory ───────────────────────────────────────────────
+// ── Provider Factory ───────────────────────────────────
 
-/** Parse the memory provider from config.yaml */
-function getConfiguredProvider(): MemoryProviderType {
-  try {
-    const configPath = getAgentWorkspace().config;
-    if (!existsSync(configPath)) return "none";
-
-    const content = readFileSync(configPath, "utf-8");
-    const lines = content.split("\n");
-    let inMemory = false;
-
-    for (const line of lines) {
-      if (line.trim().startsWith("memory:")) {
-        inMemory = true;
-        continue;
-      }
-      if (inMemory && !line.startsWith(" ") && line.trim()) break;
-      if (inMemory && line.includes("provider:")) {
-        const val = line.split("provider:")[1].trim().replace(/['"]/g, "");
-        if (val === "holographic") return "holographic";
-        if (val === "hindsight") return "hindsight";
-        return "none";
-      }
-    }
-    return "none";
-  } catch {
-    return "none";
-  }
-}
-
-/** Get the configured provider type without instantiating */
+/**
+ * The active provider's type, without instantiating it.
+ *
+ * One read, from `getActiveMemoryConfig`, which is the same resolver
+ * `getActiveMemoryProvider` uses. An active row that is switched off answers
+ * `none`; no row at all answers `hindsight`, the zero-config default the
+ * operator ruled stays (T-0077) and the file scan used to report as `none`.
+ */
 export function getMemoryProviderType(): MemoryProviderType {
-  return getConfiguredProvider();
+  return getActiveMemoryConfig().type;
 }

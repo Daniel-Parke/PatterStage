@@ -32,14 +32,72 @@ interface MemoryTabProps {
     hiddenCount: number;
     thresholdDays: number;
   };
+  /** The query whose results are on screen, when the list came from a Recall. */
+  activeQuery?: string | null;
+  /** Drop the query and go back to the recent list. */
+  onClearQuery?: () => void;
+  /** No memory provider answered, so there is no store to be empty. */
+  unreachable?: boolean;
 }
 
-export default function MemoryTab({ memories, loading, loadingInitial, showStaleToggle }: MemoryTabProps) {
+export default function MemoryTab({
+  memories,
+  loading,
+  loadingInitial,
+  showStaleToggle,
+  activeQuery = null,
+  onClearQuery,
+  unreachable = false,
+}: MemoryTabProps) {
   if (loadingInitial || loading) {
     return <LoadingSpinner text={loading ? "Searching memories..." : "Loading recent memories..."} />;
   }
 
-  if (memories.length === 0) {
+  // An empty list means one of four things, and the page used to say the same
+  // one for all of them: a fresh install's sentence, printed over a store that
+  // nothing is answering for, or one whose facts are all older than the age
+  // filter, or a search that simply missed (T-0101, D61 and D62).
+  const emptyState = () => {
+    if (unreachable) {
+      return (
+        <EmptyState
+          icon={Brain}
+          title="Memory is not connected"
+          description="Nothing answered at the endpoint above. Check the host and port on the card at the top of this page, then test the connection."
+        />
+      );
+    }
+    if (activeQuery) {
+      return (
+        <div className="space-y-3">
+          <EmptyState
+            icon={Brain}
+            title={`No memories matched "${activeQuery}"`}
+            description="The store may still hold plenty; this search found none of it. Try fewer words, or clear the search to see what was stored recently."
+          />
+          {onClearQuery && (
+            <div className="flex justify-center">
+              <button
+                type="button"
+                onClick={onClearQuery}
+                className="px-3 py-1.5 rounded-lg border border-pink-500/30 text-xs font-mono text-pink-300 transition-colors hover:bg-pink-500/10"
+              >
+                Clear search
+              </button>
+            </div>
+          )}
+        </div>
+      );
+    }
+    if (showStaleToggle && showStaleToggle.hiddenCount > 0) {
+      return (
+        <EmptyState
+          icon={Clock}
+          title={`Every memory is older than ${showStaleToggle.thresholdDays} days`}
+          description={`${showStaleToggle.hiddenCount} ${showStaleToggle.hiddenCount === 1 ? "fact is" : "facts are"} hidden by the age filter. Show them with the button above.`}
+        />
+      );
+    }
     return (
       <EmptyState
         icon={Brain}
@@ -47,10 +105,13 @@ export default function MemoryTab({ memories, loading, loadingInitial, showStale
         description="Hermes will start storing them as you converse. You can also add one with Add Memory above."
       />
     );
-  }
+  };
 
   return (
     <div className="space-y-3">
+      {/* Above the empty branch, not inside the list: the button that reveals
+          the hidden facts used to be unreachable on exactly the store that
+          needed it (T-0101, D61). */}
       {showStaleToggle && (
         <div className="flex items-center justify-between gap-3 px-4 py-2 rounded-lg border border-white/10 bg-dark-900/30 text-xs text-ps-text-secondary">
           <div className="flex items-center gap-2">
@@ -72,6 +133,7 @@ export default function MemoryTab({ memories, loading, loadingInitial, showStale
           </button>
         </div>
       )}
+      {memories.length === 0 && emptyState()}
       {memories.map((memory, i) => {
         const text = memory.content ?? "";
         const type = memory.type ?? "";
@@ -102,12 +164,12 @@ export default function MemoryTab({ memories, loading, loadingInitial, showStale
                     {tag}
                   </Badge>
                 ))}
-              {memory.score !== undefined && (
-                <span>
-                  {typeof memory.score === "number" && memory.score > 0 && memory.score <= 1
-                    ? `Relevance: ${(memory.score * 100).toFixed(0)}%`
-                    : `Proof count: ${memory.score}`}
-                </span>
+              {/* A proof count, called what it is. It used to be mapped into a
+                  field called `score` and rendered as a percentage whenever it
+                  was 1, which is the commonest fact there is: a fabricated
+                  confidence figure on most of the store (T-0101, D63). */}
+              {typeof memory.proofCount === "number" && memory.proofCount > 0 && (
+                <span>Proof count: {memory.proofCount}</span>
               )}
               {memory.created_at && (
                 <span className="flex items-center gap-1">

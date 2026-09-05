@@ -67,7 +67,7 @@ describe("MemoryTab — renders mapped JSON payload directly", () => {
         type: "observation",
         tags: ["session:api-cc4c125d27f475eb", "stress-test"],
         created_at: "2026-05-27T00:59:54.723075+00:00",
-        score: 1,
+        proofCount: 1,
       },
     ];
     renderWithMemories(memories);
@@ -85,22 +85,28 @@ describe("MemoryTab — renders mapped JSON payload directly", () => {
     expect(screen.getByText("stress-test")).toBeInTheDocument();
   });
 
-  it("renders the score as `Relevance: NN%` for fractional scores (0-1 range)", () => {
+  it("renders one proof as a proof, not as a fabricated percentage", () => {
+    // Amended for T-0101 (D63). This case used to pin
+    // `Relevance: 85%` for a fractional value, which the bridge never
+    // produced: proof_count was mapped into a field called `score`, and the
+    // component's dual-mode branch then rendered every single-proof fact as
+    // "Relevance: 100%". The field is `proofCount` now and there is one mode.
     const memories: Memory[] = [
       {
         id: "m2",
-        content: "Fractional relevance score",
+        content: "One proof only",
         type: "experience",
         tags: [],
         created_at: "2026-05-27T00:00:00+00:00",
-        score: 0.85,
+        proofCount: 1,
       },
     ];
     renderWithMemories(memories);
-    expect(screen.getByText("Relevance: 85%")).toBeInTheDocument();
+    expect(screen.getByText("Proof count: 1")).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/Relevance/);
   });
 
-  it("renders the score as `Proof count: N` for integer scores (>= 1)", () => {
+  it("renders the proof count for integer counts (>= 1)", () => {
     const memories: Memory[] = [
       {
         id: "m3",
@@ -108,7 +114,7 @@ describe("MemoryTab — renders mapped JSON payload directly", () => {
         type: "experience",
         tags: [],
         created_at: "2026-05-27T00:00:00+00:00",
-        score: 3,
+        proofCount: 3,
       },
     ];
     renderWithMemories(memories);

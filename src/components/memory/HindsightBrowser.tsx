@@ -9,7 +9,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Search, Plus, Sparkles, List, FileText,
   Settings, RefreshCw,
@@ -18,8 +18,7 @@ import { SearchInput } from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { HINDSIGHT_DEFAULT_MAX_AGE_DAYS } from "@/lib/memory/hindsight-client";
-import type { Tab } from "./hindsight/types";
-import HealthBanner from "./hindsight/HealthBanner";
+import type { HealthState, Tab } from "./hindsight/types";
 import MemoryInsights from "@/components/memory/MemoryInsights";
 import MemoryTab from "./hindsight/MemoryTab";
 import DirectivesTab from "./hindsight/DirectivesTab";
@@ -30,7 +29,19 @@ import { useHindsightMemories } from "./hindsight/useHindsightMemories";
 import { useHindsightDirectives } from "./hindsight/useHindsightDirectives";
 import { useHindsightModels } from "./hindsight/useHindsightModels";
 
-export default function HindsightBrowser() {
+interface HindsightBrowserProps {
+  /**
+   * The store's health goes UP, so the page has one place to say it. This
+   * component used to render its own banner beside the provider card's
+   * warning, which is how a first visit met two notices about one fact
+   * (T-0101).
+   */
+  onHealthChange?: (health: HealthState | null) => void;
+  /** A change re-runs the initial load: the card reconnects, the list follows. */
+  reloadToken?: number;
+}
+
+export default function HindsightBrowser({ onHealthChange, reloadToken = 0 }: HindsightBrowserProps = {}) {
   const { showToast, toastElement } = useToast();
   const [activeTab, setActiveTab] = useState<Tab>("memories");
 
@@ -54,7 +65,6 @@ export default function HindsightBrowser() {
     adding,
     health,
     totalFacts,
-    fetchHealthOnly,
     loadRecentMemories,
     runRecall,
     handleRefreshMemories,
@@ -109,6 +119,14 @@ export default function HindsightBrowser() {
     handleSaveModel,
   } = useHindsightModels(showToast, activeTab);
 
+  useEffect(() => {
+    onHealthChange?.(health);
+  }, [health, onHealthChange]);
+
+  useEffect(() => {
+    if (reloadToken > 0) void loadRecentMemories();
+  }, [reloadToken, loadRecentMemories]);
+
   // ── Render ──
 
   const tabs: Array<{ id: Tab; label: string; icon: React.ComponentType<{ className?: string }> }> = [
@@ -121,18 +139,18 @@ export default function HindsightBrowser() {
     <div className="pt-2">
       {toastElement}
 
-      {health !== null && (
-        <HealthBanner
-          health={health}
-          loadingInitial={loadingInitial}
-          onRetry={() => { void loadRecentMemories(); void fetchHealthOnly(); }}
-        />
-      )}
-
       {/* Search Bar */}
       <div className="flex gap-3 mb-6">
         <div className="flex-1 flex flex-col gap-1">
-          <SearchInput value={search} onChange={setSearch} placeholder="Search memories (semantic search)..." accentColor="pink" />
+          <SearchInput
+            value={search}
+            onChange={setSearch}
+            placeholder="Search memories (semantic search)..."
+            accentColor="pink"
+            onSubmit={() => {
+              if (search.trim() && !loading) void runRecall();
+            }}
+          />
           <p className="text-xs text-ps-text-muted pl-1">Press Enter to search</p>
         </div>
         <Button variant="secondary" color="pink" size="sm" icon={Search} onClick={() => void runRecall()} disabled={!search.trim() || loading}>
@@ -187,6 +205,12 @@ export default function HindsightBrowser() {
           memories={displayedMemories}
           loading={loading}
           loadingInitial={loadingInitial}
+          unreachable={health !== null && health.available === false}
+          activeQuery={search.trim() || null}
+          onClearQuery={() => {
+            setSearch("");
+            void loadRecentMemories();
+          }}
           showStaleToggle={{
             showStale: showStaleMemories,
             onToggle: () => setShowStaleMemories((v) => !v),

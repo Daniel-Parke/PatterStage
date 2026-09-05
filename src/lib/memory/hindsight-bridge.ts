@@ -36,7 +36,8 @@ export interface MappedMemory {
   created_at: string;
   tags: unknown;
   entities: unknown;
-  score: number;
+  /** Hindsight's proof_count, named for what it is (T-0101, D63). */
+  proofCount: number;
 }
 
 /** Map a raw Hindsight memory entry to the UI's expected shape. */
@@ -48,7 +49,7 @@ export function mapMemoryItem(item: Record<string, unknown>): MappedMemory {
     created_at: (item.date as string) || (item.created_at as string) || "",
     tags: item.tags ?? [],
     entities: item.entities ?? "",
-    score: (item.proof_count as number) || 0,
+    proofCount: (item.proof_count as number) || 0,
   };
 }
 

@@ -151,10 +151,14 @@ describe("getMemoryProviderType answers from the database, not the file", () => 
     );
 
     // Booleans, so a miss names the line rather than printing the module.
+    // `provider:` is not among them: MemoryReadResult declares a field by that
+    // name, and a check that forbade the word would fail on the type rather
+    // than on the scan. What the scan cannot do without is the file.
     expect({
       readsAFile: /readFileSync|existsSync/.test(source),
-      scansForProvider: /provider:/.test(source),
-    }).toEqual({ readsAFile: false, scansForProvider: false });
+      importsFs: /from "fs"/.test(source),
+      importsTheWorkspacePort: /runtime\/workspace/.test(source),
+    }).toEqual({ readsAFile: false, importsFs: false, importsTheWorkspacePort: false });
   });
 });
 

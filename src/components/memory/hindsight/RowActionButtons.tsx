@@ -25,7 +25,11 @@
 //   removed, both tabs use the shared components, the middle
 //   Toggle/Refresh button stays inline).
 
+"use client";
+
 import { Pencil, Trash2 } from "lucide-react";
+
+import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
 
 // ── Edit Button ──────────────────────────────────────────────
 
@@ -68,36 +72,42 @@ export function RowEditButton({ onClick }: RowEditButtonProps) {
 
 interface RowDeleteButtonProps {
   onClick: () => void;
+  /**
+   * What is about to be deleted, named in the accessible label. A directive is
+   * a standing instruction injected into every prompt and a mental model is a
+   * curated query; both used to go on one click of a bare trash icon while
+   * every other destructive row action in the product took two (T-0101).
+   */
+  label?: string;
 }
 
 /**
- * Per-row "Delete" icon button. Byte-identical to the pre-extraction
- * inline `<button>` in both DirectivesTab (line 104-110 pre-refactor)
- * and MentalModelsTab (line 110-116 pre-refactor):
+ * Per-row "Delete" icon button, two clicks.
  *
- * ```tsx
- * <button
- *   onClick={onClick}
- *   className="p-1.5 rounded-lg hover:bg-red-500/10 text-ps-text-muted hover:text-red-400 transition-colors"
- *   title="Delete"
- * >
- *   <Trash2 className="w-4 h-4" />
- * </button>
- * ```
+ * The first click arms and renames itself; the second deletes. Armed is never
+ * disabled by being armed, which is the rule ConfirmButton exists to hold
+ * (T-0096, D66). The armed state clears itself after four seconds, so a stray
+ * click hours later is a no-op rather than a deletion.
  *
- * Distinguishing styling from the Edit button: hover bg is
- * `bg-red-500/10` (not `bg-white/5`) and the hover text is
- * `text-red-400` (not `text-ps-text-secondary`). The destructive-intent
- * colour stays the same in both tabs; consolidating the colour
- * into the shared component ensures a future "make destructive
- * actions more obvious" tweak lands in one place.
+ * Distinguishing styling from the Edit button: hover bg is `bg-red-500/10` (not
+ * `bg-white/5`) and the hover text is `text-red-400`; armed reverses the pair so
+ * the second click is visibly the loaded one.
  */
-export function RowDeleteButton({ onClick }: RowDeleteButtonProps) {
+export function RowDeleteButton({ onClick, label }: RowDeleteButtonProps) {
+  const confirm = useTwoStepConfirm({ autoDismissMs: 4000 });
+  const named = label ? ` ${label}` : "";
+
   return (
     <button
-      onClick={onClick}
-      className="p-1.5 rounded-lg hover:bg-red-500/10 text-ps-text-muted hover:text-red-400 transition-colors"
-      title="Delete"
+      type="button"
+      onClick={() => (confirm.isArmed ? void confirm.confirm(onClick) : confirm.arm())}
+      className={`p-1.5 rounded-lg transition-colors ${
+        confirm.isArmed
+          ? "bg-red-500/20 text-red-300 ring-1 ring-red-500/40"
+          : "hover:bg-red-500/10 text-ps-text-muted hover:text-red-400"
+      }`}
+      aria-label={confirm.isArmed ? `Click again to confirm deleting${named}` : `Delete${named}`}
+      title={confirm.isArmed ? "Click again to confirm" : "Delete"}
     >
       <Trash2 className="w-4 h-4" />
     </button>

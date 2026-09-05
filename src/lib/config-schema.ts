@@ -41,6 +41,13 @@ export interface FieldDef {
   min?: number;
   max?: number;
   placeholder?: string;
+  /**
+   * This field is owned by another surface, which writes it as a side effect of
+   * a decision made there. The section page renders it read-only and points at
+   * that surface, and the PUT refuses it: two controls writing one setting from
+   * two sources of truth is the defect this replaces (T-0101, D64).
+   */
+  managedBy?: { label: string; href: string };
 }
 
 export interface SectionDef {
@@ -105,7 +112,7 @@ export const CONFIG_SECTIONS: Record<string, SectionDef> = {
     color: "pink",
     fields: [
       { key: "memory_enabled", label: "Memory Enabled", type: "boolean", description: "Enable memory system" },
-      { key: "provider", label: "Provider", type: "select", options: ["holographic", "hindsight"], description: "Memory backend provider. Holographic = SQLite local, Hindsight = knowledge graph (local or cloud)" },
+      { key: "provider", label: "Provider", type: "select", options: ["holographic", "hindsight"], description: "Which memory backend the agent uses. PatterStage owns this: set it on the Memory page and this file is written to match.", managedBy: { label: "Memory", href: "/agent/memory" } },
       { key: "memory_char_limit", label: "Memory Char Limit", type: "number", min: 500, max: 10000, description: "Max characters per memory entry" },
       { key: "user_char_limit", label: "User Char Limit", type: "number", min: 500, max: 10000, description: "Max characters for user profile" },
       { key: "nudge_interval", label: "Nudge Interval", type: "number", min: 1, max: 100, description: "Turns between memory flush nudges" },
@@ -545,6 +552,12 @@ export function validateSectionValues(
   for (const [key, value] of Object.entries(values)) {
     const field = byKey.get(key);
     if (!field) continue;
+    // A field another surface owns is not editable here at any value, null
+    // included: the write that sets it belongs to the page that decides it.
+    if (field.managedBy) {
+      problems.push({ key, message: `${field.label} is set on the ${field.managedBy.label} page` });
+      continue;
+    }
     if (value === null || value === undefined) continue;
 
     if (field.type === "number") {

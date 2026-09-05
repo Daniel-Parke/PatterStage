@@ -1,10 +1,16 @@
 // ═══════════════════════════════════════════════════════════════
 // LogTerminal — the terminal-styled log pane
 //
-// Extracted verbatim from app/(main)/logs/page.tsx: chrome bar,
-// column headings and the rendered rows. The scroll container ref and
-// the scroll handler stay with the page, which owns auto-scroll.
+// Chrome bar, column headings and the rendered rows. The scroll container ref
+// and the scroll handler stay with the page, which owns auto-scroll.
 // Presentation only.
+//
+// THE REF GOES ON THE DIV THAT SCROLLS. It used to go on <Panel>, whose outer
+// div carries overflow-hidden, while the element that actually scrolls is the
+// inner overflow-auto one below. So scrollTop was permanently 0: the page's
+// auto-scroll effect wrote 0 to a div that could not move, its scroll handler
+// never fired, autoScroll never turned off, and the "Latest lines" pill that
+// appears only when it does could therefore never appear at all (T-0101, D59).
 // ═══════════════════════════════════════════════════════════════
 
 "use client";
@@ -14,7 +20,8 @@ import { LogRow } from "@/components/logs/LogRow";
 import { Panel } from "@/components/dashboard/Panel";
 
 export interface LogTerminalProps {
-  containerRef: RefObject<HTMLDivElement | null>;
+  /** Points at the element that scrolls, which is the inner one. */
+  scrollRef: RefObject<HTMLDivElement | null>;
   onScroll: () => void;
   logName: string;
   activeLog: string;
@@ -25,7 +32,7 @@ export interface LogTerminalProps {
 }
 
 export default function LogTerminal({
-  containerRef,
+  scrollRef,
   onScroll,
   logName,
   activeLog,
@@ -37,13 +44,9 @@ export default function LogTerminal({
   return (
     // The shell was a hand-rolled copy of Panel down to the class list:
     // rounded-xl, border-white/10, bg-dark-900/50, overflow-hidden. It is the
-    // Panel now (T-0033), and the scroll ref and scroll handler reach the same
-    // div they always did, through the props Panel forwards.
-    <Panel
-      ref={containerRef}
-      onScroll={onScroll}
-      className="flex flex-col flex-1 min-h-0"
-    >
+    // Panel now (T-0033). It takes no ref and no scroll handler: it is the box,
+    // not the scroller.
+    <Panel className="flex flex-col flex-1 min-h-0">
       <div className="flex items-center gap-2 px-4 py-2 border-b border-white/10 bg-dark-800/50 shrink-0">
         <div className="flex gap-1.5">
           <div className="w-3 h-3 rounded-full bg-red-500/80" />
@@ -64,7 +67,11 @@ export default function LogTerminal({
         <span>Message</span>
       </div>
 
-      <div className="p-3 sm:p-4 text-xs overflow-auto flex-1 min-h-0 max-h-[calc(100vh-320px)] lg:max-h-none">
+      <div
+        ref={scrollRef}
+        onScroll={onScroll}
+        className="p-3 sm:p-4 text-xs overflow-auto flex-1 min-h-0 max-h-[calc(100vh-320px)] lg:max-h-none"
+      >
         {lines.length > 0 ? (
           lines.map((line, i) => (
             <LogRow
