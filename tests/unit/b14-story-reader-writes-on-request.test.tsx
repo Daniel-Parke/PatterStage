@@ -88,6 +88,9 @@ let current: ReturnType<typeof story>;
 let pendingGenerate: Array<{ resolve: () => void; signal: AbortSignal | undefined }> = [];
 /** When true, a generate call parks until the test resolves it. */
 let holdGenerate = false;
+/** When true, a parked call IGNORES the abort, the way a provider that does not
+ *  honour the header would. The loop then has only its own flag to stop it. */
+let holdIgnoresAbort = false;
 
 function ok(body: unknown) {
   return { ok: true, status: 200, json: async () => body };
@@ -117,7 +120,7 @@ function installFetch(): void {
         if (holdGenerate) {
           return new Promise((resolve, reject) => {
             const signal = init?.signal ?? undefined;
-            signal?.addEventListener("abort", () => {
+            if (!holdIgnoresAbort) signal?.addEventListener("abort", () => {
               const err = new Error("The operation was aborted.");
               err.name = "AbortError";
               reject(err);
@@ -159,6 +162,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   pendingGenerate = [];
   holdGenerate = false;
+  holdIgnoresAbort = false;
   window.localStorage.clear();
   (globalThis as { fetch?: unknown }).fetch = fetchMock;
   installFetch();
@@ -276,6 +280,67 @@ describe("the chapter heading never says the number twice", () => {
     await mount(halfWritten());
     const heading = await screen.findByRole("heading", { level: 2 });
     expect(heading).toHaveTextContent(/^Chapter 1$/);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════
+// (E) three things the first sweep found the cases above could not see
+// ═══════════════════════════════════════════════════════════════
+
+describe("Stop, read exactly", () => {
+  it("a Stop while a single chapter is being written still offers Stop", async () => {
+    holdGenerate = true;
+    await mount(halfWritten());
+    // "Write chapter N" writes ONE chapter and does not arm the loop, so
+    // `writing` is false throughout. A Stop control that reads only the loop
+    // would leave this call with no way to stop it.
+    fireEvent.click(await screen.findByRole("button", { name: "Write chapter 3" }));
+    await waitFor(() => expect(pendingGenerate).toHaveLength(1));
+
+    expect(await screen.findByRole("button", { name: "Stop" })).toBeInTheDocument();
+  });
+
+  it("disarms the loop, so a call that lands after the Stop starts no other", async () => {
+    holdGenerate = true;
+    // The provider ignores the abort and answers normally, which is what a
+    // gateway that does not honour the header does. The completed chapter then
+    // re-arms the effect, and the ONLY thing that stops the next call is the
+    // loop flag Stop cleared.
+    holdIgnoresAbort = true;
+    await mount(halfWritten());
+    fireEvent.click(await screen.findByRole("button", { name: "Keep writing (2 chapters left)" }));
+    await waitFor(() => expect(pendingGenerate).toHaveLength(1));
+
+    fireEvent.click(await screen.findByRole("button", { name: "Stop" }));
+    // The call SUCCEEDS anyway -- it was already on the wire and the server
+    // does not care about the abort. The loop must still be disarmed, or the
+    // completed chapter re-arms the effect and the writing carries on.
+    await act(async () => {
+      pendingGenerate[0].resolve();
+      await Promise.resolve();
+    });
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(generateCalls()).toHaveLength(1);
+  });
+
+  it("is not a failure: no error is shown after a Stop", async () => {
+    holdGenerate = true;
+    await mount(halfWritten());
+    fireEvent.click(await screen.findByRole("button", { name: "Keep writing (2 chapters left)" }));
+    await waitFor(() => expect(pendingGenerate).toHaveLength(1));
+
+    fireEvent.click(await screen.findByRole("button", { name: "Stop" }));
+    await waitFor(() => expect(pendingGenerate[0].signal?.aborted).toBe(true));
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    // An abort routed through the ordinary catch reads as "Generation failed"
+    // and burns one of the three retries the ceiling counts.
+    expect(screen.queryByText(/Generation failed|aborted/i)).not.toBeInTheDocument();
   });
 });
 

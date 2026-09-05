@@ -72,8 +72,12 @@ const MODELS = [
   { id: "m-2", name: "Mini", provider: "openai", modelId: "gpt-4o-mini", baseUrl: null, contextLength: null, credentialsId: null, createdAt: "", updatedAt: "" },
 ];
 
+const SECOND_THEME = { ...THEME, id: "T-2", name: "Rust and rain" };
+
 /** Answers keyed on `action`/`subAction`; overridable per test. */
 let refuseThemeDelete = false;
+/** Flips once a theme has been created, so the next list carries it. */
+let themeCreated = false;
 
 function answer(body: unknown, status = 200) {
   return { ok: status >= 200 && status < 300, status, json: async () => body };
@@ -83,8 +87,14 @@ function installFetch(): void {
   fetchMock.mockImplementation(async (_url, init) => {
     const body = JSON.parse(String(init?.body ?? "{}")) as Body;
     if (body.action === "themes") {
-      if (body.subAction === "list") return answer({ data: { themes: [THEME] } });
-      if (body.subAction === "create") return answer({ data: { theme: { ...THEME, id: "T-2" } } });
+      if (body.subAction === "list") {
+        // After a create, the list is what tells the page the new theme exists.
+        return answer({ data: { themes: themeCreated ? [THEME, SECOND_THEME] : [THEME] } });
+      }
+      if (body.subAction === "create") {
+        themeCreated = true;
+        return answer({ data: { theme: SECOND_THEME } });
+      }
       if (body.subAction === "delete") {
         return refuseThemeDelete
           ? answer({ error: "Missing themeId" }, 400)
@@ -121,6 +131,7 @@ async function mount() {
 beforeEach(() => {
   jest.clearAllMocks();
   refuseThemeDelete = false;
+  themeCreated = false;
   window.localStorage.clear();
   (globalThis as { fetch?: unknown }).fetch = fetchMock;
   installFetch();
@@ -192,6 +203,10 @@ describe("Save to Library reads the answer the handler actually sends", () => {
 
     await waitFor(() => expect(bodiesFor("themes", "create")).toHaveLength(1));
     await waitFor(() => expect(bodiesFor("themes", "list").length).toBe(listsBefore + 1));
+    // Making the request is not the point; reading the answer is. A relist
+    // whose result is dropped leaves the operator looking at a saved-themes
+    // strip that does not contain what they just saved.
+    expect(await screen.findByText(SECOND_THEME.name)).toBeInTheDocument();
   });
 });
 
