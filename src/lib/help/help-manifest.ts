@@ -272,8 +272,15 @@ function normalisePath(pathname: string): string {
   return bare === "" ? "/" : bare;
 }
 
+/**
+ * Does this route own this path?
+ *
+ * The dashboard needs no special case. Its route is "/", and the prefix test
+ * below asks whether the path starts with "//", which no path does, so "/"
+ * owns exactly itself and nothing else falls out of it. A separate branch for
+ * the root read as a guard against something and guarded against nothing.
+ */
 function owns(route: string, path: string): boolean {
-  if (route === "/") return path === "/";
   return path === route || path.startsWith(`${route}/`);
 }
 
