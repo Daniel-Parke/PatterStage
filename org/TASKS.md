@@ -117,7 +117,7 @@ The records under org/tasks/ are canonical.
 | T-0102 | standard | R1 | done | session-b8 |
 | T-0103 | standard | R2 | done | session-b9 |
 | T-0104 | standard | R1 | done | session-b10 |
-| T-0105 | standard | R1 | proposed | unassigned |
+| T-0105 | standard | R1 | in_progress | session-b11 |
 | T-0106 | standard | R1 | proposed | unassigned |
 | T-0107 | standard | R2 | proposed | unassigned |
 | T-0108 | standard | R2 | proposed | unassigned |
