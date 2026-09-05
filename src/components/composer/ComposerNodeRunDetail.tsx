@@ -15,7 +15,7 @@ import Sheet from "@/components/ui/Sheet";
 import { timeAgo } from "@/lib/utils";
 import ElapsedSince from "./ElapsedSince";
 import { safeApiCall } from "@/lib/api-fetch";
-import type { ComposerNode, ComposerNodeRun } from "@/lib/composer/schema";
+import type { ComposerApproval, ComposerNode, ComposerNodeRun } from "@/lib/composer/schema";
 
 const STATUS_TEXT: Record<string, string> = {
   pending: "text-ps-text-muted",
@@ -38,11 +38,14 @@ export default function ComposerNodeRunDetail({
   onClose,
   node,
   nodeRun,
+  approvals = [],
 }: {
   open: boolean;
   onClose: () => void;
   node: ComposerNode | null;
   nodeRun: ComposerNodeRun | null;
+  /** The gate decisions taken on THIS stage, oldest first (T-0106, D8). */
+  approvals?: ComposerApproval[];
 }) {
   const verdict = nodeRun?.verdict ?? null;
   const subtitle = node
@@ -122,6 +125,27 @@ export default function ComposerNodeRunDetail({
                     </ul>
                   </div>
                 ) : null}
+              </div>
+            ) : null}
+
+            {approvals.length > 0 ? (
+              <div className="space-y-2">
+                {/* Recorded since the gate existed, kept, and shown to nobody. */}
+                <Label>Gate decisions</Label>
+                <ul className="space-y-2">
+                  {approvals.map((a) => (
+                    <li key={a.id} className="rounded-lg border border-white/10 bg-dark-900/40 px-3 py-2">
+                      <span
+                        className={`font-mono text-xs ${a.action === "accept" ? "text-neon-green" : "text-neon-pink"}`}
+                      >
+                        {a.action === "accept" ? "Accepted" : "Rejected"}
+                      </span>
+                      <p className="mt-1 text-xs text-ps-text-secondary whitespace-pre-wrap break-words">
+                        {a.note && a.note.trim() ? a.note : "No note"}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
               </div>
             ) : null}
 

@@ -68,12 +68,12 @@ export function createWorkflowFromDef(input: WorkflowDef): ComposerWorkflowGraph
         workflowId = existing.id;
         version = existing.version + 1;
         getDb().prepare("DELETE FROM composer_nodes WHERE workflow_id = ?").run(workflowId); // edges cascade
-        getDb().prepare("UPDATE composer_workflows SET name = ?, description = ?, version = ?, updated_at = ? WHERE id = ?").run(def.name, def.description, version, ts, workflowId);
+        getDb().prepare("UPDATE composer_workflows SET name = ?, description = COALESCE(?, description), version = ?, updated_at = ? WHERE id = ?").run(def.name, def.description ?? null, version, ts, workflowId);
       } else {
-        getDb().prepare("INSERT INTO composer_workflows (id, key, name, description, version, created_at, updated_at) VALUES (?, ?, ?, ?, 1, ?, ?)").run(workflowId, def.key, def.name, def.description, ts, ts);
+        getDb().prepare("INSERT INTO composer_workflows (id, key, name, description, version, created_at, updated_at) VALUES (?, ?, ?, ?, 1, ?, ?)").run(workflowId, def.key, def.name, def.description ?? "", ts, ts);
       }
     } else {
-      getDb().prepare("INSERT INTO composer_workflows (id, key, name, description, version, created_at, updated_at) VALUES (?, NULL, ?, ?, 1, ?, ?)").run(workflowId, def.name, def.description, ts, ts);
+      getDb().prepare("INSERT INTO composer_workflows (id, key, name, description, version, created_at, updated_at) VALUES (?, NULL, ?, ?, 1, ?, ?)").run(workflowId, def.name, def.description ?? "", ts, ts);
     }
 
     const nodeIdByKey = new Map<string, string>();
@@ -151,7 +151,8 @@ export function getOutgoingEdges(nodeId: string): ComposerEdge[] {
  * state and PUTs it wholesale — atomic, with no partial-edit races.
  */
 /** How many completed runs a structural edit would destroy. */
-function countWorkflowRuns(workflowId: string): number {
+/** How many runs a structural edit or a delete would destroy. */
+export function countWorkflowRuns(workflowId: string): number {
   const row = getDb()
     .prepare("SELECT COUNT(*) AS n FROM composer_runs WHERE workflow_id = ?")
     .get(workflowId) as { n: number } | undefined;
@@ -197,8 +198,11 @@ export function replaceWorkflowGraph(
     const ts = now();
     getDb().prepare("DELETE FROM composer_runs WHERE workflow_id = ?").run(workflowId); // cascades node_runs + approvals
     getDb().prepare("DELETE FROM composer_nodes WHERE workflow_id = ?").run(workflowId); // edges cascade
-    getDb().prepare("UPDATE composer_workflows SET name = ?, description = ?, version = version + 1, updated_at = ? WHERE id = ?")
-      .run(def.name, def.description, ts, workflowId);
+    // COALESCE, not a bare write: the Build tab saves a canvas, and a canvas
+    // that carried no description blanked the stored one every time it was
+    // saved (T-0106, D2). Absent means leave it; "" means clear it.
+    getDb().prepare("UPDATE composer_workflows SET name = ?, description = COALESCE(?, description), version = version + 1, updated_at = ? WHERE id = ?")
+      .run(def.name, def.description ?? null, ts, workflowId);
 
     const nodeIdByKey = new Map<string, string>();
     def.nodes.forEach((n, i) => {

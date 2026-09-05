@@ -8,6 +8,7 @@
 
 import { useApiResource } from "./useApiResource";
 import type {
+  ComposerApproval,
   ComposerNodeRun,
   ComposerRun,
   ComposerWorkflow,
@@ -45,13 +46,17 @@ export interface ComposerRunDetail {
   run: ComposerRun;
   nodeRuns: ComposerNodeRun[];
   graph: ComposerWorkflowGraph | null;
+  /** The gate decisions on this run, oldest first (T-0106, D8). */
+  approvals: ComposerApproval[];
 }
 
 export function useComposerRun(id: string | null) {
   return useApiResource<ComposerRunDetail>(["composer-run", id ?? "none"], `/api/composer/runs/${id ?? ""}`, {
     select: (p) => {
       const v = p as Partial<ComposerRunDetail> | undefined;
-      return v?.run ? { run: v.run, nodeRuns: v.nodeRuns ?? [], graph: v.graph ?? null } : undefined;
+      return v?.run
+        ? { run: v.run, nodeRuns: v.nodeRuns ?? [], graph: v.graph ?? null, approvals: v.approvals ?? [] }
+        : undefined;
     },
     enabled: Boolean(id),
     refetchInterval: 3000,

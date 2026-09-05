@@ -130,9 +130,9 @@ Graph orchestration. Every route below, the SSE stream included, returns **503**
 | Route | Methods | Purpose |
 |---|---|---|
 | `/api/composer/workflows` | `GET`, `POST` | List workflow definitions; create one from a whole-graph definition. |
-| `/api/composer/workflows/[id]` | `GET`, `PUT`, `DELETE` | Read the full graph, replace it atomically, or delete it. Edits are blocked while the workflow has active runs. |
+| `/api/composer/workflows/[id]` | `GET`, `PUT`, `DELETE` | Read, replace or delete one workflow. `PUT` and `DELETE` answer **409** with `{ runCount, workflowName, confirmWith }` when the change would destroy completed runs; repeat with `?discardRunHistory=1` to go ahead. An absent `description` on a `PUT` leaves the stored one alone; `""` clears it. |
 | `/api/composer/runs` | `GET`, `POST` | List recent runs; start one (`{ workflowId \| workflowKey, input }`) and kick the engine so the first stage dispatches immediately. |
-| `/api/composer/runs/[id]` | `GET` | One run + its node-runs + the workflow graph. |
+| `/api/composer/runs/[id]` | `GET` | One run + its node-runs + the workflow graph. Answers `{ run, nodeRuns, graph, approvals }`. |
 | `/api/composer/runs/[id]/events` | `GET` | Live **SSE** (`{ run, nodeRuns }` snapshots), closing when the run is terminal. |
 | `/api/composer/runs/[id]/cancel` | `POST` | Cancel a run: the run and its live node-runs are marked cancelled and their backend runs are stopped. |
 | `/api/composer/runs/[id]/nodes/[nodeId]/approve` | `POST` | Resolve a human-in-the-loop gate (`accept` \| `reject` \| `review` \| `add_feature`) and advance the graph. |

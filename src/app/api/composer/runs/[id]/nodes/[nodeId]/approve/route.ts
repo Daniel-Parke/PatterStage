@@ -91,14 +91,26 @@ export async function POST(request: NextRequest, ctx: Ctx) {
     const run = getComposerRun(id);
     if (!run) return notFound("Composer run not found");
     if (run.status !== "awaiting_approval") return badRequest(describeNotAwaiting(run));
-    if (!getNode(nodeId)) return notFound("Node not found");
+    const gateNode = getNode(nodeId);
+    if (!gateNode) return notFound("Node not found");
 
     recordComposerApproval({ composerRunId: id, nodeId, action: parsed.action, note: parsed.note ?? null });
     // The decision is the write; only an acceptance is a gate approved (T-0098).
     if (parsed.action === "accept") {
       recordEvent("composer.gate_approved", { entityType: "composer_run", entityId: id, metadata: { nodeId } });
     }
-    updateComposerRun(id, { status: "running" }); // resume so the engine advances
+    // The note goes with the resume, so the stage that is sent back to try
+    // again is told WHY. It was recorded and shown to nobody, least of all the
+    // thing it was about (T-0106, D8). A decision with no note clears a
+    // previous one: a stale note must never follow a run around.
+    const nextContext = { ...(run.context ?? {}) };
+    const note = (parsed.note ?? "").trim();
+    if (note) {
+      nextContext.__gateNote = { nodeId, nodeLabel: gateNode.label, action: parsed.action, note };
+    } else {
+      delete nextContext.__gateNote;
+    }
+    updateComposerRun(id, { status: "running", context: nextContext }); // resume so the engine advances
     await advanceComposerRun(id);
     return ok({ run: getComposerRun(id) });
   } catch (error) {

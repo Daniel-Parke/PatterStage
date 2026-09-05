@@ -25,7 +25,8 @@ import { profileOptionsFor } from "@/components/composer/profile-options";
 import ComposerRunForm from "@/components/composer/ComposerRunForm";
 import { safeApiCall } from "@/lib/api-fetch";
 import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
-import { isTerminalComposerRunStatus } from "@/lib/composer/schema";
+import { composerWaitingReason, isTerminalComposerRunStatus } from "@/lib/composer/schema";
+import { COMPOSER_RUN_STATUS_LABELS } from "@/lib/status-labels";
 import { timeAgo } from "@/lib/utils";
 import ElapsedSince from "@/components/composer/ElapsedSince";
 
@@ -65,7 +66,8 @@ const STATUS_COLOR: Record<string, string> = {
 const STATUS_FILTERS = [
   { value: "", label: "All runs" },
   { value: "running", label: "Running" },
-  { value: "awaiting_approval", label: "Awaiting gate" },
+  // The ratified word, and the one the rows print (decision 13).
+  { value: "awaiting_approval", label: "Waiting for you" },
   { value: "completed", label: "Completed" },
   { value: "failed", label: "Failed" },
   { value: "rejected", label: "Rejected" },
@@ -94,7 +96,7 @@ export default function ComposerPage() {
   const { data: workflows, error: workflowsError, refetch: refetchWorkflows } = useComposerWorkflows();
   const { data: runs, error: runsError, refetch } = useComposerRuns();
   const { data: profiles } = useProfiles();
-  const { data: detail } = useComposerRun(selectedId);
+  const { data: detail, error: detailError, refetch: refetchDetail } = useComposerRun(selectedId);
   const { data: live, error: liveError } = useEventStream<{ run: ComposerRun; nodeRuns: ComposerNodeRun[] }>(
     selectedId ? `/api/composer/runs/${selectedId}/events` : null,
   );
@@ -248,9 +250,13 @@ export default function ComposerPage() {
         ))}
       </div>
 
-      {mode === "build" ? (
+      {/* Both panes stay mounted. The ternary unmounted the editor on every
+          switch to Run, so a look at a running workflow threw away whatever was
+          on the board (T-0106, D7). */}
+      <div hidden={mode !== "build"}>
         <WorkflowCanvas workflows={workflows ?? []} onSaved={() => void refetchWorkflows()} />
-      ) : (
+      </div>
+      <div hidden={mode !== "run"}>
         <>
       {/* Launch form — self-describing per the selected workflow's input contract.
           Collapses to a compact bar once a run is selected to free vertical space. */}
@@ -311,9 +317,24 @@ export default function ComposerPage() {
                     className={`w-full rounded-lg px-2 py-2 text-left text-xs transition hover:bg-white/5 ${selectedId === r.id ? "bg-white/5" : ""}`}
                   >
                     <div className="truncate text-ps-text-primary">{runTitle(r.input)}</div>
-                    <div className="mt-0.5 flex items-center justify-between gap-2 font-mono text-xs uppercase">
-                      <span className={STATUS_COLOR[r.status] ?? "text-ps-text-muted"}>{r.status}</span>
-                      <span className="normal-case text-ps-text-muted">{timeAgo(r.createdAt)}</span>
+                    {/* Which workflow this is a run OF. The rows were a list of
+                        objectives with no way to tell one workflow's from
+                        another's (T-0106). */}
+                    {workflows?.find((w) => w.id === r.workflowId)?.name ? (
+                      <div className="truncate text-xs text-ps-text-muted">
+                        {workflows.find((w) => w.id === r.workflowId)?.name}
+                      </div>
+                    ) : null}
+                    <div className="mt-0.5 flex items-center justify-between gap-2 font-mono text-xs">
+                      <span className={STATUS_COLOR[r.status] ?? "text-ps-text-muted"}>
+                        {COMPOSER_RUN_STATUS_LABELS[r.status] ?? r.status}
+                        {composerWaitingReason(r) === "question"
+                          ? " · answer a question"
+                          : composerWaitingReason(r) === "gate"
+                            ? " · at a gate"
+                            : ""}
+                      </span>
+                      <span className="text-ps-text-muted">{timeAgo(r.createdAt)}</span>
                     </div>
                   </button>
                 </li>
@@ -331,6 +352,10 @@ export default function ComposerPage() {
               <p className="text-sm text-ps-text-muted">Select a run to watch it live</p>
               <p className="text-xs text-ps-text-muted">Stages light up as they run — click any stage for its details.</p>
             </div>
+          ) : detailError && !graph ? (
+            // A failed detail read used to render the skeleton below for ever
+            // (T-0106, D3). The banner says what happened and offers a retry.
+            <LoadErrorBanner error={detailError} onRetry={() => void refetchDetail()} />
           ) : !run || !graph ? (
             // A run IS selected but its graph is still loading — show a skeleton,
             // never the "select a run" empty state (that read as "click did nothing").
@@ -437,9 +462,10 @@ export default function ComposerPage() {
         onClose={() => setSelectedNodeKey(null)}
         node={selectedNode}
         nodeRun={selectedNodeRun}
+        approvals={(detail?.approvals ?? []).filter((a) => selectedNode && a.nodeId === selectedNode.id)}
       />
         </>
-      )}
+      </div>
     </div>
   );
 }

@@ -17,6 +17,7 @@ import { isFeatureEnabled } from "@/lib/feature-flags";
 import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import {
   WorkflowHistoryWouldBeLost,
+  countWorkflowRuns,
   deleteWorkflow,
   getWorkflowGraph,
   replaceWorkflowGraph,
@@ -89,8 +90,28 @@ export async function DELETE(request: NextRequest, ctx: Ctx) {
   const { id } = await ctx.params;
   try {
     ensureDb();
-    if (!getWorkflowGraph(id)) return notFound("Workflow not found");
+    const graph = getWorkflowGraph(id);
+    if (!graph) return notFound("Workflow not found");
     if (workflowHasActiveRuns(id)) return badRequest(ACTIVE_EDIT_MSG);
+
+    // Deleting a workflow deletes every run of it, with the stage outputs and
+    // the gate decisions inside them. The two-click confirm asks whether the
+    // click was meant; this asks whether THAT was meant (T-0106, D1). The save
+    // path has answered this way since B2; the delete path had nothing.
+    const discardRunHistory = request.nextUrl.searchParams.get("discardRunHistory") === "1";
+    const runCount = countWorkflowRuns(id);
+    if (runCount > 0 && !discardRunHistory) {
+      return NextResponse.json(
+        {
+          error: `Deleting "${graph.name}" would permanently delete ${runCount} run(s) of it, including their stage outputs and approvals.`,
+          runCount,
+          workflowName: graph.name,
+          confirmWith: "?discardRunHistory=1",
+        },
+        { status: 409 },
+      );
+    }
+
     deleteWorkflow(id);
     return ok({ deleted: true });
   } catch (error) {

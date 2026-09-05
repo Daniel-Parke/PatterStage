@@ -9,6 +9,7 @@ import { isFeatureEnabled } from "@/lib/feature-flags";
 import {
   getComposerRun,
   getWorkflowGraph,
+  listComposerApprovals,
   listNodeRuns,
 } from "@/lib/composer/composer-repository";
 
@@ -24,7 +25,14 @@ export async function GET(_request: NextRequest, ctx: Ctx) {
   try {
     const run = getComposerRun(id);
     if (!run) return notFound("Composer run not found");
-    return ok({ run, nodeRuns: listNodeRuns(id), graph: getWorkflowGraph(run.workflowId) });
+    // The gate decisions travel with the run. They were recorded, kept, and
+    // shown to nobody (T-0106, D8).
+    return ok({
+      run,
+      nodeRuns: listNodeRuns(id),
+      graph: getWorkflowGraph(run.workflowId),
+      approvals: listComposerApprovals(id),
+    });
   } catch (error) {
     return serverErrorFromCatch("GET /api/composer/runs/[id]", `id=${id}`, error, "Failed to load run");
   }

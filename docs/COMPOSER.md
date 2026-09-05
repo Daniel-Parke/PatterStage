@@ -74,3 +74,37 @@ Deep Research is **also** a Composer node kind (`research`), so research can run
 ## Verification
 
 `npx tsc --noEmit && npm run lint && npm test && npm run build`. Engine/graph tests: [`composer-engine.test.ts`](../tests/unit/composer-engine.test.ts) (PASS path, HIL accept, FAIL loop-back), [`composer-builder.test.ts`](../tests/unit/composer-builder.test.ts) (whole-graph save + `OUTCOME` branch routing), [`composer-research-node.test.ts`](../tests/unit/composer-research-node.test.ts) and [`composer-group-node.test.ts`](../tests/unit/composer-group-node.test.ts) (research/group settle + recursion guard), and [`composer-canvas-graph.test.ts`](../tests/unit/composer-canvas-graph.test.ts) (canvas ↔ def converters). With a live Hermes + `PS_COMPOSER=1`, build a workflow on the canvas, launch it, watch the live board, approve/reject a gate, and force a FAIL to see the loop-back.
+
+
+## The starter workflows
+
+Three workflows are seeded, by key, so a second boot writes nothing:
+
+- **Research then summarise.** Research a question, check the findings at a
+  human gate, then write the summary. Rejecting the gate sends the work back to
+  the research stage with your note.
+- **Draft and review.** Draft the piece, then review it against the brief. A
+  FAIL routes back to the draft; a PASS finishes. The reviewer is deliberately
+  not the terminal stage, because a terminal node completes the run before any
+  edge is read, so a terminal reviewer could never loop.
+- **Software Delivery.** Sixteen stages, the full engineering pipeline. A fine
+  third workflow and an intimidating first one.
+
+## Deleting a workflow
+
+A workflow's runs are its history: the stage outputs, the verdicts and the gate
+decisions all hang off them. `DELETE /api/composer/workflows/[id]` therefore
+answers **409** when the workflow has runs, naming the workflow and the count,
+and deletes nothing. Repeat with `?discardRunHistory=1` to go ahead. The Build
+tab asks the same question inline, under the toolbar, and the two-click confirm
+on the button is unchanged: the first click asks whether you meant to click,
+the second question asks whether you meant to destroy the history.
+
+## Gate notes
+
+A note typed into a gate decision is recorded against the run and shown on the
+stage it was taken at, under **Gate decisions**. It also travels with the
+resume: the next stage the engine dispatches, which for a rejection is the one
+being sent back, reads it under "Note from the operator's gate decision". A
+decision taken with no note clears any previous one, so a stale note never
+follows a run around.

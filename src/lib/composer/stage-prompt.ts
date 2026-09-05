@@ -33,6 +33,10 @@ function formatContext(context: Record<string, unknown> | null): string {
   if (!context) return "";
   const parts: string[] = [];
   for (const [key, value] of Object.entries(context)) {
+    // Reserved markers are the orchestrator talking to itself: __clarify and
+    // __gateNote are not outputs of prior stages and do not belong in a dump
+    // of them (T-0106, D8).
+    if (key.startsWith("__")) continue;
     const text = typeof value === "string" ? value : JSON.stringify(value);
     const trimmed = text.length > 1500 ? `${text.slice(0, 1500)}…` : text;
     parts.push(`### ${key}\n${trimmed}`);
@@ -77,6 +81,20 @@ export function buildStagePrompt(
       "## This stage is being re-run after a downstream FAIL",
       pf.reasons.length ? `Reasons: ${pf.reasons.join("; ")}` : "",
       pf.suggestions.length ? `Suggestions: ${pf.suggestions.join("; ")}` : "",
+    );
+  }
+
+  const gateNote = run.context?.__gateNote as
+    | { nodeLabel?: unknown; action?: unknown; note?: unknown }
+    | undefined;
+  if (gateNote && typeof gateNote.note === "string" && gateNote.note.trim()) {
+    const where = typeof gateNote.nodeLabel === "string" && gateNote.nodeLabel ? gateNote.nodeLabel : "a stage";
+    const verdict = gateNote.action === "accept" ? "accepted" : "rejected";
+    lines.push(
+      "",
+      "## Note from the operator's gate decision",
+      `The gate at "${where}" was ${verdict}.`,
+      gateNote.note.trim(),
     );
   }
 

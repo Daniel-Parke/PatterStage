@@ -214,7 +214,9 @@ const edgeDefSchema = z.object({
 export const workflowDefSchema = z.object({
   key: z.string().min(1).optional(),
   name: z.string().min(1),
-  description: z.string().default(""),
+  // Optional: an absent description leaves whatever is stored, and "" clears
+  // it. A default of "" made every save that omitted one blank it (T-0106, D2).
+  description: z.string().optional(),
   nodes: z.array(nodeDefSchema).min(1),
   edges: z.array(edgeDefSchema).default([]),
 });
@@ -317,5 +319,96 @@ export const DEFAULT_SOFTWARE_DELIVERY_WORKFLOW: WorkflowDef = {
     { from: "final_assessment", to: "implement", condition: "on_fail", label: "back to build" },
     { from: "update_pr", to: "done", condition: "on_approve" },
     { from: "update_pr", to: "implement", condition: "on_reject", label: "add feature / rework" },
+  ],
+};
+
+/**
+ * Why an awaiting_approval run is waiting.
+ *
+ * "Waiting for you" is two very different states: a stage asked a question and
+ * wants an answer, or a human-in-the-loop gate is open and wants a decision.
+ * The board said the same thing for both (T-0106).
+ */
+export function composerWaitingReason(
+  run: { status: string; context: Record<string, unknown> | null },
+): "question" | "gate" | null {
+  if (run.status !== "awaiting_approval") return null;
+  return run.context?.__clarify ? "question" : "gate";
+}
+
+// ── The starter workflows ───────────────────────────────────────
+//
+// Software Delivery is sixteen stages, which is a fine third workflow and an
+// intimidating first one. These two are the first run a new operator can make
+// sense of, and each one shows a gate doing something: a decision that sends
+// the work back, and a reviewer that loops.
+
+export const RESEARCH_SUMMARISE_WORKFLOW_KEY = "research-then-summarise-v1";
+export const DRAFT_REVIEW_WORKFLOW_KEY = "draft-and-review-v1";
+
+export const DEFAULT_RESEARCH_SUMMARISE_WORKFLOW: WorkflowDef = {
+  key: RESEARCH_SUMMARISE_WORKFLOW_KEY,
+  name: "Research then summarise",
+  description: "Research a question, check the findings at a gate, then write the summary.",
+  nodes: [
+    {
+      key: "research",
+      label: "Research",
+      kind: "research",
+      gate: "auto",
+      isStart: true,
+      config: {
+        framing: "research",
+        inputSpec: {
+          objectiveLabel: "Research question",
+          objectiveHint:
+            "e.g. What are the practical trade-offs of local LLM inference on consumer GPUs?",
+          examples: [
+            "What are the practical trade-offs of local LLM inference on consumer GPUs?",
+            "Summarise the current options for on-device speech to text.",
+          ],
+        },
+      },
+    },
+    { key: "gate", label: "Check the findings", kind: "review", gate: "hil" },
+    { key: "write", label: "Write the summary", kind: "documentation", gate: "auto", isTerminal: true },
+  ],
+  edges: [
+    { from: "research", to: "gate" },
+    { from: "gate", to: "write", condition: "on_approve" },
+    { from: "gate", to: "research", condition: "on_reject", label: "research again" },
+  ],
+};
+
+export const DEFAULT_DRAFT_REVIEW_WORKFLOW: WorkflowDef = {
+  key: DRAFT_REVIEW_WORKFLOW_KEY,
+  name: "Draft and review",
+  description: "Draft the piece, then review it against the brief and revise until it passes.",
+  nodes: [
+    {
+      key: "draft",
+      label: "Draft",
+      kind: "custom",
+      gate: "auto",
+      isStart: true,
+      config: {
+        inputSpec: {
+          objectiveLabel: "What to draft",
+          objectiveHint:
+            "e.g. A 400-word release note for the new backups page, for existing users.",
+          examples: ["A 400-word release note for the new backups page, for existing users."],
+        },
+      },
+    },
+    // Not the terminal node: resolveNext answers "complete" for a terminal
+    // node BEFORE it reads an edge, so a terminal reviewer could never route
+    // its own FAIL back to the draft.
+    { key: "review", label: "Review", kind: "review", gate: "auto" },
+    { key: "done", label: "Done", kind: "custom", gate: "auto", isTerminal: true },
+  ],
+  edges: [
+    { from: "draft", to: "review" },
+    { from: "review", to: "done", condition: "on_pass" },
+    { from: "review", to: "draft", condition: "on_fail", label: "revise" },
   ],
 };

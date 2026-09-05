@@ -17,6 +17,10 @@ import {
 import {
   DEFAULT_SOFTWARE_DELIVERY_WORKFLOW,
   SOFTWARE_DELIVERY_INPUT_SPEC,
+  DEFAULT_DRAFT_REVIEW_WORKFLOW,
+  DEFAULT_RESEARCH_SUMMARISE_WORKFLOW,
+  DRAFT_REVIEW_WORKFLOW_KEY,
+  RESEARCH_SUMMARISE_WORKFLOW_KEY,
   SOFTWARE_DELIVERY_WORKFLOW_KEY,
 } from "./schema";
 
@@ -83,6 +87,15 @@ function ensureSoftwareDeliveryStartConfig(): void {
 export function ensureDefaultComposerWorkflows(): void {
   if (!getWorkflowByKey(SOFTWARE_DELIVERY_WORKFLOW_KEY)) {
     createWorkflowFromDef(DEFAULT_SOFTWARE_DELIVERY_WORKFLOW);
+  }
+  // Two starters a first run can be made sense of. Software Delivery is
+  // sixteen stages, which is a fine third workflow and an intimidating first
+  // one (T-0106). Keyed, so a second call writes nothing.
+  if (!getWorkflowByKey(RESEARCH_SUMMARISE_WORKFLOW_KEY)) {
+    createWorkflowFromDef(DEFAULT_RESEARCH_SUMMARISE_WORKFLOW);
+  }
+  if (!getWorkflowByKey(DRAFT_REVIEW_WORKFLOW_KEY)) {
+    createWorkflowFromDef(DEFAULT_DRAFT_REVIEW_WORKFLOW);
   }
   ensureRecoveryEdges();
   ensureSoftwareDeliveryStartConfig();

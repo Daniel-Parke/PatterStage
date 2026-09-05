@@ -128,9 +128,17 @@ export function graphToCanvas(graph: ComposerWorkflowGraph): CanvasState {
 }
 
 /** Canvas → a WorkflowDef ready for POST/PUT (positions folded back into config._ui). */
-export function canvasToWorkflowDef(name: string, state: CanvasState): WorkflowDef {
+/**
+ * @param description  Omit to leave the stored description alone; pass "" to
+ *                     clear it. The two-argument form is what every caller
+ *                     used, which is why a save blanked it (T-0106, D2).
+ */
+export function canvasToWorkflowDef(name: string, state: CanvasState, description?: string): WorkflowDef {
   return {
     name: name.trim(),
+    // Only when one was passed: the key must be ABSENT for the write to leave
+    // the stored description alone.
+    ...(description === undefined ? {} : { description: description.trim() }),
     nodes: state.nodes.map((n, i) => {
       const baseConfig = n.data.config ?? {};
       return {

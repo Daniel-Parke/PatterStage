@@ -32,7 +32,7 @@ import {
   type NodeProps,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { Save, Trash2, Wand2 } from "lucide-react";
+import { Copy, Save, Trash2, Wand2 } from "lucide-react";
 
 import Button from "@/components/ui/Button";
 import ConfirmButton from "@/components/ui/ConfirmButton";
@@ -107,6 +107,14 @@ function WorkflowNode({ data, selected }: NodeProps<WfNode>) {
 
 const nodeTypes = { workflow: WorkflowNode };
 
+/** A message the operator reads, and whether it is good news. */
+type Msg = { text: string; tone: "ok" | "error" };
+
+/** One comparable string for a board, so "unsaved" is a fact rather than a flag. */
+function snapshotOf(name: string, description: string, canvas: CanvasState): string {
+  return JSON.stringify({ name, description, canvas });
+}
+
 const CONDITION_HINT = "always · on_pass · on_fail · on_approve · on_reject · on_<outcome>";
 
 // ── Inner canvas (inside ReactFlowProvider) ──────────────────────
@@ -118,8 +126,14 @@ function CanvasInner({ workflows, onSaved }: { workflows: ComposerWorkflow[]; on
   const [selNode, setSelNode] = useState<string | null>(null);
   const [selEdge, setSelEdge] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState("");
+  // A message with a tone. Seven call sites shared one grey sentence, so a
+  // save that failed and a save that worked looked the same (T-0106, D6).
+  const [message, setMessage] = useState<Msg | null>(null);
+  const [description, setDescription] = useState("");
   const loadedRef = useRef<string>("");
+  /** The board as it was at the last load or successful write. */
+  const baselineRef = useRef<string>("");
+  const [pendingSwitch, setPendingSwitch] = useState<string | null>(null);
 
   const { data: graph } = useComposerWorkflowGraph(selectedWorkflowId === NEW ? null : selectedWorkflowId);
   const { screenToFlowPosition } = useReactFlow();
@@ -139,11 +153,17 @@ function CanvasInner({ workflows, onSaved }: { workflows: ComposerWorkflow[]; on
       if (loadedRef.current === NEW) return;
       loadedRef.current = NEW;
       setName("New workflow");
+      setDescription("");
       const startKey = freshKey();
-      applyCanvas({
+      const seeded: CanvasState = {
         nodes: [{ id: startKey, position: { x: 80, y: 40 }, data: { label: "Start", kind: "review", gate: "auto", isStart: true, isTerminal: false, config: null } }],
         edges: [],
-      });
+      };
+      applyCanvas(seeded);
+      // From the state being applied, not from React state: reading `nodes`
+      // here would read the PREVIOUS board, and every fresh canvas would be
+      // born dirty.
+      baselineRef.current = snapshotOf("New workflow", "", seeded);
       setSelNode(null);
       setSelEdge(null);
       return;
@@ -151,10 +171,15 @@ function CanvasInner({ workflows, onSaved }: { workflows: ComposerWorkflow[]; on
     if (!graph || graph.id !== selectedWorkflowId || loadedRef.current === selectedWorkflowId) return;
     loadedRef.current = selectedWorkflowId;
     setName(graph.name);
-    applyCanvas(graphToCanvas(graph));
+    setDescription(graph.description ?? "");
+    const loaded = graphToCanvas(graph);
+    applyCanvas(loaded);
     setSelNode(null);
     setSelEdge(null);
+    baselineRef.current = snapshotOf(graph.name, graph.description ?? "", loaded);
   }, [selectedWorkflowId, graph, applyCanvas]);
+
+
 
   const onConnect = useCallback(
     (c: Connection) => setEdges((eds) => addEdge({ ...c, label: "always", data: { condition: "always", label: null } }, eds)),
@@ -236,20 +261,32 @@ function CanvasInner({ workflows, onSaved }: { workflows: ComposerWorkflow[]; on
   // The count of completed runs a save would delete, once the server has said
   // so with a 409; null while no such question is open. The question is asked
   // inline, under the toolbar, and answered by a second click (T-0096, D51).
-  const [pendingDiscard, setPendingDiscard] = useState<number | null>(null);
+  const [pendingDiscard, setPendingDiscard] = useState<
+    | { kind: "save"; runCount: number }
+    | { kind: "delete"; runCount: number; workflowName: string }
+    | null
+  >(null);
+
+  /** The snapshot the dirty check compares against. */
+  function snapshot(): string {
+    return snapshotOf(name, description, currentCanvas());
+  }
+  function isDirty(): boolean {
+    return baselineRef.current !== "" && baselineRef.current !== snapshot();
+  }
 
   async function save(discardRunHistory = false) {
     if (saving) return;
     const state = currentCanvas();
     const errors = validateCanvas(state);
     if (errors.length) {
-      setMessage(errors[0]);
+      setMessage({ text: errors[0], tone: "error" });
       return;
     }
     setSaving(true);
-    setMessage("");
+    setMessage(null);
     try {
-      const body = canvasToWorkflowDef(name, state);
+      const body = canvasToWorkflowDef(name, state, description);
       const isNew = selectedWorkflowId === NEW;
       const putUrl = (confirmed: boolean) =>
         `/api/composer/workflows/${selectedWorkflowId}${confirmed ? "?discardRunHistory=1" : ""}`;
@@ -264,13 +301,14 @@ function CanvasInner({ workflows, onSaved }: { workflows: ComposerWorkflow[]; on
       // inline: the answer is `save(true)` from the prompt below.
       if (!res.ok && res.status === 409) {
         const runCount = (res.body as { runCount?: number } | undefined)?.runCount ?? 0;
-        setPendingDiscard(runCount);
+        setPendingDiscard({ kind: "save", runCount });
         return;
       }
       setPendingDiscard(null);
 
       if (res.ok) {
-        setMessage("Saved.");
+        setMessage({ text: "Saved.", tone: "ok" });
+        baselineRef.current = snapshot();
         onSaved();
         const newId = res.data?.data?.workflow?.id;
         if (isNew && newId) {
@@ -278,25 +316,76 @@ function CanvasInner({ workflows, onSaved }: { workflows: ComposerWorkflow[]; on
           setSelectedWorkflowId(newId);
         }
       } else {
-        setMessage(res.error ?? "Save failed");
+        setMessage({ text: res.error ?? "Save failed", tone: "error" });
       }
     } finally {
       setSaving(false);
     }
   }
 
-  async function removeWorkflow() {
+  async function removeWorkflow(discardRunHistory = false) {
     if (selectedWorkflowId === NEW || saving) return;
     setSaving(true);
     try {
-      const res = await safeApiCall(`/api/composer/workflows/${selectedWorkflowId}`, { method: "DELETE" });
+      const res = await safeApiCall(
+        `/api/composer/workflows/${selectedWorkflowId}${discardRunHistory ? "?discardRunHistory=1" : ""}`,
+        { method: "DELETE" },
+      );
+      // 409: the delete would take this workflow's runs with it. The two-click
+      // confirm asks whether the click was meant; this asks whether THAT was
+      // (T-0106, D1).
+      if (!res.ok && res.status === 409) {
+        const body = res.body as { runCount?: number; workflowName?: string } | undefined;
+        setPendingDiscard({
+          kind: "delete",
+          runCount: body?.runCount ?? 0,
+          workflowName: body?.workflowName ?? name,
+        });
+        return;
+      }
       if (res.ok) {
         onSaved();
         loadedRef.current = "";
         setSelectedWorkflowId(NEW);
-        setMessage("Deleted.");
+        setPendingDiscard(null);
+        setMessage({ text: "Deleted.", tone: "ok" });
       } else {
-        setMessage(res.error ?? "Delete failed");
+        setMessage({ text: res.error ?? "Delete failed", tone: "error" });
+      }
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function duplicateWorkflow() {
+    if (selectedWorkflowId === NEW || saving) return;
+    const state = currentCanvas();
+    const errors = validateCanvas(state);
+    if (errors.length) {
+      setMessage({ text: errors[0], tone: "error" });
+      return;
+    }
+    setSaving(true);
+    setMessage(null);
+    try {
+      // No `key` in the body: createWorkflowFromDef treats a repeated key as a
+      // replace, so a keyed duplicate would overwrite the thing it copied.
+      const res = await safeApiCall<{ data?: { workflow?: { id: string } } }>(
+        "/api/composer/workflows",
+        { method: "POST", body: canvasToWorkflowDef(`${name} (copy)`, state, description) },
+      );
+      if (res.ok) {
+        onSaved();
+        const newId = res.data?.data?.workflow?.id;
+        if (newId) {
+          loadedRef.current = newId;
+          setSelectedWorkflowId(newId);
+        }
+        setName(`${name} (copy)`);
+        baselineRef.current = "";
+        setMessage({ text: "Duplicated.", tone: "ok" });
+      } else {
+        setMessage({ text: res.error ?? "Duplicate failed", tone: "error" });
       }
     } finally {
       setSaving(false);
@@ -313,14 +402,44 @@ function CanvasInner({ workflows, onSaved }: { workflows: ComposerWorkflow[]; on
       <div className="flex flex-wrap items-end gap-3 rounded-xl border border-white/10 bg-dark-900/40 p-3">
         <div className="w-52">
           <Field label="Edit workflow">
-            <Select value={selectedWorkflowId} onChange={(v) => { loadedRef.current = ""; setSelectedWorkflowId(v); }} options={[{ value: NEW, label: "+ New workflow" }, ...workflows.map((w) => ({ value: w.id, label: w.name }))]} />
+            <Select
+              value={selectedWorkflowId}
+              onChange={(v) => {
+                // Switching used to throw an unsaved board away without a word
+                // (T-0106, D7). The Select keeps showing the current workflow
+                // until the question below is answered, so nothing moves.
+                if (isDirty()) {
+                  setPendingSwitch(v);
+                  return;
+                }
+                loadedRef.current = "";
+                setSelectedWorkflowId(v);
+              }}
+              options={[{ value: NEW, label: "+ New workflow" }, ...workflows.map((w) => ({ value: w.id, label: w.name }))]}
+            />
           </Field>
         </div>
         <div className="min-w-[180px] flex-1">
           <Field label="Name"><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Workflow name" /></Field>
         </div>
+        <div className="min-w-[200px] flex-1">
+          {/* Saving from this tab used to blank the stored description, and
+              there was nowhere to type one (T-0106, D2). */}
+          <Field label="Description">
+            <Input
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="What this workflow is for"
+            />
+          </Field>
+        </div>
         <Button variant="secondary" color="cyan" onClick={relayout}><Wand2 className="h-4 w-4" /> Auto-layout</Button>
         <Button variant="primary" color="cyan" loading={saving} onClick={() => void save()}><Save className="h-4 w-4" /> {selectedWorkflowId === NEW ? "Create" : "Save"}</Button>
+        {selectedWorkflowId !== NEW ? (
+          <Button variant="secondary" color="cyan" loading={saving} onClick={() => void duplicateWorkflow()}>
+            <Copy className="h-4 w-4" /> Duplicate
+          </Button>
+        ) : null}
         {selectedWorkflowId !== NEW ? (
           <ConfirmButton
             variant="secondary"
@@ -333,31 +452,101 @@ function CanvasInner({ workflows, onSaved }: { workflows: ComposerWorkflow[]; on
             <Trash2 className="h-4 w-4" /> Delete
           </ConfirmButton>
         ) : null}
-        {message ? <span className="text-xs text-ps-text-muted">{message}</span> : null}
+        {message ? (
+          <span
+            data-tone={message.tone}
+            role={message.tone === "error" ? "alert" : undefined}
+            className={`text-xs ${message.tone === "error" ? "text-neon-pink" : "text-neon-green"}`}
+          >
+            {message.text}
+          </span>
+        ) : null}
       </div>
 
-      {pendingDiscard !== null ? (
+      {pendingSwitch !== null ? (
         <div
           role="alert"
           className="flex flex-wrap items-center gap-3 rounded-xl border border-neon-orange/40 bg-neon-orange/10 px-4 py-3 text-xs text-ps-text-primary"
         >
           <span>
-            Saving this workflow will permanently delete {pendingDiscard} completed run{pendingDiscard === 1 ? "" : "s"},
-            including their stage outputs and approvals.
+            You have unsaved changes to &quot;{name}&quot;. Switching workflows will discard them.
+          </span>
+          <div className="ml-auto flex gap-2">
+            <Button
+              variant="secondary"
+              color="pink"
+              size="sm"
+              onClick={() => {
+                loadedRef.current = "";
+                setSelectedWorkflowId(pendingSwitch);
+                setPendingSwitch(null);
+              }}
+            >
+              Discard changes and switch
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => setPendingSwitch(null)}>
+              Keep editing
+            </Button>
+          </div>
+        </div>
+      ) : null}
+
+      {pendingDiscard?.kind === "save" ? (
+        <div
+          role="alert"
+          className="flex flex-wrap items-center gap-3 rounded-xl border border-neon-orange/40 bg-neon-orange/10 px-4 py-3 text-xs text-ps-text-primary"
+        >
+          <span>
+            Saving this workflow will permanently delete {pendingDiscard.runCount} completed run
+            {pendingDiscard.runCount === 1 ? "" : "s"}, including their stage outputs and approvals.
           </span>
           <div className="ml-auto flex gap-2">
             <Button variant="secondary" color="pink" size="sm" loading={saving} onClick={() => void save(true)}>
-              Delete {pendingDiscard} run{pendingDiscard === 1 ? "" : "s"} and save
+              Delete {pendingDiscard.runCount} run{pendingDiscard.runCount === 1 ? "" : "s"} and save
             </Button>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => {
                 setPendingDiscard(null);
-                setMessage("Not saved. Run history kept.");
+                setMessage({ text: "Not saved. Run history kept.", tone: "ok" });
               }}
             >
               Keep history
+            </Button>
+          </div>
+        </div>
+      ) : null}
+
+      {pendingDiscard?.kind === "delete" ? (
+        <div
+          role="alert"
+          className="flex flex-wrap items-center gap-3 rounded-xl border border-neon-orange/40 bg-neon-orange/10 px-4 py-3 text-xs text-ps-text-primary"
+        >
+          <span>
+            Deleting &quot;{pendingDiscard.workflowName}&quot; will permanently delete{" "}
+            {pendingDiscard.runCount} run{pendingDiscard.runCount === 1 ? "" : "s"} of it, including
+            their stage outputs and approvals.
+          </span>
+          <div className="ml-auto flex gap-2">
+            <Button
+              variant="secondary"
+              color="pink"
+              size="sm"
+              loading={saving}
+              onClick={() => void removeWorkflow(true)}
+            >
+              Delete {pendingDiscard.runCount} run{pendingDiscard.runCount === 1 ? "" : "s"} and the workflow
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setPendingDiscard(null);
+                setMessage({ text: "Not deleted. Run history kept.", tone: "ok" });
+              }}
+            >
+              Keep it
             </Button>
           </div>
         </div>
