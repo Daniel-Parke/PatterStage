@@ -221,6 +221,15 @@ describe("validateSectionValues", () => {
     ]);
   });
 
+  it("a numeric string that is ALSO out of range is still exactly one problem", () => {
+    // Sweep survivor `validate-two-problems-per-field`. Without the early
+    // continue, `"9999" > 500` coerces and the field is reported twice: once
+    // for its type and once for a range it was never measured against.
+    const problems = validateSectionValues("agent", { max_turns: "9999" });
+
+    expect(problems).toEqual([{ key: "max_turns", message: "Max Turns must be a number" }]);
+  });
+
   it("honours fractional bounds", () => {
     // compression.threshold is 0.1 to 0.95; voice.silence_threshold is 0 to 1.
     // No integer check anywhere, or every fractional field breaks.

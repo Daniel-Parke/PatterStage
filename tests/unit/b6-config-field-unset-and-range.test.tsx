@@ -341,9 +341,12 @@ describe("ConfigField: a value the schema does not expect is shown, not hidden",
     expect(screen.getAllByRole("option").map((o) => o.textContent)).toEqual(["none", "low", "medium", "high", "xhigh"]);
   });
 
-  it("a toggle holding a string says not a boolean", () => {
+  it("a toggle holding a string says not a boolean, and does not render as on", () => {
     render(<ConfigField field={fieldOf("agent", "verbose")} value="yes" sectionDef={AGENT} onUpdate={jest.fn()} />);
     expect(screen.getByText(/not a boolean/)).toBeInTheDocument();
+    // Sweep survivor `field-toggle-coerces`: Boolean("yes") is true, so the
+    // switch would read ON beside a line saying the value is not a boolean.
+    expect(screen.getByRole("switch", { name: /^Verbose Mode/ })).toHaveAttribute("aria-checked", "false");
   });
 
   it("a number holding a string says not a number", () => {

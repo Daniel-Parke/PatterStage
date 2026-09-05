@@ -538,6 +538,26 @@ describe("describeRestoreResult, the one sentence for what a restore did", () =>
     expect(text).not.toMatch(/Nothing was missing/);
   });
 
+  it("a merge that added agents but pushed none omits the push clause too", () => {
+    // Sweep survivor `describe-push-clause-always`. The replace branch is
+    // covered; the merge branch has its own copy of the clause and had no case
+    // where `pushed` was 0 and something was still added.
+    const text = describeRestoreResult()("all", "merge", {
+      root: 0,
+      profiles: 2,
+      templates: 0,
+      categories: 8,
+      skills: 0,
+      tools: 0,
+      memories: 5,
+      pushed: 0,
+      imported: null,
+      backup: null,
+    });
+
+    expect(text).toBe("Added what was missing: 2 agents");
+  });
+
   it("root: 'Restored Bob and pushed him to Hermes' when pushed", () => {
     expect(describeRestoreResult()("root", "replace", { ...FULL, root: 1, pushed: 1 })).toBe(
       "Restored Bob and pushed him to Hermes",

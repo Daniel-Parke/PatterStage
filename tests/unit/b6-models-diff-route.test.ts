@@ -317,6 +317,21 @@ describe("POST /api/models/[id]/diff { direction: 'pull' }", () => {
     expect(data.diffs).toEqual([{ id: "contextLength", label: "Context length", detail: "128000 → 200000" }]);
   });
 
+  it("a Hermes section with no base_url against a DB one reads 'u → (none)', not 'u → '", async () => {
+    // Sweep survivor `diff-fmt-ignores-empty`. diffModelAgainstHermes answers
+    // `after: ""` for an absent base_url (that is what the apply writes), so
+    // the formatter is the only thing standing between the operator and a row
+    // whose right-hand side is blank.
+    hermesState({
+      disk: { auxiliary: { vision: { model: "a", provider: "p" } } },
+      models: [["p::a", { modelId: "a", provider: "p", baseUrl: null, contextLength: null }]],
+    });
+
+    const { data } = await diff("pull");
+
+    expect(data.diffs).toEqual([{ id: "baseUrl", label: "Base URL", detail: "u → (none)" }]);
+  });
+
   it("a section equal to the row answers diffs [], inSync true and names the model in the note", async () => {
     hermesState({
       disk: IN_SYNC_PRIMARY,

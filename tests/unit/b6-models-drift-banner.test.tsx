@@ -261,6 +261,27 @@ describe("buildDriftLines says the same three sentences, each with a handle", ()
     expect(primary.registryId).toBeNull();
   });
 
+  it("a model id containing a slash keeps it: the provider is the part before the FIRST slash", () => {
+    // Sweep survivor `lines-primary-splits-last-slash`. Real model ids are
+    // routinely "anthropic/claude-sonnet-4", so `hermesModel` is
+    // "anthropic/anthropic/claude-sonnet-4" and splitting on the last slash
+    // hands the banner a provider of "anthropic/anthropic".
+    const drift = {
+      primaryDiffers: {
+        dbModel: "openai/gpt-4o",
+        hermesModel: "anthropic/anthropic/claude-sonnet-4",
+        registryId: "reg-3",
+      },
+      modelsInHermesNotInDb: [],
+      modelsInDbNotInHermes: [],
+    } as unknown as DriftReport;
+
+    const [primary] = buildDriftLines!(drift);
+
+    expect(primary.provider).toBe("anthropic");
+    expect(primary.modelId).toBe("anthropic/claude-sonnet-4");
+  });
+
   it("an empty report yields no lines", () => {
     expect(
       buildDriftLines!({ primaryDiffers: null, modelsInHermesNotInDb: [], modelsInDbNotInHermes: [] }),

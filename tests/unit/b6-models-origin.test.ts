@@ -603,6 +603,23 @@ describe("upsertModel keeps operator edits (D10)", () => {
     expect(row.lastImportedBaseUrl).toBe("https://api.anthropic.com");
   });
 
+  it("(d) a 'user' row that never had a base URL still has none after an import", () => {
+    // Sweep survivor `keep-never-imported-loses`. The never-imported disjunct
+    // in the keep-rule is redundant for `name` (a non-null name can never equal
+    // a null last_imported_name) and load-bearing only here: with base_url and
+    // last_imported_base_url both NULL, dropping it makes the two equal, and an
+    // import would quietly give an operator's own row a base URL it never had.
+    const created = createModel({ name: "My Sonnet", provider: "anthropic", modelId: SONNET, baseUrl: null });
+
+    const result = importSonnet({ baseUrl: "https://api.anthropic.com" });
+
+    expect(result.id).toBe(created.id);
+    const row = originOf(getModel(created.id));
+    expect(row.baseUrl).toBeNull();
+    expect(row.lastImportedBaseUrl).toBe("https://api.anthropic.com");
+    expect(row.origin).toBe("user");
+  });
+
   it("(e) an upsert-inserted row is 'import' with last_imported_* equal to its values", () => {
     const result = importSonnet({ baseUrl: "https://api.anthropic.com" });
 

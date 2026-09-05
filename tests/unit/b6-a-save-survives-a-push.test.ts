@@ -408,6 +408,35 @@ describe("the non-managed children of skills survive parse and build", () => {
     expect(doc.skills.disabled).toEqual([]);
   });
 
+  it("the managed children never ride along as extras: an `enabled` allowlist does not survive a rebuild", () => {
+    // Sweep survivor `skills-extras-keep-managed`. `disabled` alone is safe
+    // because buildConfigYaml assigns it after the spread, so the database
+    // still wins; `enabled` and `platform_disabled` have no such assignment and
+    // would be carried straight back out of the file they came from.
+    const parts = parseConfigYaml(
+      [
+        "skills:",
+        "  disabled:",
+        "    - old/one",
+        "  enabled:",
+        "    - only/this",
+        "  platform_disabled:",
+        "    cli:",
+        "      - x",
+        "  creation_nudge_interval: 7",
+        "",
+      ].join("\n"),
+    );
+
+    expect(Object.keys(parts.skillsExtras ?? {})).toEqual(["creation_nudge_interval"]);
+    const doc = yaml.load(buildConfigYaml({ ...parts, disabledSkills: ["ops/only-this"], platformDisabledSkills: {} })) as {
+      skills: Record<string, unknown>;
+    };
+    expect(doc.skills.enabled).toBeUndefined();
+    expect(doc.skills.platform_disabled).toBeUndefined();
+    expect(doc.skills.disabled).toEqual(["ops/only-this"]);
+  });
+
   it("the extras never enter preservedSections, and the DB's disabled list still wins", () => {
     // critique-config gap 6: carried as a preserved `skills` copy, the raw
     // disabled list would defeat the catalog normalisation and the file's

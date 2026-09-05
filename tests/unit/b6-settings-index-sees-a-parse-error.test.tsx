@@ -200,6 +200,26 @@ describe("the Settings index with a parse error", () => {
     expect(document.querySelector('a[href="/agent/settings/agent"]')).not.toBeNull();
   });
 
+  it("a section that IS present in the payload still gets no pill while the file is broken", () => {
+    // Sweep survivor `index-pills-survive-parse-error`. The other cases pass an
+    // empty payload, so zero pills proves nothing about the suppression: this
+    // one hands the page a real section and the parse error together.
+    mockUseConfig.mockReturnValue({
+      data: { agent: { max_turns: 40 } },
+      isLoading: false,
+      error: null,
+      refetch: jest.fn(),
+      configError: PARSE_ERROR,
+    });
+
+    render(<SettingsIndexPage />);
+
+    expect(screen.getByRole("alert")).toBeTruthy();
+    expect(configuredPills()).toHaveLength(0);
+    const agentCard = document.querySelector('a[href="/agent/settings/agent"]') as HTMLElement;
+    expect(agentCard.textContent).not.toContain("configured");
+  });
+
   it("the alert precedes the section grid in document order", () => {
     mockUseConfig.mockReturnValue({
       data: {},
