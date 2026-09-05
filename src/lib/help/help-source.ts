@@ -112,11 +112,15 @@ export function helpIsBuilt(): boolean {
 /**
  * One page's HTML body, or null.
  *
- * Two belts, deliberately. The slug is refused BEFORE a path is built, because
- * the safest way to survive a traversal attempt is never to construct the path;
- * and the resolved path is then checked to be inside the fragments directory,
- * because a guard that only reads the input trusts its own regex more than it
- * should.
+ * Two belts, deliberately, and the second is UNREACHABLE while the first
+ * holds. isSafeHelpSlug admits no dot, no backslash and no leading slash, so a
+ * slug that passes it cannot join its way out of the directory, and a mutation
+ * sweep duly reports the resolved-path check as an equivalent mutant.
+ *
+ * It stays. The regex is one edit away from admitting a dot, and the day it
+ * does, this line is the difference between a rendering bug and reading a file
+ * off the operator's disk. A guard that is currently redundant and a guard that
+ * is unnecessary are different things.
  */
 export function loadHelpFragment(slug: string): string | null {
   if (!isSafeHelpSlug(slug)) return null;

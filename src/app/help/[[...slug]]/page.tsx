@@ -84,6 +84,11 @@ export default async function HelpPage({
   // /help itself is the first page of the reading order, whatever B15 numbered
   // that to be. Nothing here holds a slug as a literal.
   const wanted = slug || helpIndexSlug(manifest) || "";
+  // The guard is redundant here and kept anyway: parseHelpManifest already
+  // dropped every unsafe slug, so an unsafe `wanted` finds no page and 404s
+  // either way, and a sweep reports this as an equivalent mutant. What it buys
+  // is that the refusal does not depend on the parser two modules away staying
+  // strict, which is the kind of coupling nobody notices loosening.
   const page = isSafeHelpSlug(wanted) ? helpPageBySlug(manifest, wanted) : null;
   if (!page) notFound();
 
