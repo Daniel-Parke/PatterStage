@@ -16,13 +16,22 @@ jest.mock("next/navigation", () => ({
 }));
 jest.mock("next/link", () => require("../helpers/mocks").nextLinkMock());
 jest.mock("@/hooks/useConfig", () => ({ useConfig: () => ({ data: { agent: { max_turns: 40 } }, isLoading: false, error: null, refetch: jest.fn() }) }));
+// The two file sections read through apiFetch now that they sit on the page
+// beside the yaml ones (U11, T-0125).
+jest.mock("@/lib/api-fetch", () => ({
+  ...(jest.requireActual("@/lib/api-fetch") as Record<string, unknown>),
+  apiFetch: async () => ({ data: { content: "" } }),
+}));
 
 import SettingsIndexPage from "@/app/agent/settings/page";
 
+// Amended 2026-09-10 (U11, T-0125). The index was a grid of links to 27
+// section PAGES; the sections are on this page now, so what is counted is the
+// sections rendered rather than the doors to them. The helper keeps answering
+// in the old route shape so every assertion below reads exactly as it did.
 const sectionLinks = () =>
-  Array.from(document.querySelectorAll<HTMLAnchorElement>('a[href^="/agent/settings/"]'))
-    .map((a) => a.getAttribute("href")!)
-    .filter((h) => h !== "/agent/settings/restore" && h !== "/agent/settings/system");
+  Array.from(document.querySelectorAll<HTMLElement>('[data-testid^="settings-section-"]'))
+    .map((el) => `/agent/settings/${el.getAttribute("data-testid")!.replace("settings-section-", "")}`);
 
 describe("the Settings index", () => {
   it("renders one card per catalogue section, and the count it prints is the count it renders", () => {
@@ -56,7 +65,7 @@ describe("the Settings index", () => {
     expect(links).toContain("/agent/settings/agent");
     expect(links).not.toContain("/agent/settings/discord");
     // The matching field is named on the card, so the operator sees why it matched.
-    const agentCard = document.querySelector('a[href="/agent/settings/agent"]') as HTMLElement;
+    const agentCard = screen.getByTestId("settings-section-agent");
     expect(within(agentCard).getByText(/reasoning effort/i)).toBeInTheDocument();
   });
 

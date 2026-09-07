@@ -6,13 +6,19 @@
  * the navigation matrix silently stopped covering a whole page. Deriving it
  * removes the class of bug rather than the instance.
  */
+import { settingsSectionIds } from "../../src/lib/config-sections";
 import { allModuleRoutes, documentedRoutes } from "../../src/lib/modules/registry";
 
 export const APP_NAV_ROUTES: readonly string[] = allModuleRoutes();
 
-/** Config hub and YAML/file-backed section editors (subset of `APP_NAV_ROUTES`). */
-export const CONFIG_SECTION_ROUTES: readonly string[] = APP_NAV_ROUTES.filter(
-  (p) => p === "/agent/settings" || p.startsWith("/agent/settings/")
+/**
+ * Every settings section, as the anchor it lives at on the one Settings page
+ * (U11, T-0125). These are visited by config-sections.spec.ts so a section
+ * that stopped rendering, or stopped being reachable by its anchor, is caught
+ * the way a section page that 500'd used to be.
+ */
+export const CONFIG_SECTION_ANCHORS: readonly string[] = settingsSectionIds().map(
+  (id) => `/agent/settings#${id}`,
 );
 
 /**

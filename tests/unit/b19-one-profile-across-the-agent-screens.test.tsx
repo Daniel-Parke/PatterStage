@@ -35,13 +35,17 @@ jest.mock("@/components/layout/PageHeader", () => ({
   ),
 }));
 jest.mock("lucide-react", () => require("../helpers/mocks").lucideMock());
-jest.mock("@/modules/hermes/components/ToolsInsights", () => ({
-  __esModule: true,
-  default: () => <div data-testid="tools-insights" />,
-}));
-jest.mock("@/components/skills/SkillsInsights", () => ({
-  __esModule: true,
-  default: () => <div data-testid="skills-insights" />,
+// The two strips are gone (U11): their counts are the subtitles now, which read
+// the profile's name through useProfiles.
+jest.mock("@/hooks/useProfiles", () => ({
+  useProfiles: () => ({
+    data: [
+      { id: "default", name: "Bob", description: "" },
+      { id: "qa", name: "QA Engineer", description: "" },
+    ],
+    isLoading: false,
+    error: null,
+  }),
 }));
 jest.mock("@/components/agents/AgentGrowthPanel", () => ({
   __esModule: true,
@@ -49,7 +53,7 @@ jest.mock("@/components/agents/AgentGrowthPanel", () => ({
 }));
 
 /** The real picker is a listbox of its own; what matters here is the value. */
-jest.mock("@/components/ui/ProfileSelector", () => ({
+jest.mock("@/components/ui/ProfilePicker", () => ({
   __esModule: true,
   default: ({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
     <select aria-label="Profile" value={value} onChange={(e) => onChange(e.target.value)}>

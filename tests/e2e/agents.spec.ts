@@ -13,7 +13,8 @@ const READY = { timeout: 30_000 } as const;
 
 async function openAgentsPage(page: Page) {
   await page.goto("/agent/profiles");
-  await expect(page.getByRole("heading", { name: "Agent Profiles" })).toBeVisible(READY);
+  // The registry's word, which is also the rail entry (U11, T-0125).
+  await expect(page.getByRole("heading", { name: "Agents", exact: true })).toBeVisible(READY);
 }
 
 test.describe("Agents page", () => {

@@ -55,20 +55,24 @@ function renderAt(slug: string) {
 }
 
 /**
- * Render a VALID section and let its config load settle. A valid section
- * always fetches, so the settled state is the one where a stray redirect
- * would already have fired.
+ * Render a VALID section id and let its effects settle.
+ *
+ * Amended 2026-09-10 (U11, T-0125). A valid id reaches this page only by a
+ * client-side navigation now - the server answers the 27 URLs with a 307 to
+ * the anchor before this page is involved - and the page sends it on to the
+ * same anchor. There is no editor here to fetch for any more.
  */
 async function renderLoadedSection(slug: string) {
   const view = renderAt(slug);
   await act(async () => {});
-  expect(mockApiFetch).toHaveBeenCalled();
   return view;
 }
 
 /** Every anchor on the page that points at a section route. */
+// Amended 2026-09-10 (U11, T-0125): a section is an anchor on the one Settings
+// page, so the recovery list links to `/agent/settings#<id>`.
 const sectionLinks = (): string[] =>
-  Array.from(document.querySelectorAll('a[href^="/agent/settings/"]')).map(
+  Array.from(document.querySelectorAll('a[href^="/agent/settings#"]')).map(
     (a) => a.getAttribute("href") ?? "",
   );
 
@@ -78,7 +82,7 @@ describe("Unknown config section: INV-7 the page lists what the operator could h
     await screen.findByText(/Unknown Config Section/i);
 
     const hrefs = new Set(sectionLinks());
-    const missing = IDS.filter((id) => !hrefs.has(`/agent/settings/${id}`));
+    const missing = IDS.filter((id) => !hrefs.has(`/agent/settings#${id}`));
     expect(missing).toEqual([]);
   });
 
@@ -115,18 +119,18 @@ describe("Unknown config section: INV-7 the page lists what the operator could h
 });
 
 describe("Unknown config section: the nearest match redirects", () => {
-  it("sends the reported guess agent-settings to /config/agent", async () => {
+  it("sends the reported guess agent-settings to the agent section", async () => {
     renderAt("agent-settings");
-    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith("/agent/settings/agent"));
+    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith("/agent/settings#agent"));
   });
 
   it.each([
-    ["session-reset", "/agent/settings/session_reset"],
-    ["platform-toolsets", "/agent/settings/platform_toolsets"],
-    ["code-execution", "/agent/settings/code_execution"],
-    ["smart-model-routing", "/agent/settings/smart_model_routing"],
-    ["human-delay", "/agent/settings/human_delay"],
-    ["hermes-md", "/agent/settings/hermes_md"],
+    ["session-reset", "/agent/settings#session_reset"],
+    ["platform-toolsets", "/agent/settings#platform_toolsets"],
+    ["code-execution", "/agent/settings#code_execution"],
+    ["smart-model-routing", "/agent/settings#smart_model_routing"],
+    ["human-delay", "/agent/settings#human_delay"],
+    ["hermes-md", "/agent/settings#hermes_md"],
   ])("sends the hyphenated id %s to %s", async (slug, target) => {
     renderAt(slug);
     await waitFor(() => expect(mockReplace).toHaveBeenCalledWith(target));
@@ -146,24 +150,26 @@ describe("Unknown config section: the nearest match redirects", () => {
 });
 
 describe("Unknown config section: the guards that must not change", () => {
-  it("never redirects a slug that IS a valid section", async () => {
+  // Amended 2026-09-10 (U11, T-0125). This asserted that a valid id was NOT
+  // redirected, because the editor for it lived here and a redirect from a
+  // page to itself is a loop. The editor lives on the Settings page now, so a
+  // valid id is sent to its anchor there - which is a different page, and the
+  // no-loop property is that every target leaves this route.
+  it("sends a valid section id to its anchor on the Settings page, and never back here", async () => {
     for (const id of IDS) {
       mockReplace.mockClear();
-      mockApiFetch.mockClear();
       const view = await renderLoadedSection(id);
-      expect({ id, replaced: mockReplace.mock.calls }).toEqual({ id, replaced: [] });
+      expect({ id, replaced: mockReplace.mock.calls }).toEqual({ id, replaced: [[`/agent/settings#${id}`]] });
       view.unmount();
     }
   });
 
-  it("does not loop: the target of a redirect stays put when rendered", async () => {
+  it("does not loop: every redirect target leaves this route", async () => {
     renderAt("agent-settings");
-    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith("/agent/settings/agent"));
-
-    mockReplace.mockClear();
-    mockApiFetch.mockClear();
-    await renderLoadedSection("agent");
-    expect(mockReplace).not.toHaveBeenCalled();
+    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith("/agent/settings#agent"));
+    for (const [target] of mockReplace.mock.calls as string[][]) {
+      expect(target.startsWith("/agent/settings/")).toBe(false);
+    }
   });
 
   it("does not redirect the alias target either, so model cannot bounce forever", async () => {

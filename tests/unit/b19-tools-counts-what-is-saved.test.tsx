@@ -23,16 +23,13 @@ jest.mock("next/navigation", () => ({
 jest.mock("@/components/layout/AppPageShell", () => require("../helpers/mocks").appPageShellMock());
 jest.mock("lucide-react", () => require("../helpers/mocks").lucideMock());
 
-/** The Enabled tile is a number this page hands over; capture what it is told. */
-const insightsProps: { total: number; enabled: number }[] = [];
-jest.mock("@/modules/hermes/components/ToolsInsights", () => ({
-  __esModule: true,
-  default: (props: { total: number; enabled: number }) => {
-    insightsProps.push(props);
-    return <div data-testid="tools-insights">{props.enabled}</div>;
-  },
+// Amended 2026-09-10 (U11, T-0125). The Enabled tile is gone: the strip
+// restated the subtitle, so the subtitle is the one count now, and it is read
+// off the DOM below rather than captured from props.
+jest.mock("@/hooks/useProfiles", () => ({
+  useProfiles: () => ({ data: [{ id: "default", name: "Bob", description: "" }], isLoading: false, error: null }),
 }));
-jest.mock("@/components/ui/ProfileSelector", () => ({
+jest.mock("@/components/ui/ProfilePicker", () => ({
   __esModule: true,
   default: ({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
     <select aria-label="Profile" value={value} onChange={(e) => onChange(e.target.value)}>
@@ -93,12 +90,14 @@ async function renderLoaded(initial: string[]) {
   await waitFor(() => expect(screen.getByText("Enabled toolsets")).toBeInTheDocument());
 }
 
-/** The number the Enabled tile was last given. */
-const lastEnabledTile = () => insightsProps[insightsProps.length - 1]?.enabled;
+/** The enabled count the subtitle prints, read off the DOM. */
+const lastEnabledTile = () => {
+  const m = /(\d+) of \d+ toolsets enabled/.exec(document.body.textContent ?? "");
+  return m ? Number(m[1]) : undefined;
+};
 
 beforeEach(() => {
   jest.clearAllMocks();
-  insightsProps.length = 0;
   // The selection is shared across the agent screens now, so it outlives a
   // render. Put it back to the root agent, as a fresh page load would.
   setSelectedProfile("default");
@@ -108,7 +107,7 @@ describe("with nothing changed", () => {
   it("counts the toolsets the profile actually has", async () => {
     await renderLoaded(["web", "vision"]);
 
-    expect(screen.getByText(/2 toolsets enabled/i)).toBeInTheDocument();
+    expect(screen.getByText(/\b2 of \d+ toolsets enabled/i)).toBeInTheDocument();
     expect(lastEnabledTile()).toBe(2);
   });
 
@@ -134,8 +133,8 @@ describe("with a chip toggled and not yet saved", () => {
     fireEvent.click(chip("Vision"));
 
     // One is stored. The chip shows the choice; the count must not.
-    expect(screen.getByText(/1 toolset enabled/i)).toBeInTheDocument();
-    expect(screen.queryByText(/2 toolsets enabled/i)).toBeNull();
+    expect(screen.getByText(/\b1 of \d+ toolsets enabled/i)).toBeInTheDocument();
+    expect(screen.queryByText(/\b2 of \d+ toolsets enabled/i)).toBeNull();
   });
 
   it("does not let the Enabled tile claim it either", async () => {
@@ -151,7 +150,7 @@ describe("with a chip toggled and not yet saved", () => {
 
     fireEvent.click(chip("Vision"));
 
-    expect(screen.getByText(/2 toolsets enabled/i)).toBeInTheDocument();
+    expect(screen.getByText(/\b2 of \d+ toolsets enabled/i)).toBeInTheDocument();
     expect(lastEnabledTile()).toBe(2);
     expect(screen.getByText(/unsaved changes/i)).toBeInTheDocument();
   });
@@ -164,7 +163,7 @@ describe("with a chip toggled and not yet saved", () => {
     fireEvent.change(box, { target: { value: '{"cli":["web","terminal"]}' } });
 
     expect(screen.getByText(/unsaved changes/i)).toBeInTheDocument();
-    expect(screen.getByText(/1 toolset enabled/i)).toBeInTheDocument();
+    expect(screen.getByText(/\b1 of \d+ toolsets enabled/i)).toBeInTheDocument();
   });
 });
 
@@ -177,7 +176,7 @@ describe("after the save", () => {
       fireEvent.click(screen.getByRole("button", { name: /Save & push toolsets/i }));
     });
 
-    await waitFor(() => expect(screen.getByText(/2 toolsets enabled/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/\b2 of \d+ toolsets enabled/i)).toBeInTheDocument());
     expect(lastEnabledTile()).toBe(2);
     expect(screen.queryByText(/unsaved changes/i)).toBeNull();
   });

@@ -23,11 +23,11 @@ jest.mock("next/navigation", () => ({
 }));
 jest.mock("@/components/layout/AppPageShell", () => require("../helpers/mocks").appPageShellMock());
 jest.mock("lucide-react", () => require("../helpers/mocks").lucideMock());
-jest.mock("@/modules/hermes/components/ToolsInsights", () => ({
-  __esModule: true,
-  default: () => <div data-testid="tools-insights" />,
+jest.mock("@/hooks/useProfiles", () => ({
+  useProfiles: () => ({ data: [{ id: "default", name: "Bob", description: "" }], isLoading: false, error: null }),
 }));
-jest.mock("@/components/ui/ProfileSelector", () => ({
+// The one picker for the Agent group (U11); a plain select stands in for it.
+jest.mock("@/components/ui/ProfilePicker", () => ({
   __esModule: true,
   default: ({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
     <select aria-label="Profile" value={value} onChange={(e) => onChange(e.target.value)}>

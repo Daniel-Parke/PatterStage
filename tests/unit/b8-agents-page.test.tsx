@@ -48,7 +48,6 @@ jest.mock("@/lib/api-fetch", () => ({
 
 import AgentsPage from "@/app/agent/profiles/page";
 import { setSelectedProfile } from "@/hooks/useSelectedProfile";
-import AgentProfileList from "@/components/agents/AgentProfileList";
 import type { AgentProfile } from "@/types/console";
 
 // ── fixtures ────────────────────────────────────────────────────
@@ -381,30 +380,28 @@ describe("a profile's name and description can be edited", () => {
 // D27: the sync facts are on screen
 // ═══════════════════════════════════════════════════════════════
 
+// Amended 2026-09-10 (U11, T-0125): the card column is a table of rows on the
+// page now, so the facts are read off the page rather than off the component.
 describe("what the list says about syncing", () => {
-  it("a failed sync shows the reason, not just the word", () => {
-    render(<AgentProfileList profiles={[BOB, QA]} selectedProfileId="qa" onSelect={jest.fn()} />);
+  it("a failed sync shows the reason, not just the word", async () => {
+    await renderLoaded();
 
     expect(screen.getByText(/ENOENT: memories\/USER\.md/)).toBeInTheDocument();
   });
 
-  it("a synced profile says when it last reached Hermes", () => {
-    render(<AgentProfileList profiles={[BOB, QA]} selectedProfileId="default" onSelect={jest.fn()} />);
+  it("a synced profile says when it last reached Hermes", async () => {
+    await renderLoaded();
 
     expect(screen.getAllByText(/Last pushed/i).length).toBeGreaterThanOrEqual(1);
   });
 
-  it("a profile that has never been pushed says so rather than nothing", () => {
+  it("a profile that has never been pushed says so rather than nothing", async () => {
     const fresh = { ...QA, id: "new", name: "New", syncStatus: "synced", syncError: null, syncedAt: null };
-    render(
-      <AgentProfileList
-        profiles={[fresh as unknown as AgentProfile]}
-        selectedProfileId="new"
-        onSelect={jest.fn()}
-      />,
-    );
+    answerReads([BOB, fresh as unknown as AgentProfile]);
+    setSelectedProfile("default");
+    render(withQuery(<AgentsPage />));
 
-    expect(screen.getByText(/Never pushed/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Never pushed/i)).toBeInTheDocument();
   });
 });
 

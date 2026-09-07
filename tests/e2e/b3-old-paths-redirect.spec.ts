@@ -28,6 +28,10 @@ const OLD_TO_NEW: Array<[string, string]> = [
   ["/config/models", "/agent/models"],
   ["/config/seed", "/agent/settings/restore"],
   ["/config/agent", "/agent/settings/agent"],
+  // The 27 section pages are sections of the one Settings page (U11, T-0125);
+  // a bookmarked section lands on its anchor.
+  ["/agent/settings/agent", "/agent/settings#agent"],
+  ["/agent/settings/hermes_md", "/agent/settings#hermes_md"],
 ];
 
 test.describe("old page paths answer 307 to the new address", () => {

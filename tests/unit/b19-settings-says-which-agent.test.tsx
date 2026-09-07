@@ -63,19 +63,21 @@ jest.mock("@/lib/api-fetch", () => ({
   setErrorFromCaught: jest.fn(),
 }));
 
-import ConfigSectionPage from "@/app/agent/settings/[section]/page";
 import SettingsIndexPage from "@/app/agent/settings/page";
 import { setSelectedProfile } from "@/hooks/useSelectedProfile";
 
-/** Render the Agent section over a config the server says belongs to `subject`. */
+/**
+ * Render the Agent section over a config the server says belongs to `subject`.
+ *
+ * Amended 2026-09-10 (U11, T-0125): the section editor is a section OF the
+ * Settings page now, and the subject is named once above all of them, so this
+ * renders the page and waits for the Agent section to be on it.
+ */
 async function renderSection(subject: string | undefined) {
   mockUseParams.mockReturnValue({ section: "agent" });
-  mockApiFetch.mockImplementation(async (path: string, init?: { method?: string }) => {
-    if (path === "/api/config" && init?.method === "PUT") return { data: { success: true } };
-    return { data: { agent: { max_turns: 40 } }, ...(subject ? { subject } : {}) };
-  });
-  render(<ConfigSectionPage />);
-  await waitFor(() => expect(screen.queryByText(/Loading Agent Settings/)).toBeNull());
+  mockApiFetch.mockResolvedValue({ data: { content: "" } });
+  renderIndex(subject ?? null);
+  await screen.findByTestId("settings-section-agent");
 }
 
 function renderIndex(subject: string | null) {

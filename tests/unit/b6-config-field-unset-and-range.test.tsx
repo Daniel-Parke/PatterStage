@@ -1,4 +1,5 @@
 /** @jest-environment jsdom */
+/* eslint-disable @typescript-eslint/no-require-imports */
 // ═══════════════════════════════════════════════════════════════
 // B6 oracle, group config-ui, part 2 of 2 (T-0100, D77 + D78 UI halves).
 //
@@ -59,7 +60,16 @@ jest.mock("@/lib/api-fetch", () => ({
   },
 }));
 
-import ConfigSectionPage from "@/app/agent/settings/[section]/page";
+// Amended 2026-09-10 (U11, T-0125): the agent section is a section of the one
+// Settings page. The page reads config.yaml through useConfig, so the read is
+// mocked there; the save still goes through apiFetch, which is what part (C)
+// measures.
+const mockUseConfig = jest.fn();
+jest.mock("@/hooks/useConfig", () => ({ useConfig: () => mockUseConfig() }));
+jest.mock("@/hooks/useProfiles", () => ({ useProfiles: () => ({ data: [], isLoading: false, error: null }) }));
+jest.mock("next/link", () => require("../helpers/mocks").nextLinkMock());
+
+import SettingsPage from "@/app/agent/settings/page";
 
 // ── pre-B6 type shims (see header) ──────────────────────────────
 
@@ -411,7 +421,9 @@ describe("ConfigField: a value the schema does not expect is shown, not hidden",
 // (C) the agent section page
 // ═══════════════════════════════════════════════════════════════
 
-const saveButton = () => screen.getByRole("button", { name: /^Save/ });
+// Scoped to the Agent section: every section carries its own Save now.
+const saveButton = () =>
+  within(screen.getByTestId("settings-section-agent")).getByRole("button", { name: /^Save/ });
 
 /** Every PUT /api/config body the page sent, parsed. */
 function putBodies(): Array<{ section: string; values: Record<string, unknown> }> {
@@ -422,13 +434,20 @@ function putBodies(): Array<{ section: string; values: Record<string, unknown> }
 
 async function renderAgentPage(agent: Record<string, unknown>) {
   mockUseParams.mockReturnValue({ section: "agent" });
+  mockUseConfig.mockReturnValue({
+    data: { agent },
+    isLoading: false,
+    error: null,
+    refetch: jest.fn(),
+    configError: null,
+    subject: null,
+  });
   mockApiFetch.mockImplementation(async (path: string, init?: { method?: string }) => {
     if (path === "/api/config" && init?.method === "PUT") return { data: { success: true } };
-    return { data: { agent } };
+    return { data: { content: "" } };
   });
-  render(<ConfigSectionPage />);
-  await screen.findByText("Agent Settings");
-  await waitFor(() => expect(screen.queryByText(/Loading Agent Settings/)).toBeNull());
+  render(<SettingsPage />);
+  await screen.findByTestId("settings-section-agent");
 }
 
 describe("the agent section page: Save follows the range", () => {

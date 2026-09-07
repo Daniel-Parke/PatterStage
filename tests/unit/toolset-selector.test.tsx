@@ -2,9 +2,10 @@
 
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { renderWithQuery } from "../helpers/render-with-query";
-import ToolsetSelector from "@/components/ui/ToolsetSelector";
+// The Selector became a Picker in missions/ (U11, T-0125): one caller, one shape.
+import ToolsetsPicker from "@/components/missions/ToolsetsPicker";
 
-describe("ToolsetSelector", () => {
+describe("ToolsetsPicker", () => {
   beforeEach(() => {
     global.fetch = jest.fn(() =>
       Promise.resolve({
@@ -36,7 +37,7 @@ describe("ToolsetSelector", () => {
 
   it("loads toolsets for profile and allows selection", async () => {
     const onChange = jest.fn();
-    renderWithQuery(<ToolsetSelector value={[]} onChange={onChange} profileId="creative-lead" max={5} />);
+    renderWithQuery(<ToolsetsPicker value={[]} onChange={onChange} profileId="creative-lead" max={5} />);
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
@@ -45,8 +46,8 @@ describe("ToolsetSelector", () => {
       );
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /Recommend Hermes toolsets/i }));
-    const webOption = await screen.findByRole("button", { name: /^Web/i });
+    fireEvent.click(screen.getByRole("button", { name: "Toolsets" }));
+    const webOption = await screen.findByRole("option", { name: /^Web/i });
     fireEvent.click(webOption);
     expect(onChange).toHaveBeenCalledWith(["web"]);
   });

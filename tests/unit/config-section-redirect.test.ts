@@ -72,12 +72,19 @@ const CORPUS: string[] = Array.from(
   ]),
 );
 
-/** The slug a `/agent/settings/<slug>` path would land on, or null if it leaves the route. */
+/**
+ * The section a `/agent/settings#<slug>` anchor lands on, or null if it leaves
+ * the Settings page.
+ *
+ * Amended 2026-09-10 (U11, T-0125): a section is an anchor on the one Settings
+ * page rather than a page of its own, so the resolver answers `#<id>` and the
+ * loop check reads the fragment instead of the last path segment.
+ */
 const landingSlug = (path: string): string | null => {
-  const prefix = "/agent/settings/";
+  const prefix = "/agent/settings#";
   if (!path.startsWith(prefix)) return null;
   const rest = path.slice(prefix.length);
-  return rest.includes("/") ? null : rest;
+  return rest.includes("/") || rest.includes("#") ? null : rest;
 };
 
 describe("resolveSectionRedirect: INV-1 a valid section never redirects", () => {
@@ -143,7 +150,7 @@ describe("resolveSectionRedirect: INV-3 one hop terminates, INV-4 no self-redire
 
   it("never redirects a slug to its own path", () => {
     const self = CORPUS.filter(
-      (slug) => resolveSectionRedirect(slug) === `/agent/settings/${slug}`,
+      (slug) => resolveSectionRedirect(slug) === `/agent/settings#${slug}`,
     );
     expect(self).toEqual([]);
   });
@@ -162,11 +169,11 @@ describe("resolveSectionRedirect: INV-5 an ambiguous prefix does not guess", () 
   });
 
   it.each([
-    ["sec", "/agent/settings/security"],
-    ["sess", "/agent/settings/session_reset"],
-    ["smart", "/agent/settings/smart_model_routing"],
-    ["chec", "/agent/settings/checkpoints"],
-    ["deleg", "/agent/settings/delegation"],
+    ["sec", "/agent/settings#security"],
+    ["sess", "/agent/settings#session_reset"],
+    ["smart", "/agent/settings#smart_model_routing"],
+    ["chec", "/agent/settings#checkpoints"],
+    ["deleg", "/agent/settings#delegation"],
   ])("resolves the unique prefix %s to %s", (slug, expected) => {
     expect(resolveSectionRedirect(slug as string)).toBe(expected);
   });
@@ -185,7 +192,7 @@ describe("resolveSectionRedirect: INV-6 membership is own-key membership", () =>
 describe("resolveSectionRedirect: the rescues this task was opened for", () => {
   it("rescues the reported slug: agent-settings is exactly slugify('Agent Settings')", () => {
     expect(slugify(CONFIG_SECTIONS.agent.label)).toBe("agent-settings");
-    expect(resolveSectionRedirect("agent-settings")).toBe("/agent/settings/agent");
+    expect(resolveSectionRedirect("agent-settings")).toBe("/agent/settings#agent");
   });
 
   it.each([
@@ -196,7 +203,7 @@ describe("resolveSectionRedirect: the rescues this task was opened for", () => {
     "human-delay",
     "hermes-md",
   ])("rescues %s by the hyphen-to-underscore swap alone", (slug) => {
-    expect(resolveSectionRedirect(slug)).toBe(`/agent/settings/${slug.replace(/-/g, "_")}`);
+    expect(resolveSectionRedirect(slug)).toBe(`/agent/settings#${slug.replace(/-/g, "_")}`);
   });
 
   it("keeps the pre-existing alias working: model goes to the models page", () => {
@@ -209,7 +216,7 @@ describe("resolveSectionRedirect: the rescues this task was opened for", () => {
       const labelSlug = slugify(CONFIG_SECTIONS[id].label);
       if (labelSlug === id) continue;
       const result = resolveSectionRedirect(labelSlug);
-      if (result !== `/agent/settings/${id}`) {
+      if (result !== `/agent/settings#${id}`) {
         missed.push(`${labelSlug} -> ${String(result)} (wanted /config/${id})`);
       }
     }

@@ -13,8 +13,10 @@ test.describe("Tools", () => {
 
   test("creative-lead profile shows non-empty toolsets after load", async ({ page }) => {
     await page.goto("/agent/tools");
-    await page.getByRole("button", { name: /Bob|Creative Lead|Profile/i }).first().click();
-    await page.getByRole("button", { name: "Creative Lead" }).click();
+    // The one picker for the Agent group, in the header (U11, T-0125): a
+    // listbox, so the choice is an option rather than a button.
+    await page.getByRole("button", { name: "Profile" }).click();
+    await page.getByRole("option", { name: /Creative Lead/ }).click();
     await expect(page.getByText(/hermes-cli|Web|CLI/i).first()).toBeVisible({
       timeout: 15_000,
     });

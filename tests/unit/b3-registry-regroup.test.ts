@@ -14,7 +14,7 @@
  * and lockbook-tokens.test.ts pin them); only sections, labels and hrefs do.
  */
 import { CONFIG_SECTIONS } from "@/lib/config-schema";
-import { SETTINGS_GROUPS, SETTINGS_TOOLS, settingsRoutes } from "@/lib/config-sections";
+import { SETTINGS_GROUPS, SETTINGS_TOOLS, settingsSectionIds } from "@/lib/config-sections";
 import { MODULES, allModuleRoutes, getModule, labelFor } from "@/lib/modules/registry";
 import { NAV_SECTIONS, moduleRoutes } from "@/lib/modules/types";
 import { mainSections } from "@/components/layout/sidebar-config";
@@ -130,16 +130,21 @@ describe("Settings is one route family the registry derives from the section cat
     expect(SETTINGS_TOOLS.map((t) => t.href).sort()).toEqual(["/agent/models", "/agent/settings/restore", "/agent/settings/system"].sort());
   });
 
-  it("every settings route is a registry route, so the e2e matrix still visits each section", () => {
+  // Amended 2026-09-10 (U11, T-0125). This held every section to be a
+  // registry ROUTE so the e2e matrix visited each editor. The 27 editors are
+  // sections of the one Settings page now, and the matrix visits their
+  // anchors (tests/e2e/config-sections.spec.ts); what the registry owns is the
+  // page and its two real children.
+  it("no section is a route; Settings, Restore and System are", () => {
     const routes = new Set(allModuleRoutes());
-    for (const r of settingsRoutes()) expect({ r, present: routes.has(r) }).toEqual({ r, present: true });
-    for (const id of Object.keys(CONFIG_SECTIONS)) expect(routes.has(`/agent/settings/${id}`)).toBe(true);
+    for (const id of settingsSectionIds()) expect({ id, route: routes.has(`/agent/settings/${id}`) }).toEqual({ id, route: false });
+    expect(routes.has("/agent/settings")).toBe(true);
     expect(routes.has("/agent/settings/restore")).toBe(true);
     expect(routes.has("/agent/settings/system")).toBe(true);
   });
 
   it("still produces no duplicate route", () => {
-    const all = [...MODULES.flatMap(moduleRoutes), ...settingsRoutes()];
+    const all = MODULES.flatMap(moduleRoutes);
     const dupes = all.filter((r, i) => all.indexOf(r) !== i);
     expect([...new Set(dupes)]).toEqual([]);
   });

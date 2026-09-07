@@ -65,8 +65,9 @@ describe("old paths redirect, temporarily", () => {
     const literal = (await redirects()).filter((r) => !r.destination.includes(":"));
     for (const r of literal) {
       // A destination may carry a query (the Personalities fold lands on
-      // ?tab=identity); the registry owns paths, so compare the path.
-      const to = r.destination.split("?")[0];
+      // ?tab=identity) or a hash (the 27 settings sections land on their
+      // anchor, U11); the registry owns paths, so compare the path.
+      const to = r.destination.split(/[?#]/)[0];
       expect({ to, owned: routes.has(to) }).toEqual({ to, owned: true });
     }
   });

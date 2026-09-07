@@ -51,9 +51,10 @@ jest.mock("@/components/viz/StatStrip", () => ({
 import LogInsights from "@/components/logs/LogInsights";
 import MemoryInsights from "@/components/memory/MemoryInsights";
 import SessionInsights from "@/components/session/SessionInsights";
-import SkillsInsights from "@/components/skills/SkillsInsights";
 import ModelInsights from "@/components/models/ModelInsights";
-import ToolsInsights from "@/modules/hermes/components/ToolsInsights";
+// SkillsInsights and ToolsInsights are gone (U11, T-0125): on a list screen the
+// strip was a dashboard about the list, and its one fact moved into the
+// subtitle. The rule holds for the strips that remain.
 
 /** Each strip, with enough data that it renders rather than returning null. */
 const STRIPS: Array<[string, () => React.ReactElement]> = [
@@ -87,15 +88,6 @@ const STRIPS: Array<[string, () => React.ReactElement]> = [
     ),
   ],
   [
-    "Skills",
-    () => (
-      <SkillsInsights
-        skills={[{ category: "ops" }, { category: "ops" }, { category: "research" }]}
-        activeCount={2}
-      />
-    ),
-  ],
-  [
     "Models",
     () => (
       <ModelInsights
@@ -104,7 +96,6 @@ const STRIPS: Array<[string, () => React.ReactElement]> = [
       />
     ),
   ],
-  ["Tools", () => <ToolsInsights total={10} enabled={7} />],
 ];
 
 describe("a tile says something the donut cannot", () => {
