@@ -134,3 +134,4 @@ The records under org/tasks/ are canonical.
 | T-0119 | standard | R1 | done | t0119-u5-the-type-scale-2026-09-07 |
 | T-0120 | standard | R1 | done | t0120-u6-colour-and-scales-2026-09-08 |
 | T-0121 | standard | R1 | done | t0121-u7-the-rail-2026-09-08 |
+| T-0122 | standard | R1 | done | t0122-u8-the-primitive-set-2026-09-08 |
