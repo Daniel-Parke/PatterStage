@@ -26,7 +26,11 @@ export interface ConceptAttachment {
  */
 export const CONCEPT_ATTACHMENTS: readonly ConceptAttachment[] = [
   { screen: "/work/chat", conceptIds: ["agent", "prompt"] },
-  { screen: "/work/missions", conceptIds: ["mission", "run", "schedule"] },
+  { screen: "/work/missions", conceptIds: ["mission", "run"] },
+  // `schedule` moved with the section that carried it: decision 9 made one
+  // Automation view out of the schedules section here and the schedule
+  // column on Scripts (U9, T-0123).
+  { screen: "/work/automation", conceptIds: ["schedule"] },
   { screen: "/agent/profiles", conceptIds: ["profile", "personality"] },
   { screen: "/agent/skills", conceptIds: ["skill"] },
   { screen: "/agent/tools", conceptIds: ["tool", "toolset"] },

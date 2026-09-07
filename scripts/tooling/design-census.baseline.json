@@ -5,21 +5,21 @@
     "height": 900
   },
   "counts": {
-    "routes": 23,
+    "routes": 24,
     "distinctFontSizes": 7,
-    "twelvePxShare": 0.58,
-    "monoShare": 0.64,
+    "twelvePxShare": 0.57,
+    "monoShare": 0.63,
     "textBelowFloor": 0,
     "distinctBorderColours": 34,
-    "distinctCardChromes": 86,
-    "distinctButtonHeights": 27,
-    "distinctButtonChromes": 80,
+    "distinctCardChromes": 85,
+    "distinctButtonHeights": 28,
+    "distinctButtonChromes": 79,
     "distinctRadii": 5,
     "distinctBoxShadows": 15,
     "distinctZLayers": 1,
-    "controlBordersBelowThree": 153,
-    "decorativeBordersBelowThree": 598,
-    "hitTargetsBelowTwentyFour": 84,
+    "controlBordersBelowThree": 154,
+    "decorativeBordersBelowThree": 601,
+    "hitTargetsBelowTwentyFour": 86,
     "routesWithMisalignedHeading": 0,
     "worstHeadingOffset": 0,
     "distinctContentWidths": 1,
@@ -47,6 +47,16 @@
       "rose": [
         "twelvePxShare rose from 0.56 to 0.58",
         "monoShare rose from 0.63 to 0.64"
+      ]
+    },
+    {
+      "when": "2026-09-07",
+      "reason": "T-0123: the census walks 24 routes rather than 23. /work/automation is a new destination (decision 9), so it contributes its own skip link, help link and concept hint to the absolute counts, and its own borders. The one reading that is not the extra route is distinctButtonHeights: the rail's expanded row went 26px to 24px to pay for the Automation entry, and the rail's rows are not Button-based, so 24 joined the set while 26 stayed. Every one of these is a count over more product, not more sprawl per screen.",
+      "rose": [
+        "distinctButtonHeights rose from 27 to 28",
+        "controlBordersBelowThree rose from 153 to 154",
+        "decorativeBordersBelowThree rose from 598 to 601",
+        "hitTargetsBelowTwentyFour rose from 84 to 86"
       ]
     }
   ]

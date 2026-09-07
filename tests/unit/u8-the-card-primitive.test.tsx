@@ -135,6 +135,23 @@ describe("Card keeps the element its caller was using", () => {
   });
 
   /**
+   * A primitive that cannot be identified cannot be adopted. The first screen
+   * converted onto Card (U9's Automation view, T-0123) needed to name its rows,
+   * and Card typed its props exactly - so `data-testid` was silently dropped
+   * and the only way to keep one was to keep the div.
+   */
+  it("carries an id and a test id through to the element", () => {
+    const { container } = render(
+      <Card id="row-1" data-testid="automation-row-s1">
+        body
+      </Card>,
+    );
+    const el = container.firstElementChild!;
+    expect(el.getAttribute("id")).toBe("row-1");
+    expect(el.getAttribute("data-testid")).toBe("automation-row-s1");
+  });
+
+  /**
    * The glow slot is the other half of the primitive, and it renders through a
    * different component. An `as` that only worked without a glow would be a
    * capability with a hole in it, which is how the sites being absorbed get

@@ -18,7 +18,7 @@ import {
   RotateCcw, ShieldCheck, Lock, Code,
   BookOpen, Bot, MessageCircle,
   AudioLines, Settings2, Network, BarChart3, Trophy, Telescope, Workflow,
-  FileStack, Settings, LifeBuoy,
+  FileStack, Settings, LifeBuoy, CalendarClock,
 } from "lucide-react";
 
 import type { AccentColor } from "@/types/console";
@@ -58,7 +58,7 @@ const ICONS: Record<IconName, React.ComponentType<{ className?: string }>> = {
   RotateCcw, Activity, Layers, HardDrive,
   Globe2, Code, Shield, ShieldCheck,
   AudioLines, Mic, Volume2, GitBranch,
-  ListTodo, Network, Settings2,
+  ListTodo, Network, Settings2, CalendarClock,
   Settings, LifeBuoy,
 };
 

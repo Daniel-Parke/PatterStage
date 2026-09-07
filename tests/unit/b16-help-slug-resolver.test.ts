@@ -146,6 +146,8 @@ const WORK_ROWS: readonly string[] = [
   "/work/composer",
   "/work/research",
   "/work/scripts",
+  // Decision 9, U9 (T-0123): one view of everything on a clock.
+  "/work/automation",
 ];
 const RESULTS_ROWS: readonly string[] = [
   "/results/sessions",

@@ -148,7 +148,18 @@ const ATTACHMENTS: ReadonlyArray<{ screen: string; dirs: string[]; conceptIds: s
   {
     screen: "/work/missions",
     dirs: ["src/app/work/missions", "src/components/missions"],
-    conceptIds: ["mission", "run", "schedule"],
+    conceptIds: ["mission", "run"],
+  },
+  // `schedule` moved with the section that taught it. Decision 9 (U9, T-0123)
+  // made one Automation view out of the schedules section at the foot of
+  // Missions and the schedule column on Scripts, so the term is attached to the
+  // screen that now explains it. The contract is unchanged in substance: every
+  // declared term is still attached on exactly one screen, and still on the
+  // screen where an operator meets the idea.
+  {
+    screen: "/work/automation",
+    dirs: ["src/app/work/automation", "src/components/automation"],
+    conceptIds: ["schedule"],
   },
   {
     screen: "/agent/profiles",

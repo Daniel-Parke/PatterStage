@@ -100,15 +100,21 @@ export default function Sidebar({ initialCollapsed = false }: { initialCollapsed
             // same row expanded, which is backwards for the mode that exists
             // to be reachable.
             //
-            // The EXPANDED row keeps its 3px rhythm. Deleting the sub-link
-            // tier was supposed to pay for a taller one, but that tier only
-            // rendered under the ACTIVE link, so it never cost more than one
-            // route's worth at a time and there was nothing to spend: at
-            // py-1.5 the nav measured 673px against a 572px budget, and at
-            // py-1 it measured 597. The hierarchy this batch is about is TONE,
-            // the accent bar and the space above a heading, and all three fit.
+            // The EXPANDED row was 3px, and is 2px since T-0123. Deleting the
+            // sub-link tier was supposed to pay for a taller row, but that tier
+            // only rendered under the ACTIVE link, so it never cost more than
+            // one route's worth at a time and there was nothing to spend: at
+            // py-1.5 the nav measured 673px against a 572px budget, and at py-1
+            // it measured 597.
+            //
+            // 2px because decision 9 added an Automation destination, and the
+            // rail had 7px of slack. 24px is still the row: a 20px icon and 2px
+            // either side, which is exactly the 24x24 WCAG 2.5.8 asks of a
+            // target, and the collapsed row is a 40px square either way. The
+            // 34px this returns also pays for the heading margin below, which
+            // U7 declared and never rendered.
             className={`relative flex items-center rounded-ps-md text-body transition-colors ${
-              iconsOnly ? "h-10 w-10 justify-center" : "gap-2.5 px-3 py-[3px]"
+              iconsOnly ? "h-10 w-10 justify-center" : "gap-2.5 px-3 py-[2px]"
             } ${
               active
                 ? "bg-ps-surface-raised text-ps-text-primary"
@@ -181,13 +187,25 @@ export default function Sidebar({ initialCollapsed = false }: { initialCollapsed
             starts, and its Quests and Help rows sit in the footer below as the
             plan's utility rows. Every pixel here is budgeted: the rail must
             fit 720px without scrolling (tests/e2e/rail-no-scroll.spec.ts). */}
-        <nav className="flex-1 px-3 py-2 overflow-y-auto" aria-label="Main">
+        {/* py-1, not py-2. Decision 9 added an Automation row and the nav
+            measured 590 against a 571 box: the rail had 7px of slack and a
+            row costs 26. Four of those pixels come back here and sixteen from
+            the section headings below, which is the whole of it (T-0123). The
+            headroom is still 7px until U12 takes the Rec Room from five rail
+            entries to two and hands back 78. */}
+        <nav className="flex-1 px-3 py-1 overflow-y-auto" aria-label="Main">
           {mainSections.map((section) => (
             <div key={section.label}>
               {section.label !== "Home" && !iconsOnly && (
                 // A tier of its own, and room above it. A heading set at the
                 // same weight as the rows under it is not a heading.
-                <div className="text-micro leading-4 font-mono text-ps-text-faint uppercase tracking-widest px-3 mb-0.5 mt-3 first:mt-1">
+                // `mt-2`, with no `first:` variant, and that is a FIX rather
+                // than a tightening. It read `mt-3 first:mt-1`, and every
+                // heading is the first child of its own section div - so
+                // `first:` won every time, all four rendered at 4px, and the
+                // "space above a heading" U7 recorded as delivered never
+                // painted at all. Measured: mt=4px on all four (T-0123).
+                <div className="text-micro leading-4 font-mono text-ps-text-faint uppercase tracking-widest px-3 mb-0.5 mt-2">
                   {section.label}
                 </div>
               )}

@@ -209,8 +209,8 @@ export default function ScriptsPage() {
         <p className="mb-5 max-w-3xl font-mono text-micro text-ps-text-muted">
           Drop a <span className="text-ps-text-secondary">{SCRIPT_EXT_LIST}</span> file under{" "}
           <span className="text-ps-text-secondary">PS_DATA_DIR/scripts</span> and it appears here — backups, cleanups, health
-          checks. Scheduling agent work is on the{" "}
-          <a href="/work/missions" className="text-neon-cyan hover:underline">Missions</a> page.
+          checks. Everything already on a timer — scripts and missions both — is on the{" "}
+          <a href="/work/automation" className="text-neon-cyan hover:underline">Automation</a> page.
         </p>
 
         {error && <LoadErrorBanner error={error} onRetry={() => refetch()} />}

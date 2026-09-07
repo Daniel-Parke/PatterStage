@@ -46,7 +46,7 @@ export type IconName =
   | "RotateCcw" | "Activity" | "Layers" | "HardDrive"
   | "Globe2" | "Code" | "Shield" | "ShieldCheck"
   | "AudioLines" | "Mic" | "Volume2" | "GitBranch"
-  | "ListTodo" | "Network" | "Settings2"
+  | "ListTodo" | "Network" | "Settings2" | "CalendarClock"
   | "Settings" | "LifeBuoy";
 
 export interface NavLink {

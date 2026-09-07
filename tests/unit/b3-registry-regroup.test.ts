@@ -55,7 +55,18 @@ describe("the five sections, in order", () => {
     expect(mainSections.map((s) => s.label)).toEqual(["Home", "Work", "Results", "Agent", "Rec Room"]);
     const hrefs = (label: string) => mainSections.find((s) => s.label === label)!.links.map((l) => l.href);
     expect(hrefs("Home")).toEqual(["/", "/quests", "/help"]);
-    expect(hrefs("Work")).toEqual(["/work/chat", "/work/missions", "/work/composer", "/work/research", "/work/scripts"]);
+    // Automation joined in U9 (T-0123), decision 9: the schedules section at
+    // the foot of Missions and the schedule column on Scripts became one view
+    // of everything on a clock. It sits last, at order 6, because Research
+    // holds 4 and orders are unique within a section across modules.
+    expect(hrefs("Work")).toEqual([
+      "/work/chat",
+      "/work/missions",
+      "/work/composer",
+      "/work/research",
+      "/work/scripts",
+      "/work/automation",
+    ]);
     expect(hrefs("Results")).toEqual(["/results/sessions", "/results/artifacts", "/results/insights", "/results/logs"]);
     // Personalities IS the Agents card's Identity tab now (decision 11,
     // T-0103), which is why there is no seventh row here.

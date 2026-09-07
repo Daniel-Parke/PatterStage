@@ -31,6 +31,16 @@ interface CardProps {
    * `<form>` or a `<button>` needs props this does not carry (T-0122).
    */
   as?: SurfaceElement;
+  /**
+   * An id and a test id pass through to the element.
+   *
+   * A primitive that cannot be identified cannot be adopted: the first screen
+   * converted onto Card (U9's Automation view) needed to name its rows, and
+   * without these the only way to keep a `data-testid` was to keep the div
+   * (T-0123).
+   */
+  id?: string;
+  "data-testid"?: string;
 }
 
 const paddingMap = {
@@ -50,6 +60,8 @@ export default function Card({
   padding = "md",
   variant = "panel",
   as,
+  id,
+  "data-testid": testId,
 }: CardProps) {
   const hoverClass = hover
     ? "hover:border-ps-edge-emphasis transition-colors cursor-pointer"
@@ -62,6 +74,8 @@ export default function Card({
   return (
     <GlowSurface
       as={as}
+      id={id}
+      data-testid={testId}
       accent={glow}
       intensity={glowIntensity}
       animated={glowAnimated}

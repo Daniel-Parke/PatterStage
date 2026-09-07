@@ -45,14 +45,18 @@ test.describe("Scheduling a mission", () => {
     });
     expect(saved.ok()).toBeTruthy();
 
-    await page.goto("/work/missions");
-    await expect(page.getByRole("heading", { name: "Missions", exact: true })).toBeVisible();
-    await expect(page.getByRole("button", { name: /New Mission/i })).toBeVisible();
+    // The clocks moved. Decision 9 (U9, T-0123) made one Automation view out of
+    // the schedules section at the foot of Missions and the schedule column on
+    // Scripts, because the section listed PatterStage's own table and could not
+    // see a script scheduled into the host's crontab. The journey is unchanged
+    // and so is every assertion below it; only the address is different.
+    await page.goto("/work/automation");
+    await expect(page.getByRole("heading", { name: "Automation", exact: true })).toBeVisible();
 
     const scheduled = page
       .locator("section")
-      // "Schedules", since the section lists script rows as well as mission
-      // ones and the heading stopped naming only one of them (T-0114).
+      // "Schedules", since the list holds script rows as well as mission ones
+      // and the heading stopped naming only one of them (T-0114).
       .filter({ has: page.getByRole("heading", { name: "Schedules", exact: true }) });
     await expect(scheduled).toBeVisible();
 
@@ -65,11 +69,21 @@ test.describe("Scheduling a mission", () => {
 
     // The saved mission is offered by name. This is the assertion the old
     // "presets are visible" test could not make: the form is wired to real data.
-    const missionSelect = form
-      .locator("select")
-      .filter({ has: page.getByRole("option", { name: missionName }) });
+    //
+    // A LISTBOX, not a native <select>, since U9 (T-0123) put this form on the
+    // Field Kit. `ui/field/Select` is the product's accessible dropdown, and
+    // driving it the way a person does - open it, choose the option - is a
+    // stronger reading than `selectOption` on a control the operator never
+    // sees: the native one could not be reached by keyboard in the house style
+    // at all, which is why the Kit exists.
+    // A button with aria-haspopup="listbox", which is what ui/field/Select
+    // renders: the trigger is a button and the options are a listbox beneath
+    // it, rather than a native <select> the house style cannot reach.
+    const missionSelect = form.getByRole("button", { name: "Mission" });
     await expect(missionSelect).toBeVisible({ timeout: 15_000 });
-    await missionSelect.selectOption({ label: missionName });
+    await missionSelect.click();
+    await form.getByRole("option", { name: missionName }).click();
+    await expect(missionSelect).toContainText(missionName);
 
     await form.getByPlaceholder("daily digest").fill(scheduleName);
 

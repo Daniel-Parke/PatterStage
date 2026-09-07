@@ -270,6 +270,19 @@
           ]
         },
         {
+          "slug": "guides/automation",
+          "title": "Automation",
+          "summary": "Everything on a timer, in one list: which missions and scripts run next, when they last ran, and how that went",
+          "nav": 55,
+          "screen": "/work/automation",
+          "concepts": [
+            "schedule"
+          ],
+          "shots": [
+            "docs/images/automation.png"
+          ]
+        },
+        {
           "slug": "guides/scripts",
           "title": "Scripts",
           "summary": "Host scripts under your data directory: write one, run it, put it on a timer",
@@ -703,6 +716,7 @@
     "/results/insights": "guides/insights",
     "/results/logs": "guides/logs",
     "/results/sessions": "guides/sessions",
+    "/work/automation": "guides/automation",
     "/work/chat": "guides/chat",
     "/work/composer": "guides/composer",
     "/work/missions": "guides/missions",
@@ -765,6 +779,7 @@
     "guides/missions",
     "guides/composer",
     "guides/research",
+    "guides/automation",
     "guides/scripts",
     "guides/sessions",
     "guides/artifacts",

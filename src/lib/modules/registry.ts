@@ -14,7 +14,8 @@
 // THE MAP (T-0097). Five sections, verb-first, and the URLs renamed to match:
 //
 //   Home      /            /quests            /help
-//   Work      /work/chat   /work/missions     /work/composer   /work/research   /work/scripts
+//   Work      /work/chat   /work/missions     /work/composer   /work/research
+//             /work/scripts                   /work/automation
 //   Results   /results/sessions   /results/artifacts   /results/insights   /results/logs
 //   Agent     /agent/profiles  /agent/skills  /agent/tools
 //             /agent/memory   /agent/models   /agent/settings (+ /restore, /system)
@@ -59,6 +60,15 @@ const coreModule: ProductModule = {
           color: "purple",
           order: 3,
           featureFlag: "composer",
+        },
+        {
+          icon: "CalendarClock",
+          label: "Automation",
+          href: "/work/automation",
+          color: "orange",
+          // 6, after Scripts: Research is 4 and orders are unique within a
+          // section across modules, which is what makes the merge deterministic.
+          order: 6,
         },
         { icon: "Terminal", label: "Scripts", href: "/work/scripts", color: "cyan", order: 5 },
       ],

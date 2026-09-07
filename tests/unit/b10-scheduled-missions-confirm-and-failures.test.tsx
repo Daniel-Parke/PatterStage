@@ -48,7 +48,11 @@ jest.mock("@/lib/api-fetch", () => ({
   safeApiCall: (...a: unknown[]) => (safeApiCall as unknown as (...a: unknown[]) => unknown)(...a),
 }));
 
-import ScheduledMissions from "@/components/missions/ScheduledMissions";
+// U9 (T-0123), decision 9: ScheduledMissions became AutomationList, one
+// view of everything on a clock rather than a section at the foot of
+// Missions that could not see the host crontab. Same rows, same actions;
+// these assertions are unchanged.
+import ScheduledMissions from "@/components/automation/AutomationList";
 
 // ── fixtures ───────────────────────────────────────────────────
 

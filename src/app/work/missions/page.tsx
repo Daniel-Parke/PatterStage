@@ -17,7 +17,6 @@ import {
 import { useMissionsPage } from "@/hooks/useMissionsPage";
 import MissionsList from "@/components/missions/MissionsList";
 import MissionInsights from "@/components/missions/MissionInsights";
-import ScheduledMissions from "@/components/missions/ScheduledMissions";
 import { mapCategories } from "@/lib/missions/mission-form-utils";
 
 export default function MissionsPage() {
@@ -212,10 +211,9 @@ export default function MissionsPage() {
           here will not dispatch anywhere. */}
       <AgentSetupNotice what="Dispatching a mission" />
 
-      <div>
+      <div className="space-y-6">
         <MissionInsights missions={missions} />
         <MissionsList vm={vm} />
-        <ScheduledMissions />
       </div>
 
       <Sheet
