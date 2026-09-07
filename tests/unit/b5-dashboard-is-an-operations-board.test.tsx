@@ -463,9 +463,13 @@ describe("B. the header", () => {
 // ═══════════════════════════════════════════════════════════════
 
 describe("C. the stat row", () => {
-  it("has exactly six pills, in order: Gateway, Memory, Scheduler, Spend, Processes, Errors", () => {
+  // Amended 2026-09-07 (U13, T-0127): three pills, not six. Gateway and Memory
+  // were said twice on one screen - as a pill and as a Subsystems row with the
+  // reason the pill did not carry - and Errors was said as a pill and as a
+  // panel. The row is the three facts nothing else on the board carries.
+  it("has exactly three pills, in order: Scheduler, Spend, Processes", () => {
     render(<Dashboard />);
-    expect(pillLabels()).toEqual(["gateway", "memory", "scheduler", "spend", "processes", "errors"]);
+    expect(pillLabels()).toEqual(["scheduler", "spend", "processes"]);
   });
 
   it("has no Sessions pill", () => {
@@ -473,34 +477,21 @@ describe("C. the stat row", () => {
     expect(screen.queryByText(/^sessions$/i, { selector: "div.uppercase" })).toBeNull();
   });
 
-  it("Gateway reads the subsystem row's state in the status vocabulary and links to Settings > System", () => {
-    const first = render(<Dashboard />);
-    expect(pill("Gateway").value).toBe("Healthy");
-    expect(pill("Gateway").href).toBe("/agent/settings/system");
-    first.unmount();
-
-    mockUseDashboard.mockReturnValue(dash({ subsystems: subsystemsWith("degraded") }));
-    const second = render(<Dashboard />);
-    expect(pill("Gateway").value).toBe("Degraded");
-    second.unmount();
-
-    mockUseDashboard.mockReturnValue(dash({ subsystems: subsystemsWith("down") }));
+  // Amended 2026-09-07 (U13, T-0127). The Gateway and Memory pills are gone;
+  // the Subsystems panel is the one place each is said, with its state in the
+  // vocabulary AND the reason, which the pill never had room for.
+  it("says Gateway and Memory once, on the Subsystems panel, in the status vocabulary", () => {
     render(<Dashboard />);
-    expect(pill("Gateway").value).toBe("Not running");
-  });
-
-  it("Memory reads the memory row's state, counts the facts underneath, and links to Memory", () => {
-    render(<Dashboard />);
-    const memory = pill("Memory");
-    expect(memory.value).toBe("Degraded");
-    expect(memory.subtitle).toMatch(/12 facts/);
-    expect(memory.href).toBe("/agent/memory");
-  });
-
-  it("Memory reads Healthy when the memory row is ok", () => {
-    mockUseDashboard.mockReturnValue(dash({ subsystems: subsystemsWith("ok", "ok") }));
-    render(<Dashboard />);
-    expect(pill("Memory").value).toBe("Healthy");
+    expect(screen.queryByText(/^gateway$/i, { selector: "div.uppercase" })).toBeNull();
+    expect(screen.queryByText(/^memory$/i, { selector: "div.uppercase" })).toBeNull();
+    const rows = screen.getAllByRole("listitem").filter((li) => li.hasAttribute("data-state"));
+    const gateway = rows.find((li) => within(li).queryByText("Gateway"));
+    const memory = rows.find((li) => within(li).queryByText("Memory"));
+    expect(gateway).toBeDefined();
+    expect(memory).toBeDefined();
+    expect(within(gateway!).getByText("Healthy")).toBeInTheDocument();
+    expect(within(memory!).getByText("Degraded")).toBeInTheDocument();
+    expect(within(gateway!).getByText(/reachable at/)).toBeInTheDocument();
   });
 
   it("Scheduler reads the heartbeat and links to Settings > System", () => {
@@ -539,28 +530,33 @@ describe("C. the stat row", () => {
     expect(pill("Processes").value).toBe("2 Active");
   });
 
-  it("Errors counts the monitor's error rows and links to Logs", () => {
+  // Amended 2026-09-07 (U13, T-0127): the count the Errors pill carried is in
+  // the Errors panel's own header, beside the list it counts.
+  it("counts the monitor's error rows in the Errors panel's header, and has no Errors pill", () => {
     render(<Dashboard />);
-    const errors = pill("Errors");
-    expect(errors.value).toBe("3");
-    expect(errors.href).toBe("/results/logs");
+    expect(screen.queryByText(/^errors$/i, { selector: "div.uppercase" })).toBeNull();
+    expect(screen.getByText(/3 recent/)).toBeInTheDocument();
   });
 
-  it("reads Checking… on Gateway and Memory while the subsystems have not answered, never Healthy", () => {
+  // Amended 2026-09-07 (U13, T-0127): with no Gateway or Memory pill, "not
+  // answered yet" and "the check failed" are the Subsystems panel's to say,
+  // and it says the second with a Retry (the read contract) where it used to
+  // say "Checking..." for ever.
+  it("says Checking… on the Subsystems panel while the subsystems have not answered, never Healthy", () => {
     mockUseDashboard.mockReturnValue(dash({ subsystems: null, subsystemsError: null, subsystemsSettled: false }));
     render(<Dashboard />);
-    expect(pill("Gateway").value).toMatch(/checking/i);
-    expect(pill("Memory").value).toMatch(/checking/i);
+    expect(screen.getByText(/Checking/)).toBeInTheDocument();
     expect(screen.queryByText("Healthy")).toBeNull();
   });
 
-  it("reads Unknown on Gateway and Memory when the subsystems check failed", () => {
+  it("says the check failed, with a Retry, when the subsystems check failed", () => {
     mockUseDashboard.mockReturnValue(
       dash({ subsystems: null, subsystemsError: "subsystems unreachable", subsystemsSettled: true }),
     );
     render(<Dashboard />);
-    expect(pill("Gateway").value).toBe("Unknown");
-    expect(pill("Memory").value).toBe("Unknown");
+    const alerts = screen.getAllByRole("alert").filter((a) => /subsystems unreachable/.test(a.textContent ?? ""));
+    expect(alerts).toHaveLength(1);
+    expect(within(alerts[0]).getByRole("button", { name: /retry/i })).toBeInTheDocument();
     expect(screen.queryByText("Healthy")).toBeNull();
   });
 });
@@ -570,10 +566,11 @@ describe("C. the stat row", () => {
 // ═══════════════════════════════════════════════════════════════
 
 describe("D. the monitor's three states", () => {
-  it("shows six skeletons and no alert while the monitor has not answered", () => {
+  // Amended 2026-09-07 (U13, T-0127): three pills, three skeletons.
+  it("shows three skeletons and no alert while the monitor has not answered", () => {
     mockUseDashboard.mockReturnValue(dash({ monitor: null, monitorError: null, monitorSettled: false }));
     const { container } = render(<Dashboard />);
-    expect(container.querySelectorAll(".animate-pulse")).toHaveLength(6);
+    expect(container.querySelectorAll(".animate-pulse")).toHaveLength(3);
     expect(screen.queryByRole("alert")).toBeNull();
   });
 
@@ -598,8 +595,10 @@ describe("D. the monitor's three states", () => {
     const { container } = render(<Dashboard />);
     expect(container.querySelectorAll(".animate-pulse")).toHaveLength(0);
     expect(screen.queryByRole("alert")).toBeNull();
-    expect(pill("Gateway").value).toBe("Healthy");
-    expect(pill("Errors").value).toBe("3");
+    // Amended 2026-09-07 (U13, T-0127): the pills that remain, and the count
+    // where it lives now.
+    expect(pill("Scheduler").value).toBe("Ticking");
+    expect(screen.getByText(/3 recent/)).toBeInTheDocument();
   });
 });
 
