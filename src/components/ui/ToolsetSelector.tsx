@@ -98,7 +98,7 @@ export default function ToolsetSelector({
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search toolsets…" aria-label="Toolset search"
-                className="w-full pl-8 pr-3 py-2 text-body bg-ps-surface-ground border border-ps-edge rounded-ps-sm text-ps-text-primary focus:"
+                className="w-full pl-8 pr-3 py-2 text-body bg-ps-surface-ground border border-ps-edge rounded-ps-sm text-ps-text-primary"
               />
             </div>
             <p className="text-body text-ps-text-muted mt-1.5 px-1">

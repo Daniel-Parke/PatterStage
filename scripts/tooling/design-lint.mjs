@@ -174,6 +174,25 @@ export const RULES = [
       /\b(?:text|bg|border|ring|shadow|from|via|to|fill|stroke|outline|decoration|accent|divide|placeholder)-\$\{|\$\{[^}]+\}\/\d+|\.replace\([^)]*["'/](?:text|bg|border|ring|shadow|from|via|to|fill|stroke|outline|decoration|accent|divide|placeholder)-|className=[^\n]*\$\{[^}]+\}\$\{[^}]+\}/,
   },
   {
+    id: "no-dangling-variant",
+    law: "A Tailwind variant prefix with no utility after it (`focus:`) is a class that can never exist. Inert, so nothing fails - and evidence that something removed half of a class.",
+    files: (f) => f.startsWith("src/") && (f.endsWith(".ts") || f.endsWith(".tsx")),
+    // Eleven of these were left by T-0122's focus pass, which deleted
+    // `outline-none` with a \b anchor. `:` is a word boundary, so it matched
+    // inside `focus:outline-none` and left the prefix standing.
+    //
+    // Three narrowings, all load-bearing. The variants are SPELLED OUT rather
+    // than matched as [a-z-]+, because prose ends in a colon too ("error:") and
+    // so does a pseudo-selector in a plain string. It is anchored on the QUOTE
+    // that closes the string rather than on whitespace, because a ternary
+    // (`cond ? "x" : "y"`) puts a colon before a space and is not a class. And
+    // the prefix must FOLLOW another class: skills-config.ts writes
+    // `"  disabled:"` as a YAML key and `startsWith("disabled:")` as a parser,
+    // and a rule without that lookbehind would have deleted both.
+    pattern:
+      /(?<=[\w\]/%.-]) (?:(?:focus-visible|focus-within|focus|hover|active|disabled|visited|checked|group-hover|group-focus|peer-focus|peer-checked|first|last|odd|even|placeholder|motion-safe|motion-reduce|dark|print|sm|md|lg|xl|2xl):)+(?=["'`])/,
+  },
+  {
     id: "no-raw-colour-in-tsx",
     law: "Colour comes from a token, never a literal. Design tokens are in globals.css @theme + src/lib/theme.ts (docs/contributing/design-tokens.md).",
     files: (f) => f.startsWith("src/") && f.endsWith(".tsx"),

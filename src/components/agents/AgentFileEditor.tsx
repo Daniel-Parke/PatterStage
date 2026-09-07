@@ -102,7 +102,7 @@ export default function AgentFileEditor({
         <textarea aria-label="File content"
           value={editor.content}
           onChange={(e) => onContentChange(e.target.value)}
-          className="w-full min-h-[200px] max-h-64 bg-ps-surface-inset border border-ps-edge rounded-ps-md p-4 text-body text-ps-text-primary font-mono resize-y focus:"
+          className="w-full min-h-[200px] max-h-64 bg-ps-surface-inset border border-ps-edge rounded-ps-md p-4 text-body text-ps-text-primary font-mono resize-y"
           spellCheck={false}
         />
       )}

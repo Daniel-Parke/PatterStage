@@ -70,7 +70,7 @@ export default function SkillEditorModal({
         aria-label="Skill source"
         value={content}
         onChange={(e) => onContentChange(e.target.value)}
-        className="w-full min-h-[320px] bg-ps-surface-inset border border-ps-edge rounded-ps-md p-4 text-body text-ps-text-primary font-mono resize-y focus:"
+        className="w-full min-h-[320px] bg-ps-surface-inset border border-ps-edge rounded-ps-md p-4 text-body text-ps-text-primary font-mono resize-y"
         spellCheck={false}
       />
     </Modal>
