@@ -13,6 +13,19 @@
 // and the page's Panel is the one container around the lot. The name is
 // left alone because nothing about the component's contract changed and
 // a rename would churn every import for no reader's benefit.
+//
+// ONE LINE since T-0124. It was two - a title, then a wrapping line of up
+// to seven chips, inside `p-4` - which is a card's rhythm applied to a
+// ledger, and it made the list 3,621px of scroll at 77px a row. You come
+// to this screen to find one session among hundreds, so the cost of a
+// tall row is how many you can see at once.
+//
+// Nothing was dropped to get there. The eight fields are all still here;
+// they sit in COLUMNS rather than wrapping, so the eye can run down one of
+// them, and the ones that matter least give way first as the viewport
+// narrows rather than pushing the row back to two lines. The trailing
+// affordance is one chevron at a fixed right offset: three x positions in
+// one list is what makes a list look ragged even when the rows are level.
 // ═══════════════════════════════════════════════════════════════
 
 "use client";
@@ -46,77 +59,89 @@ export default function SessionCard({ session }: { session: SessionRecord }) {
     // link inside it: an anchor inside an anchor, which is invalid and which
     // assistive technology resolves however it likes (T-0105, D32). The row is
     // a div now, and the title carries a stretched link that covers it.
-    <LedgerRow hover padding="block" className="group relative cursor-pointer">
-        <div className="flex items-start justify-between">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              {isActive && <LiveDot />}
-              <MessageSquare className="w-4 h-4 text-neon-orange flex-shrink-0" />
-              <h3 className="font-semibold text-ps-text-primary truncate">
-                <Link
-                  href={`/results/sessions/${session.id}`}
-                  className="after:absolute after:inset-0 after:content-['']"
-                >
-                  {title}
-                </Link>
-              </h3>
-              {isFailed && (
-                <span title={failureTitle} className="relative z-10 shrink-0">
-                  <Badge color="red">
-                    {session.exitCode !== null && session.exitCode !== undefined
-                      ? `${SESSION_STATUS_LABELS.failed} · exit ${session.exitCode}`
-                      : SESSION_STATUS_LABELS.failed}
-                  </Badge>
-                </span>
-              )}
-            </div>
-            <div className="flex items-center gap-3 text-micro text-ps-text-muted font-mono flex-wrap">
-              <span
-                className={`flex items-center gap-1 ${isActive ? "text-neon-green" : ""}`}
-              >
-                <Clock className="w-3 h-3" />
-                {isActive ? `${formatElapsed(session.startedAt)} ago` : timeAgo(session.startedAt)}
-              </span>
-              <span className="flex items-center gap-1">
-                <span
-                  className={`flex items-center gap-1 px-1.5 py-0.5 rounded-ps-sm text-micro font-mono ${meta.colorClass}`}
-                >
-                  {meta.icon}
-                  {meta.label}
-                </span>
-              </span>
-              {session.profileName && (
-                <span className="text-ps-text-muted">{session.profileName}</span>
-              )}
-              {session.modelId && <Badge color="purple">{session.modelId}</Badge>}
-              {typeof session.messageCount === "number" && session.messageCount > 0 && (
-                <span
-                  className="flex items-center gap-1 text-ps-text-muted"
-                  title={`${session.messageCount} message${pluralise(session.messageCount)}`}
-                >
-                  <MessageSquare className="w-3 h-3" />
-                  {session.messageCount} msgs
-                </span>
-              )}
-              {session.size > 0 && (
-                <span className="flex items-center gap-1">
-                  <HardDrive className="w-3 h-3" />
-                  {(session.size / 1024).toFixed(1)} KB
-                </span>
-              )}
-              {session.missionId && (
-                <Link
-                  href={`${MISSIONS_PATH}?mission=${session.missionId}`}
-                  className="relative z-10"
-                  title="Open parent mission"
-                >
-                  <Badge color="green">mission</Badge>
-                </Link>
-              )}
-            </div>
-          </div>
-          <ChevronRight className="w-4 h-4 text-ps-viz-glyph-idle group-hover:text-neon-orange group-hover:translate-x-0.5 transition-all flex-shrink-0 ml-4" />
-        </div>
-      </LedgerRow>
+    <LedgerRow
+      hover
+      data-testid="session-row"
+      className="group relative flex cursor-pointer items-center gap-3"
+    >
+      {isActive && <LiveDot />}
+      <MessageSquare className="h-4 w-4 shrink-0 text-neon-orange" />
+      <h3 className="min-w-0 flex-1 truncate font-semibold text-ps-text-primary">
+        <Link
+          href={`/results/sessions/${session.id}`}
+          className="after:absolute after:inset-0 after:content-['']"
+        >
+          {title}
+        </Link>
+      </h3>
+
+      {isFailed && (
+        <span title={failureTitle} className="relative z-10 shrink-0">
+          <Badge color="red">
+            {session.exitCode !== null && session.exitCode !== undefined
+              ? `${SESSION_STATUS_LABELS.failed} · exit ${session.exitCode}`
+              : SESSION_STATUS_LABELS.failed}
+          </Badge>
+        </span>
+      )}
+      {session.missionId && (
+        <Link
+          href={`${MISSIONS_PATH}?mission=${session.missionId}`}
+          className="relative z-10 shrink-0"
+          title="Open parent mission"
+        >
+          <Badge color="green">mission</Badge>
+        </Link>
+      )}
+
+      {/* The columns, widest-to-narrowest in the order they give way. A fact
+          that is useful only when you are already looking closely goes first;
+          the age and the source are what you scan a list of sessions BY, so
+          they are the last to leave. */}
+      {session.profileName && (
+        <span className="hidden shrink-0 font-mono text-micro text-ps-text-muted xl:inline">
+          {session.profileName}
+        </span>
+      )}
+      {session.modelId && (
+        <span className="hidden shrink-0 lg:inline">
+          <Badge color="purple">{session.modelId}</Badge>
+        </span>
+      )}
+      {session.size > 0 && (
+        <span className="hidden w-20 shrink-0 items-center justify-end gap-1 font-mono text-micro tabular-nums text-ps-text-muted md:flex">
+          <HardDrive className="h-3 w-3" />
+          {(session.size / 1024).toFixed(1)} KB
+        </span>
+      )}
+      {typeof session.messageCount === "number" && session.messageCount > 0 && (
+        <span
+          className="hidden w-20 shrink-0 items-center justify-end gap-1 font-mono text-micro tabular-nums text-ps-text-muted sm:flex"
+          title={`${session.messageCount} message${pluralise(session.messageCount)}`}
+        >
+          <MessageSquare className="h-3 w-3" />
+          {session.messageCount} msgs
+        </span>
+      )}
+      <span
+        className={`flex shrink-0 items-center gap-1 rounded-ps-sm px-1.5 py-0.5 font-mono text-micro ${meta.colorClass}`}
+      >
+        {meta.icon}
+        {meta.label}
+      </span>
+      <span
+        data-testid="session-age"
+        className={`w-24 shrink-0 text-right font-mono text-micro tabular-nums ${isActive ? "text-neon-green" : "text-ps-text-muted"}`}
+      >
+        <Clock className="mr-1 inline h-3 w-3" />
+        {isActive ? `${formatElapsed(session.startedAt)} ago` : timeAgo(session.startedAt)}
+      </span>
+
+      <ChevronRight
+        data-testid="session-open"
+        aria-hidden="true"
+        className="h-4 w-4 shrink-0 text-ps-viz-glyph-idle transition-all group-hover:translate-x-0.5 group-hover:text-neon-orange"
+      />
+    </LedgerRow>
   );
 }

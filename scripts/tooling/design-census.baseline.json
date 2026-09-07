@@ -10,7 +10,7 @@
     "twelvePxShare": 0.57,
     "monoShare": 0.63,
     "textBelowFloor": 0,
-    "distinctBorderColours": 34,
+    "distinctBorderColours": 35,
     "distinctCardChromes": 85,
     "distinctButtonHeights": 28,
     "distinctButtonChromes": 79,
@@ -18,7 +18,7 @@
     "distinctBoxShadows": 15,
     "distinctZLayers": 1,
     "controlBordersBelowThree": 154,
-    "decorativeBordersBelowThree": 601,
+    "decorativeBordersBelowThree": 602,
     "hitTargetsBelowTwentyFour": 86,
     "routesWithMisalignedHeading": 0,
     "worstHeadingOffset": 0,
@@ -57,6 +57,14 @@
         "controlBordersBelowThree rose from 153 to 154",
         "decorativeBordersBelowThree rose from 598 to 601",
         "hitTargetsBelowTwentyFour rose from 84 to 86"
+      ]
+    },
+    {
+      "when": "2026-09-07",
+      "reason": "T-0124: distinctBorderColours 34 -> 35 and decorativeBordersBelowThree 601 -> 602, and both are the same fact. DistributionHistogram moved out of SVG because it was the one chart carrying text inside a preserveAspectRatio=none stretch, squashing every glyph to 57% of its width. Its bars were strokes and are borders now, so the census can SEE them: chart chrome that was always painted has entered a count that could not previously reach it. The colour is the viz layer's categorical accent, which S5 exempts from the status ladder by design, and the axis moved onto the hairline rung in the same change after the live contrast gate caught it at 1.27:1.",
+      "rose": [
+        "distinctBorderColours rose from 34 to 35",
+        "decorativeBordersBelowThree rose from 601 to 602"
       ]
     }
   ]

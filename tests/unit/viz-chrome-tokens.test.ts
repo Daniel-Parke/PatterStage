@@ -165,7 +165,18 @@ describe("no chart paints text below the measured tiers", () => {
   it("points the axis labels at a tier the contrast gate measures", () => {
     const clock = readFileSync(join(ROOT, "src/components/viz/RadialActivityClock.tsx"), "utf-8");
     const histo = readFileSync(join(ROOT, "src/components/viz/DistributionHistogram.tsx"), "utf-8");
+    // An SVG label paints through `fill`, so it names the token as a CSS var.
     expect(clock).toContain("var(--color-ps-text-faint)");
-    expect(histo).toContain("var(--color-ps-text-faint)");
+    // The histogram's labels are HTML since T-0124 - it was the one chart with
+    // text inside a `preserveAspectRatio="none"` stretch, squashing every glyph
+    // to 57% of its width - so the SAME tier arrives through the utility
+    // instead. That is the stronger form of this assertion, not the weaker
+    // one: a class is what `no-sub-12px-type` and the live contrast gate can
+    // both see, and a var in a fill is visible to neither.
+    expect(histo).toContain("text-ps-text-faint");
+    // On the CODE, not the prose: the file's own comment names the defect it
+    // fixed, and a pattern that reads comments is answered by the story
+    // rather than by the fix. No SVG means no viewBox to disagree with.
+    expect(histo).not.toMatch(/<svg/);
   });
 });

@@ -275,7 +275,22 @@ export default function InsightsPage() {
                     <CardTitle icon={BarChart3} hint="All-time share of recorded interaction events, grouped by category.">By category (all-time)</CardTitle>
                     <div className="flex items-center gap-4">
                       <Donut segments={segments} size={120} center={totalEvents.toLocaleString()} centerSub="events" />
-                      <ul className="flex-1 space-y-1.5">
+                      {/* Columns, not one tall list. Measured on the running
+                          product, this legend put a label at one end of a
+                          944px row and its value at the other: the worst
+                          label-to-value gap anywhere in the product, and five
+                          pairs on this page were over 400px. A pair you have
+                          to track across a thousand pixels is two facts, not
+                          one. auto-fill keeps them together at any width the
+                          card happens to be.
+
+                          Plain responsive columns rather than
+                          `repeat(auto-fill,minmax(...))`: the arbitrary value
+                          produced no rule at all, so the first version of this
+                          fix changed the source and not the screen. Checked
+                          against the built stylesheet and re-measured on the
+                          running product (T-0124). */}
+                      <ul className="grid flex-1 grid-cols-1 gap-x-6 gap-y-1.5 sm:grid-cols-2 xl:grid-cols-3">
                         {segments.length === 0 && (
                           <li className="text-body text-ps-text-muted">No activity recorded yet.</li>
                         )}

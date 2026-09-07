@@ -15,17 +15,23 @@ interface DistributionHistogramProps {
 
 /**
  * Vertical bar histogram for a bucketed distribution (e.g. run durations).
- * Responsive width via viewBox; pure SVG with a "draw-up" transition.
  *
- * Known and deferred (T-0114, for the Results conversion): `preserveAspectRatio
- * ="none"` stretches this chart horizontally to fill its card, and it is the one
- * chart in viz/ that carries TEXT inside that stretch. In a 323px card the
- * horizontal scale is 0.48, so a 12px label renders 14.4px tall and about 3.2px
- * per character. Raising the sizes off 8px and 9px made both dimensions 1.5x
- * larger and did not change the ratio, so this is strictly better than it was;
- * it is not yet right. Fixing it means the chart knowing its own rendered width
- * (there is no ResizeObserver anywhere in src/ yet) or moving the axis labels
- * out of the SVG into an HTML row, and both belong with the Insights rebuild.
+ * HTML, not SVG, since T-0124 — and that is the fix rather than a rewrite for
+ * its own sake. It was an SVG with `preserveAspectRatio="none"`, the one chart
+ * in viz/ carrying TEXT inside that stretch: measured on /results/insights it
+ * rendered 345px wide from a 600px viewBox, so every glyph was squashed to 57%
+ * of its width at full height. T-0114 raised the sizes off 8px and 9px, which
+ * made both dimensions larger and left the ratio exactly where it was.
+ *
+ * The note left there offered two fixes: teach the chart its own rendered width
+ * with a ResizeObserver, or move the labels out of the stretch. This is the
+ * second, taken further — a bar chart is a row of rectangles with a number
+ * over each and a word under it, and none of that needs a coordinate system.
+ * As HTML the bars flex to whatever width they are given, the labels are real
+ * text on the type scale that `no-sub-12px-type` can see, and the distortion
+ * cannot come back because there is no viewBox to disagree with.
+ *
+ * The `height` prop is the PLOT height, as it was; labels sit under it.
  */
 export default function DistributionHistogram({
   bins,
@@ -33,65 +39,62 @@ export default function DistributionHistogram({
   height = 140,
   className,
 }: DistributionHistogramProps) {
-  const W = 600;
-  const H = height;
-  const padX = 8;
-  const padTop = 16;
-  const padBottom = 22;
-  const n = bins.length;
-  if (n === 0) {
-    return (
-      <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} className={className} preserveAspectRatio="none">
-        <line x1="0" y1={H - padBottom} x2={W} y2={H - padBottom} stroke={neonAlpha(color, 20)} />
-      </svg>
-    );
-  }
-  const max = niceMax(Math.max(...bins.map((b) => b.value)));
-  const innerW = W - padX * 2;
-  const innerH = H - padTop - padBottom;
-  const slot = innerW / n;
-  const barW = Math.min(slot * 0.7, 48);
+  // The axis is drawn whether or not there is anything on it, so an empty
+  // distribution reads as "nothing yet" rather than as a missing component.
+  const max = bins.length > 0 ? niceMax(Math.max(...bins.map((b) => b.value))) : 1;
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} className={className} preserveAspectRatio="none">
-      <line x1={0} y1={H - padBottom} x2={W} y2={H - padBottom} stroke="var(--color-ps-viz-axis)" />
-      {bins.map((b, i) => {
-        const h = (b.value / max) * innerH;
-        const x = padX + i * slot + (slot - barW) / 2;
-        const y = H - padBottom - h;
-        return (
-          <g key={b.label}>
-            <rect
-              x={x}
-              y={y}
-              width={barW}
-              height={Math.max(0, h)}
-              rx={3}
-              fill={neonAlpha(color, 55)}
-              stroke={neonAlpha(color, 80)}
-              strokeWidth={1}
-              style={{ transition: "height 0.6s ease, y 0.6s ease" }}
-            >
-              <title>{`${b.label}: ${b.value}`}</title>
-            </rect>
+    <div className={className}>
+      {/* The axis is `ps-edge-hairline`, not `ps-viz-axis`. Moving out of SVG
+          turned a stroke into a real border, and the live contrast gate could
+          suddenly see it: white at 8% composites to 1.27:1 on the panel,
+          against the 1.55 a boundary needs to be visible at all. An axis IS a
+          subdivision inside one surface, which is what the hairline rung is
+          for, so this is the token that was always right. The other two charts
+          still stroke `ps-viz-axis` at 1.27:1 and no gate can see them; that is
+          recorded for the viz pass rather than changed from here (T-0124). */}
+      <div
+        className="flex items-end gap-2 border-b border-ps-edge-hairline"
+        style={{ height }}
+        role="img"
+        aria-label={
+          bins.length === 0
+            ? "No distribution recorded yet"
+            : bins.map((b) => `${b.label}: ${b.value}`).join(", ")
+        }
+      >
+        {bins.map((b) => (
+          <div key={b.label} className="flex min-w-0 flex-1 flex-col items-center justify-end">
             {b.value > 0 && (
-              <text x={x + barW / 2} y={y - 3} fill={neon(color)} fontSize={12} fontFamily="monospace" textAnchor="middle">
+              <div className="mb-1 font-mono text-micro tabular-nums" style={{ color: neon(color) }}>
                 {b.value}
-              </text>
+              </div>
             )}
-            <text
-              x={padX + i * slot + slot / 2}
-              y={H - padBottom + 13}
-              fill="var(--color-ps-text-faint)"
-              fontSize={12}
-              fontFamily="monospace"
-              textAnchor="middle"
-            >
-              {b.label}
-            </text>
-          </g>
-        );
-      })}
-    </svg>
+            <div
+              title={`${b.label}: ${b.value}`}
+              className="w-full max-w-12 rounded-t-ps-sm border border-b-0 transition-[height] duration-500"
+              style={{
+                // A bar with a real value is never invisible: 2px is the floor,
+                // so "one run in this bucket" is a mark rather than nothing.
+                height: b.value > 0 ? `max(2px, ${(b.value / max) * 100}%)` : 0,
+                background: neonAlpha(color, 55),
+                borderColor: neonAlpha(color, 80),
+              }}
+            />
+          </div>
+        ))}
+      </div>
+      <div className="mt-1 flex gap-2">
+        {bins.map((b) => (
+          <div
+            key={b.label}
+            className="min-w-0 flex-1 truncate text-center font-mono text-micro text-ps-text-faint"
+            title={b.label}
+          >
+            {b.label}
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }

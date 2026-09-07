@@ -158,7 +158,13 @@ export default function SpendPanel({ summary, onSave, saving = false }: SpendPan
       >
         {periodLabel(summary.budgetPeriod)}, by source
       </div>
-      <ul className="mt-1.5 space-y-1.5">
+      {/* Columns, not one full-width list. Measured on /results/insights,
+          this put a source name at one end of a 1,134px row and its
+          figures at the other: a 944px gap, the worst label-to-value
+          distance anywhere in the product, and four of these rows were
+          over 400px. A pair you have to track across a thousand pixels
+          is two facts rather than one (T-0124). */}
+      <ul className="mt-1.5 grid grid-cols-1 gap-x-8 gap-y-1.5 sm:grid-cols-2 xl:grid-cols-3">
         {budget.sources.map((s) => (
           <li
             key={s.source}
