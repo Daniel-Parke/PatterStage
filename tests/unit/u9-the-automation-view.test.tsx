@@ -173,10 +173,21 @@ describe("a row says when, when it last did, and how it went", () => {
     expect(within(row).getByTestId("last-run")).toHaveTextContent(/never/i);
   });
 
-  it("says which scheduler owns a host row, because unscheduling differs", () => {
+  /**
+   * Read off the owner ELEMENT, not the row's text. A host row also prints
+   * "next: ask the host" in its next-run column, so asking whether the row
+   * says "host" anywhere is answered by a different sentence entirely -
+   * deleting the owner label changed nothing this could see.
+   */
+  it("says which scheduler owns a row, because unscheduling differs", () => {
+    schedules.schedules = [schedule()];
     scripts.scripts = [script()];
     render(<AutomationList />);
-    const row = screen.getByTestId("automation-row-host:ps-backup.sh");
-    expect(row).toHaveTextContent(/host/i);
+    expect(
+      within(screen.getByTestId("automation-row-host:ps-backup.sh")).getByTestId("owner"),
+    ).toHaveTextContent("Host");
+    expect(within(screen.getByTestId("automation-row-s1")).getByTestId("owner")).toHaveTextContent(
+      "PatterStage",
+    );
   });
 });

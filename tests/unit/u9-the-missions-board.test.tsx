@@ -281,6 +281,35 @@ describe("splitBlocks names the rows that left the column", () => {
     ).toEqual([]);
   });
 
+  /**
+   * A row's left is the LEFTMOST block in it, and these two cases are what
+   * make that assertion able to fail. Sorted by top and then left, the
+   * leftmost block of a row usually arrives first anyway - so an
+   * implementation that simply takes the first block it sees passes every
+   * case where the blocks in a row start level. It only shows when they do
+   * not: a tall card on the right, and a shorter one beside it starting a
+   * few pixels lower.
+   */
+  it("takes a row's left from its leftmost block, not its first", () => {
+    expect(
+      splitBlocks(
+        [at(120, 0, "heading"), at(400, 60, "tall card", 200), at(120, 80, "short card")],
+        1,
+      ),
+    ).toEqual([]);
+  });
+
+  /**
+   * And the page's column is the leftmost ROW, not the first one. A page whose
+   * first block is inset and whose later rows are not would otherwise adopt
+   * the inset as the column and report nothing at all.
+   */
+  it("takes the column from the leftmost row, not the first row", () => {
+    expect(splitBlocks([at(144, 0, "inset banner"), at(120, 60, "the rest")], 1)).toEqual([
+      { left: 144, what: "inset banner", offset: 24 },
+    ]);
+  });
+
   it("takes the leftmost row as the column, not the commonest", () => {
     expect(
       splitBlocks([at(120, 0, "strip"), at(144, 60, "board"), at(144, 200, "schedules")], 1),

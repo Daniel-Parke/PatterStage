@@ -307,7 +307,12 @@ export default function AutomationList() {
                   {/* Which scheduler holds it. Not decoration: unscheduling a
                       host row edits the crontab and a PatterStage row edits the
                       table, and only one of them can be paused. */}
-                  <span className="shrink-0 font-mono text-micro text-ps-text-faint">{row.owner}</span>
+                  <span
+                    data-testid="owner"
+                    className="shrink-0 font-mono text-micro text-ps-text-faint"
+                  >
+                    {row.owner}
+                  </span>
                 </div>
                 <div className="truncate font-mono text-micro text-ps-text-muted">
                   {/* What it fires, then its clock - but only when the target
