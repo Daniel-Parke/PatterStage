@@ -145,6 +145,82 @@ at the call site.
 `no-raw-text-alpha` refuses a hierarchy spelled as a white opacity. Both are at
 zero.
 
+## Status: the word decides the colour
+
+Seven rungs, `--color-status-{idle,queued,running,ok,warn,fail,blocked}`, and
+you do not pick one. You pick a WORD.
+
+`src/lib/status-labels.ts` holds thirteen ratified words and the maps from each
+domain enum onto them, typed with `satisfies` so an enum member with no word is
+a compile error. `STATUS_TONE` hangs a tone off the word by the same mechanism,
+and `statusToneClasses` in `src/lib/theme.ts` turns a tone into four literal
+classes: `text`, `dot`, `fill` and `border`.
+
+```tsx
+const label = SESSION_STATUS_LABELS[session.status];
+<span className={statusToneClasses[statusTone(label)].text}>{label}</span>
+```
+
+The point of the indirection is that a thing cannot be CALLED one thing and
+PAINTED another. Before it existed, thirty-four sites in twenty-six files each
+decided for themselves: a Hermes process that was `running` painted green on the
+dashboard while every other screen painted running cyan, and `failed` was
+`text-neon-pink` on two screens while the declared danger token went unused.
+
+**What is not a status.** A log's severity, a notification's tone, an artifact's
+source kind, a research step's kind, a category's chosen colour and an
+achievement's tier are all keyed by something that is not a state word, and
+folding them onto this ladder would be a category error. A duration that came in
+on time is not a success either: it is an absence of news, and it stays neutral.
+`tests/unit/u6-the-status-ladder.test.ts` holds both halves , it refuses a state
+word painted an accent, and it requires each exemption to say why in its own
+file.
+
+## Radius: three rungs and a pill
+
+| Utility | Value | Is |
+|---------|-------|----|
+| `rounded-ps-sm` | 4px | a chip, a tag, a dot's box |
+| `rounded-ps-md` | 8px | a control: button, input, select, menu row |
+| `rounded-ps-lg` | 12px | a surface: card, panel, dialog, sheet |
+| `rounded-full` | pill | a status dot, an avatar, a pill |
+
+Side-specific spellings keep their side: `rounded-t-ps-lg` on a bottom sheet,
+`rounded-l-ps-lg` on a row's rail. Eleven spellings produced seven rendered
+radii before this, with forty files painting an 8px card edge on the same screen
+as a 12px one.
+
+## A class name in prose used to be CSS
+
+Tailwind v4 scans SOURCE, and its automatic detection reads the whole project.
+This repository documents its own class names, so `org/`, `docs/` and every task
+record were generating utilities: measured at T-0120, 94 candidate-shaped
+strings and 46 colour classes shipped only because a file outside `src/`
+mentioned them.
+
+`globals.css` therefore says `@import "tailwindcss" source(none)` and
+`@source "../../src"`. Widen that only for a directory that actually renders
+markup, and note that the generated help fragments do not, because they carry
+no `class` attribute at all.
+
+The corollary matters more. **A class Tailwind cannot see as a literal string
+does not exist.** Never build one:
+
+```tsx
+// no: none of these reach the stylesheet
+className={`border-${tone}`}
+className={`${iconColorMap[c]}/60`}
+const b = textColor.replace(/^text-/, "border-") + "/20";
+
+// yes: a whole class, chosen from a map written out one entry per line
+className={pillBorderMap[color]}
+```
+
+`no-template-literal-tailwind` refuses all three of the first shapes. It missed
+two of them until T-0120, and both were live: the dashboard's stat pills had
+three accents with no border rule and eight dead hovers, and the models section
+header's muted icon tint existed only because a unit test spelled the class out.
+
 ### Layer B3, viz chrome
 
 The furniture a chart is drawn **on**, as opposed to the data drawn **in** it.
