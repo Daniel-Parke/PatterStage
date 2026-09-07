@@ -149,13 +149,44 @@ async function renderPage() {
  * strip already had (T-0035: every tile painted 0 on first frame).
  */
 function tileValue(label: string): number {
+  // A TILE OR A LEGEND ROW, since T-0124. The strip used to print Active and
+  // Inactive as tiles beside a donut made of active and inactive skills, which
+  // is the same number twice - but `Donut` renders nothing from a segment's
+  // label, so deleting the tiles would have deleted the numbers rather than
+  // the duplication. The donut has a legend now, the tiles carry only what the
+  // legend cannot, and this reads whichever of the two the figure landed on.
+  //
+  // Still the DOM, not the props: a tile that computes correctly and paints
+  // something else is exactly the failure this suite exists for (T-0035, where
+  // every tile painted 0 on the first frame).
+  const readNumber = (el: Element, strip: string): number => {
+    const digits = (el.textContent ?? "").replace(strip, "").match(/\d[\d,]*/);
+    if (!digits) throw new Error(`no number in "${strip}": ${el.textContent}`);
+    return Number(digits[0].replace(/,/g, ""));
+  };
+
+  // Total is the number in the donut's own centre, and always was: the tile
+  // that used to print it was printing the centre a second time.
+  if (label === "Total") {
+    const centre = document.querySelector(".animate-float-in .text-title");
+    if (!centre) throw new Error("no donut centre on the strip");
+    return readNumber(centre, "");
+  }
+
   const tiles = screen.getAllByTestId("stat-tile").filter(
     (t) => t.getAttribute("data-stat-label") === label,
   );
-  if (tiles.length !== 1) throw new Error(`expected one "${label}" tile, found ${tiles.length}`);
-  const digits = (tiles[0].textContent ?? "").replace(label, "").match(/\d[\d,]*/);
-  if (!digits) throw new Error(`no number in the "${label}" tile: ${tiles[0].textContent}`);
-  return Number(digits[0].replace(/,/g, ""));
+  if (tiles.length === 1) return readNumber(tiles[0], label);
+
+  const rows = screen
+    .getAllByTestId("donut-legend")
+    .flatMap((ul) => Array.from(ul.querySelectorAll("li")))
+    .filter((li) => (li.textContent ?? "").startsWith(label));
+  if (rows.length === 1) return readNumber(rows[0], label);
+
+  throw new Error(
+    `expected one "${label}" tile or legend row, found ${tiles.length} and ${rows.length}`,
+  );
 }
 
 describe("the Skills tiles agree with the Skills page", () => {

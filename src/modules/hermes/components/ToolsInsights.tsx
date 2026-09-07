@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { Wrench, Check, Power, Layers } from "lucide-react";
+import { Layers } from "lucide-react";
 import StatStrip from "@/components/viz/StatStrip";
 import { HERMES_PLATFORMS } from "../lib/toolset-catalog";
 
@@ -30,10 +30,9 @@ export default function ToolsInsights({ total, enabled }: { total: number; enabl
         center: s.total,
         centerSub: "toolsets",
       }}
+      // Enabled and Disabled are the donut's arcs and Catalog is its centre.
+      // Platforms is the footnote (T-0124).
       tiles={[
-        { icon: Wrench, label: "Catalog", value: s.total, color: "cyan" },
-        { icon: Check, label: "Enabled", value: s.enabled, color: "green" },
-        { icon: Power, label: "Disabled", value: s.disabled, color: "orange" },
         { icon: Layers, label: "Platforms", value: HERMES_PLATFORMS.length, color: "purple" },
       ]}
       ring={{

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { Activity, Clock, MessageSquare, Terminal } from "lucide-react";
+import { MessageSquare } from "lucide-react";
 import StatStrip from "@/components/viz/StatStrip";
 import type { SessionTotals } from "@/lib/sessions/session-repository";
 
@@ -50,35 +50,20 @@ export default function SessionInsights({ totals }: { totals?: SessionTotals }) 
         center: totals.total,
         centerSub: "sessions",
       }}
+      // CLI is one of the donut's own arcs and Total is the number in its
+      // centre; Active is the number in the RING beside it. What none of the
+      // three pictures carries is how much was SAID - so Messages is the tile,
+      // and it is the only one (T-0124).
       tiles={[
-        {
-          icon: Activity,
-          label: "Active",
-          value: totals.active,
-          color: "green",
-          hint: "Every matching session still running, not just the ones on this page",
-        },
-        {
-          icon: Clock,
-          label: "Total",
-          value: totals.total,
-          color: "cyan",
-          hint: "Every matching session, not just the ones on this page",
-        },
         {
           icon: MessageSquare,
           label: "Messages",
           value: totals.messages,
           color: "orange",
+          // Compact, as it always was: a message count runs to six figures and
+          // "918k" is the reading a person takes from a strip.
           compact: true,
           hint: "Messages across every matching session, not just the ones on this page",
-        },
-        {
-          icon: Terminal,
-          label: "CLI",
-          value: totals.bySource.cli ?? 0,
-          color: "purple",
-          hint: "Every matching CLI session, not just the ones on this page",
         },
       ]}
       ring={{

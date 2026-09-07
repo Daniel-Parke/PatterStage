@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { Boxes, Layers, KeyRound } from "lucide-react";
+import { KeyRound } from "lucide-react";
 import StatStrip from "@/components/viz/StatStrip";
 import type { DonutSegment } from "@/components/viz/Donut";
 import type { NeonColor } from "@/components/viz/colors";
@@ -35,9 +35,9 @@ export default function ModelInsights({
     <StatStrip
       className="mb-5"
       donut={{ segments, center: s.total, centerSub: "models" }}
+      // Models is the number in the donut's centre and Providers is how many
+      // arcs it has. Credentials is the footnote (T-0124).
       tiles={[
-        { icon: Boxes, label: "Models", value: s.total, color: "cyan" },
-        { icon: Layers, label: "Providers", value: s.providers, color: "green" },
         { icon: KeyRound, label: "Credentials", value: credentialCount, color: "purple" },
       ]}
     />

@@ -136,9 +136,16 @@ describe("a tile says something the donut cannot", () => {
     expect((captured[0].donut?.segments ?? []).length).toBeGreaterThan(1);
   });
 
-  it.each(STRIPS)("%s keeps at least one tile, so the footnote survives", (_name, renderStrip) => {
+  /**
+   * At most three, which is the plan's number, and zero is allowed. The Logs
+   * strip ends with none: its donut is the severity mix, the number in that
+   * donut's centre is the line count, and the ring beside it is how clean the
+   * file is. Nothing is left for a tile to say, and inventing one would be the
+   * defect this rule exists to stop.
+   */
+  it.each(STRIPS)("%s carries at most three tiles", (_name, renderStrip) => {
     captured.length = 0;
     render(renderStrip());
-    expect((captured[0].tiles ?? []).length).toBeGreaterThan(0);
+    expect((captured[0].tiles ?? []).length).toBeLessThanOrEqual(3);
   });
 });

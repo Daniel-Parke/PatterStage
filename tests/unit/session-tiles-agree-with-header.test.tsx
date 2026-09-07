@@ -137,15 +137,49 @@ function headerNumber(): number {
  * drift onto the source-filter buttons or a session row badge.
  */
 function strip(): HTMLElement {
-  const anchor = screen.getByText("Total");
-  const found = anchor.closest(".animate-float-in");
-  if (!found) throw new Error("insights strip not found around the TOTAL tile");
+  // Anchored on the strip itself. It used to anchor on its own TOTAL TILE, and
+  // that tile is gone: the donut beside it is made of sources and its centre
+  // has always been the total, so the tile was the same number twice. `Donut`
+  // renders nothing from a segment's label, though, so the strip grew a LEGEND
+  // in the same change - otherwise deleting the tiles would have deleted the
+  // numbers rather than the duplication (T-0124).
+  const found = document.querySelector(".animate-float-in");
+  if (!found) throw new Error("insights strip not found");
   return found as HTMLElement;
 }
 
 /** The text printed on the tile carrying `label`, exactly as a reader sees it. */
 function tileText(label: string): string {
-  const labelEl = within(strip()).getByText(label);
+  const scope = strip();
+
+  // The donut's centre carries the whole-table total.
+  if (label === "Total") {
+    const centre = scope.querySelector(".text-title");
+    if (!centre) throw new Error("no donut centre on the strip");
+    return (centre.textContent ?? "").trim();
+  }
+  // The ring carries the active count.
+  if (label === "Active") {
+    // Inside the RING itself, by test id. Two cheaper selectors both read the
+    // wrong number here: the donut's centre is also a `font-mono font-semibold`
+    // span and comes first, and a tile carrying a hint is also a `div[title]`
+    // and also comes first. Either would have reported the total, or the
+    // message count, as the active count - which is exactly the kind of quiet
+    // wrong number this suite exists to catch.
+    const ring = scope.querySelector("[data-testid=stat-ring] .font-mono");
+    if (!ring) throw new Error("no ring label on the strip");
+    return (ring.textContent ?? "").trim();
+  }
+  // A legend row, then a tile: a source is a donut segment now, and Messages
+  // is the one figure none of the three pictures carries.
+  for (const li of Array.from(scope.querySelectorAll("[data-testid=donut-legend] li"))) {
+    if ((li.textContent ?? "").startsWith(label)) {
+      const value = li.querySelector(".font-mono");
+      if (!value) throw new Error(`no value on the ${label} legend row`);
+      return (value.textContent ?? "").trim();
+    }
+  }
+  const labelEl = within(scope).getByText(label);
   const tile = labelEl.parentElement?.parentElement;
   const value = tile?.querySelector(".font-mono");
   if (!value) throw new Error(`no value found on the ${label} tile`);

@@ -85,18 +85,46 @@ export default function StatStrip({
     <div
       className={`animate-float-in grid grid-cols-1 items-center gap-5 rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel p-4 ${layout} ${className}`}
     >
+      {/* The donut, and its LEGEND. `Donut` uses `segment.label` as a React key
+          and renders nothing from it, so for as long as this strip drew a bare
+          ring of arcs, the only place a segment's name and number appeared was
+          a tile beside it that repeated them. That is why every strip in the
+          product carried tiles saying Errors / Warnings / Info next to a donut
+          made of errors, warnings and info.
+          A legend is the smaller half of that pair and the honest one: the
+          picture says the MIX, the legend says the numbers, and a tile is then
+          free to be what a tile should be - a fact neither of them carries
+          (T-0124). */}
       {donut && (
-        <div className="flex justify-center">
+        <div className="flex items-center justify-center gap-4">
           <Donut size={96} thickness={12} segments={donut.segments} center={donut.center} centerSub={donut.centerSub} />
+          {donut.segments.length > 0 && (
+            <ul data-testid="donut-legend" className="min-w-0 space-y-1">
+              {donut.segments.map((seg) => (
+                <li key={seg.label} className="flex items-center gap-2 whitespace-nowrap text-micro">
+                  <span
+                    className="h-2 w-2 shrink-0 rounded-full"
+                    style={{ background: neon(seg.color) }}
+                  />
+                  <span className="text-ps-text-secondary">{seg.label}</span>
+                  <span className="ml-auto font-mono tabular-nums text-ps-text-muted">
+                    {seg.value.toLocaleString()}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
-      <div className={`grid gap-2 ${tiles.length >= 4 ? "grid-cols-2 sm:grid-cols-4" : "grid-cols-2 sm:grid-cols-3"}`}>
-        {tiles.map((t) => (
-          <Tile key={t.label} {...t} />
-        ))}
-      </div>
+      {tiles.length > 0 && (
+        <div className={`grid gap-2 ${tiles.length >= 4 ? "grid-cols-2 sm:grid-cols-4" : "grid-cols-2 sm:grid-cols-3"}`}>
+          {tiles.map((t) => (
+            <Tile key={t.label} {...t} />
+          ))}
+        </div>
+      )}
       {ring && (
-        <div className="flex justify-center" title={ring.hint}>
+        <div data-testid="stat-ring" className="flex justify-center" title={ring.hint}>
           <ProgressRing value={ring.value} color={ring.color} size={84} thickness={8} label={ring.label} sublabel={ring.sublabel} />
         </div>
       )}

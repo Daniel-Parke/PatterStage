@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { groupByCategory } from "@/lib/skills-grouping";
-import { FileText, Check, Power, Layers } from "lucide-react";
+import { Layers } from "lucide-react";
 import StatStrip from "@/components/viz/StatStrip";
 
 /** Skills overview — active/inactive mix + category count for the selected profile. */
@@ -45,10 +45,10 @@ export default function SkillsInsights({ skills, activeCount }: { skills: Array<
         center: s.total,
         centerSub: "skills",
       }}
+      // Active and Inactive are the donut's two arcs, and Total is the number
+      // in its centre. Categories is the one thing here an active/inactive mix
+      // cannot say (T-0124).
       tiles={[
-        { icon: FileText, label: "Total", value: s.total, color: "cyan", hint: "Skills available to the selected profile — not the full installed catalog." },
-        { icon: Check, label: "Active", value: s.active, color: "green", hint: "Skills currently enabled for this profile." },
-        { icon: Power, label: "Inactive", value: s.inactive, color: "orange", hint: "Available to the profile but not currently enabled (Total − Active)." },
         { icon: Layers, label: "Categories", value: s.categories, color: "purple", hint: "Distinct skill categories in this profile." },
       ]}
       ring={{

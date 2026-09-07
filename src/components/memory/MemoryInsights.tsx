@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { Brain, Clock, Archive, Tag } from "lucide-react";
+import { Tag } from "lucide-react";
 import StatStrip from "@/components/viz/StatStrip";
 
 /**
@@ -53,11 +53,13 @@ export default function MemoryInsights({
           center: realTotal ?? s.total,
           centerSub: "facts",
         }}
+        // Fresh and Stale are the donut's two arcs, and the donut's centre is
+        // ALREADY `realTotal ?? s.total` - so a "facts in store" tile is the
+        // same number twice by construction, which is what a first pass at this
+        // wrote before the rule caught it. Distinct tags is the one thing here
+        // a freshness mix cannot say (T-0124).
         tiles={[
-          { icon: Brain, label: "Facts", value: realTotal ?? s.total, color: "pink" },
-          { icon: Clock, label: "Fresh", value: s.fresh, color: "green" },
-          { icon: Archive, label: "Stale", value: s.stale, color: "orange" },
-          { icon: Tag, label: "Distinct tags", value: s.tags, color: "purple", hint: "Number of unique tag labels across the sampled facts — not the number of tagged facts." },
+          { icon: Tag, label: "Distinct tags", value: s.tags, color: "purple" as const, hint: "Number of unique tag labels across the sampled facts — not the number of tagged facts." },
         ]}
         ring={{
           value: s.total > 0 ? s.fresh / s.total : 0,
