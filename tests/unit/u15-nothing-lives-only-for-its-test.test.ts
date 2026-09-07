@@ -37,7 +37,7 @@ const SOURCE = /\.(ts|tsx|mts|mjs|js|cjs)$/;
 
 /** Next's file conventions under app/, plus the server's own entry files. */
 const APP_ENTRY =
-  /\/src\/app\/.*\/(page|layout|route|error|global-error|not-found|loading|template|default|manifest|robots|sitemap|icon|apple-icon|opengraph-image|twitter-image)\.(ts|tsx)$/;
+  /\/src\/app\/(?:.*\/)?(page|layout|route|error|global-error|not-found|loading|template|default|manifest|robots|sitemap|icon|apple-icon|opengraph-image|twitter-image)\.(ts|tsx)$/;
 
 function entries(): string[] {
   const out = walk(join(ROOT, "src", "app")).filter((f) => APP_ENTRY.test(f.replace(/\\/g, "/")));
