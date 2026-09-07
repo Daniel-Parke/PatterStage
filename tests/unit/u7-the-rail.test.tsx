@@ -37,7 +37,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { MODULES } from "@/lib/modules/registry";
+import { MODULES, labelFor } from "@/lib/modules/registry";
 
 const ROOT = join(__dirname, "..", "..");
 const read = (rel: string) => readFileSync(join(ROOT, rel), "utf-8").replace(/\r\n/g, "\n");
@@ -72,6 +72,24 @@ describe("the sub-link tier is gone", () => {
   });
 
   /**
+   * The job that SURVIVED decision 8. `subLinks` was doing two things and only
+   * one was the rail's: `labelFor` read the sub-link's label, so deleting the
+   * field outright made /agent/settings/restore title itself "Settings" and
+   * /recroom/story-weaver/create title itself "Story Weaver". `childRoutes`
+   * keeps the naming and drops the tier.
+   */
+  it.each([
+    ["/agent/settings/restore", "Restore"],
+    ["/agent/settings/system", "System"],
+    ["/recroom/story-weaver/library", "Library"],
+    ["/recroom/story-weaver/create", "Create"],
+    ["/recroom/story-weaver/characters", "Characters"],
+    ["/recroom/story-weaver/themes", "Themes"],
+  ])("the registry still names %s", (href, label) => {
+    expect(labelFor(href)).toBe(label);
+  });
+
+  /**
    * Both destinations already carry full in-page navigation to exactly the
    * places the tier duplicated, which is why deleting it removes a tier rather
    * than a route. The routes themselves are untouched.
@@ -101,8 +119,18 @@ describe("the rail has a hierarchy", () => {
    * the rail, or the active one has nowhere to go. Labels move up a tier so
    * that they can.
    */
+  /**
+   * The ROW's own class expression, not the file. The collapse button carries
+   * `hover:text-ps-text-secondary`, so a file-wide match is answered by a
+   * control at the other end of the rail.
+   */
   it("gives an inactive row the secondary tier, not the muted one", () => {
-    expect(rail()).toMatch(/text-ps-text-secondary/);
+    const source = rail();
+    const at = source.indexOf("hover:bg-ps-surface-raised hover:text-ps-text-primary");
+    expect(at).toBeGreaterThan(-1);
+    const rowClasses = source.slice(Math.max(0, at - 60), at + 60);
+    expect(rowClasses).toContain("text-ps-text-secondary");
+    expect(rowClasses).not.toContain("text-ps-text-muted");
   });
 
   /**
@@ -120,8 +148,13 @@ describe("the rail has a hierarchy", () => {
    * The accent per destination is the registry's, and the rail is where it is
    * spent. Spending it on one hovered icon at a time is spending it on nothing.
    */
+  /**
+   * The MAP, named. `iconColorMap` also appears in this file - it is the
+   * icon's - so asking whether the file mentions "a colour map" is answered by
+   * the wrong one, and the bar could go grey with the assertion still green.
+   */
   it("paints that bar in the destination's own registry colour", () => {
-    expect(rail()).toMatch(/iconColorMap|railAccentMap|accentBarMap/);
+    expect(rail()).toMatch(/railAccentBarMap\[link\.color\]/);
   });
 });
 
@@ -166,8 +199,18 @@ describe("the product is named once", () => {
     expect(header).toMatch(/BrandMark/);
   });
 
+  /**
+   * The ELEMENT, not the import. `toMatch(/BrandMark/)` is answered by the
+   * import line, so the rail could go back to drawing its own square with the
+   * assertion still green.
+   */
   it("and there is exactly one place that draws it", () => {
     expect(() => read("src/components/layout/BrandMark.tsx")).not.toThrow();
-    expect(code(read("src/components/layout/Sidebar.tsx"))).toMatch(/BrandMark/);
+    expect(code(read("src/components/layout/Sidebar.tsx"))).toMatch(/<BrandMark\b/);
+    expect(code(read("src/components/layout/MobileHeader.tsx"))).toMatch(/<BrandMark\b/);
+    // And nobody else redraws the mark by hand.
+    for (const path of ["src/components/layout/Sidebar.tsx", "src/components/layout/MobileHeader.tsx"]) {
+      expect(code(read(path))).not.toContain("animated-border");
+    }
   });
 });
