@@ -10,7 +10,8 @@
 
 import { Brain, Clock, Tag } from "lucide-react";
 import Badge from "@/components/ui/Badge";
-import { LoadingSpinner, EmptyState } from "@/components/ui/LoadingSpinner";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { timeAgo } from "@/lib/utils";
 import { hindsightFactTypeBadgeColor } from "./utils";
 import type { Memory } from "./types";

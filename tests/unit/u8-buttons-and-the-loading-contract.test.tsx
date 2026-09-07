@@ -55,7 +55,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { pendingCount } from "@/components/ui/PageLoading";
 
 const chrome = (el: Element) => (el.getAttribute("class") ?? "").split(/\s+/);
-const Dot = ({ className }: { className?: string }) => <svg className={className} />;
+const Dot = (props: Record<string, unknown>) => <svg {...props} />;
 
 describe("a button is one of three heights", () => {
   it.each([

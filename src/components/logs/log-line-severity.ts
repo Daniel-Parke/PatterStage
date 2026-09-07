@@ -22,7 +22,7 @@
 //
 // BE PRECISE ABOUT WHAT IT ACTUALLY GOT WRONG, because the first write-up of
 // this task, and the task record itself, overstated it. The old pattern ended
-// in , so it could never match a PLURAL: `Found 0 errors` and `completed
+// in `\b`, so it could never match a PLURAL: `Found 0 errors` and `completed
 // with no errors` were already classified info, and citing them as the
 // motivation was wrong. Both were re-run against the old regex before this
 // paragraph was rewritten.

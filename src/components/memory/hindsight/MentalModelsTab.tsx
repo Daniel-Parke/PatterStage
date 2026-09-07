@@ -5,7 +5,8 @@
 import { Settings, Plus, Zap, RefreshCw, Clock } from "lucide-react";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
-import { LoadingSpinner, EmptyState } from "@/components/ui/LoadingSpinner";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { pluralise, timeAgo } from "@/lib/utils";
 import { RowEditButton, RowDeleteButton } from "./RowActionButtons";
 import type { MentalModel } from "./types";

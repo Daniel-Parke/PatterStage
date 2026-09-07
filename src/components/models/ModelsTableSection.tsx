@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { Database, Edit3, Plus, RefreshCw } from "lucide-react";
 
 import Button from "@/components/ui/Button";
-import { EmptyState } from "@/components/ui/LoadingSpinner";
+import { EmptyState } from "@/components/ui/EmptyState";
 import GlowSurface from "@/components/ui/GlowSurface";
 import ModelSyncButtons from "@/components/models/ModelSyncButtons";
 import ModelsSectionHeader from "@/components/models/ModelsSectionHeader";

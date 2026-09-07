@@ -5,7 +5,8 @@
 import { FileText, Plus, ToggleRight, ToggleLeft, RefreshCw } from "lucide-react";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
-import { LoadingSpinner, EmptyState } from "@/components/ui/LoadingSpinner";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { pluralise } from "@/lib/utils";
 import { RowEditButton, RowDeleteButton } from "./RowActionButtons";
 import type { Directive } from "./types";

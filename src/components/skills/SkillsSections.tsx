@@ -20,7 +20,7 @@
 "use client";
 
 import { ToggleLeft, ToggleRight, type LucideIcon } from "lucide-react";
-import { EmptyState } from "@/components/ui/LoadingSpinner";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { SkillSection } from "@/components/skills/SkillSection";
 import { SkillCategoryList } from "@/components/skills/SkillCategoryList";
 import { groupCategories } from "@/lib/skills-page-helpers";

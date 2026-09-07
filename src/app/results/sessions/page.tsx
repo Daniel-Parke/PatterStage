@@ -34,7 +34,8 @@
 import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import { Clock } from "lucide-react";
 import PageHeader from "@/components/layout/PageHeader";
-import { LoadingSpinner, EmptyState } from "@/components/ui/LoadingSpinner";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { EmptyState } from "@/components/ui/EmptyState";
 import Pagination, { PAGE_SIZE_OPTIONS } from "@/components/ui/Pagination";
 import { useToast } from "@/components/ui/Toast";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";

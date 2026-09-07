@@ -276,7 +276,11 @@ describe("the shared control bases wear the control rung", () => {
   it.each([
     ["the text input base", "src/lib/theme.ts", "baseInputStyles"],
     ["the field primitive's base", "src/components/ui/field/Input.tsx", "BASE"],
-    ["the secondary button", "src/components/ui/Button.tsx", "bg-ps-surface-raised"],
+    // The path moved in U8 (T-0122): Button's chrome was extracted so
+    // IconButton wears the same one and the two cannot drift. The assertion is
+    // unchanged and still reads the string that decides the control's edge -
+    // it is now one file further along.
+    ["the secondary button", "src/components/ui/button-chrome.ts", "bg-ps-surface-raised"],
   ])("%s carries edge, not hairline", (_what, path, near) => {
     const source = read(path);
     const at = source.indexOf(near);

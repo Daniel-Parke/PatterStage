@@ -14,7 +14,7 @@
 "use client";
 
 import { Search } from "lucide-react";
-import { EmptyState } from "@/components/ui/LoadingSpinner";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { SkillRowList } from "@/components/skills/SkillRowList";
 import type { Skill } from "@/types/console";
 

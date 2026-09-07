@@ -5,6 +5,7 @@
 import { statusToneClasses } from "@/lib/theme";
 import type { AccentColor } from "@/types/console";
 import GlowSurface from "@/components/ui/GlowSurface";
+import type { SurfaceElement } from "@/components/ui/GlowSurface";
 
 interface CardProps {
   children: React.ReactNode;
@@ -15,6 +16,21 @@ interface CardProps {
   glowAnimated?: boolean;
   hover?: boolean;
   padding?: "none" | "sm" | "md" | "lg";
+  /**
+   * Which rung the card sits on. `panel` is the default and is what a card
+   * on the PAGE is. `raised` is for one nested inside another surface, where
+   * the panel rung would be the same fill as its own parent and the card
+   * would read as a rule rather than a surface (T-0122).
+   */
+  variant?: "panel" | "raised";
+  /**
+   * The element to render. A card is usually a div, but nine of the sites
+   * this primitive absorbs are a `<section>`, `<header>` or `<article>`, and
+   * rendering those as a div would delete nine landmarks from the
+   * accessibility tree. Container elements only: a card is a box, and a
+   * `<form>` or a `<button>` needs props this does not carry (T-0122).
+   */
+  as?: SurfaceElement;
 }
 
 const paddingMap = {
@@ -32,16 +48,20 @@ export default function Card({
   glowAnimated = false,
   hover = false,
   padding = "md",
+  variant = "panel",
+  as,
 }: CardProps) {
   const hoverClass = hover
     ? "hover:border-ps-edge-emphasis transition-colors cursor-pointer"
     : "";
   const padClass = paddingMap[padding];
 
-  const innerClasses = `rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel min-w-0 ${padClass} ${hoverClass} ${className}`;
+  const fill = variant === "raised" ? "bg-ps-surface-raised" : "bg-ps-surface-panel";
+  const innerClasses = `rounded-ps-lg border border-ps-edge-hairline ${fill} min-w-0 ${padClass} ${hoverClass} ${className}`;
 
   return (
     <GlowSurface
+      as={as}
       accent={glow}
       intensity={glowIntensity}
       animated={glowAnimated}

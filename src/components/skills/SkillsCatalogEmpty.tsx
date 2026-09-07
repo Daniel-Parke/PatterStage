@@ -6,7 +6,7 @@
 
 import { FileText } from "lucide-react";
 import Button from "@/components/ui/Button";
-import { EmptyState } from "@/components/ui/LoadingSpinner";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 export default function SkillsCatalogEmpty({
   importing,
