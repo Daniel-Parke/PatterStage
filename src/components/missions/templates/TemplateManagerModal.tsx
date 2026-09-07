@@ -54,7 +54,7 @@ function TemplateRow({
   };
   return (
     <div
-      className="flex items-center justify-between p-2.5 rounded-lg border border-ps-edge-hairline bg-ps-surface-raised hover:border-ps-edge-hairline transition-colors group"
+      className="flex items-center justify-between p-2.5 rounded-ps-md border border-ps-edge-hairline bg-ps-surface-raised hover:border-ps-edge-hairline transition-colors group"
     >
       <div className="flex items-center gap-2.5 min-w-0 flex-1">
         <div className="text-body text-ps-text-primary truncate">{template.name}</div>
@@ -68,14 +68,14 @@ function TemplateRow({
         <div className="flex items-center gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
           <button
             onClick={() => onEdit(template)}
-            className="p-1.5 rounded text-ps-text-muted hover:text-neon-cyan hover:bg-cyan-500/10 transition-colors"
+            className="p-1.5 rounded-ps-sm text-ps-text-muted hover:text-neon-cyan hover:bg-cyan-500/10 transition-colors"
             title="Edit"
           >
             <Edit3 className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={handleDeleteClick}
-            className={`p-1.5 rounded transition-colors ${
+            className={`p-1.5 rounded-ps-sm transition-colors ${
               isArmed
                 ? "text-neon-red bg-neon-red/15 ring-1 ring-neon-red/40"
                 : "text-ps-text-muted hover:text-red-400 hover:bg-red-500/10"

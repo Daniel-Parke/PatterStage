@@ -1,5 +1,6 @@
 // StoryCard — Clickable library card for a story
 "use client";
+import { statusToneClasses } from "@/lib/theme";
 import { BookOpen, Trash2 } from "lucide-react";
 
 import ConfirmButton from "@/components/ui/ConfirmButton";
@@ -16,10 +17,16 @@ interface StoryCardProps {
   onDelete: (id: string) => void;
 }
 
+/**
+ * A story that is being written is RUNNING, and was the clearest case of the
+ * defect this batch removes: three states painted in three raw ramp colours
+ * that no other screen used, so "generating" looked like nothing else in the
+ * product that was also in progress (T-0120).
+ */
 const BADGE_TONE: Record<string, string> = {
-  complete: "bg-green-500/10 text-neon-green",
-  failed: "bg-red-500/10 text-red-400",
-  generating: "bg-orange-500/10 text-orange-400",
+  complete: `${statusToneClasses.ok.fill} ${statusToneClasses.ok.text}`,
+  failed: `${statusToneClasses.fail.fill} ${statusToneClasses.fail.text}`,
+  generating: `${statusToneClasses.running.fill} ${statusToneClasses.running.text}`,
 };
 
 export default function StoryCard({ story, onRead, onDelete }: StoryCardProps) {
@@ -30,7 +37,7 @@ export default function StoryCard({ story, onRead, onDelete }: StoryCardProps) {
   return (
     <div
       onClick={() => onRead(story.id)}
-      className="rounded-xl border border-neon-purple/15 bg-ps-surface-panel p-5 hover:border-neon-purple/30 hover:shadow-[0_0_15px_rgb(var(--ps-rgb-neon-purple)_/_0.06)] transition-all cursor-pointer group flex flex-col">
+      className="rounded-ps-lg border border-neon-purple/15 bg-ps-surface-panel p-5 hover:border-neon-purple/30 hover:shadow-[0_0_15px_rgb(var(--ps-rgb-neon-purple)_/_0.06)] transition-all cursor-pointer group flex flex-col">
       <div className="flex items-start justify-between mb-3">
         <div className="min-w-0 flex-1">
           <h3 className="text-body font-semibold text-ps-text-primary truncate">{story.title}</h3>

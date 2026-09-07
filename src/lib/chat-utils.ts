@@ -96,10 +96,10 @@ export function renderMarkdown(text: string): string {
   let html = safe.replace(
     /```(\w*)\n([\s\S]*?)```/g,
     `<div class="relative group"><div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">` +
-      `<button class="${COPY_BTN_CLASS} text-micro font-mono text-ps-text-muted hover:text-ps-text-primary bg-gray-900/80 px-2 py-1 rounded border border-ps-edge-hairline" ${COPY_BTN_DATA_ATTR}="$2">Copy</button></div>` +
-      '<pre class="bg-gray-900 border border-ps-edge-hairline rounded-lg p-4 overflow-x-auto text-body font-mono text-ps-text-primary leading-relaxed my-2"><code>$2</code></pre></div>',
+      `<button class="${COPY_BTN_CLASS} text-micro font-mono text-ps-text-muted hover:text-ps-text-primary bg-gray-900/80 px-2 py-1 rounded-ps-sm border border-ps-edge-hairline" ${COPY_BTN_DATA_ATTR}="$2">Copy</button></div>` +
+      '<pre class="bg-gray-900 border border-ps-edge-hairline rounded-ps-md p-4 overflow-x-auto text-body font-mono text-ps-text-primary leading-relaxed my-2"><code>$2</code></pre></div>',
   );
-  html = html.replace(/`([^`]+)`/g, '<code class="bg-ps-surface-raised px-1 py-0.5 rounded text-micro font-mono text-neon-cyan">$1</code>');
+  html = html.replace(/`([^`]+)`/g, '<code class="bg-ps-surface-raised px-1 py-0.5 rounded-ps-sm text-micro font-mono text-neon-cyan">$1</code>');
   html = html.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
   html = html.replace(/\*([^*]+)\*/g, "<em>$1</em>");
   html = html.replace(/\n/g, "<br />");

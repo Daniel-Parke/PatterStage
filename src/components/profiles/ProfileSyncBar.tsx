@@ -28,7 +28,7 @@ export default function ProfileSyncBar({
         disabled={busy}
         onClick={() => void onPushAll()}
         title="Push all profiles and Bob from database to Hermes disk"
-        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-micro font-mono rounded-lg border border-neon-purple/40 text-neon-purple hover:bg-neon-purple/10 disabled:opacity-50"
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-micro font-mono rounded-ps-md border border-neon-purple/40 text-neon-purple hover:bg-neon-purple/10 disabled:opacity-50"
       >
         {busy ? (
           <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -42,7 +42,7 @@ export default function ProfileSyncBar({
         disabled={busy}
         onClick={() => void onPullAll()}
         title="Pull all profiles and Bob from Hermes disk into database"
-        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-micro font-mono rounded-lg border border-neon-cyan/40 text-neon-cyan hover:bg-neon-cyan/10 disabled:opacity-50"
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-micro font-mono rounded-ps-md border border-neon-cyan/40 text-neon-cyan hover:bg-neon-cyan/10 disabled:opacity-50"
       >
         {busy ? (
           <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -57,7 +57,7 @@ export default function ProfileSyncBar({
           disabled={busy}
           onClick={() => void onImportDiscovered()}
           title="Import profile directories on disk that are not yet in SQLite"
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-micro font-mono rounded-lg border border-ps-edge-emphasis text-ps-text-muted hover:bg-ps-surface-raised disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-micro font-mono rounded-ps-md border border-ps-edge-emphasis text-ps-text-muted hover:bg-ps-surface-raised disabled:opacity-50"
         >
           Import discovered
         </button>

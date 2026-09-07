@@ -40,14 +40,14 @@ export default function MissionTimeSelector({ value, onChange, compact = false }
       <span ref={ref} className="relative inline-flex">
         <button
           onClick={() => setOpen(!open)}
-          className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-ps-surface-raised border border-ps-edge text-micro font-mono text-ps-text-secondary hover:border-neon-cyan/50 hover:text-neon-cyan transition-colors"
+          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-ps-sm bg-ps-surface-raised border border-ps-edge text-micro font-mono text-ps-text-secondary hover:border-neon-cyan/50 hover:text-neon-cyan transition-colors"
           title={`Mission time: ${selected.label} (${selected.minutes}m ≈ ${selected.devHours} dev work)`}
         >
           <Clock className="w-3 h-3" />
           {selected.minutes}m
         </button>
         {open && (
-          <div className="absolute top-full left-0 mt-1 z-50 w-48 bg-ps-surface-panel border border-ps-edge-hairline rounded-lg shadow-xl overflow-hidden">
+          <div className="absolute top-full left-0 mt-1 z-50 w-48 bg-ps-surface-panel border border-ps-edge-hairline rounded-ps-md shadow-xl overflow-hidden">
             {PRESETS.map((p) => (
               <button
                 key={p.minutes}
@@ -68,7 +68,7 @@ export default function MissionTimeSelector({ value, onChange, compact = false }
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg bg-ps-surface-raised border border-ps-edge text-body text-ps-text-primary hover:border-ps-edge-emphasis transition-colors"
+        className="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-ps-md bg-ps-surface-raised border border-ps-edge text-body text-ps-text-primary hover:border-ps-edge-emphasis transition-colors"
       >
         <div className="flex items-center gap-2">
           <Clock className="w-4 h-4 text-neon-cyan" />
@@ -78,7 +78,7 @@ export default function MissionTimeSelector({ value, onChange, compact = false }
         <ChevronDown className={`w-4 h-4 text-ps-text-muted transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
-        <div className="absolute top-full left-0 right-0 mt-1 z-50 bg-ps-surface-panel border border-ps-edge-hairline rounded-lg shadow-xl overflow-hidden">
+        <div className="absolute top-full left-0 right-0 mt-1 z-50 bg-ps-surface-panel border border-ps-edge-hairline rounded-ps-md shadow-xl overflow-hidden">
           {PRESETS.map((p) => (
             <button
               key={p.minutes}

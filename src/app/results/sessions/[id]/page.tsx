@@ -202,7 +202,7 @@ export default function SessionDetailPage() {
               {data.missionId && (
                 <a
                   href={`${MISSIONS_PATH}?mission=${data.missionId}`}
-                  className="text-micro font-mono px-2 py-1 rounded bg-neon-green/10 text-neon-green hover:bg-neon-green/20 transition-colors"
+                  className="text-micro font-mono px-2 py-1 rounded-ps-sm bg-neon-green/10 text-neon-green hover:bg-neon-green/20 transition-colors"
                   title="Open the parent mission"
                 >
                   ↗ Mission
@@ -211,14 +211,14 @@ export default function SessionDetailPage() {
               <button
                 type="button"
                 onClick={() => setExpandAll((v) => (v === true ? false : true))}
-                className="text-micro font-mono px-2 py-1 rounded bg-ps-surface-raised text-ps-text-muted hover:text-ps-text-primary transition-colors"
+                className="text-micro font-mono px-2 py-1 rounded-ps-sm bg-ps-surface-raised text-ps-text-muted hover:text-ps-text-primary transition-colors"
               >
                 {expandAll === true ? "Collapse all" : "Expand all"}
               </button>
               <button
                 type="button"
                 onClick={() => void copy(transcriptText)}
-                className="text-micro font-mono px-2 py-1 rounded bg-ps-surface-raised text-ps-text-muted hover:text-ps-text-primary transition-colors"
+                className="text-micro font-mono px-2 py-1 rounded-ps-sm bg-ps-surface-raised text-ps-text-muted hover:text-ps-text-primary transition-colors"
                 title="Copy the messages currently shown"
               >
                 {copied ? "Copied" : "Copy transcript"}
@@ -227,7 +227,7 @@ export default function SessionDetailPage() {
                 <button
                   type="button"
                   onClick={() => void refetch()}
-                  className="text-micro font-mono px-2 py-1 rounded bg-neon-cyan/10 text-neon-cyan hover:bg-neon-cyan/20 transition-colors"
+                  className="text-micro font-mono px-2 py-1 rounded-ps-sm bg-neon-cyan/10 text-neon-cyan hover:bg-neon-cyan/20 transition-colors"
                   title="Reload to check for new messages"
                 >
                   ⟳ Refresh
@@ -243,7 +243,7 @@ export default function SessionDetailPage() {
                     onClick={() => handleRoleBadgeClick(role)}
                     onDoubleClick={() => scrollToNextRole(role)}
                     title={`Click to filter · Double-click to jump to next ${role}`}
-                    className={`text-micro font-mono px-2 py-1 rounded transition-colors cursor-pointer ${
+                    className={`text-micro font-mono px-2 py-1 rounded-ps-sm transition-colors cursor-pointer ${
                       isActive
                         ? `${m.bgSolid} ${m.text} ring-1 ring-ps-edge-emphasis`
                         : `${m.bgSolid} ${m.text} opacity-60 hover:opacity-100`
@@ -257,7 +257,7 @@ export default function SessionDetailPage() {
                 <button
                   type="button"
                   onClick={clearRoleFilter}
-                  className="text-micro font-mono text-ps-text-muted hover:text-ps-text-secondary px-1.5 py-1 rounded bg-ps-surface-raised"
+                  className="text-micro font-mono text-ps-text-muted hover:text-ps-text-secondary px-1.5 py-1 rounded-ps-sm bg-ps-surface-raised"
                 >
                   clear
                 </button>
@@ -272,7 +272,7 @@ export default function SessionDetailPage() {
         {data.status === "failed" && (
           <div
             role="alert"
-            className="mb-4 rounded-lg border border-semantic-danger/40 bg-semantic-danger/10 p-3"
+            className="mb-4 rounded-ps-md border border-semantic-danger/40 bg-semantic-danger/10 p-3"
           >
             <p className="text-body font-semibold text-semantic-danger">
               {SESSION_STATUS_LABELS.failed}

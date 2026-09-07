@@ -266,7 +266,7 @@ export default function SchedulePicker({
           <ChevronDown className={`w-4 h-4 text-ps-text-muted transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
         </button>
         {dropdownOpen && (
-          <div className="absolute z-50 mt-1 w-full bg-ps-surface-panel border border-ps-edge-hairline rounded-xl shadow-2xl overflow-hidden">
+          <div className="absolute z-50 mt-1 w-full bg-ps-surface-panel border border-ps-edge-hairline rounded-ps-lg shadow-2xl overflow-hidden">
             <div className="max-h-72 overflow-y-auto py-1">
               {groups.map(({ group, items }) => (
                 <div key={group}>
@@ -293,7 +293,7 @@ export default function SchedulePicker({
           </div>
         )}
         {error && (
-          <div className="flex items-center gap-2 text-body text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 mt-1.5">
+          <div className="flex items-center gap-2 text-body text-red-400 bg-red-500/10 border border-red-500/20 rounded-ps-md px-3 py-2 mt-1.5">
             <AlertCircle className="w-4 h-4 flex-shrink-0" />
             {error}
           </div>
@@ -325,7 +325,7 @@ export default function SchedulePicker({
         </button>
 
         {dropdownOpen && (
-          <div className="absolute z-50 mt-1 w-full bg-ps-surface-panel border border-ps-edge-hairline rounded-xl shadow-2xl overflow-hidden">
+          <div className="absolute z-50 mt-1 w-full bg-ps-surface-panel border border-ps-edge-hairline rounded-ps-lg shadow-2xl overflow-hidden">
             <div className="max-h-72 overflow-y-auto py-1">
               {groups.map(({ group, items }) => (
                 <div key={group}>
@@ -380,7 +380,7 @@ export default function SchedulePicker({
 
       {/* Read-only canonical cron display + next-run preview */}
       {canonicalCron && (
-        <div className="rounded-lg bg-ps-surface-raised border border-ps-edge-hairline px-3 py-1.5 space-y-1">
+        <div className="rounded-ps-md bg-ps-surface-raised border border-ps-edge-hairline px-3 py-1.5 space-y-1">
           <div className="flex items-center gap-2">
             <span className="text-micro text-ps-text-muted font-mono shrink-0">Cron:</span>
             <code className="text-micro font-mono text-neon-orange truncate">{canonicalCron}</code>
@@ -452,7 +452,7 @@ export default function SchedulePicker({
       {/* Error. `draftError` is the picker's own: the composer never passes
           `error`, so before T-0051 this block could not fire at all. */}
       {(error || draftError) && (
-        <div className="flex items-center gap-2 text-body text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+        <div className="flex items-center gap-2 text-body text-red-400 bg-red-500/10 border border-red-500/20 rounded-ps-md px-3 py-2">
           <AlertCircle className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
           {error ?? draftError}
         </div>

@@ -39,7 +39,7 @@ export function CustomScheduleBuilder({
   const [customFrequency, setCustomFrequency] = useState<string>("60");
 
   return (
-    <div className="rounded-lg border border-ps-edge-hairline bg-ps-surface-raised p-3 space-y-3">
+    <div className="rounded-ps-md border border-ps-edge-hairline bg-ps-surface-raised p-3 space-y-3">
       <div className="flex items-center justify-between">
         <span className="text-body font-medium text-ps-text-secondary">Custom schedule</span>
         <button
@@ -106,7 +106,7 @@ export function CustomScheduleBuilder({
                 disabled={disabled}
                 onClick={() => toggleDay(d)}
                 aria-pressed={checked}
-                className={`px-2.5 py-1 rounded-md text-micro font-mono transition-colors ${
+                className={`px-2.5 py-1 rounded-ps-md text-micro font-mono transition-colors ${
                   checked
                     ? "bg-neon-orange/20 text-neon-orange border border-neon-orange/40"
                     : "bg-ps-surface-raised text-ps-text-muted border border-ps-edge hover:text-ps-text-secondary"
@@ -153,7 +153,7 @@ export function CustomScheduleBuilder({
           type="button"
           onClick={onApply}
           disabled={disabled}
-          className="px-3 py-1.5 rounded-md bg-neon-orange/20 text-neon-orange border border-neon-orange/40 text-micro font-mono hover:bg-neon-orange/30 disabled:opacity-50"
+          className="px-3 py-1.5 rounded-ps-md bg-neon-orange/20 text-neon-orange border border-neon-orange/40 text-micro font-mono hover:bg-neon-orange/30 disabled:opacity-50"
         >
           Apply
         </button>

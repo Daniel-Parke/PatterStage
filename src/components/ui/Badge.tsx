@@ -44,7 +44,7 @@ export default function Badge({
 
   return (
     <span
-      className={`inline-flex items-center font-mono rounded ${s} ${variantClass} ${className}`}
+      className={`inline-flex items-center font-mono rounded-ps-sm ${s} ${variantClass} ${className}`}
     >
       {children}
     </span>

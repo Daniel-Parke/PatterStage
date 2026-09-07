@@ -90,7 +90,7 @@ export default function MessageAvatar({ role }: { role: AVATAR_ROLE }) {
   const { Icon, iconClass, bgClass, borderClass } = AVATARS[role];
   return (
     <div
-      className={`w-8 h-8 rounded-lg ${bgClass} border ${borderClass} flex items-center justify-center shrink-0 mt-1`}
+      className={`w-8 h-8 rounded-ps-md ${bgClass} border ${borderClass} flex items-center justify-center shrink-0 mt-1`}
     >
       <Icon className={`w-4 h-4 ${iconClass}`} />
     </div>

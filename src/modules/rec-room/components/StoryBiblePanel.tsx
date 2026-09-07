@@ -68,7 +68,7 @@ export default function StoryBiblePanel({
           </div>
           <button
             onClick={onClose}
-            className="rounded-lg p-1.5 text-ps-text-muted hover:bg-ps-surface-raised hover:text-ps-text-secondary"
+            className="rounded-ps-md p-1.5 text-ps-text-muted hover:bg-ps-surface-raised hover:text-ps-text-secondary"
             aria-label="Close story bible"
           >
             <X className="h-4 w-4" />
@@ -136,7 +136,7 @@ export default function StoryBiblePanel({
               <Section icon={ListOrdered} title="Chapter Outline">
                 <div className="space-y-2">
                   {arc.chapterOutlines.map((o, i) => (
-                    <div key={i} className="rounded-lg border border-ps-edge-hairline bg-ps-surface-raised px-3 py-2">
+                    <div key={i} className="rounded-ps-md border border-ps-edge-hairline bg-ps-surface-raised px-3 py-2">
                       <div className="font-medium text-ps-text-secondary">
                         {o.number}. {o.title}
                       </div>

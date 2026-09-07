@@ -102,7 +102,7 @@ export default function LibraryPage() {
             { label: "Completed", value: completedCount, icon: CheckCircle2 },
             { label: "Words", value: totalWords.toLocaleString(), icon: Sparkles },
           ].map((stat) => (
-            <div key={stat.label} className="rounded-xl border border-ps-edge-hairline bg-ps-surface-panel p-4 text-center">
+            <div key={stat.label} className="rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel p-4 text-center">
               <stat.icon className="w-4 h-4 text-neon-purple mx-auto mb-2" />
               <div className="text-display font-bold text-ps-text-primary">{stat.value}</div>
               <div className="text-micro font-mono text-ps-text-faint uppercase tracking-wider mt-1">{stat.label}</div>
@@ -114,7 +114,7 @@ export default function LibraryPage() {
         <div className="flex gap-2" role="group" aria-label="Filter stories">
           {FILTERS.map((f) => (
             <button key={f.id} type="button" onClick={() => setFilter(f.id)} aria-pressed={filter === f.id}
-              className={`px-3 py-1.5 rounded-lg text-micro font-mono border transition-all ${
+              className={`px-3 py-1.5 rounded-ps-md text-micro font-mono border transition-all ${
                 filter === f.id
                   ? "border-neon-purple/40 bg-neon-purple/15 text-neon-purple"
                   : "border-ps-edge text-ps-text-muted hover:text-ps-text-muted"
@@ -142,7 +142,7 @@ export default function LibraryPage() {
             </p>
             {filter === "all" && (
               <button type="button" onClick={() => router.push("/recroom/story-weaver/create")}
-                className="px-6 py-3 rounded-xl border border-neon-purple/30 text-body font-mono text-neon-purple hover:bg-neon-purple/10">
+                className="px-6 py-3 rounded-ps-lg border border-neon-purple/30 text-body font-mono text-neon-purple hover:bg-neon-purple/10">
                 Create a story
               </button>
             )}
@@ -161,7 +161,7 @@ export default function LibraryPage() {
                 <div
                   key={story.id}
                   onClick={() => router.push("/recroom/story-weaver/" + story.id)}
-                  className="rounded-xl border border-ps-edge-hairline bg-ps-surface-panel p-5 hover:border-neon-purple/25 hover:bg-ps-surface-panel transition-all cursor-pointer group"
+                  className="rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel p-5 hover:border-neon-purple/25 hover:bg-ps-surface-panel transition-all cursor-pointer group"
                 >
                   <div className="flex items-start gap-4">
                     {/* Book spine indicator */}

@@ -62,7 +62,7 @@ export function RailFooter({ collapsed }: { collapsed: boolean }) {
       href="/agent/settings/system"
       aria-label="Update available"
       title={`Update available: ${behind} commit${behind === 1 ? "" : "s"} behind. Open System to install it.`}
-      className="flex items-center rounded-md bg-orange-500/10 border border-orange-500/20 p-1 text-neon-orange hover:bg-orange-500/20 transition-colors"
+      className="flex items-center rounded-ps-md bg-orange-500/10 border border-orange-500/20 p-1 text-neon-orange hover:bg-orange-500/20 transition-colors"
     >
       <ArrowUpCircle className="w-3.5 h-3.5 flex-shrink-0" />
     </Link>

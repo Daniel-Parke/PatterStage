@@ -95,7 +95,7 @@ export default function Sidebar() {
             aria-label={link.label}
             title={iconsOnly ? link.label : undefined}
             aria-current={active ? "page" : undefined}
-            className={`flex items-center gap-2.5 px-3 py-[3px] rounded-md text-body transition-colors ${
+            className={`flex items-center gap-2.5 px-3 py-[3px] rounded-ps-md text-body transition-colors ${
               active ? "bg-ps-surface-raised text-ps-text-primary" : "text-ps-text-muted hover:bg-ps-surface-raised hover:text-ps-text-primary"
             }`}
             onClick={closeMobile}
@@ -162,8 +162,8 @@ export default function Sidebar() {
         {/* Logo — min-height matches main app chrome (see --ps-shell-header-min-height) */}
         <div className="px-4 min-h-[var(--ps-shell-header-min-height)] flex items-center border-b border-ps-edge-hairline">
           <Link href="/" aria-label="PatterStage home" className="flex items-center gap-2" onClick={closeMobile}>
-            <div className="w-8 h-8 rounded-lg animated-border p-[1.5px]">
-              <div className="w-full h-full bg-ps-surface-panel rounded-[5px] flex items-center justify-center">
+            <div className="w-8 h-8 rounded-ps-md animated-border p-[1.5px]">
+              <div className="w-full h-full bg-ps-surface-panel rounded-ps-sm flex items-center justify-center">
                 <Terminal className="w-4 h-4 text-neon-cyan" />
               </div>
             </div>
@@ -217,7 +217,7 @@ export default function Sidebar() {
                 title={iconsOnly ? link.label : undefined}
                 aria-current={isActive(pathname, link.href) ? "page" : undefined}
                 onClick={closeMobile}
-                className={`flex items-center justify-center gap-1.5 rounded-md text-micro font-mono transition-colors ${
+                className={`flex items-center justify-center gap-1.5 rounded-ps-md text-micro font-mono transition-colors ${
                   isActive(pathname, link.href) ? "bg-ps-surface-raised text-ps-text-primary" : "text-ps-text-muted hover:bg-ps-surface-raised hover:text-ps-text-primary"
                 } ${iconsOnly ? "p-1.5" : "flex-auto px-2 py-1"}`}
               >
@@ -236,7 +236,7 @@ export default function Sidebar() {
               aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
               aria-expanded={!collapsed}
               onClick={toggleCollapsed}
-              className="hidden lg:flex items-center gap-1.5 px-2 py-1 rounded-md text-micro text-ps-text-muted hover:text-ps-text-secondary hover:bg-ps-surface-raised transition-colors font-mono"
+              className="hidden lg:flex items-center gap-1.5 px-2 py-1 rounded-ps-md text-micro text-ps-text-muted hover:text-ps-text-secondary hover:bg-ps-surface-raised transition-colors font-mono"
             >
               {collapsed ? (
                 <ChevronRight className="w-4 h-4" />

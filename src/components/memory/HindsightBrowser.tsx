@@ -169,7 +169,7 @@ export default function HindsightBrowser({ onHealthChange, reloadToken = 0 }: Hi
 
       {/* Reflect Result */}
       {reflectResult && (
-        <div className="mb-6 p-4 rounded-xl border border-purple-500/20 bg-purple-500/5">
+        <div className="mb-6 p-4 rounded-ps-lg border border-purple-500/20 bg-purple-500/5">
           <div className="flex items-center gap-2 mb-2">
             <Sparkles className="w-4 h-4 text-purple-400" />
             <span className="text-body font-semibold text-purple-300">Reflection</span>
@@ -184,7 +184,7 @@ export default function HindsightBrowser({ onHealthChange, reloadToken = 0 }: Hi
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-body transition-colors ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-ps-md text-body transition-colors ${
               activeTab === tab.id ? "bg-pink-500/20 text-pink-300" : "text-ps-text-muted hover:text-ps-text-secondary"
             }`}
           >

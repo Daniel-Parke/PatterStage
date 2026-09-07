@@ -81,7 +81,7 @@ function ModelRow({
       <td className="px-4 py-3">
         {model.apiStyle ? (
           <span
-            className="rounded bg-neon-cyan/10 px-1.5 py-0.5 text-micro font-mono uppercase tracking-widest text-neon-cyan/80"
+            className="rounded-ps-sm bg-neon-cyan/10 px-1.5 py-0.5 text-micro font-mono uppercase tracking-widest text-neon-cyan/80"
             title={`Direct-provider wire protocol: ${model.apiStyle === "anthropic" ? "Anthropic /v1/messages" : "OpenAI /chat/completions"}`}
           >
             {model.apiStyle}
@@ -105,7 +105,7 @@ function ModelRow({
             {badges.map((b) => (
               <span
                 key={b}
-                className="text-micro font-mono bg-neon-purple/15 text-neon-purple px-1.5 py-0.5 rounded uppercase tracking-widest"
+                className="text-micro font-mono bg-neon-purple/15 text-neon-purple px-1.5 py-0.5 rounded-ps-sm uppercase tracking-widest"
               >
                 {b}
               </span>
@@ -127,7 +127,7 @@ function ModelRow({
           <button
             type="button"
             onClick={() => onEdit(toModelEditorRecord(model))}
-            className="p-1.5 rounded-lg text-ps-text-muted hover:text-ps-text-primary hover:bg-ps-surface-raised transition-colors"
+            className="p-1.5 rounded-ps-md text-ps-text-muted hover:text-ps-text-primary hover:bg-ps-surface-raised transition-colors"
             aria-label={`Edit ${model.name}`}
             title="Edit"
           >
@@ -220,7 +220,7 @@ export default function ModelsTableSection({
         />
       ) : (
         <GlowSurface accent="purple">
-          <div className="overflow-x-auto rounded-xl border border-ps-edge-hairline bg-ps-surface-panel">
+          <div className="overflow-x-auto rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel">
             <table className="w-full text-body">
               <thead>
                 <tr className="text-left text-micro font-mono uppercase tracking-widest text-ps-text-muted border-b border-ps-edge-hairline">

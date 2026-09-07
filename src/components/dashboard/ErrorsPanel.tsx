@@ -39,7 +39,7 @@ export default function ErrorsPanel({ errors, severity, onSelectSeverity }: Erro
               <button
                 key={sev}
                 onClick={() => onSelectSeverity(sev)}
-                className={`text-micro font-mono px-1.5 py-0.5 rounded transition-colors ${
+                className={`text-micro font-mono px-1.5 py-0.5 rounded-ps-sm transition-colors ${
                   severity === sev ? "bg-red-500/20 text-red-400" : "text-ps-text-muted hover:text-ps-text-secondary"
                 }`}
               >

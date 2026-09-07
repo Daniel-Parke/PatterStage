@@ -31,7 +31,7 @@ function TrophyChip({ a }: { a: Achievement }) {
   const tc = TIER_COLOR[a.tier] as NeonColor;
   return (
     <div
-      className="flex min-w-0 items-center gap-2 rounded-lg border px-2.5 py-1.5"
+      className="flex min-w-0 items-center gap-2 rounded-ps-md border px-2.5 py-1.5"
       style={{ borderColor: neonAlpha(tc, 30), background: neonAlpha(tc, 8) }}
       title={`${a.name} — ${a.description} · ${TIER_LABEL[a.tier]} · ${a.points} pts`}
     >
@@ -75,7 +75,7 @@ export default function AchievementShowcase({
 
   return (
     <div
-      className={`rounded-2xl border border-ps-edge-hairline bg-ps-surface-panel p-4 ${className}`}
+      className={`rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel p-4 ${className}`}
     >
       {/* Header */}
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
@@ -98,7 +98,7 @@ export default function AchievementShowcase({
               return (
                 <span
                   key={t}
-                  className="rounded px-1.5 py-0.5 text-micro font-mono uppercase tracking-wider"
+                  className="rounded-ps-sm px-1.5 py-0.5 text-micro font-mono uppercase tracking-wider"
                   style={{ color: neon(tc), background: neonAlpha(tc, 10) }}
                   title={`${TIER_LABEL[t]}: ${b.unlocked}/${b.total}`}
                 >
@@ -159,7 +159,7 @@ export default function AchievementShowcase({
                 key={f}
                 type="button"
                 onClick={() => setFilter(f)}
-                className={`rounded-md px-2.5 py-1 text-micro font-mono capitalize transition-colors ${
+                className={`rounded-ps-md px-2.5 py-1 text-micro font-mono capitalize transition-colors ${
                   filter === f
                     ? "bg-neon-purple/20 text-neon-purple"
                     : "text-ps-text-muted hover:text-ps-text-secondary"
@@ -183,7 +183,7 @@ export default function AchievementShowcase({
       <button
         type="button"
         onClick={() => setExpanded((v) => !v)}
-        className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg border border-ps-edge py-1.5 text-micro font-mono text-ps-text-muted transition-colors hover:border-ps-edge-emphasis hover:text-ps-text-secondary"
+        className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-ps-md border border-ps-edge py-1.5 text-micro font-mono text-ps-text-muted transition-colors hover:border-ps-edge-emphasis hover:text-ps-text-secondary"
       >
         {expanded ? "Show less" : `Show all ${summary.total}`}
         <ChevronDown

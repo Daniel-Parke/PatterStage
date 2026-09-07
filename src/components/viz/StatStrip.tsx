@@ -33,7 +33,7 @@ function Tile({ icon: Icon, label, value, color, suffix, compact, hint }: StatTi
   const n = useCountUp(value);
   return (
     <div
-      className="rounded-xl border border-ps-edge-hairline bg-ps-surface-raised px-3 py-2"
+      className="rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-raised px-3 py-2"
       style={{ boxShadow: `inset 0 0 16px ${neonAlpha(color, 5)}` }}
       title={hint}
       // A stat tile is a CLAIM about the list beneath it, and that claim has
@@ -83,7 +83,7 @@ export default function StatStrip({
           : "";
   return (
     <div
-      className={`animate-float-in grid grid-cols-1 items-center gap-5 rounded-2xl border border-ps-edge-hairline bg-ps-surface-panel p-4 ${layout} ${className}`}
+      className={`animate-float-in grid grid-cols-1 items-center gap-5 rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel p-4 ${layout} ${className}`}
     >
       {donut && (
         <div className="flex justify-center">

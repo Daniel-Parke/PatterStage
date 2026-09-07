@@ -92,7 +92,7 @@ export default function CategoryManagerModal({
 
   return (
     <Modal open={open} onClose={onClose} title="Manage categories" size="lg">
-      <div className="mb-4 p-3 rounded-lg border border-ps-edge-hairline bg-ps-surface-panel space-y-2">
+      <div className="mb-4 p-3 rounded-ps-md border border-ps-edge-hairline bg-ps-surface-panel space-y-2">
         <label className="text-micro text-ps-text-muted font-mono block">
           New category
         </label>
@@ -107,12 +107,12 @@ export default function CategoryManagerModal({
               }
             }}
             placeholder="Category name" aria-label="New category name"
-            className="flex-1 min-w-[140px] h-9 px-3 text-body font-mono bg-ps-surface-ground border border-ps-edge rounded-lg text-ps-text-primary"
+            className="flex-1 min-w-[140px] h-9 px-3 text-body font-mono bg-ps-surface-ground border border-ps-edge rounded-ps-md text-ps-text-primary"
           />
           <select aria-label="Category colour"
             value={newColor}
             onChange={(e) => setNewColor(e.target.value)}
-            className="h-9 px-2 text-micro font-mono bg-ps-surface-ground border border-ps-edge rounded-lg"
+            className="h-9 px-2 text-micro font-mono bg-ps-surface-ground border border-ps-edge rounded-ps-md"
           >
             {COLORS.map((col) => (
               <option key={col} value={col}>
@@ -124,7 +124,7 @@ export default function CategoryManagerModal({
             type="button"
             onClick={() => void handleCreate()}
             disabled={!newName.trim() || creating}
-            className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-micro font-mono border border-neon-cyan/40 bg-neon-cyan/10 text-neon-cyan disabled:opacity-40"
+            className="inline-flex items-center gap-1.5 h-9 px-3 rounded-ps-md text-micro font-mono border border-neon-cyan/40 bg-neon-cyan/10 text-neon-cyan disabled:opacity-40"
           >
             <Plus className="w-3.5 h-3.5" />
             Create category
@@ -133,7 +133,7 @@ export default function CategoryManagerModal({
       </div>
 
       {categoriesLoadError && (
-        <div className="mb-4 p-3 rounded-lg border border-neon-orange/30 bg-neon-orange/5 text-micro font-mono text-neon-orange/90">
+        <div className="mb-4 p-3 rounded-ps-md border border-neon-orange/30 bg-neon-orange/5 text-micro font-mono text-neon-orange/90">
           {categoriesLoadError}
           <button
             type="button"
@@ -156,19 +156,19 @@ export default function CategoryManagerModal({
         {categories.map((c) => (
           <div
             key={c.id}
-            className="flex items-center gap-2 p-2 rounded-lg border border-ps-edge-hairline bg-ps-surface-panel"
+            className="flex items-center gap-2 p-2 rounded-ps-md border border-ps-edge-hairline bg-ps-surface-panel"
           >
             {editingId === c.id ? (
               <div className="flex-1 flex flex-wrap gap-2 items-center">
                 <input aria-label="Category name"
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
-                  className="flex-1 min-w-[120px] px-2 py-1 text-micro font-mono bg-ps-surface-ground border border-ps-edge rounded"
+                  className="flex-1 min-w-[120px] px-2 py-1 text-micro font-mono bg-ps-surface-ground border border-ps-edge rounded-ps-sm"
                 />
                 <select aria-label="Category colour"
                   value={editColor}
                   onChange={(e) => setEditColor(e.target.value)}
-                  className="px-2 py-1 text-micro font-mono bg-ps-surface-ground border border-ps-edge rounded"
+                  className="px-2 py-1 text-micro font-mono bg-ps-surface-ground border border-ps-edge rounded-ps-sm"
                 >
                   {COLORS.map((col) => (
                     <option key={col} value={col}>
@@ -236,7 +236,7 @@ export default function CategoryManagerModal({
       </div>
 
       {deleteTarget && (
-        <div className="mt-4 p-3 rounded-lg border border-red-500/30 bg-red-500/5">
+        <div className="mt-4 p-3 rounded-ps-md border border-red-500/30 bg-red-500/5">
           <p className="text-micro font-mono text-ps-text-secondary mb-2">
             Reassign missions and templates before deleting:
           </p>
@@ -245,7 +245,7 @@ export default function CategoryManagerModal({
             onChange={(e) =>
               setReassignId(e.target.value === "" ? null : e.target.value)
             }
-            className="w-full mb-2 px-2 py-1.5 text-micro font-mono bg-ps-surface-ground border border-ps-edge rounded"
+            className="w-full mb-2 px-2 py-1.5 text-micro font-mono bg-ps-surface-ground border border-ps-edge rounded-ps-sm"
           >
             <option value="">Uncategorized</option>
             {categories
@@ -260,7 +260,7 @@ export default function CategoryManagerModal({
             <button
               type="button"
               onClick={() => void confirmDelete()}
-              className="px-3 py-1.5 text-micro font-mono bg-red-500/20 text-red-300 rounded"
+              className="px-3 py-1.5 text-micro font-mono bg-red-500/20 text-red-300 rounded-ps-sm"
             >
               Delete category
             </button>

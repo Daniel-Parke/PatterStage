@@ -22,7 +22,7 @@ interface PaginationProps {
 }
 
 const BTN =
-  "text-micro font-mono px-3 py-1.5 rounded bg-ps-surface-raised text-ps-text-muted hover:text-ps-text-primary hover:bg-ps-surface-raised disabled:opacity-30 disabled:cursor-not-allowed transition-colors";
+  "text-micro font-mono px-3 py-1.5 rounded-ps-sm bg-ps-surface-raised text-ps-text-muted hover:text-ps-text-primary hover:bg-ps-surface-raised disabled:opacity-30 disabled:cursor-not-allowed transition-colors";
 
 export default function Pagination({
   currentPage,
@@ -73,7 +73,7 @@ export default function Pagination({
           aria-label="Rows per page"
           value={pageSize}
           onChange={(e) => onPageSizeChange(Number(e.target.value))}
-          className="text-micro font-mono px-2 py-1.5 rounded bg-ps-surface-ground border border-ps-edge text-ps-text-muted"
+          className="text-micro font-mono px-2 py-1.5 rounded-ps-sm bg-ps-surface-ground border border-ps-edge text-ps-text-muted"
         >
           {pageSizeOptions.map((n) => (
             <option key={n} value={n}>

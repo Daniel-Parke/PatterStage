@@ -43,7 +43,7 @@ export default function QuestChapter({
   return (
     <details
       open={chapter.number === 1 && !finished}
-      className="group rounded-xl border border-ps-edge-hairline bg-ps-surface-panel"
+      className="group rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel"
     >
       <summary className="flex cursor-pointer list-none flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 transition-colors hover:bg-ps-surface-raised">
         <ChevronRight

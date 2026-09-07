@@ -113,7 +113,7 @@ function renderInlineNonLink(text: string, keyBase: number): React.ReactNode {
       return (
         <code
           key={`code-${keyBase}-${i}`}
-          className="bg-ps-surface-inset text-neon-green px-1.5 py-0.5 rounded text-micro font-mono"
+          className="bg-ps-surface-inset text-neon-green px-1.5 py-0.5 rounded-ps-sm text-micro font-mono"
         >
           {part.slice(1, -1)}
         </code>
@@ -158,7 +158,7 @@ export function SimpleMarkdown({ content }: { content: string }) {
     elements.push(
       <div
         key={`table-${keyBase}`}
-        className="my-3 overflow-x-auto rounded-lg border border-ps-edge-hairline"
+        className="my-3 overflow-x-auto rounded-ps-md border border-ps-edge-hairline"
       >
         <table className="min-w-full text-body">
           <thead className="bg-ps-surface-raised">
@@ -213,7 +213,7 @@ export function SimpleMarkdown({ content }: { content: string }) {
         elements.push(
           <div
             key={`code-${i}`}
-            className="my-3 rounded-lg border border-ps-edge-hairline bg-ps-surface-inset overflow-hidden"
+            className="my-3 rounded-ps-md border border-ps-edge-hairline bg-ps-surface-inset overflow-hidden"
           >
             {codeBlockLang && (
               <div className="px-3 py-1.5 border-b border-ps-edge-hairline text-micro font-mono text-ps-text-muted uppercase">

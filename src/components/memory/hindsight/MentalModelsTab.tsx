@@ -65,7 +65,7 @@ export default function MentalModelsTab({
           {models.map((m) => (
             <div
               key={m.id}
-              className="rounded-xl border border-ps-edge-hairline bg-ps-surface-panel p-4 hover:border-pink-500/20 transition-colors"
+              className="rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel p-4 hover:border-pink-500/20 transition-colors"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
@@ -97,7 +97,7 @@ export default function MentalModelsTab({
                   <button
                     onClick={() => onRefreshModel(m.id)}
                     disabled={refreshingModelId === m.id}
-                    className="p-1.5 rounded-lg hover:bg-ps-surface-raised text-ps-text-muted hover:text-ps-text-secondary transition-colors disabled:opacity-30"
+                    className="p-1.5 rounded-ps-md hover:bg-ps-surface-raised text-ps-text-muted hover:text-ps-text-secondary transition-colors disabled:opacity-30"
                     title="Refresh (re-run reflect)"
                   >
                     <Zap className={`w-4 h-4 ${refreshingModelId === m.id ? "animate-pulse text-yellow-400" : ""}`} />

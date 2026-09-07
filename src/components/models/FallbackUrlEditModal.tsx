@@ -34,7 +34,7 @@ export default function FallbackUrlEditModal({
       <div
         ref={panelRef}
         tabIndex={-1}
-        className="w-full max-w-md bg-ps-surface-panel border border-ps-edge-hairline rounded-xl overflow-hidden"
+        className="w-full max-w-md bg-ps-surface-panel border border-ps-edge-hairline rounded-ps-lg overflow-hidden"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
@@ -55,7 +55,7 @@ export default function FallbackUrlEditModal({
             value={url}
             onChange={(e) => onUrlChange(e.target.value)}
             placeholder="https://api.openai.com/v1"
-            className="w-full bg-ps-surface-inset border border-ps-edge rounded-lg px-3 py-2 text-body text-ps-text-primary font-mono outline-none focus:border-neon-purple/50 transition-colors"
+            className="w-full bg-ps-surface-inset border border-ps-edge rounded-ps-md px-3 py-2 text-body text-ps-text-primary font-mono outline-none focus:border-neon-purple/50 transition-colors"
             autoFocus
           />
           <p className="text-micro text-ps-text-muted font-mono mt-1.5">
@@ -66,7 +66,7 @@ export default function FallbackUrlEditModal({
           <button
             type="button"
             onClick={onClose}
-            className="px-3 py-1.5 text-micro font-mono text-ps-text-muted hover:text-ps-text-primary rounded-lg hover:bg-ps-surface-raised transition-colors"
+            className="px-3 py-1.5 text-micro font-mono text-ps-text-muted hover:text-ps-text-primary rounded-ps-md hover:bg-ps-surface-raised transition-colors"
           >
             Cancel
           </button>
@@ -74,7 +74,7 @@ export default function FallbackUrlEditModal({
             type="button"
             onClick={() => void onSave()}
             disabled={saving}
-            className="px-3 py-1.5 text-micro font-mono bg-neon-purple/20 text-neon-purple rounded-lg hover:bg-neon-purple/30 transition-colors disabled:opacity-50"
+            className="px-3 py-1.5 text-micro font-mono bg-neon-purple/20 text-neon-purple rounded-ps-md hover:bg-neon-purple/30 transition-colors disabled:opacity-50"
           >
             {saving ? "Saving..." : "Save"}
           </button>

@@ -57,7 +57,7 @@ export default function SpendPanel({ summary, onSave, saving = false }: SpendPan
     return (
       <div
         data-testid="spend-loading"
-        className="rounded-2xl border border-ps-edge-hairline bg-ps-surface-panel p-4 text-body text-ps-text-muted"
+        className="rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel p-4 text-body text-ps-text-muted"
       >
         Loading provider spend…
       </div>
@@ -91,7 +91,7 @@ export default function SpendPanel({ summary, onSave, saving = false }: SpendPan
   const meterPct = verdict.fraction === null ? 0 : Math.min(100, Math.round(verdict.fraction * 100));
 
   return (
-    <div className="rounded-2xl border border-ps-edge-hairline bg-ps-surface-panel p-4">
+    <div className="rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel p-4">
       <div className="mb-3 flex items-center gap-2">
         <Wallet className="h-4 w-4 text-neon-green" />
         <h2 className={sectionHeadingClasses}>
@@ -118,7 +118,7 @@ export default function SpendPanel({ summary, onSave, saving = false }: SpendPan
           <div
             key={p.period}
             data-testid={`spend-total-${p.period}`}
-            className="rounded-xl border border-ps-edge-hairline bg-ps-surface-panel p-3"
+            className="rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel p-3"
             style={{ boxShadow: `inset 0 0 18px ${neonAlpha("green", 5)}` }}
           >
             <div className="font-mono text-display font-bold text-ps-text-primary">
@@ -220,7 +220,7 @@ export default function SpendPanel({ summary, onSave, saving = false }: SpendPan
       {verdict.state === "over" && !verdict.blocksUnattended && (
         <p
           data-testid="spend-warning"
-          className="mt-3 flex items-start gap-2 rounded-lg border border-neon-orange/30 bg-neon-orange/5 p-2.5 text-body leading-relaxed text-ps-text-secondary"
+          className="mt-3 flex items-start gap-2 rounded-ps-md border border-neon-orange/30 bg-neon-orange/5 p-2.5 text-body leading-relaxed text-ps-text-secondary"
         >
           <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-neon-orange" />
           <span>{verdict.message}</span>
@@ -230,7 +230,7 @@ export default function SpendPanel({ summary, onSave, saving = false }: SpendPan
       {verdict.blocksUnattended && (
         <p
           data-testid="spend-stopped"
-          className="mt-3 flex items-start gap-2 rounded-lg border border-neon-pink/30 bg-neon-pink/5 p-2.5 text-body leading-relaxed text-ps-text-secondary"
+          className="mt-3 flex items-start gap-2 rounded-ps-md border border-neon-pink/30 bg-neon-pink/5 p-2.5 text-body leading-relaxed text-ps-text-secondary"
         >
           <ShieldAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-neon-pink" />
           <span>{verdict.message}</span>
@@ -307,7 +307,7 @@ export default function SpendPanel({ summary, onSave, saving = false }: SpendPan
               data-testid="spend-save"
               disabled={saving}
               onClick={save}
-              className="rounded-lg border border-neon-green/40 px-3 py-1.5 text-micro font-mono text-neon-green transition-colors hover:bg-neon-green/10 disabled:opacity-50"
+              className="rounded-ps-md border border-neon-green/40 px-3 py-1.5 text-micro font-mono text-neon-green transition-colors hover:bg-neon-green/10 disabled:opacity-50"
             >
               {saving ? "Saving…" : "Save budget"}
             </button>

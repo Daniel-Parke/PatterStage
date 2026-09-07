@@ -36,7 +36,7 @@ export default function ReaderNavigation({
     <div className="flex items-center justify-between px-4 md:px-6 py-3 border-t flex-shrink-0" style={{ borderColor: theme.rule, background: theme.panel }}>
       <button onClick={onPrev}
         disabled={currentChapter <= 1}
-        className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-micro font-mono disabled:opacity-20 min-h-[44px] max-w-[45%] truncate"
+        className="flex items-center gap-1.5 px-4 py-2.5 rounded-ps-md text-micro font-mono disabled:opacity-20 min-h-[44px] max-w-[45%] truncate"
         style={{ color: theme.text, opacity: 0.6 }}>
         <ChevronLeft className="w-4 h-4 flex-shrink-0" />
         <span className="truncate">{prevChapter ? prevChapter.title : "Prev"}</span>
@@ -54,7 +54,7 @@ export default function ReaderNavigation({
 
       <button onClick={onNext}
         disabled={!hasNext}
-        className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-micro font-mono disabled:opacity-20 min-h-[44px] max-w-[45%] truncate"
+        className="flex items-center gap-1.5 px-4 py-2.5 rounded-ps-md text-micro font-mono disabled:opacity-20 min-h-[44px] max-w-[45%] truncate"
         style={{ color: theme.text }}>
         <span className="truncate">{nextChapter ? nextChapter.title : "Next"}</span>
         <ChevronRight className="w-4 h-4 flex-shrink-0" />

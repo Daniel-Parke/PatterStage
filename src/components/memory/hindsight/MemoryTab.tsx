@@ -80,7 +80,7 @@ export default function MemoryTab({
               <button
                 type="button"
                 onClick={onClearQuery}
-                className="px-3 py-1.5 rounded-lg border border-pink-500/30 text-micro font-mono text-pink-300 transition-colors hover:bg-pink-500/10"
+                className="px-3 py-1.5 rounded-ps-md border border-pink-500/30 text-micro font-mono text-pink-300 transition-colors hover:bg-pink-500/10"
               >
                 Clear search
               </button>
@@ -115,7 +115,7 @@ export default function MemoryTab({
           say: "Hiding 0 memories" on an empty store is noise, and it is not
           even true (found on the proof walk). */}
       {showStaleToggle && (showStaleToggle.hiddenCount > 0 || showStaleToggle.showStale) && (
-        <div className="flex items-center justify-between gap-3 px-4 py-2 rounded-lg border border-ps-edge-hairline bg-ps-surface-panel text-body text-ps-text-secondary">
+        <div className="flex items-center justify-between gap-3 px-4 py-2 rounded-ps-md border border-ps-edge-hairline bg-ps-surface-panel text-body text-ps-text-secondary">
           <div className="flex items-center gap-2">
             <Clock className="w-3.5 h-3.5 text-ps-text-muted" />
             <span>
@@ -128,7 +128,7 @@ export default function MemoryTab({
           <button
             type="button"
             onClick={showStaleToggle.onToggle}
-            className="px-2.5 py-1 rounded border border-pink-500/30 text-pink-300 hover:bg-pink-500/10 transition-colors"
+            className="px-2.5 py-1 rounded-ps-sm border border-pink-500/30 text-pink-300 hover:bg-pink-500/10 transition-colors"
             title={showStaleToggle.showStale ? "Hide stale memories" : "Show all memories including stale ones"}
           >
             {showStaleToggle.showStale ? "Hide stale" : "Show stale"}
@@ -151,7 +151,7 @@ export default function MemoryTab({
         return (
           <div
             key={memory.id || i}
-            className="rounded-xl border border-ps-edge-hairline bg-ps-surface-panel p-4 hover:border-pink-500/20 transition-colors"
+            className="rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel p-4 hover:border-pink-500/20 transition-colors"
           >
             <p className="text-body text-ps-text-secondary leading-relaxed mb-2">{text}</p>
             <div className="flex flex-wrap items-center gap-3 text-body text-ps-text-muted">

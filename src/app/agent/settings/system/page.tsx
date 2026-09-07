@@ -37,7 +37,7 @@ function humanSize(bytes: number): string {
 
 function Card({ icon: Icon, title, children }: { icon: typeof Settings; title: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-xl border border-ps-edge-hairline bg-ps-surface-panel p-5 space-y-4">
+    <section className="rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel p-5 space-y-4">
       <h2 className="flex items-center gap-2 text-body font-semibold text-ps-text-primary">
         <Icon className="w-4 h-4 text-neon-orange" />
         {title}
@@ -143,7 +143,7 @@ export default function SystemPage() {
               <button
                 type="button"
                 onClick={() => void copy()}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-ps-surface-raised border border-ps-edge text-micro font-mono text-ps-text-secondary hover:bg-ps-surface-raised transition-colors"
+                className="flex items-center gap-2 px-3 py-2 rounded-ps-md bg-ps-surface-raised border border-ps-edge text-micro font-mono text-ps-text-secondary hover:bg-ps-surface-raised transition-colors"
               >
                 <Copy className="w-3.5 h-3.5" />
                 Copy for a bug report
@@ -162,7 +162,7 @@ export default function SystemPage() {
               type="button"
               onClick={() => void backUpNow()}
               disabled={backingUp || readOnly}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-neon-orange/10 border border-neon-orange/20 text-micro font-mono text-neon-orange hover:bg-neon-orange/20 transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 px-3 py-2 rounded-ps-md bg-neon-orange/10 border border-neon-orange/20 text-micro font-mono text-neon-orange hover:bg-neon-orange/20 transition-colors disabled:opacity-50"
             >
               <Archive className={`w-3.5 h-3.5 ${backingUp ? "animate-pulse" : ""}`} />
               {backingUp ? "Backing up…" : "Back up now"}
@@ -200,13 +200,13 @@ export default function SystemPage() {
             </p>
             {backups.data?.restoreCommand && (
               <>
-                <pre className="max-h-40 overflow-auto rounded-lg bg-ps-surface-inset px-3 py-2 text-micro font-mono text-ps-text-muted whitespace-pre-wrap break-words">
+                <pre className="max-h-40 overflow-auto rounded-ps-md bg-ps-surface-inset px-3 py-2 text-micro font-mono text-ps-text-muted whitespace-pre-wrap break-words">
                   {backups.data.restoreCommand}
                 </pre>
                 <button
                   type="button"
                   onClick={() => void copyRestore()}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-ps-surface-raised border border-ps-edge text-micro font-mono text-ps-text-secondary hover:bg-ps-surface-raised transition-colors"
+                  className="flex items-center gap-2 px-3 py-2 rounded-ps-md bg-ps-surface-raised border border-ps-edge text-micro font-mono text-ps-text-secondary hover:bg-ps-surface-raised transition-colors"
                 >
                   <Copy className="w-3.5 h-3.5" />
                   Copy the restore command

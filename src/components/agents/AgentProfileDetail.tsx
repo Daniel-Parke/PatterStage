@@ -70,7 +70,7 @@ export default function AgentProfileDetail({
   onCloseEditor,
 }: AgentProfileDetailProps) {
   return (
-    <div className="flex-1 min-w-0 rounded-xl border border-ps-edge-hairline bg-ps-surface-panel flex flex-col">
+    <div className="flex-1 min-w-0 rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel flex flex-col">
       {!profile ? (
         <div className="flex-1 flex items-center justify-center text-body text-ps-text-muted p-8">
           Select a profile
@@ -81,7 +81,7 @@ export default function AgentProfileDetail({
 
           {/* The work is still in the editor below; this asks before it goes. */}
           {pendingDiscard && (
-            <div className="m-4 rounded-lg border border-semantic-warning/40 bg-semantic-warning/10 p-3">
+            <div className="m-4 rounded-ps-md border border-semantic-warning/40 bg-semantic-warning/10 p-3">
               <p className="text-body text-ps-text-primary">
                 You have unsaved changes to {pendingDiscard.fileName}.
               </p>
@@ -108,7 +108,7 @@ export default function AgentProfileDetail({
                 aria-selected={tab === id}
                 aria-controls={`profile-panel-${id}`}
                 onClick={() => onTabChange(id)}
-                className={`px-3 py-2 text-body rounded-t-lg border-b-2 transition-colors ${
+                className={`px-3 py-2 text-body rounded-t-ps-md border-b-2 transition-colors ${
                   tab === id
                     ? "border-neon-purple text-ps-text-primary"
                     : "border-transparent text-ps-text-muted hover:text-ps-text-secondary"

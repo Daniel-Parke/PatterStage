@@ -127,7 +127,7 @@ export default function ArtifactsPage() {
                 key={a.id}
                 type="button"
                 onClick={() => setSelectedId(a.id)}
-                className="flex flex-col gap-2 rounded-xl border border-ps-edge bg-ps-surface-panel p-3 text-left transition hover:border-ps-edge-emphasis"
+                className="flex flex-col gap-2 rounded-ps-lg border border-ps-edge bg-ps-surface-panel p-3 text-left transition hover:border-ps-edge-emphasis"
               >
                 <div className="flex items-center gap-2">
                   <Icon className={`h-4 w-4 shrink-0 ${KIND_TONE[a.sourceKind] ?? "text-ps-text-muted"}`} />
@@ -185,7 +185,7 @@ export default function ArtifactsPage() {
               dangerouslySetInnerHTML={{ __html: renderReportHtml(detail.content ?? "") }}
             />
           ) : (
-            <pre className="max-h-[70vh] overflow-auto whitespace-pre-wrap rounded-lg border border-ps-edge-hairline bg-ps-surface-panel px-3 py-2 text-body leading-relaxed text-ps-text-secondary">
+            <pre className="max-h-[70vh] overflow-auto whitespace-pre-wrap rounded-ps-md border border-ps-edge-hairline bg-ps-surface-panel px-3 py-2 text-body leading-relaxed text-ps-text-secondary">
               {detail.content ?? "(empty)"}
             </pre>
           )}

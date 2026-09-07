@@ -42,7 +42,7 @@ export default function EditChapterModal({
         aria-labelledby="edit-chapter-title"
         tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
-        className="bg-ps-surface-panel border border-neon-purple/20 rounded-xl w-full max-w-lg p-6 space-y-4"
+        className="bg-ps-surface-panel border border-neon-purple/20 rounded-ps-lg w-full max-w-lg p-6 space-y-4"
       >
         <h3 id="edit-chapter-title" className="text-body font-semibold text-ps-text-primary">Edit chapter {chapterNumber}</h3>
         <p className="text-body text-ps-text-muted">Describe what you want changed. The chapter will be rewritten, and all subsequent chapters will regenerate with the updated context.</p>
@@ -52,14 +52,14 @@ export default function EditChapterModal({
           rows={4}
           placeholder="e.g., Make the dialogue more tense, add a plot twist about the captain..."
           aria-label={`What to change in chapter ${chapterNumber}`}
-          className="w-full bg-ps-surface-inset border border-ps-edge rounded-lg px-4 py-3 text-body text-ps-text-primary placeholder-ps-text-muted outline-none focus:border-neon-purple/30 font-mono resize-none"
+          className="w-full bg-ps-surface-inset border border-ps-edge rounded-ps-md px-4 py-3 text-body text-ps-text-primary placeholder-ps-text-muted outline-none focus:border-neon-purple/30 font-mono resize-none"
         />
         <div>
           <label className="text-micro font-mono text-ps-text-muted uppercase tracking-wider block mb-1.5">Chapter length</label>
           <div className="flex flex-wrap gap-2">
             {WORD_COUNT_OPTIONS.map((opt) => (
               <button key={opt.id} type="button" onClick={() => onWordCountChange(opt.id)} aria-pressed={wordCount === opt.id}
-                className={`px-2 py-1 rounded text-micro font-mono border transition-all ${
+                className={`px-2 py-1 rounded-ps-sm text-micro font-mono border transition-all ${
                   wordCount === opt.id ? "border-neon-purple/40 bg-neon-purple/15 text-neon-purple" : "border-ps-edge text-ps-text-muted hover:text-ps-text-muted"
                 }`}>{opt.label}</button>
             ))}
@@ -70,7 +70,7 @@ export default function EditChapterModal({
           <div className="flex gap-2">
             {[2, 3, 4, 5].map(n => (
               <button key={n} type="button" onClick={() => onCountChange(n)} aria-pressed={count === n}
-                className={`px-3 py-1.5 rounded-lg text-micro font-mono border transition-all ${
+                className={`px-3 py-1.5 rounded-ps-md text-micro font-mono border transition-all ${
                   count === n ? "border-neon-purple/40 bg-neon-purple/15 text-neon-purple" : "border-ps-edge text-ps-text-muted hover:text-ps-text-muted"
                 }`}>{n}</button>
             ))}
@@ -78,11 +78,11 @@ export default function EditChapterModal({
         </div>
         <div className="flex gap-2 justify-end">
           <button type="button" onClick={onCancel}
-            className="px-4 py-2 text-body text-ps-text-muted hover:text-ps-text-secondary rounded-lg border border-ps-edge hover:bg-ps-surface-raised">
+            className="px-4 py-2 text-body text-ps-text-muted hover:text-ps-text-secondary rounded-ps-md border border-ps-edge hover:bg-ps-surface-raised">
             Cancel
           </button>
           <button type="button" onClick={onSubmit} disabled={!prompt.trim()}
-            className="px-4 py-2 text-body text-neon-purple rounded-lg border border-neon-purple/30 bg-neon-purple/10 hover:bg-neon-purple/20 disabled:opacity-30 flex items-center gap-2">
+            className="px-4 py-2 text-body text-neon-purple rounded-ps-md border border-neon-purple/30 bg-neon-purple/10 hover:bg-neon-purple/20 disabled:opacity-30 flex items-center gap-2">
             <PenLine className="w-3 h-3" /> Edit chapter
           </button>
         </div>

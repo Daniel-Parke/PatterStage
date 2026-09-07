@@ -28,7 +28,7 @@ export function Toggle({
       title={hint}
       disabled={disabled}
       onClick={() => !disabled && onChange(!checked)}
-      className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-body transition-colors focus:outline-none focus:ring-1 focus:ring-neon-cyan/30 disabled:cursor-not-allowed disabled:opacity-40 ${
+      className={`inline-flex items-center gap-1.5 rounded-ps-md border px-2.5 py-1 text-body transition-colors focus:outline-none focus:ring-1 focus:ring-neon-cyan/30 disabled:cursor-not-allowed disabled:opacity-40 ${
         checked
           ? "border-neon-cyan/40 bg-neon-cyan/10 text-neon-cyan"
           : "border-ps-edge text-ps-text-muted hover:text-ps-text-secondary"

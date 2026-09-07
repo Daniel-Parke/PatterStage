@@ -98,7 +98,7 @@ export default function PlatformsPanel({ monitor, syncNowBusy, onSyncNow }: Plat
           type="button"
           disabled={syncNowBusy}
           onClick={onSyncNow}
-          className="shrink-0 px-2 py-1 text-micro font-mono rounded border border-neon-cyan/30 text-neon-cyan/80 hover:bg-neon-cyan/10 disabled:opacity-50"
+          className="shrink-0 px-2 py-1 text-micro font-mono rounded-ps-sm border border-neon-cyan/30 text-neon-cyan/80 hover:bg-neon-cyan/10 disabled:opacity-50"
         >
           {syncNowBusy ? "Syncing…" : "Sync now"}
         </button>

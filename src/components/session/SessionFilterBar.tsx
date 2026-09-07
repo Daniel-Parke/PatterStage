@@ -61,7 +61,7 @@ export default function SessionFilterBar({
             <button
               onClick={onClearSourceFilter}
               aria-pressed={!sourceFilter}
-              className={`text-micro font-mono px-2 py-1 rounded transition-colors ${
+              className={`text-micro font-mono px-2 py-1 rounded-ps-sm transition-colors ${
                 !sourceFilter
                   ? "bg-neon-orange/20 text-neon-orange"
                   : "text-ps-text-muted hover:text-ps-text-secondary"
@@ -74,7 +74,7 @@ export default function SessionFilterBar({
                 key={src}
                 onClick={() => onSelectSourceFilter(src)}
                 aria-pressed={sourceFilter === src}
-                className={`text-micro font-mono px-2 py-1 rounded transition-colors flex items-center gap-1 ${
+                className={`text-micro font-mono px-2 py-1 rounded-ps-sm transition-colors flex items-center gap-1 ${
                   sourceFilter === src
                     ? "bg-neon-orange/20 text-neon-orange"
                     : "text-ps-text-muted hover:text-ps-text-secondary"
@@ -89,7 +89,7 @@ export default function SessionFilterBar({
               type="button"
               onClick={onToggleFailedOnly}
               aria-pressed={failedOnly}
-              className={`text-micro font-mono px-2 py-1 rounded transition-colors flex items-center gap-1 ${
+              className={`text-micro font-mono px-2 py-1 rounded-ps-sm transition-colors flex items-center gap-1 ${
                 failedOnly
                   ? "bg-semantic-danger/20 text-semantic-danger"
                   : "text-ps-text-muted hover:text-ps-text-secondary"
@@ -108,7 +108,7 @@ export default function SessionFilterBar({
           type="button"
           onClick={onToggleGroupByMission}
           aria-pressed={groupByMission}
-          className={`flex items-center gap-1 px-2 py-1 rounded transition-colors ${
+          className={`flex items-center gap-1 px-2 py-1 rounded-ps-sm transition-colors ${
             groupByMission
               ? "bg-neon-green/10 text-neon-green"
               : "text-ps-text-muted hover:text-ps-text-secondary"
@@ -122,7 +122,7 @@ export default function SessionFilterBar({
           type="button"
           onClick={onToggleHideApiNoise}
           aria-pressed={hideApiNoise}
-          className={`flex items-center gap-1 px-2 py-1 rounded transition-colors ${
+          className={`flex items-center gap-1 px-2 py-1 rounded-ps-sm transition-colors ${
             hideApiNoise
               ? "bg-neon-purple/10 text-neon-purple"
               : "text-ps-text-muted hover:text-ps-text-secondary"

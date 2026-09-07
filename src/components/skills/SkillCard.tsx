@@ -37,7 +37,7 @@ export function SkillCard({
     >
       {/* Left accent bar */}
       <div
-        className={`absolute left-0 top-0 bottom-0 w-0.5 rounded-l-xl ${
+        className={`absolute left-0 top-0 bottom-0 w-0.5 rounded-l-ps-lg ${
           enabled ? "bg-neon-green" : "bg-white/20"
         }`}
       />
@@ -106,7 +106,7 @@ export function SkillCard({
             type="button"
             data-testid="skill-edit"
             onClick={onEdit}
-            className="flex items-center gap-1 text-body px-2 py-1 rounded border border-ps-edge text-ps-text-muted hover:border-neon-green/30 hover:text-neon-green transition-all"
+            className="flex items-center gap-1 text-body px-2 py-1 rounded-ps-sm border border-ps-edge text-ps-text-muted hover:border-neon-green/30 hover:text-neon-green transition-all"
           >
             <Edit3 className="w-3 h-3" /> Edit
           </button>
@@ -114,7 +114,7 @@ export function SkillCard({
             type="button"
             data-testid="skill-view"
             onClick={onView}
-            className={`flex items-center gap-1 text-body px-2 py-1 rounded border transition-all ${
+            className={`flex items-center gap-1 text-body px-2 py-1 rounded-ps-sm border transition-all ${
               isExpanded
                 ? "border-ps-edge-emphasis text-ps-text-muted bg-ps-surface-raised"
                 : "border-ps-edge text-ps-text-muted hover:border-ps-edge-emphasis hover:text-ps-text-secondary"

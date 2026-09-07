@@ -99,7 +99,7 @@ export default function Button({
   return (
     <button
       type="button"
-      className={`inline-flex items-center justify-center rounded-lg font-mono transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${variantStyles} ${s} ${className}`}
+      className={`inline-flex items-center justify-center rounded-ps-md font-mono transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${variantStyles} ${s} ${className}`}
       disabled={disabled || loading}
       // Bloom tier (WG-WEB-011 C), tight variant: a button is a small target
       // and the 200px field would overflow it into a flat wash, so it takes the

@@ -83,7 +83,7 @@ export default function ScheduledMissions() {
   };
 
   const inputCls =
-    "w-full rounded-lg border border-ps-edge-hairline bg-ps-surface-panel px-3 py-2 text-body text-ps-text-primary focus:border-neon-orange/50 focus:outline-none";
+    "w-full rounded-ps-md border border-ps-edge-hairline bg-ps-surface-panel px-3 py-2 text-body text-ps-text-primary focus:border-neon-orange/50 focus:outline-none";
 
   return (
     /* The panel's "Edit schedule" link targets this anchor. */
@@ -107,7 +107,7 @@ export default function ScheduledMissions() {
         <button
           type="button"
           onClick={() => setShowForm((v) => !v)}
-          className="flex items-center gap-1.5 rounded-lg border border-neon-orange/30 bg-neon-orange/10 px-3 py-1.5 font-mono text-micro text-neon-orange transition-colors hover:bg-neon-orange/20"
+          className="flex items-center gap-1.5 rounded-ps-md border border-neon-orange/30 bg-neon-orange/10 px-3 py-1.5 font-mono text-micro text-neon-orange transition-colors hover:bg-neon-orange/20"
         >
           {showForm ? <ChevronDown className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />} Schedule a mission
         </button>
@@ -118,7 +118,7 @@ export default function ScheduledMissions() {
 
       {/* ── Create form (collapsible) ── */}
       {showForm && (
-        <form onSubmit={submit} className="mb-3 space-y-3 rounded-xl border border-ps-edge-hairline bg-ps-surface-panel p-4">
+        <form onSubmit={submit} className="mb-3 space-y-3 rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel p-4">
           <p className="font-mono text-micro text-ps-text-muted">
             Put an existing saved mission on a timer. (New missions can be scheduled directly from the composer&apos;s
             &quot;Schedule&quot; dispatch mode.)
@@ -155,7 +155,7 @@ export default function ScheduledMissions() {
                   key={p}
                   type="button"
                   onClick={() => setSchedule(p)}
-                  className="rounded-md border border-ps-edge px-2 py-1 font-mono text-micro text-ps-text-muted hover:bg-ps-surface-raised hover:text-ps-text-secondary"
+                  className="rounded-ps-md border border-ps-edge px-2 py-1 font-mono text-micro text-ps-text-muted hover:bg-ps-surface-raised hover:text-ps-text-secondary"
                 >
                   {p}
                 </button>
@@ -174,7 +174,7 @@ export default function ScheduledMissions() {
             <button
               type="submit"
               disabled={create.isPending}
-              className="rounded-lg border border-neon-orange/30 bg-neon-orange/10 px-4 py-2 font-mono text-body text-neon-orange transition-colors hover:bg-neon-orange/20 disabled:opacity-50"
+              className="rounded-ps-md border border-neon-orange/30 bg-neon-orange/10 px-4 py-2 font-mono text-body text-neon-orange transition-colors hover:bg-neon-orange/20 disabled:opacity-50"
             >
               {create.isPending ? "Creating…" : "Create schedule"}
             </button>
@@ -194,7 +194,7 @@ export default function ScheduledMissions() {
       {isLoading ? (
         <div className="py-6 text-center font-mono text-body text-ps-text-muted">Loading schedules…</div>
       ) : schedules.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-ps-edge-hairline bg-ps-surface-panel px-4 py-6 text-center text-body text-ps-text-muted">
+        <div className="rounded-ps-lg border border-dashed border-ps-edge-hairline bg-ps-surface-panel px-4 py-6 text-center text-body text-ps-text-muted">
           No schedules yet. Use a mission&apos;s <span className="text-ps-text-muted">Schedule</span> dispatch mode, or put a saved mission on one above.
         </div>
       ) : (
@@ -205,10 +205,10 @@ export default function ScheduledMissions() {
             // often the same on two rows over two different missions.
             const target = describeScheduleTarget(s);
             return (
-              <div key={s.id} className="flex items-center gap-4 rounded-xl border border-ps-edge-hairline bg-ps-surface-panel px-4 py-3">
+              <div key={s.id} className="flex items-center gap-4 rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel px-4 py-3">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="shrink-0 rounded border border-ps-edge-hairline px-1.5 py-0.5 font-mono text-micro uppercase tracking-wider text-ps-text-muted">
+                    <span className="shrink-0 rounded-ps-sm border border-ps-edge-hairline px-1.5 py-0.5 font-mono text-micro uppercase tracking-wider text-ps-text-muted">
                       {target.kindLabel}
                     </span>
                     <span className="truncate text-body text-ps-text-primary">
@@ -235,14 +235,14 @@ export default function ScheduledMissions() {
                       { onError: failWith("Failed to update the schedule") },
                     );
                   }}
-                  className="rounded-lg border border-ps-edge px-2.5 py-1 font-mono text-micro text-ps-text-muted hover:bg-ps-surface-raised"
+                  className="rounded-ps-md border border-ps-edge px-2.5 py-1 font-mono text-micro text-ps-text-muted hover:bg-ps-surface-raised"
                 >
                   {s.enabled ? "Pause" : "Resume"}
                 </button>
                 <button
                   type="button"
                   onClick={() => triggerRun(s.id)}
-                  className="flex items-center gap-1 rounded-lg border border-neon-cyan/30 px-2.5 py-1 font-mono text-micro text-neon-cyan hover:bg-neon-cyan/10"
+                  className="flex items-center gap-1 rounded-ps-md border border-neon-cyan/30 px-2.5 py-1 font-mono text-micro text-neon-cyan hover:bg-neon-cyan/10"
                 >
                   <Play className="h-3 w-3" /> Run
                 </button>

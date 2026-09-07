@@ -117,7 +117,7 @@ export function MessageBubble({
         if (el) messageRefs.current.set(index, el);
         else messageRefs.current.delete(index);
       }}
-      className={`rounded-xl border ${config.bg} overflow-hidden`}
+      className={`rounded-ps-lg border ${config.bg} overflow-hidden`}
     >
       <button
         onClick={() => setExpanded(!expanded)}
@@ -129,7 +129,7 @@ export function MessageBubble({
             {config.label}
           </span>
           {msg.tool_call_id && (
-            <span className="text-micro font-mono text-ps-text-muted bg-ps-surface-raised px-1.5 py-0.5 rounded">
+            <span className="text-micro font-mono text-ps-text-muted bg-ps-surface-raised px-1.5 py-0.5 rounded-ps-sm">
               {msg.tool_call_id.slice(0, 12)}
             </span>
           )}
@@ -162,7 +162,7 @@ export function MessageBubble({
           <div className="flex justify-end mb-2">
             <button
               onClick={handleCopy}
-              className="p-1 rounded text-ps-text-muted hover:text-ps-text-secondary transition-colors"
+              className="p-1 rounded-ps-sm text-ps-text-muted hover:text-ps-text-secondary transition-colors"
               title="Copy"
             >
               {copied ? (
@@ -190,7 +190,7 @@ export function MessageBubble({
                 return (
                   <div
                     key={tcKey}
-                    className="bg-ps-surface-panel rounded-lg p-3 text-micro font-mono"
+                    className="bg-ps-surface-panel rounded-ps-md p-3 text-micro font-mono"
                   >
                     <span className="text-neon-green">{fnName}</span>
                     <pre className="mt-1 text-ps-text-muted whitespace-pre-wrap">

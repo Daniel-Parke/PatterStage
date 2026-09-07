@@ -54,7 +54,7 @@ export default function SkillSelector({
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center gap-2 px-3 py-2.5 rounded-lg bg-ps-surface-raised border border-ps-edge text-body hover:border-ps-edge-emphasis transition-colors text-left"
+        className="w-full flex items-center gap-2 px-3 py-2.5 rounded-ps-md bg-ps-surface-raised border border-ps-edge text-body hover:border-ps-edge-emphasis transition-colors text-left"
       >
         <Cpu className="w-4 h-4 text-neon-purple flex-shrink-0" />
         {value.length === 0 ? (
@@ -99,7 +99,7 @@ export default function SkillSelector({
       )}
 
       {open && (
-        <div className="absolute top-full left-0 right-0 mt-1 z-50 bg-ps-surface-panel border border-ps-edge-hairline rounded-lg shadow-xl overflow-hidden">
+        <div className="absolute top-full left-0 right-0 mt-1 z-50 bg-ps-surface-panel border border-ps-edge-hairline rounded-ps-md shadow-xl overflow-hidden">
           <div className="p-2 border-b border-ps-edge-hairline">
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-ps-viz-glyph-idle" />
@@ -108,7 +108,7 @@ export default function SkillSelector({
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search skills..." aria-label="Skill search"
                 autoFocus
-                className="w-full bg-ps-surface-inset border border-ps-edge rounded-lg pl-8 pr-3 py-1.5 text-micro text-ps-text-primary placeholder-ps-text-muted outline-none focus:border-neon-purple/50 font-mono"
+                className="w-full bg-ps-surface-inset border border-ps-edge rounded-ps-md pl-8 pr-3 py-1.5 text-micro text-ps-text-primary placeholder-ps-text-muted outline-none focus:border-neon-purple/50 font-mono"
               />
             </div>
           </div>

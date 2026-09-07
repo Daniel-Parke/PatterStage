@@ -72,6 +72,7 @@ export const RUN_TONE_TEXT: Record<MissionRunTone, string> = {
   good: "text-ps-text-secondary",
   bad: statusToneClasses.fail.text,
   // Not red. See MissionRunTone -- a cancellation is the operator's own action,
-  // not a fault report.
-  stopped: "text-neon-orange",
+  // not a fault report. The `blocked` rung IS that orange, so the ladder keeps
+  // the distinction this comment asked for rather than flattening it.
+  stopped: statusToneClasses.blocked.text,
 };

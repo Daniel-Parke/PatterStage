@@ -135,11 +135,19 @@ describe("paint nobody applies", () => {
 });
 
 describe("the reduced-motion guard names what actually animates", () => {
+  /**
+   * The guard's SELECTORS, with its comments stripped. The comment inside it
+   * explains the fix by naming the class that was wrong, and a whole-block
+   * `not.toContain` is answered by the explanation rather than by the code —
+   * which is the fourth time in this programme that a comment about a defect
+   * has been read as the defect.
+   */
   const guard = () => {
     const css = read("src/app/globals.css");
     const at = css.indexOf("@media (prefers-reduced-motion: reduce)");
     expect(at).toBeGreaterThan(-1);
-    return css.slice(at, css.indexOf("}", css.indexOf("{", at) + 1) + 200);
+    const block = css.slice(at, css.indexOf("}", css.indexOf("{", at) + 1) + 200);
+    return block.replace(/\/\*[\s\S]*?\*\//g, "");
   };
 
   /**

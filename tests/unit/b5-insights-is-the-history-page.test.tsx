@@ -193,7 +193,11 @@ describe("one money number", () => {
   it("lists tokens per model with no cost", () => {
     render(<InsightsPage />);
     const heading = screen.getByRole("heading", { name: /tokens by model/i });
-    const card = heading.closest(".rounded-2xl") as HTMLElement;
+    // `.rounded-ps-lg`, the house surface radius (T-0120 collapsed eleven
+    // spellings onto three rungs). Selecting a card by its STYLING class is a
+    // fragile handle either way; the Surface primitive gives these a real one
+    // in U8.
+    const card = heading.closest(".rounded-ps-lg") as HTMLElement;
     expect(card).not.toBeNull();
     expect(within(card).getByText("12.3k")).toBeInTheDocument();
     expect(within(card).getByText(/claude-sonnet/)).toBeInTheDocument();
@@ -260,7 +264,11 @@ describe("the mission mix", () => {
   it("has a card with the five statuses and the mission total", () => {
     render(<InsightsPage />);
     const heading = screen.getByRole("heading", { name: /mission mix/i });
-    const card = heading.closest(".rounded-2xl") as HTMLElement;
+    // `.rounded-ps-lg`, the house surface radius (T-0120 collapsed eleven
+    // spellings onto three rungs). Selecting a card by its STYLING class is a
+    // fragile handle either way; the Surface primitive gives these a real one
+    // in U8.
+    const card = heading.closest(".rounded-ps-lg") as HTMLElement;
     expect(card).not.toBeNull();
     for (const word of ["Successful", "Failed", "Dispatched", "Queued", "Draft"]) {
       expect(within(card).getByText(new RegExp(`\\b${word}\\b`))).toBeInTheDocument();

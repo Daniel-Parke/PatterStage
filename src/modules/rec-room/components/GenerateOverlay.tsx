@@ -79,7 +79,7 @@ export default function GenerateOverlay({ title, visible, done, onComplete }: Ge
     // Stop control that B14 adds will make it one (T-0096, D116).
     // design-lint-disable-next-line overlay-uses-dialog-a11y -- a progress status with no controls, announced via role=status rather than trapped as a dialog
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-ps-surface-ground/90 backdrop-blur-sm" role="status" aria-live="polite" aria-busy={phase === "generating"}>
-      <div className="rounded-2xl border border-neon-purple/20 bg-ps-surface-panel p-10 text-center max-w-md w-full mx-4">
+      <div className="rounded-ps-lg border border-neon-purple/20 bg-ps-surface-panel p-10 text-center max-w-md w-full mx-4">
         {phase === "generating" ? (
           <>
             <Sparkles className="w-12 h-12 text-neon-purple animate-pulse mx-auto mb-6" />

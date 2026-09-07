@@ -62,7 +62,7 @@ export default function ModelsAgentDefaultSection({
       <ModelsSectionHeader icon={Star} title="Agent Default" color="orange" />
 
       <GlowSurface accent="orange">
-        <div className="rounded-xl border border-neon-orange/20 bg-ps-surface-panel p-6">
+        <div className="rounded-ps-lg border border-neon-orange/20 bg-ps-surface-panel p-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <BulkAuxiliaryUpdater
               models={modelOptions}

@@ -26,7 +26,7 @@ export default function TypingIndicator() {
   return (
     <div className="flex gap-3 justify-start">
       <MessageAvatar role="assistant" />
-      <div className="max-w-[70%] rounded-xl px-4 py-3 bg-ps-surface-raised border border-ps-edge-hairline">
+      <div className="max-w-[70%] rounded-ps-lg px-4 py-3 bg-ps-surface-raised border border-ps-edge-hairline">
         <div className="flex items-center gap-1.5">
           <span className="w-1.5 h-1.5 bg-white/40 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
           <span className="w-1.5 h-1.5 bg-white/40 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />

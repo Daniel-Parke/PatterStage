@@ -51,7 +51,7 @@ export default function NextQuestCard({ quests, host, hidden = false, onHide }: 
   return (
     <section
       aria-label="Start here"
-      className="rounded-xl border border-neon-cyan/25 bg-ps-surface-panel overflow-hidden"
+      className="rounded-ps-lg border border-neon-cyan/25 bg-ps-surface-panel overflow-hidden"
     >
       <div className="flex items-center gap-2 border-b border-ps-edge-hairline bg-ps-surface-raised px-4 py-2">
         <Compass className="h-3.5 w-3.5 text-neon-cyan" />
@@ -73,7 +73,7 @@ export default function NextQuestCard({ quests, host, hidden = false, onHide }: 
         <div className="mt-3 flex flex-wrap items-center gap-4">
           <Link
             href={next.screen}
-            className="inline-flex items-center gap-1.5 rounded-md border border-neon-cyan/30 bg-neon-cyan/10 px-3 py-1 text-micro font-mono text-neon-cyan transition-colors hover:bg-neon-cyan/20"
+            className="inline-flex items-center gap-1.5 rounded-ps-md border border-neon-cyan/30 bg-neon-cyan/10 px-3 py-1 text-micro font-mono text-neon-cyan transition-colors hover:bg-neon-cyan/20"
           >
             Go
             <ArrowRight className="h-3 w-3" />

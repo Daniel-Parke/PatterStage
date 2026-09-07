@@ -52,14 +52,14 @@ export default function TimeoutSelector({
       <span ref={ref} className="relative inline-flex">
         <button
           onClick={() => setOpen(!open)}
-          className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-ps-surface-raised border border-ps-edge text-micro font-mono text-ps-text-muted hover:border-ps-edge-emphasis hover:text-ps-text-secondary transition-colors"
+          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-ps-sm bg-ps-surface-raised border border-ps-edge text-micro font-mono text-ps-text-muted hover:border-ps-edge-emphasis hover:text-ps-text-secondary transition-colors"
           title={`Inactivity timeout: ${value === 0 ? "unlimited" : value + "m"}`}
         >
           <Timer className="w-3 h-3" />
           {value === 0 ? "∞" : `${value}m`}
         </button>
         {open && (
-          <div className="absolute top-full left-0 mt-1 z-50 w-44 bg-ps-surface-panel border border-ps-edge-hairline rounded-lg shadow-xl overflow-hidden">
+          <div className="absolute top-full left-0 mt-1 z-50 w-44 bg-ps-surface-panel border border-ps-edge-hairline rounded-ps-md shadow-xl overflow-hidden">
             {PRESETS.map((p) => (
               <button
                 key={p.minutes}
@@ -79,7 +79,7 @@ export default function TimeoutSelector({
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg bg-ps-surface-raised border border-ps-edge text-body text-ps-text-primary hover:border-ps-edge-emphasis transition-colors"
+        className="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-ps-md bg-ps-surface-raised border border-ps-edge text-body text-ps-text-primary hover:border-ps-edge-emphasis transition-colors"
       >
         <div className="flex items-center gap-2">
           <Timer className="w-4 h-4 text-ps-text-muted" />
@@ -93,7 +93,7 @@ export default function TimeoutSelector({
         <ChevronDown className={`w-4 h-4 text-ps-text-muted transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
-        <div className="absolute top-full left-0 right-0 mt-1 z-50 bg-ps-surface-panel border border-ps-edge-hairline rounded-lg shadow-xl overflow-hidden">
+        <div className="absolute top-full left-0 right-0 mt-1 z-50 bg-ps-surface-panel border border-ps-edge-hairline rounded-ps-md shadow-xl overflow-hidden">
           {PRESETS.map((p) => (
             <button
               key={p.minutes}

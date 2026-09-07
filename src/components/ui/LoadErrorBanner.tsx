@@ -74,8 +74,8 @@ export default function LoadErrorBanner({
   compact = false,
 }: LoadErrorBannerProps) {
   const chrome = compact
-    ? "mb-2 gap-2 rounded-lg px-3 py-2 text-body"
-    : "mb-4 gap-3 rounded-xl px-4 py-3 text-body";
+    ? "mb-2 gap-2 rounded-ps-md px-3 py-2 text-body"
+    : "mb-4 gap-3 rounded-ps-lg px-4 py-3 text-body";
   return (
     <div
       role="alert"
@@ -92,7 +92,7 @@ export default function LoadErrorBanner({
         <button
           type="button"
           onClick={onRetry}
-          className={`flex items-center gap-1.5 rounded-lg text-micro font-mono border border-red-500/40 text-red-200 hover:bg-red-500/20 transition-colors shrink-0 ${compact ? "px-2 py-0.5" : "px-2.5 py-1"}`}
+          className={`flex items-center gap-1.5 rounded-ps-md text-micro font-mono border border-red-500/40 text-red-200 hover:bg-red-500/20 transition-colors shrink-0 ${compact ? "px-2 py-0.5" : "px-2.5 py-1"}`}
         >
           <RefreshCw className="w-3 h-3" />
           {retryLabel}

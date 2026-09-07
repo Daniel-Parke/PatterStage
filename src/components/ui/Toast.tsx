@@ -115,7 +115,7 @@ export function ToastView({
       aria-live={type === "error" ? "assertive" : "polite"}
       data-testid="toast"
       style={{ bottom: `calc(1.5rem + ${index * STACK_STRIDE_REM}rem)` }}
-      className={`fixed right-6 z-[80] flex items-center gap-2 ${config.bg} border ${config.border} ${config.text} text-body font-mono px-4 py-2.5 rounded-xl shadow-lg transition-all duration-200 ${
+      className={`fixed right-6 z-[80] flex items-center gap-2 ${config.bg} border ${config.border} ${config.text} text-body font-mono px-4 py-2.5 rounded-ps-lg shadow-lg transition-all duration-200 ${
         visible ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"
       }`}
     >
@@ -128,7 +128,7 @@ export function ToastView({
           setVisible(false);
           setTimeout(onClose, 200);
         }}
-        className="ml-2 p-0.5 rounded hover:bg-ps-surface-raised transition-colors"
+        className="ml-2 p-0.5 rounded-ps-sm hover:bg-ps-surface-raised transition-colors"
       >
         <X className="w-3 h-3" aria-hidden="true" />
       </button>

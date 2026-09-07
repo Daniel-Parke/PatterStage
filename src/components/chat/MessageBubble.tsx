@@ -57,7 +57,7 @@ export default function MessageBubble({ msg }: { msg: ChatMessage }) {
       {!isUser && <MessageAvatar role={msg.role} />}
 
       <div
-        className={`max-w-[70%] rounded-xl px-4 py-3 ${
+        className={`max-w-[70%] rounded-ps-lg px-4 py-3 ${
           isUser
             ? "bg-neon-cyan/10 border border-neon-cyan/20 text-ps-text-primary"
             : "bg-ps-surface-raised border border-ps-edge-hairline text-ps-text-primary"

@@ -49,7 +49,7 @@ export function stringOr(value: unknown, fallback?: string): string | undefined 
  * the same CSS and the same rendered `<input>`.
  */
 export const HINDSIGHT_TEXT_INPUT_CLASS =
-  "w-full bg-ps-surface-inset border border-ps-edge rounded-lg px-3 py-2 text-body text-ps-text-primary focus:border-pink-500/50 focus:outline-none";
+  "w-full bg-ps-surface-inset border border-ps-edge rounded-ps-md px-3 py-2 text-body text-ps-text-primary focus:border-pink-500/50 focus:outline-none";
 
 /**
  * Tailwind className for the standard Hindsight modal `<textarea>`.
@@ -74,7 +74,7 @@ export const HINDSIGHT_TEXT_INPUT_CLASS =
  * inline string.
  */
 export const HINDSIGHT_TEXTAREA_CLASS =
-  "bg-ps-surface-inset border border-ps-edge rounded-lg p-3 text-body text-ps-text-primary resize-none focus:border-pink-500/50 focus:outline-none";
+  "bg-ps-surface-inset border border-ps-edge rounded-ps-md p-3 text-body text-ps-text-primary resize-none focus:border-pink-500/50 focus:outline-none";
 
 /** Badge colour for Hindsight fact_type */
 export function hindsightFactTypeBadgeColor(t: string): "cyan" | "purple" | "orange" | "green" | "gray" {

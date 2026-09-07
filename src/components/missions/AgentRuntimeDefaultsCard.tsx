@@ -55,7 +55,7 @@ export default function AgentRuntimeDefaultsCard({
       className={
         embedded
           ? "space-y-4"
-          : "rounded-xl border border-ps-edge-hairline bg-ps-surface-raised p-3 sm:p-4 space-y-4"
+          : "rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-raised p-3 sm:p-4 space-y-4"
       }
     >
       {!embedded && (

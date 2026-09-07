@@ -24,7 +24,7 @@ export function ChatModeToggle({
   disabled?: boolean;
 }) {
   return (
-    <div className="flex items-center rounded-lg border border-ps-edge-hairline bg-ps-surface-raised p-0.5">
+    <div className="flex items-center rounded-ps-md border border-ps-edge-hairline bg-ps-surface-raised p-0.5">
       {MODES.map((m) => {
         const active = m.value === mode;
         const Icon = m.Icon;
@@ -34,7 +34,7 @@ export function ChatModeToggle({
             onClick={() => onChange(m.value)}
             disabled={disabled}
             title={m.title}
-            className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-micro font-mono transition-colors disabled:opacity-40 ${
+            className={`flex items-center gap-1.5 rounded-ps-md px-2.5 py-1 text-micro font-mono transition-colors disabled:opacity-40 ${
               active
                 ? "bg-neon-cyan/20 text-neon-cyan"
                 : "text-ps-text-muted hover:text-ps-text-secondary"

@@ -236,14 +236,14 @@ export default function MissionsList({ vm }: MissionsListProps) {
           </div>
         )}
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-1 bg-ps-surface-panel rounded-lg border border-ps-edge-hairline p-1">
+          <div className="flex items-center gap-1 bg-ps-surface-panel rounded-ps-md border border-ps-edge-hairline p-1">
             {STATUS_FILTERS.map(
               (f) => (
                 <button
                   type="button"
                   key={f}
                   onClick={() => setFilter(f)}
-                  className={`px-2.5 py-1 rounded-md text-micro font-mono transition-colors ${
+                  className={`px-2.5 py-1 rounded-ps-md text-micro font-mono transition-colors ${
                     filter === f
                       ? "bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/30"
                       : "text-ps-text-muted hover:text-ps-text-muted border border-transparent"
@@ -260,14 +260,14 @@ export default function MissionsList({ vm }: MissionsListProps) {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search missions..." aria-label="Mission search"
-              className="w-full bg-ps-surface-panel border border-ps-edge rounded-lg pl-9 pr-8 py-1.5 text-micro text-ps-text-primary placeholder-ps-text-muted outline-none focus:border-neon-cyan/50 font-mono"
+              className="w-full bg-ps-surface-panel border border-ps-edge rounded-ps-md pl-9 pr-8 py-1.5 text-micro text-ps-text-primary placeholder-ps-text-muted outline-none focus:border-neon-cyan/50 font-mono"
             />
             {search && (
               <button
                 type="button"
                 aria-label="Clear the mission search"
                 onClick={() => setSearch("")}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded text-ps-text-muted hover:text-ps-text-secondary transition-colors"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded-ps-sm text-ps-text-muted hover:text-ps-text-secondary transition-colors"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -354,7 +354,7 @@ export default function MissionsList({ vm }: MissionsListProps) {
                   </div>
                   <div className="space-y-2 flex-1">
                     {columnMissions.length === 0 ? (
-                      <div className="rounded-xl border border-dashed border-ps-edge-hairline bg-ps-surface-panel p-4 text-center text-micro font-mono text-ps-text-faint">
+                      <div className="rounded-ps-lg border border-dashed border-ps-edge-hairline bg-ps-surface-panel p-4 text-center text-micro font-mono text-ps-text-faint">
                         No missions
                       </div>
                     ) : (
@@ -481,7 +481,7 @@ export default function MissionsList({ vm }: MissionsListProps) {
                             <button
                               type="button"
                               onClick={toggleCollapsedColumn}
-                              className="w-full text-micro font-mono text-neon-cyan/80 hover:text-neon-cyan py-2 text-center border border-dashed border-ps-edge rounded-lg transition-colors mt-2"
+                              className="w-full text-micro font-mono text-neon-cyan/80 hover:text-neon-cyan py-2 text-center border border-dashed border-ps-edge rounded-ps-md transition-colors mt-2"
                             >
                               Show all {columnMissions.length} missions →
                             </button>

@@ -67,7 +67,7 @@ export default function ConfigField({ field, value, sectionDef, onUpdate }: Conf
           {field.description && (
             <p className="text-body text-ps-text-muted">{field.description}</p>
           )}
-          <div className="text-micro text-ps-text-muted bg-ps-surface-inset rounded-lg p-3 font-mono max-h-60 overflow-y-auto whitespace-pre-wrap">
+          <div className="text-micro text-ps-text-muted bg-ps-surface-inset rounded-ps-md p-3 font-mono max-h-60 overflow-y-auto whitespace-pre-wrap">
             {JSON.stringify(value, null, 2) || "(not configured)"}
           </div>
         </div>
@@ -83,7 +83,7 @@ export default function ConfigField({ field, value, sectionDef, onUpdate }: Conf
       <div className="space-y-1.5">
         <label className="text-body font-medium text-ps-text-secondary">{field.label}</label>
         {field.description && <p className="text-body text-ps-text-muted">{field.description}</p>}
-        <div className="rounded-lg border border-ps-edge-hairline bg-ps-surface-panel px-3 py-2 font-mono text-body text-ps-text-muted">
+        <div className="rounded-ps-md border border-ps-edge-hairline bg-ps-surface-panel px-3 py-2 font-mono text-body text-ps-text-muted">
           {isUnset(value) ? "Not set" : String(value)}
         </div>
         <p className="text-body text-ps-text-faint">
@@ -168,7 +168,7 @@ export default function ConfigField({ field, value, sectionDef, onUpdate }: Conf
           <span />
         )}
         {unset ? (
-          <span className="text-micro font-mono text-ps-text-faint bg-ps-surface-raised px-1.5 py-0.5 rounded">
+          <span className="text-micro font-mono text-ps-text-faint bg-ps-surface-raised px-1.5 py-0.5 rounded-ps-sm">
             Not set
           </span>
         ) : (
@@ -176,7 +176,7 @@ export default function ConfigField({ field, value, sectionDef, onUpdate }: Conf
             type="button"
             aria-label={`Clear ${field.label}`}
             onClick={() => onUpdate(field.key, null)}
-            className="text-micro font-mono text-ps-text-muted hover:text-ps-text-primary hover:bg-ps-surface-raised px-1.5 py-0.5 rounded transition-colors"
+            className="text-micro font-mono text-ps-text-muted hover:text-ps-text-primary hover:bg-ps-surface-raised px-1.5 py-0.5 rounded-ps-sm transition-colors"
           >
             Clear
           </button>

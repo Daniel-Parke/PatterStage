@@ -23,7 +23,7 @@ export default function ComposerClarifyPrompt({
 }) {
   const [answer, setAnswer] = useState("");
   return (
-    <div className="space-y-2 rounded-lg border border-neon-cyan/30 bg-neon-cyan/[0.08] px-3 py-2.5">
+    <div className="space-y-2 rounded-ps-md border border-neon-cyan/30 bg-neon-cyan/[0.08] px-3 py-2.5">
       <div className="flex items-start gap-2">
         <HelpCircle className="mt-0.5 h-4 w-4 shrink-0 text-neon-cyan" />
         <span className="text-body text-ps-text-primary">{question}</span>
@@ -33,13 +33,13 @@ export default function ComposerClarifyPrompt({
         onChange={(e) => setAnswer(e.target.value)}
         rows={3}
         placeholder="Your answer…" aria-label="Answer to the agent's question"
-        className="w-full rounded border border-ps-edge bg-ps-surface-ground/60 px-2 py-1 text-body text-ps-text-primary placeholder:text-ps-text-faint focus:border-neon-cyan/40 focus:outline-none"
+        className="w-full rounded-ps-sm border border-ps-edge bg-ps-surface-ground/60 px-2 py-1 text-body text-ps-text-primary placeholder:text-ps-text-faint focus:border-neon-cyan/40 focus:outline-none"
       />
       <button
         type="button"
         disabled={busy || answer.trim().length === 0}
         onClick={() => onSubmit(answer.trim())}
-        className="w-full rounded-md border border-neon-cyan/30 bg-neon-cyan/15 px-3 py-1 text-micro font-mono text-neon-cyan transition hover:bg-neon-cyan/25 disabled:opacity-40"
+        className="w-full rounded-ps-md border border-neon-cyan/30 bg-neon-cyan/15 px-3 py-1 text-micro font-mono text-neon-cyan transition hover:bg-neon-cyan/25 disabled:opacity-40"
       >
         Submit answer
       </button>

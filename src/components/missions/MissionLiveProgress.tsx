@@ -46,7 +46,7 @@ export default function MissionLiveProgress({ missionId }: { missionId: string }
 
   if (data?.error) {
     return (
-      <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-3 text-micro font-mono text-red-300">
+      <div className="rounded-ps-lg border border-red-500/20 bg-red-500/5 p-3 text-micro font-mono text-red-300">
         Live run unavailable: {data.error}
       </div>
     );

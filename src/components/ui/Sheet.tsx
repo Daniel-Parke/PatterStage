@@ -49,7 +49,7 @@ export default function Sheet({
 
   const panelClass =
     effectiveSide === "bottom"
-      ? "fixed inset-x-0 bottom-0 z-[61] max-h-[92vh] rounded-t-xl border-t border-ps-edge-hairline"
+      ? "fixed inset-x-0 bottom-0 z-[61] max-h-[92vh] rounded-t-ps-lg border-t border-ps-edge-hairline"
       : "fixed top-0 right-0 bottom-0 z-[61] w-full border-l border-ps-edge-hairline sm:max-w-2xl lg:max-w-3xl xl:max-w-4xl max-w-[min(90vw,56rem)]";
 
   return createPortal(
@@ -84,7 +84,7 @@ export default function Sheet({
             <button
               type="button"
               onClick={onClose}
-              className="p-1 rounded text-ps-text-muted hover:text-ps-text-primary shrink-0"
+              className="p-1 rounded-ps-sm text-ps-text-muted hover:text-ps-text-primary shrink-0"
               aria-label="Close panel"
             >
               <X className="w-4 h-4" />

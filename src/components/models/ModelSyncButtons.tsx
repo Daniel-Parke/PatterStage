@@ -100,7 +100,7 @@ function SyncModal({
         aria-labelledby="model-sync-title"
         tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md mx-4 bg-ps-surface-panel border border-ps-edge-hairline rounded-xl shadow-2xl overflow-hidden"
+        className="w-full max-w-md mx-4 bg-ps-surface-panel border border-ps-edge-hairline rounded-ps-lg shadow-2xl overflow-hidden"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-ps-edge-hairline">
@@ -116,7 +116,7 @@ function SyncModal({
             type="button"
             aria-label="Close sync panel"
             onClick={onCancel}
-            className="p-1 rounded text-ps-text-muted hover:text-ps-text-primary hover:bg-ps-surface-raised transition-colors"
+            className="p-1 rounded-ps-sm text-ps-text-muted hover:text-ps-text-primary hover:bg-ps-surface-raised transition-colors"
           >
             <X className="w-4 h-4" aria-hidden="true" />
           </button>
@@ -145,7 +145,7 @@ function SyncModal({
               {visibleChanges.map((diff) => (
                 <div
                   key={diff.id}
-                  className="flex items-start justify-between gap-2 px-3 py-2.5 bg-ps-surface-raised rounded-lg"
+                  className="flex items-start justify-between gap-2 px-3 py-2.5 bg-ps-surface-raised rounded-ps-md"
                 >
                   <div className="flex-1 min-w-0">
                     <div className="text-body font-semibold text-ps-text-secondary">
@@ -159,7 +159,7 @@ function SyncModal({
                     <button
                       type="button"
                       onClick={() => handleRemove(diff.id)}
-                      className="flex-shrink-0 p-1 rounded text-red-400/40 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                      className="flex-shrink-0 p-1 rounded-ps-sm text-red-400/40 hover:text-red-400 hover:bg-red-500/10 transition-colors"
                       title="Exclude this change"
                     >
                       <X className="w-3 h-3" />
@@ -176,7 +176,7 @@ function SyncModal({
           <button
             type="button"
             onClick={onCancel}
-            className="px-3 py-1.5 text-micro font-mono text-ps-text-muted hover:text-ps-text-primary hover:bg-ps-surface-raised rounded-lg transition-colors"
+            className="px-3 py-1.5 text-micro font-mono text-ps-text-muted hover:text-ps-text-primary hover:bg-ps-surface-raised rounded-ps-md transition-colors"
           >
             Cancel
           </button>
@@ -188,7 +188,7 @@ function SyncModal({
             // the values already on disk. The credential then has to be written
             // from the Credentials panel instead, which is where a key belongs.
             disabled={confirming || visibleChanges.length === 0 || inSync}
-            className={`px-3 py-1.5 text-micro font-mono rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+            className={`px-3 py-1.5 text-micro font-mono rounded-ps-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
               direction === "push"
                 ? "bg-neon-purple/20 text-neon-purple hover:bg-neon-purple/30"
                 : "bg-neon-cyan/20 text-neon-cyan hover:bg-neon-cyan/30"
@@ -318,7 +318,7 @@ export default function ModelSyncButtons({
           onClick={() => void handlePull()}
           disabled={disabled || loadingDiff}
           title="Pull from Hermes"
-          className="p-1.5 rounded-lg text-ps-text-muted hover:text-neon-cyan hover:bg-neon-cyan/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="p-1.5 rounded-ps-md text-ps-text-muted hover:text-neon-cyan hover:bg-neon-cyan/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loadingDiff && modalState?.direction === "pull" ? (
             <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -331,7 +331,7 @@ export default function ModelSyncButtons({
           onClick={() => void handlePush()}
           disabled={disabled || loadingDiff}
           title="Push to Hermes"
-          className="p-1.5 rounded-lg text-ps-text-muted hover:text-neon-purple hover:bg-neon-purple/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="p-1.5 rounded-ps-md text-ps-text-muted hover:text-neon-purple hover:bg-neon-purple/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loadingDiff && modalState?.direction === "push" ? (
             <Loader2 className="w-3.5 h-3.5 animate-spin" />

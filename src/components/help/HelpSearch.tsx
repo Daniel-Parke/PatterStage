@@ -71,7 +71,7 @@ export default function HelpSearch({ entries }: { entries: HelpSearchEntry[] }) 
       </p>
 
       {results.length > 0 && (
-        <ul className="divide-y divide-ps-edge-hairline rounded-lg border border-ps-edge-hairline bg-ps-surface-panel">
+        <ul className="divide-y divide-ps-edge-hairline rounded-ps-md border border-ps-edge-hairline bg-ps-surface-panel">
           {results.map((entry) => (
             <li key={`${entry.slug}#${entry.anchor ?? ""}`}>
               <Link

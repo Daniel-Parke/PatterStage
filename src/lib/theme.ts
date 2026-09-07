@@ -288,7 +288,7 @@ export const baseInputStyles =
   // product wears, and a control's boundary is the one WCAG 1.4.11 is about.
   // On the hairline it measured 2.38:1 against the page (T-0118).
   // design-lint-disable-next-line no-bare-outline-none -- inputFieldClasses appends the accent focus border to this base; it is never used bare
-  "w-full bg-ps-surface-panel border border-ps-edge rounded-lg px-3 py-2 text-body text-ps-text-primary placeholder-ps-text-muted outline-none transition-colors font-mono";
+  "w-full bg-ps-surface-panel border border-ps-edge rounded-ps-md px-3 py-2 text-body text-ps-text-primary placeholder-ps-text-muted outline-none transition-colors font-mono";
 
 /**
  * A section heading, which is not a smaller page title.

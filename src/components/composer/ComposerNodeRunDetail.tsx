@@ -9,6 +9,7 @@
 
 "use client";
 
+import { statusToneClasses } from "@/lib/theme";
 import { sectionHeadingClasses } from "@/lib/theme";
 import { useState } from "react";
 import { Save, Check } from "lucide-react";
@@ -18,14 +19,20 @@ import ElapsedSince from "./ElapsedSince";
 import { safeApiCall } from "@/lib/api-fetch";
 import type { ComposerApproval, ComposerNode, ComposerNodeRun } from "@/lib/composer/schema";
 
+/**
+ * The ladder, keyed by the enum this panel receives (T-0120). `rejected` and
+ * `cancelled` are `blocked` rather than `fail` for the reason the canvas beside
+ * this file records: orange separates the gate the operator turned down from
+ * the stage that broke, and `blocked` IS neon-orange.
+ */
 const STATUS_TEXT: Record<string, string> = {
-  pending: "text-ps-text-muted",
-  running: "text-neon-cyan",
-  completed: "text-neon-green",
-  failed: "text-neon-pink",
-  rejected: "text-neon-orange",
-  cancelled: "text-neon-orange",
-  skipped: "text-ps-text-muted",
+  pending: statusToneClasses.queued.text,
+  running: statusToneClasses.running.text,
+  completed: statusToneClasses.ok.text,
+  failed: statusToneClasses.fail.text,
+  rejected: statusToneClasses.blocked.text,
+  cancelled: statusToneClasses.blocked.text,
+  skipped: statusToneClasses.idle.text,
 };
 
 function Label({ children }: { children: React.ReactNode }) {
@@ -135,7 +142,7 @@ export default function ComposerNodeRunDetail({
                 <Label>Gate decisions</Label>
                 <ul className="space-y-2">
                   {approvals.map((a) => (
-                    <li key={a.id} className="rounded-lg border border-ps-edge-hairline bg-ps-surface-panel px-3 py-2">
+                    <li key={a.id} className="rounded-ps-md border border-ps-edge-hairline bg-ps-surface-panel px-3 py-2">
                       <span
                         className={`font-mono text-micro ${a.action === "accept" ? "text-neon-green" : "text-neon-pink"}`}
                       >
@@ -153,7 +160,7 @@ export default function ComposerNodeRunDetail({
             {nodeRun.error ? (
               <div className="space-y-2">
                 <Label>Error</Label>
-                <p className="rounded-lg border border-neon-pink/30 bg-neon-pink/10 px-3 py-2 text-body text-neon-pink">
+                <p className="rounded-ps-md border border-neon-pink/30 bg-neon-pink/10 px-3 py-2 text-body text-neon-pink">
                   {nodeRun.error}
                 </p>
               </div>
@@ -167,12 +174,12 @@ export default function ComposerNodeRunDetail({
                     type="button"
                     onClick={() => void saveAsArtifact()}
                     disabled={saveState !== "idle"}
-                    className="inline-flex items-center gap-1 rounded border border-ps-edge px-2 py-0.5 text-micro font-mono text-ps-text-muted transition hover:border-neon-orange/40 hover:text-neon-orange disabled:opacity-60"
+                    className="inline-flex items-center gap-1 rounded-ps-sm border border-ps-edge px-2 py-0.5 text-micro font-mono text-ps-text-muted transition hover:border-neon-orange/40 hover:text-neon-orange disabled:opacity-60"
                   >
                     {saveState === "saved" ? <><Check className="h-3 w-3" /> Saved</> : <><Save className="h-3 w-3" /> {saveState === "saving" ? "Saving…" : "Save as artifact"}</>}
                   </button>
                 </div>
-                <pre className="max-h-[50vh] overflow-auto whitespace-pre-wrap rounded-lg border border-ps-edge-hairline bg-ps-surface-panel px-3 py-2 text-body leading-relaxed text-ps-text-secondary">
+                <pre className="max-h-[50vh] overflow-auto whitespace-pre-wrap rounded-ps-md border border-ps-edge-hairline bg-ps-surface-panel px-3 py-2 text-body leading-relaxed text-ps-text-secondary">
                   {nodeRun.output}
                 </pre>
               </div>

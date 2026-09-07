@@ -31,7 +31,7 @@ export default function AgentProfileList({
             key={profile.id}
             type="button"
             onClick={() => onSelect(profile)}
-            className={`w-full text-left rounded-xl border p-3 transition-all ${
+            className={`w-full text-left rounded-ps-lg border p-3 transition-all ${
               selected
                 ? profile.isDefault
                   ? "border-cyan-500/50 bg-cyan-500/10"

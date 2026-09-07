@@ -128,7 +128,7 @@ function tileValue(label: RegExp): string {
 }
 
 function cardFor(heading: RegExp): HTMLElement {
-  const el = screen.getByRole("heading", { name: heading }).closest(".rounded-2xl");
+  const el = screen.getByRole("heading", { name: heading }).closest(".rounded-ps-lg");
   if (!el) throw new Error(`no card for ${heading}`);
   return el as HTMLElement;
 }

@@ -28,7 +28,7 @@ export default function HelpFragment({ html, slug }: HelpFragmentProps) {
     return (
       <div
         role="alert"
-        className="flex items-start gap-3 rounded-lg border border-semantic-warning/40 bg-ps-surface-panel px-4 py-3"
+        className="flex items-start gap-3 rounded-ps-md border border-semantic-warning/40 bg-ps-surface-panel px-4 py-3"
       >
         <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-semantic-warning" aria-hidden="true" />
         <p className="text-body text-ps-text-secondary">

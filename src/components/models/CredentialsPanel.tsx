@@ -111,7 +111,7 @@ export default function CredentialsPanel({
   };
 
   return (
-    <section className="mb-6 rounded-xl border border-ps-edge-hairline bg-ps-surface-raised p-4">
+    <section className="mb-6 rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-raised p-4">
       <div className="mb-3 flex items-center gap-2">
         <KeyRound className="h-4 w-4 text-ps-text-muted" />
         {/* "Credentials" is this screen's word for the thing the corpus calls
@@ -123,7 +123,7 @@ export default function CredentialsPanel({
           type="button"
           disabled={adding || addOpen}
           onClick={() => setAddOpen(true)}
-          className="ml-auto flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 font-mono text-micro text-neon-cyan transition-colors hover:bg-neon-cyan/15 disabled:cursor-not-allowed disabled:opacity-50"
+          className="ml-auto flex items-center gap-1.5 rounded-ps-md px-2.5 py-1.5 font-mono text-micro text-neon-cyan transition-colors hover:bg-neon-cyan/15 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <Plus className="h-3.5 w-3.5" />
           Add credential
@@ -138,7 +138,7 @@ export default function CredentialsPanel({
       )}
 
       {addOpen && (
-        <div className="mb-3 space-y-2 rounded-lg border border-neon-cyan/20 bg-neon-cyan/[0.04] p-3">
+        <div className="mb-3 space-y-2 rounded-ps-md border border-neon-cyan/20 bg-neon-cyan/[0.04] p-3">
           <div className="grid gap-2 sm:grid-cols-2">
             <Input
               type="text"
@@ -171,7 +171,7 @@ export default function CredentialsPanel({
               type="button"
               disabled={adding || draft.apiKey.trim().length === 0 || draft.provider === ""}
               onClick={submitAdd}
-              className="rounded-lg bg-neon-cyan/20 px-2.5 py-1.5 font-mono text-micro text-neon-cyan transition-colors hover:bg-neon-cyan/30 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-ps-md bg-neon-cyan/20 px-2.5 py-1.5 font-mono text-micro text-neon-cyan transition-colors hover:bg-neon-cyan/30 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Save credential
             </button>
@@ -179,7 +179,7 @@ export default function CredentialsPanel({
               type="button"
               aria-label="Cancel adding a credential"
               onClick={closeAdd}
-              className="rounded-lg px-2.5 py-1.5 font-mono text-micro text-ps-text-muted transition-colors hover:bg-ps-surface-raised hover:text-ps-text-primary"
+              className="rounded-ps-md px-2.5 py-1.5 font-mono text-micro text-ps-text-muted transition-colors hover:bg-ps-surface-raised hover:text-ps-text-primary"
             >
               Cancel
             </button>
@@ -193,7 +193,7 @@ export default function CredentialsPanel({
           const busy = busyId === c.id;
           const rotating = rotatingId === c.id;
           return (
-            <li key={c.id} className="rounded-lg px-3 py-2 hover:bg-ps-surface-raised">
+            <li key={c.id} className="rounded-ps-md px-3 py-2 hover:bg-ps-surface-raised">
               <div className="flex items-center gap-3">
                 <span className="min-w-0 flex-1 truncate text-body text-ps-text-secondary">
                   {c.label}
@@ -206,7 +206,7 @@ export default function CredentialsPanel({
                   disabled={busy}
                   onClick={() => (rotating ? closeRotate() : setRotatingId(c.id))}
                   aria-label={`Rotate key for ${c.label}`}
-                  className="rounded-lg px-2 py-1 font-mono text-micro text-ps-text-muted transition-colors hover:bg-ps-surface-raised hover:text-ps-text-primary disabled:opacity-50"
+                  className="rounded-ps-md px-2 py-1 font-mono text-micro text-ps-text-muted transition-colors hover:bg-ps-surface-raised hover:text-ps-text-primary disabled:opacity-50"
                 >
                   Rotate key
                 </button>
@@ -218,7 +218,7 @@ export default function CredentialsPanel({
                     armed ? `Confirm delete credential ${c.label}` : `Delete credential ${c.label}`
                   }
                   title={armed ? "Click again to confirm" : "Delete credential"}
-                  className={`rounded-lg p-1.5 transition-colors disabled:opacity-50 ${
+                  className={`rounded-ps-md p-1.5 transition-colors disabled:opacity-50 ${
                     armed
                       ? "bg-neon-red/20 text-neon-red"
                       : "text-ps-text-muted hover:bg-neon-red/20 hover:text-neon-red"
@@ -251,7 +251,7 @@ export default function CredentialsPanel({
                       closeRotate();
                       void onRotate(c, key);
                     }}
-                    className="shrink-0 rounded-lg bg-neon-cyan/20 px-2.5 py-1.5 font-mono text-micro text-neon-cyan transition-colors hover:bg-neon-cyan/30 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="shrink-0 rounded-ps-md bg-neon-cyan/20 px-2.5 py-1.5 font-mono text-micro text-neon-cyan transition-colors hover:bg-neon-cyan/30 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     Save new key
                   </button>
@@ -259,7 +259,7 @@ export default function CredentialsPanel({
                     type="button"
                     aria-label={`Cancel rotating ${c.label}`}
                     onClick={closeRotate}
-                    className="shrink-0 rounded-lg px-2.5 py-1.5 font-mono text-micro text-ps-text-muted transition-colors hover:bg-ps-surface-raised hover:text-ps-text-primary"
+                    className="shrink-0 rounded-ps-md px-2.5 py-1.5 font-mono text-micro text-ps-text-muted transition-colors hover:bg-ps-surface-raised hover:text-ps-text-primary"
                   >
                     Cancel
                   </button>

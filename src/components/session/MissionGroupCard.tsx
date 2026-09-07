@@ -49,11 +49,11 @@ export default function MissionGroupCard({ group }: { group: MissionGroup }) {
             {hasActive && <LiveDot />}
             <Layers className="w-4 h-4 text-neon-green flex-shrink-0" />
             <h3 className="font-semibold text-ps-text-primary truncate">{title}</h3>
-            <span className="text-micro font-mono px-1.5 py-0.5 rounded bg-neon-green/10 text-neon-green">
+            <span className="text-micro font-mono px-1.5 py-0.5 rounded-ps-sm bg-neon-green/10 text-neon-green">
               {group.sessions.length} on this page
             </span>
             {hasActive && (
-              <span className="text-micro font-mono px-1.5 py-0.5 rounded bg-neon-green/20 text-neon-green">
+              <span className="text-micro font-mono px-1.5 py-0.5 rounded-ps-sm bg-neon-green/20 text-neon-green">
                 {group.activeCount} active
               </span>
             )}
@@ -76,7 +76,7 @@ export default function MissionGroupCard({ group }: { group: MissionGroup }) {
       </LedgerRowButton>
       <Link
         href={`${MISSIONS_PATH}?mission=${group.missionId}`}
-        className="mr-4 text-micro font-mono px-2 py-1 rounded bg-neon-green/10 text-neon-green hover:bg-neon-green/20 transition-colors shrink-0"
+        className="mr-4 text-micro font-mono px-2 py-1 rounded-ps-sm bg-neon-green/10 text-neon-green hover:bg-neon-green/20 transition-colors shrink-0"
         title="Open the parent mission"
       >
         ↗ Mission

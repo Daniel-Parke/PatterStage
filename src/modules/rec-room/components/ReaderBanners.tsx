@@ -55,7 +55,7 @@ export function StoryFailureBanner({
         <p className="text-body text-red-300/60">{generationError}</p>
       </div>
       <button onClick={onRetryFromCreate}
-        className="px-3 py-1.5 text-body text-red-300 rounded-lg border border-red-500/30 bg-red-500/10 hover:bg-red-500/20">
+        className="px-3 py-1.5 text-body text-red-300 rounded-ps-md border border-red-500/30 bg-red-500/10 hover:bg-red-500/20">
         Retry from Create
       </button>
     </div>

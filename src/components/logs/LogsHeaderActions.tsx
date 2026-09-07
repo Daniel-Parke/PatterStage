@@ -42,7 +42,7 @@ export default function LogsHeaderActions({
       <button
         type="button"
         onClick={onToggleAutoRefresh}
-        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-micro font-mono transition-all duration-300 ${
+        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-ps-md text-micro font-mono transition-all duration-300 ${
           autoRefresh
             ? "bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/50 shadow-[0_0_8px_rgb(var(--ps-rgb-neon-cyan)_/_0.3)]"
             : "bg-ps-surface-panel text-ps-text-muted border border-ps-edge hover:text-ps-text-secondary"
@@ -72,7 +72,7 @@ export default function LogsHeaderActions({
           const parsed = parseInt(e.target.value, 10);
           onLineCountChange(Number.isFinite(parsed) && parsed >= 1 ? Math.min(parsed, 1000) : 200);
         }}
-        className="bg-ps-surface-panel border border-ps-edge rounded-lg px-2 py-1.5 text-micro text-ps-text-primary font-mono appearance-none cursor-pointer outline-none focus:border-neon-cyan/50"
+        className="bg-ps-surface-panel border border-ps-edge rounded-ps-md px-2 py-1.5 text-micro text-ps-text-primary font-mono appearance-none cursor-pointer outline-none focus:border-neon-cyan/50"
       >
         <option value={100} className="bg-ps-surface-panel">100 lines</option>
         <option value={200} className="bg-ps-surface-panel">200 lines</option>

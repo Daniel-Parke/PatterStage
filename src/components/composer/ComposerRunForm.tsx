@@ -78,7 +78,7 @@ export default function ComposerRunForm({
     <Card padding="md" glow="cyan">
       {/* Orientation: what this workflow is + the stages it runs */}
       {workflow ? (
-        <div className="mb-3 rounded-lg border border-ps-edge-hairline bg-ps-surface-panel px-3 py-2.5">
+        <div className="mb-3 rounded-ps-md border border-ps-edge-hairline bg-ps-surface-panel px-3 py-2.5">
           {/* Named the way the review below names it, so the word an operator
               is about to launch one of is defined where they first read it. */}
           <p className="text-micro font-mono uppercase tracking-widest text-ps-text-muted">
@@ -99,7 +99,7 @@ export default function ComposerRunForm({
                 <span key={n.id} className="flex items-center gap-1">
                   {i > 0 ? <span className="text-ps-text-faint">→</span> : null}
                   <span
-                    className={`rounded px-1.5 py-0.5 text-micro font-mono ${n.gate === "hil" ? "bg-neon-yellow/10 text-neon-yellow/90" : "bg-ps-surface-raised text-ps-text-muted"}`}
+                    className={`rounded-ps-sm px-1.5 py-0.5 text-micro font-mono ${n.gate === "hil" ? "bg-neon-yellow/10 text-neon-yellow/90" : "bg-ps-surface-raised text-ps-text-muted"}`}
                     title={n.gate === "hil" ? "human-in-the-loop gate" : n.kind}
                   >
                     {n.label}
@@ -197,7 +197,7 @@ export default function ComposerRunForm({
 
         <div>
           <p className="text-micro font-mono uppercase tracking-widest text-ps-text-muted">{objectiveLabel}</p>
-          <p className="mt-0.5 whitespace-pre-wrap rounded-lg border border-ps-edge-hairline bg-ps-surface-panel px-3 py-2 text-body text-ps-text-secondary">{input.trim()}</p>
+          <p className="mt-0.5 whitespace-pre-wrap rounded-ps-md border border-ps-edge-hairline bg-ps-surface-panel px-3 py-2 text-body text-ps-text-secondary">{input.trim()}</p>
         </div>
 
         <div>
@@ -219,7 +219,7 @@ export default function ComposerRunForm({
         </div>
 
         {writeStages.length > 0 ? (
-          <div className="flex items-start gap-2 rounded-lg border border-neon-orange/40 bg-neon-orange/10 px-3 py-2.5">
+          <div className="flex items-start gap-2 rounded-ps-md border border-neon-orange/40 bg-neon-orange/10 px-3 py-2.5">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-neon-orange" />
             <div className="text-body text-neon-orange/90">
               <p className="font-semibold">This workflow can modify your repository.</p>

@@ -60,7 +60,7 @@ export function SearchInput({
         aria-label={ariaLabel ?? placeholder ?? "Search"}
         placeholder={placeholder}
         // design-lint-disable-next-line no-bare-outline-none -- the accent focus border comes from focusBorder on this same line; every entry is a focus:border-* class
-        className={`w-full bg-ps-surface-panel border border-ps-edge rounded-lg pl-10 pr-4 py-2.5 text-body text-ps-text-primary placeholder-ps-text-muted outline-none transition-colors font-mono ${focusBorder[accentColor] || focusBorder.cyan}`}
+        className={`w-full bg-ps-surface-panel border border-ps-edge rounded-ps-md pl-10 pr-4 py-2.5 text-body text-ps-text-primary placeholder-ps-text-muted outline-none transition-colors font-mono ${focusBorder[accentColor] || focusBorder.cyan}`}
       />
     </div>
   );

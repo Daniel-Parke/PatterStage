@@ -2,6 +2,7 @@
 // Card Component
 // ═══════════════════════════════════════════════════════════════
 
+import { statusToneClasses } from "@/lib/theme";
 import type { AccentColor } from "@/types/console";
 import GlowSurface from "@/components/ui/GlowSurface";
 
@@ -37,7 +38,7 @@ export default function Card({
     : "";
   const padClass = paddingMap[padding];
 
-  const innerClasses = `rounded-xl border border-ps-edge-hairline bg-ps-surface-panel min-w-0 ${padClass} ${hoverClass} ${className}`;
+  const innerClasses = `rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel min-w-0 ${padClass} ${hoverClass} ${className}`;
 
   return (
     <GlowSurface
@@ -65,11 +66,14 @@ export function StatusDot({
   status: "online" | "warning" | "error" | "idle";
   pulse?: boolean;
 }) {
+  // The ladder. `online` is the OK rung rather than a green of its own, and
+  // `error` stops being bg-red-500 — a raw ramp step that was one of two reds
+  // the product used for the same idea (T-0120).
   const colors = {
-    online: "bg-neon-green",
-    warning: "bg-neon-orange",
-    error: "bg-red-500",
-    idle: "bg-white/30",
+    online: statusToneClasses.ok.dot,
+    warning: statusToneClasses.warn.dot,
+    error: statusToneClasses.fail.dot,
+    idle: statusToneClasses.idle.dot,
   };
 
   return (

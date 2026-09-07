@@ -426,32 +426,6 @@
    luminescence on cards, not a flat light source; the brand's "reactor core"
    signature lives in the stronger pulse-glow / glow-surface reserved for
    live/active states (running process, live session). */
-.glow-cyan {
-  box-shadow:
-    0 0 14px rgb(var(--ps-rgb-neon-cyan) / 0.08),
-    0 0 28px rgb(var(--ps-rgb-neon-cyan) / 0.025);
-}
-.glow-purple {
-  box-shadow:
-    0 0 14px rgb(var(--ps-rgb-neon-purple) / 0.08),
-    0 0 28px rgb(var(--ps-rgb-neon-purple) / 0.025);
-}
-.glow-green {
-  box-shadow:
-    0 0 14px rgb(var(--ps-rgb-neon-green) / 0.08),
-    0 0 28px rgb(var(--ps-rgb-neon-green) / 0.025);
-}
-.glow-pink {
-  box-shadow:
-    0 0 14px rgb(var(--ps-rgb-neon-pink) / 0.08),
-    0 0 28px rgb(var(--ps-rgb-neon-pink) / 0.025);
-}
-.glow-orange {
-  box-shadow:
-    0 0 14px rgb(var(--ps-rgb-neon-orange) / 0.08),
-    0 0 28px rgb(var(--ps-rgb-neon-orange) / 0.025);
-}
-
 /* ── Motion (transform/opacity only — GPU-friendly) ──────────── */
 @keyframes ch-flame {
   0%, 100% { transform: scale(1) rotate(-1deg); opacity: 1; }
@@ -460,12 +434,6 @@
   75% { transform: scale(1.05) rotate(1deg); opacity: 0.95; }
 }
 .animate-flame { animation: ch-flame 1.6s ease-in-out infinite; transform-origin: center bottom; }
-
-@keyframes ch-pulse-glow {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.45; }
-}
-.animate-pulse-glow { animation: ch-pulse-glow 2s ease-in-out infinite; }
 
 @keyframes ch-float-in {
   from { opacity: 0; transform: translateY(8px); }
@@ -520,18 +488,16 @@
 /* Active edge on the live run canvas (react-flow): cyan glow on the stroke. */
 .ps-edge-glow .react-flow__edge-path { filter: drop-shadow(0 0 3px rgb(var(--ps-rgb-neon-cyan) / 0.7)); }
 
-/* Electrified routing chip — the edge the live run is leaving / traversing. */
-@keyframes ps-electrify {
-  0%, 100% { box-shadow: 0 0 0 0 rgb(var(--ps-rgb-neon-cyan) / 0); }
-  50% { box-shadow: 0 0 9px 1px rgb(var(--ps-rgb-neon-cyan) / 0.55); }
-}
-.ps-electrified { animation: ps-electrify 1.1s ease-in-out infinite; }
-
 @media (prefers-reduced-motion: reduce) {
+  /* `.pulse-glow`, not `.animate-pulse-glow`. The guard named the second for
+     months and the second had zero call sites; the FIRST is on the dashboard's
+     ONLINE dot and on every StatusDot in the product, so an operator who asked
+     their OS for reduced motion got a dot pulsing forever on the front door
+     (WCAG 2.3.3, found at T-0120). `.ps-electrified` left with the rule it
+     guarded. */
   .animate-flame,
-  .animate-pulse-glow,
+  .pulse-glow,
   .animate-float-in,
-  .ps-electrified,
   .animate-shimmer::after { animation: none; }
   .viz-draw { stroke-dasharray: none; stroke-dashoffset: 0; animation: none; }
   .ps-rail-flow { animation: none; }
@@ -566,10 +532,6 @@
 .text-glow-cyan {
   text-shadow: 0 0 10px rgb(var(--ps-rgb-neon-cyan) / 0.55);
 }
-.text-glow-purple {
-  text-shadow: 0 0 10px rgb(var(--ps-rgb-neon-purple) / 0.55);
-}
-
 /* Animated gradient border */
 @keyframes gradient-shift {
   0%, 100% { background-position: 0% 50%; }

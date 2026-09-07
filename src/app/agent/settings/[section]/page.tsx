@@ -66,7 +66,7 @@ function UnknownConfigSection({ slug }: { slug: string }) {
               <Link
                 key={id}
                 href={`/agent/settings/${id}`}
-                className={`flex items-center gap-3 rounded-xl border bg-ps-surface-panel px-4 py-3 transition-all ${colorBorderMap[section.color]}`}
+                className={`flex items-center gap-3 rounded-ps-lg border bg-ps-surface-panel px-4 py-3 transition-all ${colorBorderMap[section.color]}`}
               >
                 <SectionIcon
                   className={`w-4 h-4 shrink-0 ${iconColorMap[section.color]}`}
@@ -395,7 +395,7 @@ export default function ConfigSectionPage() {
           </div>
         )}
         {sectionId === "platform_toolsets" ? (
-          <p className="text-micro text-ps-text-muted font-mono border border-neon-orange/20 rounded-lg p-3 mb-6 bg-neon-orange/5">
+          <p className="text-micro text-ps-text-muted font-mono border border-neon-orange/20 rounded-ps-md p-3 mb-6 bg-neon-orange/5">
             This section edits the <strong className="text-ps-text-secondary">root</strong> Hermes{" "}
             <code className="text-ps-text-muted">config.yaml</code> only. Per-profile toolsets are managed
             on{" "}
@@ -423,7 +423,7 @@ export default function ConfigSectionPage() {
 
         {/* File editor for file-type sections */}
         {isFileSection && (
-          <div className="rounded-xl border border-ps-edge-hairline bg-ps-surface-panel p-6 mb-6">
+          <div className="rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel p-6 mb-6">
             <p className="text-micro text-ps-text-muted font-mono uppercase tracking-widest mb-4">
               {sectionDef.sensitive ? "Sensitive File — .env" : "File Content"}
             </p>
@@ -450,7 +450,7 @@ export default function ConfigSectionPage() {
               <textarea aria-label="File content"
                 value={fileContent}
                 onChange={(e) => setFileContent(e.target.value)}
-                className="w-full h-96 bg-ps-surface-inset border border-ps-edge rounded-lg p-4 text-body text-ps-text-primary font-mono resize-none focus:border-cyan-500/50 focus:outline-none"
+                className="w-full h-96 bg-ps-surface-inset border border-ps-edge rounded-ps-md p-4 text-body text-ps-text-primary font-mono resize-none focus:border-cyan-500/50 focus:outline-none"
                 spellCheck={false}
               />
             )}
@@ -459,7 +459,7 @@ export default function ConfigSectionPage() {
 
         {/* Editable fields for YAML sections */}
         {sectionDef.fields.length > 0 && (
-          <div className="rounded-xl border border-ps-edge-hairline bg-ps-surface-panel p-6 space-y-5 mb-6">
+          <div className="rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel p-6 space-y-5 mb-6">
             {sectionDef.fields.map((field) => (
               <ConfigField
                 key={field.key}
@@ -474,7 +474,7 @@ export default function ConfigSectionPage() {
 
         {/* Complex / nested fields (read-only preview) */}
         {sectionDef.complexKeys && sectionDef.complexKeys.length > 0 && (
-          <div className="rounded-xl border border-ps-edge-hairline bg-ps-surface-panel p-6">
+          <div className="rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel p-6">
             {showActions && (
               <p className="text-micro text-ps-text-muted font-mono uppercase tracking-widest mb-4">
                 Complex Fields
@@ -496,12 +496,12 @@ export default function ConfigSectionPage() {
                     <div className="flex items-center gap-2 mb-1.5">
                       <span className="text-body text-ps-text-secondary font-mono">{key}</span>
                       {isEmpty && (
-                        <span className="text-micro font-mono text-ps-text-faint bg-ps-surface-raised px-1.5 py-0.5 rounded">
+                        <span className="text-micro font-mono text-ps-text-faint bg-ps-surface-raised px-1.5 py-0.5 rounded-ps-sm">
                           empty
                         </span>
                       )}
                     </div>
-                    <div className="text-micro text-ps-text-muted bg-ps-surface-inset rounded-lg p-3 font-mono max-h-60 overflow-y-auto whitespace-pre-wrap">
+                    <div className="text-micro text-ps-text-muted bg-ps-surface-inset rounded-ps-md p-3 font-mono max-h-60 overflow-y-auto whitespace-pre-wrap">
                       {isEmpty
                         ? "(not configured)"
                         : isObj

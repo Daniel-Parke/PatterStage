@@ -188,14 +188,14 @@ export default function ScriptsPage() {
               <button
                 type="button"
                 onClick={() => openNew()}
-                className="flex items-center gap-1.5 rounded-lg border border-neon-cyan/30 px-3 py-1.5 font-mono text-micro text-neon-cyan transition-colors hover:bg-neon-cyan/10"
+                className="flex items-center gap-1.5 rounded-ps-md border border-neon-cyan/30 px-3 py-1.5 font-mono text-micro text-neon-cyan transition-colors hover:bg-neon-cyan/10"
               >
                 <Plus className="h-3 w-3" /> New script
               </button>
               <button
                 type="button"
                 onClick={() => refetch()}
-                className="flex items-center gap-1.5 rounded-lg border border-ps-edge px-3 py-1.5 font-mono text-micro text-ps-text-muted transition-colors hover:bg-ps-surface-raised hover:text-ps-text-primary"
+                className="flex items-center gap-1.5 rounded-ps-md border border-ps-edge px-3 py-1.5 font-mono text-micro text-ps-text-muted transition-colors hover:bg-ps-surface-raised hover:text-ps-text-primary"
               >
                 <RefreshCw className="h-3 w-3" /> Refresh
               </button>
@@ -217,7 +217,7 @@ export default function ScriptsPage() {
         {isLoading ? (
           <LoadingSpinner text="Loading scripts..." />
         ) : scripts.length === 0 ? (
-          <div className="rounded-xl border border-cyan-500/20 bg-ps-surface-panel">
+          <div className="rounded-ps-lg border border-cyan-500/20 bg-ps-surface-panel">
             <EmptyState
               icon={Terminal}
               title="No scripts yet"

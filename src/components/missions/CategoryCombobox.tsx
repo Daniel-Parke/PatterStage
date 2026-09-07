@@ -152,7 +152,7 @@ export default function CategoryCombobox({
           <div
             ref={menuRef}
             data-testid="category-combobox-menu"
-            className="fixed z-[9999] rounded-lg border border-ps-edge-hairline bg-ps-surface-panel shadow-2xl overflow-hidden"
+            className="fixed z-[9999] rounded-ps-md border border-ps-edge-hairline bg-ps-surface-panel shadow-2xl overflow-hidden"
             style={{
               top: menuPos.top,
               left: menuPos.left,
@@ -172,7 +172,7 @@ export default function CategoryCombobox({
                   }
                 }}
                 placeholder={searchPlaceholder}
-                className="w-full px-2 py-1.5 text-micro font-mono bg-ps-surface-ground border border-ps-edge rounded text-ps-text-primary outline-none focus:border-neon-cyan/40"
+                className="w-full px-2 py-1.5 text-micro font-mono bg-ps-surface-ground border border-ps-edge rounded-ps-sm text-ps-text-primary outline-none focus:border-neon-cyan/40"
               />
             </div>
             <ul className="max-h-48 overflow-y-auto py-1">
@@ -254,7 +254,7 @@ export default function CategoryCombobox({
         disabled={disabled}
         data-testid="category-combobox-trigger"
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between gap-2 px-3 py-2 h-9 rounded-lg border border-ps-edge bg-ps-surface-panel text-left text-body font-mono hover:border-ps-edge-emphasis disabled:opacity-50"
+        className="w-full flex items-center justify-between gap-2 px-3 py-2 h-9 rounded-ps-md border border-ps-edge bg-ps-surface-panel text-left text-body font-mono hover:border-ps-edge-emphasis disabled:opacity-50"
       >
         <span className="flex items-center gap-2 min-w-0">
           <span

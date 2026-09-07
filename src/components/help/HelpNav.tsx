@@ -33,7 +33,7 @@ function NavLink({ page, current }: { page: HelpPageMeta; current: string }) {
       <Link
         href={`/help/${page.slug}`}
         aria-current={active ? "page" : undefined}
-        className={`block rounded px-2 py-1 text-body transition-colors ${
+        className={`block rounded-ps-sm px-2 py-1 text-body transition-colors ${
           active
             ? "bg-ps-surface-raised text-neon-cyan"
             : "text-ps-text-secondary hover:bg-ps-surface-raised hover:text-ps-text-primary"

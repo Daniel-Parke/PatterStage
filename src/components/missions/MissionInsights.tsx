@@ -21,7 +21,7 @@ function Tile({
   color: NeonColor;
 }) {
   return (
-    <div className="min-w-0 rounded-xl border border-ps-edge-hairline bg-ps-surface-raised px-3 py-2" style={{ boxShadow: `inset 0 0 16px ${neonAlpha(color, 5)}` }}>
+    <div className="min-w-0 rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-raised px-3 py-2" style={{ boxShadow: `inset 0 0 16px ${neonAlpha(color, 5)}` }}>
       <div className="flex min-w-0 items-center gap-1.5">
         <Icon className="h-3 w-3 shrink-0" style={{ color: neon(color) }} />
         <span className="truncate text-micro uppercase tracking-wider text-ps-text-muted">{label}</span>
@@ -50,7 +50,7 @@ export default function MissionInsights({ missions }: { missions: MissionRow[] }
   const successPct = Math.round(s.successRate * 100);
 
   return (
-    <div className="animate-float-in mb-5 grid grid-cols-1 items-center gap-5 rounded-2xl border border-ps-edge-hairline bg-ps-surface-panel p-4 sm:grid-cols-[auto_1fr_auto]">
+    <div className="animate-float-in mb-5 grid grid-cols-1 items-center gap-5 rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel p-4 sm:grid-cols-[auto_1fr_auto]">
       <div className="flex justify-center">
         <Donut
           size={96}

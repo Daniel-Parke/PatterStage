@@ -338,7 +338,7 @@ export default function ToolsPage() {
       <div>
         <LastResult result={lastResult} />
         {profileSyncStatus === "drift" && (
-          <div className="mb-4 p-3 rounded-lg bg-semantic-warning/10 border border-semantic-warning/30 flex items-start gap-2">
+          <div className="mb-4 p-3 rounded-ps-md bg-semantic-warning/10 border border-semantic-warning/30 flex items-start gap-2">
             <Info className="w-4 h-4 text-semantic-warning flex-shrink-0 mt-0.5" />
             <p className="text-body text-semantic-warning/90">
               Toolset policy on disk differs from PatterStage (format or values).{" "}
@@ -350,14 +350,14 @@ export default function ToolsPage() {
           </div>
         )}
         {profileSyncStatus === "error" && (
-          <div className="mb-4 p-3 rounded-lg bg-semantic-danger/10 border border-semantic-danger/30">
+          <div className="mb-4 p-3 rounded-ps-md bg-semantic-danger/10 border border-semantic-danger/30">
             <p className="text-body text-semantic-danger">
               Last sync failed. Check gateway logs, then retry Pull or Push.
             </p>
           </div>
         )}
         {platformsDiverged && (
-          <div className="mb-4 p-3 rounded-lg bg-semantic-warning/10 border border-semantic-warning/30 flex items-start gap-2">
+          <div className="mb-4 p-3 rounded-ps-md bg-semantic-warning/10 border border-semantic-warning/30 flex items-start gap-2">
             <Info className="w-4 h-4 text-semantic-warning flex-shrink-0 mt-0.5" />
             <p className="text-body text-semantic-warning/90">
               Platforms have different toolsets on disk. The grid below shows the union.
@@ -366,7 +366,7 @@ export default function ToolsPage() {
             </p>
           </div>
         )}
-        <div className="mb-4 p-3 rounded-lg bg-ps-surface-panel border border-ps-edge-hairline flex items-start gap-2">
+        <div className="mb-4 p-3 rounded-ps-md bg-ps-surface-panel border border-ps-edge-hairline flex items-start gap-2">
           <Info className="w-4 h-4 text-ps-text-muted flex-shrink-0 mt-0.5" />
           <p className="text-body text-ps-text-muted">
             Hermes stores <code className="text-ps-text-muted">platform_toolsets</code> per gateway key;
@@ -393,7 +393,7 @@ export default function ToolsPage() {
                 subtitle="tooltip"
               />
               {pendingProfile && (
-                <div className="mt-3 rounded-lg border border-semantic-warning/40 bg-semantic-warning/10 p-3">
+                <div className="mt-3 rounded-ps-md border border-semantic-warning/40 bg-semantic-warning/10 p-3">
                   <p className="text-body text-ps-text-primary">
                     You have unsaved toolset changes on this profile.
                   </p>
@@ -506,7 +506,7 @@ export default function ToolsPage() {
                           setToolsetsJson(event.target.value);
                           setJsonDirty(true);
                         }}
-                        className="mt-2 w-full min-h-32 rounded-lg bg-ps-surface-ground/80 border border-ps-edge p-3 text-micro font-mono text-ps-text-primary outline-none focus:border-neon-orange/50"
+                        className="mt-2 w-full min-h-32 rounded-ps-md bg-ps-surface-ground/80 border border-ps-edge p-3 text-micro font-mono text-ps-text-primary outline-none focus:border-neon-orange/50"
                         spellCheck={false}
                       />
                     )}

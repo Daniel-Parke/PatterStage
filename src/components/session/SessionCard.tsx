@@ -79,7 +79,7 @@ export default function SessionCard({ session }: { session: SessionRecord }) {
               </span>
               <span className="flex items-center gap-1">
                 <span
-                  className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-micro font-mono ${meta.colorClass}`}
+                  className={`flex items-center gap-1 px-1.5 py-0.5 rounded-ps-sm text-micro font-mono ${meta.colorClass}`}
                 >
                   {meta.icon}
                   {meta.label}

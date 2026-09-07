@@ -55,14 +55,14 @@ function HelpNotBuilt(): ReactElement {
   return (
     <AppPageShell header={<HelpHeader subtitle="A guide for every screen, and the ideas behind it" />}>
       <div className={CONTENT_FRAME}>
-        <div className="min-w-0 flex-1 space-y-4 rounded-lg border border-ps-edge-hairline bg-ps-surface-panel px-4 py-4">
+        <div className="min-w-0 flex-1 space-y-4 rounded-ps-md border border-ps-edge-hairline bg-ps-surface-panel px-4 py-4">
           <h2 className="text-lead font-bold text-ps-text-primary">Help has not been built yet.</h2>
           <p className="text-body text-ps-text-secondary">
             The guides are generated from the repository&apos;s docs folder at build time, and the
             generated corpus is not kept in version control, so a fresh checkout has none of it
             until the first build.
           </p>
-          <pre className="overflow-x-auto rounded bg-ps-surface-inset px-3 py-2 text-micro font-mono text-neon-cyan">
+          <pre className="overflow-x-auto rounded-ps-sm bg-ps-surface-inset px-3 py-2 text-micro font-mono text-neon-cyan">
             {"npm run docs:build"}
           </pre>
         </div>

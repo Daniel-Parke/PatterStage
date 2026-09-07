@@ -172,7 +172,7 @@ export default function MissionEditorPanel({
             <div
               className={`overflow-hidden transition-all duration-200 ${promptCollapsed ? "max-h-20" : "max-h-none"}`}
             >
-              <div className="text-micro text-ps-text-muted font-mono whitespace-pre-wrap bg-ps-surface-panel rounded-lg p-2 border border-ps-edge-hairline">
+              <div className="text-micro text-ps-text-muted font-mono whitespace-pre-wrap bg-ps-surface-panel rounded-ps-md p-2 border border-ps-edge-hairline">
                 {detail.mission.prompt}
               </div>
             </div>
@@ -189,7 +189,7 @@ export default function MissionEditorPanel({
                   .map((goal, i) => (
                     <span
                       key={i}
-                      className="text-micro font-mono px-1.5 py-0.5 rounded bg-ps-surface-raised text-ps-text-muted border border-ps-edge-hairline"
+                      className="text-micro font-mono px-1.5 py-0.5 rounded-ps-sm bg-ps-surface-raised text-ps-text-muted border border-ps-edge-hairline"
                     >
                       {goal}
                     </span>
@@ -207,7 +207,7 @@ export default function MissionEditorPanel({
           )}
 
           {detail.schedule && (
-            <div className="rounded-lg border border-neon-orange/20 bg-ps-surface-panel p-2">
+            <div className="rounded-ps-md border border-neon-orange/20 bg-ps-surface-panel p-2">
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-1">
                   <Zap className="w-3 h-3 text-neon-orange" />
@@ -246,7 +246,7 @@ export default function MissionEditorPanel({
               )}
               {/* Scheduled and going to happen are not the same thing. */}
               {describeScheduleFiring(detail.schedule) && (
-                <p className="mt-1 rounded border border-neon-orange/30 bg-neon-orange/5 px-1.5 py-1 text-body text-neon-orange">
+                <p className="mt-1 rounded-ps-sm border border-neon-orange/30 bg-neon-orange/5 px-1.5 py-1 text-body text-neon-orange">
                   {describeScheduleFiring(detail.schedule)}
                 </p>
               )}
@@ -258,7 +258,7 @@ export default function MissionEditorPanel({
               that point. Rendered only while there is something to say. */}
           {runState.note && (
             <div
-              className={`rounded-lg border px-2 py-1.5 text-micro font-mono ${
+              className={`rounded-ps-md border px-2 py-1.5 text-micro font-mono ${
                 runState.tone === "overdue"
                   ? "border-neon-orange/30 bg-neon-orange/5 text-neon-orange"
                   : "border-ps-edge-hairline bg-ps-surface-panel text-ps-text-muted"
@@ -277,7 +277,7 @@ export default function MissionEditorPanel({
               <div className="text-micro font-mono text-ps-text-muted uppercase mb-1">
                 Result
               </div>
-              <div className="text-micro text-ps-text-secondary font-mono whitespace-pre-wrap bg-ps-surface-panel rounded-lg p-2 border border-ps-edge-hairline max-h-40 overflow-y-auto">
+              <div className="text-micro text-ps-text-secondary font-mono whitespace-pre-wrap bg-ps-surface-panel rounded-ps-md p-2 border border-ps-edge-hairline max-h-40 overflow-y-auto">
                 {detail.mission.result}
               </div>
             </div>
@@ -287,7 +287,7 @@ export default function MissionEditorPanel({
               run row and never shown: the panel read `mission.error`, a field
               no route sets, so a failed mission explained nothing. */}
           {run?.error && (
-            <div className="rounded-lg bg-red-500/5 border border-red-500/10 p-2">
+            <div className="rounded-ps-md bg-red-500/5 border border-red-500/10 p-2">
               <div className="text-micro font-mono text-red-400 uppercase mb-0.5">
                 Run error
               </div>
@@ -317,7 +317,7 @@ export default function MissionEditorPanel({
               <Link
                 href={`/results/sessions?missionId=${encodeURIComponent(mission.id)}`}
                 onClick={(e) => e.stopPropagation()}
-                className="inline-flex items-center gap-1 rounded-lg border border-ps-edge-hairline px-2.5 py-1.5 text-micro font-mono text-ps-text-secondary hover:border-ps-edge-emphasis hover:text-ps-text-primary transition-colors"
+                className="inline-flex items-center gap-1 rounded-ps-md border border-ps-edge-hairline px-2.5 py-1.5 text-micro font-mono text-ps-text-secondary hover:border-ps-edge-emphasis hover:text-ps-text-primary transition-colors"
               >
                 View sessions
               </Link>

@@ -26,7 +26,7 @@ interface ModelsDriftBannerProps {
 }
 
 const BUTTON_CLASS =
-  "px-2.5 py-1 text-micro font-mono rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
+  "px-2.5 py-1 text-micro font-mono rounded-ps-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
 
 export default function ModelsDriftBanner({
   drift,
@@ -40,7 +40,7 @@ export default function ModelsDriftBanner({
   const lines = drift.lines ?? [];
 
   return (
-    <div className="px-4 py-3 rounded-xl border border-neon-orange/20 bg-neon-orange/5">
+    <div className="px-4 py-3 rounded-ps-lg border border-neon-orange/20 bg-neon-orange/5">
       <div className="flex items-center gap-3">
         <AlertTriangle className="w-4 h-4 text-neon-orange/90 flex-shrink-0" aria-hidden="true" />
         <span className="text-micro font-mono text-neon-orange/90">

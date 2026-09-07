@@ -51,7 +51,7 @@ export function DeployControls({ state }: { state: VersionFooterState }) {
           onClick={() => openCheckDropdown()}
           disabled={locked}
           title={offline ? DEPLOY_OFF_TITLE : undefined}
-          className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-blue-500/10 border border-blue-500/20 text-micro font-mono text-blue-400 hover:bg-blue-500/20 transition-colors disabled:opacity-50"
+          className="flex items-center justify-center gap-2 px-3 py-2 rounded-ps-md bg-blue-500/10 border border-blue-500/20 text-micro font-mono text-blue-400 hover:bg-blue-500/20 transition-colors disabled:opacity-50"
         >
           <RefreshCw className="w-3.5 h-3.5 flex-shrink-0" />
           Check for updates
@@ -60,7 +60,7 @@ export function DeployControls({ state }: { state: VersionFooterState }) {
     }
     if (checkState === "checking") {
       return (
-        <button type="button" disabled className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-blue-500/10 border border-blue-500/20 text-micro font-mono text-blue-400 opacity-70">
+        <button type="button" disabled className="flex items-center justify-center gap-2 px-3 py-2 rounded-ps-md bg-blue-500/10 border border-blue-500/20 text-micro font-mono text-blue-400 opacity-70">
           <RefreshCw className="w-3.5 h-3.5 flex-shrink-0 animate-spin" />
           Checking...
         </button>
@@ -73,7 +73,7 @@ export function DeployControls({ state }: { state: VersionFooterState }) {
           type="button"
           onClick={() => openCheckDropdown()}
           disabled={locked}
-          className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-semantic-warning/10 border border-semantic-warning/20 text-micro font-mono text-semantic-warning hover:bg-semantic-warning/20 transition-colors disabled:opacity-50"
+          className="flex items-center justify-center gap-2 px-3 py-2 rounded-ps-md bg-semantic-warning/10 border border-semantic-warning/20 text-micro font-mono text-semantic-warning hover:bg-semantic-warning/20 transition-colors disabled:opacity-50"
         >
           <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
           Could not check. Try again
@@ -82,7 +82,7 @@ export function DeployControls({ state }: { state: VersionFooterState }) {
     }
     if (checkState === "up-to-date") {
       return (
-        <button type="button" disabled className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-green-500/10 border border-green-500/20 text-micro font-mono text-green-400 cursor-default">
+        <button type="button" disabled className="flex items-center justify-center gap-2 px-3 py-2 rounded-ps-md bg-green-500/10 border border-green-500/20 text-micro font-mono text-green-400 cursor-default">
           <Check className="w-3.5 h-3.5 flex-shrink-0" />
           Up to date
         </button>
@@ -94,7 +94,7 @@ export function DeployControls({ state }: { state: VersionFooterState }) {
         onClick={handleUpdate}
         disabled={locked}
         title={offline ? DEPLOY_OFF_TITLE : undefined}
-        className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-orange-500/10 border border-orange-500/20 text-micro font-mono text-neon-orange hover:bg-orange-500/20 transition-colors disabled:opacity-50"
+        className="flex items-center justify-center gap-2 px-3 py-2 rounded-ps-md bg-orange-500/10 border border-orange-500/20 text-micro font-mono text-neon-orange hover:bg-orange-500/20 transition-colors disabled:opacity-50"
       >
         <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
         Update available. Install it
@@ -113,7 +113,7 @@ export function DeployControls({ state }: { state: VersionFooterState }) {
       {message && <p className="text-micro font-mono text-ps-text-muted">{message}</p>}
       {/* The deploy log's last lines after a failure (D108) */}
       {deployLogTail.length > 0 && (
-        <pre className="max-h-40 overflow-auto rounded-lg bg-ps-surface-inset px-3 py-2 text-micro font-mono text-ps-text-muted whitespace-pre-wrap break-words">
+        <pre className="max-h-40 overflow-auto rounded-ps-md bg-ps-surface-inset px-3 py-2 text-micro font-mono text-ps-text-muted whitespace-pre-wrap break-words">
           {deployLogTail.join("\n")}
         </pre>
       )}
@@ -145,7 +145,7 @@ export function DeployControls({ state }: { state: VersionFooterState }) {
             title={offline ? DEPLOY_OFF_TITLE : isArmedFor("rebuild") ? "Click again to confirm: rebuilds and restarts the app" : "npm run build, then restart, on the current checkout"}
             onClick={onRebuildClick}
             disabled={locked}
-            className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-micro font-mono transition-colors disabled:opacity-50 ${
+            className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-ps-md text-micro font-mono transition-colors disabled:opacity-50 ${
               rebuilding || isArmedFor("rebuild")
                 ? "bg-neon-purple/20 border border-neon-purple/30 text-neon-purple"
                 : "bg-neon-purple/10 border border-neon-purple/20 text-neon-purple hover:bg-neon-purple/20"
@@ -159,7 +159,7 @@ export function DeployControls({ state }: { state: VersionFooterState }) {
             title={offline ? DEPLOY_OFF_TITLE : isArmedFor("restart") ? "Click again to confirm: restarts the server" : "Restart the server only (no build)"}
             onClick={onRestartClick}
             disabled={locked}
-            className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-micro font-mono transition-colors disabled:opacity-50 ${
+            className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-ps-md text-micro font-mono transition-colors disabled:opacity-50 ${
               restarting || isArmedFor("restart")
                 ? "bg-red-500/20 border border-red-500/30 text-red-300"
                 : "bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20"

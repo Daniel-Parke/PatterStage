@@ -30,8 +30,10 @@
  *   - the workflow canvas's pending/skipped are structural EDGE tokens
  *   - an artifact's source kind and a research step's kind are categorical
  */
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
+
+import { blockCommentLines } from "../../scripts/tooling/design-lint.mjs";
 
 import {
   STATUS_TONE,
@@ -45,6 +47,27 @@ const ROOT = join(__dirname, "..", "..");
 const read = (rel: string) => readFileSync(join(ROOT, rel), "utf-8").replace(/\r\n/g, "\n");
 
 const TONES = ["idle", "queued", "running", "ok", "warn", "fail", "blocked"] as const;
+
+/** Every .ts/.tsx under src/, keyed by its repo-relative path. */
+function sources(): Array<[string, string]> {
+  const out: Array<[string, string]> = [];
+  const base = join(ROOT, "src");
+  const walk = (dir: string) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const full = join(dir, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (/\.tsx?$/.test(entry.name)) {
+        out.push([
+          `src/${full.slice(base.length + 1).split("\\").join("/")}`,
+          readFileSync(full, "utf-8").replace(/\r\n/g, "\n"),
+        ]);
+      }
+    }
+  };
+  walk(base);
+  return out;
+}
+
 
 describe("the word decides the colour", () => {
   it("gives every ratified word a tone, and no word is missed", () => {
@@ -156,5 +179,80 @@ describe("what the ladder does NOT absorb, and why", () => {
     ["a neutral duration", "src/components/missions/mission-page-constants.tsx", /neutral|absence of news/i],
   ])("%s stays its own scale, and says so", (_what, path, reason) => {
     expect(read(path)).toMatch(reason);
+  });
+});
+
+/**
+ * The seam that stops there ever being a thirty-fifth map.
+ *
+ * T-0116's record says `status-colour-through-helper` was dropped from
+ * design-lint deliberately - "a state-to-colour map is an object literal over
+ * many lines and a line-oriented regex cannot see it without guessing" - and
+ * deferred to a source-seam test in U6. This is it.
+ *
+ * It does NOT refuse a state word beside any colour. The workflow canvas
+ * outlines `pending` with `border-ps-edge-emphasis` and that is right: a stage
+ * nobody has reached yet is not in a state, it is merely outlined. What it
+ * refuses is a state word painted an ACCENT or a raw Tailwind ramp step, which
+ * is exactly how thirty-four sites came to disagree about what running looks
+ * like.
+ */
+describe("a state word is never painted an accent directly", () => {
+  const STATE_WORDS =
+    "running|failed|completed|complete|successful|succeeded|queued|pending|cancelled|" +
+    "rejected|skipped|draft|dispatched|idle|error|warn|warning|degraded|healthy|down|" +
+    "ok|success|blocked|awaiting_approval|active|stopped|online|offline|generating";
+
+  /** An accent or a raw ramp step: the two vocabularies a status must not use. */
+  const FORBIDDEN =
+    "neon-[a-z]+|semantic-[a-z]+|red|green|blue|yellow|orange|purple|pink|cyan|emerald|" +
+    "amber|rose|lime|teal|sky|indigo|violet|fuchsia|slate|gray|grey|zinc|stone";
+
+  const KEYED = new RegExp(
+    `^\\s*["']?(?:${STATE_WORDS})["']?\\s*:\\s*(?:\`|")[^"\`]*\\b(?:text|bg|border|ring|from|to|divide)-(?:${FORBIDDEN})(?:-\\d{2,3})?(?:/\\d{1,3})?\\b`,
+    "i",
+  );
+
+  /**
+   * The scales that are deliberately not the status ladder. Each names WHY in
+   * its own file, and the test that checks those reasons are written down is
+   * above; this list is the second half of that bargain.
+   */
+  const NOT_STATUS: Record<string, string> = {
+    "src/components/logs/constants.ts": "log severity is not a run state",
+    "src/components/ui/Toast.tsx": "a notification's tone is not an entity's status",
+  };
+
+  it("has state words to look for, so none of this passes vacuously", () => {
+    expect(KEYED.test('  running: "text-neon-cyan",')).toBe(true);
+    expect(KEYED.test('  failed: "bg-red-500/10 text-red-400",')).toBe(true);
+    // And the forms it must leave alone.
+    expect(KEYED.test("  running: statusToneClasses.running.text,")).toBe(false);
+    expect(KEYED.test('  pending: "border-ps-edge-emphasis",')).toBe(false);
+    expect(KEYED.test('  idle: "text-ps-text-muted",')).toBe(false);
+  });
+
+  it("no map keys an accent off a state word", () => {
+    const offenders: string[] = [];
+    for (const [path, source] of sources()) {
+      if (NOT_STATUS[path]) continue;
+      const lines = source.split("\n");
+      const commented = blockCommentLines(lines);
+      lines.forEach((line, i) => {
+        if (commented[i]) return;
+        const t = line.trimStart();
+        if (t.startsWith("//") || t.startsWith("*") || t.startsWith("/*")) return;
+        if (KEYED.test(line)) offenders.push(`${path}:${i + 1}  ${line.trim().slice(0, 76)}`);
+      });
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  it("and the two that are exempt say why in their own file", () => {
+    for (const [path, reason] of Object.entries(NOT_STATUS)) {
+      const source = read(path).toLowerCase();
+      const keyword = reason.split(" ")[0];
+      expect(source).toContain(keyword);
+    }
   });
 });

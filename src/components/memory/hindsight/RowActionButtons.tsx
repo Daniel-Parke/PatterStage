@@ -60,7 +60,7 @@ export function RowEditButton({ onClick }: RowEditButtonProps) {
   return (
     <button
       onClick={onClick}
-      className="p-1.5 rounded-lg hover:bg-ps-surface-raised text-ps-text-muted hover:text-ps-text-secondary transition-colors"
+      className="p-1.5 rounded-ps-md hover:bg-ps-surface-raised text-ps-text-muted hover:text-ps-text-secondary transition-colors"
       title="Edit"
     >
       <Pencil className="w-4 h-4" />
@@ -101,7 +101,7 @@ export function RowDeleteButton({ onClick, label }: RowDeleteButtonProps) {
     <button
       type="button"
       onClick={() => (confirm.isArmed ? void confirm.confirm(onClick) : confirm.arm())}
-      className={`p-1.5 rounded-lg transition-colors ${
+      className={`p-1.5 rounded-ps-md transition-colors ${
         confirm.isArmed
           ? "bg-red-500/20 text-red-300 ring-1 ring-red-500/40"
           : "hover:bg-red-500/10 text-ps-text-muted hover:text-red-400"

@@ -107,11 +107,11 @@ export default function DirectoryPickerModal({
           </div>
         </div>
         {error && (
-          <div className="text-micro text-red-400 font-mono border border-red-500/30 rounded-lg px-2 py-1.5">
+          <div className="text-micro text-red-400 font-mono border border-red-500/30 rounded-ps-md px-2 py-1.5">
             {error}
           </div>
         )}
-        <div className="max-h-72 overflow-y-auto rounded-lg border border-ps-edge-hairline bg-ps-surface-panel">
+        <div className="max-h-72 overflow-y-auto rounded-ps-md border border-ps-edge-hairline bg-ps-surface-panel">
           {loading ? (
             <div className="p-6 text-center text-micro text-ps-text-muted font-mono">Loading…</div>
           ) : (

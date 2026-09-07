@@ -12,7 +12,7 @@ import { Brain, ChevronDown, ChevronRight } from "lucide-react";
 export default function ReasoningPanel({ reasoning }: { reasoning: string }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="mb-2 rounded-lg border border-neon-purple/20 bg-neon-purple/[0.06]">
+    <div className="mb-2 rounded-ps-md border border-neon-purple/20 bg-neon-purple/[0.06]">
       <button
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}

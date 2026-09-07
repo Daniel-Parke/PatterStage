@@ -85,7 +85,7 @@ export default function PerRowDeleteButton({
       type="button"
       onClick={handleClick}
       disabled={disabled}
-      className={`p-1.5 rounded-lg transition-colors disabled:opacity-50 ${
+      className={`p-1.5 rounded-ps-md transition-colors disabled:opacity-50 ${
         isArmed
           ? "text-red-300 bg-red-500/20 ring-1 ring-red-500/40"
           : "text-ps-text-muted hover:text-red-400 hover:bg-red-500/10"

@@ -41,7 +41,7 @@ interface CardLinkProps {
 
 function CardLink({ href, icon: Icon, title, description, color, footer }: CardLinkProps) {
   return (
-    <Link href={href} className={`group rounded-xl border bg-ps-surface-panel p-5 transition-all ${colorBorderMap[color]}`}>
+    <Link href={href} className={`group rounded-ps-lg border bg-ps-surface-panel p-5 transition-all ${colorBorderMap[color]}`}>
       <div className="flex items-center justify-between mb-3">
         <Icon className={`w-5 h-5 ${iconColorMap[color]}`} />
         <ChevronRight className="w-4 h-4 text-ps-viz-glyph-idle group-hover:text-ps-text-secondary group-hover:translate-x-1 transition-all" />
@@ -98,23 +98,23 @@ function SectionCard({
       footer={
         <>
           {fieldCount > 0 && (
-            <span className="text-micro font-mono text-ps-text-faint bg-ps-surface-raised px-1.5 py-0.5 rounded">
+            <span className="text-micro font-mono text-ps-text-faint bg-ps-surface-raised px-1.5 py-0.5 rounded-ps-sm">
               {fieldCount} field{pluralise(fieldCount)}
             </span>
           )}
           {section.type === "file" && (
-            <span className="text-micro font-mono text-ps-text-faint bg-ps-surface-raised px-1.5 py-0.5 rounded">file</span>
+            <span className="text-micro font-mono text-ps-text-faint bg-ps-surface-raised px-1.5 py-0.5 rounded-ps-sm">file</span>
           )}
           {sectionData && (
-            <span className="text-micro font-mono text-neon-green/70 bg-neon-green/5 px-1.5 py-0.5 rounded">configured</span>
+            <span className="text-micro font-mono text-neon-green/70 bg-neon-green/5 px-1.5 py-0.5 rounded-ps-sm">configured</span>
           )}
           {section.complexKeys && section.complexKeys.length > 0 && (
-            <span className="text-micro font-mono text-neon-orange/90 bg-neon-orange/5 px-1.5 py-0.5 rounded">
+            <span className="text-micro font-mono text-neon-orange/90 bg-neon-orange/5 px-1.5 py-0.5 rounded-ps-sm">
               +{section.complexKeys.length} advanced
             </span>
           )}
           {hits.slice(0, 3).map((f) => (
-            <span key={f.key} className="text-micro font-mono text-neon-cyan bg-neon-cyan/10 px-1.5 py-0.5 rounded">
+            <span key={f.key} className="text-micro font-mono text-neon-cyan bg-neon-cyan/10 px-1.5 py-0.5 rounded-ps-sm">
               {f.label}
             </span>
           ))}
@@ -169,7 +169,7 @@ export default function SettingsIndexPage() {
             onChange={(e) => setQuery(e.target.value)}
             aria-label="Search settings"
             placeholder="Find a setting by name, e.g. reasoning, timeout, voice…"
-            className="w-full bg-ps-surface-panel border border-ps-edge rounded-lg pl-10 pr-4 py-2.5 text-body text-ps-text-primary placeholder-ps-text-muted outline-none focus:border-neon-orange/50 transition-colors font-mono"
+            className="w-full bg-ps-surface-panel border border-ps-edge rounded-ps-md pl-10 pr-4 py-2.5 text-body text-ps-text-primary placeholder-ps-text-muted outline-none focus:border-neon-orange/50 transition-colors font-mono"
           />
         </div>
 
@@ -196,7 +196,7 @@ export default function SettingsIndexPage() {
                 description={t.description}
                 color={t.color}
                 footer={
-                  <span className={`text-micro font-mono ${iconColorMap[t.color]} ${badgeBgMap[t.color]} px-1.5 py-0.5 rounded`}>page</span>
+                  <span className={`text-micro font-mono ${iconColorMap[t.color]} ${badgeBgMap[t.color]} px-1.5 py-0.5 rounded-ps-sm`}>page</span>
                 }
               />
             ))}

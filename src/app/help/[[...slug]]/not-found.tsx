@@ -17,7 +17,7 @@ export default function HelpNotFound() {
     <AppPageShell>
       <HelpHeader subtitle="A guide for every screen, and the ideas behind it" />
       <div className="flex-1 w-full max-w-6xl mx-auto px-6 py-6">
-        <div className="max-w-ps-reading space-y-4 rounded-lg border border-ps-edge-hairline bg-ps-surface-panel px-4 py-4">
+        <div className="max-w-ps-reading space-y-4 rounded-ps-md border border-ps-edge-hairline bg-ps-surface-panel px-4 py-4">
           <h2 className="text-lead font-bold text-ps-text-primary">There is no such guide.</h2>
           <p className="text-body text-ps-text-secondary">
             The address does not name a page in this build of the corpus. A guide that has been
@@ -26,7 +26,7 @@ export default function HelpNotFound() {
           </p>
           <Link
             href="/help"
-            className="inline-flex items-center rounded-lg border border-neon-cyan/40 px-3 py-2 text-body text-neon-cyan transition-colors hover:bg-ps-surface-inset"
+            className="inline-flex items-center rounded-ps-md border border-neon-cyan/40 px-3 py-2 text-body text-neon-cyan transition-colors hover:bg-ps-surface-inset"
           >
             Back to the contents
           </Link>

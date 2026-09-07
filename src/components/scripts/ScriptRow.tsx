@@ -76,7 +76,7 @@ export default function ScriptRow({
 }: ScriptRowProps) {
   const lastRun = lastRunNote(s);
   return (
-    <div className="flex flex-wrap items-center gap-3 rounded-xl border border-ps-edge-hairline bg-ps-surface-panel px-4 py-3">
+    <div className="flex flex-wrap items-center gap-3 rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel px-4 py-3">
       <Terminal className="h-4 w-4 shrink-0 text-neon-cyan" />
       <div className="min-w-0 flex-1">
         <div className="truncate font-mono text-body text-ps-text-primary">{s.name}</div>
@@ -105,21 +105,21 @@ export default function ScriptRow({
         type="button"
         onClick={() => onRun(s)}
         disabled={busy}
-        className="flex items-center gap-1 rounded-lg border border-neon-green/30 px-2.5 py-1 font-mono text-micro text-neon-green hover:bg-neon-green/10 disabled:opacity-50"
+        className="flex items-center gap-1 rounded-ps-md border border-neon-green/30 px-2.5 py-1 font-mono text-micro text-neon-green hover:bg-neon-green/10 disabled:opacity-50"
       >
         {busy ? <Loader2 className="h-3 w-3 animate-spin" /> : <Play className="h-3 w-3" />} Run
       </button>
       <button
         type="button"
         onClick={() => onEdit(s)}
-        className="flex items-center gap-1 rounded-lg border border-ps-edge px-2.5 py-1 font-mono text-micro text-ps-text-secondary hover:bg-ps-surface-raised"
+        className="flex items-center gap-1 rounded-ps-md border border-ps-edge px-2.5 py-1 font-mono text-micro text-ps-text-secondary hover:bg-ps-surface-raised"
       >
         <FileCode className="h-3 w-3" /> Edit
       </button>
       <button
         type="button"
         onClick={() => onLogs(s)}
-        className="flex items-center gap-1 rounded-lg border border-ps-edge px-2.5 py-1 font-mono text-micro text-ps-text-secondary hover:bg-ps-surface-raised"
+        className="flex items-center gap-1 rounded-ps-md border border-ps-edge px-2.5 py-1 font-mono text-micro text-ps-text-secondary hover:bg-ps-surface-raised"
       >
         <ScrollText className="h-3 w-3" /> Logs
       </button>
@@ -127,7 +127,7 @@ export default function ScriptRow({
         <button
           type="button"
           onClick={() => onUnschedule(s)}
-          className="flex items-center gap-1 rounded-lg border border-ps-edge px-2.5 py-1 font-mono text-micro text-ps-text-muted hover:bg-ps-surface-raised"
+          className="flex items-center gap-1 rounded-ps-md border border-ps-edge px-2.5 py-1 font-mono text-micro text-ps-text-muted hover:bg-ps-surface-raised"
         >
           <X className="h-3 w-3" /> Unschedule
         </button>
@@ -135,7 +135,7 @@ export default function ScriptRow({
         <button
           type="button"
           onClick={() => onSchedule(s)}
-          className="flex items-center gap-1 rounded-lg border border-neon-orange/30 px-2.5 py-1 font-mono text-micro text-neon-orange hover:bg-neon-orange/10"
+          className="flex items-center gap-1 rounded-ps-md border border-neon-orange/30 px-2.5 py-1 font-mono text-micro text-neon-orange hover:bg-neon-orange/10"
         >
           <CalendarClock className="h-3 w-3" /> Schedule
         </button>

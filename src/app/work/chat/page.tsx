@@ -142,7 +142,7 @@ export default function ChatPage() {
                       <div className="relative group/download">
                         <button
                           onClick={(e) => void handleDownloadConversation(c, "json", e)}
-                          className="w-7 h-7 flex items-center justify-center rounded hover:bg-neon-cyan/20 hover:text-neon-cyan text-ps-text-muted"
+                          className="w-7 h-7 flex items-center justify-center rounded-ps-sm hover:bg-neon-cyan/20 hover:text-neon-cyan text-ps-text-muted"
                           title="Download as JSON"
                         >
                           <Download className="w-4 h-4" />
@@ -154,7 +154,7 @@ export default function ChatPage() {
                         <div className="absolute right-0 top-full mt-0.5 hidden group-hover/download:block group-focus-within/download:block z-50">
                           <button
                             onClick={(e) => void handleDownloadConversation(c, "csv", e)}
-                            className="whitespace-nowrap text-micro font-mono px-2 py-1 rounded bg-ps-surface-panel border border-ps-edge text-ps-text-secondary hover:text-ps-text-primary hover:bg-ps-surface-raised transition-colors shadow-lg"
+                            className="whitespace-nowrap text-micro font-mono px-2 py-1 rounded-ps-sm bg-ps-surface-panel border border-ps-edge text-ps-text-secondary hover:text-ps-text-primary hover:bg-ps-surface-raised transition-colors shadow-lg"
                           >
                             as CSV
                           </button>
@@ -167,7 +167,7 @@ export default function ChatPage() {
                           if (!deleteConfirm.isArmedFor(c.id)) deleteConfirm.arm(c.id);
                           else void deleteConfirm.confirm(() => handleDeleteConversation(c.id));
                         }}
-                        className={`w-7 h-7 flex items-center justify-center rounded text-ps-text-muted ${
+                        className={`w-7 h-7 flex items-center justify-center rounded-ps-sm text-ps-text-muted ${
                           deleteConfirm.isArmedFor(c.id)
                             ? "bg-neon-red/20 text-neon-red"
                             : "hover:bg-neon-red/20 hover:text-neon-red"
@@ -220,7 +220,7 @@ export default function ChatPage() {
                 />
               ) : messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-center py-24">
-                  <div className="w-16 h-16 rounded-xl bg-ps-surface-raised border border-ps-edge-hairline flex items-center justify-center mb-4">
+                  <div className="w-16 h-16 rounded-ps-lg bg-ps-surface-raised border border-ps-edge-hairline flex items-center justify-center mb-4">
                     <MessageCircle className="w-8 h-8 text-ps-text-muted" />
                   </div>
                   {/* h2, not h3. PageHeader renders the page's only h1, and this
@@ -278,7 +278,7 @@ export default function ChatPage() {
                       : "Type a message… (Enter to send, Shift+Enter for newline)"
                   }
                   rows={1}
-                  className="flex-1 bg-ps-surface-raised border border-ps-edge rounded-lg px-4 py-2.5 text-body text-ps-text-primary placeholder-ps-text-muted outline-none focus:border-neon-cyan/50 transition-colors font-mono resize-none"
+                  className="flex-1 bg-ps-surface-raised border border-ps-edge rounded-ps-md px-4 py-2.5 text-body text-ps-text-primary placeholder-ps-text-muted outline-none focus:border-neon-cyan/50 transition-colors font-mono resize-none"
                   style={{ minHeight: "42px", maxHeight: "120px" }}
                   onInput={(e) => {
                     const ta = e.target as HTMLTextAreaElement;
@@ -289,7 +289,7 @@ export default function ChatPage() {
                 <button
                   onClick={isStreaming ? () => void handleStop() : () => void handleSend()}
                   disabled={!input.trim() && !isStreaming}
-                  className={`w-9 h-9 flex items-center justify-center rounded-lg border transition-colors ${
+                  className={`w-9 h-9 flex items-center justify-center rounded-ps-md border transition-colors ${
                     isStreaming
                       ? "bg-neon-red/20 border-neon-red/30 text-neon-red hover:bg-neon-red/30"
                       : "bg-neon-cyan/20 border-neon-cyan/30 text-neon-cyan hover:bg-neon-cyan/30 disabled:opacity-30 disabled:cursor-not-allowed"

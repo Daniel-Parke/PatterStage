@@ -158,7 +158,7 @@ export function Panel({
 }: PanelProps) {
   return (
     <div
-      className={`rounded-xl border ${panelBorderClass(accent)} ${panelTintClass(tint)} overflow-hidden ${className}`}
+      className={`rounded-ps-lg border ${panelBorderClass(accent)} ${panelTintClass(tint)} overflow-hidden ${className}`}
       // Bloom tier (WG-WEB-011 C). The panel is the container WG-WEB-003 rules
       // for the genuinely self-contained thing, so it answers the pointer.
       // Rows inside a panel carry their own tight field via LedgerRow; the

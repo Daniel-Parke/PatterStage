@@ -19,7 +19,7 @@ const DEFAULT_GENRES = ["Sci-Fi", "Mystery", "Fantasy", "Romance", "Crime", "Hor
 const DEFAULT_ERAS = ["Ancient", "Medieval", "Modern", "Near Future", "Far Future", "Timeless"];
 const DEFAULT_MOODS = ["Tense", "Wonder", "Humorous", "Dark", "Hopeful", "Melancholy", "Suspenseful", "Whimsical"];
 
-const FIELD = "w-full bg-ps-surface-inset border border-ps-edge rounded-lg px-3 py-2 text-body text-ps-text-primary placeholder-ps-text-muted outline-none focus:border-green-500/40 font-mono";
+const FIELD = "w-full bg-ps-surface-inset border border-ps-edge rounded-ps-md px-3 py-2 text-body text-ps-text-primary placeholder-ps-text-muted outline-none focus:border-green-500/40 font-mono";
 const LABEL = "text-micro font-mono text-ps-text-muted uppercase tracking-wider block mb-1";
 
 export default function PromptsPage() {
@@ -143,7 +143,7 @@ export default function PromptsPage() {
             <button
               type="button"
               onClick={startNew}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-green-500/30 bg-green-500/10 text-micro font-mono text-green-400 hover:bg-green-500/20"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-ps-md border border-green-500/30 bg-green-500/10 text-micro font-mono text-green-400 hover:bg-green-500/20"
             >
               <Plus className="w-3 h-3" /> New theme
             </button>
@@ -161,7 +161,7 @@ export default function PromptsPage() {
             aria-labelledby="theme-editor-title"
             tabIndex={-1}
             onClick={(e) => e.stopPropagation()}
-            className="bg-ps-surface-panel border border-green-500/20 rounded-xl w-full max-w-2xl p-6 space-y-4 mb-12"
+            className="bg-ps-surface-panel border border-green-500/20 rounded-ps-lg w-full max-w-2xl p-6 space-y-4 mb-12"
           >
             <div className="flex items-center justify-between">
               <h3 id="theme-editor-title" className="text-body font-semibold text-ps-text-primary">{isNew ? "New story theme" : "Edit story theme"}</h3>
@@ -188,7 +188,7 @@ export default function PromptsPage() {
               <div className="flex flex-wrap gap-1.5" role="group" aria-labelledby="theme-genre-label">
                 {DEFAULT_GENRES.map(g => (
                   <button key={g} type="button" onClick={() => toggleTag("genre", g)} aria-pressed={editing.genre.includes(g)}
-                    className={`px-2.5 py-1 rounded-md text-micro font-mono border transition-all ${
+                    className={`px-2.5 py-1 rounded-ps-md text-micro font-mono border transition-all ${
                       editing.genre.includes(g) ? "border-green-500/40 bg-green-500/15 text-green-400" : "border-ps-edge text-ps-text-muted hover:text-ps-text-muted"
                     }`}>{g}</button>
                 ))}
@@ -200,7 +200,7 @@ export default function PromptsPage() {
               <div className="flex flex-wrap gap-1.5" role="group" aria-labelledby="theme-era-label">
                 {DEFAULT_ERAS.map(e => (
                   <button key={e} type="button" onClick={() => setEditing({ ...editing, era: editing.era === e ? "" : e })} aria-pressed={editing.era === e}
-                    className={`px-2.5 py-1 rounded-md text-micro font-mono border transition-all ${
+                    className={`px-2.5 py-1 rounded-ps-md text-micro font-mono border transition-all ${
                       editing.era === e ? "border-green-500/40 bg-green-500/15 text-green-400" : "border-ps-edge text-ps-text-muted hover:text-ps-text-muted"
                     }`}>{e}</button>
                 ))}
@@ -212,7 +212,7 @@ export default function PromptsPage() {
               <div className="flex flex-wrap gap-1.5" role="group" aria-labelledby="theme-mood-label">
                 {DEFAULT_MOODS.map(m => (
                   <button key={m} type="button" onClick={() => toggleTag("mood", m)} aria-pressed={editing.mood.includes(m)}
-                    className={`px-2.5 py-1 rounded-md text-micro font-mono border transition-all ${
+                    className={`px-2.5 py-1 rounded-ps-md text-micro font-mono border transition-all ${
                       editing.mood.includes(m) ? "border-green-500/40 bg-green-500/15 text-green-400" : "border-ps-edge text-ps-text-muted hover:text-ps-text-muted"
                     }`}>{m}</button>
                 ))}
@@ -234,11 +234,11 @@ export default function PromptsPage() {
 
             <div className="flex gap-2 justify-end pt-2">
               <button type="button" onClick={closeEditor}
-                className="px-4 py-2 text-body text-ps-text-muted hover:text-ps-text-secondary rounded-lg border border-ps-edge hover:bg-ps-surface-raised">
+                className="px-4 py-2 text-body text-ps-text-muted hover:text-ps-text-secondary rounded-ps-md border border-ps-edge hover:bg-ps-surface-raised">
                 Cancel
               </button>
               <button type="button" onClick={save} disabled={!editing.name.trim() || !editing.premise.trim() || saving}
-                className="px-4 py-2 text-body text-green-400 rounded-lg border border-green-500/30 bg-green-500/10 hover:bg-green-500/20 disabled:opacity-30 flex items-center gap-2">
+                className="px-4 py-2 text-body text-green-400 rounded-ps-md border border-green-500/30 bg-green-500/10 hover:bg-green-500/20 disabled:opacity-30 flex items-center gap-2">
                 {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
                 {saving ? "Saving..." : "Save theme"}
               </button>
@@ -255,14 +255,14 @@ export default function PromptsPage() {
             <p className="text-body text-ps-text-muted mb-2">No saved themes yet</p>
             <p className="text-body text-ps-text-faint mb-6">Save story concepts to build on over time</p>
             <button type="button" onClick={startNew}
-              className="px-4 py-2 rounded-lg border border-green-500/30 bg-green-500/10 text-body font-mono text-green-400 hover:bg-green-500/20">
+              className="px-4 py-2 rounded-ps-md border border-green-500/30 bg-green-500/10 text-body font-mono text-green-400 hover:bg-green-500/20">
               Create your first theme
             </button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {themes.map(theme => (
-              <div key={theme.id} className="rounded-xl border border-ps-edge-hairline bg-ps-surface-panel p-4 space-y-3 hover:border-ps-edge-hairline transition-colors">
+              <div key={theme.id} className="rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel p-4 space-y-3 hover:border-ps-edge-hairline transition-colors">
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
                     <h3 className="text-body font-semibold text-ps-text-primary truncate">{theme.name}</h3>
@@ -273,24 +273,24 @@ export default function PromptsPage() {
                 {(theme.genre.length > 0 || theme.era || theme.mood.length > 0) && (
                   <div className="flex flex-wrap gap-1">
                     {theme.genre.map(g => (
-                      <span key={g} className="px-1.5 py-0.5 rounded text-micro font-mono border border-green-500/20 bg-green-500/5 text-green-400/70">{g}</span>
+                      <span key={g} className="px-1.5 py-0.5 rounded-ps-sm text-micro font-mono border border-green-500/20 bg-green-500/5 text-green-400/70">{g}</span>
                     ))}
                     {theme.era && (
-                      <span className="px-1.5 py-0.5 rounded text-micro font-mono border border-ps-edge-hairline bg-ps-surface-raised text-ps-text-muted">{theme.era}</span>
+                      <span className="px-1.5 py-0.5 rounded-ps-sm text-micro font-mono border border-ps-edge-hairline bg-ps-surface-raised text-ps-text-muted">{theme.era}</span>
                     )}
                     {theme.mood.slice(0, 2).map(m => (
-                      <span key={m} className="px-1.5 py-0.5 rounded text-micro font-mono border border-ps-edge-hairline bg-ps-surface-raised text-ps-text-muted">{m}</span>
+                      <span key={m} className="px-1.5 py-0.5 rounded-ps-sm text-micro font-mono border border-ps-edge-hairline bg-ps-surface-raised text-ps-text-muted">{m}</span>
                     ))}
                   </div>
                 )}
 
                 <div className="flex items-center gap-1 justify-end">
                   <button type="button" onClick={() => loadTheme(theme)}
-                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-green-500/20 text-micro font-mono text-green-400 hover:bg-green-500/10">
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-ps-md border border-green-500/20 text-micro font-mono text-green-400 hover:bg-green-500/10">
                     <ArrowRight className="w-3 h-3" /> Use
                   </button>
                   <button type="button" onClick={() => startEdit(theme)} aria-label={`Edit theme ${theme.name}`}
-                    className="p-1.5 rounded text-ps-text-faint hover:text-green-400 hover:bg-green-500/10"><Edit2 className="w-3.5 h-3.5" /></button>
+                    className="p-1.5 rounded-ps-sm text-ps-text-faint hover:text-green-400 hover:bg-green-500/10"><Edit2 className="w-3.5 h-3.5" /></button>
                   <ConfirmButton
                     variant="ghost"
                     size="sm"

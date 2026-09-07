@@ -280,7 +280,7 @@ export default function DeepResearchPage() {
                   <button
                     type="button"
                     onClick={() => setSelectedId(r.id)}
-                    className={`w-full rounded-lg px-2 py-2 text-left text-body transition hover:bg-ps-surface-raised ${selectedId === r.id ? "bg-ps-surface-raised" : ""}`}
+                    className={`w-full rounded-ps-md px-2 py-2 text-left text-body transition hover:bg-ps-surface-raised ${selectedId === r.id ? "bg-ps-surface-raised" : ""}`}
                   >
                     <div className="truncate text-ps-text-primary">
                       {(r.query.split("\n").find((l) => l.trim()) ?? r.query).trim()}

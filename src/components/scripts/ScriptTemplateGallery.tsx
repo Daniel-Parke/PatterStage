@@ -28,7 +28,7 @@ export default function ScriptTemplateGallery({
             key={t.id}
             type="button"
             onClick={() => onOpenTemplate(t.name, t.content)}
-            className="group rounded-xl border border-ps-edge bg-ps-surface-panel p-3 text-left transition-colors hover:border-neon-cyan/30 hover:bg-neon-cyan/[0.03]"
+            className="group rounded-ps-lg border border-ps-edge bg-ps-surface-panel p-3 text-left transition-colors hover:border-neon-cyan/30 hover:bg-neon-cyan/[0.03]"
           >
             <div className="flex items-center gap-2">
               <FileCode className="h-4 w-4 text-neon-cyan" />

@@ -98,7 +98,7 @@ export default function ConceptHint({ id, children, className }: ConceptHintProp
       {open && (
         <span
           id={panelId}
-          className="absolute left-0 top-full z-50 mt-1 block w-64 rounded-lg border border-ps-edge-hairline bg-ps-surface-panel p-3 text-left shadow-lg"
+          className="absolute left-0 top-full z-50 mt-1 block w-64 rounded-ps-md border border-ps-edge-hairline bg-ps-surface-panel p-3 text-left shadow-lg"
         >
           {/* Styled as a heading, not tagged as one. A real <h3> here would
               push an extra level into the outline of every screen that carries

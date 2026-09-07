@@ -53,7 +53,7 @@ export default function LogFilePicker({
             value={query}
             onChange={(e) => onQueryChange(e.target.value)}
             placeholder="Filter by name…" aria-label="Log file name filter"
-            className="w-full bg-ps-surface-ground/80 border border-ps-edge rounded-lg pl-8 pr-2 py-2 text-micro text-ps-text-primary placeholder:text-ps-text-faint outline-none focus:border-neon-cyan/40 font-mono"
+            className="w-full bg-ps-surface-ground/80 border border-ps-edge rounded-ps-md pl-8 pr-2 py-2 text-micro text-ps-text-primary placeholder:text-ps-text-faint outline-none focus:border-neon-cyan/40 font-mono"
           />
         </div>
         <div className="flex-1 min-h-[12rem] max-h-[40vh] lg:max-h-[calc(100vh-280px)] overflow-y-auto space-y-3 pr-1">
@@ -79,7 +79,7 @@ export default function LogFilePicker({
                         // resolve by stylesheet order, not attribute order.
                         hover={false}
                         onClick={() => onSelect(log.name)}
-                        className={`flex items-start gap-2 text-left rounded-lg px-2.5 py-2 text-micro font-mono border ${
+                        className={`flex items-start gap-2 text-left rounded-ps-md px-2.5 py-2 text-micro font-mono border ${
                           activeLog === log.name
                             ? "bg-neon-cyan/10 text-neon-cyan border-neon-cyan/35"
                             : "border-transparent text-ps-text-muted hover:bg-ps-surface-raised hover:text-ps-text-primary"

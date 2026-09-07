@@ -32,10 +32,10 @@ export default function TopList({
   return (
     <div className={`space-y-1.5 ${className}`}>
       {rows.map((r, i) => (
-        <div key={`${r.label}-${i}`} className="relative overflow-hidden rounded-md">
+        <div key={`${r.label}-${i}`} className="relative overflow-hidden rounded-ps-md">
           {/* proportional bar */}
           <div
-            className="absolute inset-y-0 left-0 rounded-md"
+            className="absolute inset-y-0 left-0 rounded-ps-md"
             style={{
               width: `${(r.value / max) * 100}%`,
               background: neonAlpha(color, 14),

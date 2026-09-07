@@ -46,7 +46,7 @@ function compactNum(n: number): string {
 
 function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
-    <div className={`rounded-2xl border border-ps-edge-hairline bg-ps-surface-panel p-4 ${className}`}>
+    <div className={`rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel p-4 ${className}`}>
       {children}
     </div>
   );
@@ -72,7 +72,7 @@ function CardTitle({ icon: Icon, hint, children }: { icon: React.ComponentType<{
 // token figures on this page could not be told apart.
 function MetricTile({ label, value, color = "cyan", hint }: { label: string; value: string; color?: NeonColor; hint?: string }) {
   return (
-    <div className="rounded-xl border border-ps-edge-hairline bg-ps-surface-panel p-3" title={hint} style={{ boxShadow: `inset 0 0 18px ${neonAlpha(color, 5)}` }}>
+    <div className="rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel p-3" title={hint} style={{ boxShadow: `inset 0 0 18px ${neonAlpha(color, 5)}` }}>
       <div className="font-mono text-display font-bold text-ps-text-primary">{value}</div>
       <div className="mt-0.5 text-micro uppercase tracking-wider text-ps-text-muted">{label}</div>
     </div>
@@ -155,13 +155,13 @@ export default function InsightsPage() {
           subtitle="Interaction analytics & achievements"
           color="cyan"
           actions={
-            <div className="flex items-center gap-1 rounded-lg border border-ps-edge-hairline bg-ps-surface-panel p-0.5">
+            <div className="flex items-center gap-1 rounded-ps-md border border-ps-edge-hairline bg-ps-surface-panel p-0.5">
               {RANGES.map((r) => (
                 <button
                   key={r}
                   type="button"
                   onClick={() => setDays(r)}
-                  className={`rounded-md px-2.5 py-1 text-micro font-mono transition-colors ${
+                  className={`rounded-ps-md px-2.5 py-1 text-micro font-mono transition-colors ${
                     days === r ? "bg-neon-cyan/20 text-neon-cyan" : "text-ps-text-muted hover:text-ps-text-secondary"
                   }`}
                 >
@@ -189,7 +189,7 @@ export default function InsightsPage() {
           <>
             {/* ── First-run nudge (analytics start empty) ── */}
             {!error && stats && totalEvents === 0 && (
-              <div className="rounded-2xl border border-neon-cyan/20 bg-ps-surface-panel p-6 text-center" style={{ boxShadow: `0 0 24px ${neonAlpha("cyan", 6)}` }}>
+              <div className="rounded-ps-lg border border-neon-cyan/20 bg-ps-surface-panel p-6 text-center" style={{ boxShadow: `0 0 24px ${neonAlpha("cyan", 6)}` }}>
                 <Sparkles className="mx-auto h-6 w-6 text-neon-cyan" />
                 <h2 className="mt-2 text-body font-semibold text-ps-text-primary">No activity yet</h2>
                 <p className="mx-auto mt-1 max-w-md text-body leading-relaxed text-ps-text-muted">
@@ -198,7 +198,7 @@ export default function InsightsPage() {
                 </p>
                 <Link
                   href="/work/missions"
-                  className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-neon-cyan/40 px-3 py-1.5 text-micro font-mono text-neon-cyan transition-colors hover:bg-neon-cyan/10"
+                  className="mt-3 inline-flex items-center gap-1.5 rounded-ps-md border border-neon-cyan/40 px-3 py-1.5 text-micro font-mono text-neon-cyan transition-colors hover:bg-neon-cyan/10"
                 >
                   <Rocket className="h-3.5 w-3.5" /> Go to Missions
                 </Link>
@@ -260,7 +260,7 @@ export default function InsightsPage() {
                         <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
                           {insights.categorySeries.map((s) => (
                             <span key={s.key} className="flex items-center gap-1.5 text-body text-ps-text-muted">
-                              <span className="h-2 w-2 rounded-sm" style={{ background: neonAlpha(s.color, 90) }} />
+                              <span className="h-2 w-2 rounded-ps-sm" style={{ background: neonAlpha(s.color, 90) }} />
                               {s.label}
                             </span>
                           ))}
@@ -311,8 +311,8 @@ export default function InsightsPage() {
                     <CardTitle icon={TrendingUp} hint="Completed vs failed missions per day over the selected range.">Mission success trend</CardTitle>
                     <AreaTrend data={insights?.successTrend ?? []} color="green" failColor="pink" height={150} />
                     <div className="mt-2 flex gap-3 text-body text-ps-text-muted">
-                      <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-neon-green" />completed</span>
-                      <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-neon-pink" />failed</span>
+                      <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-ps-sm bg-neon-green" />completed</span>
+                      <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-ps-sm bg-neon-pink" />failed</span>
                     </div>
                   </Card>
                 </div>

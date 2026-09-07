@@ -133,7 +133,7 @@ export default function SkillDetailPage() {
             <button
               type="button"
               onClick={() => setShowRaw(!showRaw)}
-              className="text-micro font-mono text-ps-text-muted hover:text-ps-text-secondary px-3 py-1.5 rounded-lg border border-ps-edge hover:border-ps-edge-emphasis transition-colors"
+              className="text-micro font-mono text-ps-text-muted hover:text-ps-text-secondary px-3 py-1.5 rounded-ps-md border border-ps-edge hover:border-ps-edge-emphasis transition-colors"
             >
               {showRaw ? "Rendered" : "Raw"}
             </button>
@@ -145,7 +145,7 @@ export default function SkillDetailPage() {
         <div className="flex gap-6">
           {/* Main content */}
           <div className="flex-1 min-w-0">
-            <div className="rounded-xl border border-ps-edge-hairline bg-ps-surface-panel p-6">
+            <div className="rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel p-6">
               {showRaw ? (
                 <pre className="text-body font-mono text-ps-text-secondary whitespace-pre-wrap break-words">
                   {data.rawContent ?? data.content}
@@ -160,7 +160,7 @@ export default function SkillDetailPage() {
           <div className="w-56 flex-shrink-0 hidden lg:block space-y-4">
             {/* Frontmatter */}
             {Object.keys(frontmatter).length > 0 && (
-              <div className="rounded-xl border border-ps-edge-hairline bg-ps-surface-panel p-4">
+              <div className="rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel p-4">
                 <h3 className={sectionHeadingClasses}>
                   Metadata
                 </h3>
@@ -181,7 +181,7 @@ export default function SkillDetailPage() {
 
             {/* Linked files */}
             {linkedFiles.length > 0 && (
-              <div className="rounded-xl border border-ps-edge-hairline bg-ps-surface-panel p-4">
+              <div className="rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel p-4">
                 <h3 className={sectionHeadingClasses}>
                   Linked Files
                 </h3>

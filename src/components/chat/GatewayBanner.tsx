@@ -149,7 +149,7 @@ export default function GatewayBanner({
 
   return (
     <div
-      className={`w-full max-w-md mx-auto mb-6 p-4 ${accent} border rounded-lg text-left`}
+      className={`w-full max-w-md mx-auto mb-6 p-4 ${accent} border rounded-ps-md text-left`}
     >
       <div className="flex items-center gap-2 mb-1">
         <AlertTriangle className="w-4 h-4" />
@@ -162,7 +162,7 @@ export default function GatewayBanner({
       {status === "model-missing" && (
         <Link
           href={MODELS_HREF}
-          className="mt-3 inline-flex items-center rounded-md border border-neon-orange/40 px-3 py-1.5 text-body font-medium text-neon-orange hover:bg-neon-orange/10"
+          className="mt-3 inline-flex items-center rounded-ps-md border border-neon-orange/40 px-3 py-1.5 text-body font-medium text-neon-orange hover:bg-neon-orange/10"
         >
           Open models
         </Link>

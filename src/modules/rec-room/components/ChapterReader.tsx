@@ -54,7 +54,7 @@ export default function ChapterReader({
             {/* Edit button on completed chapters */}
             {currentMeta?.status === "complete" && (
               <button onClick={() => onEditChapter(currentChapter)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-ps-edge text-micro font-mono text-ps-text-muted hover:text-neon-purple hover:border-neon-purple/30 transition-colors flex-shrink-0"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-ps-md border border-ps-edge text-micro font-mono text-ps-text-muted hover:text-neon-purple hover:border-neon-purple/30 transition-colors flex-shrink-0"
                 title="Edit this chapter">
                 <PenLine className="w-3 h-3" />
                 Edit
@@ -87,11 +87,11 @@ export default function ChapterReader({
           )}
           <div className="flex gap-2">
             <button onClick={() => onRetryChapter(currentChapter)}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-orange-500/30 text-body text-orange-400 bg-orange-500/10 hover:bg-orange-500/20">
+              className="flex items-center gap-2 px-4 py-2 rounded-ps-md border border-orange-500/30 text-body text-orange-400 bg-orange-500/10 hover:bg-orange-500/20">
               <RefreshCw className="w-3 h-3" /> Retry Chapter
             </button>
             <button onClick={() => onEditChapter(currentChapter)}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-neon-purple/30 text-body text-neon-purple bg-neon-purple/10 hover:bg-neon-purple/20">
+              className="flex items-center gap-2 px-4 py-2 rounded-ps-md border border-neon-purple/30 text-body text-neon-purple bg-neon-purple/10 hover:bg-neon-purple/20">
               <PenLine className="w-3 h-3" /> Rewrite with Prompt
             </button>
           </div>

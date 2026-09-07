@@ -62,7 +62,7 @@ export default function DispatchStrip({ templates, categories }: DispatchStripPr
   );
 
   return (
-    <div className="rounded-xl border border-neon-cyan/20 bg-ps-surface-panel overflow-hidden">
+    <div className="rounded-ps-lg border border-neon-cyan/20 bg-ps-surface-panel overflow-hidden">
       <button
         onClick={toggle}
         className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-ps-surface-raised transition-colors"
@@ -102,7 +102,7 @@ export default function DispatchStrip({ templates, categories }: DispatchStripPr
           {templates.length > 12 && (
             <button
               onClick={open}
-              className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-micro font-mono text-ps-text-muted hover:text-neon-cyan transition-colors"
+              className="inline-flex items-center gap-1 px-2 py-1.5 rounded-ps-md text-micro font-mono text-ps-text-muted hover:text-neon-cyan transition-colors"
             >
               +{templates.length - 12} more
             </button>

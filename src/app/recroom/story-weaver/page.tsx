@@ -77,7 +77,7 @@ export default function StoryWeaverDashboard() {
             { label: "Chapters", value: totalChapters },
             { label: "Words", value: totalWords.toLocaleString() },
           ].map((stat) => (
-            <div key={stat.label} className="rounded-xl border border-ps-edge-hairline bg-ps-surface-panel p-4 text-center">
+            <div key={stat.label} className="rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel p-4 text-center">
               <div className="text-display font-bold text-ps-text-primary">{stat.value}</div>
               <div className="text-micro font-mono text-ps-text-faint uppercase tracking-wider mt-1">{stat.label}</div>
             </div>
@@ -87,19 +87,19 @@ export default function StoryWeaverDashboard() {
         {/* Actions */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           <button type="button" onClick={() => router.push("/recroom/story-weaver/create")}
-            className="flex items-center justify-center gap-2 px-6 py-4 rounded-xl border border-neon-purple/30 bg-neon-purple/10 text-body font-mono text-neon-purple hover:bg-neon-purple/20 transition-all shadow-[0_0_20px_rgb(var(--ps-rgb-neon-purple)_/_0.1)]">
+            className="flex items-center justify-center gap-2 px-6 py-4 rounded-ps-lg border border-neon-purple/30 bg-neon-purple/10 text-body font-mono text-neon-purple hover:bg-neon-purple/20 transition-all shadow-[0_0_20px_rgb(var(--ps-rgb-neon-purple)_/_0.1)]">
             <Plus className="w-4 h-4" /> Create
           </button>
           <button type="button" onClick={() => router.push("/recroom/story-weaver/library")}
-            className="flex items-center justify-center gap-2 px-6 py-4 rounded-xl border border-ps-edge text-body font-mono text-ps-text-muted hover:text-ps-text-secondary hover:bg-ps-surface-raised transition-all">
+            className="flex items-center justify-center gap-2 px-6 py-4 rounded-ps-lg border border-ps-edge text-body font-mono text-ps-text-muted hover:text-ps-text-secondary hover:bg-ps-surface-raised transition-all">
             <Library className="w-4 h-4" /> Library
           </button>
           <button type="button" onClick={() => router.push("/recroom/story-weaver/characters")}
-            className="flex items-center justify-center gap-2 px-6 py-4 rounded-xl border border-ps-edge text-body font-mono text-ps-text-muted hover:text-ps-text-secondary hover:bg-ps-surface-raised transition-all">
+            className="flex items-center justify-center gap-2 px-6 py-4 rounded-ps-lg border border-ps-edge text-body font-mono text-ps-text-muted hover:text-ps-text-secondary hover:bg-ps-surface-raised transition-all">
             <Users className="w-4 h-4" /> Characters
           </button>
           <button type="button" onClick={() => router.push("/recroom/story-weaver/themes")}
-            className="flex items-center justify-center gap-2 px-6 py-4 rounded-xl border border-ps-edge text-body font-mono text-ps-text-muted hover:text-ps-text-secondary hover:bg-ps-surface-raised transition-all">
+            className="flex items-center justify-center gap-2 px-6 py-4 rounded-ps-lg border border-ps-edge text-body font-mono text-ps-text-muted hover:text-ps-text-secondary hover:bg-ps-surface-raised transition-all">
             <FileText className="w-4 h-4" /> Themes
           </button>
         </div>

@@ -54,7 +54,7 @@ export default function BulkAuxiliaryUpdater({
   }, [applying, mode, selected, targetModelId, onChange]);
 
   return (
-    <div className="rounded-xl border border-ps-edge-hairline bg-ps-surface-panel overflow-hidden">
+    <div className="rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel overflow-hidden">
       {/* Collapsed header */}
       <button
         type="button"
@@ -129,7 +129,7 @@ export default function BulkAuxiliaryUpdater({
               {AUXILIARY_TASK_TYPES.map((taskType) => (
                 <label
                   key={taskType}
-                  className="flex items-center gap-1.5 cursor-pointer hover:bg-ps-surface-raised px-2 py-1 rounded transition-colors"
+                  className="flex items-center gap-1.5 cursor-pointer hover:bg-ps-surface-raised px-2 py-1 rounded-ps-sm transition-colors"
                 >
                   <input
                     type="checkbox"
@@ -151,7 +151,7 @@ export default function BulkAuxiliaryUpdater({
             type="button"
             onClick={() => void handleApply()}
             disabled={disabled || applying || !targetModelId}
-            className="w-full h-9 bg-neon-purple/10 border border-neon-purple/30 text-neon-purple text-micro font-mono rounded-lg hover:bg-neon-purple/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full h-9 bg-neon-purple/10 border border-neon-purple/30 text-neon-purple text-micro font-mono rounded-ps-md hover:bg-neon-purple/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {applying ? "Applying…" : `Apply to ${selected.size} slot${pluralise(selected.size)}`}
           </button>

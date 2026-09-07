@@ -57,7 +57,7 @@ export function ComposerAccordion({
         <button
           type="button"
           onClick={toggle}
-          className="flex-1 flex items-start justify-between gap-3 py-3 text-left hover:bg-ps-surface-raised rounded-lg -mx-1 px-1 transition-colors min-w-0"
+          className="flex-1 flex items-start justify-between gap-3 py-3 text-left hover:bg-ps-surface-raised rounded-ps-md -mx-1 px-1 transition-colors min-w-0"
           aria-expanded={open}
         >
           <span className="min-w-0 flex items-start gap-2">

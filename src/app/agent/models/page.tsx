@@ -168,7 +168,7 @@ export default function ModelsPage() {
       }
     >
       <div className="space-y-10">
-        <p className="text-micro text-ps-text-muted font-mono border border-ps-edge-hairline rounded-lg p-3 bg-ps-surface-panel">
+        <p className="text-micro text-ps-text-muted font-mono border border-ps-edge-hairline rounded-ps-md p-3 bg-ps-surface-panel">
           PatterStage stores mission defaults and the <ConceptHint id="model">model</ConceptHint>{" "}
           registry here. Hermes chat/gateway
           runtime defaults live in each profile&apos;s <strong className="text-ps-text-secondary">config.yaml</strong>{" "}

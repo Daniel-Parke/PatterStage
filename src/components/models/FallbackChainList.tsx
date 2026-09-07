@@ -59,7 +59,7 @@ function FallbackRow({
       className="border-b border-ps-edge-hairline last:border-0 hover:bg-ps-surface-raised transition-colors"
     >
       <td className="px-3 py-2">
-        <span className="inline-flex items-center justify-center w-5 h-5 text-micro font-mono bg-ps-surface-raised text-ps-text-muted rounded">
+        <span className="inline-flex items-center justify-center w-5 h-5 text-micro font-mono bg-ps-surface-raised text-ps-text-muted rounded-ps-sm">
           {position + 1}
         </span>
       </td>
@@ -88,7 +88,7 @@ function FallbackRow({
             onClick={() => onReorder(entry.id, "up")}
             disabled={disabled || position === 0}
             title="Move up"
-            className="p-1 rounded text-ps-text-muted hover:text-ps-text-primary hover:bg-ps-surface-raised transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            className="p-1 rounded-ps-sm text-ps-text-muted hover:text-ps-text-primary hover:bg-ps-surface-raised transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
           >
             <ChevronUp className="w-3.5 h-3.5" />
           </button>
@@ -97,7 +97,7 @@ function FallbackRow({
             onClick={() => onReorder(entry.id, "down")}
             disabled={disabled || position === total - 1}
             title="Move down"
-            className="p-1 rounded text-ps-text-muted hover:text-ps-text-primary hover:bg-ps-surface-raised transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            className="p-1 rounded-ps-sm text-ps-text-muted hover:text-ps-text-primary hover:bg-ps-surface-raised transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
           >
             <ChevronDown className="w-3.5 h-3.5" />
           </button>
@@ -107,7 +107,7 @@ function FallbackRow({
             onClick={() => onEdit(entry)}
             disabled={disabled}
             title="Edit"
-            className="p-1 rounded text-ps-text-muted hover:text-neon-purple hover:bg-neon-purple/10 transition-colors disabled:opacity-50"
+            className="p-1 rounded-ps-sm text-ps-text-muted hover:text-neon-purple hover:bg-neon-purple/10 transition-colors disabled:opacity-50"
           >
             <Edit3 className="w-3.5 h-3.5" />
           </button>
@@ -146,7 +146,7 @@ function AddCustomForm({ onConfirm, onCancel }: AddCustomFormProps) {
   return (
     <form
       onSubmit={(e) => void handleSubmit(e)}
-      className="p-3 bg-ps-surface-raised rounded-lg space-y-2"
+      className="p-3 bg-ps-surface-raised rounded-ps-md space-y-2"
     >
       <div className="grid grid-cols-2 gap-2">
         <div>
@@ -158,7 +158,7 @@ function AddCustomForm({ onConfirm, onCancel }: AddCustomFormProps) {
             value={modelId}
             onChange={(e) => setModelId(e.target.value)}
             placeholder="My Custom Model" aria-label="Model name"
-            className="w-full h-8 bg-ps-surface-inset border border-ps-edge rounded px-2 text-micro text-ps-text-primary font-mono outline-none focus:border-neon-purple/50"
+            className="w-full h-8 bg-ps-surface-inset border border-ps-edge rounded-ps-sm px-2 text-micro text-ps-text-primary font-mono outline-none focus:border-neon-purple/50"
             required
           />
         </div>
@@ -171,7 +171,7 @@ function AddCustomForm({ onConfirm, onCancel }: AddCustomFormProps) {
             value={provider}
             onChange={(e) => setProvider(e.target.value)}
             placeholder="openai" aria-label="Provider"
-            className="w-full h-8 bg-ps-surface-inset border border-ps-edge rounded px-2 text-micro text-ps-text-primary font-mono outline-none focus:border-neon-purple/50"
+            className="w-full h-8 bg-ps-surface-inset border border-ps-edge rounded-ps-sm px-2 text-micro text-ps-text-primary font-mono outline-none focus:border-neon-purple/50"
             required
           />
         </div>
@@ -185,7 +185,7 @@ function AddCustomForm({ onConfirm, onCancel }: AddCustomFormProps) {
           value={modelIdString}
           onChange={(e) => setModelIdString(e.target.value)}
           placeholder="gpt-4o" aria-label="Model ID"
-          className="w-full h-8 bg-ps-surface-inset border border-ps-edge rounded px-2 text-micro text-ps-text-primary font-mono outline-none focus:border-neon-purple/50"
+          className="w-full h-8 bg-ps-surface-inset border border-ps-edge rounded-ps-sm px-2 text-micro text-ps-text-primary font-mono outline-none focus:border-neon-purple/50"
           required
         />
       </div>
@@ -198,20 +198,20 @@ function AddCustomForm({ onConfirm, onCancel }: AddCustomFormProps) {
           value={baseUrl}
           onChange={(e) => setBaseUrl(e.target.value)}
           placeholder="https://api.openai.com/v1" aria-label="Base URL"
-          className="w-full h-8 bg-ps-surface-inset border border-ps-edge rounded px-2 text-micro text-ps-text-primary font-mono outline-none focus:border-neon-purple/50"
+          className="w-full h-8 bg-ps-surface-inset border border-ps-edge rounded-ps-sm px-2 text-micro text-ps-text-primary font-mono outline-none focus:border-neon-purple/50"
         />
       </div>
       <div className="flex items-center justify-end gap-2 pt-1">
         <button
           type="button"
           onClick={onCancel}
-          className="px-3 py-1 text-micro font-mono text-ps-text-muted hover:text-ps-text-primary rounded-lg hover:bg-ps-surface-raised transition-colors"
+          className="px-3 py-1 text-micro font-mono text-ps-text-muted hover:text-ps-text-primary rounded-ps-md hover:bg-ps-surface-raised transition-colors"
         >
           Cancel
         </button>
         <button
           type="submit"
-          className="px-3 py-1 text-micro font-mono bg-neon-purple/20 text-neon-purple rounded-lg hover:bg-neon-purple/30 transition-colors"
+          className="px-3 py-1 text-micro font-mono bg-neon-purple/20 text-neon-purple rounded-ps-md hover:bg-neon-purple/30 transition-colors"
         >
           Add
         </button>
@@ -257,7 +257,7 @@ export default function FallbackChainList({
     <div className="space-y-2">
       {sortedChain.length === 0 && !showAddCustom ? (
         <GlowSurface accent="purple">
-          <div className="text-center py-6 rounded-xl border border-ps-edge-hairline bg-ps-surface-panel text-micro text-ps-text-muted font-mono">
+          <div className="text-center py-6 rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel text-micro text-ps-text-muted font-mono">
             No fallback models configured
           </div>
         </GlowSurface>
@@ -310,14 +310,14 @@ export default function FallbackChainList({
             type="button"
             onClick={() => setShowRegistryDropdown((v) => !v)}
             disabled={disabled || models.length === 0}
-            className="flex items-center gap-1.5 px-3 h-8 text-micro font-mono text-ps-text-muted hover:text-ps-text-primary bg-ps-surface-raised hover:bg-ps-surface-raised rounded-lg border border-ps-edge transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-1.5 px-3 h-8 text-micro font-mono text-ps-text-muted hover:text-ps-text-primary bg-ps-surface-raised hover:bg-ps-surface-raised rounded-ps-md border border-ps-edge transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Plus className="w-3.5 h-3.5" />
             Add from Registry
             <ChevronDown className="w-3 h-3" />
           </button>
           {showRegistryDropdown && (
-            <div className="absolute top-full left-0 mt-1 z-10 w-56 bg-ps-surface-raised border border-ps-edge-hairline rounded-lg shadow-xl overflow-hidden">
+            <div className="absolute top-full left-0 mt-1 z-10 w-56 bg-ps-surface-raised border border-ps-edge-hairline rounded-ps-md shadow-xl overflow-hidden">
               {models.map((m) => (
                 <button
                   key={m.id}
@@ -342,7 +342,7 @@ export default function FallbackChainList({
           type="button"
           onClick={() => setShowAddCustom(true)}
           disabled={disabled}
-          className="flex items-center gap-1.5 px-3 h-8 text-micro font-mono text-ps-text-muted hover:text-ps-text-primary bg-ps-surface-raised hover:bg-ps-surface-raised rounded-lg border border-ps-edge transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center gap-1.5 px-3 h-8 text-micro font-mono text-ps-text-muted hover:text-ps-text-primary bg-ps-surface-raised hover:bg-ps-surface-raised rounded-ps-md border border-ps-edge transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Plus className="w-3.5 h-3.5" />
           Add Custom

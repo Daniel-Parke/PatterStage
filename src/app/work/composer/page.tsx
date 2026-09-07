@@ -36,11 +36,11 @@ import ElapsedSince from "@/components/composer/ElapsedSince";
 // react-flow needs the DOM — load the canvases client-only.
 const WorkflowCanvas = dynamic(() => import("@/components/composer/WorkflowCanvas"), {
   ssr: false,
-  loading: () => <div className="h-[640px] animate-pulse rounded-xl border border-ps-edge-hairline bg-ps-surface-panel" />,
+  loading: () => <div className="h-[640px] animate-pulse rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel" />,
 });
 const WorkflowRunCanvas = dynamic(() => import("@/components/composer/WorkflowRunCanvas"), {
   ssr: false,
-  loading: () => <div className="h-[560px] animate-pulse rounded-xl border border-ps-edge-hairline bg-ps-surface-panel" />,
+  loading: () => <div className="h-[560px] animate-pulse rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel" />,
 });
 import { useComposerWorkflows, useComposerRuns, useComposerRun } from "@/hooks/useComposer";
 import { useProfiles } from "@/hooks/useProfiles";
@@ -320,7 +320,7 @@ export default function ComposerPage() {
                   <button
                     type="button"
                     onClick={() => selectRun(r.id)}
-                    className={`w-full rounded-lg px-2 py-2 text-left text-body transition hover:bg-ps-surface-raised ${selectedId === r.id ? "bg-ps-surface-raised" : ""}`}
+                    className={`w-full rounded-ps-md px-2 py-2 text-left text-body transition hover:bg-ps-surface-raised ${selectedId === r.id ? "bg-ps-surface-raised" : ""}`}
                   >
                     <div className="truncate text-ps-text-primary">{runTitle(r.input)}</div>
                     {/* Which workflow this is a run OF. The rows were a list of
@@ -365,7 +365,7 @@ export default function ComposerPage() {
           ) : !run || !graph ? (
             // A run IS selected but its graph is still loading — show a skeleton,
             // never the "select a run" empty state (that read as "click did nothing").
-            <div className="flex h-[60vh] min-h-[420px] items-center justify-center rounded-xl border border-ps-edge-hairline bg-ps-surface-panel">
+            <div className="flex h-[60vh] min-h-[420px] items-center justify-center rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel">
               <div className="flex flex-col items-center gap-2 text-center">
                 <div className="h-5 w-5 animate-spin rounded-full border-2 border-ps-edge-emphasis border-t-neon-cyan" />
                 <p className="text-body text-ps-text-muted">Loading run…</p>
@@ -373,7 +373,7 @@ export default function ComposerPage() {
             </div>
           ) : (
             <div className="space-y-4">
-              <div className="flex items-start justify-between gap-3 rounded-lg border border-ps-edge-hairline bg-ps-surface-panel px-3 py-2.5">
+              <div className="flex items-start justify-between gap-3 rounded-ps-md border border-ps-edge-hairline bg-ps-surface-panel px-3 py-2.5">
                 <div className="min-w-0">
                   <div className="truncate text-body text-ps-text-primary">{runTitle(run.input)}</div>
                   {run.error ? (
@@ -412,7 +412,7 @@ export default function ComposerPage() {
                         else void cancelConfirm.confirm(cancelRun);
                       }}
                       disabled={gateBusy}
-                      className={`mt-1.5 rounded-lg border px-2 py-1 text-micro font-mono transition-colors disabled:opacity-40 ${
+                      className={`mt-1.5 rounded-ps-md border px-2 py-1 text-micro font-mono transition-colors disabled:opacity-40 ${
                         cancelConfirm.isArmedFor(run.id)
                           ? "border-neon-orange/60 bg-neon-orange/20 text-neon-orange"
                           : "border-ps-edge-emphasis text-ps-text-muted hover:border-neon-orange/50 hover:text-neon-orange"

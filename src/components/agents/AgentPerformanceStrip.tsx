@@ -23,7 +23,7 @@ export default function AgentPerformanceStrip() {
   if (agents.length === 0) return null;
 
   return (
-    <div className="animate-float-in mb-5 rounded-2xl border border-ps-edge-hairline bg-ps-surface-panel p-4">
+    <div className="animate-float-in mb-5 rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel p-4">
       <div className="mb-3 flex items-center gap-2 font-mono text-micro uppercase tracking-wider text-ps-text-muted">
         <Activity className="h-3.5 w-3.5 text-neon-cyan" /> Agent performance · from real activity
       </div>
@@ -35,12 +35,12 @@ export default function AgentPerformanceStrip() {
           return (
             <div
               key={a.slug}
-              className="rounded-xl border p-3"
+              className="rounded-ps-lg border p-3"
               style={{ borderColor: neonAlpha(color, 25), background: neonAlpha(color, 5) }}
             >
               <div className="mb-2 flex items-center gap-2">
                 <div
-                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg font-mono text-micro font-bold"
+                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-ps-md font-mono text-micro font-bold"
                   style={{ background: neonAlpha(color, 18), color: neon(color) }}
                 >
                   {a.name.slice(0, 2).toUpperCase()}
@@ -68,7 +68,7 @@ export default function AgentPerformanceStrip() {
 
 function Metric({ label, value, color }: { label: string; value: string; color: NeonColor }) {
   return (
-    <div className="rounded-lg bg-ps-surface-raised px-1 py-1.5">
+    <div className="rounded-ps-md bg-ps-surface-raised px-1 py-1.5">
       <div className="font-mono text-body font-bold leading-none" style={{ color: neon(color) }}>
         {value}
       </div>

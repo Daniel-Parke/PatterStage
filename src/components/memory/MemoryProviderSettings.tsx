@@ -212,7 +212,7 @@ export default function MemoryProviderSettings({
               first place the word appears, in either of its two states. */}
           <ConceptHint id="memory">{storeUnreachable ? "Set up memory" : "Memory provider"}</ConceptHint>
         </h2>
-        <span className="rounded bg-ps-surface-raised px-1.5 py-0.5 text-micro font-mono uppercase tracking-wider text-ps-text-muted">
+        <span className="rounded-ps-sm bg-ps-surface-raised px-1.5 py-0.5 text-micro font-mono uppercase tracking-wider text-ps-text-muted">
           {row?.label ?? "Memory"}
         </span>
       </div>
@@ -236,7 +236,7 @@ export default function MemoryProviderSettings({
       {unconfirmedGuess && (
         <div
           role="status"
-          className="mb-4 rounded-lg border border-neon-orange/30 bg-neon-orange/10 px-3 py-2 text-body text-neon-orange"
+          className="mb-4 rounded-ps-md border border-neon-orange/30 bg-neon-orange/10 px-3 py-2 text-body text-neon-orange"
         >
           Using the built-in default — not yet confirmed. PatterStage guessed{" "}
           <span className="font-mono">

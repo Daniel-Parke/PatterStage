@@ -45,7 +45,7 @@ export default function CollapsibleSection({
   const [expanded, setExpanded] = useState(defaultExpanded);
 
   return (
-    <div className="rounded-xl border border-ps-edge-hairline bg-ps-surface-panel overflow-hidden">
+    <div className="rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel overflow-hidden">
       {/* Header — always visible */}
       <button
         type="button"
@@ -64,7 +64,7 @@ export default function CollapsibleSection({
           </h2>
           {badge !== undefined && (
             <span
-              className={`text-micro font-mono px-1.5 py-0.5 rounded uppercase tracking-widest ${badgeColorMap[badgeColor]}`}
+              className={`text-micro font-mono px-1.5 py-0.5 rounded-ps-sm uppercase tracking-widest ${badgeColorMap[badgeColor]}`}
             >
               {badge}
             </span>

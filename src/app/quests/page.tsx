@@ -113,7 +113,7 @@ export default function QuestsPage() {
 
         {progress && (
           <>
-            <header className="flex flex-wrap items-center gap-5 rounded-xl border border-ps-edge-hairline bg-ps-surface-panel p-5">
+            <header className="flex flex-wrap items-center gap-5 rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel p-5">
               <ProgressRing
                 value={progress.total > 0 ? progress.completed / progress.total : 0}
                 color="orange"

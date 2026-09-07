@@ -296,7 +296,7 @@ export function TemplateEditorModal({
             {newLocalDirs.map((dir, i) => (
               <div
                 key={`tmpl-${dir.path}-${i}`}
-                className="rounded-lg border border-neon-cyan/15 bg-ps-surface-raised px-2 py-2"
+                className="rounded-ps-md border border-neon-cyan/15 bg-ps-surface-raised px-2 py-2"
               >
                 <LocalDirRow
                   mode="saved"
@@ -323,7 +323,7 @@ export function TemplateEditorModal({
             {newReferences.map((ref, i) => (
               <div
                 key={i}
-                className="flex items-center gap-2 bg-ps-surface-raised border border-neon-pink/20 rounded-lg px-3 py-1.5"
+                className="flex items-center gap-2 bg-ps-surface-raised border border-neon-pink/20 rounded-ps-md px-3 py-1.5"
               >
                 <span className="text-micro font-mono text-neon-pink truncate flex-1">
                   {ref}
@@ -370,7 +370,7 @@ export function TemplateEditorModal({
                     onReferenceInputChange("");
                   }
                 }}
-                className="px-3 py-1.5 rounded-lg bg-neon-pink/10 border border-neon-pink/30 text-micro text-neon-pink hover:bg-neon-pink/20 font-mono transition-colors"
+                className="px-3 py-1.5 rounded-ps-md bg-neon-pink/10 border border-neon-pink/30 text-micro text-neon-pink hover:bg-neon-pink/20 font-mono transition-colors"
               >
                 + Add
               </button>
@@ -389,7 +389,7 @@ export function TemplateEditorModal({
                   <button
                     key={icon}
                     onClick={() => onTemplateIconChange(icon)}
-                    className={`p-1.5 rounded border transition-colors ${
+                    className={`p-1.5 rounded-ps-sm border transition-colors ${
                       templateIcon === icon
                         ? "border-neon-cyan/50 bg-cyan-500/10"
                         : "border-ps-edge hover:border-ps-edge-emphasis"
@@ -413,7 +413,7 @@ export function TemplateEditorModal({
                 <button
                   key={color}
                   onClick={() => onTemplateColorChange(color)}
-                  className={`w-8 h-8 rounded-lg border-2 transition-colors ${
+                  className={`w-8 h-8 rounded-ps-md border-2 transition-colors ${
                     templateColor === color
                       ? "border-ps-edge-emphasis"
                       : "border-transparent"

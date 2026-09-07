@@ -280,7 +280,7 @@ export default function ModelEditor({
         {error && (
           <div
             role="alert"
-            className="flex items-center gap-2 text-body text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2"
+            className="flex items-center gap-2 text-body text-red-400 bg-red-500/10 border border-red-500/20 rounded-ps-md px-3 py-2"
           >
             <AlertCircle className="w-4 h-4 flex-shrink-0" />
             <span>{error}</span>
@@ -365,7 +365,7 @@ export default function ModelEditor({
         />
 
         {!usingExisting && (
-          <div className="space-y-3 rounded-lg border border-neon-purple/15 bg-neon-purple/5 p-3">
+          <div className="space-y-3 rounded-ps-md border border-neon-purple/15 bg-neon-purple/5 p-3">
             <p className="text-micro font-mono text-neon-purple uppercase tracking-widest">
               {keyless ? "Credential (optional)" : "New credential"}
             </p>

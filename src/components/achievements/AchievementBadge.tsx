@@ -108,7 +108,7 @@ export default function AchievementBadge({ achievement }: { achievement: Achieve
   return (
     <div
       title={tip}
-      className="group flex flex-col items-center gap-1.5 rounded-xl border p-3 transition-transform duration-200 hover:-translate-y-0.5"
+      className="group flex flex-col items-center gap-1.5 rounded-ps-lg border p-3 transition-transform duration-200 hover:-translate-y-0.5"
       style={
         unlocked
           ? { borderColor: neonAlpha(c, 30), background: neonAlpha(c, 8), boxShadow: `0 0 18px ${neonAlpha(c, 12)}` }
