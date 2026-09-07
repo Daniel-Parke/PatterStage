@@ -142,4 +142,25 @@ describe("U14 · Retry re-sends the prompt", () => {
     expect(sendMessageApi).not.toHaveBeenCalled();
     expect(result.current.messages).toHaveLength(2);
   });
+
+  it("does nothing for a reply that did not fail", async () => {
+    // Sharpened after the sweep (T-0128): a mutant that dropped the role and
+    // status checks survived, because a user turn has no user turn before it
+    // and stopped for that reason instead. A COMPLETED assistant turn has one,
+    // so only the status check can stop it.
+    (fetchConversation as jest.Mock).mockResolvedValue({
+      ok: true,
+      messages: [userTurn, { ...failedTurn, id: "a2", content: "Here is the summary.", status: "complete", error: null }],
+      conversation: { id: "c1", model: "the-model" },
+    });
+    const { result } = renderHook(useHarness);
+    await waitFor(() => expect(result.current.messages).toHaveLength(2));
+
+    await act(async () => {
+      await result.current.send.handleRetry("a2");
+    });
+
+    expect(sendMessageApi).not.toHaveBeenCalled();
+    expect(result.current.messages.map((m) => m.id)).toEqual(["u1", "a2"]);
+  });
 });
