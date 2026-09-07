@@ -99,6 +99,12 @@ const nextConfig: NextConfig = {
       // by a pattern, because /agent/settings/restore and /system are pages
       // of their own and a pattern would catch them too.
       ...settingsSectionIds().map((id) => temporary(`/agent/settings/${id}`, `/agent/settings#${id}`)),
+      // Five Story Weaver entries became two (decision 6, T-0126): the library
+      // is the page at the door, and Characters and Themes are panels on
+      // Create, so each old address lands where its content went.
+      temporary("/recroom/story-weaver/library", "/recroom/story-weaver"),
+      temporary("/recroom/story-weaver/characters", "/recroom/story-weaver/create#characters"),
+      temporary("/recroom/story-weaver/themes", "/recroom/story-weaver/create#themes"),
     ];
   },
 };

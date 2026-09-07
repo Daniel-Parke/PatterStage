@@ -134,9 +134,10 @@ describe("the native confirm is gone", () => {
   });
 
   it("the five sites use the primitive", () => {
+    // Amended 2026-09-07 (U12, T-0126): the library is the page at
+    // /recroom/story-weaver now, so the two Story Weaver sites are one.
     for (const f of [
       "src/app/recroom/story-weaver/page.tsx",
-      "src/app/recroom/story-weaver/library/page.tsx",
       "src/app/work/scripts/page.tsx",
       "src/components/composer/WorkflowCanvas.tsx",
     ]) {

@@ -1,22 +1,27 @@
-// ReaderSettings — Kindle-style reading customisation panel
+// ReaderSettings — the reading controls: size, spacing and face.
+//
+// The panel offered a page theme too, dark or black, two tints of one
+// register with a panel colour each. WG-WEB-001 rules one register, and two
+// near-black tints of it were a setting nobody could tell apart; decision 6's
+// batch took the second one out with the rest of the reader's private token
+// set (U12, T-0126). A saved `pageTheme` from before is dropped on load.
+//
+// The panel is a Popover on the shared dismissable, not a hand-rolled fixed
+// overlay: outside click and Escape are the hook's, and there is no backdrop
+// to trap focus behind.
 "use client";
-import { useState, useCallback } from "react";
-import { Settings, X } from "lucide-react";
-import { useDialogA11y } from "@/hooks/useDialogA11y";
+
+import { useCallback, useState } from "react";
+import { Settings } from "lucide-react";
+
+import Button from "@/components/ui/Button";
+import Popover from "@/components/ui/Popover";
 
 export interface ReadingSettings {
   fontSize: number;       // 12-28
   fontFamily: string;
   lineHeight: number;     // 1.2-2.5
   brightness: number;     // 0.4-1.0
-  /**
-   * One reading register, two page tints (WG-WEB-001: dark-first, no exception).
-   * `sepia` and `light` were removed in WO-0005. A saved setting naming either
-   * one is normalised back to `dark` by `loadSettings`, so an existing reader's
-   * stored preference degrades to the supported register instead of leaving the
-   * picker with nothing selected.
-   */
-  pageTheme: "dark" | "black";
 }
 
 export const DEFAULT_SETTINGS: ReadingSettings = {
@@ -24,7 +29,6 @@ export const DEFAULT_SETTINGS: ReadingSettings = {
   fontFamily: "EB Garamond",
   lineHeight: 1.2,
   brightness: 1.0,
-  pageTheme: "dark",
 };
 
 export const FONTS = [
@@ -34,35 +38,6 @@ export const FONTS = [
   { name: "Merriweather", label: "Merriweather", family: "var(--font-merriweather), Georgia, serif" },
   { name: "Inter", label: "Inter", family: "var(--font-inter), system-ui, sans-serif" },
 ];
-
-/**
- * The reading register, as tokens rather than literals. The hex lives once, in
- * globals.css, where the design-lint law says colour belongs; these are the
- * var() handles. `rule` is the panel border, shared by both tints, and it
- * replaces a `pageTheme === "light"` conditional in the reader that had no
- * remaining branch once the light theme went.
- *
- * The values move to the vendored @pattertech/ui kit under WO-0017.
- */
-export const THEMES: Record<
-  ReadingSettings["pageTheme"],
-  { bg: string; text: string; panel: string; accent: string; rule: string }
-> = {
-  dark: {
-    bg: "var(--ps-reader-dark-bg)",
-    text: "var(--ps-reader-dark-text)",
-    panel: "var(--ps-reader-dark-panel)",
-    accent: "var(--ps-reader-accent)",
-    rule: "var(--ps-reader-rule)",
-  },
-  black: {
-    bg: "var(--ps-reader-black-bg)",
-    text: "var(--ps-reader-black-text)",
-    panel: "var(--ps-reader-black-panel)",
-    accent: "var(--ps-reader-accent)",
-    rule: "var(--ps-reader-rule)",
-  },
-};
 
 export const WORD_COUNT_OPTIONS: Array<{ id: string; label: string }> = [
   { id: "short", label: "800-1.2k" },
@@ -78,38 +53,41 @@ const STORAGE_KEY = "story-weaver-reader-settings";
 export function loadSettings(): ReadingSettings {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) return normaliseSettings({ ...DEFAULT_SETTINGS, ...JSON.parse(saved) });
+    if (saved) return normaliseSettings(JSON.parse(saved) as Record<string, unknown>);
   } catch {}
   return { ...DEFAULT_SETTINGS };
 }
 
 /**
- * Bring a stored setting back into the supported range.
+ * Bring a stored setting back into the supported shape.
  *
- * localStorage outlives the code that wrote it. A reader who chose `sepia` or
- * `light` before WO-0005 still has that string on disk, and the reader page's
- * `THEMES[pageTheme] || THEMES.dark` fallback would render correctly while the
- * picker showed nothing selected, because no tile matches. Normalising at the
- * load boundary means an unsupported value is corrected once rather than
- * defended against at every read.
+ * localStorage outlives the code that wrote it. A reader who chose a page
+ * theme, or `sepia` or `light` before WO-0005, still has that key on disk;
+ * only the four settings that exist are kept, each checked for its type, so
+ * a stale key is corrected once here rather than defended against at every
+ * read.
  */
-function normaliseSettings(settings: ReadingSettings): ReadingSettings {
-  if (settings.pageTheme in THEMES) return settings;
-  return { ...settings, pageTheme: DEFAULT_SETTINGS.pageTheme };
+function normaliseSettings(raw: Record<string, unknown>): ReadingSettings {
+  const num = (v: unknown, fallback: number) => (typeof v === "number" && Number.isFinite(v) ? v : fallback);
+  return {
+    fontSize: num(raw.fontSize, DEFAULT_SETTINGS.fontSize),
+    fontFamily: typeof raw.fontFamily === "string" ? raw.fontFamily : DEFAULT_SETTINGS.fontFamily,
+    lineHeight: num(raw.lineHeight, DEFAULT_SETTINGS.lineHeight),
+    brightness: num(raw.brightness, DEFAULT_SETTINGS.brightness),
+  };
 }
 
 function saveSettings(s: ReadingSettings) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch {}
 }
 
+const ROW = "mb-1.5 flex items-center justify-between font-mono text-micro text-ps-text-muted";
+
 export default function ReaderSettings({ settings, onChange }: {
   settings: ReadingSettings;
   onChange: (s: ReadingSettings) => void;
 }) {
   const [open, setOpen] = useState(false);
-  // A dialog on the shared contract (T-0096, D116): Escape closes it and
-  // focus returns to the Aa button.
-  const panelRef = useDialogA11y({ open, onClose: () => setOpen(false) });
 
   const update = useCallback((patch: Partial<ReadingSettings>) => {
     const next = { ...settings, ...patch };
@@ -117,101 +95,81 @@ export default function ReaderSettings({ settings, onChange }: {
     saveSettings(next);
   }, [settings, onChange]);
 
+  const reset = () => {
+    onChange(DEFAULT_SETTINGS);
+    saveSettings(DEFAULT_SETTINGS);
+  };
+
   return (
-    <>
-      {/* Toggle Button */}
-      <button type="button" onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-ps-md border border-ps-edge text-micro font-mono text-ps-text-muted hover:text-ps-text-secondary hover:bg-ps-surface-raised transition-colors"
-        aria-label="Reading settings (font, size, theme)"
-        aria-expanded={open}
-        title="Reading settings">
-        <span className="text-body">Aa</span>
-        <Settings className="w-3.5 h-3.5" />
-      </button>
+    <Popover
+      open={open}
+      onClose={() => setOpen(false)}
+      align="right"
+      className="w-72 p-5"
+      trigger={
+        <Button
+          variant="secondary"
+          icon={Settings}
+          aria-label="Reading settings"
+          aria-expanded={open}
+          title="Reading settings"
+          onClick={() => setOpen((o) => !o)}
+        >
+          Aa
+        </Button>
+      }
+    >
+      {/* A non-modal dialog: it holds controls and Escape closes it, but it
+          traps nothing and the page behind it stays live. */}
+      <div role="dialog" aria-label="Reading settings" className="space-y-4">
+        <div className="font-mono text-micro uppercase tracking-widest text-ps-text-muted">Reading settings</div>
 
-      {/* Settings Panel — fixed position to avoid overflow clipping */}
-      {open && (
-        <>
-          <div className="fixed inset-0 z-[55]" onClick={() => setOpen(false)} role="presentation" />
-          <div
-            ref={panelRef}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="reading-settings-title"
-            tabIndex={-1}
-            className="fixed top-[52px] right-4 w-72 rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel backdrop-blur-xl p-5 z-[60] shadow-2xl max-h-[80vh] overflow-y-auto"
-          >
-          <div className="flex items-center justify-between mb-4">
-            <span id="reading-settings-title" className="text-micro font-mono text-ps-text-muted uppercase tracking-widest">Reading settings</span>
-            <button type="button" onClick={() => setOpen(false)} aria-label="Close reading settings" className="p-1 text-ps-text-muted hover:text-ps-text-muted"><X className="w-3.5 h-3.5" /></button>
+        <div>
+          <div className={ROW}>
+            <span>Font size</span>
+            <span>{settings.fontSize}px</span>
           </div>
+          {/* A range slider has no primitive; the two here are the reader's own. */}
+          <input aria-label="Font size" type="range" min={12} max={28} value={settings.fontSize}
+            onChange={(e) => update({ fontSize: parseInt(e.target.value) })}
+            className="h-1 w-full accent-neon-purple" />
+        </div>
 
-          {/* Font Size */}
-          <div className="mb-4">
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-micro font-mono text-ps-text-muted">Font Size</span>
-              <span className="text-micro font-mono text-ps-text-muted">{settings.fontSize}px</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="text-body text-ps-text-faint">A</span>
-              <input aria-label="Font size" type="range" min={12} max={28} value={settings.fontSize}
-                onChange={(e) => update({ fontSize: parseInt(e.target.value) })}
-                className="flex-1 accent-neon-purple h-1" />
-              <span className="text-lead text-ps-text-muted">A</span>
-            </div>
+        <div>
+          <div className={ROW}>
+            <span>Line spacing</span>
+            <span>{settings.lineHeight.toFixed(1)}</span>
           </div>
+          <input aria-label="Line spacing" type="range" min={12} max={25} value={Math.round(settings.lineHeight * 10)}
+            onChange={(e) => update({ lineHeight: parseInt(e.target.value) / 10 })}
+            className="h-1 w-full accent-neon-purple" />
+        </div>
 
-          {/* Line Spacing */}
-          <div className="mb-4">
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-micro font-mono text-ps-text-muted">Line Spacing</span>
-              <span className="text-micro font-mono text-ps-text-muted">{settings.lineHeight.toFixed(1)}</span>
-            </div>
-            <input aria-label="Line spacing" type="range" min={12} max={25} value={Math.round(settings.lineHeight * 10)}
-              onChange={(e) => update({ lineHeight: parseInt(e.target.value) / 10 })}
-              className="w-full accent-neon-purple h-1" />
+        <div className="space-y-1.5">
+          <span className="block font-mono text-micro text-ps-text-muted">Font</span>
+          {/* Two-up, so the five faces and Reset fit the popover's height
+              without a scroll. */}
+          <div className="grid grid-cols-2 gap-1.5">
+            {FONTS.map((f) => (
+              <Button
+                key={f.name}
+                variant={settings.fontFamily === f.name ? "primary" : "ghost"}
+                color="purple"
+                size="sm"
+                aria-pressed={settings.fontFamily === f.name}
+                onClick={() => update({ fontFamily: f.name })}
+                style={{ fontFamily: f.family }}
+              >
+                {f.label}
+              </Button>
+            ))}
           </div>
+        </div>
 
-          {/* Font Family */}
-          <div className="mb-4">
-            <span className="text-micro font-mono text-ps-text-muted block mb-2">Font</span>
-            <div className="grid grid-cols-1 gap-1.5">
-              {FONTS.map((f) => (
-                <button key={f.name} onClick={() => update({ fontFamily: f.name })}
-                  className={`text-left px-3 py-1.5 rounded-ps-md text-body transition-colors ${
-                    settings.fontFamily === f.name ? "bg-neon-purple/15 text-neon-purple border border-neon-purple/30" : "text-ps-text-muted hover:text-ps-text-secondary hover:bg-ps-surface-raised border border-transparent"
-                  }`}
-                  style={{ fontFamily: f.family }}>
-                  {f.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Page Theme */}
-          <div className="mb-4">
-            <span className="text-micro font-mono text-ps-text-muted block mb-2">Page Theme</span>
-            <div className="grid grid-cols-4 gap-2">
-              {Object.entries(THEMES).map(([key, t]) => (
-                <button key={key} onClick={() => update({ pageTheme: key as ReadingSettings["pageTheme"] })}
-                  className={`flex flex-col items-center gap-1 p-2 rounded-ps-md border transition-all ${
-                    settings.pageTheme === key ? "border-neon-purple/40" : "border-ps-edge hover:border-ps-edge-emphasis"
-                  }`}>
-                  <div className="w-8 h-8 rounded-ps-md border border-ps-edge-hairline" style={{ background: t.bg }} />
-                  <span className="text-micro font-mono text-ps-text-muted capitalize">{key}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Reset */}
-          <button onClick={() => { onChange(DEFAULT_SETTINGS); saveSettings(DEFAULT_SETTINGS); }}
-            className="w-full text-center text-micro font-mono text-ps-text-faint hover:text-ps-text-muted py-1.5 rounded-ps-md hover:bg-ps-surface-raised transition-colors">
-            Reset to Defaults
-          </button>
-          </div>
-        </>
-      )}
-    </>
+        <Button variant="ghost" size="sm" className="w-full" onClick={reset}>
+          Reset to defaults
+        </Button>
+      </div>
+    </Popover>
   );
 }

@@ -44,8 +44,11 @@ describe("module registry", () => {
   it("includes sub-links, not just their parent", () => {
     const routes = allModuleRoutes();
     expect(routes).toContain("/recroom/story-weaver");
-    expect(routes).toContain("/recroom/story-weaver/characters");
-    expect(routes).toContain("/recroom/story-weaver/themes");
+    expect(routes).toContain("/recroom/story-weaver/create");
+    // Amended 2026-09-07 (U12, T-0126): Characters and Themes are panels on
+    // Create and their addresses redirect; they are not routes.
+    expect(routes).not.toContain("/recroom/story-weaver/characters");
+    expect(routes).not.toContain("/recroom/story-weaver/themes");
   });
 
   it("carries the composer feature flag through to the derived nav", () => {

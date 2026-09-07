@@ -104,7 +104,6 @@ describe("the converted overlays", () => {
       <MobileChapterDrawer
         chapters={[]}
         currentChapter={1}
-        theme={{ bg: "", text: "", panel: "", accent: "", rule: "" }}
         onClose={onClose}
         onSelect={() => {}}
       />,

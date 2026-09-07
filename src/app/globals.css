@@ -242,6 +242,20 @@
   --color-status-fail: var(--color-semantic-danger);
   --color-status-blocked: var(--color-neon-orange);
 
+  /* The Story Weaver reader's warm register: the page you read, the ink on
+     it, and the rule between them - and nothing else. It was thirteen
+     tokens in :root: a dark tint and a black tint with a page, an ink and a
+     panel each, an accent that was the house purple by another name, a rule,
+     and five chapter-state tints that were a second status ladder drawn
+     beside the one every other screen uses. The chapter dots read the house
+     ladder now, the reader's chrome (its bars, its chapter list) sits on the
+     console's surfaces, and the register keeps the three colours that ARE
+     the register (U12, T-0126). WG-WEB-001 still holds: dark-first, one
+     register, no exception. */
+  --color-ps-reader-page: #0f0d0b;
+  --color-ps-reader-ink: #e8dcc8;
+  --color-ps-reader-rule: #2a2520;
+
   /* ── Viz chrome ────────────────────────────────────────────────────────────
      The furniture a chart is drawn ON, as opposed to the data drawn IN it.
      Series colour was never the problem: it already goes through a named scale
@@ -355,46 +369,6 @@
   --ps-rgb-neon-pink: 232 121 249;
   --ps-rgb-neon-orange: 255 102 34;
   --ps-rgb-cherenkov-glow: 51 221 255;
-
-  /* Story Weaver reading register (WG-WEB-001: dark-first, one register, no
-     exception; WO-0005). Two page tints, dark and black, and nothing else. The
-     `light` and `sepia` themes were removed: a light reading register is a fork
-     of the design system, not a setting, and it needs a dated deviation and a
-     second QC surface before it can exist.
-
-     Held here rather than as hex in the component so the values are tokens the
-     lint can see. They belong in the vendored @pattertech/ui kit; that move is
-     WO-0017, and this is the interim home the design-lint law already names
-     (globals.css @theme + src/lib/theme.ts). */
-  --ps-reader-dark-bg: #0f0d0b;
-  --ps-reader-dark-text: #e8dcc8;
-  --ps-reader-dark-panel: #1a1816;
-  --ps-reader-black-bg: #000000;
-  --ps-reader-black-text: #cccccc;
-  --ps-reader-black-panel: #111111;
-  /* Both registers share the console accent and the panel rule. */
-  --ps-reader-accent: #a855f7;
-  --ps-reader-rule: #2a2520;
-
-  /* Chapter-dot states, shared by ReaderHeader and ReaderNavigation, which
-     carried the same five-branch conditional as inline hex twice over
-     (T-0034). Values read off those components on 2026-08-25.
-
-     `idle` mints nothing: the dot for a chapter that does not exist yet was
-     already the panel rule's own colour, and saying so is better than
-     repeating the hex. The other four are warm tints belonging to the reading
-     register, which is why they live here beside it rather than in @theme.
-
-     Open, and not this task's to rule: writing / pending / failed are a
-     status ladder, and the app HAS one (--color-semantic-info / -warning /
-     -danger). Moving them onto it is a visible repaint of the reader's warm
-     register with the console's cold one, so it is a design decision for the
-     lock-book, not a side effect of moving a value out of a component. */
-  --ps-reader-chapter-done: #4a3f35;
-  --ps-reader-chapter-writing: #3b82f6;
-  --ps-reader-chapter-pending: #f59e0b;
-  --ps-reader-chapter-failed: #7f1d1d;
-  --ps-reader-chapter-idle: var(--ps-reader-rule);
 }
 
 /* One class per rung of the layer ladder (see :root above). */

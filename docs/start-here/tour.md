@@ -81,10 +81,9 @@ Where you shape the agent itself.
 The part of the product that is for enjoying rather than operating.
 
 - **[Story Weaver](../guides/story-weaver.md)**: write long fiction with the
-  agent, a chapter at a time, with
-  [characters](../guides/story-characters.md) and
-  [themes](../guides/story-themes.md) you reuse and a
-  [library](../guides/story-library.md) of what you have written.
+  agent, a chapter at a time, from a shelf of what you have written, with
+  saved characters and themes on [Create a story](../guides/story-create.md)
+  to reuse.
 
 ![Story Weaver](../images/story-weaver.png)
 

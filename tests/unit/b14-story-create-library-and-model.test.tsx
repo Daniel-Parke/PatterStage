@@ -146,7 +146,11 @@ beforeEach(() => {
 describe("deleting a saved theme", () => {
   it("posts themeId, which is the field the handler reads", async () => {
     await mount();
-    fireEvent.click(screen.getByRole("button", { name: `Delete theme ${THEME.name}` }));
+    // Two clicks since U12 (T-0126): the delete on the saved-themes panel is
+    // the same two-step ConfirmButton every other delete in the product is.
+    const del = screen.getByRole("button", { name: `Delete theme ${THEME.name}` });
+    fireEvent.click(del);
+    fireEvent.click(del);
 
     await waitFor(() => expect(bodiesFor("themes", "delete")).toHaveLength(1));
     const sent = bodiesFor("themes", "delete")[0];
@@ -157,7 +161,9 @@ describe("deleting a saved theme", () => {
   it("a refused delete leaves the theme on screen and says what happened", async () => {
     refuseThemeDelete = true;
     await mount();
-    fireEvent.click(screen.getByRole("button", { name: `Delete theme ${THEME.name}` }));
+    const del = screen.getByRole("button", { name: `Delete theme ${THEME.name}` });
+    fireEvent.click(del);
+    fireEvent.click(del);
 
     await waitFor(() => expect(bodiesFor("themes", "delete")).toHaveLength(1));
     // The optimistic removal runs on success only: a theme that is still in the
@@ -196,10 +202,13 @@ describe("Save to Library reads the answer the handler actually sends", () => {
 
   it("re-lists themes on {data:{theme}} after Save as Theme", async () => {
     await mount();
-    fireEvent.click(screen.getByRole("button", { name: /Save as Theme/ }));
-    fireEvent.change(await screen.findByLabelText("Theme name"), { target: { value: "New theme" } });
+    fireEvent.click(screen.getByRole("button", { name: /Save as theme/i }));
+    // Since U12 (T-0126) "Save as theme" opens the one theme editor, filled in
+    // from the form, so the name field is the editor's "Name".
+    const dialog = await screen.findByRole("dialog", { name: "New story theme" });
+    fireEvent.change(within(dialog).getByLabelText("Name"), { target: { value: "New theme" } });
     const listsBefore = bodiesFor("themes", "list").length;
-    fireEvent.click(screen.getByRole("button", { name: /Save theme/ }));
+    fireEvent.click(within(dialog).getByRole("button", { name: /Save theme/ }));
 
     await waitFor(() => expect(bodiesFor("themes", "create")).toHaveLength(1));
     await waitFor(() => expect(bodiesFor("themes", "list").length).toBe(listsBefore + 1));

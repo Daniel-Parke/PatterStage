@@ -1,13 +1,29 @@
-// CharacterCard — collapsible character editor (name/role/description + detail
-// fields + save-to-library / remove). Extracted verbatim from the Story Weaver
-// create page; the ROLES list is only used here so it lives with the card.
+// CharacterCard — one member of a story's cast, on the Create page: a
+// collapsed row that opens into the character's fields, with Save to Library
+// and Remove at its foot. The fields are the Field kit's and the two actions
+// are Buttons (U12, T-0126); the row itself stays a raw button, because a
+// disclosure row with a name, a summary and a role has no primitive yet.
 
 "use client";
 
-import { Save, X } from "lucide-react";
+import { ChevronDown, ChevronRight, Save, X } from "lucide-react";
+
+import Badge from "@/components/ui/Badge";
+import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
+import { InlineSelect } from "@/components/ui/Select";
+import { Field, Input, Textarea } from "@/components/ui/field";
 import type { StoryCharacter } from "@/modules/rec-room/types";
 
 const ROLES = ["protagonist", "ally", "antagonist", "supporting", "mystery"];
+
+const DETAIL_FIELDS = [
+  { field: "personality" as const, label: "Personality traits", ph: "e.g., Pragmatic, Protective, Stubborn — how they think and react" },
+  { field: "appearance" as const, label: "Appearance", ph: "Physical description — build, features, distinguishing marks" },
+  { field: "backstory" as const, label: "Backstory", ph: "Their history, motivations, what drives them..." },
+  { field: "speechPatterns" as const, label: "Speech patterns", ph: "How they talk — formal, slang, accent, verbal tics" },
+  { field: "relationships" as const, label: "Relationships", ph: "Connections to other characters — allies, enemies, bonds" },
+];
 
 export default function CharacterCard({ char, index, onUpdate, onRemove, onSave, saved, expanded, onToggle }: {
   char: StoryCharacter;
@@ -19,89 +35,81 @@ export default function CharacterCard({ char, index, onUpdate, onRemove, onSave,
   expanded: boolean;
   onToggle: (idx: number) => void;
 }) {
-  const canSave = char.name.trim() && char.description.trim();
+  const canSave = Boolean(char.name.trim() && char.description.trim());
+  const Chevron = expanded ? ChevronDown : ChevronRight;
   return (
-    <div className="rounded-ps-md border border-ps-edge-hairline bg-ps-surface-raised overflow-hidden">
-      {/* Collapsed header — entire row is tappable to expand */}
-      <div className="flex items-center gap-3 p-3 cursor-pointer hover:bg-ps-surface-raised min-h-[48px]"
-        onClick={() => onToggle(index)}>
-        <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-micro font-mono ${
-          expanded ? "bg-neon-purple/20 text-neon-purple" : "bg-ps-surface-raised text-ps-text-muted"
-        }`}>
-          {expanded ? "−" : "+"}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="text-body font-semibold text-ps-text-primary truncate">{char.name || "New Character"}</div>
+    <Card variant="raised" padding="none" className="overflow-hidden">
+      <button
+        type="button"
+        onClick={() => onToggle(index)}
+        aria-expanded={expanded}
+        className="flex min-h-12 w-full items-center gap-3 p-3 text-left transition-colors hover:bg-ps-surface-panel"
+      >
+        <Chevron className="h-4 w-4 shrink-0 text-ps-text-muted" aria-hidden="true" />
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-body font-semibold text-ps-text-primary">{char.name || "New character"}</span>
           {!expanded && char.description && (
-            <div className="text-body text-ps-text-muted truncate">{char.description}</div>
+            <span className="block truncate text-body text-ps-text-muted">{char.description}</span>
           )}
-        </div>
-        <span className="flex-shrink-0 px-2 py-0.5 rounded-ps-sm text-micro font-mono border border-ps-edge text-ps-text-muted">{char.role}</span>
-      </div>
+        </span>
+        {/* Solid, not outline: this card sits on the raised rung, where the
+            hairline an outline Badge draws is 1.11:1 and the live gate refuses
+            it as an invisible boundary. */}
+        <Badge color="purple">{char.role}</Badge>
+      </button>
 
-      {/* Expanded content */}
       {expanded && (
-        <div className="px-3 pb-3 space-y-3 border-t border-ps-edge-hairline pt-3">
-          {/* Name + Role row */}
-          <div className="flex gap-2">
-            <div className="flex-1">
-              <label className="text-micro font-mono text-ps-text-faint uppercase block mb-1">Name</label>
-              <input value={char.name} onChange={(e) => onUpdate(index, "name", e.target.value)}
-                placeholder="e.g. Mara Voss" aria-label="Character name"
-                className="w-full bg-ps-surface-inset border border-ps-edge rounded-ps-md px-3 py-2.5 text-body text-ps-text-primary placeholder-ps-text-muted font-semibold" />
-            </div>
-            <div className="w-32">
-              <label className="text-micro font-mono text-ps-text-faint uppercase block mb-1">Role</label>
-              <select aria-label="Role" value={char.role} onChange={(e) => onUpdate(index, "role", e.target.value)}
-                className="w-full bg-ps-surface-inset border border-ps-edge rounded-ps-md px-3 py-2.5 text-body text-ps-text-primary font-mono">
-                {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
-              </select>
+        <div className="space-y-3 border-t border-ps-edge-hairline p-3">
+          <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_10rem]">
+            <Field label="Name">
+              <Input value={char.name} onChange={(e) => onUpdate(index, "name", e.target.value)} placeholder="e.g. Mara Voss" className="font-semibold" />
+            </Field>
+            <div className="space-y-1">
+              <span className="block text-micro font-medium uppercase tracking-wider text-ps-text-muted">Role</span>
+              <InlineSelect
+                ariaLabel="Role"
+                accentColor="purple"
+                value={char.role}
+                onChange={(v) => onUpdate(index, "role", v)}
+                options={ROLES.map((r) => ({ value: r, label: r }))}
+              />
             </div>
           </div>
 
-          {/* Description */}
-          <div>
-            <label className="text-micro font-mono text-ps-text-faint uppercase block mb-1">Description</label>
-            <textarea value={char.description} onChange={(e) => onUpdate(index, "description", e.target.value)}
-              rows={2} placeholder="A brief summary of who they are..." aria-label="Description"
-              className="w-full bg-ps-surface-inset border border-ps-edge rounded-ps-md px-3 py-2.5 text-body text-ps-text-secondary placeholder-ps-text-muted font-mono resize-y min-h-[60px] leading-relaxed" />
-          </div>
+          <Field label="Description">
+            <Textarea
+              value={char.description}
+              onChange={(e) => onUpdate(index, "description", e.target.value)}
+              rows={2}
+              placeholder="A brief summary of who they are..."
+            />
+          </Field>
 
-          {/* Detail fields */}
-          {[
-            { field: "personality" as const, label: "Personality Traits", ph: "e.g., Pragmatic, Protective, Stubborn — how they think and react" },
-            { field: "appearance" as const, label: "Appearance", ph: "Physical description — build, features, distinguishing marks" },
-            { field: "backstory" as const, label: "Backstory", ph: "Their history, motivations, what drives them..." },
-            { field: "speechPatterns" as const, label: "Speech Patterns", ph: "How they talk — formal, slang, accent, verbal tics" },
-            { field: "relationships" as const, label: "Relationships", ph: "Connections to other characters — allies, enemies, bonds" },
-          ].map(({ field, label, ph }) => (
-            <div key={field}>
-              <label className="text-micro font-mono text-ps-text-faint uppercase block mb-1">{label}</label>
-              <textarea aria-label={label} value={char[field] || ""} onChange={(e) => onUpdate(index, field, e.target.value)}
-                rows={2} placeholder={ph}
-                className="w-full bg-ps-surface-inset border border-ps-edge rounded-ps-md px-3 py-2.5 text-body text-ps-text-secondary placeholder-ps-text-muted font-mono resize-y min-h-[60px] leading-relaxed" />
-            </div>
+          {DETAIL_FIELDS.map(({ field, label, ph }) => (
+            <Field key={field} label={label}>
+              <Textarea value={char[field] || ""} onChange={(e) => onUpdate(index, field, e.target.value)} rows={2} placeholder={ph} />
+            </Field>
           ))}
 
-          {/* Action buttons */}
-          <div className="flex items-center gap-2 pt-2 border-t border-ps-edge-hairline">
-            <button onClick={() => onSave(char)} disabled={!canSave}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-ps-md text-micro font-mono border transition-all min-h-[40px] ${
-                saved ? "border-green-500/30 bg-green-500/10 text-green-400" :
-                canSave ? "border-green-500/20 text-green-400/60 hover:bg-green-500/10 hover:text-green-400" :
-                "border-ps-edge text-ps-text-faint opacity-50"
-              }`}>
-              <Save className="w-3.5 h-3.5" />
+          <div className="flex items-center gap-2 border-t border-ps-edge-hairline pt-3">
+            <Button
+              size="sm"
+              color="green"
+              variant={saved ? "primary" : "secondary"}
+              icon={Save}
+              disabled={!canSave}
+              onClick={() => onSave(char)}
+              title={canSave ? "Save this character to the library" : "A name and a description are needed first"}
+            >
               {saved ? "Saved!" : "Save to Library"}
-            </button>
+            </Button>
             <div className="flex-1" />
-            <button onClick={() => onRemove(index)}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-ps-md text-micro font-mono border border-red-500/10 text-red-400/40 hover:bg-red-500/10 hover:text-red-400 transition-all min-h-[40px]">
-              <X className="w-3.5 h-3.5" /> Remove
-            </button>
+            <Button variant="ghost" size="sm" icon={X} onClick={() => onRemove(index)}>
+              Remove
+            </Button>
           </div>
         </div>
       )}
-    </div>
+    </Card>
   );
 }

@@ -166,12 +166,11 @@ const AGENT_ROWS: readonly string[] = [
   "/agent/settings/restore",
   "/agent/settings/system",
 ];
+// Two rows since decision 6 (U12, T-0126): the library is the page at the
+// door and Characters and Themes are panels on Create.
 const REC_ROOM_ROWS: readonly string[] = [
   "/recroom/story-weaver",
-  "/recroom/story-weaver/library",
   "/recroom/story-weaver/create",
-  "/recroom/story-weaver/characters",
-  "/recroom/story-weaver/themes",
 ];
 
 const EXPECTED_RAIL: readonly string[] = [
@@ -217,7 +216,9 @@ describe("the inputs the resolver is measured against", () => {
     expect(routes).toContain("/work/missions");
     expect(routes).toContain("/agent/settings");
     expect(new Set(EXPECTED_RAIL).size).toBe(EXPECTED_RAIL.length);
-    expect(EXPECTED_RAIL.length).toBeGreaterThanOrEqual(25);
+    // Amended 2026-09-07 (U12, T-0126): three Story Weaver rows retired with
+    // their routes, so the floor is the rail that remains.
+    expect(EXPECTED_RAIL.length).toBeGreaterThanOrEqual(22);
   });
 });
 

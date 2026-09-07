@@ -1,7 +1,8 @@
 // ── Story reader types — the shapes the reader page and its parts share.
-// Extracted verbatim from app/recroom/story-weaver/[id]/page.tsx.
-// Story Weaver behaviour is out of scope for T-0011; these interfaces are
-// copied, not changed.
+// The reader's theme type lived here too: the five-field register (bg, text,
+// panel, accent, rule) that ReaderSettings' THEMES supplied and every reader
+// part took as a prop. The register is three tokens on the stylesheet now and the
+// parts read them as classes, so there is nothing to pass (U12, T-0126).
 
 export interface Chapter {
   number: number;
@@ -25,13 +26,4 @@ export interface StoryState {
   generationError?: string;
   config?: Record<string, unknown>;
   updatedAt?: string;
-}
-
-/** The reading register for the current theme, as ReaderSettings THEMES supplies it. */
-export interface ReaderTheme {
-  bg: string;
-  text: string;
-  panel: string;
-  accent: string;
-  rule: string;
 }

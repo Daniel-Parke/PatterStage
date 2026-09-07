@@ -1,9 +1,20 @@
-// StoryCard — Clickable library card for a story
+// StoryCard — one story on the shelf.
+//
+// The library's row and the hub's card were two drawings of one record. The
+// hub is gone (decision 6, T-0126) and this is the row: the title is the link
+// to the reader, the status is the one vocabulary's word in its rung, and the
+// bin asks twice. It keeps the props both callers had, so the vocabulary
+// suite that renders it three times is untouched.
 "use client";
-import { statusToneClasses } from "@/lib/theme";
-import { BookOpen, Trash2 } from "lucide-react";
 
+import Link from "next/link";
+import { BookOpen, Clock, Trash2 } from "lucide-react";
+
+import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
 import ConfirmButton from "@/components/ui/ConfirmButton";
+import { statusTone } from "@/lib/status-labels";
+import { statusToneClasses } from "@/lib/theme";
 import { timeAgo } from "@/lib/utils";
 import { storyStatusLabel } from "@/modules/rec-room/lib/story-status-labels";
 
@@ -17,67 +28,65 @@ interface StoryCardProps {
   onDelete: (id: string) => void;
 }
 
-/**
- * A story that is being written is RUNNING, and was the clearest case of the
- * defect this batch removes: three states painted in three raw ramp colours
- * that no other screen used, so "generating" looked like nothing else in the
- * product that was also in progress (T-0120).
- */
-const BADGE_TONE: Record<string, string> = {
-  complete: `${statusToneClasses.ok.fill} ${statusToneClasses.ok.text}`,
-  failed: `${statusToneClasses.fail.fill} ${statusToneClasses.fail.text}`,
-  generating: `${statusToneClasses.running.fill} ${statusToneClasses.running.text}`,
-};
-
 export default function StoryCard({ story, onRead, onDelete }: StoryCardProps) {
-  const totalWords = (story.chapters || []).reduce((sum, c) => sum + (c.wordCount || 0), 0);
-  const completeChapters = (story.chapters || []).filter(c => c.status === "complete").length;
-  const totalChapters = (story.chapters || []).length;
+  const chapters = story.chapters || [];
+  const totalWords = chapters.reduce((sum, c) => sum + (c.wordCount || 0), 0);
+  const completeChapters = chapters.filter((c) => c.status === "complete").length;
+  const total = chapters.length;
+  // One vocabulary (decision 13). A story is Completed when every chapter is,
+  // whatever its row says; otherwise it reads its own status word.
+  const complete = story.status === "complete" || (total > 0 && completeChapters === total);
+  const word = complete ? "Completed" : storyStatusLabel(story.status);
+  const tone = statusToneClasses[statusTone(word)];
+  const readingTime = Math.max(1, Math.round(totalWords / 250));
 
   return (
-    <div
-      onClick={() => onRead(story.id)}
-      className="rounded-ps-lg border border-neon-purple/15 bg-ps-surface-panel p-5 hover:border-neon-purple/30 hover:shadow-[0_0_15px_rgb(var(--ps-rgb-neon-purple)_/_0.06)] transition-all cursor-pointer group flex flex-col">
-      <div className="flex items-start justify-between mb-3">
+    <Card as="article" padding="md" hover className="space-y-2">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <h3 className="text-body font-semibold text-ps-text-primary truncate">{story.title}</h3>
-          <div className="text-micro font-mono text-ps-text-faint mt-0.5">
-            {story.config?.genre || "General"} · {timeAgo(story.updatedAt || story.createdAt || "")}
-            {totalChapters > 0 ? ` · ${completeChapters}/${totalChapters} chapters` : ""}
+          <Link
+            href={`/recroom/story-weaver/${story.id}`}
+            className="block truncate font-serif text-lead font-semibold text-ps-text-primary transition-colors hover:text-neon-purple"
+          >
+            {story.title}
+          </Link>
+          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-micro text-ps-text-faint">
+            <span>{story.config?.genre || "General"}</span>
+            {total > 0 && <span>{completeChapters}/{total} chapters</span>}
+            <span>{totalWords.toLocaleString()} words</span>
+            {totalWords > 0 && (
+              <span className="inline-flex items-center gap-1">
+                <Clock className="h-3 w-3" aria-hidden="true" />~{readingTime} min read
+              </span>
+            )}
+            <span>
+              {complete ? "Completed" : "Last updated"} {timeAgo(story.updatedAt || story.createdAt || "")}
+            </span>
           </div>
         </div>
-        {/* The word from the one vocabulary (decision 13), not a bespoke one per card. */}
-        <div className={`text-micro font-mono px-2 py-0.5 rounded-full ${BADGE_TONE[story.status ?? ""] ?? "bg-neon-purple/10 text-neon-purple"}`}>
-          {storyStatusLabel(story.status)}
+        <div className="flex shrink-0 items-center gap-1.5">
+          <span className={`inline-flex items-center rounded-ps-sm px-2 py-0.5 font-mono text-body ${tone.fill} ${tone.text}`}>{word}</span>
+          <Button variant="ghost" size="sm" icon={BookOpen} aria-label={`Read ${story.title}`} onClick={() => onRead(story.id)}>
+            Read
+          </Button>
+          <ConfirmButton
+            variant="ghost"
+            size="sm"
+            aria-label={`Delete story ${story.title}`}
+            title="Delete story"
+            confirmLabel="Delete?"
+            onConfirm={() => onDelete(story.id)}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </ConfirmButton>
         </div>
       </div>
-      {story.premise && (
-        <p className="text-body text-ps-text-muted leading-relaxed line-clamp-2 mb-3 flex-1">{story.premise}</p>
+      {story.premise && <p className="line-clamp-2 text-body leading-relaxed text-ps-text-muted">{story.premise}</p>}
+      {!complete && total > 0 && (
+        <div className="h-1 w-full overflow-hidden rounded-full bg-ps-surface-raised" aria-hidden="true">
+          <div className={`h-full rounded-full ${statusToneClasses.running.dot}`} style={{ width: `${(completeChapters / total) * 100}%` }} />
+        </div>
       )}
-      <div className="flex items-center justify-between mt-auto pt-3 border-t border-ps-edge-hairline">
-        <div className="flex items-center gap-3">
-          <span className="text-micro font-mono text-ps-text-faint">{totalWords.toLocaleString()} words</span>
-          <div className="flex items-center gap-1 text-micro font-mono text-ps-text-muted">
-            <BookOpen className="w-3 h-3" /> Read
-          </div>
-        </div>
-        {/* Two clicks, inline, instead of the native confirm the page used to
-            raise over this card (T-0096, D51). The click must not reach the
-            card, which navigates. */}
-        <ConfirmButton
-          variant="ghost"
-          size="sm"
-          aria-label="Delete story"
-          title="Delete story"
-          confirmLabel="Delete?"
-          onClick={(e) => e.stopPropagation()}
-          onConfirm={() => onDelete(story.id)}
-          className="text-red-400/60 hover:text-red-400 hover:bg-red-500/10"
-          armedClassName="text-red-400 bg-red-500/10 ring-1 ring-red-500/30"
-        >
-          <Trash2 className="w-3.5 h-3.5" />
-        </ConfirmButton>
-      </div>
-    </div>
+    </Card>
   );
 }

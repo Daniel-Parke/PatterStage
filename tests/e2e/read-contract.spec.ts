@@ -12,10 +12,11 @@ const PAGES: Array<{ path: string; api: string; empty: RegExp | null }> = [
   { path: "/work/composer", api: "**/api/composer/runs*", empty: /No workflow runs yet/ },
   { path: "/work/missions", api: "**/api/missions*", empty: /No missions yet/ },
   { path: "/agent/profiles", api: "**/api/agent/profiles", empty: null },
-  { path: "/recroom/story-weaver", api: "**/api/stories", empty: /Your story awaits/ },
-  { path: "/recroom/story-weaver/library", api: "**/api/stories", empty: /bookshelf is empty/ },
-  { path: "/recroom/story-weaver/characters", api: "**/api/stories", empty: /No characters yet/ },
-  { path: "/recroom/story-weaver/themes", api: "**/api/stories", empty: /No saved themes yet/ },
+  // Two Story Weaver rows since U12 (T-0126): the hub is the library, and
+  // the character and theme lists are panels on Create, each with its own
+  // banner and Retry when its read fails.
+  { path: "/recroom/story-weaver", api: "**/api/stories", empty: /bookshelf is empty/ },
+  { path: "/recroom/story-weaver/create", api: "**/api/stories", empty: /No saved (?:characters|themes) yet/ },
   { path: "/work/research", api: "**/api/laboratory/research", empty: /No research runs yet/ },
   { path: "/results/artifacts", api: "**/api/artifacts*", empty: /No artifacts yet/ },
   { path: "/work/chat", api: "**/api/chat", empty: /No conversations yet/ },

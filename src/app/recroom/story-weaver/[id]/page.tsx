@@ -16,7 +16,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageTitle from "@/components/layout/PageTitle";
-import { loadSettings, DEFAULT_SETTINGS, FONTS, THEMES, type ReadingSettings } from "@/modules/rec-room/components/ReaderSettings";
+import { loadSettings, DEFAULT_SETTINGS, FONTS, type ReadingSettings } from "@/modules/rec-room/components/ReaderSettings";
 import type { Chapter, StoryState } from "@/modules/rec-room/components/story-reader-types";
 import { deriveReaderView } from "@/modules/rec-room/components/story-reader-view";
 import { ReaderLoading, ReaderNotFound } from "@/modules/rec-room/components/ReaderPlaceholders";
@@ -413,11 +413,6 @@ export default function StoryReaderPage() {
     if (window.innerWidth < 768) setSidebarOpen(false);
   };
 
-  // The `|| THEMES.dark` is unreachable through `loadSettings`, which normalises an
-  // unsupported stored value (a pre-WO-0005 `sepia` or `light`) back to dark. It
-  // stays as the runtime guard for any other path that hands this component a
-  // settings object, because a missing theme here would render an unstyled page.
-  const theme = THEMES[settings.pageTheme] || THEMES.dark;
   const fontObj = FONTS.find(f => f.name === settings.fontFamily) || FONTS[0];
 
   const handleContinueComplete = useCallback(() => {
@@ -480,7 +475,6 @@ export default function StoryReaderPage() {
         title={story.title}
         view={view}
         currentChapter={currentChapter}
-        theme={theme}
         fontFamily={fontObj.family}
         settings={settings}
         onSettingsChange={setSettings}

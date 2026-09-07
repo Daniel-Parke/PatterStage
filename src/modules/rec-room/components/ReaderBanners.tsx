@@ -1,13 +1,20 @@
 // ── ReaderBanners — the two fixed banners above the reader.
-// Extracted verbatim from app/recroom/story-weaver/[id]/page.tsx.
 // ReaderErrorBanner is the dismissible per-action error, including the
 // auto-generation pause note; StoryFailureBanner is the sticky one for a
-// story whose generation failed outright. Both are presentation: the
-// error state and the retry route stay on the page.
+// story whose generation failed outright. Both are alerts painted from the
+// status ladder's fail rung and layered on the z ladder, not on raw red and
+// an arbitrary z of 70 (U12, T-0126). The error state and the retry route
+// stay on the page.
 
 "use client";
 
 import { AlertTriangle, X } from "lucide-react";
+
+import Button from "@/components/ui/Button";
+import IconButton from "@/components/ui/IconButton";
+import { statusToneClasses } from "@/lib/theme";
+
+const FAIL = statusToneClasses.fail;
 
 export function ReaderErrorBanner({
   error,
@@ -21,9 +28,9 @@ export function ReaderErrorBanner({
   onDismiss: () => void;
 }) {
   return (
-    <div className="fixed top-0 left-0 right-0 z-[70] bg-red-500/10 border-b border-red-500/20 px-4 py-2 flex items-center gap-2">
-      <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0" />
-      <span className="text-body text-red-300 flex-1">
+    <div role="alert" className={`fixed left-0 right-0 top-0 z-toast flex items-center gap-2 border-b px-4 py-2 ${FAIL.border} ${FAIL.fill}`}>
+      <AlertTriangle className={`h-4 w-4 shrink-0 ${FAIL.text}`} aria-hidden="true" />
+      <span className="flex-1 text-body text-ps-text-primary">
         {error}
         {autoPaused && (
           <>
@@ -35,7 +42,7 @@ export function ReaderErrorBanner({
           </>
         )}
       </span>
-      <button type="button" aria-label="Dismiss error" onClick={onDismiss} className="text-red-400/50 hover:text-red-400"><X className="w-4 h-4" aria-hidden="true" /></button>
+      <IconButton icon={X} label="Dismiss error" size="sm" onClick={onDismiss} />
     </div>
   );
 }
@@ -48,16 +55,15 @@ export function StoryFailureBanner({
   onRetryFromCreate: () => void;
 }) {
   return (
-    <div className="fixed top-0 left-0 right-0 z-[65] bg-red-500/10 border-b border-red-500/20 px-4 py-3 flex items-center gap-3">
-      <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0" />
+    <div role="alert" className={`fixed left-0 right-0 top-0 z-overlay flex items-center gap-3 border-b px-4 py-3 ${FAIL.border} ${FAIL.fill}`}>
+      <AlertTriangle className={`h-5 w-5 shrink-0 ${FAIL.text}`} aria-hidden="true" />
       <div className="flex-1">
-        <p className="text-body text-red-300 font-semibold">Story generation failed</p>
-        <p className="text-body text-red-300/60">{generationError}</p>
+        <p className="text-body font-semibold text-ps-text-primary">Story generation failed</p>
+        <p className="text-body text-ps-text-secondary">{generationError}</p>
       </div>
-      <button onClick={onRetryFromCreate}
-        className="px-3 py-1.5 text-body text-red-300 rounded-ps-md border border-red-500/30 bg-red-500/10 hover:bg-red-500/20">
+      <Button variant="danger" size="sm" onClick={onRetryFromCreate}>
         Retry from Create
-      </button>
+      </Button>
     </div>
   );
 }

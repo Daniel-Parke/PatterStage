@@ -30,8 +30,10 @@ const SCREENS: Array<[string, string]> = [
   ["/results/logs", "Logs"],
   ["/agent/tools", "Tools"],
   ["/agent/models", "Models"],
-  ["/recroom/story-weaver/characters", "Characters"],
-  ["/recroom/story-weaver/themes", "Themes"],
+  // Since U12 (T-0126) the two Story Weaver headers are the library's and
+  // Create's; Characters and Themes are panels on Create.
+  ["/recroom/story-weaver", "Story Weaver"],
+  ["/recroom/story-weaver/create", "Create"],
   ["/results/sessions", "Sessions"],
   ["/", "Dashboard"],
 ];

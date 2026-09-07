@@ -78,13 +78,14 @@ describe("the sub-link tier is gone", () => {
    * /recroom/story-weaver/create title itself "Story Weaver". `childRoutes`
    * keeps the naming and drops the tier.
    */
+  // Amended 2026-09-07 (U12, T-0126): Story Weaver has one child route now.
+  // The library is the page at /recroom/story-weaver and Characters and
+  // Themes are panels on Create, so three of the six names here retired
+  // with their routes.
   it.each([
     ["/agent/settings/restore", "Restore"],
     ["/agent/settings/system", "System"],
-    ["/recroom/story-weaver/library", "Library"],
     ["/recroom/story-weaver/create", "Create"],
-    ["/recroom/story-weaver/characters", "Characters"],
-    ["/recroom/story-weaver/themes", "Themes"],
   ])("the registry still names %s", (href, label) => {
     expect(labelFor(href)).toBe(label);
   });
@@ -94,14 +95,11 @@ describe("the sub-link tier is gone", () => {
    * places the tier duplicated, which is why deleting it removes a tier rather
    * than a route. The routes themselves are untouched.
    */
-  it("and the six routes it named still exist", () => {
+  it("and the three routes it still names exist", () => {
     for (const href of [
       "/agent/settings/restore",
       "/agent/settings/system",
-      "/recroom/story-weaver/library",
       "/recroom/story-weaver/create",
-      "/recroom/story-weaver/characters",
-      "/recroom/story-weaver/themes",
     ]) {
       const segments = href.replace(/^\//, "").split("/");
       expect(() =>

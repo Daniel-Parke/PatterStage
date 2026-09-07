@@ -1,16 +1,18 @@
 // ── ChapterReader — the four states of the reading surface.
-// Extracted verbatim from app/recroom/story-weaver/[id]/page.tsx: the
-// chapter text, the "being written" placeholder, the failed-chapter
-// recovery pair and the nothing-selected fallback. Story Weaver
-// behaviour is out of scope for T-0011, so the branch order and the
-// styling are copied unchanged.
+// The chapter text, the "being written" placeholder, the failed-chapter
+// recovery pair and the nothing-selected fallback. The surface is the warm
+// register - page, ink, rule - as three classes rather than a theme object
+// threaded through five components (U12, T-0126); the controls are Buttons.
 
 "use client";
 
 import type { RefObject } from "react";
 import { AlertTriangle, PenLine, RefreshCw, Sparkles } from "lucide-react";
+
+import Button from "@/components/ui/Button";
+import { statusToneClasses } from "@/lib/theme";
 import type { ReadingSettings } from "@/modules/rec-room/components/ReaderSettings";
-import type { Chapter, ReaderTheme } from "@/modules/rec-room/components/story-reader-types";
+import type { Chapter } from "@/modules/rec-room/components/story-reader-types";
 import { chapterHeading } from "@/modules/rec-room/lib/chapter-title";
 
 export interface ChapterReaderProps {
@@ -18,7 +20,6 @@ export interface ChapterReaderProps {
   chapterContent: string;
   currentChapter: number;
   currentMeta: Chapter | undefined;
-  theme: ReaderTheme;
   fontFamily: string;
   settings: ReadingSettings;
   onEditChapter: (chapterNumber: number) => void;
@@ -30,75 +31,63 @@ export default function ChapterReader({
   chapterContent,
   currentChapter,
   currentMeta,
-  theme,
   fontFamily,
   settings,
   onEditChapter,
   onRetryChapter,
 }: ChapterReaderProps) {
   return (
-    <div ref={contentRef} className="flex-1 w-full overflow-y-auto" style={{ background: theme.bg, filter: `brightness(${settings.brightness})` }}>
+    <div
+      ref={contentRef}
+      className="w-full flex-1 overflow-y-auto bg-ps-reader-page text-ps-reader-ink"
+      style={{ filter: `brightness(${settings.brightness})` }}
+    >
       {chapterContent ? (
-        <div className="max-w-3xl mx-auto px-6 md:px-16 py-8 md:py-10">
-          <div id="chapter-top" className="flex items-center justify-between mb-8 pb-4 border-b scroll-mt-16" style={{
-            borderColor: theme.rule,
-          }}>
-            <h2 style={{
-              color: theme.text,
-              fontFamily,
-              fontSize: `${settings.fontSize + 6}px`,
-              fontWeight: 600,
-            }}>
+        <div className="mx-auto max-w-3xl px-6 py-8 md:px-16 md:py-10">
+          <div id="chapter-top" className="mb-8 flex items-center justify-between gap-3 border-b border-ps-reader-rule pb-4 scroll-mt-16">
+            <h2 style={{ fontFamily, fontSize: `${settings.fontSize + 6}px`, fontWeight: 600 }}>
               {chapterHeading(currentChapter, currentMeta?.title)}
             </h2>
-            {/* Edit button on completed chapters */}
             {currentMeta?.status === "complete" && (
-              <button onClick={() => onEditChapter(currentChapter)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-ps-md border border-ps-edge text-micro font-mono text-ps-text-muted hover:text-neon-purple hover:border-neon-purple/30 transition-colors flex-shrink-0"
-                title="Edit this chapter">
-                <PenLine className="w-3 h-3" />
+              <Button variant="ghost" size="sm" icon={PenLine} onClick={() => onEditChapter(currentChapter)} title="Edit this chapter">
                 Edit
-              </button>
+              </Button>
             )}
           </div>
-          <div className="whitespace-pre-wrap text-justify" style={{
-            color: theme.text, fontFamily,
-            fontSize: `${settings.fontSize}px`, lineHeight: settings.lineHeight,
-          }}>
+          <div
+            className="whitespace-pre-wrap text-justify"
+            style={{ fontFamily, fontSize: `${settings.fontSize}px`, lineHeight: settings.lineHeight }}
+          >
             {chapterContent}
           </div>
         </div>
       ) : currentMeta?.status === "writing" || currentMeta?.status === "pending" ? (
-        <div className="flex flex-col items-center justify-center h-full min-h-[400px]">
-          <Sparkles className="w-8 h-8 animate-pulse mb-4" style={{ color: theme.accent }} />
-          <p className="text-body" style={{ color: theme.text, opacity: 0.5, fontFamily }}>
+        <div className="flex h-full min-h-[400px] flex-col items-center justify-center">
+          <Sparkles className="mb-4 h-8 w-8 animate-pulse text-neon-purple" aria-hidden="true" />
+          <p className="text-body opacity-60" style={{ fontFamily }}>
             {currentMeta.status === "writing" ? "The muse is visiting..." : "Waiting for its moment..."}
           </p>
-          <p className="text-body mt-2" style={{ color: theme.text, opacity: 0.3 }}>
-            Chapter {currentChapter} is being written
-          </p>
+          <p className="mt-2 text-body opacity-40">Chapter {currentChapter} is being written</p>
         </div>
       ) : currentMeta?.status === "failed" ? (
-        <div className="flex flex-col items-center justify-center h-full min-h-[400px] px-6">
-          <AlertTriangle className="w-8 h-8 mb-4 text-red-400" />
-          <p className="text-body text-red-300 mb-2">Chapter {currentChapter} failed to generate</p>
+        <div className="flex h-full min-h-[400px] flex-col items-center justify-center px-6">
+          <AlertTriangle className={`mb-4 h-8 w-8 ${statusToneClasses.fail.text}`} aria-hidden="true" />
+          <p className={`mb-2 text-body ${statusToneClasses.fail.text}`}>Chapter {currentChapter} failed to generate</p>
           {currentMeta.error && (
-            <p className="text-body text-red-300/50 mb-4 max-w-md text-center">{currentMeta.error}</p>
+            <p className="mb-4 max-w-md text-center text-body opacity-70">{currentMeta.error}</p>
           )}
-          <div className="flex gap-2">
-            <button onClick={() => onRetryChapter(currentChapter)}
-              className="flex items-center gap-2 px-4 py-2 rounded-ps-md border border-orange-500/30 text-body text-orange-400 bg-orange-500/10 hover:bg-orange-500/20">
-              <RefreshCw className="w-3 h-3" /> Retry Chapter
-            </button>
-            <button onClick={() => onEditChapter(currentChapter)}
-              className="flex items-center gap-2 px-4 py-2 rounded-ps-md border border-neon-purple/30 text-body text-neon-purple bg-neon-purple/10 hover:bg-neon-purple/20">
-              <PenLine className="w-3 h-3" /> Rewrite with Prompt
-            </button>
+          <div className="flex flex-wrap justify-center gap-2">
+            <Button color="orange" icon={RefreshCw} onClick={() => onRetryChapter(currentChapter)}>
+              Retry chapter
+            </Button>
+            <Button color="purple" icon={PenLine} onClick={() => onEditChapter(currentChapter)}>
+              Rewrite with a prompt
+            </Button>
           </div>
         </div>
       ) : (
-        <div className="flex items-center justify-center h-full min-h-[400px]">
-          <p className="text-body" style={{ color: theme.text, opacity: 0.3 }}>Select a chapter to read</p>
+        <div className="flex h-full min-h-[400px] items-center justify-center">
+          <p className="text-body opacity-40">Select a chapter to read</p>
         </div>
       )}
     </div>

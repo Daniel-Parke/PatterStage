@@ -92,6 +92,23 @@ The work leading to the 1.0.0 release.
 
 ### Changed
 
+- **Story Weaver is two screens, not five.** The hub was four buttons to the
+  other four screens and a row of tiles about them; the library, one click
+  further in, was everything the hub showed and every story besides. The
+  library is the Story Weaver page now, with the counts in its subtitle and
+  the filters under it. Characters and Themes, two pages of lists that only
+  the Create screen ever used, are panels on Create: every saved character
+  and theme is still there to make, edit, use and delete, and adding a saved
+  character to a story is one click on its row where it was a button and a
+  picker. The three old addresses send you to where their content went.
+
+- **The reader's chapter dots say what the rest of the product says.** A
+  chapter being written pulses the same cyan a running mission does, a
+  chapter you have read is green, one written but unread is the orange of
+  "waiting for you", and a failed one is the same red as every other
+  failure. The dots are large enough to press now. The reader's second,
+  black page theme is gone: one warm register, its size and face still yours.
+
 - **Settings is one page.** It was an index of 30 cards leading to 27 pages
   of three or four fields each, so changing two settings in different
   sections cost four navigations. Every section is on the page now, expanded,

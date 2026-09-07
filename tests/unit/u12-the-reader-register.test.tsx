@@ -71,7 +71,7 @@ describe("the reading settings", () => {
     );
     const mod = await import("@/modules/rec-room/components/ReaderSettings");
     expect("THEMES" in mod).toBe(false);
-    const settings = mod.loadSettings() as Record<string, unknown>;
+    const settings = mod.loadSettings() as unknown as Record<string, unknown>;
     expect(settings.fontSize).toBe(20);
     expect("pageTheme" in settings).toBe(false);
   });
@@ -115,10 +115,14 @@ describe("the dots in the reader's header", () => {
     );
     const dots = screen.getAllByRole("button", { name: /^Chapter \d/ });
     expect(dots).toHaveLength(4);
-    expect(dots[0].className).toMatch(/bg-status-ok/);
-    expect(dots[1].className).toMatch(/bg-status-running/);
-    expect(dots[2].className).toMatch(/bg-status-queued/);
-    expect(dots[3].className).toMatch(/bg-status-fail/);
+    // The rung is the BUTTON's text colour and the dot inside it is
+    // `bg-current`, so the current chapter's ring and its fill are one colour
+    // without a second class; the oracle asked for `bg-` and the rung reached
+    // the button the other way.
+    expect(dots[0].className).toMatch(/text-status-ok/);
+    expect(dots[1].className).toMatch(/text-status-running/);
+    expect(dots[2].className).toMatch(/text-status-queued/);
+    expect(dots[3].className).toMatch(/text-status-fail/);
     expect(dots[0]).toHaveAttribute("aria-current", "true");
     expect(dots[1]).not.toHaveAttribute("aria-current");
     // Every dot is a target: WCAG 2.5.8 asks 24x24 and the old dots were 8px.

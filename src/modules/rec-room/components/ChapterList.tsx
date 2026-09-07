@@ -1,56 +1,48 @@
-// ChapterList — Chapter sidebar with pulsing status dots
+// ChapterList — the chapter sidebar, one row per chapter with its rung.
+//
+// The dot was four raw palette classes (blue, green, orange, white/15) for
+// four states the status ladder already names. It reads chapterTone now, so
+// a chapter being written pulses the same cyan a running mission does
+// (U12, T-0126). The row stays a raw button: it is a two-line list row with
+// a dot, which no primitive draws.
 "use client";
 
-interface Chapter {
-  number: number; title: string; status: string; wordCount: number;
-  readStatus?: "writing" | "unread" | "read";
-}
+import { statusToneClasses } from "@/lib/theme";
+import { chapterTone } from "@/modules/rec-room/lib/chapter-tone";
+import type { Chapter } from "@/modules/rec-room/components/story-reader-types";
 
 export default function ChapterList({ chapters, currentChapter, onSelect }: {
   chapters: Chapter[]; currentChapter: number; onSelect: (num: number) => void;
 }) {
-  const getStatusDot = (ch: Chapter) => {
-    const rs = ch.readStatus || (ch.status === "writing" ? "writing" : ch.status === "complete" ? "unread" : "pending");
-
-    if (rs === "writing" || ch.status === "writing") {
-      return <span className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse flex-shrink-0" />;
-    }
-    if (rs === "read") {
-      return <span className="w-2.5 h-2.5 rounded-full bg-green-500 animate-[pulse_3s_ease-in-out_infinite] flex-shrink-0" />;
-    }
-    if (rs === "unread" && ch.status === "complete") {
-      return <span className="w-2.5 h-2.5 rounded-full bg-orange-400 animate-[pulse_2s_ease-in-out_infinite] flex-shrink-0" />;
-    }
-    // pending
-    return <span className="w-2.5 h-2.5 rounded-full bg-white/15 flex-shrink-0" />;
-  };
-
   return (
     <div className="space-y-0.5">
       {chapters.map((ch) => {
         const canRead = ch.status === "complete";
         const isCurrent = ch.number === currentChapter;
+        const tone = chapterTone(ch);
         return (
-          <button key={ch.number} onClick={() => canRead && onSelect(ch.number)}
+          <button key={ch.number} type="button" onClick={() => canRead && onSelect(ch.number)}
             disabled={!canRead}
-            className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-ps-md text-left transition-all ${
-              isCurrent ? "bg-neon-purple/10 border border-neon-purple/20" : "hover:bg-ps-surface-raised border border-transparent"
-            } ${!canRead ? "opacity-50 cursor-default" : "cursor-pointer"}`}>
-            {/* Left: dot + title */}
-            <div className="flex items-center gap-2.5 min-w-0">
-              {getStatusDot(ch)}
+            aria-current={isCurrent ? "true" : undefined}
+            className={`flex w-full items-center justify-between gap-2 rounded-ps-md px-3 py-2.5 text-left transition-colors ${
+              isCurrent ? "bg-ps-surface-raised" : "hover:bg-ps-surface-raised"
+            } disabled:cursor-default disabled:opacity-50`}>
+            <div className="flex min-w-0 items-center gap-2.5">
+              <span
+                aria-hidden="true"
+                className={`h-2.5 w-2.5 shrink-0 rounded-full ${statusToneClasses[tone].dot} ${tone === "running" ? "animate-pulse" : ""}`}
+              />
               <div className="min-w-0">
-                <div className={`text-body truncate ${isCurrent ? "text-ps-text-primary" : "text-ps-text-secondary"}`}>
+                <div className={`truncate text-body ${isCurrent ? "text-ps-text-primary" : "text-ps-text-secondary"}`}>
                   {ch.title}
                 </div>
-                <div className="text-micro font-mono text-ps-text-faint">
+                <div className="font-mono text-micro text-ps-text-faint">
                   {ch.status === "complete" ? `${ch.wordCount} words` : ch.status}
                 </div>
               </div>
             </div>
-            {/* Right: tick */}
             {ch.readStatus === "read" && (
-              <span className="text-neon-green flex-shrink-0 text-body">✓</span>
+              <span className={`shrink-0 text-body ${statusToneClasses.ok.text}`} aria-label="Read">✓</span>
             )}
           </button>
         );

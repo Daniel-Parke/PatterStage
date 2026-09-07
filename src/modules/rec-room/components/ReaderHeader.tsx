@@ -1,23 +1,26 @@
-// ── ReaderHeader — the sticky reader bar and the chapter indicator dots.
-// Extracted verbatim from app/recroom/story-weaver/[id]/page.tsx. Story
-// Weaver behaviour is out of scope for T-0011, so the dot colour ladder,
-// the conditional Continue/Retry buttons and the settings slot are copied
-// unchanged; every action is a callback back to the page.
+// ── ReaderHeader — the sticky reader bar and the chapter dots.
+//
+// Eight raw buttons in eight chromes, and a row of 8px dots painted from the
+// reader's private status ladder. The buttons are Buttons, the dots are
+// ChapterDots on the house ladder, and the bar sits on the panel rung like
+// every other bar (U12, T-0126). Every action is still a callback to the page.
 
 "use client";
 
-import { BookMarked, BookOpen, ChevronLeft, PlayCircle, RefreshCw } from "lucide-react";
+import { BookMarked, BookOpen, ChevronLeft, PlayCircle, RefreshCw, Square } from "lucide-react";
+
+import Button from "@/components/ui/Button";
+import IconButton from "@/components/ui/IconButton";
+import ChapterDots from "@/modules/rec-room/components/ChapterDots";
 import ReaderSettings, { type ReadingSettings } from "@/modules/rec-room/components/ReaderSettings";
-import { chapterDotColor } from "@/modules/rec-room/components/chapter-dot";
 import StorySpendNote from "@/modules/rec-room/components/StorySpendNote";
-import type { Chapter, ReaderTheme } from "@/modules/rec-room/components/story-reader-types";
+import type { Chapter } from "@/modules/rec-room/components/story-reader-types";
 import type { SpendWindowSource } from "@/lib/spend/spend-window";
 
 export interface ReaderHeaderProps {
   title: string;
   chapters: Chapter[];
   currentChapter: number;
-  theme: ReaderTheme;
   allComplete: boolean;
   anyFailed: boolean;
   sidebarOpen: boolean;
@@ -45,7 +48,6 @@ export default function ReaderHeader({
   title,
   chapters,
   currentChapter,
-  theme,
   allComplete,
   anyFailed,
   sidebarOpen,
@@ -67,111 +69,74 @@ export default function ReaderHeader({
   spend,
 }: ReaderHeaderProps) {
   return (
-    <div className="sticky top-0 lg:top-0 z-30 border-b border-ps-edge-hairline bg-ps-surface-ground/95 backdrop-blur-xl flex-shrink-0">
-      <div className="flex items-center justify-between px-3 md:px-6 min-h-[var(--ps-shell-header-min-height)]">
-        <button onClick={onBack} aria-label="Back to the library"
-          className="p-2.5 rounded-ps-md text-ps-text-muted hover:text-ps-text-secondary hover:bg-ps-surface-raised transition-colors flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center">
-          <ChevronLeft className="w-5 h-5" />
-        </button>
-        <div className="flex-1 min-w-0 mx-2 text-center">
-          <div className="text-micro font-mono text-ps-text-faint uppercase tracking-wider">Story Weaver</div>
-          <h1 className="text-body font-semibold text-ps-text-primary truncate">{title}</h1>
+    <div className="sticky top-0 z-sticky shrink-0 border-b border-ps-edge-hairline bg-ps-surface-panel">
+      {/* Below md the actions take a row of their own and wrap; on one row with
+          the title they pushed it to nothing and ran 7px past the screen (found
+          on the T-0126 phone walk). */}
+      <div className="flex min-h-[var(--ps-shell-header-min-height)] flex-wrap items-center gap-x-2 gap-y-1 px-3 py-1 md:flex-nowrap md:px-6">
+        <IconButton icon={ChevronLeft} label="Back to the library" onClick={onBack} />
+        <div className="mx-2 min-w-0 flex-1 text-center">
+          <div className="font-mono text-micro uppercase tracking-wider text-ps-text-faint">Story Weaver</div>
+          <h1 className="truncate text-body font-semibold text-ps-text-primary">{title}</h1>
         </div>
-        <div className="flex items-center gap-1.5 flex-shrink-0">
+        <div className="flex basis-full flex-wrap items-center justify-end gap-1.5 md:basis-auto md:shrink-0">
           {/* Nothing is written unless it is asked for. This header used to
               offer no way to start OR stop: an effect wrote the next chapter
               the moment the page opened (T-0108, D88). */}
           {writing || generating ? (
-            <button
-              onClick={onStop}
-              title="Stop"
-              aria-label="Stop"
-              className="flex items-center gap-1.5 px-3 py-2 rounded-ps-md border border-red-500/30 text-body font-bold text-red-300 hover:bg-red-500/10 transition-colors min-h-[44px]"
-            >
-              <span className="hidden md:inline">Stop</span>
-              <span className="md:hidden">Stop</span>
-            </button>
-          ) : nextPending !== null && pendingCount === 1 ? (
-            <button
-              onClick={onWriteNext}
-              title={`Write chapter ${nextPending}`}
-              aria-label={`Write chapter ${nextPending}`}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-ps-md border border-cyan-500/20 text-body font-bold text-cyan-300 hover:bg-cyan-500/10 transition-colors min-h-[44px]"
-            >
-              <span className="hidden md:inline">Write chapter {nextPending}</span>
-              <span className="md:hidden">Write</span>
-            </button>
-          ) : nextPending !== null && pendingCount > 1 ? (
+            <Button variant="danger" icon={Square} onClick={onStop} title="Stop" aria-label="Stop">
+              Stop
+            </Button>
+          ) : nextPending !== null ? (
             <>
-              <button
-                onClick={onWriteNext}
-                title={`Write chapter ${nextPending}`}
-                aria-label={`Write chapter ${nextPending}`}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-ps-md border border-cyan-500/20 text-body font-bold text-cyan-300 hover:bg-cyan-500/10 transition-colors min-h-[44px]"
-              >
+              <Button color="cyan" onClick={onWriteNext} title={`Write chapter ${nextPending}`} aria-label={`Write chapter ${nextPending}`}>
                 <span className="hidden md:inline">Write chapter {nextPending}</span>
                 <span className="md:hidden">Write</span>
-              </button>
-              <button
-                onClick={onKeepWriting}
-                title={`Keep writing (${pendingCount} chapters left)`}
-                aria-label={`Keep writing (${pendingCount} chapters left)`}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-ps-md border border-cyan-500/20 text-body font-bold text-cyan-300 hover:bg-cyan-500/10 transition-colors min-h-[44px]"
-              >
-                <span className="hidden md:inline">Keep writing ({pendingCount} chapters left)</span>
-                <span className="md:hidden">Keep writing</span>
-              </button>
+              </Button>
+              {pendingCount > 1 && (
+                <Button
+                  color="cyan"
+                  onClick={onKeepWriting}
+                  title={`Keep writing (${pendingCount} chapters left)`}
+                  aria-label={`Keep writing (${pendingCount} chapters left)`}
+                >
+                  <span className="hidden md:inline">Keep writing ({pendingCount} chapters left)</span>
+                  <span className="md:hidden">Keep writing</span>
+                </Button>
+              )}
             </>
           ) : null}
-          {/* Continue button for complete stories */}
           {allComplete && (
-            <button onClick={onContinue}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-ps-md border border-green-500/20 text-body font-bold text-green-400 hover:bg-green-500/10 transition-colors min-h-[44px]"
-              title="Continue this story">
-              <PlayCircle className="w-4 h-4" />
+            <Button color="green" icon={PlayCircle} onClick={onContinue} title="Continue this story">
               <span className="hidden md:inline">Continue</span>
-            </button>
+            </Button>
           )}
-          {/* Retry all failed chapters */}
           {anyFailed && (
-            <button onClick={onRetryFailed}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-ps-md border border-orange-500/20 text-body font-bold text-orange-400 hover:bg-orange-500/10 transition-colors min-h-[44px]"
-              title="Retry failed chapters">
-              <RefreshCw className="w-4 h-4" />
+            <Button color="orange" icon={RefreshCw} onClick={onRetryFailed} title="Retry failed chapters">
               <span className="hidden md:inline">Retry</span>
-            </button>
+            </Button>
           )}
-          <button onClick={onOpenBible}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-ps-md border border-neon-purple/20 text-body font-bold text-neon-purple hover:text-neon-purple hover:bg-neon-purple/10 transition-colors min-w-[44px] min-h-[44px] justify-center"
-            title="Story Bible — arc, plot points & character journeys">
-            <BookMarked className="w-4 h-4" />
+          <Button color="purple" icon={BookMarked} onClick={onOpenBible} title="Story Bible — arc, plot points & character journeys">
             <span className="hidden md:inline">Bible</span>
-          </button>
-          <button onClick={onToggleSidebar}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-ps-md border border-ps-edge text-body font-bold text-ps-text-secondary hover:text-ps-text-primary hover:bg-ps-surface-raised transition-colors min-w-[44px] min-h-[44px] justify-center"
-            title={sidebarOpen ? "Hide Chapters" : "Show Chapters"}>
-            <BookOpen className="w-4 h-4" />
+          </Button>
+          <Button
+            icon={BookOpen}
+            onClick={onToggleSidebar}
+            aria-pressed={sidebarOpen}
+            title={sidebarOpen ? "Hide chapters" : "Show chapters"}
+          >
             <span className="hidden md:inline">Chapters</span>
-          </button>
+          </Button>
           <ReaderSettings settings={settings} onChange={onSettingsChange} />
         </div>
       </div>
 
-      {/* Chapter indicator dots, and what the story has cost so far.
-          The cost sits on this row rather than a row of its own so the sticky
-          header keeps its height, and beside the write buttons rather than in
-          Insights so it is where the money is being spent. */}
-      <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 pb-2 px-4">
-        <div className="flex items-center gap-1.5">
-        {chapters.map((ch, i) => (
-          <button key={i} onClick={() => ch.status === "complete" && onSelectChapter(i + 1)}
-            className={`w-2 h-2 rounded-full transition-all ${
-              i + 1 === currentChapter ? "scale-150" : "opacity-40 hover:opacity-70"
-            }`}
-            style={{ background: chapterDotColor(ch.status, i + 1 === currentChapter, theme.accent) }}
-            title={`Chapter ${i + 1}: ${ch.title} (${ch.status})`} />
-        ))}
-        </div>
+      {/* Chapter dots, and what the story has cost so far. The cost sits on
+          this row rather than a row of its own so the sticky header keeps its
+          height, and beside the write buttons rather than in Insights so it
+          is where the money is being spent. */}
+      <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 px-4 pb-1">
+        <ChapterDots chapters={chapters} currentChapter={currentChapter} onSelect={onSelectChapter} withTitles />
         <StorySpendNote spend={spend} />
       </div>
     </div>

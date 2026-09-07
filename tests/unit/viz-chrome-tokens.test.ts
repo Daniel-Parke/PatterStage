@@ -79,21 +79,19 @@ describe("the viz chrome scale", () => {
   });
 });
 
-describe("the reader chapter-state scale", () => {
+// Amended 2026-09-07 (U12, T-0126). This block held the five chapter-state
+// tints to their tokens; the tints are gone, because a chapter's state is a
+// status and the dots read the status ladder now. What the reader keeps is
+// the warm register itself, three colours, and those are what is held.
+describe("the reader's warm register", () => {
   const tokens = declaredTokens();
 
-  it.each([
-    "--ps-reader-chapter-done",
-    "--ps-reader-chapter-writing",
-    "--ps-reader-chapter-pending",
-    "--ps-reader-chapter-failed",
-    "--ps-reader-chapter-idle",
-  ])("declares %s", (token) => {
+  it.each(["--color-ps-reader-page", "--color-ps-reader-ink", "--color-ps-reader-rule"])("declares %s", (token) => {
     expect(tokens.has(token)).toBe(true);
   });
 
-  it("mints no colour for the idle state, which is the panel rule it already was", () => {
-    expect(tokens.get("--ps-reader-chapter-idle")).toBe("var(--ps-reader-rule)");
+  it("and no longer declares a second status ladder beside the house one", () => {
+    for (const token of tokens.keys()) expect(token.startsWith("--ps-reader-chapter-")).toBe(false);
   });
 });
 

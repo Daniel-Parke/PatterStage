@@ -2,6 +2,9 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { Sparkles, CheckCircle2 } from "lucide-react";
+
+import Card from "@/components/ui/Card";
+import { statusToneClasses } from "@/lib/theme";
 import { LOADING_MESSAGES } from "@/modules/rec-room/lib/prompts";
 
 interface GenerateOverlayProps {
@@ -78,8 +81,8 @@ export default function GenerateOverlay({ title, visible, done, onComplete }: Ge
     // live status the screen reader should announce as it changes, and the
     // Stop control that B14 adds will make it one (T-0096, D116).
     // design-lint-disable-next-line overlay-uses-dialog-a11y -- a progress status with no controls, announced via role=status rather than trapped as a dialog
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ps-surface-ground/90 backdrop-blur-sm" role="status" aria-live="polite" aria-busy={phase === "generating"}>
-      <div className="rounded-ps-lg border border-neon-purple/20 bg-ps-surface-panel p-10 text-center max-w-md w-full mx-4">
+    <div className="fixed inset-0 z-overlay flex items-center justify-center bg-ps-surface-ground/90 backdrop-blur-sm" role="status" aria-live="polite" aria-busy={phase === "generating"}>
+      <Card padding="lg" className="mx-4 w-full max-w-md text-center">
         {phase === "generating" ? (
           <>
             <Sparkles className="w-12 h-12 text-neon-purple animate-pulse mx-auto mb-6" />
@@ -97,12 +100,12 @@ export default function GenerateOverlay({ title, visible, done, onComplete }: Ge
         {/* Progress bar */}
         <div className="w-full h-2.5 rounded-full bg-ps-surface-raised mb-6 overflow-hidden">
           <div className={`h-full rounded-full transition-all duration-500 ${
-            phase === "complete" ? "bg-gradient-to-r from-semantic-success to-emerald-400" : "bg-gradient-to-r from-neon-purple to-neon-pink"
+            phase === "complete" ? statusToneClasses.ok.dot : "bg-gradient-to-r from-neon-purple to-neon-pink"
           }`} style={{ width: `${progress}%` }} />
         </div>
 
         <p className="text-micro font-mono text-ps-text-faint">{Math.round(progress)}%</p>
-      </div>
+      </Card>
     </div>
   );
 }

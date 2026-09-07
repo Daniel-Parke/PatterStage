@@ -431,7 +431,7 @@
         {
           "slug": "guides/story-weaver",
           "title": "Story Weaver",
-          "summary": "The Rec Room's long-form writer: the hub, its stats and its recent stories",
+          "summary": "The Rec Room's long-form writer: your shelf of stories, what state each is in, and the way in to a new one",
           "nav": 170,
           "screen": "/recroom/story-weaver",
           "concepts": [
@@ -444,7 +444,7 @@
         {
           "slug": "guides/story-create",
           "title": "Create a story",
-          "summary": "Setting up a story: premise, characters, parameters and the model that writes it",
+          "summary": "Setting up a story: premise, cast, parameters and the model that writes it, with your saved themes and characters beside the form",
           "nav": 180,
           "screen": "/recroom/story-weaver/create",
           "concepts": [
@@ -452,36 +452,6 @@
           ],
           "shots": [
             "docs/images/story-create.png"
-          ]
-        },
-        {
-          "slug": "guides/story-library",
-          "title": "Story library",
-          "summary": "Every story you have started, with its status and its progress",
-          "nav": 190,
-          "screen": "/recroom/story-weaver/library",
-          "shots": [
-            "docs/images/story-library.png"
-          ]
-        },
-        {
-          "slug": "guides/story-characters",
-          "title": "Characters",
-          "summary": "Reusable characters, saved once and dropped into any story",
-          "nav": 200,
-          "screen": "/recroom/story-weaver/characters",
-          "shots": [
-            "docs/images/story-characters.png"
-          ]
-        },
-        {
-          "slug": "guides/story-themes",
-          "title": "Themes",
-          "summary": "Reusable premises and tags, saved as a theme you can load later",
-          "nav": 210,
-          "screen": "/recroom/story-weaver/themes",
-          "shots": [
-            "docs/images/story-themes.png"
           ]
         },
         {
@@ -708,10 +678,7 @@
     "/help": "guides/help",
     "/quests": "guides/quests",
     "/recroom/story-weaver": "guides/story-weaver",
-    "/recroom/story-weaver/characters": "guides/story-characters",
     "/recroom/story-weaver/create": "guides/story-create",
-    "/recroom/story-weaver/library": "guides/story-library",
-    "/recroom/story-weaver/themes": "guides/story-themes",
     "/results/artifacts": "guides/artifacts",
     "/results/insights": "guides/insights",
     "/results/logs": "guides/logs",
@@ -793,9 +760,6 @@
     "guides/settings",
     "guides/story-weaver",
     "guides/story-create",
-    "guides/story-library",
-    "guides/story-characters",
-    "guides/story-themes",
     "guides/quests",
     "guides/help",
     "running/deploy",

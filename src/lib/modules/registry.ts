@@ -168,13 +168,10 @@ const recRoomModule: ProductModule = {
           color: "purple",
           order: 1,
           // Named here and visited by the e2e matrix; NOT drawn in the rail.
-          // Story Weaver's own hub navigates to all four.
-          childRoutes: [
-            { label: "Library", href: "/recroom/story-weaver/library" },
-            { label: "Create", href: "/recroom/story-weaver/create" },
-            { label: "Characters", href: "/recroom/story-weaver/characters" },
-            { label: "Themes", href: "/recroom/story-weaver/themes" },
-          ],
+          // One child since decision 6 (T-0126): the library IS the page at
+          // this href, and Characters and Themes are panels on Create. The
+          // three retired addresses answer 307 from next.config.
+          childRoutes: [{ label: "Create", href: "/recroom/story-weaver/create" }],
         },
       ],
     },

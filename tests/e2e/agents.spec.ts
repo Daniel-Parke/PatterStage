@@ -30,8 +30,12 @@ test.describe("Agents page", () => {
     // this test pass or fail on whether the run's data happened to have drifted
     // (a strict-mode violation on a drifted DB, green on a clean one). The two
     // sync-bar controls are what the test is about, so it names them.
-    await expect(page.getByRole("button", { name: "Push all", exact: true })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Pull all", exact: true })).toBeVisible();
+    // READY here too, since U11 (T-0125): the header renders while the body is
+    // still loading, so the heading above no longer means the profiles have
+    // arrived, and the default 5s ran out twice under a full worker pool while
+    // this passed alone. Nothing checked here changed; only the patience.
+    await expect(page.getByRole("button", { name: "Push all", exact: true })).toBeVisible(READY);
+    await expect(page.getByRole("button", { name: "Pull all", exact: true })).toBeVisible(READY);
   });
 
   test("New Profile button is visible", async ({ page }) => {

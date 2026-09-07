@@ -1,27 +1,36 @@
 // ── ReaderPlaceholders — the reader's two pre-render states.
-// Extracted verbatim from app/recroom/story-weaver/[id]/page.tsx: the
-// spinner while the story loads, and the not-found card with its way
-// back to the dashboard.
+// The skeleton while the story loads, on the loading contract, and the
+// not-found state with its way back (U12, T-0126).
 
 "use client";
 
-import { Loader2 } from "lucide-react";
+import { BookX, ChevronLeft } from "lucide-react";
+
+import Button from "@/components/ui/Button";
+import { EmptyState } from "@/components/ui/EmptyState";
+import PageLoading from "@/components/ui/PageLoading";
 
 export function ReaderLoading() {
   return (
-    <div className="min-h-screen bg-ps-surface-ground flex items-center justify-center">
-      <Loader2 className="w-8 h-8 text-neon-purple animate-spin" />
+    <div className="min-h-screen bg-ps-surface-ground p-6">
+      <PageLoading label="Loading the story" rows={3} rowClassName="h-24" />
     </div>
   );
 }
 
 export function ReaderNotFound({ onBack }: { onBack: () => void }) {
   return (
-    <div className="min-h-screen bg-ps-surface-ground flex items-center justify-center">
-      <div className="text-center">
-        <p className="text-body text-ps-text-muted mb-4">Story not found</p>
-        <button onClick={onBack} className="text-body text-neon-purple">← Back to Dashboard</button>
-      </div>
+    <div className="flex min-h-screen items-center justify-center bg-ps-surface-ground">
+      <EmptyState
+        icon={BookX}
+        title="Story not found"
+        description="It may have been deleted, or the address may be wrong."
+        action={
+          <Button color="purple" icon={ChevronLeft} onClick={onBack}>
+            Back to Story Weaver
+          </Button>
+        }
+      />
     </div>
   );
 }

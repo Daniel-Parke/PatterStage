@@ -100,7 +100,9 @@ export default function Dialog({
   const [narrow, setNarrow] = useState(false);
 
   useEffect(() => {
-    if (placement !== "sheet") return;
+    // No matchMedia (jsdom, some embedded browsers): a sheet is a right-hand
+    // pane, which is the wider of its two shapes and the safe one to guess.
+    if (placement !== "sheet" || typeof window.matchMedia !== "function") return;
     const mq = window.matchMedia("(max-width: 767px)");
     const update = () => setNarrow(mq.matches);
     update();

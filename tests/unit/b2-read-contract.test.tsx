@@ -61,6 +61,8 @@ describe("the Story Weaver hub", () => {
     render(<Hub />);
     await waitFor(() => expect(screen.getByRole("alert")).toBeInTheDocument());
     expect(screen.getByRole("button", { name: /retry/i })).toBeInTheDocument();
-    expect(screen.queryByText(/your story awaits/i)).toBeNull();
+    // Amended 2026-09-07 (U12, T-0126): the hub is the library, and its empty
+    // shelf says so in the library's words.
+    expect(screen.queryByText(/bookshelf is empty/i)).toBeNull();
   });
 });

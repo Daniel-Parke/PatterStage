@@ -1,13 +1,15 @@
 // ── ReaderNavigation — prev/next and the second row of chapter dots.
-// Extracted verbatim from app/recroom/story-weaver/[id]/page.tsx. Story
-// Weaver behaviour is out of scope for T-0011, so the disabled rules and
-// the dot colour ladder are copied unchanged.
+// The dots are the same ChapterDots the header draws, so the two ends of the
+// page cannot disagree about what a pending chapter looks like; the bar sits
+// on the panel rung, as the header does (U12, T-0126).
 
 "use client";
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { chapterDotColor } from "@/modules/rec-room/components/chapter-dot";
-import type { Chapter, ReaderTheme } from "@/modules/rec-room/components/story-reader-types";
+
+import Button from "@/components/ui/Button";
+import ChapterDots from "@/modules/rec-room/components/ChapterDots";
+import type { Chapter } from "@/modules/rec-room/components/story-reader-types";
 
 export interface ReaderNavigationProps {
   chapters: Chapter[];
@@ -15,7 +17,6 @@ export interface ReaderNavigationProps {
   prevChapter: Chapter | null;
   nextChapter: Chapter | null;
   hasNext: boolean;
-  theme: ReaderTheme;
   onPrev: () => void;
   onNext: () => void;
   onSelectChapter: (num: number) => void;
@@ -27,38 +28,27 @@ export default function ReaderNavigation({
   prevChapter,
   nextChapter,
   hasNext,
-  theme,
   onPrev,
   onNext,
   onSelectChapter,
 }: ReaderNavigationProps) {
   return (
-    <div className="flex items-center justify-between px-4 md:px-6 py-3 border-t flex-shrink-0" style={{ borderColor: theme.rule, background: theme.panel }}>
-      <button onClick={onPrev}
-        disabled={currentChapter <= 1}
-        className="flex items-center gap-1.5 px-4 py-2.5 rounded-ps-md text-micro font-mono disabled:opacity-20 min-h-[44px] max-w-[45%] truncate"
-        style={{ color: theme.text, opacity: 0.6 }}>
-        <ChevronLeft className="w-4 h-4 flex-shrink-0" />
-        <span className="truncate">{prevChapter ? prevChapter.title : "Prev"}</span>
-      </button>
+    <div className="flex shrink-0 items-center justify-between gap-2 border-t border-ps-edge-hairline bg-ps-surface-panel px-4 py-3 md:px-6">
+      <Button variant="ghost" icon={ChevronLeft} onClick={onPrev} disabled={currentChapter <= 1} className="max-w-[45%]" title={prevChapter ? prevChapter.title : "Previous chapter"}>
+        <span className="truncate">{prevChapter ? prevChapter.title : "Previous"}</span>
+      </Button>
 
-      <div className="flex gap-1.5 overflow-x-auto max-w-[200px] md:max-w-none">
-        {chapters.map((ch, i) => (
-          <button key={i} onClick={() => ch.status === "complete" && onSelectChapter(i + 1)}
-            aria-label={`Chapter ${i + 1}${ch.title ? `: ${ch.title}` : ""}`}
-            aria-current={i + 1 === currentChapter ? "true" : undefined}
-            className={`w-2.5 h-2.5 rounded-full transition-all flex-shrink-0 ${i + 1 === currentChapter ? "scale-125" : "opacity-40 hover:opacity-70"}`}
-            style={{ background: chapterDotColor(ch.status, i + 1 === currentChapter, theme.accent) }} />
-        ))}
-      </div>
+      <ChapterDots
+        chapters={chapters}
+        currentChapter={currentChapter}
+        onSelect={onSelectChapter}
+        className="max-w-[200px] overflow-x-auto md:max-w-none"
+      />
 
-      <button onClick={onNext}
-        disabled={!hasNext}
-        className="flex items-center gap-1.5 px-4 py-2.5 rounded-ps-md text-micro font-mono disabled:opacity-20 min-h-[44px] max-w-[45%] truncate"
-        style={{ color: theme.text }}>
+      <Button variant="ghost" onClick={onNext} disabled={!hasNext} className="max-w-[45%]" title={nextChapter ? nextChapter.title : "Next chapter"}>
         <span className="truncate">{nextChapter ? nextChapter.title : "Next"}</span>
-        <ChevronRight className="w-4 h-4 flex-shrink-0" />
-      </button>
+        <ChevronRight className="h-4 w-4 shrink-0" aria-hidden="true" />
+      </Button>
     </div>
   );
 }

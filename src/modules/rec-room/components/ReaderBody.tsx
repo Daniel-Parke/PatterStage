@@ -1,22 +1,22 @@
 // ── ReaderBody — the reading surface: header, sidebar, text, navigation.
-// Extracted verbatim from app/recroom/story-weaver/[id]/page.tsx, in the
-// same DOM order it had there: the sticky header, the flex body with the
-// desktop chapter sidebar and the chapter text plus its navigation bar,
-// and then the small-screen chapter drawer.
 //
-// Story Weaver behaviour is out of scope for T-0011. This holds no state
-// of its own; the long prop list is the page handing its state down.
+// This holds no story state of its own; the long prop list is the page
+// handing its state down. What it does hold is the one layout fact the page
+// should not: whether the screen is narrow. The chapter list is an aside on
+// a wide screen and a Dialog on a narrow one, and the two used to be decided
+// by CSS classes on both - so on a wide screen the hidden drawer was still
+// mounted, with a live focus trap behind a display:none (U12, T-0126).
 
 "use client";
 
-import type { RefObject } from "react";
+import { useEffect, useState, type RefObject } from "react";
+
 import ChapterList from "@/modules/rec-room/components/ChapterList";
 import ReaderHeader from "@/modules/rec-room/components/ReaderHeader";
 import ChapterReader from "@/modules/rec-room/components/ChapterReader";
 import ReaderNavigation from "@/modules/rec-room/components/ReaderNavigation";
 import MobileChapterDrawer from "@/modules/rec-room/components/MobileChapterDrawer";
 import type { ReadingSettings } from "@/modules/rec-room/components/ReaderSettings";
-import type { ReaderTheme } from "@/modules/rec-room/components/story-reader-types";
 import type { ReaderView } from "@/modules/rec-room/components/story-reader-view";
 import type { SpendWindowSource } from "@/lib/spend/spend-window";
 
@@ -25,7 +25,6 @@ export interface ReaderBodyProps {
   /** The page's per-render derivations, from deriveReaderView. */
   view: ReaderView;
   currentChapter: number;
-  theme: ReaderTheme;
   fontFamily: string;
   settings: ReadingSettings;
   onSettingsChange: (settings: ReadingSettings) => void;
@@ -52,11 +51,24 @@ export interface ReaderBodyProps {
   spend: SpendWindowSource | null;
 }
 
+/** Below lg the chapter list is a drawer; at lg and up it is an aside. */
+function useNarrow(): boolean {
+  const [narrow, setNarrow] = useState(false);
+  useEffect(() => {
+    if (typeof window.matchMedia !== "function") return;
+    const mq = window.matchMedia("(max-width: 1023px)");
+    const update = () => setNarrow(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+  return narrow;
+}
+
 export default function ReaderBody({
   title,
   view,
   currentChapter,
-  theme,
   fontFamily,
   settings,
   onSettingsChange,
@@ -81,15 +93,14 @@ export default function ReaderBody({
   spend,
 }: ReaderBodyProps) {
   const { chapters, chapterContent, currentMeta, nextComplete, prevChapter, nextChapter, anyFailed, allComplete } = view;
+  const narrow = useNarrow();
 
   return (
     <>
-      {/* Reader Header */}
       <ReaderHeader
         title={title}
         chapters={chapters}
         currentChapter={currentChapter}
-        theme={theme}
         allComplete={allComplete}
         anyFailed={anyFailed}
         sidebarOpen={sidebarOpen}
@@ -111,39 +122,36 @@ export default function ReaderBody({
         spend={spend}
       />
 
-      {/* Body */}
-      <div className="flex-1 flex" style={{ height: "calc(100vh - 72px)" }}>
-        {/* Chapter Sidebar */}
-        {sidebarOpen && (
-          <div className="w-56 flex-shrink-0 border-r border-ps-edge-hairline sticky top-16 overflow-y-auto hidden md:block" style={{ background: theme.panel, maxHeight: "calc(100vh - 64px)" }}>
+      <div className="flex flex-1" style={{ height: "calc(100vh - 72px)" }}>
+        {sidebarOpen && !narrow && (
+          <aside
+            aria-label="Chapters"
+            className="sticky top-16 w-56 shrink-0 overflow-y-auto border-r border-ps-edge-hairline bg-ps-surface-panel"
+            style={{ maxHeight: "calc(100vh - 64px)" }}
+          >
             <div className="p-4">
               <ChapterList chapters={chapters} currentChapter={currentChapter} onSelect={onSelectChapter} />
             </div>
-          </div>
+          </aside>
         )}
 
-        {/* Book Content */}
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex flex-1 flex-col overflow-hidden">
           <ChapterReader
             contentRef={contentRef}
             chapterContent={chapterContent}
             currentChapter={currentChapter}
             currentMeta={currentMeta}
-            theme={theme}
             fontFamily={fontFamily}
             settings={settings}
             onEditChapter={onEditChapter}
             onRetryChapter={onRetryChapter}
           />
-
-          {/* Navigation */}
           <ReaderNavigation
             chapters={chapters}
             currentChapter={currentChapter}
             prevChapter={prevChapter}
             nextChapter={nextChapter}
             hasNext={!!nextComplete}
-            theme={theme}
             onPrev={onPrev}
             onNext={onNext}
             onSelectChapter={onSelectChapter}
@@ -151,12 +159,10 @@ export default function ReaderBody({
         </div>
       </div>
 
-      {/* Mobile sidebar overlay */}
-      {sidebarOpen && (
+      {sidebarOpen && narrow && (
         <MobileChapterDrawer
           chapters={chapters}
           currentChapter={currentChapter}
-          theme={theme}
           onClose={onCloseSidebar}
           onSelect={onSelectChapter}
         />

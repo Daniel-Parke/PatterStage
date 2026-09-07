@@ -130,8 +130,9 @@ describe("stories", () => {
     expect(screen.queryByText(/Generating\.\.\./)).toBeNull();
   });
 
-  it("the hub and the library no longer say In Progress or Complete", () => {
-    for (const f of ["src/app/recroom/story-weaver/page.tsx", "src/app/recroom/story-weaver/library/page.tsx"]) {
+  // Amended 2026-09-07 (U12, T-0126): the hub and the library are one page.
+  it("the library no longer says In Progress or Complete", () => {
+    for (const f of ["src/app/recroom/story-weaver/page.tsx"]) {
       const src = readFileSync(join(ROOT, f), "utf-8");
       expect({ f, inProgress: /"In Progress|In Progress \(/.test(src) }).toEqual({ f, inProgress: false });
       expect({ f, complete: /label: "Complete"|"Complete"/.test(src) }).toEqual({ f, complete: false });

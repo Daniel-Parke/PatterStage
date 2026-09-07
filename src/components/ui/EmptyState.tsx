@@ -25,11 +25,16 @@ export function EmptyState({
   action?: React.ReactNode;
 }) {
   return (
+    // The title and the description are full-width blocks with centred text,
+    // not shrink-wrapped flex items: the pixels are the same, but a shrink-
+    // wrapped paragraph starts wherever its text happens to start, and the
+    // census read an empty shelf's line as a content block 241px inside the
+    // page's left edge (T-0126).
     <div className="flex flex-col items-center justify-center py-16 text-center">
       <Icon className="w-10 h-10 text-ps-viz-glyph-idle mb-3" />
-      <h3 className="text-body font-medium text-ps-text-muted">{title}</h3>
+      <h3 className="w-full text-body font-medium text-ps-text-muted">{title}</h3>
       {description && (
-        <p className="text-body text-ps-text-faint mt-1">{description}</p>
+        <p className="w-full text-body text-ps-text-faint mt-1">{description}</p>
       )}
       {action && <div className="mt-4">{action}</div>}
     </div>
