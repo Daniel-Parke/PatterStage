@@ -321,10 +321,21 @@ Prefer `inputFieldClasses(accent)` from `src/lib/theme.ts` (wraps `baseInputStyl
 
 One visible focus ring for the whole console, declared once in `globals.css`:
 `:focus-visible { outline: 2px solid var(--color-neon-cyan); outline-offset: 2px }`.
-It paints on keyboard focus only. A control may remove it (`outline-none`)
-only on a line that puts a ring back (`focus:border-*`, `focus:ring-*`,
-`focus-visible:ring-*`); `design-lint`'s `no-bare-outline-none` rule fails
-the build on a bare one. The root layout carries a skip link to `#main`.
+It paints on keyboard focus only, and nothing in the tree removes it: there is
+no `outline-none` in `src/`, and `design-lint`'s `no-bare-outline-none` rule
+fails the build on one that does not put a ring back on the same line (an
+outline, a `ring-*`, or a shadow standing in for one). A border colour is not a
+ring. The house `transition-colors` leaves `outline-color` alone, so the ring
+is instant where everything else fades. The root layout carries a skip link to
+`#main`.
+
+## Motion
+
+Under `prefers-reduced-motion: reduce` every animation and transition halts,
+by one universal rule in `globals.css`, and two things are put back: the
+spinners (`animate-spin`, `animate-spin-slow`), because "still working" is
+information rather than decoration. A new keyframe is therefore halted by
+default, and `tests/e2e/motion.spec.ts` fails on anything else found running.
 
 ## Overlays and confirms
 

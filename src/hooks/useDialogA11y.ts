@@ -46,16 +46,27 @@ function isTopmost(id: symbol): boolean {
 }
 
 /**
- * Everything tabbable, MINUS anything explicitly removed from the tab order.
+ * Everything tabbable, MINUS anything removed from the tab order, MINUS
+ * anything not drawn.
  *
- * Deliberately NOT filtered by visibility. The obvious extra guard here is
- * `offsetParent !== null` or `getClientRects().length > 0`, and under jsdom
- * both are false for every element in the tree, because jsdom does no layout.
- * A visibility filter would therefore make the trap silently degrade to "no
- * focusable elements" in every test that asserts it, a guard that cannot be
- * seen to work. Real hidden controls are rare inside a dialog, and `disabled`
- * plus `[tabindex="-1"]` plus `aria-hidden` cover the cases that actually
- * occur in this codebase.
+ * The trap acts at the ring's two ends only; in between, the browser's own
+ * Tab does the walking and skips `display: none` by itself. So a hidden
+ * control in the middle of a panel is harmless, and a hidden control at an
+ * END is a leak: the trap believes the ring has one more stop, never
+ * intercepts Tab from the last drawn control, and the browser walks straight
+ * out of the panel. That was the rail's collapse button, `hidden lg:flex` and
+ * the last control in the drawer on a phone: Tab from the control before it
+ * left the open drawer for the hamburger behind the backdrop.
+ *
+ * `getClientRects().length` is zero for anything `display: none` and for
+ * anything inside it. It is also zero for EVERYTHING under jsdom, which does
+ * no layout, and an earlier version of this comment refused the filter on
+ * those grounds: it would have made the trap degrade to "no focusable
+ * elements" in every test that asserts it. So it is guarded. When nothing in
+ * the panel has a rect, the ring is the unfiltered list, and the dialog
+ * suites keep asserting the trap without stubbing layout;
+ * u14-the-trap-skips-what-is-not-drawn stubs it and sees the filter work
+ * (T-0128).
  */
 const FOCUSABLE_SELECTOR = [
   "a[href]",
@@ -72,12 +83,14 @@ const FOCUSABLE_SELECTOR = [
 ].join(",");
 
 function focusableWithin(panel: HTMLElement): HTMLElement[] {
-  return Array.from(
+  const tabbable = Array.from(
     panel.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
   ).filter(
     (el) =>
       el.getAttribute("aria-hidden") !== "true" && !el.hasAttribute("inert"),
   );
+  const drawn = tabbable.filter((el) => el.getClientRects().length > 0);
+  return drawn.length > 0 ? drawn : tabbable;
 }
 
 interface DialogA11yOptions {

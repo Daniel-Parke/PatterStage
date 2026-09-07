@@ -183,7 +183,8 @@ export default function HindsightBrowser({ onHealthChange, reloadToken = 0 }: Hi
       )}
 
       {/* Tabs */}
-      <div className="flex items-center gap-2 mb-4 border-b border-ps-edge-hairline pb-2">
+      {/* flex-wrap: five tabs are 447px, a phone is 390 (T-0128). */}
+      <div className="flex flex-wrap items-center gap-2 mb-4 border-b border-ps-edge-hairline pb-2">
         {tabs.map((tab) => (
           <button
             key={tab.id}

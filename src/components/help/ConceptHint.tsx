@@ -91,7 +91,12 @@ export default function ConceptHint({ id, children, className }: ConceptHintProp
         aria-expanded={open}
         aria-describedby={open ? panelId : undefined}
         onClick={() => setOpen((v) => !v)}
-        className={`border-b border-dotted border-neon-cyan/50 text-inherit transition-colors hover:text-neon-cyan ${className ?? ""}`}
+        // A 24px box, because three of these are section headings on their
+        // own rather than words in a sentence, and a heading is a standalone
+        // target WCAG 2.5.8 measures. The dotted line is text-decoration, not
+        // the box's border, so it stays under the letters when the box grows
+        // (T-0128).
+        className={`inline-flex min-h-6 items-center text-inherit underline decoration-dotted decoration-neon-cyan/50 underline-offset-2 transition-colors hover:text-neon-cyan hover:decoration-neon-cyan ${className ?? ""}`}
       >
         {children ?? entry.term}
       </button>

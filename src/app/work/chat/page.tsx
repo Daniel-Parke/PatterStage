@@ -61,6 +61,7 @@ export default function ChatPage() {
     setInput,
     handleKeyDown,
     handleSend,
+    handleRetry,
     handleStop,
   } = useChatPage();
 
@@ -249,7 +250,9 @@ export default function ChatPage() {
                   </p>
                 </div>
               ) : (
-                messages.map((msg) => <MessageBubble key={msg.id} msg={msg} />)
+                messages.map((msg) => (
+                  <MessageBubble key={msg.id} msg={msg} onRetry={() => void handleRetry(msg.id)} />
+                ))
               )}
 
               {showTyping && <TypingIndicator />}

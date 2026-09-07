@@ -358,9 +358,9 @@
   --ps-shell-header-min-height: 5rem;
   --ps-mobile-header-min-height: 3rem;
   /* One pair, so a transition is either the one you notice or the one you do
-     not. The house transition also excludes outline-color, in U14: Tailwind's
-     `transition-colors` includes it, so the focus ring currently fades in from
-     grey over 150ms and a fast tabber never sees it cyan. */
+     not. The house transition-colors (below the z ladder) leaves outline-color
+     alone: Tailwind's includes it, so the focus ring faded in from grey over
+     150ms and a fast tabber never saw it cyan (T-0128). */
   --ps-duration-fast: 120ms;
   --ps-duration: 200ms;
   --ps-rgb-neon-cyan: 0 191 255;
@@ -379,6 +379,20 @@
 @utility z-modal { z-index: var(--z-modal); }
 @utility z-toast { z-index: var(--z-toast); }
 @utility z-tooltip { z-index: var(--z-tooltip); }
+
+/* ── The house transition-colors ──────────────────────────────────────────
+   Tailwind's transition-colors transitions outline-color too, so on every
+   control wearing it the one focus ring ("Focus, once", below) faded in from
+   grey over the transition's duration, and a fast tabber never saw it cyan.
+   Same utility, same name, without outline-color: the ring is instant and
+   everything else still fades. Only the property list is set, so duration-*
+   and ease-* keep working beside it. In the utilities layer after Tailwind's
+   own, so it wins by order at equal specificity (T-0128). */
+@layer utilities {
+  .transition-colors {
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  }
+}
 
 /* Scrollbar styling */
 ::-webkit-scrollbar {
@@ -463,18 +477,37 @@
 .ps-edge-glow .react-flow__edge-path { filter: drop-shadow(0 0 3px rgb(var(--ps-rgb-neon-cyan) / 0.7)); }
 
 @media (prefers-reduced-motion: reduce) {
-  /* `.pulse-glow`, not `.animate-pulse-glow`. The guard named the second for
-     months and the second had zero call sites; the FIRST is on the dashboard's
-     ONLINE dot and on every StatusDot in the product, so an operator who asked
-     their OS for reduced motion got a dot pulsing forever on the front door
-     (WCAG 2.3.3, found at T-0120). `.ps-electrified` left with the rule it
-     guarded. */
-  .animate-flame,
-  .pulse-glow,
-  .animate-float-in,
-  .animate-shimmer::after { animation: none; }
-  .viz-draw { stroke-dasharray: none; stroke-dashoffset: 0; animation: none; }
-  .ps-rail-flow { animation: none; }
+  /* Deny by default. This was an allowlist of seven class names, written when
+     there were seven animations, and it was already wrong once: it named
+     `.animate-pulse-glow` for months while the class in the tree was
+     `.pulse-glow`, so every StatusDot pulsed for ever under reduce (found at
+     T-0120). The reconnaissance then measured 28 animations still running
+     under reduce, the logo's flame on every screen among them (WCAG 2.3.3).
+     An allowlist can only ever name what its author knew about. Everything
+     halts: one iteration of nothing, so an entrance animation lands on its
+     end state and an infinite one never starts. Two things are put back, the
+     spinners, which say "still working" and are the one motion in the product
+     that is information rather than decoration. `.viz-draw` keeps its end
+     state pinned because its keyframes draw a line in from nothing, and a
+     halted draw would be no line. tests/e2e/motion.spec.ts is what counts
+     what actually runs (T-0128). */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .animate-spin {
+    animation-duration: 1s !important;
+    animation-iteration-count: infinite !important;
+  }
+  .animate-spin-slow {
+    animation-duration: 3s !important;
+    animation-iteration-count: infinite !important;
+  }
+  .viz-draw { stroke-dasharray: none; stroke-dashoffset: 0; }
 }
 
 /* Variable-driven surface glow (see GlowSurface.tsx); --glow-surface-rgb set inline */

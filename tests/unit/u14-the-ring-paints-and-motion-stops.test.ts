@@ -139,7 +139,9 @@ describe("U14 · reduced motion denies by default", () => {
   it("re-enables at most the spinners", () => {
     const allowed = new Set([".animate-spin", ".animate-spin-slow"]);
     const reEnabled = rules(halting ?? "")
-      .filter((r) => /animation-duration\s*:\s*(?!0\.01ms)/.test(r.body))
+      // `\S` after the lookahead, or `\s*` backtracks past the space before
+      // `0.01ms` and the halting rule itself reads as a re-enable.
+      .filter((r) => /animation-duration\s*:\s*(?!0\.01ms)\S/.test(r.body))
       .flatMap((r) => r.selectors);
     expect(reEnabled.length).toBeGreaterThan(0);
     expect(reEnabled.filter((s) => !allowed.has(s))).toEqual([]);

@@ -91,7 +91,11 @@ export default function SegmentedControl<T extends string = string>({
     <div
       role="radiogroup"
       aria-label={label}
-      className={`inline-flex items-center gap-1 rounded-ps-md border border-ps-edge bg-ps-surface-panel p-1 ${className}`}
+      // max-w-full and flex-wrap: a group with eight options is 970px of
+      // buttons, and on a phone it was the one thing on Missions that ran past
+      // the edge of main, 600px out of sight with no scrollbar to say so
+      // (T-0128). The options wrap onto more rows inside the one border.
+      className={`inline-flex max-w-full flex-wrap items-center gap-1 rounded-ps-md border border-ps-edge bg-ps-surface-panel p-1 ${className}`}
     >
       {options.map((option, index) => {
         const selected = option.value === value;

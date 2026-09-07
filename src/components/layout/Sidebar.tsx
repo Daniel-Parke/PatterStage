@@ -24,7 +24,7 @@ import { ChevronRight, ChevronLeft } from "lucide-react";
 
 import { useSidebar } from "./SidebarContext";
 import { useDialogA11y } from "@/hooks/useDialogA11y";
-import { useIsMobile } from "@/hooks/useIsMobile";
+import { TABLET_QUERY, useIsMobile } from "@/hooks/useIsMobile";
 import { iconColorMap, railAccentBarMap } from "@/lib/theme";
 import { safeApiCall } from "@/lib/api-fetch";
 import { useFeatureFlags } from "@/hooks/useFeatureFlags";
@@ -50,6 +50,7 @@ export default function Sidebar({ initialCollapsed = false }: { initialCollapsed
   const [collapsed, setCollapsed] = useState(initialCollapsed);
   const { mobileOpen, setMobileOpen } = useSidebar();
   const isMobile = useIsMobile();
+  const isTablet = useIsMobile(TABLET_QUERY);
   const { data: flags } = useFeatureFlags();
   const closeMobile = useCallback(() => setMobileOpen(false), [setMobileOpen]);
 
@@ -73,8 +74,11 @@ export default function Sidebar({ initialCollapsed = false }: { initialCollapsed
     [flags],
   );
 
-  // Icons only on a desktop rail the operator collapsed; the drawer is always full.
-  const iconsOnly = collapsed && !isMobile;
+  // Icons only on a desktop rail the operator collapsed, and on any tablet:
+  // between md and lg there is room for the 64px column beside a page and not
+  // for labels, and until T-0128 that width got the phone's drawer instead.
+  // The drawer itself is always full.
+  const iconsOnly = !isMobile && (collapsed || isTablet);
 
   // Home's rows other than Dashboard (Quests, Help) render in the footer.
   const utilityLinks = (mainSections.find((s) => s.label === "Home")?.links ?? []).filter((l) => l.href !== "/");
@@ -149,7 +153,7 @@ export default function Sidebar({ initialCollapsed = false }: { initialCollapsed
           type="button"
           aria-label="Close navigation"
           onClick={closeMobile}
-          className="lg:hidden fixed inset-0 bg-black/60 z-[55] cursor-default"
+          className="md:hidden fixed inset-0 bg-black/60 z-[55] cursor-default"
         />
       )}
 
@@ -174,7 +178,7 @@ export default function Sidebar({ initialCollapsed = false }: { initialCollapsed
         // instead of appearing where you clicked.
         className={`flex flex-col h-screen border-r border-ps-edge transition-[width] duration-200 fixed inset-y-0 left-0 z-[60] w-56 bg-ps-surface-panel transform ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
-        } lg:static lg:z-auto lg:translate-x-0 ${iconsOnly ? "lg:w-16" : "lg:w-56"}`}
+        } md:static md:z-auto md:translate-x-0 ${iconsOnly ? "md:w-16" : "md:w-56"}`}
       >
         {/* Logo — min-height matches main app chrome (see --ps-shell-header-min-height) */}
         <div className="px-4 min-h-[var(--ps-shell-header-min-height)] flex items-center border-b border-ps-edge-hairline">

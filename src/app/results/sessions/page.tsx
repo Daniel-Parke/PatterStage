@@ -255,7 +255,11 @@ export default function SessionsPage() {
       header={
         <PageHeader
           icon={Clock}
-          subtitle={`${data?.total ?? 0} recorded sessions across all agents`}
+          // The words without the number until the number is known: "0
+          // recorded sessions" is a fact this page does not have yet (T-0128).
+          subtitle={
+            data ? `${data.total} recorded sessions across all agents` : "Recorded sessions across all agents"
+          }
           color="orange"
         />
       }

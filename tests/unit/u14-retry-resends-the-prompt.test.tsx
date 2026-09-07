@@ -56,34 +56,43 @@ const failedTurn: ChatMessage = {
   updatedAt: "2026-06-01T09:30:02Z",
 };
 
+/**
+ * Stable across renders, as the page's own callbacks are. The hook's load
+ * effect depends on `setModel`; a fresh jest.fn() per render would re-run it
+ * after every state change and fetch the old pair straight back in.
+ */
+const stable = {
+  setActiveId: jest.fn(),
+  setConversations: jest.fn(),
+  loadConversations: jest.fn(async () => undefined),
+  refreshActiveConversation: jest.fn(async () => undefined),
+  setIsStreaming: jest.fn(),
+  setPendingApproval: jest.fn(),
+  messagesEndRef: { current: null },
+  abortRef: { current: null },
+  streamGenRef: { current: 0 },
+  closeStream: jest.fn(),
+  streamAgentRun: jest.fn(),
+  setModel: jest.fn(),
+  showToast: jest.fn(),
+};
+
 function useHarness() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const send = useChatSend({
+    ...stable,
     activeId: "c1",
-    setActiveId: jest.fn(),
-    setConversations: jest.fn(),
-    loadConversations: jest.fn(async () => undefined),
-    refreshActiveConversation: jest.fn(async () => undefined),
     messages,
     setMessages,
-    setIsStreaming: jest.fn(),
     pendingApproval: null,
-    setPendingApproval: jest.fn(),
-    messagesEndRef: { current: null },
-    abortRef: { current: null },
-    streamGenRef: { current: 0 },
     updateLocalMessage: (id, patch) =>
       setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, ...patch } : m))),
-    closeStream: jest.fn(),
-    streamAgentRun: jest.fn(),
     input,
     setInput,
     mode: "agent",
     model: "the-model",
-    setModel: jest.fn(),
     gatewayOnline: true,
-    showToast: jest.fn(),
   });
   return { send, messages };
 }

@@ -142,8 +142,11 @@ export function useChatSend({
   }, [messages, messagesEndRef]);
 
   // ── Send ────────────────────────────────────────────────────
-  const handleSend = useCallback(async () => {
-    const text = input.trim();
+  /**
+   * Send `text` as a new turn on top of `history`. handleSend runs it for the
+   * composer's input; handleRetry runs it for the words of a failed turn.
+   */
+  const sendText = useCallback(async (text: string, history: ChatMessage[]) => {
     if (!text) return;
     if (gatewayOnline === false) {
       showToast("Gateway is offline — start it with: hermes gateway start", "error");
@@ -171,7 +174,7 @@ export function useChatSend({
     const userMsg = localMessage(conversationId, "user", text, "complete");
     const assistantMsg = localMessage(conversationId, "assistant", "", "streaming");
     setMessages((prev) => [...prev, userMsg, assistantMsg]);
-    const priorMessages = messages;
+    const priorMessages = history;
     setInput("");
     setIsStreaming(true);
 
@@ -237,9 +240,7 @@ export function useChatSend({
       void loadConversations();
     }
   }, [
-    input,
     activeId,
-    messages,
     mode,
     model,
     gatewayOnline,
@@ -258,6 +259,30 @@ export function useChatSend({
   ]);
 
   // ── Stop the active run ─────────────────────────────────────
+  const handleSend = useCallback(() => sendText(input.trim(), messages), [sendText, input, messages]);
+
+  /**
+   * Retry a failed assistant turn. The failed turn and the user turn that
+   * asked for it leave the transcript and the same words go again as a new
+   * turn, so the screen reads as one attempt rather than a prompt stated
+   * twice with a failure between. A second failure lands on the new turn
+   * with its own reason and its own Retry (T-0128).
+   */
+  const handleRetry = useCallback(
+    async (failedId: string) => {
+      const at = messages.findIndex((m) => m.id === failedId);
+      if (at === -1 || messages[at].role !== "assistant" || messages[at].status !== "failed") return;
+      let askedAt = at - 1;
+      while (askedAt >= 0 && messages[askedAt].role !== "user") askedAt -= 1;
+      if (askedAt < 0) return;
+      const asked = messages[askedAt];
+      const remaining = messages.filter((m) => m.id !== failedId && m.id !== asked.id);
+      setMessages(remaining);
+      await sendText(asked.content, remaining);
+    },
+    [messages, sendText, setMessages],
+  );
+
   const handleStop = useCallback(async () => {
     streamGenRef.current++; // supersede any in-flight stream callbacks
     closeStream();
@@ -297,6 +322,7 @@ export function useChatSend({
 
   return {
     handleSend,
+    handleRetry,
     handleStop,
     handleApproval,
     handleKeyDown,

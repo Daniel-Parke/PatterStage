@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 /**
  * U14 · The rail between 768 and 1024.
  *
@@ -18,7 +19,7 @@
  * each query by its width, the way the b2 drawer suite answers one.
  */
 
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { render, waitFor, within } from "@testing-library/react";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -121,8 +122,10 @@ describe("U14 · the rail between 768 and 1024", () => {
   });
 
   it("the phone query stops at 767, and the shell's own breakpoints follow", () => {
-    expect(read("src/hooks/useIsMobile.ts")).toMatch(/\(max-width:\s*767px\)/);
-    expect(read("src/hooks/useIsMobile.ts")).not.toMatch(/1023px/);
+    // The DEFAULT query is the phone's and ends at 767; the tablet query that
+    // ends at 1023 is the other export, and is meant to.
+    expect(read("src/hooks/useIsMobile.ts")).toMatch(/MOBILE_QUERY = "\(max-width: 767px\)"/);
+    expect(read("src/hooks/useIsMobile.ts")).toMatch(/TABLET_QUERY = "\(min-width: 768px\) and \(max-width: 1023px\)"/);
 
     const header = read("src/components/layout/MobileHeader.tsx");
     expect(header).toMatch(/\bmd:hidden\b/);

@@ -63,7 +63,7 @@ function slugName(name: string): string {
 export default function ArtifactsPage() {
   const [kind, setKind] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const { data: artifacts, error, refetch } = useArtifacts(kind || undefined);
+  const { data: artifacts, error, refetch, isLoading } = useArtifacts(kind || undefined);
   const { data: detail } = useArtifact(selectedId);
   /** A failed write on this page. It used to refetch straight over its own
    *  failure, so a refused delete left the screen exactly as it was (D99). */
@@ -102,7 +102,11 @@ export default function ArtifactsPage() {
 
       <Card padding="sm">
         <div className="flex items-center gap-2 px-1">
-          <span className="text-micro font-mono uppercase tracking-widest text-ps-text-muted">{list.length} artifact{list.length === 1 ? "" : "s"}</span>
+          {/* An em space until the list has answered: "0 ARTIFACTS" was painted
+              before the fetch resolved on every load (T-0128). */}
+          <span className="text-micro font-mono uppercase tracking-widest text-ps-text-muted">
+            {isLoading ? "\u2003" : `${list.length} artifact${list.length === 1 ? "" : "s"}`}
+          </span>
           <div className="ml-auto w-44">
             <Select value={kind} onChange={setKind} options={KIND_FILTERS} />
           </div>

@@ -15,6 +15,12 @@ async function openAgentsPage(page: Page) {
   await page.goto("/agent/profiles");
   // The registry's word, which is also the rail entry (U11, T-0125).
   await expect(page.getByRole("heading", { name: "Agents", exact: true })).toBeVisible(READY);
+  // And a control the CLIENT renders, because since U11 the heading is drawn
+  // before hydration and a click on New Profile in that window is a click on a
+  // button with no handler yet: the modal never opened, once, under a full
+  // worker pool (T-0128). Push all appears only after the profiles fetch has
+  // resolved, so once it is visible every button on the page is wired.
+  await expect(page.getByRole("button", { name: "Push all", exact: true })).toBeVisible(READY);
 }
 
 test.describe("Agents page", () => {

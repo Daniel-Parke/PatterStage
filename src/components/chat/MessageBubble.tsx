@@ -8,13 +8,16 @@
 // of a permanent "Thinking…" placeholder (the bug this rewrite fixes).
 // ═══════════════════════════════════════════════════════════════
 
+import { AlertTriangle, RotateCcw } from "lucide-react";
+
 import { renderMarkdown } from "@/lib/chat-utils";
+import Button from "@/components/ui/Button";
 import MessageAvatar from "@/components/chat/MessageAvatar";
 import ReasoningPanel from "@/components/chat/ReasoningPanel";
 import ToolCallList from "@/components/chat/ToolCallList";
 import type { ChatMessage } from "@/types/chat";
 
-function AssistantBody({ msg }: { msg: ChatMessage }) {
+function AssistantBody({ msg, onRetry }: { msg: ChatMessage; onRetry?: () => void }) {
   const hasContent = msg.content.trim().length > 0;
   if (hasContent) {
     // The content here IS model output, so the question is only whether the
@@ -38,10 +41,25 @@ function AssistantBody({ msg }: { msg: ChatMessage }) {
     return <span className="text-ps-text-muted italic text-body">Thinking…</span>;
   }
   if (msg.status === "failed") {
+    // A failed run is an error, not a line of red italic prose where the reply
+    // would have been: announced (role=alert), seen at a glance (the icon),
+    // explained (the reason the gateway gave), and with a way forward. The
+    // read contract (T-0105) gives a failed READ Retry where the content would
+    // have been; a failed WRITE gets the same here. Retry is the page's to
+    // wire, so it renders only when the page hands one in (T-0128).
     return (
-      <span className="text-neon-red/80 italic text-body">
-        {msg.error || "The agent run failed."}
-      </span>
+      <div role="alert" className="flex flex-wrap items-start gap-3">
+        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-status-fail" aria-hidden />
+        <div className="min-w-0 flex-1 text-body">
+          <p className="font-semibold text-status-fail">The run failed.</p>
+          <p className="text-ps-text-secondary">{msg.error || "No reason came back with it."}</p>
+        </div>
+        {onRetry && (
+          <Button type="button" size="sm" icon={RotateCcw} onClick={onRetry}>
+            Retry
+          </Button>
+        )}
+      </div>
     );
   }
   if (msg.status === "cancelled") {
@@ -50,8 +68,9 @@ function AssistantBody({ msg }: { msg: ChatMessage }) {
   return <span className="text-ps-text-muted italic text-body">(no response)</span>;
 }
 
-export default function MessageBubble({ msg }: { msg: ChatMessage }) {
+export default function MessageBubble({ msg, onRetry }: { msg: ChatMessage; onRetry?: () => void }) {
   const isUser = msg.role === "user";
+  const isFailed = !isUser && msg.status === "failed";
   return (
     <div className={`flex gap-3 ${isUser ? "justify-end" : "justify-start"}`}>
       {!isUser && <MessageAvatar role={msg.role} />}
@@ -60,7 +79,9 @@ export default function MessageBubble({ msg }: { msg: ChatMessage }) {
         className={`max-w-[70%] rounded-ps-lg px-4 py-3 ${
           isUser
             ? "bg-neon-cyan/10 border border-neon-cyan/20 text-ps-text-primary"
-            : "bg-ps-surface-raised border border-ps-edge-hairline text-ps-text-primary"
+            : isFailed
+              ? "bg-ps-surface-raised border border-status-fail/40 text-ps-text-primary"
+              : "bg-ps-surface-raised border border-ps-edge-hairline text-ps-text-primary"
         }`}
       >
         {isUser ? (
@@ -71,7 +92,7 @@ export default function MessageBubble({ msg }: { msg: ChatMessage }) {
             {msg.toolCalls && msg.toolCalls.length > 0 ? (
               <ToolCallList toolCalls={msg.toolCalls} />
             ) : null}
-            <AssistantBody msg={msg} />
+            <AssistantBody msg={msg} onRetry={onRetry} />
           </>
         )}
         <div className="text-micro text-ps-text-faint font-mono mt-1 text-right">

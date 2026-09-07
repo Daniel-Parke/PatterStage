@@ -123,7 +123,7 @@ export default function RootLayout({
         */}
         <HelpProvider screens={helpScreenIndex(loadHelpManifest())} concepts={loadHelpConcepts()}>
         <SidebarProvider>
-          <div className="h-full flex flex-col lg:flex-row">
+          <div className="h-full flex flex-col md:flex-row">
             {/* No border here. The rail draws its own seam; this wrapper
                 drew a second one right beside it, so what looked like one
                 divider was two 1px rules at 1.25:1 apiece. */}

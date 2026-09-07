@@ -1,19 +1,20 @@
-// ═══════════════════════════════════════════════════════════════
-// useIsMobile — is the shell below its desktop breakpoint?
-//
-// The rail is rendered once and is either the desktop rail or the phone's
-// drawer depending on this answer (T-0097). It starts false on the server and
-// on first paint, so the rail is never inert in HTML a crawler or a keyboard
-// user reads before hydration; the effect corrects it on the first frame.
-// jsdom has no matchMedia, so a test that wants the drawer mocks it.
-// ═══════════════════════════════════════════════════════════════
-
 "use client";
 
 import { useEffect, useState } from "react";
 
-/** Tailwind's lg breakpoint is 1024px; below it the rail is the drawer. */
-const MOBILE_QUERY = "(max-width: 1023px)";
+/**
+ * Below md (768px) the rail is the drawer. This said lg (1024) until T-0128,
+ * so a tablet with room to spare for the 64px icon column got the phone's
+ * hamburger and sheet instead.
+ */
+const MOBILE_QUERY = "(max-width: 767px)";
+
+/**
+ * Between md and lg the rail is the icon column whatever the collapse
+ * preference says: there is room for 64px beside a page at that width and
+ * not for labels. At lg the preference is read again.
+ */
+export const TABLET_QUERY = "(min-width: 768px) and (max-width: 1023px)";
 
 export function useIsMobile(query: string = MOBILE_QUERY): boolean {
   const [mobile, setMobile] = useState(false);

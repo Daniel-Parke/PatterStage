@@ -249,7 +249,7 @@ export default function SpendPanel({ summary, onSave, saving = false }: SpendPan
           type="button"
           data-testid="spend-budget-toggle"
           onClick={() => setOpen((v) => !v)}
-          className="text-body text-ps-text-muted transition-colors hover:text-ps-text-secondary"
+          className="inline-flex min-h-6.5 items-center text-body text-ps-text-muted transition-colors hover:text-ps-text-secondary"
         >
           {policy.limitUsd === null
             ? "Set a budget (optional)"

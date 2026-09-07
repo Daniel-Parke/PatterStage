@@ -165,6 +165,12 @@ the reason and a **Retry** where the list would be, not an empty sidebar reading
 the middle column, and the turns of the conversation you were reading before are
 cleared rather than left sitting under the new title.
 
+**A failed run says so too.** If the agent's reply fails, the bubble where the
+reply would have been is an error: an icon, "The run failed", and the reason
+the gateway gave, announced to a screen reader as it appears. **Retry** sends
+the same prompt again as a new turn, and the failed attempt leaves the
+transcript so it reads as one attempt rather than a question asked twice.
+
 <details>
 <summary>Under the hood</summary>
 

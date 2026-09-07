@@ -37,6 +37,15 @@ test.describe("motion under reduce (gate 10)", () => {
         const names: string[] = [];
         for (const a of document.getAnimations()) {
           if (a.playState !== "running") continue;
+          // Motion, not bookkeeping. The reduce rule leaves every transition
+          // and one-shot animation at 0.01ms, and a sample can land inside the
+          // frame one of those is triggered in (the first gate caught two
+          // colour transitions that way on Profiles). What counts is anything
+          // still set to move: a duration a human could see, or a repeat.
+          const timing = a.effect?.getComputedTiming();
+          const duration = typeof timing?.duration === "number" ? timing.duration : Number.POSITIVE_INFINITY;
+          const repeats = timing?.iterations === Number.POSITIVE_INFINITY;
+          if (duration <= 20 && !repeats) continue;
           const e = a as unknown as { animationName?: string; transitionProperty?: string };
           const name =
             e.animationName ??

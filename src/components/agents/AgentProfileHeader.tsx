@@ -76,7 +76,7 @@ export default function AgentProfileHeader({
           one below to change it.
         </p>
         <details className="mt-2 group">
-          <summary className="cursor-pointer text-body text-neon-cyan hover:underline">
+          <summary className="min-h-6.5 cursor-pointer text-body text-neon-cyan hover:underline">
             Which file holds what
           </summary>
           <p className="mt-2 text-micro text-ps-text-muted font-mono">

@@ -94,7 +94,7 @@ export function Select({
         aria-label={ariaLabel}
         onClick={() => !disabled && setOpen((o) => !o)}
         onKeyDown={onKeyDown}
-        className="flex w-full items-center justify-between gap-2 rounded-ps-md border border-ps-edge bg-ps-surface-panel px-3 py-2 text-left text-body text-ps-text-primary transition-colors hover:border-ps-edge-emphasis focus:outline-none focus:ring-1 focus:ring-neon-cyan/30 disabled:cursor-not-allowed disabled:opacity-40"
+        className="flex w-full items-center justify-between gap-2 rounded-ps-md border border-ps-edge bg-ps-surface-panel px-3 py-2 text-left text-body text-ps-text-primary transition-colors hover:border-ps-edge-emphasis disabled:cursor-not-allowed disabled:opacity-40"
       >
         <span className={`truncate ${selected ? "" : "text-ps-text-muted"}`}>{selected?.label ?? placeholder}</span>
         <ChevronDown className={`h-4 w-4 shrink-0 text-ps-text-muted transition-transform ${open ? "rotate-180" : ""}`} />

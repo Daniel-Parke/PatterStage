@@ -177,6 +177,7 @@ export function useChatPage() {
     setInput: composer.setInput,
     handleKeyDown: send.handleKeyDown,
     handleSend: send.handleSend,
+    handleRetry: send.handleRetry,
     handleStop: send.handleStop,
   };
 }

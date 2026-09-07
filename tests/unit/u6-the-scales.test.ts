@@ -154,13 +154,22 @@ describe("the reduced-motion guard names what actually animates", () => {
   };
 
   /**
-   * The defect this fixes. `.pulse-glow` is on the dashboard's ONLINE dot and
+   * The defect this fixed. `.pulse-glow` is on the dashboard's ONLINE dot and
    * on every StatusDot in the product; the guard named `.animate-pulse-glow`,
    * which nothing uses. An operator who asked their OS for reduced motion got a
    * dot pulsing forever on the front door.
+   *
+   * T-0120 made the guard name the right class. T-0128 made it name no class
+   * at all: it halts everything by a `*` rule and re-enables only the
+   * spinners, because an allowlist can only ever cover what its author knew
+   * about, and the recon found 28 animations it did not. So the dot is covered
+   * by NOT being named, and that is what is asked: the universal halt, and no
+   * rule putting .pulse-glow back.
    */
-  it("guards .pulse-glow, which is the one the product uses", () => {
-    expect(guard()).toContain(".pulse-glow");
+  it("halts .pulse-glow, which is the one the product uses, by halting everything", () => {
+    const g = guard();
+    expect(g).toMatch(/\*,\s*\*::before,\s*\*::after\s*\{[^}]*animation-duration:\s*0\.01ms\s*!important/);
+    expect(g).not.toMatch(/\.pulse-glow[^{]*\{[^}]*animation-duration:\s*(?!0\.01ms)\S/);
   });
 
   it("and names nothing that no longer exists", () => {

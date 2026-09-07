@@ -54,7 +54,7 @@ export default function AgentProfilesOverview({
           may reach. Pick one in the header, or in the table, to read it or change it.
         </p>
         <details className="mt-1">
-          <summary className="cursor-pointer text-body text-neon-cyan hover:underline">
+          <summary className="min-h-6.5 cursor-pointer text-body text-neon-cyan hover:underline">
             Where a profile is stored
           </summary>
           <p className="mt-2 text-micro text-ps-text-muted font-mono">

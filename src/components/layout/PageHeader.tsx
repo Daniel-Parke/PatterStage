@@ -111,7 +111,10 @@ export default function PageHeader({
           // gap-3 (0.75rem), so 2rem is exactly the title text's own indent.
           // The subtitle reads as belonging to the title rather than to the
           // icon.
-          <p className="ml-8 truncate font-mono text-micro text-ps-text-muted">{subtitle}</p>
+          // Truncated from sm up, where the header is one line and the row of
+          // actions sits beside it; below sm it wraps, because an ellipsis on
+          // a phone hid the words on every screen (T-0127 carried, T-0128).
+          <p className="ml-8 font-mono text-micro text-ps-text-muted sm:truncate">{subtitle}</p>
         )}
       </div>
       {/*
@@ -120,7 +123,12 @@ export default function PageHeader({
         actions is not also a page with no way into its guide. There is no prop
         to opt out with: an opt-out is how a screen quietly loses its guide.
       */}
-      <div className="flex flex-shrink-0 items-center gap-3">
+      {/* max-w-full and flex-wrap on the slot itself: shrink-0 keeps the
+          title from being squeezed, but four actions side by side are 490px
+          on Tools, and a shrink-0 row that cannot wrap is wider than a phone.
+          The row takes its own second line now, main stays inside its box
+          (T-0128). */}
+      <div className="flex max-w-full flex-shrink-0 flex-wrap items-center gap-3">
         <HelpLink />
         {actions}
       </div>

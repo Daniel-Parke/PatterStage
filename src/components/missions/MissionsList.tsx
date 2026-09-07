@@ -113,17 +113,18 @@ export default function MissionsList({ vm }: MissionsListProps) {
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-3 shrink-0">
+              {/* 16px of text was the whole target on both of these (T-0128). */}
               <button
                 type="button"
                 onClick={openCategoryManager}
-                className="text-micro font-mono text-ps-text-muted hover:text-neon-cyan"
+                className="inline-flex min-h-6.5 items-center text-micro font-mono text-ps-text-muted hover:text-neon-cyan"
               >
                 Manage categories
               </button>
               <button
                 type="button"
                 onClick={openTemplateManager}
-                className="text-micro font-mono text-ps-text-muted hover:text-neon-cyan flex items-center gap-1 transition-colors"
+                className="text-micro font-mono text-ps-text-muted hover:text-neon-cyan flex min-h-6.5 items-center gap-1 transition-colors"
               >
                 <Layers className="w-3 h-3" />
                 Edit Templates

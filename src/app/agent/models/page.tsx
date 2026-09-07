@@ -136,7 +136,14 @@ export default function ModelsPage() {
         <PageHeader
           icon={Globe}
           title="Models"
-          subtitle={`${models.length} model${pluralise(models.length)} in registry · ${credentials.length} credential${pluralise(credentials.length)}`}
+          // Counts once they are counted. Loading with nothing in hand read
+          // "0 models in registry · 0 credentials", which is not a state this
+          // install has ever been in (T-0128).
+          subtitle={
+            loading && models.length === 0 && credentials.length === 0
+              ? "The model registry and its credentials"
+              : `${models.length} model${pluralise(models.length)} in registry · ${credentials.length} credential${pluralise(credentials.length)}`
+          }
           color="purple"
           // No back link: Models is a rail entry, and the rail says where you
           // are. The CONFIG eyebrow named a parent it does not have (T-0125).

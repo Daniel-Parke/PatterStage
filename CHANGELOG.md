@@ -92,6 +92,23 @@ The work leading to the 1.0.0 release.
 
 ### Changed
 
+- **The keyboard's focus ring is the same everywhere, and instant.** Text
+  fields, selects and toggles used to swap the console's ring for a fainter
+  one of their own that also lit up on a mouse click. They use the one ring
+  now, and no control anywhere removes it. The ring also stops fading in from
+  grey: it is there the moment focus lands, however fast you tab.
+- **Reduced motion means reduced motion.** With "reduce motion" set in your
+  operating system, every animation and transition in PatterStage now stops,
+  spinners excepted, because a spinner is how a page says it is still working.
+  Before, a short list of names was exempted and twenty-eight animations kept
+  running, the logo's flame among them.
+- **Tablets get the icon rail.** Between 768 and 1024 pixels wide the sidebar
+  is the 64px icon column rather than a hamburger and a drawer, so a screen
+  with room for it no longer gets the phone's chrome. The drawer starts below
+  768, where it belongs.
+- **A failed chat run is an error you can act on.** Where the reply would have
+  been, the bubble says the run failed, gives the reason, and offers **Retry**,
+  which sends the same prompt again as a new turn. Screen readers announce it.
 - **The dashboard says each fact once.** Gateway and Memory were a pill and,
   a panel above, a row with the reason the pill had no room for; Errors was a
   pill and a panel. The row is three pills now - Scheduler, Spend, Processes -
@@ -309,6 +326,19 @@ The work leading to the 1.0.0 release.
 
 ### Fixed
 
+- **Tab inside the phone's navigation drawer** could land on the hidden
+  collapse control and seem to escape behind the backdrop; it stays on what is
+  drawn.
+- **Six screens no longer run past the edge of a phone.** Missions' template
+  picker, the Memory tabs, and the header actions on Tools, Profiles, Logs and
+  Models all wrap now instead of pushing the page 40 to 600 pixels out of
+  sight with no scrollbar to say so.
+- **Every control is at least 24 pixels tall**: Manage categories and Edit
+  Templates on Missions, the two "where is it stored" disclosures on Profiles,
+  and the budget line on Insights were between 16 and 21.
+- **Three headers no longer read "0" while loading.** Models, Sessions and
+  Artifacts said "0 models", "0 recorded sessions" and "0 artifacts" before
+  their data arrived.
 - **The agent's `config.yaml` no longer corrupts itself.** A rebuild could emit the
   same top-level key twice, misread the toolsets list, and never read the
   personality at all, and the damaged text was then copied back into the database,

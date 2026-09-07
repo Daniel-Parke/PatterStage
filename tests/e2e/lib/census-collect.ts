@@ -123,6 +123,37 @@ export function collectCensus(route: string): RawCensus {
   if (rail && parseFloat(getComputedStyle(rail).borderRightWidth) === 0) result.railDivider = null;
 
   /** A short, stable name for a node, so a regression can be found again. */
+  /**
+   * WCAG 2.5.8's "in a sentence": the control, or the inline wrapper it sits
+   * in, has words for siblings. Walk up through inline-level ancestors to the
+   * block that holds it and ask whether that block has text of its own.
+   */
+  function inSentence(el: Element): boolean {
+    let node: Element = el;
+    while (node.parentElement && /^inline/.test(getComputedStyle(node.parentElement).display)) {
+      node = node.parentElement;
+    }
+    const block = node.parentElement;
+    if (!block) return false;
+    return Array.from(block.childNodes).some(
+      (n) => n.nodeType === 3 && (n.textContent ?? "").trim().length > 0,
+    );
+  }
+
+  /**
+   * The box a stretched link really covers. A link whose ::after is
+   * positioned absolute has been stretched over its nearest positioned
+   * ancestor (the `after:absolute after:inset-0` idiom on a list row), and
+   * that ancestor is the target a finger meets.
+   */
+  function stretchedTargetOf(el: Element): DOMRect | null {
+    const after = getComputedStyle(el, "::after");
+    if (after.position !== "absolute" || after.content === "none" || after.content === "normal") return null;
+    let p = el.parentElement;
+    while (p && getComputedStyle(p).position === "static") p = p.parentElement;
+    return p ? p.getBoundingClientRect() : null;
+  }
+
   function describe(el: Element): string {
     const tag = el.tagName.toLowerCase();
     const testid = el.getAttribute("data-testid");
@@ -216,6 +247,10 @@ export function collectCensus(route: string): RawCensus {
     // A surface is a thing the eye reads as a container: it has an edge, or a
     // fill with a corner, and it is big enough to be a panel rather than a dot.
     // Chrome inside a control belongs to the control, not to the card census.
+    const inProse = control && (style.display === "inline" || inSentence(el));
+    const clipped = control && style.position === "absolute" && rect.width <= 1 && rect.height <= 1;
+    const exempt = inProse || clipped;
+    const target = (control && stretchedTargetOf(el)) || rect;
     const isSurface =
       !control &&
       !insideControl &&
@@ -235,12 +270,14 @@ export function collectCensus(route: string): RawCensus {
         shadow,
         zIndex: style.position === "static" ? "auto" : style.zIndex,
         control,
-        // WCAG 2.5.8 exempts a target that is inline in a sentence, so an
-        // ordinary link inside a paragraph is not measured against the floor.
-        // `display: inline` is exactly that case: the box is the line, not the
-        // control.
-        w: control && style.display === "inline" ? 0 : Math.round(rect.width * 100) / 100,
-        h: control && style.display === "inline" ? 0 : Math.round(rect.height * 100) / 100,
+        // WCAG 2.5.8's own exemptions, and no others (T-0128). Inline in a
+        // sentence: a control whose box is the line rather than the control
+        // (`display: inline`), or one set among the words of its block, which
+        // is what a concept hint is. Not on the screen: a skip link clipped to
+        // a pixel until it is focused. A stretched link: its target is the row
+        // it covers, so the row is what is measured.
+        w: !control || exempt ? 0 : Math.round(target.width * 100) / 100,
+        h: !control || exempt ? 0 : Math.round(target.height * 100) / 100,
       });
     }
 

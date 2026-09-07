@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 /**
  * U14 · The focus trap skips what is not drawn.
  *

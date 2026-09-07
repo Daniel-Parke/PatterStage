@@ -68,6 +68,10 @@ test.describe("the rail between 768 and 1024", () => {
     const rail = page.getByTestId("app-rail");
     await expect(rail).toBeVisible();
     await expect(rail).not.toHaveAttribute("inert");
+    // The server renders the expanded rail and the tablet query is read on
+    // the client, so the column is 224px until React has hydrated; the first
+    // gate measured it in that window. Wait for the width the query gives.
+    await expect(rail).toHaveCSS("width", "64px", { timeout: 30_000 });
     const box = await rail.boundingBox();
     expect(box, "the rail has no box").not.toBeNull();
     expect(Math.round(box!.x)).toBe(0);
@@ -82,6 +86,9 @@ test.describe("the drawer's ring", () => {
   test("Tab never leaves the open drawer for something that is not drawn", async ({ page }) => {
     await page.goto("/", { waitUntil: "domcontentloaded" });
     await page.getByRole("heading").first().waitFor({ timeout: 30_000 });
+    // The closed drawer is made inert by a client effect, so the attribute is
+    // the proof that React has hydrated and the hamburger has its handler.
+    await expect(page.getByTestId("app-rail")).toHaveAttribute("inert", "", { timeout: 30_000 });
     await page.getByRole("button", { name: "Open navigation" }).click();
     await expect(page.getByRole("dialog", { name: "Navigation" })).toBeVisible();
 
