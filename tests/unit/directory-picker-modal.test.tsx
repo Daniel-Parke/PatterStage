@@ -108,3 +108,21 @@ describe("DirectoryPickerModal — safeApiCall double-wrap", () => {
     });
   });
 });
+
+// Sharpened after the sweep (T-0129): the listing is a read the hook makes
+// only while the modal is open (`enabled: open`), and a mutant that dropped
+// the guard survived, because no test rendered the picker closed. A closed
+// picker asks the disk for nothing.
+describe("DirectoryPickerModal — closed", () => {
+  const mockFetchClosed = jest.fn();
+  beforeEach(() => {
+    mockFetchClosed.mockReset();
+    global.fetch = mockFetchClosed as unknown as typeof fetch;
+  });
+
+  it("does not list the disk while it is closed", async () => {
+    renderWithQuery(<DirectoryPickerModal open={false} onClose={() => {}} onSelect={() => {}} />);
+    await new Promise((r) => setTimeout(r, 60));
+    expect(mockFetchClosed).not.toHaveBeenCalled();
+  });
+});
