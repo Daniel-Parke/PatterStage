@@ -858,7 +858,8 @@ commits, and the after reading is what the ratchet now holds.
 | Inline card chrome outside `ui/` | 113 files | 222 in 87 files | | `no-inline-card-chrome` is hard for new sites and holds 222 in its baseline |
 | Components with exactly one importer | 146 of 213 | 128 of 201 | <= 70 of ~130 | missed: the split reached the primitive layer, not the page layer |
 | Dashboard API requests, load / 30s idle | 22 (4 twice) / 11 | 17 (none twice) / 14 | <= 13 / <= 12 | load: no duplicate, and seventeen distinct facts is what the board shows; idle: the poll arithmetic gives 11 to 13 plus phase, ceiling 15 (T-0129) |
-| Test count | 6,090 | 6,791 | unchanged, exactly (U1's oracle) | U1 held identity; the other sixteen batches added 701 oracles |
+| `/work/composer` route JavaScript | 546 KB | 524 KB | <= 160 KB | **missed**: U9 split the canvas behind `next/dynamic`, which defers it, but the route still loads it on that screen; the recon's number and this one are the route's own scripts as the browser downloads them |
+| Test count | 6,090 | 6,802 | unchanged, exactly (U1's oracle) | U1 held identity; the other sixteen batches added 712 oracles |
 | `src/` lines (ts, tsx, css) | 105,975 | 105,942 | -6,000 to -9,600 | **missed**: the deletions (U12 ~1,100, U15 1,353 net, the wrappers, the routes) were paid back by the primitive set, the conversions and the comments that name each decision |
 | `tests/` lines | 108,310 | 117,944 | ~-1,750 | **missed**: U1's factories took ~1,750 out and sixteen batches of oracles put 11,400 in |
 

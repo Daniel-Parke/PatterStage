@@ -142,3 +142,4 @@ The records under org/tasks/ are canonical.
 | T-0127 | standard | R1 | done | t0127-u13-home-2026-09-07 |
 | T-0128 | standard | R1 | done | t0128-u14-interaction-2026-09-08 |
 | T-0129 | standard | R1 | done | t0129-u15-deletion-2026-09-08 |
+| T-0130 | standard | R1 | done | t0130-u16-docs-and-readiness-2026-09-08 |
