@@ -1,6 +1,6 @@
 ---
 title: Design tokens
-summary: The Cherenkov palette, the semantic colour layer, and how TypeScript maps to CSS tokens
+summary: The design system as built - the surface and edge ladder, the type scale and its register, the status ladder, radius, layers, elevation and duration, the primitive set and the rule for ui/ - and how TypeScript maps to the CSS tokens
 section: contributing
 nav: 50
 audience: contributor
@@ -10,7 +10,12 @@ compiled_from: normalised
 ---
 # PatterStage: design tokens
 
-Reference for the Cherenkov-forward palette, semantic colours, and how TypeScript maps to CSS. Use this when adding UI so new screens match the rest of the app.
+The design system as it exists after the 2026-09 overhaul (`org/plans/2026-09-ui-overhaul.md`):
+one source in `src/app/globals.css` (`@theme`), mirrored where TypeScript needs
+it in `src/lib/theme.ts`, and held by gates rather than by asking nicely
+(`design-lint`, `contrast-check`, the live census). Read it top to bottom once;
+after that, the rule for any new screen is the same everywhere: pick the role,
+not the value.
 
 ## Layer A: Cherenkov primitives
 
@@ -28,7 +33,7 @@ Registered in `src/app/globals.css` as `--color-cherenkov-100` … `--color-cher
 
 ## Layer B: Surfaces (blue-tinted neutrals)
 
-Dark scales are slightly mixed toward `#0071c2` so panels read “cool reactor core” rather than flat gray.
+Dark scales are slightly mixed toward `#0071c2` so panels read "cool reactor core" rather than flat gray. These are the primitives the ladder below is solved from; no component picks one directly any more (see B2).
 
 | Token | Hex (approx) |
 |-------|----------------|
@@ -190,6 +195,48 @@ Side-specific spellings keep their side: `rounded-t-ps-lg` on a bottom sheet,
 radii before this, with forty files painting an 8px card edge on the same screen
 as a 12px one.
 
+## Layers: seven rungs, and nothing between them
+
+| Utility | Value | Is |
+|---------|-------|----|
+| `z-base` | 0 | the page |
+| `z-sticky` | 10 | a sticky header or bar |
+| `z-dropdown` | 30 | a menu, a popover, a combobox list |
+| `z-overlay` | 50 | a backdrop |
+| `z-modal` | 60 | a dialog or sheet panel, the open drawer |
+| `z-toast` | 70 | notifications |
+| `z-tooltip` | 80 | a tooltip, above everything |
+
+Declared as `--z-*` on `:root` and exposed as one `@utility` each, so a layer is
+a word. Thirteen z-layers existed before, seven of them arbitrary: `z-[61]`
+existed because someone needed to sit on `z-[60]`. `z-scale-only` refuses an
+arbitrary `z-[...]` in `.tsx`; the twenty it still tolerates are in its
+baseline, which only ratchets down.
+
+## Elevation: two, and the glow
+
+| Token | Is | Use |
+|-------|----|-----|
+| `shadow-ps-raised` | `0 8px 24px -4px rgb(0 0 0 / 0.55), 0 2px 6px -2px rgb(0 0 0 / 0.4)` | a dialog, a popover, a menu: the one shadow that means "above the page" |
+| `glow-surface` | two soft coloured shadows driven by `--glow-surface-rgb` | the live signature only: a running process, a live session, a pulsing dot |
+
+A card is not raised; its rung on the surface ladder is what separates it. The
+recon measured 26 rendered box-shadows; the census counts what is left and
+holds it. `GlowSurface` owns the glow and sets the triplet inline (see Glow / TS
+parity below); nothing else paints a coloured shadow.
+
+## Duration: one pair, and the house transition
+
+| Property | Value | Is |
+|----------|-------|----|
+| `--ps-duration-fast` | 120ms | the transition you do not notice: a hover, a focus, a colour |
+| `--ps-duration` | 200ms | the one you do: a drawer, a rail width, a panel opening |
+
+The house `transition-colors` is Tailwind's without `outline-color`, redefined
+in the utilities layer after Tailwind's own, so the focus ring is instant where
+everything else fades (T-0128). Do not write a duration in a class; pick the
+pair.
+
 ## A class name in prose used to be CSS
 
 Tailwind v4 scans SOURCE, and its automatic detection reads the whole project.
@@ -311,11 +358,50 @@ comma triplet yields a glow that silently does not render. This file said
 spelled the same way for the same reason. If you change an `@theme` neon hex,
 update `GLOW_RGBS` and the matching `--ps-rgb-*` in the same PR.
 
-**Restraint (deep-space Cherenkov):** the `.glow-*` box-shadows in `globals.css` are intentionally soft (`14px @ 0.08` + `28px @ 0.025`) so glow reads as a subtle luminescence, not a flat light source. The brand's "reactor core" signature lives in the stronger `pulse-glow` + `glow-surface` reserved for **live/active** states (running process, live session), not static cards. New surfaces follow the same discipline: cyan (Cherenkov) is *the* primary; the other accents (purple/green/pink/orange) are semantic, not decorative. Keep few competing accents per screen.
+**Restraint (deep-space Cherenkov):** glow is the live signature and nothing else. `pulse-glow` and `glow-surface` are reserved for **live/active** states (a running process, a live session, a status dot that is on), never for a static card; the five hard-coded `.glow-<colour>` classes that once painted cards went in T-0120 and their nine call sites moved onto `GlowSurface`. New surfaces follow the same discipline: cyan (Cherenkov) is *the* primary; the other accents (purple/green/pink/orange) are semantic, not decorative. Keep few competing accents per screen.
 
 ## Form inputs
 
-Prefer `inputFieldClasses(accent)` from `src/lib/theme.ts` (wraps `baseInputStyles` + `focusColorMap`) for text inputs and selects instead of duplicating `bg-dark-*` / `focus:border-*` strings in TSX.
+A form control is the Field Kit, `src/components/ui/field`: `Field` (the only
+label, associated to its control by construction), `Input`, `Textarea`,
+`Select` (the accessible listbox) and `Toggle`, at one control height, with
+captions above. None of them paints a focus ring of its own; the global ring
+below is the ring. `inputFieldClasses(accent)` in `src/lib/theme.ts` still
+exists for the seven sites that predate the kit; do not add an eighth.
+
+## The primitive set, and what ui/ means
+
+`src/components/ui/` holds a component when three or more independent places
+call it. A component with one or two callers lives beside its callers under
+`src/components/<domain>/`; the S4 split of 2026-09 (T-0122) moved everything
+that failed the rule out, and a new primitive earns its place by the third
+caller, not by being generic.
+
+| Primitive | Is |
+|-----------|----|
+| `Button`, `IconButton`, `LinkButton` | one chrome (`button-chrome.ts`), three heights (26 / 32 / 40), four variants; an icon-only control is never under 24x24; a link that looks like a button is `LinkButton` and stays a link |
+| `Badge` | the one chip: seven colours, solid or outline, `title` for the long form |
+| `Card` | the one surface: `panel` or `raised`, one radius, one edge, a header slot |
+| `Dialog` | the one overlay: centre, right, bottom or sheet, on `useDialogA11y` (role, modal, Escape, the Tab trap over what is drawn, focus returned) |
+| `Popover` | anything dismissable that is not modal, on `useDismissable` |
+| `SegmentedControl` | a radiogroup with roving tabindex and real ARIA state; every filter row |
+| `DataList` | a table that stacks below its breakpoint instead of clipping a column |
+| `ConfirmButton` | the one destructive treatment: arm, then act, `aria-live` on the armed label |
+| `LoadErrorBanner`, `EmptyState`, `PageLoading`, `Skeleton` | the loading contract: the header always renders, a failed read is an error with Retry, an empty state renders only after a successful read, a count is a pending mark until known |
+| `Picker`, `ProfilePicker` | the one selector, keyboard-reachable |
+| `Toast` | the shell's, three at most, a success never evicts an error |
+| Field Kit (`ui/field`) | above |
+
+Seven files in `ui/` are below the rule today and are named here rather than
+hidden: `Popover` and `TemplateCard` are building blocks other primitives
+compose (`Select` and `Picker` sit on `Popover`; `TemplatePill` on
+`TemplateCard`); `ErrorBoundary` is the layout's and has one caller by nature;
+`DataList` is the newest primitive (T-0125) with two callers and forty-one
+grid-faked tables still to move onto it; `AutoTextarea`, `TemplatePill`,
+`CollapsibleSection` and `Pagination` have one or two callers and are the next
+programme's to place. The measure the recon set, components with exactly one
+importer, read 146 of 213 at the start and 128 of 201 at the end: the split
+happened at the primitive layer and has not yet reached the page layer.
 
 ## Focus
 

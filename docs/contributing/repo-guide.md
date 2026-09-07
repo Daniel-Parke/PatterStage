@@ -151,9 +151,13 @@ Next.js static files go in `public/` at the repo root; the Dockerfile runs
   internals from orchestration code.
 - **Large action-router routes split into per-action modules**: a thin `route.ts`
   dispatches on `action` to `src/lib/missions/mission-handlers/*`.
-- **Read-only data hooks wrap `useApiResource`** (`src/hooks/useApiResource.ts`).
-  Hooks with mutations or multi-query bundles stay bespoke; don't force them onto
-  the generic.
+- **Every read of the API is `useApiResource(endpoint, …)`** (`src/hooks/useApiResource.ts`),
+  and the endpoint is the cache key, so two readers of one endpoint are one
+  request whatever each selects. A hook with writes puts `useMutation` beside
+  its read and invalidates with `apiQueryKey(endpoint)`. Nothing else calls
+  `useQuery`, and no component reads the API inside a `useEffect`;
+  `design-lint`'s `no-raw-fetch-in-component` and
+  `tests/unit/u15-reads-go-through-the-hook` hold both (T-0129).
 - **Big page = page-core hook + render shell.** Past ~600 lines, lift the stateful
   core into a `use<Page>` hook and leave the `.tsx` as a shell. Move logic verbatim.
 - **Prefer composable helpers over wrappers/base classes.** No `withApiRoute` HOF,

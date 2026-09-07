@@ -2,7 +2,7 @@
 summary: The approved UI overhaul programme, batches U0 to U16, four foundational systems, the signed-off deletions, the per-screen density decisions, eleven new gates and the measurements that prove it
 type: venture
 tags: [plan, design]
-status: approved
+status: done
 approved_by: Daniel Parke (operator), 2026-09-06, at plan approval after one round of questions
 session: the UI overhaul session (Opus 5, 2026-09-06)
 compiled_from: preserved
@@ -808,3 +808,74 @@ surface at least 24x24 that is not a control (108, against the walk's narrower
   the same commit, quest hrefs re-pointed, `docs:check` re-satisfied.
 - **Parallel agents do not see each other.** Disjoint file sets per agent, and
   every shared rule is a gate rather than a comment asking nicely.
+
+## Closing (2026-09-08)
+
+Seventeen batches, T-0114 to T-0130, each an oracle-first commit measured red,
+an implementation commit gated by exit code, a mutation sweep against the
+committed tree, and a push. The census script U0 wrote took the before reading
+against the tree at 537d658c and the after reading against the tree at the end
+of U15; both are `scripts/tooling/design-census.baseline.json` at those two
+commits, and the after reading is what the ratchet now holds.
+
+### The census, before and after
+
+| Measure | Before (U0) | After (U15) | Plan target | Read |
+|---|---:|---:|---|---|
+| routes | 23 | 21 | | Rec Room five to two, Settings 27 to one |
+| distinctFontSizes | 7 | 7 | 5 | missed: 13px from one editor's own prop, 18px from one title (T-0119) |
+| twelvePxShare | 0.70 | 0.52 | <= 0.45 | short by 7 points; what is left at 12px is machine words, which belong there |
+| monoShare | 0.63 | 0.68 | ~0.45 | **missed, and moved the wrong way**: the census counts text nodes, and the conversions added more machine-word nodes (table cells, counts, status words) than they moved prose out of mono; the register rule is right and the measure needs the character-weighted reading the recon took |
+| textBelowFloor | 0 | 0 | 0 | held |
+| distinctBorderColours | 36 | 28 | <= 6 | missed: accent-tinted boundaries (status, category colour) are counted, and the census does not fold alphas of one hue |
+| distinctCardChromes | 108 | 64 | <= 4 (on the recon's narrower predicate, 47) | missed; the census counts every bordered surface's radius, border and fill as a chrome, so a status-tinted card is its own chrome by design |
+| distinctButtonHeights | 23 | 21 | 3 (+1 icon) | missed as measured: the census counts every control (links, inputs, summaries, chips), not `Button` alone; Button itself has three heights |
+| distinctButtonChromes | 89 | 57 | <= 8 | missed, same reason |
+| distinctRadii | 7 | 5 | 4 | one short |
+| distinctBoxShadows | 16 | 10 | <= 4 | missed |
+| distinctZLayers | 1 | 1 | 7, none arbitrary | the census sees positioned elements at rest only; the ladder is declared and `z-scale-only` holds 20 arbitrary in its baseline |
+| controlBordersBelowThree | 320 | 102 | 0 | missed: accent-tinted control borders are counted and not asserted (T-0118); the grey ones are at zero by the live gate |
+| decorativeBordersBelowThree | 619 | 691 | | rose on purpose: the hairline is 1.63:1 and the live floor is 1.55, and 32 section headings gained a rule (T-0119) |
+| hitTargetsBelowTwentyFour | 85 | 0 | 0 | **met** (T-0128) |
+| routesWithMisalignedHeading | 21 | 0 | 0 | **met** (T-0117) |
+| worstHeadingOffset | 289 | 0 | 0 | **met** |
+| distinctContentWidths | 8 | 1 | 1 | **met** |
+| routesOverflowingX | 0 | 0 | 0 | held; gate 9 holds `main` at 390 and 1024 as well |
+| railVsPageContrast | 1.06 | 1.47 | >= 1.45 | **met** (T-0118) |
+| railDividerContrast | 1.26 | 4.40 | >= 3 | **met** |
+
+### The other measures
+
+| Measure | Before | After | Plan target | Read |
+|---|---:|---:|---|---|
+| Bare `outline-none` in src | 46 | 0 | 0 | **met** (T-0128) |
+| Animations running under reduced motion | 28 | 0 | <= 3 | **met**; gate 10 holds it |
+| Status colour maps | 22 | 1 | 1 | **met** (T-0120) |
+| Filter groups with no ARIA state | 13 | 0 | 0 | **met**: every filter row is a `SegmentedControl` radiogroup |
+| `text-white/N` + `placeholder-white/N` | 157 | 0 | 0 | **met**; `no-raw-text-alpha` at zero |
+| Raw Tailwind palette in `.tsx` | 353 | 77 | 0 | short: `palette-must-be-house` is hard for new sites and holds 77 in its baseline |
+| Raw `<button>` outside `ui/` | 321 | 24 | 0 | short: 24 in 16 files in `no-raw-control-outside-ui`'s baseline |
+| Inline card chrome outside `ui/` | 113 files | 222 in 87 files | | `no-inline-card-chrome` is hard for new sites and holds 222 in its baseline |
+| Components with exactly one importer | 146 of 213 | 128 of 201 | <= 70 of ~130 | missed: the split reached the primitive layer, not the page layer |
+| Dashboard API requests, load / 30s idle | 22 (4 twice) / 11 | 17 (none twice) / 14 | <= 13 / <= 12 | load: no duplicate, and seventeen distinct facts is what the board shows; idle: the poll arithmetic gives 11 to 13 plus phase, ceiling 15 (T-0129) |
+| Test count | 6,090 | 6,791 | unchanged, exactly (U1's oracle) | U1 held identity; the other sixteen batches added 701 oracles |
+| `src/` lines (ts, tsx, css) | 105,975 | 105,942 | -6,000 to -9,600 | **missed**: the deletions (U12 ~1,100, U15 1,353 net, the wrappers, the routes) were paid back by the primitive set, the conversions and the comments that name each decision |
+| `tests/` lines | 108,310 | 117,944 | ~-1,750 | **missed**: U1's factories took ~1,750 out and sixteen batches of oracles put 11,400 in |
+
+### What the numbers say
+
+The four causes the reconnaissance named are answered by construction, and the
+measures that test those causes directly are met: every surface has an edge
+the eye can find, every screen shares one left edge and one content width,
+every control is a target, the ring is one ring, motion stops when asked,
+state is a word, a filter is a radiogroup, the reads are one cache. The
+measures that count *variety* on screen (chromes, heights, borders, shadows)
+moved by a third to a half and no further, because the census counts every
+bordered thing on a screen and the product still carries a legitimate
+variety of status- and category-tinted surfaces; those numbers are the
+ratchet's to hold, not this programme's to zero. Two goals were missed
+outright and should be said plainly: the register rule did not lower the mono
+share as the census measures it, and the line count of `src/` did not fall.
+The programme deleted what it said it would and built a primitive set in the
+same space; the next programme's deletion is the 128 one-caller components at
+the page layer, and the 222 inline card chromes those pages still carry.

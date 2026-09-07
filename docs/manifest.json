@@ -643,7 +643,7 @@
         {
           "slug": "contributing/design-tokens",
           "title": "Design tokens",
-          "summary": "The Cherenkov palette, the semantic colour layer, and how TypeScript maps to CSS tokens",
+          "summary": "The design system as built - the surface and edge ladder, the type scale and its register, the status ladder, radius, layers, elevation and duration, the primitive set and the rule for ui/ - and how TypeScript maps to the CSS tokens",
           "nav": 50
         },
         {
