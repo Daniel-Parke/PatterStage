@@ -23,6 +23,15 @@ The work leading to the 1.0.0 release.
 
 ### Added
 
+- **An Automation page.** One list of everything on a timer, missions and host
+  scripts together, with what runs next, when each last ran, how that went, and
+  a link to the log. The schedules section at the foot of Missions could only
+  see PatterStage's own timer, so a script you had put on the machine's crontab
+  appeared on Scripts and nowhere else; asking "what runs tonight" meant reading
+  two screens and knowing in advance which kind lived where. Every row says
+  which scheduler holds it, because a PatterStage schedule can be paused and run
+  on demand from here and a host one is managed from Scripts, where its file is.
+
 - **Quests.** A guided route through the product: 32 quests across seven
   chapters, from getting an agent answering to taking your first backup. Progress
   is worked out from the record of what you have done, so work already in that
@@ -82,6 +91,45 @@ The work leading to the 1.0.0 release.
   built-in agent.
 
 ### Changed
+
+- **The session list is half as tall.** A row was two lines and 77px; it is one
+  line and 46px, so you see twice as many at once. Nothing was dropped to get
+  there - the profile, the model, the size, the message count, the source and
+  the age are all still on the row, in columns that line up down the list
+  instead of wrapping. Narrow the window and they give way from the left, least
+  useful first; the source and the age are what you scan by, so they stay
+  longest.
+
+- **The insights strips stop saying everything twice.** Every one of them drew
+  a ring and then repeated the ring's own slices as tiles beside it. The ring
+  names its own slices now, and a tile is kept only where it says something the
+  ring cannot - how many lines were read, how many categories, how many
+  credentials. The Logs strip has no tiles at all, because its ring, its centre
+  and its gauge already say everything there is.
+
+- **The run-duration histogram's labels are readable.** They were drawn inside
+  a chart that stretches to fill its card, which squashed every character to
+  little more than half its width. The chart is ordinary text and bars now, so
+  the labels are the same size as the rest of the page whatever width the card
+  happens to be.
+
+- **The mission board no longer hides its last column.** Five columns each with
+  a fixed minimum width were wider than the space available at every window
+  size, and the row scrolled sideways silently, so Failed - the column you go
+  looking for - was the half off the edge. The board wraps onto more rows
+  instead, and nothing is hidden.
+
+- **The mission filters say what they are.** Status and category are proper
+  groups now, announced to a screen reader with the chosen one marked, and the
+  status filter carries the counts that used to sit in four tiles above the
+  board restating the columns below it. The whole filter bar is one tab stop
+  rather than eleven.
+
+- **Filter chips look like buttons.** The session filters were bare words until
+  you chose one. They carry an outline at rest now.
+
+- **A disabled button can be read.** Disabled controls were dimmed to the point
+  of near invisibility; they keep their shape and take a quieter colour instead.
 
 - **Almost every page has moved.** The sidebar is now five groups, named after
   what you are doing rather than after the subsystem behind it:

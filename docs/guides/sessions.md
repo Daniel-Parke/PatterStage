@@ -28,10 +28,15 @@ transcript".
 
 Below that, a strip of figures. A ring on the left splits the sessions by what
 started them (CLI, Mission, Cron, API, and Other for anything else) with the
-total in the middle, then four tiles: **Active**, **Total**, **Messages** and
-**CLI**, and a second ring showing how many of the matching sessions are still
-running. Every figure counts the whole matching set, not the page you happen to
-be looking at, and the strip is hidden entirely when there is nothing to count.
+total in the middle, and a legend beside it naming each source and its count.
+Then one tile, **Messages**, and a second ring showing how many of the matching
+sessions are still running. Every figure counts the whole matching set, not the
+page you happen to be looking at, and the strip is hidden entirely when there is
+nothing to count.
+
+The tiles used to repeat the ring: Active, Total and CLI were the ring's own
+segments and its centre, printed a second time beside it. The ring names them
+itself now, and the tile is what neither picture carries.
 
 Then the controls:
 
@@ -48,14 +53,24 @@ Under the controls, a line saying how much you are looking at, such as
 "Showing 12 entries of 341 total", with "API noise hidden" appended when that
 toggle is on. Then the list itself, one panel with a divider between records.
 
-A session row carries, on the first line, a pulsing green dot if it is still
-running, the session's title, and a red **Failed** badge when it ended badly,
-carrying the exit code when there is one. Hovering the badge shows the error.
-The second line is the detail: when it started (a live session counts up
-instead, "3m 12s ago"), a coloured source badge, the profile it ran under, the
-model, a message count such as "42 msgs", the transcript size in KB, and a green
-**mission** badge when a mission produced it. The badge opens that mission's panel on the
-[Missions](./missions.md) board; anywhere else on the row opens the transcript.
+A session row is one line. From the left: a pulsing green dot if it is still
+running, the session's title, a red **Failed** badge when it ended badly
+carrying the exit code where there is one, and a green **mission** badge when a
+mission produced it. Then the columns, right-aligned so they line up down the
+list: the profile it ran under, the model, the transcript size in KB, a message
+count such as "42 msgs", a coloured source badge, and when it started (a live
+session counts up instead, "3m 12s ago"). A chevron closes every row at the same
+place.
+
+Narrow the window and the columns give way from the left, least useful first:
+the profile goes, then the model, then the size, then the message count. The
+source and the age are what you scan a list of sessions by, so they are the last
+to leave. Nothing is dropped that was not there to be dropped - the row used to
+stack the same facts on a second line, which made it 77px tall and the list
+3,621px of scroll.
+
+The mission badge opens that mission's panel on the [Missions](./missions.md)
+board; anywhere else on the row opens the transcript.
 
 With **Group by mission** on, sessions sharing a mission collapse into a single
 green row: the layers icon, the newest session's title, "4 on this page", "2

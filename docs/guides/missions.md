@@ -67,15 +67,13 @@ mission has produced one), Edit (Edit draft on a draft, Re-dispatch on a finishe
 mission), Cancel or Remove from queue while it is still live, and a bin icon.
 Cancel and delete both ask a second time before they act.
 
-**Schedules.** The section at the bottom of the page, listing everything on
-PatterStage's own timer with how many are active and how many paused. A row
-says whether it runs a mission or a script and names the one it runs, then the
-cadence, when it runs next, its last result, and Pause or Resume and delete.
-Mission rows also carry Run, which fires that mission once without waiting for
-its next turn; script rows do not, because running a script by hand belongs on
-the Scripts page beside its output. **Schedule a mission** opens a short form that puts an existing saved
-mission on a timer. Script rows arrive here from the
-[Scripts](scripts.md) page, on a machine with no host scheduler of its own.
+**Schedules are not here.** They used to be a section at the foot of this
+page, listing everything on PatterStage's own timer. That list could not see a
+script scheduled into the host's own crontab, so it looked complete and was
+not; it now lives on [Automation](automation.md) together with those, which is
+one list of everything on a clock. This page keeps dispatch. A mission you are
+writing can still go straight onto a timer from the composer's **Schedule**
+dispatch mode, and it appears there.
 
 **The composer.** A panel that slides in from the right, titled New Mission,
 Edit Mission, or Re-Dispatch with the mission's name. At the top: Category,

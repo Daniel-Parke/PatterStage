@@ -49,7 +49,8 @@ Four buttons sit at the right of every row:
 - **Edit** opens the file in the editor.
 - **Logs** shows what the script has printed.
 - **Schedule** puts it on a timer. Once it is on one, that button reads
-  **Unschedule** instead.
+  **Unschedule** instead. Everything already on a timer, scripts and missions
+  together, is listed on [Automation](automation.md).
 
 If the folder is empty, the list is replaced by "No scripts yet" and a line
 suggesting you create one, install an example, or drop a file in yourself.
