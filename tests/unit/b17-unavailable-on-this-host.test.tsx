@@ -164,8 +164,13 @@ describe("the row of a quest this host cannot run", () => {
 
   it("offers no Go the operator cannot follow", () => {
     const Row = questRow();
-    render(<Row quest={quest()} available={false} />);
+    // With a Skip handler, as the page always passes one. Without it the
+    // actions row is not drawn at all and a Go that leaked into the row could
+    // not be seen: the mutation sweep for T-0127 found exactly that mutant
+    // surviving here.
+    render(<Row quest={quest()} available={false} onSkip={() => {}} />);
     expect(screen.queryByRole("link", { name: /^go$/i })).toBeNull();
+    expect(screen.getByRole("button", { name: /^skip$/i })).toBeInTheDocument();
   });
 
   it("still shows the quest: its title and what it asks for", () => {
