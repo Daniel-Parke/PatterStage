@@ -28,7 +28,8 @@ import ComposerRunForm from "@/components/composer/ComposerRunForm";
 import { safeApiCall } from "@/lib/api-fetch";
 import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
 import { composerWaitingReason, isTerminalComposerRunStatus } from "@/lib/composer/schema";
-import { COMPOSER_RUN_STATUS_LABELS } from "@/lib/status-labels";
+import { COMPOSER_RUN_STATUS_LABELS, statusTone } from "@/lib/status-labels";
+import { statusToneClasses } from "@/lib/theme";
 import { timeAgo } from "@/lib/utils";
 import ElapsedSince from "@/components/composer/ElapsedSince";
 
@@ -44,7 +45,7 @@ const WorkflowRunCanvas = dynamic(() => import("@/components/composer/WorkflowRu
 import { useComposerWorkflows, useComposerRuns, useComposerRun } from "@/hooks/useComposer";
 import { useProfiles } from "@/hooks/useProfiles";
 import { useEventStream } from "@/hooks/useEventStream";
-import type { ComposerNodeRun, ComposerRun } from "@/lib/composer/schema";
+import type { ComposerNodeRun, ComposerRun, ComposerRunStatus } from "@/lib/composer/schema";
 
 /** A short, human-readable title from a run's raw input (first line, no markdown #). */
 function runTitle(input: string | null): string {
@@ -54,16 +55,17 @@ function runTitle(input: string | null): string {
   return cleaned.length > 60 ? `${cleaned.slice(0, 60)}…` : cleaned;
 }
 
-const STATUS_COLOR: Record<string, string> = {
-  pending: "text-ps-text-muted",
-  running: "text-neon-cyan",
-  awaiting_approval: "text-neon-yellow",
-  completed: "text-neon-green",
-  failed: "text-neon-pink",
-  cancelled: "text-neon-orange",
-  rejected: "text-neon-orange",
-  skipped: "text-ps-text-muted",
-};
+/**
+ * The colour of a run's status, composed rather than chosen (T-0120):
+ * enum -> the ratified word the row already PRINTS -> that word's tone.
+ * A run cannot now read "Failed" and wear the colour of "Completed", which
+ * this map allowed - it painted failed `text-neon-pink`, an accent, while the
+ * declared danger token sat unused.
+ */
+function statusColor(status: string): string {
+  const label = COMPOSER_RUN_STATUS_LABELS[status as ComposerRunStatus];
+  return label ? statusToneClasses[statusTone(label)].text : statusToneClasses.idle.text;
+}
 
 const STATUS_FILTERS = [
   { value: "", label: "All runs" },
@@ -330,7 +332,7 @@ export default function ComposerPage() {
                       </div>
                     ) : null}
                     <div className="mt-0.5 flex items-center justify-between gap-2 font-mono text-micro">
-                      <span className={STATUS_COLOR[r.status] ?? "text-ps-text-muted"}>
+                      <span className={statusColor(r.status)}>
                         {COMPOSER_RUN_STATUS_LABELS[r.status] ?? r.status}
                         {composerWaitingReason(r) === "question"
                           ? " · answer a question"
@@ -390,7 +392,7 @@ export default function ComposerPage() {
                   )}
                 </div>
                 <div className="shrink-0 text-right">
-                  <div className={`font-mono text-micro uppercase ${STATUS_COLOR[run.status] ?? "text-ps-text-muted"}`}>
+                  <div className={`font-mono text-micro uppercase ${statusColor(run.status)}`}>
                     {run.status}
                   </div>
                   <div className="mt-0.5 text-body text-ps-text-muted">

@@ -13,6 +13,7 @@ import { useMemo } from "react";
 import { Radio, RefreshCw } from "lucide-react";
 
 import { timeAgo, titleCase } from "@/lib/utils";
+import { statusToneClasses } from "@/lib/theme";
 import type { HermesProcess } from "@/types/console";
 
 export interface ProcessesPanelProps {
@@ -56,11 +57,13 @@ export default function ProcessesPanel({ processes, onRefresh }: ProcessesPanelP
             >
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <Radio className={`w-4 h-4 ${proc.status === "running" ? "text-neon-green pulse-glow" : "text-ps-text-muted"}`} />
+                  <Radio className={`w-4 h-4 ${proc.status === "running" ? `${statusToneClasses.running.text} pulse-glow` : statusToneClasses.idle.text}`} />
                   <span className="text-body text-ps-text-primary font-medium truncate">{proc.name}</span>
                 </div>
                 <span className={`text-micro font-mono px-2 py-0.5 rounded-full ${
-                  proc.status === "running" ? "bg-neon-green/10 text-neon-green" : "bg-ps-surface-raised text-ps-text-muted"
+                  proc.status === "running"
+                    ? `${statusToneClasses.running.fill} ${statusToneClasses.running.text}`
+                    : `bg-ps-surface-raised ${statusToneClasses.idle.text}`
                 }`}>
                   {titleCase(proc.status)}
                 </span>

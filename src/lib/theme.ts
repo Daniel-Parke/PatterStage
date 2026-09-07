@@ -63,6 +63,58 @@ export const edgeClasses = {
   emphasis: "border-ps-edge-emphasis",
 } as const;
 
+/**
+ * What a status tone looks like, one literal class per slot (T-0120).
+ *
+ * Literal because Tailwind scans source: `text-status-${tone}` generates no rule
+ * at all, which is the defect the first half of this batch is about. The tone
+ * itself comes from the ratified WORD, in src/lib/status-labels.ts.
+ */
+export const statusToneClasses = {
+  idle: {
+    text: "text-status-idle",
+    dot: "bg-status-idle",
+    fill: "bg-status-idle/10",
+    border: "border-status-idle/30",
+  },
+  queued: {
+    text: "text-status-queued",
+    dot: "bg-status-queued",
+    fill: "bg-status-queued/10",
+    border: "border-status-queued/30",
+  },
+  running: {
+    text: "text-status-running",
+    dot: "bg-status-running",
+    fill: "bg-status-running/10",
+    border: "border-status-running/30",
+  },
+  ok: {
+    text: "text-status-ok",
+    dot: "bg-status-ok",
+    fill: "bg-status-ok/10",
+    border: "border-status-ok/30",
+  },
+  warn: {
+    text: "text-status-warn",
+    dot: "bg-status-warn",
+    fill: "bg-status-warn/10",
+    border: "border-status-warn/30",
+  },
+  fail: {
+    text: "text-status-fail",
+    dot: "bg-status-fail",
+    fill: "bg-status-fail/10",
+    border: "border-status-fail/30",
+  },
+  blocked: {
+    text: "text-status-blocked",
+    dot: "bg-status-blocked",
+    fill: "bg-status-blocked/10",
+    border: "border-status-blocked/30",
+  },
+} as const;
+
 /** Column widths and the block rhythm. `block` is a `space-y-*`, not a width. */
 export const measureClasses = {
   reading: "max-w-ps-reading",

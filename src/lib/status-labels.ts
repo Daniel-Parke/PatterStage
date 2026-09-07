@@ -42,6 +42,50 @@ export const STATUS_VOCABULARY = [
 export type StatusLabel = (typeof STATUS_VOCABULARY)[number];
 
 /**
+ * The seven rungs `--color-status-*` declares. A tone is what a status MEANS,
+ * not what it looks like: the look is one lookup away, in theme.ts.
+ */
+export type StatusTone = "idle" | "queued" | "running" | "ok" | "warn" | "fail" | "blocked";
+
+/**
+ * The colour belongs to the WORD (T-0120).
+ *
+ * Thirty-four sites across twenty-six files each decided this for themselves,
+ * and they disagreed: a Hermes process that was `running` painted green on the
+ * dashboard while every other screen painted `running` cyan, and `failed` was
+ * `text-neon-pink` on both the composer and research - an accent, not the
+ * declared danger token. Hanging the tone off the ratified word rather than off
+ * each screen's enum is what makes that impossible: this map is
+ * `Record<StatusLabel, StatusTone>`, so a word without a tone is a compile
+ * error, exactly as a status without a word already is.
+ *
+ * Cancelled is `blocked` rather than `fail` on purpose, and the purpose is
+ * recorded a module away: the composer's own comment says orange separates "the
+ * gate the operator turned down" from a failure. `blocked` IS neon-orange, so
+ * both the distinction and the pixel survive.
+ */
+export const STATUS_TONE = {
+  Draft: "idle",
+  Queued: "queued",
+  Running: "running",
+  "Waiting for you": "blocked",
+  Completed: "ok",
+  Failed: "fail",
+  Cancelled: "blocked",
+  Healthy: "ok",
+  Degraded: "warn",
+  "Not running": "fail",
+  "Not installed": "idle",
+  "In sync": "ok",
+  "Out of sync": "warn",
+} as const satisfies Record<StatusLabel, StatusTone>;
+
+/** The tone a ratified word carries. */
+export function statusTone(label: StatusLabel): StatusTone {
+  return STATUS_TONE[label];
+}
+
+/**
  * A mission's word. `queued` is Draft until the queue holds it, then Queued;
  * a mission the operator stopped is recorded as `failed` with a cancelled run
  * row (the mission enum has no cancelled state by ruling), so the run row is

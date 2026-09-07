@@ -16,6 +16,8 @@ import { Telescope, Send, Save, Square } from "lucide-react";
 import PageHeader from "@/components/layout/PageHeader";
 import AppPageShell from "@/components/layout/AppPageShell";
 import Card from "@/components/ui/Card";
+import { statusTone, type StatusLabel } from "@/lib/status-labels";
+import { statusToneClasses } from "@/lib/theme";
 import Button from "@/components/ui/Button";
 import ConfirmButton from "@/components/ui/ConfirmButton";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
@@ -29,13 +31,24 @@ import { formatElapsed } from "@/lib/utils";
 import { useEventStream } from "@/hooks/useEventStream";
 import type { ResearchConfig, ResearchRun, ResearchStep } from "@/lib/laboratory/deep-research/types";
 
-const STATUS_COLOR: Record<string, string> = {
-  pending: "text-ps-text-muted",
-  running: "text-neon-cyan",
-  completed: "text-neon-green",
-  failed: "text-neon-pink",
-  cancelled: "text-neon-orange",
+/**
+ * A research run's five states wear the same five words the rest of the product
+ * uses, so they take the same five tones (T-0120). It painted failed
+ * `text-neon-pink` before, which is an accent rather than the danger token, and
+ * disagreed with the composer one screen over about what a failure looks like.
+ */
+const RESEARCH_STATUS_LABEL: Record<string, StatusLabel> = {
+  pending: "Queued",
+  running: "Running",
+  completed: "Completed",
+  failed: "Failed",
+  cancelled: "Cancelled",
 };
+
+function statusColor(status: string): string {
+  const label = RESEARCH_STATUS_LABEL[status];
+  return label ? statusToneClasses[statusTone(label)].text : statusToneClasses.idle.text;
+}
 
 const PROVIDERS = [
   { value: "duckduckgo", label: "DuckDuckGo (free)" },
@@ -272,7 +285,7 @@ export default function DeepResearchPage() {
                     <div className="truncate text-ps-text-primary">
                       {(r.query.split("\n").find((l) => l.trim()) ?? r.query).trim()}
                     </div>
-                    <div className={`mt-0.5 font-mono uppercase ${STATUS_COLOR[r.status] ?? "text-ps-text-muted"}`}>
+                    <div className={`mt-0.5 font-mono uppercase ${statusColor(r.status)}`}>
                       {r.status}
                     </div>
                   </button>
@@ -296,7 +309,7 @@ export default function DeepResearchPage() {
               <div className="flex items-start justify-between gap-3">
                 <div className="text-body font-medium text-ps-text-primary">{detail.run.query}</div>
                 <div className="flex shrink-0 items-center gap-2">
-                  <div className={`font-mono text-micro uppercase ${STATUS_COLOR[detail.run.status] ?? "text-ps-text-muted"}`}>
+                  <div className={`font-mono text-micro uppercase ${statusColor(detail.run.status)}`}>
                     {detail.run.status}
                   </div>
                   {STOPPABLE.has(detail.run.status) ? (

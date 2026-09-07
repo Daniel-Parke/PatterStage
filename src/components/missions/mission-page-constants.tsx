@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { Clock, Loader2, CheckCircle2, XCircle } from "lucide-react";
 import type { MissionRunTone } from "@/lib/missions/mission-run-state";
+import { statusToneClasses } from "@/lib/theme";
 
 export interface StatusConfig {
   dot: "online" | "warning" | "error" | "idle";
@@ -16,37 +17,37 @@ export const STATUS_CONFIG: Record<string, StatusConfig> = {
   draft: {
     dot: "idle",
     bg: "bg-ps-surface-raised",
-    text: "text-ps-text-muted",
-    icon: <Clock className="w-3.5 h-3.5 text-ps-text-muted" />,
-    columnDot: "bg-white/30",
+    text: statusToneClasses.idle.text,
+    icon: <Clock className={`w-3.5 h-3.5 ${statusToneClasses.idle.text}`} />,
+    columnDot: statusToneClasses.idle.dot,
   },
   queued: {
     dot: "warning",
-    bg: "bg-neon-orange/10",
-    text: "text-neon-orange",
-    icon: <Clock className="w-3.5 h-3.5 text-neon-orange" />,
-    columnDot: "bg-neon-orange",
+    bg: statusToneClasses.queued.fill,
+    text: statusToneClasses.queued.text,
+    icon: <Clock className={`w-3.5 h-3.5 ${statusToneClasses.queued.text}`} />,
+    columnDot: statusToneClasses.queued.dot,
   },
   dispatched: {
     dot: "online",
-    bg: "bg-neon-cyan/10",
-    text: "text-neon-cyan",
-    icon: <Loader2 className="w-3.5 h-3.5 text-neon-cyan animate-spin" />,
-    columnDot: "bg-neon-cyan",
+    bg: statusToneClasses.running.fill,
+    text: statusToneClasses.running.text,
+    icon: <Loader2 className={`w-3.5 h-3.5 ${statusToneClasses.running.text} animate-spin`} />,
+    columnDot: statusToneClasses.running.dot,
   },
   successful: {
     dot: "online",
-    bg: "bg-neon-green/10",
-    text: "text-neon-green",
-    icon: <CheckCircle2 className="w-3.5 h-3.5 text-neon-green" />,
-    columnDot: "bg-neon-green",
+    bg: statusToneClasses.ok.fill,
+    text: statusToneClasses.ok.text,
+    icon: <CheckCircle2 className={`w-3.5 h-3.5 ${statusToneClasses.ok.text}`} />,
+    columnDot: statusToneClasses.ok.dot,
   },
   failed: {
     dot: "error",
-    bg: "bg-red-500/10",
-    text: "text-red-400",
-    icon: <XCircle className="w-3.5 h-3.5 text-red-400" />,
-    columnDot: "bg-red-400",
+    bg: statusToneClasses.fail.fill,
+    text: statusToneClasses.fail.text,
+    icon: <XCircle className={`w-3.5 h-3.5 ${statusToneClasses.fail.text}`} />,
+    columnDot: statusToneClasses.fail.dot,
   },
 };
 
@@ -61,12 +62,15 @@ export const FALLBACK_CATEGORY_ACTIVE = "bg-neon-cyan/20 text-neon-cyan border b
  * can see in the source.
  */
 export const RUN_TONE_TEXT: Record<MissionRunTone, string> = {
-  idle: "text-ps-text-muted",
-  waiting: "text-neon-orange/90",
-  running: "text-neon-cyan",
-  overdue: "text-neon-orange",
+  idle: statusToneClasses.idle.text,
+  waiting: statusToneClasses.blocked.text,
+  running: statusToneClasses.running.text,
+  overdue: statusToneClasses.warn.text,
+  // NOT the ok rung. A duration that came in on time is a NEUTRAL, not a
+  // success: an on-time run is an absence of news, and painting it green would
+  // make every finished mission shout the same thing twice (T-0120).
   good: "text-ps-text-secondary",
-  bad: "text-red-400",
+  bad: statusToneClasses.fail.text,
   // Not red. See MissionRunTone -- a cancellation is the operator's own action,
   // not a fault report.
   stopped: "text-neon-orange",
