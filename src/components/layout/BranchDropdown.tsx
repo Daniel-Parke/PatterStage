@@ -61,7 +61,7 @@ export function BranchDropdown({
         <select aria-label="Branch"
           value={selected}
           onChange={(e) => setSelected(e.target.value)}
-          className="w-full px-2 py-1.5 rounded-ps-md bg-ps-surface-panel border border-ps-edge text-ps-text-primary text-body focus:outline-none focus:border-neon-cyan/50"
+          className="w-full px-2 py-1.5 rounded-ps-md bg-ps-surface-panel border border-ps-edge text-ps-text-primary text-body focus:"
         >
           {branches.map((b) => (
             <option key={b} value={b}>
@@ -77,7 +77,7 @@ export function BranchDropdown({
           value={customBranch}
           onChange={(e) => setCustomBranch(e.target.value)}
           placeholder="e.g. feature/my-branch" aria-label="Other branch name"
-          className="w-full mt-0.5 px-2 py-1.5 rounded-ps-md bg-ps-surface-panel border border-ps-edge text-ps-text-primary text-body placeholder:text-ps-text-faint focus:outline-none focus:border-neon-cyan/50"
+          className="w-full mt-0.5 px-2 py-1.5 rounded-ps-md bg-ps-surface-panel border border-ps-edge text-ps-text-primary text-body placeholder:text-ps-text-faint focus:"
         />
       </div>
 

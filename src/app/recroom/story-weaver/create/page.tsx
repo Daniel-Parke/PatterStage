@@ -444,7 +444,7 @@ function CreateStoryPage() {
             <p className="text-body text-ps-text-muted">Save your current story concept as a reusable theme.</p>
             <input value={newThemeName} onChange={(e) => setNewThemeName(e.target.value)}
               placeholder="e.g. Salt and starlight" aria-label="Theme name" autoFocus
-              className="w-full bg-ps-surface-inset border border-ps-edge rounded-ps-md px-4 py-3 text-body text-ps-text-primary placeholder-ps-text-muted outline-none focus:border-green-500/40 font-mono" />
+              className="w-full bg-ps-surface-inset border border-ps-edge rounded-ps-md px-4 py-3 text-body text-ps-text-primary placeholder-ps-text-muted font-mono" />
             <div className="flex gap-2 justify-end">
               <button type="button" onClick={closeSaveTheme} className="px-4 py-2 text-body text-ps-text-muted hover:text-ps-text-secondary rounded-ps-md border border-ps-edge">Cancel</button>
               <button type="button" onClick={saveAsTheme} disabled={!newThemeName.trim() || !premise.trim()}
@@ -484,7 +484,7 @@ function CreateStoryPage() {
         <div className="rounded-ps-lg border border-neon-purple/20 bg-ps-surface-panel p-5">
           <label className="text-micro font-mono text-ps-text-muted uppercase tracking-widest block mb-2">Story Title</label>
           <input value={title} onChange={(e) => { setTitle(e.target.value); setTitleManuallyEdited(true); }} placeholder="Give your story a name..." aria-label="Story title"
-            className="w-full bg-ps-surface-inset border border-ps-edge rounded-ps-md px-4 py-3 text-lead text-ps-text-primary placeholder-ps-text-muted outline-none focus:border-neon-purple/30 font-serif font-semibold" />
+            className="w-full bg-ps-surface-inset border border-ps-edge rounded-ps-md px-4 py-3 text-lead text-ps-text-primary placeholder-ps-text-muted font-serif font-semibold" />
         </div>
 
         {/* ═══ SECTION C: Theme (Premise + Tags + Saved Themes) ═══ */}
@@ -498,7 +498,7 @@ function CreateStoryPage() {
           </div>
           <label className="text-micro font-mono text-ps-text-faint uppercase tracking-wider block mb-2">What&apos;s your story about?</label>
           <textarea value={premise} onChange={(e) => setPremise(e.target.value)} rows={4}
-            className="w-full bg-ps-surface-inset border border-ps-edge rounded-ps-md px-4 py-3 text-body text-ps-text-primary placeholder-ps-text-muted outline-none focus:border-green-500/30 font-mono resize-none leading-relaxed mb-4" placeholder="Describe your story concept..." aria-label="Premise" />
+            className="w-full bg-ps-surface-inset border border-ps-edge rounded-ps-md px-4 py-3 text-body text-ps-text-primary placeholder-ps-text-muted font-mono resize-none leading-relaxed mb-4" placeholder="Describe your story concept..." aria-label="Premise" />
           <div className="space-y-3">
             <Tags label="Genre" options={genreOpts} selected={genres} onToggle={(t) => toggle(genres, setGenres, t)} onAdd={(t) => addOpt(genreOpts, setGenreOpts, t)} />
             <Tags label="Era" options={eraOpts} selected={[era]} onToggle={(t) => setEra(t === era ? "" : t)} onAdd={(t) => addOpt(eraOpts, setEraOpts, t)} />
@@ -577,7 +577,7 @@ function CreateStoryPage() {
             <div>
               <label className="text-micro font-mono text-ps-text-muted uppercase tracking-wider block mb-2">Point of View</label>
               <select aria-label="Point of view" value={pov} onChange={(e) => setPov(e.target.value)}
-                className="w-full bg-ps-surface-inset border border-ps-edge rounded-ps-md px-3 py-2 text-body text-ps-text-primary outline-none focus:border-neon-purple/40 font-mono">
+                className="w-full bg-ps-surface-inset border border-ps-edge rounded-ps-md px-3 py-2 text-body text-ps-text-primary font-mono">
                 <option value="first">First Person</option>
                 <option value="third-limited">Third Person Limited</option>
                 <option value="third-omniscient">Third Person Omniscient</option>
@@ -586,7 +586,7 @@ function CreateStoryPage() {
             <div>
               <label className="text-micro font-mono text-ps-text-muted uppercase tracking-wider block mb-2">Length</label>
               <select aria-label="Length" value={length} onChange={(e) => setLength(e.target.value)}
-                className="w-full bg-ps-surface-inset border border-ps-edge rounded-ps-md px-3 py-2 text-body text-ps-text-primary outline-none focus:border-neon-purple/40 font-mono">
+                className="w-full bg-ps-surface-inset border border-ps-edge rounded-ps-md px-3 py-2 text-body text-ps-text-primary font-mono">
                 <option value="short">Short (3-4 chapters)</option>
                 <option value="medium">Medium (5-7 chapters)</option>
                 <option value="long">Long (8-12 chapters)</option>
@@ -597,7 +597,7 @@ function CreateStoryPage() {
             <label className="text-micro font-mono text-ps-text-muted uppercase tracking-wider block mb-2">Writing Model</label>
             <select aria-label="Writing model" value={modelId}
               onChange={(e) => { setTouchedModel(true); setModelId(e.target.value); }}
-              className="w-full bg-ps-surface-inset border border-ps-edge rounded-ps-md px-3 py-2 text-body text-ps-text-primary outline-none focus:border-neon-purple/40 font-mono">
+              className="w-full bg-ps-surface-inset border border-ps-edge rounded-ps-md px-3 py-2 text-body text-ps-text-primary font-mono">
               <option value="">Agent default model</option>
               {(models ?? []).map((m) => (
                 <option key={m.id} value={m.id}>{m.name} · {m.provider}</option>

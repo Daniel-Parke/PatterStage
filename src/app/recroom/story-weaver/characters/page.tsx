@@ -28,7 +28,7 @@ const EMPTY_CHAR: Omit<CharacterSheet, "id" | "createdAt" | "updatedAt"> = {
   speechPatterns: "", relationships: "", tags: [],
 };
 
-const FIELD = "w-full bg-ps-surface-inset border border-ps-edge rounded-ps-md px-3 py-2 text-body text-ps-text-primary placeholder-ps-text-muted outline-none focus:border-neon-purple/40 font-mono";
+const FIELD = "w-full bg-ps-surface-inset border border-ps-edge rounded-ps-md px-3 py-2 text-body text-ps-text-primary placeholder-ps-text-muted font-mono";
 const LABEL = "text-micro font-mono text-ps-text-muted uppercase tracking-wider block mb-1";
 
 export default function CharactersPage() {
@@ -257,7 +257,7 @@ export default function CharactersPage() {
               <div className="flex gap-1">
                 <input id="char-trait-input" value={personalityInput} onChange={(e) => setPersonalityInput(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addPersonality(); } }}
-                  placeholder="e.g. stubborn" className="flex-1 bg-ps-surface-inset border border-ps-edge rounded-ps-sm px-2 py-1 text-micro text-ps-text-primary placeholder-ps-text-muted outline-none focus:border-neon-purple/40 font-mono" />
+                  placeholder="e.g. stubborn" className="flex-1 bg-ps-surface-inset border border-ps-edge rounded-ps-sm px-2 py-1 text-micro text-ps-text-primary placeholder-ps-text-muted font-mono" />
                 <button type="button" aria-label="Add personality trait" onClick={addPersonality} className="px-2 py-1 text-body text-neon-purple"><Plus className="w-3 h-3" aria-hidden="true" /></button>
               </div>
             </div>
@@ -276,7 +276,7 @@ export default function CharactersPage() {
               <div className="flex gap-1">
                 <input id="char-tag-input" value={tagInput} onChange={(e) => setTagInput(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTag(); } }}
-                  placeholder="e.g. noir" className="flex-1 bg-ps-surface-inset border border-ps-edge rounded-ps-sm px-2 py-1 text-micro text-ps-text-primary placeholder-ps-text-muted outline-none focus:border-neon-purple/40 font-mono" />
+                  placeholder="e.g. noir" className="flex-1 bg-ps-surface-inset border border-ps-edge rounded-ps-sm px-2 py-1 text-micro text-ps-text-primary placeholder-ps-text-muted font-mono" />
                 <button type="button" aria-label="Add tag" onClick={addTag} className="px-2 py-1 text-body text-neon-purple"><Plus className="w-3 h-3" aria-hidden="true" /></button>
               </div>
             </div>

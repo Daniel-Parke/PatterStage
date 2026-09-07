@@ -158,7 +158,7 @@ function AddCustomForm({ onConfirm, onCancel }: AddCustomFormProps) {
             value={modelId}
             onChange={(e) => setModelId(e.target.value)}
             placeholder="My Custom Model" aria-label="Model name"
-            className="w-full h-8 bg-ps-surface-inset border border-ps-edge rounded-ps-sm px-2 text-micro text-ps-text-primary font-mono outline-none focus:border-neon-purple/50"
+            className="w-full h-8 bg-ps-surface-inset border border-ps-edge rounded-ps-sm px-2 text-micro text-ps-text-primary font-mono"
             required
           />
         </div>
@@ -171,7 +171,7 @@ function AddCustomForm({ onConfirm, onCancel }: AddCustomFormProps) {
             value={provider}
             onChange={(e) => setProvider(e.target.value)}
             placeholder="openai" aria-label="Provider"
-            className="w-full h-8 bg-ps-surface-inset border border-ps-edge rounded-ps-sm px-2 text-micro text-ps-text-primary font-mono outline-none focus:border-neon-purple/50"
+            className="w-full h-8 bg-ps-surface-inset border border-ps-edge rounded-ps-sm px-2 text-micro text-ps-text-primary font-mono"
             required
           />
         </div>
@@ -185,7 +185,7 @@ function AddCustomForm({ onConfirm, onCancel }: AddCustomFormProps) {
           value={modelIdString}
           onChange={(e) => setModelIdString(e.target.value)}
           placeholder="gpt-4o" aria-label="Model ID"
-          className="w-full h-8 bg-ps-surface-inset border border-ps-edge rounded-ps-sm px-2 text-micro text-ps-text-primary font-mono outline-none focus:border-neon-purple/50"
+          className="w-full h-8 bg-ps-surface-inset border border-ps-edge rounded-ps-sm px-2 text-micro text-ps-text-primary font-mono"
           required
         />
       </div>
@@ -198,7 +198,7 @@ function AddCustomForm({ onConfirm, onCancel }: AddCustomFormProps) {
           value={baseUrl}
           onChange={(e) => setBaseUrl(e.target.value)}
           placeholder="https://api.openai.com/v1" aria-label="Base URL"
-          className="w-full h-8 bg-ps-surface-inset border border-ps-edge rounded-ps-sm px-2 text-micro text-ps-text-primary font-mono outline-none focus:border-neon-purple/50"
+          className="w-full h-8 bg-ps-surface-inset border border-ps-edge rounded-ps-sm px-2 text-micro text-ps-text-primary font-mono"
         />
       </div>
       <div className="flex items-center justify-end gap-2 pt-1">

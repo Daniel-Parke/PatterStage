@@ -93,7 +93,7 @@ export default function FallbackConfigPanel({
             max="10"
             value={config.apiMaxRetries}
             onChange={(e) => handleRetriesChange(e.target.value)}
-            className="w-24 h-9 min-h-9 bg-ps-surface-inset border border-ps-edge rounded-ps-md px-3 text-body text-ps-text-primary font-mono outline-none focus:border-neon-purple/50 transition-colors"
+            className="w-24 h-9 min-h-9 bg-ps-surface-inset border border-ps-edge rounded-ps-md px-3 text-body text-ps-text-primary font-mono transition-colors"
           />
           <span className="ml-2 text-micro text-ps-text-muted font-mono">
             attempts before falling back

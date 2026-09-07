@@ -33,7 +33,7 @@ export default function ComposerClarifyPrompt({
         onChange={(e) => setAnswer(e.target.value)}
         rows={3}
         placeholder="Your answer…" aria-label="Answer to the agent's question"
-        className="w-full rounded-ps-sm border border-ps-edge bg-ps-surface-ground/60 px-2 py-1 text-body text-ps-text-primary placeholder:text-ps-text-faint focus:border-neon-cyan/40 focus:outline-none"
+        className="w-full rounded-ps-sm border border-ps-edge bg-ps-surface-ground/60 px-2 py-1 text-body text-ps-text-primary placeholder:text-ps-text-faint focus:"
       />
       <button
         type="button"

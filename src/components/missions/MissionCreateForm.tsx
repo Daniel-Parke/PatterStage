@@ -436,7 +436,7 @@ export default function MissionCreateForm({
           value={formState.newName}
           onChange={(e) => setFormField("newName", e.target.value)}
           placeholder="e.g., Research quantum computing trends" aria-label="Mission name"
-          className="w-full h-9 bg-ps-surface-inset border border-ps-edge rounded-ps-md px-3 text-body text-ps-text-primary placeholder-ps-text-muted outline-none focus:border-neon-cyan/50 font-mono"
+          className="w-full h-9 bg-ps-surface-inset border border-ps-edge rounded-ps-md px-3 text-body text-ps-text-primary placeholder-ps-text-muted font-mono"
         />
       </div>
 
@@ -590,7 +590,7 @@ export default function MissionCreateForm({
                   }
                 }}
                 placeholder="URL, doc path..." aria-label="Reference to add"
-                className="flex-1 h-9 bg-ps-surface-inset border border-ps-edge rounded-ps-md px-3 text-micro text-ps-text-primary placeholder-ps-text-muted outline-none focus:border-neon-pink/50 font-mono"
+                className="flex-1 h-9 bg-ps-surface-inset border border-ps-edge rounded-ps-md px-3 text-micro text-ps-text-primary placeholder-ps-text-muted font-mono"
               />
               <button
                 type="button"

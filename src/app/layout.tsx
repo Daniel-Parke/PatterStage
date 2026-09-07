@@ -102,7 +102,7 @@ export default function RootLayout({
         */}
         <a
           href="#main"
-          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[90] focus:rounded-ps-md focus:border focus:border-neon-cyan/40 focus:bg-ps-surface-panel focus:px-3 focus:py-2 focus:text-body focus:font-mono focus:text-ps-text-primary"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[90] focus:rounded-ps-md focus:border focus:bg-ps-surface-panel focus:px-3 focus:py-2 focus:text-body focus:font-mono focus:text-ps-text-primary"
         >
           Skip to main content
         </a>
@@ -132,8 +132,8 @@ export default function RootLayout({
             </div>
             <div className="flex-1 flex flex-col min-h-screen min-w-0">
               <MobileHeader />
-              {/* design-lint-disable-next-line no-bare-outline-none -- the skip link's target takes programmatic focus; a ring around the whole content pane is noise, and the first control inside it paints its own */}
-              <main id="main" tabIndex={-1} className="flex-1 overflow-y-auto outline-none" data-testid="ps-app-shell">
+              {/* design-lint-disable-next-line no-bare- -- the skip link's target takes programmatic focus; a ring around the whole content pane is noise, and the first control inside it paints its own */}
+              <main id="main" tabIndex={-1} className="flex-1 overflow-y-auto" data-testid="ps-app-shell">
                 <ErrorBoundary>{children}</ErrorBoundary>
               </main>
             </div>

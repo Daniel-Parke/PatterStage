@@ -270,14 +270,14 @@ export const pillBorderHoverMap: Record<AccentColor, ColorEntry> = PILL_BORDER_H
 
 // ── Focus Ring Color (for inputs/selects) ─────────────────────
 export const focusColorMap: Record<AccentColor, ColorEntry> = {
-  cyan: "focus:border-neon-cyan/50",
-  purple: "focus:border-neon-purple/50",
-  green: "focus:border-neon-green/50",
-  pink: "focus:border-neon-pink/50",
-  orange: "focus:border-neon-orange/50",
-  red: "focus:border-red-400/50",
-  blue: "focus:border-blue-400/50",
-  yellow: "focus:border-yellow-400/50",
+  cyan: "",
+  purple: "",
+  green: "",
+  pink: "",
+  orange: "",
+  red: "",
+  blue: "",
+  yellow: "",
 };
 
 /** RGB triplets for `rgb(var(--glow-surface-rgb) / …)` */
@@ -307,7 +307,7 @@ export const baseInputStyles =
   // product wears, and a control's boundary is the one WCAG 1.4.11 is about.
   // On the hairline it measured 2.38:1 against the page (T-0118).
   // design-lint-disable-next-line no-bare-outline-none -- inputFieldClasses appends the accent focus border to this base; it is never used bare
-  "w-full bg-ps-surface-panel border border-ps-edge rounded-ps-md px-3 py-2 text-body text-ps-text-primary placeholder-ps-text-muted outline-none transition-colors font-mono";
+  "w-full bg-ps-surface-panel border border-ps-edge rounded-ps-md px-3 py-2 text-body text-ps-text-primary placeholder-ps-text-muted transition-colors font-mono";
 
 /**
  * A section heading, which is not a smaller page title.

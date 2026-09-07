@@ -83,7 +83,7 @@ export default function ScheduledMissions() {
   };
 
   const inputCls =
-    "w-full rounded-ps-md border border-ps-edge-hairline bg-ps-surface-panel px-3 py-2 text-body text-ps-text-primary focus:border-neon-orange/50 focus:outline-none";
+    "w-full rounded-ps-md border border-ps-edge-hairline bg-ps-surface-panel px-3 py-2 text-body text-ps-text-primary focus:";
 
   return (
     /* The panel's "Edit schedule" link targets this anchor. */

@@ -53,7 +53,7 @@ export default function LogFilePicker({
             value={query}
             onChange={(e) => onQueryChange(e.target.value)}
             placeholder="Filter by name…" aria-label="Log file name filter"
-            className="w-full bg-ps-surface-ground/80 border border-ps-edge rounded-ps-md pl-8 pr-2 py-2 text-micro text-ps-text-primary placeholder:text-ps-text-faint outline-none focus:border-neon-cyan/40 font-mono"
+            className="w-full bg-ps-surface-ground/80 border border-ps-edge rounded-ps-md pl-8 pr-2 py-2 text-micro text-ps-text-primary placeholder:text-ps-text-faint font-mono"
           />
         </div>
         <div className="flex-1 min-h-[12rem] max-h-[40vh] lg:max-h-[calc(100vh-280px)] overflow-y-auto space-y-3 pr-1">

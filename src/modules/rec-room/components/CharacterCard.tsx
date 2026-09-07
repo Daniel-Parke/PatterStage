@@ -48,12 +48,12 @@ export default function CharacterCard({ char, index, onUpdate, onRemove, onSave,
               <label className="text-micro font-mono text-ps-text-faint uppercase block mb-1">Name</label>
               <input value={char.name} onChange={(e) => onUpdate(index, "name", e.target.value)}
                 placeholder="e.g. Mara Voss" aria-label="Character name"
-                className="w-full bg-ps-surface-inset border border-ps-edge rounded-ps-md px-3 py-2.5 text-body text-ps-text-primary placeholder-ps-text-muted outline-none focus:border-neon-purple/40 font-semibold" />
+                className="w-full bg-ps-surface-inset border border-ps-edge rounded-ps-md px-3 py-2.5 text-body text-ps-text-primary placeholder-ps-text-muted font-semibold" />
             </div>
             <div className="w-32">
               <label className="text-micro font-mono text-ps-text-faint uppercase block mb-1">Role</label>
               <select aria-label="Role" value={char.role} onChange={(e) => onUpdate(index, "role", e.target.value)}
-                className="w-full bg-ps-surface-inset border border-ps-edge rounded-ps-md px-3 py-2.5 text-body text-ps-text-primary outline-none focus:border-neon-purple/40 font-mono">
+                className="w-full bg-ps-surface-inset border border-ps-edge rounded-ps-md px-3 py-2.5 text-body text-ps-text-primary font-mono">
                 {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
               </select>
             </div>
@@ -64,7 +64,7 @@ export default function CharacterCard({ char, index, onUpdate, onRemove, onSave,
             <label className="text-micro font-mono text-ps-text-faint uppercase block mb-1">Description</label>
             <textarea value={char.description} onChange={(e) => onUpdate(index, "description", e.target.value)}
               rows={2} placeholder="A brief summary of who they are..." aria-label="Description"
-              className="w-full bg-ps-surface-inset border border-ps-edge rounded-ps-md px-3 py-2.5 text-body text-ps-text-secondary placeholder-ps-text-muted outline-none focus:border-neon-purple/40 font-mono resize-y min-h-[60px] leading-relaxed" />
+              className="w-full bg-ps-surface-inset border border-ps-edge rounded-ps-md px-3 py-2.5 text-body text-ps-text-secondary placeholder-ps-text-muted font-mono resize-y min-h-[60px] leading-relaxed" />
           </div>
 
           {/* Detail fields */}
@@ -79,7 +79,7 @@ export default function CharacterCard({ char, index, onUpdate, onRemove, onSave,
               <label className="text-micro font-mono text-ps-text-faint uppercase block mb-1">{label}</label>
               <textarea aria-label={label} value={char[field] || ""} onChange={(e) => onUpdate(index, field, e.target.value)}
                 rows={2} placeholder={ph}
-                className="w-full bg-ps-surface-inset border border-ps-edge rounded-ps-md px-3 py-2.5 text-body text-ps-text-secondary placeholder-ps-text-muted outline-none focus:border-neon-purple/40 font-mono resize-y min-h-[60px] leading-relaxed" />
+                className="w-full bg-ps-surface-inset border border-ps-edge rounded-ps-md px-3 py-2.5 text-body text-ps-text-secondary placeholder-ps-text-muted font-mono resize-y min-h-[60px] leading-relaxed" />
             </div>
           ))}
 

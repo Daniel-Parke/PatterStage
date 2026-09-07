@@ -128,7 +128,7 @@ export default function ModelPicker({
       id={id}
       value={selectedValue}
       onChange={(e) => handleSelect(e.target.value)}
-      className="w-full bg-ps-surface-inset border border-ps-edge rounded-ps-md px-3 py-2 text-micro text-ps-text-primary outline-none focus:border-neon-cyan/50 font-mono"
+      className="w-full bg-ps-surface-inset border border-ps-edge rounded-ps-md px-3 py-2 text-micro text-ps-text-primary font-mono"
     >
       <option value="">Default (registry / Hermes)</option>
       {models.map((m) => (

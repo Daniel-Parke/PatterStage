@@ -52,7 +52,7 @@ export default function EditChapterModal({
           rows={4}
           placeholder="e.g., Make the dialogue more tense, add a plot twist about the captain..."
           aria-label={`What to change in chapter ${chapterNumber}`}
-          className="w-full bg-ps-surface-inset border border-ps-edge rounded-ps-md px-4 py-3 text-body text-ps-text-primary placeholder-ps-text-muted outline-none focus:border-neon-purple/30 font-mono resize-none"
+          className="w-full bg-ps-surface-inset border border-ps-edge rounded-ps-md px-4 py-3 text-body text-ps-text-primary placeholder-ps-text-muted font-mono resize-none"
         />
         <div>
           <label className="text-micro font-mono text-ps-text-muted uppercase tracking-wider block mb-1.5">Chapter length</label>

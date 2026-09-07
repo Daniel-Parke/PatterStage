@@ -38,13 +38,19 @@ describe("the rule", () => {
     const hits = violationsIn("src/app/x/page.tsx", [
       'className="w-full outline-none font-mono"',
       'className="w-full outline-none focus-visible:ring-1 focus-visible:ring-neon-purple/50"',
+      // Amended 2026-09-08 (T-0122): this line is now a VIOLATION. A border
+      // colour change is not a focus ring. It fires on :focus rather than
+      // :focus-visible, so a mouse click draws it; it is a 1px edge where the
+      // ring is 2px with an offset; and 47 of the 56 such sites measured in
+      // T-0120 were below the 3:1 WCAG 1.4.11 asks of an indicator. The rule
+      // accepted it, so 55 controls removed the console's only ring and passed.
       'className="w-full outline-none focus:border-neon-purple/40"',
       'className="w-full focus:outline-none focus:ring-2"',
       "// outline-none in a comment is prose",
       // `focus:outline-none` is itself an outline-none, not a ring put back.
       'className="w-full focus:outline-none"',
     ]);
-    expect(hits.get("no-bare-outline-none::src/app/x/page.tsx")?.map((h) => h.line)).toEqual([1, 6]);
+    expect(hits.get("no-bare-outline-none::src/app/x/page.tsx")?.map((h) => h.line)).toEqual([1, 3, 6]);
   });
 
   it("the tree carries none", () => {

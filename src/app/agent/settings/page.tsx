@@ -169,7 +169,7 @@ export default function SettingsIndexPage() {
             onChange={(e) => setQuery(e.target.value)}
             aria-label="Search settings"
             placeholder="Find a setting by name, e.g. reasoning, timeout, voice…"
-            className="w-full bg-ps-surface-panel border border-ps-edge rounded-ps-md pl-10 pr-4 py-2.5 text-body text-ps-text-primary placeholder-ps-text-muted outline-none focus:border-neon-orange/50 transition-colors font-mono"
+            className="w-full bg-ps-surface-panel border border-ps-edge rounded-ps-md pl-10 pr-4 py-2.5 text-body text-ps-text-primary placeholder-ps-text-muted transition-colors font-mono"
           />
         </div>
 

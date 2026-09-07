@@ -172,7 +172,7 @@ export default function CategoryCombobox({
                   }
                 }}
                 placeholder={searchPlaceholder}
-                className="w-full px-2 py-1.5 text-micro font-mono bg-ps-surface-ground border border-ps-edge rounded-ps-sm text-ps-text-primary outline-none focus:border-neon-cyan/40"
+                className="w-full px-2 py-1.5 text-micro font-mono bg-ps-surface-ground border border-ps-edge rounded-ps-sm text-ps-text-primary"
               />
             </div>
             <ul className="max-h-48 overflow-y-auto py-1">

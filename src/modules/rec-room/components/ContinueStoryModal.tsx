@@ -50,7 +50,7 @@ export default function ContinueStoryModal({
           rows={3}
           placeholder="e.g., A new threat emerges from the east, forcing the heroes to ally with old enemies..."
           aria-label="Direction for the continuation"
-          className="w-full bg-ps-surface-inset border border-ps-edge rounded-ps-md px-4 py-3 text-body text-ps-text-primary placeholder-ps-text-muted outline-none focus:border-green-500/30 font-mono resize-none"
+          className="w-full bg-ps-surface-inset border border-ps-edge rounded-ps-md px-4 py-3 text-body text-ps-text-primary placeholder-ps-text-muted font-mono resize-none"
         />
         <div>
           <label className="text-micro font-mono text-ps-text-muted uppercase tracking-wider block mb-1.5">Additional chapters</label>

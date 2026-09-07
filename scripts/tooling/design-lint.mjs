@@ -115,9 +115,17 @@ export const RULES = [
     law: "outline-none removes the one focus ring the console has (globals.css :focus-visible). A control may remove it only on a line that puts a focus ring, border or outline back (T-0096, D117).",
     files: (f) => f.startsWith("src/") && (f.endsWith(".ts") || f.endsWith(".tsx")),
     // `focus:outline-none` is itself an outline-none, not a ring put back.
+    //
+    // And neither is a BORDER. The rule used to accept `focus:border-*` as the
+    // replacement, so 55 controls removed the console's one indicator and put
+    // a 1px colour change in its place: it fires on :focus rather than
+    // :focus-visible, so a mouse click draws it, and 47 of the 56 measured in
+    // T-0120 were below the 3:1 WCAG 1.4.11 asks of it. `bg` and `text` go for
+    // the same reason. What still counts is a ring: an outline, a ring, or a
+    // shadow standing in for one (T-0122).
     test: (line) =>
       /\boutline-none\b/.test(line) &&
-      !/focus(?:-visible|-within)?:(?:ring|border|shadow|bg|text|outline-(?!none))/.test(line),
+      !/focus(?:-visible|-within)?:(?:ring|shadow|outline-(?!none))/.test(line),
   },
   {
     id: "overlay-uses-dialog-a11y",

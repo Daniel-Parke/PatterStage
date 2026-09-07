@@ -98,7 +98,7 @@ export default function ComposerGatePrompt({
         onChange={(e) => setNote(e.target.value)}
         rows={2}
         placeholder="Optional note (e.g. what to change on reject)…" aria-label="Gate note"
-        className="w-full rounded-ps-sm border border-ps-edge bg-ps-surface-ground/60 px-2 py-1 text-body text-ps-text-primary placeholder:text-ps-text-faint focus:border-neon-yellow/40 focus:outline-none"
+        className="w-full rounded-ps-sm border border-ps-edge bg-ps-surface-ground/60 px-2 py-1 text-body text-ps-text-primary placeholder:text-ps-text-faint focus:"
       />
       <div className="flex items-center gap-2">
         <button

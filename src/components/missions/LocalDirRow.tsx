@@ -42,7 +42,7 @@ export default function LocalDirRow({
             onChange({ ...entry, path: e.target.value, branch: entry.branch })
           }
           placeholder="~/projects/my-app/" aria-label="Local directory path"
-          className="w-full bg-ps-surface-inset border border-ps-edge rounded-ps-md px-3 py-1.5 text-micro text-ps-text-primary placeholder-ps-text-muted outline-none focus:border-neon-cyan/50 font-mono"
+          className="w-full bg-ps-surface-inset border border-ps-edge rounded-ps-md px-3 py-1.5 text-micro text-ps-text-primary placeholder-ps-text-muted font-mono"
         />
       </div>
       {git?.isGitRepo && git.branches.length > 0 && (
@@ -54,7 +54,7 @@ export default function LocalDirRow({
               branch: e.target.value === "" ? null : e.target.value,
             })
           }
-          className="bg-ps-surface-inset border border-ps-edge rounded-ps-md px-2 py-1.5 text-micro text-ps-text-primary font-mono outline-none focus:border-neon-cyan/50 max-w-[140px]"
+          className="bg-ps-surface-inset border border-ps-edge rounded-ps-md px-2 py-1.5 text-micro text-ps-text-primary font-mono max-w-[140px]"
         >
           <option value="">branch</option>
           {git.branches.map((b) => (

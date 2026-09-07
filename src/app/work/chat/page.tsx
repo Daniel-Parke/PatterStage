@@ -278,7 +278,7 @@ export default function ChatPage() {
                       : "Type a message… (Enter to send, Shift+Enter for newline)"
                   }
                   rows={1}
-                  className="flex-1 bg-ps-surface-raised border border-ps-edge rounded-ps-md px-4 py-2.5 text-body text-ps-text-primary placeholder-ps-text-muted outline-none focus:border-neon-cyan/50 transition-colors font-mono resize-none"
+                  className="flex-1 bg-ps-surface-raised border border-ps-edge rounded-ps-md px-4 py-2.5 text-body text-ps-text-primary placeholder-ps-text-muted transition-colors font-mono resize-none"
                   style={{ minHeight: "42px", maxHeight: "120px" }}
                   onInput={(e) => {
                     const ta = e.target as HTMLTextAreaElement;

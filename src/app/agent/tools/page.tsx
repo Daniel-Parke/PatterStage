@@ -506,7 +506,7 @@ export default function ToolsPage() {
                           setToolsetsJson(event.target.value);
                           setJsonDirty(true);
                         }}
-                        className="mt-2 w-full min-h-32 rounded-ps-md bg-ps-surface-ground/80 border border-ps-edge p-3 text-micro font-mono text-ps-text-primary outline-none focus:border-neon-orange/50"
+                        className="mt-2 w-full min-h-32 rounded-ps-md bg-ps-surface-ground/80 border border-ps-edge p-3 text-micro font-mono text-ps-text-primary"
                         spellCheck={false}
                       />
                     )}

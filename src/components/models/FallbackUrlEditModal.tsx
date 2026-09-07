@@ -55,7 +55,7 @@ export default function FallbackUrlEditModal({
             value={url}
             onChange={(e) => onUrlChange(e.target.value)}
             placeholder="https://api.openai.com/v1"
-            className="w-full bg-ps-surface-inset border border-ps-edge rounded-ps-md px-3 py-2 text-body text-ps-text-primary font-mono outline-none focus:border-neon-purple/50 transition-colors"
+            className="w-full bg-ps-surface-inset border border-ps-edge rounded-ps-md px-3 py-2 text-body text-ps-text-primary font-mono transition-colors"
             autoFocus
           />
           <p className="text-micro text-ps-text-muted font-mono mt-1.5">
