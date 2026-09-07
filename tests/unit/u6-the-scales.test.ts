@@ -130,7 +130,10 @@ describe("paint nobody applies", () => {
    */
   it("keeps .text-glow-cyan, which has a call site", () => {
     expect(css()).toContain(".text-glow-cyan");
-    expect(read("src/components/layout/Sidebar.tsx")).toContain("text-glow-cyan");
+    // In BrandMark since T-0121, which is where the lockup moved when the
+    // mobile header stopped calling the product something else. Still one call
+    // site, still the product's own name.
+    expect(read("src/components/layout/BrandMark.tsx")).toContain("text-glow-cyan");
   });
 });
 

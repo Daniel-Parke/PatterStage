@@ -34,7 +34,6 @@ export interface SidebarLink {
   label: string;
   href: string;
   color: AccentColor;
-  subLinks?: { label: string; href: string }[];
   /** When set, the link is hidden while that feature flag is disabled. */
   featureFlag?: FeatureFlag;
 }
@@ -69,7 +68,6 @@ function toSidebarLink(link: ModuleNavLink): SidebarLink {
     label: link.label,
     href: link.href,
     color: link.color,
-    ...(link.subLinks ? { subLinks: link.subLinks } : {}),
     ...(link.featureFlag ? { featureFlag: link.featureFlag } : {}),
   };
 }

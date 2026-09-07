@@ -109,7 +109,9 @@ const hermesModule: ProductModule = {
           href: "/agent/settings",
           color: "orange",
           order: 7,
-          subLinks: [
+          // Named here and visited by the e2e matrix; NOT drawn in the rail.
+          // Settings' own page lists both, which is why the tier went.
+          childRoutes: [
             { label: "Restore", href: "/agent/settings/restore" },
             { label: "System", href: "/agent/settings/system" },
           ],
@@ -156,7 +158,9 @@ const recRoomModule: ProductModule = {
           href: "/recroom/story-weaver",
           color: "purple",
           order: 1,
-          subLinks: [
+          // Named here and visited by the e2e matrix; NOT drawn in the rail.
+          // Story Weaver's own hub navigates to all four.
+          childRoutes: [
             { label: "Library", href: "/recroom/story-weaver/library" },
             { label: "Create", href: "/recroom/story-weaver/create" },
             { label: "Characters", href: "/recroom/story-weaver/characters" },
@@ -259,7 +263,7 @@ export function railOrder(): string[] {
     ).sort((a, b) => a.order - b.order);
     for (const link of links) {
       out.push(link.href);
-      for (const sub of link.subLinks ?? []) out.push(sub.href);
+      for (const child of link.childRoutes ?? []) out.push(child.href);
     }
   }
   return out;
@@ -290,7 +294,9 @@ function namedRoutes(): Array<{ href: string; label: string }> {
     for (const section of mod.nav ?? []) {
       for (const link of section.links) {
         out.push({ href: link.href, label: link.label });
-        for (const sub of link.subLinks ?? []) out.push({ href: sub.href, label: sub.label });
+        for (const child of link.childRoutes ?? []) {
+          out.push({ href: child.href, label: child.label });
+        }
       }
     }
   }

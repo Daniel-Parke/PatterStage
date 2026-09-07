@@ -7,18 +7,18 @@
   "counts": {
     "routes": 23,
     "distinctFontSizes": 7,
-    "twelvePxShare": 0.56,
-    "monoShare": 0.63,
+    "twelvePxShare": 0.58,
+    "monoShare": 0.64,
     "textBelowFloor": 0,
     "distinctBorderColours": 34,
     "distinctCardChromes": 87,
-    "distinctButtonHeights": 29,
+    "distinctButtonHeights": 28,
     "distinctButtonChromes": 85,
     "distinctRadii": 5,
     "distinctBoxShadows": 16,
     "distinctZLayers": 1,
     "controlBordersBelowThree": 156,
-    "decorativeBordersBelowThree": 609,
+    "decorativeBordersBelowThree": 603,
     "hitTargetsBelowTwentyFour": 84,
     "routesWithMisalignedHeading": 0,
     "worstHeadingOffset": 0,
@@ -37,6 +37,14 @@
         "distinctButtonHeights rose from 22 to 29",
         "distinctButtonChromes rose from 85 to 86",
         "decorativeBordersBelowThree rose from 572 to 609"
+      ]
+    },
+    {
+      "when": "2026-09-07",
+      "reason": "T-0121. Both rises are arithmetic on a smaller denominator or a correct design choice, and neither makes the product more 12px or more mono. (1) twelvePxShare +0.02: the rail's brand tagline moved from text-body to text-micro, which is two text nodes across 23 routes, exactly the +46 measured. A tagline set at the same size as the product name above it is the absence of hierarchy this programme removes; 12px is the right size for it. (2) monoShare +0.01: deleting the sub-link tier removed 22 INTER labels, so the mono count is unchanged and only the denominator moved. Nothing became more mono.",
+      "rose": [
+        "twelvePxShare rose from 0.56 to 0.58",
+        "monoShare rose from 0.63 to 0.64"
       ]
     }
   ]

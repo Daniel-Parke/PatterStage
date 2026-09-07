@@ -1,7 +1,8 @@
 "use client";
-import { Menu, Terminal } from "lucide-react";
+import { Menu } from "lucide-react";
 import Link from "next/link";
 import { useSidebar } from "./SidebarContext";
+import BrandMark from "./BrandMark";
 
 export default function MobileHeader() {
   const { toggleMobile } = useSidebar();
@@ -16,17 +17,18 @@ export default function MobileHeader() {
       >
         <Menu className="w-5 h-5" />
       </button>
-      <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-        <div className="w-7 h-7 rounded-ps-md animated-border p-[1.5px]">
-          <div className="w-full h-full bg-ps-surface-panel rounded-ps-sm flex items-center justify-center">
-            <Terminal className="w-4 h-4 text-neon-cyan" />
-          </div>
-        </div>
-        <span className="text-body font-bold tracking-tight">
-          <span className="text-neon-cyan">PT</span>
-          <span className="text-ps-text-muted mx-0.5">/</span>
-          <span className="text-ps-text-primary">Hermes</span>
-        </span>
+      {/* One mark, one name. This said "PT / Hermes": an abbreviation of the
+          product beside the name of its dependency, so on a phone the product
+          appeared to be called something else than it does on a desktop. */}
+      {/* Named, because the words are gone: the compact lockup is the mark
+          alone, and an icon-only link with no name is what D119 refuses. Same
+          name the rail's own home link carries. */}
+      <Link
+        href="/"
+        aria-label="PatterStage home"
+        className="flex items-center gap-2 min-w-0 hover:opacity-80 transition-opacity"
+      >
+        <BrandMark size="bar" />
       </Link>
     </div>
   );

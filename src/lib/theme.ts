@@ -191,6 +191,25 @@ const BORDER_HOVER: Record<AccentColor, ColorEntry> = {
   yellow: "hover:border-yellow-400/70",
 };
 
+/**
+ * The "you are here" bar on the rail, in the destination's own registry colour.
+ *
+ * A bar rather than a fill, because the fill is what hover uses and two fills
+ * cannot tell each other apart; edge-anchored, because the rail's own seam is
+ * the edge it grows from. Written out one entry per line for the reason every
+ * map in this file is (T-0120): Tailwind scans source.
+ */
+export const railAccentBarMap: Record<AccentColor, ColorEntry> = {
+  cyan: "bg-neon-cyan",
+  purple: "bg-neon-purple",
+  green: "bg-neon-green",
+  pink: "bg-neon-pink",
+  orange: "bg-neon-orange",
+  red: "bg-red-400",
+  blue: "bg-blue-400",
+  yellow: "bg-yellow-400",
+};
+
 export const colorBorderMap: Record<AccentColor, ColorEntry> = makeMap(
   (c) => `${BORDER_BASE[c]} ${BORDER_HOVER[c]}`,
 );

@@ -67,8 +67,15 @@ describe("the five sections, in order", () => {
       "/agent/models",
       "/agent/settings",
     ]);
-    const agents = mainSections.find((s) => s.label === "Agent")!.links.find((l) => l.href === "/agent/profiles")!;
-    expect(agents.subLinks ?? []).toEqual([]);
+    // Amended 2026-09-08 (T-0121). This asserted that Agents declares no
+    // SUB-LINKS: the rail's second tier, which decision 8 deleted outright, so
+    // the property no longer exists to be empty. What survives on the registry
+    // is , which NAMES a route the rail does not draw, and the
+    // adapter must not surface those to the rail at all - a stronger statement
+    // than "this one link has none".
+    const railLinks = mainSections.flatMap((s) => s.links);
+    for (const link of railLinks) expect(link).not.toHaveProperty("subLinks");
+    for (const link of railLinks) expect(link).not.toHaveProperty("childRoutes");
     expect(hrefs("Rec Room")).toEqual(["/recroom/story-weaver"]);
   });
 

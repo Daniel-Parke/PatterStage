@@ -121,12 +121,12 @@ function withQuery(ui: React.ReactElement) {
   return <QueryClientProvider client={client}>{ui}</QueryClientProvider>;
 }
 
-function mountShell() {
+function mountShell(initialCollapsed = false) {
   return render(
     withQuery(
       <SidebarProvider>
         <MobileHeader />
-        <Sidebar />
+        <Sidebar initialCollapsed={initialCollapsed} />
       </SidebarProvider>,
     ),
   );
@@ -221,10 +221,22 @@ describe("the rail, rendered once", () => {
     );
   });
 
-  it("restores a collapsed rail from the stored preference", async () => {
-    answers["/api/prefs"] = { body: { data: { prefs: { "sidebar.collapsed": true } } } };
-    mountShell();
-    await screen.findByRole("button", { name: /expand sidebar/i });
+  /**
+   * Amended 2026-09-08 (T-0121). The rail used to FETCH this preference on
+   * mount, so it painted 224px wide and snapped to 64px once /api/prefs
+   * answered: a visible jump on the one surface the operator is watching while
+   * the page arrives. RootLayout reads it on the server now and hands it down,
+   * so what this pins is that the rail honours what it is given. The write is
+   * still a fetch, and the test above still pins it.
+   */
+  it("renders collapsed when the server says the operator collapsed it", () => {
+    mountShell(true);
+    expect(screen.getByRole("button", { name: /expand sidebar/i })).toBeInTheDocument();
+  });
+
+  it("and does not fetch the preference it was handed", () => {
+    mountShell(true);
+    expect(calls.filter((c) => c.url.includes("/api/prefs") && c.method !== "PUT")).toEqual([]);
   });
 
   it("on a phone the same aside is the drawer: inert closed, a dialog open, Escape closes it", async () => {

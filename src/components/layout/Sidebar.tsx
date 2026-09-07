@@ -17,20 +17,21 @@
 
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronRight, ChevronLeft, Terminal } from "lucide-react";
+import { ChevronRight, ChevronLeft } from "lucide-react";
 
 import { useSidebar } from "./SidebarContext";
 import { useDialogA11y } from "@/hooks/useDialogA11y";
 import { useIsMobile } from "@/hooks/useIsMobile";
-import { iconColorMap } from "@/lib/theme";
+import { iconColorMap, railAccentBarMap } from "@/lib/theme";
 import { safeApiCall } from "@/lib/api-fetch";
 import { useFeatureFlags } from "@/hooks/useFeatureFlags";
 import { mainSections } from "./sidebar-config";
 import type { SidebarLink } from "./sidebar-config";
 import { RailFooter } from "./RailFooter";
+import BrandMark from "./BrandMark";
 import QuestBadge from "@/components/quests/QuestBadge";
 
 function isActive(pathname: string, href: string): boolean {
@@ -38,9 +39,15 @@ function isActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(href + "/");
 }
 
-export default function Sidebar() {
+/**
+ * `initialCollapsed` comes from the server (see src/app/layout.tsx). The rail
+ * used to read the preference on the client, so on every hard load it painted
+ * itself 224px wide and then snapped to 64px once the fetch answered: a visible
+ * jump on a surface the operator is looking at while the page arrives.
+ */
+export default function Sidebar({ initialCollapsed = false }: { initialCollapsed?: boolean }) {
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(initialCollapsed);
   const { mobileOpen, setMobileOpen } = useSidebar();
   const isMobile = useIsMobile();
   const { data: flags } = useFeatureFlags();
@@ -50,20 +57,9 @@ export default function Sidebar() {
   const drawerOpen = isMobile && mobileOpen;
   const drawerRef = useDialogA11y({ open: drawerOpen, onClose: closeMobile });
 
-  // The collapsed state is a preference: read once, written on each toggle.
-  // A failed read or write (read-only, offline) leaves the rail where it is.
-  useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      const res = await safeApiCall<{ data?: { prefs?: Record<string, unknown> } }>("/api/prefs");
-      if (cancelled || !res.ok) return;
-      const stored = res.data?.data?.prefs?.["sidebar.collapsed"];
-      if (typeof stored === "boolean") setCollapsed(stored);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  // The preference arrives with the markup now; only the WRITE is a fetch.
+  // A failed write (read-only, offline) leaves the rail where the operator put
+  // it for this session and the server keeps its old answer.
   const toggleCollapsed = useCallback(() => {
     const next = !collapsed;
     setCollapsed(next);
@@ -86,7 +82,7 @@ export default function Sidebar() {
   const renderLink = useCallback(
     (link: SidebarLink) => {
       const active = isActive(pathname, link.href);
-      const showSubs = active && link.subLinks && !iconsOnly;
+      const bar = railAccentBarMap[link.color];
 
       return (
         <div key={link.href}>
@@ -95,32 +91,44 @@ export default function Sidebar() {
             aria-label={link.label}
             title={iconsOnly ? link.label : undefined}
             aria-current={active ? "page" : undefined}
-            className={`flex items-center gap-2.5 px-3 py-[3px] rounded-ps-md text-body transition-colors ${
-              active ? "bg-ps-surface-raised text-ps-text-primary" : "text-ps-text-muted hover:bg-ps-surface-raised hover:text-ps-text-primary"
+            // `relative`, because the accent bar is anchored to the row's
+            // own left edge. Labels sit on the SECONDARY tier: an inactive row
+            // that is already the quietest thing on the rail leaves the active
+            // one nowhere to go, which is how 63 elements came to share one
+            // tone. Collapsed, the row is a 40px square rather than 39x22:
+            // under 24x24 it failed WCAG 2.5.8, and it was smaller than the
+            // same row expanded, which is backwards for the mode that exists
+            // to be reachable.
+            //
+            // The EXPANDED row keeps its 3px rhythm. Deleting the sub-link
+            // tier was supposed to pay for a taller one, but that tier only
+            // rendered under the ACTIVE link, so it never cost more than one
+            // route's worth at a time and there was nothing to spend: at
+            // py-1.5 the nav measured 673px against a 572px budget, and at
+            // py-1 it measured 597. The hierarchy this batch is about is TONE,
+            // the accent bar and the space above a heading, and all three fit.
+            className={`relative flex items-center rounded-ps-md text-body transition-colors ${
+              iconsOnly ? "h-10 w-10 justify-center" : "gap-2.5 px-3 py-[3px]"
+            } ${
+              active
+                ? "bg-ps-surface-raised text-ps-text-primary"
+                : "text-ps-text-secondary hover:bg-ps-surface-raised hover:text-ps-text-primary"
             }`}
             onClick={closeMobile}
           >
+            {active && (
+              <span
+                aria-hidden
+                className={`absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-ps-sm ${bar}`}
+              />
+            )}
             <link.icon
-              className={`w-4 h-4 flex-shrink-0 ${active ? iconColorMap[link.color] : ""}`}
+              // Quieter than its own label when the row is not the one you are
+              // on: an icon is a landmark, not a second label.
+              className={`w-4 h-4 flex-shrink-0 ${active ? iconColorMap[link.color] : "text-ps-text-muted"}`}
             />
             {!iconsOnly && <span>{link.label}</span>}
           </Link>
-          {showSubs && (
-            <div className="ml-7 mt-1 space-y-0.5 border-l border-ps-edge-hairline pl-3">
-              {link.subLinks!.map((sub) => (
-                <Link
-                  key={sub.href}
-                  href={sub.href}
-                  className={`block py-1 text-body transition-colors ${
-                    pathname === sub.href ? "text-ps-text-primary" : "text-ps-text-muted hover:text-ps-text-secondary"
-                  }`}
-                  onClick={closeMobile}
-                >
-                  {sub.label}
-                </Link>
-              ))}
-            </div>
-          )}
         </div>
       );
     },
@@ -155,29 +163,17 @@ export default function Sidebar() {
         // 3:1, which is what WCAG 1.4.11 asks of a boundary that identifies a
         // region. No backdrop blur: there is nothing behind an opaque surface
         // to blur, and the filter cost a compositing layer on every scroll.
-        className={`flex flex-col h-screen border-r border-ps-edge transition-all duration-200 fixed inset-y-0 left-0 z-[60] w-56 bg-ps-surface-panel transform ${
+        // `transition-[width]`, not `transition-all`: the second animated colour
+        // as well, so the active row faded in over 200ms on every navigation
+        // instead of appearing where you clicked.
+        className={`flex flex-col h-screen border-r border-ps-edge transition-[width] duration-200 fixed inset-y-0 left-0 z-[60] w-56 bg-ps-surface-panel transform ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         } lg:static lg:z-auto lg:translate-x-0 ${iconsOnly ? "lg:w-16" : "lg:w-56"}`}
       >
         {/* Logo — min-height matches main app chrome (see --ps-shell-header-min-height) */}
         <div className="px-4 min-h-[var(--ps-shell-header-min-height)] flex items-center border-b border-ps-edge-hairline">
-          <Link href="/" aria-label="PatterStage home" className="flex items-center gap-2" onClick={closeMobile}>
-            <div className="w-8 h-8 rounded-ps-md animated-border p-[1.5px]">
-              <div className="w-full h-full bg-ps-surface-panel rounded-ps-sm flex items-center justify-center">
-                <Terminal className="w-4 h-4 text-neon-cyan" />
-              </div>
-            </div>
-            {!iconsOnly && (
-              <div className="leading-tight">
-                <div className="text-body font-bold tracking-tight text-ps-text-primary">
-                  PatterStage
-                </div>
-                <div className="text-body text-ps-text-muted mt-0.5">
-                  The Stage is{" "}
-                  <span className="font-bold text-neon-cyan text-glow-cyan">Yours</span>
-                </div>
-              </div>
-            )}
+          <Link href="/" aria-label="PatterStage home" className="flex items-center gap-2 min-w-0" onClick={closeMobile}>
+            <BrandMark words={!iconsOnly} />
           </Link>
         </div>
 
@@ -189,7 +185,9 @@ export default function Sidebar() {
           {mainSections.map((section) => (
             <div key={section.label}>
               {section.label !== "Home" && !iconsOnly && (
-                <div className="text-micro leading-4 font-mono text-ps-text-muted uppercase tracking-widest px-3 mb-0.5 mt-1.5">
+                // A tier of its own, and room above it. A heading set at the
+                // same weight as the rows under it is not a heading.
+                <div className="text-micro leading-4 font-mono text-ps-text-faint uppercase tracking-widest px-3 mb-0.5 mt-3 first:mt-1">
                   {section.label}
                 </div>
               )}

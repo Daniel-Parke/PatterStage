@@ -1,3 +1,4 @@
+import { readOperatorPrefs } from "@/lib/operator-prefs-repository";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import localFont from "next/font/local";
@@ -54,11 +55,30 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
+/**
+ * The rail's collapsed state is read HERE, on the server, and handed to the
+ * rail as a prop. It used to be fetched on the client, so every hard load
+ * painted a 224px rail and then snapped it to 64px once /api/prefs answered:
+ * a visible jump on the one surface the operator is looking at while the page
+ * arrives (T-0121).
+ *
+ * A read that throws leaves the rail expanded, which is the state a first-boot
+ * install has anyway.
+ */
+function readRailCollapsed(): boolean {
+  try {
+    return readOperatorPrefs()["sidebar.collapsed"] === true;
+  } catch {
+    return false;
+  }
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const railCollapsed = readRailCollapsed();
   return (
     <html
       lang="en"
@@ -108,7 +128,7 @@ export default function RootLayout({
                 drew a second one right beside it, so what looked like one
                 divider was two 1px rules at 1.25:1 apiece. */}
             <div className="flex-shrink-0">
-              <Sidebar />
+              <Sidebar initialCollapsed={railCollapsed} />
             </div>
             <div className="flex-1 flex flex-col min-h-screen min-w-0">
               <MobileHeader />

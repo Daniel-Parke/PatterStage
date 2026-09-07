@@ -49,11 +49,6 @@ export type IconName =
   | "ListTodo" | "Network" | "Settings2"
   | "Settings" | "LifeBuoy";
 
-interface NavSubLink {
-  label: string;
-  href: string;
-}
-
 export interface NavLink {
   label: string;
   href: string;
@@ -63,7 +58,8 @@ export interface NavLink {
   order: number;
   /** Hidden while this flag is disabled. */
   featureFlag?: FeatureFlag;
-  subLinks?: NavSubLink[];
+  /** Routes this link owns that the rail does not draw. */
+  childRoutes?: ChildRoute[];
 }
 
 interface NavSection {
@@ -82,13 +78,30 @@ export interface ProductModule {
   featureFlag?: FeatureFlag;
 }
 
-/** Every route a module contributes, including sub-links. Order is preserved. */
+/**
+ * Routes a nav link owns but the rail does not render.
+ *
+ * They were `subLinks` and the rail drew them as a second tier under their
+ * parent (decision 8 deleted that tier: both destinations already navigate to
+ * exactly these places from inside the page, and it was the only part of the
+ * rail whose height the registry did not bound). The registry still NAMES them,
+ * because `labelFor` is the one source of a page's h1 and tab title, and the
+ * e2e matrix still visits them.
+ */
+// Not exported: NavLink is the only reader, and an exported name with no
+// importer is what this programme is deleting.
+interface ChildRoute {
+  label: string;
+  href: string;
+}
+
+/** Every route a module contributes, including the ones the rail does not draw. */
 export function moduleRoutes(mod: ProductModule): string[] {
   const out: string[] = [];
   for (const section of mod.nav ?? []) {
     for (const link of section.links) {
       out.push(link.href);
-      for (const sub of link.subLinks ?? []) out.push(sub.href);
+      for (const child of link.childRoutes ?? []) out.push(child.href);
     }
   }
   return out;

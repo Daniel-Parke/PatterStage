@@ -105,8 +105,15 @@ describe("the rail has a hierarchy", () => {
     expect(rail()).toMatch(/text-ps-text-secondary/);
   });
 
+  /**
+   * The bar's own shape: anchored to the row's left edge, narrow, and rounded
+   * only on the side that leaves the edge. A fill alone cannot say "you are
+   * here", because a fill is what hover says.
+   */
   it("and marks where you are with a bar rather than only a fill", () => {
-    expect(rail()).toMatch(/railActiveBar|border-l-|activeBar/);
+    const source = rail();
+    expect(source).toMatch(/absolute left-0/);
+    expect(source).toMatch(/w-\[3px\]/);
   });
 
   /**
