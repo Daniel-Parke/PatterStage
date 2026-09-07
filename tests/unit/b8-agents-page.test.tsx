@@ -220,7 +220,9 @@ describe("a refetch after a mutation is silent", () => {
 
     render(withQuery(<AgentsPage />));
 
-    expect((await screen.findAllByText(/Loading profiles/i)).length).toBeGreaterThan(0);
+    // A skeleton announced once, rather than a spinner's caption (U8's
+    // loading contract, adopted by this page in U11).
+    expect((await screen.findAllByRole("status", { name: /Loading profiles/i })).length).toBeGreaterThan(0);
     await act(async () => {
       release?.(null);
     });

@@ -19,39 +19,41 @@ need to know how this install is put together.
 
 ![Settings screen](../images/settings.png)
 
-The header names the page and counts what is under it: 27 sections, plus
-Models, Restore and System. The `?` at the right of the header opens this
-guide, and pressing `?` does the same.
+The header names the page and counts what is under it: 27 sections of
+`config.yaml`, each saved with a backup. The `?` at the right of the header
+opens this guide, and pressing `?` does the same.
 
-Below it, a search box: **Find a setting by name, e.g. reasoning, timeout,
-voice…**. Typing filters everything underneath, and a card that matched
-because of one of its fields shows that field's name as a small chip, so
-searching for `reasoning` finds **Agent Settings** and tells you that
-**Reasoning Effort** is why. When nothing matches, the page says so and
-suggests a word from the field's own name.
+Under the header, one line says whose settings these are. It names the agent
+whose file this page edits, and if the profile you have chosen on Agents,
+Skills and Tools is a different one, it says so and points you at the place
+that profile's own settings live.
 
-Then three cards, each badged **page** rather than being a section:
+Then a search box: **Find a setting by name, e.g. reasoning, timeout,
+voice…**. Typing narrows the page to the sections that match, and a section
+that matched because of one of its fields shows that field's name as a small
+chip in its header, so searching for `reasoning` keeps **Agent Settings** on
+the page and tells you that **Reasoning Effort** is why. When nothing matches,
+the page says so and suggests a word from a field's own name.
 
-- **Models**, the model registry, the default for each task and the fallback
-  chain. It has [its own guide](./models.md).
-- **Restore**, which puts back what PatterStage ships.
-- **System**, which describes this install and holds the update and backup
-  controls.
+Below that the page is in two columns. Down the right, a list of every section
+in its group: **Core**, **Infrastructure**, **Security**, **Voice & Audio**,
+**Automation**, **Integrations** and **Files**, then **Pages** for the three
+things that are not sections: **Models**, **Restore** and **System**. The list
+stays put while you scroll and marks the section you are looking at; press a
+name to jump to it. On a narrow window the same list runs along the top and
+scrolls sideways.
 
-Under those, the sections themselves, in seven groups: **Core**,
-**Infrastructure**, **Security**, **Voice & Audio**, **Automation**,
-**Integrations** and **Files**. Each group has a one-line description and a
-grid of cards. A card carries the section's name, a sentence about it, and
-badges: how many fields it has, **configured** in green when the agent already
-holds values for that section, **+N advanced** when the section also has
-nested values, and **file** on the two cards in Files.
+On the right, every section, expanded, in the same order. Each is a card
+headed with the section's name, a sentence about it, and badges: how many
+fields it has, **configured** in green when the agent already holds values for
+it, **+N read-only** when it also has nested values you cannot edit here, and
+**file** on the two in Files. At the right of that header sit **Reset** and
+**Save**, for that section alone.
 
-### A section
+### A section's fields
 
-Opening a card gives you that section's own page: its name and description in
-the header, a back arrow to the index, and one card of fields. Each field is a
-switch, a number box, a drop-down or a text box, with its description above the
-control and, beneath the control, one of two things:
+Each field is a switch, a number box, a drop-down or a text box, with its
+description above the control and, beneath the control, one of two things:
 
 - **Not set**, with the line *Hermes uses its own default*. The agent has no
   value of its own for this field, so it uses whatever it would have used if
@@ -63,23 +65,29 @@ If a value already in the file is not the kind the field expects, an orange
 line under the control says which value it found and what it expected, instead
 of the control quietly rendering it as off or blank.
 
-As soon as you change anything, **UNSAVED** appears in the header beside
-**Reset** and **Save**. Reset puts back what the page loaded. Save turns into
-**Saving...**, then **Saved!** for a moment.
+As soon as you change anything in a section, **UNSAVED** appears in that
+section's header beside its **Reset** and **Save**. Reset puts back what the
+page loaded. Save turns into **Saving…**, then **Saved!** for a moment. A
+change in one section never enables another section's Save.
 
-Sections with nested values show them below the fields under **Complex
-Fields**, formatted but read-only, with a line saying they are edited in the
-agent's own file. **Platform Toolsets** is the same shape and points at the
-Tools page, which is where toolsets are actually changed.
+On a wide window a section lays its fields two to a row.
 
-The two cards in **Files** behave differently from the rest. The agent's
-instructions file opens as a plain text editor with the same Reset and Save.
-**Environment Variables** is a read-only view: every line is listed with its
-key visible and its value masked, with a note that sensitive values are edited
-on the server rather than here.
+Sections with nested values keep them behind a line reading **N read-only
+fields**. Open it and they are shown formatted, with a note that they are
+edited in the agent's own file. **Platform Toolsets** is the same shape and
+points at the Tools page, which is where toolsets are actually changed.
 
-If you reach a section address that does not exist, the page lists every
-section there is as a link rather than leaving you to guess.
+The two sections in **Files** behave differently from the rest. **HERMES.md**
+is a plain text editor with the same Reset and Save. **Environment
+Variables** is a read-only view behind a line counting its variables: open it
+and every line is listed with its key visible and its value masked, with a note
+that sensitive values are edited on the server rather than here.
+
+Each section has an address of its own, `/agent/settings#<section>`, which the
+list on the right uses and which you can bookmark. The old addresses, one page
+per section, still work: each sends you to its section on this page. If you
+reach a section address that does not exist, the page lists every section
+there is as a link rather than leaving you to guess.
 
 ### Restore
 
@@ -136,28 +144,37 @@ restore one, because restoring wants the server stopped.
 
 ### Change a setting
 
-1. Type a word from the setting into the search box. The groups collapse to
-   the cards that match, and the chip on the card tells you which field
-   matched.
-2. Open that card.
-3. Change the control. **UNSAVED** appears in the header.
-4. Press **Save**. It reads **Saved!** when the file has been written.
+1. Type a word from the setting into the search box, or press the section's
+   name in the list on the right. Searching narrows the page to the sections
+   that match, and the chip on a section tells you which field matched.
+2. Change the control. **UNSAVED** appears in that section's header.
+3. Press that section's **Save**. It reads **Saved!** when the file has been
+   written.
 
 If Save is greyed out with a change pending, hover it: the tooltip names the
 value it will not accept, for example a number outside the range the field
 allows.
 
+### Change two settings in different sections
+
+1. Change the first. Its section says **UNSAVED**; the others do not.
+2. Scroll or jump to the second and change it. Two sections now say
+   **UNSAVED**, and each has its own Save.
+3. Save each. A save writes only the section it belongs to, and only the
+   fields you changed in it.
+
 ### Put a setting back to the agent's own default
 
-1. Open the section holding the field.
+1. Find the field.
 2. Press **Clear** under it. The control empties and the field reads **Not
    set**.
-3. Press **Save**. The key is removed from the agent's file, so the agent falls
-   back to its own default rather than to a zero you did not choose.
+3. Press that section's **Save**. The key is removed from the agent's file, so
+   the agent falls back to its own default rather than to a zero you did not
+   choose.
 
 ### Update this install
 
-1. Open **System**.
+1. Open **System**, from the list on the right or the rail.
 2. Press **Back up now** first. The new backup appears in the list underneath.
 3. Press **Check for updates** and confirm the branch.
 4. If it comes back as **Update available. Install it**, press it. The app
@@ -166,9 +183,10 @@ allows.
 
 ## Notes
 
-A save sends only the fields you actually changed. That matters on a section
-where some other value on disk is one this console cannot represent: it stays
-where it is instead of blocking the save of the field beside it.
+A save sends only the fields you actually changed, in the one section you
+saved. That matters on a section where some other value on disk is one this
+console cannot represent: it stays where it is instead of blocking the save of
+the field beside it.
 
 Every save copies the file as it was found before writing, so a change you
 regret is recoverable from the copy. Values are checked against the declared
@@ -176,14 +194,14 @@ ranges and option lists in the browser and again on the server, so a number
 outside the range is refused rather than written and met later by the agent.
 
 If the agent's configuration file cannot be read, an orange alert appears at
-the top of the index, saying the sections read as unconfigured because the file
-did not parse rather than because it is empty, and on every section page that
-writes that file, saying saving is disabled there until it is repaired. The two
-file cards keep working, because they do not write that file.
+the top of the page, saying the sections read as unconfigured because the file
+did not parse rather than because it is empty, and every section that writes
+that file has its Save disabled until it is repaired. The two file sections
+keep working, because they do not write that file.
 
-Some things here are shown rather than offered. Complex nested values are
-read-only. The memory **Provider** field displays what is active and links to
-the [Memory page](./memory.md), which is the one place that changes it. The
+Some things here are shown rather than offered. Nested values are read-only.
+The memory **Provider** field displays what is active and links to the
+[Memory page](./memory.md), which is the one place that changes it. The
 environment variables view is read-only for the same reason it is masked.
 
 Restore overwrites. **Add what's missing** installs only what is absent and
@@ -215,11 +233,12 @@ three stores and which of them a snapshot actually covers.
 - The two file cards use `/api/agent/files/<key>`. Saving `HERMES.md` copies
   the previous version into the same `backups` folder first. `.env` is served
   with its values masked and is never written from the console.
-- The index, its seven groups and the three page cards are data in
+- The page, its seven groups and the three page links are data in
   `src/lib/config-sections.ts`; the fields of each section live in
-  `src/lib/config-schema.ts`. The section routes are derived from the same
-  list, so a section added to the data appears on the index, in the route
-  matrix and on the recovery page with no second edit.
+  `src/lib/config-schema.ts`. The 27 redirects from the old section addresses
+  and the list the browser tests visit are derived from the same list, so a
+  section added to the data appears on the page, in the redirects and in the
+  tests with no second edit.
 - System's table comes from `/api/status/runtime`. Backups come from
   `/api/backup`: `POST` takes one, labelled `manual`, and the restore command
   is a template with a `<backup file>` placeholder you fill in.

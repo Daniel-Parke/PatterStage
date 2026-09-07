@@ -13,6 +13,13 @@
 // names a thing the agent did or was given, so the panel makes no capability
 // claim it cannot support. ADR-0004's rule that every displayed number names its
 // subject is satisfiable here in a way it was not for the radar.
+//
+// "Memory facts" is not a row (T-0125). The signal behind it is a hard-coded
+// zero waiting for a count API that never landed (agent-experience.ts), so
+// every agent on every install read "Memory facts 0" while the Memory page
+// beside it counted real facts. A number that is always 0 is not a fact, and
+// two numbers that disagree teach the reader to trust neither. The signal
+// stays in the API, where a zero costs nobody anything.
 // ═══════════════════════════════════════════════════════════════
 
 import { AgentLevelBadge } from "@/components/achievements";
@@ -40,7 +47,6 @@ export default function AgentGrowthPanel({ profileId }: { profileId: string }) {
     ["Active days", s.activeDays],
     ["Skills enabled", s.skillsEnabled],
     ["Toolsets attached", s.toolsetCount],
-    ["Memory facts", s.memoryFacts],
   ];
 
   return (

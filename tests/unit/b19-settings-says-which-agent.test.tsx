@@ -18,7 +18,7 @@
  * settings live.
  */
 
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 
 const mockUseParams = jest.fn();

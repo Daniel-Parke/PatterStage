@@ -210,9 +210,12 @@ function railManifest(): HelpManifest {
 describe("the inputs the resolver is measured against", () => {
   it("finds the registry's routes, so an empty matrix cannot read as a pass", () => {
     const routes = allModuleRoutes();
-    expect(routes.length).toBeGreaterThanOrEqual(40);
+    // Amended 2026-09-07 (U11, T-0125): the 27 settings sections are anchors
+    // on the one Settings page, not routes, so the floor drops from 40 to the
+    // rail's own destinations and the section named is the page.
+    expect(routes.length).toBeGreaterThanOrEqual(20);
     expect(routes).toContain("/work/missions");
-    expect(routes).toContain("/agent/settings/security");
+    expect(routes).toContain("/agent/settings");
     expect(new Set(EXPECTED_RAIL).size).toBe(EXPECTED_RAIL.length);
     expect(EXPECTED_RAIL.length).toBeGreaterThanOrEqual(25);
   });

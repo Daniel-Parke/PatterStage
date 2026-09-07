@@ -45,12 +45,13 @@ describe("the registry", () => {
     expect(routes).toContain("/agent/settings/system");
   });
 
-  it("the documented set is unchanged: one guide for Settings, and its two pages", () => {
+  it("the documented set is unchanged: one guide, Settings, stands for the page and its two children", () => {
     const documented = documentedRoutes();
     expect(documented).toContain("/agent/settings");
-    expect(documented).toContain("/agent/settings/restore");
-    expect(documented).toContain("/agent/settings/system");
-    expect(documented.filter((r) => r.startsWith("/agent/settings"))).toHaveLength(3);
+    // Restore and System are sections of the Settings guide, as they were.
+    expect(documented).not.toContain("/agent/settings/restore");
+    expect(documented).not.toContain("/agent/settings/system");
+    expect(documented.filter((r) => r.startsWith("/agent/settings"))).toHaveLength(1);
   });
 
   it("a section path still reads as Settings, so a redirect in flight titles itself right", () => {

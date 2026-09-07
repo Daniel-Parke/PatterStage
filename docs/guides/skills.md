@@ -24,11 +24,11 @@ At the very top, a small line recording the last thing that happened on this
 page, such as "Saved at 14:03: apple-notes enabled". It is not there until you
 have done something.
 
-The header carries the page name, a count of the skills in the catalogue, and a
-reminder that a skill counts as active when it is in the catalogue and has not
-been switched off for the profile named beside it. On the right is a profile
-picker. That picker decides whose switches you are looking at, and switching
-profile reloads the whole list.
+The header carries the page name and one line of counts: how many skills are
+in the catalogue, how many categories they fall into, and how many are active
+for the profile named at the end of it. On the right is the profile picker
+every Agent screen shares. It decides whose switches you are looking at, and
+switching profile reloads the whole list.
 
 Under the header, a standing note explaining how the switching works: the agent
 keeps a list of the skills that are turned **off**, not a list of the ones that
@@ -39,42 +39,39 @@ edited the agent's configuration by hand, you should pull that profile in on the
 that note carries a dotted underline: pressing it opens a small box with a
 one-line definition and a link to a longer one.
 
-Then a strip of figures, which appears once there is anything to count. A ring
-on the left splits the catalogue into **Active** and **Inactive** with the total
-in the middle, then four tiles, **Total**, **Active**, **Inactive** and
-**Categories**, each with a hint on hover, and a second ring on the right giving
-the share that are active as a percentage.
-
 Below the figures, one search box, labelled with the size of the catalogue, for
 example **Search all 178 skills...**.
 
 Then the list itself, in two halves:
 
 - **Active**, everything the selected profile may use.
-- **Inactive**, everything it may not.
+- **Inactive**, everything it may not. This half is not drawn when there is
+  nothing in it.
 
 Each half is a header row with a count badge, the number of categories inside
-it, and the word "collapse" or "expand" on the right. Inside a half, categories
-are rows rather than open panels: an uppercase name, the number of skills in it,
-and a chevron. Every category starts closed, and changing profile closes
-them all again.
+it, and the word "collapse" or "expand" on the right. Inside a half, each
+category is a row: an uppercase name, the number of skills in it, and a
+chevron. While the half is small enough to show in full (about a hundred
+skills) every category starts open with its skills under it, so the skills
+themselves are what you see first. Beyond that the categories start closed and
+open one at a time. Changing profile puts the defaults back.
 
-Opening a category shows its skills as cards, up to 24 at a time. When there are
-more than that, a line under the cards says which you are looking at ("1-24 of
-60"), with the page number and **Prev** and **Next** beside it.
+A category shows up to 24 skills at a time. When there are more than that, a
+line under them says which you are looking at ("1-24 of 60"), with the page
+number and **Prev** and **Next** beside it.
 
-A skill card carries its name, its category underneath, its description in two
-lines with the full text on hover, and a switch in the top right. Along the
-bottom, a dot and the word **Active** or **Inactive**, then two buttons:
+A skill is one row: a green mark when it is on, its name, its description with
+the full text on hover, the word **Active** or **Inactive**, a switch, and two
+buttons:
 
 - **Edit** opens the skill's own text in a box you can change.
-- **View** opens a preview of the same text inside the card. The button becomes
+- **View** opens a preview of the same text under the row. The button becomes
   **Hide** while it is open.
 
 Typing in the search box replaces both halves with a line saying how many matched
-out of how many were searched, and under it a flat list of matches, active and
-inactive together. The cards behave exactly as they do in a category, and page
-the same way. Nothing matching gives you **No skills match**.
+out of how many were searched, and under it a flat list of matching rows, active and
+inactive together, each naming its category. The rows behave exactly as they do
+in a category, and page the same way. Nothing matching gives you **No skills match**.
 
 With nothing in the catalogue at all, the page is a single panel, **No skills in
 catalog**, with an **Import skills from Hermes** button that reads the agent's
@@ -87,7 +84,7 @@ own skills folder and fills the list.
 1. Choose the profile in the picker at the top right.
 2. Find the skill, either by opening its category under **Active** or by typing
    part of its name into the search box.
-3. Click the switch on its card. The card shows "Updating..." for a moment, a
+3. Click the switch on its row. The row shows "Updating…" for a moment, a
    message confirms the change, and the skill moves to the **Inactive** half.
    There is no save button: the agent's own configuration is rewritten as you
    click.
@@ -97,14 +94,14 @@ own skills folder and fills the list.
 1. Type any part of the name or the description into the search box. The search
    runs over the whole catalogue, not over the categories you happen to have
    opened, so a match three pages deep inside a closed category still comes back.
-2. The results say how many matched out of the full count. Each card names its
+2. The results say how many matched out of the full count. Each row names its
    own category, so you can see where the skill lives.
-3. Toggle, view or edit it from the result card. Clearing the box puts the two
+3. Toggle, view or edit it from the result row. Clearing the box puts the two
    halves back as they were.
 
 **Read what a skill actually tells the agent to do.**
 
-1. Press **View** on its card. The card grows a scrolling preview of the skill's
+1. Press **View** on its row. The row grows a scrolling preview of the skill's
    instructions.
 2. Press **Edit** instead if you want to change them. The box is titled with the
    skill's name and holds its text; **Reset** puts back what you opened,

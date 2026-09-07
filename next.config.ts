@@ -1,5 +1,7 @@
 import type { NextConfig } from "next";
 
+import { settingsSectionIds } from "./src/lib/config-sections";
+
 // Comma-separated full origins (scheme + host + port). scripts/bootstrap/setup.sh generates
 // PS_ALLOWED_DEV_ORIGINS for your chosen PORT (localhost, 127.0.0.1, LAN IPv4s).
 // CH_ALLOWED_DEV_ORIGINS is the legacy alias, kept for already-provisioned installs.
@@ -91,6 +93,12 @@ const nextConfig: NextConfig = {
       temporary("/config/seed", "/agent/settings/restore"),
       temporary("/config", "/agent/settings"),
       temporary("/config/:section", "/agent/settings/:section"),
+      // The 27 section editors are sections of the one Settings page now
+      // (decision 7, T-0125): a bookmarked section lands on its anchor. One
+      // entry per section, enumerated from the catalogue rather than matched
+      // by a pattern, because /agent/settings/restore and /system are pages
+      // of their own and a pattern would catch them too.
+      ...settingsSectionIds().map((id) => temporary(`/agent/settings/${id}`, `/agent/settings#${id}`)),
     ];
   },
 };

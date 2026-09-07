@@ -203,7 +203,7 @@ the process id holding the lease. Follower means the lease is live and held by
 a different process: schedules are firing, but not from this one.
 
 A platform is configured by a token in the Hermes `.env`, shown on
-`/agent/settings/env`. The Gateway and Scheduler pills open
+the environment section of Settings (`/agent/settings#env`). The Gateway and Scheduler pills open
 `/agent/settings/system`.
 
 The preference that hides the Start here card is stored as `guide.hidden` in

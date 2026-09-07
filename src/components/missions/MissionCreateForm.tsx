@@ -13,8 +13,8 @@ import CategoryCombobox, {
   type CategoryOption,
 } from "@/components/missions/CategoryCombobox";
 import MissionPromptPreview from "@/components/missions/MissionPromptPreview";
-import SkillSelector from "@/components/ui/SkillSelector";
-import ToolsetSelector from "@/components/ui/ToolsetSelector";
+import SkillsPicker from "@/components/missions/SkillsPicker";
+import ToolsetsPicker from "@/components/missions/ToolsetsPicker";
 import {
   ComposerAccordion,
   ComposerFieldLabel,
@@ -605,7 +605,7 @@ export default function MissionCreateForm({
 
         <div>
           <ComposerFieldLabel>Recommend agent skills</ComposerFieldLabel>
-          <SkillSelector
+          <SkillsPicker
             value={formState.newSkills}
             onChange={(skills) => setFormField("newSkills", skills)}
             profileId={formState.newProfile}
@@ -615,7 +615,7 @@ export default function MissionCreateForm({
 
         <div>
           <ComposerFieldLabel>Recommend Hermes toolsets</ComposerFieldLabel>
-          <ToolsetSelector
+          <ToolsetsPicker
             value={formState.newToolsets}
             onChange={(toolsets) => setFormField("newToolsets", toolsets)}
             profileId={formState.newProfile}

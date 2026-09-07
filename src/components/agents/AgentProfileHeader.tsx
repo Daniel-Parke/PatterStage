@@ -6,7 +6,9 @@
 //
 // The note used to lead the card: three file names, `skills.disabled` and
 // `platform_toolsets` were the first thing an operator read about their own
-// agent (T-0102, the copy). It is still here, in full, one click away.
+// agent (T-0102, the copy). It is still here, in full, one click away. It
+// no longer links to Personalities: that page IS the Identity tab above it
+// (decision 11, T-0103), and a link to a redirect is a link to nowhere new.
 // ═══════════════════════════════════════════════════════════════
 
 "use client";
@@ -78,13 +80,10 @@ export default function AgentProfileHeader({
             Which file holds what
           </summary>
           <p className="mt-2 text-micro text-ps-text-muted font-mono">
-            Edit <strong className="text-ps-text-secondary">SOUL.md</strong> for voice and identity.
-            Use <strong className="text-ps-text-secondary">config.yaml</strong> for skills.disabled and
-            platform_toolsets. Session display presets:{" "}
-            <a href="/agent/personalities" className="text-neon-cyan hover:underline">
-              Personalities
-            </a>
-            .
+            Edit <strong className="text-ps-text-secondary">SOUL.md</strong> for voice and identity; the
+            Identity tab opens it for you. Use{" "}
+            <strong className="text-ps-text-secondary">config.yaml</strong> for skills.disabled and
+            platform_toolsets, which the Skills and Tools pages write for you.
           </p>
         </details>
       </div>

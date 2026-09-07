@@ -1,7 +1,9 @@
 "use client";
 
+import Button from "@/components/ui/Button";
+import Dialog from "@/components/ui/Dialog";
+import { Field, Input } from "@/components/ui/field";
 import type { FallbackChainEntry } from "@/types/console";
-import { useDialogA11y } from "@/hooks/useDialogA11y";
 
 interface FallbackUrlEditModalProps {
   entry: FallbackChainEntry | null;
@@ -12,6 +14,14 @@ interface FallbackUrlEditModalProps {
   onSave: () => void | Promise<void>;
 }
 
+/**
+ * The override base URL for one fallback entry.
+ *
+ * Was a hand-rolled overlay: its own backdrop, panel, header and footer,
+ * and two raw buttons. It is a Dialog now (T-0125), which is where the
+ * contract it already kept - Escape, the Tab trap, focus returned (T-0096,
+ * D116) - has always lived.
+ */
 export default function FallbackUrlEditModal({
   entry,
   url,
@@ -20,66 +30,34 @@ export default function FallbackUrlEditModal({
   onClose,
   onSave,
 }: FallbackUrlEditModalProps) {
-  // Hooks before the early return. A dialog on the shared contract
-  // (T-0096, D116): Escape closes, Tab stays inside, focus returns.
-  const panelRef = useDialogA11y({ open: entry !== null, onClose });
-  if (!entry) return null;
-
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
-      onClick={onClose}
-      role="presentation"
-    >
-      <div
-        ref={panelRef}
-        tabIndex={-1}
-        className="w-full max-w-md bg-ps-surface-panel border border-ps-edge-hairline rounded-ps-lg overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="fallback-url-edit-title"
-      >
-        <div className="px-4 py-3 border-b border-ps-edge-hairline">
-          <h3 id="fallback-url-edit-title" className="text-body font-semibold text-ps-text-primary">
-            Edit override base URL: {entry.modelName}
-          </h3>
-        </div>
-        <div className="p-4">
-          <label htmlFor="fallback-url-edit-input" className="block text-micro font-mono text-ps-text-muted uppercase mb-1.5">
-            Override base URL
-          </label>
-          <input
-            id="fallback-url-edit-input"
-            type="text"
-            value={url}
-            onChange={(e) => onUrlChange(e.target.value)}
-            placeholder="https://api.openai.com/v1"
-            className="w-full bg-ps-surface-inset border border-ps-edge rounded-ps-md px-3 py-2 text-body text-ps-text-primary font-mono transition-colors"
-            autoFocus
-          />
-          <p className="text-micro text-ps-text-muted font-mono mt-1.5">
-            Leave empty to use the model&apos;s default base URL
-          </p>
-        </div>
-        <div className="flex items-center justify-end gap-2 px-4 py-3 border-t border-ps-edge-hairline">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-3 py-1.5 text-micro font-mono text-ps-text-muted hover:text-ps-text-primary rounded-ps-md hover:bg-ps-surface-raised transition-colors"
-          >
+    <Dialog
+      open={entry !== null}
+      onClose={onClose}
+      title={entry ? `Edit override base URL: ${entry.modelName}` : "Edit override base URL"}
+      size="sm"
+      footer={
+        <>
+          <Button variant="ghost" size="sm" onClick={onClose}>
             Cancel
-          </button>
-          <button
-            type="button"
-            onClick={() => void onSave()}
-            disabled={saving}
-            className="px-3 py-1.5 text-micro font-mono bg-neon-purple/20 text-neon-purple rounded-ps-md hover:bg-neon-purple/30 transition-colors disabled:opacity-50"
-          >
-            {saving ? "Saving..." : "Save"}
-          </button>
-        </div>
-      </div>
-    </div>
+          </Button>
+          <Button variant="primary" color="purple" size="sm" loading={saving} onClick={() => void onSave()}>
+            Save
+          </Button>
+        </>
+      }
+    >
+      <Field label="Override base URL" hint="Leave empty to use the model's default base URL" htmlFor="fallback-url-edit-input">
+        <Input
+          id="fallback-url-edit-input"
+          type="text"
+          value={url}
+          onChange={(e) => onUrlChange(e.target.value)}
+          placeholder="https://api.openai.com/v1"
+          className="font-mono"
+          autoFocus
+        />
+      </Field>
+    </Dialog>
   );
 }

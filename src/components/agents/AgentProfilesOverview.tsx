@@ -1,14 +1,10 @@
 // ═══════════════════════════════════════════════════════════════
 // AgentProfilesOverview — the standing note and the sync controls
 //
-// Extracted verbatim from app/operations/agents/page.tsx: the
-// SOUL.md/config.yaml explainer, the performance strip, the drift
-// banner and the push/pull bar.
-//
-// The drift and sync-error counts are derived here from the profiles
-// the page already passes down. It is the same single-pass reduce the
-// page ran, moved next to the banner that is its only reader; nothing
-// about what renders changes.
+// The SOUL.md/config.yaml explainer, the performance strip, the drift banner
+// and the push/pull bar. The drift and sync-error counts are derived here
+// from the profiles the page already passes down: the same single-pass
+// reduce the page ran, next to the banner that is its only reader.
 // ═══════════════════════════════════════════════════════════════
 
 "use client";
@@ -21,24 +17,18 @@ import type { AgentProfile } from "@/types/console";
 
 export interface AgentProfilesOverviewProps {
   profiles: AgentProfile[];
-  selectedProfileId: string | null;
   syncBusy: boolean;
   onPushAll: () => void;
   onPullAll: () => void;
   onImportDiscovered: () => void;
-  onPushOne: (slug: string) => void;
-  onPullOne: (slug: string) => void;
 }
 
 export default function AgentProfilesOverview({
   profiles,
-  selectedProfileId,
   syncBusy,
   onPushAll,
   onPullAll,
   onImportDiscovered,
-  onPushOne,
-  onPullOne,
 }: AgentProfilesOverviewProps) {
   const { driftCount, syncErrorCount } = profiles.reduce(
     (acc, p) => {
@@ -61,7 +51,7 @@ export default function AgentProfilesOverview({
         <p className="text-body text-ps-text-muted">
           A <ConceptHint id="profile">profile</ConceptHint> is one agent: its{" "}
           <ConceptHint id="personality">voice</ConceptHint>, the skills it may use and the tools it
-          may reach. Pick one on the left to read it or change it.
+          may reach. Pick one in the header, or in the table, to read it or change it.
         </p>
         <details className="mt-1">
           <summary className="cursor-pointer text-body text-neon-cyan hover:underline">
@@ -85,12 +75,9 @@ export default function AgentProfilesOverview({
         pushing={syncBusy}
       />
       <ProfileSyncBar
-        selectedSlug={selectedProfileId}
         onPushAll={onPushAll}
         onPullAll={onPullAll}
         onImportDiscovered={onImportDiscovered}
-        onPushOne={onPushOne}
-        onPullOne={onPullOne}
         busy={syncBusy}
       />
     </>

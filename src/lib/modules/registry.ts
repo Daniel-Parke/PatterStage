@@ -22,13 +22,12 @@
 //   Rec Room  /recroom/story-weaver/*
 //
 // The old paths answer 307 from next.config.ts for one release. The config
-// tree is not rail data any more: /agent/settings is the index, derived from
-// src/lib/config-sections.ts, and this file derives the section routes from
-// the same list so the e2e matrix still visits each one.
+// tree is not rail data any more: /agent/settings is ONE page, its 27
+// sections derived from src/lib/config-sections.ts as anchors on it (decision
+// 7, T-0125), so a section is not a route and the matrix visits the anchors.
 // ═══════════════════════════════════════════════════════════════
 
 import type { AccentColor } from "@/types/console";
-import { settingsRoutes } from "@/lib/config-sections";
 import type { ProductModule } from "./types";
 import { NAV_SECTIONS, moduleRoutes } from "./types";
 
@@ -238,14 +237,16 @@ export const MODULE_ACCENTS = {
 } as const satisfies Record<string, AccentColor>;
 
 /**
- * Every route every module contributes, plus the settings section routes the
- * catalogue derives. Deduplicated and sorted so the e2e matrix is stable
- * across reorderings.
+ * Every route every module contributes. Deduplicated and sorted so the e2e
+ * matrix is stable across reorderings.
+ *
+ * The settings sections are not here since U11 (T-0125): they are anchors on
+ * the one Settings page, and tests/e2e/config-sections.spec.ts visits each
+ * anchor from the catalogue directly.
  */
 export function allModuleRoutes(): string[] {
   const routes = new Set<string>();
   for (const mod of MODULES) for (const route of moduleRoutes(mod)) routes.add(route);
-  for (const route of settingsRoutes()) routes.add(route);
   return [...routes].sort();
 }
 
@@ -281,14 +282,13 @@ export function railOrder(): string[] {
 
 /**
  * The routes documentation is answerable for: every module route except the
- * generated `/agent/settings/<section>` editors.
+ * Settings page's own children.
  *
  * `allModuleRoutes()` is the e2e answer to "what can be visited"; this is the
- * docs answer to "what needs a guide". The twenty-seven section editors are one
- * page rendered twenty-seven times from src/lib/config-sections.ts, and the
- * fields each one carries are already documented where they are declared.
- * Demanding a guide per section would buy twenty-seven near-identical pages and
- * a gate everybody learns to satisfy with a stub, so the index stands for them.
+ * docs answer to "what needs a guide". Restore and System are pages the
+ * Settings guide describes in its own sections, and the twenty-seven settings
+ * sections - which this filter used to drop too, when they were routes - are
+ * anchors on the Settings page now (U11, T-0125) and never reach here at all.
  *
  * `docs:check` reads this, and tests/e2e/app-routes.ts derives its navigation
  * matrix from it, so the two sets cannot drift apart.

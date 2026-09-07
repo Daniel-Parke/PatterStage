@@ -1,29 +1,32 @@
 // ══════════════════════════════════════════════════════════════════════════════
-// Skills Manager: collapsed categories, a paged row window, one search box
+// Skills: a list of skills, with categories you can fold, and one search box
 // ══════════════════════════════════════════════════════════════════════════════
 //
 // T-0032. This page used to render the entire catalogue on load: every
 // category open, every skill a card, both sections at once. Measured at 178
 // skills that came to 5,450 DOM nodes, 625 buttons and 35,218 characters of
-// body text, seven times the next heaviest page in the app.
+// body text, seven times the next heaviest page in the app. It answered with
+// three things that are kept here and are separable:
 //
-// Three things hold that down now, and they are separable:
-//
-//   1. A category is a ROW with a count until someone opens it. Collapsed is
-//      the absence of an entry in `expandedCategories`, not a seeded value, so
-//      a category nobody anticipated is collapsed like every other one. The
-//      old code DID try to seed every category collapsed on load, but it
-//      seeded the API's raw category strings ("creative") and the grid read
-//      the map back by title-cased display label ("Creative"), so not one
-//      lookup ever matched and the whole catalogue rendered open regardless.
-//   2. An open category renders ONE page window of rows, not all of them, so
-//      node count stops tracking the catalogue size.
-//   3. Search runs over the whole catalogue and REPLACES the view with its
+//   1. A category is a ROW until someone opens it, and an open category
+//      renders ONE page window of rows, so node count stops tracking the
+//      catalogue size.
+//   2. Search runs over the whole catalogue and REPLACES the view with its
 //      matches. It does not filter the rendered rows. That distinction is the
 //      trap in every list virtualisation: filter the window and the search box
 //      quietly starts denying that skills exist because they happen to sit in
 //      a category nobody opened. The invariant is pinned in
 //      tests/unit/skills-catalogue-restructure.test.tsx.
+//
+// T-0125 sized the default. Collapsing EVERY category was measured on the
+// running product as a first viewport with a strip saying "78" five times and
+// twenty closed rows: not one skill name on screen, on the screen whose job
+// is to show them. A section small enough to render in full now opens with
+// its categories expanded, and a skill is one line rather than a card, so the
+// same catalogue costs a fraction of the nodes it did. Above that size the
+// categories collapse as before. The strip went with it - Active, Inactive
+// and Total were the donut's own arcs and centre - and the subtitle carries
+// the four numbers in one line.
 //
 // Presentational subcomponents live in src/components/skills/; the pure
 // derivations live in src/lib/skills-page-helpers.ts.
@@ -35,10 +38,9 @@ import { FileText } from "lucide-react";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
 import { SearchInput } from "@/components/ui/Input";
-import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import PageLoading, { pendingCount } from "@/components/ui/PageLoading";
 import { LastResult, useToast } from "@/components/ui/Toast";
-import ProfileSelector from "@/components/ui/ProfileSelector";
-import SkillsInsights from "@/components/skills/SkillsInsights";
+import ProfilePicker from "@/components/ui/ProfilePicker";
 import SkillsSections from "@/components/skills/SkillsSections";
 import SkillsSearchResults from "@/components/skills/SkillsSearchResults";
 import SkillsDenylistNote from "@/components/skills/SkillsDenylistNote";
@@ -50,9 +52,11 @@ import {
   clampPage,
   effectiveSkillEnabled,
   filterBySearch,
+  groupCategories,
 } from "@/lib/skills-page-helpers";
 import { pluralise } from "@/lib/utils";
 import type { Skill, SkillsData } from "@/types/console";
+import { useProfiles } from "@/hooks/useProfiles";
 import { useSelectedProfile } from "@/hooks/useSelectedProfile";
 
 export default function SkillsPage() {
@@ -61,13 +65,16 @@ export default function SkillsPage() {
   // Shared with Agents and Tools, so a profile chosen on one of them is the
   // profile whose skills this page turns on and off (T-0113).
   const [selectedProfile, setSelectedProfile] = useSelectedProfile();
+  const { data: profiles } = useProfiles();
+  const profileName = profiles?.find((p) => p.id === selectedProfile)?.name ?? selectedProfile;
 
   // ── View state ─────────────────────────────────────────────────────────────
   //
-  // Expanded, not collapsed. The map holds the exceptions a user has opened,
-  // so the default for anything not in it is closed, and it stays closed for
-  // categories that appear later (a profile switch, a fresh import) without
-  // anything having to remember to seed them.
+  // Overrides, keyed by section-scoped category. A section that opens by
+  // default records the categories someone has CLOSED; one that collapses by
+  // default records the ones someone has OPENED. Either way an entry is the
+  // exception, so a category that appears later (a profile switch, a fresh
+  // import) takes the default like every other one.
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
   // Page index per section-scoped category key.
   const [categoryPage, setCategoryPage] = useState<Record<string, number>>({});
@@ -78,8 +85,8 @@ export default function SkillsPage() {
   const toggleInactiveCollapsed = useCallback(() => setInactiveCollapsed((v) => !v), []);
 
   const toggleCategory = useCallback(
-    (stateKey: string) =>
-      setExpandedCategories((prev) => ({ ...prev, [stateKey]: !prev[stateKey] })),
+    (stateKey: string, expandedNow: boolean) =>
+      setExpandedCategories((prev) => ({ ...prev, [stateKey]: !expandedNow })),
     [],
   );
 
@@ -112,11 +119,6 @@ export default function SkillsPage() {
   const [editOriginal, setEditOriginal] = useState("");
   const [savingEdit, setSavingEdit] = useState(false);
 
-  // closeSkillEditor. The Edit Skill modal has 4 single-setter close sites
-  // that all do `() => setEditingSkill(null)`: the modal's onClose and its
-  // Cancel button (both inside SkillEditorModal), openSkillEditor's catch
-  // (dismiss rather than leave the modal open with empty fields) and
-  // saveSkillEdit's success path. One `useCallback` keeps the 4 in lockstep.
   const closeSkillEditor = useCallback(() => setEditingSkill(null), []);
 
   // Optimistic toggle state. Key: skillName, value: the effective (pending) enabled state
@@ -134,9 +136,9 @@ export default function SkillsPage() {
     try {
       const d = await apiFetch(`/api/skills?profile=${selectedProfile}`);
       setData(d.data);
-      // Nothing to seed. Collapsed is the absence of an entry, and a profile
-      // switch drops whatever the previous profile's categories were expanded
-      // to rather than carrying stale keys across.
+      // Nothing to seed. An override is the exception, and a profile switch
+      // drops whatever the previous profile's exceptions were rather than
+      // carrying stale keys across.
       setExpandedCategories({});
       setCategoryPage({});
     } catch (err) {
@@ -231,17 +233,10 @@ export default function SkillsPage() {
     [data, selectedProfile, showToast],
   );
 
-  // handleToggleSkill. One dispatch shape for every card on the page, whether
-  // it is rendered in the Active section, the Inactive section or the search
-  // results.
-  //
-  // It reads the skill's own effective state. The old code passed a
-  // section-dependent FALLBACK down instead, and the Inactive section passed
-  // the negation: for a skill with enabled === false and no pending toggle
-  // that resolved "currently enabled" to TRUE, so clicking a control labelled
-  // "Enable skill" sent { enabled: false } and toasted "disabled". The skill
-  // never turned on. A mixed search-results list has no section to read a
-  // fallback from, which is what made the bug impossible to carry forward.
+  // One dispatch shape for every row on the page, whether it is rendered in
+  // the Active section, the Inactive section or the search results. It reads
+  // the skill's own effective state: a section-dependent fallback once made
+  // "Enable skill" send { enabled: false } from the Inactive section.
   const handleToggleSkill = useCallback(
     (skill: Skill) => toggleSkill(skill.name, effectiveSkillEnabled(skill, toggling)),
     [toggleSkill, toggling],
@@ -297,30 +292,29 @@ export default function SkillsPage() {
       setSkillContent(d.data?.content || "// No content");
     } catch (err) {
       // Surface the real error via the toast. The inline placeholder only
-      // says "something broke" without saying why. The placeholder is still
-      // set so the panel renders a meaningful fallback if the user dismisses
-      // the toast while the panel is open.
+      // says "something broke" without saying why.
       setSkillContent("// Failed to load content");
       toastError(showToast, err, "Failed to load skill content");
     }
   };
 
-  const total = data?.skills.length || 0;
+  const total = data?.skills.length ?? null;
+  // Distinct categories in the catalogue, by the same grouping the rows use
+  // (T-0037: a private normalisation here is a second source of truth).
+  const categoryCount = groupCategories(allSkills).length;
+  const subtitle =
+    total === null
+      ? "Loading skills…"
+      : `${pendingCount(total)} skill${pluralise(total)} in ${categoryCount} categor${categoryCount === 1 ? "y" : "ies"} · ${activeSkills.length} active for ${profileName}`;
 
   return (
     <AppPageShell
       header={
         <PageHeader
           icon={FileText}
-          subtitle={`${total} skill${pluralise(total)} — active = catalog minus skills.disabled for ${selectedProfile}`}
+          subtitle={subtitle}
           color="green"
-          actions={
-            <ProfileSelector
-              value={selectedProfile}
-              onChange={(id) => setSelectedProfile(id)}
-              compact={false}
-            />
-          }
+          actions={<ProfilePicker value={selectedProfile} onChange={(id) => setSelectedProfile(id)} />}
         />
       }
     >
@@ -328,11 +322,8 @@ export default function SkillsPage() {
       {toastElement}
       <div>
         <SkillsDenylistNote />
-        {!loading && total > 0 && (
-          <SkillsInsights skills={allSkills} activeCount={activeSkills.length} />
-        )}
         {loading ? (
-          <LoadingSpinner text="Loading skills..." />
+          <PageLoading label="Loading skills" rows={8} rowClassName="h-11" />
         ) : total === 0 ? (
           <SkillsCatalogEmpty
             importing={importing}
@@ -345,6 +336,7 @@ export default function SkillsPage() {
                 value={search}
                 onChange={changeSearch}
                 placeholder={`Search all ${total} skills...`}
+                ariaLabel="Search skills"
                 accentColor="green"
               />
             </div>
@@ -352,7 +344,7 @@ export default function SkillsPage() {
             {searching ? (
               <SkillsSearchResults
                 matches={matches}
-                total={total}
+                total={total ?? 0}
                 page={clampPage(searchPage, matches.length)}
                 onPageChange={setSearchPage}
                 toggling={toggling}

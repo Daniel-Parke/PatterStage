@@ -517,7 +517,11 @@ describe("the agent section page: Clear and the diff-only send", () => {
     expect(saveButton()).toBeDisabled();
     expect(screen.queryByText("UNSAVED")).toBeNull();
     expect(putBodies()).toHaveLength(0);
-    const header = screen.getByText("Agent Settings");
+    // The section nav names the section too now (U11); the heading is the one
+    // inside the section.
+    const header = within(screen.getByTestId("settings-section-agent")).getByRole("heading", {
+      name: "Agent Settings",
+    });
     expect(within(header.parentElement as HTMLElement).queryByText("UNSAVED")).toBeNull();
   });
 });

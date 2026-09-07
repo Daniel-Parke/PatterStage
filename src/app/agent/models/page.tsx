@@ -138,8 +138,8 @@ export default function ModelsPage() {
           title="Models"
           subtitle={`${models.length} model${pluralise(models.length)} in registry · ${credentials.length} credential${pluralise(credentials.length)}`}
           color="purple"
-          backHref="/agent/settings"
-          backLabel="CONFIG"
+          // No back link: Models is a rail entry, and the rail says where you
+          // are. The CONFIG eyebrow named a parent it does not have (T-0125).
           actions={
             <>
               <Button

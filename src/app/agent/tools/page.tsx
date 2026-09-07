@@ -1,5 +1,12 @@
 // ═══════════════════════════════════════════════════════════════
-// Hermes Toolsets — per-profile platform_toolsets (SQLite → config.yaml)
+// Tools — per-profile platform_toolsets (SQLite → config.yaml)
+//
+// One picker, in the header (T-0125). The profile was a card of its own down
+// the left of the toolsets panel: 288px of column under a single select, 182px
+// shorter than the grid beside it, the largest sibling spread on any screen.
+// The picker is the header's now, as on Agents and Skills, and the grid has
+// the width. The strip went too: enabled, disabled and the catalogue size were
+// the donut's arcs and centre, and the subtitle says the one thing it said.
 // ═══════════════════════════════════════════════════════════════
 
 "use client";
@@ -16,34 +23,37 @@ import {
 } from "lucide-react";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
-import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import PageLoading from "@/components/ui/PageLoading";
 import Button from "@/components/ui/Button";
+import ProfilePicker from "@/components/ui/ProfilePicker";
+import { Textarea } from "@/components/ui/field";
 import { LastResult, useToast } from "@/components/ui/Toast";
-import ProfileSelector from "@/components/ui/ProfileSelector";
 import { API_FETCH_BULK_TIMEOUT_MS, apiFetch, safeApiCallData, toastError } from "@/lib/api-fetch";
 import { runSyncAction } from "@/lib/operation-sync-action";
 import { profileSyncBody } from "@/lib/profile-sync-body";
-import { pluralise } from "@/lib/utils";
 import type { PlatformToolsets } from "@/modules/hermes/lib/profile-config-builder";
 import type { AgentProfile } from "@/types/console";
 import {
   HERMES_CONFIGURABLE_TOOLSETS,
+  HERMES_PLATFORMS,
 } from "@/modules/hermes/lib/toolset-catalog";
 import {
   expandUnifiedToAllPlatforms,
   unionToolsetsFromPlatforms,
 } from "@/modules/hermes/lib/toolset-unify";
 import { bundleCovering } from "@/modules/hermes/lib/toolset-coverage";
-import ToolsInsights from "@/modules/hermes/components/ToolsInsights";
 import { Panel } from "@/components/dashboard/Panel";
 import ToolsetReferenceTable from "@/components/tools/ToolsetReferenceTable";
 import ConceptHint from "@/components/help/ConceptHint";
+import { useProfiles } from "@/hooks/useProfiles";
 import { useSelectedProfile } from "@/hooks/useSelectedProfile";
 
 export default function ToolsPage() {
   // Shared with Agents and Skills. Three pickers in three useStates meant three
   // subjects for one word (T-0113).
   const [selectedProfile, setSelectedProfile] = useSelectedProfile();
+  const { data: profiles } = useProfiles();
+  const profileName = profiles?.find((p) => p.id === selectedProfile)?.name ?? selectedProfile;
   const [toolsetsJson, setToolsetsJson] = useState("{}");
   const [toolsetsSource, setToolsetsSource] = useState<string | null>(null);
   const [loadingToolsets, setLoadingToolsets] = useState(true);
@@ -63,46 +73,14 @@ export default function ToolsPage() {
   const [profileSyncStatus, setProfileSyncStatus] = useState<AgentProfile["syncStatus"] | null>(null);
   const { showToast, toastElement, lastResult } = useToast();
 
-  // loadProfileSyncStatus — fetches the agent-profiles registry and
-  // surfaces the selected profile's syncStatus (drift | error | null).
-  // Best-effort: any error (network blip, 500 from the registry,
-  // malformed JSON) is swallowed and the status is reset to null —
-  // the parent page treats null as "no sync error to surface".
-  //
-  // Migrated to `safeApiCallData<T>` (List 3 Mode I audit, session 166)
-  // from a 9-line try/catch/apiFetch/as-cast form. The pre-migration
-  // shape was:
-  //
-  //   const loadProfileSyncStatus = useCallback(async () => {
-  //     try {
-  //       const data = await apiFetch("/api/agent/profiles");
-  //       const profiles = (data.data?.profiles ?? []) as AgentProfile[];
-  //       const match = profiles.find((p) => p.id === selectedProfile);
-  //       setProfileSyncStatus(match?.syncStatus ?? null);
-  //     } catch {
-  //       setProfileSyncStatus(null);
-  //     }
-  //   }, [selectedProfile]);
-  //
-  // The migrated form is byte-equivalent:
-  //   - Error path: `safeApiCallData<T>` returns `null` on caught error
-  //     (per `src/lib/api-fetch.ts:155-157`), then `null?.profiles ?? []`
-  //     gives `[]`, `find` returns `undefined`, `undefined?.syncStatus ?? null`
-  //     is `null` — same observable result as the pre-migration `catch`
-  //     branch's `setProfileSyncStatus(null)`.
-  //   - Success path: same `find` + same `match?.syncStatus ?? null`
-  //     access. The `as AgentProfile[]` cast is dropped because
-  //     `safeApiCallData<{ profiles?: AgentProfile[] }>` already
-  //     parameterises the inner payload shape (no `as` widening needed).
-  //
-  // The companion test `load-profile-sync-status-safe-api-call-data.test.tsx`
-  // pins the byte-equivalence across both the success and error paths.
+  // The selected profile's syncStatus (drift | error | null), best-effort: a
+  // failed read resets to null, which the page reads as nothing to say.
   const loadProfileSyncStatus = useCallback(async () => {
     const data = await safeApiCallData<{ profiles?: AgentProfile[] }>(
       "/api/agent/profiles",
     );
-    const profiles = data?.profiles ?? [];
-    const match = profiles.find((p) => p.id === selectedProfile);
+    const list = data?.profiles ?? [];
+    const match = list.find((p) => p.id === selectedProfile);
     setProfileSyncStatus(match?.syncStatus ?? null);
   }, [selectedProfile]);
 
@@ -130,29 +108,9 @@ export default function ToolsPage() {
     }
   }, [selectedProfile, showToast]);
 
-  // reloadAll — pairs `loadToolsets` + `loadProfileSyncStatus` for callers
-  // that need BOTH reloaded (e.g. after a pull/push from Hermes that
-  // may have changed the sync status of the active profile). Appears
-  // at 2 sites:
-  //   1. The useEffect below (fires-and-forgets on mount and on
-  //      selectedProfile change)
-  //   2. The `pullFromHermes` onSuccess (awaits so the
-  //      `runSyncAction` helper's `await onSuccess()` is honoured
-  //      and the busy spinner doesn't clear before the refetch
-  //      completes — per the helper's JSDoc)
-  // Centralising into a `useCallback` with `[loadToolsets,
-  // loadProfileSyncStatus]` deps keeps the 2 sites in lockstep
-  // (a future "also reload X" extension lands in one place). The
-  // call sites are byte-equivalent:
-  //   - `void reloadAll();` ≡ `void loadToolsets(); void loadProfileSyncStatus();`
-  //     (sequential awaits inside the callback, caller discards the promise)
-  //   - `await reloadAll();` ≡ `await loadToolsets(); await loadProfileSyncStatus();`
-  //     (sequential awaits inside the callback, caller awaits the result)
-  // Both call shapes produce the same final state: toolsets AND sync
-  // status are both reloaded. The `saveToolsets` onSuccess is
-  // intentionally NOT migrated — it only needs `loadToolsets`
-  // (the sync status doesn't change on a local save, only on
-  // pull/push that touches Hermes disk).
+  // Both reads, for the mount and for a pull or push that may have changed
+  // the sync status of the active profile. A local save reloads only the
+  // toolsets: the sync status moves only when Hermes disk is touched.
   const reloadAll = useCallback(async () => {
     await loadToolsets();
     await loadProfileSyncStatus();
@@ -185,11 +143,6 @@ export default function ToolsPage() {
     if (showAdvancedJson || jsonDirty) {
       const parsed = JSON.parse(toolsetsJson) as unknown;
       if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-        // Original behaviour: validation error shown via direct
-        // showToast (not via the helper's catch path, because the
-        // helper's `errorMessage` would replace this with the generic
-        // fallback). The error message text is byte-identical to the
-        // pre-refactor "Invalid JSON object" toast.
         showToast("Invalid JSON object", "error");
         return Promise.resolve();
       }
@@ -210,18 +163,12 @@ export default function ToolsPage() {
   };
 
   const pullFromHermes = (mode: "pull" | "push") => {
-    // syncing is a 2-state string ("pull" | "push" | null) so the
-    // buttons can show "Pulling..." / "Pushing..." independently. Wrap
-    // it as a boolean setter for the shared runSyncAction helper.
     const setBusy = (busy: boolean) => setSyncing(busy ? mode : null);
     const successMessage = mode === "pull" ? "Pulled toolsets from Hermes" : (
       selectedProfile === "default"
         ? "Pushed profile to Hermes. Model defaults re-applied to config.yaml."
         : "Pushed profile to Hermes"
     );
-    const onSuccess = async () => {
-      await reloadAll();
-    };
     return runSyncAction({
       setBusy,
       showToast,
@@ -231,7 +178,7 @@ export default function ToolsPage() {
       body: profileSyncBody(selectedProfile),
       successMessage,
       errorMessage: mode === "pull" ? "Pull failed" : "Push failed",
-      onSuccess,
+      onSuccess: reloadAll,
       // /api/agent/profiles/sync/* throw on failure (return 500), they
       // don't return {data: {success: false}}; rely on the catch path.
       checkSuccess: false,
@@ -240,8 +187,8 @@ export default function ToolsPage() {
 
   // What the profile HAS, which is what the last read returned. The counters
   // used to report `unifiedEnabled`, the pending choice, so a toggle moved the
-  // header and the Enabled tile before anything was written and the screen
-  // described a state the agent had never been given (T-0113).
+  // header before anything was written and the screen described a state the
+  // agent had never been given (T-0113).
   const enabledCount = loadedEnabled.length;
 
   const listsDiffer =
@@ -275,6 +222,8 @@ export default function ToolsPage() {
     setToolsetsJson(JSON.stringify(expandUnifiedToAllPlatforms(unifiedEnabled), null, 2));
   };
 
+  const catalogueSize = HERMES_CONFIGURABLE_TOOLSETS.length;
+
   return (
     <AppPageShell
       header={
@@ -283,46 +232,30 @@ export default function ToolsPage() {
           subtitle={
             loadingToolsets
               ? "Loading profile toolsets…"
-              : `${enabledCount} toolset${pluralise(enabledCount)} enabled for the selected profile${
-                  toolsetsDirty ? ", and you have changes that are not saved yet" : ""
+              : `${enabledCount} of ${catalogueSize} toolsets enabled for ${profileName}, fanned out to ${HERMES_PLATFORMS.length} platforms${
+                  toolsetsDirty ? " · changes not saved yet" : ""
                 }`
           }
           color="orange"
           actions={
-            <div className="flex items-center gap-2 flex-wrap justify-end">
+            // The picker and the one primary action. Pull and Push act on the
+            // grid and sit beside it; four controls up here clipped the
+            // subtitle to 292px, which is where the count lives.
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              <ProfilePicker value={selectedProfile} onChange={requestProfile} />
               {/* The page has always known this: `toolsetsDirty` guarded a profile
                   switch and was rendered nowhere, so the only way to learn that
                   the grid was ahead of the profile was to try to leave. */}
               {toolsetsDirty && !loadingToolsets && (
-                <span className="text-micro font-mono text-semantic-warning flex items-center gap-1">
-                  <Info className="w-3 h-3" />
+                <span className="flex items-center gap-1 font-mono text-micro text-semantic-warning">
+                  <Info className="h-3 w-3" aria-hidden="true" />
                   Unsaved changes
                 </span>
               )}
               <Button
-                variant="ghost"
-                size="sm"
-                color="orange"
-                icon={syncing === "pull" ? undefined : Download}
-                onClick={() => void pullFromHermes("pull")}
-                disabled={syncing !== null}
-              >
-                {syncing === "pull" ? "Pulling…" : "Pull from Hermes"}
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                color="orange"
-                icon={syncing === "push" ? undefined : Upload}
-                onClick={() => void pullFromHermes("push")}
-                disabled={syncing !== null}
-              >
-                {syncing === "push" ? "Pushing…" : "Push to Hermes"}
-              </Button>
-              <Button
                 variant="primary"
                 color="orange"
-                size="sm"
+                size="md"
                 icon={savingToolsets ? undefined : RefreshCw}
                 onClick={() => void saveToolsets()}
                 disabled={savingToolsets || loadingToolsets}
@@ -338,8 +271,8 @@ export default function ToolsPage() {
       <div>
         <LastResult result={lastResult} />
         {profileSyncStatus === "drift" && (
-          <div className="mb-4 p-3 rounded-ps-md bg-semantic-warning/10 border border-semantic-warning/30 flex items-start gap-2">
-            <Info className="w-4 h-4 text-semantic-warning flex-shrink-0 mt-0.5" />
+          <div className="mb-4 flex items-start gap-2 rounded-ps-md border border-semantic-warning/30 bg-semantic-warning/10 p-3">
+            <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-semantic-warning" aria-hidden="true" />
             <p className="text-body text-semantic-warning/90">
               Toolset policy on disk differs from PatterStage (format or values).{" "}
               <strong>Pull from Hermes</strong> imports disk into SQLite;{" "}
@@ -350,178 +283,171 @@ export default function ToolsPage() {
           </div>
         )}
         {profileSyncStatus === "error" && (
-          <div className="mb-4 p-3 rounded-ps-md bg-semantic-danger/10 border border-semantic-danger/30">
+          <div className="mb-4 rounded-ps-md border border-semantic-danger/30 bg-semantic-danger/10 p-3">
             <p className="text-body text-semantic-danger">
               Last sync failed. Check gateway logs, then retry Pull or Push.
             </p>
           </div>
         )}
         {platformsDiverged && (
-          <div className="mb-4 p-3 rounded-ps-md bg-semantic-warning/10 border border-semantic-warning/30 flex items-start gap-2">
-            <Info className="w-4 h-4 text-semantic-warning flex-shrink-0 mt-0.5" />
+          <div className="mb-4 flex items-start gap-2 rounded-ps-md border border-semantic-warning/30 bg-semantic-warning/10 p-3">
+            <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-semantic-warning" aria-hidden="true" />
             <p className="text-body text-semantic-warning/90">
-              Platforms have different toolsets on disk. The grid below shows the union.
-              <strong>Save &amp; push</strong> applies one list to all gateways (like
+              Platforms have different toolsets on disk. The grid below shows the union.{" "}
+              <strong>Save &amp; push</strong> applies one list to all gateways (like{" "}
               <code className="text-ps-text-muted">hermes tools</code> configure all).
             </p>
           </div>
         )}
-        <div className="mb-4 p-3 rounded-ps-md bg-ps-surface-panel border border-ps-edge-hairline flex items-start gap-2">
-          <Info className="w-4 h-4 text-ps-text-muted flex-shrink-0 mt-0.5" />
-          <p className="text-body text-ps-text-muted">
-            Hermes stores <code className="text-ps-text-muted">platform_toolsets</code> per gateway key;
-            PatterStage uses one enabled list per profile and fans it out on save (Nous-aligned with
-            configure all platforms). Use <strong className="text-ps-text-muted">Pull</strong> after{" "}
-            <code className="text-ps-text-muted">hermes tools</code> on disk.
-          </p>
-        </div>
-
-        {!loadingToolsets && (
-          <ToolsInsights total={HERMES_CONFIGURABLE_TOOLSETS.length} enabled={enabledCount} />
+        {pendingProfile && (
+          <div className="mb-4 rounded-ps-md border border-semantic-warning/40 bg-semantic-warning/10 p-3">
+            <p className="text-body text-ps-text-primary">
+              You have unsaved toolset changes on this profile.
+            </p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <Button variant="ghost" size="sm" color="orange" onClick={discardAndSwitch}>
+                Discard changes
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                color="orange"
+                onClick={() => setPendingProfile(null)}
+              >
+                Keep editing
+              </Button>
+            </div>
+          </div>
         )}
 
         {/* Was a hand-rolled copy of the accented panel, down to the class
             list. It is the Panel now, with the wash it was painting itself
             (T-0033, WG-WEB-003 D). */}
         <Panel accent="orange" tint="orange" className="p-4 space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-start gap-4">
-            <div className="sm:w-72 flex-shrink-0">
-              <h2 className="text-body font-mono text-neon-orange mb-2">Profile</h2>
-              <ProfileSelector
-                value={selectedProfile}
-                onChange={requestProfile}
-                subtitle="tooltip"
-              />
-              {pendingProfile && (
-                <div className="mt-3 rounded-ps-md border border-semantic-warning/40 bg-semantic-warning/10 p-3">
-                  <p className="text-body text-ps-text-primary">
-                    You have unsaved toolset changes on this profile.
-                  </p>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    <Button variant="ghost" size="sm" color="orange" onClick={discardAndSwitch}>
-                      Discard changes
-                    </Button>
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      color="orange"
-                      onClick={() => setPendingProfile(null)}
-                    >
-                      Keep editing
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </div>
-            <div className="flex-1 min-w-0">
-              {toolsetsSource && toolsetsSource !== "database" && (
-                <p className="text-micro font-mono text-neon-orange/90 mb-2">
-                  Hydrated from{" "}
-                  {toolsetsSource === "config_yaml" ? "config.yaml" : "seed pack"} into SQLite.
+          {loadingToolsets ? (
+            <PageLoading label="Loading toolsets" rows={3} rowClassName="h-8" />
+          ) : (
+            <>
+              <div>
+                <h3 className={sectionHeadingClasses}>
+                  Enabled toolsets
+                </h3>
+                {/* The grid below is bundles, not capabilities, and the
+                    difference is the whole of D80: switching a bundle on
+                    switches on everything inside it. Say which word is
+                    which where the chips are. */}
+                <p className="mb-2 text-body text-ps-text-muted">
+                  A <ConceptHint id="toolset">toolset</ConceptHint> is a named bundle of{" "}
+                  <ConceptHint id="tool">tools</ConceptHint>; turning one on turns on everything
+                  in it. Hermes keeps a list per gateway; PatterStage keeps one list per profile
+                  and fans it out to every gateway on save. Use <strong>Pull</strong> after{" "}
+                  <code className="text-ps-text-muted">hermes tools</code> on disk.
                 </p>
-              )}
-              {loadingToolsets ? (
-                <LoadingSpinner text="Loading toolsets…" />
-              ) : (
-                <>
-                  <div>
-                    <h3 className={sectionHeadingClasses}>
-                      Enabled toolsets
-                    </h3>
-                    {/* The grid below is bundles, not capabilities, and the
-                        difference is the whole of D80: switching a bundle on
-                        switches on everything inside it. Say which word is
-                        which where the chips are. */}
-                    <p className="mb-2 text-body text-ps-text-muted">
-                      A <ConceptHint id="toolset">toolset</ConceptHint> is a named bundle of{" "}
-                      <ConceptHint id="tool">tools</ConceptHint>; turning one on turns on everything
-                      in it.
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {HERMES_CONFIGURABLE_TOOLSETS.map((toolset) => {
-                        const coveredBy = bundleCovering(unifiedEnabled, toolset.id);
-                        // Covered means on: the bundle provides it. Saying so
-                        // and taking the click away is the whole of D80.
-                        const on = coveredBy !== null || isUnifiedEnabled(toolset.id);
-                        const coveringLabel = coveredBy
-                          ? HERMES_CONFIGURABLE_TOOLSETS.find((t) => t.id === coveredBy)?.label ?? coveredBy
-                          : null;
-                        return (
-                          // A toggle is a control, and the console has a
-                          // control component: 36 files use Button against 313
-                          // raw <button> elements, which is why a styling
-                          // ruling reaches so little of this app (T-0033).
-                          // primary is the on state, secondary the off one.
-                          <Button
-                            key={`unified-${toolset.id}`}
-                            variant={on ? "primary" : "secondary"}
-                            color="orange"
-                            size="sm"
-                            aria-pressed={on}
-                            disabled={coveredBy !== null || jsonDirty}
-                            icon={on ? Check : undefined}
-                            title={
-                              coveringLabel
-                                ? `Included in ${coveringLabel}. Turn that bundle off to choose this one on its own.`
-                                : toolset.description
-                            }
-                            onClick={() => toggleUnifiedToolset(toolset.id)}
-                          >
-                            {toolset.label}
-                          </Button>
-                        );
-                      })}
-                    </div>
-                    {coveredLabels.length > 0 && (
-                      <p className="mt-2 text-body text-ps-text-muted">
-                        {coveredLabels.join(", ")} {coveredLabels.length === 1 ? "is" : "are"} included
-                        in Hermes CLI. Turn that bundle off to choose them on their own.
-                      </p>
-                    )}
-                    {jsonDirty && (
-                      <p className="mt-2 text-body text-semantic-warning">
-                        Advanced JSON is the source of truth until you save or discard it.
-                      </p>
-                    )}
-                  </div>
-                  <div className="mt-4 border-t border-ps-edge-hairline pt-3">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      color="orange"
-                      aria-expanded={showAdvancedJson}
-                      onClick={() => setShowAdvancedJson((v) => !v)}
-                    >
-                      {showAdvancedJson ? "Hide" : "Show"} advanced JSON
-                    </Button>
-                    {jsonDirty && (
-                      <Button variant="ghost" size="sm" color="orange" onClick={discardJsonEdits}>
-                        Discard JSON edits
+                {toolsetsSource && toolsetsSource !== "database" && (
+                  <p className="mb-2 font-mono text-micro text-neon-orange/90">
+                    Hydrated from{" "}
+                    {toolsetsSource === "config_yaml" ? "config.yaml" : "seed pack"} into SQLite.
+                  </p>
+                )}
+                <div className="flex flex-wrap gap-2">
+                  {HERMES_CONFIGURABLE_TOOLSETS.map((toolset) => {
+                    const coveredBy = bundleCovering(unifiedEnabled, toolset.id);
+                    // Covered means on: the bundle provides it. Saying so
+                    // and taking the click away is the whole of D80.
+                    const on = coveredBy !== null || isUnifiedEnabled(toolset.id);
+                    const coveringLabel = coveredBy
+                      ? HERMES_CONFIGURABLE_TOOLSETS.find((t) => t.id === coveredBy)?.label ?? coveredBy
+                      : null;
+                    return (
+                      <Button
+                        key={`unified-${toolset.id}`}
+                        variant={on ? "primary" : "secondary"}
+                        color="orange"
+                        size="sm"
+                        aria-pressed={on}
+                        disabled={coveredBy !== null || jsonDirty}
+                        icon={on ? Check : undefined}
+                        title={
+                          coveringLabel
+                            ? `Included in ${coveringLabel}. Turn that bundle off to choose this one on its own.`
+                            : toolset.description
+                        }
+                        onClick={() => toggleUnifiedToolset(toolset.id)}
+                      >
+                        {toolset.label}
                       </Button>
-                    )}
-                    {showAdvancedJson && (
-                      <textarea aria-label="Advanced toolsets JSON"
-                        value={toolsetsJson}
-                        onChange={(event) => {
-                          setToolsetsJson(event.target.value);
-                          setJsonDirty(true);
-                        }}
-                        className="mt-2 w-full min-h-32 rounded-ps-md bg-ps-surface-ground/80 border border-ps-edge p-3 text-micro font-mono text-ps-text-primary"
-                        spellCheck={false}
-                      />
-                    )}
-                  </div>
-                </>
+                    );
+                  })}
+                </div>
+                {coveredLabels.length > 0 && (
+                  <p className="mt-2 text-body text-ps-text-muted">
+                    {coveredLabels.join(", ")} {coveredLabels.length === 1 ? "is" : "are"} included
+                    in Hermes CLI. Turn that bundle off to choose them on their own.
+                  </p>
+                )}
+                {jsonDirty && (
+                  <p className="mt-2 text-body text-semantic-warning">
+                    Advanced JSON is the source of truth until you save or discard it.
+                  </p>
+                )}
+              </div>
+              <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-ps-edge-hairline pt-3">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  color="orange"
+                  icon={syncing === "pull" ? undefined : Download}
+                  onClick={() => void pullFromHermes("pull")}
+                  disabled={syncing !== null}
+                >
+                  {syncing === "pull" ? "Pulling…" : "Pull from Hermes"}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  color="orange"
+                  icon={syncing === "push" ? undefined : Upload}
+                  onClick={() => void pullFromHermes("push")}
+                  disabled={syncing !== null}
+                >
+                  {syncing === "push" ? "Pushing…" : "Push to Hermes"}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  color="orange"
+                  aria-expanded={showAdvancedJson}
+                  onClick={() => setShowAdvancedJson((v) => !v)}
+                >
+                  {showAdvancedJson ? "Hide" : "Show"} advanced JSON
+                </Button>
+                {jsonDirty && (
+                  <Button variant="ghost" size="sm" color="orange" onClick={discardJsonEdits}>
+                    Discard JSON edits
+                  </Button>
+                )}
+              </div>
+              {showAdvancedJson && (
+                <Textarea
+                  aria-label="Advanced toolsets JSON"
+                  value={toolsetsJson}
+                  onChange={(event) => {
+                    setToolsetsJson(event.target.value);
+                    setJsonDirty(true);
+                  }}
+                  className="mt-2 min-h-32 bg-ps-surface-inset text-micro"
+                  spellCheck={false}
+                />
               )}
-            </div>
-          </div>
+            </>
+          )}
         </Panel>
 
         <Panel className="mt-6 p-4">
           <h3 className={sectionHeadingClasses}>
             Reference — Hermes toolset IDs
           </h3>
-          <p className="text-body text-ps-text-muted mb-3">
+          <p className="mb-3 text-body text-ps-text-muted">
             Catalog for labels only. Enabling toolsets above updates the selected profile config.
           </p>
           {/* The catalogue is read here, in src/app/, because ADR-0005 forbids

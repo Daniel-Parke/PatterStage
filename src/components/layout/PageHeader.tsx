@@ -62,8 +62,15 @@ export default function PageHeader({
           content, and with the actions marked shrink-0 there was nothing to
           stop it reaching zero. On a phone the busiest headers rendered
           their h1 0px wide. Growing claims the leftover space instead, and
-          the truncate on the h1 handles what is left. */}
-      <div className="flex min-w-0 flex-1 flex-col">
+          the truncate on the h1 handles what is left.
+
+          The 16rem floor is what makes the actions WRAP rather than the words
+          clip: with a picker and a primary button beside it, the Tools header
+          squeezed its subtitle to 292px and cut the count off (T-0125). Below
+          the floor the actions take a second row, which is what the wrap was
+          for. At 390px the floor still leaves room, because it is the title
+          group's minimum and not the bar's. */}
+      <div className="flex min-w-0 flex-1 flex-col sm:min-w-[16rem]">
         {backHref && (
           // Its own row ABOVE the title, not a column beside it. Beside it, the
           // back link and its divider push the h1 to the right of the content

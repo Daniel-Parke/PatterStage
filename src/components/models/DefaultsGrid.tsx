@@ -119,7 +119,9 @@ export default function DefaultsGrid({
                 <div className="text-body font-semibold text-ps-text-primary flex items-center gap-2">
                   {meta.label}
                 </div>
-                <p className="text-micro text-ps-text-muted font-mono mt-0.5 truncate">
+                {/* Two lines, not `truncate`: eight of these lost 97-256px of
+                    their own sentence to the ellipsis (T-0125). */}
+                <p className="text-micro text-ps-text-muted font-mono mt-0.5 line-clamp-2">
                   {meta.description}
                 </p>
               </div>

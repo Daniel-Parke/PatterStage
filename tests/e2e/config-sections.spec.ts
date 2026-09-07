@@ -20,7 +20,8 @@ test.describe("Settings sections, by anchor", () => {
       });
       const section = page.locator(`section#${id}`);
       await expect(section).toBeVisible({ timeout: 30_000 });
-      await expect(section.getByRole("heading", { level: 2 }).first()).toBeInViewport();
+      // A section is an h3: its group is the h2 above it.
+      await expect(section.getByRole("heading", { level: 3 }).first()).toBeInViewport();
     });
   }
 });

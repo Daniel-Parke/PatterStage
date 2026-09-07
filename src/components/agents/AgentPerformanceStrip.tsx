@@ -53,7 +53,9 @@ export default function AgentPerformanceStrip() {
                 </div>
               </div>
               <div className="grid grid-cols-4 gap-1 text-center">
-                <Metric label="runs" value={String(a.runs)} color="green" />
+                {/* Dispatches, whatever became of them. The growth panel counts
+                    COMPLETIONS, and both said "runs" (T-0125). */}
+                <Metric label="dispatched" value={String(a.runs)} color="green" />
                 <Metric label="success" value={successPct === null ? "—" : `${successPct}%`} color="cyan" />
                 <Metric label="tokens" value={fmtTokens(a.totalTokens)} color="yellow" />
                 <Metric label="avg" value={a.avgDurationSec > 0 ? `${a.avgDurationSec}s` : "—"} color="purple" />

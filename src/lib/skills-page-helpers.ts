@@ -80,6 +80,22 @@ export function groupCategories(skills: Skill[]): SkillCategoryGroup[] {
 // second place to change it.
 const SKILL_PAGE_SIZE = 24;
 
+/**
+ * How large a section may be and still open with every category expanded.
+ *
+ * Measured on the running product, collapsing every category put a first
+ * viewport on screen with not one skill name in it (T-0125). Four page windows
+ * is the size at which rendering the section in full costs about what T-0032
+ * budgeted for one open category of cards, now that a skill is a row; beyond
+ * it the categories collapse, because a wall is still a wall.
+ */
+const SKILL_OPEN_BY_DEFAULT_MAX = 4 * SKILL_PAGE_SIZE;
+
+/** Whether a section of this many skills opens with its categories expanded. */
+export function categoriesOpenByDefault(sectionSize: number): boolean {
+  return sectionSize <= SKILL_OPEN_BY_DEFAULT_MAX;
+}
+
 /** Pages a list of `total` rows occupies. Always at least 1, so no "page 1 of 0". */
 export function pageCount(total: number, size: number = SKILL_PAGE_SIZE): number {
   return Math.max(1, Math.ceil(total / size));

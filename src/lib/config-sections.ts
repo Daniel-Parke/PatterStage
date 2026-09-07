@@ -4,8 +4,10 @@
 // The index page carried its own grouping of section ids, the sidebar carried
 // another in the registry, and the two disagreed: the page listed 25 of the
 // 27 sections and printed "27 sections" over them. This file is the one
-// grouping. The index renders it; the registry derives the settings routes
-// from it, so the e2e matrix still visits every section.
+// grouping. The Settings page renders it, in this order, as one page of
+// sections (decision 7, T-0125); next.config.ts derives the 27 redirects from
+// the old section URLs to their anchors from it; and the e2e matrix visits
+// every anchor from it.
 //
 // PURE DATA, like the registry: no React, no lucide, no db. The fields each
 // section carries stay in src/lib/config-schema.ts (which the editor page
@@ -93,12 +95,7 @@ export const SETTINGS_TOOLS: readonly SettingsTool[] = [
   },
 ];
 
-/** Every section id, in index order. */
+/** Every section id, in page order. Each is an anchor on /agent/settings. */
 export function settingsSectionIds(): string[] {
   return SETTINGS_GROUPS.flatMap((g) => g.sectionIds);
-}
-
-/** The `/agent/settings/<id>` route of every section, for the registry. */
-export function settingsRoutes(): string[] {
-  return settingsSectionIds().map((id) => `/agent/settings/${id}`);
 }

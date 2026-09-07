@@ -19,6 +19,7 @@
 
 import Link from "next/link";
 
+import Button from "@/components/ui/Button";
 import { Toggle, Select, NumberInput, TextInput } from "@/components/ui/Input";
 import type { FieldDef, SectionDef } from "@/lib/config-schema";
 
@@ -172,14 +173,16 @@ export default function ConfigField({ field, value, sectionDef, onUpdate }: Conf
             Not set
           </span>
         ) : (
-          <button
-            type="button"
+          // A Button, not a 48x20 span with a click: the census counted 65 of
+          // the old one under the 24px target floor (T-0125).
+          <Button
+            variant="ghost"
+            size="sm"
             aria-label={`Clear ${field.label}`}
             onClick={() => onUpdate(field.key, null)}
-            className="text-micro font-mono text-ps-text-muted hover:text-ps-text-primary hover:bg-ps-surface-raised px-1.5 py-0.5 rounded-ps-sm transition-colors"
           >
             Clear
-          </button>
+          </Button>
         )}
       </div>
       {typeNote && <p className="text-body text-neon-orange">{typeNote}</p>}

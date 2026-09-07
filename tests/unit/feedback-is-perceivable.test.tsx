@@ -39,10 +39,25 @@ import { useToast } from "@/components/ui/Toast";
 
 const UI = join(__dirname, "..", "..", "src", "components", "ui");
 
-/** The largest `z-N` / `z-[N]` in a component's source. */
+/**
+ * The seven named layers, read off globals.css so this file cannot pin a
+ * number the tokens have moved (U6 declared them; U11's Dialog is the first
+ * overlay here to wear one rather than a raw `z-[70]`).
+ */
+function zTokens(): Record<string, number> {
+  const css = readFileSync(join(UI, "..", "..", "app", "globals.css"), "utf-8");
+  const out: Record<string, number> = {};
+  for (const m of css.matchAll(/--z-([a-z]+):\s*(\d+)/g)) out[m[1]] = Number(m[2]);
+  return out;
+}
+
+/** The largest `z-N` / `z-[N]` / `z-<token>` in a component's source. */
 function maxZ(file: string): number {
   const src = readFileSync(join(UI, file), "utf-8");
-  const zs = [...src.matchAll(/z-\[(\d+)\]|z-(\d+)/g)].map((m) => Number(m[1] ?? m[2]));
+  const tokens = zTokens();
+  const zs = [...src.matchAll(/z-\[(\d+)\]|z-(\d+)|z-([a-z]+)\b/g)]
+    .map((m) => (m[3] ? tokens[m[3]] : Number(m[1] ?? m[2])))
+    .filter((n): n is number => typeof n === "number" && Number.isFinite(n));
   if (zs.length === 0) throw new Error(`no z-index found in ${file}`);
   return Math.max(...zs);
 }
@@ -131,9 +146,10 @@ describe("a toast is announced", () => {
 
 describe("a toast is visible", () => {
   it("stacks above every overlay that can cover it", () => {
+    // Modal and Sheet are two names for Dialog since U11 (T-0125); the one
+    // overlay is where the layer is declared.
     const toast = maxZ("Toast.tsx");
-    expect(toast).toBeGreaterThan(maxZ("Sheet.tsx"));
-    expect(toast).toBeGreaterThan(maxZ("Modal.tsx"));
+    expect(toast).toBeGreaterThan(maxZ("Dialog.tsx"));
   });
 
   it("portals to the body, so no ancestor stacking context can trap it", () => {
@@ -164,7 +180,7 @@ describe("a toast is visible", () => {
     const region = screen.getByRole("status");
     expect(document.body.contains(region)).toBe(true);
     expect(region.parentElement).toBe(document.body);
-    expect(maxZ("Toast.tsx")).toBeGreaterThan(maxZ("Modal.tsx"));
+    expect(maxZ("Toast.tsx")).toBeGreaterThan(maxZ("Dialog.tsx"));
     expect(screen.getByRole("dialog")).toBeInTheDocument();
   });
 });

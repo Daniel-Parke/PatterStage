@@ -168,29 +168,6 @@ export const iconColorMap: Record<AccentColor, ColorEntry> = {
   yellow: "text-yellow-400",
 };
 
-// ── Border Color Map (for hover effects) — token-aligned ─────
-const BORDER_BASE: Record<AccentColor, ColorEntry> = {
-  cyan: "border-neon-cyan/30",
-  purple: "border-neon-purple/30",
-  green: "border-neon-green/30",
-  pink: "border-neon-pink/30",
-  orange: "border-neon-orange/30",
-  red: "border-red-400/40",
-  blue: "border-blue-400/40",
-  yellow: "border-yellow-400/40",
-};
-
-const BORDER_HOVER: Record<AccentColor, ColorEntry> = {
-  cyan: "hover:border-neon-cyan/60",
-  purple: "hover:border-neon-purple/60",
-  green: "hover:border-neon-green/60",
-  pink: "hover:border-neon-pink/60",
-  orange: "hover:border-neon-orange/60",
-  red: "hover:border-red-400/70",
-  blue: "hover:border-blue-400/70",
-  yellow: "hover:border-yellow-400/70",
-};
-
 /**
  * The "you are here" bar on the rail, in the destination's own registry colour.
  *
@@ -209,10 +186,6 @@ export const railAccentBarMap: Record<AccentColor, ColorEntry> = {
   blue: "bg-blue-400",
   yellow: "bg-yellow-400",
 };
-
-export const colorBorderMap: Record<AccentColor, ColorEntry> = makeMap(
-  (c) => `${BORDER_BASE[c]} ${BORDER_HOVER[c]}`,
-);
 
 /**
  * The stat pill's resting and hover boundary, written out for the same reason
@@ -288,18 +261,6 @@ const GLOW_RGBS: Record<AccentColor, string> = {
 } as const;
 
 export const glowSurfaceRgbMap: Record<AccentColor, ColorEntry> = makeMap((c) => GLOW_RGBS[c]);
-
-// ── Badge Background Color ────────────────────────────────────
-export const badgeBgMap: Record<AccentColor, ColorEntry> = {
-  cyan: "bg-neon-cyan/10",
-  purple: "bg-neon-purple/10",
-  green: "bg-neon-green/10",
-  pink: "bg-neon-pink/10",
-  orange: "bg-neon-orange/10",
-  red: "bg-red-500/10",
-  blue: "bg-blue-500/10",
-  yellow: "bg-yellow-500/10",
-};
 
 // ── Base Input Styles ─────────────────────────────────────────
 export const baseInputStyles =

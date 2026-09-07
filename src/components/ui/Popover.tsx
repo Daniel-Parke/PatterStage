@@ -20,6 +20,13 @@ import type { ReactNode } from "react";
 
 import { useDismissable } from "@/hooks/useDismissable";
 
+/**
+ * What an open panel looks like, shared with Picker so a menu and a listbox
+ * are one surface rather than two.
+ */
+export const POPOVER_PANEL =
+  "absolute top-full mt-1 z-dropdown max-h-80 overflow-y-auto rounded-ps-md border border-ps-edge bg-ps-surface-raised";
+
 export interface PopoverProps {
   open: boolean;
   onClose: () => void;
@@ -47,7 +54,7 @@ export default function Popover({
       {trigger}
       {open && (
         <div
-          className={`absolute top-full ${align === "right" ? "right-0" : "left-0"} mt-1 z-dropdown max-h-80 overflow-y-auto rounded-ps-md border border-ps-edge bg-ps-surface-raised ${className}`}
+          className={`${POPOVER_PANEL} ${align === "right" ? "right-0" : "left-0"} ${className}`}
         >
           {children}
         </div>

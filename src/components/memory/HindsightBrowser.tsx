@@ -140,26 +140,30 @@ export default function HindsightBrowser({ onHealthChange, reloadToken = 0 }: Hi
       {toastElement}
 
       {/* Search Bar */}
-      <div className="flex gap-3 mb-6">
-        <div className="flex-1 flex flex-col gap-1">
+      {/* One height across the row (T-0125): the box was 43px beside 33px
+          buttons, with a "Press Enter to search" line under it that put the
+          buttons on a different baseline. Enter still searches, and the
+          Recall button beside the box says so. */}
+      <div className="mb-6 flex flex-wrap gap-3">
+        <div className="min-w-64 flex-1">
           <SearchInput
             value={search}
             onChange={setSearch}
             placeholder="Search memories (semantic search)..."
             accentColor="pink"
+            className="h-8"
             onSubmit={() => {
               if (search.trim() && !loading) void runRecall();
             }}
           />
-          <p className="text-body text-ps-text-muted pl-1">Press Enter to search</p>
         </div>
-        <Button variant="secondary" color="pink" size="sm" icon={Search} onClick={() => void runRecall()} disabled={!search.trim() || loading}>
+        <Button variant="secondary" color="pink" size="md" icon={Search} onClick={() => void runRecall()} disabled={!search.trim() || loading}>
           Recall
         </Button>
-        <Button variant="secondary" color="purple" size="sm" icon={Sparkles} onClick={() => void handleReflect()} disabled={reflecting || !search.trim()}>
+        <Button variant="secondary" color="purple" size="md" icon={Sparkles} onClick={() => void handleReflect()} disabled={reflecting || !search.trim()}>
           {reflecting ? "Reflecting..." : "Reflect"}
         </Button>
-        <Button variant="primary" color="pink" size="sm" icon={Plus} onClick={openAddModal}>
+        <Button variant="primary" color="pink" size="md" icon={Plus} onClick={openAddModal}>
           Add Memory
         </Button>
       </div>

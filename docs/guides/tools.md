@@ -20,12 +20,14 @@ What your agent is allowed to do, chosen one profile at a time and written strai
 ![Tools screen](../images/tools.png)
 
 The page opens at **Agent → Tools** in the left rail. The title bar carries a
-wrench, the word **Tools**, and under it a line counting how many toolsets are
-enabled for the profile you have selected. On the right are three controls:
-**Pull from Hermes**, **Push to Hermes**, and the filled button **Save & push
-toolsets**. While one of them is working its label changes to **Pulling…**,
-**Pushing…** or **Saving…**, and the two sync buttons hold each other until the
-one that is running finishes.
+wrench, the word **Tools**, and under it a line reading how many of the
+catalogue's toolsets are enabled for the profile you have selected, and how
+many gateways that list fans out to. On the right, the profile picker every
+Agent screen shares, and the filled button **Save & push toolsets**, which
+reads **Saving…** while it works. **Pull from Hermes** and **Push to Hermes**
+sit under the grid; while one is working its label changes to **Pulling…** or
+**Pushing…**, and the two hold each other until the one that is running
+finishes.
 
 Once you have used one of those buttons, a small line appears under the header
 recording the outcome and the time, for example "Saved at 14:02: Toolsets saved
@@ -43,26 +45,16 @@ them, and you may see none:
   The grid below then shows the union of them, and saving applies one list to
   all of them.
 
-Below those is a standing grey note that does not go away. It says PatterStage
-keeps one enabled list per profile and fans it out to every gateway when you
-save, and that **Pull** is the button to reach for after toolsets have been
-changed on the agent's own side.
-
-Next is a strip of numbers for the selected profile: a doughnut splitting
-**Enabled** from **Disabled** with the size of the whole catalogue in the middle,
-four tiles reading **Catalog**, **Enabled**, **Disabled** and **Platforms**, and
-a ring showing what percentage of the catalogue is on.
-
-The orange panel underneath is where the work happens. On the left is
-**Profile** and a selector; it shows the profile's name, with its description in
-the tooltip. On the right, if the list did not come from PatterStage's own
-store, one line says where it was read from instead, either the agent's
-configuration file or the seed pack it shipped with.
-
-Then **Enabled toolsets**, and one sentence under the heading: a toolset is a
-named bundle of tools, and turning one on turns on everything in it. The words
-*toolset* and *tools* in that sentence are pressable, and open a small
-definition beside the word.
+The orange panel underneath is where the work happens. It is headed **Enabled
+toolsets**, with two sentences under the heading: a toolset is a named bundle
+of tools, and turning one on turns on everything in it; and PatterStage keeps
+one enabled list per profile and fans it out to every gateway when you save,
+so **Pull** is the button to reach for after toolsets have been changed on the
+agent's own side. The words *toolset* and *tools* in that sentence are
+pressable, and open a small definition beside the word. If the list did not
+come from PatterStage's own store, one line says where it was read from
+instead, either the agent's configuration file or the seed pack it shipped
+with.
 
 Under that is the grid itself, twenty-two buttons. Seven of them are whole
 bundles, one per gateway: **Hermes CLI**, **Hermes Discord**, **Hermes
@@ -79,8 +71,8 @@ bundle you have already enabled contains it, so it is on and choosing it
 separately would change nothing. Under the grid a line names those toolsets and
 tells you to turn the bundle off if you want to pick them individually.
 
-Below a thin divider is **Show advanced JSON**, which opens a text box holding
-the raw per-gateway lists. Once you type into that box a warning appears saying
+Below a thin divider are **Pull from Hermes**, **Push to Hermes** and **Show
+advanced JSON**, which opens a text box holding the raw per-gateway lists. Once you type into that box a warning appears saying
 the JSON is what will be saved until you save or discard it, a **Discard JSON
 edits** button joins the toggle, and the buttons in the grid stop responding.
 
@@ -97,9 +89,11 @@ anywhere except in a text box.
 
 **Give a profile one capability.**
 
-1. Open **Agent → Tools** and pick the profile with the selector.
+1. Open **Agent → Tools** and pick the profile with the picker in the header.
 2. Click the toolset you want, for example **Web**. It fills in and takes a
-   tick, and the count under the title goes up by one.
+   tick, and the header says there are changes not saved yet. The count under
+   the title does not move until you save, because it counts what the agent
+   has.
 3. Click **Save & push toolsets**. The line under the header confirms the
    toolsets were saved and pushed, and the grid redraws from what was actually
    stored rather than from what you clicked.
@@ -121,8 +115,8 @@ anywhere except in a text box.
 
 1. Click **Pull from Hermes**. It reads the agent's configuration for this
    profile back into PatterStage.
-2. The grid, the count and the numbers strip all redraw from what was on disk.
-   Anything you had changed and not saved is replaced.
+2. The grid and the count redraw from what was on disk. Anything you had
+   changed and not saved is replaced.
 3. To send in the other direction instead, use **Push to Hermes**, which writes
    the profile PatterStage already holds out to the agent. It redraws the grid
    from what is stored just as **Pull** does, so anything you had clicked and

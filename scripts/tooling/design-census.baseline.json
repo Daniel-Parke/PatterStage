@@ -7,19 +7,19 @@
   "counts": {
     "routes": 24,
     "distinctFontSizes": 7,
-    "twelvePxShare": 0.57,
-    "monoShare": 0.63,
+    "twelvePxShare": 0.54,
+    "monoShare": 0.68,
     "textBelowFloor": 0,
-    "distinctBorderColours": 35,
-    "distinctCardChromes": 85,
+    "distinctBorderColours": 33,
+    "distinctCardChromes": 81,
     "distinctButtonHeights": 28,
-    "distinctButtonChromes": 79,
+    "distinctButtonChromes": 71,
     "distinctRadii": 5,
-    "distinctBoxShadows": 15,
+    "distinctBoxShadows": 11,
     "distinctZLayers": 1,
-    "controlBordersBelowThree": 154,
-    "decorativeBordersBelowThree": 602,
-    "hitTargetsBelowTwentyFour": 86,
+    "controlBordersBelowThree": 146,
+    "decorativeBordersBelowThree": 728,
+    "hitTargetsBelowTwentyFour": 84,
     "routesWithMisalignedHeading": 0,
     "worstHeadingOffset": 0,
     "distinctContentWidths": 1,
@@ -65,6 +65,14 @@
       "rose": [
         "distinctBorderColours rose from 34 to 35",
         "decorativeBordersBelowThree rose from 601 to 602"
+      ]
+    },
+    {
+      "when": "2026-09-07",
+      "reason": "U11 (T-0125): content that was behind a click, or on a route the census never visited, is on a censused page now. Skills opens with its rows on screen: 78 mono skill ids, 78 mono status words and 77 hairline row rules that were behind twenty collapsed categories. The 27 settings section editors, never routes the census walked, are sections of /agent/settings: 27 hairline cards, 27 header rules and the mono chips, pills and Clear buttons every field carried on its own page. The mono is the register decision 10 assigns to ids, status words and commands; the borders are the hairline rung, 1.63:1 by design, below the 3:1 this count measures against.",
+      "rose": [
+        "monoShare rose from 0.63 to 0.68",
+        "decorativeBordersBelowThree rose from 602 to 728"
       ]
     }
   ]

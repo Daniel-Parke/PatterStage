@@ -232,7 +232,7 @@ export default function RestorePage() {
           subtitle="Put back what PatterStage ships, or clear out test clutter"
           color="cyan"
           backHref="/agent/settings"
-          backLabel="CONFIG"
+          backLabel="SETTINGS"
         />
       }
     >

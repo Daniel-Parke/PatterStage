@@ -1,4 +1,4 @@
-// ── SkillsSections — the Active and Inactive halves of the Skills Manager.
+// ── SkillsSections — the Active and Inactive halves of the Skills page.
 //
 // The two sections are the same shape with different accents and empty-state
 // copy, so they share one private panel here and the page passes the
@@ -7,15 +7,14 @@
 // What changed in T-0032. Each section used to render a grid of every card it
 // held, all categories open, both sections at once: 178 cards, 5,450 DOM nodes
 // and 625 buttons on load. A section is now a list of category ROWS, and only
-// a category someone has opened renders a page window of skills. The
-// per-section search boxes went with it, up to one catalogue-wide box on the
-// page, so a search no longer has to be run twice to cover the catalogue.
+// an open category renders a page window of skills.
 //
-// The Inactive grid also used to hand its cards a negated toggle fallback,
-// which made the toggle on an inactive skill compute its current state as
-// ENABLED and ask the API to disable a skill that was already disabled. Cards
-// read their own effective state now (see SkillRowList), so there is no
-// per-section negation left to get backwards.
+// What changed in T-0125. A section small enough to render in full opens with
+// its categories expanded (see categoriesOpenByDefault), and an EMPTY Inactive
+// section is not drawn at all: on a profile with everything enabled it was a
+// header row and a 330px empty state under the list, saying nothing a reader
+// could act on. An empty Active section is still drawn, because enabling a
+// skill is what this screen is for and its empty state says how.
 
 "use client";
 
@@ -23,7 +22,7 @@ import { ToggleLeft, ToggleRight, type LucideIcon } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SkillSection } from "@/components/skills/SkillSection";
 import { SkillCategoryList } from "@/components/skills/SkillCategoryList";
-import { groupCategories } from "@/lib/skills-page-helpers";
+import { categoriesOpenByDefault, groupCategories } from "@/lib/skills-page-helpers";
 import type { Skill } from "@/types/console";
 
 interface SkillsSectionPanelProps {
@@ -38,7 +37,7 @@ interface SkillsSectionPanelProps {
   collapsed: boolean;
   onToggleCollapse: () => void;
   expandedCategories: Record<string, boolean>;
-  onToggleCategory: (stateKey: string) => void;
+  onToggleCategory: (stateKey: string, expandedNow: boolean) => void;
   categoryPage: Record<string, number>;
   onCategoryPageChange: (stateKey: string, page: number) => void;
   expandedSkill: string | null;
@@ -89,6 +88,7 @@ function SkillsSectionPanel({
         <SkillCategoryList
           categories={categories}
           scope={scope}
+          openByDefault={categoriesOpenByDefault(skills.length)}
           expandedCategories={expandedCategories}
           onToggleCategory={onToggleCategory}
           categoryPage={categoryPage}
@@ -114,7 +114,7 @@ export interface SkillsSectionsProps {
   inactiveCollapsed: boolean;
   onToggleInactiveCollapsed: () => void;
   expandedCategories: Record<string, boolean>;
-  onToggleCategory: (stateKey: string) => void;
+  onToggleCategory: (stateKey: string, expandedNow: boolean) => void;
   categoryPage: Record<string, number>;
   onCategoryPageChange: (stateKey: string, page: number) => void;
   expandedSkill: string | null;
@@ -158,7 +158,6 @@ export default function SkillsSections({
 
   return (
     <div className="flex flex-col gap-6">
-      {/* ── Active Skills ── */}
       <SkillsSectionPanel
         {...shared}
         title="Active"
@@ -167,26 +166,27 @@ export default function SkillsSections({
         accentColor="text-neon-green/70"
         scope="active"
         emptyTitle="No active skills"
-        emptyDescription="Open a category below and toggle a skill to enable it"
+        emptyDescription="Turn a skill on below to enable it for this profile"
         skills={activeSkills}
         collapsed={activeCollapsed}
         onToggleCollapse={onToggleActiveCollapsed}
       />
 
-      {/* ── Inactive Skills ── */}
-      <SkillsSectionPanel
-        {...shared}
-        title="Inactive"
-        icon={ToggleLeft}
-        iconColor="text-ps-text-muted"
-        accentColor="text-ps-text-muted"
-        scope="inactive"
-        emptyTitle="No inactive skills"
-        emptyDescription="All skills are currently active"
-        skills={inactiveSkills}
-        collapsed={inactiveCollapsed}
-        onToggleCollapse={onToggleInactiveCollapsed}
-      />
+      {inactiveSkills.length > 0 && (
+        <SkillsSectionPanel
+          {...shared}
+          title="Inactive"
+          icon={ToggleLeft}
+          iconColor="text-ps-text-muted"
+          accentColor="text-ps-text-muted"
+          scope="inactive"
+          emptyTitle="No inactive skills"
+          emptyDescription="All skills are currently active"
+          skills={inactiveSkills}
+          collapsed={inactiveCollapsed}
+          onToggleCollapse={onToggleInactiveCollapsed}
+        />
+      )}
     </div>
   );
 }

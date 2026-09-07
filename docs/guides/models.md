@@ -22,8 +22,7 @@ you chose will not answer.
 ![Models screen](../images/models.png)
 
 **The header.** The page title, and under it a count of what the registry holds:
-"3 models in registry · 2 credentials". On the left, a back arrow labelled
-CONFIG that returns to [Settings](./settings.md). On the right, two buttons.
+"3 models in registry · 2 credentials". On the right, two buttons.
 **Re-import from config** reads the agent's own configuration on this machine
 and brings the models and keys it names into the registry. **Add Model** opens
 the editor on an empty form.
@@ -43,8 +42,8 @@ neither says "Make it the agent default to push it", which is the decision it is
 waiting on.
 
 **The summary strip.** Appears once you have at least one model. A ring showing
-the mix of providers, up to six of them, with the model count in the middle, and
-three tiles: Models, Providers, Credentials.
+the mix of providers, up to six of them, with the model count in the middle and
+a legend naming each provider and its count, and one tile: Credentials.
 
 **Credentials.** A card listing every key you have stored. Each row shows the
 label you gave it, its provider, and a short hint of the key itself, never the
@@ -58,7 +57,9 @@ or `openai` where the row records one and `auto` otherwise. Default For carries 
 small badge for every task slot this model is the default for, or a dash. The
 Actions column holds a down arrow (Pull from Hermes), an up arrow
 (Push to Hermes), a pencil to edit and a bin to delete. Both arrows open a panel
-listing exactly what would change before anything is written. With no models at
+listing exactly what would change before anything is written. On a window
+narrower than about 1280px the rows stack as cards, each value labelled, so
+the actions are never off the edge. With no models at
 all you get "No models yet" and the same two buttons the header carries.
 
 **Agent Default.** Two halves in one panel. On the left,

@@ -47,14 +47,13 @@ Two warnings can appear inside that card, and only one at a time.
   the values and the notice goes away.
 
 **The search row** comes next: a box reading "Search memories (semantic
-search)" with "Press Enter to search" under it, then **Recall**, **Reflect**
-and **Add Memory**. Recall and Reflect stay disabled until the box has something
-in it.
+search)", then **Recall**, **Reflect** and **Add Memory** on the same line.
+Pressing Enter in the box runs Recall. Recall and Reflect stay disabled until
+the box has something in it.
 
 **A strip of counts** appears once facts have loaded: a ring split into
-**Fresh** and **Stale**, four tiles for **Facts**, **Fresh**, **Stale** and
-**Distinct tags**, and a second ring giving the share that is fresh as a
-percentage. When the store holds more than the page that was loaded, a line
+**Fresh** and **Stale** with a legend naming each count, one tile, **Distinct
+tags**, and a second ring giving the share that is fresh as a percentage. When the store holds more than the page that was loaded, a line
 underneath says so, as in "Showing the 50 most recent of 17,638 stored facts".
 
 **A reflection panel**, headed **Reflection**, appears above the tabs after

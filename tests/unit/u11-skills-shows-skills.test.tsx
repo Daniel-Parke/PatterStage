@@ -178,8 +178,10 @@ describe("what does not change", () => {
     await waitFor(() => expect(rows()).toHaveLength(35));
     const box = within(screen.getByTestId("skills-search")).getByRole("textbox");
     fireEvent.change(box, { target: { value: "skill-03" } });
-    // 030..034 are the five inactive ones and 003 is active: six flat matches.
-    await waitFor(() => expect(rows()).toHaveLength(6));
+    // 030..034 are the five inactive ones, and the only names that carry
+    // "skill-03": five flat matches, drawn from the inactive section without a
+    // category row between them.
+    await waitFor(() => expect(rows()).toHaveLength(5));
     expect(screen.queryAllByTestId("skill-category-row")).toHaveLength(0);
   });
 

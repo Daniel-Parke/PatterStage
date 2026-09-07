@@ -97,7 +97,8 @@ describe("every section is on the page", () => {
       const s = section(id);
       expect(s.tagName).toBe("SECTION");
       expect(s.id).toBe(id);
-      expect(within(s).getByRole("heading", { level: 2 })).toHaveTextContent(CONFIG_SECTIONS[id].label);
+      // A section is an h3: its group is the h2 above it.
+      expect(within(s).getByRole("heading", { level: 3 })).toHaveTextContent(CONFIG_SECTIONS[id].label);
     }
   });
 
@@ -105,11 +106,11 @@ describe("every section is on the page", () => {
     await renderLoaded();
     const order = IDS.map((id) => section(id));
     for (let i = 1; i < order.length; i++) {
-      // eslint-disable-next-line no-bitwise
       expect(order[i - 1].compareDocumentPosition(order[i]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     }
     for (const group of SETTINGS_GROUPS) {
-      expect(screen.getByRole("heading", { name: group.label })).toBeInTheDocument();
+      // Level 2 named: the Security GROUP and the Security SECTION share a word.
+      expect(screen.getByRole("heading", { level: 2, name: group.label })).toBeInTheDocument();
     }
   });
 
@@ -208,7 +209,8 @@ describe("the search narrows the page", () => {
     });
     expect(screen.getByTestId("settings-section-agent")).toBeInTheDocument();
     expect(screen.queryByTestId("settings-section-discord")).toBeNull();
-    expect(within(section("agent")).getByText(/reasoning effort/i)).toBeInTheDocument();
+    // The field itself is on the page; the CHIP is what says why the section matched.
+    expect(within(section("agent")).getByTestId("settings-hit")).toHaveTextContent(/reasoning effort/i);
     // The nav follows the page: a hidden section is not offered as a jump.
     const nav = screen.getByRole("navigation", { name: /settings sections/i });
     expect(within(nav).queryByRole("link", { name: CONFIG_SECTIONS.discord.label })).toBeNull();

@@ -66,7 +66,9 @@ describe("the Settings index", () => {
     expect(links).not.toContain("/agent/settings/discord");
     // The matching field is named on the card, so the operator sees why it matched.
     const agentCard = screen.getByTestId("settings-section-agent");
-    expect(within(agentCard).getByText(/reasoning effort/i)).toBeInTheDocument();
+    // The field itself is on the page now (U11), so the label matches too; the
+    // chip is the one that says WHY the section is still on the page.
+    expect(within(agentCard).getByTestId("settings-hit")).toHaveTextContent(/reasoning effort/i);
   });
 
   it("an empty search shows everything again", () => {

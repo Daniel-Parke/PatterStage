@@ -1,28 +1,33 @@
 // ═══════════════════════════════════════════════════════════════
-// Agent Profiles — SOUL.md and config.yaml per profile
+// Agents — SOUL.md and config.yaml per profile
 //
 // Thin page shell: the profile fetch, the Hermes push/pull actions, the
-// create/delete calls and the file-editor buffer live here. The list,
-// the detail column, the overview strip, the editor card and the two
-// modals are presentational components under src/components/agents/.
+// create/delete calls and the file-editor buffer live here. The table, the
+// detail card, the overview strip, the editor card and the three dialogs are
+// presentational components under src/components/agents/.
+//
+// ONE PICKER, IN THE HEADER (T-0125). The profile was chosen here with a
+// column of cards down the left, on Skills with a dropdown in the header and
+// on Tools with a card in the body: three controls for one selection, which
+// T-0113 had already made shared. The header carries the one control now, on
+// all three screens; the table below marks the row it chose and the detail
+// card gets the full width the card column used to take.
 //
 // OVER THE 350-LINE TARGET, and why (T-0011 / WO-0025). Every piece of
-// presentation is out; what is left is this page's own data flow -- the
-// profiles fetch, five Hermes sync actions over one doSync, create,
-// delete, and the editor buffer with its save-status timer. Folding
-// those into a hook is the obvious next cut, and it is deliberately NOT
-// made here: T-0011 scopes the page components to presentation
-// extraction so the split stays provably render-neutral. The file is
-// inside the 400 ceiling and that cut is the way past 350.
+// presentation is out; what is left is this page's own data flow: the
+// profiles fetch, five Hermes sync actions over one doSync, create, delete,
+// and the editor buffer with its save-status timer.
 // ═══════════════════════════════════════════════════════════════
 
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Users } from "lucide-react";
+import { Plus, Users } from "lucide-react";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
-import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import Button from "@/components/ui/Button";
+import PageLoading from "@/components/ui/PageLoading";
+import ProfilePicker from "@/components/ui/ProfilePicker";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import { LastResult, useToast } from "@/components/ui/Toast";
 import type { AgentProfile, ProfileFile } from "@/types/console";
@@ -31,11 +36,11 @@ import { profileSyncBody } from "@/lib/profile-sync-body";
 import { runSyncAction } from "@/lib/operation-sync-action";
 import { agentFileUrl } from "@/components/agents/agent-file-url";
 import { DEFAULT_PROFILE_SLUG, slugifyDisplayName } from "@/lib/profile-slug";
+import { pluralise } from "@/lib/utils";
 import { useSelectedProfile } from "@/hooks/useSelectedProfile";
-import AgentsPageHeader from "@/components/agents/AgentsPageHeader";
 import AgentSetupNotice from "@/components/agents/AgentSetupNotice";
 import AgentProfilesOverview from "@/components/agents/AgentProfilesOverview";
-import AgentProfileList from "@/components/agents/AgentProfileList";
+import AgentProfilesTable from "@/components/agents/AgentProfilesTable";
 import AgentProfileDetail from "@/components/agents/AgentProfileDetail";
 import type { EditorState } from "@/components/agents/AgentFileEditor";
 import type { ProfileTab } from "@/components/agents/AgentProfileDetail";
@@ -55,9 +60,8 @@ export default function BehaviourPage() {
   // The profiles read's failure, kept apart from the list: a failed load
   // looked like an empty install with no way to retry (T-0096, D22).
   const [loadError, setLoadError] = useState<string | null>(null);
-  // Shared with Skills and Tools. The selection used to be this page's own
-  // useState, so the profile an operator picked here was not the profile whose
-  // skills and toolsets the next two screens edited (T-0113).
+  // Shared with Skills and Tools (T-0113), and chosen with the same control
+  // on all three (T-0125).
   const [selectedProfileId, setSelectedProfileId] = useSelectedProfile();
   const [editor, setEditor] = useState<EditorState | null>(null);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
@@ -83,9 +87,9 @@ export default function BehaviourPage() {
   // that was already driving an "Unsaved" badge two lines away (T-0102, D23).
   const [pendingDiscard, setPendingDiscard] = useState<PendingDiscard | null>(null);
 
-  // The first read is worth a spinner; every one after it is a refetch behind
-  // work the operator just did. Making them watch the page blank out after
-  // every save was the single loudest thing on this screen (T-0102, D21).
+  // The first read is worth a loading state; every one after it is a refetch
+  // behind work the operator just did. Making them watch the page blank out
+  // after every save was the single loudest thing on this screen (T-0102, D21).
   const loadedOnceRef = useRef(false);
 
   // Which half of the card is showing. The tab is in the URL because
@@ -99,15 +103,9 @@ export default function BehaviourPage() {
     if (wanted === "identity") setTab("identity");
   }, []);
 
-  // saveResetTimerRef — handleSave's "auto-clear the saved status
-  // after 2s" setTimeout could fire on an unmounted component if
-  // the user navigates away during the 2-second window. The pre-
-  // fix form was:
-  //   setTimeout(() => setSaveStatus("idle"), 2000);
-  // with no cleanup. Fix: keep a ref to the timer handle + clear
-  // it on unmount + clear any in-flight timer at the start of a
-  // new save (so back-to-back saves don't double-fire and leave
-  // the user with a stale "saved" state).
+  // The "saved" flash clears itself after 2s; the ref lets an unmount, or a
+  // second save inside the window, clear the timer rather than let it fire on
+  // a component that is gone or a status that has moved on.
   const saveResetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     return () => {
@@ -118,22 +116,7 @@ export default function BehaviourPage() {
     };
   }, []);
 
-  // closeDelete — the Delete Profile modal has 3 single-setter close
-  // sites that all do `() => setDeleteTarget(null)`: the modal's
-  // onClose and its Cancel button (both now inside DeleteProfileModal)
-  // and handleDelete's success path. Centralising into a `useCallback`
-  // with empty deps (useState setters are stable) keeps the 3 in
-  // lockstep. In handleDelete the two setters beside it
-  // (`setSelectedProfileId` / `closeEditor`) are conditional on the
-  // deleted profile being the one being edited, so they stay inline.
   const closeDelete = useCallback(() => setDeleteTarget(null), []);
-
-  // closeEditor — the file-editor card has 3 single-setter close sites
-  // that all do `() => setEditor(null)`: handleDelete's success path
-  // (only when the deleted profile was the one being edited), the
-  // profile-button onClick when switching profiles, and the editor's
-  // own "Close" button (now inside AgentFileEditor). Centralising into
-  // a `useCallback` with empty deps keeps the 3 in lockstep.
   const closeEditor = useCallback(() => setEditor(null), []);
 
   const { showToast, toastElement, lastResult } = useToast();
@@ -212,13 +195,10 @@ export default function BehaviourPage() {
     }
   }, []);
 
-  // Close the New Agent Profile modal. The same 4-setter block appears
-  // at 2 sites — the modal's `onClose` (X-button / overlay click) and
-  // `handleCreate`'s success path — so it lives here and both call it.
-  // Note: the modal's Cancel button uses a deliberate SOFT close (1
-  // setter, no clear) to preserve the user's in-flight form input if
-  // they cancel by accident. That is a discriminated pattern, not a
-  // duplicate, and it stays a separate prop on the modal.
+  // Close the New Agent Profile dialog. The modal's `onClose` (X / overlay)
+  // and `handleCreate`'s success path both clear the form; the modal's Cancel
+  // is a deliberate SOFT close that keeps in-flight input if the operator
+  // cancels by accident.
   const closeCreate = useCallback(() => {
     setShowCreate(false);
     setCreateName("");
@@ -226,15 +206,7 @@ export default function BehaviourPage() {
     setCreateCloneFrom("default");
   }, []);
 
-  // openCreate — sibling of `closeCreate` (session 116 P-7 / session
-  // 118 P-7 open/close sibling pattern). Naming the open path keeps the
-  // pair symmetric so a future "reset form on open" extension lands in
-  // one place. The deps array lists the stable setter explicitly to
-  // satisfy `react-hooks/exhaustive-deps`.
-  const openCreate = useCallback(
-    () => setShowCreate(true),
-    [setShowCreate],
-  );
+  const openCreate = useCallback(() => setShowCreate(true), []);
 
   useEffect(() => { loadProfiles(); }, [loadProfiles]);
 
@@ -280,9 +252,6 @@ export default function BehaviourPage() {
       successMessage: "Profile deleted",
       errorMessage: "Failed to delete profile",
       onSuccess: async () => {
-        // `closeDelete()` dismisses the modal. The 2-setter conditional
-        // block below is gated on `selectedProfileId === target`, so
-        // those setters stay inline.
         closeDelete();
         if (selectedProfileId === target) {
           // The root agent is the one profile that cannot be deleted, so it is
@@ -324,11 +293,6 @@ export default function BehaviourPage() {
       setEditor({ ...editor, original: editor.content });
       setSaveStatus("saved");
       showToast(`${editor.fileName} saved`, "success");
-      // Clear any in-flight save-reset timer from a prior save so
-      // the new save's 2s window is the source of truth (a stale
-      // timer from a previous save could race with this one's
-      // setSaveStatus("saved") and prematurely flip the UI back
-      // to "idle" before the user reads the "Saved!" indicator).
       if (saveResetTimerRef.current) {
         clearTimeout(saveResetTimerRef.current);
       }
@@ -367,6 +331,15 @@ export default function BehaviourPage() {
       return;
     }
     doSelectProfile(profile);
+  };
+
+  // The header picker and the table's name cell are the same choice. The
+  // picker answers a slug; the table answers a row; both go through the one
+  // discard guard.
+  const handleSelectProfileId = (id: string) => {
+    const profile = profiles.find((p) => p.id === id);
+    if (profile) handleSelectProfile(profile);
+    else setSelectedProfileId(id);
   };
 
   const openFile = (profileId: string, file: ProfileFile) => {
@@ -429,8 +402,7 @@ export default function BehaviourPage() {
     });
   };
   const selectedProfile = profiles.find((p) => p.id === selectedProfileId) ?? null;
-  // The file open in the editor FOR THE SELECTED PROFILE, or null. Same
-  // condition the file list used inline before the split.
+  // The file open in the editor FOR THE SELECTED PROFILE, or null.
   const openFileKey =
     editor && selectedProfile && editor.profileId === selectedProfile.id ? editor.fileKey : null;
 
@@ -455,24 +427,36 @@ export default function BehaviourPage() {
     openFileRef.current(selectedProfile.id, soul);
   }, [tab, selectedProfile]);
 
+  const header = (
+    <PageHeader
+      icon={Users}
+      subtitle={loading ? "Loading profiles…" : `${profiles.length} profile${pluralise(profiles.length)}`}
+      color="purple"
+      actions={
+        <>
+          <ProfilePicker value={selectedProfileId} onChange={handleSelectProfileId} />
+          <Button variant="primary" color="purple" icon={Plus} onClick={openCreate}>
+            New Profile
+          </Button>
+        </>
+      }
+    />
+  );
+
   if (loading) {
     return (
-      <AppPageShell
-      header={
-        <PageHeader icon={Users} title="Agents" subtitle="Loading profiles..." color="purple" />
-      }
-    >
+      <AppPageShell header={header}>
         <LastResult result={lastResult} />
         {toastElement}
-        <div><LoadingSpinner text="Loading profiles..." /></div>
+        <PageLoading label="Loading profiles" rows={4} />
       </AppPageShell>
     );
   }
 
   return (
-    <AppPageShell>
+    <AppPageShell header={header}>
       {toastElement}
-      <AgentsPageHeader profileCount={profiles.length} onNewProfile={openCreate} />
+      <LastResult result={lastResult} />
 
       {/* Without an agent installed, this page is a wall of "drift" and
           "missing" against a disk that was never there. Name the cause before
@@ -485,78 +469,78 @@ export default function BehaviourPage() {
         {loadError && <LoadErrorBanner error={loadError} onRetry={() => void loadProfiles()} />}
         <AgentProfilesOverview
           profiles={profiles}
-          selectedProfileId={selectedProfileId}
           syncBusy={syncBusy}
           onPushAll={handlePushAll}
           onPullAll={handlePullAll}
           onImportDiscovered={handleImportDiscovered}
-          onPushOne={handlePushOne}
-          onPullOne={handlePullOne}
-        />
-
-        <div className="flex flex-col lg:flex-row gap-6 min-h-[520px]">
-          <AgentProfileList
-            profiles={profiles}
-            selectedProfileId={selectedProfileId}
-            onSelect={handleSelectProfile}
-          />
-
-          <AgentProfileDetail
-            profile={selectedProfile}
-            onEdit={setEditTarget}
-            onDelete={setDeleteTarget}
-            tab={tab}
-            onTabChange={handleTabChange}
-            pendingDiscard={
-              pendingDiscard && editor
-                ? { fileName: editor.fileName, onDiscard: () => void confirmDiscard(), onKeep: keepEditing }
-                : null
-            }
-            openFileKey={openFileKey}
-            onOpenFile={openFile}
-            editor={editor}
-            hasChanges={hasChanges}
-            previewMode={previewMode}
-            saveStatus={saveStatus}
-            saving={saving}
-            onTogglePreview={() => setPreviewMode(!previewMode)}
-            onResetEditor={() => editor && setEditor({ ...editor, content: editor.original })}
-            onEditorContentChange={(content) => editor && setEditor({ ...editor, content })}
-            onSaveEditor={handleSave}
-            onCloseEditor={handleCloseEditor}
-          />
-        </div>
-
-        <CreateProfileModal
-          open={showCreate}
-          profiles={profiles}
-          name={createName}
-          onNameChange={setCreateName}
-          description={createDescription}
-          onDescriptionChange={setCreateDescription}
-          cloneFrom={createCloneFrom}
-          onCloneFromChange={setCreateCloneFrom}
-          creating={creating}
-          onClose={closeCreate}
-          onCancel={() => setShowCreate(false)}
-          onCreate={handleCreate}
-        />
-
-        <EditProfileModal
-          open={editTarget !== null}
-          profile={editTarget}
-          saving={savingProfile}
-          onClose={() => setEditTarget(null)}
-          onSave={(values) => void handleSaveProfile(values)}
-        />
-
-        <DeleteProfileModal
-          open={deleteTarget !== null}
-          deleting={deleting}
-          onClose={closeDelete}
-          onDelete={handleDelete}
         />
       </div>
+
+      <AgentProfilesTable
+        profiles={profiles}
+        selectedProfileId={selectedProfileId}
+        onSelect={handleSelectProfile}
+        onPushOne={handlePushOne}
+        onPullOne={handlePullOne}
+        busy={syncBusy}
+      />
+
+      <div className="flex min-h-[520px] flex-col">
+        <AgentProfileDetail
+          profile={selectedProfile}
+          onEdit={setEditTarget}
+          onDelete={setDeleteTarget}
+          tab={tab}
+          onTabChange={handleTabChange}
+          pendingDiscard={
+            pendingDiscard && editor
+              ? { fileName: editor.fileName, onDiscard: () => void confirmDiscard(), onKeep: keepEditing }
+              : null
+          }
+          openFileKey={openFileKey}
+          onOpenFile={openFile}
+          editor={editor}
+          hasChanges={hasChanges}
+          previewMode={previewMode}
+          saveStatus={saveStatus}
+          saving={saving}
+          onTogglePreview={() => setPreviewMode(!previewMode)}
+          onResetEditor={() => editor && setEditor({ ...editor, content: editor.original })}
+          onEditorContentChange={(content) => editor && setEditor({ ...editor, content })}
+          onSaveEditor={handleSave}
+          onCloseEditor={handleCloseEditor}
+        />
+      </div>
+
+      <CreateProfileModal
+        open={showCreate}
+        profiles={profiles}
+        name={createName}
+        onNameChange={setCreateName}
+        description={createDescription}
+        onDescriptionChange={setCreateDescription}
+        cloneFrom={createCloneFrom}
+        onCloneFromChange={setCreateCloneFrom}
+        creating={creating}
+        onClose={closeCreate}
+        onCancel={() => setShowCreate(false)}
+        onCreate={handleCreate}
+      />
+
+      <EditProfileModal
+        open={editTarget !== null}
+        profile={editTarget}
+        saving={savingProfile}
+        onClose={() => setEditTarget(null)}
+        onSave={(values) => void handleSaveProfile(values)}
+      />
+
+      <DeleteProfileModal
+        open={deleteTarget !== null}
+        deleting={deleting}
+        onClose={closeDelete}
+        onDelete={handleDelete}
+      />
     </AppPageShell>
   );
 }

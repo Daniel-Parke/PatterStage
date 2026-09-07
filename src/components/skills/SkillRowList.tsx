@@ -1,4 +1,4 @@
-// ── SkillRowList — one page window of SkillCards, plus its pager.
+// ── SkillRowList — one page window of SkillRows, plus its pager.
 //
 // The single render unit for skill rows (T-0032). A category body uses it and
 // so does the search-results panel, which is what keeps "how many rows can be
@@ -8,11 +8,16 @@
 // It is handed the FULL list for its bucket, not a pre-sliced page, so it can
 // say how many rows there really are. Slicing is the last thing that happens,
 // here, after the search has already run over the whole catalogue.
+//
+// Rows, not a grid of cards, since T-0125: a skill is a name, a line about
+// it, a switch and two doors, and a row of those is 44px where a card was 150.
 
 "use client";
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { SkillCard } from "@/components/skills/SkillCard";
+import Button from "@/components/ui/Button";
+import { Panel } from "@/components/dashboard/Panel";
+import { SkillRow } from "@/components/skills/SkillRow";
 import {
   effectiveSkillEnabled,
   pageCount,
@@ -32,6 +37,8 @@ export interface SkillRowListProps {
   onToggleSkill: (skill: Skill) => void;
   onViewSkill: (skill: Skill) => void;
   onEditSkill: (skill: Skill) => void;
+  /** Name each row's category: the search results, where the rows are out of theirs. */
+  showCategory?: boolean;
 }
 
 export function SkillRowList({
@@ -44,6 +51,7 @@ export function SkillRowList({
   onToggleSkill,
   onViewSkill,
   onEditSkill,
+  showCategory = false,
 }: SkillRowListProps) {
   const pages = pageCount(skills.length);
   const rows = pageSlice(skills, page);
@@ -52,59 +60,54 @@ export function SkillRowList({
 
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      <Panel className="divide-y divide-ps-edge-hairline">
         {rows.map((skill) => (
-          <SkillCard
+          <SkillRow
             key={skill.name}
             skill={skill}
             // Per skill, never per section. The Inactive grid used to pass a
             // negated fallback down instead, which meant the toggle on an
-            // inactive skill computed its "current" state as ENABLED and so
-            // asked the API to disable an already-disabled skill. Reading the
-            // effective state of the skill in front of you has no such trap,
-            // and it is the only thing that works for a mixed search-results
-            // list where the two states sit side by side.
+            // inactive skill computed its "current" state as ENABLED.
             enabled={effectiveSkillEnabled(skill, toggling)}
             isExpanded={expandedSkill === skill.name}
             isPending={skill.name in toggling}
+            showCategory={showCategory}
             onToggle={() => onToggleSkill(skill)}
             onView={() => onViewSkill(skill)}
             onEdit={() => onEditSkill(skill)}
             expandedContent={expandedSkill === skill.name ? skillContent : undefined}
           />
         ))}
-      </div>
+      </Panel>
 
       {pages > 1 && (
         <div className="flex items-center justify-between gap-3 pt-1">
-          <span
-            className="text-micro font-mono text-ps-text-muted"
-            data-testid="skill-page-status"
-          >
+          <span className="font-mono text-micro text-ps-text-muted" data-testid="skill-page-status">
             {pageRangeLabel(skills.length, page)}
           </span>
           <div className="flex items-center gap-2">
-            <button
-              type="button"
+            <Button
+              size="sm"
+              variant="secondary"
+              icon={ChevronLeft}
               data-testid="skill-page-prev"
               onClick={() => onPageChange(page - 1)}
               disabled={atFirst}
-              className="flex items-center gap-1 text-body px-2 py-1 rounded-ps-sm border border-ps-edge text-ps-text-muted hover:border-ps-edge-emphasis hover:text-ps-text-secondary transition-all disabled:opacity-30 disabled:hover:border-ps-edge disabled:hover:text-ps-text-muted"
             >
-              <ChevronLeft className="w-3 h-3" /> Prev
-            </button>
-            <span className="text-micro font-mono text-ps-text-faint">
+              Prev
+            </Button>
+            <span className="font-mono text-micro text-ps-text-faint">
               {page + 1}/{pages}
             </span>
-            <button
-              type="button"
+            <Button
+              size="sm"
+              variant="secondary"
               data-testid="skill-page-next"
               onClick={() => onPageChange(page + 1)}
               disabled={atLast}
-              className="flex items-center gap-1 text-body px-2 py-1 rounded-ps-sm border border-ps-edge text-ps-text-muted hover:border-ps-edge-emphasis hover:text-ps-text-secondary transition-all disabled:opacity-30 disabled:hover:border-ps-edge disabled:hover:text-ps-text-muted"
             >
-              Next <ChevronRight className="w-3 h-3" />
-            </button>
+              Next <ChevronRight className="h-3 w-3" aria-hidden="true" />
+            </Button>
           </div>
         </div>
       )}

@@ -92,6 +92,41 @@ The work leading to the 1.0.0 release.
 
 ### Changed
 
+- **Settings is one page.** It was an index of 30 cards leading to 27 pages
+  of three or four fields each, so changing two settings in different
+  sections cost four navigations. Every section is on the page now, expanded,
+  in its group, with its own Save and Reset; a list down the right names them
+  all and marks the one you are reading, and the search narrows the page
+  rather than a grid of doors. Nothing bookmarked is lost: the old address of
+  every section sends you to that section on the new page.
+
+- **One profile picker for the Agent screens, in the header.** Agents chose
+  the profile with a column of cards, Skills with a dropdown, Tools with a
+  card in the body: three controls for one choice. It is one control now, in
+  the same place on all three, and the Agents page lists its profiles as a
+  table with push and pull on each row, so the card for the chosen profile
+  gets the full width. Two numbers on that page also stopped disagreeing: the
+  performance strip now says "dispatched" for what it counts, and the growth
+  block no longer prints a memory-facts count that was always zero.
+
+- **Skills shows skills.** The page opened with a strip saying the same
+  number five times and twenty closed category rows; not one skill name was
+  on screen. A skill is one line now, and while the catalogue is small enough
+  to show in full every category starts open, so the first screen is a list
+  of skills. Large catalogues still start folded. An Inactive half with
+  nothing in it is no longer drawn.
+
+- **The models table fits a narrower window.** Below about 1280px its last
+  column, the one with edit and delete, used to sit off the right edge with
+  nothing to say so. The rows stack as labelled cards instead. The
+  task-default descriptions wrap onto two lines rather than losing their
+  ends to an ellipsis, and the page no longer carries a back arrow to a
+  Settings parent it never had.
+
+- **The Memory search row is one height**, and the "Press Enter to search"
+  line under the box is gone; Enter searches, and the Recall button beside
+  it says so.
+
 - **The session list is half as tall.** A row was two lines and 77px; it is one
   line and 46px, so you see twice as many at once. Nothing was dropped to get
   there - the profile, the model, the size, the message count, the source and

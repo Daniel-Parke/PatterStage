@@ -66,6 +66,20 @@ export function declaredColourTokens(css) {
 }
 
 /**
+ * Every `--shadow-<name>` declared in a stylesheet.
+ *
+ * `shadow-ps-raised` is a house class too, and it names a SHADOW token, not a
+ * colour: the rule below read it as `ps-raised` with no `--color-` behind it
+ * and refused the first dialog to use the elevation U6 declared for dialogs
+ * (T-0125). A shadow utility is checked against the shadow tokens.
+ */
+export function declaredShadowTokens(css) {
+  const out = new Set();
+  for (const m of css.matchAll(/--shadow-([a-z0-9-]+)\s*:/g)) out.add(m[1]);
+  return out;
+}
+
+/**
  * A house colour class: a colour utility carrying a `neon-`, `semantic-` or
  * `ps-` token, with any variant prefix before it and any opacity after it.
  * Tailwind's own palette (`text-red-400`, `bg-white/5`) is not a house token
@@ -74,11 +88,16 @@ export function declaredColourTokens(css) {
 const HOUSE_COLOUR_CLASS =
   /(?:^|[^\w-])(?:text|bg|border(?:-[trblxyse])?|ring(?:-offset)?|shadow|from|via|to|fill|stroke|outline|decoration|accent|divide|placeholder|caret)-((?:neon|semantic|ps)-[a-z0-9]+(?:-[a-z0-9]+)*)(?:\/\d{1,3})?(?![\w-])/g;
 
-/** The house tokens named on a line that `declared` does not contain, in order. */
-export function undeclaredColourClasses(line, declared) {
+/**
+ * The house tokens named on a line that `declared` does not contain, in order.
+ * A `shadow-` utility is held to `shadows` instead, when given.
+ */
+export function undeclaredColourClasses(line, declared, shadows = new Set()) {
   const out = [];
   for (const m of line.matchAll(HOUSE_COLOUR_CLASS)) {
-    if (!declared.has(m[1]) && !out.includes(m[1])) out.push(m[1]);
+    const isShadow = /(?:^|[^\w-])shadow-/.test(m[0]);
+    const known = isShadow ? shadows.has(m[1]) : declared.has(m[1]);
+    if (!known && !out.includes(m[1])) out.push(m[1]);
   }
   return out;
 }
@@ -91,6 +110,16 @@ function declaredTokens() {
       : new Set();
   }
   return declaredCache;
+}
+
+let shadowCache = null;
+function declaredShadows() {
+  if (!shadowCache) {
+    shadowCache = existsSync(GLOBALS_CSS)
+      ? declaredShadowTokens(readFileSync(GLOBALS_CSS, "utf-8"))
+      : new Set();
+  }
+  return shadowCache;
 }
 
 const SCAN_DIRS = ["src", "docs"];
@@ -143,7 +172,7 @@ export const RULES = [
     id: "token-must-exist",
     law: "A house colour class (text-, bg-, border-, ring- and friends carrying a neon-, semantic- or ps- token) must name a token declared in src/app/globals.css @theme. Tailwind generates nothing for an unknown class and says nothing, so the element renders with no colour (T-0095, D114).",
     files: (f) => f.startsWith("src/") && (f.endsWith(".ts") || f.endsWith(".tsx")),
-    test: (line) => undeclaredColourClasses(line, declaredTokens()).length > 0,
+    test: (line) => undeclaredColourClasses(line, declaredTokens(), declaredShadows()).length > 0,
   },
   {
     id: "no-ch-custom-properties",

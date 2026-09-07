@@ -98,7 +98,6 @@ describe("Dialog carries the contract", () => {
     const body = screen.getByText("the body");
     const footer = screen.getByRole("button", { name: "Footer action" });
     expect(dialog.contains(body) && dialog.contains(footer)).toBe(true);
-    // eslint-disable-next-line no-bitwise
     expect(body.compareDocumentPosition(footer) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 });

@@ -17,24 +17,22 @@ Every agent you can run lives on this screen: what it sounds like, the files it 
 
 ## What you see
 
-The header reads **Agent Profiles**, with the number of profiles configured under it and a **New Profile** button on the right.
+The header reads **Agents**, with the number of profiles under it. On the right, the profile picker that every Agent screen shares, and a **New Profile** button. The picker decides which profile the card at the foot of the page shows; choosing here is the same choice as choosing on Skills or Tools.
 
 Directly under the header, if no agent is installed on this machine, an orange notice says so. You can still configure everything on this page, but nothing will run until the agent is installed.
 
 Then one sentence says what a profile is: one agent, its voice, the skills it may use and the tools it may reach. A **Where a profile is stored** link folds out the file names behind that sentence if you want them.
 
-Then two strips that appear only when they have something to say. **Agent performance · from real activity** is one tile per agent that has actually done work, showing its runs, its mission success rate, tokens used and average run time; an agent that has not done anything yet is not listed. Under it, an orange banner appears when the console and the files on disk disagree, or when a push did not complete. It names the counts and carries a **Push all to Hermes** button.
+Then two strips that appear only when they have something to say. **Agent performance · from real activity** is one tile per agent that has actually done work, showing how many runs it has been given (dispatched), its mission success rate, tokens used and average run time; an agent that has not done anything yet is not listed. Under it, an orange banner appears when the console and the files on disk disagree, or when a push did not complete. It names the counts and carries a **Push all to Hermes** button.
 
-The row of sync buttons below is always there: **Push all**, **Pull all** and **Import discovered**. Once a profile is selected, two more appear beside them for that profile alone, reading **Push** and **Pull** followed by its short name.
+The row of sync buttons below is always there: **Push all**, **Pull all** and **Import discovered**. Push and pull for one profile are on its row in the table, as two arrows at the right-hand end.
 
-The rest of the page is two columns.
+Then the table, one row per profile: the name, its short name, how many skills and behaviour files it has, when it was last pushed (or **Never pushed**), and the two arrows. Your main agent carries a **Local default** badge. A profile whose files no longer match disk carries **Drift**; one whose last push failed carries **Sync error**, with the reason printed underneath it. The name is a button: press it to select that profile, which is the same as choosing it in the header. The selected row is highlighted. On a narrow window each row's columns stack, labelled.
 
-**Down the left**, one card per profile. Each shows the name, the description, how many skills and behaviour files it has, and when it was last pushed (or **Never pushed**). Profiles you have made also show the short name they are filed under. Your main agent carries a **Local default** badge. A profile whose files no longer match disk carries **Drift**; one whose last push failed carries **Sync error**, with the reason printed underneath it.
-
-**On the right**, the profile you have selected:
+Under the table, the profile you have selected, at full width:
 
 - Its name and description, with **Edit profile** and, for every profile except the default one, **Delete profile**.
-- A growth block: a level badge and the counts behind it, runs completed, active days, skills enabled, toolsets attached and memory facts, plus the total XP. Before the agent's first finished run this reads "No completed work yet".
+- A growth block: a level badge and the counts behind it, runs completed, active days, skills enabled and toolsets attached, plus the total XP. Before the agent's first finished run this reads "No completed work yet".
 - A line about behaviour files, with a **Which file holds what** link that expands to name them.
 - Two tabs, **Identity** and **Files**.
 
@@ -48,7 +46,7 @@ The **editor** opens as a card at the bottom of the right-hand column. It names 
 
 ### Change how an agent speaks
 
-1. Pick the profile on the left.
+1. Pick the profile in the header, or press its name in the table.
 2. Open the **Identity** tab. `SOUL.md` opens in the editor at the bottom.
 3. Press **Edit** to switch out of preview, and write.
 4. Press **Save**. The button confirms with **Saved!**, and the change is written through to the agent's own files straight away, so the next run reads it.
@@ -58,14 +56,14 @@ The **editor** opens as a card at the bottom of the right-hand column. It names 
 1. Press **New Profile**.
 2. Give it a name and a description. The name becomes its short name, so "Research Assistant" becomes `research-assistant`.
 3. Under **Clone From**, leave the default agent selected to start from a copy of it, or choose another profile. The clone copies its voice, its guide file and its settings.
-4. Press **Create**. The new profile appears in the left column, already written to disk.
+4. Press **Create**. The new profile appears in the table, already written to disk.
 
 ### Reconcile a profile that has drifted
 
 1. Select the profile carrying the **Drift** badge.
 2. Decide which side you want to keep. **Pull** takes what is on disk and brings it into PatterStage. **Push** takes what PatterStage holds and writes it to disk, overwriting what was there.
-3. Press the matching button for that profile in the sync row, or **Push all to Hermes** in the banner to settle every drifted profile at once.
-4. The badge clears and the card's "Last pushed" line updates.
+3. Press the push or pull arrow on that profile's row, or **Push all to Hermes** in the banner to settle every drifted profile at once.
+4. The badge clears and the row's "Last pushed" column updates.
 
 ## Notes
 

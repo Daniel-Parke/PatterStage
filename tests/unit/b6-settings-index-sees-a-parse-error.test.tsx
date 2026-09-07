@@ -32,7 +32,12 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { useApiResource, type UseApiResourceOptions } from "@/hooks/useApiResource";
 
-jest.mock("@/lib/api-fetch", () => ({ safeApiCall: jest.fn() }));
+// The two file sections read through apiFetch now that they are on the page
+// (U11, T-0125); the yaml read is still safeApiCall, through useConfig.
+jest.mock("@/lib/api-fetch", () => ({
+  safeApiCall: jest.fn(),
+  apiFetch: async () => ({ data: { content: "" } }),
+}));
 import { safeApiCall } from "@/lib/api-fetch";
 const mockSafeApiCall = safeApiCall as jest.Mock;
 
@@ -190,8 +195,8 @@ describe("the Settings index with a parse error", () => {
     expect(alert).toHaveTextContent(PARSE_ERROR);
     expect(alert).toHaveTextContent(DETAIL);
     expect(configuredPills()).toHaveLength(0);
-    // The grid is still there behind the alert: the cards still open.
-    expect(document.querySelector('a[href="/agent/settings/agent"]')).not.toBeNull();
+    // The sections are still there behind the alert (U11: the index IS the page).
+    expect(document.querySelector('[data-testid="settings-section-agent"]')).not.toBeNull();
   });
 
   it("a section that IS present in the payload still gets no pill while the file is broken", () => {
@@ -210,7 +215,7 @@ describe("the Settings index with a parse error", () => {
 
     expect(screen.getByRole("alert")).toBeTruthy();
     expect(configuredPills()).toHaveLength(0);
-    const agentCard = document.querySelector('a[href="/agent/settings/agent"]') as HTMLElement;
+    const agentCard = document.querySelector('[data-testid="settings-section-agent"]') as HTMLElement;
     expect(agentCard.textContent).not.toContain("configured");
   });
 
@@ -227,7 +232,7 @@ describe("the Settings index with a parse error", () => {
 
     const alert = screen.getByRole("alert");
     // querySelectorAll answers in document order, so the alert must come first.
-    const ordered = Array.from(document.querySelectorAll('[role="alert"], a[href="/agent/settings/agent"]'));
+    const ordered = Array.from(document.querySelectorAll('[role="alert"], [data-testid="settings-section-agent"]'));
     expect(ordered.indexOf(alert)).toBe(0);
     expect(ordered).toHaveLength(2);
   });
@@ -280,7 +285,7 @@ describe("the Settings index with a parse error", () => {
     render(<SettingsIndexPage />);
 
     expect(screen.queryByRole("alert")).toBeNull();
-    const agentCard = document.querySelector('a[href="/agent/settings/agent"]') as HTMLElement;
+    const agentCard = document.querySelector('[data-testid="settings-section-agent"]') as HTMLElement;
     expect(agentCard).not.toBeNull();
     expect(agentCard.textContent).toContain("configured");
     expect(configuredPills()).toHaveLength(1);

@@ -7,6 +7,7 @@
 
 import { ChevronRight, type LucideIcon } from "lucide-react";
 import Badge from "@/components/ui/Badge";
+import Button from "@/components/ui/Button";
 
 export interface SkillSectionProps {
   title: string;
@@ -33,33 +34,33 @@ export function SkillSection({
 }: SkillSectionProps) {
   return (
     <div>
-      {/* Section header */}
-      <button
-        type="button"
+      <Button
+        variant="secondary"
+        size="md"
+        aria-expanded={!collapsed}
         onClick={onToggleCollapse}
-        className="w-full flex items-center justify-between mb-3 px-4 py-2.5 rounded-ps-lg border border-ps-edge bg-ps-surface-panel hover:bg-ps-surface-panel hover:border-ps-edge-emphasis transition-all cursor-pointer group"
+        className="group mb-3 w-full justify-between"
       >
-        <div className="flex items-center gap-2.5">
-          <Icon className={`w-4 h-4 ${iconColor}`} />
-          <span className="text-body font-semibold text-ps-text-primary">{title}</span>
+        <span className="flex items-center gap-2.5">
+          <Icon className={`h-4 w-4 ${iconColor}`} aria-hidden="true" />
+          <span className="font-semibold text-ps-text-primary">{title}</span>
           <Badge color={count > 0 ? "green" : "gray"} size="sm">
             {count}
           </Badge>
-          <span className="text-micro font-mono text-ps-text-faint">
+          <span className="font-mono text-micro text-ps-text-faint">
             {categoryCount} categor{categoryCount === 1 ? "y" : "ies"}
           </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-body text-ps-text-faint group-hover:text-ps-text-muted transition-colors">
+        </span>
+        <span className="flex items-center gap-2">
+          <span className="text-body text-ps-text-faint transition-colors group-hover:text-ps-text-muted">
             {collapsed ? "expand" : "collapse"}
           </span>
           <ChevronRight
-            className={`w-4 h-4 text-ps-text-muted group-hover:text-ps-text-secondary transition-all ${
-              collapsed ? "" : "rotate-90"
-            }`}
+            className={`h-4 w-4 text-ps-text-muted transition-transform ${collapsed ? "" : "rotate-90"}`}
+            aria-hidden="true"
           />
-        </div>
-      </button>
+        </span>
+      </Button>
 
       {!collapsed && children}
     </div>

@@ -17,11 +17,21 @@ export function SearchInput({
   accentColor = "cyan",
   ariaLabel,
   onSubmit,
+  className = "",
+  type = "text",
 }: {
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
   accentColor?: string;
+  /** Extra classes for the input, typically a height to match a row of buttons. */
+  className?: string;
+  /**
+   * `search` announces the box as a searchbox and gives it the browser's own
+   * clear control. The default stays `text` because several suites and the
+   * skills page's search reach this control as a textbox.
+   */
+  type?: "text" | "search";
   /**
    * What this box searches. Defaults to "Search", which is honest for a
    * magnifier-and-field with no other context; a caller with something more
@@ -47,7 +57,7 @@ export function SearchInput({
     <div className="relative">
       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ps-text-muted" />
       <input
-        type="text"
+        type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={
@@ -60,7 +70,7 @@ export function SearchInput({
         aria-label={ariaLabel ?? placeholder ?? "Search"}
         placeholder={placeholder}
         // design-lint-disable-next-line no-bare-outline-none -- the accent focus border comes from focusBorder on this same line; every entry is a focus:border-* class
-        className={`w-full bg-ps-surface-panel border border-ps-edge rounded-ps-md pl-10 pr-4 py-2.5 text-body text-ps-text-primary placeholder-ps-text-muted transition-colors font-mono ${focusBorder[accentColor] || focusBorder.cyan}`}
+        className={`w-full bg-ps-surface-panel border border-ps-edge rounded-ps-md pl-10 pr-4 py-2.5 text-body text-ps-text-primary placeholder-ps-text-muted transition-colors font-mono ${focusBorder[accentColor] || focusBorder.cyan} ${className}`}
       />
     </div>
   );
@@ -283,6 +293,7 @@ export function InlineToggle({
   label,
   labelledBy,
   describedBy,
+  "data-testid": testId,
 }: {
   value: boolean;
   onChange: (v: boolean) => void;
@@ -292,29 +303,39 @@ export function InlineToggle({
   label?: string;
   labelledBy?: string;
   describedBy?: string;
+  "data-testid"?: string;
 }) {
   const colors = toggleColorMap[color] || toggleColorMap.cyan;
   return (
     <button
       type="button"
       role="switch"
+      data-testid={testId}
       aria-checked={value}
       aria-label={labelledBy ? undefined : label}
       aria-labelledby={labelledBy}
       aria-describedby={describedBy}
       onClick={() => onChange(!value)}
       disabled={disabled}
-      className={`relative w-9 h-5 rounded-full transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
-        value ? colors.track : "bg-ps-surface-raised border border-ps-edge-emphasis"
-      }`}
+      // The BUTTON is 44x24 and the track inside it is 36x20. The track was
+      // the button, and 36x20 is under the 24x24 WCAG 2.5.8 asks of a target;
+      // the census counted 109 of them the first time this switch appeared on
+      // a censused route (T-0125). The look is unchanged; the hit area is not.
+      className="relative inline-flex h-6 w-11 shrink-0 items-center justify-center disabled:cursor-not-allowed disabled:opacity-40"
     >
       <span
-        className={`absolute top-0.5 w-4 h-4 rounded-full transition-transform ${
-          value
-            ? `translate-x-4 ${colors.thumb}`
-            : "translate-x-0.5 bg-white/40"
+        className={`relative block h-5 w-9 rounded-full transition-colors ${
+          value ? colors.track : "bg-ps-surface-raised border border-ps-edge-emphasis"
         }`}
-      />
+      >
+        <span
+          className={`absolute top-0.5 h-4 w-4 rounded-full transition-transform ${
+            value
+              ? `translate-x-4 ${colors.thumb}`
+              : "translate-x-0.5 bg-white/40"
+          }`}
+        />
+      </span>
     </button>
   );
 }

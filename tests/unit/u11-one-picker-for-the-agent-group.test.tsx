@@ -202,7 +202,8 @@ describe("the Agents page is a table of profiles and one detail card", () => {
     render(withQuery(<AgentsPage />));
     await screen.findByText("QA Engineer");
     expect(screen.getByTestId("profile-row-default")).toHaveAttribute("aria-selected", "true");
-    fireEvent.click(within(screen.getByTestId("profile-row-qa")).getByRole("button", { name: /QA Engineer/ }));
+    // Exact: the row's push and pull controls are named for the row too.
+    fireEvent.click(within(screen.getByTestId("profile-row-qa")).getByRole("button", { name: "QA Engineer" }));
     expect(await screen.findByRole("heading", { name: "QA Engineer" })).toBeInTheDocument();
     expect(screen.getByTestId("profile-row-qa")).toHaveAttribute("aria-selected", "true");
     expect(within(headerPicker()).getByRole("button", { name: "Profile" })).toHaveTextContent("QA Engineer");
@@ -223,8 +224,8 @@ describe("the Agents page is a table of profiles and one detail card", () => {
   it("the sync-all controls are real buttons and still there", async () => {
     render(withQuery(<AgentsPage />));
     await screen.findByText("QA Engineer");
-    expect(screen.getByRole("button", { name: "Push all", exact: true })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Pull all", exact: true })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Push all" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Pull all" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Import discovered/ })).toBeInTheDocument();
   });
 

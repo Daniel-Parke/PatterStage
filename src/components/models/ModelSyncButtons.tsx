@@ -7,11 +7,14 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { ArrowDownToLine, ArrowUpToLine, X, Loader2 } from "lucide-react";
+import { ArrowDownToLine, ArrowUpToLine, X } from "lucide-react";
+
+import Button from "@/components/ui/Button";
+import Dialog from "@/components/ui/Dialog";
+import IconButton from "@/components/ui/IconButton";
 import type { SyncActionResult } from "@/lib/models/sync-result";
 import { pluralise } from "@/lib/utils";
 import { apiFetch } from "@/lib/api-fetch";
-import { useDialogA11y } from "@/hooks/useDialogA11y";
 
 interface DiffEntry {
   id: string;
@@ -54,6 +57,11 @@ function isExcludable(direction: "push" | "pull", id: string): boolean {
   return direction === "pull" || id === "model-env";
 }
 
+/**
+ * The confirmation, as a Dialog (T-0125). It was its own backdrop, panel,
+ * header and footer; what it keeps is its heading id, which the wording
+ * suite pins, and every word.
+ */
 function SyncModal({
   direction,
   diffs,
@@ -63,12 +71,8 @@ function SyncModal({
   onCancel,
   confirming,
 }: SyncModalProps) {
-  const title = direction === "push"
-    ? "Push to Hermes"
-    : "Pull from Hermes";
+  const title = direction === "push" ? "Push to Hermes" : "Pull from Hermes";
   const [removed, setRemoved] = useState<Set<string>>(new Set());
-  // A dialog on the shared contract (T-0096, D116).
-  const panelRef = useDialogA11y({ open: true, onClose: onCancel });
 
   const subtitle = direction === "push"
     ? "Write these settings into config.yaml as the primary agent model"
@@ -84,115 +88,35 @@ function SyncModal({
     });
   };
 
-  const handleConfirm = () => {
-    onConfirm(removed);
-  };
-
   const visibleCount = visibleChanges.length;
   const totalCount = diffs.length;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onCancel} role="presentation">
-      <div
-        ref={panelRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="model-sync-title"
-        tabIndex={-1}
-        onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md mx-4 bg-ps-surface-panel border border-ps-edge-hairline rounded-ps-lg shadow-2xl overflow-hidden"
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-ps-edge-hairline">
-          <div className="flex items-center gap-2">
-            {direction === "push" ? (
-              <ArrowUpToLine className="w-4 h-4 text-neon-purple" />
-            ) : (
-              <ArrowDownToLine className="w-4 h-4 text-neon-cyan" />
-            )}
-            <span id="model-sync-title" className="text-body font-semibold text-ps-text-primary">{title}</span>
-          </div>
-          <button
-            type="button"
-            aria-label="Close sync panel"
-            onClick={onCancel}
-            className="p-1 rounded-ps-sm text-ps-text-muted hover:text-ps-text-primary hover:bg-ps-surface-raised transition-colors"
-          >
-            <X className="w-4 h-4" aria-hidden="true" />
-          </button>
-        </div>
-        <p className="px-4 py-2 text-micro font-mono text-ps-text-muted">{subtitle}</p>
-
-        {/* Diffs list. With no rows at all the route's own sentence stands in
-            their place: in sync, no matching section, or an unparseable file. */}
-        <div className="px-4 py-3 max-h-72 overflow-y-auto">
-          {diffs.length === 0 ? (
-            <p className="text-micro text-ps-text-muted font-mono text-center py-4">
-              {note ?? "Nothing to sync."}
-            </p>
-          ) : visibleChanges.length === 0 ? (
-            <p className="text-micro text-ps-text-muted font-mono text-center py-4">
-              All changes removed — nothing will be synced
-            </p>
-          ) : (
-            <div className="space-y-1.5">
-              {/* Summary */}
-              {visibleCount < totalCount && (
-                <div className="text-micro font-mono text-neon-orange/90 mb-2">
-                  {totalCount - visibleCount} of {totalCount} changes excluded
-                </div>
-              )}
-              {visibleChanges.map((diff) => (
-                <div
-                  key={diff.id}
-                  className="flex items-start justify-between gap-2 px-3 py-2.5 bg-ps-surface-raised rounded-ps-md"
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="text-body font-semibold text-ps-text-secondary">
-                      {diff.label}
-                    </div>
-                    <div className="text-micro text-ps-text-muted font-mono truncate mt-0.5">
-                      {diff.detail}
-                    </div>
-                  </div>
-                  {isExcludable(direction, diff.id) && (
-                    <button
-                      type="button"
-                      onClick={() => handleRemove(diff.id)}
-                      className="flex-shrink-0 p-1 rounded-ps-sm text-red-400/40 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                      title="Exclude this change"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="flex items-center justify-end gap-2 px-4 py-3 border-t border-ps-edge-hairline bg-ps-surface-ground/50">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="px-3 py-1.5 text-micro font-mono text-ps-text-muted hover:text-ps-text-primary hover:bg-ps-surface-raised rounded-ps-md transition-colors"
-          >
+    <Dialog
+      open
+      onClose={onCancel}
+      title={title}
+      titleId="model-sync-title"
+      subtitle={subtitle}
+      icon={direction === "push" ? ArrowUpToLine : ArrowDownToLine}
+      iconColor={direction === "push" ? "text-neon-purple" : "text-neon-cyan"}
+      size="sm"
+      closeLabel="Close sync panel"
+      footer={
+        <>
+          <Button variant="ghost" size="sm" onClick={onCancel}>
             Cancel
-          </button>
-          <button
-            type="button"
-            onClick={() => void handleConfirm()}
+          </Button>
+          <Button
+            variant="primary"
+            color={direction === "push" ? "purple" : "cyan"}
+            size="sm"
+            onClick={() => onConfirm(removed)}
             // `inSync` is the route's answer, and a push whose only row is the
             // credential is still in sync: the fields would be rewritten with
             // the values already on disk. The credential then has to be written
             // from the Credentials panel instead, which is where a key belongs.
             disabled={confirming || visibleChanges.length === 0 || inSync}
-            className={`px-3 py-1.5 text-micro font-mono rounded-ps-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-              direction === "push"
-                ? "bg-neon-purple/20 text-neon-purple hover:bg-neon-purple/30"
-                : "bg-neon-cyan/20 text-neon-cyan hover:bg-neon-cyan/30"
-            }`}
           >
             {confirming
               ? "Syncing…"
@@ -201,10 +125,44 @@ function SyncModal({
                 : visibleChanges.length === diffs.length
                   ? `Confirm (${diffs.length} change${pluralise(diffs.length)})`
                   : `Confirm ${visibleChanges.length}/${diffs.length}`}
-          </button>
-        </div>
+          </Button>
+        </>
+      }
+    >
+      {/* Diffs list. With no rows at all the route's own sentence stands in
+          their place: in sync, no matching section, or an unparseable file. */}
+      <div className="max-h-72 overflow-y-auto">
+        {diffs.length === 0 ? (
+          <p className="py-4 text-center font-mono text-micro text-ps-text-muted">{note ?? "Nothing to sync."}</p>
+        ) : visibleChanges.length === 0 ? (
+          <p className="py-4 text-center font-mono text-micro text-ps-text-muted">
+            All changes removed — nothing will be synced
+          </p>
+        ) : (
+          <div className="space-y-1.5">
+            {visibleCount < totalCount && (
+              <div className="mb-2 font-mono text-micro text-neon-orange/90">
+                {totalCount - visibleCount} of {totalCount} changes excluded
+              </div>
+            )}
+            {visibleChanges.map((diff) => (
+              <div
+                key={diff.id}
+                className="flex items-start justify-between gap-2 rounded-ps-md bg-ps-surface-panel px-3 py-2.5"
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="text-body font-semibold text-ps-text-secondary">{diff.label}</div>
+                  <div className="mt-0.5 truncate font-mono text-micro text-ps-text-muted">{diff.detail}</div>
+                </div>
+                {isExcludable(direction, diff.id) && (
+                  <IconButton size="sm" icon={X} label="Exclude this change" onClick={() => handleRemove(diff.id)} />
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
-    </div>
+    </Dialog>
   );
 }
 
@@ -223,10 +181,10 @@ export default function ModelSyncButtons({
     note: string | null;
     confirming: boolean;
   } | null>(null);
-  const [loadingDiff, setLoadingDiff] = useState(false);
+  const [loadingDiff, setLoadingDiff] = useState<"push" | "pull" | null>(null);
 
   const fetchDiffs = useCallback(async (direction: "push" | "pull") => {
-    setLoadingDiff(true);
+    setLoadingDiff(direction);
     try {
       const json = await apiFetch<{
         data?: { diffs?: DiffEntry[]; inSync?: boolean; note?: string | null };
@@ -269,17 +227,9 @@ export default function ModelSyncButtons({
         confirming: false,
       });
     } finally {
-      setLoadingDiff(false);
+      setLoadingDiff(null);
     }
   }, [modelId, provider, modelIdString]);
-
-  const handlePush = useCallback(async () => {
-    void fetchDiffs("push");
-  }, [fetchDiffs]);
-
-  const handlePull = useCallback(async () => {
-    void fetchDiffs("pull");
-  }, [fetchDiffs]);
 
   const handleConfirm = useCallback(async (excluded: Set<string>) => {
     if (!modalState) return;
@@ -300,46 +250,28 @@ export default function ModelSyncButtons({
     }
   }, [modalState, modelId, onPush, onPull]);
 
-  // closeSyncModal — single-setter close-callback for the SyncModal.
-  // Sister to the close-callbacks extracted in /config/models/page.tsx
-  // (session 196) and FallbackChainList.tsx — same useState-setter
-  // stability rationale. The `<SyncModal onCancel={...}>` binding at
-  // line 281 is the only call site today (1-setter close-callback).
-  // The 2-setter `setModalState({ ...prev, confirming: true })` paths
-  // in handleConfirm are a different shape (2-setter confirm-toggling,
-  // not close) and stay inline.
   const closeSyncModal = useCallback(() => setModalState(null), []);
 
   return (
     <>
-      <div className="flex items-center gap-1">
-        <button
-          type="button"
-          onClick={() => void handlePull()}
-          disabled={disabled || loadingDiff}
-          title="Pull from Hermes"
-          className="p-1.5 rounded-ps-md text-ps-text-muted hover:text-neon-cyan hover:bg-neon-cyan/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {loadingDiff && modalState?.direction === "pull" ? (
-            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-          ) : (
-            <ArrowDownToLine className="w-3.5 h-3.5" />
-          )}
-        </button>
-        <button
-          type="button"
-          onClick={() => void handlePush()}
-          disabled={disabled || loadingDiff}
-          title="Push to Hermes"
-          className="p-1.5 rounded-ps-md text-ps-text-muted hover:text-neon-purple hover:bg-neon-purple/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {loadingDiff && modalState?.direction === "push" ? (
-            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-          ) : (
-            <ArrowUpToLine className="w-3.5 h-3.5" />
-          )}
-        </button>
-      </div>
+      <IconButton
+        size="sm"
+        icon={ArrowDownToLine}
+        color="cyan"
+        label="Pull from Hermes"
+        loading={loadingDiff === "pull"}
+        disabled={disabled || loadingDiff !== null}
+        onClick={() => void fetchDiffs("pull")}
+      />
+      <IconButton
+        size="sm"
+        icon={ArrowUpToLine}
+        color="purple"
+        label="Push to Hermes"
+        loading={loadingDiff === "push"}
+        disabled={disabled || loadingDiff !== null}
+        onClick={() => void fetchDiffs("push")}
+      />
 
       {modalState && (
         <SyncModal
