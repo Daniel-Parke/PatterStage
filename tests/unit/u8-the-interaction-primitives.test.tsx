@@ -120,7 +120,15 @@ describe("useDismissable closes a panel the three ways a panel closes", () => {
    */
   it("leaves focus alone when it was never inside the panel", () => {
     render(<Harness />);
-    fireEvent.click(screen.getByText("open"));
+    // The trigger takes focus FIRST, so there is a real element to be yanked
+    // back to. Opening from an unfocused page leaves `document.body` as the
+    // thing to restore, and jsdom ignores `body.focus()` - so a hook that
+    // restored unconditionally would have looked identical to one that does
+    // not, and did: this assertion survived its mutant until it focused
+    // something focusable.
+    const trigger = screen.getByText("open");
+    trigger.focus();
+    fireEvent.click(trigger);
     const elsewhere = screen.getByText("outside");
     elsewhere.focus();
     fireEvent.pointerDown(elsewhere);
@@ -243,9 +251,17 @@ describe("SegmentedControl puts the state in the accessibility tree", () => {
    */
   it("holds exactly one tab stop, and it is the chosen option", () => {
     render(<SegmentedHarness />);
-    const stops = screen.getAllByRole("radio").filter((el) => el.tabIndex === 0);
-    expect(stops).toHaveLength(1);
-    expect(stops[0]).toHaveAccessibleName("All");
+    const stops = () => screen.getAllByRole("radio").filter((el) => el.tabIndex === 0);
+    expect(stops()).toHaveLength(1);
+    expect(stops()[0]).toHaveAccessibleName("All");
+
+    // And it MOVES. Measured only in its default position, "the chosen option"
+    // and "the first option" are the same element, so a control that parks the
+    // stop on index 0 forever passes - which is the defect, because Tab then
+    // lands somewhere the user is not.
+    fireEvent.click(screen.getByRole("radio", { name: "Failed" }));
+    expect(stops()).toHaveLength(1);
+    expect(stops()[0]).toHaveAccessibleName("Failed");
   });
 
   it.each([

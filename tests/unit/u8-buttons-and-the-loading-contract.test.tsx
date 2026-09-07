@@ -108,7 +108,13 @@ describe("a disabled button is quiet, not invisible", () => {
 describe("IconButton cannot be nameless and cannot be small", () => {
   it("carries the name it was given", () => {
     render(<IconButton icon={Dot} label="Dismiss" />);
-    expect(screen.getByRole("button", { name: "Dismiss" })).toBeInTheDocument();
+    const button = screen.getByRole("button", { name: "Dismiss" });
+    // The name must come from `aria-label`, not from `title`. Both produce an
+    // accessible name, so asking only for the ROLE and NAME passed with the
+    // aria-label deleted - and `title` is the weaker of the two: it is
+    // announced inconsistently and it is also a mouse tooltip, so it is a
+    // fallback rather than the label.
+    expect(button.getAttribute("aria-label")).toBe("Dismiss");
   });
 
   it.each([
@@ -148,6 +154,17 @@ describe("the loading contract", () => {
   it("PageLoading draws one skeleton per row it was told to expect", () => {
     const { container } = render(<PageLoading rows={4} label="Loading" />);
     expect(container.querySelectorAll("[data-ps-skeleton]")).toHaveLength(4);
+  });
+
+  /**
+   * One announcement for the group. `getByRole("status", { name })` finds the
+   * wrapper whether or not the four skeletons inside it also announce, so it
+   * cannot see the defect it exists to prevent: a screen reader hearing
+   * "loading" five times for one page.
+   */
+  it("announces once, however many rows it draws", () => {
+    const { container } = render(<PageLoading rows={4} label="Loading sessions" />);
+    expect(container.querySelectorAll("[role=status]")).toHaveLength(1);
   });
 
   /**
