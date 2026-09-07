@@ -143,6 +143,18 @@ export interface GeometryRecord {
   contentLeft: number | null;
   /** Which element that was, so a moved number can be found again. */
   contentLeftWhat: string | null;
+  /**
+   * The page's own content blocks: where each one starts, and how tall it is.
+   *
+   * `contentLeft` is the leftmost of these, and comparing it to the h1 is what
+   * gate 6 does. That cannot see a page whose blocks disagree with EACH OTHER:
+   * on /work/missions the insights strip sat on the column and the board sat
+   * 24px inside it, and the gate compared the heading to the strip and passed.
+   *
+   * `top` and `height` are here because a left edge alone cannot answer the
+   * question. See `splitBlocks`.
+   */
+  blockLefts: Array<{ left: number; top: number; height: number; what: string }>;
   /** Width of the container the page centres its content in. */
   contentWidth: number | null;
   /** main.scrollWidth minus main.clientWidth; > 0 means silent sideways scroll. */
@@ -207,6 +219,15 @@ export interface CensusCounts {
    * beneath it on all but one screen.
    */
   distinctHeadingLefts: number;
+  /**
+   * Routes on which the page's own ROWS do not share a left edge. Cause 2 from
+   * the inside: not "the heading missed its content" but "this page's blocks
+   * missed each other". Rows rather than blocks, because a grid's columns are
+   * meant to differ - see `splitBlocks`.
+   */
+  routesWithSplitBlocks: number;
+  /** The worst such gap anywhere, in px. */
+  worstBlockLeftSpread: number;
   routesOverflowingX: number;
   /** Rail surface against the page it sits beside. Higher is better. */
   railVsPageContrast: number;
@@ -234,11 +255,64 @@ export const LOWER_IS_BETTER: ReadonlySet<keyof CensusCounts> = new Set([
   "worstHeadingOffset",
   "distinctContentWidths",
   "distinctHeadingLefts",
+  "routesWithSplitBlocks",
+  "worstBlockLeftSpread",
   "routesOverflowingX",
 ]);
 
 /** How close two left edges must be to count as one edge. */
 export const HEADING_ALIGNMENT_TOLERANCE_PX = 1;
+
+/**
+ * The ROWS that left the column, and by how far.
+ *
+ * A page's blocks do not share a left edge and are not supposed to: the second
+ * and third cards of a three-column grid are content blocks at +395 and +789,
+ * and they are exactly where they belong. Comparing every block to the leftmost
+ * reported 15 of 23 routes as split, and almost all of it was grid.
+ *
+ * Its ROWS share a left edge. So blocks are grouped by vertical overlap, each
+ * row's left is the leftmost block in it, and it is those that must agree. That
+ * is the defect /work/missions actually had: every row of the board began 24px
+ * right of the row above it, because the list added its own `px-6` inside a
+ * shell that already owned the measure.
+ *
+ * The column is the leftmost ROW, not the commonest. A vote would elect
+ * whichever inset a page happens to repeat, making the one correct row the
+ * offender; the leftmost is the edge the shell's container actually draws.
+ */
+export function splitBlocks(
+  blocks: ReadonlyArray<{ left: number; top: number; height: number; what: string }>,
+  tolerancePx: number,
+): Array<{ left: number; what: string; offset: number }> {
+  if (blocks.length < 2) return [];
+
+  // Rows, by vertical overlap. A block joins the row while it starts before the
+  // row's deepest block has ended; the first block that clears it opens a new
+  // one. Sorted by top, then by left, so a row is named by its leading block.
+  const sorted = [...blocks].sort((a, b) => a.top - b.top || a.left - b.left);
+  const rows: Array<{ left: number; what: string }> = [];
+  let bottom = -Infinity;
+  for (const block of sorted) {
+    if (block.top >= bottom) {
+      rows.push({ left: block.left, what: block.what });
+      bottom = block.top + block.height;
+    } else {
+      const row = rows[rows.length - 1];
+      if (block.left < row.left) {
+        row.left = block.left;
+        row.what = block.what;
+      }
+      bottom = Math.max(bottom, block.top + block.height);
+    }
+  }
+
+  if (rows.length < 2) return [];
+  const column = Math.min(...rows.map((r) => r.left));
+  return rows
+    .map((r) => ({ ...r, offset: r.left - column }))
+    .filter((r) => r.offset > tolerancePx);
+}
 
 /** WCAG 1.4.11: the floor for a boundary that identifies a component. */
 export const NON_TEXT_CONTRAST_FLOOR = 3;
@@ -278,6 +352,8 @@ export function summarise(raw: RawCensus[]): CensusCounts {
   let misaligned = 0;
   let worstOffset = 0;
   let overflowing = 0;
+  let splitRoutes = 0;
+  let worstSpread = 0;
   let railVsPage = Infinity;
   let railDivider = Infinity;
 
@@ -334,6 +410,12 @@ export function summarise(raw: RawCensus[]): CensusCounts {
     }
     if (g.overflowX > 0) overflowing += 1;
 
+    const strays = splitBlocks(g.blockLefts ?? [], HEADING_ALIGNMENT_TOLERANCE_PX);
+    if (strays.length > 0) {
+      splitRoutes += 1;
+      worstSpread = Math.max(worstSpread, ...strays.map((s) => Math.round(s.offset)));
+    }
+
     // The rail is one surface on every route; the worst reading is the honest
     // one, because a rail that only separates on some screens has not been
     // fixed.
@@ -367,6 +449,8 @@ export function summarise(raw: RawCensus[]): CensusCounts {
     worstHeadingOffset: worstOffset,
     distinctContentWidths: contentWidths.size,
     distinctHeadingLefts: headingLefts.size,
+    routesWithSplitBlocks: splitRoutes,
+    worstBlockLeftSpread: worstSpread,
     routesOverflowingX: overflowing,
     railVsPageContrast: Number.isFinite(railVsPage) ? round2(railVsPage) : 0,
     railDividerContrast: Number.isFinite(railDivider) ? round2(railDivider) : 0,

@@ -16,8 +16,11 @@
  * contentLeft is the LEFTMOST content block - which is the insights strip,
  * correctly aligned. A page whose blocks disagree with EACH OTHER passes a gate
  * that only ever compares one of them to the heading. So the instrument grows a
- * second reading here: how many distinct left edges the page's own content
- * blocks sit at. One container means one.
+ * second reading here: how many left edges the page's own ROWS start at. One
+ * container means one. Rows rather than blocks, because a grid's second column
+ * is a block at a different left and is exactly where it belongs - a first cut
+ * of this compared blocks and called 15 of 23 routes broken, almost all of it
+ * grid.
  *
  * ── the board clips its last column, by arithmetic ────────────
  *
@@ -218,31 +221,69 @@ describe("the strip stops restating the columns underneath it", () => {
  * The instrument, as a pure function so jest can check it against hand-written
  * cases rather than against a page. `splitBlocks` answers the question the
  * geometry gate could not ask: not "is the heading over its content", but "do
- * this page's own blocks agree with each other".
+ * this page's own rows agree with each other".
+ *
+ * ROWS, and the first version of this got that wrong. It compared every content
+ * block to the leftmost and reported 15 of 23 routes split by up to 789px -
+ * almost all of it grid, because the second and third cards of a three-column
+ * layout are content blocks at +395 and +789 and are exactly where they belong.
+ * A page's blocks do not share a left edge. Its rows do.
  */
-describe("splitBlocks names the blocks that left the column", () => {
-  const at = (left: number, what: string) => ({ left, what });
+describe("splitBlocks names the rows that left the column", () => {
+  const at = (left: number, top: number, what: string, height = 40) => ({
+    left,
+    top,
+    height,
+    what,
+  });
 
-  it("finds nothing when every block shares an edge", () => {
-    expect(splitBlocks([at(120, "a"), at(120, "b")], 1)).toEqual([]);
+  it("finds nothing when every row starts on the column", () => {
+    expect(splitBlocks([at(120, 0, "a"), at(120, 60, "b")], 1)).toEqual([]);
   });
 
   it("returns an empty list for a page with one block, or none", () => {
-    expect(splitBlocks([at(120, "only")], 1)).toEqual([]);
+    expect(splitBlocks([at(120, 0, "only")], 1)).toEqual([]);
     expect(splitBlocks([], 1)).toEqual([]);
   });
 
-  it("names the block that is inset, not the column it left", () => {
-    expect(splitBlocks([at(120, "strip"), at(144, "board")], 1)).toEqual([
+  it("names the row that is inset, not the column it left", () => {
+    expect(splitBlocks([at(120, 0, "strip"), at(144, 60, "board")], 1)).toEqual([
       { left: 144, what: "board", offset: 24 },
     ]);
   });
 
-  /** The column is the LEFTMOST edge, so an inset block is the odd one out
-      even when there are more inset blocks than aligned ones. */
-  it("takes the leftmost edge as the column, not the commonest", () => {
+  /**
+   * The half that matters, and the reason this takes tops and heights: three
+   * cards side by side are ONE row, and its left is the leftmost of them.
+   */
+  it("reads a grid row as one row, not three strays", () => {
     expect(
-      splitBlocks([at(120, "strip"), at(144, "board"), at(144, "schedules")], 1),
+      splitBlocks(
+        [at(120, 0, "heading"), at(120, 60, "card a"), at(395, 60, "card b"), at(789, 60, "card c")],
+        1,
+      ),
+    ).toEqual([]);
+  });
+
+  it("still catches a grid whose whole row is inset", () => {
+    expect(
+      splitBlocks(
+        [at(120, 0, "heading"), at(144, 60, "card a"), at(419, 60, "card b")],
+        1,
+      ),
+    ).toEqual([{ left: 144, what: "card a", offset: 24 }]);
+  });
+
+  /** A block that overlaps the row above joins it rather than opening one. */
+  it("keeps a tall block and the short ones beside it in one row", () => {
+    expect(
+      splitBlocks([at(120, 0, "tall", 200), at(400, 20, "beside"), at(120, 260, "next")], 1),
+    ).toEqual([]);
+  });
+
+  it("takes the leftmost row as the column, not the commonest", () => {
+    expect(
+      splitBlocks([at(120, 0, "strip"), at(144, 60, "board"), at(144, 200, "schedules")], 1),
     ).toEqual([
       { left: 144, what: "board", offset: 24 },
       { left: 144, what: "schedules", offset: 24 },
@@ -250,7 +291,7 @@ describe("splitBlocks names the blocks that left the column", () => {
   });
 
   it("forgives a sub-pixel difference, because layout is not integers", () => {
-    expect(splitBlocks([at(120, "a"), at(121, "b")], 1)).toEqual([]);
-    expect(splitBlocks([at(120, "a"), at(122, "b")], 1)).toHaveLength(1);
+    expect(splitBlocks([at(120, 0, "a"), at(121, 60, "b")], 1)).toEqual([]);
+    expect(splitBlocks([at(120, 0, "a"), at(122, 60, "b")], 1)).toHaveLength(1);
   });
 });

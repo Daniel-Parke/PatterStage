@@ -110,6 +110,7 @@ export function collectCensus(route: string): RawCensus {
       headingLeft: null,
       contentLeft: null,
       contentLeftWhat: null,
+      blockLefts: [],
       contentWidth: null,
       overflowX: main ? Math.max(0, main.scrollWidth - main.clientWidth) : 0,
     },
@@ -136,6 +137,7 @@ export function collectCensus(route: string): RawCensus {
   // sizeable node under main is usually the padding wrapper, whose left is the
   // column's, not the content's.
   const contentLefts: number[] = [];
+  const contentBlocks: Array<{ left: number; top: number; height: number; what: string }> = [];
   // The elements already counted as content blocks. A painted region inside
   // one of these is its CONTENTS - a log line, a table cell, a row - and a
   // page whose terminal pane holds four hundred of them would otherwise report
@@ -254,6 +256,12 @@ export function collectCensus(route: string): RawCensus {
         const left = Math.round(rect.left);
         contentLefts.push(left);
         countedBlocks.push(el);
+        contentBlocks.push({
+          left,
+          top: Math.round(rect.top),
+          height: Math.round(rect.height),
+          what: describe(el),
+        });
         if (!contentBlockNames.has(left)) contentBlockNames.set(left, describe(el));
       }
       if (style.maxWidth !== "none") {
@@ -276,6 +284,10 @@ export function collectCensus(route: string): RawCensus {
     const best = Math.min(...contentLefts);
     result.geometry.contentLeft = best;
     result.geometry.contentLeftWhat = contentBlockNames.get(best) ?? null;
+    // Every content block, with where it starts and how tall it is, so
+    // `splitBlocks` can group them into rows before comparing their lefts. A
+    // grid's second column is a block at a different left and is not a defect.
+    result.geometry.blockLefts = contentBlocks;
   }
 
   result.geometry.contentWidth =

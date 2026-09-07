@@ -1,40 +1,27 @@
 "use client";
 
 import { useMemo } from "react";
-import { Rocket, Loader2, CheckCircle2, XCircle } from "lucide-react";
 import Donut from "@/components/viz/Donut";
 import ProgressRing from "@/components/viz/ProgressRing";
-import { neon, neonAlpha, type NeonColor } from "@/components/viz/colors";
 import { countMissionsByColumn } from "@/lib/missions/mission-board";
 import { MISSION_COLUMN_LABELS } from "@/lib/status-labels";
 import type { MissionRow } from "@/hooks/missions-page-types";
 
-function Tile({
-  icon: Icon,
-  label,
-  value,
-  color,
-}: {
-  icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
-  label: string;
-  value: number;
-  color: NeonColor;
-}) {
-  return (
-    <div className="min-w-0 rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-raised px-3 py-2" style={{ boxShadow: `inset 0 0 16px ${neonAlpha(color, 5)}` }}>
-      <div className="flex min-w-0 items-center gap-1.5">
-        <Icon className="h-3 w-3 shrink-0" style={{ color: neon(color) }} />
-        <span className="truncate text-micro uppercase tracking-wider text-ps-text-muted">{label}</span>
-      </div>
-      <div className="mt-0.5 font-mono text-title font-bold leading-none text-ps-text-primary">{value}</div>
-    </div>
-  );
-}
-
 /**
- * Compact insights strip for the mission board — status mix donut, count tiles,
- * and a success ring. Computed from the board data itself (no extra fetch), so
- * it reflects exactly what's on screen. Hidden when there are no missions.
+ * Compact insights strip for the mission board — the status MIX and the success
+ * RATE. Computed from the board data itself (no extra fetch), so it reflects
+ * exactly what's on screen. Hidden when there are no missions.
+ *
+ * It used to draw four count tiles as well: Total, Running, Completed, Failed.
+ * Those restated the five numbers the board writes on its own column headers,
+ * a third of the way down a screen whose busiest problem was vertical space,
+ * while the status filter beside them showed no counts at all. The counts moved
+ * onto the filter, where a number says what you are about to filter TO rather
+ * than what you can already see (T-0123).
+ *
+ * A mix and a rate did NOT move, because neither is a count: you cannot read
+ * the success rate off a board, and the donut says at a glance what five
+ * numbers say only after you have added them up.
  */
 export default function MissionInsights({ missions }: { missions: MissionRow[] }) {
   // This file does not count missions. It used to, over m.status, and
@@ -50,7 +37,7 @@ export default function MissionInsights({ missions }: { missions: MissionRow[] }
   const successPct = Math.round(s.successRate * 100);
 
   return (
-    <div className="animate-float-in mb-5 grid grid-cols-1 items-center gap-5 rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel p-4 sm:grid-cols-[auto_1fr_auto]">
+    <div className="animate-float-in mb-5 grid grid-cols-1 items-center gap-5 rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel p-4 sm:grid-cols-2">
       <div className="flex justify-center">
         <Donut
           size={96}
@@ -65,12 +52,6 @@ export default function MissionInsights({ missions }: { missions: MissionRow[] }
           center={s.total}
           centerSub="missions"
         />
-      </div>
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-[repeat(auto-fit,minmax(7.5rem,1fr))]">
-        <Tile icon={Rocket} label="Total" value={s.total} color="cyan" />
-        <Tile icon={Loader2} label={MISSION_COLUMN_LABELS.dispatched} value={s.dispatched} color="yellow" />
-        <Tile icon={CheckCircle2} label={MISSION_COLUMN_LABELS.successful} value={s.successful} color="green" />
-        <Tile icon={XCircle} label={MISSION_COLUMN_LABELS.failed} value={s.failed} color="pink" />
       </div>
       <div className="flex justify-center">
         <ProgressRing

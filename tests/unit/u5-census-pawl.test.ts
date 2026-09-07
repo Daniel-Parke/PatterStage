@@ -39,6 +39,8 @@ const counts = (over: Partial<CensusCounts> = {}): CensusCounts => ({
   worstHeadingOffset: 0,
   distinctContentWidths: 1,
   distinctHeadingLefts: 1,
+  routesWithSplitBlocks: 0,
+  worstBlockLeftSpread: 0,
   routesOverflowingX: 0,
   railVsPageContrast: 1.47,
   railDividerContrast: 4.4,

@@ -184,18 +184,37 @@ describe("the insights strip counts what the board counts", () => {
     expect(donutProps[0].center).toBe(20);
   });
 
-  it("labels its tiles Total, Running, Completed and Failed", () => {
+  /**
+   * The four count tiles moved in U9 (T-0123). They restated the five numbers
+   * the board writes on its own column headers, a third of the way down the
+   * screen whose worst problem was vertical space, while the status filter
+   * beside them showed no counts at all - so the counts went to the filter,
+   * where a number says what you are about to filter TO.
+   *
+   * B10's contract is NOT about tiles. It is "one count set, keyed on the
+   * board's own columns, in the ratified words", and that is asserted here at
+   * the surface which now carries it. Nothing is weakened: the same five
+   * numbers and the same five words, read off the filter instead of the strip.
+   */
+  it("no longer restates the columns as tiles", () => {
     for (const label of ["Total", "Running", "Completed", "Failed"]) {
-      expect(screen.getByText(label)).toBeInTheDocument();
+      expect(screen.queryByText(label)).not.toBeInTheDocument();
     }
   });
 
-  it("puts the right number under each tile", () => {
-    const tile = (label: string) => screen.getByText(label).closest("div")?.parentElement;
-    expect(tile("Total")).toHaveTextContent("20");
-    expect(tile("Running")).toHaveTextContent("4");
-    expect(tile("Completed")).toHaveTextContent("5");
-    expect(tile("Failed")).toHaveTextContent("6");
+  it("hands the counts to the status filter, in the ratified words", () => {
+    render(<MissionsList vm={vmFor(rows())} />);
+    const group = screen.getByRole("radiogroup", { name: /status/i });
+    for (const [label, count] of [
+      ["All", 20],
+      ["Draft", 2],
+      ["Queued", 3],
+      ["Running", 4],
+      ["Completed", 5],
+      ["Failed", 6],
+    ] as const) {
+      expect(group.textContent).toContain(`${label}${count}`);
+    }
   });
 
   it("has stopped speaking the second vocabulary", () => {
@@ -270,8 +289,14 @@ describe("the board speaks the same five words", () => {
     // GREEN CONTROL for the numbers themselves: 2/3/4/5/6 are already right on
     // the board today. What section 6 changes is where they come from, so this
     // must stay green through the rewrite.
+    //
+    // TWICE each since U9 (T-0123), not once: the column badge, and the status
+    // filter beside it, which gained the counts the four insights tiles used to
+    // carry. The exact count is kept rather than loosened to "at least one",
+    // because a third rendering appearing would be the defect B10 exists to
+    // stop - one count set, drawn where it is useful, and nowhere else.
     for (const n of ["2", "3", "4", "5", "6"]) {
-      expect(screen.getAllByText(n)).toHaveLength(1);
+      expect(screen.getAllByText(n)).toHaveLength(2);
     }
   });
 });

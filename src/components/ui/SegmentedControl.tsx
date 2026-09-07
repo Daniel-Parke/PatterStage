@@ -109,7 +109,11 @@ export default function SegmentedControl<T extends string = string>({
             tabIndex={selected ? 0 : -1}
             onClick={() => onChange(option.value)}
             onKeyDown={(e) => onKeyDown(e, index)}
-            className={`rounded-ps-sm px-3 py-1 text-micro font-mono transition-colors ${
+            // `text-body`, not `text-micro`. S3 names 14/21 as the size for a
+            // button, and a filter is the control a dense screen is operated
+            // with; setting it at 12px both breaks the scale and pushes the
+            // product's 12px share the wrong way, which the census caught.
+            className={`rounded-ps-sm px-3 py-1 text-body font-mono transition-colors ${
               selected
                 ? "bg-ps-surface-raised text-ps-text-primary"
                 : "text-ps-text-secondary hover:text-ps-text-primary"
@@ -117,7 +121,7 @@ export default function SegmentedControl<T extends string = string>({
           >
             {option.label}
             {option.count !== undefined && (
-              <span className="ml-1.5 text-ps-text-faint">{option.count}</span>
+              <span className="ml-1.5 tabular-nums text-ps-text-faint">{option.count}</span>
             )}
           </button>
         );

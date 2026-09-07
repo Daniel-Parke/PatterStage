@@ -16,6 +16,7 @@ import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import { Panel } from "@/components/dashboard/Panel";
 import { LedgerRowButton } from "@/components/dashboard/LedgerRow";
 import CategoryAccordion from "@/components/ui/CategoryAccordion";
+import SegmentedControl from "@/components/ui/SegmentedControl";
 import TemplatePill from "@/components/ui/TemplatePill";
 import {
   CATEGORY_COLOR_CLASSES,
@@ -43,7 +44,6 @@ import ConceptHint from "@/components/help/ConceptHint";
 // The board's columns are the board module's, and so are its counts: a second
 // list here is how the strip beside it ended up in a second vocabulary
 // (T-0104, C126).
-const STATUS_FILTERS = ["all", ...MISSION_BOARD_COLUMNS] as const;
 
 export interface MissionsListProps {
   vm: MissionsPageViewModel;
@@ -96,7 +96,7 @@ export default function MissionsList({ vm }: MissionsListProps) {
   const columnCounts = countMissionsByColumn(filtered);
 
   return (
-    <div className="w-full max-w-none px-6 py-6">
+    <div>
       {/* The status summary is rendered once by <MissionInsights> above this
           list, off the same countMissionsByColumn call this board uses. */}
       {!showCreate && (
@@ -141,35 +141,20 @@ export default function MissionsList({ vm }: MissionsListProps) {
               <p className="text-micro font-mono text-ps-text-faint uppercase tracking-widest mb-2">
                 Template categories
               </p>
-              <div className="flex flex-wrap gap-2 mb-4">
-                <button
-                  type="button"
-                  onClick={() => setCategoryFilter("all")}
-                  className={`px-3 py-1 rounded-full text-micro font-mono transition-colors ${
-                    categoryFilter === "all"
-                      ? FALLBACK_CATEGORY_ACTIVE
-                                            : "text-ps-text-muted border border-ps-edge hover:text-ps-text-secondary hover:border-ps-edge-emphasis"
-                  }`}
-                >
-                  All
-                </button>
-                {templateCategoryPills.map((pill) => {
-                  const active = categoryFilter === pill.id;
-                  return (
-                    <button
-                      type="button"
-                      key={pill.id}
-                      onClick={() => setCategoryFilter(pill.id)}
-                      className={`px-3 py-1 rounded-full text-micro font-mono transition-colors ${
-                        active
-                          ? (CATEGORY_COLOR_CLASSES[pill.color] ?? FALLBACK_CATEGORY_ACTIVE)
-                          : "text-ps-text-muted border border-ps-edge hover:text-ps-text-secondary hover:border-ps-edge-emphasis"
-                      }`}
-                    >
-                      {pill.name} ({pill.count})
-                    </button>
-                  );
-                })}
+              <div className="mb-4">
+                <SegmentedControl
+                  label="Template categories"
+                  options={[
+                    { value: "all", label: "All" },
+                    ...templateCategoryPills.map((pill) => ({
+                      value: pill.id,
+                      label: pill.name,
+                      count: pill.count,
+                    })),
+                  ]}
+                  value={categoryFilter}
+                  onChange={setCategoryFilter}
+                />
               </div>
             </>
           )}
@@ -204,56 +189,34 @@ export default function MissionsList({ vm }: MissionsListProps) {
 
       <div className="flex flex-col gap-3 mb-4">
         {missionCategoryPills.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => setMissionCategoryFilter("all")}
-              className={`px-3 py-1 rounded-full text-micro font-mono transition-colors ${
-                missionCategoryFilter === "all"
-                  ? FALLBACK_CATEGORY_ACTIVE
-                                        : "text-ps-text-muted border border-ps-edge hover:text-ps-text-secondary hover:border-ps-edge-emphasis"
-              }`}
-            >
-              All missions
-            </button>
-            {missionCategoryPills.map((pill) => {
-              const active = missionCategoryFilter === pill.id;
-              return (
-                <button
-                  type="button"
-                  key={pill.id}
-                  onClick={() => setMissionCategoryFilter(pill.id)}
-                  className={`px-3 py-1 rounded-full text-micro font-mono transition-colors ${
-                    active
-                      ? (CATEGORY_COLOR_CLASSES[pill.color] ?? FALLBACK_CATEGORY_ACTIVE)
-                      : "text-ps-text-muted border border-ps-edge hover:text-ps-text-secondary hover:border-ps-edge-emphasis"
-                  }`}
-                >
-                  {pill.name} ({pill.count})
-                </button>
-              );
-            })}
-          </div>
+          <SegmentedControl
+            label="Mission categories"
+            options={[
+              { value: "all", label: "All missions" },
+              ...missionCategoryPills.map((pill) => ({
+                value: pill.id,
+                label: pill.name,
+                count: pill.count,
+              })),
+            ]}
+            value={missionCategoryFilter}
+            onChange={setMissionCategoryFilter}
+          />
         )}
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-1 bg-ps-surface-panel rounded-ps-md border border-ps-edge-hairline p-1">
-            {STATUS_FILTERS.map(
-              (f) => (
-                <button
-                  type="button"
-                  key={f}
-                  onClick={() => setFilter(f)}
-                  className={`px-2.5 py-1 rounded-ps-md text-micro font-mono transition-colors ${
-                    filter === f
-                      ? "bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/30"
-                      : "text-ps-text-muted hover:text-ps-text-muted border border-transparent"
-                  }`}
-                >
-                  {f === "all" ? "All" : MISSION_COLUMN_LABELS[f]}
-                </button>
-              ),
-            )}
-          </div>
+          <SegmentedControl
+            label="Status"
+            options={[
+              { value: "all", label: "All", count: filtered.length },
+              ...MISSION_BOARD_COLUMNS.map((status) => ({
+                value: status,
+                label: MISSION_COLUMN_LABELS[status],
+                count: columnCounts[status],
+              })),
+            ]}
+            value={filter}
+            onChange={setFilter}
+          />
           <div className="relative flex-1 min-w-[200px] max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-ps-viz-glyph-idle" />
             <input
@@ -291,7 +254,10 @@ export default function MissionsList({ vm }: MissionsListProps) {
           </div>
         </div>
       ) : (
-        <div className="flex flex-col lg:flex-row gap-4 overflow-x-auto pb-2">
+        <div
+          data-testid="missions-board"
+          className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3"
+        >
           {MISSION_BOARD_COLUMNS.map(
             (status) => {
               const columnMissions = filtered.filter(
@@ -323,7 +289,7 @@ export default function MissionsList({ vm }: MissionsListProps) {
               return (
                 <div
                   key={status}
-                  className="flex-1 min-w-[240px] flex flex-col"
+                  className="flex min-w-0 flex-col"
                 >
                   <div className="flex items-center justify-between mb-3 px-1">
                     <div className="flex items-center gap-2">
