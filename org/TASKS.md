@@ -139,3 +139,4 @@ The records under org/tasks/ are canonical.
 | T-0124 | standard | R1 | done | t0124-u10-results-2026-09-09 |
 | T-0125 | standard | R1 | done | t0125-u11-agent-settings-2026-09-07 |
 | T-0126 | standard | R1 | done | t0126-u12-rec-room-2026-09-07 |
+| T-0127 | standard | R1 | done | t0127-u13-home-2026-09-07 |
