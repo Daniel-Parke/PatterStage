@@ -1,4 +1,19 @@
-@import "tailwindcss";
+/* Tailwind scans SOURCE, and by default it scans the whole project: org/,
+   docs/, tests/, every task record and every markdown file. This repository
+   documents its own class names, so that default made prose load-bearing.
+   Measured at T-0120: 94 candidate-shaped strings, 46 of them naming a colour,
+   were in the shipped stylesheet only because a file outside src/ mentioned
+   them - several of them classes the codemods had just removed from the
+   product. One was worse than dead weight: /`s Spend pill had a border because
+   `border-yellow-400/20` appears once in the repository, in the reconnaissance
+   document REPORTING that the border does not work.
+
+   The app is entirely in src/. The generated help fragments carry no class
+   attribute at all - they are styled by the .ps-help-prose descendant rules
+   below - so nothing outside src/ needs scanning. Widen this only for a
+   directory that actually renders markup. */
+@import "tailwindcss" source(none);
+@source "../../src";
 
 @theme {
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;

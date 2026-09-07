@@ -7,7 +7,7 @@
 import Link from "next/link";
 
 import type { AccentColor } from "@/types/console";
-import { iconColorMap } from "@/lib/theme";
+import { iconColorMap, pillBorderHoverMap, pillBorderMap } from "@/lib/theme";
 import Sparkline from "@/components/viz/Sparkline";
 import type { NeonColor } from "@/components/viz/colors";
 
@@ -44,8 +44,11 @@ export function StatPill({
   trendColor?: NeonColor;
 }) {
   const textColor = iconColorMap[color];
-  // Derive border colour from the text colour pattern: replace "text-" with "border-"
-  const borderClass = textColor.replace(/^text-/, "border-") + "/20";
+  // From a map, not from the text colour. Deriving it with
+  // `.replace(/^text-/, "border-")` produced a class Tailwind never sees, so
+  // three accents drew a solid white ring and all eight hovers were dead
+  // (T-0120).
+  const borderClass = pillBorderMap[color];
   const base = `rounded-lg border ${borderClass} bg-ps-surface-panel px-4 py-3 flex items-center gap-3 min-w-0`;
 
   const inner = (
@@ -78,7 +81,7 @@ export function StatPill({
   );
 
   if (href) {
-    const hoverBorder = textColor.replace(/^text-/, "hover:border-") + "/45";
+    const hoverBorder = pillBorderHoverMap[color];
     return (
       <Link href={href} className={`${base} ${hoverBorder} hover:bg-ps-surface-panel transition-colors`}>
         {inner}

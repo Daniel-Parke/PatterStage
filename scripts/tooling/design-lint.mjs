@@ -151,8 +151,19 @@ export const RULES = [
     // (`agent-card-${id}.json`) is not mistaken for a class. The second branch
     // catches an opacity modifier applied to an interpolated class, which fails
     // the same way: `${iconColorMap[c]}/60`.
+    // Four shapes, because there are four ways to build a class Tailwind
+    // cannot see, and the two added at T-0120 are the two that were live:
+    // StatPill edited a class with `.replace(/^text-/, "border-") + "/20"`,
+    // and ModelsSectionHeader concatenated `/60` onto an interpolated class by
+    // putting two interpolations next to each other. Both rendered only
+    // because the class name they assembled happened to be written down
+    // somewhere else Tailwind was also scanning - a document for one, a unit
+    // test for the other.
+    //
+    // The last branch is deliberately narrowed to a className: `${a}${b}` is
+    // how every URL and every message in this codebase is built.
     pattern:
-      /\b(?:text|bg|border|ring|shadow|from|via|to|fill|stroke|outline|decoration|accent|divide|placeholder)-\$\{|\$\{[^}]+\}\/\d+/,
+      /\b(?:text|bg|border|ring|shadow|from|via|to|fill|stroke|outline|decoration|accent|divide|placeholder)-\$\{|\$\{[^}]+\}\/\d+|\.replace\([^)]*["'/](?:text|bg|border|ring|shadow|from|via|to|fill|stroke|outline|decoration|accent|divide|placeholder)-|className=[^\n]*\$\{[^}]+\}\$\{[^}]+\}/,
   },
   {
     id: "no-raw-colour-in-tsx",

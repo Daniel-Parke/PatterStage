@@ -43,7 +43,7 @@
 
 import type { LucideIcon } from "lucide-react";
 import type { AccentColor } from "@/types/console";
-import { iconColorMap, sectionHeadingClasses } from "@/lib/theme";
+import { iconColorMap, iconMutedColorMap, sectionHeadingClasses } from "@/lib/theme";
 
 type ModelsSectionHeaderTone = "full" | "muted";
 
@@ -68,10 +68,14 @@ export default function ModelsSectionHeader({
   color,
   iconTone = "full",
 }: ModelsSectionHeaderProps) {
-  const opacityClass = iconTone === "muted" ? "/60" : "";
+  // A whole class from a map, not two interpolations touching: `${cls}${"/60"}`
+  // assembles `text-neon-purple/60` at runtime, and Tailwind, which scans
+  // source, generates no such rule. It worked only because a unit test wrote
+  // the class name down (T-0120).
+  const iconClass = iconTone === "muted" ? iconMutedColorMap[color] : iconColorMap[color];
   return (
     <h2 className={`${sectionHeadingClasses} flex items-center gap-2`}>
-      <Icon className={`w-4 h-4 ${iconColorMap[color]}${opacityClass}`} />
+      <Icon className={`w-4 h-4 ${iconClass}`} />
       {title}
     </h2>
   );

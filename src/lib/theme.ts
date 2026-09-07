@@ -17,7 +17,11 @@ import type { AccentColor } from "@/types/console";
  * (`--ps-shell-header-min-height` in globals.css).
  */
 export const shellHeaderBarClasses =
-  "border-b border-ps-edge-hairline bg-ps-surface-panel backdrop-blur-xl min-h-[var(--ps-shell-header-min-height)] flex items-center";
+  // No backdrop-blur. It was there because the bar used to be translucent
+  // (bg-dark-900/50); the panel rung is opaque, so the filter blurs nothing and
+  // costs a compositing layer on every scroll of every page — the same dead
+  // paint T-0118 took off the rail, left behind on its neighbour.
+  "border-b border-ps-edge-hairline bg-ps-surface-panel min-h-[var(--ps-shell-header-min-height)] flex items-center";
 
 // ═══════════════════════════════════════════════════════════════
 // The surface ladder and the measures — the code mirror of the tokens ruled at
@@ -138,6 +142,60 @@ const BORDER_HOVER: Record<AccentColor, ColorEntry> = {
 export const colorBorderMap: Record<AccentColor, ColorEntry> = makeMap(
   (c) => `${BORDER_BASE[c]} ${BORDER_HOVER[c]}`,
 );
+
+/**
+ * The stat pill's resting and hover boundary, written out for the same reason
+ * everything above it is (T-0120).
+ *
+ * StatPill used to derive these from the icon colour:
+ * `textColor.replace(/^text-/, "border-") + "/20"`. Tailwind scans source
+ * statically and cannot see a class assembled at runtime, so three of the eight
+ * accents had no border rule at all - the pill fell back to `currentColor` and
+ * drew a solid white ring - and every one of the eight had a dead hover. The
+ * three that DID work only worked because the class name happened to be written
+ * down in a document Tailwind was also scanning.
+ */
+const PILL_BORDER: Record<AccentColor, ColorEntry> = {
+  cyan: "border-neon-cyan/20",
+  purple: "border-neon-purple/20",
+  green: "border-neon-green/20",
+  pink: "border-neon-pink/20",
+  orange: "border-neon-orange/20",
+  red: "border-red-400/20",
+  blue: "border-blue-400/20",
+  yellow: "border-yellow-400/20",
+};
+
+const PILL_BORDER_HOVER: Record<AccentColor, ColorEntry> = {
+  cyan: "hover:border-neon-cyan/45",
+  purple: "hover:border-neon-purple/45",
+  green: "hover:border-neon-green/45",
+  pink: "hover:border-neon-pink/45",
+  orange: "hover:border-neon-orange/45",
+  red: "hover:border-red-400/45",
+  blue: "hover:border-blue-400/45",
+  yellow: "hover:border-yellow-400/45",
+};
+
+/**
+ * The same eight accents at 60%, for an icon that labels a section rather than
+ * signalling one. Written out for the reason above: ModelsSectionHeader built
+ * these by concatenating `/60` onto an interpolated class, and the rules
+ * existed only because a test file spelled two of them out.
+ */
+export const iconMutedColorMap: Record<AccentColor, ColorEntry> = {
+  cyan: "text-neon-cyan/60",
+  purple: "text-neon-purple/60",
+  green: "text-neon-green/60",
+  pink: "text-neon-pink/60",
+  orange: "text-neon-orange/60",
+  red: "text-red-400/60",
+  blue: "text-blue-400/60",
+  yellow: "text-yellow-400/60",
+};
+
+export const pillBorderMap: Record<AccentColor, ColorEntry> = PILL_BORDER;
+export const pillBorderHoverMap: Record<AccentColor, ColorEntry> = PILL_BORDER_HOVER;
 
 // ── Focus Ring Color (for inputs/selects) ─────────────────────
 export const focusColorMap: Record<AccentColor, ColorEntry> = {

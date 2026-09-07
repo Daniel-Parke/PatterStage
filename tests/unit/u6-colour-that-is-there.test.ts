@@ -139,10 +139,17 @@ describe("the accent maps are written out, one class per entry", () => {
    * theme.ts's own comment reads "The accent maps below are written out
    * LITERALLY, one class per entry."
    */
+  /**
+   * The POSITIVE, and the linter carries the negative. `not.toMatch(/\.replace\(/)`
+   * over a whole file is answered by the comment that explains why the replace
+   * went away — a comment naming a defect is not a use of it, and the scan
+   * above (which skips comments, because design-lint does) is what refuses the
+   * real thing.
+   */
   it("StatPill picks its border from a map rather than editing a string", () => {
     const source = read("src/components/dashboard/StatPill.tsx");
-    expect(source).not.toMatch(/\.replace\(/);
-    expect(source).toMatch(/pillBorderMap|colorBorderMap/);
+    expect(source).toMatch(/pillBorderMap\[color\]/);
+    expect(source).toMatch(/pillBorderHoverMap\[color\]/);
   });
 
   it("and the map has an entry for every accent, resting and hover", () => {
@@ -154,6 +161,16 @@ describe("the accent maps are written out, one class per entry", () => {
 
   it("ModelsSectionHeader's muted icon is a class, not two interpolations", () => {
     const source = read("src/components/models/ModelsSectionHeader.tsx");
-    expect(source).not.toMatch(/\$\{[^}]+\}\$\{[^}]+\}/);
+    expect(source).toMatch(/iconMutedColorMap\[color\]/);
+  });
+
+  it("and the muted map has an entry for every accent too", () => {
+    const theme = read("src/lib/theme.ts");
+    const at = theme.indexOf("iconMutedColorMap");
+    expect(at).toBeGreaterThan(-1);
+    const block = theme.slice(at, at + 500);
+    for (const accent of ["cyan", "purple", "green", "pink", "orange", "red", "blue", "yellow"]) {
+      expect(block).toMatch(new RegExp(`${accent}:\\s*"text-[\\w-]+/60"`));
+    }
   });
 });
