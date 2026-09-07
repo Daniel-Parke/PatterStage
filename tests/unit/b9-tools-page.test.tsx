@@ -24,7 +24,7 @@ jest.mock("next/navigation", () => ({
 jest.mock("@/components/layout/AppPageShell", () => require("../helpers/mocks").appPageShellMock());
 jest.mock("lucide-react", () => require("../helpers/mocks").lucideMock());
 jest.mock("@/hooks/useProfiles", () => ({
-  useProfiles: () => ({ data: [{ id: "default", name: "Bob", description: "" }], isLoading: false, error: null }),
+  useProfiles: () => ({ refetch: async () => undefined, data: [{ id: "default", name: "Bob", description: "" }], isLoading: false, error: null }),
 }));
 // The one picker for the Agent group (U11); a plain select stands in for it.
 jest.mock("@/components/ui/ProfilePicker", () => ({

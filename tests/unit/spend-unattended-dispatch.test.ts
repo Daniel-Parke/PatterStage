@@ -175,9 +175,10 @@ describe("clause 5: attended dispatch cannot reach the gate", () => {
     // caller routes through.
     "src/lib/orchestration/dispatch.ts",
     "src/lib/missions/mission-dispatch.ts",
-    // The routes behind the buttons: dispatch, run-now, run-this-schedule-now,
-    // approve-this-Composer-gate, start-a-Deep-Research-run.
-    "src/app/api/missions/[id]/dispatch/route.ts",
+    // The routes behind the buttons: run-now, run-this-schedule-now,
+    // approve-this-Composer-gate, start-a-Deep-Research-run. (The per-mission
+    // dispatch route had no caller and went in T-0129; the action envelope on
+    // POST /api/missions is what the button posts, through dispatch.ts above.)
     "src/app/api/missions/[id]/run/route.ts",
     "src/app/api/schedules/[id]/run/route.ts",
     "src/app/api/composer/runs/[id]/nodes/[nodeId]/approve/route.ts",

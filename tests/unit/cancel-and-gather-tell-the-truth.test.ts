@@ -450,7 +450,7 @@ describe("a degraded gather is recorded, and the report says so", () => {
     // it displaced, and matches the highest file on disk. This asserts the only
     // thing that is this migration's business — its own number.
     const { RESEARCH_GATHER_SCHEMA_VERSION } = await import(
-      "@/lib/db/apply-research-gather-migration"
+      "@/lib/db/sql-migrations"
     );
     expect(RESEARCH_GATHER_SCHEMA_VERSION).toBe(36);
   });

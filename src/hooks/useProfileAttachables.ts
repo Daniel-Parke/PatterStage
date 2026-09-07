@@ -12,9 +12,7 @@ import type { Skill } from "@/types/console";
 /** Enabled skills available to attach for a profile (defaults to "default"). */
 export function useProfileSkills(profileId?: string) {
   const slug = profileId ?? "default";
-  return useApiResource<Skill[]>(
-    ["profile-skills", slug],
-    `/api/skills?profile=${encodeURIComponent(slug)}`,
+  return useApiResource<Skill[]>(`/api/skills?profile=${encodeURIComponent(slug)}`,
     {
       select: (payload) => {
         const raw = (payload as { skills?: Skill[] } | undefined)?.skills;
@@ -28,9 +26,7 @@ export function useProfileSkills(profileId?: string) {
 /** Recommended platform toolset ids (unioned across platforms) for a profile. */
 export function useProfileToolsets(profileId?: string) {
   const slug = profileId ?? "default";
-  return useApiResource<string[]>(
-    ["profile-toolsets", slug],
-    `/api/agent/profiles/${encodeURIComponent(slug)}/toolsets`,
+  return useApiResource<string[]>(`/api/agent/profiles/${encodeURIComponent(slug)}/toolsets`,
     {
       // The route already unions across platforms server-side and returns it as
       // `unifiedEnabled` (api/agent/profiles/[id]/toolsets/route.ts:42). Reading

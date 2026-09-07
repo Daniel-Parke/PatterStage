@@ -1,15 +1,15 @@
-// Unit tests for the 4 dashboard helpers extracted in session 174:
+// Unit tests for the dashboard helpers extracted in session 174 (the fourth,
+// loadInitialDashboardData, went in T-0129: every dashboard read is a
+// useApiResource keyed on its endpoint now, and there is no second loader):
 //   - dedupErrors (src/lib/dashboard/dashboard-error-dedup.ts)
 //   - resolveModelReadiness (src/lib/models/model-readiness.ts), which took
 //     over from formatModelSubtitle when the product's three answers to "do I
 //     have a model?" were collapsed into one. The subtitle is one of its three
 //     readers now, so the ladder it used to own is asserted there.
 //   - topNTemplates (src/lib/dashboard-top-templates.ts)
-//   - loadInitialDashboardData (src/lib/dashboard-initial-load.ts)
 //
 // The dashboard (src/app/page.tsx) is not rendered here; we exercise
-// the helpers directly with mocked fetch (for loadInitialDashboardData)
-// or pure inputs (for the 3 pure helpers). The byte-equivalence
+// the helpers directly with pure inputs. The byte-equivalence
 // expectations (the inline code in page.tsx produced the same shape)
 // are documented inline next to each test.
 
@@ -19,17 +19,7 @@ import {
 } from "@/lib/dashboard/dashboard-error-dedup";
 import { resolveModelReadiness } from "@/lib/models/model-readiness";
 import { topNTemplates } from "@/lib/dashboard/dashboard-top-templates";
-// Note: `loadInitialDashboardData` is imported via the test name
-// only; the test bodies use `require()` inside `jest.isolateModules`
-// to re-require the helper after `jest.doMock` registers the mock.
-// The static import is intentionally unused (eslint allows `_`-prefix
-// names; we keep the symbol in scope so test names reference it).
-import {
-  loadInitialDashboardData as _loadInitialDashboardData,
-  type DashboardTemplate,
-  type ModelsDefaults,
-} from "@/lib/dashboard/dashboard-initial-load";
-import { safeApiCallData } from "@/lib/api-fetch";
+import type { DashboardTemplate } from "@/hooks/useDashboard";
 
 // ── dedupErrors ───────────────────────────────────────────────
 
@@ -246,93 +236,5 @@ describe("topNTemplates", () => {
     expect(result[0].name).toBeUndefined();
     // Every entry from index 1 onwards must have a non-empty name.
     expect(result.slice(1).every((t) => (t.name ?? "") !== "")).toBe(true);
-  });
-});
-
-// ── loadInitialDashboardData ──────────────────────────────────
-
-describe("loadInitialDashboardData", () => {
-  beforeEach(() => {
-    jest.resetAllMocks();
-  });
-
-  it("returns null slots for every endpoint when all 8 fetches return null", async () => {
-    jest.spyOn(safeApiCallData, "call" as never); // not used; safeApiCallData is async
-    // Mock the safeApiCallData module to return null for all calls.
-    jest.doMock("@/lib/api-fetch", () => ({
-      safeApiCallData: jest.fn().mockResolvedValue(null),
-    }));
-    // Re-require the helper after the mock is registered.
-    jest.isolateModules(() => {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { loadInitialDashboardData: load } = require("@/lib/dashboard/dashboard-initial-load");
-      // The mocked fetch returns null for every endpoint, so the
-      // helper's `?? null` / `?? []` defensive defaults fire.
-      return load({}).then((result: unknown) => {
-        const r = result as { dashboardData: Record<string, unknown>; modelsDefaults: unknown };
-        expect(r.dashboardData).toEqual({
-          status: null,
-          config: null,
-          templates: [],
-          categories: [],
-          monitor: null,
-          processes: [],
-          missions: [],
-        });
-        expect(r.modelsDefaults).toBeNull();
-      });
-    });
-  });
-
-  it("unwraps the inner payload for endpoints with a `{ data: T }` envelope", async () => {
-    const fixtures = {
-      status: { gatewayConnected: true },
-      config: { model: { default: "gpt-4o" } },
-      templates: { templates: [{ id: "t1", name: "T1" }] },
-      categories: { categories: [{ id: "c1", name: "C1" }] },
-      monitor: { cron: { jobs: [] }, sessions: { recent: [] } },
-      processes: { processes: [{ id: "p1" }] },
-      missions: { missions: [{ id: "m1" }] },
-      defaults: { defaults: { agent: "claude-3-5-sonnet" } },
-    };
-    jest.doMock("@/lib/api-fetch", () => ({
-      safeApiCallData: jest.fn().mockImplementation((path: string) => {
-        if (path.endsWith("/api/status")) return Promise.resolve(fixtures.status);
-        if (path.endsWith("/api/config")) return Promise.resolve(fixtures.config);
-        if (path.endsWith("/api/templates")) return Promise.resolve(fixtures.templates);
-        if (path.endsWith("/api/mission-categories")) return Promise.resolve(fixtures.categories);
-        if (path.endsWith("/api/monitor")) return Promise.resolve(fixtures.monitor);
-        if (path.endsWith("/api/agents")) return Promise.resolve(fixtures.processes);
-        if (path.endsWith("/api/missions")) return Promise.resolve(fixtures.missions);
-        if (path.endsWith("/api/models/defaults")) return Promise.resolve(fixtures.defaults);
-        return Promise.resolve(null);
-      }),
-    }));
-    jest.isolateModules(() => {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { loadInitialDashboardData: load } = require("@/lib/dashboard/dashboard-initial-load");
-      return load({}).then((result: unknown) => {
-        const r = result as {
-          dashboardData: {
-            status: unknown;
-            config: unknown;
-            templates: unknown[];
-            categories: unknown[];
-            monitor: unknown;
-            processes: unknown[];
-            missions: unknown[];
-          };
-          modelsDefaults: { defaults: ModelsDefaults | null } | null;
-        };
-        expect(r.dashboardData.status).toEqual(fixtures.status);
-        expect(r.dashboardData.config).toEqual(fixtures.config);
-        expect(r.dashboardData.templates).toEqual(fixtures.templates.templates);
-        expect(r.dashboardData.categories).toEqual(fixtures.categories.categories);
-        expect(r.dashboardData.monitor).toEqual(fixtures.monitor);
-        expect(r.dashboardData.processes).toEqual(fixtures.processes.processes);
-        expect(r.dashboardData.missions).toEqual(fixtures.missions.missions);
-        expect(r.modelsDefaults?.defaults?.agent).toBe("claude-3-5-sonnet");
-      });
-    });
   });
 });

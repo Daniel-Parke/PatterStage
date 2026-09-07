@@ -36,7 +36,7 @@ function wrapper({ children }: { children: ReactNode }) {
 const run = () =>
   renderHook(
     () =>
-      useApiResource<{ availableLogs: { name: string }[] }>(["k"], "/api/logs", {
+      useApiResource<{ availableLogs: { name: string }[] }>("/api/logs", {
         select: (p) => p as { availableLogs: { name: string }[] } | undefined,
       }),
     { wrapper },

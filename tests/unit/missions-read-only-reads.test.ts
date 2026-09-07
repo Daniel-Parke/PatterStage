@@ -124,14 +124,6 @@ describe("PS_READ_ONLY=true", () => {
     expect(res.status).toBe(503);
   });
 
-  it("still refuses POST /api/missions/[id]/dispatch", async () => {
-    const route = require("@/app/api/missions/[id]/dispatch/route") as {
-      POST: (req: unknown, ctx: { params: Promise<{ id: string }> }) => Promise<Res>;
-    };
-    const res = await route.POST({}, { params: Promise.resolve({ id: "m1" }) });
-    expect(res.status).toBe(503);
-  });
-
   it("still refuses POST /api/missions/[id]/cancel", async () => {
     const route = require("@/app/api/missions/[id]/cancel/route") as {
       POST: (req: unknown, ctx: { params: Promise<{ id: string }> }) => Promise<Res>;

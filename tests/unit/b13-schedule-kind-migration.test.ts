@@ -50,7 +50,7 @@ interface ApplierModule {
 function applier(): ApplierModule {
   let mod: unknown;
   try {
-    mod = require("@/lib/db/apply-schedule-kind-migration");
+    mod = require("@/lib/db/sql-migrations");
   } catch {
     throw new Error("src/lib/db/apply-schedule-kind-migration.ts does not exist yet (contract 2.2)");
   }

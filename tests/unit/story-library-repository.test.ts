@@ -10,7 +10,7 @@
 
 import { join } from "path";
 import { execBaselineSchema } from "../helpers/baseline-db";
-import { applyRecroomLibraryMigration } from "@/lib/db/apply-recroom-library-migration";
+import { applyRecroomLibraryMigration } from "@/lib/db/sql-migrations";
 
 let testDb: import("better-sqlite3").Database | null = null;
 

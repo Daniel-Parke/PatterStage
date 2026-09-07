@@ -11,7 +11,7 @@
 import { join } from "path";
 
 import { execBaselineSchema } from "../helpers/baseline-db";
-import { applyAnalyticsEventsMigration } from "@/lib/db/apply-analytics-events-migration";
+import { applyAnalyticsEventsMigration } from "@/lib/db/sql-migrations";
 import { applyComposerMigration } from "@/lib/db/apply-composer-migration";
 import { applyMemoryProvidersMigration } from "@/lib/db/apply-memory-providers-migration";
 import { ANALYTICS_EVENT_TYPES, COMPLETIONIST_EVENT_TYPES } from "@/lib/analytics/event-types";

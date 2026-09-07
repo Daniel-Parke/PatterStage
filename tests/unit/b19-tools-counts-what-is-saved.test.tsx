@@ -27,7 +27,7 @@ jest.mock("lucide-react", () => require("../helpers/mocks").lucideMock());
 // restated the subtitle, so the subtitle is the one count now, and it is read
 // off the DOM below rather than captured from props.
 jest.mock("@/hooks/useProfiles", () => ({
-  useProfiles: () => ({ data: [{ id: "default", name: "Bob", description: "" }], isLoading: false, error: null }),
+  useProfiles: () => ({ refetch: async () => undefined, data: [{ id: "default", name: "Bob", description: "" }], isLoading: false, error: null }),
 }));
 jest.mock("@/components/ui/ProfilePicker", () => ({
   __esModule: true,

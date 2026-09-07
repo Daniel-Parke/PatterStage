@@ -102,7 +102,7 @@ describe("useApiResource: selectMeta sees the whole body", () => {
       selectMeta: (b) => ({ configError: (b as { configError?: string } | null)?.configError ?? null }),
     };
 
-    const { result } = renderHook(() => useApiResource(["b6-meta"], "/api/config", opts), {
+    const { result } = renderHook(() => useApiResource("/api/config", opts), {
       wrapper: makeWrapper(),
     });
 
@@ -120,7 +120,7 @@ describe("useApiResource: selectMeta sees the whole body", () => {
       selectMeta: (b) => ({ configError: (b as { configError?: string } | null)?.configError ?? null }),
     };
 
-    const { result } = renderHook(() => useApiResource(["b6-meta-fallback"], "/api/list", opts), {
+    const { result } = renderHook(() => useApiResource("/api/list", opts), {
       wrapper: makeWrapper(),
     });
 
@@ -135,7 +135,7 @@ describe("useApiResource: selectMeta sees the whole body", () => {
       select: (p) => (p as { stats?: { total: number } } | null)?.stats,
     };
 
-    const { result } = renderHook(() => useApiResource(["b6-no-meta"], "/api/stats", opts), {
+    const { result } = renderHook(() => useApiResource("/api/stats", opts), {
       wrapper: makeWrapper(),
     });
 

@@ -10,7 +10,8 @@
 
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiQueryKey, useApiResource } from "@/hooks/useApiResource";
 import { safeApiCall } from "@/lib/api-fetch";
 
 /** How a run ended. "not-started" never reached the script at all. */
@@ -56,19 +57,19 @@ interface ScriptsPayload {
  *  that already completed, and an empty reason renders nothing. */
 const SCHEDULER_UNKNOWN: SchedulerAvailability = { available: true, reason: "" };
 
-async function fetchScripts(): Promise<ScriptsPayload> {
-  const res = await safeApiCall<{ data?: ScriptsPayload }>("/api/scripts");
-  if (!res.ok) throw new Error(res.error ?? "Failed to load scripts");
-  return {
-    scripts: res.data?.data?.scripts ?? [],
-    scheduler: res.data?.data?.scheduler ?? SCHEDULER_UNKNOWN,
-  };
-}
 
 export function useScripts() {
   const qc = useQueryClient();
-  const query = useQuery({ queryKey: ["scripts"], queryFn: fetchScripts, refetchInterval: 30_000 });
-  const invalidate = () => qc.invalidateQueries({ queryKey: ["scripts"] });
+  const query = useApiResource<ScriptsPayload>("/api/scripts", {
+    select: (p) => {
+      const d = p as Partial<ScriptsPayload> | null;
+      if (!d) return undefined;
+      return { scripts: d.scripts ?? [], scheduler: d.scheduler ?? SCHEDULER_UNKNOWN };
+    },
+    errorMessage: "Failed to load scripts",
+    refetchInterval: 30_000,
+  });
+  const invalidate = () => qc.invalidateQueries({ queryKey: apiQueryKey("/api/scripts") });
 
   const run = useMutation({
     // A run that could not be started answers non-2xx with the reason, so the
@@ -85,7 +86,7 @@ export function useScripts() {
     scripts: query.data?.scripts ?? [],
     scheduler: query.data?.scheduler ?? SCHEDULER_UNKNOWN,
     isLoading: query.isLoading,
-    error: query.isError ? (query.error as Error).message : null,
+    error: query.error,
     refetch: () => query.refetch(),
     run,
   };

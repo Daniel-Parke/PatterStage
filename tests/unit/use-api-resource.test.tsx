@@ -32,7 +32,7 @@ describe("useApiResource", () => {
 
     const { result } = renderHook(
       () =>
-        useApiResource<Stats>(["stats"], "/api/stats", {
+        useApiResource<Stats>("/api/stats", {
           select: (p) => (p as { stats?: Stats } | null)?.stats,
         }),
       { wrapper: makeWrapper() },
@@ -50,7 +50,7 @@ describe("useApiResource", () => {
 
     const { result } = renderHook(
       () =>
-        useApiResource<Stats>(["stats-err"], "/api/stats", {
+        useApiResource<Stats>("/api/stats", {
           select: (p) => (p as { stats?: Stats } | null)?.stats,
         }),
       { wrapper: makeWrapper() },
@@ -65,7 +65,7 @@ describe("useApiResource", () => {
 
     const { result } = renderHook(
       () =>
-        useApiResource<Stats[]>(["list"], "/api/list", {
+        useApiResource<Stats[]>("/api/list", {
           select: (p) => (p as { items?: Stats[] } | null)?.items,
           fallback: [],
         }),
@@ -82,7 +82,7 @@ describe("useApiResource", () => {
 
     const { result } = renderHook(
       () =>
-        useApiResource<Stats>(["missing"], "/api/stats", {
+        useApiResource<Stats>("/api/stats", {
           select: (p) => (p as { stats?: Stats } | null)?.stats,
           errorMessage: "No stats",
         }),

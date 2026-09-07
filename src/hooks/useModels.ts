@@ -38,7 +38,7 @@ export interface ApiDefaults {
 }
 
 export function useModels() {
-  return useApiResource<ApiModel[]>(["models"], "/api/models", {
+  return useApiResource<ApiModel[]>("/api/models", {
     select: (payload) => (payload as { models?: ApiModel[] } | undefined)?.models,
     fallback: [],
     errorMessage: "Failed to load models",
@@ -46,7 +46,7 @@ export function useModels() {
 }
 
 export function useModelDefaults() {
-  return useApiResource<ApiDefaults | null>(["model-defaults"], "/api/models/defaults", {
+  return useApiResource<ApiDefaults | null>("/api/models/defaults", {
     select: (payload) => (payload as { defaults?: ApiDefaults } | undefined)?.defaults ?? null,
     fallback: null,
   });

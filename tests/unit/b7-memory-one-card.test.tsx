@@ -24,7 +24,9 @@
 // PageHeader and next/navigation are stood in for as b6-restore-page does.
 // ═══════════════════════════════════════════════════════════════
 
-import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
+// Reads go through useApiResource since T-0129, so the component wants a QueryClient.
+import { renderWithQuery } from "../helpers/render-with-query";
 
 jest.mock("next/navigation", () => ({
   usePathname: () => "/agent/memory",
@@ -130,7 +132,7 @@ beforeEach(() => {
 describe("Test connection believes a healthy answer", () => {
   it("reads health through both envelope levels and reports Connected", async () => {
     answerWith(configPayload(HINDSIGHT_ACTIVE), healthPayload(true, "ok"));
-    render(<MemoryProviderSettings />);
+    renderWithQuery(<MemoryProviderSettings />);
     const probe = await loadedButton(/Test connection/i);
 
     await act(async () => {
@@ -146,7 +148,7 @@ describe("Test connection believes a healthy answer", () => {
       ok: true,
       data: { data: { health: { available: false, error: "connection refused" } } },
     });
-    render(<MemoryProviderSettings />);
+    renderWithQuery(<MemoryProviderSettings />);
     const probe = await loadedButton(/Test connection/i);
 
     await act(async () => {
@@ -158,7 +160,7 @@ describe("Test connection believes a healthy answer", () => {
 
   it("GREEN CONTROL: a refused call still falls back to the route's error", async () => {
     answerWith(configPayload(HINDSIGHT_ACTIVE), { ok: false, error: "the database is locked" });
-    render(<MemoryProviderSettings />);
+    renderWithQuery(<MemoryProviderSettings />);
     const probe = await loadedButton(/Test connection/i);
 
     await act(async () => {
@@ -176,7 +178,7 @@ describe("Test connection believes a healthy answer", () => {
 describe("Save edits the active provider, it does not replace it", () => {
   it("a holographic install saves as holographic, with its own label", async () => {
     answerWith(configPayload(HOLOGRAPHIC_ACTIVE), { ok: true, data: { data: {} } }, healthPayload(true));
-    render(<MemoryProviderSettings />);
+    renderWithQuery(<MemoryProviderSettings />);
     const save = await loadedSaveButton();
 
     await act(async () => {
@@ -192,7 +194,7 @@ describe("Save edits the active provider, it does not replace it", () => {
     // makeActive rewrites every other row's is_active. Sending it for a row
     // that is already active is a write nobody asked for.
     answerWith(configPayload(HOLOGRAPHIC_ACTIVE), { ok: true, data: { data: {} } }, healthPayload(true));
-    render(<MemoryProviderSettings />);
+    renderWithQuery(<MemoryProviderSettings />);
     const save = await loadedSaveButton();
 
     await act(async () => {
@@ -209,7 +211,7 @@ describe("Save edits the active provider, it does not replace it", () => {
       { ok: true, data: { data: {} } },
       healthPayload(true),
     );
-    render(<MemoryProviderSettings />);
+    renderWithQuery(<MemoryProviderSettings />);
     const save = await loadedSaveButton();
 
     await act(async () => {
@@ -227,7 +229,7 @@ describe("Save edits the active provider, it does not replace it", () => {
     // a smaller window. Here the read never lands.
     mockSafeApiCall.mockReset();
     mockSafeApiCall.mockImplementation(() => new Promise(() => {}));
-    render(<MemoryProviderSettings />);
+    renderWithQuery(<MemoryProviderSettings />);
 
     expect(await screen.findByRole("button", { name: /^Save$/ })).toBeDisabled();
     expect(screen.getByRole("button", { name: /Test connection/i })).toBeDisabled();
@@ -235,7 +237,7 @@ describe("Save edits the active provider, it does not replace it", () => {
 
   it("the header names the active provider rather than a hardcoded one", async () => {
     answerWith(configPayload(HOLOGRAPHIC_ACTIVE));
-    render(<MemoryProviderSettings />);
+    renderWithQuery(<MemoryProviderSettings />);
 
     expect(await screen.findByText("Holographic")).toBeInTheDocument();
     expect(screen.queryByText("Hindsight")).toBeNull();
@@ -252,7 +254,7 @@ describe("a first visit with nothing listening says it once", () => {
       configPayload([{ type: "hindsight", label: "Hindsight", isActive: true, confirmed: false }]),
     );
 
-    render(<MemoryPage />);
+    renderWithQuery(<MemoryPage />);
 
     expect(await screen.findByRole("heading", { name: "Set up memory" })).toBeInTheDocument();
     const message = await screen.findAllByText(/No memory provider is answering/i);
@@ -264,7 +266,7 @@ describe("a first visit with nothing listening says it once", () => {
       configPayload([{ type: "hindsight", label: "Hindsight", isActive: true, confirmed: false }]),
     );
 
-    render(<MemoryPage />);
+    renderWithQuery(<MemoryPage />);
 
     await screen.findByRole("heading", { name: "Set up memory" });
     // The guess warning means "something answered and it may not be yours". It
@@ -277,7 +279,7 @@ describe("a first visit with nothing listening says it once", () => {
       configPayload([{ type: "hindsight", label: "Hindsight", isActive: true, confirmed: false }]),
     );
 
-    render(<MemoryPage />);
+    renderWithQuery(<MemoryPage />);
 
     expect(await screen.findByText(/Memory is not connected/i)).toBeInTheDocument();
     expect(screen.queryByText(/No memories yet/i)).toBeNull();
@@ -288,7 +290,7 @@ describe("a first visit with nothing listening says it once", () => {
       configPayload([{ type: "hindsight", label: "Hindsight", isActive: true, confirmed: false }]),
     );
 
-    render(<MemoryPage />);
+    renderWithQuery(<MemoryPage />);
 
     const heading = await screen.findByRole("heading", { name: "Set up memory" });
     const card = heading.closest("div[class*='rounded']") as HTMLElement;
@@ -305,7 +307,7 @@ describe("a store that answered, on a row nobody confirmed", () => {
     );
     storeIsUp();
 
-    render(<MemoryPage />);
+    renderWithQuery(<MemoryPage />);
 
     // The banner is what settles last, so it is what the wait is for.
     const banner = await screen.findByRole("status");

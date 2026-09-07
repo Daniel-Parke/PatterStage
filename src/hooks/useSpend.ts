@@ -19,7 +19,7 @@ import type { SpendSummary } from "@/lib/spend/spend-summary";
 
 export function useSpend() {
   const [saving, setSaving] = useState(false);
-  const r = useApiResource<SpendSummary>(["spend"], "/api/spend", {
+  const r = useApiResource<SpendSummary>("/api/spend", {
     select: (p) => (p as { spend?: SpendSummary } | null)?.spend,
     errorMessage: "Failed to load provider spend",
     refetchInterval: 30_000,

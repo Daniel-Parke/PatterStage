@@ -466,15 +466,34 @@ export const RULES = [
   },
   {
     id: "no-raw-fetch-in-component",
-    law: "A component reads the API through useApiResource, which is cached and deduped. Sixteen files call safeApiCall inside a useEffect instead, and the dashboard therefore issues 23 requests on load with six endpoints fetched twice.",
+    law: "A component reads the API through useApiResource, which is cached, deduped, and keyed on the endpoint so two readers are one request. A read inside a useEffect (safeApiCall, safeApiCallData or apiFetch with no method, so a GET) is the pattern that fetched on every mount and poll with no cache in front of it; the dashboard issued 22 requests on load that way, four endpoints twice (T-0129). A read in a click handler is on demand and is not this.",
     files: (f) =>
       (f.startsWith("src/components/") || f.startsWith("src/app/") || f.startsWith("src/modules/")) &&
+      !f.startsWith("src/app/api/") &&
       f.endsWith(".tsx"),
     fileTest: (lines) => {
-      const usesEffect = lines.some((l) => /\buseEffect\s*\(/.test(l));
-      if (!usesEffect) return null;
-      const at = lines.findIndex((l) => /\bsafeApiCall\s*[(<]/.test(l));
-      return at >= 0 ? at : null;
+      const text = lines.join("\n");
+      const re = /\buseEffect\s*\(/g;
+      let m;
+      while ((m = re.exec(text)) !== null) {
+        let depth = 0;
+        let end = -1;
+        for (let i = m.index + m[0].length - 1; i < text.length; i++) {
+          if (text[i] === "(") depth += 1;
+          else if (text[i] === ")" && --depth === 0) {
+            end = i;
+            break;
+          }
+        }
+        if (end === -1) continue;
+        const body = text.slice(m.index, end);
+        const calls = body.match(/\b(safeApiCall|safeApiCallData|apiFetch)\s*[<(][^\n]*\n(?:[^\n]*\n){0,7}/g) ?? [];
+        for (const call of calls) {
+          if (/\bmethod\s*:/.test(call)) continue;
+          return text.slice(0, text.indexOf(call)).split("\n").length - 1;
+        }
+      }
+      return null;
     },
   },
 ];

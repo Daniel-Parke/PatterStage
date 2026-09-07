@@ -18,7 +18,9 @@
  * once" is now an assertion rather than a structural accident.
  */
 import "@testing-library/jest-dom";
-import { render, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
+// Reads go through useApiResource since T-0129, so the page wants a QueryClient.
+import { renderWithQuery } from "../helpers/render-with-query";
 
 jest.mock("next/navigation", () => ({
   usePathname: () => "/agent/memory",
@@ -72,7 +74,7 @@ function mockUnreachableProvider() {
 describe("the Memory page with no memory provider running", () => {
   it("says nothing is answering instead of implying an empty store", async () => {
     mockUnreachableProvider();
-    render(<MemoryPage />);
+    renderWithQuery(<MemoryPage />);
 
     await waitFor(() => {
       expect(screen.getByText(/No memory provider is answering/i)).toBeInTheDocument();
@@ -81,7 +83,7 @@ describe("the Memory page with no memory provider running", () => {
 
   it("says it once, on the card that carries the endpoint", async () => {
     mockUnreachableProvider();
-    render(<MemoryPage />);
+    renderWithQuery(<MemoryPage />);
 
     const said = await screen.findAllByText(/No memory provider is answering/i);
     expect(said).toHaveLength(1);
@@ -90,7 +92,7 @@ describe("the Memory page with no memory provider running", () => {
 
   it("never renders the 'Hindsight undefined' string on that banner", async () => {
     mockUnreachableProvider();
-    const { container } = render(<MemoryPage />);
+    const { container } = renderWithQuery(<MemoryPage />);
 
     await waitFor(() => {
       expect(screen.getByText(/No memory provider is answering/i)).toBeInTheDocument();

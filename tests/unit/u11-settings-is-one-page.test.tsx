@@ -32,7 +32,7 @@ jest.mock("lucide-react", () => require("../helpers/mocks").lucideMock());
 jest.mock("@/components/layout/AppPageShell", () => require("../helpers/mocks").appPageShellMock());
 jest.mock("@/hooks/useProfiles", () => ({
   useProfiles: () => ({
-    data: [{ id: "default", name: "Bob (local default)", description: "" }],
+    refetch: async () => undefined, data: [{ id: "default", name: "Bob (local default)", description: "" }],
     isLoading: false,
     error: null,
   }),

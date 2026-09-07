@@ -7,7 +7,7 @@
 
 import { join } from "path";
 import type DatabaseNs from "better-sqlite3";
-import { applyChatMigration, CHAT_SCHEMA_VERSION } from "@/lib/db/apply-chat-migration";
+import { applyChatMigration, CHAT_SCHEMA_VERSION } from "@/lib/db/sql-migrations";
 import { getSchemaVersion, setSchemaVersion } from "@/lib/db-schema";
 
 type RealDb = DatabaseNs.Database;

@@ -39,7 +39,7 @@ jest.mock("lucide-react", () => require("../helpers/mocks").lucideMock());
 // the profile's name through useProfiles.
 jest.mock("@/hooks/useProfiles", () => ({
   useProfiles: () => ({
-    data: [
+    refetch: async () => undefined, data: [
       { id: "default", name: "Bob", description: "" },
       { id: "qa", name: "QA Engineer", description: "" },
     ],

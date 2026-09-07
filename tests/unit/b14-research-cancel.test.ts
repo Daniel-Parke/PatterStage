@@ -28,11 +28,9 @@ import { join } from "path";
 import type DatabaseNs from "better-sqlite3";
 
 import { execBaselineSchema } from "../helpers/baseline-db";
-import { applyDeepResearchMigration } from "@/lib/db/apply-deep-research-migration";
+import { applyDeepResearchMigration, applyResearchUsageMigration, applyResearchGatherMigration } from "@/lib/db/sql-migrations";
 import { applyResearchOptionsMigration } from "@/lib/db/apply-research-options-migration";
 import { applyResearchComposerLinkMigration } from "@/lib/db/apply-research-composer-link-migration";
-import { applyResearchUsageMigration } from "@/lib/db/apply-research-usage-migration";
-import { applyResearchGatherMigration } from "@/lib/db/apply-research-gather-migration";
 
 type RealDb = DatabaseNs.Database;
 let testDb: RealDb | null = null;

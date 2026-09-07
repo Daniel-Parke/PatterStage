@@ -8,7 +8,8 @@
 
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiQueryKey, useApiResource } from "@/hooks/useApiResource";
 import { safeApiCall } from "@/lib/api-fetch";
 import type { ScheduleListItem, CatchUpPolicy } from "@/lib/schedules-repository";
 
@@ -23,16 +24,15 @@ export interface CreateScheduleBody {
 
 // ScheduleListItem, not ScheduleRecord: the list read resolves the mission's
 // name so a row can say what it fires (T-0114).
-async function fetchSchedules(): Promise<ScheduleListItem[]> {
-  const res = await safeApiCall<{ data?: { schedules: ScheduleListItem[] } }>("/api/schedules");
-  if (!res.ok) throw new Error(res.error ?? "Failed to load schedules");
-  return res.data?.data?.schedules ?? [];
-}
 
 export function useSchedules() {
   const qc = useQueryClient();
-  const query = useQuery({ queryKey: ["schedules"], queryFn: fetchSchedules });
-  const invalidate = () => qc.invalidateQueries({ queryKey: ["schedules"] });
+  const query = useApiResource<ScheduleListItem[]>("/api/schedules", {
+    select: (p) => (p as { schedules?: ScheduleListItem[] } | null)?.schedules,
+    fallback: [],
+    errorMessage: "Failed to load schedules",
+  });
+  const invalidate = () => qc.invalidateQueries({ queryKey: apiQueryKey("/api/schedules") });
 
   // Every mutation throws on a failed call. Returning a failed safeApiCall
   // result as if it were a success put the failure somewhere a caller had to
@@ -78,7 +78,7 @@ export function useSchedules() {
   return {
     schedules: query.data ?? [],
     isLoading: query.isLoading,
-    error: query.isError ? (query.error as Error).message : null,
+    error: query.error,
     refetch: () => query.refetch(),
     create,
     remove,
@@ -95,13 +95,9 @@ export interface MissionOption {
 /** Mission list for the schedule create form. Degrades gracefully (the page
  *  falls back to a manual id input when the agent's mission list is unavailable). */
 export function useMissionOptions() {
-  return useQuery({
-    queryKey: ["mission-options"],
-    retry: 0,
-    queryFn: async (): Promise<MissionOption[]> => {
-      const res = await safeApiCall<{ data?: { missions: MissionOption[] } }>("/api/missions?limit=500");
-      if (!res.ok) throw new Error(res.error ?? "Failed to load missions");
-      return (res.data?.data?.missions ?? []).map((m) => ({ id: m.id, name: m.name }));
-    },
+  return useApiResource<MissionOption[]>("/api/missions?limit=500", {
+    select: (p) =>
+      ((p as { missions?: MissionOption[] } | null)?.missions ?? []).map((m) => ({ id: m.id, name: m.name })),
+    errorMessage: "Failed to load missions",
   });
 }

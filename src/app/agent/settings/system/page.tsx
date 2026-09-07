@@ -57,11 +57,11 @@ function Row({ label, value }: { label: string; value: string | number }) {
 }
 
 export default function SystemPage() {
-  const runtime = useApiResource<RuntimeStatus>(["runtime-status"], "/api/status/runtime", {
+  const runtime = useApiResource<RuntimeStatus>("/api/status/runtime", {
     select: (p) => p as RuntimeStatus | undefined,
     errorMessage: "Could not read how this install is configured",
   });
-  const backups = useApiResource<BackupList>(["database-backups"], "/api/backup", {
+  const backups = useApiResource<BackupList>("/api/backup", {
     select: (p) => p as BackupList | undefined,
     errorMessage: "Could not list the database backups",
   });

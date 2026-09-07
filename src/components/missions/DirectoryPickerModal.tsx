@@ -5,7 +5,7 @@ import { ChevronUp, File, Folder, FolderOpen } from "lucide-react";
 
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
-import { safeApiCall, setErrorFromCaught } from "@/lib/api-fetch";
+import { useApiResource } from "@/hooks/useApiResource";
 
 interface Entry {
   name: string;
@@ -19,50 +19,37 @@ interface DirectoryPickerModalProps {
   onSelect: (absolutePath: string) => void;
 }
 
+interface Listing {
+  path: string;
+  parent: string | null;
+  entries: Entry[];
+}
+
 export default function DirectoryPickerModal({
   open,
   onClose,
   onSelect,
 }: DirectoryPickerModalProps) {
-  const [path, setPath] = useState<string>("");
-  const [parent, setParent] = useState<string | null>(null);
-  const [entries, setEntries] = useState<Entry[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadPath = useCallback((next: string | null) => {
-    setLoading(true);
-    setError(null);
-    const q = next && next.length > 0 ? "?path=" + encodeURIComponent(next) : "";
-    // safeApiCall returns { ok, data: <body> } where <body> is the API
-    // envelope ({ data: { path, parent, entries } }). `safeApiCall<T>`
-    // does NOT unwrap — `data` is the full body — so the type is the
-    // envelope shape and the inner fields are read via
-    // `j.data?.data?.path` / `j.data?.data?.parent` /
-    // `j.data?.data?.entries` (two indirections).
-    safeApiCall<{ data?: { path: string; parent: string | null; entries: Entry[] } }>(
-      "/api/fs/list" + q,
-    )
-      .then((j) => {
-        if (!j.ok) {
-          setError(typeof j.error === "string" ? j.error : "Failed to list");
-          return;
-        }
-        const payload = j.data?.data;
-        if (payload) {
-          setPath(payload.path);
-          setParent(payload.parent);
-          setEntries(payload.entries ?? []);
-        }
-      })
-      .catch((err) => setErrorFromCaught(setError, err, "Network error"))
-      .finally(() => setLoading(false));
-  }, []);
+  // The folder asked for; null is the root the server chooses. The listing
+  // is a read keyed on it (T-0129), so going up and back down is a cache hit.
+  const [requested, setRequested] = useState<string | null>(null);
+  const q = requested && requested.length > 0 ? "?path=" + encodeURIComponent(requested) : "";
+  const listing = useApiResource<Listing>("/api/fs/list" + q, {
+    select: (p) => (p as Listing | null) ?? undefined,
+    errorMessage: "Failed to list",
+    enabled: open,
+    staleTime: 10_000,
+  });
+  const path = listing.data?.path ?? "";
+  const parent = listing.data?.parent ?? null;
+  const entries = listing.data?.entries ?? [];
+  const loading = listing.isLoading || listing.isFetching;
+  const error = listing.error;
+  const loadPath = useCallback((next: string | null) => setRequested(next), []);
 
   useEffect(() => {
-    if (!open) return;
-    void loadPath(null);
-  }, [open, loadPath]);
+    if (open) setRequested(null);
+  }, [open]);
 
   return (
     <Modal

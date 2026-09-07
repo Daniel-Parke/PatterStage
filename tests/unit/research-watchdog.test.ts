@@ -6,7 +6,7 @@
 
 import { join } from "path";
 import { execBaselineSchema } from "../helpers/baseline-db";
-import { applyDeepResearchMigration } from "@/lib/db/apply-deep-research-migration";
+import { applyDeepResearchMigration } from "@/lib/db/sql-migrations";
 import { applyResearchOptionsMigration } from "@/lib/db/apply-research-options-migration";
 import { applyResearchComposerLinkMigration } from "@/lib/db/apply-research-composer-link-migration";
 

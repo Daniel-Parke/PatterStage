@@ -5,7 +5,7 @@
 
 import { join } from "path";
 import { execBaselineSchema } from "../helpers/baseline-db";
-import { applyArtifactsMigration } from "@/lib/db/apply-artifacts-migration";
+import { applyArtifactsMigration } from "@/lib/db/sql-migrations";
 
 let testDb: import("better-sqlite3").Database | null = null;
 

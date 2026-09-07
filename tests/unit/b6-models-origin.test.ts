@@ -55,7 +55,7 @@ import {
   getSchemaVersion,
   setSchemaVersion,
 } from "@/lib/db-schema";
-import { OPERATOR_PREFS_SCHEMA_VERSION } from "@/lib/db/apply-operator-prefs-migration";
+import { OPERATOR_PREFS_SCHEMA_VERSION } from "@/lib/db/sql-migrations";
 import { COMPOSER_NODE_CANCELLED_SCHEMA_VERSION } from "@/lib/db/apply-composer-node-cancelled-migration";
 
 type RealDb = DatabaseNs.Database;
@@ -169,7 +169,7 @@ interface OriginApplier {
 /** The new applier module, read loosely so this file loads before it exists. */
 function loadOriginApplier(): OriginApplier | null {
   try {
-    return require("@/lib/db/apply-models-origin-migration") as OriginApplier;
+    return require("@/lib/db/sql-migrations") as OriginApplier;
   } catch {
     return null;
   }

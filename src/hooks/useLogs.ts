@@ -13,9 +13,7 @@ import { useApiResource } from "./useApiResource";
 import type { LogGetData } from "@/app/api/logs/route";
 
 export function useLogs(name: string, lines: number, opts: { autoRefresh: boolean }) {
-  return useApiResource<LogGetData>(
-    ["logs", name, lines],
-    `/api/logs?name=${encodeURIComponent(name)}&lines=${lines}`,
+  return useApiResource<LogGetData>(`/api/logs?name=${encodeURIComponent(name)}&lines=${lines}`,
     {
       select: (p) => p as LogGetData | undefined,
       errorMessage: "Failed to load log",

@@ -187,8 +187,10 @@ resulting CSS silently did nothing.
 - **Data viz:** hand-rolled SVG only, primitives in `@/components/viz`. Entrance via
   `.viz-draw`, gated on `prefers-reduced-motion`. Scale/path maths goes in
   `viz/geometry.ts` so it is unit-testable.
-- **Motion:** the reduced-motion-safe wrappers in `@/components/motion`. Keep motion
-  off dense, frequently-repolling surfaces.
+- **Motion:** CSS only. `Stagger`/`StaggerItem`/`Collapse` in `@/components/motion`
+  are classes over `ch-float-in`, not a library, and `prefers-reduced-motion`
+  halts everything by one rule. Keep motion off dense, frequently-repolling
+  surfaces.
 
 > **Being replaced.** The estate's design system is `@pattertech/ui` (Cherenkov
 > tokens + typed primitives), already used by PatterStudio's app. PatterStage

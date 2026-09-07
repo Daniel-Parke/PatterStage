@@ -36,7 +36,6 @@ Every `route.ts` under `src/app/api` has a row, here or in the Chat / Composer /
 | `/api/agent/root` | `GET`, `PUT` | The root agent's PatterStage-side label. `PUT { displayName?, description? }` renames it; a blank name is a **400**, and nothing is written into the agent's own files. `POST` is a **405**. |
 | `/api/agent/profiles` | `GET`, `POST` | Professional profiles (SQLite source of truth; each row includes `syncStatus` for drift). `POST { cloneFrom: "default" }` copies the root agent's SOUL.md, AGENTS.md, config.yaml and personality. |
 | `/api/agent/profiles/[id]` | `PUT`, `DELETE` | Update or delete one profile (no `GET`, use list + id). |
-| `/api/agent/profiles/sync/drift` | `GET` | Full drift report (root, named profiles, skills catalog). Returns the per-resource sync state that the drift banner reads. |
 | `/api/agent/profiles/sync/push` | `POST` | Push to `HERMES_HOME/profiles/<slug>/`. Body is a bag of optional flags, first match wins: `{ root }`, `{ skills }`, `{ skillKey }`, `{ all }` / `{ missingOnly }` / `{ onlyOutOfSync }`, else `{ slug }`. |
 | `/api/agent/profiles/sync/pull` | `POST` | Pull from Hermes disk into the DB. Same flag-bag shape: `{ skills }`, `{ skillKey }`, `{ all }` / `{ importDiscovered }`, `{ root }` (or `slug: "default"`), else `{ slug }`. Supplying none of them is a **400** (`slug, all, root, or skills required`). |
 | `/api/agent/profiles/sync/import` | `GET`, `POST` | `GET` lists profiles discovered on Hermes disk (each with an `inDatabase` flag); `POST` imports them into the DB (`{ importSkills }`, `{ importAllDiscovered }`, or `{ slug }`). |
@@ -46,7 +45,6 @@ Every `route.ts` under `src/app/api` has a row, here or in the Chat / Composer /
 | `/api/credentials` | `GET`, `POST` | API key credentials (masked list; create via POST). |
 | `/api/credentials/[id]` | `PATCH`, `DELETE` | `PATCH { apiKey }` rotates the stored key and rewrites the provider's Hermes `.env` variable; a failed `.env` write puts the old key back and answers **500**. `DELETE` removes the credential: its `.env` variable goes with it unless a same-provider sibling still uses it, and the models that pointed at it are unlinked; the answer says which happened. `GET` returns **405**. |
 | `/api/cron/hardware` | `GET`, `POST`, `PUT`, `DELETE` | Host **scripts** (system cron) under `PS_SCRIPTS_DIR` / `PS_HARDWARE_LOG_DIR`, powering the Scripts page. (The legacy `/api/cron` agent-cron bridge has been removed; recurring agent work uses `/api/schedules`.) |
-| `/api/cron/hardware/meta` | `GET` | `{ scriptsDir, logDir }`. |
 | `/api/scripts` | `GET` | List host script files under `PS_DATA_DIR/scripts` with each file's schedule, where that schedule lives (`scheduleSource`: `host` or `patterstage`) and last-run hint, plus `scheduler: { available, reason }` saying whether this host schedules without PatterStage. |
 | `/api/scripts/[name]` | `GET`, `PUT`, `DELETE` | Read, upsert (`{ content }`) or delete one host script. Path-validated under `PS_DATA_DIR/scripts`; powers the in-app editor. |
 | `/api/scripts/run` | `POST` | Run a script on demand (`{ name }`). Path-validated, no shell. Answers `{ outcome: "succeeded" \| "failed", exitCode }` when the script ran, 404 when there is no such script, and 503 naming the reason when the machine could not start it. |
@@ -71,7 +69,6 @@ Every `route.ts` under `src/app/api` has a row, here or in the Chat / Composer /
 | `/api/mission-categories` | `GET`, `POST`, `PUT`, `DELETE` | Mission category CRUD (see [MISSIONS.md](../guides/missions.md)). |
 | `/api/missions` | `GET`, `POST` | Mission list/detail + RPC mutations (see [RPC-style routes](#rpc-style-routes)). |
 | `/api/missions/[id]` | `GET` | One mission, for REST symmetry with the sub-routes below. The list endpoint also accepts `?id=`. |
-| `/api/missions/[id]/dispatch` | `POST` | Run a mission through the agent runtime (no bash, no status files); RunSync reconciles completion. |
 | `/api/missions/[id]/cancel` | `POST` | Stop a running mission via `runtime.stopRun`. Local run/mission/session state is finalised even if the backend call fails. |
 | `/api/missions/[id]/run` | `GET` | The mission's latest run, so the board can resolve a PatterStage run id and stream `/api/runs/[id]/events`. |
 | `/api/models` | `GET`, `POST` | Models registry (SQLite). |
@@ -161,7 +158,7 @@ Deep Research and the artifacts registry. See [LABORATORY.md](../guides/research
 | Resource | How drift is exposed | Sync routes |
 |----------|----------------------|-------------|
 | **Models** | `GET /api/models/sync/drift` | `POST .../pull`, `POST .../push` |
-| **Profiles** | `GET /api/agent/profiles/sync/drift` for the full report, and `syncStatus` on each row from `GET /api/agent/profiles` for the per-row badge | `POST /api/agent/profiles/sync/push`, `POST .../pull` |
+| **Profiles** | `syncStatus` on each row from `GET /api/agent/profiles`, which is what the drift banner and the per-row badge read (the separate full-report route had no caller and was removed in T-0129) | `POST /api/agent/profiles/sync/push`, `POST .../pull` |
 
 ## RPC-style routes
 

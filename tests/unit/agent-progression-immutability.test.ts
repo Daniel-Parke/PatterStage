@@ -17,7 +17,7 @@
 
 import { join } from "path";
 import { execBaselineSchema } from "../helpers/baseline-db";
-import { applyAgentProgressionMigration } from "@/lib/db/apply-agent-progression-migration";
+import { applyAgentProgressionMigration } from "@/lib/db/sql-migrations";
 
 let testDb: import("better-sqlite3").Database | null = null;
 

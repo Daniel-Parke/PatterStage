@@ -10,7 +10,7 @@ import type { ResearchPreset, ResearchRun, ResearchStep } from "@/lib/laboratory
 
 /** Saved Deep Research presets. */
 export function useResearchPresets() {
-  return useApiResource<ResearchPreset[]>(["research-presets"], "/api/laboratory/research/presets", {
+  return useApiResource<ResearchPreset[]>("/api/laboratory/research/presets", {
     select: (payload) => (payload as { presets?: ResearchPreset[] } | undefined)?.presets,
     fallback: [],
   });
@@ -18,7 +18,7 @@ export function useResearchPresets() {
 
 /** Recent research runs. Polls so pending → completed transitions surface. */
 export function useResearchRuns(refetchInterval: number | false = 4000) {
-  return useApiResource<ResearchRun[]>(["research-runs"], "/api/laboratory/research", {
+  return useApiResource<ResearchRun[]>("/api/laboratory/research", {
     select: (payload) => (payload as { runs?: ResearchRun[] } | undefined)?.runs,
     fallback: [],
     refetchInterval,
@@ -27,9 +27,7 @@ export function useResearchRuns(refetchInterval: number | false = 4000) {
 
 /** One research run + its steps. Polls while a run is selected. */
 export function useResearchRun(id: string | null) {
-  return useApiResource<{ run: ResearchRun; steps: ResearchStep[] }>(
-    ["research-run", id ?? "none"],
-    `/api/laboratory/research/${id ?? ""}`,
+  return useApiResource<{ run: ResearchRun; steps: ResearchStep[] }>(`/api/laboratory/research/${id ?? ""}`,
     {
       select: (payload) => {
         const v = payload as { run?: ResearchRun; steps?: ResearchStep[] } | undefined;

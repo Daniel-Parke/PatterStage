@@ -191,7 +191,7 @@ let testDb: import("better-sqlite3").Database | null = null;
 jest.mock("@/lib/db", () => require("../helpers/baseline-db").dbSingletonMock(() => testDb));
 
 import { execBaselineSchema } from "../helpers/baseline-db";
-import { applyOperatorPrefsMigration } from "@/lib/db/apply-operator-prefs-migration";
+import { applyOperatorPrefsMigration } from "@/lib/db/sql-migrations";
 import { readOperatorPrefs, writeOperatorPref } from "@/lib/operator-prefs-repository";
 
 const migrationsDir = join(process.cwd(), "src", "lib", "db", "migrations");

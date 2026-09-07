@@ -66,7 +66,7 @@ jest.mock("@/lib/api-fetch", () => ({
 // measures.
 const mockUseConfig = jest.fn();
 jest.mock("@/hooks/useConfig", () => ({ useConfig: () => mockUseConfig() }));
-jest.mock("@/hooks/useProfiles", () => ({ useProfiles: () => ({ data: [], isLoading: false, error: null }) }));
+jest.mock("@/hooks/useProfiles", () => ({ useProfiles: () => ({ refetch: async () => undefined, data: [], isLoading: false, error: null }) }));
 jest.mock("next/link", () => require("../helpers/mocks").nextLinkMock());
 
 import SettingsPage from "@/app/agent/settings/page";

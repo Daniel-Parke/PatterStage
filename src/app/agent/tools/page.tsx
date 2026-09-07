@@ -12,7 +12,7 @@
 "use client";
 
 import { sectionHeadingClasses } from "@/lib/theme";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Wrench,
   Info,
@@ -28,7 +28,7 @@ import Button from "@/components/ui/Button";
 import ProfilePicker from "@/components/ui/ProfilePicker";
 import { Textarea } from "@/components/ui/field";
 import { LastResult, useToast } from "@/components/ui/Toast";
-import { API_FETCH_BULK_TIMEOUT_MS, apiFetch, safeApiCallData, toastError } from "@/lib/api-fetch";
+import { API_FETCH_BULK_TIMEOUT_MS, apiFetch, toastError } from "@/lib/api-fetch";
 import { runSyncAction } from "@/lib/operation-sync-action";
 import { profileSyncBody } from "@/lib/profile-sync-body";
 import type { PlatformToolsets } from "@/modules/hermes/lib/profile-config-builder";
@@ -52,7 +52,7 @@ export default function ToolsPage() {
   // Shared with Agents and Skills. Three pickers in three useStates meant three
   // subjects for one word (T-0113).
   const [selectedProfile, setSelectedProfile] = useSelectedProfile();
-  const { data: profiles } = useProfiles();
+  const { data: profiles, refetch: refetchProfiles } = useProfiles();
   const profileName = profiles?.find((p) => p.id === selectedProfile)?.name ?? selectedProfile;
   const [toolsetsJson, setToolsetsJson] = useState("{}");
   const [toolsetsSource, setToolsetsSource] = useState<string | null>(null);
@@ -70,19 +70,14 @@ export default function ToolsPage() {
   const [loadedEnabled, setLoadedEnabled] = useState<string[]>([]);
   // A profile the operator asked for while changes were unsaved (D84).
   const [pendingProfile, setPendingProfile] = useState<string | null>(null);
-  const [profileSyncStatus, setProfileSyncStatus] = useState<AgentProfile["syncStatus"] | null>(null);
+  // Read off the profiles the page already has, rather than a second raw
+  // read of /api/agent/profiles on every mount (T-0129).
+  const profileSyncStatus: AgentProfile["syncStatus"] | null =
+    profiles?.find((p) => p.id === selectedProfile)?.syncStatus ?? null;
   const { showToast, toastElement, lastResult } = useToast();
 
   // The selected profile's syncStatus (drift | error | null), best-effort: a
   // failed read resets to null, which the page reads as nothing to say.
-  const loadProfileSyncStatus = useCallback(async () => {
-    const data = await safeApiCallData<{ profiles?: AgentProfile[] }>(
-      "/api/agent/profiles",
-    );
-    const list = data?.profiles ?? [];
-    const match = list.find((p) => p.id === selectedProfile);
-    setProfileSyncStatus(match?.syncStatus ?? null);
-  }, [selectedProfile]);
 
   const loadToolsets = useCallback(async () => {
     setLoadingToolsets(true);
@@ -111,10 +106,15 @@ export default function ToolsPage() {
   // Both reads, for the mount and for a pull or push that may have changed
   // the sync status of the active profile. A local save reloads only the
   // toolsets: the sync status moves only when Hermes disk is touched.
+  // Through a ref, so the reload effect below depends on the toolsets loader
+  // alone: a consumer that hands back a fresh refetch on every render would
+  // otherwise re-run the effect on every render (T-0129).
+  const refetchProfilesRef = useRef(refetchProfiles);
+  refetchProfilesRef.current = refetchProfiles;
   const reloadAll = useCallback(async () => {
     await loadToolsets();
-    await loadProfileSyncStatus();
-  }, [loadToolsets, loadProfileSyncStatus]);
+    await refetchProfilesRef.current();
+  }, [loadToolsets]);
 
   useEffect(() => {
     void reloadAll();

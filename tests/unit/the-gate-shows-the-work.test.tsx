@@ -67,7 +67,7 @@ jest.mock("@/hooks/useComposer", () => ({
   useComposerWorkflowGraph: (...a: unknown[]) => mockUseGraph(...(a as [])),
 }));
 
-jest.mock("@/hooks/useProfiles", () => ({ useProfiles: () => ({ data: [] }) }));
+jest.mock("@/hooks/useProfiles", () => ({ useProfiles: () => ({ refetch: async () => undefined, data: [] }) }));
 jest.mock("@/hooks/useEventStream", () => ({
   useEventStream: () => ({ data: null, connected: false, error: null }),
 }));

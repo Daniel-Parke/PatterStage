@@ -17,7 +17,9 @@
  * behalf: a provider can be picked here, and picking one is what gets sent.
  */
 
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
+// Reads go through useApiResource since T-0129, so the component wants a QueryClient.
+import { renderWithQuery } from "../helpers/render-with-query";
 import React from "react";
 
 import MemoryProviderSettings from "@/components/memory/MemoryProviderSettings";
@@ -61,7 +63,7 @@ beforeEach(() => {
 /** Render the card and wait for the row it fetches, since Save waits for it. */
 async function mount(type = "hindsight") {
   activeType = type;
-  const r = render(<MemoryProviderSettings />);
+  const r = renderWithQuery(<MemoryProviderSettings />);
   await waitFor(() => expect(screen.getByRole("button", { name: /^save$/i })).toBeEnabled());
   return r;
 }

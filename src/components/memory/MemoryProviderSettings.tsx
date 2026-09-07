@@ -25,6 +25,7 @@ import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import { Field, Input } from "@/components/ui/field";
 import { Select } from "@/components/ui/Input";
+import { useApiResource } from "@/hooks/useApiResource";
 import { safeApiCall } from "@/lib/api-fetch";
 import ConceptHint from "@/components/help/ConceptHint";
 
@@ -73,6 +74,11 @@ const SELECTABLE_PROVIDERS: ReadonlyArray<{ type: MemoryProviderType; label: str
   { type: "holographic", label: "Holographic" },
 ];
 
+interface MemoryConfigPayload {
+  active?: { type?: string; config?: Cfg };
+  providers?: ActiveRow[];
+}
+
 const FALLBACK_ROW: ActiveRow = {
   type: "hindsight",
   label: "Hindsight",
@@ -103,28 +109,25 @@ export default function MemoryProviderSettings({
   // window, so the buttons wait.
   const [loaded, setLoaded] = useState(false);
 
+  // The read goes through the hook (T-0129); the effect below only copies
+  // what it answered into the form's own state, once, when it answers.
+  const configRead = useApiResource<MemoryConfigPayload>("/api/memory/config", {
+    select: (p) => (p as MemoryConfigPayload | null) ?? undefined,
+    staleTime: 30_000,
+  });
   useEffect(() => {
-    void (async () => {
-      const res = await safeApiCall<{
-        data?: {
-          active?: { type?: string; config?: Cfg };
-          providers?: ActiveRow[];
-        };
-      }>("/api/memory/config");
-      const payload = (res.data as {
-        data?: { active?: { type?: string; config?: Cfg }; providers?: ActiveRow[] };
-      } | undefined)?.data;
-      const c = payload?.active?.config;
-      if (c) setCfg({ host: c.host, port: c.port, bank: c.bank });
-      const providers = payload?.providers ?? [];
-      const activeRow =
-        providers.find((p) => p.isActive) ??
-        providers.find((p) => p.type === payload?.active?.type) ??
-        null;
-      setRow(activeRow);
-      setLoaded(true);
-    })();
-  }, []);
+    if (!configRead.settled) return;
+    const payload = configRead.data;
+    const c = payload?.active?.config;
+    if (c) setCfg({ host: c.host, port: c.port, bank: c.bank });
+    const providers = payload?.providers ?? [];
+    const activeRow =
+      providers.find((p) => p.isActive) ??
+      providers.find((p) => p.type === payload?.active?.type) ??
+      null;
+    setRow(activeRow);
+    setLoaded(true);
+  }, [configRead.settled, configRead.data]);
 
   async function test(): Promise<Health | null> {
     setTesting(true);

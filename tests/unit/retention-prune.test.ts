@@ -39,10 +39,7 @@ jest.mock("@/lib/db", () => ({
 }));
 
 import { execBaselineSchema } from "../helpers/baseline-db";
-import { applyAnalyticsEventsMigration } from "@/lib/db/apply-analytics-events-migration";
-import { applyChatMigration } from "@/lib/db/apply-chat-migration";
-import { applyAgentProgressionMigration } from "@/lib/db/apply-agent-progression-migration";
-import { applyRetentionMigration } from "@/lib/db/apply-retention-migration";
+import { applyAnalyticsEventsMigration, applyChatMigration, applyAgentProgressionMigration, applyRetentionMigration } from "@/lib/db/sql-migrations";
 import { runRetentionPrune } from "@/lib/retention/retention-prune";
 import {
   countAnalyticsEventsBefore,

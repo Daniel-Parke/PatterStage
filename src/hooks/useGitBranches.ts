@@ -28,9 +28,7 @@ export function useGitBranches(path: string): GitBranchesData | null {
     return () => clearTimeout(t);
   }, [trimmed]);
 
-  const { data } = useApiResource<GitBranchesData>(
-    ["git-branches", debounced],
-    `/api/fs/git/branches?path=${encodeURIComponent(debounced)}`,
+  const { data } = useApiResource<GitBranchesData>(`/api/fs/git/branches?path=${encodeURIComponent(debounced)}`,
     {
       select: (payload) => payload as GitBranchesData | undefined,
       fallback: EMPTY,

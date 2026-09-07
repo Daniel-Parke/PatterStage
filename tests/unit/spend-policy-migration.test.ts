@@ -20,7 +20,7 @@ import type DatabaseNs from "better-sqlite3";
 import {
   applySpendPolicyMigration,
   SPEND_POLICY_SCHEMA_VERSION,
-} from "@/lib/db/apply-spend-policy-migration";
+} from "@/lib/db/sql-migrations";
 import { getSchemaVersion, setSchemaVersion } from "@/lib/db-schema";
 
 type RealDb = DatabaseNs.Database;

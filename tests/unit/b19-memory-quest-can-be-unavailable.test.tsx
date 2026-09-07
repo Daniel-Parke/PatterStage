@@ -33,7 +33,8 @@ let payloads: Record<string, unknown> = {};
 let composerFlag: boolean | undefined;
 
 jest.mock("@/hooks/useApiResource", () => ({
-  useApiResource: <T,>(_key: unknown, endpoint: string, opts: ResourceOptions<T>) => {
+  // The endpoint is the key since T-0129: the hook takes (endpoint, opts).
+  useApiResource: <T,>(endpoint: string, opts: ResourceOptions<T>) => {
     const payload = payloads[endpoint];
     const value = payload === undefined ? undefined : opts.select(payload);
     return { data: value === undefined ? (opts.fallback ?? null) : value, isLoading: false, error: null };

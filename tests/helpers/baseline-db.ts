@@ -2,9 +2,7 @@ import { readFileSync } from "fs";
 import { join } from "path";
 import { applyModelsApiStyleMigration } from "../../src/lib/db/apply-models-api-style-migration";
 import { applyNeutralColumnNames } from "../../src/lib/db/apply-neutral-column-names";
-import { applyModelsOriginMigration } from "../../src/lib/db/apply-models-origin-migration";
-import { applyRunsSpendSourceMigration } from "../../src/lib/db/apply-runs-spend-source-migration";
-import { applyScheduleKindMigration } from "../../src/lib/db/apply-schedule-kind-migration";
+import { applyModelsOriginMigration, applyRunsSpendSourceMigration, applyScheduleKindMigration } from "../../src/lib/db/sql-migrations";
 
 const migrationsDir = join(__dirname, "..", "..", "src", "lib", "db", "migrations");
 

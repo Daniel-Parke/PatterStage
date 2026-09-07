@@ -85,13 +85,6 @@ jest.mock("@/lib/api-fetch", () => ({
   safeApiCall: (...a: unknown[]) => mockSafeApiCall(...a),
   safeApiCallData: (...a: unknown[]) => mockSafeApiCallData(...a),
 }));
-jest.mock("@/lib/dashboard/dashboard-initial-load", () => ({
-  loadInitialDashboardData: jest.fn(async () => ({
-    dashboardData: { status: null, config: null, templates: [], categories: [], monitor: null, processes: [], missions: [] },
-    modelsDefaults: null,
-  })),
-}));
-
 import Dashboard from "@/app/page";
 
 // ── Fixtures ─────────────────────────────────────────────────────
@@ -370,21 +363,21 @@ describe("A. useDashboard exposes the monitor and subsystems queries' error and 
     };
   }
 
-  // Both wire helpers are routed by path, so the failure lands whichever
-  // helper fetchMonitor ends up calling: safeApiCallData answers null (today's
-  // plumbing throws "Failed to load monitor" on it) and safeApiCall answers
-  // { ok: false, error: "Failed to load monitor" } (the plumbing that would
-  // carry the server's own message).
+  // Every read goes through useApiResource since T-0129, which calls
+  // safeApiCall and unwraps the `{ data: { data } }` envelope, so the wire is
+  // routed by path there: a monitor that answers null selects to nothing and
+  // reads "Failed to load monitor"; a subsystems read that throws carries its
+  // own message.
   function wire(over: { monitor?: () => Promise<unknown>; subsystems?: () => Promise<unknown> } = {}) {
-    mockSafeApiCall.mockImplementation(async (path: string) =>
-      path.startsWith("/api/monitor") && over.monitor
-        ? { ok: false, error: "Failed to load monitor" }
-        : { ok: true, data: { data: { processes: [], missions: [] } } },
-    );
-    mockSafeApiCallData.mockImplementation(async (path: string) => {
-      if (path.startsWith("/api/monitor")) return over.monitor ? over.monitor() : monitor();
-      if (path.startsWith("/api/status/subsystems")) return over.subsystems ? over.subsystems() : SUBSYSTEMS;
-      return { timeseries: [] };
+    mockSafeApiCall.mockImplementation(async (path: string) => {
+      if (path.startsWith("/api/monitor")) {
+        return { ok: true, data: { data: over.monitor ? await over.monitor() : monitor() } };
+      }
+      if (path.startsWith("/api/status/subsystems")) {
+        return { ok: true, data: { data: over.subsystems ? await over.subsystems() : SUBSYSTEMS } };
+      }
+      if (path.startsWith("/api/analytics/timeseries")) return { ok: true, data: { data: { timeseries: [] } } };
+      return { ok: true, data: { data: { processes: [], missions: [], templates: [], categories: [] } } };
     });
   }
 
@@ -402,7 +395,8 @@ describe("A. useDashboard exposes the monitor and subsystems queries' error and 
   });
 
   it("carries the monitor query's failure as monitorError, settled, with monitor null", async () => {
-    // safeApiCallData answers null for a failed read; fetchMonitor throws on it.
+    // A monitor that answers null selects to nothing, which the hook reads as
+    // the failure it is.
     wire({ monitor: async () => null });
     const { result } = renderHook(() => realUseDashboard() as DashResult, { wrapper: wrapper() });
     await waitFor(() => expect(result.current.monitorError).toBe("Failed to load monitor"));

@@ -10,7 +10,7 @@ import { join } from "path";
 import { execBaselineSchema } from "../helpers/baseline-db";
 import { mockRequest } from "../helpers/api-test-helpers";
 import { MIGRATION_HEAD_SCHEMA_VERSION, getSchemaVersion } from "@/lib/db-schema";
-import { OPERATOR_PREFS_SCHEMA_VERSION, applyOperatorPrefsMigration } from "@/lib/db/apply-operator-prefs-migration";
+import { OPERATOR_PREFS_SCHEMA_VERSION, applyOperatorPrefsMigration } from "@/lib/db/sql-migrations";
 
 let testDb: import("better-sqlite3").Database | null = null;
 

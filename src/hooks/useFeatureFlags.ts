@@ -13,7 +13,7 @@ import { useApiResource } from "./useApiResource";
 export type FeatureFlagMap = Record<string, boolean>;
 
 export function useFeatureFlags() {
-  return useApiResource<FeatureFlagMap>(["feature-flags"], "/api/feature-flags", {
+  return useApiResource<FeatureFlagMap>("/api/feature-flags", {
     select: (p) => (p as { flags?: FeatureFlagMap } | undefined)?.flags,
     fallback: {},
     staleTime: 60_000,

@@ -30,9 +30,7 @@ interface ToolsetCatalogEntry {
 
 /** `toolsetLabel(id)` returns the catalogue label, or the id when unknown. */
 export function useToolsetCatalog(): { toolsetLabel: (id: string) => string } {
-  const { data } = useApiResource<Record<string, string>>(
-    ["toolset-catalog"],
-    "/api/tools",
+  const { data } = useApiResource<Record<string, string>>("/api/tools",
     {
       select: (payload) =>
         Object.fromEntries(

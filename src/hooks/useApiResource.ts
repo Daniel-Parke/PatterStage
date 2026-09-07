@@ -1,13 +1,26 @@
 // ═══════════════════════════════════════════════════════════════
-// useApiResource — generic TanStack Query layer for read-only `{ data: T }` routes
+// useApiResource — the one way a component reads the API
 //
-// Folds the identical fetch+query+error shape the read-only hooks repeated
+// Folds the identical fetch+query+error shape every read-only hook repeated
 // (safeApiCall → unwrap the `{ data: ... }` envelope → throw on error →
 // `{ data, isLoading, isFetching, error, refetch }`). Each domain hook stays a
 // thin wrapper that supplies its endpoint + a `select` to pick its payload and
-// keeps its own public field name (stats / summary / sessions / …). Hooks with
-// mutations (useSchedules), callback grids (useMissionsApi), or multi-query
-// bundles (useDashboard) are intentionally NOT folded here.
+// keeps its own public field name (stats / summary / sessions / …).
+//
+// THE KEY IS THE ENDPOINT (T-0129). It used to be the caller's: useDashboard
+// cached /api/status/subsystems under ["dashboard","subsystems"] while
+// useQuestHost cached the same endpoint under ["status-subsystems"], so the
+// dashboard fetched it twice on every load and both polls ran side by side;
+// four endpoints were fetched twice that way, and a second loader fetched
+// three more a second time for a static bundle. Two readers of one endpoint
+// are one cache entry now, whatever they select: the cache holds the raw
+// envelope and each reader selects its own shape from it through react-query's
+// own `select`, which structurally shares the result so a re-render does not
+// hand a consumer a new object for the same data. A read that must POST (the
+// story routes' action envelope) keys on endpoint AND body.
+//
+// react-query is reached only through this hook. No component or hook calls
+// useQuery itself; u15-reads-go-through-the-hook holds that.
 // ═══════════════════════════════════════════════════════════════
 
 "use client";
@@ -17,84 +30,111 @@ import { useQuery, type QueryKey } from "@tanstack/react-query";
 import { safeApiCall } from "@/lib/api-fetch";
 
 export interface UseApiResourceOptions<T, M = unknown> {
-  /** Pick the payload from the unwrapped `ok()` body (i.e. `res.data?.data`). */
+  /** Pick the payload out of the envelope's `data`. `undefined` means "not there". */
   select: (payload: unknown) => T | undefined;
-  /**
-   * Pick anything that rides BESIDE the payload, from the whole body.
-   *
-   * `ok()` can attach siblings to `data` — `/api/config` sends `configError`
-   * there when the file did not parse. Selecting only `data.data` threw that
-   * away, so an unparseable config.yaml reached the Settings index as `{}` and
-   * rendered as a fresh install (T-0100, D75).
-   */
+  /** Pick something off the whole response body (a `meta` block, say). */
   selectMeta?: (body: unknown) => M;
-  /** Returned when the request succeeds but `select` yields undefined (empty list, etc.). */
+  /** What `data` is when `select` finds nothing, instead of an error. */
   fallback?: T;
   errorMessage?: string;
-  refetchInterval?: number | false;
+  /**
+   * A fixed interval, or a function of the SELECTED value: a poll that stops
+   * once it has what it was waiting for (a run id) asks for `false` then.
+   */
+  refetchInterval?: number | false | ((value: T | null) => number | false);
   staleTime?: number;
-  /** When false, the query is disabled (no fetch) and `data` stays null. */
   enabled?: boolean;
+  /**
+   * A read that must POST. The story routes take `{ action: "list" }` in a
+   * body rather than a GET, and a list is a read whatever verb carries it, so
+   * it is cached and deduped like one. Part of the key.
+   */
+  body?: unknown;
 }
 
-/** An Error that carries the failed response's parsed body. */
-function failure(message: string, body: unknown): Error {
-  const err = new Error(message) as Error & { responseBody?: unknown };
+/** The cache key for an endpoint, for whoever invalidates it after a write. */
+export function apiQueryKey(endpoint: string, body?: unknown): QueryKey {
+  return body === undefined ? [endpoint] : [endpoint, body];
+}
+
+/** What the cache holds: the envelope's `data`, and the whole body for `selectMeta`. */
+interface Envelope {
+  data: unknown;
+  body: unknown;
+}
+
+/** An Error that carries the failed response's parsed body and status. */
+function failure(message: string, body: unknown, status: number | null): Error {
+  const err = new Error(message) as Error & { responseBody?: unknown; status?: number | null };
   err.responseBody = body;
+  err.status = status;
   return err;
 }
 
-/** The `data` field of a failed response's body, when there is one. */
 function bodyOf(error: unknown): unknown {
   const body = (error as { responseBody?: unknown } | null)?.responseBody;
   if (!body || typeof body !== "object") return null;
   return (body as { data?: unknown }).data ?? null;
 }
 
-export function useApiResource<T, M = unknown>(
-  queryKey: QueryKey,
-  endpoint: string,
-  opts: UseApiResourceOptions<T, M>,
-) {
+function statusOf(error: unknown): number | null {
+  return (error as { status?: number | null } | null)?.status ?? null;
+}
+
+export function useApiResource<T, M = unknown>(endpoint: string, opts: UseApiResourceOptions<T, M>) {
+  const pick = (env: Envelope): { value: T; meta: M | null } => {
+    const meta = opts.selectMeta ? opts.selectMeta(env.body) : null;
+    const value = opts.select(env.data);
+    if (value === undefined) {
+      if (opts.fallback !== undefined) return { value: opts.fallback, meta };
+      throw failure(opts.errorMessage ?? "Failed to load", env.body, null);
+    }
+    return { value, meta };
+  };
+
+  const interval = opts.refetchInterval;
   const query = useQuery({
-    queryKey,
-    queryFn: async (): Promise<{ value: T; meta: M | null }> => {
-      const res = await safeApiCall<{ data?: unknown }>(endpoint);
-      if (!res.ok) throw failure(res.error ?? opts.errorMessage ?? "Failed to load", res.body);
-      // Read before the payload, and kept through the fallback: a body that
-      // says why it is empty is exactly the body whose payload is empty.
-      const meta = opts.selectMeta ? opts.selectMeta(res.data ?? null) : null;
-      const value = opts.select(res.data?.data);
-      if (value === undefined) {
-        if (opts.fallback !== undefined) return { value: opts.fallback, meta };
-        throw failure(res.error ?? opts.errorMessage ?? "Failed to load", res.body);
-      }
-      return { value, meta };
+    queryKey: apiQueryKey(endpoint, opts.body),
+    queryFn: async (): Promise<Envelope> => {
+      const res =
+        opts.body === undefined
+          ? await safeApiCall<{ data?: unknown }>(endpoint)
+          : await safeApiCall<{ data?: unknown }>(endpoint, { method: "POST", body: opts.body });
+      if (!res.ok) throw failure(res.error ?? opts.errorMessage ?? "Failed to load", res.body, res.status ?? null);
+      return { data: res.data?.data, body: res.data ?? null };
     },
-    refetchInterval: opts.refetchInterval,
+    // Errors thrown here land in the query's error state, so "the payload was
+    // not there" reads the same as "the request failed".
+    select: pick,
+    refetchInterval:
+      typeof interval === "function"
+        ? (q) => {
+            let value: T | null = null;
+            try {
+              value = q.state.data ? pick(q.state.data).value : null;
+            } catch {
+              value = null;
+            }
+            return interval(value);
+          }
+        : interval,
     staleTime: opts.staleTime,
     enabled: opts.enabled,
   });
+
   return {
     data: query.data?.value ?? null,
     /** Whatever `selectMeta` picked off the body; null when none was given. */
     meta: query.data?.meta ?? null,
     isLoading: query.isLoading,
     isFetching: query.isFetching,
+    /** True once the first read has answered, well or badly: "not yet" and "failed" are different answers. */
+    settled: query.isFetched,
     error: query.isError ? (query.error as Error).message : null,
-    /**
-     * The `data` field of a FAILED response, when the server sent one.
-     *
-     * A 4xx is not always a dead end: /logs answers a missing log file with the
-     * list of files that do exist, which is the only thing that lets the page
-     * pick a different one. Throwing the Error and dropping the body meant that
-     * list was computed, serialised, received and discarded — a route saying
-     * the right thing to a caller that was not listening (T-0071).
-     *
-     * `error` stays set. This is recovery DATA, not a success: a page that
-     * rendered as though nothing were wrong would be a different lie.
-     */
+    /** The failed response's `data`, when the server sent one beside its error. */
     errorBody: query.isError ? bodyOf(query.error) : null,
+    /** The failed response's HTTP status, when there was one. */
+    errorStatus: query.isError ? statusOf(query.error) : null,
     refetch: query.refetch,
   };
 }

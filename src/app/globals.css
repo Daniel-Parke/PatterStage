@@ -429,6 +429,23 @@
 }
 .animate-float-in { animation: ch-float-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
 
+/* The stagger the motion wrappers lean on (T-0129): each child floats in,
+   50ms after the one before it, by child order, so an item carries no state
+   and no library. Twelve steps is more than any grid on the product shows in
+   one row; a thirteenth child lands with the twelfth. */
+.ps-stagger > * { animation: ch-float-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.ps-stagger > :nth-child(2) { animation-delay: 50ms; }
+.ps-stagger > :nth-child(3) { animation-delay: 100ms; }
+.ps-stagger > :nth-child(4) { animation-delay: 150ms; }
+.ps-stagger > :nth-child(5) { animation-delay: 200ms; }
+.ps-stagger > :nth-child(6) { animation-delay: 250ms; }
+.ps-stagger > :nth-child(7) { animation-delay: 300ms; }
+.ps-stagger > :nth-child(8) { animation-delay: 350ms; }
+.ps-stagger > :nth-child(9) { animation-delay: 400ms; }
+.ps-stagger > :nth-child(10) { animation-delay: 450ms; }
+.ps-stagger > :nth-child(11) { animation-delay: 500ms; }
+.ps-stagger > :nth-child(n + 12) { animation-delay: 550ms; }
+
 @keyframes ch-shimmer {
   100% { transform: translateX(100%); }
 }
@@ -471,8 +488,6 @@
   animation: ps-rail-flow 0.5s linear infinite;
   box-shadow: 0 0 5px rgb(var(--ps-rgb-neon-cyan) / 0.6);
 }
-.ps-rail-done { background: rgb(var(--ps-rgb-neon-green) / 0.45); }
-
 /* Active edge on the live run canvas (react-flow): cyan glow on the stroke. */
 .ps-edge-glow .react-flow__edge-path { filter: drop-shadow(0 0 3px rgb(var(--ps-rgb-neon-cyan) / 0.7)); }
 
@@ -581,23 +596,7 @@
 }
 
 /* Slide in animation (for toasts) */
-@keyframes slide-in-from-bottom {
-  from { transform: translateY(0.5rem); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-.animate-in {
-  animation: slide-in-from-bottom 0.2s ease-out;
-}
-
 /* Skeleton shimmer animation */
-@keyframes skeleton-shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-.skeleton-shimmer {
-  animation: skeleton-shimmer 1.8s ease-in-out infinite;
-}
-
 /* Grid background */
 .grid-bg {
   background-image:

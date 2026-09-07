@@ -63,17 +63,14 @@ import { fileHash, contentHash } from "@/lib/fs/fs-helpers";
 import { buildHermesPathBundle } from "./paths";
 import { getHermesDefaultRoot } from "./profile-paths";
 import { getAgentRoot } from "@/lib/agent-root-repository";
-import { assembleConfigYamlForProfile, getProfile, listProfiles } from "./profiles-repository";
+import { assembleConfigYamlForProfile, getProfile } from "./profiles-repository";
 import {
   configYamlSemanticallyMatches,
   disabledSkillsMatchJson,
 } from "./profile-config-builder";
-import { listSkills, type SkillRow } from "@/lib/skills-repository";
-import { skillFilePath } from "./skills-config";
 import {
   assembleRootConfig,
   catalogKeysForPull,
-  globalSkillsRoot,
   profileRootForSlug,
 } from "./profile-sync-shared";
 
@@ -88,18 +85,6 @@ export interface RootDriftEntry {
   drifted: boolean;
   fields: string[];
   syncError: string | null;
-}
-
-interface SkillDriftEntry {
-  skillKey: string;
-  drifted: boolean;
-  syncError: string | null;
-}
-
-export interface FullDriftReport {
-  root: RootDriftEntry;
-  profiles: ProfileDriftEntry[];
-  skills: SkillDriftEntry[];
 }
 
 /**
@@ -204,34 +189,5 @@ export function detectRootDrift(): RootDriftEntry {
     drifted: fields.length > 0,
     fields,
     syncError: row.syncError,
-  };
-}
-
-function detectSkillDrift(skill: SkillRow, skillsRoot: string): SkillDriftEntry {
-  const path = skillFilePath(skillsRoot, skill.skillKey);
-  const disk = fileHash(path);
-  const db = contentHash(skill.content);
-  return {
-    skillKey: skill.skillKey,
-    drifted: disk !== db,
-    syncError: skill.syncError,
-  };
-}
-
-function detectAllProfileDrift(): ProfileDriftEntry[] {
-  return listProfiles().map((p) => detectProfileDrift(p.slug));
-}
-
-export function detectFullDrift(): FullDriftReport {
-  // `listSkills()` already returns every row, body included. The previous
-  // `detectSkillDrift(s.skillKey)` then re-fetched each of those rows one at a
-  // time (1 + N queries for N skills) to read the body it had just discarded.
-  // Hand the row straight in, and resolve the skills root once rather than per
-  // skill.
-  const skillsRoot = globalSkillsRoot();
-  return {
-    root: detectRootDrift(),
-    profiles: detectAllProfileDrift(),
-    skills: listSkills().map((s) => detectSkillDrift(s, skillsRoot)),
   };
 }

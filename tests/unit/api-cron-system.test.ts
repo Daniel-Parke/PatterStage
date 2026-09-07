@@ -65,17 +65,6 @@ beforeEach(() => {
   });
 });
 
-describe("GET /api/cron/hardware/meta", () => {
-  it("returns scriptsDir and logDir from paths", async () => {
-    const { GET } = await import("@/app/api/cron/hardware/meta/route");
-    const res = await GET(mockRequest("http://127.0.0.1/api/test"));
-    expect(res.status).toBe(200);
-    const body = (await res.json()) as { data?: { scriptsDir: string; logDir: string } };
-    expect(body.data?.scriptsDir).toBe("/tmp/ch-data/scripts");
-    expect(body.data?.logDir).toBe("/tmp/ch-data/logs");
-  });
-});
-
 describe("GET /api/cron/hardware", () => {
   it("returns jobs whose commands run scripts under the scripts dir", async () => {
     mockCrontab = "*/10 * * * * /tmp/ch-data/scripts/ps-backup.mjs >> /tmp/ch-data/logs/ps-backup.log 2>&1\n";

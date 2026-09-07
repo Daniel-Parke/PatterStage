@@ -30,7 +30,7 @@ import { join } from "path";
 import type DatabaseNs from "better-sqlite3";
 
 import { MIGRATION_HEAD_SCHEMA_VERSION, getSchemaVersion, setSchemaVersion } from "@/lib/db-schema";
-import { MODELS_ORIGIN_SCHEMA_VERSION } from "@/lib/db/apply-models-origin-migration";
+import { MODELS_ORIGIN_SCHEMA_VERSION } from "@/lib/db/sql-migrations";
 
 type RealDb = DatabaseNs.Database;
 
@@ -49,7 +49,7 @@ interface SpendSourceApplier {
 
 function loadApplier(): SpendSourceApplier | null {
   try {
-    return require("@/lib/db/apply-runs-spend-source-migration") as SpendSourceApplier;
+    return require("@/lib/db/sql-migrations") as SpendSourceApplier;
   } catch {
     return null;
   }

@@ -56,7 +56,7 @@ jest.mock("@/components/ui/ProfilePicker", () => ({
   default: () => <div data-testid="profile-picker" />,
 }));
 jest.mock("@/hooks/useProfiles", () => ({
-  useProfiles: () => ({ data: [{ id: "default", name: "Bob", description: "" }], isLoading: false, error: null }),
+  useProfiles: () => ({ refetch: async () => undefined, data: [{ id: "default", name: "Bob", description: "" }], isLoading: false, error: null }),
 }));
 
 jest.mock("@/lib/operation-sync-action", () => ({

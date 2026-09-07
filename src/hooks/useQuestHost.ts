@@ -30,13 +30,13 @@ import { useApiResource } from "./useApiResource";
 import { useFeatureFlags } from "./useFeatureFlags";
 
 export function useQuestHost(): QuestHostCapabilities {
-  const subsystems = useApiResource<SubsystemRow[]>(["status-subsystems"], "/api/status/subsystems", {
+  const subsystems = useApiResource<SubsystemRow[]>("/api/status/subsystems", {
     select: (p) => (p as SubsystemSummary | undefined)?.subsystems,
     fallback: [],
     staleTime: 30_000,
   });
   // The same key the System page reads under, so the two share one answer.
-  const runtime = useApiResource<RuntimeStatus>(["runtime-status"], "/api/status/runtime", {
+  const runtime = useApiResource<RuntimeStatus>("/api/status/runtime", {
     select: (p) => p as RuntimeStatus | undefined,
     staleTime: 60_000,
   });

@@ -16,7 +16,9 @@
 // instance did. The operator ruled the zero-config connect stays, so the
 // product says out loud that it GUESSED until somebody presses Save.
 
-import { render, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
+// Reads go through useApiResource since T-0129, so the component wants a QueryClient.
+import { renderWithQuery } from "../helpers/render-with-query";
 
 const mockSafeApiCall = jest.fn();
 jest.mock("@/lib/api-fetch", () => ({
@@ -47,7 +49,7 @@ describe("an unconfirmed default admits it is a guess", () => {
   it("names the host and port it guessed", async () => {
     mockSafeApiCall.mockResolvedValueOnce(configPayload(false));
 
-    render(<MemoryProviderSettings />);
+    renderWithQuery(<MemoryProviderSettings />);
 
     await waitFor(() => expect(screen.getByRole("status")).toBeTruthy());
     const banner = screen.getByRole("status").textContent ?? "";
@@ -63,7 +65,7 @@ describe("an unconfirmed default admits it is a guess", () => {
     // rather than as the warning it is.
     mockSafeApiCall.mockResolvedValueOnce(configPayload(false));
 
-    render(<MemoryProviderSettings />);
+    renderWithQuery(<MemoryProviderSettings />);
 
     await waitFor(() => expect(screen.getByRole("status")).toBeTruthy());
     expect(screen.getByRole("status").textContent).toMatch(/memories rather than yours/i);
@@ -72,7 +74,7 @@ describe("an unconfirmed default admits it is a guess", () => {
   it("reflects a guessed endpoint that is not the shipped one", async () => {
     mockSafeApiCall.mockResolvedValueOnce(configPayload(false, "10.0.0.9", 9500));
 
-    render(<MemoryProviderSettings />);
+    renderWithQuery(<MemoryProviderSettings />);
 
     await waitFor(() => expect(screen.getByRole("status")).toBeTruthy());
     expect(screen.getByRole("status").textContent).toContain("10.0.0.9:9500");
@@ -85,7 +87,7 @@ describe("a confirmed endpoint is left alone", () => {
     // nobody reads, which would put the real case back out of sight.
     mockSafeApiCall.mockResolvedValueOnce(configPayload(true));
 
-    render(<MemoryProviderSettings />);
+    renderWithQuery(<MemoryProviderSettings />);
 
     await waitFor(() => expect(screen.getByText(/Memory provider/i)).toBeTruthy());
     expect(screen.queryByRole("status")).toBeNull();
@@ -96,7 +98,7 @@ describe("a confirmed endpoint is left alone", () => {
     // inventing a fact. Silence is the honest state here.
     mockSafeApiCall.mockResolvedValueOnce({ ok: false, error: "Network error" });
 
-    render(<MemoryProviderSettings />);
+    renderWithQuery(<MemoryProviderSettings />);
 
     await waitFor(() => expect(screen.getByText(/Memory provider/i)).toBeTruthy());
     expect(screen.queryByRole("status")).toBeNull();

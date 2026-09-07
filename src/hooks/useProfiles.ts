@@ -13,10 +13,12 @@ export interface UiProfile {
   name: string;
   description: string;
   isDefault?: boolean;
+  /** Whether the stored profile matches Hermes on disk; the Tools page reads it (T-0129). */
+  syncStatus?: "synced" | "drift" | "error";
 }
 
 export function useProfiles() {
-  return useApiResource<UiProfile[]>(["agent-profiles"], "/api/agent/profiles", {
+  return useApiResource<UiProfile[]>("/api/agent/profiles", {
     select: (payload) => {
       const raw = (payload as { profiles?: Record<string, unknown>[] } | undefined)?.profiles;
       if (!Array.isArray(raw)) return undefined;
@@ -25,6 +27,7 @@ export function useProfiles() {
         name: p.name as string,
         description: (p.description as string) || "",
         isDefault: (p.isDefault as boolean) ?? false,
+        syncStatus: p.syncStatus as UiProfile["syncStatus"],
       }));
     },
     fallback: [],

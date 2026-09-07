@@ -16,10 +16,9 @@
 
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, ArrowUpRight } from "lucide-react";
 
-import { safeApiCallData } from "@/lib/api-fetch";
+import { useApiResource } from "@/hooks/useApiResource";
 import { AGENT_INSTALL_DOCS } from "@/lib/dashboard/first-run-steps";
 import type { MonitorData } from "@/types/console";
 
@@ -28,18 +27,15 @@ interface AgentPresence {
   available: boolean;
 }
 
-async function fetchAgentPresence(): Promise<AgentPresence> {
-  const monitor = await safeApiCallData<MonitorData>("/api/monitor");
-  const framework = monitor?.framework;
-  // `undefined` means the monitor could not tell us, which is not the same as
-  // "absent" — say nothing rather than accuse a working install.
-  return { name: framework?.name ?? "Hermes", available: framework?.available !== false };
-}
 
 export default function AgentSetupNotice({ what }: { what: string }) {
-  const { data } = useQuery({
-    queryKey: ["agent-presence"],
-    queryFn: fetchAgentPresence,
+  // The monitor the dashboard polls, under the same key, so this costs no
+  // request of its own on a screen that already has it (T-0129).
+  const { data } = useApiResource<AgentPresence>("/api/monitor", {
+    select: (p) => {
+      const framework = (p as MonitorData | null)?.framework;
+      return { name: framework?.name ?? "Hermes", available: framework?.available !== false };
+    },
     staleTime: 60_000,
   });
 

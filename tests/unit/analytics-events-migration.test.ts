@@ -10,7 +10,7 @@ import type DatabaseNs from "better-sqlite3";
 import {
   applyAnalyticsEventsMigration,
   ANALYTICS_EVENTS_SCHEMA_VERSION,
-} from "@/lib/db/apply-analytics-events-migration";
+} from "@/lib/db/sql-migrations";
 import { getSchemaVersion, setSchemaVersion } from "@/lib/db-schema";
 
 type RealDb = DatabaseNs.Database;

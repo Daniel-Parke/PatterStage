@@ -92,6 +92,11 @@ The work leading to the 1.0.0 release.
 
 ### Changed
 
+- **The dashboard asks each question once.** Loading the home screen made 22
+  requests to the app's own API, four of them for facts it had already asked
+  for, because two parts of the screen cached the same answer under different
+  names. Every read is now filed under the address it came from, so the second
+  asker gets the first one's answer. Nothing on the board changed.
 - **The keyboard's focus ring is the same everywhere, and instant.** Text
   fields, selects and toggles used to swap the console's ring for a fainter
   one of their own that also lit up on a mouse click. They use the one ring
@@ -454,6 +459,13 @@ The work leading to the 1.0.0 release.
 
 ### Removed
 
+- **Three API routes nothing called**: the full drift report, the scripts
+  directory lookup, and the per-mission dispatch route that its own header said
+  had been superseded. Their rows in the API reference went with them; two of
+  those rows described what the app does wrongly.
+- **An animation library** (`motion`) that served two screens' fade-ins. The
+  same fade-ins are done by the stylesheet now, and honour reduced motion by
+  the same rule as everything else.
 - **The Personalities page**, its sidebar entry and its API. Editing a
   personality happens on the Agents page's Identity tab.
 - **The "activate personality" control**, which changed nothing when clicked, and

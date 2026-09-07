@@ -13,7 +13,9 @@
 //   2. Does NOT crash when the entries payload is missing (defensive fallback).
 //   3. Surfaces the error path when !ok.
 
-import { render, waitFor, screen } from "@testing-library/react";
+import { waitFor, screen } from "@testing-library/react";
+// Reads go through useApiResource since T-0129, so the component wants a QueryClient.
+import { renderWithQuery } from "../helpers/render-with-query";
 import DirectoryPickerModal from "@/components/missions/DirectoryPickerModal";
 
 const mockFetch = jest.fn();
@@ -53,7 +55,7 @@ describe("DirectoryPickerModal — safeApiCall double-wrap", () => {
     });
 
     const onSelect = jest.fn();
-    render(
+    renderWithQuery(
       <DirectoryPickerModal open onClose={() => {}} onSelect={onSelect} />,
     );
 
@@ -84,7 +86,7 @@ describe("DirectoryPickerModal — safeApiCall double-wrap", () => {
         }),
     });
 
-    render(<DirectoryPickerModal open onClose={() => {}} onSelect={() => {}} />);
+    renderWithQuery(<DirectoryPickerModal open onClose={() => {}} onSelect={() => {}} />);
 
     await waitFor(() => {
       expect(screen.getByText("Empty folder")).toBeInTheDocument();
@@ -99,7 +101,7 @@ describe("DirectoryPickerModal — safeApiCall double-wrap", () => {
       json: () => Promise.resolve({}),
     });
 
-    render(<DirectoryPickerModal open onClose={() => {}} onSelect={() => {}} />);
+    renderWithQuery(<DirectoryPickerModal open onClose={() => {}} onSelect={() => {}} />);
 
     await waitFor(() => {
       expect(screen.getByText("Empty folder")).toBeInTheDocument();

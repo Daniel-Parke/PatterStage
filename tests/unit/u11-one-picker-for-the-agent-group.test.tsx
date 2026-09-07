@@ -43,7 +43,7 @@ jest.mock("@/components/agents/AgentGrowthPanel", () => ({
 }));
 jest.mock("@/hooks/useProfiles", () => ({
   useProfiles: () => ({
-    data: [
+    refetch: async () => undefined, data: [
       { id: "default", name: "Bob (local default)", description: "" },
       { id: "qa", name: "QA Engineer", description: "" },
     ],

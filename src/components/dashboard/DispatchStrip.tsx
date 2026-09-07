@@ -23,7 +23,7 @@ import {
   type TemplateLike,
 } from "@/lib/missions/mission-categories";
 import type { MissionCategory } from "@/lib/missions/mission-category-repository";
-import type { DashboardTemplate } from "@/lib/dashboard/dashboard-initial-load";
+import type { DashboardTemplate } from "@/hooks/useDashboard";
 import { topNTemplates } from "@/lib/dashboard/dashboard-top-templates";
 import type { AccentColor } from "@/types/console";
 

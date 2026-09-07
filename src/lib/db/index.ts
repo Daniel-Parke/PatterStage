@@ -53,15 +53,29 @@ import { applyMissionQueueMigration } from "./apply-mission-queue-migration";
 import { applyCronScheduleCanonicalisation } from "./apply-cron-schedule-canonicalisation";
 import { applyRunsSchedulesMigration } from "./apply-runs-schedules-migration";
 import { applyLegacyColumnRepair } from "./apply-legacy-column-repair";
-import { applyDropGameTablesMigration } from "./apply-drop-game-tables-migration";
-import { applyAnalyticsEventsMigration } from "./apply-analytics-events-migration";
-import { applyChatMigration } from "./apply-chat-migration";
-import { applyBenchmarksMigration } from "./apply-benchmarks-migration";
+// The seventeen one-file migrations, as a table (T-0129).
+import {
+  applyDropGameTablesMigration,
+  applyAnalyticsEventsMigration,
+  applyChatMigration,
+  applyBenchmarksMigration,
+  applyBenchmarkCatalogMigration,
+  applyDeepResearchMigration,
+  applyArtifactsMigration,
+  applyRecroomLibraryMigration,
+  applyAgentProgressionMigration,
+  applyRetentionMigration,
+  applySpendPolicyMigration,
+  applyResearchUsageMigration,
+  applyResearchGatherMigration,
+  applyOperatorPrefsMigration,
+  applyModelsOriginMigration,
+  applyRunsSpendSourceMigration,
+  applyScheduleKindMigration,
+} from "./sql-migrations";
 import { applyBenchmarkConfigMigration } from "./apply-benchmark-config-migration";
-import { applyBenchmarkCatalogMigration } from "./apply-benchmark-catalog-migration";
 import { applyBenchGatewaysMigration } from "./apply-bench-gateways-migration";
 import { applyMissionPhasesMigration } from "./apply-mission-phases-migration";
-import { applyDeepResearchMigration } from "./apply-deep-research-migration";
 import { applyRetireMissionPhasesMigration } from "./apply-retire-mission-phases-migration";
 import { applyComposerMigration } from "./apply-composer-migration";
 import { applyMemoryProvidersMigration } from "./apply-memory-providers-migration";
@@ -70,20 +84,9 @@ import { applyModelsApiStyleMigration } from "./apply-models-api-style-migration
 import { applyResearchComposerLinkMigration } from "./apply-research-composer-link-migration";
 import { applyComposerGroupLinkMigration } from "./apply-composer-group-link-migration";
 import { applyFrameworksMigration } from "./apply-frameworks-migration";
-import { applyArtifactsMigration } from "./apply-artifacts-migration";
-import { applyRecroomLibraryMigration } from "./apply-recroom-library-migration";
 import { applyNeutralColumnNames } from "./apply-neutral-column-names";
-import { applyAgentProgressionMigration } from "./apply-agent-progression-migration";
-import { applyRetentionMigration } from "./apply-retention-migration";
-import { applySpendPolicyMigration } from "./apply-spend-policy-migration";
-import { applyResearchUsageMigration } from "./apply-research-usage-migration";
 import { applyComposerRejectedMigration } from "./apply-composer-rejected-migration";
-import { applyResearchGatherMigration } from "./apply-research-gather-migration";
 import { applyComposerNodeCancelledMigration } from "./apply-composer-node-cancelled-migration";
-import { applyOperatorPrefsMigration } from "./apply-operator-prefs-migration";
-import { applyModelsOriginMigration } from "./apply-models-origin-migration";
-import { applyRunsSpendSourceMigration } from "./apply-runs-spend-source-migration";
-import { applyScheduleKindMigration } from "./apply-schedule-kind-migration";
 
 // ── Ensure data directory exists ───────────────────────────────
 

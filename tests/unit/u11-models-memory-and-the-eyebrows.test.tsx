@@ -35,7 +35,7 @@ jest.mock("@/components/ui/ProfilePicker", () => ({
 }));
 jest.mock("@/hooks/useProfiles", () => ({
   useProfiles: () => ({
-    data: [{ id: "default", name: "Bob (local default)", description: "" }],
+    refetch: async () => undefined, data: [{ id: "default", name: "Bob (local default)", description: "" }],
     isLoading: false,
     error: null,
   }),

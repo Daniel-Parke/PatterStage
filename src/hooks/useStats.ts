@@ -9,7 +9,7 @@ import type { DashboardStats } from "@/lib/stats/stats-repository";
 
 /** Polls the dashboard stats on a 20s cadence (live-ish without SSE pressure). */
 export function useStats() {
-  const r = useApiResource<DashboardStats>(["dashboard-stats"], "/api/stats", {
+  const r = useApiResource<DashboardStats>("/api/stats", {
     select: (p) => (p as { stats?: DashboardStats } | null)?.stats,
     errorMessage: "Failed to load stats",
     refetchInterval: 20_000,

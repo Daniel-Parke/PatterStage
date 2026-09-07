@@ -45,7 +45,7 @@ jest.mock("@/components/layout/AppPageShell", () => ({
 /** The names come from the same list the pickers read. */
 jest.mock("@/hooks/useProfiles", () => ({
   useProfiles: () => ({
-    data: [
+    refetch: async () => undefined, data: [
       { id: "default", name: "Bob (local default)", description: "" },
       { id: "qa", name: "QA Engineer", description: "" },
     ],

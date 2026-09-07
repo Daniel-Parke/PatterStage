@@ -17,7 +17,15 @@
 import { expect, test } from "@playwright/test";
 
 const LOAD_CEILING = 18;
-const IDLE_CEILING = 12;
+/**
+ * The idle ceiling is arithmetic, not a round number. The board polls the
+ * monitor every 10s (3 in the window), agents, missions and subsystems every
+ * 15s (2 each), stats every 20s (1 or 2), spend every 30s (1) and the session
+ * trend every 60s (0 or 1): eleven to thirteen, and the phase of each timer
+ * against the window's edges adds one or two. Fifteen holds that; a new poll
+ * on the board raises it on purpose, here, with its interval.
+ */
+const IDLE_CEILING = 15;
 const IDLE_MS = 30_000;
 
 test.describe("the dashboard asks each question once", () => {

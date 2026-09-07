@@ -78,18 +78,7 @@ export function useSessions({
   if (status) params.set("status", status);
   if (hideApiNoise) params.set("hideApiNoise", "1");
   if (missionId) params.set("missionId", missionId);
-  return useApiResource<SessionsResponse>(
-    [
-      "sessions",
-      page,
-      source,
-      pageSize,
-      trimmed ?? "",
-      status ?? "",
-      hideApiNoise ? 1 : 0,
-      missionId ?? "",
-    ],
-    `/api/sessions?${params}`,
+  return useApiResource<SessionsResponse>(`/api/sessions?${params}`,
     {
       select: (p) => p as SessionsResponse | undefined,
       fallback: { sessions: [], total: 0, totals: NO_TOTALS, sources: [] },

@@ -24,10 +24,12 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { safeApiCall } from "@/lib/api-fetch";
 
-import { useApiResource } from "./useApiResource";
+import { apiQueryKey, useApiResource } from "./useApiResource";
 
 /** The one query key the prefs map lives under. */
-const OPERATOR_PREFS_QUERY_KEY = ["operator-prefs"] as const;
+// The endpoint IS the key (T-0129), so the invalidation after a write hits
+// the same entry every reader of /api/prefs shares.
+const OPERATOR_PREFS_QUERY_KEY = apiQueryKey("/api/prefs");
 
 export interface UseOperatorPrefsResult {
   /** Every stored preference, keyed as the allow-list names it. */
@@ -45,7 +47,7 @@ export interface UseOperatorPrefsResult {
 
 export function useOperatorPrefs(): UseOperatorPrefsResult {
   const queryClient = useQueryClient();
-  const read = useApiResource<Record<string, unknown>>(OPERATOR_PREFS_QUERY_KEY, "/api/prefs", {
+  const read = useApiResource<Record<string, unknown>>("/api/prefs", {
     select: (p) => (p as { prefs?: Record<string, unknown> } | undefined)?.prefs,
     fallback: {},
     errorMessage: "Failed to read your preferences",

@@ -13,9 +13,7 @@ export function useConfig() {
   const resource = useApiResource<
     Record<string, unknown>,
     { configError: string | null; subject: string | null }
-  >(
-    ["config"],
-    "/api/config",
+  >("/api/config",
     {
       select: (p) => (p as Record<string, unknown> | null) ?? undefined,
       fallback: {},

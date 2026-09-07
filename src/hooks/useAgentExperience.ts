@@ -32,9 +32,7 @@ export interface AgentExperienceEntry {
 
 /** Agents ranked most-grown first. Empty until an agent has completed work. */
 export function useAgentExperience() {
-  const { data, ...rest } = useApiResource<AgentExperienceEntry[]>(
-    ["agent-experience"],
-    "/api/agents/experience",
+  const { data, ...rest } = useApiResource<AgentExperienceEntry[]>("/api/agents/experience",
     {
       select: (payload) => (payload as { entries?: AgentExperienceEntry[] } | undefined)?.entries,
       fallback: [],

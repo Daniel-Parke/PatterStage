@@ -16,14 +16,9 @@ import {
 // The last applier's own gate, and the one before it. Imported by their own
 // specifiers, which the global "@/lib/db" mock does not intercept, so these are
 // the real numbers the chain ends on.
-import { OPERATOR_PREFS_SCHEMA_VERSION } from "@/lib/db/apply-operator-prefs-migration";
-import { MODELS_ORIGIN_SCHEMA_VERSION } from "@/lib/db/apply-models-origin-migration";
-import { RUNS_SPEND_SOURCE_SCHEMA_VERSION } from "@/lib/db/apply-runs-spend-source-migration";
-import { SCHEDULE_KIND_SCHEMA_VERSION } from "@/lib/db/apply-schedule-kind-migration";
+import { OPERATOR_PREFS_SCHEMA_VERSION, MODELS_ORIGIN_SCHEMA_VERSION, RUNS_SPEND_SOURCE_SCHEMA_VERSION, SCHEDULE_KIND_SCHEMA_VERSION, RESEARCH_GATHER_SCHEMA_VERSION, RESEARCH_USAGE_SCHEMA_VERSION } from "@/lib/db/sql-migrations";
 import { COMPOSER_NODE_CANCELLED_SCHEMA_VERSION } from "@/lib/db/apply-composer-node-cancelled-migration";
-import { RESEARCH_GATHER_SCHEMA_VERSION } from "@/lib/db/apply-research-gather-migration";
 import { COMPOSER_REJECTED_SCHEMA_VERSION } from "@/lib/db/apply-composer-rejected-migration";
-import { RESEARCH_USAGE_SCHEMA_VERSION } from "@/lib/db/apply-research-usage-migration";
 
 // jest.setup globally mocks "@/lib/db" (no runMigrations on the mock); pull the
 // real implementation so we exercise the actual wiring.

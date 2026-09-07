@@ -20,9 +20,7 @@ import { join } from "path";
 import type DatabaseNs from "better-sqlite3";
 import { execBaselineSchema } from "../helpers/baseline-db";
 import { applyComposerMigration } from "@/lib/db/apply-composer-migration";
-import { applyDeepResearchMigration } from "@/lib/db/apply-deep-research-migration";
-import { applySpendPolicyMigration } from "@/lib/db/apply-spend-policy-migration";
-import { applyResearchUsageMigration } from "@/lib/db/apply-research-usage-migration";
+import { applyDeepResearchMigration, applySpendPolicyMigration, applyResearchUsageMigration } from "@/lib/db/sql-migrations";
 
 type RealDb = DatabaseNs.Database;
 
