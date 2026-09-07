@@ -40,7 +40,21 @@ export default defineConfig({
     {
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
+      // The phone spec runs under its own project, below, and nowhere else.
+      testIgnore: "**/phone.spec.ts",
     },
+    // The 390x844 project (T-0128). One file, the whole route matrix: gate 9's
+    // containment at 390 and 1024, the icon rail between 768 and 1024, and the
+    // drawer's focus ring. Deferred by the last programme; landed with gate 9.
+    ...(smokeOnly
+      ? []
+      : [
+          {
+            name: "phone",
+            use: { ...devices["Desktop Chrome"], viewport: { width: 390, height: 844 }, hasTouch: true },
+            testMatch: "**/phone.spec.ts",
+          },
+        ]),
   ],
   use: {
     baseURL,
