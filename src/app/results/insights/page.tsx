@@ -22,7 +22,7 @@ import {
 import PageHeader from "@/components/layout/PageHeader";
 import AppPageShell from "@/components/layout/AppPageShell";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
-import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import PageLoading from "@/components/ui/PageLoading";
 import {
   AreaTrend, ActivityHeatmap, Donut, RadialActivityClock,
   DistributionHistogram, TopList, StackedAreaTrend,
@@ -184,7 +184,12 @@ export default function InsightsPage() {
         )}
 
         {!stats && statsLoading ? (
-          <LoadingSpinner text="Loading insights…" />
+          // The loading contract (T-0122), and the reason it exists. A 40px
+          // spinner standing in for an 800px body is most of this page's 0.054
+          // CLS: the whole screen jumps when the read lands. Skeletons the
+          // shape of what is coming hold the space instead, and the header has
+          // already rendered because the shell takes it as a prop.
+          <PageLoading label="Loading insights" rows={3} rowClassName="h-64" />
         ) : (
           <>
             {/* ── First-run nudge (analytics start empty) ── */}

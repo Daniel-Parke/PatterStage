@@ -56,15 +56,21 @@ export default function SessionFilterBar({
           />
         </div>
         {sources.length > 0 && (
+          // Every chip carries a resting boundary. A filter with none does not
+          // read as a control at all - it reads as a word - and WCAG 1.4.11
+          // asks 3:1 of the boundary that identifies one. The edge is `ps-edge`
+          // in BOTH states, per the rule U6 settled: an accent stroke cannot
+          // reliably reach 3:1 on the panel, so what says "chosen" is the fill
+          // and the text, never the border (T-0124).
           <div className="flex items-center gap-2 flex-wrap">
             <Filter className="w-4 h-4 text-ps-text-muted flex-shrink-0" />
             <button
               onClick={onClearSourceFilter}
               aria-pressed={!sourceFilter}
-              className={`text-micro font-mono px-2 py-1 rounded-ps-sm transition-colors ${
+              className={`rounded-ps-sm border border-ps-edge px-2 py-1 font-mono text-micro transition-colors ${
                 !sourceFilter
                   ? "bg-neon-orange/20 text-neon-orange"
-                  : "text-ps-text-muted hover:text-ps-text-secondary"
+                  : "text-ps-text-muted hover:bg-ps-surface-raised hover:text-ps-text-secondary"
               }`}
             >
               All
@@ -74,10 +80,10 @@ export default function SessionFilterBar({
                 key={src}
                 onClick={() => onSelectSourceFilter(src)}
                 aria-pressed={sourceFilter === src}
-                className={`text-micro font-mono px-2 py-1 rounded-ps-sm transition-colors flex items-center gap-1 ${
+                className={`flex items-center gap-1 rounded-ps-sm border border-ps-edge px-2 py-1 font-mono text-micro transition-colors ${
                   sourceFilter === src
                     ? "bg-neon-orange/20 text-neon-orange"
-                    : "text-ps-text-muted hover:text-ps-text-secondary"
+                    : "text-ps-text-muted hover:bg-ps-surface-raised hover:text-ps-text-secondary"
                 }`}
               >
                 {sourceMeta(src).icon}
@@ -89,10 +95,10 @@ export default function SessionFilterBar({
               type="button"
               onClick={onToggleFailedOnly}
               aria-pressed={failedOnly}
-              className={`text-micro font-mono px-2 py-1 rounded-ps-sm transition-colors flex items-center gap-1 ${
+              className={`flex items-center gap-1 rounded-ps-sm border border-ps-edge px-2 py-1 font-mono text-micro transition-colors ${
                 failedOnly
                   ? "bg-semantic-danger/20 text-semantic-danger"
-                  : "text-ps-text-muted hover:text-ps-text-secondary"
+                  : "text-ps-text-muted hover:bg-ps-surface-raised hover:text-ps-text-secondary"
               }`}
             >
               <AlertTriangle className="w-3 h-3" />
