@@ -15,7 +15,7 @@
 //
 // The source-shape half of this oracle is b5-dashboard-source-shape.test.ts.
 
-import { fireEvent, render, renderHook, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, renderHook, screen, waitFor, within } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 
@@ -178,6 +178,7 @@ function dash(over: Partial<DashResult> = {}): DashResult {
     refetchMonitor: jest.fn(async () => undefined),
     refetchMissions: jest.fn(async () => undefined),
     refetchProcesses: jest.fn(async () => undefined),
+    refetchSubsystems: jest.fn(async () => undefined),
     monitorError: null,
     monitorSettled: true,
     subsystemsError: null,
@@ -415,6 +416,27 @@ describe("A. useDashboard exposes the monitor and subsystems queries' error and 
     await waitFor(() => expect(result.current.subsystemsError).toBe("subsystems unreachable"));
     expect(result.current.subsystemsSettled).toBe(true);
     expect(result.current.subsystems).toBeNull();
+  });
+
+  // Added 2026-09-07 (U13, T-0127): the Subsystems panel is the one place
+  // Gateway and Memory are said now, so it owes a Retry, and this is what
+  // the Retry presses.
+  it("re-reads the subsystems on demand, which is what the panel's Retry presses", async () => {
+    let calls = 0;
+    wire({
+      subsystems: async () => {
+        calls += 1;
+        if (calls === 1) throw new Error("subsystems unreachable");
+        return SUBSYSTEMS;
+      },
+    });
+    const { result } = renderHook(() => realUseDashboard() as DashResult, { wrapper: wrapper() });
+    await waitFor(() => expect(result.current.subsystemsError).toBe("subsystems unreachable"));
+    await act(async () => {
+      await result.current.refetchSubsystems();
+    });
+    await waitFor(() => expect(result.current.subsystems).toEqual(SUBSYSTEMS));
+    expect(result.current.subsystemsError).toBeNull();
   });
 });
 

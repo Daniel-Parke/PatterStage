@@ -10,6 +10,8 @@ interface BadgeProps {
   size?: "sm" | "md";
   variant?: "solid" | "outline";
   className?: string;
+  /** A hover title, for a chip whose full meaning does not fit its word (T-0127). */
+  title?: string;
 }
 
 const colorMap: Record<string, { bg: string; text: string; border: string }> = {
@@ -33,6 +35,7 @@ export default function Badge({
   size = "sm",
   variant = "solid",
   className = "",
+  title,
 }: BadgeProps) {
   const c = colorMap[color] || colorMap.gray;
   const s = sizeMap[size];
@@ -44,6 +47,7 @@ export default function Badge({
 
   return (
     <span
+      title={title}
       className={`inline-flex items-center font-mono rounded-ps-sm ${s} ${variantClass} ${className}`}
     >
       {children}

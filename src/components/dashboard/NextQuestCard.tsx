@@ -16,14 +16,18 @@
 //
 // Presentational. The page hands it the evaluated progress off the stats poll
 // it already makes, the host capabilities, and whether the operator has hidden
-// the guide, the same way it hands ProgressLine its stats.
+// the guide, the same way it hands ProgressLine its stats. Since U13 (T-0127)
+// it is the dashboard's own Panel shell with the header every other panel has,
+// and its three controls are the primitives rather than three class strings.
 // ═══════════════════════════════════════════════════════════════
 
 "use client";
 
-import Link from "next/link";
 import { ArrowRight, ChevronRight, Compass } from "lucide-react";
 
+import { Panel, PanelHeader } from "@/components/dashboard/Panel";
+import Button from "@/components/ui/Button";
+import LinkButton from "@/components/ui/LinkButton";
 import type { QuestProgress } from "@/lib/quests/evaluate";
 import { QUEST_CHAPTERS, questAvailable, type QuestHostCapabilities } from "@/lib/quests/quest-defs";
 
@@ -49,53 +53,42 @@ export default function NextQuestCard({ quests, host, hidden = false, onHide }: 
   const chapter = QUEST_CHAPTERS.find((c) => c.number === next.chapter);
 
   return (
-    <section
-      aria-label="Start here"
-      className="rounded-ps-lg border border-neon-cyan/25 bg-ps-surface-panel overflow-hidden"
-    >
-      <div className="flex items-center gap-2 border-b border-ps-edge-hairline bg-ps-surface-raised px-4 py-2">
-        <Compass className="h-3.5 w-3.5 text-neon-cyan" />
-        <span className="text-micro font-mono uppercase tracking-wider text-ps-text-secondary">
-          Start here
-        </span>
-        <span className="ml-auto font-mono text-micro text-ps-text-muted">
-          {quests.completed}/{quests.total}
-        </span>
-      </div>
-      <div className="px-4 py-3">
-        {chapter && (
-          <div className="text-micro font-mono uppercase tracking-wider text-ps-text-muted">
-            Chapter {chapter.number} · {chapter.title}
-          </div>
-        )}
-        <div className="mt-1 text-body font-semibold text-ps-text-primary">{next.title}</div>
-        <p className="mt-1 text-body text-ps-text-secondary">{next.action}</p>
-        <div className="mt-3 flex flex-wrap items-center gap-4">
-          <Link
-            href={next.screen}
-            className="inline-flex items-center gap-1.5 rounded-ps-md border border-neon-cyan/30 bg-neon-cyan/10 px-3 py-1 text-micro font-mono text-neon-cyan transition-colors hover:bg-neon-cyan/20"
-          >
-            Go
-            <ArrowRight className="h-3 w-3" />
-          </Link>
-          <Link
-            href="/quests"
-            className="inline-flex items-center gap-1 text-micro font-mono text-neon-purple hover:underline"
-          >
-            All quests
-            <ChevronRight className="h-3 w-3" />
-          </Link>
-          {onHide && (
-            <button
-              type="button"
-              onClick={onHide}
-              className="ml-auto text-micro font-mono text-ps-text-muted transition-colors hover:text-ps-text-secondary"
-            >
-              Hide this guide
-            </button>
+    <section aria-label="Start here">
+      <Panel accent="cyan">
+        <PanelHeader
+          icon={Compass}
+          label="Start here"
+          accent="cyan"
+          rightSlot={
+            <span className="font-mono text-micro text-ps-text-muted">
+              {quests.completed}/{quests.total}
+            </span>
+          }
+        />
+        <div className="px-4 py-3">
+          {chapter && (
+            <div className="font-mono text-micro uppercase tracking-wider text-ps-text-muted">
+              Chapter {chapter.number} · {chapter.title}
+            </div>
           )}
+          <div className="mt-1 text-body font-semibold text-ps-text-primary">{next.title}</div>
+          <p className="mt-1 text-body text-ps-text-secondary">{next.action}</p>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <LinkButton href={next.screen} variant="primary" color="cyan" size="sm" icon={ArrowRight}>
+              Go
+            </LinkButton>
+            <LinkButton href="/quests" variant="ghost" color="purple" size="sm">
+              All quests
+              <ChevronRight className="h-3 w-3" aria-hidden="true" />
+            </LinkButton>
+            {onHide && (
+              <Button variant="ghost" size="sm" onClick={onHide} className="ml-auto">
+                Hide this guide
+              </Button>
+            )}
+          </div>
         </div>
-      </div>
+      </Panel>
     </section>
   );
 }

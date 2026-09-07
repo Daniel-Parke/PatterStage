@@ -3,28 +3,26 @@
 // ═══════════════════════════════════════════════════════════════
 // What is happening on this machine right now, and one click into the
 // surface that answers each question in full. History (the charts, the
-// mission mix, the trophy case) lives on Insights (T-0099, B5). Six pills, one
-// Progress line, the dispatch strip, the live panels. No clock, no Story
+// mission mix, the trophy case) lives on Insights (T-0099, B5). Three pills,
+// one Progress line, the dispatch strip, the live panels. No clock, no Story
 // Weaver card, no hero charts.
+//
+// Three pills, not six, since U13 (T-0127): Gateway and Memory were said as a
+// pill AND as a Subsystems row that carried the reason the pill could not;
+// Errors was said as a pill and as a panel. Each fact is said once, where it
+// is best said, and the row is the three facts nothing else here carries.
 
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
 import Link from "next/link";
-import {
-  AlertTriangle,
-  ChevronRight,
-  Globe,
-  Layers,
-  Radio,
-  Timer,
-  Wallet,
-  Zap,
-} from "lucide-react";
+import { ChevronRight, Radio, Timer, Wallet, Zap } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 import { timeAgo } from "@/lib/utils";
-import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import Card from "@/components/ui/Card";
+import LinkButton from "@/components/ui/LinkButton";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
+import PageLoading from "@/components/ui/PageLoading";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
 import { StatPill, StatPillSkeleton } from "@/components/dashboard/StatPill";
@@ -44,10 +42,7 @@ import { isMissionActive } from "@/lib/missions/mission-board";
 import { dedupErrors } from "@/lib/dashboard/dashboard-error-dedup";
 import { describeSchedulerHealth } from "@/lib/dashboard/scheduler-pill";
 import { settleFirstRunFacts, type FirstRunFacts } from "@/lib/dashboard/first-run-steps";
-import { SUBSYSTEM_STATE_LABELS } from "@/lib/status-labels";
 import { formatUsd } from "@/lib/spend/spend-law";
-import type { SubsystemRow } from "@/lib/status/subsystems";
-import type { AccentColor } from "@/types/console";
 import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
 import { useInterval } from "@/hooks/useInterval";
 import { useDashboard } from "@/hooks/useDashboard";
@@ -57,28 +52,6 @@ import { useStats } from "@/hooks/useStats";
 import { useAgentExperience } from "@/hooks/useAgentExperience";
 import { useSpend } from "@/hooks/useSpend";
 import { ConfigYamlErrorAlert } from "@/components/config/ConfigYamlErrorAlert";
-
-const STATE_COLOR: Record<SubsystemRow["state"], AccentColor> = {
-  ok: "green",
-  degraded: "orange",
-  down: "pink",
-};
-
-/**
- * A subsystem row as a pill: the ratified word for its state, in its colour.
- * A row that has not been read yet is "Checking…" and a check that failed is
- * "Unknown"; neither is green, because nothing on this board is green until
- * it has actually been read (T-0099, D57).
- */
-function subsystemPill(
-  row: SubsystemRow | null,
-  answered: boolean,
-  checkError: string | null,
-): { value: string; color: AccentColor } {
-  if (row) return { value: SUBSYSTEM_STATE_LABELS[row.state], color: STATE_COLOR[row.state] };
-  if (!answered && !checkError) return { value: "Checking…", color: "cyan" };
-  return { value: "Unknown", color: "orange" };
-}
 
 export default function Dashboard() {
   // All dashboard data comes from the TanStack Query layer
@@ -110,6 +83,7 @@ export default function Dashboard() {
     refetchMonitor,
     refetchMissions,
     refetchProcesses,
+    refetchSubsystems,
   } = useDashboard();
   // The Progress line reads the stats poll the shell already makes, the
   // agents ranked by growth, and this month's spend for the Spend pill.
@@ -216,14 +190,13 @@ export default function Dashboard() {
   const agentConfigured = monitor?.framework?.available !== false;
 
   const gatewayRow = subsystems?.subsystems.find((s) => s.id === "gateway") ?? null;
-  const memoryRow = subsystems?.subsystems.find((s) => s.id === "memory") ?? null;
   const gatewayReachable = gatewayRow?.state === "ok";
   // The Start here card waits for both reads before it speaks, and the
   // header's agent badge reads a gateway that has answered ONCE as reachable:
   // the story used to change twice while loading and flip on a single failed
-  // probe (T-0099, D57). The Gateway pill below is deliberately not latched —
-  // it reports the check that was actually just made, "Checking…" and
-  // "Unknown" included, which is the other half of the same ruling.
+  // probe (T-0099, D57). The Subsystems panel is deliberately not latched — it
+  // reports the check that was actually just made, "Checking…" and a failed
+  // check included, which is the other half of the same ruling.
   const readingsSettled = monitorSettled && subsystemsSettled;
   const rawFirstRunFacts = useMemo<FirstRunFacts>(
     () => ({
@@ -269,8 +242,6 @@ export default function Dashboard() {
     [monitor?.scheduler, now],
   );
 
-  const gatewayPill = subsystemPill(gatewayRow, subsystemsSettled, subsystemsError);
-  const memoryPill = subsystemPill(memoryRow, subsystemsSettled, subsystemsError);
   const monthSpend = spend?.periods.find((p) => p.period === "month") ?? null;
   const errorCount = monitor?.errors.length ?? 0;
 
@@ -315,10 +286,10 @@ export default function Dashboard() {
     >
       {toastElement}
 
+      {/* The loading contract (T-0122): the header is drawn above, and the body
+          holds its shape as a skeleton rather than a spinner in a void. */}
       {!ready ? (
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <LoadingSpinner text="Loading dashboard..." />
-        </div>
+        <PageLoading label="Loading the dashboard" rows={5} rowClassName="h-24" />
       ) : (
         <div className="space-y-6">
         {/* Start here: the next quest, before the widgets. Renders nothing once
@@ -340,29 +311,20 @@ export default function Dashboard() {
           <ConfigYamlErrorAlert message={monitor.system.configYamlError} />
         ) : null}
         {/* Is each thing this product depends on up, and why not (T-0091). */}
-        <SubsystemsPanel subsystems={subsystems?.subsystems ?? null} checkedAt={subsystems?.checkedAt ?? null} />
+        <SubsystemsPanel
+          subsystems={subsystems?.subsystems ?? null}
+          checkedAt={subsystems?.checkedAt ?? null}
+          error={subsystemsSettled ? subsystemsError : null}
+          onRetry={() => void refetchSubsystems()}
+        />
 
-        {/* ═══ Six pills: gateway, memory, scheduler, spend, processes, errors ═══
-            Three states for the monitor they hang off: not yet (skeletons),
-            failed (an alert with Retry, never skeletons forever), here. */}
+        {/* ═══ Three pills: scheduler, spend, processes ═══
+            The facts the Subsystems panel above and the Errors panel below do
+            not carry. Three states for the monitor they hang off: not yet
+            (skeletons), failed (an alert with Retry, never skeletons forever),
+            here. At three across, the subtext has room; at six it clipped. */}
         {monitor ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 min-w-0">
-            <StatPill
-              icon={Globe}
-              label="Gateway"
-              value={gatewayPill.value}
-              color={gatewayPill.color}
-              subtitle={gatewayRow?.url ?? gatewayRow?.reason ?? (subsystemsError ? "check failed" : undefined)}
-              href="/agent/settings/system"
-            />
-            <StatPill
-              icon={Layers}
-              label="Memory"
-              value={memoryPill.value}
-              color={memoryPill.color}
-              subtitle={`${Math.max(0, monitor.memory.factCount)} facts · ${monitor.memory.provider || "no provider"}`}
-              href="/agent/memory"
-            />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 min-w-0">
             <StatPill
               icon={Timer}
               label="Scheduler"
@@ -384,15 +346,8 @@ export default function Dashboard() {
               label="Processes"
               value={activeProcesses.length > 0 ? `${activeProcesses.length} Active` : status?.soulFile ? "Idle" : "Offline"}
               color={activeProcesses.length > 0 ? "green" : status?.soulFile ? "cyan" : "pink"}
+              subtitle={activeProcesses.length > 0 ? "running now" : "nothing running"}
               href="/agent/profiles"
-            />
-            <StatPill
-              icon={AlertTriangle}
-              label="Errors"
-              value={String(errorCount)}
-              color={errorCount > 0 ? "pink" : "green"}
-              subtitle={errorCount === 1 ? "recent error" : "recent errors"}
-              href="/results/logs"
             />
           </div>
         ) : monitorError ? (
@@ -403,10 +358,7 @@ export default function Dashboard() {
             className="mb-0"
           />
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 min-w-0">
-            <StatPillSkeleton />
-            <StatPillSkeleton />
-            <StatPillSkeleton />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 min-w-0">
             <StatPillSkeleton />
             <StatPillSkeleton />
             <StatPillSkeleton />
@@ -423,7 +375,7 @@ export default function Dashboard() {
         />
 
         {/* ═══ Handoff / continuation ═══ */}
-        <div className="rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+        <Card as="section" padding="none" className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
           <div>
             <div className="text-micro font-mono text-ps-text-muted uppercase tracking-wider">
               Continue work
@@ -444,13 +396,11 @@ export default function Dashboard() {
               )}
             </div>
           </div>
-          <Link
-            href="/results/sessions"
-            className="text-micro font-mono text-neon-purple hover:underline inline-flex items-center gap-1"
-          >
-            Session browser <ChevronRight className="w-3 h-3" />
-          </Link>
-        </div>
+          <LinkButton href="/results/sessions" variant="ghost" color="purple" size="sm">
+            Session browser
+            <ChevronRight className="h-3 w-3" aria-hidden="true" />
+          </LinkButton>
+        </Card>
 
         {/* ═══ Mission Dispatch Quick Launch ═══ */}
         <DispatchStrip templates={templates} categories={categories} />
@@ -471,6 +421,7 @@ export default function Dashboard() {
           />
           <ErrorsPanel
             errors={filteredErrors}
+            count={errorCount}
             severity={errorSev}
             onSelectSeverity={selectSeverity}
           />

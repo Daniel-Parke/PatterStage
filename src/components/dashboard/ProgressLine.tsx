@@ -15,7 +15,10 @@
 import Link from "next/link";
 import { Bot, CalendarClock, ChevronRight, Compass, Terminal, Trophy } from "lucide-react";
 
+import Card from "@/components/ui/Card";
+import LinkButton from "@/components/ui/LinkButton";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
+import Skeleton from "@/components/ui/Skeleton";
 import { StreakFlame, AgentLevelBadge } from "@/components/achievements";
 import type { AgentExperienceEntry } from "@/hooks/useAgentExperience";
 import type { DashboardStats } from "@/lib/stats/stats-repository";
@@ -51,17 +54,15 @@ export default function ProgressLine({ stats, statsError, onRetryStats, topAgent
         />
       );
     }
-    return <div className="animate-shimmer h-16 rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel" aria-hidden />;
+    return <Skeleton className="h-16 w-full" />;
   }
 
   const unlocked = stats.achievements.filter((a) => a.unlocked).length;
   const next = stats.automations.nextRun;
 
   return (
-    <section
-      aria-label="Progress"
-      className="rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel px-4 py-3 flex flex-wrap items-center gap-x-6 gap-y-3"
-    >
+    <section aria-label="Progress">
+      <Card padding="none" className="flex flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3">
       <StreakFlame current={stats.streak.current} longest={stats.streak.longest} />
       <div className="hidden h-8 w-px bg-ps-surface-raised sm:block" />
       <Link href="/agent/profiles" className="transition hover:opacity-90" title="Agent level. Open Agents">
@@ -70,17 +71,19 @@ export default function ProgressLine({ stats, statsError, onRetryStats, topAgent
           label={topAgent ? topAgent.targetLabel : "Agent"}
         />
       </Link>
-      <Link
+      <LinkButton
         href="/results/insights"
-        className="flex items-center gap-2 text-body text-ps-text-muted hover:text-ps-text-primary transition-colors"
+        variant="ghost"
+        size="sm"
+        icon={Trophy}
         title="Achievements unlocked. Open Insights"
+        className="font-sans"
       >
-        <Trophy className="h-3.5 w-3.5 text-neon-yellow" />
-        <span>Achievements</span>
+        Achievements
         <span className="font-mono text-ps-text-primary">
           {unlocked}/{stats.achievements.length}
         </span>
-      </Link>
+      </LinkButton>
       <div className="flex items-center gap-2 text-body">
         <CalendarClock className="h-3.5 w-3.5 text-neon-cyan" />
         {next ? (
@@ -98,14 +101,11 @@ export default function ProgressLine({ stats, statsError, onRetryStats, topAgent
           <span className="text-ps-text-muted">No automation scheduled</span>
         )}
       </div>
-      <Link
-        href="/quests"
-        className="ml-auto inline-flex items-center gap-1 text-micro font-mono text-neon-purple hover:underline"
-      >
-        <Compass className="h-3.5 w-3.5" />
+      <LinkButton href="/quests" variant="ghost" color="purple" size="sm" icon={Compass} className="ml-auto">
         Quests
-        <ChevronRight className="h-3 w-3" />
-      </Link>
+        <ChevronRight className="h-3 w-3" aria-hidden="true" />
+      </LinkButton>
+      </Card>
     </section>
   );
 }

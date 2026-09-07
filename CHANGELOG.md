@@ -92,6 +92,25 @@ The work leading to the 1.0.0 release.
 
 ### Changed
 
+- **The dashboard says each fact once.** Gateway and Memory were a pill and,
+  a panel above, a row with the reason the pill had no room for; Errors was a
+  pill and a panel. The row is three pills now - Scheduler, Spend, Processes -
+  each wide enough for its second line, the Errors count sits in the Errors
+  panel's own header, and the Subsystems panel, now the one place the gateway
+  and the memory store are reported, says so with a Retry when the check
+  itself fails instead of reading "Checking..." for ever. The board loads as
+  a skeleton under its header rather than a spinner in an empty page.
+
+- **Quests is one card level.** A chapter was a card, every quest in it was a
+  card, and the badge a quest earns was a bordered tile inside that. The
+  chapter is the surface; its quests are rows divided by thin rules, with the
+  status word in a column of its own so every title starts at the same edge,
+  Go and Skip side by side, and the achievement as a chip.
+
+- **Help names itself.** The front page of the guides is titled Help, the word
+  the sidebar and the tab already used, and every guide page carries a HELP
+  link back to it beside its own title.
+
 - **Story Weaver is two screens, not five.** The hub was four buttons to the
   other four screens and a row of tiles about them; the library, one click
   further in, was everything the hub showed and every story besides. The

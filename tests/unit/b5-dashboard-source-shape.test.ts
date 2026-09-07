@@ -28,12 +28,17 @@ describe("the dashboard page", () => {
     expect(src).not.toMatch(/CommandCenter/);
   });
 
-  it("renders the Progress line and the six pills the plan names", () => {
+  // Amended 2026-09-07 (U13, T-0127): three pills. Gateway and Memory are the
+  // Subsystems panel's rows, with their reasons, and Errors is its own panel;
+  // the row is the three facts nothing else on the board carries.
+  it("renders the Progress line and the three pills that say something nothing else does", () => {
     expect(src).toMatch(/ProgressLine/);
-    for (const label of ['"Gateway"', '"Memory"', '"Scheduler"', '"Spend"', '"Processes"', '"Errors"']) {
+    for (const label of ['"Scheduler"', '"Spend"', '"Processes"']) {
       expect(src).toContain(`label=${label}`);
     }
-    expect(src).not.toMatch(/label="Sessions"/);
+    for (const label of ['"Gateway"', '"Memory"', '"Errors"', '"Sessions"']) {
+      expect(src).not.toContain(`label=${label}`);
+    }
   });
 
   it("reads the monitor's failure from the hook rather than waiting forever", () => {

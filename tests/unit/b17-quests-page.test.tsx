@@ -293,7 +293,10 @@ describe("a quest row", () => {
 
   it("marks a completed quest complete, and dates it", async () => {
     render(withQuery(<QuestsPage />));
-    const row = (await screen.findByText("Add a model")).closest("li, div, article") as HTMLElement;
+    // Amended 2026-09-07 (U13, T-0127): the row is the list item. Its title
+    // sits in a line of its own now, so the nearest div is that line, not the
+    // row that carries the marker.
+    const row = (await screen.findByText("Add a model")).closest("li") as HTMLElement;
     expect(within(row).getByText(/complete|done/i)).toBeInTheDocument();
     expect(screen.getByText(/2026/)).toBeInTheDocument();
   });

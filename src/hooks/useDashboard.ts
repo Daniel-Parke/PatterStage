@@ -149,6 +149,8 @@ export interface UseDashboardResult {
   refetchMonitor: () => Promise<unknown>;
   refetchMissions: () => Promise<unknown>;
   refetchProcesses: () => Promise<unknown>;
+  /** The Subsystems panel's Retry (U13, T-0127): a failed check is an error with a way back, not Checking... for ever. */
+  refetchSubsystems: () => Promise<unknown>;
 }
 
 export function useDashboard(): UseDashboardResult {
@@ -207,5 +209,6 @@ export function useDashboard(): UseDashboardResult {
     refetchMonitor: () => monitorQuery.refetch(),
     refetchMissions: () => missionsQuery.refetch(),
     refetchProcesses: () => processesQuery.refetch(),
+    refetchSubsystems: () => subsystemsQuery.refetch(),
   };
 }

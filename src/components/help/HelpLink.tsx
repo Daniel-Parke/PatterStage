@@ -92,7 +92,9 @@ export default function HelpLink() {
       aria-label={name}
       title={name}
       data-testid="help-link"
-      className="flex items-center text-ps-text-muted hover:text-ps-text-primary transition-colors shrink-0"
+      // 24x24, not the 16x16 glyph alone: this is the product's own escape
+      // hatch and it was the smallest control on every screen (T-0127).
+      className="flex h-6 w-6 shrink-0 items-center justify-center rounded-ps-sm text-ps-text-muted transition-colors hover:text-ps-text-primary"
     >
       <HelpCircle className="w-4 h-4" aria-hidden="true" />
     </Link>

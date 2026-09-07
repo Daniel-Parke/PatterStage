@@ -85,7 +85,8 @@ export default async function HelpPage({
 
   // /help itself is the first page of the reading order, whatever B15 numbered
   // that to be. Nothing here holds a slug as a literal.
-  const wanted = slug || helpIndexSlug(manifest) || "";
+  const index = helpIndexSlug(manifest) || "";
+  const wanted = slug || index;
   // The guard is redundant here and kept anyway: parseHelpManifest already
   // dropped every unsafe slug, so an unsafe `wanted` finds no page and 404s
   // either way, and a sweep reports this as an equivalent mutant. What it buys
@@ -105,7 +106,7 @@ export default async function HelpPage({
         /* An expression, not a literal: the walk in b3-titles-from-registry only
            reads title="..." string literals, and a page whose name is the guide's
            name is not a header contradicting its rail entry. */
-        <HelpHeader title={page.title} subtitle={page.summary} />
+        <HelpHeader title={page.title} subtitle={page.summary} back={wanted !== index} />
       }
     >
       <div className={CONTENT_FRAME}>

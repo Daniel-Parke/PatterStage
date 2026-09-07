@@ -1,5 +1,5 @@
 ---
-title: Documentation
+title: Help
 summary: "The reading path: what PatterStage is, the first hour, one guide per screen, and where the governing corpus lives"
 section: start-here
 nav: 0
@@ -8,7 +8,7 @@ tags: [product, docs]
 compiled_from: normalised
 ---
 
-# Documentation
+# Help
 
 Six tiers, in reading order. Start at the top and stop when you have what you
 came for.

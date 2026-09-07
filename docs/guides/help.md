@@ -22,9 +22,10 @@ screen can hand you the page written about it.
 
 **The header.** A life ring, the title of the page you are reading, and that
 page's one-line summary beneath it. Arriving from the rail you land on
-**Documentation**, the front page of the whole set; open any page from the
-contents and the header takes that page's own name. This is the only screen in
-the console with no **?** in its header, because you are already in the guide.
+**Help**, the front page of the whole set; open any page from the contents and
+the header takes that page's own name, with a **HELP** link on its left that
+returns you to the front page. This is the only screen in the console with no
+**?** in its header, because you are already in the guide.
 
 **The contents**, down the left, and above the page on a narrow window. Six
 group headings in small capitals, in reading order: Start here, Concepts,
@@ -69,7 +70,7 @@ interrupted rather than that the page has nothing to say.
 screen's own buttons. It opens the guide for the screen you are on, and its
 tooltip names it: "Help for Missions", "Help for Models". No screen can opt out
 of it, and it is never dead: a screen with no guide of its own lands you on
-**Documentation**, the front page of the set, instead; on a console whose
+**Help**, the front page of the set, instead; on a console whose
 documentation has not been built it lands you on the panel that tells you how to
 build it.
 

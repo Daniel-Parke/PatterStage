@@ -12,7 +12,7 @@
 "use client";
 
 import { useMemo, useState, useCallback } from "react";
-import Link from "next/link";
+import LinkButton from "@/components/ui/LinkButton";
 import { useRouter } from "next/navigation";
 import { Rocket, ChevronRight, ChevronDown } from "lucide-react";
 
@@ -78,13 +78,10 @@ export default function DispatchStrip({ templates, categories }: DispatchStripPr
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <Link
-            href="/work/missions"
-            onClick={(e) => e.stopPropagation()}
-            className="text-micro font-mono text-neon-cyan hover:underline flex items-center gap-1"
-          >
-            full control <ChevronRight className="w-3 h-3" />
-          </Link>
+          <LinkButton href="/work/missions" variant="ghost" color="cyan" size="sm" onClick={(e) => e.stopPropagation()}>
+            full control
+            <ChevronRight className="h-3 w-3" aria-hidden="true" />
+          </LinkButton>
           {expanded ? (
             <ChevronDown className="w-4 h-4 text-ps-viz-glyph-idle" />
           ) : (

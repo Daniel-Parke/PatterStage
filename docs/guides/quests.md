@@ -37,26 +37,30 @@ running**, opens itself when it still has something left in it, and folds away
 once it is complete. In order, the seven are Get running, Missions, Shape your
 agent, Automate and watch, Multi-stage work, Rec Room and Keep it healthy.
 
-**A quest.** Open a chapter and each quest inside it is a card:
+**A quest.** Open a chapter and each quest inside it is a row, the rows
+divided by thin rules rather than boxed:
 
-- A marker in small capitals reading **To do**, **Complete** or **Skipped**.
+- A marker in small capitals reading **To do**, **Complete** or **Skipped**, in
+  a column of its own down the left, so every title starts at the same edge.
 - The quest's name, and on a finished one, the date it was first seen done.
 - One sentence saying what to do, naming the screen it happens on: "Add a model
   on the Models page, so the agent has something to think with."
 - **Teaches**, followed by chips naming the ideas the quest introduces: Model,
   Provider, Mission, Schedule, Gate, Artifact and the rest.
-- **Earns**, followed by a badge, on the four quests that unlock one.
-- A **Go** button that opens the screen where the action happens.
-- **Skip** underneath, or **Unskip** on one you have already skipped.
+- **Earns**, followed by a chip naming the achievement, on the four quests
+  that unlock one; it lights orange once earned.
+- A **Go** button that opens the screen where the action happens, and beside
+  it **Skip**, or **Unskip** on one you have already skipped.
 
-**A quest this machine cannot run.** In place of Go, a panel headed
+**A quest this machine cannot run.** In place of Go, a line headed
 "Unavailable on this host" with one sentence naming what is missing, and for
 most of them what would change it: no agent is reachable, no memory provider is
 reachable, the Composer is switched off on this install, or host script
-scheduling that native Windows does not have. The card still shows, it still keeps its place in the
-count, and it never claims to be complete.
+scheduling that native Windows does not have. The row still shows, it still
+keeps its place in the count, and it never claims to be complete.
 
-**While the read is in flight**, a spinner reading "Reading your progress...".
+**While the read is in flight**, the header is drawn and the body is a
+skeleton the shape of the list.
 If that read fails, a banner naming the failure with a **Retry** button and a
 note that your progress comes from the same poll the dashboard uses and nothing
 has been lost. You are never shown a page of zeros instead.
@@ -70,22 +74,22 @@ would otherwise look as though it had simply done nothing.
 **Do the next thing.**
 
 1. Open Quests. Chapter 1 is already open unless you have finished it.
-2. Read the first card marked **To do** and press **Go**. You land on the screen
+2. Read the first row marked **To do** and press **Go**. You land on the screen
    the sentence describes.
 3. Do the thing. There is nothing to come back and tick. The next time the
-   console reads your progress, up to twenty seconds later, the card turns
+   console reads your progress, up to twenty seconds later, the row turns
    **Complete**, stamps today's date, and a message reading "Quest complete:"
    with the quest's name appears in the corner.
 
 **Skip one that does not apply to your install.**
 
-1. Find the card. "Add a credential" is the usual one: a local provider that
+1. Find the row. "Add a credential" is the usual one: a local provider that
    needs no API key makes it impossible rather than merely undone.
-2. Press **Skip**. The card dims and its marker changes to **Skipped** at once;
+2. Press **Skip**. The row dims and its marker changes to **Skipped** at once;
    the totals at the top and on its chapter each drop by one the next time your
    progress is read, so the number stays a description of what you still mean to
    do.
-3. Press **Unskip** on the same card to put it back into the count.
+3. Press **Unskip** on the same row to put it back into the count.
 
 **See what a chapter is going to ask of you.**
 

@@ -40,7 +40,7 @@ describe("a guide page's header", () => {
   it("carries a back link to Help, the section's own word", () => {
     render(<HelpHeader title="Missions" subtitle="Dispatch work." back />);
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Missions");
-    expect(screen.getByRole("link", { name: /help/i, exact: false })).toHaveAttribute("href", "/help");
+    expect(screen.getByRole("link", { name: /^help$/i })).toHaveAttribute("href", "/help");
   });
 
   it("and the front page itself carries none: it is Help", () => {

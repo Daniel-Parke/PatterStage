@@ -11,6 +11,10 @@
 //
 // So the icon is chosen HERE, one module inside the boundary, and the server
 // page passes only strings.
+//
+// `back` (U13, T-0127): a guide page's header is the guide's own name (B16),
+// and the rail's word for the section is Help; the back link carries it, so
+// every Help screen but the front page - which IS Help - says where it is.
 // ═══════════════════════════════════════════════════════════════
 
 "use client";
@@ -19,6 +23,24 @@ import { LifeBuoy } from "lucide-react";
 
 import PageHeader from "@/components/layout/PageHeader";
 
-export default function HelpHeader({ title, subtitle }: { title?: string; subtitle: string }) {
-  return <PageHeader icon={LifeBuoy} title={title} subtitle={subtitle} color="cyan" />;
+export default function HelpHeader({
+  title,
+  subtitle,
+  back = false,
+}: {
+  title?: string;
+  subtitle: string;
+  /** Carry a back link to the front page of Help. Off for the front page itself. */
+  back?: boolean;
+}) {
+  return (
+    <PageHeader
+      icon={LifeBuoy}
+      title={title}
+      subtitle={subtitle}
+      color="cyan"
+      backHref={back ? "/help" : undefined}
+      backLabel={back ? "HELP" : undefined}
+    />
+  );
 }

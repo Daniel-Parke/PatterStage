@@ -49,11 +49,13 @@ export function StatPill({
   // three accents drew a solid white ring and all eight hovers were dead
   // (T-0120).
   const borderClass = pillBorderMap[color];
-  const base = `rounded-ps-md border ${borderClass} bg-ps-surface-panel px-4 py-3 flex items-center gap-3 min-w-0`;
+  // items-start, not items-center: a pill with a subtitle and one without sat
+  // on different baselines in the same row (T-0127).
+  const base = `rounded-ps-md border ${borderClass} bg-ps-surface-panel px-4 py-3 flex items-start gap-3 min-w-0`;
 
   const inner = (
     <>
-      <Icon className={`w-4 h-4 opacity-60 flex-shrink-0 ${textColor}`} />
+      <Icon className={`mt-0.5 w-4 h-4 opacity-60 flex-shrink-0 ${textColor}`} />
       <div className="min-w-0 flex-1">
         <div className="text-micro font-mono text-ps-text-muted uppercase truncate">
           {label}

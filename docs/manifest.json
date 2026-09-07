@@ -7,7 +7,7 @@
       "pages": [
         {
           "slug": "index",
-          "title": "Documentation",
+          "title": "Help",
           "summary": "The reading path: what PatterStage is, the first hour, one guide per screen, and where the governing corpus lives",
           "nav": 0
         },

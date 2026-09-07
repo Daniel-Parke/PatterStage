@@ -21,8 +21,9 @@ import { Trophy } from "lucide-react";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
 import QuestChapter from "@/components/quests/QuestChapter";
+import Card from "@/components/ui/Card";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
-import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import PageLoading from "@/components/ui/PageLoading";
 import ProgressRing from "@/components/viz/ProgressRing";
 import { useOperatorPrefs } from "@/hooks/useOperatorPrefs";
 import { useQuestHost } from "@/hooks/useQuestHost";
@@ -94,7 +95,7 @@ export default function QuestsPage() {
         />
       }
     >
-      <div className="space-y-4">
+      <div className="space-y-6">
         {error && (
           <LoadErrorBanner
             error={error}
@@ -109,11 +110,12 @@ export default function QuestsPage() {
         */}
         {saveError && <LoadErrorBanner error={saveError} compact />}
 
-        {!error && !progress && <LoadingSpinner text="Reading your progress..." />}
+        {/* The loading contract (T-0122): the header is drawn, the body holds its shape. */}
+        {!error && !progress && <PageLoading label="Reading your progress" rows={4} rowClassName="h-20" />}
 
         {progress && (
           <>
-            <header className="flex flex-wrap items-center gap-5 rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel p-5">
+            <Card as="header" padding="lg" className="flex flex-wrap items-center gap-6">
               <ProgressRing
                 value={progress.total > 0 ? progress.completed / progress.total : 0}
                 color="orange"
@@ -129,9 +131,11 @@ export default function QuestsPage() {
                   {progress.chapters.length} chapters, first to last.
                 </p>
               </div>
-            </header>
+            </Card>
 
-            <div className="space-y-2">
+            {/* Spacious (the density decision for this screen): a chapter is
+                read, not operated, so the rhythm is the section step. */}
+            <div className="space-y-4">
               {progress.chapters.map((chapter) => (
                 <QuestChapter
                   key={chapter.id}

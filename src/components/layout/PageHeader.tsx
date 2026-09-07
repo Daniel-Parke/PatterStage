@@ -79,7 +79,10 @@ export default function PageHeader({
           // every page rather than zero, and the gate measures zero.
           <Link
             href={backHref}
-            className="mb-1 flex w-fit items-center gap-1.5 text-ps-text-muted transition-colors hover:text-ps-text-primary"
+            // min-h-6 and min-w-6: a 14px arrow and a 12px word made a 16px-tall
+            // target on every page with a way back, and below sm, where the word
+            // is hidden, a 14px-wide one (T-0127).
+            className="mb-1 flex min-h-6 min-w-6 w-fit items-center gap-1.5 text-ps-text-muted transition-colors hover:text-ps-text-primary"
             // Always named, because the label is hidden below sm and a link
             // whose text disappears at a breakpoint would otherwise be an
             // unnamed arrow on a phone.

@@ -11,6 +11,7 @@
 
 import { Activity } from "lucide-react";
 import { Panel, PanelHeader } from "@/components/dashboard/Panel";
+import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import { SUBSYSTEM_STATE_LABELS, statusTone } from "@/lib/status-labels";
 import { statusToneClasses } from "@/lib/theme";
 import type { SubsystemRow, SubsystemState } from "@/lib/status/subsystems";
@@ -44,9 +45,14 @@ const WORD_COLOR: Record<SubsystemState, string> = {
 export default function SubsystemsPanel({
   subsystems,
   checkedAt,
+  error = null,
+  onRetry,
 }: {
   subsystems: SubsystemRow[] | null;
   checkedAt: string | null;
+  /** The check itself failed. Since U13 (T-0127) this panel is the ONE place Gateway and Memory are said, so it owes the read contract: an error with Retry, never "Checking..." for ever. */
+  error?: string | null;
+  onRetry?: () => void;
 }) {
   const worst: SubsystemState = subsystems?.some((s) => s.state === "down")
     ? "down"
@@ -54,11 +60,11 @@ export default function SubsystemsPanel({
       ? "degraded"
       : "ok";
   return (
-    <Panel accent={worst === "ok" ? "green" : worst === "degraded" ? "orange" : "pink"}>
+    <Panel accent={error ? "orange" : worst === "ok" ? "green" : worst === "degraded" ? "orange" : "pink"}>
       <PanelHeader
         icon={Activity}
         label="Subsystems"
-        accent={worst === "ok" ? "green" : worst === "degraded" ? "orange" : "pink"}
+        accent={error ? "orange" : worst === "ok" ? "green" : worst === "degraded" ? "orange" : "pink"}
         rightSlot={
           checkedAt ? (
             <span className="text-micro font-mono text-ps-text-muted">
@@ -67,16 +73,22 @@ export default function SubsystemsPanel({
           ) : null
         }
       />
-      {!subsystems ? (
+      {error && !subsystems ? (
+        <div className="px-4 pb-4">
+          <LoadErrorBanner compact error={`Couldn't check the subsystems: ${error}`} onRetry={onRetry} />
+        </div>
+      ) : !subsystems ? (
         <p className="px-4 pb-4 text-body text-ps-text-muted">Checking the gateway, memory, sync, config.yaml and the gateway gate…</p>
       ) : (
         <ul role="list" className="px-4 pb-4 space-y-2">
           {subsystems.map((row) => (
-            <li key={row.id} role="listitem" data-state={row.state} className="flex items-start gap-3 text-body">
+            <li key={row.id} role="listitem" data-state={row.state} className="flex flex-wrap items-start gap-x-3 gap-y-0.5 text-body">
               <span aria-hidden className={`mt-1 h-2 w-2 shrink-0 rounded-full ${DOT[row.state]}`} />
               <span className="w-24 shrink-0 font-mono text-ps-text-secondary">{row.label}</span>
               <span className={`w-24 shrink-0 font-mono ${WORD_COLOR[row.state]}`}>{WORD[row.state]}</span>
-              <span className="min-w-0 break-words text-ps-text-muted">{row.reason}</span>
+              {/* On a phone the reason takes a line of its own under the label
+                  rather than a third of the width beside it (T-0127). */}
+              <span className="min-w-0 basis-full break-words pl-5 text-ps-text-muted sm:basis-auto sm:flex-1 sm:pl-0">{row.reason}</span>
             </li>
           ))}
         </ul>
