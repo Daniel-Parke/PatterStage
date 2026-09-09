@@ -29,6 +29,7 @@ const Database = jest.requireActual(
 const migrationsDir = join(process.cwd(), "src", "lib", "db", "migrations");
 
 let testDb: RealDb | null = null;
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports; require is the hoisting-safe form
 jest.mock("@/lib/db", () => require("../helpers/baseline-db").dbSingletonMock(() => testDb));
 
 const pushed = jest.fn();
@@ -51,6 +52,7 @@ interface Applier {
 
 /** Read at call time, so a missing applier is a red and not a compile error. */
 function applier(): Applier {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- read at call time so a missing applier is a red, not a compile error
   const mod = require("@/lib/db/sql-migrations") as Partial<Applier>;
   if (!mod.applyFallbackIdentityMigration) throw new Error("sql-migrations has no applyFallbackIdentityMigration yet");
   return mod as Applier;

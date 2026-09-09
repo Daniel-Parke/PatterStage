@@ -120,12 +120,15 @@ describe("041_schedule_kind.sql", () => {
     expect(existsSync(sqlPath)).toBe(true);
   });
 
-  it("is the highest-numbered migration on disk", () => {
+  // Amended 2026-09-10 (T-0140): 042_fallback_identity.sql is the head now;
+  // this file is the rung below it.
+  it("sits one below the highest-numbered migration on disk", () => {
     const numbers = readdirSync(migrationsDir)
       .filter((f) => /^\d{3}_.*\.sql$/.test(f))
       .map((f) => parseInt(f.slice(0, 3), 10));
     expect(numbers.length).toBeGreaterThan(20);
-    expect(Math.max(...numbers)).toBe(41);
+    expect(Math.max(...numbers)).toBe(42);
+    expect(numbers).toContain(41);
   });
 });
 
@@ -236,7 +239,9 @@ describe("the applier's own gate", () => {
 });
 
 describe("the head constant", () => {
-  it("equals this applier's gate — it is now the last rung", () => {
-    expect(MIGRATION_HEAD_SCHEMA_VERSION).toBe(41);
+  // Amended 2026-09-10 (T-0140): 042_fallback_identity displaced this applier
+  // as the last rung; the head sits one above this gate now.
+  it("sits one above this applier's gate, which was the last rung until 042", () => {
+    expect(MIGRATION_HEAD_SCHEMA_VERSION).toBe(42);
   });
 });

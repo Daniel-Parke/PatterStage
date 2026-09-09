@@ -9,8 +9,9 @@ status: approved
 
 > Evidence: `org/reviews/2026-09-consolidation-recon.md`. Format and
 > discipline follow `org/plans/2026-09-ui-overhaul.md`. Batches C0 to C8,
-> task records **T-0135 to T-0138 and T-0140 to T-0144** (T-0139 is the
-> Models page reload fix C3's walk found, taken in between on 2026-09-10). Approved by the operator's instruction
+> task records **T-0135 to T-0138 and T-0141 to T-0145** (T-0139 and T-0140
+> are the Models page reload fix and the custom fallback identity fix that
+> C3's walk found, taken in between on 2026-09-10). Approved by the operator's instruction
 > of 2026-09-09: "focus on reviewing the entire codebase, with the goal of
 > consolidating and massively reducing the line counts where possible … to
 > make development easier in future, make maintenance way easier, and to
@@ -135,7 +136,7 @@ batch.
   `useApiResource` and the eleven left are held on the census by name for
   C6 to take with the page layer.
 
-### C4 — The test harnesses [L] · T-0140
+### C4 — The test harnesses [L] · T-0141
 - `tests/helpers/mocks.tsx` gains the db stanza (the dominant shape, opt-in
   per file), the paths stanza, the request stub; a `tests/helpers/story.tsx`
   harness for the seven story suites; the settings and models fixtures that
@@ -143,14 +144,14 @@ batch.
 - Verify: the identity oracle (`it()` count, coverage percentages unchanged);
   `testRepeatedWindowLines` and `suitesMockingDbInline`; knip clean.
 
-### C5 — Comments that narrate [M] · T-0141
+### C5 — Comments that narrate [M] · T-0142
 - File by file, the 107 essays: the extraction arithmetic, the byte-equivalence
   notes, the session numbers, the "used to" diaries that no longer name a
   defect. What stays is what says why.
 - Verify: `commentEssays` 107 to ≤ 60; the operator reads the diff; no code
   line changes in this batch (a comment batch is comments).
 
-### C6 — The page layer [L] · T-0142
+### C6 — The page layer [L] · T-0143
 - One-importer components under sixty lines folded into their one caller
   where the fold reads better; siblings that are one thing merged; the 222
   inline card chromes onto `Card`, the 24 raw controls onto the primitives,
@@ -159,7 +160,7 @@ batch.
   baselines re-cut downward; the isolated instance walked at 1440 and 390;
   screenshots recaptured.
 
-### C7 — The lib root [M] · T-0143
+### C7 — The lib root [M] · T-0144
 - The 71 root files into their domains: `chat/`, `models/`, `schedules/`,
   `scripts/`, `credentials/`, `runs/`, `skills/`, `artifacts/`, with the
   repositories beside their types, the way T-0010 placed the first six.
@@ -168,7 +169,7 @@ batch.
 - Verify: `libRootFiles` 71 to ≤ 12; `tsc`, knip, the reachability gate,
   `docs:check` and `check-doc-links`.
 
-### C8 — Closing [S] · T-0144
+### C8 — Closing [S] · T-0145
 - The census after beside the census before, each measure read against its
   target, the missed ones as numbers. The docs that name a moved path
   updated. The plan marked done.

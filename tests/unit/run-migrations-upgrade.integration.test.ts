@@ -16,7 +16,7 @@ import {
 // The last applier's own gate, and the one before it. Imported by their own
 // specifiers, which the global "@/lib/db" mock does not intercept, so these are
 // the real numbers the chain ends on.
-import { OPERATOR_PREFS_SCHEMA_VERSION, MODELS_ORIGIN_SCHEMA_VERSION, RUNS_SPEND_SOURCE_SCHEMA_VERSION, SCHEDULE_KIND_SCHEMA_VERSION, RESEARCH_GATHER_SCHEMA_VERSION, RESEARCH_USAGE_SCHEMA_VERSION } from "@/lib/db/sql-migrations";
+import { OPERATOR_PREFS_SCHEMA_VERSION, MODELS_ORIGIN_SCHEMA_VERSION, RUNS_SPEND_SOURCE_SCHEMA_VERSION, SCHEDULE_KIND_SCHEMA_VERSION, FALLBACK_IDENTITY_SCHEMA_VERSION, RESEARCH_GATHER_SCHEMA_VERSION, RESEARCH_USAGE_SCHEMA_VERSION } from "@/lib/db/sql-migrations";
 import { COMPOSER_NODE_CANCELLED_SCHEMA_VERSION } from "@/lib/db/apply-composer-node-cancelled-migration";
 import { COMPOSER_REJECTED_SCHEMA_VERSION } from "@/lib/db/apply-composer-rejected-migration";
 
@@ -244,7 +244,8 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
   // rather than on the install that trips over it.
   describe("the head constant cannot drift from the chain", () => {
     it("equals the last applier's version gate", () => {
-      expect(MIGRATION_HEAD_SCHEMA_VERSION).toBe(SCHEDULE_KIND_SCHEMA_VERSION);
+      // Amended 2026-09-10 (T-0140): the fallback identity applier is the head.
+      expect(MIGRATION_HEAD_SCHEMA_VERSION).toBe(FALLBACK_IDENTITY_SCHEMA_VERSION);
     });
 
     // schema_version strictly increases and a gate is claimed once, which is
@@ -252,6 +253,7 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
     // above the applier that used to hold it is what that rule looks like from
     // the outside, and it catches a new migration that reuses or skips a number.
     it("sits exactly one above the gate it displaced", () => {
+      expect(FALLBACK_IDENTITY_SCHEMA_VERSION).toBe(SCHEDULE_KIND_SCHEMA_VERSION + 1);
       expect(SCHEDULE_KIND_SCHEMA_VERSION).toBe(RUNS_SPEND_SOURCE_SCHEMA_VERSION + 1);
       expect(RUNS_SPEND_SOURCE_SCHEMA_VERSION).toBe(MODELS_ORIGIN_SCHEMA_VERSION + 1);
       expect(MODELS_ORIGIN_SCHEMA_VERSION).toBe(OPERATOR_PREFS_SCHEMA_VERSION + 1);

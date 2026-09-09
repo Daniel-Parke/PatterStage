@@ -39,6 +39,7 @@ export const SQL_MIGRATIONS: ReadonlyArray<readonly [version: number, file: stri
   [39, "039_models_origin.sql"],
   [40, "040_runs_spend_source.sql"],
   [41, "041_schedule_kind.sql"],
+  [42, "042_fallback_identity.sql"],
 ];
 
 /**
@@ -77,6 +78,7 @@ export const applyOperatorPrefsMigration = at(38);
 export const applyModelsOriginMigration = at(39);
 export const applyRunsSpendSourceMigration = at(40);
 export const applyScheduleKindMigration = at(41);
+export const applyFallbackIdentityMigration = at(42);
 
 export const ANALYTICS_EVENTS_SCHEMA_VERSION = 12;
 export const CHAT_SCHEMA_VERSION = 13;
@@ -89,3 +91,4 @@ export const OPERATOR_PREFS_SCHEMA_VERSION = 38;
 export const MODELS_ORIGIN_SCHEMA_VERSION = 39;
 export const RUNS_SPEND_SOURCE_SCHEMA_VERSION = 40;
 export const SCHEDULE_KIND_SCHEMA_VERSION = 41;
+export const FALLBACK_IDENTITY_SCHEMA_VERSION = 42;

@@ -366,6 +366,12 @@ The work leading to the 1.0.0 release.
 
 ### Fixed
 
+- **A custom fallback model keeps what you typed.** Adding a fallback that is
+  not in the registry stored none of its name, provider or model id: the row
+  read "Custom / custom" with an empty model id from then on, and that empty
+  id is what a push wrote into config.yaml. The three are kept now. Entries
+  added before this fix never had them stored and still read as Custom; add
+  them again.
 - **A failed chat run is said once.** The bubble already carried the reason
   and Retry; a toast repeated the sentence over the box you were typing in.
   The toast is gone, and in fast mode the model's own error is the bubble's

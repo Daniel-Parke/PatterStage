@@ -29,8 +29,10 @@ function loadRealBetterSqlite3(): typeof import("better-sqlite3") {
 }
 
 describe("U15 · the table", () => {
-  it("names seventeen migrations, ascending, each a real file whose prefix is its version", () => {
-    expect(SQL_MIGRATIONS).toHaveLength(17);
+  // Amended 2026-09-10 (T-0140): 042_fallback_identity joined the table, the
+  // first migration written onto the one driver rather than folded into it.
+  it("names eighteen migrations, ascending, each a real file whose prefix is its version", () => {
+    expect(SQL_MIGRATIONS).toHaveLength(18);
     const versions = SQL_MIGRATIONS.map(([v]) => v);
     expect([...versions].sort((a, b) => a - b)).toEqual(versions);
     expect(new Set(versions).size).toBe(versions.length);

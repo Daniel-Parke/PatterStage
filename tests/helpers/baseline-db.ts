@@ -2,7 +2,7 @@ import { readFileSync } from "fs";
 import { join } from "path";
 import { applyModelsApiStyleMigration } from "../../src/lib/db/apply-models-api-style-migration";
 import { applyNeutralColumnNames } from "../../src/lib/db/apply-neutral-column-names";
-import { applyModelsOriginMigration, applyRunsSpendSourceMigration, applyScheduleKindMigration } from "../../src/lib/db/sql-migrations";
+import { applyFallbackIdentityMigration, applyModelsOriginMigration, applyRunsSpendSourceMigration, applyScheduleKindMigration } from "../../src/lib/db/sql-migrations";
 
 const migrationsDir = join(__dirname, "..", "..", "src", "lib", "db", "migrations");
 
@@ -51,6 +51,7 @@ export function execBaselineSchema(database: import("better-sqlite3").Database):
   // schedules.kind and schedules.script_name are added post-baseline (v41) and
   // written by createSchedule, so the same rule applies once more.
   applyScheduleKindMigration(database, migrationsDir);
+  applyFallbackIdentityMigration(database, migrationsDir);
   database
     .prepare("INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)")
     .run("schema_version", "3");

@@ -51,10 +51,14 @@ interface FallbackRow {
   model_name: string | null; provider: string | null; model_id_string: string | null;
 }
 
+// A registry entry reads its identity from the model it points at; a custom
+// entry has no such row and reads the three columns 042 gave it (T-0140).
 const FALLBACK_JOIN_SELECT = `
   SELECT f.id, f.model_id, f.position, f.enabled, f.override_base_url,
          f.created_at, f.updated_at,
-         m.name AS model_name, m.provider, m.model_id AS model_id_string
+         COALESCE(m.name, f.custom_name) AS model_name,
+         COALESCE(m.provider, f.custom_provider) AS provider,
+         COALESCE(m.model_id, f.custom_model_id) AS model_id_string
   FROM model_fallbacks f
   LEFT JOIN models m ON f.model_id = m.id
 `;
@@ -105,28 +109,16 @@ export function addFallbackEntry(input: CreateFallbackInput): FallbackEntryRecor
   // Default to enabled (1) unless explicitly set to false
   const enabled = input.enabled !== false ? 1 : 0;
 
+  // A custom entry's identity is its own; a registry entry's is the model's.
+  const custom = input.modelId ? [null, null, null] : [input.modelName ?? null, input.provider ?? null, input.modelIdString ?? null];
   getDb().prepare(
-    `INSERT INTO model_fallbacks (id, model_id, position, enabled, override_base_url, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`
-  ).run(id, input.modelId, position, enabled, input.overrideBaseUrl ?? null, ts, ts);
+    `INSERT INTO model_fallbacks (id, model_id, position, enabled, override_base_url, created_at, updated_at,
+                                  custom_name, custom_provider, custom_model_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+  ).run(id, input.modelId, position, enabled, input.overrideBaseUrl ?? null, ts, ts, ...custom);
 
-  // For registry-backed entries, return the JOIN'd row
-  if (input.modelId) {
-    return getFallbackEntry(id)!;
-  }
-  // Custom entries have no FK to models — return denormalised record
-  return {
-    id,
-    modelId: input.modelId,
-    modelName: input.modelName ?? "Custom",
-    provider: input.provider ?? "custom",
-    modelIdString: input.modelIdString ?? "",
-    position,
-    enabled: enabled === 1,
-    overrideBaseUrl: input.overrideBaseUrl ?? null,
-    createdAt: ts,
-    updatedAt: ts,
-  };
+  // What was written is what is read back, for both kinds of entry.
+  return getFallbackEntry(id)!;
 }
 
 /** Update an existing fallback entry. */
