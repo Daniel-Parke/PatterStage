@@ -53,8 +53,9 @@ function fixture(): string {
   const root = mkdtempSync(join(tmpdir(), "line-census-"));
   mkdirSync(join(root, "src", "lib"), { recursive: true });
   mkdirSync(join(root, "tests", "unit"), { recursive: true });
-  writeFileSync(join(root, "src", "lib", "a.ts"), Array.from({ length: 10 }, (_, i) => `export const a${i} = ${i};`).join("\n") + "\n");
-  writeFileSync(join(root, "tests", "unit", "a.test.ts"), 'describe("a", () => { it("is", () => {}); });\n');
+  // No trailing newline, so a line count is the count of statements.
+  writeFileSync(join(root, "src", "lib", "a.ts"), Array.from({ length: 10 }, (_, i) => `export const a${i} = ${i};`).join("\n"));
+  writeFileSync(join(root, "tests", "unit", "a.test.ts"), 'describe("a", () => { it("is", () => {}); });');
   return root;
 }
 
@@ -76,13 +77,13 @@ describe("C0 · the line census", () => {
     expect(held.out).toMatch(/measures held/);
 
     const a = join(root, "src", "lib", "a.ts");
-    writeFileSync(a, readFileSync(a, "utf8") + "export const more = 1;\nexport const still = 2;\n");
+    writeFileSync(a, readFileSync(a, "utf8") + "\nexport const more = 1;\nexport const still = 2;");
     const grew = census(["--root", root, "--baseline", baseline]);
     expect(grew.code).toBe(1);
     expect(grew.out).toMatch(/srcLines rose from 10 to 12/);
     expect(census(["--root", root, "--baseline", baseline, "--allow-growth", "a fixture"]).code).toBe(0);
 
-    writeFileSync(a, "export const one = 1;\n");
+    writeFileSync(a, "export const one = 1;");
     const fell = census(["--root", root, "--baseline", baseline]);
     expect(fell.code).toBe(0);
     expect(fell.out).toMatch(/srcLines fell from 10 to 1/);
