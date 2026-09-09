@@ -245,6 +245,37 @@ test.describe("a banner's sentence comes first", () => {
   });
 });
 
+test.describe("the phone's shortcuts (U19)", () => {
+  test("/agent/settings: a select jumps to a section, and the list is for the desk", async ({ page }) => {
+    await page.goto("/agent/settings", { waitUntil: "domcontentloaded" });
+    await page.getByRole("heading").first().waitFor(READY);
+    const jump = page.getByRole("combobox", { name: "Jump to section" });
+    await expect(jump).toBeVisible(READY);
+    await expect(page.getByRole("link", { name: "Memory Settings" })).toBeHidden();
+  });
+
+  test("/results/sessions: the strip is one row of numbers", async ({ page }) => {
+    await page.goto("/results/sessions", { waitUntil: "domcontentloaded" });
+    await page.getByRole("heading").first().waitFor(READY);
+    const row = page.getByTestId("strip-phone-row");
+    // The strip renders only once there is something to count; the e2e data
+    // has sessions.
+    await expect(row).toBeVisible(READY);
+    const box = await row.boundingBox();
+    expect(box, "the row has no box").not.toBeNull();
+    expect(box!.height, "one row of numbers, not a stack").toBeLessThan(60);
+    await expect(page.getByTestId("stat-ring")).toBeHidden();
+  });
+
+  test("/work/missions: the board is not below the templates", async ({ page }) => {
+    await page.goto("/work/missions", { waitUntil: "domcontentloaded" });
+    await page.getByRole("heading").first().waitFor(READY);
+    const disclosure = page.getByRole("button", { name: /Quick load template/ });
+    await expect(disclosure).toBeVisible(READY);
+    await expect(disclosure).toHaveAttribute("aria-expanded", "false");
+  });
+});
+
 test.describe("the drawer's ring", () => {
   test("Tab never leaves the open drawer for something that is not drawn", async ({ page }) => {
     await page.goto("/", { waitUntil: "domcontentloaded" });
