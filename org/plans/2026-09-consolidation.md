@@ -158,6 +158,14 @@ batch.
   defect. What stays is what says why.
 - Verify: `commentEssays` 107 to ≤ 60; the operator reads the diff; no code
   line changes in this batch (a comment batch is comments).
+- Corrected in the batch (T-0142): 104 essays at the start, not 107 (C3 and
+  C4 had already cut three); 8 at the end, src 105,422 to 100,962. It took
+  two passes, because the first left 73 essays against the 60: the files
+  over forty percent comment were read again. The oracle counts design-lint
+  pragma LINES rather than files, so one pragma cut among two in a file is
+  seen. "No code line changes" is proved rather than promised: a
+  stripped-code diff of every changed file against the batch base (171
+  files, 0 code changes). Two stale facts were corrected rather than cut.
 
 ### C6 — The page layer [L] · T-0143
 - One-importer components under sixty lines folded into their one caller

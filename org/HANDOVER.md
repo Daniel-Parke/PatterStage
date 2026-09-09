@@ -74,7 +74,8 @@ plan header says so.
    (heredocs on this box strip a backslash level; a `\b` became a backspace
    byte once).
 3. Walk anything visual on the isolated instance:
-   `PS_AUTH_TOKEN=u14walk PS_DATA_DIR=<scratch>/u14/data CH_DATA_DIR=<same> PORT=3939 nohup npx next start -p 3939`,
+   `PS_AUTH_TOKEN=u14walk PS_DATA_DIR=<a scratch dir> CH_DATA_DIR=<the same dir> PORT=3939 nohup npx next start -p 3939`
+   (any empty directory outside the repo; the instance seeds it),
    visit `/?ps_token=u14walk` first, drive it with a Playwright script, stop
    the port. `npm run build` first if src changed.
 4. The gate, by exit code, on the finished tree, with nothing edited while
@@ -137,9 +138,44 @@ identity oracle, the census and the gate over the whole tree afterwards.
 ## C6 · what the survey found (start here tomorrow)
 
 - 29 one-importer components under sixty lines, each with its one importer
-  (`scratchpad/c6/survey.py` prints them; the census `--report` lists all
-  130 with line counts). Fold where the fold reads better; `index.ts`
-  re-exports (field/Input, field/Toggle, achievements/*) are not folds.
+  (the census `--report` lists all 130 with line counts). Fold where the
+  fold reads better; `index.ts` re-exports (field/Input, field/Toggle,
+  achievements/*) are not folds. Lines, component, importer:
+
+  | Lines | Component | Its one importer |
+  | ---: | --- | --- |
+  | 18 | components/skills/SkillsDenylistNote | app/agent/skills/page |
+  | 22 | components/memory/hindsight/HealthBanner | components/memory/MemoryProviderSettings |
+  | 27 | components/ui/field/Input | components/ui/field/index (re-export) |
+  | 31 | components/achievements/StreakFlame | components/achievements/index (re-export) |
+  | 34 | components/chat/ReasoningPanel | components/chat/MessageBubble |
+  | 35 | components/models/ModelsTaskDefaultsSection | app/agent/models/page |
+  | 36 | components/scripts/ScriptLogsModal | app/work/scripts/page |
+  | 36 | components/skills/SkillsCatalogEmpty | app/agent/skills/page |
+  | 37 | components/providers/QueryProvider | app/layout |
+  | 39 | components/chat/TypingIndicator | app/work/chat/page |
+  | 39 | components/layout/MobileHeader | app/layout |
+  | 42 | components/ui/field/Toggle | components/ui/field/index (re-export) |
+  | 43 | components/chat/ApprovalPrompt | app/work/chat/page |
+  | 43 | components/chat/ToolCallList | components/chat/MessageBubble |
+  | 43 | components/missions/MissionLiveProgress | components/missions/MissionEditorPanel |
+  | 45 | components/profiles/ProfilesDriftBanner | components/agents/AgentProfilesOverview |
+  | 46 | components/help/HelpFragment | app/help/[[...slug]]/page |
+  | 46 | components/models/ModelInsights | app/agent/models/page |
+  | 46 | components/scripts/ScriptTemplateGallery | app/work/scripts/page |
+  | 47 | components/quests/QuestBadge | components/layout/Sidebar |
+  | 49 | components/composer/ComposerClarifyPrompt | app/work/composer/page |
+  | 49 | components/help/HelpPrevNext | app/help/[[...slug]]/page |
+  | 51 | components/chat/ChatModeToggle | app/work/chat/page |
+  | 52 | components/agents/DeleteProfileModal | app/agent/profiles/page |
+  | 52 | components/missions/ToolsetsPicker | components/missions/MissionCreateForm |
+  | 55 | components/models/FieldRow | components/models/ModelEditor |
+  | 56 | components/quests/QuestTracker | components/providers/FeedbackProvider |
+  | 57 | components/config/SettingsSubject | app/agent/settings/page |
+  | 59 | components/achievements/AgentLevelBadge | components/achievements/index (re-export) |
+
+  (`components/motion/index.tsx` is not on the list: it has two importers,
+  the insights page and AchievementShowcase.)
 - design-lint debt by rule: `no-inline-card-chrome` 221 in 86 files (top:
   WorkflowCanvas 11, MissionCreateForm 11, CategoryManagerModal 10,
   FallbackChainList 8); `palette-must-be-house` 74 in 33; `z-scale-only` 20
