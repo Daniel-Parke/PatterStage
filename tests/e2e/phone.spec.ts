@@ -48,8 +48,11 @@ const READY = { timeout: 30_000 } as const;
 
 /** 12rem, the floor the header describes for its title group. */
 const TITLE_FLOOR = 192;
-/** Three lines of text-micro (16px leading) and a little rounding. */
-const SUBTITLE_CEILING = 52;
+/**
+ * Three lines of text-body (21px leading) and a little rounding. The subtitle
+ * was text-micro (16px) until U18 moved prose out of mono (T-0132).
+ */
+const SUBTITLE_CEILING = 66;
 
 async function expectTitleRoom(page: Page, route: string) {
   const r = await page.evaluate(() => {

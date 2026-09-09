@@ -15,7 +15,7 @@
  * fetch timers, chat-utils with localStorage, sub-components), so we
  * mock aggressively to isolate the toast-rendering contract.
  */
-import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 
 // ── Icon mocks (lucide-react is a peer dep of every component) ──
 jest.mock("lucide-react", () => {
@@ -148,33 +148,28 @@ beforeEach(() => {
 
 import ChatPage from "@/app/work/chat/page";
 
-describe("ChatPage — toast rendering regression", () => {
-  it("renders the toast portal node in the DOM (toastElement is in the tree)", async () => {
-    render(<ChatPage />);
-    // The chat page used to call useToast() and destructure only
-    // `showToast`, silently dropping the `toastElement` portal. We
-    // type a message, hit send — and because the mocked gateway is
-    // offline, the send path emits the "Gateway is offline" toast.
-    // If `toastElement` is missing from the page tree, the toast text
-    // never reaches the DOM and this test fails.
-    const textarea = screen.getByRole("textbox") as HTMLTextAreaElement;
-    await act(async () => {
-      fireEvent.change(textarea, { target: { value: "hello" } });
-    });
-
-    // Send button is the small action button next to the textarea.
+describe("ChatPage — an offline gateway, said where the operator is looking", () => {
+  // This test used to type a message and press Send with the gateway offline,
+  // and expect the "Gateway is offline" toast, which proved the page rendered
+  // `toastElement`. Two things moved under it. FeedbackProvider owns the toast
+  // stack now (T-0096), so `toastElement` is always null and the regression it
+  // guarded cannot recur in that form. And since U18 (T-0132) an offline
+  // gateway disables the composer with the reason as its placeholder rather
+  // than accepting a message and toasting; the Send button is disabled with
+  // it, so the old path cannot be walked. What the page owes now is the
+  // disabled composer, its reason, and the toast stack lifted above it.
+  it("disables the composer, says why, and lifts the toast stack above it", async () => {
+    const { unmount } = render(<ChatPage />);
+    const textarea = screen.getByRole("textbox", { name: "Message" }) as HTMLTextAreaElement;
+    await waitFor(() => expect(textarea).toBeDisabled());
+    expect(textarea.placeholder).toMatch(/hermes gateway start/);
     // The send-icon mock output is `[Send]`, so the button text contains it.
     const sendButton = screen.getByText("[Send]").closest("button") as HTMLButtonElement;
-    expect(sendButton).toBeTruthy();
-    await act(async () => {
-      fireEvent.click(sendButton);
-    });
-
-    // The toast should appear with the offline message.
-    await waitFor(() => {
-      expect(
-        screen.getByText(/Gateway is offline/i),
-      ).toBeInTheDocument();
-    });
+    expect(sendButton).toBeDisabled();
+    // The stack rests above the composer on this screen, and only while the
+    // screen is mounted.
+    expect(document.documentElement.style.getPropertyValue("--ps-toast-lift")).not.toBe("");
+    unmount();
+    expect(document.documentElement.style.getPropertyValue("--ps-toast-lift")).toBe("");
   });
 });
