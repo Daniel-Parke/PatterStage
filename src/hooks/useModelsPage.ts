@@ -56,6 +56,7 @@ export function useModelsPage() {
     defaults: registry.defaults,
     modelReadiness: registry.modelReadiness,
     loading: registry.loading,
+    settled: registry.settled,
     error: registry.error,
     drift: registry.drift,
     refreshing: actions.refreshing,

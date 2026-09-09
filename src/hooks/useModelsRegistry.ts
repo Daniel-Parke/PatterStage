@@ -39,6 +39,10 @@ export function useModelsRegistry() {
   // response the slot uuids come in. Null until the first read lands.
   const [modelReadiness, setModelReadiness] = useState<ModelReadiness | null>(null);
   const [loading, setLoading] = useState(true);
+  // True once the first read has answered, whatever it said. `loading` is
+  // true again on every reload; a page keeps what it has on screen through
+  // those and shows the spinner only before this is true.
+  const [settled, setSettled] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [drift, setDrift] = useState<SyncDrift | null>(null);
 
@@ -93,6 +97,7 @@ export function useModelsRegistry() {
       setErrorFromCaught(setError, err, "Failed to load registry");
     } finally {
       setLoading(false);
+      setSettled(true);
     }
   }, []);
 
@@ -131,6 +136,7 @@ export function useModelsRegistry() {
     setDefaults,
     modelReadiness,
     loading,
+    settled,
     error,
     drift,
     fallbackChain,

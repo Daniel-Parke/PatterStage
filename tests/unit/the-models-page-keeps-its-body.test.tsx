@@ -134,7 +134,7 @@ describe("a reload keeps the registry on screen", () => {
     const net = installFetch(answers());
     net.hold();
     render(<ModelsPage />);
-    expect(screen.getByRole("heading", { name: "Models", exact: true })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /^Models$/ })).toBeInTheDocument();
     expect(screen.getByText(/Loading models/)).toBeInTheDocument();
     net.open();
     await screen.findByRole("button", { name: /Fallback Chain/ });

@@ -5,9 +5,24 @@ import { test, expect } from "@playwright/test";
 // survives a save. The unit oracles hold the shapes; this holds that they are
 // wired to a real server.
 
+// Amended 2026-09-10 (T-0139): the read after a save reset on its socket twice
+// in full gate runs (apiRequestContext.get: ECONNRESET) and passed every time
+// alone. The request context keeps a connection the server may have closed
+// between two reads under load; a browser retries that for an idempotent GET,
+// Playwright's context does not, so the read retries once here.
+async function readWorkflows(page: import("@playwright/test").Page) {
+  try {
+    return await page.request.get("/api/composer/workflows");
+  } catch (err) {
+    if (!/ECONNRESET/.test(String(err))) throw err;
+    await page.waitForTimeout(250);
+    return page.request.get("/api/composer/workflows");
+  }
+}
+
 test.describe("Composer", () => {
   test("the two starter workflows are seeded and offered", async ({ page }) => {
-    const res = await page.request.get("/api/composer/workflows");
+    const res = await readWorkflows(page);
     if (!res.ok()) {
       test.skip(true, "the composer flag is off on this instance");
       return;
@@ -17,7 +32,7 @@ test.describe("Composer", () => {
     await expect
       .poll(
         async () => {
-          const r = await page.request.get("/api/composer/workflows");
+          const r = await readWorkflows(page);
           const b = (await r.json()) as { data?: { workflows?: { name: string }[] } };
           return (b.data?.workflows ?? []).map((w) => w.name);
         },
@@ -63,7 +78,7 @@ test.describe("Composer", () => {
     await page.getByRole("button", { name: /^Create$/ }).click();
     await expect(page.getByText("Saved.")).toBeVisible({ timeout: 20_000 });
 
-    const res = await page.request.get("/api/composer/workflows");
+    const res = await readWorkflows(page);
     const body = (await res.json()) as { data?: { workflows?: { name: string; description: string }[] } };
     const saved = (body.data?.workflows ?? []).find((w) => w.name === unique);
     expect(saved?.description).toBe("What this one is for");

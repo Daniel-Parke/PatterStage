@@ -1,10 +1,10 @@
 {
   "measuredAt": "2026-09-09",
   "counts": {
-    "srcLines": 105410,
-    "testLines": 121189,
+    "srcLines": 105422,
+    "testLines": 121356,
     "srcRepeatedWindowLines": 1176,
-    "testRepeatedWindowLines": 6027,
+    "testRepeatedWindowLines": 6044,
     "routesWithTryCatch": 13,
     "handRolledReadHooks": 11,
     "writeHooksWithoutMutation": 0,
@@ -49,6 +49,21 @@
       "measuredAt": "2026-09-09",
       "rise": "handRolledReadHooks rose from 5 to 11",
       "reason": "C3 (T-0138): the read measure walks the AST for a fetch reachable from a useEffect callback through the file's own functions; the regex before it counted 5, three of them click handlers, and missed eight loaders called from effects. Two of the honest thirteen (the Story Weaver pages) moved onto useApiResource in C3; the eleven left are named by --report and held here."
+    },
+    {
+      "measuredAt": "2026-09-09",
+      "rise": "srcLines rose from 105410 to 105422",
+      "reason": "T-0139: the Models page reload fix adds twelve source lines (the settled flag, its comment, the page's note) and its oracle suite 167 test lines; the oracle's fetch double repeats the models suites' stanza, which C4 (T-0140) folds into tests/helpers."
+    },
+    {
+      "measuredAt": "2026-09-09",
+      "rise": "testLines rose from 121189 to 121356",
+      "reason": "T-0139: the Models page reload fix adds twelve source lines (the settled flag, its comment, the page's note) and its oracle suite 167 test lines; the oracle's fetch double repeats the models suites' stanza, which C4 (T-0140) folds into tests/helpers."
+    },
+    {
+      "measuredAt": "2026-09-09",
+      "rise": "testRepeatedWindowLines rose from 6027 to 6044",
+      "reason": "T-0139: the Models page reload fix adds twelve source lines (the settled flag, its comment, the page's note) and its oracle suite 167 test lines; the oracle's fetch double repeats the models suites' stanza, which C4 (T-0140) folds into tests/helpers."
     }
   ]
 }

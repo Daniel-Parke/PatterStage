@@ -49,6 +49,7 @@ export default function ModelsPage() {
     defaults,
     modelReadiness,
     loading,
+    settled,
     error,
     drift,
     handleDriftPull,
@@ -194,7 +195,11 @@ export default function ModelsPage() {
           />
         )}
 
-        {loading ? (
+        {/* The spinner is for the first read only. Every write reloads the
+            registry, and swapping the body for a spinner on each one closed
+            the disclosure the operator had opened and blinked the lists out
+            (T-0144). */}
+        {!settled ? (
           <LoadingSpinner text="Loading models..." />
         ) : (
           <>
