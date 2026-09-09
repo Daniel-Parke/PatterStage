@@ -113,6 +113,9 @@ describe("the factories behave the way the stanzas they replace behaved", () => 
       const mock = fetchMap({ "/api/models": { body: { data: { models: [] } } }, "/api/models/defaults": { body: { data: { defaults: {} } }, status: 200 } });
       expect(await (await fetch("/api/models/defaults")).json()).toEqual({ data: { defaults: {} } });
       expect(await (await fetch("/api/models?limit=1")).json()).toEqual({ data: { models: [] } });
+      // The sweep's survivor (T-0141): a URL two keys prefix goes to the
+      // longer one, or a sub-route would answer with its parent's body.
+      expect(await (await fetch("/api/models/defaults?taskType=agent")).json()).toEqual({ data: { defaults: {} } });
       await expect(fetch("/api/nothing")).rejects.toThrow(/Unmatched fetch/);
       expect(mock).toHaveBeenCalledTimes(3);
       const fallen = fetchMap({}, { fallback: (url) => (url.includes("/drift") ? { body: { data: null } } : undefined) });
