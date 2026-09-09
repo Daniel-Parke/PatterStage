@@ -151,3 +151,4 @@ The records under org/tasks/ are canonical.
 | T-0136 | standard | R1 | done | t0136-c1-one-route-body-2026-09-10 |
 | T-0137 | standard | R1 | done | t0137-c2-one-type-each-2026-09-10 |
 | T-0138 | standard | R1 | done | t0138-c3-one-way-to-write-2026-09-10 |
+| T-0139 | standard | R1 | done | t0139-the-models-page-keeps-its-body-2026-09-10 |
