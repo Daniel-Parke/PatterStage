@@ -17,6 +17,7 @@ import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
 import Card from "@/components/ui/Card";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
+import SplitPane from "@/components/ui/SplitPane";
 import { Select } from "@/components/ui/field";
 import dynamic from "next/dynamic";
 
@@ -295,11 +296,19 @@ export default function ComposerPage() {
         </Card>
       )}
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[320px_1fr]">
-        {/* Runs list */}
+      {/* The runs are the aside and the pipeline is the pane: two columns
+          from lg, and on a phone the runs behind a "Runs" button that closes
+          when one is chosen (T-0131). */}
+      <SplitPane
+        gap="md"
+        asideLabel="Runs"
+        asideWidth="lg:w-80"
+        closeOnChange={selectedId}
+        aside={
         <Card padding="sm">
           <div className="mb-2 flex items-center gap-2 px-1">
-            <h2 className={sectionHeadingClasses}>Runs</h2>
+            {/* The column's heading from lg; below lg the sheet's title is the word. */}
+            <h2 className={`${sectionHeadingClasses} hidden lg:block`}>Runs</h2>
             <div className="ml-auto w-36">
               <Select value={statusFilter} onChange={setStatusFilter} options={STATUS_FILTERS} />
             </div>
@@ -348,7 +357,8 @@ export default function ComposerPage() {
             </ul>
           )}
         </Card>
-
+        }
+      >
         {/* Pipeline detail */}
         <Card padding="md">
           {!selectedId ? (
@@ -468,7 +478,7 @@ export default function ComposerPage() {
             </div>
           )}
         </Card>
-      </div>
+      </SplitPane>
       <ComposerNodeRunDetail
         open={selectedNode != null}
         onClose={() => setSelectedNodeKey(null)}

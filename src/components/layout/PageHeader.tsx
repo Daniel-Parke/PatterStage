@@ -127,8 +127,15 @@ export default function PageHeader({
           title from being squeezed, but four actions side by side are 490px
           on Tools, and a shrink-0 row that cannot wrap is wider than a phone.
           The row takes its own second line now, main stays inside its box
-          (T-0128). */}
-      <div className="flex max-w-full flex-shrink-0 flex-wrap items-center gap-3">
+          (T-0128).
+
+          basis-full below sm: the 16rem floor above is sm: too, so at 390 the
+          title group had no floor at all, and a slot of actions that happened
+          to fit beside it took the row. Chat read "(", Scripts "Scr…", and
+          the subtitle went one word per line (the review of 2026-09-08). On a
+          phone the actions take their own row unconditionally; from sm the
+          floor decides, as before (T-0131). */}
+      <div className="flex max-w-full flex-shrink-0 flex-wrap items-center gap-3 basis-full sm:basis-auto">
         <HelpLink />
         {actions}
       </div>

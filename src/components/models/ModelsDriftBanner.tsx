@@ -65,9 +65,13 @@ export default function ModelsDriftBanner({
             const ref = `${line.provider}/${line.modelId}`;
 
             return (
-              <li key={key} className="flex items-center justify-between gap-3">
+              // flex-wrap, and the controls basis-full below sm: on a phone two
+              // "Pull from Hermes" sat beside two one-line reasons squeezed to
+              // a column (the review of 2026-09-08). The sentence first; its
+              // control under it, and beside it again from sm (T-0131).
+              <li key={key} className="flex flex-wrap items-center justify-between gap-3">
                 <span className="min-w-0 flex-1 text-micro font-mono text-ps-text-muted">{line.text}</span>
-                <div className="flex flex-shrink-0 items-center gap-1.5">
+                <div className="flex basis-full flex-shrink-0 items-center gap-1.5 sm:basis-auto">
                   {!canPull && !canPush && (
                     // A line with no safe remedy is not a line with no
                     // explanation: a push writes config.model, which is the

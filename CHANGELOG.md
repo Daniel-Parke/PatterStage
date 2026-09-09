@@ -331,6 +331,19 @@ The work leading to the 1.0.0 release.
 
 ### Fixed
 
+- **A phone keeps the page's name.** On Chat, Scripts and Skills the header's
+  buttons took the title's row, so the name read "(" or "Scr…" and the line
+  under it went one word per line. Below tablet width the buttons take their
+  own row and the title has the width.
+- **Chat, Logs, Composer and Research stack on a phone.** Chat kept its
+  conversation list beside a transcript a hundred pixels wide. The list, the
+  log files and the runs now sit behind a button on narrow screens and open
+  as a sheet that closes when you choose; the conversation, the terminal and
+  the report take the whole width.
+- **A banner's words come before its button.** The profile drift notice, the
+  memory health banner and the model drift lines squeezed their sentence into
+  a column beside their button on a phone; the button sits under the sentence
+  there now.
 - **Tab inside the phone's navigation drawer** could land on the hidden
   collapse control and seem to escape behind the backdrop; it stays on what is
   drawn.

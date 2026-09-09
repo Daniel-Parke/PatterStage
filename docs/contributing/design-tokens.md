@@ -384,6 +384,7 @@ caller, not by being generic.
 | `Card` | the one surface: `panel` or `raised`, one radius, one edge, a header slot |
 | `Dialog` | the one overlay: centre, right, bottom or sheet, on `useDialogA11y` (role, modal, Escape, the Tab trap over what is drawn, focus returned) |
 | `Popover` | anything dismissable that is not modal, on `useDismissable` |
+| `SplitPane` | the one two-column shape: a list that chooses and the thing chosen. Two columns from lg; below lg the list is behind a button that opens it as a sheet and closes when the choice changes (Chat, Logs, Composer, Research) |
 | `SegmentedControl` | a radiogroup with roving tabindex and real ARIA state; every filter row |
 | `DataList` | a table that stacks below its breakpoint instead of clipping a column |
 | `ConfirmButton` | the one destructive treatment: arm, then act, `aria-live` on the armed label |

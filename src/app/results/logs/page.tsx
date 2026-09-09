@@ -16,6 +16,7 @@ import AppPageShell from "@/components/layout/AppPageShell";
 import Button from "@/components/ui/Button";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
+import SplitPane from "@/components/ui/SplitPane";
 import { safeApiCallData, setErrorFromCaught } from "@/lib/api-fetch";
 import { downloadFile } from "@/lib/chat-utils";
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
@@ -304,17 +305,25 @@ export default function LogsPage() {
           </div>
         )}
 
-        <div className="flex flex-col lg:flex-row gap-4 flex-1 min-h-0">
-          {/* File picker */}
-          <LogFilePicker
-            files={filteredFiles}
-            query={fileQuery}
-            onQueryChange={setFileQuery}
-            activeLog={activeLog}
-            onSelect={setActiveLog}
-          />
-
-          <div className="flex-1 flex flex-col min-w-0 min-h-0">
+        {/* The file picker is the aside and the terminal is the pane: two
+            columns from lg, and on a phone the picker behind a "Log files"
+            button that closes when a file is chosen (T-0131). */}
+        <SplitPane
+          fill
+          gap="md"
+          asideLabel="Log files"
+          asideWidth="lg:w-72"
+          closeOnChange={activeLog}
+          aside={
+            <LogFilePicker
+              files={filteredFiles}
+              query={fileQuery}
+              onQueryChange={setFileQuery}
+              activeLog={activeLog}
+              onSelect={setActiveLog}
+            />
+          }
+        >
             <div className="flex items-center gap-3 mb-4 flex-wrap">
               {searchVisible ? (
                 <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -408,8 +417,7 @@ export default function LogsPage() {
                 searchTerm={search}
               />
             ) : null}
-          </div>
-        </div>
+        </SplitPane>
       </div>
     </AppPageShell>
   );

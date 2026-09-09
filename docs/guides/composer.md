@@ -51,7 +51,9 @@ your repository, meaning the ones that implement code, build tests or open a pul
 request, are outlined in orange with a warning naming them, and the confirm
 button says so as well. Nothing runs until you press it.
 
-Below the launch card the page is two columns.
+Below the launch card the page is two columns. On a phone, or in a window
+narrower than about a thousand pixels, the runs sit behind a **Runs** button
+above the pipeline instead; choosing one closes it.
 
 On the left, **Runs**: every run of every workflow, newest first, with a status
 filter above the list. Each row carries the first line of the objective, the name

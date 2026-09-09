@@ -29,7 +29,11 @@ export default function ProfilesDriftBanner({
   }
 
   return (
-    <div className="flex items-center gap-3 px-4 py-3 rounded-ps-lg border border-neon-orange/20 bg-neon-orange/5 mb-4">
+    // flex-wrap, and the button basis-full below sm: on a phone the headline
+    // sat in a 150px column beside "Push all to Hermes" (the review of
+    // 2026-09-08). The sentences come first; the button wraps under them
+    // and sits beside them again from sm (T-0131).
+    <div className="flex flex-wrap items-center gap-3 px-4 py-3 rounded-ps-lg border border-neon-orange/20 bg-neon-orange/5 mb-4">
       <AlertTriangle className="w-4 h-4 text-neon-orange/90 flex-shrink-0" />
       <div className="flex-1 min-w-0">
         <span className="text-micro font-mono text-neon-orange/90">
@@ -43,7 +47,7 @@ export default function ProfilesDriftBanner({
         type="button"
         disabled={pushing}
         onClick={() => void onPushAll()}
-        className="px-3 py-1 text-micro font-mono text-neon-orange/90 hover:text-neon-orange bg-neon-orange/10 hover:bg-neon-orange/20 rounded-ps-md transition-colors disabled:opacity-50"
+        className="basis-full w-fit px-3 py-1 text-micro font-mono text-neon-orange/90 hover:text-neon-orange bg-neon-orange/10 hover:bg-neon-orange/20 rounded-ps-md transition-colors disabled:opacity-50 sm:basis-auto"
       >
         {pushing ? "Pushing…" : "Push all to Hermes"}
       </button>

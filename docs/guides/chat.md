@@ -27,7 +27,10 @@ toggle is greyed out while a reply is arriving, so a conversation cannot change
 mode halfway through a turn.
 
 Down the left is **Conversations**, with the number held in brackets, most
-recently active first. Arriving at the page opens the top one. Each row shows the
+recently active first. On a phone, or in a window narrower than about a
+thousand pixels, the list sits behind a **Conversations** button above the
+conversation instead; choosing one closes it and the conversation takes the
+whole width. Arriving at the page opens the top one. Each row shows the
 conversation's title and how long ago it last changed. Move the pointer over a
 row, or tab into it, and two more
 controls appear at its right edge: a download button, and a delete button. The

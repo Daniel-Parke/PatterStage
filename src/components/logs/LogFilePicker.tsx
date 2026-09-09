@@ -40,8 +40,8 @@ export default function LogFilePicker({
     // The aside is layout now and the Panel is the surface (T-0033). It used
     // to draw its own border, radius and interior, which is the box Panel
     // already renders; keeping the <aside> keeps the landmark a screen reader
-    // navigates by.
-    <aside className="w-full lg:w-72 shrink-0 flex flex-col min-h-0">
+    // navigates by. The width is the SplitPane's, not this file's (T-0131).
+    <aside className="flex w-full flex-col min-h-0">
       <Panel className="flex flex-col gap-2 min-h-0 flex-1 p-3">
         <label className="text-micro font-mono uppercase tracking-wide text-ps-text-muted">
           Log file

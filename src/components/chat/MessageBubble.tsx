@@ -55,7 +55,10 @@ function AssistantBody({ msg, onRetry }: { msg: ChatMessage; onRetry?: () => voi
           <p className="text-ps-text-secondary">{msg.error || "No reason came back with it."}</p>
         </div>
         {onRetry && (
-          <Button type="button" size="sm" icon={RotateCcw} onClick={onRetry}>
+          // basis-full below sm, like every banner's action (T-0131): beside
+          // the words in a phone-width bubble, Retry left them 35% of the
+          // row and the reason read one word per line.
+          <Button type="button" size="sm" icon={RotateCcw} onClick={onRetry} className="basis-full sm:basis-auto">
             Retry
           </Button>
         )}
@@ -76,7 +79,10 @@ export default function MessageBubble({ msg, onRetry }: { msg: ChatMessage; onRe
       {!isUser && <MessageAvatar role={msg.role} />}
 
       <div
-        className={`max-w-[70%] rounded-ps-lg px-4 py-3 ${
+        // 85% on a phone: 70% of a 358px transcript is 250px, and a bubble
+        // that narrow wrapped a failed run's reason one word per line
+        // (T-0131). From sm the 70% that keeps a conversation readable holds.
+        className={`max-w-[85%] sm:max-w-[70%] rounded-ps-lg px-4 py-3 ${
           isUser
             ? "bg-neon-cyan/10 border border-neon-cyan/20 text-ps-text-primary"
             : isFailed

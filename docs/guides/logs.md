@@ -34,7 +34,9 @@ again now. **Delete All** is the destructive one, and it asks twice: the first
 click changes the button to **Confirm Clear** and puts a **Cancel** beside it.
 It is disabled while no log file exists.
 
-Below the header the screen is in two columns.
+Below the header the screen is in two columns. On a phone, or in a window
+narrower than about a thousand pixels, the file list sits behind a **Log
+files** button above the terminal instead; choosing a file closes it.
 
 On the left, under the heading **Log file**, is the list of files that exist,
 with a **Filter by name…** box above it. Files are grouped under **Core**,

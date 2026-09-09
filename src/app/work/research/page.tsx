@@ -21,6 +21,7 @@ import { statusToneClasses } from "@/lib/theme";
 import Button from "@/components/ui/Button";
 import ConfirmButton from "@/components/ui/ConfirmButton";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
+import SplitPane from "@/components/ui/SplitPane";
 import { Field, Textarea, Select, Input } from "@/components/ui/field";
 import ResearchReport from "@/components/research/ResearchReport";
 import ConceptHint from "@/components/help/ConceptHint";
@@ -266,10 +267,18 @@ export default function DeepResearchPage() {
         </div>
       </Card>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[300px_1fr]">
-        {/* Runs list */}
+      {/* The runs are the aside and the report is the pane: two columns from
+          lg, and on a phone the runs behind a "Runs" button that closes when
+          one is chosen (T-0131). */}
+      <SplitPane
+        gap="md"
+        asideLabel="Runs"
+        asideWidth="lg:w-72"
+        closeOnChange={selectedId}
+        aside={
         <Card padding="sm">
-          <h2 className={`${sectionHeadingClasses} px-1`}>Runs</h2>
+          {/* The column's heading from lg; below lg the sheet's title is the word. */}
+          <h2 className={`${sectionHeadingClasses} hidden px-1 lg:block`}>Runs</h2>
           {/* The empty state only after a read that succeeded (T-0096). */}
           {runsError ? null : (runs ?? []).length === 0 ? (
             <p className="px-1 py-4 text-body text-ps-text-muted">No research runs yet.</p>
@@ -294,7 +303,8 @@ export default function DeepResearchPage() {
             </ul>
           )}
         </Card>
-
+        }
+      >
         {/* Detail */}
         <Card padding="md">
           {!detail ? (
@@ -338,7 +348,7 @@ export default function DeepResearchPage() {
             </div>
           )}
         </Card>
-      </div>
+      </SplitPane>
     </div>
     </AppPageShell>
   );

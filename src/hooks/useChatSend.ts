@@ -136,9 +136,15 @@ export function useChatSend({
     setReloadNonce((n) => n + 1);
   }, []);
 
-  // Auto-scroll on new/updated messages.
+  // Auto-scroll on new/updated messages. The transcript's OWN scroller moves,
+  // not every scrollable ancestor: scrollIntoView also scrolled <main> by the
+  // mobile header's 48px, which put the Conversations opener under the sticky
+  // header on a phone (T-0131). Smoothness is the scroller's CSS
+  // (scroll-smooth), which reduced motion turns off with everything else.
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const scroller = messagesEndRef.current?.parentElement;
+    // Optional call: jsdom draws nothing and has no scrollTo on an element.
+    scroller?.scrollTo?.({ top: scroller.scrollHeight });
   }, [messages, messagesEndRef]);
 
   // ── Send ────────────────────────────────────────────────────

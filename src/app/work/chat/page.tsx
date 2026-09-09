@@ -14,6 +14,7 @@ import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
 import Button from "@/components/ui/Button";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
+import SplitPane from "@/components/ui/SplitPane";
 import { timeAgo } from "@/lib/utils";
 import TypingIndicator from "@/components/chat/TypingIndicator";
 import GatewayBanner from "@/components/chat/GatewayBanner";
@@ -103,11 +104,22 @@ export default function ChatPage() {
         />
       }
     >
-      <div className="flex flex-col flex-1 min-h-0">
-        <div className="flex flex-1 overflow-hidden">
-          {/* Sidebar */}
-          <div className="w-60 shrink-0 border-r border-ps-edge-hairline bg-ps-surface-raised flex flex-col min-h-0">
-            <div className="px-3 py-2 border-b border-ps-edge flex items-center justify-between">
+      {/* The list of conversations is the aside; the transcript and the
+          composer are the pane. From lg they are two columns; on a phone the
+          list is behind a "Conversations (n)" button and closes when one is
+          chosen, and the transcript has the width it did not have when the
+          240px column stayed (the review of 2026-09-08, T-0131). */}
+      <SplitPane
+        fill
+        asideLabel={`Conversations (${conversations.length})`}
+        asideWidth="lg:w-60"
+        asideClassName="border-r border-ps-edge-hairline bg-ps-surface-raised"
+        closeOnChange={activeId}
+        aside={
+          <>
+            {/* The column's own heading, from lg; below lg the sheet's title
+                is the same words. */}
+            <div className="hidden px-3 py-2 border-b border-ps-edge lg:flex items-center justify-between">
               <span className="text-micro font-mono text-ps-text-muted uppercase tracking-wider">
                 Conversations ({conversations.length})
               </span>
@@ -197,11 +209,10 @@ export default function ChatPage() {
                 <div className="p-3 text-body text-ps-text-faint italic">No conversations yet</div>
               )}
             </div>
-          </div>
-
-          {/* Main chat area */}
-          <div className="flex-1 flex flex-col min-w-0 min-h-0">
-            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+          </>
+        }
+      >
+            <div className="flex-1 overflow-y-auto scroll-smooth px-4 py-4 space-y-4 lg:px-6">
               {bannerStates.map((state) => (
                 <GatewayBanner
                   key={state}
@@ -261,7 +272,7 @@ export default function ChatPage() {
             </div>
 
             {/* Composer */}
-            <div className="border-t border-ps-edge-hairline px-6 py-4">
+            <div className="border-t border-ps-edge-hairline px-4 py-4 lg:px-6">
               {pendingApproval && (
                 <ApprovalPrompt
                   toolName={pendingApproval.toolName}
@@ -303,9 +314,7 @@ export default function ChatPage() {
                 </button>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
+      </SplitPane>
       {toastElement}
     </AppPageShell>
   );

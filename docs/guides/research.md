@@ -46,7 +46,9 @@ the right of the same row is **Start research**. Until the question is at least
 three characters long that button stays disabled and a line under it reads
 "Enter a research question (≥ 3 characters) to start."
 
-The rest of the page is two panes side by side.
+The rest of the page is two panes side by side. On a phone, or in a window
+narrower than about a thousand pixels, the runs sit behind a **Runs** button
+above the report instead; choosing one closes it.
 
 **Runs** on the left lists your research runs, newest first, up to fifty. Each
 row shows the first line of the question and, under it, the run's state in

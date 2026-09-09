@@ -76,10 +76,16 @@ export default function LoadErrorBanner({
   const chrome = compact
     ? "mb-2 gap-2 rounded-ps-md px-3 py-2 text-body"
     : "mb-4 gap-3 rounded-ps-lg px-4 py-3 text-body";
+  // The sentence is what the banner is for, and the button took its room:
+  // on a phone the memory health banner's words sat in a column beside
+  // Retry (the review of 2026-09-08). Below sm the button wraps under the
+  // words; the compact variant lives in a list column that is narrow at
+  // every width, so its button always does (T-0131).
+  const wrap = compact ? "basis-full" : "basis-full sm:basis-auto";
   return (
     <div
       role="alert"
-      className={`flex items-start border border-red-500/30 bg-red-500/10 text-red-200 ${chrome} ${className ?? ""}`}
+      className={`flex flex-wrap items-start border border-red-500/30 bg-red-500/10 text-red-200 ${chrome} ${className ?? ""}`}
     >
       <AlertTriangle className={`${compact ? "w-4 h-4" : "w-5 h-5"} shrink-0 mt-0.5`} />
       <div className="flex-1 min-w-0">
@@ -92,7 +98,7 @@ export default function LoadErrorBanner({
         <button
           type="button"
           onClick={onRetry}
-          className={`flex items-center gap-1.5 rounded-ps-md text-micro font-mono border border-red-500/40 text-red-200 hover:bg-red-500/20 transition-colors shrink-0 ${compact ? "px-2 py-0.5" : "px-2.5 py-1"}`}
+          className={`flex w-fit items-center gap-1.5 rounded-ps-md text-micro font-mono border border-red-500/40 text-red-200 hover:bg-red-500/20 transition-colors shrink-0 ${wrap} ${compact ? "px-2 py-0.5" : "px-2.5 py-1"}`}
         >
           <RefreshCw className="w-3 h-3" />
           {retryLabel}
