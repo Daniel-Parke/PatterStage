@@ -1,8 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // ScriptRow — one script file with its size, schedule and actions
 //
-// Extracted verbatim from app/orchestration/scripts/page.tsx. Every
-// action is a callback; the row owns no state. Presentation only.
+// Every action is a callback; the row owns no state. Presentation only.
 // ═══════════════════════════════════════════════════════════════
 
 "use client";

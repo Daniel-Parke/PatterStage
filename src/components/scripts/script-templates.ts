@@ -1,7 +1,6 @@
 // ═══════════════════════════════════════════════════════════════
 // Script templates — the starters the Scripts page offers
 //
-// The bash trio was extracted verbatim from app/orchestration/scripts/page.tsx.
 // Data only: picking one opens it in the editor, it is never written to disk
 // from here.
 //

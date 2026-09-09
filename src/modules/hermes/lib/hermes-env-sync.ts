@@ -1,7 +1,6 @@
 // ═══════════════════════════════════════════════════════════════
 // hermes-env-sync.ts: write-through to ~/.hermes/.env
 //
-// Split out of config-sync.ts, which now owns only config.yaml.
 // Without this module, `hermes chat --model X` would fail because
 // Hermes cannot resolve credentials: every credential mutation in
 // /api/credentials writes the plaintext key here, and Hermes reads it
@@ -12,13 +11,10 @@
 // therefore preserves ordering, blank lines and `#` comments
 // verbatim, and appends only what is genuinely new.
 //
-// `parseEnvFile` and the `ENV_LINE_RE` regex live in `@/lib/env-file`
-// (shared with `@/modules/hermes/lib/config-import.ts`). They were
-// promoted from this module's private implementation in session 164
-// because the same parser was duplicated across 2 files.
-// `serializeEnvFile` can't call `parseEnvFile` directly, because that
-// would throw away the comments, so it reaches for the shared `ENV_LINE_RE`
-// to identify keyval lines while iterating the raw file content.
+// `serializeEnvFile` can't call the shared `parseEnvFile` (`@/lib/env-file`)
+// directly, because that would throw away the comments, so it reaches for
+// the shared `ENV_LINE_RE` to identify keyval lines while iterating the raw
+// file content.
 // ═══════════════════════════════════════════════════════════════
 
 import { existsSync, readFileSync } from "fs";
@@ -110,7 +106,7 @@ export function syncCredentialToHermesEnv(input: SyncCredentialInput): { backupP
  * Remove all rows for a given provider's API key from ~/.hermes/.env.
  * Used when a credential is deleted — we can only target the env var
  * tied to the credential's provider; if multiple credentials share the
- * same provider, the caller (PR 7) must repick a winner before calling.
+ * same provider, the caller must repick a winner before calling.
  *
  * @public Kept exported for tests/unit/hermes-config-sync-env.test.ts, which
  * reaches it through `require("@/modules/hermes/lib/hermes-env-sync")`. knip

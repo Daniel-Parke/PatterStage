@@ -1,9 +1,8 @@
 // ═══════════════════════════════════════════════════════════════
 // AgentFileEditor — the preview/edit card for one behaviour file
 //
-// Extracted verbatim from app/operations/agents/page.tsx. The editor
-// buffer, the save call and the save-status timer stay on the page;
-// this renders the card and calls back. Presentation only.
+// The editor buffer, the save call and the save-status timer stay on the
+// page; this renders the card and calls back. Presentation only.
 // ═══════════════════════════════════════════════════════════════
 
 "use client";

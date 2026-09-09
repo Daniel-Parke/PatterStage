@@ -1,21 +1,14 @@
 // ═══════════════════════════════════════════════════════════════
-// providers.ts — Authoritative provider list and env-var map
+// providers.ts — the provider list and env-var map Hermes accepts
 // ═══════════════════════════════════════════════════════════════
 //
-// Single source of truth for which providers Hermes accepts and the
-// environment variable names it reads each provider's API key from.
-//
-// Mirrors the `--provider` choices in
-//   hermes-agent/hermes_cli/main.py (chat_parser.add_argument)
-// plus auxiliary-only providers documented in the user guide. Adding a
-// new provider here is the only file change needed to teach PatterStage
-// about it.
+// Mirrors the `--provider` choices in hermes-agent/hermes_cli/main.py
+// (chat_parser.add_argument) plus the auxiliary-only providers the user guide
+// documents. Adding a provider here is the only file change needed.
 
 /**
- * Hermes-recognised inference providers. The first 14 must stay in
- * lock-step with the `hermes chat --provider` argparse `choices=[...]`
- * list (excluding "auto"). Auxiliary-only providers from the user-guide
- * docs follow.
+ * The first 14 must stay in lock-step with `hermes chat --provider`'s argparse
+ * `choices=[...]` (excluding "auto"); auxiliary-only providers follow.
  */
 export const HERMES_PROVIDERS = [
   "openrouter",
@@ -47,11 +40,7 @@ export const HERMES_PROVIDERS = [
 
 export type HermesProvider = (typeof HERMES_PROVIDERS)[number];
 
-/**
- * Per-provider environment variable used by Hermes to read the API key.
- * Used by modules/hermes/lib/config-sync.ts (PR 5) when writing credentials to
- * ~/.hermes/.env.
- */
+/** The environment variable Hermes reads each provider's API key from. */
 export const PROVIDER_ENV_VAR: Record<HermesProvider, string> = {
   openrouter: "OPENROUTER_API_KEY",
   "openai-codex": "OPENAI_API_KEY",
@@ -85,16 +74,12 @@ export function isHermesProvider(provider: string): provider is HermesProvider {
 
 
 /**
- * Providers Hermes can drive with no API key at all.
- *
- * Four are local or self-hosted endpoints, and `nous` authenticates by OAuth
- * through the Hermes CLI. The editor demanded a key for every new credential,
- * so pointing PatterStage at a local Ollama meant inventing one (T-0100, D15).
- *
- * Deliberately NOT derived from `PROVIDER_ENV_VAR`: `ollama` and `vllm` DO
- * have a variable, and an endpoint behind a proxy may want it set. Needing no
- * key and having nowhere to put one are different facts, and only `nous` is
- * the second.
+ * Providers Hermes can drive with no API key: four local or self-hosted
+ * endpoints, and `nous`, which authenticates by OAuth through the CLI. The
+ * editor demanded a key for every credential, so a local Ollama meant
+ * inventing one (T-0100, D15). Deliberately NOT derived from `PROVIDER_ENV_VAR`:
+ * `ollama` and `vllm` DO have a variable an endpoint behind a proxy may want
+ * set; needing no key and having nowhere to put one are different facts.
  */
 export const KEYLESS_PROVIDERS = ["ollama", "lmstudio", "vllm", "custom", "nous"] as const;
 
@@ -104,19 +89,14 @@ export type KeylessProvider = (typeof KEYLESS_PROVIDERS)[number];
 /**
  * True when this provider works without an API key.
  *
- * @public The membership test that goes with the exported list. The models
- * page hands the list itself to the editor (core may not import a module), so
- * the product asks the array; this is here so anything server-side asks the
- * same question the same way rather than open-coding an `includes`.
+ * @public The models page hands the list itself to the editor (core may not
+ * import a module); this is for server-side callers to ask the same way.
  */
 export function isKeylessProvider(provider: string): provider is KeylessProvider {
   return (KEYLESS_PROVIDERS as readonly string[]).includes(provider);
 }
 
-/**
- * Returns the env var name for a given provider, or null if the provider
- * is not recognised by Hermes.
- */
+/** The env var name for a provider, or null when Hermes does not recognise it. */
 export function envVarForProvider(provider: string): string | null {
   if (!isHermesProvider(provider)) return null;
   return PROVIDER_ENV_VAR[provider] ?? null;

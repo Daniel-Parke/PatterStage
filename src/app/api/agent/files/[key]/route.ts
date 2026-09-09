@@ -41,14 +41,9 @@ type FileResponseVariant = {
 };
 
 /**
- * Build the GET response payload for a file-read branch. The 3 branches
- * (managed-file hit, missing file, real-file read) all share the same
- * `key`/`name`/`description` envelope and only differ in `content`,
- * `size`, `lastModified`, and `exists`. This helper centralizes the
- * common envelope so the per-branch code can focus on the variant.
- * `lastModified: undefined` is omitted from the payload (matching the
- * original shape where the "missing file" branch had no `lastModified`
- * field at all).
+ * Build the GET response payload for a file-read branch. `lastModified:
+ * undefined` is omitted from the payload, so the "missing file" branch
+ * carries no `lastModified` field.
  *
  * Returns the INNER payload (not `{ data: payload }`): the callers wrap it
  * with `ok()`, which adds the single `{ data }` envelope. (A prior version
@@ -87,7 +82,6 @@ function buildFileResponse(
   return data;
 }
 
-/** Build a path lookup map from a Hermes path bundle. */
 function getBundlePathMap(bundle: ReturnType<typeof buildProfileHermesPathBundle>): Record<string, string> {
   return {
     soul: bundle.soul,
@@ -103,12 +97,9 @@ function getBundlePathMap(bundle: ReturnType<typeof buildProfileHermesPathBundle
 
 /**
  * Resolve `profileParam` to a safe profile slug, falling back to `"default"`
- * when the input is invalid. Used by the GET + PUT try-blocks after
- * `resolveFilePath` has already validated the input (so the invalid branch
- * is unreachable in practice, but the defensive fallback preserves the
- * pre-refactor behaviour). Centralises the 2-line
- * `const prof = resolveSafeProfileName(profile); const profileSlug = prof.ok ? prof.profile : "default"`
- * pattern that was duplicated at GET line 136-137 and PUT line 214-215.
+ * when the input is invalid. `resolveFilePath` has already validated the
+ * input by the time GET and PUT call this, so the invalid branch is
+ * unreachable in practice; the fallback is defensive.
  */
 function safeProfileSlug(profileParam: string | null): string {
   const prof = resolveSafeProfileName(profileParam);
@@ -293,11 +284,6 @@ export async function PUT(
           normalizePlatformToolsets(platformToolsetsFromJson(cols.platformToolsetsJson)),
         );
         writeManagedFileContent(profileSlug, "config", cols.configYaml);
-        // applyProfileOrRootPatchOrFail collapses the 4-line
-        // apply+toPatchResponse+assert+return-err dance into 1 call
-        // + 1 instanceof check. Replaces the if/else update block
-        // AND the separate push block below (2 places, 16 lines
-        // total).
         const configPatch = {
           personality: cols.personality,
           disabledSkillsJson: cols.disabledSkillsJson,
@@ -313,14 +299,6 @@ export async function PUT(
         if (result instanceof NextResponse) return result;
       }
       else {
-        // Non-config managed file (SOUL.md, AGENTS.md, etc.) — write
-        // the column-free file body to the managed-files table, then
-        // push. pushProfileOrRootOrFail is the push-only companion
-        // of applyProfileOrRootPatchOrFail — collapses the
-        // push+toPatchResponse+assert+return-err dance into 1 call
-        // + 1 instanceof check. writeManagedFileContent has already
-        // updated the managed-files table; we just need the post-
-        // write push to mirror to Hermes.
         // The write answers whether it happened. HERMES.md exists only on the
         // root agent, so on a named profile this returns false and used to be
         // discarded: the route pushed, audited and answered 200 over a save

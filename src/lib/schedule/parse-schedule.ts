@@ -107,17 +107,9 @@ export function parseSchedule(raw: string): ParsedSchedule {
  * falling back to `fallback` for the `invalid` variant (which has no
  * `display` field).
  *
- * The 3 call sites that used to inline this type-narrowing pattern
- * (`"display" in parsed ? (parsed as { display: string }).display : <fallback>`)
- * now use this helper. The `in` operator is the canonical way to narrow
- * the `ParsedSchedule` discriminated union on the `display` field —
- * TypeScript can't narrow it via `parsed.kind` because 3 of the 4
- * variants have a `display` field and the 4th (`invalid`) doesn't.
- *
- * Byte-equivalence: the inline form and the helper form produce the
- * same string for every reachable input (the `invalid` variant is
- * the only one that takes the fallback branch, and the `display`
- * field is non-empty on the 3 success variants per `parseSchedule`).
+ * The `in` operator is how the `ParsedSchedule` union narrows on `display`:
+ * TypeScript can't narrow it via `parsed.kind` because 3 of the 4 variants
+ * have a `display` field and the 4th (`invalid`) doesn't.
  *
  * @param parsed — the result of `parseSchedule()`.
  * @param fallback — the string returned when `parsed.kind === "invalid"`.

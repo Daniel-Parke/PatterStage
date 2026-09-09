@@ -2,16 +2,15 @@
 // useMissionTemplateActions — the template write path
 // ═══════════════════════════════════════════════════════════════
 //
-// Split out of useMissionsPage (Phase 4 god-file decomposition). Owns
-// the six template handlers: save-as-template from the composer, the
+// Owns the six template handlers: save-as-template from the composer, the
 // editor's create/save, edit, delete, and the interactive "click a
 // template to load it" selection. All six read the composer form and
 // the editor drafts; none of them own that state.
 //
 // The two state containers are passed in whole and destructured here so
-// every handler's dependency array stays per-field, exactly as it was
-// before the split. `useMissionTemplatesState` keeps the drafts and the
-// modal flags; `useMissionComposer` keeps the form.
+// every handler's dependency array stays per-field.
+// `useMissionTemplatesState` keeps the drafts and the modal flags;
+// `useMissionComposer` keeps the form.
 
 "use client";
 
@@ -134,13 +133,6 @@ export function useMissionTemplateActions({
     const existingTemplate = templates.find(
           (t) =>
             t.name === name &&
-            // `isCustom` is already declared (optional) on the
-            // `MissionTemplate` interface in TemplateModals.tsx:67, so
-            // no structural cast is needed to read it. The prior
-            // `(t as MissionTemplate & { isCustom?: boolean })` was
-            // redundant — `isCustom` is in the type, not in the
-            // legacy backend shape. The `!== false` check is
-            // preserved byte-equivalent.
             t.isCustom !== false,
         );
 
@@ -185,20 +177,6 @@ export function useMissionTemplateActions({
     // destroyed whatever mission the operator was half way through writing
     // (T-0104, D72).
     resetTemplateDraft();
-    // `closeTemplateManager` is the hook's stable close-callback for
-    // the template-manager modal (sibling of `openTemplateManager`).
-    // Pre-session-211: this site inlined `setShowTemplateManager
-    // (false)` directly. The 2-1/2 line of code is byte-equivalent
-    // (same `setShowTemplateManager(false)` payload via the callback
-    // body), but the migration keeps the 3 internal call sites
-    // consistent with the page's `<TemplateManagerModal
-    // onClose={closeTemplateManager}>` JSX binding — any future
-    // "also clear the template filter" or "also reset template
-    // category" extension added to `closeTemplateManager` lands
-    // here too, automatically. The deps array adds `closeTemplateManager`
-    // (it's a stable `useCallback` with `[]` deps, so the reference
-    // is the same on every render of the hook — adding it is a
-    // correctness no-op but keeps the linter happy).
     closeTemplateManager();
     setShowTemplateEditor(true);
   }, [closeTemplateManager, resetTemplateDraft, setEditingTemplateId, setShowTemplateEditor]);
@@ -246,17 +224,6 @@ export function useMissionTemplateActions({
       // Into the editor draft. applyTemplateToForm wrote the composer fields,
       // which is the other half of D72.
       seedTemplateDraft(t);
-      // `closeTemplateManager` is the hook's stable close-callback for
-      // the template-manager modal (sister migration to the same
-      // pattern in `handleCreateNewTemplate` above and
-      // `handleDeleteTemplate` below). Pre-session-211: this site
-      // inlined `setShowTemplateManager(false)` directly. The migration
-      // is byte-equivalent (same payload via the callback body) and
-      // keeps the 3 internal call sites consistent with the page's
-      // `<TemplateManagerModal onClose={closeTemplateManager}>` JSX
-      // binding. The deps array adds `closeTemplateManager` (stable
-      // `useCallback` with `[]` deps, so the reference is the same on
-      // every render).
       closeTemplateManager();
       setShowTemplateEditor(true);
     },
@@ -279,14 +246,7 @@ export function useMissionTemplateActions({
   }, [showToast, fetchData, closeTemplateManager]);
 
   const handleTemplateSelect = useCallback((t: MissionTemplate) => {
-    // The interactive "click a template" path: just apply + open +
-    // toast. No `rememberCategory` (the user picked a template
-    // interactively; persisting the category is reserved for the
-    // deep-link path in `fetchData`) and no `clearQueryParam`
-    // (there is no `?template=` query to strip — the user is
-    // already on the bare missions page). The shared apply+open
-    // +toast trio is consolidated in `loadAndApplyTemplate`; see
-    // the helper's JSDoc for the 2-site consolidation rationale.
+    // Interactive path: no category to remember, no query param to strip.
     loadAndApplyTemplate(t);
   }, [loadAndApplyTemplate]);
 

@@ -1,37 +1,14 @@
-// ═══════════════════════════════════════════════════════════════
-// hindsight-request.ts - the transport the Hindsight actions share
-// ═══════════════════════════════════════════════════════════════
-//
-// Extracted from src/app/api/memory/hindsight/route.ts. Every action in
-// hindsight-read-actions.ts and hindsight-write-actions.ts goes through
-// `requestWithTimeout`, which is the active memory provider's request()
-// under another name. Host, port and default bank come from the provider
-// config (see /config/memory), never from a hardcoded localhost:9177.
+// hindsight-request.ts - the transport the Hindsight actions share. Every
+// action goes through `requestWithTimeout`, the active memory provider's
+// request(); host, port and bank come from the provider config, never a hardcoded localhost:9177.
 
 import { getActiveMemoryProvider, getActiveMemoryConfig } from "@/lib/memory/memory-providers";
 
 /**
- * Heuristic for "is this a connection-level failure?" — used to
- * downgrade the catch-branch response status from 500 to 503 (the
- * Hindsight server isn't responding, so it's not really a code bug).
- * The original `requestWithTimeout` error message already includes
- * the upstream status + body, so the match must look at substrings
- * of `error.message`, not at `error.name` or a typed `code` field.
- */
-/**
- * Is this "Hindsight is not running" rather than "Hindsight is broken"?
- *
- * The distinction is the whole point: a connection failure is a 503 and an
- * empty state that says the service is down, while anything else is a 500 and
- * a real error. Getting it wrong means a user who simply has not started
- * Hindsight sees a server error.
- *
- * It reads the CAUSE CHAIN, not just the message. Node's fetch throws
- * `TypeError: fetch failed` and hides the real reason one level down in
- * `cause` (`Error: connect ECONNREFUSED 127.0.0.1:9177`). Matching on the
- * message alone therefore missed the single commonest case, the service not
- * being up, and returned 500 for it. Found 2026-08-23 by loading /memory with
- * Hindsight stopped and watching the console log a server error.
+ * "Hindsight is not running" (a 503 and an empty state) rather than "Hindsight
+ * is broken" (a 500). It reads the CAUSE CHAIN, not just the message: Node's
+ * fetch hides `ECONNREFUSED` one level down in `cause`, so matching the
+ * message alone returned 500 for the commonest case, the service not being up.
  */
 export function isHindsightConnectionError(error: unknown): boolean {
   const NEEDLES = ["connect", "econnrefused", "refused", "timed out", "timeout",
@@ -52,10 +29,7 @@ export function isHindsightConnectionError(error: unknown): boolean {
   return false;
 }
 
-// ── DB-owned endpoint/bank ───────────────────────────────────
-// Host/port/bank come from the active provider config (see /config/memory) —
-// no more hardcoded localhost:9177 / "hermes". The provider's request()
-// preserves the error-message shape isHindsightConnectionError matches.
+// The provider's request() preserves the error-message shape isHindsightConnectionError matches.
 
 /** The configured default bank (overridable per request via ?bank=). */
 export function defaultBank(): string {

@@ -1,7 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
 // DeleteProfileModal — confirm deleting a profile and its files
-//
-// Extracted verbatim from app/operations/agents/page.tsx.
 // ═══════════════════════════════════════════════════════════════
 
 "use client";

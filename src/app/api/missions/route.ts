@@ -4,10 +4,8 @@
 // Missions are stored in PatterStage SQLite. Dispatch is handled
 // by the Hermes backend for mission execution.
 //
-// This route is a thin auth + parse + router: each POST action
-// (dispatch/promote/update/cancel/delete) lives in its own module
-// under src/lib/mission-handlers/*. The id/category resolution helpers
-// shared by the handlers + GET live in mission-handlers/shared.ts.
+// This route is a thin auth + parse + router: each POST action lives in
+// its own module under src/lib/missions/mission-handlers/*.
 import { NextRequest, NextResponse } from "next/server";
 
 import { listMissions } from "@/lib/missions/mission-repository";
@@ -97,10 +95,9 @@ export const POST = route("POST /api/missions", "processing request", "Internal 
 
   ensureSyncLayer();
 
-  // Hoist parseJsonBody out of the main try/catch so malformed JSON returns
+  // parseJsonBody sits outside the main try/catch so malformed JSON returns
   // 400 (REST semantics) instead of being swallowed and re-thrown as a
-  // generic 500 from the catch below. Same bug class as the session-37
-  // fix for /api/sessions, /api/memory/hindsight, etc.
+  // generic 500 from the catch below.
   const bodyResult = await parseJsonBody(request);
   if (bodyResult instanceof NextResponse) return bodyResult;
   const body = bodyResult as Record<string, unknown>;

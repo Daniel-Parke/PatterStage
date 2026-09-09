@@ -67,8 +67,7 @@ export default function LogsPage() {
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const terminalRef = useRef<HTMLDivElement>(null);
   // "Delete all logs" is a destructive singleton action — no auto-dismiss
-  // (the user must explicitly confirm or cancel). The hook returns
-  // `isArmed` for the singleton key; `confirm` runs the action.
+  // (the user must explicitly confirm or cancel).
   const { isArmed: deleteArmed, arm: armDelete, confirm: confirmDelete, cancel: cancelDelete } =
     useTwoStepConfirm({ autoDismissMs: 0 });
 
@@ -93,11 +92,6 @@ export default function LogsPage() {
     }
     await confirmDelete(async () => {
       try {
-        // The route returns `{ data: { cleared: N } }` (envelope).
-        // `safeApiCallData<T>` returns `T | null` (the inner payload
-        // directly — no manual `data?.data?.cleared` indirection).
-        // Matches the canonical envelope + safeApiCallData shape
-        // used by every other read-only fetch on the Logs page.
         const delData = await safeApiCallData<{ cleared?: number }>("/api/logs", {
           method: "DELETE",
         });
@@ -135,8 +129,6 @@ export default function LogsPage() {
     }
   }, [availableLogs, activeLog]);
 
-  // Auto-refresh is now owned by the hook (refreshIntervalMs: 5000 above).
-
   // Auto-scroll to top on new data
   useEffect(() => {
     if (autoScroll && terminalRef.current) {
@@ -144,16 +136,6 @@ export default function LogsPage() {
     }
   }, [data?.lines, autoScroll]);
 
-  // Open/close sibling pair for the search input. The X button on
-  // the visible search input and the "Filter lines" pill form a
-  // 2-state toggle. The X path is a 2-setter close (clear the search
-  // query AND hide the input); the open path is the 1-setter show.
-  // Both promoted to useCallback-wrapped named callbacks following
-  // the session 116 P-7 / session 118 P-7 pattern (named open/close
-  // siblings next to each other, with the stable `useState` setters
-  // listed explicitly in the deps array to satisfy the
-  // `react-hooks/exhaustive-deps` rule). The close path used to
-  // be an inline 3-line arrow on the X button's `onClick` prop.
   const openSearchInput = useCallback(
     () => setSearchVisible(true),
     [setSearchVisible],
@@ -162,23 +144,14 @@ export default function LogsPage() {
     setSearch("");
     setSearchVisible(false);
   }, [setSearch, setSearchVisible]);
-  // The "Latest lines" pill is a 2-step action: re-enable auto-scroll
-  // AND scroll the terminal to the top. The inline 4-line arrow on the
-  // button's `onClick` prop is promoted to a named useCallback so the
-  // page's intent is named (the inline form was a 5-line body buried
-  // in the JSX). The terminalRef read is unconditional — `current` is
-  // null only on the first render, in which case the autoScroll state
-  // still flips so the next render scrolls correctly.
+  // terminalRef.current is null only on the first render, in which case the
+  // autoScroll state still flips so the next render scrolls correctly.
   const jumpToLatestLines = useCallback(() => {
     setAutoScroll(true);
     if (terminalRef.current) {
       terminalRef.current.scrollTop = 0;
     }
   }, [setAutoScroll, terminalRef]);
-  // Dismiss the action message toast. Single-setter close callback
-  // following the same useCallback pattern as the sibling open/close
-  // callbacks above. Used by the small "×" button on the action
-  // message banner.
   const dismissActionMessage = useCallback(
     () => setActionMessage(null),
     [setActionMessage],
@@ -195,10 +168,6 @@ export default function LogsPage() {
   }, [refetch]);
 
 
-  // Named sibling for the header's auto-refresh pill. Byte-equivalent to
-  // the inline `() => setAutoRefresh(!autoRefresh)` arrow it replaces; the
-  // captured boolean is listed in the deps array so the
-  // `react-hooks/exhaustive-deps` rule is satisfied.
   const toggleAutoRefresh = useCallback(
     () => setAutoRefresh(!autoRefresh),
     [autoRefresh, setAutoRefresh],

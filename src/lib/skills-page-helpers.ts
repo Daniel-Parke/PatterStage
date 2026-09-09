@@ -1,20 +1,10 @@
-// ═══════════════════════════════════════════════════════════════
-// skills-page-helpers.ts: pure derivations for the Skills Manager page
-// ═══════════════════════════════════════════════════════════════
-//
-// Extracted from app/operations/skills/page.tsx so the optimistic-toggle
-// resolution + search/grouping/paging derivations are pure + unit-testable.
+// skills-page-helpers.ts: pure derivations for the Skills Manager page.
 
 import { groupByCategory, titleCaseCategory } from "@/lib/skills-grouping";
 import { filterByCaseInsensitiveSubstring } from "@/lib/list-search";
 import type { Skill } from "@/types/console";
 
-/**
- * The "effective" enabled state of a skill after applying any pending
- * optimistic toggle. Reads `pending[skill.name]` (the in-flight mutation)
- * and falls back to the supplied value (defaults to the server's
- * `skill.enabled`).
- */
+/** A skill's enabled state with any in-flight optimistic toggle applied. */
 export function effectiveSkillEnabled(
   skill: Skill,
   pending: Record<string, boolean>,
@@ -24,13 +14,9 @@ export function effectiveSkillEnabled(
 }
 
 /**
- * Case-insensitive search over a skill's name + description.
- *
- * This runs over whatever list it is handed, and the page hands it the WHOLE
- * catalogue rather than the rendered window. That is the invariant worth
- * stating out loud (T-0032, INV-1): the moment a paged surface filters only
- * the rows it happens to have rendered, the search box starts reporting "no
- * matches" for skills that are sitting right there in the catalogue.
+ * Case-insensitive search over name + description. The page hands it the WHOLE
+ * catalogue, never the rendered window (T-0032, INV-1): a paged surface that
+ * filters only its rendered rows reports "no matches" for skills it holds.
  */
 export function filterBySearch(skills: Skill[], search: string) {
   return filterByCaseInsensitiveSubstring(skills, search, [
@@ -43,10 +29,8 @@ export function filterBySearch(skills: Skill[], search: string) {
 export interface SkillCategoryGroup {
   /**
    * The case-normalised grouping key. Collapse and paging state key off THIS,
-   * never off `category`. The page used to seed its collapse map with the
-   * API's raw category strings while the grid looked state up by the
-   * title-cased display label, so no lookup ever matched and every category
-   * rendered open no matter what the map said.
+   * never off `category`: the page once seeded its collapse map with raw API
+   * strings while the grid looked up by display label, so nothing ever matched.
    */
   key: string;
   /** Title-cased label for the eye. */
@@ -55,10 +39,8 @@ export interface SkillCategoryGroup {
 }
 
 /**
- * Case-insensitive grouping into buckets, each sorted by name. The display
- * name is the title-cased first item's original case, which keeps a polished
- * label even when the underlying category values vary in case (the "Creative"
- * vs "creative" mismatch class of bug).
+ * Case-insensitive buckets, each sorted by name, labelled from the first item's
+ * original case so "Creative" and "creative" do not split.
  */
 export function groupCategories(skills: Skill[]): SkillCategoryGroup[] {
   return groupByCategory(skills, "Other").map(([key, items]) => ({
@@ -68,26 +50,17 @@ export function groupCategories(skills: Skill[]): SkillCategoryGroup[] {
   }));
 }
 
-// ── Paging ─────────────────────────────────────────────────────────────────
-//
-// The window that keeps DOM node count off the catalogue size. 178 skills
-// rendered at once cost 5,450 nodes and 625 buttons; one window costs a fixed
-// slice of that, and the cost stops moving when the catalogue grows.
-
-// Rows rendered per page, in a category body and in the search results alike.
-// Deliberately NOT exported: every consumer, tests included, reads the window
-// size through the paging helpers below, so there is one source of truth and no
-// second place to change it.
+// ── Paging: the window that keeps DOM node count off the catalogue size (178
+// skills at once cost 5,450 nodes and 625 buttons). The page size is
+// deliberately NOT exported: every consumer, tests included, reads the window
+// through the helpers below, so there is no second place to change it.
 const SKILL_PAGE_SIZE = 24;
 
 /**
  * How large a section may be and still open with every category expanded.
- *
- * Measured on the running product, collapsing every category put a first
- * viewport on screen with not one skill name in it (T-0125). Four page windows
- * is the size at which rendering the section in full costs about what T-0032
- * budgeted for one open category of cards, now that a skill is a row; beyond
- * it the categories collapse, because a wall is still a wall.
+ * Collapsing every category put a first viewport on screen with no skill name
+ * in it (T-0125); four page windows renders in full for about what T-0032
+ * budgeted for one open category of cards, now that a skill is a row.
  */
 const SKILL_OPEN_BY_DEFAULT_MAX = 4 * SKILL_PAGE_SIZE;
 
@@ -102,11 +75,8 @@ export function pageCount(total: number, size: number = SKILL_PAGE_SIZE): number
 }
 
 /**
- * Clamp a page index into range.
- *
- * The case that matters is the shrink: the user is on page 3 of a category and
- * types a search that narrows it to five rows. Unclamped, the window slices
- * past the end and they stare at an empty list that has results in it.
+ * Clamp a page index into range. The case that matters is the shrink: on page 3,
+ * a search narrows to five rows, and unclamped the window slices past the end.
  */
 export function clampPage(
   page: number,
@@ -138,11 +108,8 @@ export function pageRangeLabel(
 }
 
 /**
- * Scope a category key to the section it is rendered in.
- *
- * "Other" exists in both the Active and the Inactive section. One shared key
- * would make expanding it in one section expand it in the other, and page 3 of
- * one would silently become page 3 of the other.
+ * Scope a category key to its section: "Other" exists in both Active and
+ * Inactive, and one shared key would expand and page both at once.
  */
 export function categoryStateKey(scope: string, key: string): string {
   return `${scope}::${key}`;

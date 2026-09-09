@@ -19,22 +19,6 @@ interface FallbackConfigPanelProps {
   importing?: boolean;
 }
 
-/**
- * Build a partial `FallbackConfig` patch from a single field update.
- * Centralises the `{ ...config, X: value }` shape that the 3 inline
- * handlers (retries / restoration / notification) each used to repeat.
- * Callers pass a `Partial<FallbackConfig>` so a future field addition
- * lands in 1 place — the `keyof FallbackConfig` type discriminator
- * catches unknown fields at compile time.
- *
- * Pre-refactor: 3 inline handlers (handleRetriesChange /
- * handleRestorationChange / handleNotificationChange) each did the
- * same `{ ...config, <field>: <value> }` spread. The retries variant
- * had an extra `parseInt + isNaN + range guard` 3-line prelude
- * before the spread; the other 2 were a single-line `onUpdate(...)`
- * call. Post-refactor: 1 `updateField` helper that accepts any
- * `Partial<FallbackConfig>` and forwards the merge to the parent.
- */
 function buildConfigPatch(
   config: FallbackConfig,
   patch: Partial<FallbackConfig>,
@@ -55,13 +39,6 @@ export default function FallbackConfigPanel({
 }: FallbackConfigPanelProps) {
   const syncBlocked = syncing || saving || dirty;
 
-  // updateField — single 1-call update path for all 3 editable fields.
-  // Replaces the 3 pre-refactor handlers (handleRetriesChange /
-  // handleRestorationChange / handleNotificationChange) with a single
-  // helper that forwards a `Partial<FallbackConfig>` patch to the parent.
-  // The retries variant still has its own `parseInt + range guard`
-  // (preserved byte-equivalent from the pre-refactor `handleRetriesChange`)
-  // but the spread + `onUpdate(...)` call collapse to 1 line.
   const updateField = (patch: Partial<FallbackConfig>) =>
     onUpdate(buildConfigPatch(config, patch));
 

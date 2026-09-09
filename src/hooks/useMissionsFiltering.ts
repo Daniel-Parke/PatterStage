@@ -2,8 +2,7 @@
 // useMissionsFiltering — board view state and its derived selectors
 // ═══════════════════════════════════════════════════════════════
 //
-// Split out of useMissionsPage (Phase 4 god-file decomposition). Owns
-// the five pieces of board view state the user drives (status filter,
+// Owns the five pieces of board view state the user drives (status filter,
 // search text, the two category filters, the collapsed result columns)
 // and the five memos derived from them. Every selector is a pure
 // function in src/lib/missions/mission-filters.ts; this hook is the

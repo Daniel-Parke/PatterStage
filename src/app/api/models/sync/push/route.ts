@@ -14,11 +14,7 @@ import { answerSingle } from "@/modules/hermes/lib/sync-answer";
 import { z } from "zod";
 
 export async function POST(request: NextRequest) {
-  // `modelId` is required; `pushCredential` defaults to `true` when
-  // absent (matches the pre-refactor `!== false` semantics). The zod
-  // `.min(1)` + string check makes the post-parse `if (!modelId)`
-  // unreachable — a missing/empty `modelId` surfaces as a 400 from
-  // `zodErrorResponse` with the same "modelId is required" text.
+  // `modelId` is required; `pushCredential` defaults to `true` when absent.
   const pushPostSchema = z
     .object({
       modelId: z.string().min(1, "modelId is required"),

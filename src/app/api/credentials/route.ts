@@ -43,10 +43,7 @@ export async function POST(request: NextRequest) {
     const credential = createCredential(parsed);
     createdId = credential.id;
     // credentialPostSchema narrows parsed.provider to HermesProvider, so no
-    // defensive isHermesProvider() guard is needed. The previous widening
-    // cast (`as HermesProvider`) was a workaround for the z.enum widening
-    // cast on providerSchema; session 53 dropped the widening cast, so
-    // the type now flows through without manual coercion.
+    // defensive isHermesProvider() guard is needed.
     syncCredentialToHermesEnv({
       provider: parsed.provider,
       apiKey: parsed.apiKey,

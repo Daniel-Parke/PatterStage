@@ -25,6 +25,14 @@ status: approved
 > that stopped: the seventy-one files still at the library's root, and the
 > shapes the overhaul's recon then measured.
 
+## Progress
+
+As of 2026-09-10: C0 to C5 landed and pushed (T-0135 to T-0138, T-0141,
+T-0142), with the two fixes the walks found in between (T-0139, T-0140).
+C6, C7 and C8 remain. The numbers against the targets, what is open and
+how a batch is landed are in `org/HANDOVER.md`; each batch's own
+corrections are written into its row below.
+
 ## What it is for
 
 Three things, in the operator's words: development easier, maintenance

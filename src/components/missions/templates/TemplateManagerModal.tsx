@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════
 // TemplateManagerModal — the "Edit Templates" manager (grouped list +
-// per-row two-step delete). Extracted verbatim from TemplateModals.tsx.
+// per-row two-step delete).
 // ═══════════════════════════════════════════════════════════════
 
 "use client";
@@ -32,8 +32,7 @@ interface TemplateManagerModalProps {
 // Each row has its own `useTwoStepConfirm({ autoDismissMs: 4000 })` instance
 // so a stale "armed" state from one row cannot fire when the user later
 // clicks a different row's delete button. By the time onDelete runs, the
-// user has already confirmed in the leaf. Sister to the per-row confirms in
-// MissionEditorPanel + PerRowDeleteButton.
+// user has already confirmed in the leaf.
 function TemplateRow({
   template,
   onEdit,

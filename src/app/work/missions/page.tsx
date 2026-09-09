@@ -94,57 +94,12 @@ export default function MissionsPage() {
     handleCreateNewTemplate,
   } = vm;
 
-  // Close the create/edit mission sheet. The shared `closeComposer`
-  // callback lives in the hook (see useMissionsPage.ts) — the 2
-  // success branches of `handleCreate` (update + promote) use it
-  // too, so a future "clear form fields" or "dismiss category"
-  // reset lands in one place. The Sheet's onClose,
-  // MissionComposerActions footer onClose, and the embedded
-  // MissionCreateForm onClose all funnel through this single
-  // reference.
   const handleCloseCreate = vm.closeComposer;
 
-  // Sibling open callback for the action-bar's "New Mission" button.
-  // Mirrors the `closeComposer` shape (single-setter, no editing state
-  // mutation) — promoted from the inline `() => setShowCreate(true)`
-  // so the open/close pair are named siblings in the hook's return
-  // value. The 4 internal `setShowCreate(true)` sites in the hook
-  // (handleEdit, handleDuplicateMission, handleTemplateSelect,
-  // fetchData's template-apply path) are NOT this callback — they all
-  // do additional state mutations first. See `openCreate` JSDoc in
-  // useMissionsPage.ts.
   const handleOpenCreate = vm.openCreate;
 
-  // The 3 modal close callbacks (`closeCategoryManager`,
-  // `closeTemplateManager`, `closeTemplateEditor`) are now exposed by
-  // the hook as siblings of the 3 corresponding `open*` callbacks
-  // (`openCategoryManager`, `openTemplateManager`, and the editor's
-  // inline open in `handleCreateNewTemplate` / `handleEditTemplate`).
-  // This page-local promotion mirrors the `openCreate` / `closeComposer`
-  // pair that sessions 98 + 114 + 116 + 118 established, and the
-  // `closeCategoryManager` / `openCategoryManager` pair that session
-  // 118 codified. The `cancelTemplateEditor` (2-setter HARD close that
-  // also clears `editingTemplateId`) is intentionally kept page-local
-  // — its 2-setter shape doesn't fit the hook's single-setter close
-  // callback contract. The 3 promoted callbacks are byte-equivalent
-  // to the pre-migration page-local definitions: each is
-  // `useCallback(() => setX(false), [])` (or `[setX]` for the
-  // pre-migration form, which has the same runtime behavior — React
-  // re-checks the deps; `setX` is stable).
   const closeCategoryManager = vm.closeCategoryManager;
   const closeTemplateManager = vm.closeTemplateManager;
-  // Open sibling for `closeCategoryManager`. The `onManageCategories` prop
-  // on `<MissionCreateForm>` previously received an inline `() =>
-  // setShowCategoryManager(true)` arrow — promoted to a named callback so
-  // the open/close pair is named next to each other in the page, matching
-  // the `openCreate` / `closeComposer` pair from session 114 + 116 and the
-  // `openAgentCreate` / `closeAgentModal` pair from session 114. As of
-  // session 118, this callback is exposed by `useMissionsPage` as
-  // `vm.openCategoryManager` so the same callback is reused by
-  // `MissionsList`'s "Manage categories" button (the 2 inline arrows
-  // that used to live at those 2 call sites are now this single named
-  // callback). The `useCallback` deps array is `[]` (the setter reference
-  // is stable), matching the sibling close callbacks.
   const openCategoryManager = vm.openCategoryManager;
   // One close path. The editor used to have two, a SOFT close that left
   // editingTemplateId set and a HARD one that cleared it, described in a long

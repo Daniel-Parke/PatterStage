@@ -1,10 +1,8 @@
 // ═══════════════════════════════════════════════════════════════
 // useGatewayHealth — Unified gateway connectivity + agent model status
 // ═══════════════════════════════════════════════════════════════
-// Consolidates three separate useEffect patterns from the chat page:
-//   1. Gateway online check (polls every 30s)
-//   2. Whether the agent has a model at all
-//   3. Registry + gateway model list
+// Three reads: the gateway online check (polled every 30s), whether the
+// agent has a model at all, and the registry + gateway model lists.
 // ═══════════════════════════════════════════════════════════════
 
 "use client";
@@ -82,11 +80,8 @@ export function useGatewayHealth(): GatewayHealth & {
   const [modelsLoading, setModelsLoading] = useState(true);
 
   // ── Check gateway connectivity ───────────────────────────────
-  // The endpoint returns `{ data: { online: boolean } }`. `safeApiCallData`
-  // unwraps the inner `{ online }` so a truthy `online` is reported as
-  // online and any error (or `{ data: { online: false } }`) is reported
-  // as offline — byte-equivalent to the pre-refactor
-  // `result.ok ? result.data?.online === true : false` shape.
+  // The endpoint returns `{ data: { online: boolean } }`; `safeApiCallData`
+  // unwraps the inner `{ online }`, and any error reports as offline.
   const checkOnline = useCallback(async () => {
     const data = await safeApiCallData<{
       online: boolean;
@@ -122,10 +117,9 @@ export function useGatewayHealth(): GatewayHealth & {
   }, []);
 
   // ── Fetch model lists ───────────────────────────────────────
-  // Both endpoints return `{ data: <inner> }`. As with `checkAgentModel`,
-  // the pre-refactor code read the envelope and the model list was
-  // always empty. After the migration, `registry` and `gateway` are the
-  // inner payloads (`null` on error, payload on success).
+  // Both endpoints return `{ data: <inner> }`; `registry` and `gateway` are
+  // the inner payloads (`null` on error). Reading the envelope instead left
+  // the model list always empty.
   const fetchModels = useCallback(async () => {
     setModelsError(null);
     setModelsLoading(true);

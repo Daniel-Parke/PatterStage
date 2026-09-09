@@ -1,25 +1,12 @@
-// ═══════════════════════════════════════════════════════════════
-// gateway-banner-states — which connection banners the chat page shows
+// gateway-banner-states — which connection banners the chat page shows: a
+// decision, not a rendering, so a test can read the rule.
 //
-// Extracted from four nested JSX conditions in the chat page so the rule is
-// something a test can read. It is a decision, not a rendering: it takes the
-// probe results and the conversation state and returns the banners to draw,
-// in order.
-//
-// THE RULE, and why it changed (P0-5). All four banners used to be gated behind
-// an EMPTY chat, so the operator most likely to need one -- mid-conversation,
-// having just watched a turn fail -- was the one who could not see it. The
-// actionable "start it with" sentence was unreachable at exactly the moment it
-// became actionable.
-//
-// The gate is not simply removed, because the four states are not one kind of
-// thing. Two of them BLOCK the send: the gateway is off, or it refused our key.
-// Those are facts about whether the product works right now, and they show
-// wherever the operator is. The other two are advisory -- configuration
-// guidance and a first-load spinner -- and a banner that appears above a
-// working conversation every thirty seconds teaches the operator to ignore
-// banners, including the two that matter.
-// ═══════════════════════════════════════════════════════════════
+// THE RULE (P0-5). All four banners were gated behind an EMPTY chat, so the
+// operator who had just watched a turn fail could not see the "start it with"
+// sentence. Two banners BLOCK the send (gateway off, key refused) and show
+// wherever the operator is; two are advisory (configuration guidance, a
+// first-load spinner) and stay on the empty chat, because a banner over a
+// working conversation teaches the operator to ignore the two that matter.
 
 export type GatewayBannerState = "offline" | "auth-missing" | "model-missing" | "checking";
 
@@ -29,11 +16,9 @@ export interface BannerInputs {
   /** Gateway answered but accepted our bearer key. `null` when unreachable. */
   gatewayAuthConfigured: boolean | null;
   /**
-   * Whether the agent has a model it can call. Read from the one readiness
-   * answer the server resolves (src/lib/models/model-readiness.ts), never
-   * re-derived here. `null` while unknown, which draws no banner: this used to
-   * be an AND of the models registry and the config file, and it accused a
-   * working install of having no model.
+   * From the one readiness answer the server resolves (model-readiness.ts),
+   * never re-derived: an AND of registry and config file here accused a working
+   * install of having no model. `null` while unknown draws no banner.
    */
   modelReady: boolean | null;
   hasActiveConversation: boolean;
@@ -51,12 +36,8 @@ export function bannerStatesFor(input: BannerInputs): GatewayBannerState[] {
 
   const states: GatewayBannerState[] = [];
 
-  // Blocking: shown wherever the operator is.
-  //
-  // These two are mutually exclusive by construction, and deliberately so.
-  // `auth-missing` requires the gateway to have ANSWERED, which is the thing
-  // `offline` denies. Showing both would be two contradictory readings of one
-  // probe.
+  // Blocking: shown wherever the operator is. Mutually exclusive by
+  // construction: `auth-missing` requires the gateway to have ANSWERED.
   if (gatewayOnline === false) states.push("offline");
   else if (gatewayOnline === true && gatewayAuthConfigured === false) states.push("auth-missing");
 

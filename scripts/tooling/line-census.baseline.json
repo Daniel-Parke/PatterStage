@@ -1,17 +1,17 @@
 {
   "measuredAt": "2026-09-09",
   "counts": {
-    "srcLines": 105422,
-    "testLines": 120549,
+    "srcLines": 100962,
+    "testLines": 120624,
     "srcRepeatedWindowLines": 1176,
-    "testRepeatedWindowLines": 4637,
+    "testRepeatedWindowLines": 4651,
     "routesWithTryCatch": 13,
     "handRolledReadHooks": 11,
     "writeHooksWithoutMutation": 0,
     "repeatedTypeShapeFiles": 2,
     "oneImporterComponents": 130,
     "libRootFiles": 71,
-    "commentEssays": 104,
+    "commentEssays": 8,
     "suitesMockingDbInline": 14
   },
   "allowed": [
@@ -74,6 +74,16 @@
       "measuredAt": "2026-09-09",
       "rise": "suitesMockingDbInline rose from 100 to 101",
       "reason": "T-0140: the custom-fallback oracle adds 160 test lines and mocks the db through dbSingletonMock, which the predicate counts as inline until C4 (T-0141) names that factory too."
+    },
+    {
+      "measuredAt": "2026-09-09",
+      "rise": "testLines rose from 120549 to 120624",
+      "reason": "C5 (T-0142): the oracle suite adds its 75 lines to tests; every other measure fell or held."
+    },
+    {
+      "measuredAt": "2026-09-09",
+      "rise": "testRepeatedWindowLines rose from 4637 to 4651",
+      "reason": "C5 (T-0142): the oracle suite adds its 75 lines to tests; every other measure fell or held."
     }
   ]
 }

@@ -1,8 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // ScriptTemplateGallery — the starter-template cards
 //
-// Extracted verbatim from app/orchestration/scripts/page.tsx. Picking
-// a card opens the template in the editor; nothing is written here.
+// Picking a card opens the template in the editor; nothing is written here.
 // Presentation only.
 // ═══════════════════════════════════════════════════════════════
 

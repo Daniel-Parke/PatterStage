@@ -1,38 +1,24 @@
 // ═══════════════════════════════════════════════════════════════
 // spend/spend-repository.ts · every statement the spend feature runs
 //
-// The only file in src/lib/spend/ that contains SQL (WG-ARCH-002). Nothing
+// The only file in src/lib/spend/ that contains SQL (WG-ARCH-002): nothing
 // above it knows a column name, and nothing below it decides anything.
 //
-// ── THREE THINGS TO KNOW BEFORE EDITING ANYTHING HERE ──────────
-//
-// 1. NO NEW TRACKING. Every figure this feature reports is mined from rows that
-//    were already being written before it existed: `runs.usage_json`, which the
-//    reconcile path stamps from the runtime's own token counts, and the model
-//    dimension on the linked mission. The task row was explicit that spend is
-//    computed from what is already recorded, and the only honest way to hold
-//    that line is for this file to add no writes except the policy itself.
-//
-// 2. `runs.submitted_at` CARRIES TWO DIFFERENT TIMESTAMP SHAPES. The scheduler
-//    claims an occurrence through `createRun`, which passes `now()` =
-//    `new Date().toISOString()` ("2026-08-23T10:00:00.000Z"). Rows inserted
-//    without that argument take the column DEFAULT `datetime('now')`
-//    ("2026-08-23 10:00:00"). Those do NOT compare correctly as strings: 'T' is
-//    0x54 and ' ' is 0x20, so an ISO row sorts after every SQLite-shaped row on
-//    the same day and a naive `>=` silently drops or admits whole days. Every
-//    comparison here therefore goes through SQLite's `datetime()`, exactly as
-//    retention-repository.ts does and for exactly the same reason. It costs the
-//    index; a budget read that runs once per tick can afford a scan, and a
-//    budget boundary that is right only on most days cannot.
-//
-// 3. THE JOIN TO `missions` IS A LEFT JOIN, DELIBERATELY. A Composer stage run
-//    has a `composer_node_run_id` and NO `mission_id`. The Insights per-model
-//    aggregate (analytics/run-aggregates.ts) INNER JOINs missions, which is why
-//    Composer spend has never appeared in it at all. An inner join here would
-//    reproduce that hole in the one place it would be a money error rather than
-//    a chart error, so Composer stages come through with a null model and are
-//    priced at model-cost's conservative default. Unknown must never read as
-//    free.
+// 1. NO NEW TRACKING. Every figure is mined from rows already written before
+//    the feature existed (`runs.usage_json`, stamped by reconcile from the
+//    runtime's own counts, and the model on the linked mission), so this file
+//    adds no writes except the policy itself.
+// 2. `runs.submitted_at` CARRIES TWO TIMESTAMP SHAPES: `createRun` passes an
+//    ISO string ("2026-08-23T10:00:00.000Z"); rows without it take the column
+//    DEFAULT `datetime('now')` ("2026-08-23 10:00:00"). 'T' sorts after ' ', so
+//    a string `>=` silently drops or admits whole days; every comparison goes
+//    through `datetime()`, as retention-repository.ts does, at the cost of the
+//    index, which a once-per-tick read can afford.
+// 3. THE JOIN TO `missions` IS A LEFT JOIN. A Composer stage run has no
+//    `mission_id`; the Insights aggregate (analytics/run-aggregates.ts) INNER
+//    JOINs and has never shown Composer spend. Here that hole would be a money
+//    error, so Composer stages arrive with a null model and are priced at
+//    model-cost's conservative default. Unknown must never read as free.
 // ═══════════════════════════════════════════════════════════════
 
 import { getDb, inTransaction } from "@/lib/db";
@@ -52,13 +38,9 @@ export interface SpendUsageRow {
 }
 
 /**
- * How a `runs` row is classified into a spend source.
- *
- * Written once and shared by both reads below. The per-story read exists so the
- * Rec Room can show a story its own bill, and the one way that figure could
- * come to disagree with the console's Story Weaver row is by classifying or
- * pricing a row differently. It cannot, because it is this expression fed to
- * the same fold.
+ * How a `runs` row is classified into a spend source. Shared by both reads so
+ * the per-story figure the Rec Room shows cannot disagree with the console's
+ * Story Weaver row: same expression, same fold.
  */
 const SOURCE_CASE = `CASE
     WHEN r.spend_source IS NOT NULL AND r.spend_source <> 'agent' THEN r.spend_source
@@ -68,16 +50,11 @@ const SOURCE_CASE = `CASE
 
 /**
  * Every run in the window that recorded token usage, tagged by source.
- *
  * `sinceExpr` is a SQLite-format instant from `periodStart`. Runs of EVERY
- * status are included, not just completed ones: a run that failed after burning
- * tokens still cost money, and a budget that only counted successes would
- * under-report precisely when things were going wrong.
+ * status count: a run that failed after burning tokens still cost money.
  *
- * Throws on failure. The callers wrap this themselves with the fallback each
- * one needs, and those fallbacks are not the same: the summary degrades to
- * zero, the guard refuses. Swallowing here would take that choice away from
- * the one caller whose choice costs money.
+ * Throws on failure. The callers' fallbacks differ (the summary degrades to
+ * zero, the guard refuses), and swallowing here would take that choice away.
  */
 export function readRunUsageSince(sinceExpr: string): SpendUsageRow[] {
   return getDb()
@@ -95,17 +72,11 @@ export function readRunUsageSince(sinceExpr: string): SpendUsageRow[] {
 }
 
 /**
- * Every recorded run linked to ONE story, in the same shape as the window read.
- *
- * No date bound: a story is not a calendar period, and "what has this story
- * cost" means since it was created.
- *
- * The model column is NULL here for the same reason it is null there. A story
- * run has no mission to join, so the console prices it at model-cost's
- * conservative default; resolving the story's configured model at this one site
- * would give the reader a different number from the console for the same money,
- * which is the drift T-0108 (D104) spent its scope removing.
- *
+ * Every recorded run linked to ONE story, in the window read's shape. No date
+ * bound: a story is not a calendar period. The model is NULL for the same
+ * reason it is null there: a story run has no mission to join, and resolving
+ * the story's model at this one site would give the reader a different number
+ * from the console for the same money, the drift T-0108 (D104) removed.
  * Throws on failure, like the read above, so the caller keeps its own fallback.
  */
 export function readRunUsageForStory(storyId: string): SpendUsageRow[] {
@@ -130,16 +101,10 @@ export interface ResearchUsageRow {
 }
 
 /**
- * What each Deep Research run in the window cost, in tokens.
- *
- * Returns a row per run INCLUDING the ones whose columns are NULL, which is the
- * whole point: the caller has to be able to tell a run that cost nothing from a
- * run whose cost was never recorded. Filtering the NULLs out here would leave
- * the summary unable to declare them, and it would quietly resume reporting
- * pre-034 research as free.
- *
- * Throws on failure, like `readRunUsageSince`, so each caller keeps its own
- * fallback: the summary degrades to zero, the guard refuses.
+ * What each Deep Research run in the window cost, in tokens. Rows with NULL
+ * columns are returned, not filtered: the caller must tell a run that cost
+ * nothing from one whose cost was never recorded, or pre-034 research quietly
+ * reads as free again. Throws on failure, like `readRunUsageSince`.
  */
 export function readResearchUsageSince(sinceExpr: string): ResearchUsageRow[] {
   return getDb()
@@ -161,10 +126,8 @@ interface RawSpendPolicy {
 }
 
 /**
- * The operator's budget row (migration 033 seeds exactly one).
- *
- * A database with no row yet reads as UNSET rather than as an error, so the
- * feature is inert on an install mid-migration instead of breaking it.
+ * The operator's budget row (migration 033 seeds exactly one). No row reads as
+ * UNSET rather than as an error, so the feature is inert mid-migration.
  */
 export function readSpendPolicy(): SpendPolicy {
   const row = getDb()
@@ -187,15 +150,10 @@ export interface SpendPolicyPatch {
 }
 
 /**
- * Change the budget. Every supplied field is written in ONE statement.
- *
- * That is not tidiness. Migration 033 refuses to hold `hard_stop = 1` with no
- * figure beside it, so clearing the figure and disarming the stop as two
- * statements would fail on the first of them. Writing them together means the
- * pair the database forbids never exists, not even inside a transaction.
- *
- * A patch with nothing in it is a no-op rather than an error, so a caller that
- * filtered everything out does not have to check first.
+ * Change the budget, every supplied field in ONE statement: migration 033
+ * refuses `hard_stop = 1` with no figure beside it, so clearing the figure and
+ * disarming the stop as two statements would fail on the first. An empty patch
+ * is a no-op rather than an error, so a caller need not check first.
  */
 export function writeSpendPolicy(patch: SpendPolicyPatch): void {
   const sets: string[] = [];

@@ -1,33 +1,21 @@
-// ═══════════════════════════════════════════════════════════════
-// apply-composer-rejected-migration.ts
+// apply-composer-rejected-migration.ts: widens the two composer status CHECK
+// constraints to admit `rejected` (035). Version guarded at schema_version 35,
+// wired LAST in runMigrations.
 //
-// Widens the two composer status CHECK constraints to admit `rejected` (035).
-// Version guarded at schema_version 35, wired LAST in runMigrations.
+// The first table rebuild in the chain, so NOT `execMigrationFile`:
+// `execIdempotent` swallows "already exists", right for ADD COLUMN and wrong
+// here, since a half-applied rebuild would be recorded as done with a dropped
+// table and no replacement; and a rebuild must be atomic, which better-sqlite3's
+// `transaction()` gives and `database.exec` on a multi-statement script does not.
 //
-// THIS IS THE FIRST TABLE REBUILD IN THE CHAIN, and it therefore does NOT use
-// `execMigrationFile`, for two reasons that matter:
+// `PRAGMA foreign_keys` cannot change inside a transaction, so it is set around
+// the transaction here, not in the .sql, and restored in a `finally` so a failed
+// rebuild does not leave foreign keys silently off for the rest of the process.
 //
-//   1. `execIdempotent` swallows "already exists" and "duplicate column name",
-//      which is the right doctrine for an ADD COLUMN and the wrong one here. A
-//      rebuild that half-applied and then hit "already exists" would be recorded
-//      as done, leaving a database with a dropped table and no replacement.
-//   2. A rebuild must be atomic. better-sqlite3's `transaction()` wrapper rolls
-//      the whole thing back on any throw; `database.exec` on a multi-statement
-//      script does not.
-//
-// `PRAGMA foreign_keys` cannot change inside a transaction, so it is set here,
-// around the transaction, rather than in the .sql file. It is restored in a
-// `finally`, so a failed rebuild does not leave the connection with foreign keys
-// silently off for the rest of the process's life — which would be a far worse
-// outcome than the failed migration itself.
-//
-// THE SHAPE GUARD is the point of this file. The migration copies an EXPLICIT
-// column list, and the failure mode of a wrong list is not an error — it is a
-// silent column drop. So the live shape is asserted against the list the .sql
-// file copies, and a mismatch throws before anything is dropped. A future
-// migration that adds a column to either table without revisiting this one will
-// fail loudly on the next boot instead of quietly discarding operator data.
-// ═══════════════════════════════════════════════════════════════
+// THE SHAPE GUARD is the point: the .sql copies an EXPLICIT column list, and a
+// wrong list is not an error but a silent column drop. The live shape is
+// asserted against that list and a mismatch throws before anything is dropped,
+// so a later migration that adds a column fails loudly on the next boot.
 
 import type Database from "better-sqlite3";
 import { existsSync, readFileSync } from "fs";
@@ -35,16 +23,14 @@ import { join } from "path";
 import { getSchemaVersion, setSchemaVersion } from "@/lib/db-schema";
 
 /**
- * The head of the migration ladder as of T-0069.
- * `MIGRATION_HEAD_SCHEMA_VERSION` in `src/lib/db-schema.ts` must equal this, and
- * `tests/unit/run-migrations-upgrade.integration.test.ts` asserts it does.
+ * The head of the migration ladder as of T-0069. `MIGRATION_HEAD_SCHEMA_VERSION`
+ * in `src/lib/db-schema.ts` must equal this; `tests/unit/run-migrations-upgrade.integration.test.ts` asserts it.
  */
 export const COMPOSER_REJECTED_SCHEMA_VERSION = 35;
 
 /**
  * The exact column set each table must have for `035_composer_rejected.sql`'s
- * copy to be lossless. Order is irrelevant (the SQL names every column on both
- * sides); membership is not.
+ * copy to be lossless. Order is irrelevant (the SQL names every column); membership is not.
  */
 const EXPECTED_COLUMNS: Record<string, readonly string[]> = {
   composer_runs: [
@@ -83,9 +69,8 @@ export function applyComposerRejectedMigration(
   if (current >= COMPOSER_REJECTED_SCHEMA_VERSION) return current;
 
   const path = join(migrationsDir, "035_composer_rejected.sql");
-  // A missing file is not an error: prebuild-db.mjs ships a database that has
-  // already had the migrations applied, and the .sql files are not always
-  // deployed alongside it. Same contract as execMigrationFile.
+  // A missing file is not an error: prebuild-db.mjs ships a database already
+  // migrated, without the .sql files beside it. Same contract as execMigrationFile.
   if (existsSync(path)) {
     assertRebuildIsLossless(database, "composer_runs");
     assertRebuildIsLossless(database, "composer_node_runs");

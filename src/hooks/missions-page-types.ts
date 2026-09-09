@@ -2,9 +2,8 @@
 // missions-page-types — the missions page row + detail view models
 // ═══════════════════════════════════════════════════════════════
 //
-// Split out of useMissionsPage (Phase 4 god-file decomposition). These
-// two types are read by the focused hooks the page composes and by the
-// presentational components underneath it. They live in their own
+// These two types are read by the focused hooks the page composes and by
+// the presentational components underneath it. They live in their own
 // module so neither has to import the composing hook, which would make
 // the module graph cyclic.
 

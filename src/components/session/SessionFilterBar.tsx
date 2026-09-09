@@ -1,9 +1,8 @@
 // ═══════════════════════════════════════════════════════════════
 // SessionFilterBar — search, source filter and the view-options row
 //
-// Extracted verbatim from app/(main)/sessions/page.tsx. Every piece of
-// state stays on the page; this component only renders the controls and
-// calls back. Presentation only.
+// Every piece of state stays on the page; this component only renders the
+// controls and calls back. Presentation only.
 // ═══════════════════════════════════════════════════════════════
 
 "use client";

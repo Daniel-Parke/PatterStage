@@ -1,7 +1,6 @@
 // ═══════════════════════════════════════════════════════════════
 // useHindsightDirectives — directives tab state + CRUD handlers.
-// Extracted verbatim from HindsightBrowser. Self-gates its load effect
-// on activeTab === "directives".
+// Self-gates its load effect on activeTab === "directives".
 // ═══════════════════════════════════════════════════════════════
 
 "use client";
@@ -31,8 +30,6 @@ export function useHindsightDirectives(showToast: ShowToast, activeTab: Tab) {
   const [savingDirective, setSavingDirective] = useState(false);
 
   const loadDirectives = useCallback(async () => {
-    // Compose the GET fetch + busy-state toggle + server-error toast
-    // + empty-state reset via the shared `loadHindsightList` helper.
     await loadHindsightList<Directive>(
       "directives",
       setLoadingDirectives,

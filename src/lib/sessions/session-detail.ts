@@ -2,20 +2,10 @@
 // session-detail — pure helpers for GET /api/sessions/[id]
 // ══════════════════════════════════════════════════════════════════════════════
 //
-// The session-detail route has 4 distinct return branches (Hermes state.db,
-// legacy file JSONL, legacy file JSON, mission-output file, no-output-yet
-// sentinel) that all build the same `data` payload shape. This module
-// consolidates:
-//   - the standardized `SessionData` payload type
-//   - `buildSessionData(input)` — defaulting helper for `messageCount`
-//   - `findFileWithExtension(dir, baseName, extensions)` — the "try the raw
-//     name, then .json, then .jsonl" file-discovery pattern
-//
-// Keeping the helpers exported and pure makes them unit-testable in
-// isolation, and means a future route that needs the same response shape
-// or the same file-discovery pattern can import them rather than
-// re-implementing (which is what caused the 3x `existsSync` repetition
-// the original route had).
+// Every branch of the session-detail route (Hermes state.db, legacy file
+// JSONL, legacy file JSON, mission-output file, no-output-yet sentinel)
+// builds the same `data` payload. The shape and the helpers the branches
+// share live here, pure, so they are unit-tested without the route.
 // ══════════════════════════════════════════════════════════════════════════════
 
 import { existsSync } from "fs";
@@ -55,12 +45,7 @@ export interface SessionData {
   [key: string]: unknown;
 }
 
-/**
- * Resolve the standardized GET /api/sessions/[id] response payload from
- * the per-branch raw fields. `messageCount` is derived from
- * `messages.length` when omitted. Any extra keys (e.g. `note`) pass
- * through unchanged.
- */
+/** The GET /api/sessions/[id] payload; `messageCount` defaults to `messages.length`. */
 export function buildSessionData(input: SessionData): SessionData {
   return {
     ...input,
@@ -91,21 +76,10 @@ export function findFileWithExtension(
 }
 
 // ── DB-derived envelope helper ─────────────────────────────────
-//
-// `GET /api/sessions/[id]` has 2 branches that build a `SessionData`
-// payload from a `SessionRecord` row: the mission-output-file branch
-// (transcript exists) and the no-output-yet branch (mission-spawned
-// session whose agent hasn't produced a file). Both share the same
-// 4 envelope fields (title/model/source/created) derived from the
-// DB row. Extracting the shared fields keeps the two call sites in
-// sync and lets a future 3rd branch (e.g. streaming-output) reuse the
-// same derivation without re-implementing the fallbacks.
 
 /**
- * Minimal shape the helper reads from the `SessionRecord`. Defined as
- * a local structural alias (not imported) so this module stays
- * decoupled from the repository's full row type — the helper only
- * needs these 4 fields.
+ * The `SessionRecord` fields the envelope reads. A local structural type
+ * rather than the repository's row type, so this module stays decoupled from it.
  */
 export interface DbSessionEnvelope {
   title: string | null;
@@ -119,11 +93,9 @@ export interface DbSessionEnvelope {
 }
 
 /**
- * Build the 4 shared `SessionData` envelope fields from a DB session
- * row. `title` falls back to the sanitized id; `model` falls back to
- * `""` (matches the legacy file branches' `data.model || ""` shape).
- * `created` is forwarded verbatim — `null` is allowed and surfaces as
- * `"created": null` in the wire payload.
+ * The `SessionData` envelope fields from a DB session row. `title` falls back
+ * to the sanitized id and `model` to `""`, matching the legacy file branches;
+ * `created` is forwarded verbatim, so `null` reaches the wire as `null`.
  */
 export function dbSessionFields(
   dbSession: DbSessionEnvelope,
@@ -151,21 +123,14 @@ export function dbSessionFields(
 
 // ── Mission-output line parser ─────────────────────────────────
 //
-// The mission-output branch of `GET /api/sessions/[id]` reads a
-// `.session` or `.output.log` file written by the recurring-mission
-// dispatch pipeline. The format is one assistant message per line
-// (no JSON envelope, no role field). Extracting the split/filter/map
-// skeleton gives us a unit-testable parser that future consumers
-// (e.g. an export-to-JSONL tool) can import rather than re-implement.
+// A `.session` or `.output.log` file written by the recurring-mission
+// dispatch pipeline is one assistant message per line: no JSON envelope, no
+// role field.
 
 /**
- * Parse a mission-output file body into a `SessionMessage[]` array.
- * Each non-blank line becomes a single assistant message with that
- * line as its `content`. Empty / whitespace-only lines are dropped.
- * `index` is the line's position in the *filtered* array (matches
- * the pre-refactor behaviour where the `.map((line, i) => ...)`
- * callback's `i` was the index of the filtered line, not the raw
- * line in the file).
+ * Parse a mission-output file body: each non-blank line becomes one assistant
+ * message. `index` is the line's position in the filtered array, not the raw
+ * line number in the file.
  */
 export function parseAssistantLines(content: string): Array<{
   index: number;

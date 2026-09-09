@@ -1,43 +1,19 @@
-// ═══════════════════════════════════════════════════════════════
 // useDialogA11y: the modal-dialog behaviour contract, in ONE place.
 //
-// Sheet.tsx owned half of this inline (Escape + body scroll lock) and
-// Modal.tsx owned none of it, which is how three working controls came to
-// report as dead buttons: a text-scraping QA pass and a screen reader both
-// look for [role=dialog], and Modal announced itself as a plain <div>
-// (T-0036). Rather than write the missing half a second time in Modal, the
-// shared half moved here and BOTH components call this hook. Sheet's public
-// API is untouched; it gains the focus trap it was always missing.
-//
-// What the hook owns:
-//   · Escape closes.
-//   · Tab and Shift+Tab wrap inside the panel, and focus that has escaped
-//     the panel is pulled back into it.
-//   · Focus moves onto the panel when it opens and is restored to whatever
-//     had focus before (the trigger) when it closes.
-//   · Body scroll is locked while open and restored to its previous value.
-//
-// What the hook does NOT own, because it differs per component: the role and
-// aria attributes themselves. The caller spreads them onto its own panel
-// element, so Modal can point aria-labelledby at its existing <h2> while
-// Sheet keeps the aria-label its callers already rely on.
-// ═══════════════════════════════════════════════════════════════
+// Sheet owned half of this inline and Modal none, so Modal announced itself as
+// a plain <div> and a QA pass reported three working controls as dead buttons
+// (T-0036). Both components call this hook. It owns Escape, the Tab ring and
+// focus recapture, focus on open and restore on close, and the body scroll
+// lock. It does NOT own the role and aria attributes, which differ per
+// component: the caller spreads them onto its own panel.
 
 import { useEffect, useRef, type RefObject } from "react";
 
 /**
- * The open dialogs, innermost last.
- *
- * Escape and the Tab trap must belong to the TOPMOST dialog only. Without
- * this, every open dialog registers its own document-level keydown listener
- * and they all fire together: on the missions page the category modal opens
- * OVER the composer sheet (the opener does not close the sheet), so one
- * Escape closed both and the operator lost a half-filled mission to a
- * keystroke aimed at the modal on top of it. The Tab trap only avoided the
- * same fight by accident of mount order.
- *
- * Module-level because it is genuinely global: two components, any number of
- * instances, one keyboard.
+ * The open dialogs, innermost last. Escape and the Tab trap belong to the
+ * TOPMOST only: the category modal opens OVER the composer sheet, so one Escape
+ * closed both and lost a half-filled mission. Module-level because it is
+ * global: two components, any number of instances, one keyboard.
  */
 const dialogStack: symbol[] = [];
 
@@ -46,27 +22,15 @@ function isTopmost(id: symbol): boolean {
 }
 
 /**
- * Everything tabbable, MINUS anything removed from the tab order, MINUS
- * anything not drawn.
+ * Everything tabbable, minus anything out of the tab order or not drawn.
+ * The trap acts at the ring's two ENDS only, so a hidden control at an end
+ * is a leak: the rail's `hidden lg:flex` collapse button was last in the
+ * drawer on a phone, and Tab walked out to the hamburger behind the backdrop.
  *
- * The trap acts at the ring's two ends only; in between, the browser's own
- * Tab does the walking and skips `display: none` by itself. So a hidden
- * control in the middle of a panel is harmless, and a hidden control at an
- * END is a leak: the trap believes the ring has one more stop, never
- * intercepts Tab from the last drawn control, and the browser walks straight
- * out of the panel. That was the rail's collapse button, `hidden lg:flex` and
- * the last control in the drawer on a phone: Tab from the control before it
- * left the open drawer for the hamburger behind the backdrop.
- *
- * `getClientRects().length` is zero for anything `display: none` and for
- * anything inside it. It is also zero for EVERYTHING under jsdom, which does
- * no layout, and an earlier version of this comment refused the filter on
- * those grounds: it would have made the trap degrade to "no focusable
- * elements" in every test that asserts it. So it is guarded. When nothing in
- * the panel has a rect, the ring is the unfiltered list, and the dialog
- * suites keep asserting the trap without stubbing layout;
- * u14-the-trap-skips-what-is-not-drawn stubs it and sees the filter work
- * (T-0128).
+ * `getClientRects().length` is zero for `display: none` and for EVERYTHING
+ * under jsdom, which does no layout, so the filter is guarded: when nothing
+ * has a rect the ring is the unfiltered list, the dialog suites keep asserting
+ * the trap, and u14-the-trap-skips-what-is-not-drawn stubs layout (T-0128).
  */
 const FOCUSABLE_SELECTOR = [
   "a[href]",
@@ -101,11 +65,9 @@ interface DialogA11yOptions {
 }
 
 /**
- * Wire the dialog behaviour contract to a panel element.
- *
- * @returns the ref to attach to the panel that carries `role="dialog"`. The
- * panel needs `tabIndex={-1}` so focus has somewhere to land when the dialog
- * holds no focusable control of its own.
+ * Wire the contract to a panel element.
+ * @returns the ref for the panel carrying `role="dialog"`; give it
+ * `tabIndex={-1}` so focus can land when the dialog holds no control.
  */
 export function useDialogA11y({
   open,
@@ -113,20 +75,15 @@ export function useDialogA11y({
 }: DialogA11yOptions): RefObject<HTMLDivElement | null> {
   const panelRef = useRef<HTMLDivElement | null>(null);
 
-  // onClose is read through a ref so the effect below depends on `open`
-  // ALONE. Callers routinely pass an inline arrow (`onClose={() => setOpen(
-  // false)}`); with onClose in the dependency array, every parent re-render
-  // would tear the effect down and set it up again, and "set up again"
-  // includes moving focus back onto the panel. That is the exact failure mode
-  // that makes a trapped dialog impossible to type into, and it would have
-  // been invisible until someone tried to fill in a form inside one.
+  // onClose is read through a ref so the effect depends on `open` ALONE:
+  // callers pass inline arrows, and re-running the effect moves focus back
+  // onto the panel, which makes a trapped dialog impossible to type into.
   const onCloseRef = useRef(onClose);
   useEffect(() => {
     onCloseRef.current = onClose;
   });
 
-  // Identity for this dialog instance on the stack. A ref so it survives
-  // re-renders: a new symbol each render would corrupt the stack.
+  // A ref so the identity survives re-renders; a new symbol each render corrupts the stack.
   const idRef = useRef<symbol | null>(null);
   if (idRef.current === null) idRef.current = Symbol("dialog");
 
@@ -142,8 +99,8 @@ export function useDialogA11y({
         : null;
 
     const onKey = (e: KeyboardEvent) => {
-      // Only the dialog on top reacts. A dialog underneath keeps its listener
-      // registered so it takes over the moment the one above it closes.
+      // Only the dialog on top reacts. One underneath keeps its listener so it
+      // takes over the moment the one above closes.
       if (!isTopmost(id)) return;
       if (e.key === "Escape") {
         onCloseRef.current();
@@ -153,8 +110,7 @@ export function useDialogA11y({
 
       const items = focusableWithin(panel);
       if (items.length === 0) {
-        // Nothing to move to, so keep focus on the panel rather than letting
-        // Tab walk out into the page behind the overlay.
+        // Nothing to move to: keep focus on the panel rather than let Tab out.
         e.preventDefault();
         panel.focus();
         return;
@@ -166,9 +122,8 @@ export function useDialogA11y({
         document.activeElement instanceof HTMLElement
           ? document.activeElement
           : null;
-      // The panel itself counts as OUTSIDE the ring: it is where focus lands
-      // on open, and from there Tab must go to `first` and Shift+Tab to
-      // `last`, which is what "outside" already produces.
+      // The panel itself counts as OUTSIDE the ring: from it Tab goes to
+      // `first` and Shift+Tab to `last`, which is what "outside" produces.
       const inRing = active !== null && active !== panel && panel.contains(active);
 
       if (e.shiftKey) {
@@ -189,9 +144,8 @@ export function useDialogA11y({
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
-    // Focus the panel rather than its first control. The panel carries the
-    // accessible name, so a screen reader announces the dialog and its title
-    // instead of jumping straight to an unexplained "Close" button.
+    // The panel, not its first control: it carries the accessible name, so a
+    // screen reader announces the title rather than an unexplained "Close".
     panel?.focus();
 
     return () => {
@@ -199,8 +153,7 @@ export function useDialogA11y({
       if (at !== -1) dialogStack.splice(at, 1);
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = previousOverflow;
-      // Restore focus to the trigger, unless it has left the document in the
-      // meantime (a row deleted by the dialog that opened over it).
+      // Restore focus to the trigger unless it left the document (a row the dialog deleted).
       if (previouslyFocused?.isConnected) previouslyFocused.focus();
     };
   }, [open]);

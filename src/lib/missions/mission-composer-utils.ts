@@ -2,10 +2,8 @@
 // mission-composer-utils.ts — pure helpers for the mission composer
 // ═══════════════════════════════════════════════════════════════
 //
-// Extracted from useMissionsPage so both the composer state hook
-// (useMissionComposer) and the page hook (useMissionsPage) can import
-// them without a circular dependency. Pure + localStorage helpers;
-// each is unit-tested in isolation.
+// Shared by useMissionComposer and useMissionsPage, and kept out of both so
+// neither hook imports the other.
 
 import type { MissionTemplate } from "@/components/missions/TemplateModals";
 
@@ -15,13 +13,10 @@ const LAST_CATEGORY_KEY = "ps-last-mission-category";
 /**
  * Read the legacy `categoryId` field from a `MissionTemplate`.
  *
- * The `MissionTemplate` interface (in `src/components/missions/TemplateModals.tsx`)
- * exposes `category: string` as the canonical category field, but the
- * legacy backend response shape also carries a `categoryId?: string`
- * field that several call sites need to read. This helper centralises
- * the cast + read + fallback discipline so a future "drop the legacy
- * shape" change lands in one place. The `?? fallback` preserves the
- * original `?? <default>` semantics at every call site.
+ * `MissionTemplate` exposes `category: string` as the canonical field, but the
+ * legacy backend response shape also carries `categoryId?: string`, which
+ * several call sites read. Centralised so a future "drop the legacy shape"
+ * change lands in one place.
  */
 export function getCategoryIdFromTemplate(
   t: MissionTemplate,
@@ -46,12 +41,7 @@ export function rememberLastCategory(id: string | null | undefined): void {
   }
 }
 
-/**
- * Read the user's last-selected mission category from localStorage.
- * Mirrors `rememberLastCategory()` — same try/catch+ignore discipline.
- * Returns `null` on any failure (storage unavailable, parse error,
- * key missing).
- */
+/** Read the user's last-selected mission category; `null` on any failure. */
 export function readLastCategory(): string | null {
   try {
     return localStorage.getItem(LAST_CATEGORY_KEY);

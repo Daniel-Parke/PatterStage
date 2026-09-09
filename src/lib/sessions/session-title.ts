@@ -1,23 +1,10 @@
 // ═══════════════════════════════════════════════════════════════
-// session-title.ts — Display title resolver for session records
+// session-title.ts — display title resolver for session records
 // ═══════════════════════════════════════════════════════════════
-// Pure, side-effect-free, browser-safe helper. Used by both the
-// sessions list page (client component) and the /api/sessions/[id]
-// route (server). Keeping the title resolver free of Node-only APIs
-// means it can be bundled into the browser without a 'fs' stub.
-//
-// Fallback chain (newest first wins):
-//   1. session.title
-//   2. for source=cron: "Cron: <cron job name from jobs.json>" (or job id)
-//      — requires the caller to pass `cronJobs`; otherwise falls back
-//      to the embedded job id from the session id itself.
-//   3. for source=mission: "Mission: <mission name>" (or id)
-//   4. for source=api: "API: <first 8 chars of id>"
-//   5. final fallback: "Session <first 8 chars of id>"
-//
-// The server-only jobs.json loader lives in `session-title-server.ts`
-// to keep this module browser-safe. The page passes a `null` map (uses
-// embedded id); server routes pass the loaded map for nicer names.
+// Pure and browser-safe: the sessions list page (client) and the
+// /api/sessions/[id] route (server) both use it, so no Node-only APIs. The
+// jobs.json loader lives in `session-title-server.ts` for that reason; the page
+// passes a `null` map, server routes pass the loaded map for nicer names.
 
 export interface TitleInput {
   id: string;
@@ -33,11 +20,8 @@ export interface CronJobEntry {
 }
 
 /**
- * Best-effort extraction of a cron job id from a session id.
- *
- * Hermes cron session ids look like `cron_<job-uuid>_<YYYYMMDD>_<HHMMSS>`.
- * The job uuid is the prefix before the first underscore after `cron_`.
- * Returns null if the id doesn't match the expected shape.
+ * The job id from a Hermes cron session id (`cron_<job-uuid>_<YYYYMMDD>_<HHMMSS>`),
+ * or null when the shape does not match.
  */
 export function cronJobIdFromSessionId(sessionId: string): string | null {
   if (!sessionId.startsWith("cron_")) return null;
@@ -48,15 +32,9 @@ export function cronJobIdFromSessionId(sessionId: string): string | null {
 }
 
 /**
- * Parse the segments of a cron session id into structured parts.
- *
- * Hermes cron session ids look like `cron_<job-uuid>_<YYYYMMDD>_<HHMMSS>`.
- * The legacy sync code in session-repository.ts used the same shape
- * to format titles ("Cron: <name> — <date> <time>"), so this helper
- * returns the segments in a structure that maps 1:1 onto that use.
- *
- * Returns null when the id doesn't match the expected shape (no
- * `cron_` prefix, or fewer than 3 underscore-separated segments).
+ * The job id and the segments after it, which session-sync formats into
+ * "Cron: <name> — <date> <time>". Null without the `cron_` prefix or with
+ * fewer than three segments.
  */
 export function parseCronSessionId(sessionId: string):
   | { jobId: string; rest: string[] }
@@ -72,9 +50,8 @@ export function parseCronSessionId(sessionId: string):
  * Resolve a display title for a session record.
  *
  * @param session  the session record (or a subset of its fields)
- * @param cronJobs optional pre-loaded map of cron job id -> entry.
- *                 When omitted or the job isn't in the map, falls back
- *                 to the first 8 chars of the embedded job id.
+ * @param cronJobs optional map of cron job id -> entry; without it, or with the
+ *                 job absent, the first 8 chars of the embedded job id are used.
  */
 export function formatSessionTitle(
   session: TitleInput,
@@ -95,8 +72,7 @@ export function formatSessionTitle(
   }
 
   if (session.source === "mission") {
-    // Mission name is normally set by the dispatch pipeline as session.title,
-    // but if it isn't, fall back to a short id.
+    // The dispatch pipeline normally sets the mission name as session.title.
     if (session.profileName) return `Mission: ${session.profileName}`;
     return `Mission ${idPrefix}`;
   }
@@ -109,13 +85,9 @@ export function formatSessionTitle(
 }
 
 /**
- * Pure helper for the session detail page: detect when a session has no
- * messages but the API note suggests the agent is still running, so the
- * page can show a refresh CTA instead of "No messages in this session".
- *
- * The note comes from `/api/sessions/[id]`'s no-output-yet sentinel
- * branches (mission-spawned, cron-spawned). Returns false when the
- * note is missing, empty, or doesn't match the running pattern.
+ * For the session detail page: no messages, but the API note says the agent is
+ * still running, so the page shows a refresh CTA instead of "No messages". The
+ * note comes from `/api/sessions/[id]`'s no-output-yet sentinel branches.
  */
 export function isSessionStillRunning(
   messageCount: number,

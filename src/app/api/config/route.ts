@@ -32,13 +32,10 @@ const WRITABLE_SECTIONS = new Set(
 
 // PUT body shape: a whitelisted section name + an object of values to
 // merge in. `values` is `Record<string, unknown>` (free-form) because
-// the per-section field validation lives in `config-schema.ts` (the
-// client sends the typed section schema and the server just trusts the
-// shape). `.strict()` rejects unknown top-level keys, matching the
-// pre-refactor manual cast + `badRequest("Missing 'section' or 'values'")`.
-// The section whitelist check is kept as a separate `forbidden()` branch
-// below so the 403 message format is preserved (zod refine would lose
-// the human-readable section list).
+// the per-section field validation lives in `config-schema.ts`.
+// `.strict()` rejects unknown top-level keys. The section whitelist check
+// is a separate `forbidden()` branch below so the 403 keeps the
+// human-readable section list (a zod refine would lose it).
 const configPutSchema = z
   .object({
     section: z.string().min(1),
@@ -77,10 +74,7 @@ export const PUT = route("PUT /api/config", "updating config", "Failed to update
   if (parsed instanceof NextResponse) return parsed;
   const { section, values } = parsed;
 
-  // Non-writable section → 403 (zod refine surfaces the failure as
-  // { message: "section_not_writable" } in zodErrorResponse, but we
-  // need the custom `forbidden()` body with the section list to match
-  // the pre-refactor message format).
+  // Non-writable section → 403 with the section list in the body.
   if (!WRITABLE_SECTIONS.has(section)) {
     return forbidden(
       `Section '${section}' is not writable. Allowed: ${[...WRITABLE_SECTIONS].join(", ")}`
@@ -100,9 +94,7 @@ export const PUT = route("PUT /api/config", "updating config", "Failed to update
   }
   const paths = getAgentWorkspace();
 
-  // Create backup (no-op when config.yaml doesn't exist) — single call
-  // to the canonical backupFile() helper replaces the 4-line inline
-  // `existsSync + ensureDir + backupTimestamp + writeFileSync` block.
+  // Create backup (no-op when config.yaml doesn't exist).
   //
   // It stays HERE, ahead of the parse below, and the ordering is load-bearing.
   // It is the only reason the pre-T-0060 defect was recoverable rather than

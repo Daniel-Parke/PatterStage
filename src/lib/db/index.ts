@@ -5,10 +5,7 @@
 //
 // Relocated from src/lib/db.ts by operator ruling D8 (2026-08-22), so
 // the connection module sits inside the directory that already holds
-// the migration chain it runs. Every `@/lib/db` import is byte-identical
-// across the move; only this file's own relative specifiers changed,
-// and `resolveMigrationsDir`'s __dirname candidate, which now resolves
-// to the same absolute path from one directory deeper.
+// the migration chain it runs.
 //
 // Three statements remain in this file, and all three are plumbing:
 // the connection module's own work, not any table's business.
@@ -22,18 +19,8 @@
 //     schema. There is no repository to route it through, because
 //     until it has run there are no tables to have one.
 //
-// Everything else that used to live here has gone to a repository:
-// getGatewayPlatforms to sync/sync-repository.ts, and getSchemaHealth's
-// two mission_categories statements to
-// missions/mission-category-schema-repository.ts (which takes an open
-// handle rather than calling getDb, so nothing cycles back through
-// this module).
-//
-// The three are no longer counted by `sql-outside-repository`, because
-// src/lib/db/ is exempt by location. They were not deleted and they did
-// not move behind a seam; the file moved into the exempt directory by a
-// sanctioned ruling, and this comment is where that is written down so
-// the drop in the count is not mistaken for a migration.
+// src/lib/db/ is exempt from `sql-outside-repository` by location, so
+// the three are not counted; they were not moved behind a seam.
 // ═══════════════════════════════════════════════════════════════
 
 import Database, { type Database as _DatabaseType } from "better-sqlite3";
@@ -131,10 +118,7 @@ export function getDb(): Database.Database {
 
 // ── Shorthand helpers ─────────────────────────────────────────
 
-/**
- * Wrap `fn` in a SQLite transaction. Commits on success, rolls back on throw.
- * shorthand for `getDb().transaction(fn)()`.
- */
+/** Wrap `fn` in a SQLite transaction. Commits on success, rolls back on throw. */
 export function inTransaction<T>(fn: () => T): T {
   const database = getDb();
   return database.transaction(fn)();
@@ -285,7 +269,7 @@ export function runMigrations(database: Database.Database): void {
   // Story Weaver reusable character + theme library. CREATE at v29.
   applyRecroomLibraryMigration(database, migrationsDir);
 
-  // agent_root.framework_md -> framework_md, cron_jobs.external_job_id ->
+  // agent_root.hermes_md -> framework_md, cron_jobs.external_job_id ->
   // external_job_id. RENAME at v30.
   applyNeutralColumnNames(database);
 

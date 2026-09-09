@@ -9,21 +9,6 @@
 // Sources: cli (Hermes interactive), cron (scheduled jobs),
 //         mission (PatterStage dispatch), api (direct API calls)
 //
-// UX features layered on top of the raw session list (June 2026):
-//   - "Group by mission" toggle collapses sessions with the same
-//     missionId into a single expandable card so recurring
-//     missions don't produce dozens of indistinguishable rows.
-//   - Live indicator (pulsing dot + elapsed time) on active sessions
-//     so users can tell "still running" from "recently completed".
-//   - Mission badge is a real link to /orchestration/missions/{id}.
-//   - "Hide API noise" toggle (opt-in) filters out short-lived
-//     api-source sessions that drown out meaningful activity.
-//   - "5 msgs" badge per row from messageCount, populated by the
-//     Hermes state.db sync.
-//   - Title fallback resolves cron job names from ~/.hermes/cron/jobs.json
-//     via src/lib/sessions/session-title.ts so recurring cron sessions get
-//     human-readable names like "Cron: Review & Refactor — 20260601 185050".
-//
 // The row, the mission-group row and the filter bar are presentational
 // components under src/components/session/; this file is the shell that
 // owns the query, the filters and the paging.
@@ -116,21 +101,11 @@ export default function SessionsPage() {
   const [, setNowTick] = useState(0);
   const { toastElement } = useToast();
 
-  // Open/close sibling pair for the source filter. The "All" button
-  // clears the filter (sets it to `null`); each source button in the
-  // filter bar's .map() sets it to that source. Both paths were
-  // inline `() => setSourceFilter(X)` arrows — promoting to named
-  // useCallback siblings follows the session 116 P-7 / session 118 P-7
-  // pattern. `selectSourceFilter` takes a parameter because the .map()
-  // supplies the source; the `null` path (`clearSourceFilter`) is the
-  // 1-arg "close" sibling. Both callbacks list the stable `useState`
-  // setter explicitly in the deps array to satisfy
-  // `react-hooks/exhaustive-deps`.
   // Both filter callbacks also reset to page 0 so the user doesn't land
   // on a stale page index with "no results" after narrowing the filter.
-  // (Previously a `useEffect` watched `sourceFilter` to reset the page;
-  // folding the reset into the setters keeps `sourceFilter` + `page` in
-  // the query key changing together — one refetch per filter change.)
+  // The reset lives in the setters rather than a `useEffect` on
+  // `sourceFilter` so `sourceFilter` + `page` in the query key change
+  // together — one refetch per filter change.
   const clearSourceFilter = useCallback(() => {
     setSourceFilter(null);
     setPage(0);
@@ -139,17 +114,9 @@ export default function SessionsPage() {
     setSourceFilter(src);
     setPage(0);
   }, [setSourceFilter, setPage]);
-  // Toggle callbacks for the 2 view-options row buttons (group-by-mission
-  // and hide-api-noise). Both were inline `() => setX(!X)` arrows on the
-  // button onClick props — promoting to named useCallbacks follows the
-  // session 191 sibling pattern (the Skills page's
-  // `toggleActiveCollapsed` / `toggleInactiveCollapsed` pair). We pass
-  // the next boolean to the `useStoredBool` setter rather than calling
-  // the setter with a functional updater — `useStoredBool` returns a
-  // `(v: boolean) => void` setter (not a React `Dispatch`), so the
-  // functional form isn't available. The deps array lists the captured
-  // boolean so the `react-hooks/exhaustive-deps` rule is satisfied
-  // (the setter itself has a stable identity per `key`).
+  // `useStoredBool` returns a `(v: boolean) => void` setter, not a React
+  // `Dispatch`, so the functional updater form isn't available: the next
+  // boolean is passed and the captured boolean listed in the deps.
   const toggleGroupByMission = useCallback(
     () => setGroupByMission(!groupByMission),
     [groupByMission, setGroupByMission],
@@ -189,19 +156,9 @@ export default function SessionsPage() {
     refetchIntervalMs: anyLive ? SESSIONS_LIVE_POLL_MS : false,
   });
 
-  // Surface API errors as a persistent <LoadErrorBanner> with a Retry
-  // button. The banner is always rendered when `loadError` is non-null —
-  // it's sticky (the empty list state below the banner is now the
-  // "load failed, not catalog empty" state, which is the canonical
-  // disambiguation the umbrella skill's `LoadErrorBanner` pattern
-  // (Pattern #19) was designed for). The Retry button calls
-  // `useSessions`'s `refetch` so the user can re-attempt the fetch
-  // without manually reloading the page.
-  //
-  // Replaces the previous `useEffect(() => showToast(loadError, "error"))`
-  // form (4s toast, no recovery affordance, disappeared on its own
-  // leaving the user staring at a frozen list with a generic "no
-  // results" empty state).
+  // Load errors are a persistent <LoadErrorBanner> with Retry, not a toast:
+  // a 4s toast disappeared on its own and left the user staring at a frozen
+  // list with a generic "no results" empty state.
 
   // Stable reference for downstream useMemo hooks — prevents unnecessary recomputation
   // on renders where data hasn't changed. Using data?.sessions as dependency is safe:

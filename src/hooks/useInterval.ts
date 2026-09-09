@@ -1,51 +1,12 @@
-// ═══════════════════════════════════════════════════════════════
-// useInterval — Declarative setInterval wrapper for React
-// ═══════════════════════════════════════════════════════════════
+// useInterval — declarative setInterval for React.
 //
-// Multiple PatterStage pages run a `setInterval` for polling or
-// live-tick re-renders. The pattern is identical in every one:
-//
-//   useEffect(() => {
-//     if (!enabled) return;
-//     const id = setInterval(() => fn(), ms);
-//     return () => clearInterval(id);
-//   }, [enabled, ms]);
-//
-// This hook centralises the pattern so the call sites are one-liners:
-//
-//   useInterval(refetch, { ms: 10000 });
-//   useInterval(() => setNowTick(n => n + 1), { ms: 1000 });
-//   useInterval(refetch, { ms: 5000, enabled: autoRefresh });
-//
-// The callback is stored in a ref so changing its identity doesn't
-// restart the interval (otherwise the dashboard's polls would re-arm
-// on every render of the parent).
-//
-// On unmount the timer is cleared (the effect's cleanup runs). The
-// `enabled: false` path also doesn't register the interval, so a
-// "polling paused" toggle costs zero timers in the browser.
-//
-// ── Hidden tabs ──────────────────────────────────────────────────
-// By default the timer is also suspended while the document is hidden,
-// and fires once the moment the tab comes back. A console left open on
-// a background tab overnight should not spend the night re-querying its
-// own database, and a clock nobody can see does not need to re-render
-// every second. TanStack Query already behaves this way: its
-// `refetchInterval` is gated on the same `visibilitychange` signal,
-// so this makes the hand-rolled timers match the query layer instead of
-// quietly disagreeing with it.
-//
-// The catch-up tick on return matters: without it the operator would
-// look at data that is up to one full period stale and have no way to
-// know. With it, the tab is fresh by the time they have read it. Pass
-// `pauseWhenHidden: false` for a timer that must keep running unseen.
-//
-// Scope note: this hook fits the simple single-interval case
-// (logs auto-refresh, sessions live-tick, etc.). The dashboard's
-// 3-way polling block needs to share one AbortController across
-// all three fetches, so it intentionally uses raw setInterval +
-// forEach cleanup. If a future call site needs a shared signal,
-// extract a `usePollWithAbort` variant.
+// The callback lives in a ref so a changed identity does not restart the
+// interval; `enabled: false` registers no timer. By default the timer is also
+// suspended while the document is hidden and fires once on return: a console
+// left on a background tab should not spend the night re-querying its own
+// database, and TanStack Query gates `refetchInterval` on the same
+// `visibilitychange`, so the hand-rolled timers match the query layer. The
+// catch-up tick is what keeps the operator from reading a full period stale.
 
 "use client";
 
@@ -56,20 +17,14 @@ export interface UseIntervalOptions {
   ms: number;
   /** When false, the interval is not registered (paused). Default true. */
   enabled?: boolean;
-  /**
-   * When true (the default) the interval is suspended while the document is
-   * hidden, and fires one catch-up tick when it becomes visible again.
-   */
+  /** Default true: suspend while hidden, one catch-up tick on return. */
   pauseWhenHidden?: boolean;
 }
 
 /**
- * Whether the document is currently visible. Returns true unconditionally when
- * `active` is false, so a caller that opted out of the visibility gate never
- * subscribes to the event at all.
- *
- * SSR-safe: the initial value is `true` and the listener is registered from an
- * effect, so the server render and the first client render agree.
+ * Whether the document is visible; true unconditionally when `active` is
+ * false, so an opted-out caller never subscribes. SSR-safe: initial `true`,
+ * listener registered from an effect.
  */
 function useDocumentVisible(active: boolean): boolean {
   const [visible, setVisible] = useState(true);
@@ -86,32 +41,24 @@ function useDocumentVisible(active: boolean): boolean {
 }
 
 /**
- * Run `fn` every `ms` milliseconds while `enabled` is true.
- *
- * @param fn   - The callback to run on each tick. May return a Promise;
- *               the return value is ignored (use a fire-and-forget API).
- * @param opts - `{ ms, enabled, pauseWhenHidden }`. When `enabled` is false the
- *               interval is not started at all. `ms` must be > 0. While the tab
- *               is hidden the interval is suspended unless `pauseWhenHidden` is
- *               explicitly false; on return it fires once immediately and then
- *               resumes its cadence.
+ * Run `fn` every `ms` while `enabled`.
+ * @param fn   - Run on each tick; a returned Promise is ignored.
+ * @param opts - `{ ms, enabled, pauseWhenHidden }`. `ms` must be > 0; hidden
+ *               tabs suspend unless `pauseWhenHidden` is false, then catch up once.
  */
 export function useInterval(
   fn: () => void | Promise<void>,
   { ms, enabled = true, pauseWhenHidden = true }: UseIntervalOptions,
 ): void {
   const fnRef = useRef(fn);
-  // Keep the latest callback in the ref so callers don't need to memoize.
-  // Without this, every parent re-render would restart the interval
-  // (because the effect's dep would change).
+  // The latest callback in a ref, so callers need not memoize and re-renders do not restart the interval.
   useEffect(() => {
     fnRef.current = fn;
   });
 
   const visible = useDocumentVisible(pauseWhenHidden);
-  // Set while the timer is suspended for a hidden tab, so the effect can tell
-  // "we just came back, catch up" from "we are mounting for the first time".
-  // Mount must NOT fire a tick, because the caller loads its own initial data.
+  // Set while suspended for a hidden tab, so "we just came back" is told from
+  // mount; mount must NOT tick, since the caller loads its own initial data.
   const missedTicksRef = useRef(false);
 
   useEffect(() => {

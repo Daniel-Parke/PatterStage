@@ -6,20 +6,6 @@
 // discriminated union for the read-only .env preview UI). This module
 // parses the WHOLE file into a `Map<string, string>` for sync/import
 // code that needs the full key→value table.
-//
-// Pre-refactor, this exact logic was duplicated in two places:
-//   1. `src/modules/hermes/lib/config-sync.ts` `parseEnvFile()` (private) — used
-//      by `syncCredentialToHermesEnv` and `removeCredentialFromHermesEnv`
-//      to read the prior env state before merging new keys in.
-//   2. `src/modules/hermes/lib/config-import.ts` `parseEnvCredentials()` (inline regex
-//      inside a try/catch) — used to discover which `<PROVIDER>_API_KEY`
-//      lines exist in `~/.hermes/.env` during the registry-import flow.
-//
-// Both sites used the same regex `^([A-Za-z_][A-Za-z0-9_]*)=(.*)$` and
-// the same skip-rules (blank line, `#`-prefixed comment, no `=` match).
-// Promoting to a shared module guarantees the two sites stay in lockstep
-// if a future .env dialect (e.g. multi-line values, export-prefixed
-// declarations) needs to be supported.
 
 /**
  * Match a single .env key=value line. The key must be a valid identifier
@@ -38,18 +24,14 @@ export const ENV_LINE_RE = /^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/;
 /**
  * Parse the entire content of a .env file into a `Map<string, string>`.
  *
- * Skip rules (matching the pre-refactor behaviour of both call sites):
+ * Skip rules:
  *   - blank lines (whitespace-only after `trim()`) → ignored
  *   - lines starting with `#` (comments) → ignored
  *   - lines without a `=` (malformed) → ignored
- *   - duplicate keys → last write wins (matches `Map.set` semantics,
- *     which is what the pre-refactor inline code did because the same
- *     key appearing twice would call `out.set(key, value)` twice)
+ *   - duplicate keys → last write wins
  *
  * Newline handling: splits on `\r?\n` so both Unix (`\n`) and Windows
- * (`\r\n`) line endings are accepted. The pre-refactor inline code in
- * `modules/hermes/lib/config-sync.ts` and `modules/hermes/lib/config-import.ts` both used the same
- * `\r?\n` split, preserved here byte-for-byte.
+ * (`\r\n`) line endings are accepted.
  *
  * @param content - The full file content. Empty string returns an empty Map.
  * @returns Map of key → raw value (no quote stripping at this layer).

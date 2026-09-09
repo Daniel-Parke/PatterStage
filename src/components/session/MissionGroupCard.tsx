@@ -1,9 +1,8 @@
 // ═══════════════════════════════════════════════════════════════
 // MissionGroupCard — sessions sharing a missionId, collapsed into one row
 //
-// Extracted verbatim from app/(main)/sessions/page.tsx. The expanded
-// flag is local card state; the grouping itself is computed upstream by
-// buildGroupedEntries in src/lib/sessions/sessions-grouping.ts.
+// The expanded flag is local card state; the grouping itself is computed
+// upstream by buildGroupedEntries in src/lib/sessions/sessions-grouping.ts.
 //
 // T-0033 turned the green rounded box into a ledger row inside the page's
 // one Panel, per WG-WEB-003 (D). A group row is still a group: it keeps

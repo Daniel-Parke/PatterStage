@@ -85,18 +85,7 @@ export function MessageBubble({
     setLastExpandAll(expandAll);
     setExpanded(expandAll);
   }
-  // Use the shared `useCopyToClipboard` hook (sister to the
-  // PersonalityCard migration in operations/personalities/page.tsx) so
-  // the "[copied, setCopied] + useRef<setTimeout> + unmount cleanup"
-  // pattern lives in exactly one place. The 1500ms reset matches the
-  // pre-refactor inline timer (the Personalities site uses 2000ms — a
-  // different value passed via the hook's `resetMs` option).
   const [copied, copy] = useCopyToClipboard({ resetMs: 1500 });
-  // Use the shared `getMessageRole` helper so the "missing/empty role
-  // → unknown" defensive default lives in exactly one place. The
-  // session detail page and the helper itself both consume it, so any
-  // future change (e.g. handling a "tool_call_only" sentinel) lands
-  // here once, not in N+1 inline copies.
   const role = getMessageRole(msg);
   const content =
     typeof msg.content === "string"

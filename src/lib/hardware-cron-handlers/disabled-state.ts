@@ -2,10 +2,9 @@
 // hardware-cron-handlers/disabled-state.ts - the disabled-id sidecar
 // ═══════════════════════════════════════════════════════════════
 //
-// Extracted from the /api/cron/hardware route god-file. Crontab has no
-// "disabled" concept, so PatterStage keeps the set of paused job ids in a
-// JSON sidecar next to the data dir. This module owns that file and
-// nothing else: read it, write it, and apply a tri-state enable flag.
+// Crontab has no "disabled" concept, so PatterStage keeps the set of paused
+// job ids in a JSON sidecar next to the data dir. This module owns that file
+// and nothing else: read it, write it, and apply a tri-state enable flag.
 
 import * as fs from "fs";
 import { join } from "path";
@@ -100,10 +99,6 @@ export function saveDisabledIds(ids: Set<string>): void {
  *   enabled === false → add
  *   enabled === true  → delete
  *   enabled === undefined → no-op (skip)
- *
- * Shared by PUT (toggle-only branch) and PUT (non-toggle branch's
- * post-write sync), so the "if (enabled === false) add else delete"
- * tri-state lives in exactly one place.
  */
 function setDisabled(disabledIds: Set<string>, id: string, enabled: boolean | undefined): void {
   if (enabled === undefined) return;
@@ -114,12 +109,7 @@ function setDisabled(disabledIds: Set<string>, id: string, enabled: boolean | un
   }
 }
 
-/**
- * Compose `setDisabled` (mutate the in-memory set) with `saveDisabledIds`
- * (persist to disk) so PUT's two call sites collapse to a single call.
- * Byte-equivalent to the inline pair — `setDisabled` is a no-op when
- * `enabled` is undefined, matching the original call sites.
- */
+/** Apply the flag to the in-memory set, then persist it. */
 export function applyDisabledChange(
   disabledIds: Set<string>,
   id: string,

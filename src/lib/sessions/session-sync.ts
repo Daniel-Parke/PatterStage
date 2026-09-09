@@ -1,25 +1,15 @@
 // ═══════════════════════════════════════════════════════════════
 // session-sync.ts: the upsert pipeline, agent state.db to sessions
 //
-// Split out of session-repository.ts (which is pure CRUD), then split
-// again by responsibility. What is left here is the pipeline itself,
-// run on the 15s sessions sync cycle (SessionSync) and on demand via
-// `listSessions({ syncIfActive })`:
+// The pipeline, run on the 15s sessions sync cycle (SessionSync) and on
+// demand via `listSessions({ syncIfActive })`:
 //
 //   read rows → resolve mission links → title → upsert → sweep
 //
-// The pieces it orchestrates each own their own file:
-//   - ../runtime/state-db, which reads the agent's own state.db (a
-//     foreign database, hence the adapter layer rather than a
-//     repository).
-//   - ./hermes-state-sessions, which translates the agent's end_reason
-//     vocabulary into a PatterStage status and exit code.
-//   - ./session-sync-repository, which owns every statement this
-//     pipeline runs against PatterStage's own `sessions` table.
-//   - ./session-mission-links, which resolves a session to its parent
-//     mission (bulk shape, used once per tick).
-//   - ./session-orphan-sweep, which closes rows the agent will never
-//     report an end for. Called once, at the tail.
+// ../runtime/state-db reads the agent's own state.db (a foreign
+// database, hence an adapter rather than a repository); every statement
+// this pipeline runs against PatterStage's own `sessions` table is in
+// ./session-sync-repository.
 //
 // It depends on session-repository only for the pure `estimateSessionSize`
 // helper, a one-directional edge. The repository imports
@@ -76,19 +66,6 @@ function ensureMessageCountColumn(database: Database.Database): void {
   }
 }
 
-/**
- * Sync Hermes sessions into the sessions table.
- *
- * Reads session metadata from Hermes's state.db (v0.14+).
- * Upserts so PatterStage has a unified view of all agent activity.
- *
- * For cron sessions, derives mission_id by matching the embedded
- * job ID in the session title against cron_jobs.external_job_id,
- * then resolving to missions.id via the missions.cron_job_id FK.
- *
- * Completed sessions in Hermes are updated to "completed"/"failed"
- * status here — their end state is always driven by Hermes.
- */
 /** At most this many row-level causes are carried into the log line. */
 const MAX_SKIP_SAMPLES = 3;
 
@@ -229,35 +206,14 @@ export function syncHermesSessionsToDb(): { synced: number; skipped: number } {
   reportSkips(result.skipped, result.samples);
 
   // ── Step 3: Close orphaned active sessions ──────────────────
-  // Two independent mechanisms protect the Sessions page from rows
-  // stuck on "active" forever:
-  //
-  //   (A) Parent-mission status. If a session has a non-null
-  //       mission_id and the parent mission has a terminal status
-  //       (anything other than "dispatched"), the session's terminal
-  //       state is derived from the mission: "successful" → "completed"
-  //       (exit 0), "failed" → "failed" (exit 1), other → "completed"
-  //       (exit 0, the parent is no longer running so it ended). This
-  //       catches mission, cron, api, cli, discord, and telegram
-  //       sessions uniformly — previously the sweep only covered
-  //       cli/api, which left 33 mission + 202 cron + 57 discord + 43
-  //       telegram rows permanently stuck.
-  //
-  //   (B) Age-based fallback. Sessions with no parent mission_id
-  //       (e.g. Hermes CLI sessions that never went through a
-  //       mission) are closed by age alone: started_at older than 5
-  //       minutes (safely past any in-progress window) and size > 0
-  //       (has actual content — empty sessions are probably still
-  //       booting and shouldn't be closed prematurely).
-  //
-  // The 15s sync cycle re-runs these UPDATEs on every tick, so
-  // without log suppression the message would fire ~4×/min with a
-  // count that hovers between the same values forever (gateway
-  // keeps re-inserting them as active on the next cycle's upsert).
-  // Suppress the noise; only log on first occurrence and on a real
-  // shift of >=100. The suppression state lives in
-  // ./session-orphan-sweep. Audit reference: dogfood-output/report.md
-  // Issue #3.
+  // Two mechanisms, both in ./session-orphan-sweep: (A) a session with a
+  // mission_id takes its terminal state from the parent mission, which is
+  // what freed the 33 mission + 202 cron + 57 discord + 43 telegram rows
+  // the cli/api-only sweep had left stuck on "active"; (B) parentless
+  // sessions close by age alone. The 15s cycle re-runs the UPDATEs every
+  // tick, so the log is suppressed to first occurrence and shifts of
+  // >=100; that state lives in the sweep. Audit reference:
+  // dogfood-output/report.md Issue #3.
   try {
     const result = closeOrphanedActiveSessions(database, { log: true });
     void result; // logging side-effect captured in module-level state

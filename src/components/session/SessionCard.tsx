@@ -1,9 +1,8 @@
 // ═══════════════════════════════════════════════════════════════
 // SessionCard — one session as a ledger row
 //
-// Extracted verbatim from app/(main)/sessions/page.tsx so the page
-// stays a thin shell (docs/CONTRIBUTING.md, "Where UI lives").
-// Presentation only: it derives its title and source badge from the
+// Lives here so the page stays a thin shell (docs/CONTRIBUTING.md, "Where UI
+// lives"). Presentation only: it derives its title and source badge from the
 // record it is handed and owns no state.
 //
 // It rendered a rounded box of its own until T-0033. A session record

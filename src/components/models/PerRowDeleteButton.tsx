@@ -3,39 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 //
 // Shared by `ModelRow` (in ModelsTableSection) and `FallbackRow`
-// (in FallbackChainList). Both call sites had an identical 8-line
-// pattern pre-refactor:
-//
-//   const deleteConfirm = useTwoStepConfirm({ autoDismissMs: 4000 });
-//   const handleDeleteClick = () => {
-//     if (deleteConfirm.isArmedFor(id)) {
-//       void deleteConfirm.confirm(() => onDelete(...));
-//     } else {
-//       deleteConfirm.arm(id);
-//     }
-//   };
-//   const isArmed = deleteConfirm.isArmedFor(id);
-//   <button
-//     onClick={handleDeleteClick}
-//     className={`p-1.5 rounded-lg transition-colors ${
-//       isArmed
-//         ? "text-red-300 bg-red-500/20 ring-1 ring-red-500/40"
-//         : "text-ps-text-muted hover:text-red-400 hover:bg-red-500/10"
-//     }`}
-//     aria-label={
-//       isArmed
-//         ? `Click again to confirm deleting ${name}`
-//         : `Delete ${name}`
-//     }
-//     title={isArmed ? "Click again to confirm" : "Delete"}
-//   >
-//     <Trash2 className="w-3.5 h-3.5" />
-//   </button>
-//
-// The two sites were identical except for the call-site-specific bits
-// (id, name, onDelete callback, optional `disabled` prop). Extracting
-// keeps the armed-state styling + aria-labels in lockstep — a future
-// "armed" style tweak is a one-file change instead of two.
+// (in FallbackChainList).
 //
 // Per the project's two-step-confirm convention, the auto-dismiss is
 // 4000ms (matches the rest of the codebase: dashboard's mission

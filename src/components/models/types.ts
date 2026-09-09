@@ -1,14 +1,11 @@
 // ═══════════════════════════════════════════════════════════════
-// /config/models — API row shapes used by the models page
+// /config/models — API row shapes used by the models page. TaskType lives in
+// models/task-types.ts.
 // ═══════════════════════════════════════════════════════════════
-//
-// Shared types for the models page. TaskType lives in
-// models/task-types.ts as the single source of truth.
 
 import type { ModelEditorRecord } from "./ModelEditor";
 
-// The row is the library's (C2, T-0137); this file keeps the name its
-// importers use.
+// The row is the library's (C2, T-0137); this file keeps the name its importers use.
 import type { ApiModel } from "@/lib/models/model-types";
 export type { ApiModel };
 
@@ -22,17 +19,13 @@ export interface ApiCredential {
 }
 
 /**
- * One drift sentence, with the handles needed to act on it.
- *
- * The banner used to offer a single "Sync Now" that ran a whole re-import,
- * whichever way the drift actually pointed. A line says which side is ahead,
- * so the banner can offer the one direction that resolves it (T-0100).
- *
- *  - `primary`      the agent default and config.yaml's primary disagree;
- *                   `registryId` is the registry row matching the Hermes
- *                   primary, or null when no row matches it
- *  - `hermes-only`  config.yaml has a model the registry does not; pull adds it
- *  - `db-only`      the registry has a model config.yaml does not
+ * One drift sentence with the handles to act on it. The banner used to offer a
+ * single "Sync Now" that re-imported everything whichever way the drift
+ * pointed; a line says which side is ahead so the banner offers the one
+ * direction that resolves it (T-0100). `primary`: the agent default and
+ * config.yaml's primary disagree, `registryId` the row matching the Hermes
+ * primary or null; `hermes-only`: config.yaml has a model the registry lacks,
+ * pull adds it; `db-only`: the registry has one config.yaml lacks.
  */
 export interface DriftLine {
   kind: "primary" | "hermes-only" | "db-only";
@@ -44,11 +37,7 @@ export interface DriftLine {
   registryId: string | null;
 }
 
-/**
- * A stable key for one line, so a busy flag can name the row it belongs to.
- * Lines are not persisted and carry no id of their own; kind plus the model
- * reference is unique within one report.
- */
+/** A stable key for one line (lines carry no id): kind plus model reference is unique per report. */
 export function driftLineKey(line: DriftLine): string {
   return `${line.kind}:${line.provider}/${line.modelId}`;
 }
@@ -60,16 +49,7 @@ export interface SyncDrift {
   lines?: DriftLine[];
 }
 
-/**
- * Project an `ApiModel` row down to the subset of fields the
- * `ModelEditor` form edits (omits `defaults`, `createdAt`, `updatedAt`).
- *
- * Centralised here so the table row and any future call site (e.g. a
- * context-menu "Edit" action, a bulk-edit, an admin row in another
- * page) stay in lockstep with the `ModelEditorRecord` shape. Adding a
- * new editable field is a one-line change in `ModelEditor.tsx` plus
- * one line here, instead of touching every call site.
- */
+/** The subset of an `ApiModel` row the `ModelEditor` form edits. */
 export function toModelEditorRecord(m: ApiModel): ModelEditorRecord {
   return {
     id: m.id,

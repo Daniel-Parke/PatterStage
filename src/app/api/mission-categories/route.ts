@@ -61,8 +61,7 @@ export async function GET(_request: NextRequest) {
     });
   } catch (error) {
     logApiError("GET /api/mission-categories", "list", error);
-    // toError() unwraps Error instances; the `|| "..."` fallback preserves
-    // the byte-equivalent wire string for non-Error throws (e.g. throw "x").
+    // The `|| "..."` fallback covers non-Error throws (e.g. throw "x").
     return serverError(toError(error).message || "Failed to load categories");
   }
 }
@@ -87,13 +86,6 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    // The repository's "already exists" error surfaces a 409 via the
-    // shared `conflict()` factory (sibling of `badRequest`/`notFound`/
-    // `forbidden`/`serverError` in `@/lib/api-response`). The factory
-    // was already exported but the only 409 site in this route was
-    // kept inline (per the session-71 outlier rule, since pre-session-95
-    // no other 409 sites existed in the codebase). Session 134 promotes
-    // the inline form to the factory now that the helper is canonical.
     const msg = toError(error).message || "Create failed";
     if (msg.includes("already exists")) {
       return conflict(msg);
@@ -151,7 +143,7 @@ export async function DELETE(request: NextRequest) {
     if ((missionCount > 0 || templateCount > 0) && reassignToId === undefined) {
       // Extended 400 body (carries missionCount + templateCount counts) — kept
       // inline because the badRequest() factory doesn't support extra body
-      // fields. Matches the same outlier pattern as the 503 above.
+      // fields.
       return NextResponse.json(
         {
           error: "reassignToId required when category is in use",

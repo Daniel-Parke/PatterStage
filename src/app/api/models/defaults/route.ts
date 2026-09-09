@@ -79,8 +79,7 @@ export async function PUT(request: NextRequest) {
 
   try {
     // setDefaultPutSchema narrows parsed.taskType to TaskType, so no
-    // cast is needed. (Session 53 dropped the z.enum widening cast on
-    // taskTypeSchema.)
+    // cast is needed.
     const defaults = setDefaultModel(parsed.taskType, parsed.modelId);
     // Through finalize, not the bare sync: it refreshes agent_root.config_yaml
     // as well, so the next agent-root Push cannot reinstate a primary this

@@ -77,18 +77,10 @@ export const GET = route("GET /api/skills", "listing skills", "Failed to list sk
   // audit-found case-collision duplicates collapse into a single
   // bucket. The page does the same with groupByCategory().
   //
-  // `Object.fromEntries(map)` is the canonical Map→Record conversion
-  // (the 4-line `for (const [k, v] of map) record[k] = v;` pattern is
-  // the pre-`Object.fromEntries` idiom). The helper returns a fresh
-  // `Record<string, Skill[]>` with the same shape as the old loop
-  // (Map<string, Skill[]> → Record<string, Skill[]>) so the rest of
-  // the handler is byte-equivalent.
-  //
   // `categories` carries SIZES, not the skill objects. Serving the buckets
   // re-serialised every Skill that `skills` already carries: 69,574 of this
   // response's 137,534 bytes, in the largest body the app serves. The only
-  // consumer reads Object.keys() and groups `skills` itself, so this is a
-  // 49.3% cut with no call-site change.
+  // consumer reads Object.keys() and groups `skills` itself.
   const categoryGroups = groupByCategory(skills, "uncategorized");
   const categories = Object.fromEntries(
     [...categoryGroups].map(([name, items]) => [name, items.length]),

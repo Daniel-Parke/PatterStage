@@ -1,6 +1,5 @@
 // ── SkillsCatalogEmpty — what the Skills Manager shows with no catalog.
-// Extracted verbatim from app/operations/skills/page.tsx, import
-// affordance included. The import call itself stays on the page.
+// The import call itself stays on the page.
 
 "use client";
 

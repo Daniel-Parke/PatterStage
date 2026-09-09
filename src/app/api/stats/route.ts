@@ -1,28 +1,16 @@
 // ═══════════════════════════════════════════════════════════════
 // GET /api/stats — dashboard + gamification stats
 //
-// One read-only aggregate over the PatterStage DB. Powers the command-center
-// dashboard (vitals, throughput, activity heatmap, streak/level, achievements).
-//
-// It also CAPTURES, which is the one thing here that is not a read, so it is
-// worth saying why it lives on this route and not on one of its own.
-//
-// This aggregate is the only place in the product that computes both halves of
-// an agent's progression at once: `agents[]` carries every profile's measured
-// performance and `achievements[]` carries the evaluated achievement list. The
-// per-Body record (WG-ARCH-003) is exactly those two things stored, so recording
-// them here costs one small SELECT plus one cheap active-days read per profile,
-// while computing them anywhere else would mean a second full scan of `runs`.
-//
-// The capture appends a row only when an agent's answer has actually moved, so
-// the dashboard's 20-second poll writes nothing in the steady state, and a
-// failure to capture is logged and swallowed: the dashboard must not go dark
-// because bookkeeping failed.
-//
-// The quest latch is the second write, and it is here for the same reason: the
-// quest programme is evaluated inside this same aggregate, and what it finds
-// complete has to outlive the retention of the events it was derived from. It
-// too writes only when something has moved, and it too fails quietly.
+// One read-only aggregate over the DB for the dashboard. It also CAPTURES,
+// which is why the writes live on this route: it is the only place that
+// computes both halves of an agent's progression at once (`agents[]` and
+// `achievements[]`), which is exactly the per-Body record WG-ARCH-003 stores,
+// so recording here costs one small SELECT per profile where anywhere else
+// would rescan `runs`. The capture appends only when an answer has moved, so
+// the 20-second poll writes nothing in the steady state, and a failure is
+// logged and swallowed: the dashboard must not go dark because bookkeeping
+// failed. The quest latch is here for the same reason: what the programme finds
+// complete has to outlive the retention of the events it was derived from.
 // ═══════════════════════════════════════════════════════════════
 
 import { logApiError } from "@/lib/api-logger";

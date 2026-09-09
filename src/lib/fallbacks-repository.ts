@@ -37,12 +37,6 @@ export interface UpdateFallbackInput {
 }
 
 // ── Shared SELECT shape + row mapper ─────────────────────────────
-//
-// The SELECT column list and the row → FallbackEntryRecord projection
-// are identical between `listFallbackChain` (full table scan) and
-// `getFallbackEntry` (id-keyed lookup). Extracting them to top-level
-// constants/functions keeps the two callers in lockstep — adding a new
-// field is a one-line edit in each, instead of two-sites-drift risk.
 
 interface FallbackRow {
   id: string; model_id: string | null; position: number;
@@ -188,13 +182,8 @@ export function updateFallbackConfigBatch(updates: {
   fallbackNotification?: boolean;
   apiMaxRetries?: number;
 }): FallbackConfig {
-  // The pre-refactor form was 3 hand-listed `if (X !== undefined) {
-  // getDb().prepare(...).run(KEY, String(X)) }` blocks — same SQL string,
-  // same `.run(key, stringified-value)` shape. The loop collapses them
-  // to a single prepared statement (better-sqlite3 caches by SQL text,
-  // so reuse is a wash but the byte-for-byte wire shape is preserved).
-  // `getFallbackConfig` at the end is unchanged (it re-reads all rows
-  // and returns the full object, so a partial batch is safe).
+  // `getFallbackConfig` re-reads every row, so a partial batch still returns
+  // the full object.
   const stmt = getDb().prepare(
     "INSERT OR REPLACE INTO fallback_config (key, value) VALUES (?, ?)"
   );

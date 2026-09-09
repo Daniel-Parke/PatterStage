@@ -2,8 +2,7 @@
 // useChatConversations — the sidebar list and which one is active
 // ═══════════════════════════════════════════════════════════════
 //
-// Split out of useChatPage (Phase 4 god-file decomposition). Owns the
-// server-persisted conversation list, the active id, and the four
+// Owns the server-persisted conversation list, the active id, and the four
 // things a user does to a row: start a new one, select it, delete it,
 // export it. Plus `refreshActiveConversation`, the reconciliation read
 // the stream falls back to when the socket closes without a terminal

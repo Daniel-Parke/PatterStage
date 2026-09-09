@@ -2,16 +2,6 @@
 // LoadErrorBanner — Persistent error banner for page-level load failures
 // ═══════════════════════════════════════════════════════════════
 //
-// Replaces the ad-hoc error-banner / error-toast / "not found" full-page
-// patterns that pages with `useApiData` had open-coded:
-//   - `useEffect(() => showToast(loadError, "error"), [loadError])` (toast
-//     disappears after 4s — no recovery affordance; the user just stares
-//     at a frozen list with a generic "no results" empty state)
-//   - inline `<div className="border-red-500/30 bg-red-500/10 ...">{error}</div>`
-//     (persistent but no Retry button)
-//   - "Session Not Found" full-page placeholder (no way to retry without
-//     manually navigating back)
-//
 // THE READ CONTRACT (T-0096). A list read that failed shows THIS, with a
 // Retry, and never the page's empty state. Nine pages rendered "no X yet"
 // over a 500, because their hooks swallowed the failure into an empty array;
@@ -19,31 +9,11 @@
 // `compact` variant is for a sidebar or a list column, where the full banner
 // is wider than the column.
 //
-// Component contract:
-//   - `error`: the actual error string from `useApiData`'s `error` field
-//   - `onRetry`: optional retry click handler; when provided, a "Retry"
-//     button is rendered on the right side of the banner
-//   - `hint`: optional explanation text rendered below the error (kept
-//     short — the banner is meant to fit on one line at desktop width)
-//   - `className`: optional container class extension (lets the page add
-//     margin-bottom / max-width without forking the component)
-//   - `compact`: the smaller variant
-//
-// The component is purely presentational; it never calls `useApiData` or
-// any fetch. The page is the source of truth for `refetch`, the banner
-// just invokes it on click. This keeps the component decoupled from any
-// particular data hook.
-//
-// **The page OWNS the conditional render.** The component itself does
-// NOT check for an empty `error` and does NOT short-circuit; it
-// always renders the banner chrome. Pages wrap it as
+// Purely presentational: it never calls `useApiData` or any fetch. The page
+// owns `refetch`; the banner just invokes it on click. The component never
+// checks for an empty `error` and always renders the banner chrome; pages
+// wrap it as
 //   {loadError && <LoadErrorBanner error={loadError} onRetry={refetch} />}
-// so the success path renders nothing and the failure path renders
-// the banner with the actual error string. Putting the conditional at
-// the call site (vs. inside the component) keeps the component
-// trivially testable — no null-error handling needed in the
-// component, and the "no error, no banner" invariant is one of the
-// easiest things to read off a JSX tree.
 
 "use client";
 

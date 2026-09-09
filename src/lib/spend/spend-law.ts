@@ -1,57 +1,32 @@
-// ═══════════════════════════════════════════════════════════════
-// spend/spend-law.ts · what a budget means, as pure functions
+// spend/spend-law.ts · what a budget means, as pure functions. LLM provider
+// spend is the only thing in PatterStage that costs money; this is the whole of
+// what the product may conclude about it, with no database and no clock it was
+// not handed, so every rule is testable in one line (tier R2).
 //
-// LLM provider spend is the only thing in PatterStage that costs money. This
-// file is the whole of what the product is allowed to conclude about it. It
-// touches no database and no clock it was not handed, so every rule below is
-// testable in one line, which is what tier R2 is for.
+// The operator's ruling, which is the design: "We should just have a warning
+// here, AND the ability for the user to have a hard stop, but we should not
+// force this in a way that is awkward for users." So:
+//   1. A figure is OPTIONAL. `limitUsd: null` ships and means "no budget";
+//      `evaluateSpend` returns `unset` for it and says nothing at all.
+//   2. A figure that is set WARNS, and that is the whole of the default.
+//   3. The HARD STOP is a second switch, off until the operator arms it beside
+//      his own figure; only then is `blocksUnattended` ever true.
+//   4. It governs UNATTENDED work only. A human clicking dispatch answers for
+//      the spend himself (spend-guard.ts).
 //
-// ── THE OPERATOR'S RULING, WHICH IS THE DESIGN ─────────────────
-//
-//   "We should just have a warning here, AND the ability for the user to have a
-//    hard stop, but we should not force this in a way that is awkward for
-//    users."
-//
-// Four consequences, and each one is a function or a constant below:
-//
-//   1. A budget figure is OPTIONAL. `limitUsd: null` is the shipped state and
-//      means "no budget". `evaluateSpend` returns `unset` for it, with no
-//      message at all: an install with no figure warns about nothing, no matter
-//      how much has been spent. A tool that refuses to work until you have
-//      filled in a budget field teaches you to resent it.
-//   2. A figure that IS set WARNS. That is the default and it is the whole of
-//      the default. Nothing is blocked by a figure alone.
-//   3. The HARD STOP is a second, separate switch, off until the operator
-//      turns it on beside his own figure. Only then does `blocksUnattended`
-//      ever become true.
-//   4. It governs UNATTENDED work only. Nothing here knows about attended
-//      dispatch, because attended dispatch never asks: a human clicking
-//      dispatch is answering for the spend himself. See spend-guard.ts.
-//
-// ── WHY CALENDAR PERIODS, NOT ROLLING WINDOWS ──────────────────
-//
-// A person who types "40 dollars a month" means the month. A rolling 30-day
-// window would put him over budget on a day he had spent nothing, because of
-// what he spent four weeks ago, and there is no date on which it resets. So
-// `periodStart` returns the start of the calendar day, the ISO week (Monday) or
-// the calendar month, in UTC, in SQLite's own datetime format.
-//
-// UTC, not local time, because it is what the database stores and comparing a
-// local boundary against UTC rows moves the budget's edge by the offset. The
-// cost is that "today" starts at UTC midnight rather than the operator's; the
-// alternative is a budget whose window silently disagrees with the rows it is
-// measuring, which is worse in the one place being wrong costs money.
-// ═══════════════════════════════════════════════════════════════
+// Calendar periods, not rolling windows: "40 dollars a month" means the month,
+// and a rolling window never resets. `periodStart` is UTC because that is what
+// the database stores; a local boundary compared against UTC rows moves the
+// budget's edge by the offset, which is worse than "today" starting at UTC midnight.
 
 /** The windows a budget can be expressed in. Mirrors the CHECK in migration 033. */
 export const SPEND_PERIODS = ["day", "week", "month"] as const;
 export type SpendPeriod = (typeof SPEND_PERIODS)[number];
 
 /**
- * The things that spend provider tokens. Scope comes off the task row for
- * three of them; Story Weaver drives callLLM directly and was invisible to
- * this list, and therefore to the console and the hard stop, until it wrote
- * its own runs row (T-0108, D87).
+ * The things that spend provider tokens. Story Weaver drives callLLM directly
+ * and was invisible here, and so to the console and the hard stop, until it
+ * wrote its own runs row (T-0108, D87).
  */
 export const SPEND_SOURCES = ["agent", "composer", "research", "story"] as const;
 export type SpendSource = (typeof SPEND_SOURCES)[number];
@@ -71,10 +46,7 @@ export interface SpendPolicy {
   updatedAt: string;
 }
 
-/**
- * What a fresh install has. Exported so the repository, the route and the tests
- * all mean the same thing by "unset" rather than each spelling it out.
- */
+/** A fresh install's policy, exported so the repository, route and tests mean one thing by "unset". */
 export const UNSET_SPEND_POLICY: SpendPolicy = {
   limitUsd: null,
   period: "month",
@@ -83,24 +55,15 @@ export const UNSET_SPEND_POLICY: SpendPolicy = {
 };
 
 /**
- * The fraction of a set figure at which the warning starts.
- *
- * 0.8 is a judgement, not a derivation, and it is worth saying so. It is early
- * enough that a person who checks the console once a day sees it before the
- * ceiling, and late enough that it is not shouting for most of the period.
+ * Where the warning starts. 0.8 is a judgement, not a derivation: early enough
+ * that a once-a-day check sees it before the ceiling, late enough not to shout
+ * for most of the period.
  */
 export const SPEND_WARN_FRACTION = 0.8;
 
-/**
- * unset       no figure. Silent, always.
- * ok          under the warning line.
- * approaching at or past the warning line, under the figure.
- * over        at or past the figure.
- */
-// Module-private on purpose. Reachable structurally through the exported
-// parent type, so a caller can still read the field; nothing imports the
-// NAME, and an export nothing imports is what the widened knip gate exists
-// to catch. Export it again the moment a caller genuinely needs to name it.
+/** unset: no figure, silent. ok: under the warning line. approaching: past it, under the figure. over: at or past it. */
+// Module-private on purpose: reachable structurally through the exported parent
+// type, and an export nothing imports is what the widened knip gate exists to catch.
 type SpendState = "unset" | "ok" | "approaching" | "over";
 
 export interface SpendVerdict {
@@ -109,10 +72,7 @@ export interface SpendVerdict {
   fraction: number | null;
   /** True only when a figure is set AND has been reached. */
   breached: boolean;
-  /**
-   * True only when `breached` AND the operator armed the stop. Attended
-   * dispatch never reads this; see the header.
-   */
+  /** True only when `breached` AND the operator armed the stop. Attended dispatch never reads this. */
   blocksUnattended: boolean;
   /** A sentence for a person, or null when there is nothing to say. */
   message: string | null;
@@ -136,13 +96,9 @@ export function periodLabel(period: SpendPeriod): string {
 }
 
 /**
- * The same period as a possessive, so a figure can name the window it covers.
- *
- * It exists because a sentence saying "this period's total" is unattributable
- * the moment more than one period is on screen: the console draws three tiles
- * and printed ONE such sentence beneath them, so a $12.00 month tile could sit
- * directly above a note about $4.00 and nothing said which was which. Every
- * money sentence names its own window now.
+ * The period as a possessive, so every money sentence names its own window: the
+ * console draws three tiles, and one unattributed "this period's total" beneath
+ * them could not say which it meant.
  */
 export function periodPossessive(period: SpendPeriod): string {
   switch (period) {
@@ -172,13 +128,9 @@ function pad(n: number): string {
 }
 
 /**
- * The instant the given calendar period began, in UTC, in SQLite's own
- * `YYYY-MM-DD HH:MM:SS` format so it can be compared against `datetime(col)`
- * directly.
- *
- * The week starts on MONDAY. `getUTCDay()` returns 0 for Sunday, which would
- * make a naive subtraction jump back six days on a Sunday instead of forward to
- * the Monday just gone; `(day + 6) % 7` is the correction.
+ * The instant the calendar period began, in UTC, in SQLite's `YYYY-MM-DD
+ * HH:MM:SS` so it compares against `datetime(col)` directly. The week starts on
+ * MONDAY: `getUTCDay()` is 0 on Sunday, and `(day + 6) % 7` is the correction.
  */
 export function periodStart(period: SpendPeriod, nowIso: string): string {
   const d = new Date(nowIso);
@@ -198,13 +150,10 @@ export function periodStart(period: SpendPeriod, nowIso: string): string {
 }
 
 /**
- * The whole of the budget decision.
- *
- * Read the first branch as the feature's posture: no figure means no opinion,
- * and that is checked before anything else so a hard stop that somehow reached
- * this function without a figure beside it still cannot block. Migration 033
- * refuses to store that pair; this refuses to act on it. Both, because the one
- * thing worse than a budget that does not stop work is a stop nobody can lift.
+ * The whole of the budget decision. No figure means no opinion, checked first,
+ * so a hard stop that reached here without a figure still cannot block.
+ * Migration 033 refuses to store that pair; this refuses to act on it, because
+ * a stop nobody can lift is worse than a budget that does not stop work.
  */
 export function evaluateSpend(policy: SpendPolicy, spentUsd: number): SpendVerdict {
   const limit = policy.limitUsd;

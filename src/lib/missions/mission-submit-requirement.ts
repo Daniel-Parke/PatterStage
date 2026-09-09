@@ -1,22 +1,11 @@
-// ═══════════════════════════════════════════════════════════════
-// mission-submit-requirement.ts — one reason, in the order it applies
-//
-// The composer's submit button had FOUR disabling conditions and ONE
-// explanation. `title` was keyed exclusively off the dispatch acknowledgement,
-// so an operator with an empty Mission Name and an outstanding ack was told to
-// open Dispatch, which is the one thing they could fix by doing nothing (it is
-// open by default). And once the ack cleared, `title` became undefined: the
-// button was still dead, now with no tooltip at all. The remedy text vanished at
-// exactly the moment a remaining blocker became the sole cause.
-//
-// Two passes reported this as "the disabled button reads as broken". Both were
-// right, and neither could see why, because the reason shown was never the
-// reason that applied.
-//
-// Pure, and in src/lib/ rather than beside the component, so the ORDER and the
-// WORDING can be unit-tested in a node environment without rendering anything.
-// The same argument scheduler-pill.ts's header makes for itself.
-// ═══════════════════════════════════════════════════════════════
+// mission-submit-requirement.ts — one reason, in the order it applies. The
+// composer's submit button had FOUR disabling conditions and ONE explanation,
+// keyed off the dispatch acknowledgement alone: an empty Mission Name with an
+// outstanding ack was told to open Dispatch (open by default), and once the ack
+// cleared the button stayed dead with no tooltip at all. Two passes reported
+// "the disabled button reads as broken"; the reason shown was never the reason
+// that applied. Pure and in src/lib/ so ORDER and WORDING are unit-testable
+// without rendering, the argument scheduler-pill.ts's header makes for itself.
 
 export const DISPATCH_ACK_REQUIREMENT =
   "Open Dispatch to choose how this mission runs before submitting.";
@@ -27,14 +16,10 @@ export interface SubmitBlocker {
 }
 
 /**
- * The FIRST unmet requirement, in the same order as the button's disabled
- * expression, or null when there is none.
- *
- * The ordering is the contract: a test iterates all sixteen boolean
- * combinations and asserts `blocker !== null` agrees with the disabled
- * expression exactly. That is what makes "the tooltip and the disabled state
- * cannot disagree" a fact rather than an intention, since there is no longer a
- * second place for them to disagree in.
+ * The FIRST unmet requirement, in the button's disabled-expression order, or
+ * null. The ordering is the contract: a test iterates all sixteen combinations
+ * and asserts `blocker !== null` agrees with the disabled expression, so the
+ * tooltip and the disabled state have no second place to disagree in.
  */
 export function firstUnmetSubmitRequirement(input: {
   name: string;
@@ -49,9 +34,8 @@ export function firstUnmetSubmitRequirement(input: {
     return { code: "instruction", message: "Enter an instruction before submitting." };
   }
   if (input.dispatching) {
-    // Deliberately carries a message even though the UI shows none: a spinner
-    // already says this, and a tooltip repeating it is noise. The code is here
-    // so the caller can decide, rather than this module deciding for it.
+    // Carries a message the UI does not show (a spinner already says it), so
+    // the caller decides rather than this module.
     return { code: "dispatching", message: "Submitting..." };
   }
   if (input.needsDispatchAck) {

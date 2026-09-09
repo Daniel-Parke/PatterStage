@@ -35,13 +35,9 @@ interface FallbackRowProps {
 }
 
 /**
- * One row in the fallback chain. The delete button is delegated to
- * `PerRowDeleteButton` (a shared, per-row arm-confirm component that
- * also serves `ModelRow` in `ModelsTableSection`) so the armed-state
- * styling + aria-label shape stays in lockstep across the two
- * list-style tables. The per-row `useTwoStepConfirm` instance lives
- * inside the button, so each row owns its own armed state — a stale
- * arm on one row cannot fire on another.
+ * One row in the fallback chain. The delete button's `useTwoStepConfirm`
+ * lives inside `PerRowDeleteButton`, so each row owns its own armed state —
+ * a stale arm on one row cannot fire on another.
  */
 function FallbackRow({
   entry,
@@ -111,8 +107,7 @@ function FallbackRow({
           >
             <Edit3 className="w-3.5 h-3.5" />
           </button>
-          {/* Delete — armed state mirrors the per-row delete pattern
-              in ModelsTableSection (now shared via PerRowDeleteButton) */}
+          {/* Delete */}
           <PerRowDeleteButton
             rowId={entry.id}
             rowName={entry.modelName}
@@ -234,16 +229,6 @@ export default function FallbackChainList({
   const [showRegistryDropdown, setShowRegistryDropdown] = useState(false);
   const [showAddCustom, setShowAddCustom] = useState(false);
 
-  // closeAddCustom — single-setter close-callback for the inline
-  // AddCustomForm. Sister to the close-callbacks extracted in
-  // /config/models/page.tsx + ModelSyncButtons.tsx (session 196) —
-  // same useState-setter stability rationale. The 2 call sites
-  // today are the Cancel button onClick and the post-onConfirm
-  // `setShowAddCustom(false)` bare statement. Extracting keeps
-  // them in lockstep if a future "reset the form fields on close"
-  // or "fire an analytics event" extension lands. The
-  // `setShowRegistryDropdown((v) => !v)` toggle is a different
-  // shape (toggle, not close) and stays inline.
   const closeAddCustom = useCallback(() => setShowAddCustom(false), []);
 
   const handleAddFromRegistry = (modelId: string) => {

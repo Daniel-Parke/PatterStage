@@ -1,50 +1,19 @@
-// ═══════════════════════════════════════════════════════════════
-// hindsight-client.ts — Shared client for the Hindsight API
-// ═══════════════════════════════════════════════════════════════
-//
-// The Hindsight browser (src/components/memory/HindsightBrowser.tsx)
-// and the Hindsight server route (src/app/api/memory/hindsight/route.ts)
-// both talk to the same Hindsight HTTP API on localhost:9177. The
-// client-side calls have a uniform shape:
-//
-//   1. Fetch `/api/memory/hindsight?action=<name>&...params` (GET)
-//      or POST to `/api/memory/hindsight` with `{ action, ...body }`.
-//   2. Unwrap the `{ data: { ...inner } }` envelope.
-//   3. The inner payload is endpoint-specific — the typed shape is
-//      declared per action.
-//
-// Before this module, the browser's 5+ fetch callsites inlined the
-// envelope-unwrapping pattern (`data?.data?.foo`) with the same
-// defensive `?? []` / `?? ""` fallbacks. The repetitive shape made
-// the call sites longer than necessary and easy to break in
-// lockstep. This module exposes a thin typed wrapper for the GET
-// surface. The two near-clone "load list" callbacks for the
-// directives + mental-models tabs are a separate, smaller helper.
-//
-// The POST surface (create / update / refresh / delete) already
-// uses `runMutation` from `src/lib/run-mutation.ts` (4 sites) plus
-// the legacy `safeApiCall` shape (2 sites — the toggle and the
-// inline delete confirmations). Those stay on the existing
-// helpers; this module only owns the GET surface.
+// hindsight-client.ts — the shared GET surface for the Hindsight API on
+// localhost:9177, used by src/components/memory/HindsightBrowser.tsx and
+// src/app/api/memory/hindsight/route.ts: GET `/api/memory/hindsight?action=<name>&...`,
+// unwrap `{ data: { ...inner } }`, type the payload per action. The POST
+// surface (create / update / refresh / delete) goes through `runMutation`.
 
 import { safeApiCall } from "@/lib/api-fetch";
 
 type ShowToast = (message: string, tone?: "success" | "error" | "info") => void;
 
 /**
- * Fetch a Hindsight GET endpoint and unwrap the `{ data: { ... } }`
- * envelope. The inner payload is returned typed as `T`; the function
- * returns `null` on error or on a successful response with no inner
- * data field.
- *
- * Mirrors the byte-equivalence contract documented on
- * `safeApiCallData` (src/lib/api-fetch.ts): `null` on `!ok`, `null`
- * on success-without-`data`. Callers can chain `if (inner) { ... }`
- * without TS complaining about `T | null | undefined`.
+ * Fetch a Hindsight GET endpoint and unwrap the `{ data: { ... } }` envelope.
+ * Returns `null` on error or when the response carries no inner data.
  *
  * @param action - The `action` query-param value (e.g. `"list"`, `"directives"`).
- * @param query - Optional extra query params. `undefined` values are skipped
- *                so callers can pass `{ limit: undefined }` to drop a key.
+ * @param query - Extra query params; `undefined` values are skipped, so `{ limit: undefined }` drops a key.
  */
 export async function hindsightGet<T>(
   action: string,
@@ -62,45 +31,15 @@ export async function hindsightGet<T>(
 }
 
 /**
- * Load a list endpoint from `/api/memory/hindsight` with the same
- * 5-line shape that HindsightBrowser.tsx previously inlined twice
- * (`loadDirectives` and `loadModels` — both 12-line `useCallback`s
- * with the exact same envelope → error-toast → set-state ladder).
+ * Load a list endpoint: the GET, the busy toggle, the error toast and the
+ * empty-state reset. A server `error` toasts and resets to `[]`; a network
+ * error returns `null` from `hindsightGet` and resets the same way.
  *
- * The helper composes the GET fetch, the busy-state toggle, the
- * server-error toast, and the empty-state reset. The inner payload's
- * `key` (e.g. `"directives"` or `"models"`) is read by the helper,
- * and the typed items are forwarded to `setItems` only on the
- * no-error path. On a server-reported `error` field (any truthy
- * value — matches the pre-form's `if (inner?.error)` check exactly),
- * the helper shows the toast, resets the items to `[]`, and returns
- * without calling `setItems` on the happy path (the caller can rely
- * on the items list being empty on the error path). On a network
- * error, `hindsightGet` returns `null` and the helper does the same
- * reset-and-return dance so the caller's UI is always in a consistent
- * state.
- *
- * **Byte-equivalence:** the helper body is the EXACT same 5-line
- * composition as the pre-form inline `loadDirectives` /
- * `loadModels` callbacks — same `hindsightGet` call (which itself
- * unwraps the `{ data: { ... } }` envelope), same busy-state
- * toggle (set true → fetch → set false, no try/catch wrapper), same
- * `if (inner?.error) { showToast; setX([]); return; }` ladder, same
- * `setX(inner?.[key] || [])` happy-path. No throw propagation
- * changes (the inline form never had a try/catch — `hindsightGet`
- * catches network errors and returns `null`).
- *
- * @param action the Hindsight endpoint name (e.g. `"directives"`,
- *   `"mental-models"`)
- * @param setBusy a `useState` setter for the loading flag — the
- *   helper toggles it true before the fetch and false after, with
- *   no try/catch wrapper
- * @param key the property name in the inner payload that holds the
- *   items array (e.g. `"directives"`, `"models"`)
- * @param setItems a `useState` setter for the items list — the
- *   helper writes the inner array (or `[]` on error) via this setter
- * @param showToast the `useToast()` return value — used to surface
- *   the server's `error` field on the !ok path
+ * @param action the Hindsight endpoint name (e.g. `"directives"`, `"mental-models"`)
+ * @param setBusy a `useState` setter for the loading flag
+ * @param key the inner-payload property holding the items (e.g. `"directives"`, `"models"`)
+ * @param setItems a `useState` setter for the items list (the inner array, or `[]` on error)
+ * @param showToast the `useToast()` return value, for the server's `error` field
  */
 export async function loadHindsightList<TItem>(
   action: string,
@@ -121,33 +60,18 @@ export async function loadHindsightList<TItem>(
   setItems(items);
 }
 
-// ── Memory age filter (stale-fact TTL substitute) ──────────────
-// Hindsight has no per-fact TTL field, so the UI cannot ask the
-// daemon to "give me facts newer than N days" in a single call. We
-// fetch what the daemon returns (sorted by recency) and filter
-// client-side by `created_at`. Stale facts are hidden by default
-// but the user can override via the "Show stale" toggle in the
-// Memory tab. Default age threshold is 90 days — facts older than
-// that are usually superseded by newer knowledge and add noise to
-// the Memory tab. The threshold is a constant here, not user-
-// configurable, to avoid the UI surface area of an "I forgot I set
-// it to 7 days and now nothing shows" footgun.
-//
-// Added 2026-06-13 as part of the corpus-flood cleanup. See skill
-// hindsight-memory-configuration/references/session-2026-06-13-corpus-
-// flood-cleanup.md for context.
-/** Default age threshold (days) for the Memory tab. Facts older than
- * this are hidden by default. */
+// Memory age filter. Hindsight has no per-fact TTL, so the UI filters what the
+// daemon returns by `created_at`. Stale facts hide by default; the Memory tab's
+// "Show stale" toggle overrides. The 90-day threshold is a constant, not a
+// setting, to avoid the "I forgot I set it to 7 days" footgun.
+/** Default age threshold (days) for the Memory tab. */
 export const HINDSIGHT_DEFAULT_MAX_AGE_DAYS = 90;
-/** Filter an array of memories by age, using the `created_at`
- * field on each memory. Memories without a parseable `created_at`
- * are kept (we can't prove they're stale, so default to showing
- * them — better to over-show than to silently drop).
+/**
+ * Filter memories by `created_at`. A missing or unparseable date is kept:
+ * better to over-show than to silently drop.
  *
  * @param memories the array to filter
- * @param maxAgeDays facts older than this many days are dropped.
- *   Pass `Infinity` to disable the filter (used by the "Show stale"
- *   toggle in the UI).
+ * @param maxAgeDays facts older than this are dropped; `Infinity` disables the filter ("Show stale").
  */
 export function filterMemoriesByAge<T extends { created_at?: string }>(
   memories: T[],

@@ -2,8 +2,7 @@
 // useModelsRegistry — the one read of /config/models
 // ═══════════════════════════════════════════════════════════════
 //
-// Split out of useModelsPage (Phase 4 god-file decomposition). Owns
-// every slice `loadAll` writes — models, credentials, task defaults,
+// Owns every slice `loadAll` writes — models, credentials, task defaults,
 // sync drift, the fallback chain and the fallback config — plus the
 // page-level loading/error pair and the two option lists the pickers
 // render from.

@@ -1,8 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // TemplateEditorModal — the "Save as Template" / "Edit Template" form.
-// Extracted verbatim from TemplateModals.tsx. The icon/color pickers
-// (TEMPLATE_ICONS / TEMPLATE_COLORS / ICON_MAP) are only used here, so
-// they're module-local rather than exported.
+// The icon/color pickers (TEMPLATE_ICONS / TEMPLATE_COLORS / ICON_MAP) are
+// only used here, so they're module-local rather than exported.
 // ═══════════════════════════════════════════════════════════════
 
 "use client";

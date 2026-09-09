@@ -1,11 +1,10 @@
 // ═══════════════════════════════════════════════════════════════
 // LogsHeaderActions — the page header's two controls
 //
-// Extracted verbatim from app/(main)/logs/page.tsx: Refresh and the two-step
-// Delete All. The auto-refresh toggle and the line-count select were here
-// too, and on a phone the four wrapped the header onto three rows; they are
-// about the terminal, so they moved into the terminal's own bar (LogTerminal,
-// T-0133).
+// Refresh and the two-step Delete All. The auto-refresh toggle and the
+// line-count select were here too, and on a phone the four wrapped the
+// header onto three rows; they are about the terminal, so they moved into
+// the terminal's own bar (LogTerminal, T-0133).
 // ═══════════════════════════════════════════════════════════════
 
 "use client";

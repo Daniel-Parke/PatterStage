@@ -2,12 +2,11 @@
 // useChatSend — sending a turn, stopping it, approving a tool
 // ═══════════════════════════════════════════════════════════════
 //
-// Split out of useChatPage (Phase 4 god-file decomposition). Owns the
-// turn lifecycle: create the conversation if there isn't one, render the
-// user row and the assistant placeholder optimistically, POST the turn,
-// adopt the server-assigned ids, then hand off to whichever stream the
-// mode calls for — the run-event SSE in "agent" mode, a raw gateway
-// stream in "fast" mode.
+// Owns the turn lifecycle: create the conversation if there isn't one,
+// render the user row and the assistant placeholder optimistically, POST
+// the turn, adopt the server-assigned ids, then hand off to whichever
+// stream the mode calls for — the run-event SSE in "agent" mode, a raw
+// gateway stream in "fast" mode.
 //
 // Also owns the two effects that keep the transcript in step with the
 // active conversation: loading its messages (and adopting its model)

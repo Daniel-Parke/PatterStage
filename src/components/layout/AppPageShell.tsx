@@ -1,40 +1,22 @@
-// ═══════════════════════════════════════════════════════════════
-// App Page Shell — the page frame, and the one container that owns
-// the left edge
-// ═══════════════════════════════════════════════════════════════
+// App Page Shell — the page frame, and the one container that owns the left edge.
 //
-// This used to be a background and nothing else, so every page supplied its own
-// column. Measured across 23 routes that produced seven content widths, eight
-// left gutters and eight padding rhythms, and on 21 of them the h1 did not
-// share a left edge with the content beneath it, by up to 289px. On
-// /results/artifacts the header bar's own bottom rule stopped 180px short of
-// both viewport edges, pointing at nothing. That is not twenty mistakes; it is
-// a missing structure.
-//
-// The header is a PROP rather than a child because a child cannot be both
-// full-bleed and contained, and both is exactly what a header bar is: its
-// background and rule span the viewport while its words line up with the page.
-// Handing it in lets the shell render the bar itself and put the header's
-// content in the SAME container as the body, so the two edges cannot disagree.
+// This used to be a background only, and 23 routes produced seven content
+// widths and eight gutters, with the h1 off the content's left edge on 21 of
+// them: a missing structure, not twenty mistakes. The header is a PROP because
+// a bar must be both full-bleed and contained; the shell renders the bar and
+// puts the header's content in the SAME container as the body.
 
 import type { ReactNode } from "react";
 
 import { shellHeaderBarClasses } from "@/lib/theme";
 
 /**
- * What happens INSIDE the container. Never what the container is: the left edge
- * is the same on every screen at every density, which is the whole point.
- *
- *   board  the default, and most of this product. Full width, page rhythm.
- *   prose  a narrower column for longform, LEFT aligned inside the page
- *          container rather than centred in one of its own. Centring it is the
- *          defect: a second centred container is what moves one screen's
- *          content 400px from its neighbour's.
- *   pane   fills the remaining height and manages its own scrolling, for a
- *          split view: chat, the composer canvas, the reader.
+ * What happens INSIDE the container, never what the container is. `board` is
+ * the default; `prose` is a narrower column LEFT aligned inside the page
+ * container, because a second centred container is what moves one screen's
+ * content 400px from its neighbour's; `pane` fills the height and scrolls itself.
  */
-// Not exported: every call site spells the literal, so an exported alias would
-// be a name with no readers, which is what this programme is deleting.
+// Not exported: every call site spells the literal, and an alias with no readers is what this programme deletes.
 type PageDensity = "board" | "prose" | "pane";
 
 interface AppPageShellProps {
@@ -48,28 +30,15 @@ interface AppPageShellProps {
 }
 
 /**
- * The measure, and the only thing that decides a left edge. One string, used
- * verbatim in both places, so a change to the page width changes both or
- * neither.
- *
- * The density's own classes go on a CHILD of this, never on the same element.
- * `max-w-ps-page` and `max-w-ps-prose` together are decided by the order the
- * two rules happen to sit in the emitted stylesheet, which is not something a
- * call site can see or control.
- *
- * The gutter narrows on a phone because 24px each side of a 375px screen is
- * 13% of it. That is one string for every page, so the invariant is untouched:
- * at any given width every screen still has the same left edge. Measured on
- * /work/missions at 375, the flat 24px cost 16px of column against what that
- * page used to give itself.
+ * The measure, and the only thing that decides a left edge; one string used
+ * verbatim in both places. The density's classes go on a CHILD, never the same
+ * element: `max-w-ps-page` and `max-w-ps-prose` together are decided by
+ * stylesheet order. The gutter narrows on a phone (24px each side of 375px is
+ * 13% of it); it is still one string, so every screen keeps the same left edge.
  */
 export const PAGE_MEASURE = "mx-auto w-full max-w-ps-page px-4 sm:px-6";
 
-/**
- * Two steps, not eight. The census measured eight distinct gaps between a
- * page's top-level blocks; the rhythm is now 32px between sections here, and
- * 16px inside one, which is the only other step the system has.
- */
+/** Two steps, not the eight the census measured: 32px between sections, 16px inside one. */
 const DENSITY: Record<PageDensity, string> = {
   board: "py-6 space-y-8",
   prose: "py-8 space-y-8 max-w-ps-prose",
@@ -89,8 +58,7 @@ export default function AppPageShell({
       className={`min-h-screen bg-ps-surface-ground grid-bg flex flex-col ${fx} ${className}`.trim()}
     >
       {header ? (
-        // Sticky and full-bleed. The BAR is what spans the viewport; the
-        // container inside it is what the words line up with.
+        // Sticky and full-bleed: the BAR spans the viewport, the container inside is what the words line up with.
         <header className={`${shellHeaderBarClasses} sticky top-0 z-sticky w-full`}>
           <div data-ps-container className={PAGE_MEASURE}>
             {header}

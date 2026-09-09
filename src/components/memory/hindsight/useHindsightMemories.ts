@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // useHindsightMemories — memories tab state + recall/reflect/add + health.
-// Extracted verbatim from HindsightBrowser. Owns the shared `search` and
-// `health` state (health is only ever written by the memory fetch paths).
+// Owns the shared `search` and `health` state (health is only ever written
+// by the memory fetch paths).
 // ═══════════════════════════════════════════════════════════════
 
 "use client";
@@ -67,8 +67,6 @@ export function useHindsightMemories(showToast: ShowToast) {
 
   const loadRecentMemories = useCallback(async () => {
     setLoadingInitial(true);
-    // Envelope-typed: the route returns
-    // `{ data: { memories, mode, error } }`.
     const inner = await hindsightGet<{ memories?: Memory[]; total?: number; mode?: string; error?: string }>(
       "list",
       { limit: 50 },
@@ -103,8 +101,6 @@ export function useHindsightMemories(showToast: ShowToast) {
     }
     setLoading(true);
     try {
-      // Envelope-typed: the route returns
-      // `{ data: { memories, available, mode, message, error } }`.
       const inner = await hindsightGet<{
         memories?: Memory[];
         available?: boolean;
@@ -144,7 +140,6 @@ export function useHindsightMemories(showToast: ShowToast) {
     if (!search.trim()) return;
     setReflecting(true);
     setReflectResult(null);
-    // Single-nesting: type param is the inner `{response}` shape.
     const inner = await hindsightGet<{ response?: string }>("reflect", { query: search });
     setReflecting(false);
     if (!inner) {

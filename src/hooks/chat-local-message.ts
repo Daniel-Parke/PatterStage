@@ -2,9 +2,8 @@
 // chat-local-message — optimistic message rows and the click guard
 // ═══════════════════════════════════════════════════════════════
 //
-// Split out of useChatPage (Phase 4 god-file decomposition). A turn is
-// rendered optimistically before the server has assigned ids: the user
-// row and the assistant placeholder are built here, given a local id,
+// A turn is rendered optimistically before the server has assigned ids: the
+// user row and the assistant placeholder are built here, given a local id,
 // and swapped for the server-assigned ids once POST returns.
 //
 // Module-level, not hook-level: `localSeq` is a process-wide counter, so

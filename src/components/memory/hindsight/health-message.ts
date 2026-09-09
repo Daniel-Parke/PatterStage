@@ -1,23 +1,4 @@
-// ═══════════════════════════════════════════════════════════════
-// healthBannerMessage — build the Hindsight "not responding" message
-// ═══════════════════════════════════════════════════════════════
-//
-// HealthBanner.tsx had a 6-line inline ternary that decided the
-// banner message based on three `health` fields:
-//
-//   1. If `health.error` mentions "Redis" → "Redis is not running..."
-//   2. Else if `health.message` is set → "Hindsight <mode>: <message>"
-//   3. Else → "Hindsight <mode>: <error or 'not responding'>"
-//
-// The 3-branch decision is small but worth extracting for two reasons:
-//   1. **Testability** — the Redis detection is a substring heuristic
-//      that can match partial substrings ("refused to start" contains
-//      nothing Redis-related, but "RedisConnectionError" should match).
-//      Unit tests pin down the exact matching behaviour so a future
-//      tightening to word-boundary matches is a deliberate change.
-//   2. **The HealthState shape is reused** — when a future consumer
-//      (e.g. a Hindsight settings page) needs the same banner, the
-//      helper is the single source of truth.
+// healthBannerMessage — the Hindsight "not responding" banner message.
 
 import {
   MEMORY_NOT_ANSWERING,
@@ -32,44 +13,24 @@ const REDIS_TOKEN = "Redis";
 /** Fallback message when neither `error` nor `message` is set. */
 const NOT_RESPONDING = "not responding";
 
-/**
- * The transport-failure list and its plain-English replacement moved to
- * @/lib/memory/memory-error-copy. The store route publishes the same sentence
- * for the same outage, and a second copy of the rule would have let the banner
- * and the toast describe one stopped provider in two different ways.
- */
-
-/**
- * "Hindsight <mode>", or plain "Hindsight" when the payload carried no mode.
- * An unreachable provider answers without one, which used to render the literal
- * string "Hindsight undefined:".
- */
+/** "Hindsight <mode>", or "Hindsight" when the payload carried no mode: an
+ * unreachable provider answers without one and used to render "Hindsight undefined:". */
 function label(mode: string | undefined): string {
   return mode ? `Hindsight ${mode}` : "Hindsight";
 }
 
 /**
- * Resolve the banner message for a `health: HealthState` payload.
- *
- *   0. the error is PatterStage's own no-provider notice → verbatim
- *   1. `health.error?.includes("Redis")` → "Redis is not running.
- *      Start Redis to enable memory features: redis-server"
+ * The banner message for a `health: HealthState` payload, in order:
+ *   0. PatterStage's own no-provider notice → verbatim, because "Hindsight:"
+ *      stamped on a sentence about there being no Hindsight is a contradiction
+ *   1. the error mentions Redis → the actionable Redis hint, above the message
+ *      branch because it usually arrives with a generic "Connection refused"
  *   2. `health.message` is set → "Hindsight <mode>: <message>"
- *   3. the error is a bare transport failure → the plain-English
- *      "nothing is answering, and that is survivable" sentence
+ *   3. a bare transport failure → MEMORY_NOT_ANSWERING, shared with the store
+ *      route via memory-error-copy so banner and toast describe one outage one
+ *      way; below the message branch so a provider that explains itself is
+ *      quoted verbatim and only Node's "fetch failed" is translated
  *   4. otherwise → "Hindsight <mode>: <error || 'not responding'>"
- *
- * The order matters: case 1 wins over case 2 because a Redis-related
- * error often comes with a generic "Connection refused" message and we
- * want the actionable Redis hint to surface. Case 3 sits below the
- * message branch so a provider that explains itself is always quoted
- * verbatim, and only Node's own "fetch failed" gets translated.
- *
- * Case 0 sits above all of them because the label is a lie for it. Those
- * notices are PatterStage saying there is no provider, or no client for the
- * one selected; stamping "Hindsight:" on the front of a sentence about there
- * being no Hindsight is the contradiction this branch exists to stop, and the
- * notice is already a complete instruction that needs no prefix.
  */
 export function healthBannerMessage(health: HealthState): string {
   if (health.error && isMemoryUnavailableMessage(health.error)) {

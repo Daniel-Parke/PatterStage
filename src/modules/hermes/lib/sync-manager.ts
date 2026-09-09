@@ -123,21 +123,8 @@ export function detectConfigDrift(): DriftReport {
 /**
  * Project a `DriftReport` to the flat `string[]` shape consumed by the
  * `ModelsDriftBanner` component (`{ hasDrift, driftDetails: string[] }`).
- * Centralises the 3-line "if (X) push string" pattern that the
- * `/api/models/sync/drift` GET handler used to spell out inline:
- *
- *   1. `primaryDiffers` (one-line per diff)
- *   2. `modelsInHermesNotInDb` (one-line per missing-in-DB model)
- *   3. `modelsInDbNotInHermes` (one-line per missing-in-Hermes model)
- *
- * Order is preserved: primary first, then Hermes-only, then DB-only —
- * matches the pre-refactor inline order in `route.ts` byte-for-byte.
- *
- * The result of `driftDetails.length > 0` is the `hasDrift` flag in the
- * UI surface; this helper does NOT include that flag (the route composes
- * `{ hasDrift, driftDetails }` from the array length — that is the
- * canonical place to centralise the boolean so the helper stays
- * "details only").
+ * Does NOT include the `hasDrift` flag: the route composes it from the
+ * array length, so the helper stays "details only".
  */
 export function buildDriftDetails(drift: DriftReport): string[] {
   // Delegated so the sentence exists once. buildDriftLines emits the same
@@ -246,14 +233,10 @@ export function pushModelToHermes(modelId: string): SyncActionResult {
 /**
  * Push a credential (provider + apiKey) to the Hermes .env file.
  *
- * `provider` is typed as `HermesProvider` because the body only accepts
- * the canonical list (it checks via `isHermesProvider` and passes the
- * value to `syncCredentialToHermesEnv` which requires the literal
- * union). Callers that source the value from a `string` field (e.g.
- * the credentials DB column) must validate with `isHermesProvider`
- * before calling. The previous `provider: string` signature forced two
- * internal `as HermesProvider` casts and a defensive `isHermesProvider`
- * re-check that doubled the work. (Session 53 refactor.)
+ * `provider` is typed as `HermesProvider` because `syncCredentialToHermesEnv`
+ * requires the literal union. Callers that source the value from a `string`
+ * field (e.g. the credentials DB column) must validate with `isHermesProvider`
+ * before calling.
  */
 function pushCredentialToHermesEnv(provider: HermesProvider, apiKey: string): SyncActionResult {
   try {
@@ -301,10 +284,6 @@ export function pushCredential(credentialId: string): SyncActionResult {
   }
   // The DB column is `provider TEXT` (no CHECK constraint), so validate
   // against the canonical list before passing to the typed push helper.
-  // The check was previously inside pushCredentialToHermesEnv as a
-  // defensive double-check; hoisting it here makes the call site
-  // honest about the type narrowing and lets the helper accept the
-  // narrow type without an internal cast.
   if (!isHermesProvider(cred.provider)) {
     return {
       success: false,

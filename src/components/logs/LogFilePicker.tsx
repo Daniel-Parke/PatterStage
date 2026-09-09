@@ -1,9 +1,8 @@
 // ═══════════════════════════════════════════════════════════════
 // LogFilePicker — the grouped log-file sidebar
 //
-// Extracted verbatim from app/(main)/logs/page.tsx. It renders the
-// already-filtered list it is handed; the name filter and the active
-// selection stay on the page. Presentation only.
+// It renders the already-filtered list it is handed; the name filter and
+// the active selection stay on the page. Presentation only.
 // ═══════════════════════════════════════════════════════════════
 
 "use client";

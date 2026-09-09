@@ -1,8 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // ScriptLogsModal — the tail of a script's run log
 //
-// Extracted verbatim from app/orchestration/scripts/page.tsx. The fetch
-// stays on the page; this renders the text it is handed.
+// The fetch stays on the page; this renders the text it is handed.
 // ═══════════════════════════════════════════════════════════════
 
 "use client";

@@ -1,27 +1,13 @@
-// ═══════════════════════════════════════════════════════════════
-// QuestBadge — how many quests are left, in the rail
+// QuestBadge — how many quests are left, in the rail. It reads the same deduped
+// stats poll every quest surface reads, renders nothing while stats are unread
+// and nothing once every quest is done (32/32 forever is a nag).
 //
-// Rides inside the rail's Quests link and reads the same deduped stats poll
-// every other quest surface reads, so it adds no request of its own and the
-// Sidebar never waits on anything: while stats are unread it renders nothing,
-// and the rail is the width it always was.
-//
-// It renders nothing once every quest is done, too. A counter that reads 32/32
-// forever is a nag with nothing left to nag about, and the rail has no pixels
-// to spare for it.
-//
-// Collapsed, it is a DOT rather than "n/N". The icons-only rail is 64px wide
-// and its footer stacks the two utility links vertically; three characters of
-// mono text there would widen the row or wrap it, while a dot rides beside the
-// icon and changes neither the rail's width nor its height. The rail has to
-// fit 1280x720 without scrolling (tests/e2e/rail-no-scroll.spec.ts).
-//
-// Decorative, deliberately. The link it sits in carries its own aria-label
-// ("Quests"), which is the accessible name a screen reader hears and which
-// D119 pins; a second name inside it would be ignored, and a live region in
-// the rail would re-announce a count on a twenty-second poll. The count is
-// said in full on the page the link opens, and in a title for a hover.
-// ═══════════════════════════════════════════════════════════════
+// Collapsed, it is a DOT rather than "n/N": the 64px rail's footer stacks its
+// links vertically and mono text there would widen or wrap the row; the rail
+// must fit 1280x720 without scrolling (tests/e2e/rail-no-scroll.spec.ts).
+// Decorative, deliberately: the link's own aria-label ("Quests") is the name
+// D119 pins, a second name inside it would be ignored, and a live region would
+// re-announce a count every poll. The count is said in full on the page and in a title.
 
 "use client";
 

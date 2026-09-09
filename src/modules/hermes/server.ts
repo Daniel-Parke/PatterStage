@@ -1,12 +1,7 @@
-// ═══════════════════════════════════════════════════════════════
-// modules/hermes/server.ts — the hermes module's server-side capability
-//
-// Registered in src/lib/modules/server.ts, the composition root. Core calls
-// through the ServerModule interface and never names this module, which is what
-// keeps `core-imports-no-module` enforceable everywhere else.
-//
+// modules/hermes/server.ts — the hermes module's server-side capability,
+// registered in src/lib/modules/server.ts. Core calls through ServerModule and
+// never names this module, which keeps `core-imports-no-module` enforceable.
 // Mirrors src/modules/rec-room/server.ts, the module that proved the seam.
-// ═══════════════════════════════════════════════════════════════
 
 import type { ServerModule } from "@/lib/modules/server";
 import type { AgentRosterEntry } from "@/lib/agents/roster";
@@ -22,24 +17,15 @@ import { seedAgentCatalog, publishSkill } from "./lib/seed-agent-catalog";
 export const hermesServerModule: ServerModule = {
   id: "hermes",
 
-  /**
-   * The two fields core needs about an agent, projected out of a 17-column row
-   * whose other fifteen are Hermes file contents.
-   *
-   * `displayName || slug` because the column is NOT NULL with a '' default, so an
-   * unset name is an empty string rather than null, and an empty label in the
-   * composer's picker would be unselectable.
-   */
+  /** The two fields core needs, out of a 17-column row of Hermes file contents.
+   * `displayName || slug`: the column is NOT NULL default '', and an empty label
+   * in the composer's picker would be unselectable. */
   listAgentRoster: (): AgentRosterEntry[] =>
     listProfiles().map((p) => ({ slug: p.slug, displayName: p.displayName || p.slug })),
 
-  /**
-   * ConfigSync only. The other four read-side sources stayed in core because they
-   * needed file PATHS, which AgentWorkspace already gives them neutrally. This one
-   * parses a Hermes config.yaml schema (memory.provider, model.default and its
-   * string shorthand), handles a duplicate-key quirk specific to that file, and
-   * probes SOUL.md. That is protocol knowledge, not a path.
-   */
+  /** ConfigSync only: the other four read-side sources need file PATHS, which
+   * AgentWorkspace gives neutrally. This one parses a Hermes config.yaml schema,
+   * its duplicate-key quirk and SOUL.md: protocol knowledge, not a path. */
   syncSources: (): SyncSource[] => [new ConfigSync()],
 
   /** Hermes' own cron/jobs.json, projected to the core-owned CronJobEntry. */
@@ -51,10 +37,7 @@ export const hermesServerModule: ServerModule = {
   /** Write a seeded core skill through to the Hermes global skills dir. */
   publishSkill,
 
-  /**
-   * The skills count for a batch of profiles, the SAME function the profile
-   * cards count with (GET /api/agent/profiles). Core asks for it here so the
-   * Agents-page performance strip cannot carry a second, different answer.
-   */
+  /** The SAME skills counter the profile cards use (GET /api/agent/profiles),
+   * so the Agents-page performance strip cannot carry a second answer. */
   createAgentSkillsCounter: createProfileSkillsCounter,
 };

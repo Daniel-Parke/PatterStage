@@ -1,7 +1,6 @@
 // ── SkillEditorModal — edit one skill's markdown.
-// Extracted verbatim from app/operations/skills/page.tsx. The content,
-// the original snapshot and the PUT stay on the page; this renders the
-// modal and calls back. Presentation only.
+// The content, the original snapshot and the PUT stay on the page; this
+// renders the modal and calls back. Presentation only.
 
 "use client";
 

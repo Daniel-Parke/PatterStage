@@ -1,6 +1,5 @@
 // ── SkillsDenylistNote — the standing explainer above the skill lists.
-// Extracted verbatim from app/operations/skills/page.tsx. Static copy,
-// no props, no state.
+// Static copy, no props, no state.
 
 import ConceptHint from "@/components/help/ConceptHint";
 

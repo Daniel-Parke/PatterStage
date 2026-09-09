@@ -1,8 +1,5 @@
 // ── deriveReaderView — the reader's per-render derivations, in one place.
-// Pure helper, extracted verbatim from app/recroom/story-weaver/[id]/page.tsx
-// where these eight consts sat between the guards and the return. Same
-// expressions, same order, no behaviour: Story Weaver behaviour is out of
-// scope for T-0011.
+// Pure helper. Story Weaver behaviour is out of scope for T-0011.
 
 import type { Chapter, StoryState } from "@/modules/rec-room/components/story-reader-types";
 

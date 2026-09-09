@@ -1,25 +1,14 @@
-// ═══════════════════════════════════════════════════════════════
-// orchestration/run-deadline.ts: when the reconciler stops waiting
+// orchestration/run-deadline.ts: when the reconciler stops waiting. These
+// values were private to run-reconcile.ts, so the console could say nothing
+// about a run but that it was still going, while the reconciler computed and
+// threw away every tick the exact instant it would mark the run failed. Now
+// run-reconcile imports them and `buildMissionRunView` publishes the same
+// arithmetic to the mission API for the board.
 //
-// These three values used to be private to run-reconcile.ts, which meant
-// the console could not tell an operator anything about a run except
-// that it was still going. The reconciler knows more than that: it knows
-// the exact instant at which it will give up on a run and mark it
-// failed. That instant is the difference between "this has been running
-// two hours and that is fine" and "this is overdue and about to be
-// killed", and it was being computed and thrown away every tick.
-//
-// So the constants live here, run-reconcile imports them (its behaviour
-// is unchanged), and `buildMissionRunView` publishes the same arithmetic
-// to the mission API so the board can render it.
-//
-// Two deadlines, deliberately distinguished by `declared`:
-//   • the mission declared a timeout, and the reconciler enforces it even
-//     when the backend still reports the run as started;
-//   • no declared timeout, so only the safety cap applies, and it only
-//     bites when the backend stops answering. An untimed mission the
-//     backend is happily running is long, not stuck.
-// ═══════════════════════════════════════════════════════════════
+// Two deadlines, distinguished by `declared`: the mission's own timeout,
+// enforced even while the backend reports the run as started; or the safety
+// cap, which bites only when the backend stops answering. An untimed mission
+// the backend is happily running is long, not stuck.
 
 import { MAX_TIMEOUT_MINUTES } from "@/lib/missions/mission-timeout";
 import type { MissionRunView } from "@/lib/missions/mission-run-state";
@@ -50,9 +39,8 @@ export interface DeadlineMission {
 export function declaredTimeoutMinutes(mission: DeadlineMission | null): number | null {
   const t = mission?.timeoutMinutes ?? mission?.missionTimeMinutes;
   if (typeof t !== "number" || !(t > 0)) return null;
-  // The belt for a row written before the boundary validated (T-0088): a
-  // stored 1e9 used to BE the unreachable-backend cap, so the run never
-  // self-healed. Nothing declared may exceed the ceiling.
+  // The belt for a row written before the boundary validated (T-0088): a stored
+  // 1e9 used to BE the unreachable-backend cap, so the run never self-healed.
   return Math.min(t, MAX_TIMEOUT_MINUTES);
 }
 
@@ -64,9 +52,8 @@ export interface RunDeadline {
 }
 
 /**
- * The instant the reconciler stops waiting for a run submitted at
- * `submittedAt`. Null when the timestamp cannot be parsed, because a
- * missing deadline beats a deadline in 1970.
+ * The instant the reconciler stops waiting for a run submitted at `submittedAt`.
+ * Null when the timestamp cannot be parsed: a missing deadline beats one in 1970.
  */
 export function runDeadline(
   submittedAt: string,
@@ -82,11 +69,8 @@ export function runDeadline(
 }
 
 /**
- * Project a run row onto the wire shape the mission board reads.
- *
- * The deadline is attached only while the run is still going: once a run
- * is terminal nothing is waiting for it, and a deadline on a finished
- * run would render as an "overdue" badge on a completed mission.
+ * The wire shape the mission board reads. The deadline is attached only while
+ * the run is going: on a finished run it would render as an "overdue" badge.
  */
 export function buildMissionRunView(
   mission: DeadlineMission | null,

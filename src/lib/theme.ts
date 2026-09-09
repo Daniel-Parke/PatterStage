@@ -1,40 +1,27 @@
 // ═══════════════════════════════════════════════════════════════
-// Shared Theme Constants — Single Source of Truth
+// theme.ts — the shared class strings, and the code mirror of the ruled tokens
 // ═══════════════════════════════════════════════════════════════
 
 import type { AccentColor } from "@/types/console";
 
 /**
- * The header BAR's own chrome, used by AppPageShell and nowhere else.
- *
- * It carries no measure and no horizontal padding on purpose: the bar spans the
- * viewport so its bottom rule reaches both edges, and the container INSIDE it
- * owns the left edge. It used to carry `px-6`, which made every page's header
- * pad itself independently of its body — one of the reasons 21 of 23 routes
- * measured an h1 that did not line up with its own content.
- *
- * The min-height is what keeps the bar level with the Sidebar's brand row
- * (`--ps-shell-header-min-height` in globals.css).
+ * The header BAR's own chrome, used by AppPageShell only. No measure and no
+ * horizontal padding: the bar spans the viewport so its rule reaches both
+ * edges, and the container INSIDE it owns the left edge (its old `px-6` is one
+ * reason 21 of 23 routes had an h1 out of line with its body). The min-height
+ * keeps it level with the Sidebar's brand row (`--ps-shell-header-min-height`).
  */
 export const shellHeaderBarClasses =
-  // No backdrop-blur. It was there because the bar used to be translucent
-  // (bg-dark-900/50); the panel rung is opaque, so the filter blurs nothing and
-  // costs a compositing layer on every scroll of every page — the same dead
-  // paint T-0118 took off the rail, left behind on its neighbour.
+  // No backdrop-blur: the panel rung is opaque, so it blurred nothing and cost
+  // a compositing layer per scroll, the dead paint T-0118 took off the rail.
   "border-b border-ps-edge-hairline bg-ps-surface-panel min-h-[var(--ps-shell-header-min-height)] flex items-center";
 
 // ═══════════════════════════════════════════════════════════════
-// The surface ladder and the measures — the code mirror of the tokens ruled at
-// the first-build lock-in sitting of 2026-08-24 (org/LOCKBOOK.md, Tokens).
-//
-// The lock-book names two homes for a token, globals.css @theme and this file,
-// and says they must agree. Two homes with nothing holding them together is how
-// a mirror goes stale, so tests/unit/lockbook-tokens.test.ts reads the CSS and
-// fails if either map names a token globals.css does not declare.
-//
-// These are the semantic names. The appearance-named spellings (bg-ps-surface-panel,
-// max-w-4xl) still paint the same pixels and are still everywhere; nothing is
-// repainted by declaring a name for what is already there.
+// The surface ladder and the measures: the code mirror of the tokens ruled at
+// the first-build lock-in sitting of 2026-08-24 (org/LOCKBOOK.md, Tokens). The
+// lock-book names two homes for a token, globals.css @theme and this file, so
+// tests/unit/lockbook-tokens.test.ts fails if either map names a token the CSS
+// does not declare.
 // ═══════════════════════════════════════════════════════════════
 
 /** Semantic surfaces: the page ground, a raised panel, a sunken well, a rule. */
@@ -46,16 +33,12 @@ export const surfaceClasses = {
 } as const;
 
 /**
- * The three rules, which are a separate ladder from the three fills: on the
- * surface ray a 3:1 stroke comes out a blue line rather than an edge, so the
- * rules travel a cooler, far less saturated one (T-0116).
- *
- *   edge      a control's boundary and the shell's seams. 3:1, WCAG 1.4.11.
- *   hairline  a subdivision inside one surface: a card outline, a row rule.
- *             1.63:1, because a card whose fill already sits 1.47:1 off the
- *             page does not also need a 3:1 stroke, and drawing one round
- *             every tile reads as wireframe.
- *   emphasis  selected, armed, focused. 4.52:1.
+ * The three rules, a separate ladder from the fills: on the surface ray a 3:1
+ * stroke reads as a blue line, so the rules travel a cooler, less saturated
+ * one (T-0116). `edge` is a control's boundary and the shell's seams, 3:1 per
+ * WCAG 1.4.11; `hairline` a subdivision inside one surface at 1.63:1, because
+ * a card already 1.47:1 off the page with a 3:1 stroke round it reads as
+ * wireframe; `emphasis` is selected, armed, focused, 4.52:1.
  */
 export const edgeClasses = {
   edge: "border-ps-edge",
@@ -64,11 +47,9 @@ export const edgeClasses = {
 } as const;
 
 /**
- * What a status tone looks like, one literal class per slot (T-0120).
- *
- * Literal because Tailwind scans source: `text-status-${tone}` generates no rule
- * at all, which is the defect the first half of this batch is about. The tone
- * itself comes from the ratified WORD, in src/lib/status-labels.ts.
+ * What a status tone looks like, one literal class per slot (T-0120): Tailwind
+ * scans source, so `text-status-${tone}` generates no rule. The tone itself
+ * comes from the ratified WORD in src/lib/status-labels.ts.
  */
 export const statusToneClasses = {
   idle: {
@@ -134,26 +115,15 @@ function makeMap<T>(fn: (c: AccentColor) => T): Record<AccentColor, T> {
 // ═══════════════════════════════════════════════════════════════
 // The accent maps below are written out LITERALLY, one class per entry.
 //
-// They used to be generated with template literals (`text-${COLOR_TEXT[c]}`).
-// Tailwind scans source statically and cannot evaluate an expression, so a
-// generated class only reached the stylesheet when some unrelated file happened
-// to spell out the same literal. Two measured consequences on this tree:
-//
-//  • `hover:border-neon-cyan/60` and `focus:border-neon-*/50` produced ZERO CSS
-//    rules. The border and focus-ring variants simply did not exist. A missing
-//    focus ring is an accessibility defect (WCAG 2.4.7), not a cosmetic one.
-//  • `border-red/40` was never a valid class at all: the token map gave bare
-//    "red", and Tailwind has red-400/red-500, not `red`.
-//
-// The base/hover classes are also split into separate maps rather than one long
-// string. The combined string previously ended in
-// `hover:shadow-[0_0_20px_rgb(var(--ps-rgb-neon-cyan)_/_0.12)]`, and that
-// malformed candidate took its well-formed neighbours down with it — splitting
-// them is what actually made the hover and focus classes appear. The dead
-// shadow is dropped rather than resurrected; it never rendered.
-//
-// `scripts/tooling/design-lint.mjs` (rule `no-template-literal-tailwind`) fails
-// the build if the pattern returns. Keep these literal.
+// They were generated with template literals, and Tailwind scans source
+// statically, so a generated class reached the stylesheet only when some other
+// file spelled out the same literal: `hover:border-neon-cyan/60` and
+// `focus:border-neon-*/50` produced ZERO rules (a missing focus ring is WCAG
+// 2.4.7, not cosmetic), and `border-red/40` was never a class at all. Base and
+// hover are separate maps because one malformed candidate in the old combined
+// string (a `hover:shadow-[...]`) took its well-formed neighbours down with it;
+// that shadow never rendered and is dropped. `scripts/tooling/design-lint.mjs`
+// (rule `no-template-literal-tailwind`) fails the build if the pattern returns.
 // ═══════════════════════════════════════════════════════════════
 
 // ── Icon Color Map ────────────────────────────────────────────
@@ -169,12 +139,9 @@ export const iconColorMap: Record<AccentColor, ColorEntry> = {
 };
 
 /**
- * The "you are here" bar on the rail, in the destination's own registry colour.
- *
- * A bar rather than a fill, because the fill is what hover uses and two fills
- * cannot tell each other apart; edge-anchored, because the rail's own seam is
- * the edge it grows from. Written out one entry per line for the reason every
- * map in this file is (T-0120): Tailwind scans source.
+ * The "you are here" bar on the rail, in the destination's registry colour. A
+ * bar, because the fill is what hover uses; edge-anchored, because the rail's
+ * seam is the edge it grows from. Literal for the reason above (T-0120).
  */
 export const railAccentBarMap: Record<AccentColor, ColorEntry> = {
   cyan: "bg-neon-cyan",
@@ -188,16 +155,10 @@ export const railAccentBarMap: Record<AccentColor, ColorEntry> = {
 };
 
 /**
- * The stat pill's resting and hover boundary, written out for the same reason
- * everything above it is (T-0120).
- *
- * StatPill used to derive these from the icon colour:
- * `textColor.replace(/^text-/, "border-") + "/20"`. Tailwind scans source
- * statically and cannot see a class assembled at runtime, so three of the eight
- * accents had no border rule at all - the pill fell back to `currentColor` and
- * drew a solid white ring - and every one of the eight had a dead hover. The
- * three that DID work only worked because the class name happened to be written
- * down in a document Tailwind was also scanning.
+ * The stat pill's resting and hover boundary, literal for the reason above
+ * (T-0120). StatPill derived these from the icon colour with a regex, so three
+ * of the eight accents had no border rule (the pill fell back to `currentColor`
+ * and drew a solid white ring) and all eight had a dead hover.
  */
 const PILL_BORDER: Record<AccentColor, ColorEntry> = {
   cyan: "border-neon-cyan/20",
@@ -222,10 +183,9 @@ const PILL_BORDER_HOVER: Record<AccentColor, ColorEntry> = {
 };
 
 /**
- * The same eight accents at 60%, for an icon that labels a section rather than
- * signalling one. Written out for the reason above: ModelsSectionHeader built
- * these by concatenating `/60` onto an interpolated class, and the rules
- * existed only because a test file spelled two of them out.
+ * The same eight at 60%, for an icon that labels a section rather than
+ * signalling one. Literal for the reason above: ModelsSectionHeader built these
+ * by interpolation, and the rules existed only because a test spelled two out.
  */
 export const iconMutedColorMap: Record<AccentColor, ColorEntry> = {
   cyan: "text-neon-cyan/60",
@@ -264,28 +224,18 @@ export const glowSurfaceRgbMap: Record<AccentColor, ColorEntry> = makeMap((c) =>
 
 // ── Base Input Styles ─────────────────────────────────────────
 export const baseInputStyles =
-  // `edge` rather than `hairline`: this is the base every text input in the
-  // product wears, and a control's boundary is the one WCAG 1.4.11 is about.
-  // On the hairline it measured 2.38:1 against the page (T-0118).
+  // `edge`, not `hairline`: a control's boundary is what WCAG 1.4.11 is about,
+  // and on the hairline it measured 2.38:1 against the page (T-0118).
   // design-lint-disable-next-line no-bare-outline-none -- inputFieldClasses appends the accent focus border to this base; it is never used bare
   "w-full bg-ps-surface-panel border border-ps-edge rounded-ps-md px-3 py-2 text-body text-ps-text-primary placeholder-ps-text-muted transition-colors font-mono";
 
 /**
- * A section heading, which is not a smaller page title.
- *
- * Thirty h2 elements wore ten treatments between them, from a 12px micro-caps
- * label to a 20px bold line, so a section heading was indistinguishable from a
- * slightly emphatic list item on most screens. This is the one: micro-caps mono
- * on the secondary tier with a hairline under it, which reads as a HEADING
- * because of its register and its rule rather than because of its size
- * (T-0119, decision 10).
- *
- * It owns the TYPOGRAPHY and nothing else. Where the heading sits, and what
- * sits beside it, stays with the call site: several of these have an icon in a
- * row and a couple are inside a flex header bar.
- *
- * A dialog's title and an empty state's heading are not section headings; they
- * keep `text-title`.
+ * A section heading, which is not a smaller page title. Thirty h2s wore ten
+ * treatments, so a heading was indistinguishable from an emphatic list item;
+ * this is the one, micro-caps mono on the secondary tier with a hairline under
+ * it, a HEADING by register and rule rather than size (T-0119, decision 10).
+ * It owns the TYPOGRAPHY only; placement stays with the call site. A dialog's
+ * title and an empty state's heading are not section headings; they keep `text-title`.
  */
 export const sectionHeadingClasses =
   "text-micro font-mono uppercase tracking-widest text-ps-text-secondary border-b border-ps-edge-hairline pb-1.5 mb-3";

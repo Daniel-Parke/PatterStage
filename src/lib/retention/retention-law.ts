@@ -2,59 +2,33 @@
 // retention/retention-law.ts · the declared facts about the readings tables
 //
 // WG-ARCH-008 declares `analytics_events` and `chat_messages` the READINGS
-// class: append-only, growing with use, and therefore required to name an owner,
-// a consumer, a retention window and a prune path. This file is those
-// declarations as code, with no IO in it, so the numbers can be read, argued
-// with and unit-tested without opening a database.
+// class: each must name an owner, a consumer, a retention window and a prune
+// path. This file is those declarations as code, with no IO, so the numbers can
+// be unit-tested without a database. The same facts sit in migration 032's
+// header and ADR-0009, deliberately, so the decision is legible from the
+// schema, the code and the record alike.
 //
-// The same facts are written into migration 032's header and into ADR-0009. That
-// is deliberate duplication of a decision that has to be legible from three
-// different starting points: the schema, the code and the decision record.
+// THE NUMBERS. A window exceeds the longest read any live consumer performs,
+// with headroom for a machine switched off, and never goes below the floor.
+// analytics_events: the longest bounded read is 365 days (`maxCountInSingleDay`,
+// `countByTypeAndHour`, `countByHourAllTypes`), so 365 is the floor and 400 the
+// window, five weeks for a closed laptop and a late prune. Its UNBOUNDED reads
+// (`countByType`, `distinctActiveDays`, `distinctProfileCount`,
+// `distinctEventTypeCount`) feed the achievements and the streak; no window
+// satisfies them, so migration 031 captures the answer instead, and the prune
+// refuses to run until it has. chat_messages: no windowed consumer exists, so
+// the number is argued: a conversation idle for a year is beyond working reuse,
+// and user-authored content is the one class where keeping LESS is the safer
+// default. The floor of 30 catches a mistyped 3.
 //
-// ── WHY EACH NUMBER IS THE NUMBER ──────────────────────────────
-//
-// The rule, stated once and applied twice: a window is longer than the longest
-// read any live consumer performs, with headroom for a machine that was switched
-// off, and it is never shorter than the floor.
-//
-// analytics_events. The longest bounded read in the codebase is 365 days
-// (`maxCountInSingleDay`, `countByTypeAndHour` and `countByHourAllTypes` each
-// default `sinceDays = 365`); the Insights page offers 7, 30 and 90. So a window
-// under 365 makes a live chart show a smaller answer than it showed yesterday,
-// and 365 is the floor. The shipped window is 400: 365 plus five weeks, which
-// absorbs a laptop that was closed for a month and a prune that runs late
-// without ever clipping the edge of a 365-day read.
-//
-// The UNBOUNDED reads over the same table are the interesting case, and they are
-// the reason migration 031 exists rather than a reason for a longer window.
-// `countByType`, `distinctActiveDays`, `distinctProfileCount` and
-// `distinctEventTypeCount` are lifetime aggregates feeding the achievements and
-// the daily streak: no finite window satisfies them, so they are satisfied by
-// capturing the answer instead of by keeping the inputs. The prune refuses to
-// run unless that capture has happened.
-//
-// chat_messages. There is no windowed consumer to derive a number from: the
-// reader is the transcript, which is unbounded by construction. So the number is
-// argued rather than measured, and the argument is that a conversation with no
-// activity for a full year is beyond any working reuse. It is also user-authored
-// content, the one class where keeping LESS is the safer default rather than the
-// riskier one, which is why the argued number is not longer. The floor of 30
-// days exists to catch a mistyped 3.
-//
-// ── THE SPLIT THRESHOLDS ───────────────────────────────────────
-//
-// RUL-ARCH-008 keeps one database until volume forces a split. These are the
-// numbers at which "volume forced it" becomes true, and they are reported by the
-// prune command so the seam is observable rather than decorative.
-//
-// Retention is the cheap answer and is tried first, so a threshold only counts
-// when the policy is already enabled and the table is STILL growing. The numbers
-// are set where the lifetime aggregates start to hurt: `countByType` is an
-// unindexed GROUP BY over the whole table on every dashboard poll, and a million
-// rows of that on the small always-on machines this product targets is where a
-// 20-second poll stops being free. `chat_messages` gets a quarter of the count
-// because its rows are one to three orders of magnitude larger (content,
-// reasoning and tool_calls_json), so a similar number of BYTES arrives sooner.
+// THE SPLIT THRESHOLDS. RUL-ARCH-008 keeps one database until volume forces a
+// split; these are where that becomes true, reported by the prune command so
+// the seam is observable, and counted only with retention enabled and the table
+// STILL growing. They sit where the lifetime aggregates start to hurt:
+// `countByType` is an unindexed GROUP BY on every dashboard poll, and a million
+// rows on the small always-on machines this targets is where a 20-second poll
+// stops being free. `chat_messages` gets a quarter because its rows are one to
+// three orders of magnitude larger, so a similar number of BYTES arrives sooner.
 // ═══════════════════════════════════════════════════════════════
 
 /** The two tables WG-ARCH-008 declares as readings. Order is the prune order. */
@@ -94,9 +68,8 @@ export const RETENTION_LAW: Record<RetentionTable, RetentionDeclaration> = {
     table: "chat_messages",
     owner: "src/lib/chat-repository.ts",
     consumer: "the Chat surface (whole-conversation transcript) and run reconciliation",
-    // No windowed consumer exists; the transcript read is unbounded. Recorded as
-    // 0 rather than invented, because a fabricated measurement is worse than an
-    // honest absence, and the floor below is what actually protects this table.
+    // No windowed consumer exists; recorded as 0 rather than invented, and the
+    // floor below is what actually protects this table.
     longestConsumerReadDays: 0,
     floorDays: 30,
     defaultDays: 365,
@@ -109,11 +82,9 @@ export function isRetentionTable(value: string): value is RetentionTable {
 }
 
 /**
- * Whether a proposed window is legal, and why not when it is not.
- *
- * The database enforces the same floors with CHECK constraints, so this cannot
- * be the only guard and is not meant to be: it exists to fail with a sentence an
- * operator can act on instead of a SQLite constraint code.
+ * Whether a proposed window is legal, and why not. The CHECK constraints
+ * enforce the same floors; this exists to fail with a sentence an operator can
+ * act on instead of a SQLite constraint code.
  */
 export function validateRetainDays(
   table: RetentionTable,

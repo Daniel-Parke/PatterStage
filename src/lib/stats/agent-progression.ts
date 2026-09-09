@@ -1,63 +1,23 @@
-// ═══════════════════════════════════════════════════════════════
-// stats/agent-progression.ts · capture the per-Body record, so growth outlives
-// the history it was derived from
+// stats/agent-progression.ts · the per-Body progression record, appended so
+// recorded growth survives the deletion of the history it was derived from
+// (WG-ARCH-003). Every progression number is otherwise derived on read from
+// `runs` and `analytics_events`, and retention would silently un-earn it.
 //
-// THE PROBLEM THIS SOLVES. Every progression number in PatterStage is derived on
-// read. An agent's level and XP come out of `runs`; its achievements come out of
-// `analytics_events` plus the live mission, session and schedule counts. Nothing
-// is stored. That is fine while history is kept forever, and it stops being fine
-// the moment retention starts deleting rows: the next read returns smaller
-// numbers, an earned achievement silently un-earns itself, and no reader can
-// tell that apart from it never having been earned. WG-ARCH-003 rules that
-// recorded growth survives the deletion of the history it came from, and this is
-// the capture side of that.
+// What is captured is what the product already shows: the level half is
+// `agentExperienceFromPerformance`, per profile (ADR-0004's per-Body rule); the
+// achievement half is the dashboard's evaluated list filtered to the agent
+// scope, Rec Room excluded (ADR-0004 decision 5). Achievements are computed ONCE
+// for the whole install, so every row names its subject in `achievementsScope`
+// (ADR-0004 decision 4) rather than claiming the Body earned them. The benchmark
+// axis is DEFERRED by ADR-0004's amendment, so nothing of it is captured.
 //
-// WHAT IS CAPTURED, and why it is exactly what the product already shows. The
-// design brief for this work was to snapshot what the UI shows now rather than
-// to invent a better computation, so:
+// A row is written when the profile has none, or when the recorded answer
+// (level, XP, unlocked set) has moved. The retention prune (ADR-0009) passes
+// `{ force: true }`: its interlock reads the newest row's timestamp, and only a
+// row written just now is evidence for a deletion.
 //
-//   the level half        is `agentExperienceFromPerformance`, the same call
-//                         behind AgentGrowthPanel and the dashboard hero badge.
-//                         Per-profile, per ADR-0004's per-Body rule.
-//
-//   the achievement half  is the evaluated achievement list the dashboard
-//                         renders, filtered to the agent scope. Rec Room
-//                         creative activity is excluded because ADR-0004
-//                         decision 5 says it never touches the agent's record.
-//
-// One honesty note, and it is the reason `achievementsScope` exists as a stored
-// field rather than an assumption. Achievements today are computed ONCE for the
-// whole install: there is no per-profile achievement computation anywhere in the
-// product. Writing that install-wide set onto a per-profile row without saying
-// so would make the row claim the Body earned them. So every row names its
-// subject, which is ADR-0004 decision 4 applied to storage, and the day a
-// per-Body computation lands the older rows still read honestly.
-//
-// The benchmark axis is NOT here. ADR-0004's amendment marks it DEFERRED with no
-// implementation, so there is nothing to capture and nothing to resurrect.
-//
-// WHEN A ROW IS WRITTEN. When the profile has no row yet, or when the recorded
-// ANSWER has moved: the level, the XP, or the set of unlocked achievements. An
-// unchanged answer needs no correction, so the steady state is one row per agent
-// profile and the table grows only when an agent actually does.
-//
-// THE ONE EXCEPTION IS THE RETENTION PRUNE (ADR-0009), which passes
-// `{ force: true }`. Lazy capture is right for the dashboard's 20-second poll
-// and wrong immediately before a deletion: an install whose answer has not moved
-// for months has a months-old newest row, and the prune's interlock reads the
-// newest row's timestamp to decide what it is allowed to delete. Forcing a row
-// makes that timestamp NOW, so the interlock passes on the strength of a capture
-// that genuinely just happened rather than on a stale one. The cost is one row
-// per profile per applied prune, which is the cheapest possible price for the
-// only guarantee this table exists to provide.
-//
-// Regression is recorded, not suppressed. The achievement inputs are measured
-// over a rolling window, so a value can fall and an unlocked achievement can
-// read as locked again. The append-only table is what makes that safe: the
-// earlier row still says the achievement was unlocked, because nothing is ever
-// rewritten. That is the high-water mark, held by the ledger rather than by a
-// max() somebody has to remember to write.
-// ═══════════════════════════════════════════════════════════════
+// Regression is recorded, not suppressed: the inputs are measured over a rolling
+// window, and the append-only table keeps the earlier row as the high-water mark.
 
 import { createHash } from "crypto";
 
@@ -79,29 +39,18 @@ import {
 
 /**
  * The formula version. BUMP THIS whenever the stored answer could change for
- * unchanged inputs: the `AGENT_XP` weights, the level curve, the signal set, the
- * achievement definitions' `measure` or `target`, or the tier-to-points table.
- *
- * It is what separates "the level moved because the agent grew" from "the level
- * moved because we changed the maths". Two rows with the same `inputsDigest` and
- * different answers are the second case; without this number they are
- * indistinguishable from each other and the record stops being evidence.
+ * unchanged inputs: the `AGENT_XP` weights, the level curve, the signal set, an
+ * achievement's `measure` or `target`, or the tier-to-points table. It is what
+ * separates "the agent grew" from "we changed the maths".
  */
 export const AGENT_PROGRESSION_COMPUTATION_VERSION = 3;
 
 // VERSION HISTORY
-//   1 → 2  (T-0081) The `runsCompleted` signal stopped counting every run and
-//          started counting runs that COMPLETED, and `activeDays` began
-//          coalescing a NULL profile to "default" the way its sibling aggregate
-//          always had. Both change the stored answer for unchanged history,
-//          which is exactly what this number exists to separate from an agent
-//          having grown. Rows written at version 1 are still true about what
-//          version 1 measured; they are not comparable to version 2 rows.
+//   1 → 2  (T-0081) `runsCompleted` counts runs that COMPLETED, and `activeDays`
+//          coalesces a NULL profile to "default". Version 1 rows are true about
+//          what version 1 measured; they are not comparable to version 2 rows.
 
-/**
- * The only `achievementsScope` value written today: the achievements were
- * computed once for the whole install, not for this profile.
- */
+/** The only `achievementsScope` written today: computed once for the whole install, not per profile. */
 export const ACHIEVEMENTS_SCOPE_INSTALL = "install";
 
 /** One achievement as stored: the measurement, never the presentation. */
@@ -115,14 +64,10 @@ export interface CapturedAchievement {
 }
 
 /**
- * Everything the two computations read, and nothing else.
- *
- * `measures` is keyed by achievement id and holds the value that achievement's
- * own `measure` returned. Keying by id rather than storing the raw metrics
- * bundle is deliberate: it is the value that actually decided the answer, it
- * cannot drift when an unrelated metric is added, and it cannot carry a Rec Room
- * count into an agent's record by accident, because the Rec Room definitions are
- * filtered out before this is built.
+ * Everything the two computations read. `measures` is keyed by achievement id
+ * and holds what that achievement's own `measure` returned: the value that
+ * decided the answer, immune to an unrelated metric being added, and built
+ * after the Rec Room definitions are filtered out.
  */
 export interface AgentProgressionInputs {
   signals: AgentExperienceSignals;
@@ -162,13 +107,9 @@ function canonicalise(value: unknown): unknown {
 }
 
 /**
- * Serialise the inputs canonically and hash that exact string.
- *
- * Both halves are returned together so the stored `inputs_json` is always the
- * preimage of the stored `inputs_digest`. That is what lets a later reader
- * verify a row with nothing but a sha256: hash the stored JSON, compare. It also
- * means the digest cannot drift from the JSON through a later edit to one and
- * not the other, because there is one call and no second path.
+ * Canonical JSON of the inputs and its sha256, from one call, so the stored
+ * `inputs_json` is always the preimage of `inputs_digest` and a later reader
+ * can verify a row with nothing but a hash.
  */
 export function digestInputs(inputs: AgentProgressionInputs): { json: string; digest: string } {
   const json = JSON.stringify(canonicalise(inputs));
@@ -190,10 +131,7 @@ export function agentScopedAchievements(evaluated: Achievement[]): CapturedAchie
     .sort((a, b) => a.id.localeCompare(b.id));
 }
 
-/**
- * Build one profile's record. Pure: given the same performance row, the same
- * active-day count and the same achievements, it returns the same bytes.
- */
+/** Build one profile's record. Pure: the same inputs return the same bytes. */
 export function buildAgentProgressionRecord(
   perf: AgentPerformance,
   achievements: CapturedAchievement[],
@@ -220,9 +158,8 @@ export function buildAgentProgressionRecord(
 }
 
 /**
- * The recorded answer, reduced to one comparable string: level, XP and the set
- * of unlocked achievement ids. Progress toward a still-locked achievement is
- * deliberately NOT part of it, or every token processed would append a row.
+ * The answer as one comparable string: level, XP and the unlocked ids. Progress
+ * toward a locked achievement is left out, or every token processed would append a row.
  */
 function answerKey(level: number, xp: number, achievements: CapturedAchievement[]): string {
   const unlocked = achievements
@@ -258,27 +195,18 @@ export function isCorrection(
 /** How a capture behaves when the answer has not moved. */
 export interface CaptureAgentProgressionOptions {
   /**
-   * Append a row for every profile even when its answer is unchanged.
-   *
-   * Only the retention prune sets this, and only immediately before deleting.
-   * See the header: the prune's interlock is a timestamp, and a timestamp is
-   * only evidence if something actually wrote it just now.
+   * Append a row for every profile even when unchanged. Only the retention
+   * prune sets this, immediately before deleting (see the header).
    */
   force?: boolean;
 }
 
 /**
- * Capture the current progression for every agent profile, appending a row for
- * each one whose answer has moved. Returns the number of rows appended.
- *
- * Takes the dashboard aggregate's own outputs rather than recomputing them: the
- * caller has already measured every agent's performance and evaluated every
- * achievement, and this records the answer it just gave rather than a second
- * answer computed a moment later from a moved database.
- *
- * It throws on a database failure. The route that calls it decides what that
- * means; swallowing here would report a refused write as "nothing to do", which
- * is the one lie this record cannot afford.
+ * Capture every agent profile, appending a row for each whose answer has moved;
+ * returns the rows appended. Takes the dashboard aggregate's own outputs so the
+ * record is the answer it just gave, not a second one from a moved database.
+ * Throws on a database failure: swallowing would report a refused write as
+ * "nothing to do".
  */
 export function captureAgentProgressionSnapshots(
   input: {
@@ -314,24 +242,11 @@ export function captureAgentProgressionSnapshots(
 
 /**
  * Capture from the live dashboard computation, for a reader that has not
- * already paid for it.
- *
- * WHY A READER WRITES. Capture used to happen in exactly one place: inside
- * `GET /api/stats`, the dashboard poll. So an install driven over HTTP -- a QA
- * pass, a scripted operator, anything that never opens the dashboard -- never
- * captured, and `GET /api/agents/progression` answered with rows that had never
- * been written. Spend read live and progression read stored, and the two
- * disagreed. That asymmetry was the whole of finding 12's RC-A.
- *
- * It stays a CORRECTION, not a heartbeat: `captureAgentProgressionSnapshots`
- * writes only when the recorded answer has moved, so a reader polled every
- * twenty seconds still produces one row per agent per genuine change.
- *
- * IT DOES NOT SWALLOW. The caller guards and LOGS, which is what
- * `GET /api/stats` has always done. A swallow here would have been a second
- * rule for the same thing and a quieter one: the error would vanish rather
- * than reach the log, and a capture that had stopped working would look
- * exactly like one that had nothing to write.
+ * already paid for it. Capture used to happen only in `GET /api/stats`, so an
+ * install driven over HTTP never captured and `GET /api/agents/progression`
+ * read rows never written: finding 12's RC-A. It stays a correction, not a
+ * heartbeat. It does not swallow: the caller guards and logs, as `GET /api/stats`
+ * always has, so a capture that stopped working stays visible.
  */
 export function captureAgentProgressionFromLiveStats(): number {
   const stats = getDashboardStats();

@@ -1,21 +1,11 @@
-// ═══════════════════════════════════════════════════════════════
-// stats/agent-stats-repository.ts — the per-agent reads behind the
-// Agents page performance strip and the Agent Experience level
+// stats/agent-stats-repository.ts — the per-agent reads behind the Agents
+// page performance strip and the Agent Experience level.
 //
-// Every query that agent-stats.ts and agent-experience.ts used to
-// prepare inline lives here, with its SQL, parameters and row shape
-// unchanged. The functions deliberately do NOT swallow their errors:
-// both callers already wrap these reads in try/catch blocks whose
-// exact grouping is load-bearing (the agent_root read and the
-// agent_profiles read share one catch, so a failure on the first
-// must skip the second), and moving the swallow in here would change
-// that grouping.
-//
-// It sits beside stats-repository.ts rather than inside it because
-// stats-repository.ts imports getAgentPerformance from agent-stats.ts;
-// folding these reads into that file would close the loop into an
-// import cycle.
-// ═══════════════════════════════════════════════════════════════
+// Errors are NOT swallowed here: both callers wrap these reads in try/catch
+// whose grouping is load-bearing (the agent_root and agent_profiles reads
+// share one catch, so a failure on the first must skip the second). Beside
+// stats-repository.ts rather than inside it, which would close an import cycle
+// through agent-stats.ts.
 
 import { getDb } from "@/lib/db";
 
@@ -44,17 +34,10 @@ export function readMissionStatusCountsByProfile(): Array<{ p: string; status: s
     .all() as Array<{ p: string; status: string; c: number }>;
 }
 
-// `countSkills()` was here, a `SELECT COUNT(*) FROM skills` described as "the
-// ceiling a profile's disabled list subtracts from". That subtraction is gone
-// (see AgentPerformance.skills): the catalogue table is not the set a profile
-// may use, so nothing reads this ceiling any more.
-
 /**
- * The profile-shaped columns of a row in agent_root or agent_profiles.
- *
- * `disabled_skills` is deliberately absent. The strip no longer derives its
- * skills count from that column, and selecting a denylist nothing subtracts
- * would invite the arithmetic back.
+ * The profile-shaped columns of agent_root or agent_profiles. `disabled_skills`
+ * is deliberately absent: selecting a denylist nothing subtracts would invite
+ * the skills-count arithmetic back.
  */
 export interface AgentProfileStatsRow {
   display_name: string;
@@ -76,15 +59,10 @@ export function readAgentProfileStatsRows(): Array<AgentProfileStatsRow & { slug
     .all() as Array<AgentProfileStatsRow & { slug: string }>;
 }
 
-/** Distinct days on which the named profile completed a run. */
 /**
- * Distinct days on which this agent completed a run.
- *
- * COALESCEs the profile exactly as `runsByProfile` does. A run against the root
- * agent stores `profile_name = NULL`, so a bare `profile_name = ?` matched none
- * of them: the SAME run earned XP through the coalescing aggregate and
- * contributed no active day here, and two numbers on one dashboard panel
- * disagreed about whether it had happened (T-0081, RC-C).
+ * Distinct days on which this agent completed a run. COALESCEs the profile as
+ * `runsByProfile` does: a root run stores `profile_name = NULL`, so a bare
+ * equality matched none, and two numbers on one panel disagreed (T-0081, RC-C).
  */
 export function countAgentActiveDays(slug: string): number | undefined {
   return (

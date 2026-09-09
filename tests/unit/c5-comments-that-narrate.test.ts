@@ -53,9 +53,9 @@ describe("C5 · comments that narrate", () => {
     // Read from the tree at C4's chore commit, the batch's base: the count
     // and the files may fall only if the code they excused moved, and no
     // code moves in a comment batch.
-    const pragmas = SRC.filter((f) => /design-lint-disable-next-line/.test(readFileSync(f, "utf8"))).length;
+    const pragmas = SRC.reduce((n, f) => n + (readFileSync(f, "utf8").match(/design-lint-disable-next-line/g) ?? []).length, 0);
     const directives = SRC.reduce((n, f) => n + (readFileSync(f, "utf8").match(/eslint-disable|@ts-expect-error|prettier-ignore/g) ?? []).length, 0);
-    expect(pragmas).toBeGreaterThanOrEqual(PRAGMA_FILES_AT_BASE);
+    expect(pragmas).toBeGreaterThanOrEqual(PRAGMA_LINES_AT_BASE);
     expect(directives).toBeGreaterThanOrEqual(DIRECTIVES_AT_BASE);
   });
 
@@ -67,5 +67,5 @@ describe("C5 · comments that narrate", () => {
 });
 
 // Measured on the tree at the batch's base (filled in when the oracle lands).
-const PRAGMA_FILES_AT_BASE = 27;
+const PRAGMA_LINES_AT_BASE = 37;
 const DIRECTIVES_AT_BASE = 13;

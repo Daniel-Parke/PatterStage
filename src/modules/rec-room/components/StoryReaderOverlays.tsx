@@ -1,6 +1,5 @@
-// ── StoryReaderOverlays — everything the reader renders ON TOP of itself.
-// Extracted verbatim from app/recroom/story-weaver/[id]/page.tsx: the
-// dismissible error banner, the story bible panel, the generate overlay,
+// ── StoryReaderOverlays — everything the reader renders ON TOP of itself:
+// the dismissible error banner, the story bible panel, the generate overlay,
 // the edit-chapter and continue-story modals, and the sticky
 // generation-failed banner, in that DOM order.
 //

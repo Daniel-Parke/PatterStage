@@ -1,10 +1,9 @@
 // ═══════════════════════════════════════════════════════════════
 // CreateProfileModal — new agent profile, optionally cloned
 //
-// Extracted verbatim from app/operations/agents/page.tsx. Note the two
-// different closes, which is deliberate and was deliberate before the
-// split: `onClose` (X / overlay) clears the form, `onCancel` is a SOFT
-// close that keeps in-flight input if the user cancels by accident.
+// Note the two different closes, which is deliberate: `onClose` (X /
+// overlay) clears the form, `onCancel` is a SOFT close that keeps
+// in-flight input if the user cancels by accident.
 // ═══════════════════════════════════════════════════════════════
 
 "use client";

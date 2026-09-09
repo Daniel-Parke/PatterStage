@@ -1,8 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // ScriptEditorModal — write or edit a script file
 //
-// Extracted verbatim from app/orchestration/scripts/page.tsx. The
-// editor's state and its save/delete calls stay on the page; this
+// The editor's state and its save/delete calls stay on the page; this
 // component renders the modal and calls back. Presentation only.
 // ═══════════════════════════════════════════════════════════════
 

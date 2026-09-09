@@ -49,11 +49,6 @@ export const PUT = route("PUT /api/agent/profiles/[id]/toolsets", "saving toolse
   const platformToolsets = normalizePlatformToolsetsFromInput(bodyResult.platformToolsets);
   const platformToolsetsJson = serializeJsonToolsets(platformToolsets);
 
-  // applyProfileOrRootPatchOrFail collapses the 4-line
-  // apply+toPatchResponse+assert+return-err dance into 1 call +
-  // 1 instanceof check. Byte-equivalent to the pre-migration shape
-  // (same 404 on not-found, same 500 on push-failed, same
-  // { success: true, profile, platformToolsets } success body).
   const result = applyProfileOrRootPatchOrFail(
     prof.profile,
     { platformToolsetsJson },

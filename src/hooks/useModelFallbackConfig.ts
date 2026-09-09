@@ -2,8 +2,7 @@
 // useModelFallbackConfig — the fallback settings and their save
 // ═══════════════════════════════════════════════════════════════
 //
-// Split out of useModelsPage (Phase 4 god-file decomposition). Owns the
-// three settings that govern the chain (restore-primary, notification,
+// Owns the three settings that govern the chain (restore-primary, notification,
 // retry threshold) and the only interesting thing about them: the save
 // is debounced 400ms, guarded by a generation counter so a superseded
 // PUT cannot clobber a newer one, and flushed before the sync-to-Hermes

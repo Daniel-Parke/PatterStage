@@ -43,17 +43,13 @@ export const analyticsTimeseriesQuerySchema = z
   .strict();
 
 /**
- * Build the `defaults` schema for the Models registry. Each entry is a
- * task slot (one of `TASK_TYPES`) → boolean (whether the model claims
- * that slot as a default). The shape used to be hand-listed with 12
- * `z.boolean().optional()` lines that drifted from the canonical
- * `TASK_TYPES` array in `@/lib/models/task-types`. Deriving it from
- * `TASK_TYPES` makes the schema a single source of truth: adding a new
- * task slot is a one-line edit in `@/lib/models/task-types`, and the
- * Models POST/PUT body shape tracks automatically.
+ * The `defaults` schema for the Models registry: task slot (one of
+ * `TASK_TYPES`) → boolean. Derived from `TASK_TYPES` rather than hand-listed,
+ * because a hand-listed copy drifted from it; adding a task slot is a one-line
+ * edit in `@/lib/models/task-types`.
  *
- * `.strict()` is preserved from the inline form so unknown task-slot
- * keys are still rejected (e.g. `defaults: { typo: true }` → 400).
+ * `.strict()` so unknown task-slot keys are rejected
+ * (e.g. `defaults: { typo: true }` → 400).
  */
 function buildModelDefaultsSchema(): z.ZodType<Partial<Record<TaskType, boolean>>> {
   const shape: Record<TaskType, z.ZodOptional<z.ZodBoolean>> = {} as Record<
@@ -71,21 +67,12 @@ function buildModelDefaultsSchema(): z.ZodType<Partial<Record<TaskType, boolean>
 /**
  * Provider name validated against the canonical list in
  * src/modules/hermes/lib/providers.ts. Adding a new provider is a single edit
- * to that file.
- *
- * Inferred as `HermesProvider` (a literal union) so consumers like
- * `parsed.data.provider` narrow automatically — no `as HermesProvider`
- * cast needed at call sites. Previously widened to `string` via
- * `as readonly [string, ...string[]]`, which forced 3+ call sites
- * to cast back to the narrow type. (Session 53 refactor.)
+ * to that file. Inferred as `HermesProvider` (a literal union) so consumers
+ * narrow without a cast.
  */
 export const providerSchema = z.enum(HERMES_PROVIDERS);
 
-/**
- * Task slot (one of the 12 `TASK_TYPES`). Infers as `TaskType` literal
- * union so consumers get narrow typing without an `as TaskType` cast.
- * (Session 53 refactor.)
- */
+/** Task slot (one of the 12 `TASK_TYPES`), inferred as the `TaskType` literal union. */
 export const taskTypeSchema = z.enum(TASK_TYPES);
 
 const modelDefaultsSchema = buildModelDefaultsSchema();
@@ -132,21 +119,11 @@ export const setDefaultPutSchema = z
  * route applies defaults (`target: "all"`, `mode: "merge"`).
  *
  * The `id` key is a legacy alias for `templateId` — kept so old
- * clients / scripts that send `{ id: "..." }` (instead of the
- * modern `{ templateId: "..." }`) continue to work. The route's
- * pre-refactor inline form used `typeof body.id === "string" ? body.id`
- * to fold the alias back to `templateId`; the same logic is preserved
- * via zod's `.transform()` so the downstream `runCatalogSeed` still
- * receives a single `templateId` field.
- *
- * Pre-refactor the route did `body.target as SeedTarget["target"]`
- * with no validation, so a foreign value (e.g. `target: "xss"`)
- * would silently reach `runCatalogSeed` and surface as a less
- * actionable runtime error. With the schema in place, a 400 with
- * the `details: error.flatten()` payload is returned at the
- * request-validation layer — strict improvement, aligned with the
- * `parseAndValidateJsonBody` migration that swept the rest of the
- * Models/Config surface in sessions 121 + 122.
+ * clients / scripts that send `{ id: "..." }` continue to work; the
+ * `.transform()` folds it back so `runCatalogSeed` receives a single
+ * `templateId` field. Validating `target` here turns a foreign value
+ * into a 400 with `details` instead of a less actionable runtime error
+ * inside `runCatalogSeed`.
  */
 export const seedPostSchema = z
   .object({
@@ -175,10 +152,3 @@ export function zodErrorResponse(error: z.ZodError): NextResponse {
     { status: 400 }
   );
 }
-
-// Synchronous JSON body parser with Zod validation for NextRequest.
-// Returns { ok, data } or { ok: false, error: NextResponse } — never throws.
-// Callers that need the ZodError directly should use the pattern:
-//   let raw: unknown; try { raw = await request.json(); } catch { return 400; }
-//   const parsed = schema.safeParse(raw);
-//   if (!parsed.success) return zodErrorResponse(parsed.error);

@@ -84,16 +84,9 @@ function initialFormState(model: ModelEditorRecord | null): FormState {
 }
 
 /**
- * Validate the model-editor form before submission. Pure function
- * (no side effects) — returns the user-facing error string for the
- * first failing field, or `null` if all fields are valid. Centralises
- * the 4 sequential `if (!X) return setError(Y)` checks that previously
- * inlined the validation logic into `handleSubmit`, so the caller can
- * early-return on a single guard instead of repeating the `setError +
- * return` shape. The auto-fill of `credentialLabel` (a state
- * side-effect) is intentionally NOT done here — it lives in the caller
- * after the validation passes, so the helper stays pure and the state
- * mutation is visible in the same scope as the submit flow.
+ * Validate the model-editor form before submission. Returns the user-facing
+ * error for the first failing field, or `null`. Pure: the `credentialLabel`
+ * auto-fill is a state side-effect and stays in the caller.
  */
 function validateModelForm(
   form: FormState,
@@ -112,14 +105,6 @@ function validateModelForm(
   return null;
 }
 
-/**
- * Parse an optional string-form numeric field. Centralises the
- * `trim() === "" ? null : <trim()>` pattern that was duplicated for
- * `baseUrl` (raw string) and `contextLength` (Number-coerced). Returns
- * the parsed value or `null` for blank input. The `parse` parameter
- * lets the caller control the value transformation (raw string for
- * baseUrl, Number() for contextLength).
- */
 function parseOptionalStringField(
   raw: string,
   parse: (trimmed: string) => string | number,
@@ -155,16 +140,6 @@ export default function ModelEditor({
   const keyless = keylessProviders.includes(form.provider);
 
   const handleSubmit = async () => {
-    // Field-level validation — single guard against the pure helper
-    // (returns the first failing field's error message, or `null`).
-    // Pre-refactor: 4 sequential `if (!X) return setError(Y)` checks
-    // each combined validation + side-effect into 1 line; the
-    // credentialLabel auto-fill (a state mutation) was entangled
-    // with the validation flow, making the order of side-effects
-    // implicit. Post-refactor: validation is a pure function call,
-    // and the credentialLabel auto-fill (still a state mutation)
-    // lives between the validation guard and the saving state
-    // transition so its position in the flow is explicit.
     const validationError = validateModelForm(form, isEdit, usingExisting, keyless);
     if (validationError) {
       setError(validationError);
@@ -230,16 +205,10 @@ export default function ModelEditor({
       setErrorFromCaught(setError, err, "Save failed");
     } finally {
       // Always clear the saving state, regardless of success or failure.
-      // The success path unmounts the modal via `onSaved()` → parent
-      // `setEditing(undefined)`, so this is currently invisible — but if
-      // the parent ever defers the unmount, OR if the modal is reused
-      // for a 2nd edit without remount, the saving spinner would stay
-      // stuck on the success path. The 3 lines are the same shape as
-      // `toggleSkill`'s `finally` block (skills page) and the
-      // `runFallbackMutation` pattern (useModelsPage) — one canonical
-      // place to reset the busy flag, not duplicated in success/failure
-      // branches. Was previously only in the catch block; the success
-      // path relied on the parent unmounting the modal.
+      // The success path unmounts the modal via `onSaved()`, so this is
+      // currently invisible — but if the parent ever defers the unmount, or
+      // the modal is reused for a second edit without remount, the saving
+      // spinner would stay stuck on the success path.
       setSaving(false);
     }
   };

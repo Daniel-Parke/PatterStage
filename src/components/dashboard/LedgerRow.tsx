@@ -3,43 +3,27 @@
 // ═══════════════════════════════════════════════════════════════
 //
 // WG-WEB-003 (D): a record with three or more comparable fields is a table or
-// a ledger, not a rounded box. This is the ledger.
+// a ledger, not a rounded box. This is the ledger. ActiveMissionsPanel and
+// ErrorsPanel rendered it by hand and T-0024 set data-bloom on each by hand;
+// T-0033's point is that a styling ruling reaches a record surface BY
+// CONSTRUCTION, so the pattern has one definition and those panels consume it.
 //
-// The pattern is not new. ActiveMissionsPanel and ErrorsPanel have rendered it
-// since the dashboard god-page was decomposed, and T-0024 set data-bloom on
-// each of them by hand. Two hand-written copies of a pattern is how the third
-// copy gets the attribute wrong, and T-0033's whole point is that a future
-// styling ruling should reach a record surface BY CONSTRUCTION rather than by
-// whoever edits it next remembering. So the pattern has one definition, here,
-// and the panels that established it consume it like everyone else.
-//
-// Two shapes, because a row is either a fact or a control:
-//
-//   LedgerRow        a div. Facts, with their own links and buttons inside.
-//                    Does not wash on hover unless asked, because ErrorsPanel's
-//                    rows do not and ActiveMissionsPanel's do; the quieter of
-//                    the two is the default.
-//   LedgerRowButton  a real <button type="button">. The whole row is the
-//                    control: a mission row that expands, a log file that
-//                    selects, a session group that opens. Washes on hover,
-//                    because it is interactive.
-//
-// Both answer the bloom field at the TIGHT tier. A row is short and wide, and
-// the 200px field sized for a card would overflow it into a flat wash; 90px is
-// the size that reads as a row lighting up. The attribute is declared BEFORE
-// the prop spread, exactly as Button declares it, so a call site that needs a
-// row not to answer can pass data-bloom={undefined} and win.
+// Two shapes, because a row is either a fact or a control: LedgerRow is a div
+// of facts with its own links inside, quiet on hover unless asked (ErrorsPanel's
+// rows do not wash, ActiveMissionsPanel's do; the quieter is the default);
+// LedgerRowButton is a real <button type="button">, the whole row the control,
+// washing on hover. Both answer the bloom field at the TIGHT tier: the 200px
+// field sized for a card overflows a short wide row into a flat wash, and 90px
+// reads as a row lighting up.
 
 import type { ReactNode } from "react";
 
 export type LedgerRowPadding = "row" | "block" | "none";
 
 /**
- * `row` is the dashboard's own rhythm: one line of facts, wide and short.
- * `block` is the taller row that carries a title line and a meta line, which
- * is what a session, a mission and a session group each need. `none` hands the
- * box back to a call site that paints its own (the log line's column grid, the
- * log file picker's selected state).
+ * `row` is one line of facts; `block` the taller row with a title and a meta
+ * line (session, mission, session group); `none` hands the box to a call site
+ * that paints its own (the log line's column grid, the log file picker).
  */
 const paddingMap: Record<LedgerRowPadding, string> = {
   row: "px-4 py-2.5",
@@ -92,11 +76,9 @@ export interface LedgerRowButtonProps
   children: ReactNode;
   padding?: LedgerRowPadding;
   /**
-   * Wash on hover. On by default, because the whole row is the control. Pass
-   * false where the row paints its own selected and unselected states: two
-   * competing `hover:bg-*` classes resolve by stylesheet order, not by the
-   * order they appear in the attribute, so the shared one has to be switchable
-   * off rather than overridden.
+   * Wash on hover, on by default because the whole row is the control. Pass
+   * false where the row paints its own selected state: two `hover:bg-*` classes
+   * resolve by stylesheet order, so the shared one must be switchable off.
    */
   hover?: boolean;
 }
@@ -113,9 +95,8 @@ export function LedgerRowButton({
       type="button"
       className={rowClasses(padding, hover, className)}
       // Bloom tier (WG-WEB-011 C), tight variant, before the spread. A disabled
-      // row needs no opt-out: browsers deliver no pointer events to it, so the
-      // listener resolves to the container behind it, which is the correct
-      // reading. Nothing dead lights up.
+      // row needs no opt-out: it gets no pointer events, so the listener
+      // resolves to the container behind it. Nothing dead lights up.
       data-bloom="tight"
       {...props}
     >

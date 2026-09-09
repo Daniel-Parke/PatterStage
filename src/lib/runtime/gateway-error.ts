@@ -1,37 +1,21 @@
-// ═══════════════════════════════════════════════════════════════
-// runtime/gateway-error.ts — a failed fetch, said in operator
+// runtime/gateway-error.ts — a failed fetch, said in operator.
 //
-// Node's fetch throws `TypeError: fetch failed` and hides the only sentence
-// worth reading one level down in `cause`. Every layer above HermesRuntime
-// reads that through `messageFromError`, which joins the chain, so a chat turn
-// against a stopped gateway reached SEVEN storage columns as
+// Node's fetch hides the reason in `cause`, and `messageFromError` joins the
+// chain, so a stopped gateway reached SEVEN storage columns as
+// "fetch failed: connect ECONNREFUSED 127.0.0.1:8652", worst of them
+// `missions.result`. This is the one place that turns it into a sentence; it
+// lives beside the runtime because `ep.baseUrl` is the fact the message needs.
 //
-//     fetch failed: connect ECONNREFUSED 127.0.0.1:8652
-//
-// -- an address the operator never typed, no statement of what the address is,
-// and no remedy. Worst of the seven is `missions.result`, where that string is
-// presented as the outcome of the operator's work.
-//
-// This is the one place that turns it into a sentence. It lives beside the
-// runtime because `ep.baseUrl` is the fact the message needs and the runtime
-// is where that fact exists.
-//
-// NO `cause`. Deliberate, and the reason is `messageFromError` itself: it
-// walks the chain and appends any link the outer message does not already
-// quote, so attaching the original TypeError would re-append the exact noise
-// this module exists to remove. The diagnosis is not discarded -- the transport
-// CODE is carried in the message, which is the part that distinguishes
-// "nothing is listening" from "that name does not resolve".
-// ═══════════════════════════════════════════════════════════════
+// NO `cause`, deliberately: `messageFromError` appends any link the outer
+// message does not quote, so attaching the original would re-append the noise.
+// The transport CODE is carried in the message instead.
 
 import { errorChain } from "@/lib/api-fetch";
 import { RuntimeRequestError } from "./types";
 
 /**
- * The gateway answered nothing. 503 rather than 404 or 429, both of which are
- * load-bearing elsewhere: `run-reconcile` treats 404 as "the backend lost this
- * run" and fails it (past T-0078's grace), and `submitWithBackoff` retries 429.
- * A gateway that is off is neither.
+ * 503, not 404 or 429, both load-bearing elsewhere: `run-reconcile` fails a run
+ * on 404 (past T-0078's grace) and `submitWithBackoff` retries 429.
  */
 const UNREACHABLE_STATUS = 503;
 
@@ -51,24 +35,16 @@ const TRANSPORT_CODES = [
 ];
 
 /**
- * The transport code from anywhere in the cause chain, or null.
- *
- * Walks with `errorChain` rather than rolling a third copy of the same loop.
- * `api-fetch.ts` calls itself "the ONE cause walker" and records that a second
- * copy already survives in the memory module; a third one here would have made
- * that comment quietly false.
- *
- * Its non-Error-yields-an-EMPTY-chain property is exactly what is wanted: a
- * bare string is not evidence of a transport failure.
+ * The transport code from anywhere in the cause chain, or null. Walks with
+ * `errorChain` rather than a third copy of the loop; its non-Error-yields-
+ * empty property is wanted, since a bare string is not evidence of a failure.
  */
 function transportCode(err: unknown): string | null {
   for (const link of errorChain(err)) {
     const code = (link as NodeJS.ErrnoException).code;
     if (typeof code === "string" && TRANSPORT_CODES.includes(code)) return code;
-    // undici does not always set `code` on the link that names the problem, so
-    // fall back to the text. Anchored on the code TOKEN, not on loose words
-    // like "network", to avoid claiming a transport failure over a phrase that
-    // merely mentions one.
+    // undici does not always set `code` on the link that names the problem;
+    // fall back to the text, anchored on the code TOKEN, not loose words.
     const match = link.message.match(/\b(E[A-Z]{3,}|UND_ERR_[A-Z_]+)\b/);
     if (match && TRANSPORT_CODES.includes(match[1])) return match[1];
   }
@@ -76,22 +52,12 @@ function transportCode(err: unknown): string | null {
 }
 
 /**
- * Did the CALLER cancel this, rather than the gateway failing?
- *
- * The distinction is the whole reason this function takes a signal. `submitRun`
- * is handed the caller's AbortSignal and a cancelled mission aborts it
- * mid-flight; the rejected fetch that produces is indistinguishable, by shape,
- * from a transport failure. Reporting a deliberate cancel as "the gateway is
- * not responding" is the defect class T-0069 removed -- a decision rendered as
- * a crash -- so a caller abort is rethrown untouched and never mapped.
- *
- * THE SIGNAL IS THE WHOLE TEST, and the error's shape is not consulted at all.
- * That started narrower -- `AbortError` or `TimeoutError` by name -- and a
- * mutation sweep showed the narrow version missing the commonest case:
- * aborting a fetch that is already on the wire rejects with a RESET SOCKET, so
- * a cancelled mission was reported as "not responding (ECONNRESET)". Once we
- * have pulled the plug ourselves there is no gateway diagnosis worth giving,
- * whatever came back, so the aborted signal alone decides it.
+ * Did the CALLER cancel this? `submitRun` is handed the caller's AbortSignal,
+ * and a cancelled mission's rejected fetch is indistinguishable by shape from
+ * a transport failure; reporting it as "not responding" is the defect class
+ * T-0069 removed, so a caller abort is never mapped. THE SIGNAL IS THE WHOLE
+ * TEST: matching `AbortError`/`TimeoutError` by name missed the commonest
+ * case, an abort mid-wire rejecting with a RESET SOCKET.
  */
 function callerCancelled(callerSignal?: AbortSignal): boolean {
   return callerSignal?.aborted === true;
@@ -112,11 +78,8 @@ export interface GatewayFailureContext {
 }
 
 /**
- * Translate a rejected gateway fetch, or return `null` to leave it alone.
- *
- * `null` means "this is not mine": a caller abort, or an error that carries no
- * evidence of a transport failure. Rewriting those would replace a true message
- * with a guess.
+ * Translate a rejected gateway fetch, or `null` for "not mine": a caller abort
+ * or an error with no transport evidence, which rewriting would turn into a guess.
  */
 export function describeGatewayFailure(
   err: unknown,

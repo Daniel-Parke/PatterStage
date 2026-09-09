@@ -1,19 +1,13 @@
-// ═══════════════════════════════════════════════════════════════
-// sync-answer.ts: how a sync endpoint answers, said once
+// sync-answer.ts: how a sync endpoint answers, said once.
 //
-// T-0082 gave the profile PUSH route two helpers. A single target that
-// failed is a 500 whose message names the target and the reason, because
-// apiFetch throws on a 500 and every caller's catch already shows the
-// message. A batch with failures is a 200 whose `data.success` is false
-// and whose `data.error` names each failure, because one profile out of
-// twelve failing is a real outcome and not a server error, and collapsing
-// it would throw away the eleven that worked.
-//
-// The pull route, the import route and the models push route never got
-// the helpers. They answered 200 with `success: false` buried where no
-// client reads, so a pull that could not read the disk toasted "Pulled
-// from Hermes" (T-0095, D125, D19). Now they share these.
-// ═══════════════════════════════════════════════════════════════
+// T-0082 gave the profile PUSH route two helpers: a single failed target is a
+// 500 naming target and reason, because apiFetch throws on a 500 and every
+// caller's catch shows the message; a batch with failures is a 200 with
+// `data.success` false and `data.error` naming each, because one profile of
+// twelve failing is an outcome, not a server error. The pull, import and
+// models-push routes answered 200 with `success: false` where no client reads,
+// so a pull that could not read the disk toasted "Pulled from Hermes"
+// (T-0095, D125, D19). Now they share these.
 
 import { NextResponse } from "next/server";
 
@@ -27,12 +21,8 @@ export interface SyncOutcome {
 }
 
 /**
- * One target, answered with the outcome it had.
- *
- * `verb` is the sentence's subject in the operator's words ("Push to Hermes",
- * "Pull from Hermes", "Import from Hermes"). The slug goes in the message
- * because the 500 body is only `{ error }`: there is nowhere else for a client
- * to read which target failed.
+ * One target. `verb` is the subject in the operator's words ("Push to Hermes");
+ * the slug goes in the message because the 500 body is only `{ error }`.
  */
 export function answerSingle<R extends SyncOutcome>(
   verb: string,
@@ -44,11 +34,8 @@ export function answerSingle<R extends SyncOutcome>(
 }
 
 /**
- * A batch, answered as a batch. Never converged onto a 500: the failures are
- * named at `data.error`, which is where runSyncAction reads, and everything
- * that worked still travels in `extra`.
- *
- * `noun` is the operation as a countable word ("push", "pull", "import").
+ * A batch, never converged onto a 500: failures are named at `data.error`, where
+ * runSyncAction reads. `noun` is the operation as a countable word ("push").
  */
 export function answerBatch<R extends SyncOutcome>(
   noun: string,

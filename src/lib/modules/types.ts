@@ -1,28 +1,18 @@
 // ═══════════════════════════════════════════════════════════════
 // modules/types.ts — the ProductModule contract (ADR-0005)
 //
-// A module is a product surface that plugs into PatterStage. The console verbs
-// (found, commission, gate, watch) stay in core; everything else declares itself
-// here rather than editing core files.
+// A module is a product surface that plugs into PatterStage; the console verbs
+// stay in core and everything else declares itself here. PURE DATA, no React,
+// lucide or db, because the e2e route matrix imports the registry from plain
+// node, so icons are named as STRINGS and resolved by the sidebar (the
+// hand-mirrored copy in tests/e2e/app-routes.ts had already lost
+// /laboratory/artifacts).
 //
-// This file is PURE DATA: no React, no lucide, no db. That matters because the
-// registry has three consumers with three different environments —
-//
-//   • the sidebar          (client React, needs icon components)
-//   • the e2e route matrix (plain node, must not import React)
-//   • future module code   (server)
-//
-// so icons are named as STRINGS and resolved to components by the sidebar. The
-// hand-mirrored copy in tests/e2e/app-routes.ts was already stale when this was
-// written: it had lost /laboratory/artifacts entirely.
-//
-// THE FIVE SECTIONS (T-0097, decisions 8, 11, 12 and 14). A module contributes
-// links to sections it does not own: Research is Work beside Chat and Missions
-// though it belongs to the laboratory module; Artifacts and Insights are
-// Results beside Sessions and Logs. So the section is named from a fixed list
-// and every link carries an `order`, and the rail merges by section and sorts
-// by order. The config tree is no longer rail data: it is the Settings index,
-// derived from src/lib/config-sections.ts.
+// THE FIVE SECTIONS (T-0097, decisions 8, 11, 12 and 14): a module contributes
+// links to sections it does not own (Research is Work, Artifacts and Insights
+// are Results), so the section is named from a fixed list, every link carries
+// an `order`, and the rail merges by section and sorts by order. The config
+// tree is the Settings index, derived from src/lib/config-sections.ts, not rail data.
 // ═══════════════════════════════════════════════════════════════
 
 import type { AccentColor } from "@/types/console";
@@ -33,9 +23,8 @@ export const NAV_SECTIONS = ["Home", "Work", "Results", "Agent", "Rec Room"] as 
 export type NavSectionLabel = (typeof NAV_SECTIONS)[number];
 
 /**
- * Icon names, resolved to lucide components by the sidebar. A string keeps this
- * module importable from a non-React context; the sidebar's map is exhaustive
- * over this union, so a typo is a compile error rather than a missing icon.
+ * Icon names, resolved to lucide components by the sidebar, whose map is
+ * exhaustive over this union, so a typo is a compile error, not a missing icon.
  */
 export type IconName =
   | "Zap" | "Clock" | "Database" | "ScrollText"
@@ -79,17 +68,13 @@ export interface ProductModule {
 }
 
 /**
- * Routes a nav link owns but the rail does not render.
- *
- * They were `subLinks` and the rail drew them as a second tier under their
- * parent (decision 8 deleted that tier: both destinations already navigate to
- * exactly these places from inside the page, and it was the only part of the
- * rail whose height the registry did not bound). The registry still NAMES them,
- * because `labelFor` is the one source of a page's h1 and tab title, and the
- * e2e matrix still visits them.
+ * Routes a nav link owns but the rail does not render. They were `subLinks`,
+ * drawn as a second tier; decision 8 deleted the tier (both destinations
+ * navigate there from inside the page, and it was the only rail height the
+ * registry did not bound). The registry still NAMES them because `labelFor` is
+ * the one source of a page's h1 and tab title, and the e2e matrix visits them.
  */
-// Not exported: NavLink is the only reader, and an exported name with no
-// importer is what this programme is deleting.
+// Not exported: NavLink is the only reader.
 interface ChildRoute {
   label: string;
   href: string;

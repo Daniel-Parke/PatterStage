@@ -7,12 +7,6 @@
 // The panel renders consecutive identical (source, message) pairs as
 // a single row with a "(×N)" suffix so users see e.g.
 // `Api_Server: Refusing to start (×5)` instead of 5 separate rows.
-//
-// The dedup logic was inline in src/app/page.tsx (a 12-line
-// `for...of` over `monitor.errors`, building a `Map` keyed by
-// `${source}::${message}`). Extracted to a pure helper so the
-// algorithm can be unit-tested without rendering the dashboard, and
-// so the page JSX stays a pure render of the precomputed array.
 
 /**
  * Subset of the error item shape the dedup helper needs. The
@@ -46,10 +40,6 @@ export interface DedupableError {
  *   //   { source: "Api_Server", message: "Refusing to start  (×2)" },
  *   //   { source: "Cron",       message: "Job missed" },
  *   // ]
- *
- * The "(×N)" suffix uses two spaces before the parenthetical to
- * match the pre-extraction inline shape byte-for-byte (a render
- * regression would surface as a snapshot diff).
  */
 export function dedupErrors<T extends DedupableError>(errors: readonly T[]): T[] {
   const seen = new Map<string, { err: T; count: number }>();

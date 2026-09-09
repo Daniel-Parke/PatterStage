@@ -1,23 +1,12 @@
 // ═══════════════════════════════════════════════════════════════
 // deep-research/usage.ts — totalling what the model reported, honestly.
 //
-// A Deep Research run makes several LLM calls: one to plan, one to reason per
-// round, one to synthesize. Its spend is the sum of them, and until T-0030 that
-// sum was never taken: `defaultLlm` returned `{ content }` and dropped
-// `LLMResponse.usage` on the floor.
-//
-// THE DISTINCTION THIS MODULE EXISTS TO KEEP. There are three states, not two:
-//
-//   counted            the provider reported counts; add them to the total
-//   recorded as zero   the provider reported zero; that is a real measurement
-//   never recorded     nobody reported anything; this is NOT zero
-//
-// The third is why `accumulateUsage` returns null rather than a zeroed object
-// for an empty input. A run with no usage is a run whose cost is unknown, and
-// the spend console must be able to say so. Collapsing it to zero would take a
-// real, uncounted cost and paint it as free, which is exactly the hole T-0030
-// was filed to close, moved one layer down where it is harder to see.
-// spend-summary.ts already argues the same point against itself in a comment.
+// A Deep Research run makes several LLM calls and its spend is their sum, which
+// until T-0030 was never taken: `defaultLlm` dropped `LLMResponse.usage`. Three
+// states, not two: counted, recorded as zero (a real measurement), and never
+// recorded, which is NOT zero. That is why `accumulateUsage` returns null for
+// an empty input: a run with no usage has an unknown cost, and collapsing it to
+// zero would paint a real cost as free, the hole T-0030 closed, one layer down.
 // ═══════════════════════════════════════════════════════════════
 
 /** Token counts as a provider reports them. */
@@ -41,16 +30,10 @@ function finite(n: unknown): number | null {
 }
 
 /**
- * Total the usage of every call in a run.
- *
- * Returns null when NOT ONE call reported usable counts, which the caller must
- * persist as NULL rather than as 0. Calls that reported nothing are skipped;
- * calls that reported something are counted, so a run where one provider hop
- * stayed silent still contributes what the others measured.
- *
- * A non-finite count is treated as absent rather than added. NaN in a spend
- * figure is worse than a missing one: it renders as "NaN" beside real money and
- * survives every arithmetic check downstream, including the budget comparison.
+ * Total every call's usage. Null when NOT ONE call reported usable counts,
+ * which the caller persists as NULL, not 0; a silent hop is skipped and the
+ * others still count. A non-finite count is treated as absent: NaN beside real
+ * money survives every downstream check, the budget comparison included.
  */
 export function accumulateUsage(
   calls: Array<ResearchUsage | undefined | null>,
@@ -68,8 +51,8 @@ export function accumulateUsage(
     sawAny = true;
     prompt += p ?? 0;
     completion += c ?? 0;
-    // Prefer the provider's own total, which can legitimately exceed
-    // prompt+completion (reasoning tokens, cached reads billed separately).
+    // The provider's own total is preferred: it can exceed prompt+completion
+    // (reasoning tokens, cached reads billed separately).
     const t = finite(call.totalTokens);
     total += t ?? (p ?? 0) + (c ?? 0);
   }

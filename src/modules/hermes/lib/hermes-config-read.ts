@@ -1,12 +1,11 @@
 // ═══════════════════════════════════════════════════════════════
 // hermes-config-read.ts: reading ~/.hermes/config.yaml
 //
-// Split out of config-sync.ts. One responsibility: turn the on-disk
-// config.yaml into typed values, and never write. The shape of that
-// file (`model`, `auxiliary`, `fallback_providers`, `agent`) is
-// declared here as `HermesConfig` because this is where it is parsed;
-// the writers import the type from here rather than each keeping a
-// private idea of the layout.
+// One responsibility: turn the on-disk config.yaml into typed values,
+// and never write. The shape of that file (`model`, `auxiliary`,
+// `fallback_providers`, `agent`) is declared here as `HermesConfig`
+// because this is where it is parsed; the writers import the type from
+// here rather than each keeping a private idea of the layout.
 //
 // Three readers, at three grains:
 //   - readHermesYamlConfig:    the whole file, or null.
@@ -40,16 +39,9 @@ export interface HermesConfig {
 
 /**
  * Read `~/.hermes/config.yaml` and return the parsed YAML object, or
- * `null` if the file is missing or unparseable. Single source of truth
- * for the "existsSync + readFileSync + yaml.load + try/catch fallback"
- * pattern that was duplicated across 5 sites (this module, the drift
- * detector, the per-model diff route, and the fallbacks/import GET/POST).
- *
- * Byte-equivalence: callers that previously did
- *   `yaml.load(raw) as HermesConfig ?? {}`
- * get `null` instead and must handle the missing-file case explicitly —
- * a more honest contract than silently substituting an empty object
- * (which previously masked missing files in 2 of the 5 sites).
+ * `null` if the file is missing or unparseable. `null` rather than `{}`
+ * so a missing file cannot pass as an empty config; callers handle it
+ * explicitly.
  */
 export function readHermesYamlConfig<T = Record<string, unknown>>(): T | null {
   const paths = getActiveHermesPaths();
@@ -63,21 +55,12 @@ export function readHermesYamlConfig<T = Record<string, unknown>>(): T | null {
 }
 
 /**
- * Parse a YAML string into a HermesConfig, treating empty/whitespace-only
- * content as an empty object. The 3 callers that previously wrote
- *   `original ? ((yaml.load(original) as HermesConfig) ?? {}) : {}`
- * inline (syncDefaultsToHermesConfig's tail, syncSingleModelToHermesConfig,
- * syncFallbacksToHermesConfig) all want the same "empty-string → {}" short
- * circuit. Centralises the load + empty-fallback so a future parser tweak
- * (e.g. swapping js-yaml for a different library) lands in one place.
+ * Parse a YAML string into a HermesConfig, treating empty content as an
+ * empty object.
  *
- * **Does NOT catch parse errors** — the three pre-refactor sites all
- * allowed yaml.load throws to propagate, so this helper matches that
- * behaviour. The exception is `syncDefaultsToHermesConfig`, which has a
- * custom try/catch that *surfaces* the parse error to server logs and
- * skips the write to avoid corrupting the on-disk file. That site stays
- * inline (with a comment pointing here) because the recovery logic is
- * specific to "must not overwrite a partially-written file".
+ * **Does NOT catch parse errors**: a `yaml.load` throw propagates. The one
+ * caller that must not overwrite a partially-written file
+ * (`syncDefaultsToHermesConfig`) keeps its own try/catch inline.
  */
 export function loadHermesConfigFromString(content: string): HermesConfig {
   if (!content) return {};

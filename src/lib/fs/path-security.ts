@@ -76,11 +76,7 @@ export function resolveSafeProfileName(
 
 /**
  * Resolve a profile id (or null → "default") and return a 400 NextResponse
- * if it is invalid. The "validation-returns-Response-or-T" pattern from the
- * `requireMissionId` / `getMissionOrNotFound` helpers in
- * `src/app/api/missions/route.ts` (session 42). Centralises the 8 inline
- * `if (!prof.ok) { return badRequest(prof.error); }` copies that the
- * `agent/profiles/*` and `agent/personality` routes used to repeat.
+ * if it is invalid.
  *
  * Callers check `if (prof instanceof NextResponse) return prof;` to
  * short-circuit. Success type is `{ profile: string }` — the consumer reads

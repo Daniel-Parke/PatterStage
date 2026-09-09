@@ -2,11 +2,8 @@
 // mission-filters.ts — pure selectors for the missions page
 // ═══════════════════════════════════════════════════════════════
 //
-// Extracted from useMissionsPage so the board-filtering, count, and
-// category-pill logic is pure + unit-testable in isolation (the hook
-// just wraps each in a useMemo). Every function is generic over the
-// minimal field set it reads, so there is no import cycle back to the
-// hook's MissionRow type.
+// Every function is generic over the minimal field set it reads, so there is
+// no import cycle back to the hook's MissionRow type.
 
 import {
   missionBoardColumn,
@@ -39,10 +36,7 @@ export interface MissionFilterCriteria {
   search: string;
 }
 
-/**
- * Filter the missions list by board column, category, and search text.
- * Byte-equivalent to the inline `missions.filter(...)` the hook used.
- */
+/** Filter the missions list by board column, category, and search text. */
 export function filterMissions<M extends MissionFilterFields>(
   missions: M[],
   { filter, missionCategoryFilter, search }: MissionFilterCriteria,
@@ -108,10 +102,7 @@ export function computeTemplateCategoryPills(
 
 type TemplateWithCategory = MissionTemplate & { categoryId?: string };
 
-/**
- * Group templates by category, then narrow to the active category filter.
- * Byte-equivalent to the hook's inline `filteredGrouped` useMemo.
- */
+/** Group templates by category, then narrow to the active category filter. */
 export function filterGroupedTemplates(
   templates: MissionTemplate[],
   categories: CategoryLike[] | MissionCategory[],

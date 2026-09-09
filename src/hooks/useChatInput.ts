@@ -2,8 +2,7 @@
 // useChatInput — the composer box, the mode toggle, the model picker
 // ═══════════════════════════════════════════════════════════════
 //
-// Split out of useChatPage (Phase 4 god-file decomposition). Four
-// pieces of local UI state with no wire calls between them: the draft
+// Four pieces of local UI state with no wire calls between them: the draft
 // text, the agent/fast mode, the selected model, and the textarea ref
 // that gets focus after a new conversation opens.
 //

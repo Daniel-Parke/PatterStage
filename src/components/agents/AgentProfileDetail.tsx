@@ -1,10 +1,9 @@
 // ═══════════════════════════════════════════════════════════════
 // AgentProfileDetail — the right-hand column for the selected profile
 //
-// Extracted verbatim from app/operations/agents/page.tsx. It composes
-// the identity header, the behaviour-file list and the file editor, and
-// renders the "Select a profile" placeholder when nothing is selected.
-// Presentation only: every callback goes back to the page.
+// It composes the identity header, the behaviour-file list and the file
+// editor, and renders the "Select a profile" placeholder when nothing is
+// selected. Presentation only: every callback goes back to the page.
 // ═══════════════════════════════════════════════════════════════
 
 "use client";

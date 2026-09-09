@@ -207,12 +207,6 @@ function parseEnvCredentials(envPath: string): Map<HermesProvider, ParsedCredent
   if (!existsSync(envPath)) return byProvider;
 
   try {
-    // Shared parser promoted from `modules/hermes/lib/config-sync.ts:parseEnvFile` to
-    // `@/lib/env-file` in session 164 — same regex, same skip rules
-    // (blank lines, `#` comments, malformed lines), same `\r?\n` split.
-    // The two sites had drifted in 2026-05 to use the same regex
-    // independently; this is the first consolidation to a single source
-    // of truth.
     const envVars = parseEnvFile(readFileSync(envPath, "utf-8"));
 
     for (const [key, rawValue] of envVars) {

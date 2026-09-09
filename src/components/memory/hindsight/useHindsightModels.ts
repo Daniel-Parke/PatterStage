@@ -1,7 +1,6 @@
 // ═══════════════════════════════════════════════════════════════
 // useHindsightModels — mental-models tab state + CRUD handlers.
-// Extracted verbatim from HindsightBrowser. Self-gates its load effect
-// on activeTab === "mental-models".
+// Self-gates its load effect on activeTab === "mental-models".
 // ═══════════════════════════════════════════════════════════════
 
 "use client";
@@ -30,8 +29,6 @@ export function useHindsightModels(showToast: ShowToast, activeTab: Tab) {
   const [refreshingModelId, setRefreshingModelId] = useState<string | null>(null);
 
   const loadModels = useCallback(async () => {
-    // Sister to `loadDirectives` — same `loadHindsightList` helper, just
-    // with the `mental-models` action + `models` key.
     await loadHindsightList<MentalModel>(
       "mental-models",
       setLoadingModels,

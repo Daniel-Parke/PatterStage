@@ -1,10 +1,9 @@
 // ═══════════════════════════════════════════════════════════════
 // AgentProfileFiles — the behaviour-file list for one profile
 //
-// Extracted verbatim from app/operations/agents/page.tsx. `openFileKey`
-// is the file currently in the editor FOR THIS PROFILE, which is the
-// same condition the page used inline (editor.fileKey matches AND
-// editor.profileId is the selected profile). Presentation only.
+// `openFileKey` is the file currently in the editor FOR THIS PROFILE
+// (editor.fileKey matches AND editor.profileId is the selected profile).
+// Presentation only.
 // ═══════════════════════════════════════════════════════════════
 
 "use client";
