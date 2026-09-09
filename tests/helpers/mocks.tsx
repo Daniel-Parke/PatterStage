@@ -91,36 +91,97 @@ export function nextLinkMock(): {
  * This keeps the two things a route test reads: the status, and a body it can
  * await.
  */
+const STATUS_TEXT: Record<number, string> = {
+  200: "OK", 201: "Created", 204: "No Content", 400: "Bad Request", 401: "Unauthorized", 403: "Forbidden",
+  404: "Not Found", 405: "Method Not Allowed", 409: "Conflict", 422: "Unprocessable Entity", 500: "Internal Server Error", 503: "Service Unavailable",
+};
+
+export interface MockNextRequest {
+  url: string;
+  method: string;
+  headers: Headers;
+  nextUrl: URL;
+  bodyUsed: boolean;
+  json(): Promise<unknown>;
+  text(): Promise<string>;
+}
+
+export interface MockNextResponse {
+  status: number;
+  ok: boolean;
+  statusText: string;
+  headers: Headers;
+  body: unknown;
+  json(): Promise<unknown>;
+  text(): Promise<string>;
+}
+
+/**
+ * next/server as the two classes the routes touch: a request that parses the
+ * body it was given and carries `nextUrl`, and a response that
+ * `NextResponse.json(data, init)` builds with `status`, `ok`, `statusText`,
+ * `headers` and the data. Both are classes so `instanceof` holds where
+ * parse-json-body checks it (C4, T-0141: thirteen suites spelled these).
+ */
 export function nextServerMock(): {
+  NextRequest: new (url: string, init?: RequestInit) => MockNextRequest;
   NextResponse: {
-    new (status: number, body: unknown): { status: number; body: unknown; json(): Promise<unknown> };
-    json(data: unknown, init?: { status?: number }): {
-      status: number;
-      body: unknown;
-      json(): Promise<unknown>;
-    };
+    new (data?: unknown, init?: ResponseInit): MockNextResponse;
+    json(data: unknown, init?: ResponseInit): MockNextResponse;
   };
 } {
-  class NextResponse {
+  class NextRequest implements MockNextRequest {
+    url: string;
+    method: string;
+    headers: Headers;
+    nextUrl: URL;
+    bodyUsed = false;
+    private _body: string;
+    constructor(url: string, init?: RequestInit) {
+      this.url = url;
+      this.method = init?.method ?? "GET";
+      this.headers = new Headers(init?.headers as HeadersInit);
+      this._body = typeof init?.body === "string" ? init.body : JSON.stringify(init?.body ?? {});
+      this.nextUrl = new URL(url, "http://localhost");
+    }
+    async json() {
+      return JSON.parse(this._body) as unknown;
+    }
+    async text() {
+      return this._body;
+    }
+  }
+  class NextResponse implements MockNextResponse {
     status: number;
+    ok: boolean;
+    statusText: string;
+    headers: Headers;
     body: unknown;
-    constructor(status: number, body: unknown) {
-      this.status = status;
-      this.body = body;
+    constructor(data?: unknown, init?: ResponseInit) {
+      this.body = data;
+      this.status = init?.status ?? 200;
+      this.ok = this.status >= 200 && this.status < 300;
+      this.statusText = init?.statusText ?? STATUS_TEXT[this.status] ?? "";
+      this.headers = new Headers(init?.headers);
     }
     async json() {
       return this.body;
     }
-    static json(data: unknown, init?: { status?: number }) {
-      return new NextResponse(init?.status ?? 200, data);
+    async text() {
+      return JSON.stringify(this.body);
+    }
+    static json(data: unknown, init?: ResponseInit) {
+      return new NextResponse(data, init);
     }
   }
-  return { NextResponse } as never;
+  return { NextRequest, NextResponse };
 }
 
 /** The data directory, pinned under /tmp so no test reads the operator's own. */
-export function pathsMock() {
+export function pathsMock(over: { PATHS?: Record<string, string> } & Record<string, unknown> = {}) {
+  const { PATHS: pathsOver, ...rest } = over;
   return {
+    ...rest,
     PS_DATA_DIR: "/tmp/ch-data",
     PATHS: {
       missions: "/tmp/ch-data/missions",
@@ -132,6 +193,7 @@ export function pathsMock() {
       auditLog: "/tmp/ch-data/audit",
       psScripts: "/tmp/ch-data/scripts",
       psHardwareLogs: "/tmp/ch-data/logs",
+      ...pathsOver,
     },
     getPsScriptsDir: () => "/tmp/ch-data/scripts",
     getPsHardwareLogDir: () => "/tmp/ch-data/logs",
@@ -167,5 +229,83 @@ export function agentRuntimeMock() {
       apiUrl: "http://127.0.0.1:9/v1/chat/completions",
       gatewayBase: "http://127.0.0.1:9",
     })),
+  };
+}
+
+// ── C4 (T-0141): the stanzas the census found pasted across the corpus ──
+
+/**
+ * `@/lib/db` as a stub: nothing reaches a database. The default `now` and
+ * `uuid` are fixed strings, so a suite that reads a timestamp or an id back
+ * gets the same one every run; pass the suite's own where it asserted them.
+ */
+export function dbMock(over: { now?: () => string; uuid?: () => string; getDb?: () => unknown } = {}) {
+  return {
+    ensureDb: jest.fn(),
+    getDb: over.getDb ? jest.fn(over.getDb) : jest.fn(),
+    now: over.now ?? (() => "2026-01-01T00:00:00.000Z"),
+    uuid: over.uuid ?? (() => "test-uuid"),
+    inTransaction: <T,>(fn: () => T) => fn(),
+  };
+}
+
+/** `window.matchMedia` answering every query the same way, with the listener surface jsdom lacks. */
+export function matchMediaMock(matches: boolean | ((query: string) => boolean) = false): void {
+  window.matchMedia = jest.fn((query: string) => ({
+    matches: typeof matches === "function" ? matches(query) : matches,
+    media: query,
+    onchange: null,
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
+    addListener: jest.fn(),
+    removeListener: jest.fn(),
+    dispatchEvent: jest.fn(),
+  })) as unknown as typeof window.matchMedia;
+}
+
+/**
+ * The ProfilePicker as a plain select over two profiles, so a page suite can
+ * change the profile without the real picker's listbox.
+ */
+export function profilePickerMock(): {
+  __esModule: true;
+  default: (props: { value: string; onChange: (v: string) => void }) => ReactElement;
+} {
+  return {
+    __esModule: true,
+    default: ({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
+      <select aria-label="Profile" value={value} onChange={(e) => onChange(e.target.value)}>
+        <option value="default">Bob</option>
+        <option value="qa">QA Engineer</option>
+      </select>
+    ),
+  };
+}
+
+/**
+ * The agent runtime over a Hermes home the suite creates per test and names
+ * through `global.__FAKE_HERMES_ROOT__`, so the paths follow the temp dir.
+ */
+export function agentRuntimeFakeRootMock() {
+  const root = () => (global as { __FAKE_HERMES_ROOT__?: string }).__FAKE_HERMES_ROOT__!;
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- inside a jest.mock factory, where imports are not yet resolved
+  const { join } = require("path") as typeof import("path");
+  return {
+    getActiveHermesPaths: () => ({
+      root: root(),
+      env: join(root(), ".env"),
+      soul: join(root(), "SOUL.md"),
+      hermes: join(root(), "HERMES.md"),
+      agents: join(root(), "AGENTS.md"),
+      skills: join(root(), "skills"),
+      profiles: join(root(), "profiles"),
+      sessions: join(root(), "sessions"),
+      logs: join(root(), "logs"),
+      config: join(root(), "config.yaml"),
+      backups: join(root(), "backups"),
+      cronJobs: join(root(), "cron", "jobs.json"),
+      memoryDb: join(root(), "memory_store.db"),
+    }),
+    getActiveHermesHome: () => root(),
   };
 }

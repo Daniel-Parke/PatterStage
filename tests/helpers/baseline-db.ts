@@ -77,13 +77,16 @@ export function execBaselineSchema(database: import("better-sqlite3").Database):
  * producing real ones regardless: it is what the repository layer writes as a
  * primary key.
  */
-export function dbSingletonMock(current: () => import("better-sqlite3").Database | null) {
+export function dbSingletonMock(
+  current: () => import("better-sqlite3").Database | null,
+  over: { uuid?: () => string; now?: () => string } = {},
+) {
   const actualCrypto = jest.requireActual("crypto") as typeof import("crypto");
   return {
     getDb: () => current()!,
     inTransaction: <T,>(fn: () => T) => current()!.transaction(fn)(),
-    uuid: () => actualCrypto.randomUUID(),
-    now: () => new Date().toISOString(),
+    uuid: over.uuid ?? (() => actualCrypto.randomUUID()),
+    now: over.now ?? (() => new Date().toISOString()),
     ensureDb: () => undefined,
   };
 }

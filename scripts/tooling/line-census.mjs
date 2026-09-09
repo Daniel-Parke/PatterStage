@@ -219,8 +219,11 @@ function commentEssays() {
   return { count: rows.length, files: rows.sort((a, b) => b[2] - a[2]) };
 }
 
+// A suite that mocks the db through a factory (dbMock for a stub,
+// dbSingletonMock for the in-memory double) is not counted; C0 named only the
+// first and counted the thirty-eight suites already on the second (T-0141).
 function inlineDbMocks() {
-  const files = tests.filter((f) => /\.test\.(ts|tsx)$/.test(f) && /jest\.mock\("@\/lib\/db"/.test(text.get(f)) && !/dbMock\(/.test(text.get(f)));
+  const files = tests.filter((f) => /\.test\.(ts|tsx)$/.test(f) && /jest\.mock\("@\/lib\/db"/.test(text.get(f)) && !/\bdb(Singleton)?Mock\(/.test(text.get(f)));
   return { count: files.length, files: files.map(rel) };
 }
 

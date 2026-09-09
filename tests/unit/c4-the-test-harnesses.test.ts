@@ -102,7 +102,7 @@ describe("the factories behave the way the stanzas they replace behaved", () => 
     const own = pathsMock({ PATHS: { templates: "/tmp/test-templates" }, readEnv: () => "yes" });
     expect(own.PATHS.templates).toBe("/tmp/test-templates");
     expect(own.PATHS.stories).toBe("/tmp/ch-data/stories");
-    expect((own as { readEnv: () => string }).readEnv()).toBe("yes");
+    expect((own as unknown as { readEnv: () => string }).readEnv()).toBe("yes");
   });
 
   it("the fetch map answers exact, then the longest prefix, and throws for what the suite did not stub", async () => {
