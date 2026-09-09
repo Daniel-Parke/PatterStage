@@ -152,3 +152,4 @@ The records under org/tasks/ are canonical.
 | T-0137 | standard | R1 | done | t0137-c2-one-type-each-2026-09-10 |
 | T-0138 | standard | R1 | done | t0138-c3-one-way-to-write-2026-09-10 |
 | T-0139 | standard | R1 | done | t0139-the-models-page-keeps-its-body-2026-09-10 |
+| T-0140 | standard | R2 | done | t0140-a-custom-fallback-keeps-its-name-2026-09-10 |

@@ -1,0 +1,58 @@
+{
+  "id": "T-0140",
+  "intent": "A custom fallback keeps the name, provider and model id the operator typed. model_fallbacks carried only the registry FK, which a custom entry does not have; the INSERT dropped its identity and every read joined models for it and found nothing, so the POST echoed the input and the next list said Custom / custom / an empty model id, which is what the chain then pushed into config.yaml. Found on the isolated instance during C3's walk (T-0138). Migration 042 adds three columns; the repository writes them for a custom entry and reads them where the JOIN has nothing.",
+  "declared": {
+    "capabilities": [
+      "edit-source",
+      "edit-tests",
+      "edit-docs",
+      "schema-migration"
+    ],
+    "side_effects": [
+      "schema_version 41 to 42 on the next boot, three nullable columns added, no backfill"
+    ]
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [
+    {
+      "factor": "schema-change",
+      "tier_floor": "R2",
+      "source": "derived:paths",
+      "evidence": "one additive migration (three nullable columns, no backfill, the 041 shape) wired as the last rung with the head raised; one repository's INSERT and SELECT; no route, no protected path; the upgrade integration suite and a new oracle on real SQLite; two migration suites amended at the changed line"
+    }
+  ],
+  "status": "done",
+  "owner_session": "t0140-a-custom-fallback-keeps-its-name-2026-09-10",
+  "claims": [
+    "src/lib/db/migrations/042_fallback_identity.sql",
+    "src/lib/db/sql-migrations.ts",
+    "src/lib/db/index.ts",
+    "src/lib/db-schema.ts",
+    "src/lib/fallbacks-repository.ts",
+    "tests/helpers/baseline-db.ts",
+    "tests/unit/a-custom-fallback-keeps-its-name.test.ts",
+    "tests/unit/b13-schedule-kind-migration.test.ts",
+    "tests/unit/run-migrations-upgrade.integration.test.ts",
+    "docs/running/migration.md",
+    "CHANGELOG.md",
+    "org/plans/2026-09-consolidation.md"
+  ],
+  "programme": "Taken between T-0139 and C4 of org/plans/2026-09-consolidation.md; the plan's remaining ids moved by two (C4 is T-0141).",
+  "timestamps": {
+    "opened": "2026-09-10T15:30:00Z",
+    "updated": "2026-09-10T16:30:00Z",
+    "closed": "2026-09-10T16:30:00Z"
+  },
+  "invariants": [
+    "I1 A CUSTOM ENTRY'S IDENTITY IS ITS OWN. model_fallbacks.custom_name, custom_provider and custom_model_id are written for an entry with no registry FK and read wherever the models JOIN has nothing; a registry entry's identity is still the model's.",
+    "I2 WHAT IS WRITTEN IS WHAT IS READ. addFallbackEntry returns getFallbackEntry(id) for both kinds of entry, so the POST's answer and the next list agree.",
+    "I3 THE HEAD IS 042. FALLBACK_IDENTITY_SCHEMA_VERSION is 42, one above SCHEDULE_KIND_SCHEMA_VERSION; MIGRATION_HEAD_SCHEMA_VERSION equals it; the applier is the last rung of runMigrations and of the test baseline; the upgrade suite asserts the ladder.",
+    "I4 THE PAST IS NOT REWRITTEN. Rows written before 042 have no identity to backfill and keep reading as Custom; the CHANGELOG says to add them again."
+  ],
+  "commits": "de0a4e3a the oracle, red at 4 of 6; 3e384340 the migration, the head, the repository and the amended suites; 60ccf37a the rule the sweep's survivor asked for; the chore commit that carries this record and the derived views.",
+  "verification": "Gate by exit code on the finished tree: lint 0, tsc 0, jest 0 (6850 tests, 677 suites), knip 0, canary 0, build 0, Playwright 0 (272 passed, 24 skipped, 0 failed, two projects), census 0, census:lines 0. The oracle, on real SQLite: 042 takes a v41 table to 42 with the three columns and is idempotent; a custom entry lists and reads back with what was typed; a registry entry still reads from the model it points at; the chain pushed to Hermes carries the custom entry's model id and provider; a row written before the migration still says Custom. The upgrade integration suite climbs a degraded legacy database to the new head. Isolated instance walk (T-0140): after Add Custom the row on screen reads the typed name true and \"openai / gpt-4o-mini\" true; the API's last entry is {\"modelName\":\"T-0140 walk ca4m\",\"provider\":\"openai\",\"modelIdString\":\"gpt-4o-mini\"}; 8 rows written before the migration still read Custom.",
+  "mutation": "Five mutants against the committed tree, four killed on the first pass: the INSERT dropping a custom entry's identity again; the read no longer falling back to the custom columns; the migration unwired from the runtime chain; the applier gated at the old head. One survived: COALESCE with the custom column first, which reads the same for every row the INSERT writes because a registry entry's custom columns are null. The oracle gained a row that carries both and reads the registry's name (60ccf37a), the rule being that a renamed model is read by its new name, and the mutant re-run against it is killed, 5 of 5.",
+  "deviation": "The consolidation plan says the programme does not touch the schema, and this is not the programme: it is a data defect in a shipped feature that the programme's walk exposed, taken as its own record with a schema-change tier. The columns are three nullable ALTERs rather than a NOT NULL with a default, because a row written before them has nothing true to put there. The plan's remaining ids moved by two for T-0139 and this; the plan header says so."
+}
