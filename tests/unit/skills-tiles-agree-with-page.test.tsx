@@ -59,16 +59,14 @@ jest.mock("@/hooks/useProfiles", () => ({
   useProfiles: () => ({ refetch: async () => undefined, data: [{ id: "default", name: "Bob", description: "" }], isLoading: false, error: null }),
 }));
 
-jest.mock("@/lib/operation-sync-action", () => ({
-  __esModule: true,
-  runSyncAction: jest.fn(),
-}));
-
 const apiFetch = jest.fn();
 jest.mock("@/lib/api-fetch", () => ({
   __esModule: true,
   apiFetch: (...args: unknown[]) => apiFetch(...args),
   toastError: jest.fn(),
+  // Amended 2026-09-10 (C3, T-0138): the toggle writes through runWrite, which says a
+  // failure through messageFromError.
+  messageFromError: (e: unknown, f: string) => (e instanceof Error ? e.message : f),
   API_FETCH_BULK_TIMEOUT_MS: 300_000,
 }));
 

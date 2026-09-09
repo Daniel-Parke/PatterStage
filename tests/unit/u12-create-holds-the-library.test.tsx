@@ -13,7 +13,9 @@
  * The double is global fetch, as in the B14 suite for this page, so every
  * write is asserted on the body that goes on the wire.
  */
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
+// Amended 2026-09-10 (C3, T-0138): the libraries read through useApiResource.
+import { renderWithQuery } from "../helpers/render-with-query";
 
 jest.mock("lucide-react", () => {
   const passthrough = () => () => null;
@@ -116,7 +118,7 @@ beforeEach(() => {
 });
 
 async function mount() {
-  const utils = render(<CreateStoryPage />);
+  const utils = renderWithQuery(<CreateStoryPage />);
   await screen.findByRole("button", { name: `Use theme ${THEME.name}` });
   return utils;
 }
@@ -258,7 +260,7 @@ describe("the read contract, on both panels", () => {
   it("with nothing saved, each panel says so and still offers its editor", async () => {
     themes = [];
     characters = [];
-    render(<CreateStoryPage />);
+    renderWithQuery(<CreateStoryPage />);
     await screen.findByText(/No saved themes yet/);
     expect(screen.getByText(/No saved characters yet/)).toBeInTheDocument();
     expect(within(themesPanel()).getByRole("button", { name: "New theme" })).toBeInTheDocument();
@@ -267,7 +269,7 @@ describe("the read contract, on both panels", () => {
 
   it("a failed library read is an error with Retry inside the panel, never an empty shelf", async () => {
     charactersStatus = 500;
-    render(<CreateStoryPage />);
+    renderWithQuery(<CreateStoryPage />);
     await screen.findByRole("button", { name: `Use theme ${THEME.name}` });
     const panel = charactersPanel();
     const alert = await within(panel).findByRole("alert");

@@ -62,9 +62,6 @@ export function useMissionsData({
     fetchTemplates,
     fetchMissionDetail,
     fetchCategories,
-    createCategory,
-    updateCategory,
-    deleteCategory,
   } = useMissionsApi();
 
   const [missions, setMissions] = useState<MissionRow[]>([]);
@@ -132,9 +129,6 @@ export function useMissionsData({
     closeCategoryManager,
   } = useMissionCategories({
     fetchCategories,
-    createCategory,
-    updateCategory,
-    deleteCategory,
     showToast,
     onMissionsReassigned: reloadMissionsAndTemplates,
   });

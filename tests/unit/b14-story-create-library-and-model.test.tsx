@@ -24,7 +24,9 @@
 // envelope shape.
 // ═══════════════════════════════════════════════════════════════
 
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
+// Amended 2026-09-10 (C3, T-0138): the libraries read through useApiResource.
+import { renderWithQuery } from "../helpers/render-with-query";
 
 jest.mock("lucide-react", () => {
   const passthrough = () => () => null;
@@ -122,7 +124,7 @@ function bodiesFor(action: string, subAction?: string): Body[] {
 }
 
 async function mount() {
-  const utils = render(<CreateStoryPage />);
+  const utils = renderWithQuery(<CreateStoryPage />);
   // The saved-theme card only renders once the themes list has landed.
   await screen.findByText(THEME.name);
   return utils;

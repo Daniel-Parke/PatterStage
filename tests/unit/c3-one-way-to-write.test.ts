@@ -63,7 +63,6 @@ const WRITERS = [
   "src/hooks/useMissionDispatch.ts",
   "src/hooks/useMissionTemplateActions.ts",
   "src/hooks/useModelFallbackChain.ts",
-  "src/hooks/useModelFallbackConfig.ts",
   "src/hooks/useMissionCategories.ts",
   "src/hooks/success-message-for-dispatch.ts",
   "src/app/page.tsx",
@@ -92,9 +91,18 @@ describe("C3 · one way to write", () => {
   it("every named writer writes through the helper and carries no write of its own", () => {
     for (const f of WRITERS) {
       const src = read(f);
-      expect({ f, through: /\b(?:runWrite|dispatchMission)\(/.test(src) }).toEqual({ f, through: true });
+      expect({ f, through: /\b(?:runWrite|dispatchMission)\s*(?:<[^(]*>)?\(/.test(src) }).toEqual({ f, through: true });
       expect({ f, raw: rawWrites(src) }).toEqual({ f, raw: [] });
     }
+  });
+
+  it("the fallback settings' sync writes through the helper; its autosave is the one write that says nothing by design", () => {
+    // A debounced save per change would toast on every pause in typing, so
+    // the autosave is silent on success and shows its failure inline; it is
+    // the one raw write the lint baseline holds for this file.
+    const src = read("src/hooks/useModelFallbackConfig.ts");
+    expect(src).toMatch(/\brunWrite\s*(?:<[^(]*>)?\(/);
+    expect(rawWrites(src)).toHaveLength(1);
   });
 
   it("a hook whose calls are all writes says nothing about a failure itself", () => {
@@ -118,8 +126,8 @@ describe("C3 · one way to write", () => {
     expect(create).toMatch(/useApiResource</);
     expect(library).toMatch(/useApiResource</);
     // The list reads: no fetch call carries a `list` sub-action or action.
-    expect(create).not.toMatch(/safeApiCall[^;]*subAction: "list"/s);
-    expect(library).not.toMatch(/safeApiCall[^;]*action: "list"/s);
+    expect(create).not.toMatch(/safeApiCall[^;]*subAction: "list"/);
+    expect(library).not.toMatch(/safeApiCall[^;]*action: "list"/);
   });
 
   it("the census sees a loader called from an effect, not a write in a click handler", () => {

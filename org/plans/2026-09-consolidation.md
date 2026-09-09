@@ -122,6 +122,17 @@ batch.
 - Verify: `handRolledReadHooks` and `writeHooksWithoutMutation` to 0; the
   mission dispatch loop timed and unchanged; the model actions' contract
   suites green.
+- Corrected in the batch (T-0138): the helper is a function, `runWrite` in
+  `src/lib/api-write.ts`, not a hook, because the toast is per-page state
+  (`useToast`) rather than a context and the reload is the caller's own
+  loader; react-query's `useMutation` stays for the hooks that own query keys
+  and invalidate them, and the lint rule (`no-raw-write-outside-the-helper`,
+  a new rule beside the read rule) knows both. Four helpers and the
+  `toastFromResult` idiom folded onto it, not one. The read measure, walked
+  on the AST, found thirteen effect reads where the regex found five (three
+  of those were click handlers); the two Story Weaver pages moved onto
+  `useApiResource` and the eleven left are held on the census by name for
+  C6 to take with the page layer.
 
 ### C4 — The test harnesses [L] · T-0139
 - `tests/helpers/mocks.tsx` gains the db stanza (the dominant shape, opt-in

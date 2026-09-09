@@ -494,6 +494,8 @@ describe("each new rule refuses one form and allows the other", () => {
       '  await safeApiCall("/api/things", { method: "POST" });',
       "}",
     ];
-    expect([...violationsIn("src/components/x.tsx", handler).keys()]).toEqual([]);
+    // Amended 2026-09-10 (C3, T-0138): a write in a handler is the write
+    // rule's (no-raw-write-outside-the-helper), so only the read rule is read.
+    expect([...violationsIn("src/components/x.tsx", handler).keys()].filter((k) => k.startsWith("no-raw-fetch-in-component"))).toEqual([]);
   });
 });

@@ -1,17 +1,17 @@
 {
   "measuredAt": "2026-09-09",
   "counts": {
-    "srcLines": 106274,
-    "testLines": 122030,
-    "srcRepeatedWindowLines": 1192,
-    "testRepeatedWindowLines": 6028,
+    "srcLines": 105410,
+    "testLines": 121189,
+    "srcRepeatedWindowLines": 1176,
+    "testRepeatedWindowLines": 6027,
     "routesWithTryCatch": 13,
-    "handRolledReadHooks": 5,
-    "writeHooksWithoutMutation": 4,
+    "handRolledReadHooks": 11,
+    "writeHooksWithoutMutation": 0,
     "repeatedTypeShapeFiles": 2,
     "oneImporterComponents": 130,
-    "libRootFiles": 72,
-    "commentEssays": 108,
+    "libRootFiles": 71,
+    "commentEssays": 104,
     "suitesMockingDbInline": 100
   },
   "allowed": [
@@ -44,6 +44,11 @@
       "measuredAt": "2026-09-09",
       "rise": "commentEssays rose from 107 to 108",
       "reason": "C2 (T-0137): the oracle suite adds its lines to tests; src/components/models/types.ts lost fourteen code lines to the library's ApiModel and kept its comments, so it crossed the essay line without gaining a comment"
+    },
+    {
+      "measuredAt": "2026-09-09",
+      "rise": "handRolledReadHooks rose from 5 to 11",
+      "reason": "C3 (T-0138): the read measure walks the AST for a fetch reachable from a useEffect callback through the file's own functions; the regex before it counted 5, three of them click handlers, and missed eight loaders called from effects. Two of the honest thirteen (the Story Weaver pages) moved onto useApiResource in C3; the eleven left are named by --report and held here."
     }
   ]
 }

@@ -9,12 +9,13 @@
 import { act, render, renderHook, screen } from "@testing-library/react";
 
 jest.mock("@/lib/api-fetch", () => ({
-  safeApiCall: jest.fn(async () => ({ ok: true, data: {} })),
+  // Amended 2026-09-10 (C3, T-0138): the write is runWrite over apiFetch, body as JSON.
+  apiFetch: jest.fn(async () => ({ data: {} })),
+  messageFromError: (e: unknown, f: string) => (e instanceof Error ? e.message : f),
   toastError: jest.fn(),
 }));
-jest.mock("@/lib/dashboard/toast-from-result", () => ({ toastFromResult: jest.fn() }));
 
-import { safeApiCall } from "@/lib/api-fetch";
+import { apiFetch } from "@/lib/api-fetch";
 import { useMissionTemplateActions } from "@/hooks/useMissionTemplateActions";
 import { MissionComposerActions } from "@/components/missions/MissionCreateForm";
 
@@ -66,7 +67,7 @@ function hookArgs() {
 }
 
 describe("the hook: an existing name arms first, writes second", () => {
-  beforeEach(() => (safeApiCall as jest.Mock).mockClear());
+  beforeEach(() => (apiFetch as jest.Mock).mockClear());
 
   it("does not write on the first save, names the template, and writes an update on the second", async () => {
     const args = hookArgs();
@@ -75,15 +76,15 @@ describe("the hook: an existing name arms first, writes second", () => {
     await act(async () => {
       await result.current.handleSaveAsTemplate();
     });
-    expect(safeApiCall).not.toHaveBeenCalled();
+    expect(apiFetch).not.toHaveBeenCalled();
     expect(result.current.overwriteTemplateName).toBe("Nightly");
 
     await act(async () => {
       await result.current.handleSaveAsTemplate();
     });
-    expect(safeApiCall).toHaveBeenCalledTimes(1);
-    const [, opts] = (safeApiCall as jest.Mock).mock.calls[0] as [string, { body: Record<string, unknown> }];
-    expect(opts.body).toMatchObject({ action: "update", templateId: "t1" });
+    expect(apiFetch).toHaveBeenCalledTimes(1);
+    const [, opts] = (apiFetch as jest.Mock).mock.calls[0] as [string, { body: string }];
+    expect(JSON.parse(opts.body)).toMatchObject({ action: "update", templateId: "t1" });
     expect(result.current.overwriteTemplateName).toBeNull();
   });
 
@@ -94,9 +95,9 @@ describe("the hook: an existing name arms first, writes second", () => {
     await act(async () => {
       await result.current.handleSaveAsTemplate();
     });
-    expect(safeApiCall).toHaveBeenCalledTimes(1);
-    const [, opts] = (safeApiCall as jest.Mock).mock.calls[0] as [string, { body: Record<string, unknown> }];
-    expect(opts.body).toMatchObject({ action: "create" });
+    expect(apiFetch).toHaveBeenCalledTimes(1);
+    const [, opts] = (apiFetch as jest.Mock).mock.calls[0] as [string, { body: string }];
+    expect(JSON.parse(opts.body)).toMatchObject({ action: "create" });
     expect(result.current.overwriteTemplateName).toBeNull();
   });
 });

@@ -12,7 +12,7 @@
  * found none, and synthesised "HTTP <status>".
  *
  * That is a CLASS, not one bad toast. `apiFetch` is the single fetch helper
- * behind `safeApiCall`, `safeApiCallData`, `runMutation` and `hindsightMutate`,
+ * behind `safeApiCall`, `safeApiCallData` and `runWrite`,
  * so every caller of every route that nests its message lost it the same way.
  * The fix belongs in the helper, and these are its oracles.
  *
@@ -21,7 +21,7 @@
  */
 
 import { apiFetch, safeApiCall } from "@/lib/api-fetch";
-import { runMutation } from "@/lib/run-mutation";
+import { runWrite } from "@/lib/api-write";
 
 const originalFetch = globalThis.fetch;
 
@@ -107,7 +107,7 @@ describe("apiFetch keeps the message a failing route deliberately sent", () => {
 describe("the store-a-memory toast", () => {
   it("says what the route said, not the status code", async () => {
     // The exact path the reported defect took: the Add memory modal calls
-    // runMutation, which toasts `safeApiCall`'s error.
+    // runWrite, which toasts the thrown ApiError's message.
     failWith({
       data: {
         available: false,
@@ -118,14 +118,16 @@ describe("the store-a-memory toast", () => {
     });
 
     const showToast = jest.fn();
-    const stored = await runMutation(showToast, {
-      build: () => ({ content: "the operator prefers short answers" }),
-      path: "/api/memory/hindsight",
-      successMsg: "Memory stored",
-      errorMsg: "Failed to store memory",
+    // Amended 2026-09-10 (C3, T-0138): the modal writes through runWrite.
+    const stored = await runWrite({
+      showToast,
+      url: "/api/memory/hindsight",
+      body: { content: "the operator prefers short answers" },
+      successMessage: "Memory stored",
+      errorMessage: "Failed to store memory",
     });
 
-    expect(stored).toBe(false);
+    expect(stored).toBeUndefined();
     expect(showToast).toHaveBeenCalledWith(
       "No memory provider is configured, so there is nothing to store or search. " +
         "Set one up in the memory provider card at the top of the Memory page.",

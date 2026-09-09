@@ -9,9 +9,8 @@
 import { useState, useCallback, useEffect } from "react";
 import type { ToastType } from "@/components/ui/Toast";
 import { loadHindsightList } from "@/lib/memory/hindsight-client";
-import { hindsightMutate } from "@/lib/memory/hindsight-mutate";
 import { parseOptionalTagsInput, parseTagsInput } from "@/lib/memory/hindsight-tag-input";
-import { runMutation } from "@/lib/run-mutation";
+import { runWrite } from "@/lib/api-write";
 import type { Tab, Directive } from "./types";
 
 // The directive modal resets to these blank values on open, close, and
@@ -60,52 +59,50 @@ export function useHindsightDirectives(showToast: ShowToast, activeTab: Tab) {
     [setEditingDirective],
   );
 
-  const handleCreateDirective = () =>
-    runMutation(showToast, {
-      isValid: () => dirForm.name.trim().length > 0 && dirForm.content.trim().length > 0,
-      busy: setCreatingDirective,
-      build: () => ({
+  const handleCreateDirective = async () => {
+    if (!dirForm.name.trim() || !dirForm.content.trim()) return false;
+    const created = await runWrite({
+      setBusy: setCreatingDirective,
+      showToast,
+      url: "/api/memory/hindsight",
+      body: {
         action: "create-directive",
         name: dirForm.name,
         content: dirForm.content,
         priority: parseInt(dirForm.priority) || 0,
         tags: parseOptionalTagsInput(dirForm.tags),
-      }),
-      path: "/api/memory/hindsight",
-      successMsg: "Directive created",
-      errorMsg: "Failed to create directive",
+      },
+      successMessage: "Directive created",
+      errorMessage: "Failed to create directive",
       onSuccess: async () => {
         closeDirectiveModal();
         await loadDirectives();
       },
     });
+    return created !== undefined;
+  };
 
   const handleToggleDirective = async (directive: Directive) => {
-    // Dynamic success message (deactivated vs activated) — `hindsightMutate`
-    // forwards the `successMsg: () => string` thunk to `toastFromResult`
-    // unchanged, so the directive.is_active state is read at toast time,
-    // not at request time. Same semantics as the pre-form inline call.
-    const result = await hindsightMutate(
+    await runWrite({
       showToast,
-      "POST",
-      { action: "update-directive", id: directive.id, is_active: !directive.is_active },
-      () => (directive.is_active ? "Directive deactivated" : "Directive activated"),
-      "Failed to update directive",
-    );
-    if (!result.ok) return;
-    await loadDirectives();
+      url: "/api/memory/hindsight",
+      body: { action: "update-directive", id: directive.id, is_active: !directive.is_active },
+      successMessage: directive.is_active ? "Directive deactivated" : "Directive activated",
+      errorMessage: "Failed to update directive",
+      onSuccess: loadDirectives,
+    });
   };
 
   const handleDeleteDirective = async (id: string) => {
-    const result = await hindsightMutate(
+    await runWrite({
       showToast,
-      "DELETE",
-      { type: "directive", id },
-      "Directive deleted",
-      "Failed to delete directive",
-    );
-    if (!result.ok) return;
-    setDirectives(prev => prev.filter(d => d.id !== id));
+      url: "/api/memory/hindsight",
+      method: "DELETE",
+      body: { type: "directive", id },
+      successMessage: "Directive deleted",
+      errorMessage: "Failed to delete directive",
+      onSuccess: () => setDirectives((prev) => prev.filter((d) => d.id !== id)),
+    });
   };
 
   const openEditDirective = (d: Directive) => {
@@ -113,27 +110,29 @@ export function useHindsightDirectives(showToast: ShowToast, activeTab: Tab) {
     setEditDirForm({ name: d.name, content: d.content, priority: String(d.priority), tags: d.tags.join(", ") });
   };
 
-  const handleSaveDirective = () => {
+  const handleSaveDirective = async () => {
     if (!editingDirective) return false;
-    return runMutation(showToast, {
-      isValid: () => editDirForm.name.trim().length > 0 && editDirForm.content.trim().length > 0,
-      busy: setSavingDirective,
-      build: () => ({
+    if (!editDirForm.name.trim() || !editDirForm.content.trim()) return false;
+    const saved = await runWrite({
+      setBusy: setSavingDirective,
+      showToast,
+      url: "/api/memory/hindsight",
+      body: {
         action: "update-directive",
         id: editingDirective.id,
         name: editDirForm.name,
         content: editDirForm.content,
         priority: parseInt(editDirForm.priority) || 0,
         tags: parseTagsInput(editDirForm.tags),
-      }),
-      path: "/api/memory/hindsight",
-      successMsg: "Directive updated",
-      errorMsg: "Failed to update directive",
+      },
+      successMessage: "Directive updated",
+      errorMessage: "Failed to update directive",
       onSuccess: async () => {
         setEditingDirective(null);
         await loadDirectives();
       },
     });
+    return saved !== undefined;
   };
 
   return {

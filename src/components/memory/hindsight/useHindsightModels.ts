@@ -9,9 +9,8 @@
 import { useState, useCallback, useEffect } from "react";
 import type { ToastType } from "@/components/ui/Toast";
 import { loadHindsightList } from "@/lib/memory/hindsight-client";
-import { hindsightMutate } from "@/lib/memory/hindsight-mutate";
 import { parseOptionalTagsInput, parseTagsInput } from "@/lib/memory/hindsight-tag-input";
-import { runMutation } from "@/lib/run-mutation";
+import { runWrite } from "@/lib/api-write";
 import type { Tab, MentalModel } from "./types";
 
 const EMPTY_MODEL_FORM = { name: "", query: "", tags: "" };
@@ -59,52 +58,50 @@ export function useHindsightModels(showToast: ShowToast, activeTab: Tab) {
     [setEditingModel],
   );
 
-  const handleCreateModel = () =>
-    runMutation(showToast, {
-      isValid: () => modelForm.name.trim().length > 0 && modelForm.query.trim().length > 0,
-      busy: setCreatingModel,
-      build: () => ({
+  const handleCreateModel = async () => {
+    if (!modelForm.name.trim() || !modelForm.query.trim()) return false;
+    const created = await runWrite({
+      setBusy: setCreatingModel,
+      showToast,
+      url: "/api/memory/hindsight",
+      body: {
         action: "create-model",
         name: modelForm.name,
         query: modelForm.query,
         tags: parseOptionalTagsInput(modelForm.tags),
-      }),
-      path: "/api/memory/hindsight",
-      successMsg: "Mental model created (generating in background)",
-      errorMsg: "Failed to create mental model",
+      },
+      successMessage: "Mental model created (generating in background)",
+      errorMessage: "Failed to create mental model",
       onSuccess: async () => {
         closeModelModal();
         await loadModels();
       },
     });
+    return created !== undefined;
+  };
 
   const handleRefreshModel = async (id: string) => {
-    setRefreshingModelId(id);
-    const result = await hindsightMutate(
+    await runWrite({
+      setBusy: (busy) => setRefreshingModelId(busy ? id : null),
       showToast,
-      "POST",
-      { action: "refresh-model", id },
-      "Mental model refresh started",
-      "Failed to refresh mental model",
-    );
-    if (!result.ok) {
-      setRefreshingModelId(null);
-      return;
-    }
-    await loadModels();
-    setRefreshingModelId(null);
+      url: "/api/memory/hindsight",
+      body: { action: "refresh-model", id },
+      successMessage: "Mental model refresh started",
+      errorMessage: "Failed to refresh mental model",
+      onSuccess: loadModels,
+    });
   };
 
   const handleDeleteModel = async (id: string) => {
-    const result = await hindsightMutate(
+    await runWrite({
       showToast,
-      "DELETE",
-      { type: "model", id },
-      "Mental model deleted",
-      "Failed to delete mental model",
-    );
-    if (!result.ok) return;
-    setMentalModels(prev => prev.filter(m => m.id !== id));
+      url: "/api/memory/hindsight",
+      method: "DELETE",
+      body: { type: "model", id },
+      successMessage: "Mental model deleted",
+      errorMessage: "Failed to delete mental model",
+      onSuccess: () => setMentalModels((prev) => prev.filter((m) => m.id !== id)),
+    });
   };
 
   const openEditModel = (m: MentalModel) => {
@@ -112,26 +109,28 @@ export function useHindsightModels(showToast: ShowToast, activeTab: Tab) {
     setEditModelForm({ name: m.name, query: m.source_query, tags: m.tags.join(", ") });
   };
 
-  const handleSaveModel = () => {
+  const handleSaveModel = async () => {
     if (!editingModel) return false;
-    return runMutation(showToast, {
-      isValid: () => editModelForm.name.trim().length > 0,
-      busy: setSavingModel,
-      build: () => ({
+    if (!editModelForm.name.trim()) return false;
+    const saved = await runWrite({
+      setBusy: setSavingModel,
+      showToast,
+      url: "/api/memory/hindsight",
+      body: {
         action: "update-model",
         id: editingModel.id,
         name: editModelForm.name,
         query: editModelForm.query || undefined,
         tags: parseTagsInput(editModelForm.tags),
-      }),
-      path: "/api/memory/hindsight",
-      successMsg: "Mental model updated",
-      errorMsg: "Failed to update mental model",
+      },
+      successMessage: "Mental model updated",
+      errorMessage: "Failed to update mental model",
       onSuccess: async () => {
         setEditingModel(null);
         await loadModels();
       },
     });
+    return saved !== undefined;
   };
 
   return {

@@ -158,6 +158,11 @@ Next.js static files go in `public/` at the repo root; the Dockerfile runs
   `useQuery`, and no component reads the API inside a `useEffect`;
   `design-lint`'s `no-raw-fetch-in-component` and
   `tests/unit/u15-reads-go-through-the-hook` hold both (T-0129).
+- **A screen writes through `runWrite`** (`src/lib/api-write.ts`): busy, the
+  call, what happened in the server's words, the reload, busy cleared, said
+  once. A hook that owns query keys writes through react-query's `useMutation`
+  and invalidates them instead. `design-lint`'s
+  `no-raw-write-outside-the-helper` holds both (T-0138).
 - **Big page = page-core hook + render shell.** Past ~600 lines, lift the stateful
   core into a `use<Page>` hook and leave the `.tsx` as a shell. Move logic verbatim.
 - **Prefer composable helpers over wrappers/base classes.** No `withApiRoute` HOF,

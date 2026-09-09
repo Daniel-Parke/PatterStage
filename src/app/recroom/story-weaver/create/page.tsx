@@ -14,7 +14,7 @@
 // its panel, never an empty shelf.
 "use client";
 
-import { Suspense, useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FolderOpen, Plus, Save, Sparkles, X } from "lucide-react";
 
@@ -27,6 +27,7 @@ import PageLoading from "@/components/ui/PageLoading";
 import SegmentedControl from "@/components/ui/SegmentedControl";
 import { InlineSelect } from "@/components/ui/Select";
 import { Field, Input, Textarea } from "@/components/ui/field";
+import { useApiResource } from "@/hooks/useApiResource";
 import { useModelDefaults, useModels } from "@/hooks/useModels";
 import { safeApiCall } from "@/lib/api-fetch";
 import { sectionHeadingClasses } from "@/lib/theme";
@@ -131,14 +132,20 @@ function CreateStoryPage() {
   const [settingOpts, setSettingOpts] = useState([...DEFAULT_SETTINGS]);
   const [hasDraft, setHasDraft] = useState(false);
 
-  // The two libraries, each with its own read state so one failing does not
-  // take the other's list away.
-  const [savedCharacters, setSavedCharacters] = useState<CharacterSheet[]>([]);
-  const [charactersLoaded, setCharactersLoaded] = useState(false);
-  const [charactersError, setCharactersError] = useState<string | null>(null);
-  const [savedThemes, setSavedThemes] = useState<StoryTheme[]>([]);
-  const [themesLoaded, setThemesLoaded] = useState(false);
-  const [themesError, setThemesError] = useState<string | null>(null);
+  // The two libraries, each its own read so one failing does not take the
+  // other's list away.
+  const themesRead = useApiResource<StoryTheme[]>("/api/stories", {
+    body: { action: "themes", subAction: "list" },
+    select: (d) => (d as { themes?: StoryTheme[] } | null)?.themes ?? [],
+    errorMessage: "Failed to load themes",
+  });
+  const charactersRead = useApiResource<CharacterSheet[]>("/api/stories", {
+    body: { action: "characters", subAction: "list" },
+    select: (d) => (d as { characters?: CharacterSheet[] } | null)?.characters ?? [],
+    errorMessage: "Failed to load characters",
+  });
+  const savedThemes = themesRead.data ?? [];
+  const savedCharacters = charactersRead.data ?? [];
   const [themeEditor, setThemeEditor] = useState<ThemeEditorState>({ open: false });
   const [sheetEditor, setSheetEditor] = useState<SheetEditorState>({ open: false });
 
@@ -152,34 +159,6 @@ function CreateStoryPage() {
     if (modelDefaults?.agent) setModelId(modelDefaults.agent);
   }, [modelDefaults, touchedModel]);
 
-  const loadThemes = useCallback(async () => {
-    const res = await safeApiCall<{ data?: { themes?: StoryTheme[] } }>("/api/stories", {
-      method: "POST",
-      body: { action: "themes", subAction: "list" },
-    });
-    if (!res.ok) {
-      setThemesError(res.error ?? "Failed to load themes");
-    } else {
-      setThemesError(null);
-      setSavedThemes(res.data?.data?.themes ?? []);
-    }
-    setThemesLoaded(true);
-  }, []);
-
-  const loadCharacters = useCallback(async () => {
-    const res = await safeApiCall<{ data?: { characters?: CharacterSheet[] } }>("/api/stories", {
-      method: "POST",
-      body: { action: "characters", subAction: "list" },
-    });
-    if (!res.ok) {
-      setCharactersError(res.error ?? "Failed to load characters");
-    } else {
-      setCharactersError(null);
-      setSavedCharacters(res.data?.data?.characters ?? []);
-    }
-    setCharactersLoaded(true);
-  }, []);
-
   // Theme: sets only premise + tags (NOT characters, NOT params).
   const applyTheme = useCallback((theme: StoryTheme) => {
     setPremise(theme.premise);
@@ -192,36 +171,31 @@ function CreateStoryPage() {
 
   // A theme named in the URL is applied on arrival. The Themes page's "Use"
   // used to send people here this way; a bookmark still can.
+  const appliedUrlTheme = useRef<string | null>(null);
   useEffect(() => {
     const themeId = searchParams.get("theme");
-    if (!themeId) return;
+    if (!themeId || appliedUrlTheme.current === themeId) return;
     setSelectedTheme(themeId);
-    void (async () => {
-      const res = await safeApiCall<{ data?: { themes?: StoryTheme[] } }>("/api/stories", {
-        method: "POST",
-        body: { action: "themes", subAction: "list" },
-      });
-      const theme = res.ok ? res.data?.data?.themes?.find((t) => t.id === themeId) : undefined;
-      if (theme) applyTheme(theme);
-    })();
-  }, [searchParams, applyTheme]);
+    const theme = themesRead.data?.find((t) => t.id === themeId);
+    if (!theme) return;
+    appliedUrlTheme.current = themeId;
+    applyTheme(theme);
+  }, [searchParams, themesRead.data, applyTheme]);
 
   useEffect(() => {
     setHasDraft(!!localStorage.getItem(DRAFT_KEY));
-    void loadThemes();
-    void loadCharacters();
-  }, [loadThemes, loadCharacters]);
+  }, []);
 
   // The two retired pages redirect to #themes and #characters. The browser's
   // own jump to a fragment happens before this client page has rendered its
   // sections, so it lands on nothing; once both libraries are on the page the
   // anchor is honoured by hand (the same fix Settings needed in T-0125).
   useEffect(() => {
-    if (!themesLoaded || !charactersLoaded) return;
+    if (!themesRead.settled || !charactersRead.settled) return;
     const id = window.location.hash.replace(/^#/, "");
     if (id !== "themes" && id !== "characters") return;
     document.getElementById(id)?.scrollIntoView({ block: "start" });
-  }, [themesLoaded, charactersLoaded]);
+  }, [themesRead.settled, charactersRead.settled]);
 
   // Auto-save draft
   useEffect(() => {
@@ -346,7 +320,7 @@ function CreateStoryPage() {
         }),
       2000,
     );
-    await loadCharacters();
+    await charactersRead.refetch();
   };
 
   const toggleCharExpand = (idx: number) => {
@@ -378,7 +352,7 @@ function CreateStoryPage() {
     const res = await safeApiCall<{ data?: unknown }>("/api/stories", { method: "POST", body });
     if (!res.ok || !res.data?.data) return res.error ?? "Could not save that theme";
     setWriteError(null);
-    await loadThemes();
+    await themesRead.refetch();
     setThemeEditor({ open: false });
     return null;
   };
@@ -397,7 +371,7 @@ function CreateStoryPage() {
       return;
     }
     setWriteError(null);
-    setSavedThemes((prev) => prev.filter((t) => t.id !== id));
+    void themesRead.refetch();
     if (selectedTheme === id) setSelectedTheme("");
   };
 
@@ -409,7 +383,7 @@ function CreateStoryPage() {
     const res = await safeApiCall<{ data?: unknown }>("/api/stories", { method: "POST", body });
     if (!res.ok || !res.data?.data) return res.error ?? "Could not save that character";
     setWriteError(null);
-    await loadCharacters();
+    await charactersRead.refetch();
     setSheetEditor({ open: false });
     return null;
   };
@@ -424,7 +398,7 @@ function CreateStoryPage() {
       return;
     }
     setWriteError(null);
-    setSavedCharacters((prev) => prev.filter((c) => c.id !== id));
+    void charactersRead.refetch();
   };
 
   // ── the form ───────────────────────────────────────────────────
@@ -600,10 +574,10 @@ function CreateStoryPage() {
 
         <ThemeLibraryPanel
           themes={savedThemes}
-          loading={!themesLoaded}
-          error={themesError}
+          loading={!themesRead.settled}
+          error={themesRead.error}
           selectedId={selectedTheme}
-          onRetry={loadThemes}
+          onRetry={() => void themesRead.refetch()}
           onUse={applyTheme}
           onEdit={(theme) => setThemeEditor({ open: true, theme })}
           onDelete={deleteTheme}
@@ -643,10 +617,10 @@ function CreateStoryPage() {
 
         <CharacterLibraryPanel
           characters={savedCharacters}
-          loading={!charactersLoaded}
-          error={charactersError}
+          loading={!charactersRead.settled}
+          error={charactersRead.error}
           inCast={inCast}
-          onRetry={loadCharacters}
+          onRetry={() => void charactersRead.refetch()}
           onAdd={addFromLibrary}
           onEdit={(sheet) => setSheetEditor({ open: true, sheet })}
           onDelete={deleteSheet}

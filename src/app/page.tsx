@@ -34,10 +34,8 @@ import ActiveMissionsPanel from "@/components/dashboard/ActiveMissionsPanel";
 import PlatformsPanel from "@/modules/hermes/components/PlatformsPanel";
 import ErrorsPanel from "@/components/dashboard/ErrorsPanel";
 import ProcessesPanel from "@/components/dashboard/ProcessesPanel";
-import { toastError } from "@/lib/api-fetch";
-import { runMutation } from "@/lib/run-mutation";
-import { toastFromResult } from "@/lib/dashboard/toast-from-result";
-import { dispatchMissionAction } from "@/hooks/success-message-for-dispatch";
+import { runWrite } from "@/lib/api-write";
+import { dispatchMission } from "@/hooks/success-message-for-dispatch";
 import { isMissionActive } from "@/lib/missions/mission-board";
 import { dedupErrors } from "@/lib/dashboard/dashboard-error-dedup";
 import { describeSchedulerHealth } from "@/lib/dashboard/scheduler-pill";
@@ -109,12 +107,13 @@ export default function Dashboard() {
 
   const handleSyncNow = useCallback(
     () =>
-      runMutation(showToast, {
-        busy: setSyncNowBusy,
-        build: () => ({}),
-        path: "/api/sync",
-        successMsg: "Background sync completed",
-        errorMsg: "Sync failed",
+      runWrite({
+        setBusy: setSyncNowBusy,
+        showToast,
+        url: "/api/sync",
+        body: {},
+        successMessage: "Background sync completed",
+        errorMessage: "Sync failed",
         onSuccess: async () => {
           await refetchMonitor();
         },
@@ -142,30 +141,17 @@ export default function Dashboard() {
     (sev: "all" | "error" | "warning") => setErrorSev(sev),
     [setErrorSev],
   );
-  // Note: useTwoStepConfirm handles its own unmount cleanup.
-  // The original handler had no busy state (the row already shows
-  // "Confirm?" via `isArmedFor`), so we keep the original `try/catch`
-  // shape rather than adopting `runMutation` (which requires a busy
-  // setter that the page does not consume).
+  // The row already shows "Confirm?" through `isArmedFor`, so the cancel
+  // carries no busy state of its own; the missions query is re-pulled so the
+  // active-missions panel drops the cancelled row.
   const handleCancelMission = useCallback(async (missionId: string, missionName: string) => {
     const doCancel = async () => {
-      try {
-        // The route returns `{ mission, cancel: { accepted, processKillPending } }`;
-        // dispatchMissionAction owns the wire call and the envelope type.
-        const { ok, error } = await dispatchMissionAction("cancel", { missionId });
-        toastFromResult(
-          showToast,
-          { ok, error },
-          `Cancelled "${missionName}"`,
-          "Failed to cancel mission",
-        );
-        if (!ok) return;
-        // Re-pull the missions query so the active-missions panel drops
-        // the cancelled row (replaces the old manual fetch + setData).
-        await refetchMissions();
-      } catch (err) {
-        toastError(showToast, err, "Failed to cancel mission");
-      }
+      await dispatchMission("cancel", { missionId }, {
+        showToast,
+        successMessage: `Cancelled "${missionName}"`,
+        errorMessage: "Failed to cancel mission",
+      });
+      await refetchMissions();
     };
     if (!isArmedFor(missionId)) {
       arm(missionId);

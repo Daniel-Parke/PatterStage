@@ -9,7 +9,9 @@
  * the subtitle and on the filters, not in a tile row above the list it counts
  * (the same rule Skills learned in T-0125).
  */
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
+// Amended 2026-09-10 (C3, T-0138): the shelf reads through useApiResource.
+import { renderWithQuery } from "../helpers/render-with-query";
 import { pageSubtitle } from "../helpers/page-subtitle";
 
 jest.mock("lucide-react", () => {
@@ -76,18 +78,24 @@ function bodies(): Body[] {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  listAnswer = () => answer({ data: { stories: STORIES } });
+  // Amended 2026-09-10 (C3, T-0138): a delete re-reads the shelf rather than
+  // editing it in place, so the server's list drops what was deleted.
+  const deleted: string[] = [];
+  listAnswer = () => answer({ data: { stories: STORIES.filter((s) => !deleted.includes(s.id)) } });
   (globalThis as { fetch?: unknown }).fetch = fetchMock;
   fetchMock.mockImplementation(async (_url, init) => {
     const body = JSON.parse(String(init?.body ?? "{}")) as Body;
     if (body.action === "list") return listAnswer();
-    if (body.action === "delete") return answer({ data: { deleted: true } });
+    if (body.action === "delete") {
+      deleted.push(String(body.storyId));
+      return answer({ data: { deleted: true } });
+    }
     return answer({ data: {} });
   });
 });
 
 async function mount() {
-  const utils = render(<StoryWeaverPage />);
+  const utils = renderWithQuery(<StoryWeaverPage />);
   await screen.findByRole("link", { name: "The Lighthouse Keeper" });
   return utils;
 }
@@ -165,7 +173,7 @@ describe("the page at the door", () => {
 describe("the read contract", () => {
   it("an empty shelf says so, only after a read that succeeded, and offers the way in", async () => {
     listAnswer = () => answer({ data: { stories: [] } });
-    render(<StoryWeaverPage />);
+    renderWithQuery(<StoryWeaverPage />);
     await screen.findByText(/Your bookshelf is empty/);
     fireEvent.click(screen.getByRole("button", { name: "Create a story" }));
     expect(push).toHaveBeenCalledWith("/recroom/story-weaver/create");
@@ -174,7 +182,7 @@ describe("the read contract", () => {
 
   it("a failed read is an error with Retry, never an empty shelf", async () => {
     listAnswer = () => answer({ error: "the database is locked" }, 500);
-    render(<StoryWeaverPage />);
+    renderWithQuery(<StoryWeaverPage />);
     const alert = await screen.findByRole("alert");
     expect(within(alert).getByRole("button", { name: /retry/i })).toBeInTheDocument();
     expect(screen.queryByText(/bookshelf is empty/)).toBeNull();

@@ -14,7 +14,7 @@ import {
   HINDSIGHT_DEFAULT_MAX_AGE_DAYS,
 } from "@/lib/memory/hindsight-client";
 import { parseOptionalTagsInput } from "@/lib/memory/hindsight-tag-input";
-import { runMutation } from "@/lib/run-mutation";
+import { runWrite } from "@/lib/api-write";
 import { stringOr } from "./utils";
 import type { Memory, HealthState } from "./types";
 
@@ -157,17 +157,15 @@ export function useHindsightMemories(showToast: ShowToast) {
   const openAddModal = useCallback(() => setShowAddModal(true), [setShowAddModal]);
   const closeAddModal = useCallback(() => setShowAddModal(false), [setShowAddModal]);
 
-  const handleAdd = () =>
-    runMutation(showToast, {
-      isValid: () => newContent.trim().length > 0,
-      busy: setAdding,
-      build: () => ({
-        content: newContent,
-        tags: parseOptionalTagsInput(newTags),
-      }),
-      path: "/api/memory/hindsight",
-      successMsg: "Memory stored",
-      errorMsg: "Failed to store memory",
+  const handleAdd = async () => {
+    if (!newContent.trim()) return false;
+    const stored = await runWrite({
+      setBusy: setAdding,
+      showToast,
+      url: "/api/memory/hindsight",
+      body: { content: newContent, tags: parseOptionalTagsInput(newTags) },
+      successMessage: "Memory stored",
+      errorMessage: "Failed to store memory",
       onSuccess: async () => {
         setShowAddModal(false);
         setNewContent("");
@@ -176,6 +174,8 @@ export function useHindsightMemories(showToast: ShowToast) {
         else await loadRecentMemories();
       },
     });
+    return stored !== undefined;
+  };
 
   return {
     memories,

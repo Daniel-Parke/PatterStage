@@ -24,6 +24,7 @@ import { readdirSync, readFileSync, statSync, writeFileSync, existsSync } from "
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+import ts from "typescript";
 
 const args = process.argv.slice(2);
 const flag = (name) => {
@@ -53,7 +54,7 @@ const lines = (f) => text.get(f).split("\n");
 const count = (files) => files.reduce((n, f) => n + lines(f).length, 0);
 /** The file without its comments, for matching a shape by its code. */
 const code = (f) => text.get(f).replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
-const ts = (files) => files.filter((f) => /\.(ts|tsx)$/.test(f));
+const tsFiles = (files) => files.filter((f) => /\.(ts|tsx)$/.test(f));
 
 // A six-line window of trimmed, non-comment, non-bracket lines that appears in
 // two or more files. Each covered line counts once.
@@ -98,20 +99,71 @@ function routesWithTryCatch() {
   return { count: hits.length, sites: hits.reduce((n, f) => n + (code(f).match(/serverErrorFromCatch\(/g) ?? []).length, 0), files: hits.map(rel) };
 }
 
+// A read the screen rolled itself: a fetch (safeApiCall, safeApiCallData or
+// apiFetch) reachable from a useEffect callback, through the file's own
+// functions, because a loader is usually a useCallback the effect calls.
+// Walked on the AST since C3 (T-0138): the regex before it counted three
+// click handlers as reads and missed eight loaders called from effects.
+const FETCHERS = new Set(["safeApiCall", "safeApiCallData", "apiFetch"]);
+function effectReads(file) {
+  const source = text.get(file);
+  if (!/useEffect\(/.test(source)) return false;
+  const sf = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true);
+  const fns = new Map();
+  const fnOf = (init) => {
+    if (!init) return null;
+    if (ts.isArrowFunction(init) || ts.isFunctionExpression(init)) return init;
+    const first = ts.isCallExpression(init) ? init.arguments[0] : undefined;
+    return first && (ts.isArrowFunction(first) || ts.isFunctionExpression(first)) ? first : null;
+  };
+  const collect = (node) => {
+    if (ts.isFunctionDeclaration(node) && node.name) fns.set(node.name.text, node);
+    if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && fnOf(node.initializer)) fns.set(node.name.text, fnOf(node.initializer));
+    ts.forEachChild(node, collect);
+  };
+  collect(sf);
+  const seen = new Set();
+  const reaches = (node) => {
+    let hit = false;
+    const go = (n) => {
+      if (hit) return;
+      if (ts.isCallExpression(n)) {
+        const callee = n.expression;
+        const name = ts.isIdentifier(callee) ? callee.text : ts.isPropertyAccessExpression(callee) ? callee.name.text : null;
+        if (name && FETCHERS.has(name)) { hit = true; return; }
+        if (name && fns.has(name) && !seen.has(name)) { seen.add(name); if (reaches(fns.get(name))) { hit = true; return; } }
+      }
+      ts.forEachChild(n, go);
+    };
+    go(node);
+    return hit;
+  };
+  let found = false;
+  const effects = (node) => {
+    if (found) return;
+    if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === "useEffect" && node.arguments.length && reaches(node.arguments[0])) found = true;
+    ts.forEachChild(node, effects);
+  };
+  effects(sf);
+  return found;
+}
+
 function handRolledReads() {
-  const files = ts(src).filter((f) => !/\/src\/app\/api\//.test(f) && !/\/src\/hooks\/useApi(Resource|Mutation)\.ts$/.test(f) && !/\/src\/lib\//.test(f));
-  const hits = files.filter((f) => {
-    const t = code(f);
-    return /safeApiCall(Data)?\(/.test(t) && /useEffect\(/.test(t) && !/useApiResource\(/.test(t) && !/useApiMutation\(/.test(t);
-  });
+  const files = tsFiles(src).filter((f) => !/\/src\/app\/api\//.test(f) && !/\/src\/hooks\/useApiResource\.ts$/.test(f) && !/\/src\/lib\//.test(f));
+  const hits = files.filter(effectReads);
   return { count: hits.length, files: hits.map(rel) };
 }
 
+// The named hooks write through runWrite (or its mission shorthand) and say
+// nothing about a failure themselves; a toastError of their own is the old
+// try/catch/finally around the call.
 function writesWithoutMutation() {
   const named = ["useModelActions", "useMissionDispatch", "useMissionTemplateActions", "useModelFallbackChain"];
   const hits = named.filter((n) => {
     const f = src.find((p) => p.endsWith(`/src/hooks/${n}.ts`));
-    return f && !/useApiMutation\(/.test(code(f));
+    if (!f) return true;
+    const t = code(f);
+    return !/\b(runWrite|dispatchMission)\s*(<[^(]*>)?\(/.test(t) || /toastError\(/.test(t);
   });
   return { count: hits.length, files: hits };
 }
@@ -127,7 +179,7 @@ function repeatedTypeShapes() {
   };
   const out = {};
   for (const [name, re] of Object.entries(shapes)) {
-    const files = ts(src).filter((f) => re.test(code(f)));
+    const files = tsFiles(src).filter((f) => re.test(code(f)));
     out[name] = { count: files.length, files: files.map(rel) };
   }
   return out;
@@ -141,7 +193,7 @@ function oneImporterComponents() {
     const alias = stem.replace(/.*\/src\//, "@/");
     const base = stem.split("/").pop();
     let n = 0;
-    for (const f of ts(src)) {
+    for (const f of tsFiles(src)) {
       if (f === c) continue;
       const t = text.get(f);
       if (t.includes(`"${alias}"`) || new RegExp(`from "\\.{1,2}/[^"]*\\b${base}"`).test(t)) n += 1;
@@ -158,7 +210,7 @@ function libRootFiles() {
 
 function commentEssays() {
   const rows = [];
-  for (const f of ts(src)) {
+  for (const f of tsFiles(src)) {
     const ls = lines(f);
     if (ls.length < 60) continue;
     const c = ls.filter((l) => /^\s*(\/\/|\*|\/\*)/.test(l)).length;
@@ -172,8 +224,8 @@ function inlineDbMocks() {
   return { count: files.length, files: files.map(rel) };
 }
 
-const srcDup = repeatedWindows(ts(src));
-const testDup = repeatedWindows(ts(tests));
+const srcDup = repeatedWindows(tsFiles(src));
+const testDup = repeatedWindows(tsFiles(tests));
 const routes = routesWithTryCatch();
 const reads = handRolledReads();
 const writes = writesWithoutMutation();

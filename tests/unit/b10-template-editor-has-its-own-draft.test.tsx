@@ -28,13 +28,14 @@ import { act, renderHook } from "@testing-library/react";
 
 // ── the wire ───────────────────────────────────────────────────
 
-const safeApiCall = jest.fn(async () => ({ ok: true, data: {} }));
+// Amended 2026-09-10 (C3, T-0138): the write is runWrite over apiFetch, body as JSON.
+const apiFetch = jest.fn(async () => ({ data: {} }));
 
 jest.mock("@/lib/api-fetch", () => ({
-  safeApiCall: (...a: unknown[]) => (safeApiCall as unknown as (...a: unknown[]) => unknown)(...a),
+  apiFetch: (...a: unknown[]) => (apiFetch as unknown as (...a: unknown[]) => unknown)(...a),
   toastError: jest.fn(),
+  messageFromError: (e: unknown, f: string) => (e instanceof Error ? e.message : f),
 }));
-jest.mock("@/lib/dashboard/toast-from-result", () => ({ toastFromResult: jest.fn() }));
 
 import { useMissionTemplatesState } from "@/hooks/useMissionTemplatesState";
 import { useMissionTemplateActions } from "@/hooks/useMissionTemplateActions";
@@ -125,16 +126,16 @@ function mount(templates: MissionTemplate[] = [TEMPLATE]) {
 }
 
 function lastBody(): Record<string, unknown> {
-  const call = safeApiCall.mock.calls[safeApiCall.mock.calls.length - 1] as unknown as [
+  const call = apiFetch.mock.calls[apiFetch.mock.calls.length - 1] as unknown as [
     string,
-    { body: Record<string, unknown> },
+    { body: string },
   ];
-  return call[1].body;
+  return JSON.parse(call[1].body) as Record<string, unknown>;
 }
 
 beforeEach(() => {
-  safeApiCall.mockClear();
-  safeApiCall.mockResolvedValue({ ok: true, data: {} } as never);
+  apiFetch.mockClear();
+  apiFetch.mockResolvedValue({ data: {} } as never);
 });
 
 // ── D70: the soft close clears the target ──────────────────────
@@ -167,7 +168,7 @@ describe("Save as Template resolves its target by name, never by a stale id", ()
       await result.current.actions.handleSaveAsTemplate();
     });
 
-    expect(safeApiCall).toHaveBeenCalledTimes(1);
+    expect(apiFetch).toHaveBeenCalledTimes(1);
     expect(lastBody()).toMatchObject({ action: "create", name: "A brand new mission" });
     expect(lastBody().templateId).toBeUndefined();
   });
@@ -195,7 +196,7 @@ describe("Save as Template resolves its target by name, never by a stale id", ()
     await act(async () => {
       await result.current.actions.handleSaveAsTemplate();
     });
-    expect(safeApiCall).not.toHaveBeenCalled();
+    expect(apiFetch).not.toHaveBeenCalled();
     expect(result.current.actions.overwriteTemplateName).toBe("A brand new mission");
 
     await act(async () => {

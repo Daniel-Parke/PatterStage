@@ -29,7 +29,7 @@ import ProfilePicker from "@/components/ui/ProfilePicker";
 import { Textarea } from "@/components/ui/field";
 import { LastResult, useToast } from "@/components/ui/Toast";
 import { API_FETCH_BULK_TIMEOUT_MS, apiFetch, toastError } from "@/lib/api-fetch";
-import { runSyncAction } from "@/lib/operation-sync-action";
+import { runWrite } from "@/lib/api-write";
 import { profileSyncBody } from "@/lib/profile-sync-body";
 import type { PlatformToolsets } from "@/modules/hermes/lib/profile-config-builder";
 import type { AgentProfile } from "@/types/console";
@@ -150,7 +150,7 @@ export default function ToolsPage() {
     } else {
       payload = expandUnifiedToAllPlatforms(unifiedEnabled);
     }
-    return runSyncAction({
+    return runWrite({
       setBusy: setSavingToolsets,
       showToast,
       url: `/api/agent/profiles/${selectedProfile}/toolsets`,
@@ -169,7 +169,7 @@ export default function ToolsPage() {
         ? "Pushed profile to Hermes. Model defaults re-applied to config.yaml."
         : "Pushed profile to Hermes"
     );
-    return runSyncAction({
+    return runWrite({
       setBusy,
       showToast,
       url: `/api/agent/profiles/sync/${mode}`,

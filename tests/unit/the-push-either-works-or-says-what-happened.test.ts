@@ -27,7 +27,7 @@
 //     the only problem is a sync ERROR;
 //   * and `POST /api/agent/profiles/sync/push` answers 200 {success:false} for
 //     the same failure the toolsets route answers 500 for -- while putting the
-//     reason at `data.result.error`, where runSyncAction does not look, so the
+//     reason at `data.result.error`, where runWrite does not look, so the
 //     operator gets a generic "Push failed" and never sees the ENOENT at all.
 
 import { mkdtempSync, existsSync, rmSync, readFileSync, mkdirSync } from "fs";

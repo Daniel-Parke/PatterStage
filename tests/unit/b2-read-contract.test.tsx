@@ -10,6 +10,8 @@
  * tests/e2e/read-contract.spec.ts drives every page against a 500.
  */
 import { render, screen, waitFor } from "@testing-library/react";
+// Amended 2026-09-10 (C3, T-0138): the hub reads through useApiResource.
+import { renderWithQuery } from "../helpers/render-with-query";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -58,7 +60,7 @@ describe("the Story Weaver hub", () => {
       new Response(JSON.stringify({ error: "database locked" }), { status: 500, headers: { "content-type": "application/json" } }),
     ) as unknown as typeof fetch;
     const { default: Hub } = await import("@/app/recroom/story-weaver/page");
-    render(<Hub />);
+    renderWithQuery(<Hub />);
     await waitFor(() => expect(screen.getByRole("alert")).toBeInTheDocument());
     expect(screen.getByRole("button", { name: /retry/i })).toBeInTheDocument();
     // Amended 2026-09-07 (U12, T-0126): the hub is the library, and its empty

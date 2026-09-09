@@ -47,7 +47,7 @@ import SkillsDenylistNote from "@/components/skills/SkillsDenylistNote";
 import SkillsCatalogEmpty from "@/components/skills/SkillsCatalogEmpty";
 import SkillEditorModal from "@/components/skills/SkillEditorModal";
 import { API_FETCH_BULK_TIMEOUT_MS, apiFetch, toastError } from "@/lib/api-fetch";
-import { runSyncAction } from "@/lib/operation-sync-action";
+import { runWrite } from "@/lib/api-write";
 import {
   clampPage,
   effectiveSkillEnabled,
@@ -149,7 +149,7 @@ export default function SkillsPage() {
   }, [selectedProfile, showToast]);
 
   const importSkillsFromHermes = () =>
-    runSyncAction({
+    runWrite({
       setBusy: setImporting,
       showToast,
       url: "/api/agent/profiles/sync/import",
@@ -205,30 +205,27 @@ export default function SkillsPage() {
             }
           : prev,
       );
-      try {
-        await apiFetch(`/api/skills/${encodeURIComponent(skillName)}/toggle`, {
-          method: "PUT",
-          body: JSON.stringify({ profile: selectedProfile, enabled: next }),
-        });
-        showToast(
-          next ? `${skillName} enabled` : `${skillName} disabled`,
-          "success",
-        );
-      } catch (err) {
-        // Revert the optimistic data on failure (toggling is cleared by the
-        // finally block below, so we only need to revert data here).
-        if (prevData) {
-          setData(prevData);
-        }
-        toastError(showToast, err, "Failed to update skill");
-      } finally {
-        // Always clear the pending toggle, regardless of success or failure.
-        setToggling((prev) => {
-          const next2 = { ...prev };
-          delete next2[skillName];
-          return next2;
-        });
-      }
+      await runWrite({
+        // The pending toggle clears whatever the answer was.
+        setBusy: (busy) => {
+          if (busy) return;
+          setToggling((prev) => {
+            const rest = { ...prev };
+            delete rest[skillName];
+            return rest;
+          });
+        },
+        showToast,
+        url: `/api/skills/${encodeURIComponent(skillName)}/toggle`,
+        method: "PUT",
+        body: { profile: selectedProfile, enabled: next },
+        successMessage: next ? `${skillName} enabled` : `${skillName} disabled`,
+        errorMessage: "Failed to update skill",
+        // Put the optimistic row back.
+        onError: () => {
+          if (prevData) setData(prevData);
+        },
+      });
     },
     [data, selectedProfile, showToast],
   );
@@ -261,23 +258,22 @@ export default function SkillsPage() {
 
   const saveSkillEdit = async () => {
     if (!editingSkill || savingEdit) return;
-    setSavingEdit(true);
-    try {
-      await apiFetch(skillApiUrl(editingSkill), {
-        method: "PUT",
-        body: JSON.stringify({ content: editContent }),
-      });
-      setEditOriginal(editContent);
-      showToast(`${editingSkill} saved`, "success");
-      if (expandedSkill === editingSkill) {
-        setSkillContent(editContent);
-      }
-      closeSkillEditor();
-    } catch (err) {
-      toastError(showToast, err, "Failed to save skill");
-    } finally {
-      setSavingEdit(false);
-    }
+    await runWrite({
+      setBusy: setSavingEdit,
+      showToast,
+      url: skillApiUrl(editingSkill),
+      method: "PUT",
+      body: { content: editContent },
+      successMessage: `${editingSkill} saved`,
+      errorMessage: "Failed to save skill",
+      onSuccess: () => {
+        setEditOriginal(editContent);
+        if (expandedSkill === editingSkill) {
+          setSkillContent(editContent);
+        }
+        closeSkillEditor();
+      },
+    });
   };
 
   const viewSkill = async (skill: Skill) => {

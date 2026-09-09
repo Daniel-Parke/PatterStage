@@ -14,7 +14,8 @@ jest.mock("@/lib/api-fetch", () => ({
   ...(jest.requireActual("@/lib/api-fetch") as Record<string, unknown>),
   apiFetch: jest.fn(),
 }));
-const { apiFetch } = require("@/lib/api-fetch") as { apiFetch: jest.Mock };
+import { apiFetch as apiFetchMocked } from "@/lib/api-fetch";
+const apiFetch = apiFetchMocked as unknown as jest.Mock;
 
 const base = (overrides: Partial<RunWriteOptions> = {}): RunWriteOptions => ({
   setBusy: jest.fn(),
@@ -95,7 +96,7 @@ describe("runWrite · the six things", () => {
     expect(opts.onSuccess).not.toHaveBeenCalled();
     expect(opts.setBusy).toHaveBeenLastCalledWith(false);
 
-    apiFetch.mockRejectedValueOnce("not an Error");
+    apiFetch.mockRejectedValueOnce(new Error(""));
     const plain = base();
     await runWrite(plain);
     expect(plain.showToast).toHaveBeenCalledWith("boom", "error");
@@ -109,10 +110,11 @@ describe("runWrite · the six things", () => {
     expect(onError).toHaveBeenCalledWith(err);
   });
 
-  it("busy clears even when the reload throws", async () => {
+  it("a reload that throws is said as the failure, and busy still clears", async () => {
     apiFetch.mockResolvedValue({ data: {} });
     const opts = base({ onSuccess: async () => { throw new Error("reload broke"); } });
-    await expect(runWrite(opts)).rejects.toThrow("reload broke");
+    await expect(runWrite(opts)).resolves.toBeUndefined();
+    expect(opts.showToast).toHaveBeenCalledWith("reload broke", "error");
     expect(opts.setBusy).toHaveBeenLastCalledWith(false);
   });
 

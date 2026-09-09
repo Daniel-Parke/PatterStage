@@ -22,6 +22,8 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+// Amended 2026-09-10 (C3, T-0138): the create page reads its libraries through useApiResource.
+import { renderWithQuery } from "../helpers/render-with-query";
 
 jest.mock("lucide-react", () => {
   const passthrough = () => () => null;
@@ -183,7 +185,7 @@ describe("the story reader", () => {
 
 describe("the create page", () => {
   it("says a story costs money before the button that spends it", async () => {
-    render(<CreateStoryPage />);
+    renderWithQuery(<CreateStoryPage />);
 
     const before = await screen.findByTestId("story-spend-before");
     expect(before).toHaveTextContent(/paid model/i);

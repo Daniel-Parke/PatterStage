@@ -1,25 +1,26 @@
 // ═══════════════════════════════════════════════════════════════
-// useModelActions — registry writes for /config/models
+// useModelActions — registry writes for /agent/models
 // ═══════════════════════════════════════════════════════════════
 //
-// Split out of useModelsPage (Phase 4 god-file decomposition). Owns the
-// write path over the model registry itself: push/pull against Hermes,
-// the editor's save, delete, the per-task default setter and its bulk
-// sibling, and the manual refresh. Plus the three flags the UI disables
-// controls on: `editing` (which record the modal has open), `refreshing`
-// and `busyTaskType`.
+// Owns the write path over the model registry itself: push/pull against
+// Hermes, the editor's save, delete, the credentials, the per-task default
+// setter and its bulk sibling, the manual refresh and the drift lines.
+// Plus the flags the UI disables controls on: `editing` (which record the
+// modal has open), `refreshing`, `busyTaskType`, `busyCredentialId`,
+// `addingCredential`, `busyDriftLine`.
 //
 // Reads nothing it does not write. `loadAll` is the registry hook's
-// refetch, called after every successful mutation exactly as before;
-// `setDefaults` is passed in only for handleSetDefault's optimistic
-// flip, which is reconciled by the loadAll that follows it.
+// refetch, run after every write through `runWrite`; `setDefaults` is
+// passed in only for handleSetDefault's optimistic flip, which is
+// reconciled by the reload that follows it either way.
 
 "use client";
 
 import { useCallback, useState, type Dispatch, type SetStateAction } from "react";
 
 import type { ToastType } from "@/components/ui/Toast";
-import { API_FETCH_BULK_TIMEOUT_MS, apiFetch, messageFromError, safeApiCallData, toastError } from "@/lib/api-fetch";
+import { API_FETCH_BULK_TIMEOUT_MS, apiFetch, messageFromError } from "@/lib/api-fetch";
+import { runWrite, type RunWriteOptions } from "@/lib/api-write";
 import type { ModelEditorRecord } from "@/components/models/ModelEditor";
 import { type TaskType } from "@/lib/models/task-types";
 import type { SyncActionResult } from "@/lib/models/sync-result";
@@ -37,6 +38,10 @@ export interface UseModelActionsArgs {
   agentDefaultId?: string | null;
 }
 
+/** What /api/models/sync/* and /api/models/import answer with. */
+type SyncEnvelope = { data?: Partial<SyncActionResult> };
+type ImportEnvelope = { data?: { modelsImported?: number; modelsSkipped?: number; credentialsUpdated?: number } };
+
 export function useModelActions({
   loadAll,
   setDefaults,
@@ -52,7 +57,26 @@ export function useModelActions({
   const [busyTaskType, setBusyTaskType] = useState<TaskType | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
-  /** Shared sync helper — both push and pull follow the same pattern. */
+  /** A write to the registry: the words, the call, the registry reloaded. */
+  const write = useCallback(
+    <T,>(opts: Omit<RunWriteOptions<T>, "showToast" | "onSuccess"> & { onSuccess?: (data: T) => void }) =>
+      runWrite<T>({
+        ...opts,
+        showToast,
+        onSuccess: async (data) => {
+          await loadAll();
+          opts.onSuccess?.(data);
+        },
+      }),
+    [loadAll, showToast],
+  );
+
+  /**
+   * Push or pull one model against Hermes. The route answers 200 with
+   * `success: false` and its details when the config could not be written or
+   * read, and that is the answer the caller gets back, not a toast alone: the
+   * drift banner and the per-row buttons read the outcome (T-0100).
+   */
   const syncModel = useCallback(
     async (
       action: "push" | "pull",
@@ -60,37 +84,36 @@ export function useModelActions({
       options?: Record<string, unknown>,
     ): Promise<SyncActionResult> => {
       const label = action === "push" ? "Push" : "Pull";
-      try {
-        const res = await apiFetch<{ data?: Partial<SyncActionResult> }>(`/api/models/sync/${action}`, {
-          method: "POST",
-          body: JSON.stringify({ modelId, ...options }),
-          // Bulk: work scales with the install, not the request (T-0047).
-          timeoutMs: API_FETCH_BULK_TIMEOUT_MS,
-        });
-        // Read the answer. A 2xx used to be enough for the success toast, so a
-        // body saying `success: false` toasted "Model pushed to Hermes" over a
-        // refusal (T-0095, D11). The push route now answers 500 for that, which
-        // the catch below handles; this is the other half, for any 200 that
-        // still carries a failed outcome.
-        const outcome = res?.data;
-        if (outcome?.success === false) {
-          const details = outcome.details ?? [];
-          showToast(details[0]?.detail || `${label} failed`, "error");
-          return { success: false, backupPath: outcome.backupPath ?? null, details };
-        }
-        showToast(`Model ${action}ed to Hermes`, "success");
-        void loadAll();
-        return { success: true, backupPath: outcome?.backupPath ?? null, details: outcome?.details ?? [] };
-      } catch (err) {
-        toastError(showToast, err, `${label} failed`);
+      let thrown: unknown;
+      const res = await write<SyncEnvelope>({
+        url: `/api/models/sync/${action}`,
+        body: { modelId, ...options },
+        timeoutMs: API_FETCH_BULK_TIMEOUT_MS,
+        checkSuccess: false,
+        successMessage: (r) =>
+          r?.data?.success === false
+            ? { message: r.data.details?.[0]?.detail || `${label} failed`, type: "error" }
+            : `Model ${action}ed to Hermes`,
+        errorMessage: `${label} failed`,
+        onError: (err) => {
+          thrown = err;
+        },
+      });
+      if (!res) {
         return {
           success: false,
           backupPath: null,
-          details: [{ action, detail: messageFromError(err, `${label} failed`) }],
+          details: [{ action, detail: messageFromError(thrown, `${label} failed`) }],
         };
       }
+      const outcome = res.data;
+      return {
+        success: outcome?.success !== false,
+        backupPath: outcome?.backupPath ?? null,
+        details: outcome?.details ?? [],
+      };
     },
-    [loadAll, showToast],
+    [write],
   );
 
   const handlePush = useCallback(
@@ -111,26 +134,18 @@ export function useModelActions({
     showToast("Model saved", "success");
   }, [loadAll, showToast]);
 
-  // handleDelete is the post-confirm action — the per-row confirm
-  // guard has already fired (see ModelsTableSection's per-row
-  // useTwoStepConfirm). The pre-refactor form was a single global
-  // `window.confirm` call here, which (a) blocked the JS thread with
-  // a native dialog, (b) had no per-row context, and (c) broke the
-  // project's two-step-confirm convention (see
-  // `tests/unit/window-confirm-source-patterns.test.ts`).
+  // handleDelete is the post-confirm action — the per-row confirm guard has
+  // already fired (see ModelsTableSection's per-row useTwoStepConfirm).
   const handleDelete = useCallback(
     async (model: ApiModel) => {
-      try {
-        await apiFetch(`/api/models/${encodeURIComponent(model.id)}`, {
-          method: "DELETE",
-        });
-        showToast(`Deleted ${model.name}`, "success");
-        await loadAll();
-      } catch (err) {
-        toastError(showToast, err, "Delete failed");
-      }
+      await write({
+        url: `/api/models/${encodeURIComponent(model.id)}`,
+        method: "DELETE",
+        successMessage: `Deleted ${model.name}`,
+        errorMessage: "Delete failed",
+      });
     },
-    [loadAll, showToast]
+    [write]
   );
 
   /**
@@ -144,256 +159,170 @@ export function useModelActions({
    */
   const handleDeleteCredential = useCallback(
     async (credential: ApiCredential) => {
-      setBusyCredentialId(credential.id);
-      try {
-        const res = await apiFetch<{
-          data?: {
-            envVarRemoved?: boolean;
-            envVarKeptForSibling?: boolean;
-            envError?: string | null;
-            orphanedModels?: string[];
+      await write<{
+        data?: {
+          envVarRemoved?: boolean;
+          envVarKeptForSibling?: boolean;
+          envError?: string | null;
+          orphanedModels?: string[];
+        };
+      }>({
+        setBusy: (busy) => setBusyCredentialId(busy ? credential.id : null),
+        url: `/api/credentials/${encodeURIComponent(credential.id)}`,
+        method: "DELETE",
+        successMessage: (res) => {
+          const d = res?.data ?? {};
+          const notes: string[] = [];
+          if (d.envVarKeptForSibling) {
+            // design-lint-disable-next-line hermes-outside-adapter -- the toast names the exact file the shared key lives in; "the agent's env file" would send the operator hunting
+            notes.push("another credential for this provider still uses the key in ~/.hermes/.env");
+          } else if (d.envVarRemoved) {
+            // design-lint-disable-next-line hermes-outside-adapter -- same remedy-naming rule as the GatewayBanner precedent
+            notes.push("removed from ~/.hermes/.env");
+          }
+          if (d.envError) notes.push(`.env not updated: ${d.envError}`);
+          const orphans = d.orphanedModels ?? [];
+          if (orphans.length > 0) {
+            notes.push(`${orphans.join(", ")} now ${orphans.length === 1 ? "has" : "have"} no key`);
+          }
+          return {
+            message: `Deleted ${credential.label}${notes.length ? ` — ${notes.join("; ")}` : ""}`,
+            type: orphans.length > 0 || d.envError ? "info" : "success",
           };
-        }>(`/api/credentials/${encodeURIComponent(credential.id)}`, { method: "DELETE" });
-
-        const d = res?.data ?? {};
-        const notes: string[] = [];
-        if (d.envVarKeptForSibling) {
-          // design-lint-disable-next-line hermes-outside-adapter -- the toast names the exact file the shared key lives in; "the agent's env file" would send the operator hunting
-          notes.push("another credential for this provider still uses the key in ~/.hermes/.env");
-        } else if (d.envVarRemoved) {
-          // design-lint-disable-next-line hermes-outside-adapter -- same remedy-naming rule as the GatewayBanner precedent
-          notes.push("removed from ~/.hermes/.env");
-        }
-        if (d.envError) notes.push(`.env not updated: ${d.envError}`);
-        const orphans = d.orphanedModels ?? [];
-        if (orphans.length > 0) {
-          notes.push(`${orphans.join(", ")} now ${orphans.length === 1 ? "has" : "have"} no key`);
-        }
-
-        showToast(
-          `Deleted ${credential.label}${notes.length ? ` — ${notes.join("; ")}` : ""}`,
-          orphans.length > 0 || d.envError ? "info" : "success",
-        );
-        await loadAll();
-      } catch (err) {
-        toastError(showToast, err, "Delete failed");
-      } finally {
-        setBusyCredentialId(null);
-      }
+        },
+        errorMessage: "Delete failed",
+      });
     },
-    [loadAll, showToast],
+    [write],
   );
 
-  /**
-   * Create a credential on its own, with no model attached to it.
-   *
-   * The only way to make one used to be the model editor's picker, so the
-   * Models page could show credentials, delete them and rotate them while the
-   * act of adding one lived inside saving a MODEL. An operator who already had
-   * their model, and only wanted to give it a key, had nowhere to go (T-0113).
-   * The route is the same one the editor posts to, so the analytics event, the
-   * env write and the rollback on a failed write are all unchanged.
-   */
   const handleAddCredential = useCallback(
     async ({ label, provider, apiKey }: { label: string; provider: string; apiKey: string }) => {
-      setAddingCredential(true);
-      try {
-        const res = await apiFetch<{ data?: { credential?: { label?: string; keyHint?: string } } }>(
-          "/api/credentials",
-          { method: "POST", body: JSON.stringify({ label, provider, apiKey }) },
-        );
-        const saved = res?.data?.credential;
-        const hint = saved?.keyHint ? `: ${saved.keyHint}` : "";
-        showToast(`Added ${saved?.label ?? label}${hint}`, "success");
-        await loadAll();
-      } catch (err) {
-        toastError(showToast, err, "Could not add the credential");
-      } finally {
-        setAddingCredential(false);
-      }
+      await write<{ data?: { credential?: { label?: string; keyHint?: string } } }>({
+        setBusy: setAddingCredential,
+        url: "/api/credentials",
+        body: { label, provider, apiKey },
+        successMessage: (res) => {
+          const saved = res?.data?.credential;
+          return `Added ${saved?.label ?? label}${saved?.keyHint ? `: ${saved.keyHint}` : ""}`;
+        },
+        errorMessage: "Could not add the credential",
+      });
     },
-    [loadAll, showToast],
+    [write],
+  );
+
+  const handleRotateCredential = useCallback(
+    async (credential: ApiCredential, apiKey: string) => {
+      await write<{ data?: { credential?: { keyHint?: string }; envVarUpdated?: boolean } }>({
+        setBusy: (busy) => setBusyCredentialId(busy ? credential.id : null),
+        url: `/api/credentials/${encodeURIComponent(credential.id)}`,
+        method: "PATCH",
+        body: { apiKey },
+        successMessage: (res) =>
+          `Rotated ${credential.label}: now ${res?.data?.credential?.keyHint ?? ""}${res?.data?.envVarUpdated ? "; Hermes .env updated" : ""}`,
+        errorMessage: "Rotate failed",
+      });
+    },
+    [write],
   );
 
   /**
-   * Replace one credential's key, in the row and in the agent's env file.
-   *
-   * The only way to change a key used to be to delete the credential and add
-   * it again, which unlinked every model pointing at it: an expired key cost
-   * the operator their model wiring (T-0100, D14). The route keeps the two
-   * copies together, so the toast reports the new hint and whether the env
-   * file moved with it.
+   * Set or clear one task type's default. The flip is optimistic; the reload
+   * that follows the answer, refused or not, is what the screen settles on.
+   * A refusal comes back as a 200 with `error` set (the model has no key, say),
+   * so the success message reads it.
    */
-  const handleRotateCredential = useCallback(
-    async (credential: ApiCredential, apiKey: string) => {
-      setBusyCredentialId(credential.id);
-      try {
-        const res = await apiFetch<{
-          data?: { credential?: { keyHint?: string }; envVarUpdated?: boolean };
-        }>(`/api/credentials/${encodeURIComponent(credential.id)}`, {
-          method: "PATCH",
-          body: JSON.stringify({ apiKey }),
-        });
-        const hint = res?.data?.credential?.keyHint ?? "";
-        // Only said when it happened: a provider that authenticates by OAuth
-        // has no variable to write, and claiming otherwise would send the
-        // operator looking for a change that was never made.
-        const envNote = res?.data?.envVarUpdated ? "; Hermes .env updated" : "";
-        showToast(`Rotated ${credential.label}: now ${hint}${envNote}`, "success");
-        await loadAll();
-      } catch (err) {
-        toastError(showToast, err, "Rotate failed");
-      } finally {
-        setBusyCredentialId(null);
-      }
-    },
-    [loadAll, showToast],
-  );
-
   const handleSetDefault = useCallback(
     async (taskType: TaskType, modelId: string | null) => {
-      setBusyTaskType(taskType);
       setDefaults((prev) => ({ ...prev, [taskType]: modelId }));
-      try {
-        const res = await apiFetch<{ data?: { error?: string | null } }>("/api/models/defaults", {
-          method: "PUT",
-          body: JSON.stringify({ taskType, modelId }),
-        });
-        await loadAll();
-        // The route answers 200 with the yaml writer's refusal beside the
-        // saved defaults: the database change happened, the file's did not,
-        // and saying "Cleared" over that is the lie this replaces (T-0100, D9).
-        const refusal = res?.data?.error;
-        if (refusal) {
-          showToast(refusal, "error");
-        } else {
-          showToast(
-            modelId ? `Default updated for ${taskType}` : `Cleared default for ${taskType}`,
-            "success"
-          );
-        }
-      } catch (err) {
-        toastError(showToast, err, "Default update failed");
-        await loadAll();
-      } finally {
-        setBusyTaskType(null);
-      }
+      await write<{ data?: { error?: string | null } }>({
+        setBusy: (busy) => setBusyTaskType(busy ? taskType : null),
+        url: "/api/models/defaults",
+        method: "PUT",
+        body: { taskType, modelId },
+        successMessage: (res) =>
+          res?.data?.error
+            ? { message: res.data.error, type: "error" }
+            : modelId
+              ? `Default updated for ${taskType}`
+              : `Cleared default for ${taskType}`,
+        errorMessage: "Default update failed",
+        onError: loadAll,
+      });
     },
-    [loadAll, showToast, setDefaults]
+    [write, loadAll, setDefaults]
   );
 
+  /** One PUT per task type, one sentence about all of them. */
   const handleBulkAuxiliaryChange = useCallback(
     async (taskTypes: TaskType[], targetModelId: string) => {
-      setBusyTaskType("agent");
-      try {
-        const results = await Promise.all(
-          taskTypes.map(async (taskType) => {
-            try {
-              await apiFetch("/api/models/defaults", {
+      await runWrite<{ taskType: TaskType; ok: boolean }[]>({
+        setBusy: (busy) => setBusyTaskType(busy ? "agent" : null),
+        showToast,
+        request: () =>
+          Promise.all(
+            taskTypes.map((taskType) =>
+              apiFetch("/api/models/defaults", {
                 method: "PUT",
                 body: JSON.stringify({ taskType, modelId: targetModelId }),
-              });
-              return { taskType, ok: true };
-            } catch (err) {
-              return { taskType, ok: false, error: messageFromError(err, "Failed") };
-            }
-          })
-        );
-        await loadAll();
-        const failures = results.filter((r) => !r.ok);
-        if (failures.length === 0) {
-          showToast(
-            `Set ${taskTypes.length} auxiliary default${pluralise(taskTypes.length)}`,
-            "success"
-          );
-        } else {
-          showToast(
-            `${results.length - failures.length}/${taskTypes.length} updated — ${failures.map((f) => f.taskType).join(", ")} failed`,
-            "error"
-          );
-        }
-      } catch (err) {
-        toastError(showToast, err, "Bulk update failed");
-        await loadAll();
-      } finally {
-        setBusyTaskType(null);
-      }
+              }).then(
+                () => ({ taskType, ok: true }),
+                () => ({ taskType, ok: false }),
+              ),
+            ),
+          ),
+        successMessage: (results) => {
+          const failures = results.filter((r) => !r.ok);
+          return failures.length === 0
+            ? `Set ${taskTypes.length} auxiliary default${pluralise(taskTypes.length)}`
+            : {
+                message: `${results.length - failures.length}/${taskTypes.length} updated — ${failures.map((f) => f.taskType).join(", ")} failed`,
+                type: "error",
+              };
+        },
+        errorMessage: "Bulk update failed",
+        onSuccess: loadAll,
+        onError: loadAll,
+      });
     },
-    [loadAll, showToast]
+    [showToast, loadAll]
   );
 
   const handleRefresh = useCallback(async () => {
-    setRefreshing(true);
-    try {
-      // `/api/models/import` returns `{ data: { modelsImported,
-      // modelsSkipped, credentialsUpdated } }`. `safeApiCallData`
-      // unwraps the envelope in one call — same observable
-      // result as the inline form (returns the inner payload
-      // or `null` on error). The success-path access is
-      // `res?.X` instead of `result.data?.X`; the catch path
-      // still surfaces the API's error message via the
-      // thrown error, which `toastError` converts to a
-      // toast.
-      const result = await safeApiCallData<{
-        modelsImported?: number;
-        modelsSkipped?: number;
-        credentialsUpdated?: number;
-      }>("/api/models/import", {
-        method: "POST",
-        // Bulk: walks the whole catalogue (T-0047).
-        timeoutMs: API_FETCH_BULK_TIMEOUT_MS,
-      });
-      const modelsImported = result?.modelsImported ?? 0;
-      const creds = result?.credentialsUpdated ?? 0;
-      showToast(
-        `Re-imported ${modelsImported} model${pluralise(modelsImported)} from config.yaml${creds > 0 ? `, ${creds} credential${pluralise(creds)} updated` : ""}`,
-        "success"
-      );
-      await loadAll();
-    } catch (err) {
-      toastError(showToast, err, "Refresh failed");
-    } finally {
-      setRefreshing(false);
-    }
-  }, [loadAll, showToast]);
+    await write<ImportEnvelope>({
+      setBusy: setRefreshing,
+      url: "/api/models/import",
+      // Bulk: walks the whole catalogue (T-0047).
+      timeoutMs: API_FETCH_BULK_TIMEOUT_MS,
+      successMessage: (res) => {
+        const modelsImported = res?.data?.modelsImported ?? 0;
+        const creds = res?.data?.credentialsUpdated ?? 0;
+        return `Re-imported ${modelsImported} model${pluralise(modelsImported)} from config.yaml${creds > 0 ? `, ${creds} credential${pluralise(creds)} updated` : ""}`;
+      },
+      errorMessage: "Refresh failed",
+    });
+  }, [write]);
 
-  /**
-   * Resolve one drift line by taking Hermes' side of it.
-   *
-   * A model Hermes has and the registry does not is a re-import. A primary
-   * disagreement where the Hermes model IS in the registry is not: importing
-   * would not move the default, so the fix is to make that row the agent
-   * default, which is the same write the defaults selector performs.
-   */
+  /** Resolve one drift line by taking Hermes' side of it. */
   const handleDriftPull = useCallback(
     async (line: DriftLine) => {
-      setBusyDriftLine(driftLineKey(line));
-      try {
-        if (line.kind === "primary" && line.registryId) {
-          await apiFetch("/api/models/defaults", {
-            method: "PUT",
-            body: JSON.stringify({ taskType: "agent", modelId: line.registryId }),
-          });
-        } else {
-          await apiFetch("/api/models/import", {
-            method: "POST",
-            // Bulk: walks the whole catalogue (T-0047).
-            timeoutMs: API_FETCH_BULK_TIMEOUT_MS,
-          });
-        }
-        await loadAll();
-        showToast("Pulled from Hermes", "success");
-      } catch (err) {
-        toastError(showToast, err, "Pull failed");
-      } finally {
-        setBusyDriftLine(null);
-      }
+      const primary = line.kind === "primary" && line.registryId;
+      await write({
+        setBusy: (busy) => setBusyDriftLine(busy ? driftLineKey(line) : null),
+        url: primary ? "/api/models/defaults" : "/api/models/import",
+        method: primary ? "PUT" : "POST",
+        body: primary ? { taskType: "agent", modelId: line.registryId } : undefined,
+        timeoutMs: primary ? undefined : API_FETCH_BULK_TIMEOUT_MS,
+        successMessage: "Pulled from Hermes",
+        errorMessage: "Pull failed",
+      });
     },
-    [loadAll, showToast],
+    [write],
   );
 
   /**
-   * Resolve one drift line by taking the registry's side of it.
+   * Resolve one drift line by taking PatterStage's side of it.
    *
    * The push writes `config.model`, which is the agent default and nothing
    * else, so that is the only id this ever sends. Without one there is
@@ -406,26 +335,15 @@ export function useModelActions({
         showToast("Set an agent default model first, then push it to Hermes", "error");
         return;
       }
-      setBusyDriftLine(driftLineKey(line));
-      try {
-        const res = await apiFetch<{ data?: Partial<SyncActionResult> }>("/api/models/sync/push", {
-          method: "POST",
-          body: JSON.stringify({ modelId: agentDefaultId, pushCredential: false }),
-        });
-        const outcome = res?.data;
-        if (outcome?.success === false) {
-          showToast(outcome.details?.[0]?.detail || "Push failed", "error");
-          return;
-        }
-        await loadAll();
-        showToast("Pushed to Hermes", "success");
-      } catch (err) {
-        toastError(showToast, err, "Push failed");
-      } finally {
-        setBusyDriftLine(null);
-      }
+      await write<SyncEnvelope>({
+        setBusy: (busy) => setBusyDriftLine(busy ? driftLineKey(line) : null),
+        url: "/api/models/sync/push",
+        body: { modelId: agentDefaultId, pushCredential: false },
+        successMessage: "Pushed to Hermes",
+        errorMessage: "Push failed",
+      });
     },
-    [agentDefaultId, loadAll, showToast],
+    [agentDefaultId, write, showToast],
   );
 
   return {

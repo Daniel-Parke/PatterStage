@@ -10,7 +10,7 @@
 // are panels on Create now and this list IS the library.
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { BookOpen, Plus } from "lucide-react";
 
@@ -21,6 +21,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import PageLoading, { pendingCount } from "@/components/ui/PageLoading";
 import SegmentedControl from "@/components/ui/SegmentedControl";
+import { useApiResource } from "@/hooks/useApiResource";
 import { safeApiCall } from "@/lib/api-fetch";
 import StoryCard from "@/modules/rec-room/components/StoryCard";
 import type { StorySummary } from "@/modules/rec-room/types";
@@ -42,28 +43,16 @@ function isComplete(s: StorySummary): boolean {
 
 export default function StoryWeaverPage() {
   const router = useRouter();
-  const [stories, setStories] = useState<StorySummary[]>([]);
-  const [loaded, setLoaded] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<Filter>("all");
-
-  const fetchStories = useCallback(async () => {
-    const res = await safeApiCall<{ data?: { stories?: StorySummary[] } }>("/api/stories", {
-      method: "POST",
-      body: { action: "list" },
-    });
-    if (!res.ok) {
-      setError(res.error ?? "Failed to load stories");
-    } else {
-      setError(null);
-      setStories(res.data?.data?.stories ?? []);
-    }
-    setLoaded(true);
-  }, []);
-
-  useEffect(() => {
-    void fetchStories();
-  }, [fetchStories]);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const read = useApiResource<StorySummary[]>("/api/stories", {
+    body: { action: "list" },
+    select: (d) => (d as { stories?: StorySummary[] } | null)?.stories ?? [],
+    errorMessage: "Failed to load stories",
+  });
+  const stories = read.data ?? [];
+  const loaded = read.settled;
+  const error = read.error ?? deleteError;
 
   // The row's ConfirmButton has already asked; this is the second click.
   const handleDelete = async (id: string) => {
@@ -72,10 +61,11 @@ export default function StoryWeaverPage() {
       body: { action: "delete", storyId: id },
     });
     if (!res.ok) {
-      setError(res.error ?? "Failed to delete story");
+      setDeleteError(res.error ?? "Failed to delete story");
       return;
     }
-    setStories((prev) => prev.filter((s) => s.id !== id));
+    setDeleteError(null);
+    void read.refetch();
   };
 
   const completed = stories.filter(isComplete).length;
@@ -123,7 +113,7 @@ export default function StoryWeaverPage() {
       }
     >
       <div className="space-y-6">
-        {error && <LoadErrorBanner error={error} onRetry={fetchStories} />}
+        {error && <LoadErrorBanner error={error} onRetry={() => void read.refetch()} />}
 
         <SegmentedControl label="Filter stories" options={FILTERS} value={filter} onChange={setFilter} />
 

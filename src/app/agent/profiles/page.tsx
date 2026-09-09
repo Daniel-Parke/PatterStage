@@ -33,7 +33,7 @@ import { LastResult, useToast } from "@/components/ui/Toast";
 import type { AgentProfile, ProfileFile } from "@/types/console";
 import { API_FETCH_BULK_TIMEOUT_MS, apiFetch, toastError } from "@/lib/api-fetch";
 import { profileSyncBody } from "@/lib/profile-sync-body";
-import { runSyncAction } from "@/lib/operation-sync-action";
+import { runWrite } from "@/lib/api-write";
 import { agentFileUrl } from "@/components/agents/agent-file-url";
 import { DEFAULT_PROFILE_SLUG, slugifyDisplayName } from "@/lib/profile-slug";
 import { pluralise } from "@/lib/utils";
@@ -127,7 +127,7 @@ export default function BehaviourPage() {
     successMessage: string,
     errorMessage: string,
   ): Promise<void> =>
-    runSyncAction({
+    runWrite({
       setBusy: setSyncBusy,
       showToast,
       url,
@@ -221,7 +221,7 @@ export default function BehaviourPage() {
   const handleCreate = async () => {
     if (creating || !createName.trim()) return;
     const name = createName.trim();
-    await runSyncAction({
+    await runWrite({
       setBusy: setCreating,
       showToast,
       url: "/api/agent/profiles",
@@ -243,7 +243,7 @@ export default function BehaviourPage() {
   const handleDelete = async () => {
     if (deleting || !deleteTarget) return;
     const target = deleteTarget;
-    await runSyncAction({
+    await runWrite({
       setBusy: setDeleting,
       showToast,
       url: `/api/agent/profiles/${target}`,
@@ -284,27 +284,30 @@ export default function BehaviourPage() {
 
   const handleSave = async () => {
     if (!editor) return;
-    setSaveStatus("saving");
-    try {
-      await apiFetch(agentFileUrl(editor.profileId, editor.fileKey), {
-        method: "PUT",
-        body: JSON.stringify({ content: editor.content, backup: true }),
-      });
-      setEditor({ ...editor, original: editor.content });
-      setSaveStatus("saved");
-      showToast(`${editor.fileName} saved`, "success");
-      if (saveResetTimerRef.current) {
-        clearTimeout(saveResetTimerRef.current);
-      }
-      saveResetTimerRef.current = setTimeout(() => {
-        saveResetTimerRef.current = null;
-        setSaveStatus("idle");
-      }, 2000);
-      await loadProfiles();
-    } catch (err) {
-      setSaveStatus("error");
-      toastError(showToast, err, "Failed to save file");
-    }
+    await runWrite({
+      setBusy: (busy) => {
+        if (busy) setSaveStatus("saving");
+      },
+      showToast,
+      url: agentFileUrl(editor.profileId, editor.fileKey),
+      method: "PUT",
+      body: { content: editor.content, backup: true },
+      successMessage: `${editor.fileName} saved`,
+      errorMessage: "Failed to save file",
+      onSuccess: async () => {
+        setEditor({ ...editor, original: editor.content });
+        setSaveStatus("saved");
+        if (saveResetTimerRef.current) {
+          clearTimeout(saveResetTimerRef.current);
+        }
+        saveResetTimerRef.current = setTimeout(() => {
+          saveResetTimerRef.current = null;
+          setSaveStatus("idle");
+        }, 2000);
+        await loadProfiles();
+      },
+      onError: () => setSaveStatus("error"),
+    });
   };
 
   const doSelectProfile = (profile: AgentProfile) => {
@@ -383,7 +386,7 @@ export default function BehaviourPage() {
     if (!target || savingProfile) return;
     // The root agent is not a row in agent_profiles, so the profile route
     // refuses its slug outright; it has its own route and its own field name.
-    await runSyncAction({
+    await runWrite({
       setBusy: setSavingProfile,
       showToast,
       url: target.isDefault ? "/api/agent/root" : `/api/agent/profiles/${target.id}`,

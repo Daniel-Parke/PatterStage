@@ -18,7 +18,8 @@
 import { useCallback, useRef, useState, type Dispatch, type SetStateAction } from "react";
 
 import type { ToastType } from "@/components/ui/Toast";
-import { safeApiCall, apiFetch, toastError } from "@/lib/api-fetch";
+import { safeApiCall } from "@/lib/api-fetch";
+import { runWrite } from "@/lib/api-write";
 import type { FallbackConfig } from "@/types/console";
 
 type ToastFn = (message: string, type?: ToastType) => void;
@@ -109,52 +110,41 @@ export function useModelFallbackConfig({
     return persistFallbackConfigNow(pending);
   }, [fallbackConfig, fallbackConfigDirty, fallbackConfigSaving, persistFallbackConfigNow]);
 
+  /**
+   * Push the fallback settings to Hermes. The pending autosave is flushed
+   * first, so what is synced is what is on screen; the answer carries the
+   * config Hermes now holds, which becomes the screen's, and is checked
+   * against the retry threshold that was asked for.
+   */
   const handleSyncFallbackToHermes = useCallback(async () => {
+    const expectedRetries = fallbackConfig.apiMaxRetries;
     setSyncingFallback(true);
-    try {
-      const expectedRetries = fallbackConfig.apiMaxRetries;
-      const saved = await flushFallbackConfigSave();
-      if (!saved) {
-        showToast(fallbackConfigError ?? "Save fallback settings before syncing", "error");
-        return;
-      }
-
-      const res = await apiFetch<{
-        data: {
-          success: boolean;
-          config: FallbackConfig;
-          configPath?: string;
-        };
-      }>("/api/models/fallbacks", {
-        method: "POST",
-        body: JSON.stringify({ action: "sync", config: fallbackConfig }),
-      });
-
-      const payload = res.data;
-      if (!payload?.success) {
-        showToast("Sync failed", "error");
-        return;
-      }
-
-      if (payload.config) {
-        setFallbackConfig(payload.config);
-        setFallbackConfigDirty(false);
-      }
-
-      if (payload.config.apiMaxRetries !== expectedRetries) {
-        showToast(
-          `Sync finished but retry threshold is still ${payload.config.apiMaxRetries} (expected ${expectedRetries})`,
-          "error",
-        );
-        return;
-      }
-
-      showToast("Fallback config synced to Hermes", "success");
-    } catch (err) {
-      toastError(showToast, err, "Sync failed");
-    } finally {
+    const saved = await flushFallbackConfigSave();
+    if (!saved) {
       setSyncingFallback(false);
+      showToast(fallbackConfigError ?? "Save fallback settings before syncing", "error");
+      return;
     }
+    await runWrite<{ data?: { success?: boolean; config?: FallbackConfig } }>({
+      setBusy: setSyncingFallback,
+      showToast,
+      url: "/api/models/fallbacks",
+      body: { action: "sync", config: fallbackConfig },
+      successMessage: (res) => {
+        const retries = res?.data?.config?.apiMaxRetries;
+        return retries !== undefined && retries !== expectedRetries
+          ? { message: `Sync finished but retry threshold is still ${retries} (expected ${expectedRetries})`, type: "error" }
+          : "Fallback config synced to Hermes";
+      },
+      errorMessage: "Sync failed",
+      onSuccess: (res) => {
+        const config = res?.data?.config;
+        if (config) {
+          setFallbackConfig(config);
+          setFallbackConfigDirty(false);
+        }
+      },
+    });
   }, [fallbackConfig, fallbackConfigError, flushFallbackConfigSave, showToast, setFallbackConfig]);
 
   return {

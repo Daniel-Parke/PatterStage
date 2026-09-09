@@ -18,8 +18,7 @@
 import { useCallback } from "react";
 
 import type { ToastType } from "@/components/ui/Toast";
-import { safeApiCall, toastError } from "@/lib/api-fetch";
-import { toastFromResult } from "@/lib/dashboard/toast-from-result";
+import { runWrite } from "@/lib/api-write";
 import type { useMissionComposer } from "@/hooks/useMissionComposer";
 import type { useMissionTemplatesState } from "@/hooks/useMissionTemplatesState";
 import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
@@ -96,28 +95,18 @@ export function useMissionTemplateActions({
 
   const persistTemplate = useCallback(
     async (payload: Record<string, unknown>, postSuccess: () => void) => {
-      setTemplateSaving(true);
-      try {
-        const res = await safeApiCall("/api/templates", {
-          method: "POST",
-          body: payload,
-        });
-        const wasUpdate = payload.action === "update";
-        toastFromResult(
-          showToast,
-          res,
-          wasUpdate ? "Template updated!" : "Template saved!",
-          "Failed to save template",
-        );
-        if (res.ok) {
+      await runWrite({
+        setBusy: setTemplateSaving,
+        showToast,
+        url: "/api/templates",
+        body: payload,
+        successMessage: payload.action === "update" ? "Template updated!" : "Template saved!",
+        errorMessage: "Failed to save template",
+        onSuccess: () => {
           postSuccess();
           void fetchData();
-        }
-      } catch (err) {
-        toastError(showToast, err, "Failed to save template");
-      } finally {
-        setTemplateSaving(false);
-      }
+        },
+      });
     },
     // setTemplateSaving is a stable container-hook setter (listed to
     // satisfy exhaustive-deps now that it's destructured, not a local
@@ -274,41 +263,19 @@ export function useMissionTemplateActions({
     [seedTemplateDraft, closeTemplateManager, setEditingTemplateId, setShowTemplateEditor],
   );
 
+  // The row's own two-step confirm has already asked; this is the second click.
   const handleDeleteTemplate = useCallback(async (templateId: string) => {
-    // The pre-session 207 form had a `window.confirm("Delete this
-    // template?")` pre-confirm guard here — that guard has moved
-    // into the `TemplateRow` leaf sub-component inside
-    // `TemplateModals.tsx` as a per-row
-    // `useTwoStepConfirm({ autoDismissMs: 4000 })` instance, where
-    // the template id is in scope at render time. By the time this
-    // callback is called, the user has already confirmed in the
-    // leaf; this hook is a thin transport wrapper (wire delete +
-    // toast + post-success reload + closeTemplateManager()).
-    const result = await safeApiCall("/api/templates", {
-      method: "POST",
-      body: { action: "delete", templateId },
-    });
-    toastFromResult(
+    await runWrite({
       showToast,
-      result,
-      "Template deleted",
-      "Failed to delete template",
-    );
-    if (result.ok) {
-      // `closeTemplateManager` is the hook's stable close-callback
-      // for the template-manager modal (sister migration to the same
-      // pattern in `handleCreateNewTemplate` and `handleEditTemplate`
-      // above). Pre-session-211: this site inlined
-      // `setShowTemplateManager(false)` directly. The migration is
-      // byte-equivalent (same payload via the callback body) and
-      // keeps the 3 internal call sites consistent with the page's
-      // `<TemplateManagerModal onClose={closeTemplateManager}>` JSX
-      // binding. The deps array adds `closeTemplateManager` (stable
-      // `useCallback` with `[]` deps, so the reference is the same on
-      // every render).
-      closeTemplateManager();
-      fetchData();
-    }
+      url: "/api/templates",
+      body: { action: "delete", templateId },
+      successMessage: "Template deleted",
+      errorMessage: "Failed to delete template",
+      onSuccess: () => {
+        closeTemplateManager();
+        void fetchData();
+      },
+    });
   }, [showToast, fetchData, closeTemplateManager]);
 
   const handleTemplateSelect = useCallback((t: MissionTemplate) => {

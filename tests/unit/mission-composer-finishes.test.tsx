@@ -42,10 +42,13 @@ import { join } from "path";
 
 import { useMissionDispatch } from "@/hooks/useMissionDispatch";
 
-const dispatchMissionAction = jest.fn();
+// Amended 2026-09-10 (C3, T-0138): the hook writes through dispatchMission, which is
+// runWrite on POST /api/missions and resolves to the payload on success and
+// to nothing otherwise; the toast is the helper's. The seam moved with it.
+const dispatchMission = jest.fn();
 jest.mock("@/hooks/success-message-for-dispatch", () => ({
   ...jest.requireActual("@/hooks/success-message-for-dispatch"),
-  dispatchMissionAction: (...args: unknown[]) => dispatchMissionAction(...(args as [])),
+  dispatchMission: (...args: unknown[]) => dispatchMission(...(args as [])),
 }));
 
 type Mode = "save" | "queue" | "now" | "cron";
@@ -103,8 +106,8 @@ function harness(
 }
 
 beforeEach(() => {
-  dispatchMissionAction.mockReset();
-  dispatchMissionAction.mockResolvedValue({ ok: true, data: { mission: { id: "m1" } } });
+  dispatchMission.mockReset();
+  dispatchMission.mockResolvedValue({ mission: { id: "m1" } });
 });
 
 describe("a successful create closes the composer", () => {
@@ -123,7 +126,7 @@ describe("a successful create closes the composer", () => {
   });
 
   it("does not close when the request failed", async () => {
-    dispatchMissionAction.mockResolvedValue({ ok: false, error: "boom" });
+    dispatchMission.mockResolvedValue(undefined);
     const h = harness({ mode: "save" });
     await act(async () => {
       await h.result.current.handleCreate();
@@ -152,9 +155,9 @@ describe("re-dispatching a completed mission", () => {
     // operator in a create-shaped composer holding edit data.
     let clearedBeforeRequest = false;
     const h = harness({ mode: "now", editingId: "done-1", missions: completed });
-    dispatchMissionAction.mockImplementation(async () => {
+    dispatchMission.mockImplementation(async () => {
       clearedBeforeRequest = h.setEditingId.mock.calls.some(([v]) => v === null);
-      return { ok: true, data: { mission: { id: "m1" } } };
+      return { mission: { id: "m1" } };
     });
     await act(async () => {
       await h.result.current.handleCreate();
@@ -214,7 +217,7 @@ describe("a mission whose schedule was never usable is not dispatched", () => {
     await act(async () => {
       await h.result.current.handleCreate();
     });
-    expect(dispatchMissionAction).not.toHaveBeenCalled();
+    expect(dispatchMission).not.toHaveBeenCalled();
   });
 
   it("keeps the composer open so the operator can fix it", async () => {
@@ -256,7 +259,7 @@ describe("a mission whose schedule was never usable is not dispatched", () => {
     await act(async () => {
       await h.result.current.handleCreate();
     });
-    expect(dispatchMissionAction).toHaveBeenCalled();
+    expect(dispatchMission).toHaveBeenCalled();
   });
 
   it("still dispatches once the draft is corrected", async () => {
@@ -265,6 +268,6 @@ describe("a mission whose schedule was never usable is not dispatched", () => {
     await act(async () => {
       await h.result.current.handleCreate();
     });
-    expect(dispatchMissionAction).toHaveBeenCalled();
+    expect(dispatchMission).toHaveBeenCalled();
   });
 });
