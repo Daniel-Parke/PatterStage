@@ -208,3 +208,26 @@ describe("isApiSuccessFalse", () => {
     expect(isApiSuccessFalse(input)).toBe(expected);
   });
 });
+
+describe("dispatchMission · the mission shorthand", () => {
+  // The sweep's one survivor (T-0138): the hook reads `created.mission?.id`
+  // to open the row a write made, so the shorthand must hand back the
+  // payload the route nests under `data`, not the envelope.
+  it("posts the action in the envelope and resolves to the payload, unwrapped", async () => {
+    const { dispatchMission } = await import("@/hooks/success-message-for-dispatch");
+    apiFetch.mockResolvedValue({ data: { mission: { id: "m1", name: "n" } } });
+    const showToast = jest.fn();
+    const payload = await dispatchMission("dispatch", { name: "n", instruction: "i" }, { showToast, successMessage: "Mission dispatched", errorMessage: "Failed" });
+    expect(payload).toEqual({ mission: { id: "m1", name: "n" } });
+    expect(apiFetch).toHaveBeenCalledWith("/api/missions", { method: "POST", body: JSON.stringify({ action: "dispatch", name: "n", instruction: "i" }), timeoutMs: undefined });
+    expect(showToast).toHaveBeenCalledWith("Mission dispatched", "success");
+  });
+
+  it("resolves to nothing when the write failed, and to an empty payload when the route sent none", async () => {
+    const { dispatchMission } = await import("@/hooks/success-message-for-dispatch");
+    apiFetch.mockRejectedValueOnce(new Error("no"));
+    expect(await dispatchMission("delete", { missionId: "m1" }, { showToast: jest.fn(), successMessage: "Deleted", errorMessage: "Failed" })).toBeUndefined();
+    apiFetch.mockResolvedValueOnce({});
+    expect(await dispatchMission("delete", { missionId: "m1" }, { showToast: jest.fn(), successMessage: "Deleted", errorMessage: "Failed" })).toEqual({});
+  });
+});
