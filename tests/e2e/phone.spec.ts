@@ -20,11 +20,98 @@
  * trap used to reach it, so focus vanished and the next Tab looked like it had
  * gone behind the backdrop (T-0128). Thirty presses is more than the drawer
  * holds, so the ring wraps at least once.
+ *
+ * Then the three things the UI review of 2026-09-08 found the containment
+ * gate could not see, because nothing overflowed: the words were crushed
+ * inside main (T-0131).
+ *
+ * The title's room. On every route at 390 the h1's box is at least 12rem
+ * wide and the subtitle runs to three lines at most. Chat, Scripts and Skills
+ * rendered "(" and "Scr…" with the subtitle one word per line, because the
+ * header's actions took the title's row.
+ *
+ * The split panes. Chat, Logs, Composer and Research are one shape: a list
+ * that chooses and the thing chosen. At 390 the list is behind a button that
+ * opens it as a sheet, and the main pane has the width; Chat's composer is
+ * wide enough to type in.
+ *
+ * A banner's sentence. Below sm the action wraps under the sentence, so the
+ * sentence keeps at least three fifths of the banner and the button sits on
+ * its own row beneath it.
  */
 
 import { expect, test, type Page } from "@playwright/test";
 
 import { documentedRoutes } from "../../src/lib/modules/registry";
+
+const READY = { timeout: 30_000 } as const;
+
+/** 12rem, the floor the header describes for its title group. */
+const TITLE_FLOOR = 192;
+/** Three lines of text-micro (16px leading) and a little rounding. */
+const SUBTITLE_CEILING = 52;
+
+async function expectTitleRoom(page: Page, route: string) {
+  const r = await page.evaluate(() => {
+    const h1 = document.querySelector("main h1");
+    if (!h1) return null;
+    const box = h1.getBoundingClientRect();
+    const next = h1.nextElementSibling;
+    const subtitle = next && next.tagName === "P" ? next.getBoundingClientRect() : null;
+    return {
+      width: box.width,
+      text: h1.textContent?.trim() ?? "",
+      subtitleHeight: subtitle ? subtitle.height : 0,
+      subtitleText: next && next.tagName === "P" ? next.textContent?.trim().slice(0, 60) : "",
+    };
+  });
+  expect(r, `${route}: no h1 inside main`).not.toBeNull();
+  expect(r!.width, `${route} at 390: the h1 "${r!.text}" has ${Math.round(r!.width)}px`).toBeGreaterThanOrEqual(
+    TITLE_FLOOR,
+  );
+  expect(
+    r!.subtitleHeight,
+    `${route} at 390: the subtitle "${r!.subtitleText}" is ${Math.round(r!.subtitleHeight)}px tall`,
+  ).toBeLessThanOrEqual(SUBTITLE_CEILING);
+}
+
+/**
+ * Every role=alert on the page keeps three fifths of its width for its
+ * words. The text block is the alert's child that carries the most text.
+ */
+async function expectAlertsReadable(page: Page, route: string) {
+  const alerts = await page.evaluate(() =>
+    Array.from(document.querySelectorAll('[role="alert"]')).map((alert) => {
+      const kids = Array.from(alert.children) as HTMLElement[];
+      const text = kids
+        .filter((k) => (k.textContent ?? "").trim().length > 0 && k.tagName !== "BUTTON")
+        .sort((a, b) => (b.textContent ?? "").length - (a.textContent ?? "").length)[0];
+      const button = alert.querySelector("button");
+      const a = alert.getBoundingClientRect();
+      const t = text ? text.getBoundingClientRect() : null;
+      const b = button ? button.getBoundingClientRect() : null;
+      return {
+        alert: a.width,
+        text: t ? t.width : 0,
+        textBottom: t ? t.bottom : 0,
+        buttonTop: b ? b.top : null,
+        words: (alert.textContent ?? "").trim().slice(0, 50),
+      };
+    }),
+  );
+  for (const a of alerts) {
+    if (a.alert === 0) continue;
+    expect(
+      a.text / a.alert,
+      `${route} at 390: the alert "${a.words}" gives its words ${Math.round(a.text)}px of ${Math.round(a.alert)}px`,
+    ).toBeGreaterThanOrEqual(0.6);
+    if (a.buttonTop !== null) {
+      expect(a.buttonTop, `${route} at 390: the alert's button sits beside its words, not under them`).toBeGreaterThanOrEqual(
+        a.textBottom - 1,
+      );
+    }
+  }
+}
 
 async function expectContained(page: Page, route: string, width: number) {
   const r = await page.evaluate(() => {
@@ -51,6 +138,8 @@ test.describe("containment (gate 9)", () => {
       await page.getByRole("heading").first().waitFor({ timeout: 30_000 });
       await page.waitForTimeout(1_000);
       await expectContained(page, route, 390);
+      await expectTitleRoom(page, route);
+      await expectAlertsReadable(page, route);
 
       await page.setViewportSize({ width: 1024, height: 768 });
       await page.waitForTimeout(500);
@@ -79,6 +168,73 @@ test.describe("the rail between 768 and 1024", () => {
     await expect(page.getByRole("button", { name: "Open navigation" })).toBeHidden();
     // Icons only, but every row still says where it goes.
     await expect(rail.getByRole("link", { name: "Missions" })).toHaveAttribute("title", "Missions");
+  });
+});
+
+const SPLIT_PANES: Array<{ route: string; label: RegExp }> = [
+  { route: "/work/chat", label: /^Conversations/ },
+  { route: "/results/logs", label: /^Log files/ },
+  { route: "/work/composer", label: /^Runs/ },
+  { route: "/work/research", label: /^Runs/ },
+];
+
+test.describe("the split panes", () => {
+  for (const { route, label } of SPLIT_PANES) {
+    test(`${route} puts its list behind a button and gives the pane the width`, async ({ page }) => {
+      test.setTimeout(90_000);
+      await page.clock.setFixedTime(new Date("2026-06-01T09:30:00Z"));
+      await page.goto(route, { waitUntil: "domcontentloaded" });
+      await page.getByRole("heading").first().waitFor(READY);
+
+      // The button appears once React has read the viewport, so waiting for
+      // it is also waiting for hydration.
+      const opener = page.getByRole("button", { name: label });
+      await expect(opener).toBeVisible(READY);
+
+      const widths = await page.evaluate(() => {
+        const main = document.querySelector("main");
+        const pane = document.querySelector('[data-ps-split="main"]');
+        return {
+          main: main ? main.clientWidth : 0,
+          pane: pane ? pane.getBoundingClientRect().width : 0,
+        };
+      });
+      expect(widths.pane, `${route} at 390: the main pane is ${Math.round(widths.pane)}px of ${widths.main}px`).toBeGreaterThanOrEqual(
+        widths.main * 0.85,
+      );
+
+      await opener.click();
+      const sheet = page.getByRole("dialog", { name: label });
+      await expect(sheet).toBeVisible();
+      await page.keyboard.press("Escape");
+      await expect(sheet).toBeHidden();
+    });
+  }
+
+  test("/work/chat: the composer is wide enough to type in", async ({ page }) => {
+    await page.goto("/work/chat", { waitUntil: "domcontentloaded" });
+    await page.getByRole("heading").first().waitFor(READY);
+    const composer = page.getByRole("textbox", { name: "Message" });
+    await expect(composer).toBeVisible(READY);
+    const box = await composer.boundingBox();
+    expect(box, "the composer has no box").not.toBeNull();
+    expect(Math.round(box!.width)).toBeGreaterThanOrEqual(300);
+  });
+});
+
+test.describe("a banner's sentence comes first", () => {
+  test("/results/artifacts with its read broken: the words keep the width and Retry sits under them", async ({ page }) => {
+    await page.route("**/api/artifacts*", (route) =>
+      route.fulfill({
+        status: 500,
+        contentType: "application/json",
+        body: JSON.stringify({ error: "the database is locked" }),
+      }),
+    );
+    await page.goto("/results/artifacts", { waitUntil: "domcontentloaded" });
+    const banner = page.getByRole("alert").filter({ has: page.getByRole("button", { name: /retry/i }) });
+    await expect(banner.first()).toBeVisible(READY);
+    await expectAlertsReadable(page, "/results/artifacts");
   });
 });
 
