@@ -154,3 +154,4 @@ The records under org/tasks/ are canonical.
 | T-0139 | standard | R1 | done | t0139-the-models-page-keeps-its-body-2026-09-10 |
 | T-0140 | standard | R2 | done | t0140-a-custom-fallback-keeps-its-name-2026-09-10 |
 | T-0141 | standard | R1 | done | t0141-c4-the-test-harnesses-2026-09-10 |
+| T-0142 | standard | R1 | done | t0142-c5-comments-that-narrate-2026-09-11 |

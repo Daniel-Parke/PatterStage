@@ -64,7 +64,7 @@ plan header says so.
 | comment essays | 107 | 8 | ≤ 60 |
 | suites mocking db inline | 100 | 14 | ≤ 20 (met) |
 | design-lint debt (all rules) | 350 | 369 (19 are the new write rule's baseline) | falls in C6 |
-| jest | 6,860 | 6880 | unchanged by a test batch |
+| jest | 6,860 | 6,880 (679 suites) | unchanged by a test batch |
 
 ## How a batch is landed (the discipline, verbatim from practice)
 
