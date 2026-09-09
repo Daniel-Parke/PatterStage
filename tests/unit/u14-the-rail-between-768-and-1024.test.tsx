@@ -22,6 +22,7 @@
 import { render, waitFor, within } from "@testing-library/react";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { matchMediaMock } from "../helpers/mocks";
 
 jest.mock("next/navigation", () => ({ usePathname: () => "/" }));
 jest.mock("next/link", () => require("../helpers/mocks").nextLinkMock());
@@ -51,22 +52,11 @@ const read = (rel: string) => readFileSync(join(ROOT, rel), "utf8");
  * for a desktop.
  */
 function mockViewport(width: number) {
-  window.matchMedia = jest.fn((query: string) => {
+  matchMediaMock((query) => {
     const max = query.match(/max-width:\s*(\d+)px/);
     const min = query.match(/min-width:\s*(\d+)px/);
-    const matches =
-      (!max || width <= Number(max[1])) && (!min || width >= Number(min[1])) && Boolean(max || min);
-    return {
-      matches,
-      media: query,
-      onchange: null,
-      addEventListener: jest.fn(),
-      removeEventListener: jest.fn(),
-      addListener: jest.fn(),
-      removeListener: jest.fn(),
-      dispatchEvent: jest.fn(),
-    };
-  }) as unknown as typeof window.matchMedia;
+    return (!max || width <= Number(max[1])) && (!min || width >= Number(min[1])) && Boolean(max || min);
+  });
 }
 
 function mountShell(initialCollapsed = false) {

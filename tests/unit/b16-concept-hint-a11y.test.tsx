@@ -41,14 +41,7 @@ jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn(), prefetch: jest.fn() }),
 }));
 
-jest.mock("next/link", () => ({
-  __esModule: true,
-  default: ({ href, children, ...rest }: { href: string; children: ReactNode }) => (
-    <a href={href} {...rest}>
-      {children}
-    </a>
-  ),
-}));
+jest.mock("next/link", () => require("../helpers/mocks").nextLinkMock());
 
 jest.mock("lucide-react", () => require("../helpers/mocks").lucideMock());
 

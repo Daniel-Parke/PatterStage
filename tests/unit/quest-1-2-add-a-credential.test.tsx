@@ -23,26 +23,11 @@
 
 import "@testing-library/jest-dom";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { jsonResponse } from "../helpers/fetch-map";
 
 import ModelsPage from "@/app/agent/models/page";
 import { QUEST_DEFS } from "@/lib/quests/quest-defs";
 import { TASK_TYPES } from "@/lib/models/task-types";
-
-interface MinimalResponse {
-  ok: boolean;
-  status: number;
-  json: () => Promise<unknown>;
-  text: () => Promise<string>;
-}
-
-function jsonResponse(body: unknown, status = 200): MinimalResponse {
-  return {
-    ok: status >= 200 && status < 300,
-    status,
-    json: async () => body,
-    text: async () => JSON.stringify(body),
-  };
-}
 
 const nullDefaults = () =>
   TASK_TYPES.reduce<Record<string, string | null>>((acc, t) => {

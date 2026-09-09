@@ -27,11 +27,10 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { matchMediaMock } from "../helpers/mocks";
 
-jest.mock("lucide-react", () => {
-  const passthrough = () => () => null;
-  return new Proxy({}, { get: () => passthrough() });
-});
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+jest.mock("lucide-react", () => require("../helpers/story").lucideNullMock());
 
 // next/dynamic, minus the framework: a lazy component around the same loader.
 jest.mock("next/dynamic", () => ({
@@ -167,16 +166,7 @@ beforeEach(() => {
   buildMounts = 0;
   window.history.replaceState(null, "", "/work/composer");
   // The stage sheet reads a media query on mount; jsdom ships no matchMedia.
-  window.matchMedia = jest.fn((query: string) => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    addListener: jest.fn(),
-    removeListener: jest.fn(),
-    dispatchEvent: jest.fn(),
-  })) as unknown as typeof window.matchMedia;
+  matchMediaMock();
   mockUseWorkflows.mockReturnValue({ ...resource(WORKFLOWS), refetch: jest.fn() });
   mockUseGraph.mockReturnValue({ data: null });
   setRuns([]);

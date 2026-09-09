@@ -10,6 +10,7 @@
  */
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { matchMediaMock } from "../helpers/mocks";
 
 let pathname = "/";
 jest.mock("next/navigation", () => ({
@@ -133,16 +134,7 @@ function mountShell(initialCollapsed = false) {
 }
 
 function mockMedia(mobile: boolean) {
-  window.matchMedia = jest.fn((query: string) => ({
-    matches: mobile && /max-width/.test(query),
-    media: query,
-    onchange: null,
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    addListener: jest.fn(),
-    removeListener: jest.fn(),
-    dispatchEvent: jest.fn(),
-  })) as unknown as typeof window.matchMedia;
+  matchMediaMock((query) => mobile && /max-width/.test(query));
 }
 
 beforeEach(() => {

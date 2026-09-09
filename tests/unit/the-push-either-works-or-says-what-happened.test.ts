@@ -91,13 +91,7 @@ jest.mock("@/lib/agent-root-repository", () => ({
 // the model defaults on its way through, and mocking that away would have cut
 // out part of the very path this file exists to exercise.
 let testDb: import("better-sqlite3").Database | null = null;
-jest.mock("@/lib/db", () => ({
-  now: () => "2026-08-31T12:00:00Z",
-  getDb: () => testDb!,
-  ensureDb: () => undefined,
-  inTransaction: <T,>(fn: () => T) => testDb!.transaction(fn)(),
-  uuid: () => "test-uuid",
-}));
+jest.mock("@/lib/db", () => require("../helpers/baseline-db").dbSingletonMock(() => testDb, { uuid: () => "test-uuid", now: () => "2026-08-31T12:00:00Z" }));
 
 import { execBaselineSchema } from "../helpers/baseline-db";
 import { pushRootToHermes } from "@/modules/hermes/lib/profile-push";

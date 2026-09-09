@@ -32,10 +32,12 @@ import { rawMetrics, composerFormState, missionsViewModel } from "../helpers/fix
 const ROOT = join(__dirname, "..", "..");
 const UNIT = join(__dirname);
 const SELF = "c4-the-test-harnesses.test.ts";
+// The U1 oracle quotes the stanzas it refuses, as this one does; neither is corpus.
+const ORACLES = new Set([SELF, "u1-shared-mock-factories.test.ts"]);
 
 function corpus(): Array<[string, string]> {
   return readdirSync(UNIT)
-    .filter((f) => f !== SELF && (f.endsWith(".test.ts") || f.endsWith(".test.tsx")))
+    .filter((f) => !ORACLES.has(f) && (f.endsWith(".test.ts") || f.endsWith(".test.tsx")))
     .map((f) => [f, readFileSync(join(UNIT, f), "utf-8").replace(/\r\n/g, "\n")]);
 }
 
@@ -164,15 +166,28 @@ describe("the factories behave the way the stanzas they replace behaved", () => 
   });
 });
 
-/** The stanzas, spelled the way they were pasted; a suite that still carries one is named. */
-const REPLACED: ReadonlyArray<{ name: string; test: (text: string) => boolean }> = [
+/**
+ * The stanzas, spelled the way they were pasted; a suite that still carries
+ * one is named, unless it is listed under `keeps` with the reason its own
+ * mock is not the stanza (a class that records its calls is testing the
+ * recording, and stays).
+ */
+const REPLACED: ReadonlyArray<{ name: string; test: (text: string) => boolean; keeps?: Record<string, string> }> = [
   { name: "the db stub as a bare object", test: (t) => /jest\.mock\("@\/lib\/db", \(\) => \(\{ ensureDb: jest\.fn\(\) \}\)\)/.test(t) },
-  { name: "the db stub with now t and uuid u", test: (t) => /now: \(\) => "t", uuid: \(\) => "u"/.test(t) },
+  { name: "the db stub with now t and uuid u", test: (t) => /jest\.mock\("@\/lib\/db", \(\) => \(\{[^}]*now: \(\) => "t", uuid: \(\) => "u"/.test(t) },
   { name: "the in-memory db double by hand", test: (t) => /jest\.mock\("@\/lib\/db", \(\) => \(\{[^}]*getDb: \(\) => testDb!/.test(t) },
-  { name: "the next/server request by hand", test: (t) => /private _body: string;/.test(t) },
+  {
+    name: "the next/server request by hand",
+    test: (t) => /private _body: string;/.test(t),
+    keeps: {
+      "mission-categories-route.test.ts": "its NextResponse records every response into __responses and its db mock routes ensureDb through a local the tests arm",
+      "mission-require-or-not-found.test.ts": "its NextResponse records every response into __responses, which the tests read",
+      "missions-delete-null-check.test.ts": "the same recorder",
+    },
+  },
   { name: "the fetch map by hand", test: (t) => /^function jsonResponse\(/m.test(t) && /global\.fetch = jest\.fn\(async \(input: RequestInfo \| URL\)/.test(t) },
   { name: "matchMedia by hand", test: (t) => /window\.matchMedia = jest\.fn\(\(query: string\) => \(\{/.test(t) },
-  { name: "next/link by hand", test: (t) => /jest\.mock\("next\/link", \(\) => \(\{\n\s*__esModule: true,\n\s*default: \(\{ href, children/.test(t) },
+  { name: "next/link by hand", test: (t) => /jest\.mock\("next\/link", \(\) => \(\{\n\s*__esModule: true,\n\s*default: \(\{ href, children, \.\.\.rest \}/.test(t) },
   { name: "the story fixture by hand", test: (t) => /^function story\(chapters/m.test(t) },
   { name: "the paths block by hand", test: (t) => /stories: "\/tmp\/ch-data\/stories",\n\s*recroom: "\/tmp\/ch-data\/recroom",/.test(t) },
   { name: "the stats ledger's zero row by hand", test: (t) => /completedMissions: 0,\n\s*failedMissions: 0,\n\s*completedRuns: 0,/.test(t) },
@@ -185,8 +200,14 @@ const REPLACED: ReadonlyArray<{ name: string; test: (text: string) => boolean }>
 describe("the corpus carries none of the stanzas", () => {
   for (const stanza of REPLACED) {
     it(`${stanza.name}: no suite spells it`, () => {
-      const offenders = corpus().filter(([, text]) => stanza.test(text)).map(([f]) => f);
+      const offenders = corpus()
+        .filter(([f, text]) => stanza.test(text) && !(stanza.keeps && f in stanza.keeps))
+        .map(([f]) => f);
       expect(offenders).toEqual([]);
+      // A keep that no longer spells the stanza has been converted; the reason is stale.
+      for (const f of Object.keys(stanza.keeps ?? {})) {
+        expect({ f, stillSpellsIt: stanza.test(readFileSync(join(UNIT, f), "utf-8")) }).toEqual({ f, stillSpellsIt: true });
+      }
     });
   }
 });

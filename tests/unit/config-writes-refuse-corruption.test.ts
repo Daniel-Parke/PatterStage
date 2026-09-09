@@ -55,13 +55,8 @@ jest.mock("@/lib/models-repository", () => ({
   getModel: jest.fn(() => null),
 }));
 
-jest.mock("@/lib/db", () => ({
-  getDb: jest.fn(),
-  ensureDb: jest.fn(),
-  now: () => "2026-09-01T00:00:00Z",
-  inTransaction: <T,>(fn: () => T) => fn(),
-  uuid: () => "test-uuid",
-}));
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+jest.mock("@/lib/db", () => require("../helpers/mocks").dbMock({ now: () => "2026-09-01T00:00:00Z" }));
 
 import {
   assertParseableConfigYaml,

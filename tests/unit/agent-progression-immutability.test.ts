@@ -21,13 +21,7 @@ import { applyAgentProgressionMigration } from "@/lib/db/sql-migrations";
 
 let testDb: import("better-sqlite3").Database | null = null;
 
-jest.mock("@/lib/db", () => ({
-  getDb: () => testDb!,
-  inTransaction: <T,>(fn: () => T) => testDb!.transaction(fn)(),
-  ensureDb: () => undefined,
-  uuid: () => "test-uuid",
-  now: () => new Date().toISOString(),
-}));
+jest.mock("@/lib/db", () => require("../helpers/baseline-db").dbSingletonMock(() => testDb, { uuid: () => "test-uuid" }));
 
 import {
   captureAgentProgressionSnapshots,

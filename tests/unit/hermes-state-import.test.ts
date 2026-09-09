@@ -14,10 +14,8 @@ jest.mock("fs", () => {
 
 let testDb: import("better-sqlite3").Database | null = null;
 
-jest.mock("@/lib/db", () => ({
-  getDb: () => testDb!,
-  ensureDb: () => undefined,
-}));
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports; require is the hoisting-safe form
+jest.mock("@/lib/db", () => require("../helpers/baseline-db").dbSingletonMock(() => testDb));
 
 jest.mock("@/modules/hermes/lib/profile-paths", () => ({
   getHermesDefaultRoot: () => "/nonexistent-hermes",

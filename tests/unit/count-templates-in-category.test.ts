@@ -10,12 +10,8 @@ import { join } from "path";
 let testDb: import("better-sqlite3").Database | null = null;
 
 // Lightweight db mock — avoid loading the real db.ts (which resolves a DB path
-// at import). mission-category-repository only needs db/inTransaction/now.
-jest.mock("@/lib/db", () => ({
-  getDb: () => testDb!,
-  inTransaction: <T,>(fn: () => T) => testDb!.transaction(fn)(),
-  now: () => new Date().toISOString(),
-}));
+// at import).
+jest.mock("@/lib/db", () => require("../helpers/baseline-db").dbSingletonMock(() => testDb));
 // Custom-template dir is non-existent so only the DB catalog matters here.
 jest.mock("@/lib/paths", () => ({
   PATHS: { templates: "/tmp/__no_such_templates_dir__" },

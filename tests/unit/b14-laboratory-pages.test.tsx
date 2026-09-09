@@ -27,11 +27,10 @@
 
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
+import { matchMediaMock } from "../helpers/mocks";
 
-jest.mock("lucide-react", () => {
-  const passthrough = () => () => null;
-  return new Proxy({}, { get: () => passthrough() });
-});
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+jest.mock("lucide-react", () => require("../helpers/story").lucideNullMock());
 
 jest.mock("next/navigation", () => ({
   usePathname: () => "/work/research",
@@ -149,19 +148,7 @@ const refetchArtifacts = jest.fn();
 
 // jsdom has no matchMedia, and the Sheet asks it about reduced motion.
 beforeAll(() => {
-  Object.defineProperty(window, "matchMedia", {
-    writable: true,
-    value: (query: string) => ({
-      matches: false,
-      media: query,
-      onchange: null,
-      addListener: jest.fn(),
-      removeListener: jest.fn(),
-      addEventListener: jest.fn(),
-      removeEventListener: jest.fn(),
-      dispatchEvent: jest.fn(),
-    }),
-  });
+  matchMediaMock();
 });
 
 function researchRuns(runs: unknown[] = [COMPLETED_RUN]) {

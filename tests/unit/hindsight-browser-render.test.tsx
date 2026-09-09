@@ -6,24 +6,9 @@
 
 import "@testing-library/jest-dom";
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { jsonResponse } from "../helpers/fetch-map";
 
 import HindsightBrowser from "@/components/memory/HindsightBrowser";
-
-interface MinimalResponse {
-  ok: boolean;
-  status: number;
-  json: () => Promise<unknown>;
-  text: () => Promise<string>;
-}
-
-function jsonResponse(body: unknown, status = 200): MinimalResponse {
-  return {
-    ok: status >= 200 && status < 300,
-    status,
-    json: async () => body,
-    text: async () => JSON.stringify(body),
-  };
-}
 
 const originalFetch = global.fetch;
 

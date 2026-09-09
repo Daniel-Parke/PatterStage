@@ -35,6 +35,7 @@ import type { MissionGroup } from "@/lib/sessions/sessions-grouping";
 import type { LogFileMeta } from "@/lib/fs/log-files";
 import type { MissionsPageViewModel } from "@/hooks/useMissionsPage";
 import type { MissionRow } from "@/hooks/missions-page-types";
+import { missionsViewModel } from "../helpers/fixtures";
 
 // The detail panel opens an EventSource when a mission expands. These tests are
 // about which rows render and what the row's click does, not the stream.
@@ -302,40 +303,7 @@ describe("the missions board is a ledger per column", () => {
   ];
 
   function viewModel(over: Partial<MissionsPageViewModel> = {}) {
-    return {
-      missions,
-      showCreate: true,
-      filter: "all",
-      setFilter: jest.fn(),
-      search: "",
-      setSearch: jest.fn(),
-      expandedId: null,
-      setExpandedId: jest.fn(),
-      detail: null,
-      detailLoading: false,
-      promptCollapsed: true,
-      setPromptCollapsed: jest.fn(),
-      collapsedColumns: {},
-      setCollapsedColumns: jest.fn(),
-      categoryFilter: "all",
-      setCategoryFilter: jest.fn(),
-      missionCategoryFilter: "all",
-      setMissionCategoryFilter: jest.fn(),
-      templateCategoryPills: [],
-      missionCategoryPills: [],
-      filteredGrouped: [],
-      filtered: missions,
-      categories: [],
-      handleTemplateSelect: jest.fn(),
-      openTemplateManager: jest.fn(),
-      openCategoryManager: jest.fn(),
-      handleEdit: jest.fn(),
-      handleDelete: jest.fn(),
-      handleCancel: jest.fn(),
-      handleDuplicateMission: jest.fn(),
-      cancellingMissionId: null,
-      ...over,
-    } as unknown as MissionsPageViewModel;
+    return missionsViewModel(missions, { showCreate: true, missionCategoryPills: [], ...over });
   }
 
   it("still renders every mission, in its own column", () => {

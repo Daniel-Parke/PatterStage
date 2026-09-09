@@ -13,18 +13,11 @@
 // So this renders the real component and reads what an operator would read.
 
 import { render, screen } from "@testing-library/react";
-import type { ReactNode } from "react";
 
 // The model banner carries the one action now, so the component renders a
 // Link.
-jest.mock("next/link", () => ({
-  __esModule: true,
-  default: ({ href, children, ...rest }: { href: string; children: ReactNode }) => (
-    <a href={href} {...rest}>
-      {children}
-    </a>
-  ),
-}));
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+jest.mock("next/link", () => require("../helpers/mocks").nextLinkMock());
 
 jest.mock("lucide-react", () => {
   const passthrough = (name: string) => () => `[${name}]`;

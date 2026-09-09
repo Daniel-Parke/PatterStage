@@ -2,9 +2,9 @@
   "measuredAt": "2026-09-09",
   "counts": {
     "srcLines": 105422,
-    "testLines": 121516,
+    "testLines": 120549,
     "srcRepeatedWindowLines": 1176,
-    "testRepeatedWindowLines": 6044,
+    "testRepeatedWindowLines": 4637,
     "routesWithTryCatch": 13,
     "handRolledReadHooks": 11,
     "writeHooksWithoutMutation": 0,
@@ -12,7 +12,7 @@
     "oneImporterComponents": 130,
     "libRootFiles": 71,
     "commentEssays": 104,
-    "suitesMockingDbInline": 101
+    "suitesMockingDbInline": 14
   },
   "allowed": [
     {

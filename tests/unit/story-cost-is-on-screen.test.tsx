@@ -25,18 +25,11 @@ import { act, fireEvent, render, screen, waitFor } from "@testing-library/react"
 // Amended 2026-09-10 (C3, T-0138): the create page reads its libraries through useApiResource.
 import { renderWithQuery } from "../helpers/render-with-query";
 
-jest.mock("lucide-react", () => {
-  const passthrough = () => () => null;
-  return new Proxy({}, { get: () => passthrough() });
-});
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+jest.mock("lucide-react", () => require("../helpers/story").lucideNullMock());
 
-const push = jest.fn();
-jest.mock("next/navigation", () => ({
-  useRouter: () => ({ push, replace: jest.fn(), back: jest.fn() }),
-  useParams: () => ({ id: "S-1" }),
-  usePathname: () => "/recroom/story-weaver/S-1",
-  useSearchParams: () => new URLSearchParams(),
-}));
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+jest.mock("next/navigation", () => require("../helpers/story").storyReaderNavigationMock(jest.fn()));
 
 jest.mock("@/hooks/useModels", () => ({
   useModels: () => ({ data: [] }),
@@ -45,38 +38,24 @@ jest.mock("@/hooks/useModels", () => ({
 
 import StoryReaderPage from "@/app/recroom/story-weaver/[id]/page";
 import CreateStoryPage from "@/app/recroom/story-weaver/create/page";
+import { type Body, ok, story } from "../helpers/story";
 
 // ── the doubles ─────────────────────────────────────────────────
 
-type Body = Record<string, unknown>;
-
 const fetchMock = jest.fn<Promise<unknown>, [string, RequestInit?]>();
 
-function ok(body: unknown) {
-  return { ok: true, status: 200, json: async () => body };
-}
-
-let current: Record<string, unknown>;
+let current: ReturnType<typeof story>;
 /** What the server would answer for `spend` right now. */
 let spendNow: { runs: number; costUsd: number } | null;
 
-function story(chapters: { number: number; title: string; status: string; wordCount: number }[]) {
-  return {
-    id: "S-1",
-    title: "Salt and starlight",
-    status: "active",
-    chapters,
-    chapterContents: Object.fromEntries(
-      chapters.filter((c) => c.status === "complete").map((c) => [String(c.number), `Text of chapter ${c.number}.`]),
-    ),
-  };
-}
-
 function halfWritten() {
-  return story([
-    { number: 1, title: "The Departure", status: "complete", wordCount: 100 },
-    { number: 2, title: "Chapter 2", status: "pending", wordCount: 0 },
-  ]);
+  return story(
+    [
+      { number: 1, title: "The Departure", status: "complete", wordCount: 100 },
+      { number: 2, title: "Chapter 2", status: "pending", wordCount: 0 },
+    ],
+    { title: "Salt and starlight" },
+  );
 }
 
 function installFetch(): void {
@@ -98,7 +77,7 @@ function installFetch(): void {
         if (next) {
           next.status = "complete";
           (current.chapterContents as Record<string, string>)[String(next.number)] = "Text.";
-          current = { ...current, chapters: [...(current.chapters as unknown[])] };
+          current = { ...current, chapters: [...current.chapters] };
         }
         // The call cost money, so the next read of the figure is higher.
         spendNow = { runs: 3, costUsd: 1.25 };

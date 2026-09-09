@@ -28,30 +28,10 @@
 
 import "@testing-library/jest-dom";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { fetchMap, type FetchAnswer } from "../helpers/fetch-map";
 
 import ModelsPage from "@/app/agent/models/page";
 import { TASK_TYPES } from "@/lib/models/task-types";
-
-interface FetchResponseInit {
-  body: unknown;
-  status?: number;
-}
-
-interface MinimalResponse {
-  ok: boolean;
-  status: number;
-  json: () => Promise<unknown>;
-  text: () => Promise<string>;
-}
-
-function jsonResponse({ body, status = 200 }: FetchResponseInit): MinimalResponse {
-  return {
-    ok: status >= 200 && status < 300,
-    status,
-    json: async () => body,
-    text: async () => JSON.stringify(body),
-  };
-}
 
 const originalFetch = global.fetch;
 
@@ -60,23 +40,14 @@ afterEach(() => {
 });
 
 /** URL-prefix fetch mock, longest key first, as models-page-render.test.tsx. */
-function setFetch(map: Record<string, FetchResponseInit>) {
-  global.fetch = jest.fn(async (input: RequestInfo | URL) => {
-    const url = typeof input === "string" ? input : input.toString();
-    const matched = map[url];
-    if (matched) return jsonResponse(matched) as unknown as Response;
-    const sortedKeys = Object.keys(map).sort((a, b) => b.length - a.length);
-    for (const k of sortedKeys) {
-      if (url.startsWith(k)) return jsonResponse(map[k] as FetchResponseInit) as unknown as Response;
-    }
-    if (url.includes("/api/models/sync/drift")) {
-      return jsonResponse({ body: { data: null } }) as unknown as Response;
-    }
-    if (url.includes("/api/models/fallbacks")) {
-      return jsonResponse({ body: { data: { chain: [], config: null } } }) as unknown as Response;
-    }
-    throw new Error(`Unmatched fetch: ${url}`);
-  }) as typeof global.fetch;
+function setFetch(map: Record<string, FetchAnswer>) {
+  fetchMap(map, {
+    fallback: (url) => {
+      if (url.includes("/api/models/sync/drift")) return { body: { data: null } };
+      if (url.includes("/api/models/fallbacks")) return { body: { data: { chain: [], config: null } } };
+      return undefined;
+    },
+  });
 }
 
 /** Every recorded POST to /api/models/import, whatever else was fetched. */
@@ -125,7 +96,7 @@ function fixture(over: {
     },
     "/api/models": { body: { data: { models: over.models ?? [] } } },
     "/api/credentials": { body: { data: { credentials: [] } } },
-  } as Record<string, FetchResponseInit>;
+  } as Record<string, FetchAnswer>;
 }
 
 const REIMPORT = /^Re-import from config$/;

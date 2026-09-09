@@ -18,6 +18,7 @@
  * it is.
  */
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { matchMediaMock } from "../helpers/mocks";
 
 jest.mock("next/navigation", () => ({ usePathname: () => "/" }));
 jest.mock("next/link", () => require("../helpers/mocks").nextLinkMock());
@@ -53,16 +54,7 @@ function mountShell() {
 }
 
 function mockMedia(mobile: boolean) {
-  window.matchMedia = jest.fn((query: string) => ({
-    matches: mobile && /max-width/.test(query),
-    media: query,
-    onchange: null,
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    addListener: jest.fn(),
-    removeListener: jest.fn(),
-    dispatchEvent: jest.fn(),
-  })) as unknown as typeof window.matchMedia;
+  matchMediaMock((query) => mobile && /max-width/.test(query));
 }
 
 /** The one rail. */

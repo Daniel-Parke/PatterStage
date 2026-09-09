@@ -22,44 +22,27 @@
 
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 
-jest.mock("lucide-react", () => {
-  // Icons leave the accessibility tree, so an icon-only button that names
-  // itself with `title` still resolves by its accessible name.
-  const passthrough = () => () => null;
-  return new Proxy({}, { get: () => passthrough() });
-});
+// Icons leave the accessibility tree, so an icon-only button that names
+// itself with `title` still resolves by its accessible name.
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+jest.mock("lucide-react", () => require("../helpers/story").lucideNullMock());
 
-const push = jest.fn();
-jest.mock("next/navigation", () => ({
-  useRouter: () => ({ push, replace: jest.fn(), back: jest.fn() }),
-  useParams: () => ({ id: "S-1" }),
-  usePathname: () => "/recroom/story-weaver/S-1",
-  useSearchParams: () => new URLSearchParams(),
-}));
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+jest.mock("next/navigation", () => require("../helpers/story").storyReaderNavigationMock(jest.fn()));
 
 import StoryReaderPage from "@/app/recroom/story-weaver/[id]/page";
+import {
+  type Body,
+  callsFor,
+  halfWritten,
+  markComplete,
+  ok,
+  oneFailedTwoPending,
+  story,
+  writeNextChapter,
+} from "../helpers/story";
 
 // ── the story double ────────────────────────────────────────────
-
-interface Chapter {
-  number: number;
-  title: string;
-  status: string;
-  wordCount: number;
-  error?: string;
-}
-
-function story(chapters: Chapter[]) {
-  return {
-    id: "S-1",
-    title: "Salt and Starlight",
-    status: "active",
-    chapters,
-    chapterContents: Object.fromEntries(
-      chapters.filter((c) => c.status === "complete").map((c) => [String(c.number), `Text of chapter ${c.number}.`]),
-    ) as Record<string, string>,
-  };
-}
 
 /** One chapter failed, nothing pending: the story a Retry is pressed on. */
 function oneFailed() {
@@ -70,29 +53,7 @@ function oneFailed() {
   ]);
 }
 
-/** One failed chapter AND two still waiting: the shape the loop can run away on. */
-function oneFailedTwoPending() {
-  return story([
-    { number: 1, title: "The Departure", status: "complete", wordCount: 100 },
-    { number: 2, title: "Chapter 2", status: "failed", wordCount: 0, error: "The gateway is not reachable." },
-    { number: 3, title: "Chapter 3", status: "pending", wordCount: 0 },
-    { number: 4, title: "Chapter 4", status: "pending", wordCount: 0 },
-  ]);
-}
-
-/** Two written, two waiting. */
-function halfWritten() {
-  return story([
-    { number: 1, title: "The Departure", status: "complete", wordCount: 100 },
-    { number: 2, title: "The Signal", status: "complete", wordCount: 100 },
-    { number: 3, title: "Chapter 3", status: "pending", wordCount: 0 },
-    { number: 4, title: "Chapter 4", status: "pending", wordCount: 0 },
-  ]);
-}
-
 // ── the fetch double ────────────────────────────────────────────
-
-type Body = Record<string, unknown>;
 
 const fetchMock = jest.fn<Promise<unknown>, [string, RequestInit?]>();
 let current: ReturnType<typeof story>;
@@ -110,25 +71,6 @@ let generateFails = false;
  * stage of the loop its own commit, the way a real request does.
  */
 let parkedGenerates: Array<() => void> = [];
-
-function ok(body: unknown) {
-  return { ok: true, status: 200, json: async () => body };
-}
-
-function markComplete(number: number): void {
-  const chapter = current.chapters.find((c) => c.number === number);
-  if (!chapter) return;
-  chapter.status = "complete";
-  chapter.error = undefined;
-  current.chapterContents[String(number)] = `Text of chapter ${number}.`;
-  current = { ...current, chapters: [...current.chapters] };
-}
-
-/** Complete the first pending chapter, as the server would. */
-function writeNextChapter(): void {
-  const next = current.chapters.find((c) => c.status === "pending");
-  if (next) markComplete(next.number);
-}
 
 function installFetch(): void {
   fetchMock.mockImplementation(async (_url, init) => {
@@ -149,7 +91,7 @@ function installFetch(): void {
               resolve(ok({ error: "The gateway is not reachable." }));
               return;
             }
-            writeNextChapter();
+            current = writeNextChapter(current);
             resolve(ok({ data: { story: current } }));
           });
         });
@@ -165,27 +107,19 @@ function installFetch(): void {
             parkedRetries.push({
               signal,
               resolve: () => {
-                markComplete(Number(body.chapterNumber));
+                current = markComplete(current, Number(body.chapterNumber));
                 resolve(ok({ data: { story: current } }));
               },
             });
           });
         }
-        markComplete(Number(body.chapterNumber));
+        current = markComplete(current, Number(body.chapterNumber));
         return ok({ data: { story: current } });
       }
       default:
         return ok({ data: {} });
     }
   });
-}
-
-function bodies(): Body[] {
-  return fetchMock.mock.calls.map((c) => JSON.parse(String(c[1]?.body ?? "{}")) as Body);
-}
-
-function callsFor(action: string): Body[] {
-  return bodies().filter((b) => b.action === action);
 }
 
 async function mount(initial: ReturnType<typeof story>) {
@@ -268,7 +202,7 @@ describe("a finished run leaves nothing armed", () => {
 
     // Stop showing while nothing is running is not only a lie about the state.
     // It is the latch that lets a later action resume the loop.
-    expect(callsFor("generate-chapter")).toHaveLength(2);
+    expect(callsFor(fetchMock, "generate-chapter")).toHaveLength(2);
     await waitFor(() => expect(screen.queryByRole("button", { name: "Stop" })).not.toBeInTheDocument());
   });
 });
@@ -284,19 +218,19 @@ describe("a Retry after the ceiling paused the loop", () => {
     await answerGeneration(1);
     await answerGeneration(2);
     await flush();
-    expect(callsFor("generate-chapter")).toHaveLength(3);
+    expect(callsFor(fetchMock, "generate-chapter")).toHaveLength(3);
     expect(await screen.findByText(/Auto-generation paused/)).toBeInTheDocument();
 
     // The cause is fixed, and the operator does what the banner says: Retry.
     generateFails = false;
     fireEvent.click(await screen.findByRole("button", { name: "Retry" }));
-    await waitFor(() => expect(callsFor("retry-chapter")).toHaveLength(1));
+    await waitFor(() => expect(callsFor(fetchMock, "retry-chapter")).toHaveLength(1));
     await flush();
     await flush();
 
     // One chapter was asked for. One chapter is what gets billed: the two that
     // were still pending are still pending, and still offered as a choice.
-    expect(callsFor("generate-chapter")).toHaveLength(3);
+    expect(callsFor(fetchMock, "generate-chapter")).toHaveLength(3);
     expect(await screen.findByRole("button", { name: "Write chapter 3" })).toBeInTheDocument();
   });
 });
@@ -313,7 +247,7 @@ describe("GREEN CONTROL", () => {
     await answerGeneration(0);
     await answerGeneration(1);
 
-    expect(callsFor("generate-chapter")).toHaveLength(2);
+    expect(callsFor(fetchMock, "generate-chapter")).toHaveLength(2);
     await waitFor(() =>
       expect(screen.queryByRole("button", { name: /Write chapter|Keep writing/ })).not.toBeInTheDocument(),
     );
@@ -325,7 +259,7 @@ describe("GREEN CONTROL", () => {
     await mount(oneFailed());
     fireEvent.click(await screen.findByRole("button", { name: "Retry" }));
 
-    await waitFor(() => expect(callsFor("retry-chapter")).toHaveLength(1));
+    await waitFor(() => expect(callsFor(fetchMock, "retry-chapter")).toHaveLength(1));
     await waitFor(() => expect(screen.queryByRole("button", { name: "Retry" })).not.toBeInTheDocument());
   });
 });

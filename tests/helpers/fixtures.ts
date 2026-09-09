@@ -29,8 +29,14 @@ export function rawMetrics(over: Partial<RawMetrics> = {}): RawMetrics {
     schedulesFired: 0,
     skillToggles: 0,
     personalityChanges: 0,
+    modelConfigs: 0,
+    chatMessages: 0,
+    distinctProfiles: 0,
+    distinctEventTypes: 0,
+    eventCounts: {},
+    facts: { profiles: 0, models: 0, credentials: 0, workflows: 0, memoryConfigured: false },
     ...over,
-  } as RawMetrics;
+  };
 }
 
 /** The composer's form with a name and an instruction, everything else at rest. */

@@ -17,10 +17,8 @@ import { readFileSync } from "fs";
 import { join } from "path";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 
-jest.mock("lucide-react", () => {
-  const passthrough = () => () => null;
-  return new Proxy({}, { get: () => passthrough() });
-});
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+jest.mock("lucide-react", () => require("../helpers/story").lucideNullMock());
 
 const ROOT = join(__dirname, "..", "..");
 const page = readFileSync(join(ROOT, "src", "app", "page.tsx"), "utf-8");

@@ -8,23 +8,10 @@
 
 import "@testing-library/jest-dom";
 import { render, screen, waitFor } from "@testing-library/react";
+import { fetchMap, type FetchAnswer } from "../helpers/fetch-map";
 
 import ModelsPage from "@/app/agent/models/page";
 import { TASK_TYPES } from "@/lib/models/task-types";
-
-interface FetchResponseInit {
-  body: unknown;
-  status?: number;
-}
-
-function jsonResponse({ body, status = 200 }: FetchResponseInit) {
-  return {
-    ok: status >= 200 && status < 300,
-    status,
-    json: async () => body,
-    text: async () => JSON.stringify(body),
-  };
-}
 
 const originalFetch = global.fetch;
 
@@ -32,26 +19,15 @@ afterEach(() => {
   global.fetch = originalFetch;
 });
 
-function setFetch(map: Record<string, FetchResponseInit>) {
-  global.fetch = jest.fn(async (input: RequestInfo | URL) => {
-    const url = typeof input === "string" ? input : input.toString();
-    const matched = map[url];
-    if (matched) return jsonResponse(matched) as unknown as Response;
-    const sortedKeys = Object.keys(map).sort((a, b) => b.length - a.length);
-    for (const k of sortedKeys) {
-      if (url.startsWith(k)) return jsonResponse(map[k] as FetchResponseInit) as unknown as Response;
-    }
-    if (url.includes("/api/models/sync/drift")) {
-      return jsonResponse({ body: { data: null } }) as unknown as Response;
-    }
-    if (url.includes("/api/models/fallbacks")) {
-      return jsonResponse({ body: { data: { chain: [], config: null } } }) as unknown as Response;
-    }
-    if (url.includes("/api/models/import")) {
-      return jsonResponse({ body: { data: { modelsImported: 0 } } }) as unknown as Response;
-    }
-    throw new Error(`Unmatched fetch: ${url}`);
-  }) as typeof global.fetch;
+function setFetch(map: Record<string, FetchAnswer>) {
+  fetchMap(map, {
+    fallback: (url) => {
+      if (url.includes("/api/models/sync/drift")) return { body: { data: null } };
+      if (url.includes("/api/models/fallbacks")) return { body: { data: { chain: [], config: null } } };
+      if (url.includes("/api/models/import")) return { body: { data: { modelsImported: 0 } } };
+      return undefined;
+    },
+  });
 }
 
 function defaultFallbacks() {
@@ -59,7 +35,7 @@ function defaultFallbacks() {
     "/api/models/sync/drift": { body: { data: null } },
     "/api/models/fallbacks": { body: { data: { chain: [], config: { restorePrimaryOnFallback: true, fallbackNotification: false, apiMaxRetries: 2 } } } },
     "/api/models/fallbacks/config": { body: { data: { config: { restorePrimaryOnFallback: true, fallbackNotification: false, apiMaxRetries: 2 } } } },
-  } as Record<string, FetchResponseInit>;
+  } as Record<string, FetchAnswer>;
 }
 
 function defaultModelsFetch(models: unknown[] = []) {

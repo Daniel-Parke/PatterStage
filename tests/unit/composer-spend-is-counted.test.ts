@@ -31,13 +31,8 @@ import type DatabaseNs from "better-sqlite3";
 type RealDb = DatabaseNs.Database;
 let testDb: RealDb | null = null;
 
-jest.mock("@/lib/db", () => ({
-  getDb: () => testDb!,
-  ensureDb: () => undefined,
-  now: () => new Date().toISOString(),
-  uuid: () => `id-${Math.random().toString(36).slice(2)}`,
-  inTransaction: <T,>(fn: () => T) => testDb!.transaction(fn)(),
-}));
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports; require is the hoisting-safe form
+jest.mock("@/lib/db", () => require("../helpers/baseline-db").dbSingletonMock(() => testDb));
 
 const Database = jest.requireActual(
   join(process.cwd(), "node_modules", "better-sqlite3", "lib", "index.js"),

@@ -7,7 +7,8 @@ jest.mock("@/lib/api-logger", () => ({
   logApiError: jest.fn(),
   serverErrorFromCatch: jest.fn(),
 }));
-jest.mock("@/lib/db", () => ({ ensureDb: jest.fn() }));
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+jest.mock("@/lib/db", () => require("../helpers/mocks").dbMock());
 
 const mockPushProfile = jest.fn((..._a: unknown[]) => ({ success: true, slug: "qa", backupPath: null, error: null }));
 const mockPushAll = jest.fn((..._a: unknown[]) => [{ success: true, slug: "qa", backupPath: null, error: null }]);

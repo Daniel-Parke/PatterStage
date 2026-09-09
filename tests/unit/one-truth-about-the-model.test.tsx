@@ -31,20 +31,12 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { render, renderHook, screen, waitFor } from "@testing-library/react";
-import type { ReactNode } from "react";
 
 import { bannerStatesFor } from "@/components/chat/gateway-banner-states";
 import type { ApiModel } from "@/components/models/types";
 import type { ModelReadiness } from "@/lib/models/model-readiness";
 
-jest.mock("next/link", () => ({
-  __esModule: true,
-  default: ({ href, children, ...rest }: { href: string; children: ReactNode }) => (
-    <a href={href} {...rest}>
-      {children}
-    </a>
-  ),
-}));
+jest.mock("next/link", () => require("../helpers/mocks").nextLinkMock());
 
 jest.mock("lucide-react", () => require("../helpers/mocks").lucideMock());
 

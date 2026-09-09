@@ -50,7 +50,8 @@ jest.mock("@/lib/missions/mission-repository", () => ({
 jest.mock("@/lib/sessions/session-repository", () => ({
   closeSessionForMission: jest.fn(),
 }));
-jest.mock("@/lib/db", () => ({ now: jest.fn(() => new Date().toISOString()) }));
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+jest.mock("@/lib/db", () => require("../helpers/mocks").dbMock({ now: jest.fn(() => new Date().toISOString()) }));
 jest.mock("@/lib/runtime", () => ({
   runtime: { getRun: jest.fn(), stopRun: jest.fn(() => Promise.resolve()) },
 }));

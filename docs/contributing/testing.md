@@ -183,6 +183,32 @@ A workflow file can only decide which jobs run. Which ones *block* a merge is a 
 
 Other workflows: **gitleaks** (secret scan).
 
+## Shared test doubles
+
+The stanzas most suites need are factories in `tests/helpers/`, opt-in per file:
+a suite adopts one by calling it inside its own `jest.mock`, and a suite that
+mocks differently keeps its own mock, because it is testing something
+different (U1, T-0115; C4, T-0141).
+
+- `mocks.tsx`: `lucideMock()` (every icon an `<svg data-icon>`), `appPageShellMock()`,
+  `nextLinkMock()`, `nextServerMock()` (`NextRequest` and `NextResponse` as classes,
+  so `instanceof` holds), `pathsMock(over)`, `agentRuntimeMock()`,
+  `agentRuntimeFakeRootMock()` (over `global.__FAKE_HERMES_ROOT__`), `dbMock(over)`
+  (the `@/lib/db` stub), `matchMediaMock(matches)`, `profilePickerMock()`.
+- `baseline-db.ts`: `execBaselineSchema(db)` and `dbSingletonMock(() => testDb, { uuid, now })`
+  for a suite over a real in-memory SQLite.
+- `fetch-map.ts`: `fetchMap(map, { fallback })` installs `global.fetch` over a path
+  map (exact, then longest prefix, then a throw) and `jsonResponse(body, status)`.
+- `story.tsx`: the Story Weaver fixtures (`story`, `halfWritten`,
+  `oneFailedTwoPending`, `markComplete`, `writeNextChapter`), the parked fetch
+  (`park`), `bodies`/`callsFor`, `lucideNullMock()`, `storyReaderNavigationMock()`
+  and `storyRepositoryMock()`.
+- `fixtures.ts`: `rawMetrics(over)`, `composerFormState(over)`, `missionsViewModel(rows, over)`.
+- `render-with-query.tsx`: `renderWithQuery(ui)` for a component that reads through `useApiResource`.
+
+`tests/unit/c4-the-test-harnesses.test.ts` refuses a suite that spells one of the
+replaced stanzas by hand, and names the few that keep their own with the reason.
+
 ## Auth in route tests
 
 Route tests use the shared helper in `tests/helpers/api-test-helpers.ts`, which

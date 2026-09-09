@@ -7,7 +7,8 @@
 // row and every board card that renders it.
 
 jest.mock("@/lib/models-repository", () => ({ findModelByModelId: () => null }));
-jest.mock("@/lib/db", () => ({ getDb: jest.fn(), ensureDb: jest.fn(), now: () => "t", uuid: () => "u", inTransaction: <T,>(fn: () => T) => fn() }));
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+jest.mock("@/lib/db", () => require("../helpers/mocks").dbMock({ now: () => "t", uuid: () => "u" }));
 
 import type { Mission } from "@/lib/missions/mission-types";
 import { normaliseMissionName, missionNameFrom } from "@/lib/missions/mission-name";

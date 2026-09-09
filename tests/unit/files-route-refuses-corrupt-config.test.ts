@@ -40,7 +40,8 @@ jest.mock("@/modules/hermes/handlers/profile-patch", () => ({
 }));
 jest.mock("@/modules/hermes/lib/profiles-repository", () => ({ getProfile: () => null }));
 jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
-jest.mock("@/lib/db", () => ({ ensureDb: jest.fn(), getDb: jest.fn(), now: () => "t", uuid: () => "u", inTransaction: <T,>(fn: () => T) => fn() }));
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+jest.mock("@/lib/db", () => require("../helpers/mocks").dbMock({ now: () => "t", uuid: () => "u" }));
 
 import { PUT } from "@/app/api/agent/files/[key]/route";
 

@@ -30,10 +30,8 @@ jest.mock("@/lib/api-auth", () => ({
   isReadOnly: jest.fn(() => false),
 }));
 
-const mockEnsureDb = jest.fn();
-jest.mock("@/lib/db", () => ({
-  ensureDb: () => mockEnsureDb(),
-}));
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+jest.mock("@/lib/db", () => require("../helpers/mocks").dbMock());
 
 const mockUpsertSkill = jest.fn();
 jest.mock("@/lib/skills-repository", () => ({

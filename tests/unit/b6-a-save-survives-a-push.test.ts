@@ -97,13 +97,7 @@ jest.mock("@/lib/agent-root-repository", () => {
 });
 
 let testDb: import("better-sqlite3").Database | null = null;
-jest.mock("@/lib/db", () => ({
-  now: () => new Date().toISOString(),
-  getDb: () => testDb!,
-  ensureDb: () => undefined,
-  inTransaction: <T,>(fn: () => T) => testDb!.transaction(fn)(),
-  uuid: () => "b6-uuid",
-}));
+jest.mock("@/lib/db", () => require("../helpers/baseline-db").dbSingletonMock(() => testDb, { uuid: () => "b6-uuid" }));
 
 // The audit ledger and the analytics ledger both write under PS_DATA_DIR or
 // the database; neither is what this file measures.

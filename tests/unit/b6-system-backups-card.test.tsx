@@ -23,6 +23,7 @@
 
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { matchMediaMock } from "../helpers/mocks";
 
 jest.mock("next/navigation", () => ({
   usePathname: () => "/agent/settings/system",
@@ -146,16 +147,7 @@ beforeEach(() => {
     "/api/backup": { body: backupList([]) },
   };
   installFetch();
-  window.matchMedia = jest.fn((query: string) => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    addListener: jest.fn(),
-    removeListener: jest.fn(),
-    dispatchEvent: jest.fn(),
-  })) as unknown as typeof window.matchMedia;
+  matchMediaMock();
   Object.assign(navigator, { clipboard: { writeText: jest.fn(async () => {}) } });
 });
 

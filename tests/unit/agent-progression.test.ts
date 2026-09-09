@@ -19,6 +19,7 @@ import {
 import type { AgentProgressionSnapshotRow } from "@/lib/stats/agent-progression-repository";
 import { evaluateAchievements, type RawMetrics } from "@/lib/stats/derive";
 import type { AgentPerformance } from "@/lib/stats/agent-stats";
+import { rawMetrics } from "../helpers/fixtures";
 
 // countAgentActiveDays is the only IO buildAgentProgressionRecord reaches; the
 // experience helper already degrades a failed read to 0, and a fixed 0 here
@@ -28,34 +29,7 @@ jest.mock("@/lib/stats/agent-stats-repository", () => ({
 }));
 
 function metrics(over: Partial<RawMetrics> = {}): RawMetrics {
-  return {
-    completedMissions: 0,
-    failedMissions: 0,
-    completedRuns: 0,
-    totalTokens: 0,
-    stories: 0,
-    schedulesEnabled: 0,
-    scriptsEnabled: 0,
-    longestStreak: 0,
-    currentStreak: 0,
-    completionHours: [],
-    dispatchedMissions: 0,
-    maxMissionsInADay: 0,
-    chaptersGenerated: 0,
-    storiesCompleted: 0,
-    sessionsStarted: 0,
-    schedulesCreated: 0,
-    schedulesFired: 0,
-    skillToggles: 0,
-    personalityChanges: 0,
-    modelConfigs: 0,
-    chatMessages: 0,
-    distinctProfiles: 0,
-    distinctEventTypes: 0,
-    eventCounts: {},
-    facts: { profiles: 0, models: 0, credentials: 0, workflows: 0, memoryConfigured: false },
-    ...over,
-  };
+  return rawMetrics(over);
 }
 
 function inputs(over: Partial<AgentProgressionInputs> = {}): AgentProgressionInputs {

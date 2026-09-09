@@ -34,13 +34,11 @@
 import { act, fireEvent, render, renderHook, screen } from "@testing-library/react";
 import type { ComponentType } from "react";
 
-jest.mock("lucide-react", () => {
-  // Icons leave the accessibility tree, so an icon-only button that names
-  // itself with `title` still resolves by its accessible name. A mocked icon
-  // that rendered text would become the name and hide the title (skeptic 4).
-  const passthrough = () => () => null;
-  return new Proxy({}, { get: () => passthrough() });
-});
+// Icons leave the accessibility tree, so an icon-only button that names
+// itself with `title` still resolves by its accessible name. A mocked icon
+// that rendered text would become the name and hide the title (skeptic 4).
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+jest.mock("lucide-react", () => require("../helpers/story").lucideNullMock());
 
 // next/server, the way models-api.test.ts stands it in: a status and a body.
 jest.mock("next/server", () => ({

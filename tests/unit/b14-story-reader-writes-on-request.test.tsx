@@ -23,43 +23,18 @@
 
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 
-jest.mock("lucide-react", () => {
-  // Icons leave the accessibility tree, so an icon-only button that names
-  // itself with `title` still resolves by its accessible name.
-  const passthrough = () => () => null;
-  return new Proxy({}, { get: () => passthrough() });
-});
+// Icons leave the accessibility tree, so an icon-only button that names
+// itself with `title` still resolves by its accessible name.
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+jest.mock("lucide-react", () => require("../helpers/story").lucideNullMock());
 
-const push = jest.fn();
-jest.mock("next/navigation", () => ({
-  useRouter: () => ({ push, replace: jest.fn(), back: jest.fn() }),
-  useParams: () => ({ id: "S-1" }),
-  usePathname: () => "/recroom/story-weaver/S-1",
-  useSearchParams: () => new URLSearchParams(),
-}));
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+jest.mock("next/navigation", () => require("../helpers/story").storyReaderNavigationMock(jest.fn()));
 
 import StoryReaderPage from "@/app/recroom/story-weaver/[id]/page";
+import { type Body, bodies, callsFor, ok, story, writeNextChapter } from "../helpers/story";
 
 // ── the story double ────────────────────────────────────────────
-
-interface Chapter {
-  number: number;
-  title: string;
-  status: string;
-  wordCount: number;
-}
-
-function story(chapters: Chapter[]) {
-  return {
-    id: "S-1",
-    title: "Salt and Starlight",
-    status: "active",
-    chapters,
-    chapterContents: Object.fromEntries(
-      chapters.filter((c) => c.status === "complete").map((c) => [String(c.number), `Text of chapter ${c.number}.`]),
-    ),
-  };
-}
 
 /** Two written, two waiting — the Library row an operator clicks to re-read. */
 function halfWritten() {
@@ -80,8 +55,6 @@ function allWritten() {
 
 // ── the fetch double ────────────────────────────────────────────
 
-type Body = Record<string, unknown>;
-
 const fetchMock = jest.fn<Promise<unknown>, [string, RequestInit?]>();
 let current: ReturnType<typeof story>;
 /** Resolvers for in-flight generate calls, so a Stop can be timed. */
@@ -91,19 +64,6 @@ let holdGenerate = false;
 /** When true, a parked call IGNORES the abort, the way a provider that does not
  *  honour the header would. The loop then has only its own flag to stop it. */
 let holdIgnoresAbort = false;
-
-function ok(body: unknown) {
-  return { ok: true, status: 200, json: async () => body };
-}
-
-/** Complete the first pending chapter, as the server would. */
-function writeNextChapter(): void {
-  const next = current.chapters.find((c) => c.status === "pending");
-  if (!next) return;
-  next.status = "complete";
-  current.chapterContents[String(next.number)] = `Text of chapter ${next.number}.`;
-  current = { ...current, chapters: [...current.chapters] };
-}
 
 function installFetch(): void {
   fetchMock.mockImplementation(async (_url, init) => {
@@ -128,13 +88,13 @@ function installFetch(): void {
             pendingGenerate.push({
               signal,
               resolve: () => {
-                writeNextChapter();
+                current = writeNextChapter(current);
                 resolve(ok({ data: { story: current } }));
               },
             });
           });
         }
-        writeNextChapter();
+        current = writeNextChapter(current);
         return ok({ data: { story: current } });
       }
       default:
@@ -143,12 +103,8 @@ function installFetch(): void {
   });
 }
 
-function bodies(): Body[] {
-  return fetchMock.mock.calls.map((c) => JSON.parse(String(c[1]?.body ?? "{}")) as Body);
-}
-
 function generateCalls(): Body[] {
-  return bodies().filter((b) => b.action === "generate-chapter");
+  return callsFor(fetchMock, "generate-chapter");
 }
 
 async function mount(initial: ReturnType<typeof story>) {
@@ -181,7 +137,7 @@ describe("opening a half-written story", () => {
     });
 
     expect(generateCalls()).toHaveLength(0);
-    expect(bodies().map((b) => b.action)).toContain("load");
+    expect(bodies(fetchMock).map((b) => b.action)).toContain("load");
   });
 
   it("offers the two ways to start, named for what they do", async () => {

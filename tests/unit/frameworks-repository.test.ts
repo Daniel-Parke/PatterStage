@@ -5,11 +5,7 @@
 import { join } from "path";
 
 let testDb: import("better-sqlite3").Database | null = null;
-jest.mock("@/lib/db", () => ({
-  getDb: () => testDb!,
-  ensureDb: () => undefined,
-  now: () => new Date().toISOString(),
-}));
+jest.mock("@/lib/db", () => require("../helpers/baseline-db").dbSingletonMock(() => testDb));
 
 import { applyFrameworksMigration } from "@/lib/db/apply-frameworks-migration";
 import { getActiveFrameworkConfig, listFrameworks, updateFramework } from "@/lib/frameworks/repository";

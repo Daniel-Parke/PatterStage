@@ -22,7 +22,8 @@ jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
 jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn(), serverErrorFromCatch: jest.fn() }));
 jest.mock("@/lib/agents/roster", () => ({ resolveAgentSlug: (s: string) => s }));
 jest.mock("@/lib/missions/mission-category-repository", () => ({ getMissionCategory: () => null }));
-jest.mock("@/lib/db", () => ({ getDb: jest.fn(), ensureDb: jest.fn(), now: () => "t", uuid: () => "u", inTransaction: <T,>(fn: () => T) => fn() }));
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+jest.mock("@/lib/db", () => require("../helpers/mocks").dbMock({ now: () => "t", uuid: () => "u" }));
 
 import { handleDispatchMission } from "@/lib/missions/mission-handlers/dispatch";
 

@@ -8,45 +8,8 @@
 // - unknown action returns 400
 // - validateChapterOutput strips meta commentary
 
-jest.mock("next/server", () => {
-  class NextResponse {
-    status: number;
-    ok: boolean;
-    statusText: string;
-    headers: Headers;
-    private _data: unknown;
-    constructor(data?: unknown, init?: ResponseInit) {
-      this._data = data;
-      this.status = init?.status ?? 200;
-      this.ok = this.status >= 200 && this.status < 300;
-      this.statusText = init?.statusText ?? "OK";
-      this.headers = new Headers(init?.headers);
-    }
-    static json(data: unknown, init?: ResponseInit) {
-      return new NextResponse(data, init);
-    }
-    async json() {
-      return this._data;
-    }
-  }
-  return {
-    NextRequest: class NextRequest {
-      url: string;
-      method: string;
-      headers: Headers;
-      bodyUsed: boolean = false;
-      private _body: string;
-      constructor(url: string, init?: RequestInit) {
-        this.url = url;
-        this.method = init?.method ?? "GET";
-        this.headers = new Headers(init?.headers as HeadersInit);
-        this._body = typeof init?.body === "string" ? init.body : JSON.stringify(init?.body ?? {});
-      }
-      async json() { return JSON.parse(this._body); }
-    },
-    NextResponse,
-  };
-});
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+jest.mock("next/server", () => require("../helpers/mocks").nextServerMock());
 
 jest.mock("@/lib/api-logger", () => ({
   logApiError: jest.fn(),
@@ -59,27 +22,8 @@ jest.mock("@/modules/rec-room/lib/prompts", () => ({
 jest.mock("@/lib/api-auth", () => ({
 }));
 
-// Mock story-repository
-jest.mock("@/modules/rec-room/lib/story-repository", () => {
-  const listStories = jest.fn();
-  const getStory = jest.fn();
-  const createStory = jest.fn();
-  const updateStory = jest.fn();
-  const deleteStory = jest.fn();
-
-  return {
-    listStories,
-    getStory,
-    createStory,
-    updateStory,
-    deleteStory,
-    __listStories: listStories,
-    __getStory: getStory,
-    __createStory: createStory,
-    __updateStory: updateStory,
-    __deleteStory: deleteStory,
-  };
-});
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+jest.mock("@/modules/rec-room/lib/story-repository", () => require("../helpers/story").storyRepositoryMock());
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const storyRepo = require("@/modules/rec-room/lib/story-repository") as Record<string, unknown>;

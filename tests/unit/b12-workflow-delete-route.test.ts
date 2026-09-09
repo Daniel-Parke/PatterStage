@@ -25,7 +25,8 @@
 let composerOn = true;
 jest.mock("@/lib/feature-flags", () => ({ isFeatureEnabled: () => composerOn }));
 
-jest.mock("@/lib/db", () => ({ ensureDb: jest.fn(), now: () => "2026-09-05T12:00:00.000Z" }));
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+jest.mock("@/lib/db", () => require("../helpers/mocks").dbMock({ now: () => "2026-09-05T12:00:00.000Z" }));
 
 jest.mock("@/lib/api-logger", () => ({
   logApiError: jest.fn(),

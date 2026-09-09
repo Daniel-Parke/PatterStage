@@ -28,29 +28,13 @@
 // This is the repro, authored before the fix and kept forever.
 // ═══════════════════════════════════════════════════════════════
 
-jest.mock("next/server", () => {
-  class NextResponse {
-    status: number;
-    private _data: unknown;
-    constructor(data: unknown = null, init?: ResponseInit) {
-      this._data = data;
-      this.status = init?.status ?? 200;
-    }
-    json() {
-      return Promise.resolve(this._data);
-    }
-    static json(data: unknown, init?: ResponseInit) {
-      return new NextResponse(data, init);
-    }
-  }
-  return { NextRequest: class NextRequest {}, NextResponse };
-});
+jest.mock("next/server", () => require("../helpers/mocks").nextServerMock());
 
 jest.mock("@/lib/api-logger", () => ({
   logApiError: jest.fn(),
   serverErrorFromCatch: jest.fn(() => ({ status: 500, json: async () => ({ error: "boom" }) })),
 }));
-jest.mock("@/lib/db", () => ({ ensureDb: jest.fn() }));
+jest.mock("@/lib/db", () => require("../helpers/mocks").dbMock());
 jest.mock("@/lib/sync", () => ({ ensureSyncLayer: jest.fn() }));
 jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
 jest.mock("@/lib/missions/mission-repository", () => ({

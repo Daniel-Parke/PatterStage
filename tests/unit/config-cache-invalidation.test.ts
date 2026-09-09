@@ -41,27 +41,7 @@ let testDb: import("better-sqlite3").Database | null = null;
 
 jest.mock("@/lib/db", () => require("../helpers/baseline-db").dbSingletonMock(() => testDb));
 
-jest.mock("@/modules/hermes/lib/agent-runtime", () => ({
-  getActiveHermesPaths: () => {
-    const root = (global as { __FAKE_HERMES_ROOT__?: string }).__FAKE_HERMES_ROOT__!;
-    return {
-      root,
-      env: join(root, ".env"),
-      soul: join(root, "SOUL.md"),
-      hermes: join(root, "HERMES.md"),
-      agents: join(root, "AGENTS.md"),
-      skills: join(root, "skills"),
-      profiles: join(root, "profiles"),
-      sessions: join(root, "sessions"),
-      logs: join(root, "logs"),
-      config: join(root, "config.yaml"),
-      backups: join(root, "backups"),
-      cronJobs: join(root, "cron", "jobs.json"),
-      memoryDb: join(root, "memory_store.db"),
-    };
-  },
-  getActiveHermesHome: () => (global as { __FAKE_HERMES_ROOT__?: string }).__FAKE_HERMES_ROOT__,
-}));
+jest.mock("@/modules/hermes/lib/agent-runtime", () => require("../helpers/mocks").agentRuntimeFakeRootMock());
 
 // The only mock that is not about isolating the cache. `PUT /api/config`
 // appends an audit line, and `PATHS.auditLog` resolves from the real data dir

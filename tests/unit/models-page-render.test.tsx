@@ -7,30 +7,10 @@
 
 import "@testing-library/jest-dom";
 import { render, screen, waitFor, within } from "@testing-library/react";
+import { fetchMap, type FetchAnswer } from "../helpers/fetch-map";
 
 import ModelsPage from "@/app/agent/models/page";
 import { TASK_TYPES } from "@/lib/models/task-types";
-
-interface FetchResponseInit {
-  body: unknown;
-  status?: number;
-}
-
-interface MinimalResponse {
-  ok: boolean;
-  status: number;
-  json: () => Promise<unknown>;
-  text: () => Promise<string>;
-}
-
-function jsonResponse({ body, status = 200 }: FetchResponseInit): MinimalResponse {
-  return {
-    ok: status >= 200 && status < 300,
-    status,
-    json: async () => body,
-    text: async () => JSON.stringify(body),
-  };
-}
 
 const originalFetch = global.fetch;
 
@@ -41,31 +21,17 @@ afterEach(() => {
 /**
  * Smart fetch mock: matches by URL prefix so query params don't break tests.
  */
-function setFetch(map: Record<string, FetchResponseInit>) {
-  global.fetch = jest.fn(async (input: RequestInfo | URL) => {
-    const url = typeof input === "string" ? input : input.toString();
-    // Try exact match first
-    const matched = map[url];
-    if (matched) return jsonResponse(matched) as unknown as Response;
-    // Fallback: prefix match (routes with query params)
-    // Sort keys longest-first so "/api/models/defaults" matches before "/api/models"
-    const sortedKeys = Object.keys(map).sort((a, b) => b.length - a.length);
-    for (const k of sortedKeys) {
-      if (url.startsWith(k)) return jsonResponse(map[k] as FetchResponseInit) as unknown as Response;
-    }
+function setFetch(map: Record<string, FetchAnswer>) {
+  fetchMap(map, {
     // For any unmatched fetch, return a safe 200 with empty data
     // so the page doesn't crash — these are optional endpoints
-    if (url.includes("/api/models/sync/drift")) {
-      return jsonResponse({ body: { data: null } }) as unknown as Response;
-    }
-    if (url.includes("/api/models/fallbacks")) {
-      return jsonResponse({ body: { data: { chain: [], config: null } } }) as unknown as Response;
-    }
-    if (url.includes("/api/models/import")) {
-      return jsonResponse({ body: { data: { modelsImported: 0 } } }) as unknown as Response;
-    }
-    throw new Error(`Unmatched fetch: ${url}`);
-  }) as typeof global.fetch;
+    fallback: (url) => {
+      if (url.includes("/api/models/sync/drift")) return { body: { data: null } };
+      if (url.includes("/api/models/fallbacks")) return { body: { data: { chain: [], config: null } } };
+      if (url.includes("/api/models/import")) return { body: { data: { modelsImported: 0 } } };
+      return undefined;
+    },
+  });
 }
 
 // Default fallback responses used across tests
@@ -74,7 +40,7 @@ function defaultFallbacks() {
     "/api/models/sync/drift": { body: { data: null } },
     "/api/models/fallbacks": { body: { data: { chain: [], config: { restorePrimaryOnFallback: true, fallbackNotification: false, apiMaxRetries: 2 } } } },
     "/api/models/fallbacks/config": { body: { data: { config: { restorePrimaryOnFallback: true, fallbackNotification: false, apiMaxRetries: 2 } } } },
-  } as Record<string, FetchResponseInit>;
+  } as Record<string, FetchAnswer>;
 }
 
 describe("ModelsPage", () => {

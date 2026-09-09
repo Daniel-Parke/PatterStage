@@ -33,6 +33,7 @@ import * as missionBoard from "@/lib/missions/mission-board";
 import * as statusLabels from "@/lib/status-labels";
 import type { MissionRow } from "@/hooks/missions-page-types";
 import type { MissionsPageViewModel } from "@/hooks/useMissionsPage";
+import { missionsViewModel } from "../helpers/fixtures";
 
 // ── the Donut double ───────────────────────────────────────────
 //
@@ -229,41 +230,7 @@ describe("the insights strip counts what the board counts", () => {
 // ── the board ──────────────────────────────────────────────────
 
 function vmFor(missions: MissionRow[]): MissionsPageViewModel {
-  return {
-    missions,
-    filtered: missions,
-    showCreate: false,
-    filter: "all",
-    setFilter: jest.fn(),
-    search: "",
-    setSearch: jest.fn(),
-    expandedId: null,
-    setExpandedId: jest.fn(),
-    detail: null,
-    detailLoading: false,
-    promptCollapsed: true,
-    setPromptCollapsed: jest.fn(),
-    collapsedColumns: {},
-    setCollapsedColumns: jest.fn(),
-    categoryFilter: "all",
-    setCategoryFilter: jest.fn(),
-    missionCategoryFilter: "all",
-    setMissionCategoryFilter: jest.fn(),
-    templateCategoryPills: [],
-    missionCategoryPills: [],
-    filteredGrouped: [],
-    categories: [],
-    handleTemplateSelect: jest.fn(),
-    openTemplateManager: jest.fn(),
-    openCategoryManager: jest.fn(),
-    handleEdit: jest.fn(),
-    handleDelete: jest.fn(),
-    handleCancel: jest.fn(),
-    handleDuplicateMission: jest.fn(),
-    cancellingMissionId: null,
-    missionsLoadError: null,
-    fetchData: jest.fn(),
-  } as unknown as MissionsPageViewModel;
+  return missionsViewModel(missions, { missionCategoryPills: [] });
 }
 
 describe("the board speaks the same five words", () => {

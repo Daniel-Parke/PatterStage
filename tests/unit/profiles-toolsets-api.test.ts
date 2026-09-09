@@ -4,7 +4,8 @@ jest.mock("@/lib/api-auth", () => ({
 }));
 
 jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
-jest.mock("@/lib/db", () => ({ ensureDb: jest.fn() }));
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+jest.mock("@/lib/db", () => require("../helpers/mocks").dbMock());
 
 const mockHydrate = jest.fn((..._a: unknown[]) => ({
   toolsets: { cli: ["hermes-cli"], discord: ["hermes-discord"] },

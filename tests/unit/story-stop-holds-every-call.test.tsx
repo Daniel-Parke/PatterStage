@@ -25,115 +25,34 @@
 
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 
-jest.mock("lucide-react", () => {
-  // Icons leave the accessibility tree, so an icon-only button that names
-  // itself with `title` still resolves by its accessible name.
-  const passthrough = () => () => null;
-  return new Proxy({}, { get: () => passthrough() });
-});
+// Icons leave the accessibility tree, so an icon-only button that names
+// itself with `title` still resolves by its accessible name.
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+jest.mock("lucide-react", () => require("../helpers/story").lucideNullMock());
 
-const push = jest.fn();
-jest.mock("next/navigation", () => ({
-  useRouter: () => ({ push, replace: jest.fn(), back: jest.fn() }),
-  useParams: () => ({ id: "S-1" }),
-  usePathname: () => "/recroom/story-weaver/S-1",
-  useSearchParams: () => new URLSearchParams(),
-}));
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+jest.mock("next/navigation", () => require("../helpers/story").storyReaderNavigationMock(jest.fn()));
 
 import StoryReaderPage from "@/app/recroom/story-weaver/[id]/page";
-
-// ── the story double ────────────────────────────────────────────
-
-interface Chapter {
-  number: number;
-  title: string;
-  status: string;
-  wordCount: number;
-  error?: string;
-}
-
-function story(chapters: Chapter[]) {
-  return {
-    id: "S-1",
-    title: "Salt and Starlight",
-    status: "active",
-    chapters,
-    chapterContents: Object.fromEntries(
-      chapters
-        .filter((c) => c.status === "complete")
-        .map((c) => [String(c.number), `Text of chapter ${c.number}.`]),
-    ) as Record<string, string>,
-  };
-}
-
-/** One failed chapter and two still waiting: both Retry and Write are offered. */
-function oneFailedTwoPending() {
-  return story([
-    { number: 1, title: "The Departure", status: "complete", wordCount: 100 },
-    { number: 2, title: "Chapter 2", status: "failed", wordCount: 0, error: "The gateway is not reachable." },
-    { number: 3, title: "Chapter 3", status: "pending", wordCount: 0 },
-    { number: 4, title: "Chapter 4", status: "pending", wordCount: 0 },
-  ]);
-}
-
-/** Two written, two waiting. */
-function halfWritten() {
-  return story([
-    { number: 1, title: "The Departure", status: "complete", wordCount: 100 },
-    { number: 2, title: "The Signal", status: "complete", wordCount: 100 },
-    { number: 3, title: "Chapter 3", status: "pending", wordCount: 0 },
-    { number: 4, title: "Chapter 4", status: "pending", wordCount: 0 },
-  ]);
-}
+import {
+  type Body,
+  type Parked,
+  callsFor,
+  halfWritten,
+  markComplete,
+  ok,
+  oneFailedTwoPending,
+  park,
+  story,
+  writeNextChapter,
+} from "../helpers/story";
 
 // ── the fetch double ────────────────────────────────────────────
-
-type Body = Record<string, unknown>;
-
-interface Parked {
-  action: string;
-  signal: AbortSignal | undefined;
-  /** Answer this call as the server would. */
-  resolve: (body: unknown) => void;
-}
 
 const fetchMock = jest.fn<Promise<unknown>, [string, RequestInit?]>();
 let current: ReturnType<typeof story>;
 /** Every generating call still on the wire, in the order it was made. */
 let parked: Parked[] = [];
-
-function ok(body: unknown) {
-  return { ok: true, status: 200, json: async () => body };
-}
-
-function markComplete(number: number): void {
-  const chapter = current.chapters.find((c) => c.number === number);
-  if (!chapter) return;
-  chapter.status = "complete";
-  chapter.error = undefined;
-  current.chapterContents[String(number)] = `Text of chapter ${number}.`;
-  current = { ...current, chapters: [...current.chapters] };
-}
-
-/** Complete the first pending chapter, as the server would. */
-function writeNextChapter(): void {
-  const next = current.chapters.find((c) => c.status === "pending");
-  if (next) markComplete(next.number);
-}
-
-function park(action: string, init: RequestInit | undefined): Promise<unknown> {
-  return new Promise((resolve, reject) => {
-    const signal = init?.signal ?? undefined;
-    // A real fetch rejects with AbortError the moment its signal aborts. That
-    // rejection IS the Stop, on every path that bills.
-    signal?.addEventListener("abort", () => {
-      const err = new Error("The operation was aborted.");
-      err.name = "AbortError";
-      reject(err);
-    });
-    parked.push({ action, signal, resolve });
-  });
-}
 
 function installFetch(): void {
   fetchMock.mockImplementation(async (_url, init) => {
@@ -148,19 +67,13 @@ function installFetch(): void {
         return ok({ data: current });
       case "generate-chapter":
       case "retry-chapter":
-        return park(String(body.action), init);
+        // A real fetch rejects with AbortError the moment its signal aborts. That
+        // rejection IS the Stop, on every path that bills.
+        return park(parked, String(body.action), init);
       default:
         return ok({ data: {} });
     }
   });
-}
-
-function bodies(): Body[] {
-  return fetchMock.mock.calls.map((c) => JSON.parse(String(c[1]?.body ?? "{}")) as Body);
-}
-
-function callsFor(action: string): Body[] {
-  return bodies().filter((b) => b.action === action);
 }
 
 function parkedFor(action: string): Parked[] {
@@ -200,7 +113,7 @@ describe("two calls on the wire", () => {
 
     // The generate finishes. The retry is still running, and still billing.
     await act(async () => {
-      writeNextChapter();
+      current = writeNextChapter(current);
       parkedFor("generate-chapter")[0].resolve(ok({ data: { story: current } }));
       await Promise.resolve();
     });
@@ -217,7 +130,7 @@ describe("two calls on the wire", () => {
     await waitFor(() => expect(parkedFor("retry-chapter")).toHaveLength(1));
 
     await act(async () => {
-      writeNextChapter();
+      current = writeNextChapter(current);
       parkedFor("generate-chapter")[0].resolve(ok({ data: { story: current } }));
       await Promise.resolve();
     });
@@ -237,15 +150,15 @@ describe("after a Stop", () => {
 
     fireEvent.click(await screen.findByRole("button", { name: "Write chapter 3" }));
     await waitFor(() => expect(parkedFor("generate-chapter")).toHaveLength(1));
-    const loadsBefore = callsFor("load").length;
+    const loadsBefore = callsFor(fetchMock, "load").length;
 
     // The Stop landed after the provider had already answered, so chapter 3
     // was written and billed. This is reachable: the abort can arrive during
     // the title or the summary call, and generate.ts catches both.
-    markComplete(3);
+    current = markComplete(current, 3);
     fireEvent.click(await screen.findByRole("button", { name: "Stop" }));
 
-    await waitFor(() => expect(callsFor("load").length).toBeGreaterThan(loadsBefore));
+    await waitFor(() => expect(callsFor(fetchMock, "load").length).toBeGreaterThan(loadsBefore));
     // The next write is offered on chapter 4, which is the chapter the server
     // would actually write. Offering chapter 3 here is the money bug: the call
     // names no chapter, so it would write and bill chapter 4 regardless.
@@ -274,7 +187,7 @@ describe("GREEN CONTROL", () => {
     expect(screen.getByRole("button", { name: "Stop" })).toBeInTheDocument();
 
     await act(async () => {
-      writeNextChapter();
+      current = writeNextChapter(current);
       parkedFor("generate-chapter")[0].resolve(ok({ data: { story: current } }));
       await Promise.resolve();
     });

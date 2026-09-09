@@ -22,6 +22,7 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { matchMediaMock } from "../helpers/mocks";
 
 jest.mock("lucide-react", () => require("../helpers/mocks").lucideMock());
 
@@ -31,22 +32,11 @@ const ROOT = join(__dirname, "..", "..");
 const read = (rel: string) => readFileSync(join(ROOT, rel), "utf8");
 
 function mockViewport(width: number) {
-  window.matchMedia = jest.fn((query: string) => {
+  matchMediaMock((query) => {
     const max = query.match(/max-width:\s*(\d+)px/);
     const min = query.match(/min-width:\s*(\d+)px/);
-    const matches =
-      (!max || width <= Number(max[1])) && (!min || width >= Number(min[1])) && Boolean(max || min);
-    return {
-      matches,
-      media: query,
-      onchange: null,
-      addEventListener: jest.fn(),
-      removeEventListener: jest.fn(),
-      addListener: jest.fn(),
-      removeListener: jest.fn(),
-      dispatchEvent: jest.fn(),
-    };
-  }) as unknown as typeof window.matchMedia;
+    return (!max || width <= Number(max[1])) && (!min || width >= Number(min[1])) && Boolean(max || min);
+  });
 }
 
 function mount(selected: string | null = "a", width = 1440) {

@@ -21,7 +21,8 @@ jest.mock("@/lib/runs-repository", () => ({
 jest.mock("@/lib/runtime", () => ({
   runtime: { submitRun: jest.fn() },
 }));
-jest.mock("@/lib/db", () => ({ uuid: jest.fn(() => "run-ch-1") }));
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+jest.mock("@/lib/db", () => require("../helpers/mocks").dbMock({ uuid: jest.fn(() => "run-ch-1") }));
 jest.mock("@/lib/analytics/record-event", () => ({ recordEvent: jest.fn() }));
 jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
 jest.mock("@/lib/api-fetch", () => ({ messageFromError: (_e: unknown, f: string) => f }));

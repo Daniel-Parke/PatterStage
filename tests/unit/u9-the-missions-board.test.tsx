@@ -57,6 +57,7 @@ import MissionInsights from "@/components/missions/MissionInsights";
 import type { MissionRow } from "@/hooks/missions-page-types";
 import type { MissionsPageViewModel } from "@/hooks/useMissionsPage";
 import { splitBlocks } from "../e2e/lib/census-analysis";
+import { missionsViewModel } from "../helpers/fixtures";
 
 function rows(): MissionRow[] {
   const make = (prefix: string, n: number, fields: Partial<MissionRow>): MissionRow[] =>
@@ -79,44 +80,7 @@ function rows(): MissionRow[] {
 }
 
 function vmFor(missions: MissionRow[]): MissionsPageViewModel {
-  return {
-    missions,
-    filtered: missions,
-    showCreate: false,
-    filter: "all",
-    setFilter: jest.fn(),
-    search: "",
-    setSearch: jest.fn(),
-    expandedId: null,
-    setExpandedId: jest.fn(),
-    detail: null,
-    detailLoading: false,
-    promptCollapsed: true,
-    setPromptCollapsed: jest.fn(),
-    collapsedColumns: {},
-    setCollapsedColumns: jest.fn(),
-    categoryFilter: "all",
-    setCategoryFilter: jest.fn(),
-    missionCategoryFilter: "all",
-    setMissionCategoryFilter: jest.fn(),
-    templateCategoryPills: [],
-    missionCategoryPills: [
-      { id: "ops", name: "Ops", color: "cyan", count: 12 },
-      { id: "research", name: "Research", color: "purple", count: 8 },
-    ],
-    filteredGrouped: [],
-    categories: [],
-    handleTemplateSelect: jest.fn(),
-    openTemplateManager: jest.fn(),
-    openCategoryManager: jest.fn(),
-    handleEdit: jest.fn(),
-    handleDelete: jest.fn(),
-    handleCancel: jest.fn(),
-    handleDuplicateMission: jest.fn(),
-    cancellingMissionId: null,
-    missionsLoadError: null,
-    fetchData: jest.fn(),
-  } as unknown as MissionsPageViewModel;
+  return missionsViewModel(missions);
 }
 
 describe("the board sits where the page sits", () => {

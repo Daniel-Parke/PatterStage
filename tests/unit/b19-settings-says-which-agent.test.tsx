@@ -28,14 +28,7 @@ jest.mock("next/navigation", () => ({
   usePathname: () => "/agent/settings",
   useSearchParams: () => new URLSearchParams(),
 }));
-jest.mock("next/link", () => ({
-  __esModule: true,
-  default: ({ href, children, ...rest }: { href: string; children: ReactNode }) => (
-    <a href={href} {...rest}>
-      {children}
-    </a>
-  ),
-}));
+jest.mock("next/link", () => require("../helpers/mocks").nextLinkMock());
 jest.mock("lucide-react", () => require("../helpers/mocks").lucideMock());
 jest.mock("@/components/layout/AppPageShell", () => ({
   __esModule: true,

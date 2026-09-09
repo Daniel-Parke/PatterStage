@@ -21,6 +21,7 @@ import "@testing-library/jest-dom";
 import { screen, waitFor } from "@testing-library/react";
 // Reads go through useApiResource since T-0129, so the page wants a QueryClient.
 import { renderWithQuery } from "../helpers/render-with-query";
+import { jsonResponse } from "../helpers/fetch-map";
 
 jest.mock("next/navigation", () => ({
   usePathname: () => "/agent/memory",
@@ -29,22 +30,6 @@ jest.mock("next/navigation", () => ({
 jest.mock("@/components/layout/AppPageShell", () => require("../helpers/mocks").appPageShellMock());
 
 import MemoryPage from "@/app/agent/memory/page";
-
-interface MinimalResponse {
-  ok: boolean;
-  status: number;
-  json: () => Promise<unknown>;
-  text: () => Promise<string>;
-}
-
-function jsonResponse(body: unknown, status = 200): MinimalResponse {
-  return {
-    ok: status >= 200 && status < 300,
-    status,
-    json: async () => body,
-    text: async () => JSON.stringify(body),
-  };
-}
 
 const originalFetch = global.fetch;
 afterEach(() => {

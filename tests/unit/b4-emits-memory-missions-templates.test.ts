@@ -25,11 +25,8 @@ jest.mock("@/lib/analytics/record-event", () => ({ recordEvent: jest.fn() }));
 
 // ── memory/config: the DB-owned provider table ─────────────────
 const mockUpdateMemoryProvider = jest.fn();
-jest.mock("@/lib/db", () => ({
-  ensureDb: jest.fn(),
-  getDb: jest.fn(),
-  now: () => "2026-09-05T00:00:00.000Z",
-}));
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+jest.mock("@/lib/db", () => require("../helpers/mocks").dbMock({ now: () => "2026-09-05T00:00:00.000Z" }));
 const DEFAULT_MEMORY_CONFIG = { host: "127.0.0.1", port: 9177, bank: "hermes" };
 jest.mock("@/lib/memory/memory-providers", () => {
   const { HindsightMemoryProvider } = jest.requireActual(
@@ -62,22 +59,10 @@ jest.mock("fs", () => ({
   unlinkSync: jest.fn(),
   rmSync: jest.fn(),
 }));
-jest.mock("@/lib/paths", () => ({
-  PS_DATA_DIR: "/tmp/ch-data",
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+jest.mock("@/lib/paths", () => require("../helpers/mocks").pathsMock({
+  PATHS: { templates: "/tmp/test-templates" },
   getPsDataDir: () => "/tmp/ch-data",
-  PATHS: {
-    templates: "/tmp/test-templates",
-    missions: "/tmp/ch-data/missions",
-    patterStageDb: "/tmp/ch-data/control-hub.db",
-    stories: "/tmp/ch-data/stories",
-    recroom: "/tmp/ch-data/recroom",
-    workspaces: "/tmp/ch-data/workspaces",
-    auditLog: "/tmp/ch-data/audit",
-    psScripts: "/tmp/ch-data/scripts",
-    psHardwareLogs: "/tmp/ch-data/logs",
-  },
-  getPsScriptsDir: () => "/tmp/ch-data/scripts",
-  getPsHardwareLogDir: () => "/tmp/ch-data/logs",
   readEnv: (...keys: string[]) => {
     for (const k of keys) {
       const v = process.env[k];

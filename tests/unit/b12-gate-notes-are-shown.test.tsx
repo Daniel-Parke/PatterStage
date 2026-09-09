@@ -17,13 +17,12 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { render, screen, within } from "@testing-library/react";
+import { matchMediaMock } from "../helpers/mocks";
 
-jest.mock("lucide-react", () => {
-  // Icons leave the accessibility tree, so an icon-only button that names
-  // itself with `title` or `aria-label` still resolves by its accessible name.
-  const passthrough = () => () => null;
-  return new Proxy({}, { get: () => passthrough() });
-});
+// Icons leave the accessibility tree, so an icon-only button that names
+// itself with `title` or `aria-label` still resolves by its accessible name.
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+jest.mock("lucide-react", () => require("../helpers/story").lucideNullMock());
 
 jest.mock("@/lib/api-fetch", () => ({ safeApiCall: jest.fn(async () => ({ ok: true, data: {} })) }));
 
@@ -91,16 +90,7 @@ beforeEach(() => {
   // The sheet reads a media query on mount to choose its side; jsdom ships no
   // matchMedia, and without one every render here dies in the framework
   // rather than on the contract.
-  window.matchMedia = jest.fn((query: string) => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    addListener: jest.fn(),
-    removeListener: jest.fn(),
-    dispatchEvent: jest.fn(),
-  })) as unknown as typeof window.matchMedia;
+  matchMediaMock();
 });
 
 describe("the stage sheet shows what the operator decided at this gate, and why", () => {

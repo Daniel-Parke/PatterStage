@@ -22,11 +22,10 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { act, render, screen, within } from "@testing-library/react";
+import { matchMediaMock } from "../helpers/mocks";
 
-jest.mock("lucide-react", () => {
-  const passthrough = () => () => null;
-  return new Proxy({}, { get: () => passthrough() });
-});
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+jest.mock("lucide-react", () => require("../helpers/story").lucideNullMock());
 
 jest.mock("next/dynamic", () => ({
   __esModule: true,
@@ -155,16 +154,7 @@ function gatePanel(): HTMLElement {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  window.matchMedia = jest.fn((query: string) => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    addListener: jest.fn(),
-    removeListener: jest.fn(),
-    dispatchEvent: jest.fn(),
-  })) as unknown as typeof window.matchMedia;
+  matchMediaMock();
   mockUseWorkflows.mockReturnValue(resource(WORKFLOWS));
   mockUseGraph.mockReturnValue({ data: null });
 });

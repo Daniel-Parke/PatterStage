@@ -14,10 +14,8 @@ import { readFileSync } from "fs";
 import { join } from "path";
 import { render, screen, within } from "@testing-library/react";
 
-jest.mock("lucide-react", () => {
-  const passthrough = () => () => null;
-  return new Proxy({}, { get: () => passthrough() });
-});
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+jest.mock("lucide-react", () => require("../helpers/story").lucideNullMock());
 
 import QuestChapter from "@/components/quests/QuestChapter";
 import type { QuestChapterState, QuestState } from "@/lib/quests/evaluate";

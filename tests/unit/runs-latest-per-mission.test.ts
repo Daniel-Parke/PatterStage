@@ -16,13 +16,7 @@ import { applyComposerMigration } from "@/lib/db/apply-composer-migration";
 
 let testDb: Database.Database | null = null;
 
-jest.mock("@/lib/db", () => ({
-  getDb: () => testDb!,
-  inTransaction: <T,>(fn: () => T) => fn(),
-  uuid: () => "uuid",
-  now: () => new Date().toISOString(),
-  ensureDb: () => undefined,
-}));
+jest.mock("@/lib/db", () => require("../helpers/baseline-db").dbSingletonMock(() => testDb, { uuid: () => "uuid" }));
 
 import { createRun, listLatestRunsForMissions, updateRun } from "@/lib/runs-repository";
 

@@ -29,6 +29,7 @@ jest.mock("@/components/help/ConceptHint", () => ({
 import MissionsList from "@/components/missions/MissionsList";
 import type { MissionRow } from "@/hooks/missions-page-types";
 import type { MissionsPageViewModel } from "@/hooks/useMissionsPage";
+import { missionsViewModel } from "../helpers/fixtures";
 
 const ROOT = join(__dirname, "..", "..");
 const read = (rel: string) => readFileSync(join(ROOT, rel), "utf8");
@@ -48,43 +49,12 @@ function rows(n: number): MissionRow[] {
 
 function vmFor(missions: MissionRow[]) {
   const openCreate = jest.fn();
-  const vm = {
-    missions,
-    filtered: missions,
-    showCreate: false,
+  const vm = missionsViewModel(missions, {
     openCreate,
-    filter: "all",
-    setFilter: jest.fn(),
-    search: "",
-    setSearch: jest.fn(),
-    expandedId: null,
-    setExpandedId: jest.fn(),
-    detail: null,
-    detailLoading: false,
-    promptCollapsed: true,
-    setPromptCollapsed: jest.fn(),
-    collapsedColumns: {},
-    setCollapsedColumns: jest.fn(),
-    categoryFilter: "all",
-    setCategoryFilter: jest.fn(),
-    missionCategoryFilter: "all",
-    setMissionCategoryFilter: jest.fn(),
     templates: [template],
-    templateCategoryPills: [],
     missionCategoryPills: [],
     filteredGrouped: [{ categoryId: "c1", label: "Ops", color: "cyan", items: [template] }],
-    categories: [],
-    handleTemplateSelect: jest.fn(),
-    openTemplateManager: jest.fn(),
-    openCategoryManager: jest.fn(),
-    handleEdit: jest.fn(),
-    handleDelete: jest.fn(),
-    handleCancel: jest.fn(),
-    handleDuplicateMission: jest.fn(),
-    cancellingMissionId: null,
-    missionsLoadError: null,
-    fetchData: jest.fn(),
-  } as unknown as MissionsPageViewModel;
+  } as unknown as Partial<MissionsPageViewModel>);
   return { vm, openCreate };
 }
 

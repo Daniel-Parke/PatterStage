@@ -30,15 +30,7 @@ jest.mock("lucide-react", () => require("../helpers/mocks").lucideMock());
 jest.mock("@/hooks/useProfiles", () => ({
   useProfiles: () => ({ refetch: async () => undefined, data: [{ id: "default", name: "Bob", description: "" }], isLoading: false, error: null }),
 }));
-jest.mock("@/components/ui/ProfilePicker", () => ({
-  __esModule: true,
-  default: ({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
-    <select aria-label="Profile" value={value} onChange={(e) => onChange(e.target.value)}>
-      <option value="default">Bob</option>
-      <option value="qa">QA Engineer</option>
-    </select>
-  ),
-}));
+jest.mock("@/components/ui/ProfilePicker", () => require("../helpers/mocks").profilePickerMock());
 
 const mockApiFetch = jest.fn();
 const mockSafeApiCallData = jest.fn();

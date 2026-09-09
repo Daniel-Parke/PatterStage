@@ -18,22 +18,8 @@ jest.mock("fs", () => ({
   unlinkSync: jest.fn(),
 }));
 
-jest.mock("@/lib/paths", () => ({
-  PS_DATA_DIR: "/tmp/ch-data",
-  PATHS: {
-    templates: "/tmp/test-templates",
-    missions: "/tmp/ch-data/missions",
-    patterStageDb: "/tmp/ch-data/control-hub.db",
-    stories: "/tmp/ch-data/stories",
-    recroom: "/tmp/ch-data/recroom",
-    workspaces: "/tmp/ch-data/workspaces",
-    auditLog: "/tmp/ch-data/audit",
-    psScripts: "/tmp/ch-data/scripts",
-    psHardwareLogs: "/tmp/ch-data/logs",
-  },
-  getPsScriptsDir: () => "/tmp/ch-data/scripts",
-  getPsHardwareLogDir: () => "/tmp/ch-data/logs",
-}));
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+jest.mock("@/lib/paths", () => require("../helpers/mocks").pathsMock({ PATHS: { templates: "/tmp/test-templates" } }));
 
 jest.mock("@/lib/schema", () => ({
   parseTemplatePackManifestV1: jest.fn(),

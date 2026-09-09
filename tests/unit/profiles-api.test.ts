@@ -105,9 +105,7 @@ const store = new Map<
   }
 >();
 
-jest.mock("@/lib/db", () => ({
-  ensureDb: jest.fn(),
-}));
+jest.mock("@/lib/db", () => require("../helpers/mocks").dbMock());
 
 jest.mock("@/lib/agent-root-repository", () => ({
   getAgentRoot: jest.fn(() => ({

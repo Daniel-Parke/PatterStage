@@ -5,7 +5,8 @@
 // three handlers and is tested in one can lose two of them silently.
 
 jest.mock("@/lib/models-repository", () => ({ findModelByModelId: () => null }));
-jest.mock("@/lib/db", () => ({ getDb: jest.fn(), ensureDb: jest.fn(), now: () => "t", uuid: () => "u", inTransaction: <T,>(fn: () => T) => fn() }));
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+jest.mock("@/lib/db", () => require("../helpers/mocks").dbMock({ now: () => "t", uuid: () => "u" }));
 jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
 jest.mock("@/lib/missions/mission-response", () => ({ missionResponse: (m: unknown) => ({ mission: m }) }));
 

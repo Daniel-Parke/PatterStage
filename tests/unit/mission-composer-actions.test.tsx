@@ -12,29 +12,9 @@ import {
   dispatchSubmitLabel,
   MissionComposerActions,
 } from "@/components/missions/MissionCreateForm";
-import type { MissionFormState } from "@/components/missions/MissionCreateForm";
+import { composerFormState } from "../helpers/fixtures";
 
-const baseFormState: MissionFormState = {
-  newName: "Test",
-  newInstruction: "Do work",
-  newContext: "",
-  newGoals: "",
-  newDispatch: "save",
-  newSchedule: "every 5m",
-  newMissionTime: 15,
-  newTimeout: 10,
-  newProfile: "",
-  newModel: "",
-  newProvider: "",
-  newLocalDirs: [],
-  localDirDraft: { path: "", branch: null },
-  newReferences: [],
-  referenceInput: "",
-  newSkills: [],
-  newOutputFormat: "",
-  newConstraints: "",
-  newToolsets: [],
-};
+const baseFormState = composerFormState({ newInstruction: "Do work" });
 
 describe("dispatch modes", () => {
   it("orders Save, Queue, Run now, Schedule", () => {

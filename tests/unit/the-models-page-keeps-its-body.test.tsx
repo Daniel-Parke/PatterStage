@@ -17,23 +17,10 @@
 
 import "@testing-library/jest-dom";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { jsonResponse, type FetchAnswer } from "../helpers/fetch-map";
 
 import ModelsPage from "@/app/agent/models/page";
 import { TASK_TYPES } from "@/lib/models/task-types";
-
-interface FetchResponseInit {
-  body: unknown;
-  status?: number;
-}
-
-function jsonResponse({ body, status = 200 }: FetchResponseInit) {
-  return {
-    ok: status >= 200 && status < 300,
-    status,
-    json: async () => body,
-    text: async () => JSON.stringify(body),
-  } as unknown as Response;
-}
 
 const originalFetch = global.fetch;
 afterEach(() => {
@@ -53,7 +40,7 @@ const MODEL = {
 };
 
 /** The registry's reads, each answered as often as the page asks. */
-function answers(): Record<string, FetchResponseInit> {
+function answers(): Record<string, FetchAnswer> {
   const config = { restorePrimaryOnFallback: true, fallbackNotification: false, apiMaxRetries: 2 };
   return {
     "/api/models/sync/drift": { body: { data: null } },
@@ -72,7 +59,7 @@ function answers(): Record<string, FetchResponseInit> {
  * A fetch that answers from the map, and holds every GET behind `gate` while
  * `held` is on: the reload in flight, as a network makes it.
  */
-function installFetch(map: Record<string, FetchResponseInit>) {
+function installFetch(map: Record<string, FetchAnswer>) {
   let held = false;
   let release: () => void = () => undefined;
   let gate = Promise.resolve();
@@ -94,7 +81,7 @@ function installFetch(map: Record<string, FetchResponseInit>) {
       .sort((a, b) => b.length - a.length)
       .find((k) => path === k || path.startsWith(`${k}/`));
     if (!key) throw new Error(`Unmatched fetch: ${url}`);
-    return jsonResponse(map[key]);
+    return jsonResponse(map[key].body, map[key].status);
   }) as typeof global.fetch;
   return { hold, open };
 }

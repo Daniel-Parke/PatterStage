@@ -34,28 +34,9 @@ import MissionCreateForm, {
   MissionComposerActions,
 } from "@/components/missions/MissionCreateForm";
 import type { MissionFormState } from "@/components/missions/MissionCreateForm";
+import { composerFormState } from "../helpers/fixtures";
 
-const baseFormState: MissionFormState = {
-  newName: "Test",
-  newInstruction: "Run the task",
-  newContext: "",
-  newGoals: "",
-  newOutputFormat: "",
-  newConstraints: "",
-  newDispatch: "save",
-  newSchedule: "every 5m",
-  newMissionTime: 15,
-  newTimeout: 10,
-  newProfile: "",
-  newModel: "",
-  newProvider: "",
-  newLocalDirs: [],
-  localDirDraft: { path: "", branch: null },
-  newReferences: [],
-  referenceInput: "",
-  newSkills: [],
-  newToolsets: [],
-};
+const baseFormState = composerFormState();
 
 const HINT = /to choose how this mission runs before submitting/i;
 

@@ -17,10 +17,8 @@ import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 // Amended 2026-09-10 (C3, T-0138): the libraries read through useApiResource.
 import { renderWithQuery } from "../helpers/render-with-query";
 
-jest.mock("lucide-react", () => {
-  const passthrough = () => () => null;
-  return new Proxy({}, { get: () => passthrough() });
-});
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+jest.mock("lucide-react", () => require("../helpers/story").lucideNullMock());
 
 const push = jest.fn();
 jest.mock("next/navigation", () => ({

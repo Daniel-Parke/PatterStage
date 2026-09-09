@@ -10,35 +10,9 @@ import {
 } from "@/lib/stats/derive";
 import { ICONS } from "@/components/achievements/AchievementBadge";
 import { COMPLETIONIST_EVENT_TYPES } from "@/lib/analytics/event-types";
+import { rawMetrics } from "../helpers/fixtures";
 
-const baseMetrics = (over: Partial<RawMetrics> = {}): RawMetrics => ({
-  completedMissions: 0,
-  failedMissions: 0,
-  completedRuns: 0,
-  totalTokens: 0,
-  stories: 0,
-  schedulesEnabled: 0,
-  scriptsEnabled: 0,
-  longestStreak: 0,
-  currentStreak: 0,
-  completionHours: [],
-  dispatchedMissions: 0,
-  maxMissionsInADay: 0,
-  chaptersGenerated: 0,
-  storiesCompleted: 0,
-  sessionsStarted: 0,
-  schedulesCreated: 0,
-  schedulesFired: 0,
-  skillToggles: 0,
-  personalityChanges: 0,
-  modelConfigs: 0,
-  chatMessages: 0,
-  distinctProfiles: 0,
-  distinctEventTypes: 0,
-  eventCounts: {},
-  facts: { profiles: 0, models: 0, credentials: 0, workflows: 0, memoryConfigured: false },
-  ...over,
-});
+const baseMetrics = (over: Partial<RawMetrics> = {}): RawMetrics => rawMetrics(over);
 
 describe("computeLevel", () => {
   it("starts at level 1 with the first title", () => {

@@ -150,7 +150,8 @@ jest.mock("@/lib/stats/agent-stats-repository", () => ({
 
 // ── the route half's neighbours ──────────────────────────────────
 
-jest.mock("@/lib/db", () => ({ ensureDb: jest.fn() }));
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+jest.mock("@/lib/db", () => require("../helpers/mocks").dbMock());
 jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
 jest.mock("@/lib/analytics/record-event", () => ({ recordEvent: jest.fn() }));
 jest.mock("@/modules/hermes/lib/profile-push", () => ({

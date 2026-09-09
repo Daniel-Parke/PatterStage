@@ -32,30 +32,8 @@ import type { ComponentProps, ComponentType } from "react";
 import type { NextRequest } from "next/server";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 
-jest.mock("next/server", () => ({
-  NextRequest: class NextRequest {
-    url: string;
-    method: string;
-    private _body: string;
-    constructor(url: string, init?: RequestInit) {
-      this.url = url;
-      this.method = init?.method ?? "GET";
-      this._body = typeof init?.body === "string" ? init.body : JSON.stringify(init?.body ?? {});
-    }
-    async json() { return JSON.parse(this._body); }
-  },
-  NextResponse: class NextResponse {
-    status = 200;
-    private _data: unknown;
-    static json(data: unknown, init?: ResponseInit): NextResponse {
-      const r = new NextResponse();
-      r.status = init?.status ?? 200;
-      r._data = data;
-      return r;
-    }
-    async json() { return this._data; }
-  },
-}));
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+jest.mock("next/server", () => require("../helpers/mocks").nextServerMock());
 
 jest.mock("@/lib/api-logger", () => ({
   logApiError: jest.fn(),

@@ -37,6 +37,7 @@ import {
 } from "@/lib/stats/derive";
 import { ICONS } from "@/components/achievements/AchievementBadge";
 import { AGENT_PROGRESSION_COMPUTATION_VERSION } from "@/lib/stats/agent-progression";
+import { rawMetrics } from "../helpers/fixtures";
 
 const ROOT = process.cwd();
 
@@ -84,34 +85,7 @@ function defs(): DefsModule {
 }
 
 function baseMetrics(over: Partial<RawMetrics> = {}): RawMetrics {
-  return {
-    completedMissions: 0,
-    failedMissions: 0,
-    completedRuns: 0,
-    totalTokens: 0,
-    stories: 0,
-    schedulesEnabled: 0,
-    scriptsEnabled: 0,
-    longestStreak: 0,
-    currentStreak: 0,
-    completionHours: [],
-    dispatchedMissions: 0,
-    maxMissionsInADay: 0,
-    chaptersGenerated: 0,
-    storiesCompleted: 0,
-    sessionsStarted: 0,
-    schedulesCreated: 0,
-    schedulesFired: 0,
-    skillToggles: 0,
-    personalityChanges: 0,
-    modelConfigs: 0,
-    chatMessages: 0,
-    distinctProfiles: 0,
-    distinctEventTypes: 0,
-    eventCounts: {},
-    facts: { profiles: 0, models: 0, credentials: 0, workflows: 0, memoryConfigured: false },
-    ...over,
-  };
+  return rawMetrics(over);
 }
 
 const CHAIN_IDS = ["first-hour", "agent-shaper", "clockmaker", "curriculum"] as const;

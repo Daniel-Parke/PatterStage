@@ -92,40 +92,7 @@ jest.mock("@/modules/hermes/lib/agent-runtime", () => {
 // The same NextRequest / NextResponse doubles models-api.test.ts uses: the
 // routes answer through NextResponse.json and parse-json-body checks
 // `instanceof NextResponse`, and both hold against this class.
-jest.mock("next/server", () => ({
-  NextRequest: class NextRequest {
-    url: string;
-    method: string;
-    headers: Headers;
-    nextUrl: URL;
-    bodyUsed: boolean = false;
-    private _body: string;
-    constructor(url: string, init?: RequestInit) {
-      this.url = url;
-      this.method = init?.method ?? "GET";
-      this.headers = new Headers(init?.headers as HeadersInit);
-      this._body = typeof init?.body === "string" ? init.body : JSON.stringify(init?.body ?? {});
-      this.nextUrl = new URL(url);
-    }
-    async json() {
-      return JSON.parse(this._body);
-    }
-  },
-  NextResponse: class NextResponse {
-    status: number;
-    body: unknown;
-    constructor(status: number, body: unknown) {
-      this.status = status;
-      this.body = body;
-    }
-    async json() {
-      return this.body;
-    }
-    static json(data: unknown, init?: ResponseInit) {
-      return new NextResponse(init?.status ?? 200, data);
-    }
-  },
-}));
+jest.mock("next/server", () => require("../helpers/mocks").nextServerMock());
 
 jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
 jest.mock("@/lib/api-logger", () => ({

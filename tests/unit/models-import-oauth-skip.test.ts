@@ -35,7 +35,8 @@ jest.mock("@/lib/models-repository", () => ({
 }));
 jest.mock("@/lib/api-auth", () => ({ requireAuth: () => null, requireNotReadOnly: () => null }));
 jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
-jest.mock("@/lib/db", () => ({ ensureDb: jest.fn(), getDb: jest.fn() }));
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+jest.mock("@/lib/db", () => require("../helpers/mocks").dbMock());
 
 import { NextRequest } from "next/server";
 

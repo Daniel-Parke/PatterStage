@@ -12,28 +12,9 @@
 import { render, screen } from "@testing-library/react";
 import { useState } from "react";
 import MissionCreateForm, { type MissionFormState } from "@/components/missions/MissionCreateForm";
+import { composerFormState } from "../helpers/fixtures";
 
-const baseFormState: MissionFormState = {
-  newName: "",
-  newInstruction: "",
-  newContext: "",
-  newGoals: "",
-  newDispatch: "save",
-  newSchedule: "every 5m",
-  newMissionTime: 15,
-  newTimeout: 10,
-  newProfile: "",
-  newModel: "",
-  newProvider: "",
-  newLocalDirs: [],
-  localDirDraft: { path: "", branch: null },
-  newReferences: [],
-  referenceInput: "",
-  newSkills: [],
-  newOutputFormat: "",
-  newConstraints: "",
-  newToolsets: [],
-};
+const baseFormState = composerFormState({ newName: "", newInstruction: "" });
 
 function Harness() {
   const [formState, setFormState] = useState<MissionFormState>(baseFormState);

@@ -29,7 +29,8 @@ describe("methodNotAllowed", () => {
 describe("the skills toggle answers a stub, not a framework 405", () => {
   jest.mock("@/lib/api-auth", () => ({ requireNotReadOnly: () => null }));
   jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn(), serverErrorFromCatch: jest.fn() }));
-  jest.mock("@/lib/db", () => ({ ensureDb: jest.fn(), getDb: jest.fn(), now: () => "t", uuid: () => "u", inTransaction: <T,>(fn: () => T) => fn() }));
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+  jest.mock("@/lib/db", () => require("../helpers/mocks").dbMock({ now: () => "t", uuid: () => "u" }));
   jest.mock("@/lib/agent-root-repository", () => ({ getAgentRoot: jest.fn() }));
   jest.mock("@/modules/hermes/lib/profiles-repository", () => ({ getDisabledSkills: jest.fn(), getProfile: jest.fn() }));
   jest.mock("@/modules/hermes/handlers/profile-patch", () => ({ applyProfileOrRootPatchOrFail: jest.fn() }));

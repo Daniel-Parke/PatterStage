@@ -29,23 +29,7 @@ import type { NextRequest } from "next/server";
 
 // ── doubles ────────────────────────────────────────────────────
 
-jest.mock("next/server", () => {
-  class MockResponse {
-    status: number;
-    private _data: unknown;
-    constructor(data: unknown = null, init?: ResponseInit) {
-      this._data = data;
-      this.status = init?.status ?? 200;
-    }
-    json() {
-      return Promise.resolve(this._data);
-    }
-    static json(data: unknown, init?: ResponseInit) {
-      return new MockResponse(data, init);
-    }
-  }
-  return { NextRequest: class MockRequest {}, NextResponse: MockResponse };
-});
+jest.mock("next/server", () => require("../helpers/mocks").nextServerMock());
 
 jest.mock("@/lib/api-logger", () => ({
   logApiError: jest.fn(),
@@ -53,7 +37,7 @@ jest.mock("@/lib/api-logger", () => ({
     throw error;
   }),
 }));
-jest.mock("@/lib/db", () => ({ ensureDb: jest.fn(), getDb: jest.fn(), inTransaction: jest.fn(), uuid: jest.fn(), now: jest.fn() }));
+jest.mock("@/lib/db", () => require("../helpers/mocks").dbMock());
 jest.mock("@/lib/sync", () => ({ ensureSyncLayer: jest.fn() }));
 jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
 

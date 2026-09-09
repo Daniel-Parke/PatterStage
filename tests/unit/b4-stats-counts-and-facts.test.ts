@@ -18,13 +18,7 @@ import { ANALYTICS_EVENT_TYPES, COMPLETIONIST_EVENT_TYPES } from "@/lib/analytic
 
 let testDb: import("better-sqlite3").Database | null = null;
 
-jest.mock("@/lib/db", () => ({
-  getDb: () => testDb!,
-  inTransaction: <T,>(fn: () => T) => testDb!.transaction(fn)(),
-  ensureDb: () => undefined,
-  uuid: () => `id-${Math.random().toString(36).slice(2)}`,
-  now: () => new Date().toISOString(),
-}));
+jest.mock("@/lib/db", () => require("../helpers/baseline-db").dbSingletonMock(() => testDb));
 jest.mock("@/lib/stats/agent-stats", () => ({ getAgentPerformance: () => [] }));
 
 import { computeDashboard, getDashboardStats } from "@/lib/stats/stats-repository";

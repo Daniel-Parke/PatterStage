@@ -2,40 +2,13 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 
 import type { NextRequest } from "next/server";
-jest.mock("next/server", () => ({
-  // NextRequest must be a real class (not a plain object literal) so the
-  // `parseJsonBody` caller can use `instanceof` on NextResponse — see
-  // session 37 control-hub-list1-session37-findings for the failure mode.
-  NextRequest: class NextRequest {
-    url: string;
-    method: string;
-    headers: Headers;
-    bodyUsed: boolean = false;
-    private _body: string;
-    constructor(url: string, init?: RequestInit) {
-      this.url = url;
-      this.method = init?.method ?? "GET";
-      this.headers = new Headers(init?.headers as HeadersInit);
-      this._body = typeof init?.body === "string" ? init.body : JSON.stringify(init?.body ?? {});
-    }
-    async json() { return JSON.parse(this._body); }
-  },
-  // NextResponse is a class (not an object literal) so `instanceof` works
-  // in the `parseJsonBody` call site. Static `json()` factory keeps the
-  // existing call sites' usage (`NextResponse.json(data, init)`) intact.
-  NextResponse: class NextResponse {
-    status = 200;
-    private _data: unknown;
-    static json(data: unknown, init?: ResponseInit): NextResponse {
-      const status = init?.status ?? 200;
-      const r = new NextResponse();
-      r.status = status;
-      r._data = data;
-      return r;
-    }
-    async json() { return this._data; }
-  },
-}));
+// NextRequest must be a real class (not a plain object literal) so the
+// `parseJsonBody` caller can use `instanceof` on NextResponse — see
+// session 37 control-hub-list1-session37-findings for the failure mode.
+// NextResponse is a class (not an object literal) so `instanceof` works
+// in the `parseJsonBody` call site. Static `json()` factory keeps the
+// existing call sites' usage (`NextResponse.json(data, init)`) intact.
+jest.mock("next/server", () => require("../helpers/mocks").nextServerMock());
 
 jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
 jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));

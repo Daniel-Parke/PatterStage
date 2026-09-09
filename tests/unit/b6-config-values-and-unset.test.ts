@@ -88,23 +88,7 @@ jest.mock("@/lib/agent-root-repository", () => ({
   setAgentRootSyncStatus: jest.fn(),
 }));
 
-jest.mock("@/lib/paths", () => ({
-  PS_DATA_DIR: "/tmp/ch-data",
-  PATHS: {
-    missions: "/tmp/ch-data/missions",
-    patterStageDb: "/tmp/ch-data/control-hub.db",
-    templates: "/tmp/ch-data/templates",
-    stories: "/tmp/ch-data/stories",
-    recroom: "/tmp/ch-data/recroom",
-    workspaces: "/tmp/ch-data/workspaces",
-    auditLog: "/tmp/ch-data/audit",
-    psScripts: "/tmp/ch-data/scripts",
-    psHardwareLogs: "/tmp/ch-data/logs",
-  },
-  getPsScriptsDir: () => "/tmp/ch-data/scripts",
-  getPsHardwareLogDir: () => "/tmp/ch-data/logs",
-  readEnv: () => undefined,
-}));
+jest.mock("@/lib/paths", () => require("../helpers/mocks").pathsMock({ readEnv: () => undefined }));
 
 jest.mock("@/lib/api-logger", () => ({
   logApiError: jest.fn(),
