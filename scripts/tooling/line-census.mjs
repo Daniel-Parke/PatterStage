@@ -200,25 +200,38 @@ if (report) {
   process.exit(0);
 }
 
+const previous = existsSync(BASELINE) ? JSON.parse(readFileSync(BASELINE, "utf8")) : null;
+const base = previous?.counts ?? null;
+const rose = [];
+const fell = [];
+if (base) {
+  for (const [k, v] of Object.entries(counts)) {
+    if (!(k in base)) continue;
+    if (v > base[k]) rose.push(`${k} rose from ${base[k]} to ${v}`);
+    if (v < base[k]) fell.push(`${k} fell from ${base[k]} to ${v}`);
+  }
+  for (const k of Object.keys(base)) if (!(k in counts)) rose.push(`${k} is in the baseline and no longer measured`);
+}
+
 if (update) {
-  writeFileSync(BASELINE, JSON.stringify({ measuredAt: new Date().toISOString().slice(0, 10), counts }, null, 2) + "\n");
-  console.log(`line-census: baseline written: ${JSON.stringify(counts)}`);
+  // A re-cut holds a fall. A rise is held only with a reason, and the reason
+  // is written into the baseline beside the number it excuses, so the file
+  // itself says why a measure went up (a source batch adding its oracle
+  // suite is the usual one).
+  if (rose.length && !allowGrowth) {
+    console.error("line-census: --update-baseline would hold a rise: " + rose.join("; ") + '. Pass --allow-growth "<reason>" to hold it with the reason recorded.');
+    process.exit(1);
+  }
+  const allowed = [...(previous?.allowed ?? []), ...rose.map((r) => ({ measuredAt: new Date().toISOString().slice(0, 10), rise: r, reason: allowGrowth }))];
+  writeFileSync(BASELINE, JSON.stringify({ measuredAt: new Date().toISOString().slice(0, 10), counts, allowed }, null, 2) + "\n");
+  console.log(`line-census: baseline written: ${JSON.stringify(counts)}${rose.length ? ` (held ${rose.length} rise(s): ${allowGrowth})` : ""}`);
   process.exit(0);
 }
 
-if (!existsSync(BASELINE)) {
+if (!base) {
   console.error("line-census: no baseline; run with --update-baseline");
   process.exit(2);
 }
-const base = JSON.parse(readFileSync(BASELINE, "utf8")).counts;
-const rose = [];
-const fell = [];
-for (const [k, v] of Object.entries(counts)) {
-  if (!(k in base)) continue;
-  if (v > base[k]) rose.push(`${k} rose from ${base[k]} to ${v}`);
-  if (v < base[k]) fell.push(`${k} fell from ${base[k]} to ${v}`);
-}
-for (const k of Object.keys(base)) if (!(k in counts)) rose.push(`${k} is in the baseline and no longer measured`);
 if (fell.length) console.log("line-census: " + fell.join("; ") + " (run --update-baseline to hold it)");
 if (rose.length && !allowGrowth) {
   console.error("line-census: the tree moved the wrong way: " + rose.join("; ") + ". Run with --report to see what is behind each number, or --allow-growth \"<reason>\".");

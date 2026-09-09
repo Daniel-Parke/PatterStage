@@ -25,38 +25,35 @@
 // too writes only when something has moved, and it too fails quietly.
 // ═══════════════════════════════════════════════════════════════
 
-import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
+import { logApiError } from "@/lib/api-logger";
 import { ok } from "@/lib/api-response";
 import { ensureDb } from "@/lib/db";
 import { isReadOnly } from "@/lib/read-only";
 import * as questLatch from "@/lib/quests/quest-latch";
 import { getDashboardStats } from "@/lib/stats/stats-repository";
 import { captureAgentProgressionSnapshots } from "@/lib/stats/agent-progression";
+import { route } from "@/lib/api-route";
 
-export async function GET() {
-  try {
-    ensureDb();
-    const stats = getDashboardStats();
-    // check-read-only-guards-disable-next-line -- this GET appends a progression snapshot and latches quest completions, which are writes; under PS_READ_ONLY the read is served and the bookkeeping is skipped (T-0095, D124; B17)
-    if (!isReadOnly()) {
-      try {
-        captureAgentProgressionSnapshots({
-          agents: stats.agents,
-          achievements: stats.achievements,
-        });
-      } catch (error) {
-        logApiError("GET /api/stats", "capturing agent progression", error);
-      }
-      // Its own try: a progression capture that fails must not cost the
-      // operator a quest they finished, and vice versa.
-      try {
-        if (stats.quests.latchChanged) questLatch.writeQuestCompletions(stats.quests.nextCompletedAt);
-      } catch (error) {
-        logApiError("GET /api/stats", "latching quest completions", error);
-      }
+export const GET = route("GET /api/stats", "", "Failed to load stats", async () => {
+  ensureDb();
+  const stats = getDashboardStats();
+  // check-read-only-guards-disable-next-line -- this GET appends a progression snapshot and latches quest completions, which are writes; under PS_READ_ONLY the read is served and the bookkeeping is skipped (T-0095, D124; B17)
+  if (!isReadOnly()) {
+    try {
+      captureAgentProgressionSnapshots({
+        agents: stats.agents,
+        achievements: stats.achievements,
+      });
+    } catch (error) {
+      logApiError("GET /api/stats", "capturing agent progression", error);
     }
-    return ok({ stats });
-  } catch (error) {
-    return serverErrorFromCatch("GET /api/stats", "", error, "Failed to load stats");
+    // Its own try: a progression capture that fails must not cost the
+    // operator a quest they finished, and vice versa.
+    try {
+      if (stats.quests.latchChanged) questLatch.writeQuestCompletions(stats.quests.nextCompletedAt);
+    } catch (error) {
+      logApiError("GET /api/stats", "latching quest completions", error);
+    }
   }
-}
+  return ok({ stats });
+});

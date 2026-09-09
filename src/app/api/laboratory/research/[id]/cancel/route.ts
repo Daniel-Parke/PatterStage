@@ -7,38 +7,29 @@
 
 import type { NextRequest } from "next/server";
 
-import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ok, notFound, conflict } from "@/lib/api-response";
 import { recordEvent } from "@/lib/analytics/record-event";
 import {
   cancelResearchRun,
   getResearchRun,
 } from "@/lib/laboratory/deep-research/research-repository";
+import { route } from "@/lib/api-route";
 
 interface Ctx {
   params: Promise<{ id: string }>;
 }
 
-export async function POST(_request: NextRequest, ctx: Ctx) {
+export const POST = route("POST /api/laboratory/research/[id]/cancel", (p) => `id=${p.id}`, "Failed to cancel research run", async (_request: NextRequest, ctx: Ctx) => {
   const { id } = await ctx.params;
-  try {
-    // The lookup is only here to tell an unknown id (404) from a finished run
-    // (409); the cancel itself is still one conditional UPDATE.
-    if (!getResearchRun(id)) return notFound("Research run not found");
+  // The lookup is only here to tell an unknown id (404) from a finished run
+  // (409); the cancel itself is still one conditional UPDATE.
+  if (!getResearchRun(id)) return notFound("Research run not found");
 
-    const run = cancelResearchRun(id);
-    if (!run) return conflict("That run has already finished");
+  const run = cancelResearchRun(id);
+  if (!run) return conflict("That run has already finished");
 
-    // After the write, never before it: no event claims an outcome the table
-    // does not hold.
-    recordEvent("research.cancelled", { entityType: "research", entityId: id });
-    return ok({ run });
-  } catch (error) {
-    return serverErrorFromCatch(
-      "POST /api/laboratory/research/[id]/cancel",
-      `id=${id}`,
-      error,
-      "Failed to cancel research run",
-    );
-  }
-}
+  // After the write, never before it: no event claims an outcome the table
+  // does not hold.
+  recordEvent("research.cancelled", { entityType: "research", entityId: id });
+  return ok({ run });
+});

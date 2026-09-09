@@ -6,7 +6,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ok, created, badRequest } from "@/lib/api-response";
 import { ensureDb } from "@/lib/db";
 import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
@@ -15,6 +14,7 @@ import {
   createResearchPreset,
   deleteResearchPreset,
 } from "@/lib/laboratory/deep-research/research-repository";
+import { route } from "@/lib/api-route";
 
 const createSchema = z.object({
   name: z.string().min(1).max(60),
@@ -29,34 +29,22 @@ const createSchema = z.object({
     .strict(),
 });
 
-export async function GET() {
-  try {
-    ensureDb();
-    return ok({ presets: listResearchPresets() });
-  } catch (error) {
-    return serverErrorFromCatch("GET /api/laboratory/research/presets", "list", error, "Failed to list presets");
-  }
-}
+export const GET = route("GET /api/laboratory/research/presets", "list", "Failed to list presets", async () => {
+  ensureDb();
+  return ok({ presets: listResearchPresets() });
+});
 
-export async function POST(request: NextRequest) {
+export const POST = route("POST /api/laboratory/research/presets", "create", "Failed to save preset", async (request: NextRequest) => {
   const parsed = await parseAndValidateJsonBody(request, createSchema);
   if (parsed instanceof NextResponse) return parsed;
-  try {
-    ensureDb();
-    return created({ preset: createResearchPreset(parsed.name, parsed.config) });
-  } catch (error) {
-    return serverErrorFromCatch("POST /api/laboratory/research/presets", "create", error, "Failed to save preset");
-  }
-}
+  ensureDb();
+  return created({ preset: createResearchPreset(parsed.name, parsed.config) });
+});
 
-export async function DELETE(request: NextRequest) {
+export const DELETE = route("DELETE /api/laboratory/research/presets", "delete", "Failed to delete preset", async (request: NextRequest) => {
   const id = request.nextUrl.searchParams.get("id");
   if (!id) return badRequest("id is required");
-  try {
-    ensureDb();
-    deleteResearchPreset(id);
-    return ok({ deleted: true });
-  } catch (error) {
-    return serverErrorFromCatch("DELETE /api/laboratory/research/presets", "delete", error, "Failed to delete preset");
-  }
-}
+  ensureDb();
+  deleteResearchPreset(id);
+  return ok({ deleted: true });
+});

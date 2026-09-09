@@ -19,6 +19,7 @@ import { setDefaultPutSchema } from "@/lib/api-schemas";
 import { notFound, ok } from "@/lib/api-response";
 import { finalizeRootConfigOnDisk } from "@/modules/hermes/lib/config-sync";
 import { recordEvent } from "@/lib/analytics/record-event";
+import { route } from "@/lib/api-route";
 
 /**
  * The readiness sentence, or null when the file it is read from cannot answer.
@@ -58,28 +59,19 @@ function resolveReadiness(
   }
 }
 
-export async function GET(_request: NextRequest) {
-  try {
-    // `defaults` carries registry UUIDs (the Models UI needs them to know which
-    // model each slot points at).
-    //
-    // `modelReadiness` is the product's ONE answer to "do I have a model?",
-    // resolved here so chat, the dashboard and the Models page read the same
-    // sentence instead of each combining the registry slot with the config
-    // file in its own way. It replaces `agentModelLabel`, which was the same
-    // idea half-finished: a resolved name with no verdict attached, which left
-    // every caller to invent the verdict.
-    const agentDefault = getDefaultModel("agent");
-    return ok({ defaults: getModelDefaults(), modelReadiness: resolveReadiness(agentDefault) });
-  } catch (error) {
-    return serverErrorFromCatch(
-      "GET /api/models/defaults",
-      "reading defaults",
-      error,
-      "Failed to read defaults",
-    );
-  }
-}
+export const GET = route("GET /api/models/defaults", "reading defaults", "Failed to read defaults", async (_request: NextRequest) => {
+  // `defaults` carries registry UUIDs (the Models UI needs them to know which
+  // model each slot points at).
+  //
+  // `modelReadiness` is the product's ONE answer to "do I have a model?",
+  // resolved here so chat, the dashboard and the Models page read the same
+  // sentence instead of each combining the registry slot with the config
+  // file in its own way. It replaces `agentModelLabel`, which was the same
+  // idea half-finished: a resolved name with no verdict attached, which left
+  // every caller to invent the verdict.
+  const agentDefault = getDefaultModel("agent");
+  return ok({ defaults: getModelDefaults(), modelReadiness: resolveReadiness(agentDefault) });
+});
 
 export async function PUT(request: NextRequest) {
   const parsed = await parseAndValidateJsonBody(request, setDefaultPutSchema);

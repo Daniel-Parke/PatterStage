@@ -284,8 +284,12 @@ describe("C. the stats read latches beside the progression capture", () => {
   });
 
   it("keeps its own try, so a progression failure cannot swallow the latch", () => {
+    // Three tries until C1 (T-0136): the handler's own outer try is the
+    // route() wrapper's now, so the file keeps the two inner ones, the
+    // latch's and the progression's, which is the separation this holds.
     const tries = src.match(/try\s*\{/g) ?? [];
-    expect(tries.length).toBeGreaterThanOrEqual(3);
+    expect(tries.length).toBeGreaterThanOrEqual(2);
+    expect(src).toMatch(/= route\(/);
     expect(src).toMatch(/latching quest completions/);
   });
 

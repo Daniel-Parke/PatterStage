@@ -89,6 +89,25 @@ describe("C0 · the line census", () => {
     expect(fell.out).toMatch(/srcLines fell from 10 to 1/);
   });
 
+  // Sharpened in C1 (T-0136): a source batch that adds its oracle suite
+  // raises testLines, and the re-cut that follows must not hold that rise
+  // silently. The reason goes into the baseline beside the number.
+  it("a re-cut holds a rise only with a reason, and writes the reason down", () => {
+    const root = fixture();
+    const baseline = join(root, "baseline.json");
+    expect(census(["--root", root, "--baseline", baseline, "--update-baseline"]).code).toBe(0);
+    const t = join(root, "tests", "unit", "a.test.ts");
+    writeFileSync(t, readFileSync(t, "utf8") + '\nit("more", () => {});');
+    const refused = census(["--root", root, "--baseline", baseline, "--update-baseline"]);
+    expect(refused.code).toBe(1);
+    expect(refused.out).toMatch(/would hold a rise: testLines rose from 1 to 2/);
+    const held = census(["--root", root, "--baseline", baseline, "--update-baseline", "--allow-growth", "the batch adds its oracle"]);
+    expect(held.code).toBe(0);
+    const written = JSON.parse(readFileSync(baseline, "utf8")) as { counts: { testLines: number }; allowed: { rise: string; reason: string }[] };
+    expect(written.counts.testLines).toBe(2);
+    expect(written.allowed).toEqual([expect.objectContaining({ rise: "testLines rose from 1 to 2", reason: "the batch adds its oracle" })]);
+  });
+
   it("the recon and the plan are filed, and the plan is measured by it", () => {
     const recon = read("org/reviews/2026-09-consolidation-recon.md");
     expect(recon).toMatch(/^status: done$/m);

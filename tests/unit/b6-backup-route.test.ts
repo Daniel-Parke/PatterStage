@@ -261,9 +261,12 @@ describe("the route file, as the gates read it", () => {
   const lines = () => readFileSync(file, "utf-8").split(/\r?\n/);
 
   it("declares GET and POST at column zero, so the canary and the guard check can see them", () => {
+    // Two spellings since C1 (T-0136): a handler through the route() wrapper
+    // is `export const GET = route(`, also at column zero, and both gates
+    // read both.
     const src = lines();
-    expect(src.some((l) => /^export async function GET\(/.test(l))).toBe(true);
-    expect(src.some((l) => /^export async function POST\(/.test(l))).toBe(true);
+    expect(src.some((l) => /^export (?:async function GET\(|const GET = route\()/.test(l))).toBe(true);
+    expect(src.some((l) => /^export (?:async function POST\(|const POST = route\()/.test(l))).toBe(true);
   });
 
   it("carries no read-only guard inside GET, and the guard inside POST", () => {
@@ -272,8 +275,8 @@ describe("the route file, as the gates read it", () => {
     const byMethod: Record<string, number> = {};
     let current = "";
     for (const raw of lines()) {
-      const handler = /^export (?:async )?function (GET|HEAD|OPTIONS|POST|PUT|DELETE|PATCH)\b/.exec(raw);
-      if (handler) current = handler[1];
+      const handler = /^export (?:(?:async )?function (GET|HEAD|OPTIONS|POST|PUT|DELETE|PATCH)\b|const (GET|HEAD|OPTIONS|POST|PUT|DELETE|PATCH) = route\()/.exec(raw);
+      if (handler) current = handler[1] ?? handler[2];
       const t = raw.trim();
       if (t.startsWith("//") || t.startsWith("*") || t.startsWith("/*")) continue;
       if (/\b(requireAuth|requireNotReadOnly|isReadOnly)\s*\(/.test(raw)) {

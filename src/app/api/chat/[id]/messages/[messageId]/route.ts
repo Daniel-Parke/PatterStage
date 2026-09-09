@@ -9,7 +9,6 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
-import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ok, badRequest, notFound } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import {
@@ -18,12 +17,13 @@ import {
   type ChatMessageStatus,
   type ToolCallRecord,
 } from "@/lib/chat-repository";
+import { route } from "@/lib/api-route";
 
 type Ctx = { params: Promise<{ id: string; messageId: string }> };
 
 const TERMINAL: ReadonlySet<string> = new Set(["complete", "failed", "cancelled", "streaming"]);
 
-export async function PATCH(request: NextRequest, ctx: Ctx) {
+export const PATCH = route("PATCH /api/chat/[id]/messages/[messageId]", (p) => p.messageId, "Failed to update message", async (request: NextRequest, ctx: Ctx) => {
   const { id, messageId } = await ctx.params;
   const existing = getMessage(messageId);
   if (!existing || existing.conversationId !== id) return notFound("Message not found");
@@ -41,17 +41,12 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
   if (status !== undefined && (typeof status !== "string" || !TERMINAL.has(status))) {
     return badRequest("status must be one of: streaming, complete, failed, cancelled");
   }
-
-  try {
-    const message = updateMessage(messageId, {
-      content: typeof content === "string" ? content : undefined,
-      reasoning: typeof reasoning === "string" ? reasoning : undefined,
-      toolCalls: Array.isArray(toolCalls) ? (toolCalls as ToolCallRecord[]) : undefined,
-      status: status as ChatMessageStatus | undefined,
-      error: typeof error === "string" ? error : undefined,
-    });
-    return ok({ message });
-  } catch (err) {
-    return serverErrorFromCatch("PATCH /api/chat/[id]/messages/[messageId]", messageId, err, "Failed to update message");
-  }
-}
+  const message = updateMessage(messageId, {
+    content: typeof content === "string" ? content : undefined,
+    reasoning: typeof reasoning === "string" ? reasoning : undefined,
+    toolCalls: Array.isArray(toolCalls) ? (toolCalls as ToolCallRecord[]) : undefined,
+    status: status as ChatMessageStatus | undefined,
+    error: typeof error === "string" ? error : undefined,
+  });
+  return ok({ message });
+});

@@ -332,7 +332,9 @@ describe("what the gates read", () => {
     const src = readFileSync(join(ROOT, "src", "app", "api", "credentials", "[id]", "route.ts"), "utf-8");
 
     // Booleans, so a miss reports one line rather than the whole route source.
-    const declaredAtColumnZero = /^export async function PATCH\(/m.test(src);
+    // Since C1 (T-0136) the handler may be exported through the route()
+    // wrapper, `export const PATCH = route(`, which the gates read too.
+    const declaredAtColumnZero = /^export (?:async function PATCH\(|const PATCH = route\()/m.test(src);
     const consultsAGuard = /requireAuth|requireNotReadOnly|isReadOnly/.test(src);
     expect({ declaredAtColumnZero, consultsAGuard }).toEqual({ declaredAtColumnZero: true, consultsAGuard: false });
   });

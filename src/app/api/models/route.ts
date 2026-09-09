@@ -16,19 +16,11 @@ import { modelPostSchema } from "@/lib/api-schemas";
 import { created, ok } from "@/lib/api-response";
 import { syncDefaultsToHermesConfig } from "@/modules/hermes/lib/config-sync";
 import { recordEvent } from "@/lib/analytics/record-event";
+import { route } from "@/lib/api-route";
 
-export async function GET(request?: NextRequest) {
-  try {
-    return ok({ models: listModels({ limit: boundsFrom(request, MODEL_LIST_BOUNDS).limit }) });
-  } catch (error) {
-    return serverErrorFromCatch(
-      "GET /api/models",
-      "listing models",
-      error,
-      "Failed to list models",
-    );
-  }
-}
+export const GET = route("GET /api/models", "listing models", "Failed to list models", async (request?: NextRequest) => {
+  return ok({ models: listModels({ limit: boundsFrom(request, MODEL_LIST_BOUNDS).limit }) });
+});
 
 export async function POST(request: NextRequest) {
   const parsed = await parseAndValidateJsonBody(request, modelPostSchema);

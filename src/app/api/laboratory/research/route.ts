@@ -10,13 +10,13 @@ import { boundsFrom } from "@/lib/list-bounds";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ok, created } from "@/lib/api-response";
 import { ensureDb } from "@/lib/db";
 import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import { createResearchRun, listResearchRuns } from "@/lib/laboratory/deep-research/research-repository";
 import { runResearchJob } from "@/lib/laboratory/deep-research/run-job";
 import { recordEvent } from "@/lib/analytics/record-event";
+import { route } from "@/lib/api-route";
 
 const configSchema = z
   .object({
@@ -35,29 +35,20 @@ const startSchema = z
   })
   .strict();
 
-export async function GET(request?: NextRequest) {
-  try {
-    ensureDb();
-    return ok({ runs: listResearchRuns(boundsFrom(request, { defaultLimit: 50, maxLimit: 500 }).limit) });
-  } catch (error) {
-    return serverErrorFromCatch("GET /api/laboratory/research", "list", error, "Failed to list research runs");
-  }
-}
+export const GET = route("GET /api/laboratory/research", "list", "Failed to list research runs", async (request?: NextRequest) => {
+  ensureDb();
+  return ok({ runs: listResearchRuns(boundsFrom(request, { defaultLimit: 50, maxLimit: 500 }).limit) });
+});
 
-export async function POST(request: NextRequest) {
+export const POST = route("POST /api/laboratory/research", "start", "Failed to start research run", async (request: NextRequest) => {
   const parsed = await parseAndValidateJsonBody(request, startSchema);
   if (parsed instanceof NextResponse) return parsed;
-
-  try {
-    ensureDb();
-    const config = parsed.config ?? {};
-    const run = createResearchRun({ query: parsed.query, modelId: config.modelId ?? null, config });
-    // The row is the start; the outcome is recorded by the job when it ends (T-0098).
-    recordEvent("research.started", { entityType: "research", entityId: run.id });
-    // Fire-and-forget: the engine runs in the background; the page polls.
-    void runResearchJob(run.id, parsed.query, config);
-    return created({ run });
-  } catch (error) {
-    return serverErrorFromCatch("POST /api/laboratory/research", "start", error, "Failed to start research run");
-  }
-}
+  ensureDb();
+  const config = parsed.config ?? {};
+  const run = createResearchRun({ query: parsed.query, modelId: config.modelId ?? null, config });
+  // The row is the start; the outcome is recorded by the job when it ends (T-0098).
+  recordEvent("research.started", { entityType: "research", entityId: run.id });
+  // Fire-and-forget: the engine runs in the background; the page polls.
+  void runResearchJob(run.id, parsed.query, config);
+  return created({ run });
+});

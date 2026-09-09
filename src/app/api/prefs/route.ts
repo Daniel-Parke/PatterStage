@@ -6,19 +6,15 @@
 import type { NextRequest } from "next/server";
 
 import { requireNotReadOnly } from "@/lib/api-auth";
-import { serverErrorFromCatch } from "@/lib/api-logger";
 import { badRequest, ok } from "@/lib/api-response";
 import { readOperatorPrefs, validateOperatorPref, writeOperatorPref } from "@/lib/operator-prefs-repository";
+import { route } from "@/lib/api-route";
 
-export async function GET() {
-  try {
-    return ok({ prefs: readOperatorPrefs() });
-  } catch (error) {
-    return serverErrorFromCatch("GET /api/prefs", "reading preferences", error, "Failed to read preferences");
-  }
-}
+export const GET = route("GET /api/prefs", "reading preferences", "Failed to read preferences", async () => {
+  return ok({ prefs: readOperatorPrefs() });
+});
 
-export async function PUT(request: NextRequest) {
+export const PUT = route("PUT /api/prefs", "writing a preference", "Failed to save the preference", async (request: NextRequest) => {
   // The proxy refuses every write under read-only first; this names the thing.
   const refused = requireNotReadOnly("preferences");
   if (refused) return refused;
@@ -29,11 +25,6 @@ export async function PUT(request: NextRequest) {
   }
   const checked = validateOperatorPref(body.key, body.value);
   if (!checked.ok) return badRequest(checked.error);
-
-  try {
-    writeOperatorPref(checked.key, checked.value);
-    return ok({ prefs: readOperatorPrefs() });
-  } catch (error) {
-    return serverErrorFromCatch("PUT /api/prefs", "writing a preference", error, "Failed to save the preference");
-  }
-}
+  writeOperatorPref(checked.key, checked.value);
+  return ok({ prefs: readOperatorPrefs() });
+});

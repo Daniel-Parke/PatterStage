@@ -20,27 +20,19 @@ import { appendAuditLine } from "@/lib/audit-log";
 import { databaseBackupsDir, listDatabaseBackups, restoreCommand, snapshotDatabase } from "@/lib/db/backup";
 import { getDbPath } from "@/lib/paths";
 import { messageFromError } from "@/lib/api-fetch";
+import { route } from "@/lib/api-route";
 
-export async function GET(): Promise<Response> {
-  try {
-    const dbPath = getDbPath();
-    return ok({
-      dbPath,
-      dir: databaseBackupsDir(),
-      backups: listDatabaseBackups(),
-      // A template, not a command for one file: the operator pastes the name
-      // of the backup they picked in place of the placeholder.
-      restoreCommand: restoreCommand(dbPath, "<backup file>"),
-    });
-  } catch (error) {
-    return serverErrorFromCatch(
-      "GET /api/backup",
-      "listing the database backups",
-      error,
-      "Failed to list the database backups",
-    );
-  }
-}
+export const GET = route("GET /api/backup", "listing the database backups", "Failed to list the database backups", async () => {
+  const dbPath = getDbPath();
+  return ok({
+    dbPath,
+    dir: databaseBackupsDir(),
+    backups: listDatabaseBackups(),
+    // A template, not a command for one file: the operator pastes the name
+    // of the backup they picked in place of the placeholder.
+    restoreCommand: restoreCommand(dbPath, "<backup file>"),
+  });
+});
 
 export async function POST(): Promise<Response> {
   // Read-only mode. NOT authentication: src/proxy.ts authenticates every

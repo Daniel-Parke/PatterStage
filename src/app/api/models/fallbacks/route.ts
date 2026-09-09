@@ -28,19 +28,11 @@ import { commitFallbackChange, syncEnabledFallbackChainToHermes } from "@/module
 import { importFallbacksFromHermesYaml } from "@/modules/hermes/lib/fallback-import";
 import { inTransaction } from "@/lib/db";
 import { created, notFound, ok, serverError } from "@/lib/api-response";
+import { route } from "@/lib/api-route";
 
-export async function GET(_request: NextRequest) {
-  try {
-    return ok({ entries: listFallbackChain(), config: getFallbackConfig() });
-  } catch (error) {
-    return serverErrorFromCatch(
-      "GET /api/models/fallbacks",
-      "reading fallback chain",
-      error,
-      "Failed to read fallback chain",
-    );
-  }
-}
+export const GET = route("GET /api/models/fallbacks", "reading fallback chain", "Failed to read fallback chain", async (_request: NextRequest) => {
+  return ok({ entries: listFallbackChain(), config: getFallbackConfig() });
+});
 
 export async function POST(request: NextRequest) {
   const parsed = await parseAndValidateJsonBody(request, fallbackActionSchema);

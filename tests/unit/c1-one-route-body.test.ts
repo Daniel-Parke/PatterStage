@@ -17,10 +17,18 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { NextResponse } from "next/server";
 
+// The wrapper's contract is what it hands to serverErrorFromCatch: the
+// route's name, what was happening, the error, the sentence. The helper
+// itself is the api-logger's (its own suite), so it is stood in for here and
+// answers the way it does.
 const mockLogApiError = jest.fn();
 jest.mock("@/lib/api-logger", () => ({
-  ...(jest.requireActual("@/lib/api-logger") as Record<string, unknown>),
-  logApiError: (...a: unknown[]) => mockLogApiError(...a),
+  serverErrorFromCatch: (routeName: string, doing: string, error: unknown, message: string) => {
+    mockLogApiError(routeName, doing, error);
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { NextResponse: NR } = require("next/server") as typeof import("next/server");
+    return NR.json({ error: message }, { status: 500 });
+  },
 }));
 
 import { route } from "@/lib/api-route";
@@ -62,6 +70,21 @@ describe("C1 · one route body", () => {
     expect(mockLogApiError).toHaveBeenCalledWith("POST /api/things", "creating a thing", boom);
   });
 
+  it("a name or a sentence may be a function of the route's params, resolved on the failure path", async () => {
+    const DELETE = route(
+      (p) => `DELETE /api/artifacts/${p.id}`,
+      "deleting an artifact",
+      (p) => `Failed to delete artifact ${p.id}`,
+      async (_req: unknown, _ctx: { params: Promise<{ id: string }> }) => {
+        throw new Error("gone");
+      },
+    );
+    const res = await DELETE({}, { params: Promise.resolve({ id: "abc" }) });
+    expect(res.status).toBe(500);
+    expect(await res.json()).toEqual({ error: "Failed to delete artifact abc" });
+    expect(mockLogApiError).toHaveBeenCalledWith("DELETE /api/artifacts/abc", "deleting an artifact", expect.any(Error));
+  });
+
   it("a synchronous throw is caught the same way", async () => {
     const DELETE = route("DELETE /api/things", "deleting", "Failed to delete", () => {
       throw new Error("sync");
@@ -71,13 +94,32 @@ describe("C1 · one route body", () => {
     expect(mockLogApiError).toHaveBeenCalledTimes(1);
   });
 
-  it("no route ends in the one-line catch any more", () => {
+  // Sharpened after the codemod: a handler whose log names something the
+  // wrapper cannot see (a path resolved from the request, an action parsed
+  // from the body, an id read from the query) keeps its own catch so the log
+  // keeps that word; the route's own params the wrapper can resolve, and
+  // those became functions. What no route does any more is end in the
+  // one-line catch with all three strings LITERAL, which is the shape that
+  // was the same a hundred times.
+  it("no route ends in the one-line catch with three literal strings any more", () => {
     const offenders: string[] = [];
+    const literalCatch = /catch \(error\) \{\s*return serverErrorFromCatch\(\s*"[^"]*",\s*"[^"]*",\s*error,\s*"[^"]*",?\s*\)/;
     for (const f of walk(join(ROOT, "src", "app", "api"))) {
-      const src = readFileSync(f, "utf8");
-      if (/catch \(error\) \{\s*return serverErrorFromCatch\(/.test(src)) offenders.push(f.slice(ROOT.length + 1));
+      if (literalCatch.test(readFileSync(f, "utf8"))) offenders.push(f.slice(ROOT.length + 1));
     }
     expect(offenders).toEqual([]);
+  });
+
+  it("the read-only guard gate still sees every handler in its new spelling", () => {
+    // The gate reads handlers by regex and refuses a walk that finds too few;
+    // a regex that knew only `export async function GET` would count the
+    // wrapped handlers as nothing.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { execFileSync } = require("node:child_process") as typeof import("node:child_process");
+    const out = execFileSync(process.execPath, [join(ROOT, "scripts", "tooling", "check-read-only-guards.mjs")], { encoding: "utf8" });
+    const m = /(\d+) handlers across (\d+) route files/.exec(out);
+    expect(m).not.toBeNull();
+    expect(Number(m![1])).toBeGreaterThanOrEqual(160);
   });
 
   it("the converted routes are exported through the wrapper, and still by their method names", () => {

@@ -27,6 +27,7 @@ import { handlePromoteMission } from "@/lib/missions/mission-handlers/promote";
 import { handleUpdateMission } from "@/lib/missions/mission-handlers/update";
 import { handleCancelMission } from "@/lib/missions/mission-handlers/cancel";
 import { handleDeleteMission } from "@/lib/missions/mission-handlers/delete";
+import { route } from "@/lib/api-route";
 
 // ── GET ───────────────────────────────────────────────────────
 
@@ -86,7 +87,7 @@ export async function GET(request: NextRequest) {
 
 // ── POST ──────────────────────────────────────────────────────
 
-export async function POST(request: NextRequest) {
+export const POST = route("POST /api/missions", "processing request", "Internal server error", async (request: NextRequest) => {
   // One read-only guard, not two. This handler carried requireAuth() AND an
   // isReadOnly() block, which are the same check: requireAuth IS
   // requireNotReadOnly under an older name. The duplication is what the name
@@ -103,25 +104,20 @@ export async function POST(request: NextRequest) {
   const bodyResult = await parseJsonBody(request);
   if (bodyResult instanceof NextResponse) return bodyResult;
   const body = bodyResult as Record<string, unknown>;
+  const { action } = body as { action?: string };
 
-  try {
-    const { action } = body as { action?: string };
-
-    switch (action) {
-      case "dispatch":
-        return await handleDispatchMission(body);
-      case "promote":
-        return await handlePromoteMission(body);
-      case "update":
-        return handleUpdateMission(body);
-      case "cancel":
-        return handleCancelMission(body);
-      case "delete":
-        return handleDeleteMission(body);
-      default:
-        return badRequest(`Unknown action: ${action}`);
-    }
-  } catch (error) {
-    return serverErrorFromCatch("POST /api/missions", "processing request", error, "Internal server error");
+  switch (action) {
+    case "dispatch":
+      return await handleDispatchMission(body);
+    case "promote":
+      return await handlePromoteMission(body);
+    case "update":
+      return handleUpdateMission(body);
+    case "cancel":
+      return handleCancelMission(body);
+    case "delete":
+      return handleDeleteMission(body);
+    default:
+      return badRequest(`Unknown action: ${action}`);
   }
-}
+});

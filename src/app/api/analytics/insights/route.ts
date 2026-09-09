@@ -6,18 +6,14 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextRequest } from "next/server";
-import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ok } from "@/lib/api-response";
 import { ensureDb } from "@/lib/db";
 import { getInsightsBundle } from "@/lib/analytics/insights-bundle";
+import { route } from "@/lib/api-route";
 
-export async function GET(request: NextRequest) {
-  try {
-    ensureDb();
-    const raw = Number(request.nextUrl.searchParams.get("days") ?? 30);
-    const days = Number.isFinite(raw) ? raw : 30;
-    return ok({ insights: getInsightsBundle(days) });
-  } catch (error) {
-    return serverErrorFromCatch("GET /api/analytics/insights", "", error, "Failed to load insights");
-  }
-}
+export const GET = route("GET /api/analytics/insights", "", "Failed to load insights", async (request: NextRequest) => {
+  ensureDb();
+  const raw = Number(request.nextUrl.searchParams.get("days") ?? 30);
+  const days = Number.isFinite(raw) ? raw : 30;
+  return ok({ insights: getInsightsBundle(days) });
+});

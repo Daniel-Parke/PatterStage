@@ -3,24 +3,20 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextRequest } from "next/server";
-import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ok, notFound } from "@/lib/api-response";
 import {
   getResearchRun,
   listResearchSteps,
 } from "@/lib/laboratory/deep-research/research-repository";
+import { route } from "@/lib/api-route";
 
 interface Ctx {
   params: Promise<{ id: string }>;
 }
 
-export async function GET(_request: NextRequest, ctx: Ctx) {
+export const GET = route("GET /api/laboratory/research/[id]", (p) => `id=${p.id}`, "Failed to load research run", async (_request: NextRequest, ctx: Ctx) => {
   const { id } = await ctx.params;
-  try {
-    const run = getResearchRun(id);
-    if (!run) return notFound("Research run not found");
-    return ok({ run, steps: listResearchSteps(id) });
-  } catch (error) {
-    return serverErrorFromCatch("GET /api/laboratory/research/[id]", `id=${id}`, error, "Failed to load research run");
-  }
-}
+  const run = getResearchRun(id);
+  if (!run) return notFound("Research run not found");
+  return ok({ run, steps: listResearchSteps(id) });
+});

@@ -5,13 +5,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ok, notFound, badRequest } from "@/lib/api-response";
 import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import { getSchedule, updateSchedule, deleteSchedule } from "@/lib/schedules-repository";
 import { parseSchedule } from "@/lib/schedule/parse-schedule";
 import { computeNextRun, scheduleCanEverFire } from "@/lib/schedule/next-run";
 import { scheduleIntervalProblem } from "@/lib/schedule/interval-bounds";
+import { route } from "@/lib/api-route";
 
 interface Ctx {
   params: Promise<{ id: string }>;
@@ -29,72 +29,59 @@ const schedulePatchSchema = z
   })
   .strict();
 
-export async function GET(_request: NextRequest, ctx: Ctx) {
+export const GET = route("GET /api/schedules/[id]", (p) => `id=${p.id}`, "Failed to load schedule", async (_request: NextRequest, ctx: Ctx) => {
   const { id } = await ctx.params;
-  try {
-    const schedule = getSchedule(id);
-    if (!schedule) return notFound("Schedule not found");
-    return ok({ schedule });
-  } catch (error) {
-    return serverErrorFromCatch("GET /api/schedules/[id]", `id=${id}`, error, "Failed to load schedule");
-  }
-}
+  const schedule = getSchedule(id);
+  if (!schedule) return notFound("Schedule not found");
+  return ok({ schedule });
+});
 
-export async function PATCH(request: NextRequest, ctx: Ctx) {
+export const PATCH = route("PATCH /api/schedules/[id]", (p) => `id=${p.id}`, "Failed to update schedule", async (request: NextRequest, ctx: Ctx) => {
   const { id } = await ctx.params;
   const parsed = await parseAndValidateJsonBody(request, schedulePatchSchema);
   if (parsed instanceof NextResponse) return parsed;
+  if (!getSchedule(id)) return notFound("Schedule not found");
 
-  try {
-    if (!getSchedule(id)) return notFound("Schedule not found");
-
-    // Recompute next_run_at when the schedule expression changes.
-    let nextRunAt: string | null | undefined;
-    if (parsed.schedule !== undefined) {
-      if (parseSchedule(parsed.schedule).kind === "invalid") {
-        return badRequest(`Unrecognized schedule: ${parsed.schedule}`);
-      }
-      // Shape is not satisfiability -- see the note in
-      // src/app/api/schedules/route.ts. `0 0 30 2 *` parses cleanly and can
-      // never fire (T-0079).
-      if (!scheduleCanEverFire(parsed.schedule)) {
-        return badRequest(
-          `Schedule "${parsed.schedule}" can never fire: it names a date that does not ` +
-            `exist, or a field outside its range. Check the day-of-month against the month.`,
-        );
-      }
-      // How often, as well as whether. See the note in
-      // src/app/api/schedules/route.ts: `every 0m` is due again the instant it
-      // fires, so it dispatched a paid agent run on every tick.
-      const tooFrequent = scheduleIntervalProblem(parsed.schedule);
-      if (tooFrequent) return badRequest(tooFrequent);
-      const next = computeNextRun(parsed.schedule, new Date());
-      nextRunAt = next ? next.toISOString() : null;
+  // Recompute next_run_at when the schedule expression changes.
+  let nextRunAt: string | null | undefined;
+  if (parsed.schedule !== undefined) {
+    if (parseSchedule(parsed.schedule).kind === "invalid") {
+      return badRequest(`Unrecognized schedule: ${parsed.schedule}`);
     }
-
-    const schedule = updateSchedule(id, {
-      name: parsed.name,
-      schedule: parsed.schedule,
-      scheduleDisplay: parsed.scheduleDisplay,
-      enabled: parsed.enabled,
-      catchUpPolicy: parsed.catchUpPolicy,
-      repeatTimes: parsed.repeatTimes,
-      profileName: parsed.profileName,
-      nextRunAt,
-    });
-    return ok({ schedule });
-  } catch (error) {
-    return serverErrorFromCatch("PATCH /api/schedules/[id]", `id=${id}`, error, "Failed to update schedule");
+    // Shape is not satisfiability -- see the note in
+    // src/app/api/schedules/route.ts. `0 0 30 2 *` parses cleanly and can
+    // never fire (T-0079).
+    if (!scheduleCanEverFire(parsed.schedule)) {
+      return badRequest(
+        `Schedule "${parsed.schedule}" can never fire: it names a date that does not ` +
+          `exist, or a field outside its range. Check the day-of-month against the month.`,
+      );
+    }
+    // How often, as well as whether. See the note in
+    // src/app/api/schedules/route.ts: `every 0m` is due again the instant it
+    // fires, so it dispatched a paid agent run on every tick.
+    const tooFrequent = scheduleIntervalProblem(parsed.schedule);
+    if (tooFrequent) return badRequest(tooFrequent);
+    const next = computeNextRun(parsed.schedule, new Date());
+    nextRunAt = next ? next.toISOString() : null;
   }
-}
 
-export async function DELETE(request: NextRequest, ctx: Ctx) {
+  const schedule = updateSchedule(id, {
+    name: parsed.name,
+    schedule: parsed.schedule,
+    scheduleDisplay: parsed.scheduleDisplay,
+    enabled: parsed.enabled,
+    catchUpPolicy: parsed.catchUpPolicy,
+    repeatTimes: parsed.repeatTimes,
+    profileName: parsed.profileName,
+    nextRunAt,
+  });
+  return ok({ schedule });
+});
+
+export const DELETE = route("DELETE /api/schedules/[id]", (p) => `id=${p.id}`, "Failed to delete schedule", async (request: NextRequest, ctx: Ctx) => {
   const { id } = await ctx.params;
-  try {
-    const deleted = deleteSchedule(id);
-    if (!deleted) return notFound("Schedule not found");
-    return ok({ deleted: true });
-  } catch (error) {
-    return serverErrorFromCatch("DELETE /api/schedules/[id]", `id=${id}`, error, "Failed to delete schedule");
-  }
-}
+  const deleted = deleteSchedule(id);
+  if (!deleted) return notFound("Schedule not found");
+  return ok({ deleted: true });
+});

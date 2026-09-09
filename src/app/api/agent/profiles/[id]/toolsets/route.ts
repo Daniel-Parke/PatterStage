@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { serverErrorFromCatch } from "@/lib/api-logger";
 import { methodNotAllowed, notFound, ok } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb } from "@/lib/db";
@@ -17,82 +16,55 @@ import {
 import { requireSafeProfileName } from "@/lib/fs/path-security";
 import { isReadOnly } from "@/lib/read-only";
 import { recordEvent } from "@/lib/analytics/record-event";
+import { route } from "@/lib/api-route";
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export const GET = route("GET /api/agent/profiles/[id]/toolsets", "reading toolsets", "Failed to read toolsets", async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   const { id } = await params;
   const prof = requireSafeProfileName(id);
   if (prof instanceof NextResponse) return prof;
-
-  try {
-    ensureDb();
-    // check-read-only-guards-disable-next-line -- hydrating may persist the normalised JSON, a write this GET skips under PS_READ_ONLY while still answering (T-0095, D124)
-    const hydrated = hydratePlatformToolsetsForSlug(prof.profile, { persist: !isReadOnly() });
-    if (!hydrated) {
-      return notFound("Profile not found");
-    }
-    const divergence = platformsDiffer(hydrated.toolsets);
-    return ok({
-      profile: prof.profile,
-      platformToolsets: hydrated.toolsets,
-      source: hydrated.source,
-      unifiedEnabled: unionToolsetsFromPlatforms(hydrated.toolsets),
-      platformsDiverged: divergence.diverged,
-      divergedPlatforms: divergence.platforms,
-    });
+  ensureDb();
+  // check-read-only-guards-disable-next-line -- hydrating may persist the normalised JSON, a write this GET skips under PS_READ_ONLY while still answering (T-0095, D124)
+  const hydrated = hydratePlatformToolsetsForSlug(prof.profile, { persist: !isReadOnly() });
+  if (!hydrated) {
+    return notFound("Profile not found");
   }
-  catch (error) {
-    return serverErrorFromCatch(
-      "GET /api/agent/profiles/[id]/toolsets",
-      "reading toolsets",
-      error,
-      "Failed to read toolsets",
-    );
-  }
-}
+  const divergence = platformsDiffer(hydrated.toolsets);
+  return ok({
+    profile: prof.profile,
+    platformToolsets: hydrated.toolsets,
+    source: hydrated.source,
+    unifiedEnabled: unionToolsetsFromPlatforms(hydrated.toolsets),
+    platformsDiverged: divergence.diverged,
+    divergedPlatforms: divergence.platforms,
+  });
+});
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export const PUT = route("PUT /api/agent/profiles/[id]/toolsets", "saving toolsets", "Failed to save toolsets", async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   const { id } = await params;
   const prof = requireSafeProfileName(id);
   if (prof instanceof NextResponse) return prof;
+  ensureDb();
+  const bodyResult = await parseJsonBody(request);
+  if (bodyResult instanceof NextResponse) return bodyResult;
+  const platformToolsets = normalizePlatformToolsetsFromInput(bodyResult.platformToolsets);
+  const platformToolsetsJson = serializeJsonToolsets(platformToolsets);
 
-  try {
-    ensureDb();
-    const bodyResult = await parseJsonBody(request);
-    if (bodyResult instanceof NextResponse) return bodyResult;
-    const platformToolsets = normalizePlatformToolsetsFromInput(bodyResult.platformToolsets);
-    const platformToolsetsJson = serializeJsonToolsets(platformToolsets);
+  // applyProfileOrRootPatchOrFail collapses the 4-line
+  // apply+toPatchResponse+assert+return-err dance into 1 call +
+  // 1 instanceof check. Byte-equivalent to the pre-migration shape
+  // (same 404 on not-found, same 500 on push-failed, same
+  // { success: true, profile, platformToolsets } success body).
+  const result = applyProfileOrRootPatchOrFail(
+    prof.profile,
+    { platformToolsetsJson },
+    { platformToolsetsJson },
+    "Failed to sync profile to Hermes",
+  );
+  if (result instanceof NextResponse) return result;
 
-    // applyProfileOrRootPatchOrFail collapses the 4-line
-    // apply+toPatchResponse+assert+return-err dance into 1 call +
-    // 1 instanceof check. Byte-equivalent to the pre-migration shape
-    // (same 404 on not-found, same 500 on push-failed, same
-    // { success: true, profile, platformToolsets } success body).
-    const result = applyProfileOrRootPatchOrFail(
-      prof.profile,
-      { platformToolsetsJson },
-      { platformToolsetsJson },
-      "Failed to sync profile to Hermes",
-    );
-    if (result instanceof NextResponse) return result;
-
-    recordEvent("toolset.saved", { entityType: "toolset", entityId: prof.profile, profile: prof.profile });
-    return ok({ success: true, profile: result.profile, platformToolsets });
-  }
-  catch (error) {
-    return serverErrorFromCatch(
-      "PUT /api/agent/profiles/[id]/toolsets",
-      "saving toolsets",
-      error,
-      "Failed to save toolsets",
-    );
-  }
-}
+  recordEvent("toolset.saved", { entityType: "toolset", entityId: prof.profile, profile: prof.profile });
+  return ok({ success: true, profile: result.profile, platformToolsets });
+});
 
 export async function DELETE() {
   return methodNotAllowed("Method not allowed", ["GET", "PUT"]);

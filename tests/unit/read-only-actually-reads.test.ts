@@ -95,9 +95,11 @@ function guardCallsByMethod(file: string): Array<{ method: string; line: number;
   let exempt = false;
   const lines = readFileSync(file, "utf-8").split(/\r?\n/);
   lines.forEach((raw, i) => {
-    const handler = /^export (?:async )?function (GET|HEAD|OPTIONS|POST|PUT|DELETE|PATCH)\b/.exec(raw);
+    // Two spellings since C1 (T-0136): the declared function, and the
+    // handler exported through the route() wrapper, both at column zero.
+    const handler = /^export (?:(?:async )?function (GET|HEAD|OPTIONS|POST|PUT|DELETE|PATCH)\b|const (GET|HEAD|OPTIONS|POST|PUT|DELETE|PATCH) = route\()/.exec(raw);
     if (handler) {
-      current = handler[1];
+      current = handler[1] ?? handler[2];
       handlersSeen += 1;
     }
     const trimmed = raw.trim();

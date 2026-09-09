@@ -21,7 +21,7 @@
 
 import type { NextRequest } from "next/server";
 
-import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
+import { logApiError } from "@/lib/api-logger";
 import { ok } from "@/lib/api-response";
 import { ensureDb } from "@/lib/db";
 import {
@@ -29,31 +29,23 @@ import {
   readLatestAgentProgressionSnapshots,
 } from "@/lib/stats/agent-progression-repository";
 import { captureAgentProgressionFromLiveStats } from "@/lib/stats/agent-progression";
+import { route } from "@/lib/api-route";
 
-export async function GET(request: NextRequest) {
+export const GET = route("GET /api/agents/progression", "reading recorded agent progression", "Failed to load agent progression", async (request: NextRequest) => {
+  ensureDb();
+  // Before the read, so the very first caller -- the one who has never opened
+  // the dashboard, which is exactly the reported case -- sees something.
+  // Guarded and logged the same way GET /api/stats guards its capture: the
+  // stored rows are the answer this endpoint owes, and the capture is a
+  // courtesy performed on the way past.
   try {
-    ensureDb();
-    // Before the read, so the very first caller -- the one who has never opened
-    // the dashboard, which is exactly the reported case -- sees something.
-    // Guarded and logged the same way GET /api/stats guards its capture: the
-    // stored rows are the answer this endpoint owes, and the capture is a
-    // courtesy performed on the way past.
-    try {
-      captureAgentProgressionFromLiveStats();
-    } catch (error) {
-      logApiError("GET /api/agents/progression", "capturing agent progression", error);
-    }
-    const slug = request.nextUrl.searchParams.get("slug");
-    const snapshots = slug
-      ? readAgentProgressionHistory(slug)
-      : readLatestAgentProgressionSnapshots();
-    return ok({ slug: slug ?? null, snapshots });
+    captureAgentProgressionFromLiveStats();
   } catch (error) {
-    return serverErrorFromCatch(
-      "GET /api/agents/progression",
-      "reading recorded agent progression",
-      error,
-      "Failed to load agent progression",
-    );
+    logApiError("GET /api/agents/progression", "capturing agent progression", error);
   }
-}
+  const slug = request.nextUrl.searchParams.get("slug");
+  const snapshots = slug
+    ? readAgentProgressionHistory(slug)
+    : readLatestAgentProgressionSnapshots();
+  return ok({ slug: slug ?? null, snapshots });
+});

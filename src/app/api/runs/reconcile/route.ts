@@ -7,15 +7,11 @@ import type { NextRequest } from "next/server";
 // tests that don't want to wait a full tick). Idempotent and safe.
 // ═══════════════════════════════════════════════════════════════
 
-import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ok } from "@/lib/api-response";
 import { reconcileActiveRuns } from "@/lib/orchestration";
+import { route } from "@/lib/api-route";
 
-export async function POST(_request: NextRequest) {
-  try {
-    const advanced = await reconcileActiveRuns();
-    return ok({ advanced });
-  } catch (error) {
-    return serverErrorFromCatch("POST /api/runs/reconcile", "reconcile", error, "Failed to reconcile runs");
-  }
-}
+export const POST = route("POST /api/runs/reconcile", "reconcile", "Failed to reconcile runs", async (_request: NextRequest) => {
+  const advanced = await reconcileActiveRuns();
+  return ok({ advanced });
+});

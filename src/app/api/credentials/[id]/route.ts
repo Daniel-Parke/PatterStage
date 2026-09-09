@@ -33,7 +33,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-import { serverErrorFromCatch, logApiError } from "@/lib/api-logger";
+import { logApiError } from "@/lib/api-logger";
 import { notFound, ok, methodNotAllowed } from "@/lib/api-response";
 import { appendAuditLine } from "@/lib/audit-log";
 import {
@@ -50,6 +50,7 @@ import {
   syncCredentialToHermesEnv,
 } from "@/modules/hermes/lib/hermes-env-sync";
 import { envVarForProvider, isHermesProvider } from "@/modules/hermes/lib/providers";
+import { route } from "@/lib/api-route";
 
 interface Ctx {
   params: Promise<{ id: string }>;
@@ -69,118 +70,99 @@ const credentialPatchSchema = z
 // No auth or read-only call here, and that is deliberate: src/proxy.ts
 // authenticates every request and refuses unsafe methods under PS_READ_ONLY
 // before a handler runs.
-export async function PATCH(request: NextRequest, ctx: Ctx) {
+export const PATCH = route("PATCH /api/credentials/[id]", (p) => `id=${p.id}`, "Failed to rotate credential", async (request: NextRequest, ctx: Ctx) => {
   const { id } = await ctx.params;
   const parsed = await parseAndValidateJsonBody(request, credentialPatchSchema);
   if (parsed instanceof NextResponse) return parsed;
   const apiKey = parsed.apiKey;
+  // The previous key is read first, because it is what the restore below
+  // needs and it stops existing the moment the row is rewritten.
+  const existing = getCredentialWithKey(id);
+  if (!existing) return notFound("Credential not found");
 
+  const credential = updateCredential(id, { apiKey });
+  if (!credential) return notFound("Credential not found");
+
+  const provider = existing.provider;
+  let envVarUpdated = false;
   try {
-    // The previous key is read first, because it is what the restore below
-    // needs and it stops existing the moment the row is rewritten.
-    const existing = getCredentialWithKey(id);
-    if (!existing) return notFound("Credential not found");
-
-    const credential = updateCredential(id, { apiKey });
-    if (!credential) return notFound("Credential not found");
-
-    const provider = existing.provider;
-    let envVarUpdated = false;
+    // A provider Hermes does not know, or one that authenticates by OAuth
+    // (nous), has no variable to write. Guarded rather than caught, because
+    // the sync throws on both and a throw here would roll back a rotation
+    // that was entirely successful.
+    if (isHermesProvider(provider) && envVarForProvider(provider)) {
+      syncCredentialToHermesEnv({ provider, apiKey });
+      envVarUpdated = true;
+    }
+  } catch (error) {
+    // Put the old key back. Hermes still holds the previous key, so leaving
+    // the new one in the row would give the operator a credential that reads
+    // as rotated and authenticates as nothing.
     try {
-      // A provider Hermes does not know, or one that authenticates by OAuth
-      // (nous), has no variable to write. Guarded rather than caught, because
-      // the sync throws on both and a throw here would roll back a rotation
-      // that was entirely successful.
-      if (isHermesProvider(provider) && envVarForProvider(provider)) {
-        syncCredentialToHermesEnv({ provider, apiKey });
-        envVarUpdated = true;
-      }
-    } catch (error) {
-      // Put the old key back. Hermes still holds the previous key, so leaving
-      // the new one in the row would give the operator a credential that reads
-      // as rotated and authenticates as nothing.
-      try {
-        updateCredential(id, { apiKey: existing.apiKey });
-      } catch (restoreError) {
-        logApiError(
-          "PATCH /api/credentials/[id]",
-          "restoring the previous key after a failed .env write",
-          restoreError,
-        );
-      }
-      throw error;
+      updateCredential(id, { apiKey: existing.apiKey });
+    } catch (restoreError) {
+      logApiError(
+        "PATCH /api/credentials/[id]",
+        "restoring the previous key after a failed .env write",
+        restoreError,
+      );
     }
-
-    appendAuditLine({ action: "credential.rotate", resource: id, ok: true });
-
-    // The summary, never the key: this route's whole reason for having no GET
-    // is that no response in this surface carries one.
-    return ok({ credential, envVarUpdated });
-  } catch (error) {
-    return serverErrorFromCatch(
-      "PATCH /api/credentials/[id]",
-      `id=${id}`,
-      error,
-      "Failed to rotate credential",
-    );
+    throw error;
   }
-}
 
-export async function DELETE(_request: NextRequest, ctx: Ctx) {
+  appendAuditLine({ action: "credential.rotate", resource: id, ok: true });
+
+  // The summary, never the key: this route's whole reason for having no GET
+  // is that no response in this surface carries one.
+  return ok({ credential, envVarUpdated });
+});
+
+export const DELETE = route("DELETE /api/credentials/[id]", (p) => `id=${p.id}`, "Failed to delete credential", async (_request: NextRequest, ctx: Ctx) => {
   const { id } = await ctx.params;
-  try {
-    const credential = getCredential(id);
-    if (!credential) return notFound("Credential not found");
+  const credential = getCredential(id);
+  if (!credential) return notFound("Credential not found");
 
-    // Read the attachments BEFORE the delete, while the link still exists.
-    const orphanedModels = listModels()
-      .filter((m) => m.credentialsId === id)
-      .map((m) => m.modelId);
+  // Read the attachments BEFORE the delete, while the link still exists.
+  const orphanedModels = listModels()
+    .filter((m) => m.credentialsId === id)
+    .map((m) => m.modelId);
 
-    if (!deleteCredential(id)) return notFound("Credential not found");
+  if (!deleteCredential(id)) return notFound("Credential not found");
 
-    let envRemoved = false;
-    let envError: string | null = null;
-    const siblingRemains = listCredentials().some((c) => c.provider === credential.provider);
-    // Guarded rather than cast. `credentials.provider` is a plain TEXT column,
-    // so a row written before the provider list existed -- or by hand -- can
-    // hold a value the env-sync does not know. It throws on those, and the row
-    // deletion has already happened, so an unguarded call would turn a
-    // successful delete into a 500.
-    if (!siblingRemains && isHermesProvider(credential.provider)) {
-      try {
-        removeCredentialFromHermesEnv(credential.provider);
-        envRemoved = true;
-      } catch (error) {
-        // The row is gone, which is what was asked for and what happened. A 500
-        // here would deny a deletion that took, and invite a retry that 404s
-        // (the T-0082 lesson). The failure is reported in the body instead.
-        logApiError("DELETE /api/credentials/[id]", "removing credential from Hermes .env", error);
-        envError = error instanceof Error ? error.message : String(error);
-      }
+  let envRemoved = false;
+  let envError: string | null = null;
+  const siblingRemains = listCredentials().some((c) => c.provider === credential.provider);
+  // Guarded rather than cast. `credentials.provider` is a plain TEXT column,
+  // so a row written before the provider list existed -- or by hand -- can
+  // hold a value the env-sync does not know. It throws on those, and the row
+  // deletion has already happened, so an unguarded call would turn a
+  // successful delete into a 500.
+  if (!siblingRemains && isHermesProvider(credential.provider)) {
+    try {
+      removeCredentialFromHermesEnv(credential.provider);
+      envRemoved = true;
+    } catch (error) {
+      // The row is gone, which is what was asked for and what happened. A 500
+      // here would deny a deletion that took, and invite a retry that 404s
+      // (the T-0082 lesson). The failure is reported in the body instead.
+      logApiError("DELETE /api/credentials/[id]", "removing credential from Hermes .env", error);
+      envError = error instanceof Error ? error.message : String(error);
     }
-
-    appendAuditLine({ action: "credential.delete", resource: id, ok: true });
-
-    return ok({
-      deleted: true,
-      provider: credential.provider,
-      // Said out loud either way, so the operator never has to infer which
-      // happened from the absence of a message.
-      envVarRemoved: envRemoved,
-      envVarKeptForSibling: siblingRemains,
-      envError,
-      orphanedModels,
-    });
-  } catch (error) {
-    return serverErrorFromCatch(
-      "DELETE /api/credentials/[id]",
-      `id=${id}`,
-      error,
-      "Failed to delete credential",
-    );
   }
-}
+
+  appendAuditLine({ action: "credential.delete", resource: id, ok: true });
+
+  return ok({
+    deleted: true,
+    provider: credential.provider,
+    // Said out loud either way, so the operator never has to infer which
+    // happened from the absence of a message.
+    envVarRemoved: envRemoved,
+    envVarKeptForSibling: siblingRemains,
+    envError,
+    orphanedModels,
+  });
+});
 
 // GET is not supported, and the reason is the point: this route addresses a
 // secret. `apiKey` is never returned by any response in this surface, so a

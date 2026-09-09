@@ -9,13 +9,13 @@
 
 import { NextRequest } from "next/server";
 
-import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ok } from "@/lib/api-response";
 import { ensureDb } from "@/lib/db";
 import { analyticsTimeseriesQuerySchema, zodErrorResponse } from "@/lib/api-schemas";
 import { timeseries } from "@/lib/analytics/analytics-repository";
+import { route } from "@/lib/api-route";
 
-export async function GET(request: NextRequest) {
+export const GET = route("GET /api/analytics/timeseries", "", "Failed to load analytics timeseries", async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const parsed = analyticsTimeseriesQuerySchema.safeParse({
     type: searchParams.get("type") ?? undefined,
@@ -23,22 +23,12 @@ export async function GET(request: NextRequest) {
     bucket: searchParams.get("bucket") ?? undefined,
   });
   if (!parsed.success) return zodErrorResponse(parsed.error);
-
-  try {
-    ensureDb();
-    const { type, days, bucket } = parsed.data;
-    return ok({
-      timeseries: timeseries(type ?? null, days),
-      type: type ?? null,
-      days,
-      bucket,
-    });
-  } catch (error) {
-    return serverErrorFromCatch(
-      "GET /api/analytics/timeseries",
-      "",
-      error,
-      "Failed to load analytics timeseries",
-    );
-  }
-}
+  ensureDb();
+  const { type, days, bucket } = parsed.data;
+  return ok({
+    timeseries: timeseries(type ?? null, days),
+    type: type ?? null,
+    days,
+    bucket,
+  });
+});

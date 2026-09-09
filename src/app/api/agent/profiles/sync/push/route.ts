@@ -1,7 +1,6 @@
 import { NextRequest } from "next/server";
 
 import { badRequest } from "@/lib/api-response";
-import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ensureDb } from "@/lib/db";
 import { parseOptionalJsonBody } from "@/lib/parse-optional-json-body";
 import { booleanFlag, stringFlag } from "@/lib/parse-bag-flags";
@@ -15,6 +14,7 @@ import {
 import { answerBatch as answerAnyBatch, answerSingle as answerAnySingle } from "@/modules/hermes/lib/sync-answer";
 import type { SyncResult } from "@/modules/hermes/lib/profile-sync-shared";
 import { recordEvent } from "@/lib/analytics/record-event";
+import { route } from "@/lib/api-route";
 
 // The two answer shapes were written here first (QA finding 7, T-0082) and now
 // live in sync-answer.ts so the pull, import and models routes answer the same
@@ -37,7 +37,7 @@ function answerProfileBatch(results: SyncResult[], extra: Record<string, unknown
   return answerBatch(results, extra);
 }
 
-export async function POST(request: NextRequest) {
+export const POST = route("POST /api/agent/profiles/sync/push", "push", "Failed to push profile", async (request: NextRequest) => {
   // Body is a bag of optional flags (slug, all, root, skills, ...);
   // missing or malformed body is treated as {} so callers can POST
   // with no payload to trigger default behaviour.
@@ -49,51 +49,40 @@ export async function POST(request: NextRequest) {
   const skillKey = stringFlag(body, "skillKey");
   const missingOnly = booleanFlag(body, "missingOnly");
   const onlyOutOfSync = booleanFlag(body, "onlyOutOfSync");
+  ensureDb();
 
-  try {
-    ensureDb();
-
-    if (root) {
-      return answerProfilePush("default", pushRootToHermes());
-    }
-
-    if (skills) {
-      const results = pushAllSkillsToHermes();
-      return answerBatch(results, { results });
-    }
-
-    if (skillKey) {
-      return answerSingle(pushSkillToHermes(skillKey));
-    }
-
-    if (all || missingOnly || onlyOutOfSync) {
-      const profileResults = pushAllProfiles({
-        onlyMissing: missingOnly,
-        onlyOutOfSync,
-      });
-      const rootResult = pushRootToHermes();
-      return answerProfileBatch([...profileResults, rootResult], {
-        root: rootResult,
-        results: profileResults,
-      });
-    }
-
-    if (!slug) {
-      return badRequest("slug, all, root, skills, or skillKey required");
-    }
-
-    if (slug === "default") {
-      return answerProfilePush("default", pushRootToHermes());
-    }
-
-    return answerProfilePush(slug, pushProfileToHermes(slug));
+  if (root) {
+    return answerProfilePush("default", pushRootToHermes());
   }
-  catch (error) {
-    return serverErrorFromCatch(
-      "POST /api/agent/profiles/sync/push",
-      "push",
-      error,
-      "Failed to push profile",
-    );
+
+  if (skills) {
+    const results = pushAllSkillsToHermes();
+    return answerBatch(results, { results });
   }
-}
+
+  if (skillKey) {
+    return answerSingle(pushSkillToHermes(skillKey));
+  }
+
+  if (all || missingOnly || onlyOutOfSync) {
+    const profileResults = pushAllProfiles({
+      onlyMissing: missingOnly,
+      onlyOutOfSync,
+    });
+    const rootResult = pushRootToHermes();
+    return answerProfileBatch([...profileResults, rootResult], {
+      root: rootResult,
+      results: profileResults,
+    });
+  }
+
+  if (!slug) {
+    return badRequest("slug, all, root, skills, or skillKey required");
+  }
+
+  if (slug === "default") {
+    return answerProfilePush("default", pushRootToHermes());
+  }
+
+  return answerProfilePush(slug, pushProfileToHermes(slug));
+});

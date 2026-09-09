@@ -41,7 +41,12 @@ const READ_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 /** The guards. `requireAuth` is gone, and is listed so its return is caught. */
 const GUARD = /\b(requireAuth|requireNotReadOnly|isReadOnly)\s*\(/;
 
-const HANDLER = /^export\s+(?:async\s+)?function\s+([A-Z]+)\b/;
+// Two spellings: the declared function, and since C1 (T-0136) the handler
+// exported through the route() wrapper, `export const GET = route(`. A
+// scanner that knew only the first would count zero handlers after the
+// codemod and read that as a pass, which the guard below is written to
+// refuse.
+const HANDLER = /^export\s+(?:(?:async\s+)?function\s+([A-Z]+)\b|const\s+([A-Z]+)\s*=\s*route\()/;
 
 /** `// check-read-only-guards-disable-next-line -- <reason>`, reason required. */
 const PRAGMA = /\/\/\s*check-read-only-guards-disable-next-line\s+--\s+\S/;
@@ -69,7 +74,7 @@ for (const file of routeFiles(API_ROOT)) {
   lines.forEach((raw, i) => {
     const handler = HANDLER.exec(raw);
     if (handler) {
-      method = handler[1];
+      method = handler[1] ?? handler[2];
       handlersSeen += 1;
     }
 

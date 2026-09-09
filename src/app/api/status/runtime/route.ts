@@ -3,15 +3,11 @@
 // @/lib/status/runtime-status; this binds them to the route and supplies the
 // one fact core cannot read itself, the agent's home (ADR-0005).
 
-import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ok } from "@/lib/api-response";
 import { collectRuntimeStatus } from "@/lib/status/runtime-status";
 import { getActiveHermesHome } from "@/modules/hermes/lib/agent-runtime";
+import { route } from "@/lib/api-route";
 
-export async function GET() {
-  try {
-    return ok(collectRuntimeStatus({ hermesHome: getActiveHermesHome() }));
-  } catch (error) {
-    return serverErrorFromCatch("GET /api/status/runtime", "reading the runtime status", error, "Failed to read the runtime status");
-  }
-}
+export const GET = route("GET /api/status/runtime", "reading the runtime status", "Failed to read the runtime status", async () => {
+  return ok(collectRuntimeStatus({ hermesHome: getActiveHermesHome() }));
+});

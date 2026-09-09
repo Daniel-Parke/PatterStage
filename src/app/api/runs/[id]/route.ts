@@ -3,21 +3,17 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextRequest } from "next/server";
-import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ok, notFound } from "@/lib/api-response";
 import { getRun } from "@/lib/runs-repository";
+import { route } from "@/lib/api-route";
 
 interface Ctx {
   params: Promise<{ id: string }>;
 }
 
-export async function GET(_request: NextRequest, ctx: Ctx) {
+export const GET = route("GET /api/runs/[id]", (p) => `id=${p.id}`, "Failed to load run", async (_request: NextRequest, ctx: Ctx) => {
   const { id } = await ctx.params;
-  try {
-    const run = getRun(id);
-    if (!run) return notFound("Run not found");
-    return ok({ run });
-  } catch (error) {
-    return serverErrorFromCatch("GET /api/runs/[id]", `id=${id}`, error, "Failed to load run");
-  }
-}
+  const run = getRun(id);
+  if (!run) return notFound("Run not found");
+  return ok({ run });
+});

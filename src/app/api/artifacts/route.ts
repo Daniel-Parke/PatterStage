@@ -6,7 +6,6 @@ import { boundsFrom } from "@/lib/list-bounds";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ok } from "@/lib/api-response";
 import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import {
@@ -15,6 +14,7 @@ import {
   type ArtifactSourceKind,
 } from "@/lib/artifacts-repository";
 import { recordEvent } from "@/lib/analytics/record-event";
+import { route } from "@/lib/api-route";
 
 const SOURCE_KINDS = ["research", "composer", "mission", "chat", "manual"] as const;
 
@@ -31,41 +31,33 @@ const createSchema = z
   })
   .strict();
 
-export async function GET(request: NextRequest) {
-  try {
-    const sp = request.nextUrl.searchParams;
-    const kindParam = sp.get("kind");
-    const kind = (SOURCE_KINDS as readonly string[]).includes(kindParam ?? "")
-      ? (kindParam as ArtifactSourceKind)
-      : undefined;
-    const artifacts = listArtifacts({
-      sourceKind: kind,
-      sourceRunId: sp.get("runId") ?? undefined,
-      limit: boundsFrom(request, { defaultLimit: 200, maxLimit: 500 }).limit,
-    });
-    return ok({ artifacts });
-  } catch (error) {
-    return serverErrorFromCatch("GET /api/artifacts", "listing artifacts", error, "Failed to list artifacts");
-  }
-}
+export const GET = route("GET /api/artifacts", "listing artifacts", "Failed to list artifacts", async (request: NextRequest) => {
+  const sp = request.nextUrl.searchParams;
+  const kindParam = sp.get("kind");
+  const kind = (SOURCE_KINDS as readonly string[]).includes(kindParam ?? "")
+    ? (kindParam as ArtifactSourceKind)
+    : undefined;
+  const artifacts = listArtifacts({
+    sourceKind: kind,
+    sourceRunId: sp.get("runId") ?? undefined,
+    limit: boundsFrom(request, { defaultLimit: 200, maxLimit: 500 }).limit,
+  });
+  return ok({ artifacts });
+});
 
-export async function POST(request: NextRequest) {
+export const POST = route("POST /api/artifacts", "creating artifact", "Failed to save artifact", async (request: NextRequest) => {
   const parsed = await parseAndValidateJsonBody(request, createSchema);
   if (parsed instanceof NextResponse) return parsed;
-  try {
-    const artifact = createArtifact({
-      sourceKind: parsed.sourceKind,
-      sourceRunId: parsed.sourceRunId ?? null,
-      sourceNodeId: parsed.sourceNodeId ?? null,
-      name: parsed.name,
-      description: parsed.description ?? null,
-      mimeType: parsed.mimeType,
-      content: parsed.content,
-      tags: parsed.tags,
-    });
-    recordEvent("artifact.saved", { entityType: "artifact", entityId: artifact.id, metadata: { sourceKind: parsed.sourceKind } });
-    return ok({ artifact });
-  } catch (error) {
-    return serverErrorFromCatch("POST /api/artifacts", "creating artifact", error, "Failed to save artifact");
-  }
-}
+  const artifact = createArtifact({
+    sourceKind: parsed.sourceKind,
+    sourceRunId: parsed.sourceRunId ?? null,
+    sourceNodeId: parsed.sourceNodeId ?? null,
+    name: parsed.name,
+    description: parsed.description ?? null,
+    mimeType: parsed.mimeType,
+    content: parsed.content,
+    tags: parsed.tags,
+  });
+  recordEvent("artifact.saved", { entityType: "artifact", entityId: artifact.id, metadata: { sourceKind: parsed.sourceKind } });
+  return ok({ artifact });
+});

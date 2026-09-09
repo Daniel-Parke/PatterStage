@@ -11,7 +11,6 @@
 import { NextRequest } from "next/server";
 
 import { requireNotReadOnly } from "@/lib/api-auth";
-import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ok, badRequest, notFound, serviceUnavailable } from "@/lib/api-response";
 import { appendAuditLine } from "@/lib/audit-log";
 import { isFeatureEnabled } from "@/lib/feature-flags";
@@ -20,6 +19,7 @@ import { runtime } from "@/lib/runtime";
 import { cancelComposerRun, stopBackendRuns } from "@/lib/composer/cancel";
 import { getComposerRun } from "@/lib/composer/composer-repository";
 import type { ComposerRun } from "@/lib/composer/schema";
+import { route } from "@/lib/api-route";
 
 interface Ctx {
   params: Promise<{ id: string }>;
@@ -46,7 +46,7 @@ function describeNotCancellable(run: ComposerRun): string {
   return `This run is ${run.status}, which cannot be cancelled.`;
 }
 
-export async function POST(_request: NextRequest, ctx: Ctx) {
+export const POST = route("POST /api/composer/runs/[id]/cancel", (p) => `id=${p.id}`, "Failed to cancel run", async (_request: NextRequest, ctx: Ctx) => {
   if (!isFeatureEnabled("composer")) {
     return serviceUnavailable("Composer is not enabled. Set PS_COMPOSER=1 to enable workflows.");
   }
@@ -58,32 +58,23 @@ export async function POST(_request: NextRequest, ctx: Ctx) {
   if (readOnly) return readOnly;
 
   const { id } = await ctx.params;
-  try {
-    ensureDb();
-    const existing = getComposerRun(id);
-    if (!existing) return notFound("Composer run not found");
+  ensureDb();
+  const existing = getComposerRun(id);
+  if (!existing) return notFound("Composer run not found");
 
-    // Already cancelled is what the caller asked for. A second click — or a
-    // double click — must not paint a failure for a satisfied intent.
-    if (existing.status === "cancelled") return ok({ run: existing });
+  // Already cancelled is what the caller asked for. A second click — or a
+  // double click — must not paint a failure for a satisfied intent.
+  if (existing.status === "cancelled") return ok({ run: existing });
 
-    const stops = cancelComposerRun(id);
-    if (stops === null) return badRequest(describeNotCancellable(existing));
+  const stops = cancelComposerRun(id);
+  if (stops === null) return badRequest(describeNotCancellable(existing));
 
-    appendAuditLine({ action: "composer.cancel", resource: id, ok: true });
+  appendAuditLine({ action: "composer.cancel", resource: id, ok: true });
 
-    // Remote half, deliberately not awaited: the local record is already
-    // written, and a gateway that cannot be reached must not turn a successful
-    // cancellation into an error the operator has to interpret.
-    void stopBackendRuns(stops, (runId, profileName) => runtime.stopRun(runId, profileName));
+  // Remote half, deliberately not awaited: the local record is already
+  // written, and a gateway that cannot be reached must not turn a successful
+  // cancellation into an error the operator has to interpret.
+  void stopBackendRuns(stops, (runId, profileName) => runtime.stopRun(runId, profileName));
 
-    return ok({ run: getComposerRun(id) });
-  } catch (error) {
-    return serverErrorFromCatch(
-      "POST /api/composer/runs/[id]/cancel",
-      `id=${id}`,
-      error,
-      "Failed to cancel run",
-    );
-  }
-}
+  return ok({ run: getComposerRun(id) });
+});

@@ -11,7 +11,6 @@ import { boundsFrom } from "@/lib/list-bounds";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ok, created, badRequest, serviceUnavailable } from "@/lib/api-response";
 import { ensureDb } from "@/lib/db";
 import { isFeatureEnabled } from "@/lib/feature-flags";
@@ -24,6 +23,7 @@ import {
 } from "@/lib/composer/composer-repository";
 import { advanceComposerRun } from "@/lib/composer/engine";
 import { recordEvent } from "@/lib/analytics/record-event";
+import { route } from "@/lib/api-route";
 
 const startSchema = z
   .object({
@@ -35,48 +35,39 @@ const startSchema = z
   .strict()
   .refine((v) => v.workflowId || v.workflowKey, { message: "workflowId or workflowKey is required" });
 
-export async function GET(request?: NextRequest) {
+export const GET = route("GET /api/composer/runs", "list", "Failed to list runs", async (request?: NextRequest) => {
   if (!isFeatureEnabled("composer")) {
     return serviceUnavailable("Composer is not enabled. Set PS_COMPOSER=1 to enable workflows.");
   }
-  try {
-    ensureDb();
-    return ok({ runs: listComposerRuns(boundsFrom(request, { defaultLimit: 50, maxLimit: 500 }).limit) });
-  } catch (error) {
-    return serverErrorFromCatch("GET /api/composer/runs", "list", error, "Failed to list runs");
-  }
-}
+  ensureDb();
+  return ok({ runs: listComposerRuns(boundsFrom(request, { defaultLimit: 50, maxLimit: 500 }).limit) });
+});
 
-export async function POST(request: NextRequest) {
+export const POST = route("POST /api/composer/runs", "start", "Failed to start run", async (request: NextRequest) => {
   if (!isFeatureEnabled("composer")) {
     return serviceUnavailable("Composer is not enabled. Set PS_COMPOSER=1 to enable workflows.");
   }
 
   const parsed = await parseAndValidateJsonBody(request, startSchema);
   if (parsed instanceof NextResponse) return parsed;
+  ensureDb();
+  const workflow = parsed.workflowId
+    ? getWorkflow(parsed.workflowId)
+    : getWorkflowByKey(parsed.workflowKey!);
+  if (!workflow) return badRequest("Unknown workflow");
 
-  try {
-    ensureDb();
-    const workflow = parsed.workflowId
-      ? getWorkflow(parsed.workflowId)
-      : getWorkflowByKey(parsed.workflowKey!);
-    if (!workflow) return badRequest("Unknown workflow");
-
-    const run = createComposerRun({
-      workflowId: workflow.id,
-      input: parsed.input,
-      profileName: parsed.profileName ?? null,
-    });
-    recordEvent("composer.run_started", {
-      entityType: "composer_run",
-      entityId: run.id,
-      profile: parsed.profileName ?? null,
-      metadata: { workflowId: workflow.id },
-    });
-    // Kick the engine so the first stage dispatches now (the tick is the backstop).
-    void advanceComposerRun(run.id);
-    return created({ run });
-  } catch (error) {
-    return serverErrorFromCatch("POST /api/composer/runs", "start", error, "Failed to start run");
-  }
-}
+  const run = createComposerRun({
+    workflowId: workflow.id,
+    input: parsed.input,
+    profileName: parsed.profileName ?? null,
+  });
+  recordEvent("composer.run_started", {
+    entityType: "composer_run",
+    entityId: run.id,
+    profile: parsed.profileName ?? null,
+    metadata: { workflowId: workflow.id },
+  });
+  // Kick the engine so the first stage dispatches now (the tick is the backstop).
+  void advanceComposerRun(run.id);
+  return created({ run });
+});

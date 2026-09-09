@@ -7,16 +7,12 @@
 // able to forge achievement progress).
 // ═══════════════════════════════════════════════════════════════
 
-import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ok } from "@/lib/api-response";
 import { ensureDb } from "@/lib/db";
 import { getAnalyticsSummary } from "@/lib/analytics/aggregates";
+import { route } from "@/lib/api-route";
 
-export async function GET() {
-  try {
-    ensureDb();
-    return ok({ analytics: getAnalyticsSummary() });
-  } catch (error) {
-    return serverErrorFromCatch("GET /api/analytics", "", error, "Failed to load analytics");
-  }
-}
+export const GET = route("GET /api/analytics", "", "Failed to load analytics", async () => {
+  ensureDb();
+  return ok({ analytics: getAnalyticsSummary() });
+});

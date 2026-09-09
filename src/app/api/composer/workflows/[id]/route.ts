@@ -25,6 +25,7 @@ import {
 } from "@/lib/composer/composer-repository";
 import { workflowDefSchema } from "@/lib/composer/schema";
 import { recordEvent } from "@/lib/analytics/record-event";
+import { route } from "@/lib/api-route";
 
 interface Ctx {
   params: Promise<{ id: string }>;
@@ -32,20 +33,16 @@ interface Ctx {
 
 const ACTIVE_EDIT_MSG = "Cannot change a workflow with active runs — let them finish or cancel them first.";
 
-export async function GET(_request: NextRequest, ctx: Ctx) {
+export const GET = route("GET /api/composer/workflows/[id]", (p) => `id=${p.id}`, "Failed to load workflow", async (_request: NextRequest, ctx: Ctx) => {
   if (!isFeatureEnabled("composer")) {
     return serviceUnavailable("Composer is not enabled. Set PS_COMPOSER=1 to enable workflows.");
   }
   const { id } = await ctx.params;
-  try {
-    ensureDb();
-    const graph = getWorkflowGraph(id);
-    if (!graph) return notFound("Workflow not found");
-    return ok({ workflow: graph });
-  } catch (error) {
-    return serverErrorFromCatch("GET /api/composer/workflows/[id]", `id=${id}`, error, "Failed to load workflow");
-  }
-}
+  ensureDb();
+  const graph = getWorkflowGraph(id);
+  if (!graph) return notFound("Workflow not found");
+  return ok({ workflow: graph });
+});
 
 export async function PUT(request: NextRequest, ctx: Ctx) {
   if (!isFeatureEnabled("composer")) {
@@ -83,38 +80,34 @@ export async function PUT(request: NextRequest, ctx: Ctx) {
   }
 }
 
-export async function DELETE(request: NextRequest, ctx: Ctx) {
+export const DELETE = route("DELETE /api/composer/workflows/[id]", (p) => `id=${p.id}`, "Failed to delete workflow", async (request: NextRequest, ctx: Ctx) => {
   if (!isFeatureEnabled("composer")) {
     return serviceUnavailable("Composer is not enabled. Set PS_COMPOSER=1 to enable workflows.");
   }
   const { id } = await ctx.params;
-  try {
-    ensureDb();
-    const graph = getWorkflowGraph(id);
-    if (!graph) return notFound("Workflow not found");
-    if (workflowHasActiveRuns(id)) return badRequest(ACTIVE_EDIT_MSG);
+  ensureDb();
+  const graph = getWorkflowGraph(id);
+  if (!graph) return notFound("Workflow not found");
+  if (workflowHasActiveRuns(id)) return badRequest(ACTIVE_EDIT_MSG);
 
-    // Deleting a workflow deletes every run of it, with the stage outputs and
-    // the gate decisions inside them. The two-click confirm asks whether the
-    // click was meant; this asks whether THAT was meant (T-0106, D1). The save
-    // path has answered this way since B2; the delete path had nothing.
-    const discardRunHistory = request.nextUrl.searchParams.get("discardRunHistory") === "1";
-    const runCount = countWorkflowRuns(id);
-    if (runCount > 0 && !discardRunHistory) {
-      return NextResponse.json(
-        {
-          error: `Deleting "${graph.name}" would permanently delete ${runCount} run(s) of it, including their stage outputs and approvals.`,
-          runCount,
-          workflowName: graph.name,
-          confirmWith: "?discardRunHistory=1",
-        },
-        { status: 409 },
-      );
-    }
-
-    deleteWorkflow(id);
-    return ok({ deleted: true });
-  } catch (error) {
-    return serverErrorFromCatch("DELETE /api/composer/workflows/[id]", `id=${id}`, error, "Failed to delete workflow");
+  // Deleting a workflow deletes every run of it, with the stage outputs and
+  // the gate decisions inside them. The two-click confirm asks whether the
+  // click was meant; this asks whether THAT was meant (T-0106, D1). The save
+  // path has answered this way since B2; the delete path had nothing.
+  const discardRunHistory = request.nextUrl.searchParams.get("discardRunHistory") === "1";
+  const runCount = countWorkflowRuns(id);
+  if (runCount > 0 && !discardRunHistory) {
+    return NextResponse.json(
+      {
+        error: `Deleting "${graph.name}" would permanently delete ${runCount} run(s) of it, including their stage outputs and approvals.`,
+        runCount,
+        workflowName: graph.name,
+        confirmWith: "?discardRunHistory=1",
+      },
+      { status: 409 },
+    );
   }
-}
+
+  deleteWorkflow(id);
+  return ok({ deleted: true });
+});

@@ -7,16 +7,16 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
-import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ok, badRequest, notFound } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { getConversation } from "@/lib/chat-repository";
 import { getRun } from "@/lib/runs-repository";
 import { runtime } from "@/lib/runtime";
+import { route } from "@/lib/api-route";
 
 type Ctx = { params: Promise<{ id: string }> };
 
-export async function POST(request: NextRequest, ctx: Ctx) {
+export const POST = route("POST /api/chat/[id]/approval", (p) => p.id, "Failed to resolve approval", async (request: NextRequest, ctx: Ctx) => {
   const { id } = await ctx.params;
   if (!getConversation(id)) return notFound("Conversation not found");
 
@@ -32,15 +32,10 @@ export async function POST(request: NextRequest, ctx: Ctx) {
 
   const run = getRun(runId);
   if (!run || !run.runId) return notFound("Run not found");
-
-  try {
-    await runtime.resolveApproval(
-      run.runId,
-      { approved, note: typeof note === "string" ? note : undefined },
-      run.profileName ?? undefined,
-    );
-    return ok({ runId, approved });
-  } catch (error) {
-    return serverErrorFromCatch("POST /api/chat/[id]/approval", id, error, "Failed to resolve approval");
-  }
-}
+  await runtime.resolveApproval(
+    run.runId,
+    { approved, note: typeof note === "string" ? note : undefined },
+    run.profileName ?? undefined,
+  );
+  return ok({ runId, approved });
+});

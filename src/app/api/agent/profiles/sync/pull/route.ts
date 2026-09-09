@@ -1,7 +1,6 @@
 import { NextRequest } from "next/server";
 
 import { badRequest } from "@/lib/api-response";
-import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ensureDb } from "@/lib/db";
 import { parseOptionalJsonBody } from "@/lib/parse-optional-json-body";
 import { booleanFlag, stringFlag } from "@/lib/parse-bag-flags";
@@ -19,6 +18,7 @@ import {
 import { answerBatch, answerSingle } from "@/modules/hermes/lib/sync-answer";
 import type { SyncResult } from "@/modules/hermes/lib/profile-sync-shared";
 import { recordEvent } from "@/lib/analytics/record-event";
+import { route } from "@/lib/api-route";
 
 // Every branch answers through sync-answer.ts. This route used to return
 // `ok({ success: result.success, result })`, a 200 for a pull that did not
@@ -37,7 +37,7 @@ function recordProfileBatch(results: SyncResult[]) {
   if (count > 0) recordEvent("profile.pulled", { entityType: "profile", entityId: "all", metadata: { count } });
 }
 
-export async function POST(request: NextRequest) {
+export const POST = route("POST /api/agent/profiles/sync/pull", "pull", "Failed to pull profile", async (request: NextRequest) => {
   // Body is a bag of optional flags (slug, all, root, skills,
   // reconcileDisk, ...); missing or malformed body is treated as {}.
   const body = await parseOptionalJsonBody(request);
@@ -50,55 +50,44 @@ export async function POST(request: NextRequest) {
   const reconcileDisk =
     booleanFlag(body, "reconcileDisk") ||
     (process.env.PS_PULL_RECONCILE_DISK || process.env.CH_PULL_RECONCILE_DISK) === "1";
+  ensureDb();
 
-  try {
-    ensureDb();
-
-    if (skills) {
-      const results = importAllSkillsFromDisk();
-      return answerBatch("pull", results, { results });
-    }
-
-    if (skillKey) {
-      return answerSingle(VERB, pullSkillFromHermes(skillKey));
-    }
-
-    if (all || importDiscovered) {
-      const profileResults = [];
-      for (const p of listProfiles()) {
-        profileResults.push(pullProfileFromHermes(p.slug, { reconcileDisk }));
-      }
-      const rootResult = pullRootFromHermes({ reconcileDisk });
-      if (importDiscovered) {
-        for (const d of discoverLocalProfiles().filter((p) => !p.inDatabase)) {
-          profileResults.push(importDiscoveredProfile(d.slug));
-        }
-      }
-      const skillResults = importAllSkillsFromDisk();
-      recordProfileBatch([...profileResults, rootResult]);
-      return answerBatch("pull", [...profileResults, rootResult, ...skillResults], {
-        root: rootResult,
-        profiles: profileResults,
-        skills: skillResults,
-      });
-    }
-
-    if (root || slug === "default") {
-      return answerProfilePull("default", pullRootFromHermes({ reconcileDisk }));
-    }
-
-    if (!slug) {
-      return badRequest("slug, all, root, or skills required");
-    }
-
-    return answerProfilePull(slug, pullProfileFromHermes(slug, { reconcileDisk }));
+  if (skills) {
+    const results = importAllSkillsFromDisk();
+    return answerBatch("pull", results, { results });
   }
-  catch (error) {
-    return serverErrorFromCatch(
-      "POST /api/agent/profiles/sync/pull",
-      "pull",
-      error,
-      "Failed to pull profile",
-    );
+
+  if (skillKey) {
+    return answerSingle(VERB, pullSkillFromHermes(skillKey));
   }
-}
+
+  if (all || importDiscovered) {
+    const profileResults = [];
+    for (const p of listProfiles()) {
+      profileResults.push(pullProfileFromHermes(p.slug, { reconcileDisk }));
+    }
+    const rootResult = pullRootFromHermes({ reconcileDisk });
+    if (importDiscovered) {
+      for (const d of discoverLocalProfiles().filter((p) => !p.inDatabase)) {
+        profileResults.push(importDiscoveredProfile(d.slug));
+      }
+    }
+    const skillResults = importAllSkillsFromDisk();
+    recordProfileBatch([...profileResults, rootResult]);
+    return answerBatch("pull", [...profileResults, rootResult, ...skillResults], {
+      root: rootResult,
+      profiles: profileResults,
+      skills: skillResults,
+    });
+  }
+
+  if (root || slug === "default") {
+    return answerProfilePull("default", pullRootFromHermes({ reconcileDisk }));
+  }
+
+  if (!slug) {
+    return badRequest("slug, all, root, or skills required");
+  }
+
+  return answerProfilePull(slug, pullProfileFromHermes(slug, { reconcileDisk }));
+});

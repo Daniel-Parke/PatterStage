@@ -15,21 +15,17 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextRequest } from "next/server";
-import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ok, notFound } from "@/lib/api-response";
 import { getMission } from "@/lib/missions/mission-repository";
 import { getLatestRunForMission } from "@/lib/runs-repository";
+import { route } from "@/lib/api-route";
 
 interface Ctx {
   params: Promise<{ id: string }>;
 }
 
-export async function GET(_request: NextRequest, ctx: Ctx) {
+export const GET = route("GET /api/missions/[id]/run", (p) => `id=${p.id}`, "Failed to load mission run", async (_request: NextRequest, ctx: Ctx) => {
   const { id } = await ctx.params;
-  try {
-    if (!getMission(id)) return notFound("Mission not found");
-    return ok({ run: getLatestRunForMission(id) });
-  } catch (error) {
-    return serverErrorFromCatch("GET /api/missions/[id]/run", `id=${id}`, error, "Failed to load mission run");
-  }
-}
+  if (!getMission(id)) return notFound("Mission not found");
+  return ok({ run: getLatestRunForMission(id) });
+});

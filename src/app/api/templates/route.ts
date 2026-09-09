@@ -13,7 +13,6 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
-import { serverErrorFromCatch } from "@/lib/api-logger";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { handleCreateTemplate } from "@/lib/templates-handlers/create";
 import { handleDeleteTemplate } from "@/lib/templates-handlers/delete";
@@ -21,41 +20,38 @@ import { handleImportTemplatePack } from "@/lib/templates-handlers/import-pack";
 import { handleListTemplates } from "@/lib/templates-handlers/list";
 import type { TemplateActionBody } from "@/lib/templates-handlers/shared";
 import { handleUpdateTemplate } from "@/lib/templates-handlers/update";
+import { route } from "@/lib/api-route";
 
 export async function GET() {
   return handleListTemplates();
 }
 
-export async function POST(request: NextRequest) {
-  try {
-    // Body shape is action-discriminated and validated per-branch below;
-    // parseJsonBody gives us a 400 on malformed JSON but the inner field
-    // types are checked per-branch. Body is untyped (was `any` when read
-    // via request.json()) to preserve the original assignability to typed
-    // template fields — see TemplateActionBody in templates-handlers/shared.ts.
-    const parsed = await parseJsonBody(request);
-    if (parsed instanceof NextResponse) return parsed;
-    const body = parsed as TemplateActionBody;
-    const { action } = body;
+export const POST = route("POST /api/templates", "processing request", "Failed to process request", async (request: NextRequest) => {
+  // Body shape is action-discriminated and validated per-branch below;
+  // parseJsonBody gives us a 400 on malformed JSON but the inner field
+  // types are checked per-branch. Body is untyped (was `any` when read
+  // via request.json()) to preserve the original assignability to typed
+  // template fields — see TemplateActionBody in templates-handlers/shared.ts.
+  const parsed = await parseJsonBody(request);
+  if (parsed instanceof NextResponse) return parsed;
+  const body = parsed as TemplateActionBody;
+  const { action } = body;
 
-    if (action === "create") {
-      return handleCreateTemplate(body);
-    }
-
-    if (action === "update") {
-      return handleUpdateTemplate(body);
-    }
-
-    if (action === "importPack") {
-      return handleImportTemplatePack(body);
-    }
-
-    if (action === "delete") {
-      return handleDeleteTemplate(body);
-    }
-
-    return NextResponse.json({ error: "Unknown action" }, { status: 400 });
-  } catch (err) {
-    return serverErrorFromCatch("POST /api/templates", "processing request", err, "Failed to process request");
+  if (action === "create") {
+    return handleCreateTemplate(body);
   }
-}
+
+  if (action === "update") {
+    return handleUpdateTemplate(body);
+  }
+
+  if (action === "importPack") {
+    return handleImportTemplatePack(body);
+  }
+
+  if (action === "delete") {
+    return handleDeleteTemplate(body);
+  }
+
+  return NextResponse.json({ error: "Unknown action" }, { status: 400 });
+});

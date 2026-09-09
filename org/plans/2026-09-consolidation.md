@@ -58,7 +58,7 @@ counting on the tree:
 | `tests` lines | `testLines` | 121,651 | **≤ 116,000** |
 | src lines in a repeated 6-line window | `srcRepeatedWindowLines` | 1,416 | **≤ 600** |
 | tests lines in a repeated 6-line window | `testRepeatedWindowLines` | 6,028 | **≤ 2,500** |
-| API routes with the try/serverErrorFromCatch body | `routesWithTryCatch` | 82 (126 sites) | **0** |
+| API routes with the try/serverErrorFromCatch body | `routesWithTryCatch` | 82 (126 sites) | **≤ 13** (a catch that does more than log, or a name that reads something other than the route's params, keeps its own; measured at C1) |
 | files reading with useState + useEffect + safeApiCall | `handRolledReadHooks` | 5 | **0** |
 | the four named action hooks without useApiMutation | `writeHooksWithoutMutation` | 4 | **0** |
 | files spelling a repeated type shape (mission draft, model row, sync failure) | `repeatedTypeShapeFiles` | 23 | **3** |
@@ -92,12 +92,15 @@ batch.
   fixture tree; the baseline committed at today's numbers.
 
 ### C1 — One route body [M] · T-0136
-- `route(name, handler)` in `src/lib/api-route.ts`: catches, logs through
-  `serverErrorFromCatch` with the route's name, returns the handler's
-  response. The 126 sites converted by script; the two strings per site
-  become the one name.
+- `route(name, doing, failed, handler)` in `src/lib/api-route.ts`: catches,
+  logs through `serverErrorFromCatch` with the route's name, returns the
+  handler's response; each of the three may be a function of the route's
+  resolved params, so a dynamic segment's log keeps its id. The sites
+  converted by an AST codemod: 112 handlers in 68 files; a catch that does
+  more than log, or a name that reads something other than the params,
+  keeps its own try (13 files).
 - `requireAuth` stays where it is (three routes, the proxy does the rest).
-- Verify: `routesWithTryCatch` 82 to 0; every API contract suite green
+- Verify: `routesWithTryCatch` 82 to 13; every API contract suite green
   unchanged; a mutant that swallows the error inside the wrapper is killed.
 
 ### C2 — One type each [S] · T-0137

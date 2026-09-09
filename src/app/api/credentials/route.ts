@@ -16,19 +16,11 @@ import { badRequest, created, ok } from "@/lib/api-response";
 import { syncCredentialToHermesEnv } from "@/modules/hermes/lib/hermes-env-sync";
 import { envVarForProvider } from "@/modules/hermes/lib/providers";
 import { recordEvent } from "@/lib/analytics/record-event";
+import { route } from "@/lib/api-route";
 
-export async function GET(_request: NextRequest) {
-  try {
-    return ok({ credentials: listCredentials() });
-  } catch (error) {
-    return serverErrorFromCatch(
-      "GET /api/credentials",
-      "listing credentials",
-      error,
-      "Failed to list credentials",
-    );
-  }
-}
+export const GET = route("GET /api/credentials", "listing credentials", "Failed to list credentials", async (_request: NextRequest) => {
+  return ok({ credentials: listCredentials() });
+});
 
 export async function POST(request: NextRequest) {
   // Hoist body parsing out of the main try/catch so malformed JSON returns
