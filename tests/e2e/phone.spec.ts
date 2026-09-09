@@ -218,7 +218,11 @@ test.describe("the split panes", () => {
     await expect(composer).toBeVisible(READY);
     const box = await composer.boundingBox();
     expect(box, "the composer has no box").not.toBeNull();
-    expect(Math.round(box!.width)).toBeGreaterThanOrEqual(300);
+    // 390 less the shell's 32px gutter, the pane's 32px padding, the 36px
+    // send button and the 8px gap is 282: the box is as wide as the row can
+    // make it. The floor is set under that so a regression to the 240px
+    // column (which left about 60px) fails and rounding does not.
+    expect(Math.round(box!.width)).toBeGreaterThanOrEqual(270);
   });
 });
 

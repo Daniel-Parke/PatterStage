@@ -25,7 +25,7 @@ import { join } from "node:path";
 jest.mock("next/navigation", () => ({ usePathname: () => "/work/chat" }));
 jest.mock("next/link", () => require("../helpers/mocks").nextLinkMock());
 jest.mock("lucide-react", () => require("../helpers/mocks").lucideMock());
-jest.mock("@/components/help/HelpLink", () => ({ __esModule: true, default: () => <a href="/help">?</a> }));
+jest.mock("@/components/help/HelpLink", () => ({ __esModule: true, default: () => <a href="#guide">?</a> }));
 jest.mock("@/components/layout/PageTitle", () => ({
   __esModule: true,
   default: () => null,

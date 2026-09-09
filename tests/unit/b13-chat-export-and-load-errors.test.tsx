@@ -71,13 +71,6 @@ jest.mock("@/lib/chat-utils", () => ({
 
 import ChatPage from "@/app/work/chat/page";
 
-// jsdom has no scrollIntoView; the transcript's auto-scroll effect calls it.
-if (typeof Element !== "undefined" && !Element.prototype.scrollIntoView) {
-  Element.prototype.scrollIntoView = function scrollIntoView() {
-    /* no-op for jsdom */
-  };
-}
-
 // ── fixtures ───────────────────────────────────────────────────
 
 function conversation(id: string, title: string): ChatConversation {

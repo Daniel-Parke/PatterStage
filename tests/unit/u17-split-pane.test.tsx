@@ -154,7 +154,8 @@ describe("U17 · SplitPane", () => {
       expect(src).toMatch(/<SplitPane\b/);
       expect(src).toMatch(/closeOnChange=/);
       // The two that fill the viewport say so; the two on a scrolling page do not.
-      const fill = /<SplitPane\b[^>]*\bfill\b/s.test(src.slice(src.indexOf("<SplitPane"), src.indexOf(">", src.indexOf("<SplitPane"))));
+      // [^>]* spans lines on its own; the opening tag runs to its first `>`.
+      const fill = /<SplitPane\b[^>]*\bfill\b/.test(src.slice(src.indexOf("<SplitPane"), src.indexOf(">", src.indexOf("<SplitPane"))));
       expect(fill).toBe(fills);
     }
     expect(read("src/app/work/chat/page.tsx")).not.toMatch(/w-60 shrink-0 border-r/);
@@ -167,5 +168,17 @@ describe("U17 · SplitPane", () => {
 
   it("is in the primitive table", () => {
     expect(read("docs/contributing/design-tokens.md")).toContain("`SplitPane`");
+  });
+
+  // Sharpened after the walk: with the list behind a button, the button was
+  // under the sticky header at 390, because scrollIntoView on the transcript's
+  // end also scrolled <main> by the mobile header's 48px.
+  it("the chat's transcript scrolls itself, not main", () => {
+    const send = read("src/hooks/useChatSend.ts");
+    // The call, not the word: the comment beside the fix names what it replaced.
+    expect(send).not.toMatch(/\.scrollIntoView\(/);
+    expect(send).toMatch(/scroller\?\.scrollTo\?\.\(\{ top: scroller\.scrollHeight \}\)/);
+    // Smoothness moved to the scroller's CSS, where reduced motion can reach it.
+    expect(read("src/app/work/chat/page.tsx")).toMatch(/overflow-y-auto scroll-smooth/);
   });
 });

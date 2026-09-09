@@ -146,15 +146,6 @@ beforeEach(() => {
   jest.clearAllMocks();
 });
 
-// jsdom does not implement Element.scrollIntoView — the chat page's
-// auto-scroll effect calls it. Polyfill to a no-op so the effect does
-// not throw on mount.
-if (typeof Element !== "undefined" && !Element.prototype.scrollIntoView) {
-  Element.prototype.scrollIntoView = function scrollIntoView() {
-    /* no-op for jsdom */
-  };
-}
-
 import ChatPage from "@/app/work/chat/page";
 
 describe("ChatPage — toast rendering regression", () => {

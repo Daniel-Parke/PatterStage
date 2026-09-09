@@ -22,7 +22,9 @@ jest.mock("lucide-react", () => require("../helpers/mocks").lucideMock());
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import ProfilesDriftBanner from "@/components/profiles/ProfilesDriftBanner";
 import ModelsDriftBanner from "@/components/models/ModelsDriftBanner";
+import MessageBubble from "@/components/chat/MessageBubble";
 import type { SyncDrift } from "@/components/models/types";
+import type { ChatMessage } from "@/types/chat";
 
 const drift: SyncDrift = {
   hasDrift: true,
@@ -82,5 +84,28 @@ describe("U17 · banners wrap their action", () => {
     expect(pull.parentElement).toHaveClass("sm:basis-auto");
     const push = screen.getByRole("button", { name: /Push to Hermes for openai\/gpt-y/ });
     expect(push.parentElement).toHaveClass("basis-full");
+  });
+
+  // Sharpened after the walk: the chat's failed-run bubble is a banner too,
+  // and at 390 it gave its reason 35% of a 250px bubble, one word per line.
+  it("a failed run's Retry wraps under the reason, and the bubble is wider on a phone", () => {
+    const msg = {
+      id: "m1",
+      role: "assistant",
+      content: "",
+      status: "failed",
+      error: "POST /v1/runs → 500 Internal Server Error",
+      createdAt: "2026-06-01T09:30:00Z",
+    } as unknown as ChatMessage;
+    render(<MessageBubble msg={msg} onRetry={() => {}} />);
+    const alert = screen.getByRole("alert");
+    expect(alert).toHaveClass("flex-wrap");
+    const retry = screen.getByRole("button", { name: /retry/i });
+    expect(retry).toHaveClass("basis-full");
+    expect(retry).toHaveClass("sm:basis-auto");
+    const bubble = alert.parentElement!;
+    expect(bubble).toHaveClass("max-w-[85%]");
+    expect(bubble).toHaveClass("sm:max-w-[70%]");
+    expect(bubble).not.toHaveClass("max-w-[70%]");
   });
 });
