@@ -123,6 +123,19 @@ describe("the repository keeps a custom entry's identity", () => {
     expect(pushed.mock.calls[0][0]).toEqual([expect.objectContaining({ modelId: "gpt-peek", provider: "openai" })]);
   });
 
+  it("the registry wins when a row carries both, so a renamed model is read by its new name", () => {
+    // The sweep's survivor (T-0140): COALESCE in either order reads the same
+    // for rows the INSERT writes, because a registry entry's custom columns
+    // are null. The rule is pinned on a row that has both.
+    const model = createModel({ name: "Renamed", provider: "minimax", modelId: "MiniMax-M3" });
+    testDb!
+      .prepare(
+        "INSERT INTO model_fallbacks (id, model_id, position, enabled, override_base_url, created_at, updated_at, custom_name, custom_provider, custom_model_id) VALUES ('both', ?, 1, 1, NULL, 't', 't', 'Stale', 'stale', 'stale-id')",
+      )
+      .run(model.id);
+    expect(listFallbackChain()[0]).toMatchObject({ id: "both", modelName: "Renamed", provider: "minimax", modelIdString: "MiniMax-M3" });
+  });
+
   it("a row written before the migration has nothing to read and still says Custom", () => {
     testDb!
       .prepare(
