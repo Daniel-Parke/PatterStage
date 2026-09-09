@@ -31,8 +31,9 @@ made it, the file extension it will download as, and how big it is. Under that i
 how long ago it was produced.
 
 Before anything has been produced you get an empty panel instead: a faint icon,
-**No artifacts yet**, and a line pointing you at Deep Research or a Composer
-workflow, whose output is captured here on its own.
+**No artifacts yet**, a line saying that Deep Research and Composer workflows
+produce them, and two buttons that take you there, **Run Deep Research** and
+**Open Composer**. Their output is captured here on its own.
 
 Clicking a card opens a panel over the page, from the right on a wide window and
 up from the bottom on a narrow one. Its heading is the artifact's name, and

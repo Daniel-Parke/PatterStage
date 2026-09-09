@@ -81,6 +81,12 @@ const STATUS_FILTERS = [
 
 export default function ComposerPage() {
   const [mode, setMode] = useState<"run" | "build">("run");
+  // The canvas mounts the first time Build is opened and stays mounted after.
+  // next/dynamic deferred its 400 KB but still loaded it on the route, and
+  // the Run tab, a form and a list, never needs it (the review of 2026-09-08,
+  // T-0133). Staying mounted keeps T-0106 D7: a look at a running workflow
+  // does not throw away what is on the board.
+  const [buildOpened, setBuildOpened] = useState(false);
   const [input, setInput] = useState("");
   const [workflowId, setWorkflowId] = useState<string>("");
   const [profileName, setProfileName] = useState<string>("");
@@ -247,7 +253,10 @@ export default function ComposerPage() {
           <button
             key={m}
             type="button"
-            onClick={() => setMode(m)}
+            onClick={() => {
+              setMode(m);
+              if (m === "build") setBuildOpened(true);
+            }}
             className={`-mb-px border-b-2 px-3 py-2 text-micro font-mono uppercase tracking-widest transition ${
               mode === m ? "border-neon-cyan text-neon-cyan" : "border-transparent text-ps-text-muted hover:text-ps-text-secondary"
             }`}
@@ -260,9 +269,11 @@ export default function ComposerPage() {
       {/* Both panes stay mounted. The ternary unmounted the editor on every
           switch to Run, so a look at a running workflow threw away whatever was
           on the board (T-0106, D7). */}
-      <div hidden={mode !== "build"}>
-        <WorkflowCanvas workflows={workflows ?? []} onSaved={() => void refetchWorkflows()} />
-      </div>
+      {buildOpened && (
+        <div hidden={mode !== "build"}>
+          <WorkflowCanvas workflows={workflows ?? []} onSaved={() => void refetchWorkflows()} />
+        </div>
+      )}
       <div hidden={mode !== "run"}>
         <>
       {/* Launch form — self-describing per the selected workflow's input contract.

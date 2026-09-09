@@ -32,7 +32,8 @@ total in the middle, and a legend beside it naming each source and its count.
 Then one tile, **Messages**, and a second ring showing how many of the matching
 sessions are still running. Every figure counts the whole matching set, not the
 page you happen to be looking at, and the strip is hidden entirely when there is
-nothing to count.
+nothing to count. On a phone the strip is one line of the same numbers, the
+total, the messages and the active count; the rings are for a wider screen.
 
 The tiles used to repeat the ring: Active, Total and CLI were the ring's own
 segments and its centre, printed a second time beside it. The ring names them

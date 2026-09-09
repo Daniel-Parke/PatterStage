@@ -261,10 +261,6 @@ export default function LogsPage() {
           actions={
             <LogsHeaderActions
               hasLogs={(availableLogs?.length ?? 0) > 0}
-              autoRefresh={autoRefresh}
-              onToggleAutoRefresh={toggleAutoRefresh}
-              lineCount={lineCount}
-              onLineCountChange={setLineCount}
               refreshing={refreshing}
               onRefresh={() => void handleRefresh()}
               deleteArmed={deleteArmed}
@@ -415,6 +411,10 @@ export default function LogsPage() {
                 totalLines={data.totalLines}
                 lines={filteredLines}
                 searchTerm={search}
+                autoRefresh={autoRefresh}
+                onToggleAutoRefresh={toggleAutoRefresh}
+                lineCount={lineCount}
+                onLineCountChange={setLineCount}
               />
             ) : null}
         </SplitPane>

@@ -223,6 +223,11 @@ describe("the log terminal is a panel of ledger lines", () => {
         totalLines={lines.length}
         lines={lines}
         searchTerm={searchTerm}
+        // The terminal's own bar since U19 (T-0133); not what this test reads.
+        autoRefresh={false}
+        onToggleAutoRefresh={() => {}}
+        lineCount={200}
+        onLineCountChange={() => {}}
       />,
     );
   }

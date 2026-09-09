@@ -30,12 +30,16 @@ and a success percentage worked out from finished missions only. It is counted
 from every mission on the board, so it does not narrow when you filter or
 search; the column counts beside it do.
 
-**Quick load template.** Your templates as clickable pills, grouped into
-category accordions. Clicking one fills the composer and opens it; nothing is
-dispatched. On the right of that row are **Manage categories** and
-**Edit Templates**. Filter pills for template categories appear only when your
-templates span more than one category. The whole section hides while the
-composer is open.
+**Quick load template.** A closed panel that says how many templates you have;
+open it and your templates are clickable pills, grouped into category
+accordions. Clicking one fills the composer and opens it; nothing is
+dispatched. Inside the panel are **Manage categories** and **Edit Templates**.
+Filter pills for template categories appear only when your templates span more
+than one category. The whole panel hides while the composer is open. It is
+closed so that the board, not the templates, is what you see first.
+
+An empty board says **No missions yet** and offers the two things to do:
+**New Mission**, and **Load a template**, which opens the panel above.
 
 **Filters.** A row of category pills (All missions, then one per category with a
 count), a status filter (All, Draft, Queued, Running, Completed, Failed), and a

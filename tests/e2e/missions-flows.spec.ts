@@ -92,6 +92,8 @@ test.describe("Missions page flows", () => {
   test("create a category via Manage categories", async ({ page }) => {
     const cat = uniq("e2e-cat");
     await page.goto("/work/missions");
+    // Inside the templates disclosure since U19 (T-0133); open it first.
+    await page.getByRole("button", { name: /Quick load template/ }).click();
     await page.getByRole("button", { name: /Manage categories/i }).click();
     await expect(page.getByRole("heading", { name: /Manage categories/i })).toBeVisible();
     await page.getByPlaceholder("Category name").fill(cat);

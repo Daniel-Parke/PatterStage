@@ -1,5 +1,15 @@
 // ═══════════════════════════════════════════════════════════════
-// CollapsibleSection — reusable togglable section with header badge
+// CollapsibleSection — the disclosure
+//
+// A heading, a count, and a body that opens on demand. Uncontrolled by
+// default (it holds its own open state); a caller that needs to open it from
+// elsewhere, as Missions' empty state opens the templates, passes `expanded`
+// and `onExpandedChange` (T-0133).
+//
+// `headerRight` renders BESIDE the disclosure button, not inside it: a
+// control inside a button is nested interactive content, which the browser
+// hoists out of the markup and a screen reader cannot reach (T-0071 found the
+// same shape in the chat list).
 // ═══════════════════════════════════════════════════════════════
 
 "use client";
@@ -16,11 +26,15 @@ export interface CollapsibleSectionProps {
   badge?: number | string;
   /** Description text shown only when expanded. */
   description?: string;
-  /** Whether the section starts expanded (default: false). */
+  /** Whether the section starts expanded (default: false). Ignored when `expanded` is passed. */
   defaultExpanded?: boolean;
+  /** Controlled open state. Pair with `onExpandedChange`. */
+  expanded?: boolean;
+  /** Called with the next state when the header is pressed. */
+  onExpandedChange?: (expanded: boolean) => void;
   /** Children rendered inside the expandable body. */
   children: ReactNode;
-  /** Optional extra actions rendered on the right side of the header. */
+  /** Optional extra actions rendered beside the header button. */
   headerRight?: ReactNode;
   /** Accent colour for the badge pill (default: "purple"). */
   badgeColor?: "purple" | "orange" | "green" | "cyan";
@@ -38,47 +52,50 @@ export default function CollapsibleSection({
   badge,
   description,
   defaultExpanded = false,
+  expanded: controlled,
+  onExpandedChange,
   children,
   headerRight,
   badgeColor = "purple",
 }: CollapsibleSectionProps) {
-  const [expanded, setExpanded] = useState(defaultExpanded);
+  const [own, setOwn] = useState(defaultExpanded);
+  const expanded = controlled ?? own;
+  const toggle = () => {
+    const next = !expanded;
+    if (controlled === undefined) setOwn(next);
+    onExpandedChange?.(next);
+  };
 
   return (
     <div className="rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel overflow-hidden">
       {/* Header — always visible */}
-      <button
-        type="button"
-        onClick={() => setExpanded((v) => !v)}
-        className="w-full flex items-center justify-between px-5 py-3 text-left hover:bg-ps-surface-raised transition-colors"
-        // A disclosure button that does not announce its state is a working
-        // control that reads as an inert one, to a screen reader and to any
-        // automated pass alike. The chevron below says "open" in pixels only.
-        // Same defect as Modal announcing itself as a plain div (T-0036), and
-        // MissionComposerLayout's accordion already does this correctly.
-        aria-expanded={expanded}
-      >
-        <div className="flex items-center gap-3">
-          <h2 className={sectionHeadingClasses}>
-            {title}
-          </h2>
-          {badge !== undefined && (
-            <span
-              className={`text-micro font-mono px-1.5 py-0.5 rounded-ps-sm uppercase tracking-widest ${badgeColorMap[badgeColor]}`}
-            >
-              {badge}
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          {headerRight}
+      <div className="flex items-center gap-2 pr-5">
+        <button
+          type="button"
+          onClick={toggle}
+          className="flex min-w-0 flex-1 items-center justify-between px-5 py-3 text-left hover:bg-ps-surface-raised transition-colors"
+          aria-expanded={expanded}
+        >
+          <div className="flex items-center gap-3">
+            <h2 className={sectionHeadingClasses}>
+              {title}
+            </h2>
+            {badge !== undefined && (
+              <span
+                className={`text-micro font-mono px-1.5 py-0.5 rounded-ps-sm uppercase tracking-widest ${badgeColorMap[badgeColor]}`}
+              >
+                {badge}
+              </span>
+            )}
+          </div>
           {expanded ? (
-            <ChevronUp className="w-4 h-4 text-ps-text-muted" />
+            <ChevronUp className="w-4 h-4 shrink-0 text-ps-text-muted" />
           ) : (
-            <ChevronDown className="w-4 h-4 text-ps-text-muted" />
+            <ChevronDown className="w-4 h-4 shrink-0 text-ps-text-muted" />
           )}
-        </div>
-      </button>
+        </button>
+        {headerRight && <div className="flex shrink-0 items-center gap-2">{headerRight}</div>}
+      </div>
 
       {/* Body — conditionally rendered */}
       {expanded && (

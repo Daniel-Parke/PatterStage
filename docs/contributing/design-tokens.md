@@ -385,6 +385,7 @@ caller, not by being generic.
 | `Dialog` | the one overlay: centre, right, bottom or sheet, on `useDialogA11y` (role, modal, Escape, the Tab trap over what is drawn, focus returned) |
 | `Popover` | anything dismissable that is not modal, on `useDismissable` |
 | `SplitPane` | the one two-column shape: a list that chooses and the thing chosen. Two columns from lg; below lg the list is behind a button that opens it as a sheet and closes when the choice changes (Chat, Logs, Composer, Research) |
+| `CollapsibleSection` | the disclosure: a heading, a count, a body that opens on demand; uncontrolled, or controlled by the caller that needs to open it from elsewhere (Missions' templates, Models' fallback chain) |
 | `SegmentedControl` | a radiogroup with roving tabindex and real ARIA state; every filter row |
 | `DataList` | a table that stacks below its breakpoint instead of clipping a column |
 | `ConfirmButton` | the one destructive treatment: arm, then act, `aria-live` on the armed label |
@@ -398,9 +399,8 @@ hidden: `Popover` and `TemplateCard` are building blocks other primitives
 compose (`Select` and `Picker` sit on `Popover`; `TemplatePill` on
 `TemplateCard`); `ErrorBoundary` is the layout's and has one caller by nature;
 `DataList` is the newest primitive (T-0125) with two callers and forty-one
-grid-faked tables still to move onto it; `AutoTextarea`, `TemplatePill`,
-`CollapsibleSection` and `Pagination` have one or two callers and are the next
-programme's to place. The measure the recon set, components with exactly one
+grid-faked tables still to move onto it; `AutoTextarea`, `TemplatePill` and
+`Pagination` have one or two callers and are the next programme's to place. The measure the recon set, components with exactly one
 importer, read 146 of 213 at the start and 128 of 201 at the end: the split
 happened at the primitive layer and has not yet reached the page layer.
 

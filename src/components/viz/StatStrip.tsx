@@ -85,6 +85,37 @@ export default function StatStrip({
     <div
       className={`animate-float-in grid grid-cols-1 items-center gap-5 rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel p-4 ${layout} ${className}`}
     >
+      {/* A phone gets one row of the numbers and none of the pictures: on
+          /results/sessions at 390 the donut, the tile and the ring stacked to
+          350px before the search field (the review of 2026-09-08, T-0133).
+          Derived from the same props, so every strip has it and no caller
+          changed. The count-up is the tiles'; a row is read, not watched. */}
+      <div
+        data-testid="strip-phone-row"
+        className="flex flex-wrap items-baseline gap-x-3 gap-y-1 font-mono text-body text-ps-text-secondary sm:hidden"
+      >
+        {donut && (
+          <span>
+            <span className="font-bold text-ps-text-primary">{donut.center}</span>
+            {donut.centerSub && <> {donut.centerSub}</>}
+          </span>
+        )}
+        {tiles.map((t) => (
+          <span key={t.label}>
+            <span className="font-bold text-ps-text-primary">
+              {t.compact ? compactNum(t.value) : Math.round(t.value).toLocaleString()}
+              {t.suffix ?? ""}
+            </span>{" "}
+            {t.label.toLowerCase()}
+          </span>
+        ))}
+        {ring && (
+          <span>
+            <span className="font-bold text-ps-text-primary">{ring.label}</span>
+            {ring.sublabel && <> {ring.sublabel}</>}
+          </span>
+        )}
+      </div>
       {/* The donut, and its LEGEND. `Donut` uses `segment.label` as a React key
           and renders nothing from it, so for as long as this strip drew a bare
           ring of arcs, the only place a segment's name and number appeared was
@@ -96,7 +127,7 @@ export default function StatStrip({
           free to be what a tile should be - a fact neither of them carries
           (T-0124). */}
       {donut && (
-        <div className="flex items-center justify-center gap-4">
+        <div className="hidden items-center justify-center gap-4 sm:flex">
           <Donut size={96} thickness={12} segments={donut.segments} center={donut.center} centerSub={donut.centerSub} />
           {donut.segments.length > 0 && (
             <ul data-testid="donut-legend" className="min-w-0 space-y-1">
@@ -117,14 +148,14 @@ export default function StatStrip({
         </div>
       )}
       {tiles.length > 0 && (
-        <div className={`grid gap-2 ${tiles.length >= 4 ? "grid-cols-2 sm:grid-cols-4" : "grid-cols-2 sm:grid-cols-3"}`}>
+        <div className={`hidden gap-2 sm:grid ${tiles.length >= 4 ? "sm:grid-cols-4" : "sm:grid-cols-3"}`}>
           {tiles.map((t) => (
             <Tile key={t.label} {...t} />
           ))}
         </div>
       )}
       {ring && (
-        <div data-testid="stat-ring" className="flex justify-center" title={ring.hint}>
+        <div data-testid="stat-ring" className="hidden justify-center sm:flex" title={ring.hint}>
           <ProgressRing value={ring.value} color={ring.color} size={84} thickness={8} label={ring.label} sublabel={ring.sublabel} />
         </div>
       )}

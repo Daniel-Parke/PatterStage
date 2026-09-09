@@ -94,6 +94,11 @@ describe("the log terminal's scroll container is the one that scrolls", () => {
         totalLines={2}
         lines={LINES}
         searchTerm=""
+        // The terminal's own bar since U19 (T-0133); not what this test reads.
+        autoRefresh={false}
+        onToggleAutoRefresh={() => {}}
+        lineCount={200}
+        onLineCountChange={() => {}}
       />,
     );
   }

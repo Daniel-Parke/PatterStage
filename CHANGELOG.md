@@ -92,6 +92,23 @@ The work leading to the 1.0.0 release.
 
 ### Changed
 
+- **The missions board comes first.** The Quick load template panel sat
+  above the board and pushed it 500 pixels down the busiest screen. It is a
+  closed panel now that says how many templates you have and opens on demand,
+  and an empty board offers **New Mission** and **Load a template** itself.
+- **Empty pages offer their action.** Automation's empty state carries
+  **Schedule a mission** and Artifacts' carries **Run Deep Research** and
+  **Open Composer**, instead of naming them somewhere else.
+- **Settings on a phone jumps by a select.** The section list that ran off
+  the right edge is a **Jump to section** select below tablet width.
+- **The sessions strip fits a phone.** Below tablet width it is one line of
+  its numbers; the rings are for a wider screen.
+- **The log terminal owns its bar.** The auto-refresh switch and the line
+  count sit beside the file name in the terminal, so the page header keeps
+  Refresh and Delete All and no longer wraps onto three rows on a phone. The
+  three coloured dots that decorated that bar are gone.
+- **Composer loads its board only when you open Build.** The Run tab is a
+  form and a list and no longer carries the board's code.
 - **The dashboard's badge says what the panel says.** The header read ONLINE
   beside a Subsystems row reading "Gateway · Not running". The badge now
   carries the gateway row's own word and colour, Healthy, Degraded or Not

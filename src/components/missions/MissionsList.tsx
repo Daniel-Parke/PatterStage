@@ -1,6 +1,5 @@
 "use client";
 
-import { sectionHeadingClasses } from "@/lib/theme";
 import {
   AlertTriangle,
   ChevronRight,
@@ -18,6 +17,10 @@ import { LedgerRowButton } from "@/components/dashboard/LedgerRow";
 import CategoryAccordion from "@/components/ui/CategoryAccordion";
 import SegmentedControl from "@/components/ui/SegmentedControl";
 import TemplatePill from "@/components/ui/TemplatePill";
+import CollapsibleSection from "@/components/ui/CollapsibleSection";
+import { EmptyState } from "@/components/ui/EmptyState";
+import Button from "@/components/ui/Button";
+import { useState } from "react";
 import {
   CATEGORY_COLOR_CLASSES,
   resolveCategoryDisplay,
@@ -52,6 +55,8 @@ export interface MissionsListProps {
 export default function MissionsList({ vm }: MissionsListProps) {
   const {
     missions,
+    templates,
+    openCreate,
     showCreate,
     filter,
     setFilter,
@@ -94,6 +99,12 @@ export default function MissionsList({ vm }: MissionsListProps) {
   const renderedAt = Date.now();
   // One pass for the badges, and the same function the strip above reads.
   const columnCounts = countMissionsByColumn(filtered);
+  // The templates are a collapsed disclosure: on the busiest screen the board
+  // started 500px below the fold, under a heading, a blurb, a segmented control
+  // and eight accordions (the review of 2026-09-08). Closed until asked; the
+  // empty state's "Load a template" asks (T-0133).
+  const [templatesOpen, setTemplatesOpen] = useState(false);
+  const templateCount = templates?.length ?? 0;
 
   return (
     <div>
@@ -101,17 +112,18 @@ export default function MissionsList({ vm }: MissionsListProps) {
           list, off the same countMissionsByColumn call this board uses. */}
       {!showCreate && (
         <div className="mb-6" data-testid="missions-quick-templates">
+          <CollapsibleSection
+            title="Quick load template"
+            badge={`${templateCount} template${templateCount === 1 ? "" : "s"}`}
+            badgeColor="cyan"
+            expanded={templatesOpen}
+            onExpandedChange={setTemplatesOpen}
+          >
           <div className="flex flex-wrap justify-between items-start gap-4 mb-3">
-            <div>
-              <h2 className={`${sectionHeadingClasses} flex items-center gap-2`}>
-                <Zap className="w-3 h-3 text-neon-cyan" />
-                Quick load template
-              </h2>
-              <p className="text-micro text-ps-text-muted mt-1 font-mono">
-                Prefill the <ConceptHint id="mission">mission</ConceptHint> form — review and dispatch
-                when ready
-              </p>
-            </div>
+            <p className="text-body text-ps-text-muted">
+              Prefill the <ConceptHint id="mission">mission</ConceptHint> form; review and dispatch
+              when ready.
+            </p>
             <div className="flex flex-wrap items-center gap-3 shrink-0">
               {/* 16px of text was the whole target on both of these (T-0128). */}
               <button
@@ -185,6 +197,7 @@ export default function MissionsList({ vm }: MissionsListProps) {
               </CategoryAccordion>
             ))}
           </div>
+          </CollapsibleSection>
         </div>
       )}
 
@@ -246,14 +259,25 @@ export default function MissionsList({ vm }: MissionsListProps) {
         <LoadErrorBanner error={missionsLoadError} onRetry={() => void fetchData()} />
       )}
       {missionsLoadError ? null : filtered.length === 0 ? (
-        <div className="text-center py-12">
-          <Rocket className="w-10 h-10 text-ps-viz-glyph-idle mx-auto mb-3" />
-          <div className="text-body text-ps-text-muted">
-            {missions.length === 0
-              ? "No missions yet - create one to get started"
-              : "No missions match your filter"}
-          </div>
-        </div>
+        // The first action one click from the top: an empty board used to be
+        // a sentence under 500px of templates (T-0133).
+        <EmptyState
+          icon={Rocket}
+          title={missions.length === 0 ? "No missions yet" : "No missions match your filter"}
+          description={missions.length === 0 ? "Create one, or load a template to prefill the form." : undefined}
+          action={
+            missions.length === 0 ? (
+              <div className="flex flex-wrap justify-center gap-2">
+                <Button variant="primary" color="cyan" size="sm" icon={Rocket} onClick={openCreate}>
+                  New Mission
+                </Button>
+                <Button variant="secondary" color="cyan" size="sm" icon={Zap} onClick={() => setTemplatesOpen(true)}>
+                  Load a template
+                </Button>
+              </div>
+            ) : undefined
+          }
+        />
       ) : (
         <div
           data-testid="missions-board"

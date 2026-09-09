@@ -85,6 +85,10 @@ instead, the panel shows the question, an answer box and **Submit answer**.
 
 ### The Build tab
 
+The board loads the first time you open this tab, so the Run tab does not
+carry it; once open it stays loaded, and switching back to Run keeps whatever
+is on it.
+
 A toolbar runs across the top: **Edit workflow**, which chooses what you are
 editing or starts a new one, then **Name**, **Description**, **Auto-layout**,
 **Create** or **Save**, **Duplicate** and **Delete**. The result of a save appears

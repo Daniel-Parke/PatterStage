@@ -36,6 +36,7 @@ import RunProgress from "@/components/schedule/RunProgress";
 import ConceptHint from "@/components/help/ConceptHint";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Field, Input, Select } from "@/components/ui/field";
 import { useSchedules, useMissionOptions } from "@/hooks/useSchedules";
 import { useScripts } from "@/hooks/useScripts";
@@ -185,15 +186,19 @@ export default function AutomationList() {
             </span>
           )}
         </div>
-        <Button
-          variant="primary"
-          color="orange"
-          size="sm"
-          icon={showForm ? ChevronDown : Plus}
-          onClick={() => setShowForm((v) => !v)}
-        >
-          Schedule a mission
-        </Button>
+        {/* One control per action: while the list is empty the empty state
+            carries this button, and the header does not repeat it (T-0133). */}
+        {(rows.length > 0 || showForm) && (
+          <Button
+            variant="primary"
+            color="orange"
+            size="sm"
+            icon={showForm ? ChevronDown : Plus}
+            onClick={() => setShowForm((v) => !v)}
+          >
+            Schedule a mission
+          </Button>
+        )}
       </div>
 
       {error && <LoadErrorBanner error={error} onRetry={() => refetch()} />}
@@ -283,12 +288,18 @@ export default function AutomationList() {
       {isLoading ? (
         <div className="py-6 text-center font-mono text-body text-ps-text-muted">Loading schedules…</div>
       ) : rows.length === 0 ? (
-        // design-lint-disable-next-line no-inline-card-chrome -- a dashed edge is the empty state saying "nothing yet", which is a different idea from a surface; Card draws a solid one and this is the one place the difference is the message
-        <div className="rounded-ps-lg border border-dashed border-ps-edge-hairline bg-ps-surface-panel px-4 py-6 text-center text-body text-ps-text-muted">
-          Nothing is on a clock yet. Put a saved mission on a timer above, use a mission&apos;s{" "}
-          <span className="text-ps-text-secondary">Schedule</span> dispatch mode, or schedule a script from its row on
-          Scripts.
-        </div>
+        // The one thing to do is IN the empty state, not only in the section
+        // header 700px above the ground (the review of 2026-09-08, T-0133).
+        <EmptyState
+          icon={CalendarClock}
+          title="Nothing is on a clock yet"
+          description="Put a saved mission on a timer, use a mission's Schedule dispatch mode, or schedule a script from its row on Scripts."
+          action={
+            <Button variant="primary" color="orange" size="sm" icon={Plus} onClick={() => setShowForm(true)}>
+              Schedule a mission
+            </Button>
+          }
+        />
       ) : (
         <div className="space-y-2">
           {rows.map((row) => (

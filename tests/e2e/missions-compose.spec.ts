@@ -34,6 +34,9 @@ test.describe("Missions composer", () => {
 
   test("manage categories modal has create form", async ({ page }) => {
     await page.goto("/work/missions");
+    // Manage categories lives inside the templates disclosure, which is
+    // closed until asked so the board comes first (U19, T-0133).
+    await page.getByRole("button", { name: /Quick load template/ }).click();
     await page.getByRole("button", { name: /Manage categories/i }).click();
     await expect(
       page.getByRole("heading", { name: /Manage categories/i }),

@@ -21,7 +21,7 @@
  * resumes from the frame that was actually on screen rather than snapping back
  * toward the stale origin.
  */
-import { act, render, renderHook, screen } from "@testing-library/react";
+import { act, render, renderHook, screen, within } from "@testing-library/react";
 
 import StatStrip from "@/components/viz/StatStrip";
 import { useCountUp } from "@/hooks/useCountUp";
@@ -30,6 +30,13 @@ import { useCountUp } from "@/hooks/useCountUp";
 function Dot({ className, style }: { className?: string; style?: React.CSSProperties }) {
   return <span className={className} style={style} data-testid="tile-icon" />;
 }
+
+/**
+ * The tiles' own grid. Since U19 (T-0133) the strip also renders a phone row
+ * of the same numbers (hidden from sm up), so a query over the whole screen
+ * finds each figure twice; these tests are about the tiles.
+ */
+const tiles = () => within(screen.getAllByTestId("stat-tile")[0].parentElement!);
 
 describe("stat tiles on first paint", () => {
   beforeEach(() => {
@@ -57,43 +64,43 @@ describe("stat tiles on first paint", () => {
     // Nothing has been flushed: no timer advanced, no frame delivered. And on
     // a first paint there is nothing to animate, so no frame was even asked for.
     expect(rafSpy).not.toHaveBeenCalled();
-    expect(screen.getByText("7")).toBeInTheDocument();
-    expect(screen.getByText("42")).toBeInTheDocument();
-    expect(screen.getByText("176")).toBeInTheDocument();
-    expect(screen.getByText("4,218")).toBeInTheDocument();
+    expect(tiles().getByText("7")).toBeInTheDocument();
+    expect(tiles().getByText("42")).toBeInTheDocument();
+    expect(tiles().getByText("176")).toBeInTheDocument();
+    expect(tiles().getByText("4,218")).toBeInTheDocument();
 
     // And the specific lie is absent: no tile reads zero.
-    expect(screen.queryByText("0")).not.toBeInTheDocument();
+    expect(tiles().queryByText("0")).not.toBeInTheDocument();
 
     rafSpy.mockRestore();
   });
 
   it("still paints the truth when the value is genuinely zero", () => {
     render(<StatStrip tiles={[{ icon: Dot, label: "Errors", value: 0, color: "pink" }]} />);
-    expect(screen.getByText("0")).toBeInTheDocument();
+    expect(tiles().getByText("0")).toBeInTheDocument();
   });
 
   it("ramps, rather than jumping, when the value LATER changes", () => {
     const { rerender } = render(
       <StatStrip tiles={[{ icon: Dot, label: "Runs", value: 100, color: "cyan" }]} />,
     );
-    expect(screen.getByText("100")).toBeInTheDocument();
+    expect(tiles().getByText("100")).toBeInTheDocument();
 
     rerender(<StatStrip tiles={[{ icon: Dot, label: "Runs", value: 200, color: "cyan" }]} />);
     // Still the old figure: a change starts a ramp, it does not teleport.
-    expect(screen.getByText("100")).toBeInTheDocument();
+    expect(tiles().getByText("100")).toBeInTheDocument();
 
     act(() => {
       jest.advanceTimersByTime(400);
     });
     // Mid-ramp: neither endpoint is on screen, so the ramp really is running.
-    expect(screen.queryByText("100")).not.toBeInTheDocument();
-    expect(screen.queryByText("200")).not.toBeInTheDocument();
+    expect(tiles().queryByText("100")).not.toBeInTheDocument();
+    expect(tiles().queryByText("200")).not.toBeInTheDocument();
 
     act(() => {
       jest.advanceTimersByTime(400);
     });
-    expect(screen.getByText("200")).toBeInTheDocument();
+    expect(tiles().getByText("200")).toBeInTheDocument();
   });
 });
 

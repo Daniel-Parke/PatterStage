@@ -130,15 +130,21 @@ describe("the section nav", () => {
     for (const id of IDS) {
       expect(within(nav).getByRole("link", { name: CONFIG_SECTIONS[id].label })).toHaveAttribute("href", `#${id}`);
     }
+    // Each page is linked twice since U19 (T-0133): once beside the phone's
+    // Jump to section select, once in the desk's list; the two are for two
+    // widths and both say the same href.
     for (const tool of SETTINGS_TOOLS) {
-      expect(within(nav).getByRole("link", { name: tool.label })).toHaveAttribute("href", tool.href);
+      const links = within(nav).getAllByRole("link", { name: tool.label });
+      expect(links).toHaveLength(2);
+      for (const link of links) expect(link).toHaveAttribute("href", tool.href);
     }
   });
 
   it("the nav holds exactly the sections plus the three pages, nothing invented", async () => {
     await renderLoaded();
     const nav = screen.getByRole("navigation", { name: /settings sections/i });
-    expect(within(nav).getAllByRole("link")).toHaveLength(IDS.length + SETTINGS_TOOLS.length);
+    // The sections once, the pages twice (the phone row and the desk list).
+    expect(within(nav).getAllByRole("link")).toHaveLength(IDS.length + SETTINGS_TOOLS.length * 2);
   });
 });
 

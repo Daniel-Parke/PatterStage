@@ -26,13 +26,15 @@ on disk, and how long ago it was last written to, as in `agent.log · 771 lines
 end of the file, not of the whole file. Before a file has loaded it reads
 "Hermes agent and gateway logs" instead.
 
-To the right of the header are four controls. A small refresh button turns the
-five second auto-refresh on and off; it glows and spins while it is on, and its
-tooltip says which state it is in. Next to it, **Lines to show** picks how much
-of the file to load: 100, 200, 500 or 1000 lines. **Refresh** fetches the file
+To the right of the header are two controls. **Refresh** fetches the file
 again now. **Delete All** is the destructive one, and it asks twice: the first
 click changes the button to **Confirm Clear** and puts a **Cancel** beside it.
 It is disabled while no log file exists.
+
+The terminal's own bar, under the file name, holds the two controls that are
+about the terminal: an **Auto-refresh** switch that turns the five second
+refresh on and off, and **Lines to show**, which picks how much of the file to
+load: 100, 200, 500 or 1000 lines.
 
 Below the header the screen is in two columns. On a phone, or in a window
 narrower than about a thousand pixels, the file list sits behind a **Log

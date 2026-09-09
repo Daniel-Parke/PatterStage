@@ -19,6 +19,8 @@ import Button from "@/components/ui/Button";
 import ConfirmButton from "@/components/ui/ConfirmButton";
 import Sheet from "@/components/ui/Sheet";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
+import { EmptyState } from "@/components/ui/EmptyState";
+import LinkButton from "@/components/ui/LinkButton";
 import { Select } from "@/components/ui/field";
 import { useArtifacts, useArtifact } from "@/hooks/useArtifacts";
 import { renderReportHtml } from "@/lib/laboratory/deep-research/markdown";
@@ -115,12 +117,24 @@ export default function ArtifactsPage() {
 
       {/* The empty state only after a read that succeeded (T-0096). */}
       {error ? null : list.length === 0 ? (
+        // The two ways to make one are IN the empty state, as links, rather
+        // than named in a sentence with no way there (T-0133).
         <Card padding="md">
-          <div className="flex flex-col items-center justify-center gap-2 py-10 text-center">
-            <FileStack className="h-6 w-6 text-ps-viz-glyph-idle" />
-            <p className="text-body text-ps-text-muted">No artifacts yet</p>
-            <p className="text-body text-ps-text-muted">Run Deep Research or a Composer workflow — its output is captured here automatically.</p>
-          </div>
+          <EmptyState
+            icon={FileStack}
+            title="No artifacts yet"
+            description="Run Deep Research or a Composer workflow; its output is captured here automatically."
+            action={
+              <div className="flex flex-wrap justify-center gap-2">
+                <LinkButton href="/work/research" variant="primary" color="cyan" size="sm" icon={Telescope}>
+                  Run Deep Research
+                </LinkButton>
+                <LinkButton href="/work/composer" variant="ghost" color="cyan" size="sm" icon={GitBranch}>
+                  Open Composer
+                </LinkButton>
+              </div>
+            }
+          />
         </Card>
       ) : (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">

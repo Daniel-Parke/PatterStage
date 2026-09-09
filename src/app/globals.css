@@ -605,16 +605,6 @@
   background-size: 40px 40px;
 }
 
-/* Auto-refresh button pulse — fires on each log refresh tick */
-@keyframes auto-refresh-tick {
-  0% { box-shadow: 0 0 0px rgb(var(--ps-rgb-neon-cyan) / 0); }
-  30% { box-shadow: 0 0 12px rgb(var(--ps-rgb-neon-cyan) / 0.55); }
-  100% { box-shadow: 0 0 0px rgb(var(--ps-rgb-neon-cyan) / 0); }
-}
-.animate-auto-refresh-tick {
-  animation: auto-refresh-tick 0.8s ease-out forwards;
-}
-
 /* Slow spin for auto-refresh icon */
 @keyframes spin-slow {
   from { transform: rotate(0deg); }

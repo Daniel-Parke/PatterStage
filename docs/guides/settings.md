@@ -40,8 +40,8 @@ in its group: **Core**, **Infrastructure**, **Security**, **Voice & Audio**,
 **Automation**, **Integrations** and **Files**, then **Pages** for the three
 things that are not sections: **Models**, **Restore** and **System**. The list
 stays put while you scroll and marks the section you are looking at; press a
-name to jump to it. On a narrow window the same list runs along the top and
-scrolls sideways.
+name to jump to it. On a narrow window the list is a **Jump to section** select
+at the top instead, with the three pages as links beside it.
 
 On the right, every section, expanded, in the same order. Each is a card
 headed with the section's name, a sentence about it, and badges: how many
