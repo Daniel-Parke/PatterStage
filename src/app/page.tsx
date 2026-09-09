@@ -43,6 +43,8 @@ import { dedupErrors } from "@/lib/dashboard/dashboard-error-dedup";
 import { describeSchedulerHealth } from "@/lib/dashboard/scheduler-pill";
 import { settleFirstRunFacts, type FirstRunFacts } from "@/lib/dashboard/first-run-steps";
 import { formatUsd } from "@/lib/spend/spend-law";
+import { SUBSYSTEM_STATE_LABELS, statusTone } from "@/lib/status-labels";
+import { statusToneClasses } from "@/lib/theme";
 import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
 import { useInterval } from "@/hooks/useInterval";
 import { useDashboard } from "@/hooks/useDashboard";
@@ -219,7 +221,10 @@ export default function Dashboard() {
   }
   const settledFacts = latched?.settled ?? rawFirstRunFacts;
   const gatewaySettledReachable = settledFacts.gatewayReachable === true;
-  const gatewaySettledUrl = settledFacts.gatewayUrl ?? "the configured address";
+  // The badge's word and tone are the Subsystems row's own, so the header
+  // cannot say ONLINE beside a row that says Not running (T-0132).
+  const gatewayWord = gatewayRow ? SUBSYSTEM_STATE_LABELS[gatewayRow.state] : null;
+  const gatewayToneClasses = gatewayWord ? statusToneClasses[statusTone(gatewayWord)] : null;
 
   const activeProcesses = useMemo(() => processes.filter((p) => p.status === "running"), [processes]);
   const activeMissions = useMemo(
@@ -262,24 +267,28 @@ export default function Dashboard() {
           actions={
             /* The badge used to be a hardcoded green ONLINE, sitting directly
                under the agent-framework heading. On an install with no agent it
-               claimed the agent was up. It now reports what the monitor
-               actually found. */
-            agentConfigured ? (
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-neon-green pulse-glow" />
-                <span className="text-micro text-ps-text-secondary font-mono">ONLINE</span>
-              </div>
-            ) : gatewaySettledReachable ? (
-              <div className="flex items-center gap-2" title={`${agentName} runs through the gateway at ${gatewaySettledUrl}`}>
-                <div className="w-2 h-2 rounded-full bg-neon-cyan" />
-                <span className="text-micro text-neon-cyan font-mono">REMOTE</span>
-              </div>
-            ) : (
+               claimed the agent was up. It then reported what the monitor found:
+               ONLINE for PatterStage's own server, which nobody doubts, beside a
+               Subsystems row reading "Gateway · Not running" (the review of
+               2026-09-08). A fact is said once, where it is best said (T-0127):
+               the badge carries the gateway row's own word and tone, with the
+               row's reason as its tooltip, so the two cannot disagree; a blip
+               shows in both places for one poll, consistently. NOT INSTALLED
+               stays for the install with no agent and no reachable gateway,
+               which is the first run's fact and is read from the settled facts
+               so one failed probe cannot claim the agent is absent (D57,
+               T-0132). */
+            !agentConfigured && !gatewaySettledReachable ? (
               <div className="flex items-center gap-2" title={`${agentName} is not installed on this machine`}>
                 <div className="w-2 h-2 rounded-full bg-neon-orange" />
                 <span className="text-micro text-neon-orange font-mono">NOT INSTALLED</span>
               </div>
-            )
+            ) : gatewayRow && gatewayWord && gatewayToneClasses ? (
+              <div className="flex items-center gap-2" title={gatewayRow.reason}>
+                <div className={`w-2 h-2 rounded-full ${gatewayToneClasses.dot}`} />
+                <span className={`text-micro font-mono ${gatewayToneClasses.text}`}>Gateway · {gatewayWord}</span>
+              </div>
+            ) : null
           }
         />
       }

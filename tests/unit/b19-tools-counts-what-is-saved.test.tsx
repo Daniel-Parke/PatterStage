@@ -15,6 +15,7 @@
  */
 
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { pageSubtitle } from "../helpers/page-subtitle";
 
 jest.mock("next/navigation", () => ({
   usePathname: () => "/agent/tools",
@@ -107,7 +108,7 @@ describe("with nothing changed", () => {
   it("counts the toolsets the profile actually has", async () => {
     await renderLoaded(["web", "vision"]);
 
-    expect(screen.getByText(/\b2 of \d+ toolsets enabled/i)).toBeInTheDocument();
+    expect(pageSubtitle()).toHaveTextContent(/\b2 of \d+ toolsets enabled/i);
     expect(lastEnabledTile()).toBe(2);
   });
 
@@ -133,8 +134,8 @@ describe("with a chip toggled and not yet saved", () => {
     fireEvent.click(chip("Vision"));
 
     // One is stored. The chip shows the choice; the count must not.
-    expect(screen.getByText(/\b1 of \d+ toolsets enabled/i)).toBeInTheDocument();
-    expect(screen.queryByText(/\b2 of \d+ toolsets enabled/i)).toBeNull();
+    expect(pageSubtitle()).toHaveTextContent(/\b1 of \d+ toolsets enabled/i);
+    expect(pageSubtitle()).not.toHaveTextContent(/\b2 of \d+ toolsets enabled/i);
   });
 
   it("does not let the Enabled tile claim it either", async () => {
@@ -150,7 +151,7 @@ describe("with a chip toggled and not yet saved", () => {
 
     fireEvent.click(chip("Vision"));
 
-    expect(screen.getByText(/\b2 of \d+ toolsets enabled/i)).toBeInTheDocument();
+    expect(pageSubtitle()).toHaveTextContent(/\b2 of \d+ toolsets enabled/i);
     expect(lastEnabledTile()).toBe(2);
     expect(screen.getByText(/unsaved changes/i)).toBeInTheDocument();
   });
@@ -163,7 +164,7 @@ describe("with a chip toggled and not yet saved", () => {
     fireEvent.change(box, { target: { value: '{"cli":["web","terminal"]}' } });
 
     expect(screen.getByText(/unsaved changes/i)).toBeInTheDocument();
-    expect(screen.getByText(/\b1 of \d+ toolsets enabled/i)).toBeInTheDocument();
+    expect(pageSubtitle()).toHaveTextContent(/\b1 of \d+ toolsets enabled/i);
   });
 });
 
@@ -176,7 +177,7 @@ describe("after the save", () => {
       fireEvent.click(screen.getByRole("button", { name: /Save & push toolsets/i }));
     });
 
-    await waitFor(() => expect(screen.getByText(/\b2 of \d+ toolsets enabled/i)).toBeInTheDocument());
+    await waitFor(() => expect(pageSubtitle()).toHaveTextContent(/\b2 of \d+ toolsets enabled/i));
     expect(lastEnabledTile()).toBe(2);
     expect(screen.queryByText(/unsaved changes/i)).toBeNull();
   });

@@ -192,7 +192,9 @@ export function useChatSend({
         error: send.error || "Failed to send message",
       });
       setIsStreaming(false);
-      showToast(send.error || "Failed to send message", "error");
+      // The bubble is the alert, with the reason and Retry (T-0128). A toast
+      // saying the same sentence over the composer was the failure said twice,
+      // in the place the operator was about to type (T-0132).
       return;
     }
 
@@ -213,7 +215,7 @@ export function useChatSend({
       // Fast mode — stream a raw model reply from the gateway.
       const controller = new AbortController();
       abortRef.current = controller;
-      const acc = { content: "" };
+      const acc = { content: "", error: null as string | null };
       await streamChatResponse(
         toApiMessages(priorMessages, text),
         model,
@@ -223,13 +225,18 @@ export function useChatSend({
           acc.content += delta;
           updateLocalMessage(assistantMessageId, { content: acc.content, status: "streaming" });
         },
-        (errMsg) => showToast(errMsg, "error"),
+        // The stream's own reason is the bubble's reason. It used to be a
+        // toast, beside a bubble that said only that nothing came back
+        // (T-0132).
+        (errMsg) => {
+          acc.error = errMsg;
+        },
       );
       if (gen !== streamGenRef.current) return;
       const status = acc.content ? "complete" : "failed";
       const error = acc.content
         ? null
-        : "The model returned nothing. Check the gateway is reachable and the model is configured.";
+        : (acc.error ?? "The model returned nothing. Check the gateway is reachable and the model is configured.");
       updateLocalMessage(assistantMessageId, { content: acc.content, status, error });
       setIsStreaming(false);
       abortRef.current = null;

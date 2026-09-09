@@ -10,6 +10,7 @@
  * (the same rule Skills learned in T-0125).
  */
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { pageSubtitle } from "../helpers/page-subtitle";
 
 jest.mock("lucide-react", () => {
   const passthrough = () => () => null;
@@ -97,7 +98,7 @@ describe("the page at the door", () => {
   it("is Story Weaver, and its subtitle counts the shelf rather than a row of tiles", async () => {
     await mount();
     expect(screen.getByRole("heading", { level: 1, name: "Story Weaver" })).toBeInTheDocument();
-    expect(screen.getByText(/3 stories/)).toBeInTheDocument();
+    expect(pageSubtitle()).toHaveTextContent(/3 stories/);
     // The six tiles said "Stories", "Chapters", "Words" above the list that
     // showed them. None of those labels is on the page.
     expect(screen.queryByText(/^Words$/)).toBeNull();

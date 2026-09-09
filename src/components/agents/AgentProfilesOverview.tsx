@@ -68,12 +68,8 @@ export default function AgentProfilesOverview({
 
       <AgentPerformanceStrip />
 
-      <ProfilesDriftBanner
-        driftCount={driftCount}
-        errorCount={syncErrorCount}
-        onPushAll={onPushAll}
-        pushing={syncBusy}
-      />
+      {/* The banner states the drift; the bar under it is the one Push all (T-0132). */}
+      <ProfilesDriftBanner driftCount={driftCount} errorCount={syncErrorCount} />
       <ProfileSyncBar
         onPushAll={onPushAll}
         onPullAll={onPullAll}

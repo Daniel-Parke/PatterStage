@@ -23,7 +23,7 @@ Directly under the header, if no agent is installed on this machine, an orange n
 
 Then one sentence says what a profile is: one agent, its voice, the skills it may use and the tools it may reach. A **Where a profile is stored** link folds out the file names behind that sentence if you want them.
 
-Then two strips that appear only when they have something to say. **Agent performance · from real activity** is one tile per agent that has actually done work, showing how many runs it has been given (dispatched), its mission success rate, tokens used and average run time; an agent that has not done anything yet is not listed. Under it, an orange banner appears when the console and the files on disk disagree, or when a push did not complete. It names the counts and carries a **Push all to Hermes** button.
+Then two strips that appear only when they have something to say. **Agent performance · from real activity** is one tile per agent that has actually done work, showing how many runs it has been given (dispatched), its mission success rate, tokens used and average run time; an agent that has not done anything yet is not listed. Under it, an orange banner appears when the console and the files on disk disagree, or when a push did not complete. It names the counts and points at **Push all** in the row below.
 
 The row of sync buttons below is always there: **Push all**, **Pull all** and **Import discovered**. Push and pull for one profile are on its row in the table, as two arrows at the right-hand end.
 
@@ -62,7 +62,7 @@ The **editor** opens as a card at the bottom of the right-hand column. It names 
 
 1. Select the profile carrying the **Drift** badge.
 2. Decide which side you want to keep. **Pull** takes what is on disk and brings it into PatterStage. **Push** takes what PatterStage holds and writes it to disk, overwriting what was there.
-3. Press the push or pull arrow on that profile's row, or **Push all to Hermes** in the banner to settle every drifted profile at once.
+3. Press the push or pull arrow on that profile's row, or **Push all** in the row of sync buttons to settle every drifted profile at once.
 4. The badge clears and the row's "Last pushed" column updates.
 
 ## Notes

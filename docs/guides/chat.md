@@ -44,9 +44,10 @@ The middle column is the conversation. When something is wrong between
 PatterStage and the agent's gateway, a banner sits above it. Two of those
 banners appear wherever you are, because they mean your next message cannot go
 anywhere: the gateway is not responding, or the gateway answered but rejected
-PatterStage's key. Each one names what to do about it. Two more are advisory and
-only show on an empty conversation: one while the first connection check is
-still running, and one saying no model is ready for chat.
+PatterStage's key. Each one names what to do about it, and while the gateway is
+not responding the message box is disabled and says how to start it. Two more
+are advisory and only show on an empty conversation: one while the first
+connection check is still running, and one saying no model is ready for chat.
 
 Before the first message there is an empty state: the conversation's title, or
 "Chat with your agent" when nothing is selected yet, then a line describing the

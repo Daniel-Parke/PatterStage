@@ -92,6 +92,18 @@ The work leading to the 1.0.0 release.
 
 ### Changed
 
+- **The dashboard's badge says what the panel says.** The header read ONLINE
+  beside a Subsystems row reading "Gateway · Not running". The badge now
+  carries the gateway row's own word and colour, Healthy, Degraded or Not
+  running, with the reason in its tooltip, so the two cannot disagree.
+- **The line under every page title is prose.** It was set in the small
+  monospace the app keeps for paths and IDs; it reads in the body face now,
+  with any count in it still in tabular figures.
+- **Skills rows drop the word beside the switch.** "Active" restated what the
+  switch already showed and cost every row a line on a phone.
+- **One Push all.** The profile drift banner named the counts and carried its
+  own Push all button sixty pixels above the row of sync buttons that also
+  had one. The banner states the drift and points at the row.
 - **The dashboard asks each question once.** Loading the home screen made 22
   requests to the app's own API, four of them for facts it had already asked
   for, because two parts of the screen cached the same answer under different
@@ -331,6 +343,14 @@ The work leading to the 1.0.0 release.
 
 ### Fixed
 
+- **A failed chat run is said once.** The bubble already carried the reason
+  and Retry; a toast repeated the sentence over the box you were typing in.
+  The toast is gone, and in fast mode the model's own error is the bubble's
+  reason. Toasts that do appear on the chat screen sit above the composer.
+- **The gateway-offline notice is a banner, not a floating card.** It sat
+  centred in the transcript at 60% of the column, and wider than the column
+  on a phone. It is a full-width banner at the top now, and while the gateway
+  is not responding the message box is disabled and says how to start it.
 - **A phone keeps the page's name.** On Chat, Scripts and Skills the header's
   buttons took the title's row, so the name read "(" or "Scr…" and the line
   under it went one word per line. Below tablet width the buttons take their

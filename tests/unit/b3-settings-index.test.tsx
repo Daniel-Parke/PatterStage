@@ -7,6 +7,7 @@
  * Models, Restore and System; and it gains a search across every field.
  */
 import { fireEvent, render, screen, within } from "@testing-library/react";
+import { pageSubtitle } from "../helpers/page-subtitle";
 
 import { CONFIG_SECTIONS } from "@/lib/config-schema";
 
@@ -39,7 +40,8 @@ describe("the Settings index", () => {
     const ids = Object.keys(CONFIG_SECTIONS);
     const links = sectionLinks();
     expect(links.sort()).toEqual(ids.map((id) => `/agent/settings/${id}`).sort());
-    const subtitle = screen.getByText(/\d+ sections/);
+    const subtitle = pageSubtitle();
+    expect(subtitle).toHaveTextContent(/\d+ sections/);
     expect(subtitle.textContent).toContain(`${ids.length} sections`);
   });
 

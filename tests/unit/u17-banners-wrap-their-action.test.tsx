@@ -64,12 +64,14 @@ describe("U17 · banners wrap their action", () => {
     expect(retry).not.toHaveClass("sm:basis-auto");
   });
 
-  it("ProfilesDriftBanner: Push all wraps under the two sentences below sm", () => {
-    render(<ProfilesDriftBanner driftCount={2} errorCount={0} onPushAll={() => {}} pushing={false} />);
-    const button = screen.getByRole("button", { name: "Push all to Hermes" });
-    expect(button).toHaveClass("basis-full");
-    expect(button).toHaveClass("sm:basis-auto");
-    expect(button.parentElement).toHaveClass("flex-wrap");
+  it("ProfilesDriftBanner: the sentences have the whole width, because the action moved to the bar", () => {
+    // Its Push all wrapped under the sentences below sm in U17; U18 (T-0132)
+    // took the button out altogether, the bar under the banner being the one
+    // Push all (u18-one-push-all). What is left to hold is that the words
+    // are not sharing their row with anything.
+    render(<ProfilesDriftBanner driftCount={2} errorCount={0} />);
+    expect(screen.queryByRole("button")).toBeNull();
+    expect(screen.getByText(/2 profiles drifted/).parentElement).toHaveClass("flex-1");
   });
 
   it("ModelsDriftBanner: every line's controls wrap under its sentence below sm", () => {

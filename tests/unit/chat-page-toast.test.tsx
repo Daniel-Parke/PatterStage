@@ -2,18 +2,21 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 
 /**
- * Regression tests for the chat page's toast rendering.
+ * The chat page with the gateway offline.
  *
- * History: the chat page previously called `useToast()` to get
- * `showToast` but never rendered the returned `toastElement`. The result
- * was that *every* toast (delete success, gateway offline, chat error,
- * download success) was silent — no UI feedback. This test asserts the
- * bug stays fixed: triggering any toast-bearing code path must produce
- * a Toast element in the rendered output.
+ * History: this began as a regression test for the chat page's toast
+ * rendering. The page once called `useToast()` for `showToast` and never
+ * rendered the returned `toastElement`, so every toast was silent, and the
+ * test pressed Send with the gateway offline to see the "Gateway is offline"
+ * toast appear. FeedbackProvider owns the stack now (T-0096), and since U18
+ * (T-0132) an offline gateway disables the composer with the reason rather
+ * than accepting a message and toasting. What this suite holds is that
+ * contract, and that the toast stack is lifted above the composer while the
+ * screen is mounted.
  *
  * The page imports a lot of heavy dependencies (useGatewayHealth with
  * fetch timers, chat-utils with localStorage, sub-components), so we
- * mock aggressively to isolate the toast-rendering contract.
+ * mock aggressively.
  */
 import { render, screen, waitFor } from "@testing-library/react";
 

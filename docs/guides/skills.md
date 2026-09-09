@@ -61,7 +61,7 @@ line under them says which you are looking at ("1-24 of 60"), with the page
 number and **Prev** and **Next** beside it.
 
 A skill is one row: a green mark when it is on, its name, its description with
-the full text on hover, the word **Active** or **Inactive**, a switch, and two
+the full text on hover, a switch that is on when the skill is, and two
 buttons:
 
 - **Edit** opens the skill's own text in a box you can change.

@@ -9,6 +9,7 @@
 
 "use client";
 
+import { useEffect } from "react";
 import { MessageCircle, Send, Plus, X, Download, Square, Check } from "lucide-react";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
@@ -50,6 +51,7 @@ export default function ChatPage() {
     conversationError,
     reloadActiveConversation,
     gatewayUrl,
+    gatewayOnline,
     modelDetail,
     bannerStates,
     messages,
@@ -70,6 +72,18 @@ export default function ChatPage() {
   // requires a confirmation). First click arms; second click within 3s deletes.
   const deleteConfirm = useTwoStepConfirm({ autoDismissMs: 3000 });
 
+  // The toast stack rests above the composer on this screen, not over it: a
+  // toast at the foot of the viewport covered the box the operator was typing
+  // in (the review of 2026-09-08, T-0132). Toast reads the variable; it is
+  // set only while this screen is mounted.
+  useEffect(() => {
+    document.documentElement.style.setProperty("--ps-toast-lift", "5rem");
+    return () => {
+      document.documentElement.style.removeProperty("--ps-toast-lift");
+    };
+  }, []);
+
+  const gatewayOffline = gatewayOnline === false;
   const lastMessage = messages[messages.length - 1];
   const showTyping =
     isStreaming && lastMessage?.role === "assistant" && !lastMessage.content && !lastMessage.reasoning;
@@ -286,10 +300,16 @@ export default function ChatPage() {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={handleKeyDown}
+                  // Disabled with the reason where the words would go, rather
+                  // than accepting a message and toasting that it cannot be
+                  // sent (T-0132). The banner above says the same in full.
+                  disabled={gatewayOnline === false}
                   placeholder={
-                    isStreaming
-                      ? "Streaming… press Stop to interrupt"
-                      : "Type a message… (Enter to send, Shift+Enter for newline)"
+                    gatewayOffline
+                      ? "The gateway is offline. Start it with: hermes gateway start"
+                      : isStreaming
+                        ? "Streaming… press Stop to interrupt"
+                        : "Type a message… (Enter to send, Shift+Enter for newline)"
                   }
                   rows={1}
                   className="flex-1 bg-ps-surface-raised border border-ps-edge rounded-ps-md px-4 py-2.5 text-body text-ps-text-primary placeholder-ps-text-muted transition-colors font-mono resize-none"
@@ -302,7 +322,7 @@ export default function ChatPage() {
                 />
                 <button
                   onClick={isStreaming ? () => void handleStop() : () => void handleSend()}
-                  disabled={!input.trim() && !isStreaming}
+                  disabled={(!input.trim() && !isStreaming) || gatewayOffline}
                   className={`w-9 h-9 flex items-center justify-center rounded-ps-md border transition-colors ${
                     isStreaming
                       ? "bg-neon-red/20 border-neon-red/30 text-neon-red hover:bg-neon-red/30"

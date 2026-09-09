@@ -32,7 +32,7 @@
 // `contentHash(profile.userMd || "# User\n")` returned a real digest.
 // Null is never a digest, so a profile with no memories/USER.md was
 // drifted for ever and no pull could clear it. Only Push could, which
-// is why the banner's only CTA reads "Push all to Hermes". The operator
+// is why the banner points at Push all and nothing else. The operator
 // saw it directly: a "Pull all" that visibly worked, a profile's skills
 // going 183 to 218, and a banner that did not move.
 //

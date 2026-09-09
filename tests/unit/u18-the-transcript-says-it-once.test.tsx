@@ -80,7 +80,7 @@ function makeHarness(mode: "agent" | "fast") {
       model: "the-model",
       gatewayOnline: true,
     });
-    return { send, messages };
+    return { send, messages, setInput };
   };
 }
 
@@ -93,9 +93,12 @@ describe("U18 · the transcript says it once", () => {
   it("a failed send is the bubble's to say: no toast repeats it", async () => {
     (sendMessageApi as jest.Mock).mockResolvedValue({ ok: false, error: "POST /v1/runs → 500" });
     const { result } = renderHook(makeHarness("agent"));
-    await waitFor(() => expect(fetchConversation).toHaveBeenCalled());
+    // The load's last step is setModel; sending before it lands lets the
+    // load's setMessages wipe the failed pair.
+    await waitFor(() => expect(stable.setModel).toHaveBeenCalled());
+    act(() => result.current.setInput("hello"));
     await act(async () => {
-      await result.current.send.sendText("hello", []);
+      await result.current.send.handleSend();
     });
     const failed = result.current.messages.find((m) => m.role === "assistant");
     expect(failed?.status).toBe("failed");
@@ -115,9 +118,12 @@ describe("U18 · the transcript says it once", () => {
       },
     );
     const { result } = renderHook(makeHarness("fast"));
-    await waitFor(() => expect(fetchConversation).toHaveBeenCalled());
+    // The load's last step is setModel; sending before it lands lets the
+    // load's setMessages wipe the failed pair.
+    await waitFor(() => expect(stable.setModel).toHaveBeenCalled());
+    act(() => result.current.setInput("hello"));
     await act(async () => {
-      await result.current.send.sendText("hello", []);
+      await result.current.send.handleSend();
     });
     const failed = result.current.messages.find((m) => m.role === "assistant");
     expect(failed?.status).toBe("failed");

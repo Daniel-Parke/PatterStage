@@ -29,9 +29,10 @@ opened the tab. It is arranged top to bottom, health first, then work.
 uses. Under it, the agent framework driving this install, Hermes on a standard
 install, and the model that agent will use. If a model has been chosen in
 Models but not yet written to the agent, the line says so. On the right, a badge
-reading ONLINE, REMOTE or NOT INSTALLED, which reports NOT INSTALLED or REMOTE
-when the check says the agent is absent; until a check has said so, including
-while the board is still loading, the badge reads ONLINE. Beside it, a **?**
+that says what the Subsystems panel's first row says about the agent's
+gateway, in the same word and colour: Gateway · Healthy, Gateway · Degraded or
+Gateway · Not running, with the reason in its tooltip. An install with no
+agent and no reachable gateway reads NOT INSTALLED instead. Beside it, a **?**
 that opens the guide for whichever screen you are on.
 
 **Start here.** A card with one thing to do next, and only one. It names the
@@ -134,8 +135,9 @@ Subsystems panel reading "Checking…" has not had an answer yet, and a panel
 showing a failure with **Retry** means the check itself failed, which is a
 different thing from a subsystem being down. The panel reports the check most
 recently made, so it can flicker on a single failed probe; the Start here card
-waits for a settled reading before it speaks. The badge reads ONLINE until a
-check says otherwise, so it is showing ONLINE during the first load too.
+waits for a settled reading before it speaks. The header's badge carries the
+same word as the panel's Gateway row, so the two never disagree; before the
+first check has answered, the badge is empty.
 
 While the board loads, the header is drawn and the body is a skeleton the
 shape of the panels, rather than a spinner in an empty page.

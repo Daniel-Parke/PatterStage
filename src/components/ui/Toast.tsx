@@ -114,7 +114,10 @@ export function ToastView({
       role={type === "error" ? "alert" : "status"}
       aria-live={type === "error" ? "assertive" : "polite"}
       data-testid="toast"
-      style={{ bottom: `calc(1.5rem + ${index * STACK_STRIDE_REM}rem)` }}
+      // --ps-toast-lift: a screen with a composer at its foot sets it on the
+      // root while mounted, so the stack rests above the box the operator is
+      // typing in rather than over it (chat, T-0132). Unset, it is 0.
+      style={{ bottom: `calc(1.5rem + var(--ps-toast-lift, 0rem) + ${index * STACK_STRIDE_REM}rem)` }}
       className={`fixed right-6 z-[80] flex items-center gap-2 ${config.bg} border ${config.border} ${config.text} text-body font-mono px-4 py-2.5 rounded-ps-lg shadow-lg transition-all duration-200 ${
         visible ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"
       }`}

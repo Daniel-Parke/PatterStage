@@ -39,6 +39,26 @@ interface PageHeaderProps {
   actions?: React.ReactNode;
 }
 
+/**
+ * Prose in Inter, a count in mono (decision 10, T-0132). The subtitle was
+ * `font-mono text-micro` on every screen, which set "Talk to your Hermes
+ * agent" as if it were a path and was the largest single contributor to the
+ * mono share the census counts. A token is a count when it is digits, with
+ * the dots, commas and colons a number or a clock carries; a digit inside a
+ * word ("gpt-4o") is part of the word and stays in it.
+ */
+function subtitleNodes(text: string): React.ReactNode[] {
+  return text.split(/(\s+)/).map((token, i) =>
+    /^\d[\d.,:]*$/.test(token) ? (
+      <span key={i} className="font-mono tabular-nums">
+        {token}
+      </span>
+    ) : (
+      token
+    ),
+  );
+}
+
 export default function PageHeader({
   icon: Icon,
   title,
@@ -114,7 +134,8 @@ export default function PageHeader({
           // Truncated from sm up, where the header is one line and the row of
           // actions sits beside it; below sm it wraps, because an ellipsis on
           // a phone hid the words on every screen (T-0127 carried, T-0128).
-          <p className="ml-8 font-mono text-micro text-ps-text-muted sm:truncate">{subtitle}</p>
+          // Body prose, not a micro machine word: see subtitleNodes.
+          <p className="ml-8 text-body text-ps-text-muted sm:truncate">{subtitleNodes(subtitle)}</p>
         )}
       </div>
       {/*

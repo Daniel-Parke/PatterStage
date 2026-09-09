@@ -17,17 +17,10 @@ jest.mock("lucide-react", () => {
 
 import ProfilesDriftBanner from "@/components/profiles/ProfilesDriftBanner";
 
-const noop = () => undefined;
-
+// No onPushAll and no pushing since U18 (T-0132): the bar under the banner
+// owns the one Push all.
 function renderBanner(driftCount: number, errorCount: number) {
-  return render(
-    <ProfilesDriftBanner
-      driftCount={driftCount}
-      errorCount={errorCount}
-      onPushAll={noop}
-      pushing={false}
-    />,
-  );
+  return render(<ProfilesDriftBanner driftCount={driftCount} errorCount={errorCount} />);
 }
 
 describe("the profiles banner says what is actually wrong", () => {
@@ -65,10 +58,13 @@ describe("the profiles banner says what is actually wrong", () => {
     expect(text).toContain("1 sync error");
   });
 
-  it("still offers the action that fixes it", () => {
+  it("still names the action that fixes it, which lives in the bar below", () => {
     renderBanner(0, 1);
 
-    expect(screen.getByRole("button", { name: /push all/i })).toBeTruthy();
+    // The banner carried its own Push all button until U18 (T-0132); the bar
+    // under it has the one Push all now, and the sentence points at it.
+    expect(screen.queryByRole("button")).toBeNull();
+    expect(screen.getByText(/Push all/)).toBeTruthy();
   });
 
   it("GREEN CONTROL: renders nothing at all when nothing is wrong", () => {

@@ -139,11 +139,15 @@ function dash(gateway: "ok" | "down"): UseDashboardResult {
 }
 
 describe("a reachable gateway with no local install", () => {
-  it("says the work runs remotely instead of claiming nothing will run", () => {
+  it("says the gateway is healthy instead of claiming nothing will run", () => {
     mockUseDashboard.mockReturnValue(dash("ok"));
     const { container } = render(<Dashboard />);
 
-    expect(screen.getByText("REMOTE")).toBeInTheDocument();
+    // REMOTE until U18 (T-0132): the badge carries the Subsystems row's own
+    // word for the gateway now, and a reachable gateway is Healthy whether the
+    // install is local or not. The finding's claim is unchanged: nothing here
+    // says the agent is absent.
+    expect(screen.getByText("Gateway · Healthy")).toBeInTheDocument();
     expect(screen.queryByText("NOT INSTALLED")).toBeNull();
     // The badge's own tooltip is where the address is said.
     expect(container.querySelector(`[title*="${GATEWAY_URL}"]`)).not.toBeNull();
@@ -155,13 +159,16 @@ describe("a reachable gateway with no local install", () => {
   it("D57: one failed probe does not turn a remote install back into an absent one", () => {
     mockUseDashboard.mockReturnValue(dash("ok"));
     const view = render(<Dashboard />);
-    expect(screen.getByText("REMOTE")).toBeInTheDocument();
+    expect(screen.getByText("Gateway · Healthy")).toBeInTheDocument();
 
-    // The gateway is probed every fifteen seconds. A blip is a blip.
+    // The gateway is probed every fifteen seconds. A blip is a blip. Since
+    // U18 (T-0132) the badge says what the panel says, so the blip shows in
+    // both places for one poll, consistently; what D57 forbids, and what the
+    // settled facts still hold, is the blip claiming the agent is absent.
     mockUseDashboard.mockReturnValue(dash("down"));
     view.rerender(<Dashboard />);
 
-    expect(screen.getByText("REMOTE")).toBeInTheDocument();
+    expect(screen.getByText("Gateway · Not running")).toBeInTheDocument();
     expect(screen.queryByText("NOT INSTALLED")).toBeNull();
   });
 
@@ -170,6 +177,6 @@ describe("a reachable gateway with no local install", () => {
     render(<Dashboard />);
 
     expect(screen.getByText("NOT INSTALLED")).toBeInTheDocument();
-    expect(screen.queryByText("REMOTE")).toBeNull();
+    expect(screen.queryByText(/Gateway · /)).toBeNull();
   });
 });

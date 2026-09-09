@@ -148,25 +148,31 @@ export default function GatewayBanner({
       : "bg-neon-orange/10 border-neon-orange/20 text-neon-orange";
 
   return (
+    // A standing state is a banner: full width at the top of the transcript,
+    // announced. It rendered as a centred card 60% of the column wide,
+    // floating between the header and the first message, and at 390 wider
+    // than the column (the review of 2026-09-08, T-0132). Red is an alert,
+    // because the next message cannot go anywhere; orange is advisory.
     <div
-      className={`w-full max-w-md mx-auto mb-6 p-4 ${accent} border rounded-ps-md text-left`}
+      role={copy.tone === "red" ? "alert" : "status"}
+      className={`mb-4 flex w-full items-start gap-3 rounded-ps-lg border px-4 py-3 text-left ${accent}`}
     >
-      <div className="flex items-center gap-2 mb-1">
-        <AlertTriangle className="w-4 h-4" />
+      <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+      <div className="min-w-0 flex-1">
         <span className="text-body font-semibold">{copy.title}</span>
+        <p className="text-body text-ps-text-secondary">{renderBody(copy.body)}</p>
+        {/* One action, and one that exists. The remedy for every model state is
+            the same screen, so the banner takes the operator there rather than
+            describing three routes and leaving them to pick. */}
+        {status === "model-missing" && (
+          <Link
+            href={MODELS_HREF}
+            className="mt-2 inline-flex items-center rounded-ps-md border border-neon-orange/40 px-3 py-1.5 text-body font-medium text-neon-orange hover:bg-neon-orange/10"
+          >
+            Open models
+          </Link>
+        )}
       </div>
-      <p className="text-body text-ps-text-secondary">{renderBody(copy.body)}</p>
-      {/* One action, and one that exists. The remedy for every model state is
-          the same screen, so the banner takes the operator there rather than
-          describing three routes and leaving them to pick. */}
-      {status === "model-missing" && (
-        <Link
-          href={MODELS_HREF}
-          className="mt-3 inline-flex items-center rounded-ps-md border border-neon-orange/40 px-3 py-1.5 text-body font-medium text-neon-orange hover:bg-neon-orange/10"
-        >
-          Open models
-        </Link>
-      )}
     </div>
   );
 }

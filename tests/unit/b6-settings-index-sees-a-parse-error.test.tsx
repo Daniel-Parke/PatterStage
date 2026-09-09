@@ -28,6 +28,7 @@
 
 import React from "react";
 import { render, renderHook, screen, waitFor } from "@testing-library/react";
+import { pageSubtitle } from "../helpers/page-subtitle";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { useApiResource, type UseApiResourceOptions } from "@/hooks/useApiResource";
@@ -271,7 +272,7 @@ describe("the Settings index with a parse error", () => {
 
     expect(screen.queryByRole("alert")).toBeNull();
     expect(configuredPills()).toHaveLength(0);
-    expect(screen.getByText(/\d+ sections/)).toBeInTheDocument();
+    expect(pageSubtitle()).toHaveTextContent(/\d+ sections/);
   });
 
   it("GREEN CONTROL: a mock without the field still renders, and a present section still reads configured", () => {

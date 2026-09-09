@@ -66,9 +66,10 @@ export function SkillRow({
       <span className="min-w-0 flex-1 truncate text-body text-ps-text-muted" title={skill.description}>
         {skill.description}
       </span>
-      <span className={`shrink-0 font-mono text-micro ${enabled ? "text-neon-green/80" : "text-ps-text-faint"}`}>
-        {enabled ? "Active" : "Inactive"}
-      </span>
+      {/* No state word beside the switch: the switch says it, in its name
+          ("Disable web-search"), its checked state and its tone, and the
+          green mark at the row's start says it again; the word cost every row
+          a line on a phone (the review of 2026-09-08, T-0132). */}
       <InlineToggle
         data-testid="skill-toggle"
         value={enabled}
