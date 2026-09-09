@@ -10,6 +10,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import type { ModelRow } from "@/lib/models/model-types";
 import {
   Plus,
   Edit3,
@@ -31,15 +32,7 @@ import { apiFetch, setErrorFromCaught } from "@/lib/api-fetch";
  * Minimal model shape for the editor form — a subset of ApiModel
  * that omits defaults, createdAt, updatedAt (not editable in the form).
  */
-export interface ModelEditorRecord {
-  id: string;
-  name: string;
-  provider: string;
-  modelId: string;
-  baseUrl: string | null;
-  contextLength: number | null;
-  credentialsId: string | null;
-}
+export type ModelEditorRecord = ModelRow;
 
 interface ModelEditorProps {
   /** When null, the modal is in create mode. */

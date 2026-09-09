@@ -11,6 +11,9 @@ import { isTaskType, type TaskType } from "./models/task-types";
 import { getCredentialWithKey } from "./credentials-repository";
 import { emptyModelDefaults } from "./utils";
 import { inferApiStyle, normalizeApiStyle, type ApiStyle } from "./llm-endpoint";
+// Aliased: this file's own `ModelRow` is the SQLite row in snake_case; the
+// library's is the model as the product sees it (C2, T-0137).
+import type { ModelIdentity, ModelRow as StoredModel } from "./models/model-types";
 // ── Public types ────────────────────────────────────────────────
 
 export interface ModelDefaults {
@@ -28,14 +31,7 @@ export interface ModelDefaults {
   delegation: string | null;
 }
 
-export interface ModelRecord {
-  id: string;
-  name: string;
-  provider: string;
-  modelId: string;
-  baseUrl: string | null;
-  contextLength: number | null;
-  credentialsId: string | null;
+export interface ModelRecord extends StoredModel {
   /**
    * Wire protocol for the direct-provider path: "openai" (`/chat/completions`)
    * or "anthropic" (`/v1/messages`). Null ⇒ inferred from provider/baseUrl at
@@ -396,12 +392,8 @@ export function setDefaultModel(taskType: TaskType, modelId: string | null): Mod
  * For each task type in defaultSlots, sets this model as the default
  * for that slot.
  */
-export function upsertModel(input: {
+export function upsertModel(input: ModelIdentity & {
   name: string;
-  provider: string;
-  modelId: string;
-  baseUrl: string | null;
-  contextLength: number | null;
   defaultSlots: TaskType[];
 }): UpsertModelResult {
   const ts = now();

@@ -118,7 +118,10 @@ function writesWithoutMutation() {
 
 function repeatedTypeShapes() {
   const shapes = {
-    missionDraftFields: /suggestedToolsets\?: string\[\];/,
+    // Three lines, because a template also carries optional toolsets and a
+    // patch's updates carry the same names nullable; the draft is the one
+    // with optional goals and a plain string modelId under them.
+    missionDraftFields: /suggestedToolsets\?: string\[\];\s*\n\s*goals\?: string\[\];\s*\n\s*modelId\?: string;/,
     modelRow: /contextLength: number \| null;/,
     syncSourceFailure: /syncedCount: 0,\s*\n\s*error: String\(err\)/,
   };

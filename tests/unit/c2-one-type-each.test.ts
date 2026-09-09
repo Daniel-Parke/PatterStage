@@ -61,9 +61,10 @@ describe("C2 · one type each", () => {
     };
     const again: MissionDraftFields = mission;
     expect(again.suggestedToolsets).toEqual(["fs"]);
-    // Two lines: a template carries optional toolsets too, with required
-    // goals under them; the draft is the one with optional goals.
-    expect(filesSpelling(/suggestedToolsets\?: string\[\];\s*\n\s*goals\?: string\[\];/)).toEqual(["src/lib/missions/mission-types.ts"]);
+    // Three lines: a template carries optional toolsets too, with required
+    // goals under them, and a patch's updates carry the same names nullable;
+    // the draft is the one with optional goals and a plain string modelId.
+    expect(filesSpelling(/suggestedToolsets\?: string\[\];\s*\n\s*goals\?: string\[\];\s*\n\s*modelId\?: string;/)).toEqual(["src/lib/missions/mission-types.ts"]);
   });
 
   it("the model's identity is one type, and a record is one", () => {
@@ -72,7 +73,7 @@ describe("C2 · one type each", () => {
     const record: ModelRecord = {
       ...row,
       apiStyle: null,
-      origin: "manual",
+      origin: "user",
       lastImportedName: null,
       lastImportedBaseUrl: null,
       createdAt: "2026-06-01T00:00:00Z",

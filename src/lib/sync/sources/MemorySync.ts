@@ -13,6 +13,7 @@ import { setMultipleStats } from "@/lib/system-repository";
 import { getMemoryProviderType, getActiveMemoryProvider } from "@/lib/memory/memory-providers";
 import { logApiError } from "@/lib/api-logger";
 import type { SyncSource, SyncResult } from "@/lib/sync/types";
+import { syncFailure, syncSuccess } from "@/lib/sync/types";
 
 /** Get memory database file size. */
 function getMemoryDbSize(): string {
@@ -67,21 +68,10 @@ export class MemorySync implements SyncSource {
       // It is also derivable from `memory.provider`, which IS read: "Not
       // Installed" is exactly the unavailable case (T-0081).
 
-      return {
-        sourceName: this.name,
-        success: true,
-        syncedCount: 3,
-        durationMs: Math.round(performance.now() - start),
-      };
+      return syncSuccess(this.name, 3, start);
     } catch (err) {
       logApiError("MemorySync", "syncing memory stats", err);
-      return {
-        sourceName: this.name,
-        success: false,
-        syncedCount: 0,
-        error: String(err),
-        durationMs: Math.round(performance.now() - start),
-      };
+      return syncFailure(this.name, err, start);
     }
   }
 }

@@ -6,23 +6,11 @@
 // models/task-types.ts as the single source of truth.
 
 import type { ModelEditorRecord } from "./ModelEditor";
-import type { TaskType } from "@/lib/models/task-types";
-import type { ApiStyle } from "@/lib/llm-endpoint";
 
-export interface ApiModel {
-  id: string;
-  name: string;
-  provider: string;
-  modelId: string;
-  baseUrl: string | null;
-  contextLength: number | null;
-  credentialsId: string | null;
-  /** Direct-provider wire protocol (openai | anthropic); null ⇒ inferred at call time. */
-  apiStyle: ApiStyle | null;
-  defaults: Record<TaskType, string | null>;
-  createdAt: string;
-  updatedAt: string;
-}
+// The row is the library's (C2, T-0137); this file keeps the name its
+// importers use.
+import type { ApiModel } from "@/lib/models/model-types";
+export type { ApiModel };
 
 export interface ApiCredential {
   id: string;

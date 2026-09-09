@@ -8,18 +8,9 @@
 
 import { useApiResource } from "./useApiResource";
 
-/** Minimal shape of a model returned by /api/models. */
-export interface ApiModel {
-  id: string;
-  name: string;
-  provider: string;
-  modelId: string;
-  baseUrl: string | null;
-  contextLength: number | null;
-  credentialsId: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
+/** The row /api/models returns, spelled once in the library (C2, T-0137). */
+import type { ApiModel } from "@/lib/models/model-types";
+export type { ApiModel };
 
 /** Shape of defaults returned by /api/models/defaults. */
 export interface ApiDefaults {

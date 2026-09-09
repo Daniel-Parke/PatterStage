@@ -23,6 +23,7 @@ import { now } from "@/lib/db";
 import { insertErrorLogEntries, pruneErrorLogEntries } from "@/lib/sync/sync-repository";
 import { logApiError } from "@/lib/api-logger";
 import type { SyncSource, SyncResult } from "@/lib/sync/types";
+import { syncFailure, syncSuccess } from "@/lib/sync/types";
 
 /** Extract timestamp from a log line. Returns empty string if no match. */
 function extractTimestamp(line: string): string {
@@ -136,12 +137,7 @@ export class LogSync implements SyncSource {
       const allEntries = [...gatewayEntries, ...agentEntries];
 
       if (allEntries.length === 0) {
-        return {
-          sourceName: this.name,
-          success: true,
-          syncedCount: 0,
-          durationMs: Math.round(performance.now() - start),
-        };
+        return syncSuccess(this.name, 0, start);
       }
 
       // Deduplicate: use (source + timestamp + first 80 chars of message) as dedup key
@@ -159,21 +155,10 @@ export class LogSync implements SyncSource {
       // Prune old entries — keep only the most recent 500
       pruneErrorLogEntries();
 
-      return {
-        sourceName: this.name,
-        success: true,
-        syncedCount: uniqueEntries.length,
-        durationMs: Math.round(performance.now() - start),
-      };
+      return syncSuccess(this.name, uniqueEntries.length, start);
     } catch (err) {
       logApiError("LogSync", "syncing error logs", err);
-      return {
-        sourceName: this.name,
-        success: false,
-        syncedCount: 0,
-        error: String(err),
-        durationMs: Math.round(performance.now() - start),
-      };
+      return syncFailure(this.name, err, start);
     }
   }
 }

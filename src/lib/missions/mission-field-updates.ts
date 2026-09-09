@@ -6,27 +6,13 @@ import { normaliseMissionName } from "@/lib/missions/mission-name";
 import { buildMissionPrompt, parseMissionPrompt } from "@/lib/missions/build-mission-prompt";
 import { normalizeLocalDirsInput } from "@/lib/fs/local-dir-entry";
 import type { LocalDirEntry } from "@/types/console";
-import type { Mission } from "@/lib/missions/mission-types";
-import type { MissionStatus } from "@/lib/missions/mission-types";
+import type { Mission, MissionDraftFields, MissionStatus } from "@/lib/missions/mission-types";
 
-export interface MissionFieldPatchInput {
+export interface MissionFieldPatchInput extends MissionDraftFields {
   name?: string;
   instruction?: string;
   context?: string;
   localDirs?: unknown;
-  references?: string[];
-  skills?: string[];
-  suggestedToolsets?: string[];
-  goals?: string[];
-  modelId?: string;
-  provider?: string;
-  profileName?: string;
-  missionTimeMinutes?: number;
-  timeoutMinutes?: number;
-  schedule?: string;
-  categoryId?: string | null;
-  outputFormat?: string;
-  constraints?: string;
   status?: string;
   result?: string;
   queuedForRun?: boolean;

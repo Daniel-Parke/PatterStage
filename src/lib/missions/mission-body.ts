@@ -8,26 +8,14 @@
 
 import { parseTimeoutMinutes } from "@/lib/missions/mission-timeout";
 import { findModelByModelId } from "../models-repository";
+import type { MissionDraftFields } from "@/lib/missions/mission-types";
 
 /** Shared fields destructured from mission action body (dispatch/promote/update). */
-export interface MissionBodyFields {
+export interface MissionBodyFields extends MissionDraftFields {
   name?: string;
   instruction?: string;
   context?: string;
   localDirs?: unknown;
-  references?: string[];
-  skills?: string[];
-  suggestedToolsets?: string[];
-  goals?: string[];
-  modelId?: string;
-  provider?: string;
-  profileName?: string;
-  missionTimeMinutes?: number;
-  timeoutMinutes?: number;
-  schedule?: string;
-  categoryId?: string | null;
-  outputFormat?: string;
-  constraints?: string;
 }
 
 /**

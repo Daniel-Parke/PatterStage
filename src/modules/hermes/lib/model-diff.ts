@@ -12,6 +12,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import type { HermesConfigModelEntry } from "./hermes-config-read";
+import type { ModelIdentity } from "@/lib/models/model-types";
 
 export interface ModelDiff {
   field: string;
@@ -33,12 +34,7 @@ export interface ModelDiffResult {
  * because the diff is also shown for a section found another way.
  */
 export function diffModelAgainstHermes(
-  model: {
-    modelId: string;
-    provider: string;
-    baseUrl: string | null;
-    contextLength: number | null;
-  },
+  model: ModelIdentity,
   hermes: HermesConfigModelEntry,
 ): ModelDiffResult {
   const diffs: ModelDiff[] = [];

@@ -5,6 +5,7 @@
 import { runMissionQueueTick } from "@/lib/missions/mission-queue-tick";
 import { logApiError } from "@/lib/api-logger";
 import type { SyncSource, SyncResult } from "@/lib/sync/types";
+import { syncFailure } from "@/lib/sync/types";
 
 export class MissionQueueSync implements SyncSource {
   readonly name = "mission-queue";
@@ -36,13 +37,7 @@ export class MissionQueueSync implements SyncSource {
       };
     } catch (err) {
       logApiError("MissionQueueSync", "sync", err);
-      return {
-        sourceName: this.name,
-        success: false,
-        syncedCount: 0,
-        error: String(err),
-        durationMs: Math.round(performance.now() - start),
-      };
+      return syncFailure(this.name, err, start);
     }
   }
 }

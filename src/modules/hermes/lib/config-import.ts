@@ -20,6 +20,7 @@
 //   - Credentials are only created if a model for that provider exists
 
 import { createHash } from "crypto";
+import type { ModelIdentity } from "@/lib/models/model-types";
 import { existsSync, readFileSync } from "fs";
 import * as yaml from "js-yaml";
 
@@ -37,7 +38,7 @@ interface ParsedCredential {
   importKey: string;
 }
 
-interface ParsedModel {
+interface ParsedModel extends Omit<ModelIdentity, "provider"> {
   /**
    * Stable key used for upsert — SHA-256(provider + model_id), first 16 hex.
    * Used to detect "same model, already imported" across runs.
@@ -45,9 +46,6 @@ interface ParsedModel {
   importKey: string;
   name: string;
   provider: HermesProvider;
-  modelId: string;
-  baseUrl: string | null;
-  contextLength: number | null;
   /** Task types this model should be the default for. Empty = no defaults. */
   defaultSlots: TaskType[];
 }

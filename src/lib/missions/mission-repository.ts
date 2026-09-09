@@ -9,7 +9,7 @@ import { join } from "path";
 import { getDb, inTransaction, uuid, now } from "../db";
 import { safeJsonParse } from "../utils";
 import { PATHS } from "../paths";
-import type { Mission, MissionStatus } from "@/lib/missions/mission-types";
+import type { Mission, MissionStatus, MissionDraftFields } from "@/lib/missions/mission-types";
 // Type-only, so it is erased at compile time and no runtime cycle is
 // created with the audit module that consumes these two functions.
 import type { ForeignMissionModelRow } from "@/lib/missions/mission-model-audit";
@@ -145,25 +145,12 @@ export function getMission(id: string): Mission | null {
   return rowToMission(row);
 }
 
-export function createMission(data: {
+export function createMission(data: MissionDraftFields & {
   name: string;
   prompt: string;
   profileId?: string;
   localDirs?: LocalDirEntry[] | string[];
-  references?: string[];
-  skills?: string[];
-  suggestedToolsets?: string[];
-  goals?: string[];
-  modelId?: string;
-  provider?: string;
-  profileName?: string;
-  missionTimeMinutes?: number;
-  timeoutMinutes?: number;
-  schedule?: string;
   cronJobId?: string;
-  categoryId?: string | null;
-  outputFormat?: string;
-  constraints?: string;
 }): Mission {
   const id = uuid();
   const ts = now();

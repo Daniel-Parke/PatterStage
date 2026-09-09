@@ -1,17 +1,17 @@
 {
   "measuredAt": "2026-09-09",
   "counts": {
-    "srcLines": 106405,
-    "testLines": 121926,
-    "srcRepeatedWindowLines": 1358,
+    "srcLines": 106274,
+    "testLines": 122030,
+    "srcRepeatedWindowLines": 1192,
     "testRepeatedWindowLines": 6028,
     "routesWithTryCatch": 13,
     "handRolledReadHooks": 5,
     "writeHooksWithoutMutation": 4,
-    "repeatedTypeShapeFiles": 23,
+    "repeatedTypeShapeFiles": 2,
     "oneImporterComponents": 130,
     "libRootFiles": 72,
-    "commentEssays": 107,
+    "commentEssays": 108,
     "suitesMockingDbInline": 100
   },
   "allowed": [
@@ -34,6 +34,16 @@
       "measuredAt": "2026-09-09",
       "rise": "testLines rose from 121915 to 121926",
       "reason": "C1 (T-0136): four suites that read the handler spelling say why they read two"
+    },
+    {
+      "measuredAt": "2026-09-09",
+      "rise": "testLines rose from 121926 to 122030",
+      "reason": "C2 (T-0137): the oracle suite adds its lines to tests; src/components/models/types.ts lost fourteen code lines to the library's ApiModel and kept its comments, so it crossed the essay line without gaining a comment"
+    },
+    {
+      "measuredAt": "2026-09-09",
+      "rise": "commentEssays rose from 107 to 108",
+      "reason": "C2 (T-0137): the oracle suite adds its lines to tests; src/components/models/types.ts lost fourteen code lines to the library's ApiModel and kept its comments, so it crossed the essay line without gaining a comment"
     }
   ]
 }

@@ -17,28 +17,15 @@ import { enrichedMission } from "@/lib/missions/mission-response";
 import { logApiError } from "@/lib/api-logger";
 import { isMissionDraft, isMissionQueuedForRun } from "@/lib/missions/mission-board";
 import { DISPATCH_MODES, parseDispatchMode } from "@/lib/dispatch-mode";
-import type { Mission } from "@/lib/missions/mission-types";
+import type { Mission, MissionDraftFields } from "@/lib/missions/mission-types";
 
-export interface PromoteMissionInput {
+export interface PromoteMissionInput extends MissionDraftFields {
   missionId: string;
   dispatchMode: string;
-  schedule?: string;
   name?: string;
   instruction?: string;
   context?: string;
   localDirs?: unknown;
-  references?: string[];
-  skills?: string[];
-  suggestedToolsets?: string[];
-  goals?: string[];
-  modelId?: string;
-  provider?: string;
-  profileName?: string;
-  missionTimeMinutes?: number;
-  timeoutMinutes?: number;
-  categoryId?: string | null;
-  outputFormat?: string;
-  constraints?: string;
 }
 
 export type PromoteMissionResult =

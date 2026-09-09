@@ -24,6 +24,7 @@ import { getActiveHermesPaths } from "../lib/agent-runtime";
 import { setMultipleStats } from "@/lib/system-repository";
 import { logApiError } from "@/lib/api-logger";
 import type { SyncSource, SyncResult } from "@/lib/sync/types";
+import { syncFailure, syncSuccess } from "@/lib/sync/types";
 
 async function fileExists(path: string): Promise<boolean> {
   try {
@@ -57,12 +58,7 @@ export class ConfigSync implements SyncSource {
           "config.soul_present": soulPresent,
           "config.yaml_error": "",
         });
-        return {
-          sourceName: this.name,
-          success: true,
-          syncedCount: 2,
-          durationMs: Math.round(performance.now() - start),
-        };
+        return syncSuccess(this.name, 2, start);
       }
 
       const raw = await readFile(configPath, "utf-8");
@@ -99,12 +95,7 @@ export class ConfigSync implements SyncSource {
           "config.present": "true",
           "config.yaml_error": message,
         });
-        return {
-          sourceName: this.name,
-          success: true,
-          syncedCount: 0,
-          durationMs: Math.round(performance.now() - start),
-        };
+        return syncSuccess(this.name, 0, start);
       }
       // Parsed cleanly — clear any prior malformed-config alert + log gate.
       lastYamlErrorSignature = null;
@@ -126,21 +117,10 @@ export class ConfigSync implements SyncSource {
         "config.yaml_error": "",
       });
 
-      return {
-        sourceName: this.name,
-        success: true,
-        syncedCount: 2,
-        durationMs: Math.round(performance.now() - start),
-      };
+      return syncSuccess(this.name, 2, start);
     } catch (err) {
       logApiError("ConfigSync", "syncing config", err);
-      return {
-        sourceName: this.name,
-        success: false,
-        syncedCount: 0,
-        error: String(err),
-        durationMs: Math.round(performance.now() - start),
-      };
+      return syncFailure(this.name, err, start);
     }
   }
 }

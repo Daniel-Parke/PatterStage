@@ -14,6 +14,7 @@ import { deleteAllAgentProcesses, insertAgentProcesses } from "@/lib/sync/sync-r
 import { setSystemStat } from "@/lib/system-repository";
 import { logApiError } from "@/lib/api-logger";
 import type { SyncSource, SyncResult } from "@/lib/sync/types";
+import { syncFailure, syncSuccess } from "@/lib/sync/types";
 
 interface ParsedProcess {
   id: string;
@@ -177,21 +178,10 @@ export class ProcessSync implements SyncSource {
         // /proc/uptime not available (non-Linux) — skip silently
       }
 
-      return {
-        sourceName: this.name,
-        success: true,
-        syncedCount: processes.length,
-        durationMs: Math.round(performance.now() - start),
-      };
+      return syncSuccess(this.name, processes.length, start);
     } catch (err) {
       logApiError("ProcessSync", "syncing processes", err);
-      return {
-        sourceName: this.name,
-        success: false,
-        syncedCount: 0,
-        error: String(err),
-        durationMs: Math.round(performance.now() - start),
-      };
+      return syncFailure(this.name, err, start);
     }
   }
 }

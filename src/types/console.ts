@@ -19,6 +19,8 @@ import type { SchedulerHealth } from "@/lib/orchestration/scheduler/health";
 
 // ── API Response Envelope ──────────────────────────────────────
 
+import type { MissionDraftFields } from "@/lib/missions/mission-types";
+
 export interface ApiResponse<T> {
   data?: T;
   error?: string;
@@ -184,30 +186,19 @@ export interface AgentProfile {
 
 // ── Mission ─────────────────────────────────────────────────
 
-export interface Mission {
+// The draft's fields are the domain type's (C2, T-0137); this is the API
+// row the client reads, with `model` beside `modelId` and a string status.
+export interface Mission extends MissionDraftFields {
   id: string;
   name: string;
   prompt: string;
   profileId?: string;
-  profileName?: string;
   status: string;
   result?: string;
   sessionId?: string;
   localDirs?: LocalDirEntry[];
-  references?: string[];
-  skills?: string[];
-  suggestedToolsets?: string[];
-  goals?: string[];
-  modelId?: string;
-  provider?: string;
   model?: string;
-  missionTimeMinutes?: number;
-  timeoutMinutes?: number;
-  schedule?: string;
   cronJobId?: string;
-  categoryId?: string | null;
-  outputFormat?: string;
-  constraints?: string;
   queuedForRun?: boolean;
   createdAt: string;
   updatedAt: string;

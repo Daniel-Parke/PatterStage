@@ -17,6 +17,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { existsSync, readFileSync } from "fs";
+import type { ModelIdentity } from "@/lib/models/model-types";
 import * as yaml from "js-yaml";
 
 import { modelKey } from "@/lib/model-key";
@@ -90,12 +91,7 @@ export function loadHermesConfigFromString(content: string): HermesConfig {
  * Shared by sync-manager.ts (drift detection) and the sync/pull route
  * (per-model pull from Hermes config → DB).
  */
-export interface HermesConfigModelEntry {
-  modelId: string;
-  provider: string;
-  baseUrl: string | null;
-  contextLength: number | null;
-}
+export type HermesConfigModelEntry = ModelIdentity;
 
 export function readHermesConfigModels(): Map<string, HermesConfigModelEntry> {
   const config = readHermesYamlConfig<Record<string, unknown>>();

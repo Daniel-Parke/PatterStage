@@ -11,6 +11,7 @@ import { getAgentWorkspace } from "@/lib/runtime/workspace";
 import { upsertGatewayPlatforms } from "@/lib/sync/sync-repository";
 import { logApiError } from "@/lib/api-logger";
 import type { SyncSource, SyncResult } from "@/lib/sync/types";
+import { syncFailure, syncSuccess } from "@/lib/sync/types";
 
 /** Parse .env content into a key-value map. */
 function parseEnvVars(content: string): Record<string, string> {
@@ -47,12 +48,7 @@ export class EnvSync implements SyncSource {
         envExists = false;
       }
       if (!envExists) {
-        return {
-          sourceName: this.name,
-          success: true,
-          syncedCount: 0,
-          durationMs: Math.round(performance.now() - start),
-        };
+        return syncSuccess(this.name, 0, start);
       }
 
       const content = await readFile(envPath, "utf-8");
@@ -96,21 +92,10 @@ export class EnvSync implements SyncSource {
       const now = new Date().toISOString();
       upsertGatewayPlatforms(platforms, now);
 
-      return {
-        sourceName: this.name,
-        success: true,
-        syncedCount: platforms.length,
-        durationMs: Math.round(performance.now() - start),
-      };
+      return syncSuccess(this.name, platforms.length, start);
     } catch (err) {
       logApiError("EnvSync", "syncing env", err);
-      return {
-        sourceName: this.name,
-        success: false,
-        syncedCount: 0,
-        error: String(err),
-        durationMs: Math.round(performance.now() - start),
-      };
+      return syncFailure(this.name, err, start);
     }
   }
 }

@@ -14,7 +14,31 @@ import type { LocalDirEntry } from "@/types/console";
 
 export type MissionStatus = "queued" | "dispatched" | "successful" | "failed";
 
-export interface Mission {
+/**
+ * The fields a mission draft carries beyond its name and prompt: what it
+ * may read, what it may use, which model and profile answer, how long it
+ * has, and when it runs. Spelled once here (C2, T-0137); a Mission, the
+ * body a route reads, the patch a field update takes, the input a promote
+ * takes and the row the repository creates all extend it, where they used
+ * to each spell the ten lines.
+ */
+export interface MissionDraftFields {
+  references?: string[];
+  skills?: string[];
+  suggestedToolsets?: string[];
+  goals?: string[];
+  modelId?: string;
+  provider?: string;
+  profileName?: string;
+  missionTimeMinutes?: number;
+  timeoutMinutes?: number;
+  schedule?: string;
+  categoryId?: string | null;
+  outputFormat?: string;
+  constraints?: string;
+}
+
+export interface Mission extends MissionDraftFields {
   id: string;
   name: string;
   prompt: string;
@@ -26,21 +50,8 @@ export interface Mission {
   createdAt: string;
   updatedAt: string;
   localDirs?: LocalDirEntry[];
-  references?: string[];
-  skills?: string[];
-  suggestedToolsets?: string[];
-  goals?: string[];
-  modelId?: string;
-  provider?: string;
-  profileName?: string;
-  missionTimeMinutes?: number;
-  timeoutMinutes?: number;
-  schedule?: string;
   /** ID of the linked cron job (legacy recurring path; superseded by schedules). */
   cronJobId?: string;
-  categoryId?: string | null;
-  outputFormat?: string;
-  constraints?: string;
   /** True when dispatchMode=queue and waiting for the queue worker; false for save drafts. */
   queuedForRun?: boolean;
 }
