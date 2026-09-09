@@ -49,7 +49,12 @@ export function RailFooter({ collapsed }: { collapsed: boolean }) {
   const behind = !u || u.checkFailed ? null : u.updateAvailable ? Math.max(1, u.behind ?? 1) : 0;
 
   const updateAvailable = behind !== null && behind > 0;
-  const line = version ? `v${version}${gitHash && gitHash !== "unknown" ? ` · ${gitHash}` : ""}` : null;
+  // The version alone in the rail: with the commit beside it the line
+  // truncated to "v0.1.0 ·…" at 224px, which said less than the version
+  // alone (the review of 2026-09-08, P4). The commit is the tooltip's, and
+  // Settings › System's, where it already was (T-0134).
+  const line = version ? `v${version}` : null;
+  const detail = version ? `v${version}${gitHash && gitHash !== "unknown" ? ` · ${gitHash}` : ""}` : null;
 
   const badge = updateAvailable ? (
     <Link
@@ -66,7 +71,7 @@ export function RailFooter({ collapsed }: { collapsed: boolean }) {
   return (
     <span className="flex items-center gap-1.5 min-w-0">
       {badge}
-      <span className="text-micro font-mono text-ps-text-faint truncate" title={line ?? undefined}>
+      <span className="text-micro font-mono text-ps-text-faint truncate" title={detail ?? undefined}>
         {line ?? ""}
       </span>
     </span>

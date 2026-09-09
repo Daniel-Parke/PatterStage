@@ -152,19 +152,23 @@ describe("topNTemplates", () => {
     expect(result).not.toBe(input); // defensive copy, not the same reference
   });
 
-  it("caps at the default 12 when more templates are provided", () => {
+  // The default cap was 12 until U20 (T-0134): at 900px tall the strip was
+  // cut at the fold. It is six, one row, and DispatchStrip reads the same
+  // constant.
+  it("caps at the default 6 when more templates are provided", () => {
     const input: DashboardTemplate[] = Array.from({ length: 20 }, (_, i) =>
       makeTemplate({ id: `tpl-${i}`, name: `Template ${i}` }),
     );
     const result = topNTemplates(input);
-    expect(result).toHaveLength(12);
+    expect(result).toHaveLength(6);
   });
 
   it("sorts custom templates first, then alphabetical by name", () => {
-    // We need MORE than n entries (default 12) to force the sort path;
-    // otherwise the no-op fast path returns [...templates] in input
-    // order and the sort never runs. 13 entries, cap 12 → 1 entry is
-    // dropped (the last in sorted order).
+    // We need MORE than n entries to force the sort path; otherwise the
+    // no-op fast path returns [...templates] in input order and the sort
+    // never runs. 13 entries at the explicit cap of 12 → 1 entry is dropped
+    // (the last in sorted order). The cap is passed, since U20 moved the
+    // default to six; the ladder under test is the same.
     const input: DashboardTemplate[] = [
       makeTemplate({ id: "0", name: "Z-extra", isCustom: false }),
       makeTemplate({ id: "1", name: "Zebra", isCustom: false }),
@@ -180,7 +184,7 @@ describe("topNTemplates", () => {
       makeTemplate({ id: "11", name: "Filler2", isCustom: false }),
       makeTemplate({ id: "12", name: "Filler3", isCustom: false }),
     ];
-    const result = topNTemplates(input);
+    const result = topNTemplates(input, 12);
     // Verified with plain-node sort: customs sort first (Apple, B,
     // Banana, E1), then non-customs alphabetically (C, D, E2, Filler1,
     // Filler2, Filler3, Mango, Z-extra, Zebra). The cap drops the
@@ -210,7 +214,8 @@ describe("topNTemplates", () => {
   });
 
   it("treats missing names as empty strings for sort", () => {
-    // 13 entries (default n=12) so the sort path is exercised; the
+    // 13 entries at an explicit cap of 12 (the default is six since U20,
+    // T-0134) so the sort path is exercised; the
     // no-op fast path returns [...input] in input order, which would
     // mask the sort behaviour.
     const input: DashboardTemplate[] = [
@@ -231,7 +236,7 @@ describe("topNTemplates", () => {
     // Verified with plain-node sort: localeCompare puts "" BEFORE
     // non-empty strings, so the empty-name entry sorts FIRST. The
     // cap drops the LAST sorted entry (F9), keeping 12 in the result.
-    const result = topNTemplates(input);
+    const result = topNTemplates(input, 12);
     expect(result).toHaveLength(12);
     expect(result[0].name).toBeUndefined();
     // Every entry from index 1 onwards must have a non-empty name.

@@ -214,13 +214,18 @@ export default function DeepResearchPage() {
               <Select value={cfg.modelId ?? ""} onChange={(v) => setCfg({ ...cfg, modelId: v })} options={modelOptions} />
             </Field>
           </div>
-          <Field label="Search">
-            <Select
-              value={cfg.searchProvider ?? "duckduckgo"}
-              onChange={(v) => setCfg({ ...cfg, searchProvider: v })}
-              options={PROVIDERS}
-            />
-          </Field>
+          {/* Search takes the row below lg, so the two numbers pair on the
+              next one; at 390 Breadth sat alone on a third row (the review of
+              2026-09-08, P4, T-0134). */}
+          <div className="col-span-2 lg:col-span-1">
+            <Field label="Search">
+              <Select
+                value={cfg.searchProvider ?? "duckduckgo"}
+                onChange={(v) => setCfg({ ...cfg, searchProvider: v })}
+                options={PROVIDERS}
+              />
+            </Field>
+          </div>
           <Field label="Depth" hint="rounds">
             <Input
               type="number"

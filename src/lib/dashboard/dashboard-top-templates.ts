@@ -28,27 +28,33 @@ export interface TemplateForStrip {
   isCustom?: boolean;
 }
 
-const DEFAULT_STRIP_CAP = 12;
+/**
+ * How many templates the dashboard's collapsed strip shows before "+N more".
+ * Twelve until T-0134: at 900px tall the strip was cut at the fold and only
+ * its first row of pills was visible (the review of 2026-09-08, P4). Six is
+ * one row at 1440, and the strip is what one reads to launch, not the
+ * catalogue. DispatchStrip reads this rather than carrying its own number.
+ */
+export const DASHBOARD_STRIP_CAP = 6;
 
 /**
- * Return the top `n` templates (default 12) for the dashboard's
- * collapsed template strip, ordered by the priority ladder:
+ * Return the top `n` templates (default DASHBOARD_STRIP_CAP) for the
+ * dashboard's collapsed template strip, ordered by the priority ladder:
  * custom templates first, then alphabetical by name (with
  * undefined names sorted last as empty strings).
  *
  * The input is not mutated. When `templates.length <= n`, the
  * original array is returned unchanged (a no-op fast path so the
  * dashboard's `useMemo` doesn't re-allocate on the common
- * ≤-12-templates case).
+ * few-templates case).
  *
  * @param templates - The full template list (already filtered by the
  *                    active category, if any)
- * @param n         - The cap; defaults to 12 (the dashboard's
- *                    "Mission Dispatch" strip width)
+ * @param n         - The cap; defaults to DASHBOARD_STRIP_CAP
  */
 export function topNTemplates<T extends TemplateForStrip>(
   templates: readonly T[],
-  n: number = DEFAULT_STRIP_CAP,
+  n: number = DASHBOARD_STRIP_CAP,
 ): T[] {
   if (templates.length <= n) return [...templates];
   const sorted = [...templates].sort((a, b) => {

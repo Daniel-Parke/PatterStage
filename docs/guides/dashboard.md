@@ -77,7 +77,7 @@ and a link to **open transcript**. **Session browser** on the right opens the
 full list.
 
 **Launch a Mission.** A strip of mission templates. Clicking one opens the
-mission compose form with that template already selected. Up to twelve are
+mission compose form with that template already selected. Up to six are
 shown, your own templates first, then alphabetically; if you have more there is
 a "+N more" control that expands the strip into every template grouped by
 category. **full control** opens Missions.

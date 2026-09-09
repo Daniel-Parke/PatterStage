@@ -92,6 +92,12 @@ The work leading to the 1.0.0 release.
 
 ### Changed
 
+- **Four small things, each a line.** The sidebar's version line shows the
+  version alone (the commit is in its tooltip and on Settings › System)
+  instead of truncating both. Research's Search picker takes its own row on
+  a phone so Depth and Breadth sit together. The Story Weaver title field
+  uses the same face as every other field. The dashboard's Launch a Mission
+  strip shows six templates and "+N more" rather than twelve cut at the fold.
 - **The missions board comes first.** The Quick load template panel sat
   above the board and pushed it 500 pixels down the busiest screen. It is a
   closed panel now that says how many templates you have and opens on demand,

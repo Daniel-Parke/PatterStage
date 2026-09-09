@@ -24,7 +24,7 @@ import {
 } from "@/lib/missions/mission-categories";
 import type { MissionCategory } from "@/lib/missions/mission-category-repository";
 import type { DashboardTemplate } from "@/hooks/useDashboard";
-import { topNTemplates } from "@/lib/dashboard/dashboard-top-templates";
+import { DASHBOARD_STRIP_CAP, topNTemplates } from "@/lib/dashboard/dashboard-top-templates";
 import type { AccentColor } from "@/types/console";
 
 /**
@@ -96,12 +96,12 @@ export default function DispatchStrip({ templates, categories }: DispatchStripPr
           {collapsedStrip.map((t) => (
             <TemplatePill key={t.id} t={t} onSelect={() => select(t.id)} />
           ))}
-          {templates.length > 12 && (
+          {templates.length > DASHBOARD_STRIP_CAP && (
             <button
               onClick={open}
               className="inline-flex items-center gap-1 px-2 py-1.5 rounded-ps-md text-micro font-mono text-ps-text-muted hover:text-neon-cyan transition-colors"
             >
-              +{templates.length - 12} more
+              +{templates.length - DASHBOARD_STRIP_CAP} more
             </button>
           )}
         </div>

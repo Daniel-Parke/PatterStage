@@ -571,7 +571,10 @@ function CreateStoryPage() {
                 setTitleManuallyEdited(true);
               }}
               placeholder="Give your story a name..."
-              className="font-serif text-lead font-semibold"
+              // The house register, not the reader's serif: a field is
+              // operated, not read, and the serif on this one field alone
+              // read as a different product (the review of 2026-09-08, P4).
+              className="text-lead font-semibold"
             />
           </Field>
         </Card>
