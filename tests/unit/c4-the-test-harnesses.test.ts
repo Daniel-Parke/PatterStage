@@ -117,7 +117,7 @@ describe("the factories behave the way the stanzas they replace behaved", () => 
       // longer one, or a sub-route would answer with its parent's body.
       expect(await (await fetch("/api/models/defaults?taskType=agent")).json()).toEqual({ data: { defaults: {} } });
       await expect(fetch("/api/nothing")).rejects.toThrow(/Unmatched fetch/);
-      expect(mock).toHaveBeenCalledTimes(3);
+      expect(mock).toHaveBeenCalledTimes(4);
       const fallen = fetchMap({}, { fallback: (url) => (url.includes("/drift") ? { body: { data: null } } : undefined) });
       expect(await (await fetch("/api/models/sync/drift")).json()).toEqual({ data: null });
       expect(fallen).toHaveBeenCalledTimes(1);
