@@ -112,7 +112,9 @@ describe("C0 · the line census", () => {
     const recon = read("org/reviews/2026-09-consolidation-recon.md");
     expect(recon).toMatch(/^status: done$/m);
     const plan = read("org/plans/2026-09-consolidation.md");
-    expect(plan).toMatch(/^status: approved$/m);
+    // `approved` while the programme ran, `done` once C8 closed it (T-0145).
+    // Anything else means the plan was filed without a ruling or edited by hand.
+    expect(plan).toMatch(/^status: (?:approved|done)$/m);
     expect(plan).toMatch(/line-census/);
     for (const m of ["srcLines", "testLines", "routesWithTryCatch", "oneImporterComponents", "libRootFiles"]) {
       expect(plan).toContain(m);

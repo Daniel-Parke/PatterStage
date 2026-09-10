@@ -24,7 +24,7 @@ import type { AccentColor } from "@/types/console";
 type Glyph = ComponentType<{ className?: string }>;
 
 /** One entry: its left half, and the three things a row can do to it. */
-export interface LibraryRow {
+interface LibraryRow {
   key: string;
   /** The entry's own name, which is what the edit and delete labels are built from. */
   name: string;

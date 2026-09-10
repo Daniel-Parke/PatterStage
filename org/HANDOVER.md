@@ -52,7 +52,7 @@ plan header says so.
 | Measure | Plan start | Now | Target |
 | --- | --- | --- | --- |
 | src lines | 107,123 | 100,881 | ≤ 98,000 (missed by 2,881) |
-| tests lines | 121,651 | 121,112 | ≤ 116,000 (missed by 5,112) |
+| tests lines | 121,651 | 121,114 | ≤ 116,000 (missed by 5,114) |
 | src lines in a repeated window | 1,416 | 1,000 | ≤ 600 (missed by 400) |
 | tests lines in a repeated window | 6,028 | 4,343 | ≤ 2,500 (missed by 1,843) |
 | routes with their own try/catch | 82 | 13 | ≤ 13 (met, corrected at C1) |

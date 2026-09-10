@@ -2,7 +2,7 @@
   "measuredAt": "2026-09-10",
   "counts": {
     "srcLines": 100881,
-    "testLines": 121112,
+    "testLines": 121114,
     "srcRepeatedWindowLines": 1000,
     "testRepeatedWindowLines": 4343,
     "routesWithTryCatch": 13,
@@ -139,6 +139,11 @@
       "measuredAt": "2026-09-10",
       "rise": "testLines rose from 121538 to 121546",
       "reason": "C7 (T-0144): the mutation sweep found the root-header check soft, so every root file now carries the marker the oracle demands and the oracle demands the marker as well as the reason; four src lines and eight test lines are that sharpening."
+    },
+    {
+      "measuredAt": "2026-09-10",
+      "rise": "testLines rose from 121112 to 121114",
+      "reason": "C8 (T-0145): two lines of comment on C0's status assertion, saying which status a filed plan may have and that C8 is what makes it done."
     }
   ]
 }

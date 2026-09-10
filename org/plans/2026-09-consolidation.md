@@ -234,7 +234,7 @@ achieved would make the whole census worthless.
 | Measure | C0 | Now | Target | |
 |---|---:|---:|---:|---|
 | `srcLines` | 107,123 | 100,881 | 98,000 | missed by 2,881 |
-| `testLines` | 121,762 | 121,112 | 116,000 | missed by 5,112 |
+| `testLines` | 121,762 | 121,114 | 116,000 | missed by 5,114 |
 | `srcRepeatedWindowLines` | 1,416 | 1,000 | 600 | missed by 400 |
 | `testRepeatedWindowLines` | 6,028 | 4,343 | 2,500 | missed by 1,843 |
 | `routesWithTryCatch` | 82 | 13 | 13 | met (C1) |
@@ -254,7 +254,7 @@ violations to **0**, with twelve pragmas whose reasons are on their lines
 
 ### Why the five missed, in the words of the measures themselves
 
-**The two line counts.** The programme cut 6,242 lines from `src` and 650
+**The two line counts.** The programme cut 6,242 lines from `src` and 648
 from `tests`, against targets asking for 9,123 and 5,762. The estimate came
 from the recon's duplication ceiling, and the ceiling counted every repeated
 window as removable. It is not: a window repeated by exactly two consumers
