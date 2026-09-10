@@ -156,3 +156,4 @@ The records under org/tasks/ are canonical.
 | T-0141 | standard | R1 | done | t0141-c4-the-test-harnesses-2026-09-10 |
 | T-0142 | standard | R1 | done | t0142-c5-comments-that-narrate-2026-09-11 |
 | T-0143 | standard | R2 | done | t0143-c6-the-page-layer-2026-09-11 |
+| T-0144 | standard | R2 | done | t0144-c7-the-lib-root-2026-09-11 |
