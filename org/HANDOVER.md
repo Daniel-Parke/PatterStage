@@ -1,11 +1,11 @@
 ---
-summary: Where the consolidation programme stands, how a batch is landed, what is open, and how to pick the work up tomorrow
+summary: What the consolidation programme did and left behind, how a batch was landed, what is open, and what waits next
 type: venture
 tags: [handover, consolidation]
-updated: 2026-09-10
+updated: 2026-09-11
 ---
 
-# Handover · PatterStage, evening of 2026-09-10
+# Handover · PatterStage, 2026-09-11
 
 This page is the one to read before touching the tree. It says where the
 work stands, what was learned landing it, what is still open, and the exact
@@ -18,7 +18,7 @@ a chat.
 2. `org/plans/2026-09-consolidation.md`: the programme, batches C0 to C8,
    the census that referees it, and the corrections each batch wrote into
    its row.
-3. The last task record, `org/tasks/T-0142.json`, and `org/TASKS.md` (the
+3. The last task record, `org/tasks/T-0145.json`, and `org/TASKS.md` (the
    derived live view) for the rest.
 4. `docs/contributing/testing.md` ("Shared test doubles") and
    `docs/contributing/repo-guide.md` (the read and write rules) for the
