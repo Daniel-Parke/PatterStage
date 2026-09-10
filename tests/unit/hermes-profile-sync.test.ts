@@ -5,14 +5,10 @@ import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, existsSync } from 
 import { tmpdir } from "os";
 import { join } from "path";
 
-import { execBaselineSchema } from "../helpers/baseline-db";
+import { openBaselineDb } from "../helpers/baseline-db";
 
 let testDb: import("better-sqlite3").Database | null = null;
 let hermesRoot = "";
-
-function loadRealBetterSqlite3(): typeof import("better-sqlite3") {
-  return require("better-sqlite3/lib/index.js") as typeof import("better-sqlite3");
-}
 
 jest.mock("@/lib/db", () => require("../helpers/baseline-db").dbSingletonMock(() => testDb));
 
@@ -26,12 +22,7 @@ jest.mock("@/modules/hermes/lib/profile-paths", () => {
 });
 
 beforeEach(() => {
-  const Database = loadRealBetterSqlite3();
-  testDb = new (Database as unknown as new (path: string) => import("better-sqlite3").Database)(
-    ":memory:"
-  );
-  testDb.pragma("foreign_keys = ON");
-  execBaselineSchema(testDb);
+  testDb = openBaselineDb();
   hermesRoot = mkdtempSync(join(tmpdir(), "ch-hermes-sync-"));
   writeFileSync(join(hermesRoot, "config.yaml"), "version: 1\n");
 });

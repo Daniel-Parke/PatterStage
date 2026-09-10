@@ -116,12 +116,31 @@ export interface MockNextResponse {
   text(): Promise<string>;
 }
 
+/** One `NextResponse.json(data, init)` call, as the recorder saw it. */
+export interface RecordedResponse {
+  data: unknown;
+  init?: ResponseInit;
+}
+
 /**
  * next/server as the two classes the routes touch: a request that parses the
  * body it was given and carries `nextUrl`, and a response that
  * `NextResponse.json(data, init)` builds with `status`, `ok`, `statusText`,
  * `headers` and the data. Both are classes so `instanceof` holds where
  * parse-json-body checks it (C4, T-0141: thirteen suites spelled these).
+ *
+ * Every `NextResponse.json` call is also appended to `__responses`, which the
+ * module object carries out (C8: seven more suites kept their own class only
+ * for this recorder). A route that answers without handing the response back —
+ * a handler whose return value the suite cannot reach, or one answer of several
+ * — is then read through
+ *
+ *   const { __responses } = jest.requireMock("next/server") as
+ *     { __responses: RecordedResponse[] };
+ *
+ * and cleared with `__responses.length = 0` between tests. The array is fresh
+ * per call, so it cannot leak from one suite into the next, and a suite that
+ * never looks at it is unaffected.
  */
 export function nextServerMock(): {
   NextRequest: new (url: string, init?: RequestInit) => MockNextRequest;
@@ -129,7 +148,9 @@ export function nextServerMock(): {
     new (data?: unknown, init?: ResponseInit): MockNextResponse;
     json(data: unknown, init?: ResponseInit): MockNextResponse;
   };
+  __responses: RecordedResponse[];
 } {
+  const responses: RecordedResponse[] = [];
   class NextRequest implements MockNextRequest {
     url: string;
     method: string;
@@ -171,10 +192,11 @@ export function nextServerMock(): {
       return JSON.stringify(this.body);
     }
     static json(data: unknown, init?: ResponseInit) {
+      responses.push({ data, init });
       return new NextResponse(data, init);
     }
   }
-  return { NextRequest, NextResponse };
+  return { NextRequest, NextResponse, __responses: responses };
 }
 
 /** The data directory, pinned under /tmp so no test reads the operator's own. */

@@ -23,8 +23,7 @@
 // edge, so a terminal reviewer's FAIL could never reach the draft.
 // ═══════════════════════════════════════════════════════════════
 
-import { join } from "path";
-import { execBaselineSchema } from "../helpers/baseline-db";
+import { openBaselineDb } from "../helpers/baseline-db";
 import { applyComposerMigration } from "@/lib/db/apply-composer-migration";
 import { applyComposerGroupLinkMigration } from "@/lib/db/apply-composer-group-link-migration";
 
@@ -43,18 +42,14 @@ import { ensureDefaultComposerWorkflows } from "@/lib/composer/seed";
 import { getInputSpec } from "@/lib/composer/schema";
 import type { ComposerWorkflowGraph } from "@/lib/composer/schema";
 
-const migrationsDir = join(process.cwd(), "src", "lib", "db", "migrations");
-
 const RESEARCH_KEY = "research-then-summarise-v1";
 const DRAFT_KEY = "draft-and-review-v1";
 
 beforeEach(() => {
-  const Database = require("better-sqlite3/lib/index.js") as typeof import("better-sqlite3");
-  testDb = new (Database as unknown as new (p: string) => import("better-sqlite3").Database)(":memory:");
-  testDb.pragma("foreign_keys = ON");
-  execBaselineSchema(testDb);
-  applyComposerMigration(testDb, migrationsDir);
-  applyComposerGroupLinkMigration(testDb, migrationsDir);
+  testDb = openBaselineDb([
+    applyComposerMigration,
+    applyComposerGroupLinkMigration,
+  ]);
 });
 afterEach(() => {
   testDb?.close();

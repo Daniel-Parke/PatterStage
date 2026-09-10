@@ -3,8 +3,7 @@
 // Phase 1.5-C — a Composer "research" node drives a Deep Research run (not a
 // Hermes agent run); the engine settles the stage from the linked research run.
 
-import { join } from "path";
-import { execBaselineSchema } from "../helpers/baseline-db";
+import { openBaselineDb } from "../helpers/baseline-db";
 import { applyComposerMigration } from "@/lib/db/apply-composer-migration";
 import { applyDeepResearchMigration } from "@/lib/db/sql-migrations";
 import { applyResearchOptionsMigration } from "@/lib/db/apply-research-options-migration";
@@ -37,7 +36,6 @@ import {
   updateResearchRun,
 } from "@/lib/laboratory/deep-research/research-repository";
 
-const migrationsDir = join(process.cwd(), "src", "lib", "db", "migrations");
 const mockSubmit = runtime.submitRun as jest.Mock;
 
 const WF = {
@@ -51,15 +49,13 @@ const WF = {
 };
 
 beforeEach(() => {
-  const Database = require("better-sqlite3/lib/index.js") as typeof import("better-sqlite3");
-  testDb = new (Database as unknown as new (p: string) => import("better-sqlite3").Database)(":memory:");
-  testDb.pragma("foreign_keys = ON");
-  execBaselineSchema(testDb);
-  applyDeepResearchMigration(testDb, migrationsDir); // v19: research_runs/steps
-  applyComposerMigration(testDb, migrationsDir); // v21: composer tables
-  applyResearchOptionsMigration(testDb, migrationsDir); // v23: research_runs.config_json
-  applyResearchComposerLinkMigration(testDb, migrationsDir); // v25: link column
-  applyComposerGroupLinkMigration(testDb, migrationsDir); // v26: composer_runs.parent_node_run_id
+  testDb = openBaselineDb([
+    applyDeepResearchMigration, // v19: research_runs/steps
+    applyComposerMigration, // v21: composer tables
+    applyResearchOptionsMigration, // v23: research_runs.config_json
+    applyResearchComposerLinkMigration, // v25: link column
+    applyComposerGroupLinkMigration, // v26: composer_runs.parent_node_run_id
+  ]);
   mockSubmit.mockReset();
   mockRunResearchJob.mockClear();
 });

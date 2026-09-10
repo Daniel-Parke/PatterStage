@@ -15,8 +15,7 @@
 // test would fail with the trigger's own message. That is a proof about the
 // code that runs, not about the code as it currently reads.
 
-import { join } from "path";
-import { execBaselineSchema } from "../helpers/baseline-db";
+import { openBaselineDb } from "../helpers/baseline-db";
 import { applyAgentProgressionMigration } from "@/lib/db/sql-migrations";
 
 let testDb: import("better-sqlite3").Database | null = null;
@@ -30,8 +29,6 @@ import {
 import { readAgentProgressionHistory } from "@/lib/stats/agent-progression-repository";
 import type { AgentPerformance } from "@/lib/stats/agent-stats";
 import type { Achievement } from "@/lib/stats/derive";
-
-const migrationsDir = join(process.cwd(), "src", "lib", "db", "migrations");
 
 function agent(over: Partial<AgentPerformance> = {}): AgentPerformance {
   return {
@@ -79,13 +76,7 @@ function seedOneRow(): void {
 }
 
 beforeEach(() => {
-  const Database = require("better-sqlite3/lib/index.js") as typeof import("better-sqlite3");
-  testDb = new (Database as unknown as new (path: string) => import("better-sqlite3").Database)(
-    ":memory:",
-  );
-  testDb.pragma("foreign_keys = ON");
-  execBaselineSchema(testDb);
-  applyAgentProgressionMigration(testDb, migrationsDir);
+  testDb = openBaselineDb([applyAgentProgressionMigration]);
 });
 afterEach(() => {
   testDb?.close();

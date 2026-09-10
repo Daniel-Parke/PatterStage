@@ -1,10 +1,10 @@
 {
   "measuredAt": "2026-09-10",
   "counts": {
-    "srcLines": 100894,
-    "testLines": 121546,
-    "srcRepeatedWindowLines": 1190,
-    "testRepeatedWindowLines": 4786,
+    "srcLines": 100881,
+    "testLines": 121112,
+    "srcRepeatedWindowLines": 1000,
+    "testRepeatedWindowLines": 4343,
     "routesWithTryCatch": 13,
     "handRolledReadHooks": 0,
     "writeHooksWithoutMutation": 0,

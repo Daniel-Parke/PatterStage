@@ -46,84 +46,20 @@ export default function HindsightBrowser({ onHealthChange, reloadToken = 0 }: Hi
   const { showToast, toastElement } = useToast();
   const [activeTab, setActiveTab] = useState<Tab>("memories");
 
-  const {
-    memories,
-    loading,
-    loadingInitial,
-    search,
-    setSearch,
-    reflectResult,
-    reflecting,
-    showStaleMemories,
-    setShowStaleMemories,
-    displayedMemories,
-    hiddenStaleCount,
-    showAddModal,
-    newContent,
-    setNewContent,
-    newTags,
-    setNewTags,
-    adding,
-    health,
-    totalFacts,
-    loadRecentMemories,
-    runRecall,
-    handleRefreshMemories,
-    handleReflect,
-    handleAdd,
-    openAddModal,
-    closeAddModal,
-  } = useHindsightMemories(showToast);
+  // Each tab's state stays behind the hook that owns it. The shell used to
+  // restate all three name lists as it destructured them, which is the
+  // interface written twice and drifts a rename into three places.
+  const memory = useHindsightMemories(showToast);
+  const dirs = useHindsightDirectives(showToast, activeTab);
+  const models = useHindsightModels(showToast, activeTab);
 
-  const {
-    directives,
-    loadingDirectives,
-    showDirectiveModal,
-    dirForm,
-    setDirForm,
-    creatingDirective,
-    editingDirective,
-    editDirForm,
-    setEditDirForm,
-    savingDirective,
-    loadDirectives,
-    openDirectiveModal,
-    closeDirectiveModal,
-    closeEditDirective,
-    openEditDirective,
-    handleCreateDirective,
-    handleToggleDirective,
-    handleDeleteDirective,
-    handleSaveDirective,
-  } = useHindsightDirectives(showToast, activeTab);
-
-  const {
-    mentalModels,
-    loadingModels,
-    showModelModal,
-    modelForm,
-    setModelForm,
-    creatingModel,
-    editingModel,
-    editModelForm,
-    setEditModelForm,
-    savingModel,
-    refreshingModelId,
-    loadModels,
-    openModelModal,
-    closeModelModal,
-    closeEditModel,
-    openEditModel,
-    handleCreateModel,
-    handleRefreshModel,
-    handleDeleteModel,
-    handleSaveModel,
-  } = useHindsightModels(showToast, activeTab);
+  const { health, search, loading } = memory;
 
   useEffect(() => {
     onHealthChange?.(health);
   }, [health, onHealthChange]);
 
+  const { loadRecentMemories } = memory;
   useEffect(() => {
     if (reloadToken > 0) void loadRecentMemories();
   }, [reloadToken, loadRecentMemories]);
@@ -149,37 +85,37 @@ export default function HindsightBrowser({ onHealthChange, reloadToken = 0 }: Hi
         <div className="min-w-64 flex-1">
           <SearchInput
             value={search}
-            onChange={setSearch}
+            onChange={memory.setSearch}
             placeholder="Search memories (semantic search)..."
             accentColor="pink"
             className="h-8"
             onSubmit={() => {
-              if (search.trim() && !loading) void runRecall();
+              if (search.trim() && !loading) void memory.runRecall();
             }}
           />
         </div>
-        <Button variant="secondary" color="pink" size="md" icon={Search} onClick={() => void runRecall()} disabled={!search.trim() || loading}>
+        <Button variant="secondary" color="pink" size="md" icon={Search} onClick={() => void memory.runRecall()} disabled={!search.trim() || loading}>
           Recall
         </Button>
-        <Button variant="secondary" color="purple" size="md" icon={Sparkles} onClick={() => void handleReflect()} disabled={reflecting || !search.trim()}>
-          {reflecting ? "Reflecting..." : "Reflect"}
+        <Button variant="secondary" color="purple" size="md" icon={Sparkles} onClick={() => void memory.handleReflect()} disabled={memory.reflecting || !search.trim()}>
+          {memory.reflecting ? "Reflecting..." : "Reflect"}
         </Button>
-        <Button variant="primary" color="pink" size="md" icon={Plus} onClick={openAddModal}>
+        <Button variant="primary" color="pink" size="md" icon={Plus} onClick={memory.openAddModal}>
           Add Memory
         </Button>
       </div>
 
       {/* Memory insights — fresh/stale fact mix + tags for the loaded set */}
-      {!loadingInitial && <MemoryInsights memories={memories} hiddenStaleCount={hiddenStaleCount} totalFacts={totalFacts} />}
+      {!memory.loadingInitial && <MemoryInsights memories={memory.memories} hiddenStaleCount={memory.hiddenStaleCount} totalFacts={memory.totalFacts} />}
 
       {/* Reflect Result */}
-      {reflectResult && (
+      {memory.reflectResult && (
         <Card glow="purple" className="mb-6">
           <div className="flex items-center gap-2 mb-2">
             <Sparkles className="w-4 h-4 text-neon-purple" />
             <span className="text-body font-semibold text-neon-purple">Reflection</span>
           </div>
-          <p className="text-body text-ps-text-secondary leading-relaxed">{reflectResult}</p>
+          <p className="text-body text-ps-text-secondary leading-relaxed">{memory.reflectResult}</p>
         </Card>
       )}
 
@@ -199,7 +135,7 @@ export default function HindsightBrowser({ onHealthChange, reloadToken = 0 }: Hi
           </button>
         ))}
         <div className="flex-1" />
-        <Button variant="ghost" size="sm" icon={RefreshCw} onClick={handleRefreshMemories} disabled={loading || loadingInitial}
+        <Button variant="ghost" size="sm" icon={RefreshCw} onClick={memory.handleRefreshMemories} disabled={loading || memory.loadingInitial}
           title={search.trim() ? "Run the same search again" : "Reload recent memories"}>
           Refresh
         </Button>
@@ -208,83 +144,83 @@ export default function HindsightBrowser({ onHealthChange, reloadToken = 0 }: Hi
       {/* Tab Content */}
       {activeTab === "memories" && (
         <MemoryTab
-          memories={displayedMemories}
+          memories={memory.displayedMemories}
           loading={loading}
-          loadingInitial={loadingInitial}
+          loadingInitial={memory.loadingInitial}
           unreachable={health !== null && health.available === false}
           activeQuery={search.trim() || null}
           onClearQuery={() => {
-            setSearch("");
+            memory.setSearch("");
             void loadRecentMemories();
           }}
           showStaleToggle={{
-            showStale: showStaleMemories,
-            onToggle: () => setShowStaleMemories((v) => !v),
-            hiddenCount: hiddenStaleCount,
+            showStale: memory.showStaleMemories,
+            onToggle: () => memory.setShowStaleMemories((v) => !v),
+            hiddenCount: memory.hiddenStaleCount,
             thresholdDays: HINDSIGHT_DEFAULT_MAX_AGE_DAYS,
           }}
         />
       )}
       {activeTab === "directives" && (
         <DirectivesTab
-          directives={directives} loading={loadingDirectives}
-          onCreateClick={openDirectiveModal} onRefresh={loadDirectives}
-          onEdit={openEditDirective} onToggle={handleToggleDirective} onDelete={handleDeleteDirective}
+          directives={dirs.directives} loading={dirs.loadingDirectives}
+          onCreateClick={dirs.openDirectiveModal} onRefresh={dirs.loadDirectives}
+          onEdit={dirs.openEditDirective} onToggle={dirs.handleToggleDirective} onDelete={dirs.handleDeleteDirective}
         />
       )}
       {activeTab === "mental-models" && (
         <MentalModelsTab
-          models={mentalModels} loading={loadingModels} refreshingModelId={refreshingModelId}
-          onCreateClick={openModelModal} onRefresh={loadModels}
-          onEdit={openEditModel} onRefreshModel={handleRefreshModel} onDelete={handleDeleteModel}
+          models={models.mentalModels} loading={models.loadingModels} refreshingModelId={models.refreshingModelId}
+          onCreateClick={models.openModelModal} onRefresh={models.loadModels}
+          onEdit={models.openEditModel} onRefreshModel={models.handleRefreshModel} onDelete={models.handleDeleteModel}
         />
       )}
 
       {/* Modals */}
       <AddMemoryModal
-        open={showAddModal} onClose={closeAddModal}
-        content={newContent} tags={newTags} adding={adding}
-        onContentChange={setNewContent} onTagsChange={setNewTags} onSave={handleAdd}
+        open={memory.showAddModal} onClose={memory.closeAddModal}
+        content={memory.newContent} tags={memory.newTags} adding={memory.adding}
+        onContentChange={memory.setNewContent} onTagsChange={memory.setNewTags} onSave={memory.handleAdd}
       />
       <DirectiveModal
-        open={showDirectiveModal} onClose={closeDirectiveModal}
+        open={dirs.showDirectiveModal} onClose={dirs.closeDirectiveModal}
         isEdit={false}
-        name={dirForm.name} content={dirForm.content} priority={dirForm.priority} tags={dirForm.tags}
-        saving={creatingDirective}
-        onNameChange={setField(setDirForm, "name")}
-        onContentChange={setField(setDirForm, "content")}
-        onPriorityChange={setField(setDirForm, "priority")}
-        onTagsChange={setField(setDirForm, "tags")}
-        onSave={handleCreateDirective}
+        name={dirs.dirForm.name} content={dirs.dirForm.content} priority={dirs.dirForm.priority} tags={dirs.dirForm.tags}
+        saving={dirs.creatingDirective}
+        onNameChange={setField(dirs.setDirForm, "name")}
+        onContentChange={setField(dirs.setDirForm, "content")}
+        onPriorityChange={setField(dirs.setDirForm, "priority")}
+        onTagsChange={setField(dirs.setDirForm, "tags")}
+        onSave={dirs.handleCreateDirective}
       />
       <DirectiveModal
-        open={!!editingDirective} onClose={closeEditDirective} isEdit={true}
-        name={editDirForm.name} content={editDirForm.content} priority={editDirForm.priority} tags={editDirForm.tags}
-        saving={savingDirective}
-        onNameChange={setField(setEditDirForm, "name")}
-        onContentChange={setField(setEditDirForm, "content")}
-        onPriorityChange={setField(setEditDirForm, "priority")}
-        onTagsChange={setField(setEditDirForm, "tags")}
-        onSave={handleSaveDirective}
+        open={!!dirs.editingDirective} onClose={dirs.closeEditDirective} isEdit={true}
+        name={dirs.editDirForm.name} content={dirs.editDirForm.content} priority={dirs.editDirForm.priority} tags={dirs.editDirForm.tags}
+        saving={dirs.savingDirective}
+        onNameChange={setField(dirs.setEditDirForm, "name")}
+        onContentChange={setField(dirs.setEditDirForm, "content")}
+        onPriorityChange={setField(dirs.setEditDirForm, "priority")}
+        onTagsChange={setField(dirs.setEditDirForm, "tags")}
+        onSave={dirs.handleSaveDirective}
       />
       <MentalModelModal
-        open={showModelModal} onClose={closeModelModal}
+        open={models.showModelModal} onClose={models.closeModelModal}
         isEdit={false}
-        name={modelForm.name} query={modelForm.query} tags={modelForm.tags}
-        saving={creatingModel}
-        onNameChange={setField(setModelForm, "name")}
-        onQueryChange={setField(setModelForm, "query")}
-        onTagsChange={setField(setModelForm, "tags")}
-        onSave={handleCreateModel}
+        name={models.modelForm.name} query={models.modelForm.query} tags={models.modelForm.tags}
+        saving={models.creatingModel}
+        onNameChange={setField(models.setModelForm, "name")}
+        onQueryChange={setField(models.setModelForm, "query")}
+        onTagsChange={setField(models.setModelForm, "tags")}
+        onSave={models.handleCreateModel}
       />
       <MentalModelModal
-        open={!!editingModel} onClose={closeEditModel} isEdit={true}
-        name={editModelForm.name} query={editModelForm.query} tags={editModelForm.tags}
-        saving={savingModel}
-        onNameChange={setField(setEditModelForm, "name")}
-        onQueryChange={setField(setEditModelForm, "query")}
-        onTagsChange={setField(setEditModelForm, "tags")}
-        onSave={handleSaveModel}
+        open={!!models.editingModel} onClose={models.closeEditModel} isEdit={true}
+        name={models.editModelForm.name} query={models.editModelForm.query} tags={models.editModelForm.tags}
+        saving={models.savingModel}
+        onNameChange={setField(models.setEditModelForm, "name")}
+        onQueryChange={setField(models.setEditModelForm, "query")}
+        onTagsChange={setField(models.setEditModelForm, "tags")}
+        onSave={models.handleSaveModel}
       />
     </div>
   );

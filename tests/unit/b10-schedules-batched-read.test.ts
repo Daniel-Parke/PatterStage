@@ -1,5 +1,4 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports -- better-sqlite3's package root is not newable under the jest transform */
 
 /**
  * B10 oracle, the board's one-query schedule read (T-0104, D68).
@@ -10,7 +9,7 @@
  * repository, and this file asks the repository.
  */
 
-import { execBaselineSchema } from "../helpers/baseline-db";
+import { openBaselineDb } from "../helpers/baseline-db";
 
 let testDb: import("better-sqlite3").Database | null = null;
 let dbReads = 0;
@@ -45,9 +44,7 @@ function insertSchedule(id: string, missionId: string, createdAt: string, name: 
 }
 
 beforeEach(() => {
-  const Database = require("better-sqlite3/lib/index.js") as typeof import("better-sqlite3");
-  testDb = new (Database as unknown as new (p: string) => import("better-sqlite3").Database)(":memory:");
-  execBaselineSchema(testDb);
+  testDb = openBaselineDb();
   // After the schema: these rows are about the reader, not about referential
   // integrity, and inventing a mission for each one would say nothing extra.
   testDb.pragma("foreign_keys = OFF");

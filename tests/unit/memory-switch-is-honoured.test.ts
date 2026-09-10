@@ -40,7 +40,7 @@
 // first one below.
 
 import { join } from "path";
-import { execBaselineSchema } from "../helpers/baseline-db";
+import { openBaselineDb } from "../helpers/baseline-db";
 import { applyMemoryProvidersMigration } from "@/lib/db/apply-memory-providers-migration";
 
 let testDb: import("better-sqlite3").Database | null = null;
@@ -54,16 +54,8 @@ import {
 } from "@/lib/memory/memory-providers/repository";
 import { getActiveMemoryProvider } from "@/lib/memory/memory-providers/registry";
 
-const migrationsDir = join(process.cwd(), "src", "lib", "db", "migrations");
-
 beforeEach(() => {
-  const Database = require("better-sqlite3/lib/index.js") as typeof import("better-sqlite3");
-  testDb = new (Database as unknown as new (p: string) => import("better-sqlite3").Database)(
-    ":memory:",
-  );
-  testDb.pragma("foreign_keys = ON");
-  execBaselineSchema(testDb);
-  applyMemoryProvidersMigration(testDb, migrationsDir);
+  testDb = openBaselineDb([applyMemoryProvidersMigration]);
 });
 afterEach(() => {
   testDb?.close();

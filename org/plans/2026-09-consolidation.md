@@ -2,7 +2,7 @@
 summary: The consolidation programme, batches C0 to C8, each a way the same thing is done many times made one thing, measured by a line census that can only fall, with no feature removed
 type: venture
 tags: [plan, consolidation]
-status: approved
+status: done
 ---
 
 # PatterStage · Consolidation programme (2026-09)
@@ -220,6 +220,81 @@ batch.
 - The census after beside the census before, each measure read against its
   target, the missed ones as numbers. The docs that name a moved path
   updated. The plan marked done.
+
+## What the programme did
+
+Closed at C8 (T-0145) on 2026-09-11. Twelve measures, eight batches, two
+fixes the walks found on the way, 39 commits on `dev`, every batch gated by
+exit code and swept for mutants against its own committed tree.
+
+Seven of the twelve met their target and five did not. The misses are here
+with their numbers, because a target quietly restated to match what was
+achieved would make the whole census worthless.
+
+| Measure | C0 | Now | Target | |
+|---|---:|---:|---:|---|
+| `srcLines` | 107,123 | 100,881 | 98,000 | missed by 2,881 |
+| `testLines` | 121,762 | 121,112 | 116,000 | missed by 5,112 |
+| `srcRepeatedWindowLines` | 1,416 | 1,000 | 600 | missed by 400 |
+| `testRepeatedWindowLines` | 6,028 | 4,343 | 2,500 | missed by 1,843 |
+| `routesWithTryCatch` | 82 | 13 | 13 | met (C1) |
+| `handRolledReadHooks` | 5 | 0 | 0 | met (C6) |
+| `writeHooksWithoutMutation` | 4 | 0 | 0 | met (C3) |
+| `repeatedTypeShapeFiles` | 23 | 2 | 3 | met (C2) |
+| `oneImporterComponents` | 130 | 103 | 95 | missed by 8 |
+| `libRootFiles` | 71 | 6 | 12 | met (C7) |
+| `commentEssays` | 107 | 9 | 60 | met (C5) |
+| `suitesMockingDbInline` | 100 | 14 | 20 | met (C4) |
+
+Beside them, the debt the UI overhaul left as a baseline: design-lint 369
+violations to **0**, with twelve pragmas whose reasons are on their lines
+(C6). The design census fell too: card chromes 63 to 54, button chromes 56 to
+45, border colours 28 to 24, box shadows 10 to 8, control borders below 3:1
+102 to 82.
+
+### Why the five missed, in the words of the measures themselves
+
+**The two line counts.** The programme cut 6,242 lines from `src` and 650
+from `tests`, against targets asking for 9,123 and 5,762. The estimate came
+from the recon's duplication ceiling, and the ceiling counted every repeated
+window as removable. It is not: a window repeated by exactly two consumers
+cannot pay for its own interface. C8 measured this directly on the Rec Room
+library panels, where folding 48 duplicated lines cost 39 new ones for the
+shared component and its two prop types. What the programme actually removed
+is the duplication with three or more consumers, and it removed nearly all of
+it.
+
+`tests` moved least because C4's rule was identity: the same test count, the
+same coverage, or the saving is not a saving. Sixteen suites keep their own
+database stanza after C8, and each is a fixture that differs in what it
+admits (foreign keys off, an on-disk file, a schema deliberately older than
+the baseline). Adopting a helper there would change what the harness allows,
+which is a behaviour change wearing a refactor's clothes.
+
+**The two repeated-window counts.** Both more than halved. What is left is
+mostly import stanzas, which a helper cannot remove without hiding what a
+file depends on, and prop lists, which are an interface written once at each
+end.
+
+**One-importer components.** Every component under sixty lines is folded, 27
+of them, and the 103 that remain are larger pieces with a real subject or
+index re-exports. The plan's own decision 5 says the target was the wrappers
+that say nothing, not a page split into named parts; by that reading the
+work is done and the number is simply the wrong instrument for it. C8 leaves
+it as a number rather than folding pages into each other to move it.
+
+### What the programme is leaving behind
+
+- One route body, one write helper, one read hook, one type per shape, one
+  test double per stanza, one domain per lib file.
+- Six gates that did not exist at C0 or that now read zero: the line census
+  itself, design-lint's whole baseline, the write rule, the read rule, the
+  lib-root oracle and the programme's own arithmetic (this file, held by
+  `tests/unit/c8-the-programme-is-closed.test.ts`).
+- Two product defects the walks found and fixed on the way: the Models page
+  swapping its body for a spinner on every reload (T-0139), and a custom
+  fallback losing the name, provider and model id an operator typed
+  (T-0140, migration 042).
 
 ## What I decided not to do, and why
 

@@ -100,12 +100,27 @@ describe("C8 · the programme is closed", () => {
    * The plan is where an operator reads the result, so a miss that lives only
    * in a test record is a miss nobody sees. Each missed measure's key has to
    * appear in the plan's closing section with its number beside it.
+   *
+   * Against the COMMITTED baseline, not a live count. A live count would put
+   * the plan in a loop with itself: writing this test changed `testLines`, so
+   * the number the plan had just stated stopped being true the moment it was
+   * checked. The baseline is the number the programme committed to, it moves
+   * only with a written reason, and when it moves this fails until the plan
+   * says the new one, which is the coupling that should exist.
    */
-  it("the plan says what missed, with the number", () => {
+  it("the plan says what missed, with the number the baseline holds", () => {
+    const committed = (
+      JSON.parse(readFileSync(join(ROOT, "scripts", "tooling", "line-census.baseline.json"), "utf8")) as {
+        counts: Record<string, number>;
+      }
+    ).counts;
     const plan = readFileSync(join(ROOT, "org", "plans", "2026-09-consolidation.md"), "utf8");
     const closing = plan.slice(plan.indexOf("## What the programme did"));
     expect(closing.length).toBeGreaterThan(400);
-    const silent = MISSED.filter((k) => !closing.includes(k) || !closing.includes(String(now[k])));
+    // A number written for a person carries thousands separators; 100,881 and
+    // 100881 are the same number, and the plan is prose before it is data.
+    const asWritten = closing.replace(/(\d),(?=\d{3}\b)/g, "$1");
+    const silent = MISSED.filter((k) => !closing.includes(k) || !asWritten.includes(String(committed[k])));
     expect(silent).toEqual([]);
   });
 

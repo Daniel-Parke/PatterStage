@@ -42,7 +42,7 @@ committed tree, and a chore commit carrying the record and the derived views.
 | C5 comments that narrate | T-0142 | narration cut file by file (two passes, ten agents); code proved unchanged by a stripped-code diff | yes |
 | C6 the page layer | T-0143 | eight agents over disjoint file groups: six design-lint rules to zero (the whole baseline, 369 to 0), the eleven effect reads onto `useApiResource`, 27 one-importer folds, two pages that swapped their body on reload fixed | yes |
 | C7 the lib root | T-0144 | 65 of the 71 root files into fifteen domains, by codemod, with every import rewritten; six stay, each saying in its own header why it belongs to no domain | yes |
-| C8 closing | T-0145 | the census after beside the before; the plan marked done | no |
+| C8 closing | T-0145 | the last duplication taken by five agents, then the census read against every target, the five misses recorded with their numbers, and the plan marked done | yes |
 
 The plan's remaining ids moved by two for the fixes taken in between; the
 plan header says so.
@@ -51,20 +51,20 @@ plan header says so.
 
 | Measure | Plan start | Now | Target |
 | --- | --- | --- | --- |
-| src lines | 107,123 | 100,890 | ≤ 98,000 |
-| tests lines | 121,651 | 121,538 | ≤ 116,000 |
-| src lines in a repeated window | 1,416 | 1,190 | ≤ 600 |
-| tests lines in a repeated window | 6,028 | 4,786 | ≤ 2,500 |
+| src lines | 107,123 | 100,881 | ≤ 98,000 (missed by 2,881) |
+| tests lines | 121,651 | 121,112 | ≤ 116,000 (missed by 5,112) |
+| src lines in a repeated window | 1,416 | 1,000 | ≤ 600 (missed by 400) |
+| tests lines in a repeated window | 6,028 | 4,343 | ≤ 2,500 (missed by 1,843) |
 | routes with their own try/catch | 82 | 13 | ≤ 13 (met, corrected at C1) |
 | hand-rolled reads (by AST since C3) | 5 (regex) | 0 | 0 (met) |
 | named hooks writing on their own | 4 | 0 | 0 (met) |
 | repeated type shapes | 23 | 2 | 3 (met) |
-| one-importer components | 130 | 103 | ≤ 95 (missed by 8; see C7) |
+| one-importer components | 130 | 103 | ≤ 95 (missed by 8) |
 | lib root files | 71 | 6 | ≤ 12 (met) |
-| comment essays | 107 | 9 | ≤ 60 |
+| comment essays | 107 | 9 | ≤ 60 (met) |
 | suites mocking db inline | 100 | 14 | ≤ 20 (met) |
 | design-lint debt (all rules) | 350 | 0 | 0 (met) |
-| jest | 6,860 | 6,902 (683 suites) | unchanged by a test batch |
+| jest | 6,860 | 6,920 (684 suites) | unchanged by a test batch |
 
 ## How a batch is landed (the discipline, verbatim from practice)
 
@@ -141,25 +141,27 @@ identity oracle, the census and the gate over the whole tree afterwards.
 - **T-0140's fallback rows** on the isolated instance's data dir are walk
   artefacts, not product data.
 
-## C8 · closing (start here tomorrow)
+## The programme is closed. What is next
 
-- The plan's last batch (T-0145) reads the census after beside the census
-  before, each measure against its target, and marks the plan done. The
-  numbers are in this page's table and in each batch's record; the two that
-  missed are `src` and `tests` lines (targets 98,000 and 116,000, currently
-  100,890 and 121,538) and one-importer components (target 95, currently
-  103).
-- Where the remaining src lines are, measured rather than guessed: the
-  census `--report` prints `srcDup.byFile` and `essays`. The largest single
-  duplication left is HindsightBrowser's 65 lines and the three hindsight
-  tab hooks that repeat each other, then the models page's handler lists,
-  which are a prop-drilling shape rather than copied code.
-- Docs that name a moved path are all updated (`docs:check` and
-  `check-doc-links` are in the gate), but the guides were written before C6
-  and C7 changed how a screen reads and where a lib file lives; the guide
-  for a screen a batch changed is the batch's own job, so nothing is
-  outstanding there. What C8 owes is the design-tokens page's account of
-  the primitives now that every screen uses them.
+The consolidation programme (C0 to C8, T-0135 to T-0145) is done and the plan
+is marked done, with its own account of what met its target and what did not
+in `org/plans/2026-09-consolidation.md` under "What the programme did". The
+five misses are named there with their numbers and the reason each one is a
+number rather than a failure.
+
+Nothing in the programme is outstanding. What waits, in the operator's order:
+
+1. **The v1.0.0 release.** The release actions have always been the
+   operator's: the migration script on a copy of a real install, the Docker
+   matrix, the tag. The checklist is in `docs/running/migration.md` and
+   `org/plans/2026-09-final-release.md`. Nothing since has changed that order.
+2. **The open items below**, none of which blocks a release.
+3. **If another consolidation batch is wanted**, the honest remaining targets
+   are the two line counts, and the census `--report` says where they are:
+   `srcDup.byFile` and `testDup.byFile` name the files, `essays` the
+   comment-heavy ones. The largest single item left is the missions page's
+   handler lists, which are a prop-drilling shape rather than copied code, so
+   the fix is a context or a hook object rather than a fold.
 
 ## Release
 

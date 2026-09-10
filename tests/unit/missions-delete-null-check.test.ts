@@ -9,48 +9,7 @@
  */
 
 import type { NextRequest } from "next/server";
-jest.mock("next/server", () => {
-  // NextResponse as a real class so `bodyResult instanceof NextResponse`
-  // (used by parseJsonBody's callsite) works. See session-37 findings.
-  const responses: Array<{ data: unknown; init?: ResponseInit }> = [];
-  class NextResponse {
-    ok: boolean;
-    status: number;
-    statusText: string;
-    headers: Headers;
-    private _data: unknown;
-    constructor(data: unknown = null, init?: ResponseInit) {
-      this._data = data;
-      this.status = init?.status ?? 200;
-      this.ok = this.status >= 200 && this.status < 300;
-      this.statusText = this.status === 404 ? "Not Found" : "OK";
-      this.headers = new Headers(init?.headers as HeadersInit);
-    }
-    json() { return Promise.resolve(this._data); }
-    static json(data: unknown, init?: ResponseInit) {
-      responses.push({ data, init });
-      return new NextResponse(data, init);
-    }
-  }
-  return {
-    NextRequest: class NextRequest {
-      url: string;
-      method: string;
-      headers: Headers;
-      bodyUsed: boolean = false;
-      private _body: string;
-      constructor(url: string, init?: RequestInit) {
-        this.url = url;
-        this.method = init?.method ?? "GET";
-        this.headers = new Headers(init?.headers as HeadersInit);
-        this._body = typeof init?.body === "string" ? init.body : JSON.stringify(init?.body ?? {});
-      }
-      async json() { return JSON.parse(this._body); }
-    },
-    NextResponse,
-    __responses: responses,
-  };
-});
+jest.mock("next/server", () => require("../helpers/mocks").nextServerMock());
 
 jest.mock("@/lib/api/api-logger", () => ({ logApiError: jest.fn() }));
 

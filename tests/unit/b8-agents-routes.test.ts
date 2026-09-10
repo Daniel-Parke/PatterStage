@@ -31,7 +31,7 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 
-import { execBaselineSchema } from "../helpers/baseline-db";
+import { openBaselineDb } from "../helpers/baseline-db";
 
 let testDb: import("better-sqlite3").Database | null = null;
 
@@ -102,10 +102,7 @@ async function getProfiles() {
 }
 
 beforeEach(() => {
-  const Database = require("better-sqlite3/lib/index.js") as typeof import("better-sqlite3");
-  testDb = new (Database as unknown as new (p: string) => import("better-sqlite3").Database)(":memory:");
-  testDb.pragma("foreign_keys = ON");
-  execBaselineSchema(testDb);
+  testDb = openBaselineDb();
   rmSync(hermesHome, { recursive: true, force: true });
   mkdirSync(hermesHome, { recursive: true });
   jest.clearAllMocks();

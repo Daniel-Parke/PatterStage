@@ -5,18 +5,9 @@
 // The full-chain wiring (runMigrations actually calls the applier) is guarded
 // separately in run-migrations-upgrade.integration.test.ts.
 
-import { join } from "path";
-import type DatabaseNs from "better-sqlite3";
+import { migrationsDir, openRealDb, type RealDb } from "../helpers/baseline-db";
 import { applyChatMigration, CHAT_SCHEMA_VERSION } from "@/lib/db/sql-migrations";
 import { getSchemaVersion, setSchemaVersion } from "@/lib/db-schema";
-
-type RealDb = DatabaseNs.Database;
-
-const Database = jest.requireActual(
-  join(process.cwd(), "node_modules", "better-sqlite3", "lib", "index.js"),
-) as unknown as new (path: string) => RealDb;
-
-const migrationsDir = join(process.cwd(), "src", "lib", "db", "migrations");
 
 function tableNames(db: RealDb): string[] {
   return (
@@ -35,7 +26,7 @@ function withMeta(db: RealDb): RealDb {
 
 describe("chat migration (v13, real SQLite)", () => {
   it("creates both tables + indexes and bumps schema_version to 13", () => {
-    const db = withMeta(new Database(":memory:"));
+    const db = withMeta(openRealDb());
     setSchemaVersion(db, 12);
 
     applyChatMigration(db, migrationsDir);
@@ -56,7 +47,7 @@ describe("chat migration (v13, real SQLite)", () => {
   });
 
   it("cascades message deletes when the parent conversation is removed", () => {
-    const db = withMeta(new Database(":memory:"));
+    const db = withMeta(openRealDb());
     db.pragma("foreign_keys = ON");
     setSchemaVersion(db, 12);
     applyChatMigration(db, migrationsDir);
@@ -74,7 +65,7 @@ describe("chat migration (v13, real SQLite)", () => {
   });
 
   it("is idempotent — a second apply is a no-op and does not throw", () => {
-    const db = withMeta(new Database(":memory:"));
+    const db = withMeta(openRealDb());
     setSchemaVersion(db, 12);
 
     applyChatMigration(db, migrationsDir);
@@ -84,7 +75,7 @@ describe("chat migration (v13, real SQLite)", () => {
   });
 
   it("version-guards: a DB already at v13 is left untouched (early return)", () => {
-    const db = withMeta(new Database(":memory:"));
+    const db = withMeta(openRealDb());
     setSchemaVersion(db, 13);
 
     const result = applyChatMigration(db, migrationsDir);

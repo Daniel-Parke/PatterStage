@@ -19,7 +19,7 @@
 
 import type DatabaseNs from "better-sqlite3";
 
-import { execBaselineSchema } from "../helpers/baseline-db";
+import { openBaselineDb } from "../helpers/baseline-db";
 
 type RealDb = DatabaseNs.Database;
 let testDb: RealDb | null = null;
@@ -43,10 +43,7 @@ function runs(): RawRun[] {
 }
 
 beforeEach(() => {
-  const Database = require("better-sqlite3/lib/index.js") as typeof import("better-sqlite3");
-  testDb = new (Database as unknown as new (p: string) => RealDb)(":memory:");
-  testDb.pragma("foreign_keys = ON");
-  execBaselineSchema(testDb);
+  testDb = openBaselineDb();
   // The link is a real FK, so the story has to exist for the row to land.
   testDb.prepare("INSERT INTO stories (id, title) VALUES (?, ?)").run("S-1", "A story");
 });

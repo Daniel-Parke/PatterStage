@@ -21,9 +21,7 @@
 // fixed it.
 // ═══════════════════════════════════════════════════════════════
 
-import { join } from "path";
-
-import { execBaselineSchema } from "../helpers/baseline-db";
+import { openBaselineDb } from "../helpers/baseline-db";
 import { applyComposerMigration } from "@/lib/db/apply-composer-migration";
 import { applyComposerGroupLinkMigration } from "@/lib/db/apply-composer-group-link-migration";
 
@@ -41,15 +39,11 @@ import {
 import { ensureDefaultComposerWorkflows } from "@/lib/composer/seed";
 import { RESEARCH_SUMMARISE_WORKFLOW_KEY } from "@/lib/composer/schema";
 
-const migrationsDir = join(process.cwd(), "src", "lib", "db", "migrations");
-
 beforeEach(() => {
-  const Database = require("better-sqlite3/lib/index.js") as typeof import("better-sqlite3");
-  testDb = new (Database as unknown as new (p: string) => import("better-sqlite3").Database)(":memory:");
-  testDb.pragma("foreign_keys = ON");
-  execBaselineSchema(testDb);
-  applyComposerMigration(testDb, migrationsDir);
-  applyComposerGroupLinkMigration(testDb, migrationsDir);
+  testDb = openBaselineDb([
+    applyComposerMigration,
+    applyComposerGroupLinkMigration,
+  ]);
 });
 afterEach(() => {
   testDb?.close();

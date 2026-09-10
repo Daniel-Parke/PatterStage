@@ -33,7 +33,7 @@
 // places, and written nowhere. `rejected` must not become the second one.
 
 import { join } from "path";
-import { execBaselineSchema } from "../helpers/baseline-db";
+import { openBaselineDb } from "../helpers/baseline-db";
 import { applyComposerMigration } from "@/lib/db/apply-composer-migration";
 import { applyComposerGroupLinkMigration } from "@/lib/db/apply-composer-group-link-migration";
 import { applyComposerRejectedMigration } from "@/lib/db/apply-composer-rejected-migration";
@@ -86,14 +86,10 @@ const DEAD_END_GATE = {
 };
 
 beforeEach(() => {
-  const Database = require("better-sqlite3/lib/index.js") as typeof import("better-sqlite3");
-  testDb = new (Database as unknown as new (p: string) => import("better-sqlite3").Database)(
-    ":memory:",
-  );
-  testDb.pragma("foreign_keys = ON");
-  execBaselineSchema(testDb);
-  applyComposerMigration(testDb, migrationsDir);
-  applyComposerGroupLinkMigration(testDb, migrationsDir);
+  testDb = openBaselineDb([
+    applyComposerMigration,
+    applyComposerGroupLinkMigration,
+  ]);
   // The migration under test. Without it every `rejected` write below throws a
   // CHECK violation, which is the point: the status has to be admitted by the
   // schema before it can be written.
@@ -128,14 +124,10 @@ function runParkedAtGate(): { runId: string; nodeRunId: string; nodeId: string }
 
 /** A composer-capable database at v26, i.e. everything 035 expects to find. */
 function freshComposerDbAtV34(): import("better-sqlite3").Database {
-  const Database = require("better-sqlite3/lib/index.js") as typeof import("better-sqlite3");
-  const db = new (Database as unknown as new (p: string) => import("better-sqlite3").Database)(
-    ":memory:",
-  );
-  db.pragma("foreign_keys = ON");
-  execBaselineSchema(db);
-  applyComposerMigration(db, migrationsDir);
-  applyComposerGroupLinkMigration(db, migrationsDir);
+  const db = openBaselineDb([
+    applyComposerMigration,
+    applyComposerGroupLinkMigration,
+  ]);
   return db;
 }
 

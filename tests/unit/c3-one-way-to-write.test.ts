@@ -72,6 +72,9 @@ const WRITERS = [
   "src/components/memory/hindsight/useHindsightDirectives.ts",
   "src/components/memory/hindsight/useHindsightMemories.ts",
   "src/components/memory/hindsight/useHindsightModels.ts",
+  // The two CRUD tabs share their create, save and delete through this
+  // factory since C8 (T-0145); each hook keeps the writes only it makes.
+  "src/components/memory/hindsight/useHindsightCrudTab.ts",
 ];
 
 describe("C3 · one way to write", () => {

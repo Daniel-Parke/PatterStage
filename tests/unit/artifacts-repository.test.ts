@@ -3,8 +3,7 @@
 // CRUD + idempotent capture for the artifacts registry (real SQLite; the
 // @/lib/db singleton is mocked to a fresh in-memory DB per test).
 
-import { join } from "path";
-import { execBaselineSchema } from "../helpers/baseline-db";
+import { openBaselineDb } from "../helpers/baseline-db";
 import { applyArtifactsMigration } from "@/lib/db/sql-migrations";
 
 let testDb: import("better-sqlite3").Database | null = null;
@@ -20,14 +19,8 @@ import {
   listArtifacts,
 } from "@/lib/runs/artifacts-repository";
 
-const migrationsDir = join(process.cwd(), "src", "lib", "db", "migrations");
-
 beforeEach(() => {
-  const Database = require("better-sqlite3/lib/index.js") as typeof import("better-sqlite3");
-  testDb = new (Database as unknown as new (path: string) => import("better-sqlite3").Database)(":memory:");
-  testDb.pragma("foreign_keys = ON");
-  execBaselineSchema(testDb);
-  applyArtifactsMigration(testDb, migrationsDir);
+  testDb = openBaselineDb([applyArtifactsMigration]);
 });
 afterEach(() => {
   testDb?.close();

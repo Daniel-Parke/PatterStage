@@ -7,7 +7,7 @@
  * page), behind a Zod allow-list so the route cannot become a free-form store.
  */
 import { join } from "path";
-import { execBaselineSchema } from "../helpers/baseline-db";
+import { openBaselineDb } from "../helpers/baseline-db";
 import { mockRequest } from "../helpers/api-test-helpers";
 import { MIGRATION_HEAD_SCHEMA_VERSION, getSchemaVersion } from "@/lib/db-schema";
 import { OPERATOR_PREFS_SCHEMA_VERSION, applyOperatorPrefsMigration } from "@/lib/db/sql-migrations";
@@ -22,11 +22,7 @@ import { GET, PUT } from "@/app/api/prefs/route";
 const migrationsDir = join(process.cwd(), "src", "lib", "db", "migrations");
 
 beforeEach(() => {
-  const Database = require("better-sqlite3/lib/index.js") as typeof import("better-sqlite3");
-  testDb = new (Database as unknown as new (path: string) => import("better-sqlite3").Database)(":memory:");
-  testDb.pragma("foreign_keys = ON");
-  execBaselineSchema(testDb);
-  applyOperatorPrefsMigration(testDb, migrationsDir);
+  testDb = openBaselineDb([applyOperatorPrefsMigration]);
 });
 afterEach(() => {
   testDb?.close();

@@ -14,7 +14,7 @@ import * as yaml from "js-yaml";
 
 let fakeRoot: string;
 
-import { execBaselineSchema } from "../helpers/baseline-db";
+import { openBaselineDb } from "../helpers/baseline-db";
 
 let testDb: import("better-sqlite3").Database | null = null;
 
@@ -22,20 +22,11 @@ jest.mock("@/lib/db", () => require("../helpers/baseline-db").dbSingletonMock(()
 
 jest.mock("@/modules/hermes/lib/agent-runtime", () => require("../helpers/mocks").agentRuntimeFakeRootMock());
 
-function loadRealBetterSqlite3(): typeof import("better-sqlite3") {
-  return require("better-sqlite3/lib/index.js") as typeof import("better-sqlite3");
-}
-
 beforeEach(() => {
   fakeRoot = mkdtempSync(join(tmpdir(), "ch-yaml-sync-"));
   (global as { __FAKE_HERMES_ROOT__?: string }).__FAKE_HERMES_ROOT__ = fakeRoot;
 
-  const Database = loadRealBetterSqlite3();
-  testDb = new (Database as unknown as new (path: string) => import("better-sqlite3").Database)(
-    ":memory:"
-  );
-  testDb.pragma("foreign_keys = ON");
-  execBaselineSchema(testDb);
+  testDb = openBaselineDb();
 });
 
 afterEach(() => {

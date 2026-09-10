@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports -- better-sqlite3's package root is not newable under the jest transform, and chapter-title's new export is read through a loose require so this file loads before it exists */
+/* eslint-disable @typescript-eslint/no-require-imports -- chapter-title's new export is read through a loose require so this file loads before it exists */
 
 // ═══════════════════════════════════════════════════════════════
 // B14 oracle, group story-controls: the dead controls, the missing premise and
@@ -31,10 +31,9 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { readFileSync } from "fs";
-import { join } from "path";
-import type DatabaseNs from "better-sqlite3";
 
-type RealDb = DatabaseNs.Database;
+import { baselineSqlPath, openRealDb, type RealDb } from "../helpers/baseline-db";
+
 let testDb: RealDb | null = null;
 
 jest.mock("@/lib/db", () => require("../helpers/baseline-db").dbSingletonMock(() => testDb));
@@ -121,12 +120,9 @@ function userMessages(): string[] {
 }
 
 beforeEach(() => {
-  const Database = require("better-sqlite3/lib/index.js") as typeof import("better-sqlite3");
-  testDb = new (Database as unknown as new (p: string) => RealDb)(":memory:");
+  testDb = openRealDb();
   testDb.exec("CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);");
-  testDb.exec(
-    readFileSync(join(process.cwd(), "src", "lib", "db", "migrations", "001_baseline.sql"), "utf-8"),
-  );
+  testDb.exec(readFileSync(baselineSqlPath, "utf-8"));
   jest.clearAllMocks();
   callLLMMock.mockResolvedValue({ content: "Rewritten prose.", model: "m" });
 });

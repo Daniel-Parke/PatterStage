@@ -4,19 +4,9 @@
 
 import { readFileSync } from "fs";
 import { join } from "path";
-import type DatabaseNs from "better-sqlite3";
+import { migrationsDir, openRealDb, type RealDb } from "../helpers/baseline-db";
 import { applyRunsSchedulesMigration } from "@/lib/db/apply-runs-schedules-migration";
 import { getSchemaVersion } from "@/lib/db-schema";
-
-type RealDb = DatabaseNs.Database;
-
-// jest.config maps "better-sqlite3" to a mock (even through requireActual), so
-// load the REAL native module by its on-disk path to bypass the name mapper.
-const Database = jest.requireActual(
-  join(process.cwd(), "node_modules", "better-sqlite3", "lib", "index.js"),
-) as unknown as new (path: string) => RealDb;
-
-const migrationsDir = join(process.cwd(), "src", "lib", "db", "migrations");
 
 function cols(db: RealDb, table: string): string[] {
   return (db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[]).map((r) => r.name);
@@ -34,7 +24,7 @@ function withMeta(db: RealDb): RealDb {
 
 describe("runs/schedules schema (real SQLite)", () => {
   it("baseline provisions runs + schedules tables and the new columns", () => {
-    const db = withMeta(new Database(":memory:"));
+    const db = withMeta(openRealDb());
     db.exec(readFileSync(join(migrationsDir, "001_baseline.sql"), "utf-8"));
 
     expect(tableNames(db)).toEqual(expect.arrayContaining(["runs", "schedules"]));
@@ -52,7 +42,7 @@ describe("runs/schedules schema (real SQLite)", () => {
   });
 
   it("009 apply migration upgrades a pre-runs/schedules DB and is idempotent", () => {
-    const db = withMeta(new Database(":memory:"));
+    const db = withMeta(openRealDb());
     db.exec("CREATE TABLE missions (id TEXT PRIMARY KEY);");
     db.exec("CREATE TABLE agent_profiles (slug TEXT PRIMARY KEY);");
 
@@ -69,7 +59,7 @@ describe("runs/schedules schema (real SQLite)", () => {
   });
 
   it("enforces the runs.status CHECK constraint", () => {
-    const db = withMeta(new Database(":memory:"));
+    const db = withMeta(openRealDb());
     db.exec(readFileSync(join(migrationsDir, "001_baseline.sql"), "utf-8"));
     db.prepare("INSERT INTO missions (id, name, prompt) VALUES ('m1','n','p')").run();
 

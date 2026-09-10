@@ -98,6 +98,15 @@ describe("the factories behave the way the stanzas they replace behaved", () => 
     expect(NextResponse.json({}) instanceof NextResponse).toBe(true);
   });
 
+  it("next/server records every json answer into __responses, and a second mock gets its own array", () => {
+    const first = nextServerMock();
+    expect(first.__responses).toEqual([]);
+    first.NextResponse.json({ a: 1 }, { status: 201 });
+    first.NextResponse.json({ b: 2 });
+    expect(first.__responses).toEqual([{ data: { a: 1 }, init: { status: 201 } }, { data: { b: 2 }, init: undefined }]);
+    expect(nextServerMock().__responses).toEqual([]);
+  });
+
   it("the paths block takes a suite's own template dir and its own readEnv", () => {
     const base = pathsMock();
     expect(base.PATHS.templates).toBe("/tmp/ch-data/templates");
@@ -179,15 +188,9 @@ const REPLACED: ReadonlyArray<{ name: string; test: (text: string) => boolean; k
   { name: "the db stub as a bare object", test: (t) => /jest\.mock\("@\/lib\/db", \(\) => \(\{ ensureDb: jest\.fn\(\) \}\)\)/.test(t) },
   { name: "the db stub with now t and uuid u", test: (t) => /jest\.mock\("@\/lib\/db", \(\) => \(\{[^}]*now: \(\) => "t", uuid: \(\) => "u"/.test(t) },
   { name: "the in-memory db double by hand", test: (t) => /jest\.mock\("@\/lib\/db", \(\) => \(\{[^}]*getDb: \(\) => testDb!/.test(t) },
-  {
-    name: "the next/server request by hand",
-    test: (t) => /private _body: string;/.test(t),
-    keeps: {
-      "mission-categories-route.test.ts": "its NextResponse records every response into __responses and its db mock routes ensureDb through a local the tests arm",
-      "mission-require-or-not-found.test.ts": "its NextResponse records every response into __responses, which the tests read",
-      "missions-delete-null-check.test.ts": "the same recorder",
-    },
-  },
+  // No keeps: the recorder the three holdouts kept their own class for is
+  // `nextServerMock().__responses` now (C8), so the stanza is spelled nowhere.
+  { name: "the next/server request by hand", test: (t) => /private _body: string;/.test(t) },
   { name: "the fetch map by hand", test: (t) => /^function jsonResponse\(/m.test(t) && /global\.fetch = jest\.fn\(async \(input: RequestInfo \| URL\)/.test(t) },
   { name: "matchMedia by hand", test: (t) => /window\.matchMedia = jest\.fn\(\(query: string\) => \(\{/.test(t) },
   { name: "next/link by hand", test: (t) => /jest\.mock\("next\/link", \(\) => \(\{\n\s*__esModule: true,\n\s*default: \(\{ href, children, \.\.\.rest \}/.test(t) },

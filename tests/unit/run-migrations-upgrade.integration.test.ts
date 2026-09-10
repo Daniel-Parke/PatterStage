@@ -7,7 +7,7 @@
 
 import { readdirSync, readFileSync } from "fs";
 import { join } from "path";
-import type DatabaseNs from "better-sqlite3";
+import { migrationsDir, openRealDb, type RealDb } from "../helpers/baseline-db";
 import {
   MIGRATION_HEAD_SCHEMA_VERSION,
   getSchemaVersion,
@@ -24,14 +24,6 @@ import { COMPOSER_REJECTED_SCHEMA_VERSION } from "@/lib/db/apply-composer-reject
 // real implementation so we exercise the actual wiring.
 const { runMigrations } = jest.requireActual<typeof import("@/lib/db")>("@/lib/db");
 
-type RealDb = DatabaseNs.Database;
-
-const Database = jest.requireActual(
-  join(process.cwd(), "node_modules", "better-sqlite3", "lib", "index.js"),
-) as unknown as new (path: string) => RealDb;
-
-const migrationsDir = join(process.cwd(), "src", "lib", "db", "migrations");
-
 function cols(db: RealDb, table: string): string[] {
   return (db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[]).map((r) => r.name);
 }
@@ -43,7 +35,7 @@ function tableNames(db: RealDb): string[] {
 
 describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
   it("upgrades a degraded legacy install to the full current schema", () => {
-    const db = new Database(":memory:");
+    const db = openRealDb();
     db.pragma("foreign_keys = ON");
     db.exec("CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);");
     db.exec(readFileSync(join(migrationsDir, "001_baseline.sql"), "utf-8"));
@@ -194,7 +186,7 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
     // (v4→) only run on subsequent passes. getDb() loops to convergence so a
     // single first boot reaches the terminal schema; this guards that contract
     // (regression for "no such table: composer_workflows" on first boot).
-    const db = new Database(":memory:");
+    const db = openRealDb();
     db.pragma("foreign_keys = ON");
 
     runMigrations(db); // pass 1 — baseline only
@@ -222,7 +214,7 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
   });
 
   it("is idempotent — a second runMigrations on the upgraded DB is a no-op", () => {
-    const db = new Database(":memory:");
+    const db = openRealDb();
     db.pragma("foreign_keys = ON");
     db.exec("CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);");
     db.exec(readFileSync(join(migrationsDir, "001_baseline.sql"), "utf-8"));

@@ -114,21 +114,7 @@ jest.mock("@/lib/config/config-cache", () => ({
   },
 }));
 
-jest.mock("next/server", () => ({
-  NextRequest: class NextRequest {},
-  NextResponse: class NextResponse {
-    constructor(
-      public status: number,
-      public body: unknown,
-    ) {}
-    async json() {
-      return this.body;
-    }
-    static json(data: unknown, init?: { status?: number }) {
-      return new NextResponse(init?.status ?? 200, data);
-    }
-  },
-}));
+jest.mock("next/server", () => require("../helpers/mocks").nextServerMock());
 
 // Keep serverErrorFromCatch REAL: a 500 that this file expects not to happen
 // must be a 500 the route really produces, not a mock artefact.

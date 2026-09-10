@@ -13,16 +13,9 @@
 // and it is a no-op under every ordering rather than a throw.
 // ═══════════════════════════════════════════════════════════════
 
-import { join } from "path";
-import type DatabaseNs from "better-sqlite3";
+import { openRealDb, type RealDb } from "../helpers/baseline-db";
 import { getSchemaVersion, setSchemaVersion } from "@/lib/db-schema";
 import { applyNeutralColumnNames } from "@/lib/db/apply-neutral-column-names";
-
-type RealDb = DatabaseNs.Database;
-
-const Database = jest.requireActual(
-  join(process.cwd(), "node_modules", "better-sqlite3", "lib", "index.js"),
-) as unknown as new (path: string) => RealDb;
 
 function cols(db: RealDb, table: string): string[] {
   return (db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[]).map((r) => r.name);
@@ -33,7 +26,7 @@ function indexNames(db: RealDb, table: string): string[] {
 
 /** A v29-shaped DB carrying the two vendor-named columns, with real values. */
 function legacyDb(): RealDb {
-  const db = new Database(":memory:");
+  const db = openRealDb();
   db.exec(`
     CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
     CREATE TABLE agent_root (
@@ -114,7 +107,7 @@ describe("applyNeutralColumnNames (030)", () => {
   it("is a no-op when a table was already created with the NEW names", () => {
     // The ordering hazard: an ensure-path can create agent_root before the
     // migration chain reaches v30.
-    const db = new Database(":memory:");
+    const db = openRealDb();
     db.exec(`
       CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
       CREATE TABLE agent_root (id INTEGER PRIMARY KEY, framework_md TEXT NOT NULL DEFAULT '');
@@ -134,7 +127,7 @@ describe("applyNeutralColumnNames (030)", () => {
   });
 
   it("survives a minimal schema with neither table present", () => {
-    const db = new Database(":memory:");
+    const db = openRealDb();
     db.exec("CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);");
     setSchemaVersion(db, 29);
     expect(() => applyNeutralColumnNames(db)).not.toThrow();

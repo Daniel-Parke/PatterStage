@@ -30,50 +30,11 @@
 //   DELETE 403 (system category)  → forbidden
 //   DELETE 500 (catch)            → serverError
 
-// Mock next/server with a real NextResponse class so `instanceof NextResponse`
-// checks in parseJsonBody work correctly. Capture the responses for assertions.
-jest.mock("next/server", () => {
-  const responses: Array<{ data: unknown; init?: ResponseInit }> = [];
-  class NextResponse {
-    ok: boolean;
-    status: number;
-    private _data: unknown;
-    constructor(data: unknown = null, init?: ResponseInit) {
-      this._data = data;
-      this.status = init?.status ?? 200;
-      this.ok = this.status >= 200 && this.status < 300;
-    }
-    json() {
-      return Promise.resolve(this._data);
-    }
-    static json(data: unknown, init?: ResponseInit) {
-      responses.push({ data, init });
-      return new NextResponse(data, init);
-    }
-  }
-  return {
-    NextRequest: class NextRequest {
-      url: string;
-      method: string;
-      headers: Headers;
-      private _body: string;
-      constructor(url: string, init?: RequestInit) {
-        this.url = url;
-        this.method = init?.method ?? "GET";
-        this.headers = new Headers(init?.headers as HeadersInit);
-        this._body =
-          typeof init?.body === "string"
-            ? init.body
-            : JSON.stringify(init?.body ?? {});
-      }
-      async json() {
-        return JSON.parse(this._body);
-      }
-    },
-    NextResponse,
-    __responses: responses,
-  };
-});
+// The shared next/server double: a real NextResponse class, so the
+// `instanceof NextResponse` check in parseJsonBody works, and a recorder the
+// assertions read every answer out of.
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- hoisting-safe inside jest.mock
+jest.mock("next/server", () => require("../helpers/mocks").nextServerMock());
 
 // Pull the responses array accessor out of the mock.
 const { __responses, NextRequest } = jest.requireMock("next/server") as {

@@ -4,9 +4,15 @@ import { applyModelsApiStyleMigration } from "../../src/lib/db/apply-models-api-
 import { applyNeutralColumnNames } from "../../src/lib/db/apply-neutral-column-names";
 import { applyFallbackIdentityMigration, applyModelsOriginMigration, applyRunsSpendSourceMigration, applyScheduleKindMigration } from "../../src/lib/db/sql-migrations";
 
-const migrationsDir = join(__dirname, "..", "..", "src", "lib", "db", "migrations");
+export const migrationsDir = join(__dirname, "..", "..", "src", "lib", "db", "migrations");
 
 export const baselineSqlPath = join(migrationsDir, "001_baseline.sql");
+
+/** A real better-sqlite3 handle, as opposed to the jest.config stub. */
+export type RealDb = import("better-sqlite3").Database;
+
+/** The shape every `apply*Migration` in `src/lib/db` shares. */
+export type MigrationApplier = (database: RealDb, dir: string) => unknown;
 
 /**
  * Apply the current squashed baseline schema, plus any additive column
@@ -55,6 +61,56 @@ export function execBaselineSchema(database: import("better-sqlite3").Database):
   database
     .prepare("INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)")
     .run("schema_version", "3");
+}
+
+/**
+ * An empty real in-memory SQLite database: no schema, no pragmas, nothing
+ * (C8, T-0146).
+ *
+ * `jest.requireActual` against the on-disk path is what bypasses the stub: the
+ * `^better-sqlite3$` mapper in jest.config.js does not match an absolute path,
+ * and requireActual skips the manual mock. That one fact is the reason this
+ * function exists, and it is now written down once.
+ *
+ * The eighteen PRE-BASELINE migration suites want exactly this and nothing
+ * more: a bare `meta` table, `setSchemaVersion(db, N - 1)`, then the single
+ * applier under test, so the assertion is that the migration CLIMBS from the
+ * old schema. Handing them `openBaselineDb` would hand them the schema whose
+ * absence is the point.
+ */
+export function openRealDb(): RealDb {
+  const Database = jest.requireActual(
+    join(process.cwd(), "node_modules", "better-sqlite3", "lib", "index.js"),
+  ) as unknown as new (path: string) => RealDb;
+  return new Database(":memory:");
+}
+
+/**
+ * A real in-memory SQLite database on the baseline schema, with foreign keys
+ * enforced and the given migrations applied in order (C8, T-0146).
+ *
+ * Forty-odd suites opened one by hand, and the four lines were the same four
+ * lines every time: bypass the `better-sqlite3` stub that jest.config maps in,
+ * open `:memory:`, turn foreign keys ON, run `execBaselineSchema`, then walk a
+ * list of appliers with the migrations directory. Only that last list ever
+ * differed, so it is the argument:
+ *
+ *   testDb = openBaselineDb([applyComposerMigration, applyComposerGroupLinkMigration]);
+ *
+ * `openRealDb` above is what bypasses the stub, and is the only place that
+ * knows how.
+ *
+ * Foreign keys are ON and not negotiable here, because that is what a running
+ * install does. A suite that needs them off says so afterwards on the handle it
+ * gets back; a suite that seeds rows the schema would reject keeps its own
+ * fixture rather than asking this helper to relax.
+ */
+export function openBaselineDb(migrations: MigrationApplier[] = []): RealDb {
+  const database = openRealDb();
+  database.pragma("foreign_keys = ON");
+  execBaselineSchema(database);
+  for (const apply of migrations) apply(database, migrationsDir);
+  return database;
 }
 
 /**

@@ -24,24 +24,17 @@
  * is compared against.
  */
 
-import { join } from "path";
+import { openRealDb, type RealDb } from "../helpers/baseline-db";
 
-import type DatabaseNs from "better-sqlite3";
-
-type RealDb = DatabaseNs.Database;
 let testDb: RealDb | null = null;
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports; require is the hoisting-safe form
 jest.mock("@/lib/db", () => require("../helpers/baseline-db").dbSingletonMock(() => testDb));
 
-const Database = jest.requireActual(
-  join(process.cwd(), "node_modules", "better-sqlite3", "lib", "index.js"),
-) as unknown as new (path: string) => RealDb;
-
 import { readRunUsageSince } from "@/lib/spend/spend-repository";
 
 beforeAll(() => {
-  testDb = new Database(":memory:");
+  testDb = openRealDb();
   testDb.exec(`
     CREATE TABLE runs (
       id TEXT PRIMARY KEY, mission_id TEXT, composer_node_run_id TEXT,

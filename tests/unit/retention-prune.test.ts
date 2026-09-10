@@ -26,13 +26,11 @@
 //   THE RECORD     an applied run leaves evidence of what it took, including
 //                  when it took nothing.
 
-import { join } from "path";
-
 let testDb: import("better-sqlite3").Database | null = null;
 
 jest.mock("@/lib/db", () => require("../helpers/baseline-db").dbSingletonMock(() => testDb, { uuid: () => "test-uuid" }));
 
-import { execBaselineSchema } from "../helpers/baseline-db";
+import { openBaselineDb } from "../helpers/baseline-db";
 import { applyAnalyticsEventsMigration, applyChatMigration, applyAgentProgressionMigration, applyRetentionMigration } from "@/lib/db/sql-migrations";
 import { runRetentionPrune } from "@/lib/retention/retention-prune";
 import {
@@ -46,8 +44,6 @@ import {
   setRetentionPolicy,
 } from "@/lib/retention/retention-repository";
 import { readRetentionStatus } from "@/lib/retention/retention-status";
-
-const migrationsDir = join(process.cwd(), "src", "lib", "db", "migrations");
 
 /** A fixed instant, so the boundary tests do not race the wall clock. */
 const CUTOFF = "2026-01-01 00:00:00";
@@ -130,16 +126,12 @@ function conversationIds(): string[] {
 beforeEach(() => {
   eventSeq = 0;
   convoSeq = 0;
-  const Database = require("better-sqlite3/lib/index.js") as typeof import("better-sqlite3");
-  testDb = new (Database as unknown as new (path: string) => import("better-sqlite3").Database)(
-    ":memory:",
-  );
-  testDb.pragma("foreign_keys = ON");
-  execBaselineSchema(testDb);
-  applyAnalyticsEventsMigration(testDb, migrationsDir);
-  applyChatMigration(testDb, migrationsDir);
-  applyAgentProgressionMigration(testDb, migrationsDir);
-  applyRetentionMigration(testDb, migrationsDir);
+  testDb = openBaselineDb([
+    applyAnalyticsEventsMigration,
+    applyChatMigration,
+    applyAgentProgressionMigration,
+    applyRetentionMigration,
+  ]);
 });
 afterEach(() => {
   testDb?.close();

@@ -41,30 +41,8 @@ import type { ComponentType } from "react";
 jest.mock("lucide-react", () => require("../helpers/story").lucideNullMock());
 
 // next/server, the way models-api.test.ts stands it in: a status and a body.
-jest.mock("next/server", () => ({
-  NextRequest: class NextRequest {
-    url: string;
-    method: string;
-    constructor(url: string, init?: RequestInit) {
-      this.url = url;
-      this.method = init?.method ?? "GET";
-    }
-  },
-  NextResponse: class NextResponse {
-    status: number;
-    body: unknown;
-    constructor(status: number, body: unknown) {
-      this.status = status;
-      this.body = body;
-    }
-    async json() {
-      return this.body;
-    }
-    static json(data: unknown, init?: ResponseInit) {
-      return new NextResponse(init?.status ?? 200, data);
-    }
-  },
-}));
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- hoisting-safe inside jest.mock
+jest.mock("next/server", () => require("../helpers/mocks").nextServerMock());
 
 // The registry and the config readers, as models-pull-context-length mocks
 // them: the real sync-manager runs over these.

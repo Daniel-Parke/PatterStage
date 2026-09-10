@@ -3,8 +3,7 @@
 // CRUD + graph-navigation coverage for the Composer repository (real SQLite;
 // the @/lib/db singleton is mocked to a fresh in-memory DB per test).
 
-import { join } from "path";
-import { execBaselineSchema } from "../helpers/baseline-db";
+import { openBaselineDb } from "../helpers/baseline-db";
 import { applyComposerMigration } from "@/lib/db/apply-composer-migration";
 import { applyComposerGroupLinkMigration } from "@/lib/db/apply-composer-group-link-migration";
 import {
@@ -27,15 +26,11 @@ let testDb: import("better-sqlite3").Database | null = null;
 
 jest.mock("@/lib/db", () => require("../helpers/baseline-db").dbSingletonMock(() => testDb));
 
-const migrationsDir = join(process.cwd(), "src", "lib", "db", "migrations");
-
 beforeEach(() => {
-  const Database = require("better-sqlite3/lib/index.js") as typeof import("better-sqlite3");
-  testDb = new (Database as unknown as new (path: string) => import("better-sqlite3").Database)(":memory:");
-  testDb.pragma("foreign_keys = ON");
-  execBaselineSchema(testDb); // missions + runs, schema_version 3
-  applyComposerMigration(testDb, migrationsDir); // composer tables + runs column
-  applyComposerGroupLinkMigration(testDb, migrationsDir); // composer_runs.parent_node_run_id (v26)
+  testDb = openBaselineDb([
+    applyComposerMigration, // composer tables + runs column
+    applyComposerGroupLinkMigration, // composer_runs.parent_node_run_id (v26)
+  ]); // missions + runs, schema_version 3
 });
 
 afterEach(() => {

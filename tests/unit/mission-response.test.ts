@@ -6,27 +6,11 @@
 // 4 sites in /api/missions/route.ts and 5 sites in
 // mission-promote-handler.ts.
 
-const responses: Array<{ data: unknown; init?: ResponseInit }> = [];
-jest.mock("next/server", () => {
-  class NextResponse {
-    ok: boolean;
-    status: number;
-    private _data: unknown;
-    constructor(data: unknown = null, init?: ResponseInit) {
-      this._data = data;
-      this.status = init?.status ?? 200;
-      this.ok = this.status >= 200 && this.status < 300;
-    }
-    json() {
-      return Promise.resolve(this._data);
-    }
-    static json(data: unknown, init?: ResponseInit) {
-      responses.push({ data, init });
-      return new NextResponse(data, init);
-    }
-  }
-  return { NextResponse };
-});
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- hoisting-safe inside jest.mock
+jest.mock("next/server", () => require("../helpers/mocks").nextServerMock());
+const { __responses: responses } = jest.requireMock("next/server") as {
+  __responses: Array<{ data: unknown; init?: ResponseInit }>;
+};
 
 const mockGetMission = jest.fn();
 jest.mock("@/lib/missions/mission-repository", () => ({

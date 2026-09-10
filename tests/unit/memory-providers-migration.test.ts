@@ -2,19 +2,12 @@
 // Verifies the v22 memory_providers migration against REAL SQLite: the table,
 // the seeded default Hindsight row, schema_version 22, idempotency + guard.
 
-import { join } from "path";
-import type DatabaseNs from "better-sqlite3";
+import { migrationsDir, openRealDb, type RealDb } from "../helpers/baseline-db";
 import { applyMemoryProvidersMigration } from "@/lib/db/apply-memory-providers-migration";
 import { getSchemaVersion, setSchemaVersion } from "@/lib/db-schema";
 
-type RealDb = DatabaseNs.Database;
-const Database = jest.requireActual(
-  join(process.cwd(), "node_modules", "better-sqlite3", "lib", "index.js"),
-) as unknown as new (path: string) => RealDb;
-const migrationsDir = join(process.cwd(), "src", "lib", "db", "migrations");
-
 function makeDb(): RealDb {
-  const db = new Database(":memory:");
+  const db = openRealDb();
   db.exec("CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);");
   setSchemaVersion(db, 21);
   return db;

@@ -23,14 +23,10 @@ import { mkdtempSync, mkdirSync, writeFileSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 
-import { execBaselineSchema } from "../helpers/baseline-db";
+import { openBaselineDb } from "../helpers/baseline-db";
 
 let testDb: import("better-sqlite3").Database | null = null;
 let hermesRoot = "";
-
-function loadRealBetterSqlite3(): typeof import("better-sqlite3") {
-  return require("better-sqlite3/lib/index.js") as typeof import("better-sqlite3");
-}
 
 jest.mock("@/lib/db", () => require("../helpers/baseline-db").dbSingletonMock(() => testDb));
 
@@ -78,12 +74,7 @@ function seedProfileWithNoMemories(slug: string): string {
 }
 
 beforeEach(() => {
-  const Database = loadRealBetterSqlite3();
-  testDb = new (Database as unknown as new (path: string) => import("better-sqlite3").Database)(
-    ":memory:",
-  );
-  testDb.pragma("foreign_keys = ON");
-  execBaselineSchema(testDb);
+  testDb = openBaselineDb();
   hermesRoot = mkdtempSync(join(tmpdir(), "ps-drift-missing-"));
   writeFileSync(join(hermesRoot, "config.yaml"), "skills:\n  disabled: []\n");
 });

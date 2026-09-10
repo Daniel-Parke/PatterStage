@@ -27,7 +27,7 @@
 
 import type DatabaseNs from "better-sqlite3";
 
-import { execBaselineSchema } from "../helpers/baseline-db";
+import { openBaselineDb } from "../helpers/baseline-db";
 
 type RealDb = DatabaseNs.Database;
 let testDb: RealDb | null = null;
@@ -69,10 +69,7 @@ function handlers(): SpendHandlerModule {
 const EARLY = "2000-01-01 00:00:00";
 
 beforeEach(() => {
-  const Database = require("better-sqlite3/lib/index.js") as typeof import("better-sqlite3");
-  testDb = new (Database as unknown as new (p: string) => RealDb)(":memory:");
-  testDb.pragma("foreign_keys = ON");
-  execBaselineSchema(testDb);
+  testDb = openBaselineDb();
   // recordedSpendSince reads research_runs too, and 019 is not part of the
   // squashed baseline. Only the four columns the spend read names are needed.
   testDb.exec(`

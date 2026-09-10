@@ -27,17 +27,10 @@
 
 import { existsSync, readdirSync } from "fs";
 import { join } from "path";
-import type DatabaseNs from "better-sqlite3";
+import { migrationsDir, openRealDb, type RealDb } from "../helpers/baseline-db";
 
 import { MIGRATION_HEAD_SCHEMA_VERSION, getSchemaVersion, setSchemaVersion } from "@/lib/db-schema";
 
-type RealDb = DatabaseNs.Database;
-
-const Database = jest.requireActual(
-  join(process.cwd(), "node_modules", "better-sqlite3", "lib", "index.js"),
-) as unknown as new (path: string) => RealDb;
-
-const migrationsDir = join(process.cwd(), "src", "lib", "db", "migrations");
 const sqlPath = join(migrationsDir, "041_schedule_kind.sql");
 
 // ── the applier the contract creates, loaded lazily ────────────
@@ -59,7 +52,7 @@ function applier(): ApplierModule {
 
 /** The `schedules` table as 001_baseline declares it, and nothing else. */
 function baselineSchedules(): RealDb {
-  const db = new Database(":memory:");
+  const db = openRealDb();
   db.exec("CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);");
   db.exec(`
     CREATE TABLE schedules (

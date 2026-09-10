@@ -16,21 +16,12 @@
 // Full-chain wiring (runMigrations actually calls the applier) is guarded in
 // run-migrations-upgrade.integration.test.ts.
 
-import { join } from "path";
-import type DatabaseNs from "better-sqlite3";
+import { migrationsDir, openRealDb, type RealDb } from "../helpers/baseline-db";
 import {
   applyRetentionMigration,
   RETENTION_SCHEMA_VERSION,
 } from "@/lib/db/sql-migrations";
 import { getSchemaVersion, setSchemaVersion } from "@/lib/db-schema";
-
-type RealDb = DatabaseNs.Database;
-
-const Database = jest.requireActual(
-  join(process.cwd(), "node_modules", "better-sqlite3", "lib", "index.js"),
-) as unknown as new (path: string) => RealDb;
-
-const migrationsDir = join(process.cwd(), "src", "lib", "db", "migrations");
 
 function namesOfType(db: RealDb, type: string): string[] {
   return (
@@ -45,7 +36,7 @@ function withMeta(db: RealDb): RealDb {
   return db;
 }
 function migrated(): RealDb {
-  const db = withMeta(new Database(":memory:"));
+  const db = withMeta(openRealDb());
   setSchemaVersion(db, 31);
   applyRetentionMigration(db, migrationsDir);
   return db;
@@ -173,7 +164,7 @@ describe("retention migration (v32, real SQLite)", () => {
   });
 
   it("bumps schema_version to 32 and is idempotent", () => {
-    const db = withMeta(new Database(":memory:"));
+    const db = withMeta(openRealDb());
     setSchemaVersion(db, 31);
 
     applyRetentionMigration(db, migrationsDir);
@@ -187,7 +178,7 @@ describe("retention migration (v32, real SQLite)", () => {
   });
 
   it("version-guards: a DB already at v32 is left untouched (early return)", () => {
-    const db = withMeta(new Database(":memory:"));
+    const db = withMeta(openRealDb());
     setSchemaVersion(db, RETENTION_SCHEMA_VERSION);
 
     expect(applyRetentionMigration(db, migrationsDir)).toBe(RETENTION_SCHEMA_VERSION);

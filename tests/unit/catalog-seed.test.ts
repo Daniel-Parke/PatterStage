@@ -4,16 +4,12 @@
 import { existsSync } from "fs";
 import { join } from "path";
 
-import { execBaselineSchema } from "../helpers/baseline-db";
+import { openBaselineDb } from "../helpers/baseline-db";
 
 const repoRoot = join(__dirname, "..", "..");
 const hasSeedPack = existsSync(join(repoRoot, "data/seed/profiles/manifest.json"));
 
 let testDb: import("better-sqlite3").Database | null = null;
-
-function loadRealBetterSqlite3(): typeof import("better-sqlite3") {
-  return require("better-sqlite3/lib/index.js") as typeof import("better-sqlite3");
-}
 
 jest.mock("@/lib/db", () => require("../helpers/baseline-db").dbSingletonMock(() => testDb));
 
@@ -28,12 +24,7 @@ jest.mock("@/lib/host/paths", () => ({
 }));
 
 beforeEach(() => {
-  const Database = loadRealBetterSqlite3();
-  testDb = new (Database as unknown as new (path: string) => import("better-sqlite3").Database)(
-    ":memory:"
-  );
-  testDb.pragma("foreign_keys = ON");
-  execBaselineSchema(testDb);
+  testDb = openBaselineDb();
 });
 
 afterEach(() => {

@@ -4,8 +4,7 @@
 // nested ComposerRun; the engine settles the group stage when the child run
 // finishes, and recursion is blocked.
 
-import { join } from "path";
-import { execBaselineSchema } from "../helpers/baseline-db";
+import { openBaselineDb } from "../helpers/baseline-db";
 import { applyComposerMigration } from "@/lib/db/apply-composer-migration";
 import { applyComposerGroupLinkMigration } from "@/lib/db/apply-composer-group-link-migration";
 
@@ -26,16 +25,13 @@ import {
 } from "@/lib/composer/composer-repository";
 import { advanceComposerRun } from "@/lib/composer/engine";
 
-const migrationsDir = join(process.cwd(), "src", "lib", "db", "migrations");
 const flush = () => new Promise((r) => setTimeout(r, 30)); // let the async child-advance settle
 
 beforeEach(() => {
-  const Database = require("better-sqlite3/lib/index.js") as typeof import("better-sqlite3");
-  testDb = new (Database as unknown as new (p: string) => import("better-sqlite3").Database)(":memory:");
-  testDb.pragma("foreign_keys = ON");
-  execBaselineSchema(testDb);
-  applyComposerMigration(testDb, migrationsDir); // v21 composer tables (+ runs.composer_node_run_id)
-  applyComposerGroupLinkMigration(testDb, migrationsDir); // v26 composer_runs.parent_node_run_id
+  testDb = openBaselineDb([
+    applyComposerMigration, // v21 composer tables (+ runs.composer_node_run_id)
+    applyComposerGroupLinkMigration, // v26 composer_runs.parent_node_run_id
+  ]);
 });
 afterEach(async () => {
   await flush();

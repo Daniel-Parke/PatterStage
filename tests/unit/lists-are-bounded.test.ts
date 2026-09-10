@@ -8,14 +8,10 @@
 // plumbs it; ordering is deterministic and stated.
 
 import { NextRequest } from "next/server";
-import { execBaselineSchema } from "../helpers/baseline-db";
+import { openBaselineDb } from "../helpers/baseline-db";
 
 let testDb: import("better-sqlite3").Database | null = null;
 let tick = 0;
-
-function loadRealBetterSqlite3(): typeof import("better-sqlite3") {
-  return require("better-sqlite3/lib/index.js") as typeof import("better-sqlite3");
-}
 
 jest.mock("@/lib/db", () => {
   const actualCrypto = jest.requireActual("crypto") as typeof import("crypto");
@@ -30,10 +26,7 @@ jest.mock("@/lib/db", () => {
 });
 
 beforeEach(() => {
-  const Database = loadRealBetterSqlite3();
-  testDb = new (Database as unknown as new (path: string) => import("better-sqlite3").Database)(":memory:");
-  testDb.pragma("foreign_keys = ON");
-  execBaselineSchema(testDb);
+  testDb = openBaselineDb();
 });
 
 afterEach(() => {

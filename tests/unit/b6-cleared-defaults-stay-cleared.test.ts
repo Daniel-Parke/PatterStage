@@ -96,7 +96,7 @@ jest.mock("@/lib/api/api-fetch", () => ({
 
 import { NextRequest } from "next/server";
 
-import { execBaselineSchema } from "../helpers/baseline-db";
+import { openBaselineDb } from "../helpers/baseline-db";
 import { createModel, getModelDefaults, setDefaultModel } from "@/lib/models/models-repository";
 import { getAgentRoot, updateAgentRoot } from "@/lib/agents/agent-root-repository";
 import {
@@ -200,10 +200,7 @@ beforeEach(() => {
   home = mkdtempSync(join(tmpdir(), "b6-cleared-defaults-"));
   (global as Record<string, unknown>)[HOME_KEY] = home;
 
-  const Database = require("better-sqlite3/lib/index.js") as typeof import("better-sqlite3");
-  testDb = new (Database as unknown as new (path: string) => import("better-sqlite3").Database)(":memory:");
-  testDb.pragma("foreign_keys = ON");
-  execBaselineSchema(testDb);
+  testDb = openBaselineDb();
   jest.clearAllMocks();
 });
 

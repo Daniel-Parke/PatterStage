@@ -2,19 +2,12 @@
 // Phase 2 — the v27 frameworks registry migration against REAL SQLite: the
 // table, the seeded default active Hermes row, schema_version 27, idempotency.
 
-import { join } from "path";
-import type DatabaseNs from "better-sqlite3";
+import { migrationsDir, openRealDb, type RealDb } from "../helpers/baseline-db";
 import { applyFrameworksMigration } from "@/lib/db/apply-frameworks-migration";
 import { getSchemaVersion, setSchemaVersion } from "@/lib/db-schema";
 
-type RealDb = DatabaseNs.Database;
-const Database = jest.requireActual(
-  join(process.cwd(), "node_modules", "better-sqlite3", "lib", "index.js"),
-) as unknown as new (path: string) => RealDb;
-const migrationsDir = join(process.cwd(), "src", "lib", "db", "migrations");
-
 function makeDb(): RealDb {
-  const db = new Database(":memory:");
+  const db = openRealDb();
   db.exec("CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);");
   setSchemaVersion(db, 26);
   return db;

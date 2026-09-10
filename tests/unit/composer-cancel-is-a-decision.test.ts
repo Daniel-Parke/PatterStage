@@ -33,7 +33,7 @@
 // holding stale output for a run that ended while it waited.
 
 import { join } from "path";
-import { execBaselineSchema } from "../helpers/baseline-db";
+import { openBaselineDb } from "../helpers/baseline-db";
 import { applyComposerMigration } from "@/lib/db/apply-composer-migration";
 import { applyComposerGroupLinkMigration } from "@/lib/db/apply-composer-group-link-migration";
 import { applyComposerRejectedMigration } from "@/lib/db/apply-composer-rejected-migration";
@@ -90,15 +90,11 @@ const GATED = {
 };
 
 function freshDb(): import("better-sqlite3").Database {
-  const Database = require("better-sqlite3/lib/index.js") as typeof import("better-sqlite3");
-  const db = new (Database as unknown as new (p: string) => import("better-sqlite3").Database)(
-    ":memory:",
-  );
-  db.pragma("foreign_keys = ON");
-  execBaselineSchema(db);
-  applyComposerMigration(db, migrationsDir);
-  applyComposerGroupLinkMigration(db, migrationsDir);
-  applyComposerRejectedMigration(db, migrationsDir);
+  const db = openBaselineDb([
+    applyComposerMigration,
+    applyComposerGroupLinkMigration,
+    applyComposerRejectedMigration,
+  ]);
   return db;
 }
 

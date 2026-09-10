@@ -24,10 +24,9 @@
 // exactly. The watchdog and the rest of the repository are untouched.
 // ═══════════════════════════════════════════════════════════════
 
-import { join } from "path";
 import type DatabaseNs from "better-sqlite3";
 
-import { execBaselineSchema } from "../helpers/baseline-db";
+import { openBaselineDb } from "../helpers/baseline-db";
 import { applyDeepResearchMigration, applyResearchUsageMigration, applyResearchGatherMigration } from "@/lib/db/sql-migrations";
 import { applyResearchOptionsMigration } from "@/lib/db/apply-research-options-migration";
 import { applyResearchComposerLinkMigration } from "@/lib/db/apply-research-composer-link-migration";
@@ -70,8 +69,6 @@ import {
 } from "@/lib/laboratory/deep-research/research-repository";
 import { runResearchJob } from "@/lib/laboratory/deep-research/run-job";
 import type { ResearchRun } from "@/lib/laboratory/deep-research/types";
-
-const migrationsDir = join(process.cwd(), "src", "lib", "db", "migrations");
 
 // ── the two things the contract adds, read loosely ──────────────
 
@@ -119,15 +116,13 @@ const RESULT = {
 const STEP = { kind: "plan" as const, input: "q", output: "a plan", sources: [] };
 
 beforeEach(() => {
-  const Database = require("better-sqlite3/lib/index.js") as typeof import("better-sqlite3");
-  testDb = new (Database as unknown as new (p: string) => RealDb)(":memory:");
-  testDb.pragma("foreign_keys = ON");
-  execBaselineSchema(testDb);
-  applyDeepResearchMigration(testDb, migrationsDir);
-  applyResearchOptionsMigration(testDb, migrationsDir);
-  applyResearchComposerLinkMigration(testDb, migrationsDir);
-  applyResearchUsageMigration(testDb, migrationsDir);
-  applyResearchGatherMigration(testDb, migrationsDir);
+  testDb = openBaselineDb([
+    applyDeepResearchMigration,
+    applyResearchOptionsMigration,
+    applyResearchComposerLinkMigration,
+    applyResearchUsageMigration,
+    applyResearchGatherMigration,
+  ]);
   jest.clearAllMocks();
 });
 

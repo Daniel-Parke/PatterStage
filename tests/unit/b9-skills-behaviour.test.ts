@@ -16,7 +16,7 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 
-import { execBaselineSchema } from "../helpers/baseline-db";
+import { openBaselineDb } from "../helpers/baseline-db";
 
 /** The shell that writes these files eats a backslash level; this does not. */
 const LF = String.fromCharCode(10);
@@ -95,10 +95,7 @@ async function readSkill(segments: string[]) {
 }
 
 beforeEach(() => {
-  const Database = require("better-sqlite3/lib/index.js") as typeof import("better-sqlite3");
-  testDb = new (Database as unknown as new (p: string) => import("better-sqlite3").Database)(":memory:");
-  testDb.pragma("foreign_keys = ON");
-  execBaselineSchema(testDb);
+  testDb = openBaselineDb();
   rmSync(hermesHome, { recursive: true, force: true });
   mkdirSync(skillsRoot, { recursive: true });
   jest.clearAllMocks();

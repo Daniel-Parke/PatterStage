@@ -39,20 +39,8 @@ jest.mock("@/lib/runs/artifacts-repository", () => ({
   deleteArtifact: jest.fn(),
 }));
 
-jest.mock("next/server", () => ({
-  NextResponse: class NextResponse {
-    constructor(
-      public status: number,
-      public body: unknown,
-    ) {}
-    async json() {
-      return this.body;
-    }
-    static json(data: unknown, init?: { status?: number }) {
-      return new NextResponse(init?.status ?? 200, data);
-    }
-  },
-}));
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- hoisting-safe inside jest.mock
+jest.mock("next/server", () => require("../helpers/mocks").nextServerMock());
 
 import { GET as getArtifactRoute } from "@/app/api/artifacts/[id]/route";
 import { ANALYTICS_EVENT_TYPES, ANALYTICS_ENTITY_TYPES } from "@/lib/analytics/event-types";

@@ -29,7 +29,7 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "fs
 import { tmpdir } from "os";
 import { join } from "path";
 
-import { execBaselineSchema } from "../helpers/baseline-db";
+import { openBaselineDb } from "../helpers/baseline-db";
 import { applyMemoryProvidersMigration } from "@/lib/db/apply-memory-providers-migration";
 
 let testDb: import("better-sqlite3").Database | null = null;
@@ -59,7 +59,6 @@ jest.mock("@/lib/analytics/record-event", () => ({ recordEvent: jest.fn() }));
 import { getMemoryProviderType } from "@/lib/memory/memory-providers";
 import { updateMemoryProvider } from "@/lib/memory/memory-providers/repository";
 
-const migrationsDir = join(process.cwd(), "src", "lib", "db", "migrations");
 const configPath = () => join(hermesHome, "config.yaml");
 const MALFORMED = ["agent:", "  max_turns: 100", "  max_turns: 200", ""].join("\n");
 
@@ -81,11 +80,7 @@ function diskDoc(): Record<string, Record<string, unknown>> {
 }
 
 beforeEach(() => {
-  const Database = require("better-sqlite3/lib/index.js") as typeof import("better-sqlite3");
-  testDb = new (Database as unknown as new (p: string) => import("better-sqlite3").Database)(":memory:");
-  testDb.pragma("foreign_keys = ON");
-  execBaselineSchema(testDb);
-  applyMemoryProvidersMigration(testDb, migrationsDir);
+  testDb = openBaselineDb([applyMemoryProvidersMigration]);
   rmSync(hermesHome, { recursive: true, force: true });
   require("fs").mkdirSync(hermesHome, { recursive: true });
   jest.clearAllMocks();

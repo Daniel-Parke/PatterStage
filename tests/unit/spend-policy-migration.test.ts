@@ -15,28 +15,19 @@
 //      (clause 4). A stop with no ceiling is not a strict setting, it is an
 //      outage, and this is the layer where "cannot" is cheaper than "should not".
 
-import { join } from "path";
-import type DatabaseNs from "better-sqlite3";
+import { migrationsDir, openRealDb, type RealDb } from "../helpers/baseline-db";
 import {
   applySpendPolicyMigration,
   SPEND_POLICY_SCHEMA_VERSION,
 } from "@/lib/db/sql-migrations";
 import { getSchemaVersion, setSchemaVersion } from "@/lib/db-schema";
 
-type RealDb = DatabaseNs.Database;
-
-const Database = jest.requireActual(
-  join(process.cwd(), "node_modules", "better-sqlite3", "lib", "index.js"),
-) as unknown as new (path: string) => RealDb;
-
-const migrationsDir = join(process.cwd(), "src", "lib", "db", "migrations");
-
 function cols(db: RealDb, table: string): string[] {
   return (db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[]).map((r) => r.name);
 }
 
 function migrated(): RealDb {
-  const db = new Database(":memory:");
+  const db = openRealDb();
   db.exec("CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);");
   setSchemaVersion(db, 32);
   applySpendPolicyMigration(db, migrationsDir);
@@ -60,7 +51,7 @@ describe("spend policy migration (v33, real SQLite)", () => {
   });
 
   it("returns early without touching anything when the database is already past the gate", () => {
-    const db = new Database(":memory:");
+    const db = openRealDb();
     db.exec("CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);");
     setSchemaVersion(db, 33);
     expect(applySpendPolicyMigration(db, migrationsDir)).toBe(33);

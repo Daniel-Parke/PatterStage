@@ -8,7 +8,7 @@
 // forever. Missions have reconcileRunsOnBoot for exactly this; stories get the
 // same sweep, at the same moment.
 
-import { execBaselineSchema } from "../helpers/baseline-db";
+import { openBaselineDb } from "../helpers/baseline-db";
 
 let testDb: import("better-sqlite3").Database | null = null;
 
@@ -22,17 +22,8 @@ import {
 } from "@/modules/rec-room/lib/story-repository";
 import { recRoomServerModule } from "@/modules/rec-room/server";
 
-function loadRealBetterSqlite3(): unknown {
-  // The mapper points "better-sqlite3" at a manual mock; the real CJS entry
-  // is reached by its file path, as every DB-backed test in this tree does.
-  return jest.requireActual("better-sqlite3/lib/index.js");
-}
-
 beforeEach(() => {
-  const Database = loadRealBetterSqlite3();
-  testDb = new (Database as unknown as new (path: string) => import("better-sqlite3").Database)(":memory:");
-  testDb.pragma("foreign_keys = ON");
-  execBaselineSchema(testDb);
+  testDb = openBaselineDb();
 });
 
 afterEach(() => {

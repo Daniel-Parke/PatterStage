@@ -23,7 +23,7 @@
 import type DatabaseNs from "better-sqlite3";
 import type * as SchedulesRepo from "@/lib/schedule/schedules-repository";
 
-import { execBaselineSchema } from "../helpers/baseline-db";
+import { openBaselineDb } from "../helpers/baseline-db";
 import { describeScheduleTarget } from "@/lib/schedule/schedule-target";
 
 type RealDb = DatabaseNs.Database;
@@ -38,10 +38,7 @@ function seedMission(db: RealDb, id: string, name: string, deleted = false): voi
 }
 
 beforeEach(() => {
-  const Database = require("better-sqlite3/lib/index.js") as typeof import("better-sqlite3");
-  testDb = new (Database as unknown as new (p: string) => RealDb)(":memory:");
-  testDb.pragma("foreign_keys = ON");
-  execBaselineSchema(testDb);
+  testDb = openBaselineDb();
   jest.resetModules();
   jest.doMock("@/lib/db", () => {
     const actual = jest.requireActual("@/lib/db");

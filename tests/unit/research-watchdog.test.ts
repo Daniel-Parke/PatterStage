@@ -4,8 +4,7 @@
 // process can leave a row 'running' forever. failStuckResearchRuns() (run on
 // boot) must fail the stuck ones without touching fresh or terminal runs.
 
-import { join } from "path";
-import { execBaselineSchema } from "../helpers/baseline-db";
+import { openBaselineDb } from "../helpers/baseline-db";
 import { applyDeepResearchMigration } from "@/lib/db/sql-migrations";
 import { applyResearchOptionsMigration } from "@/lib/db/apply-research-options-migration";
 import { applyResearchComposerLinkMigration } from "@/lib/db/apply-research-composer-link-migration";
@@ -21,16 +20,12 @@ import {
   updateResearchRun,
 } from "@/lib/laboratory/deep-research/research-repository";
 
-const migrationsDir = join(process.cwd(), "src", "lib", "db", "migrations");
-
 beforeEach(() => {
-  const Database = require("better-sqlite3/lib/index.js") as typeof import("better-sqlite3");
-  testDb = new (Database as unknown as new (path: string) => import("better-sqlite3").Database)(":memory:");
-  testDb.pragma("foreign_keys = ON");
-  execBaselineSchema(testDb);
-  applyDeepResearchMigration(testDb, migrationsDir); // research_runs/steps (v19)
-  applyResearchOptionsMigration(testDb, migrationsDir); // research_runs.config_json (v23)
-  applyResearchComposerLinkMigration(testDb, migrationsDir); // research_runs.composer_node_run_id (v25)
+  testDb = openBaselineDb([
+    applyDeepResearchMigration, // research_runs/steps (v19)
+    applyResearchOptionsMigration, // research_runs.config_json (v23)
+    applyResearchComposerLinkMigration, // research_runs.composer_node_run_id (v25)
+  ]);
 });
 afterEach(() => {
   testDb?.close();

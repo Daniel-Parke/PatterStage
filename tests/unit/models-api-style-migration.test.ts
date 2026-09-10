@@ -4,17 +4,9 @@
 
 import { readFileSync } from "fs";
 import { join } from "path";
-import type DatabaseNs from "better-sqlite3";
+import { migrationsDir, openRealDb, type RealDb } from "../helpers/baseline-db";
 import { applyModelsApiStyleMigration } from "@/lib/db/apply-models-api-style-migration";
 import { getSchemaVersion, setSchemaVersion } from "@/lib/db-schema";
-
-type RealDb = DatabaseNs.Database;
-
-const Database = jest.requireActual(
-  join(process.cwd(), "node_modules", "better-sqlite3", "lib", "index.js"),
-) as unknown as new (path: string) => RealDb;
-
-const migrationsDir = join(process.cwd(), "src", "lib", "db", "migrations");
 
 function cols(db: RealDb, table: string): string[] {
   return (db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[]).map((r) => r.name);
@@ -22,7 +14,7 @@ function cols(db: RealDb, table: string): string[] {
 
 /** Fresh baseline DB (models table without api_style), marked pre-v24. */
 function baselineDb(): RealDb {
-  const db = new Database(":memory:");
+  const db = openRealDb();
   db.pragma("foreign_keys = ON");
   db.exec("CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);");
   db.exec(readFileSync(join(migrationsDir, "001_baseline.sql"), "utf-8"));

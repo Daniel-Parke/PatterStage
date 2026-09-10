@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/* eslint-disable @typescript-eslint/no-require-imports -- better-sqlite3's package root is not newable under the jest transform, and the 040 applier is read through a loose require so this file loads before it exists */
+/* eslint-disable @typescript-eslint/no-require-imports -- the 040 applier is read through a loose require so this file loads before it exists */
 
 // ═══════════════════════════════════════════════════════════════
 // B14 oracle, group spend-plumbing, part one: migration 040 (D87, blocker).
@@ -27,14 +27,10 @@
 
 import { readdirSync, readFileSync } from "fs";
 import { join } from "path";
-import type DatabaseNs from "better-sqlite3";
+import { migrationsDir, openRealDb, type RealDb } from "../helpers/baseline-db";
 
 import { MIGRATION_HEAD_SCHEMA_VERSION, getSchemaVersion, setSchemaVersion } from "@/lib/db-schema";
 import { MODELS_ORIGIN_SCHEMA_VERSION } from "@/lib/db/sql-migrations";
-
-type RealDb = DatabaseNs.Database;
-
-const migrationsDir = join(process.cwd(), "src", "lib", "db", "migrations");
 
 // jest.setup globally mocks "@/lib/db"; runMigrations is the real wiring,
 // pulled past it.
@@ -58,8 +54,7 @@ function loadApplier(): SpendSourceApplier | null {
 // ── helpers ─────────────────────────────────────────────────────
 
 function openMemoryDb(): RealDb {
-  const Database = require("better-sqlite3/lib/index.js") as typeof import("better-sqlite3");
-  const db = new (Database as unknown as new (path: string) => RealDb)(":memory:");
+  const db = openRealDb();
   db.pragma("foreign_keys = ON");
   return db;
 }
