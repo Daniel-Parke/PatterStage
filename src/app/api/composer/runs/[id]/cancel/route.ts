@@ -10,16 +10,16 @@
 
 import { NextRequest } from "next/server";
 
-import { requireNotReadOnly } from "@/lib/api-auth";
-import { ok, badRequest, notFound, serviceUnavailable } from "@/lib/api-response";
-import { appendAuditLine } from "@/lib/audit-log";
+import { requireNotReadOnly } from "@/lib/api/api-auth";
+import { ok, badRequest, notFound, serviceUnavailable } from "@/lib/api/api-response";
+import { appendAuditLine } from "@/lib/api/audit-log";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import { ensureDb } from "@/lib/db";
 import { runtime } from "@/lib/runtime";
 import { cancelComposerRun, stopBackendRuns } from "@/lib/composer/cancel";
 import { getComposerRun } from "@/lib/composer/composer-repository";
 import type { ComposerRun } from "@/lib/composer/schema";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 interface Ctx {
   params: Promise<{ id: string }>;

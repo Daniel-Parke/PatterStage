@@ -87,7 +87,7 @@ independently.
 | Table | Owner | Consumer | Window | Floor |
 |---|---|---|---|---|
 | `analytics_events` | `src/lib/analytics/analytics-repository.ts` | `GET /api/analytics` (Insights) and `src/lib/stats/stats-repository.ts` (achievements, streak) | 400 days | 365 days |
-| `chat_messages` | `src/lib/chat-repository.ts` | the Chat surface (whole-conversation transcript) and run reconciliation | 365 days | 30 days |
+| `chat_messages` | `src/lib/chat/chat-repository.ts` | the Chat surface (whole-conversation transcript) and run reconciliation | 365 days | 30 days |
 
 ### 2. Why those numbers, and not rounder ones
 

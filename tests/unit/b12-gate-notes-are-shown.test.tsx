@@ -24,7 +24,7 @@ import { matchMediaMock } from "../helpers/mocks";
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
 jest.mock("lucide-react", () => require("../helpers/story").lucideNullMock());
 
-jest.mock("@/lib/api-fetch", () => ({ safeApiCall: jest.fn(async () => ({ ok: true, data: {} })) }));
+jest.mock("@/lib/api/api-fetch", () => ({ safeApiCall: jest.fn(async () => ({ ok: true, data: {} })) }));
 
 import ComposerNodeRunDetail from "@/components/composer/ComposerNodeRunDetail";
 import type { ComposerApproval, ComposerNode, ComposerNodeRun } from "@/lib/composer/schema";

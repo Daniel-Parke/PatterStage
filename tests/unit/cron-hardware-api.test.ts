@@ -15,15 +15,15 @@ jest.mock("fs", () => ({
   unlinkSync: jest.fn(),
 }));
 
-jest.mock("@/lib/api-auth", () => ({
+jest.mock("@/lib/api/api-auth", () => ({
   isReadOnly: jest.fn(() => false),
 }));
 
-jest.mock("@/lib/hardware-cron", () => ({
+jest.mock("@/lib/host/hardware-cron", () => ({
   crontabLineUsesScriptsDir: jest.fn(() => true),
 }));
 
-jest.mock("@/lib/paths", () => ({
+jest.mock("@/lib/host/paths", () => ({
   PS_DATA_DIR: "/tmp/ch-data",
   getPsScriptsDir: () => "/tmp/ch-data/scripts",
   getPsHardwareLogDir: () => "/tmp/ch-data/logs",

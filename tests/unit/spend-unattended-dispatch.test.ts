@@ -36,11 +36,11 @@ const dispatchMissionNow = jest.fn();
 const listActiveComposerRuns = jest.fn();
 const isFeatureEnabled = jest.fn();
 
-jest.mock("@/lib/schedules-repository", () => ({
+jest.mock("@/lib/schedule/schedules-repository", () => ({
   getDueSchedules: (...a: unknown[]) => getDueSchedules(...a),
   advanceSchedule: (...a: unknown[]) => advanceSchedule(...a),
 }));
-jest.mock("@/lib/runs-repository", () => ({ createRun: (...a: unknown[]) => createRun(...a) }));
+jest.mock("@/lib/runs/runs-repository", () => ({ createRun: (...a: unknown[]) => createRun(...a) }));
 jest.mock("@/lib/missions/mission-repository", () => ({
   hasDispatchedMission: (...a: unknown[]) => hasDispatchedMission(...a),
   getNextQueuedMission: (...a: unknown[]) => getNextQueuedMission(...a),
@@ -51,7 +51,7 @@ jest.mock("@/lib/orchestration/dispatch", () => ({
 jest.mock("@/lib/missions/mission-dispatch", () => ({
   dispatchMissionNow: (...a: unknown[]) => dispatchMissionNow(...a),
 }));
-jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
+jest.mock("@/lib/api/api-logger", () => ({ logApiError: jest.fn() }));
 
 // ── composer tick collaborators ───────────────────────────────
 jest.mock("@/lib/feature-flags", () => ({ isFeatureEnabled: (...a: unknown[]) => isFeatureEnabled(...a) }));
@@ -71,7 +71,7 @@ jest.mock("@/lib/composer/composer-repository", () => ({
   updateNodeRun: jest.fn(),
 }));
 jest.mock("@/lib/composer/dispatch", () => ({ dispatchComposerNode: jest.fn() }));
-jest.mock("@/lib/artifacts-repository", () => ({ captureArtifactOnce: jest.fn() }));
+jest.mock("@/lib/runs/artifacts-repository", () => ({ captureArtifactOnce: jest.fn() }));
 jest.mock("@/lib/laboratory/deep-research/research-repository", () => ({
   getResearchRunByComposerNodeRunId: jest.fn(),
 }));

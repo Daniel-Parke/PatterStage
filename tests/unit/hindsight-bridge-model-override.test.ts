@@ -59,7 +59,7 @@ jest.mock("next/server", () => ({
   },
 }));
 
-jest.mock("@/lib/api-logger", () => ({
+jest.mock("@/lib/api/api-logger", () => ({
   logApiError: jest.fn(),
 }));
 

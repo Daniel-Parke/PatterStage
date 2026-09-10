@@ -23,7 +23,7 @@
 
 import { useSyncExternalStore } from "react";
 
-import { DEFAULT_PROFILE_SLUG } from "@/lib/profile-slug";
+import { DEFAULT_PROFILE_SLUG } from "@/lib/agents/profile-slug";
 
 const STORAGE_KEY = "patterstage.selected-profile";
 

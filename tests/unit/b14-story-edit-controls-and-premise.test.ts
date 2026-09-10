@@ -40,10 +40,10 @@ let testDb: RealDb | null = null;
 jest.mock("@/lib/db", () => require("../helpers/baseline-db").dbSingletonMock(() => testDb));
 
 const callLLMMock = jest.fn();
-jest.mock("@/lib/llm", () => ({ callLLM: (...a: unknown[]) => callLLMMock(...a) }));
+jest.mock("@/lib/models/llm", () => ({ callLLM: (...a: unknown[]) => callLLMMock(...a) }));
 
 jest.mock("@/lib/analytics/record-event", () => ({ recordEvent: jest.fn() }));
-jest.mock("@/lib/api-logger", () => ({
+jest.mock("@/lib/api/api-logger", () => ({
   logApiError: jest.fn(),
   serverErrorFromCatch: jest.fn(() => ({ status: 500, body: { error: "boom" } })),
 }));

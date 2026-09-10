@@ -3,12 +3,12 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextRequest } from "next/server";
-import { ok, notFound } from "@/lib/api-response";
+import { ok, notFound } from "@/lib/api/api-response";
 import {
   getResearchRun,
   listResearchSteps,
 } from "@/lib/laboratory/deep-research/research-repository";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 interface Ctx {
   params: Promise<{ id: string }>;

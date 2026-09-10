@@ -25,7 +25,7 @@ import MemoryTab from "./hindsight/MemoryTab";
 import DirectivesTab from "./hindsight/DirectivesTab";
 import MentalModelsTab from "./hindsight/MentalModelsTab";
 import { AddMemoryModal, DirectiveModal, MentalModelModal } from "./hindsight/Modals";
-import { setField } from "@/lib/set-field";
+import { setField } from "@/lib/config/set-field";
 import { useHindsightMemories } from "./hindsight/useHindsightMemories";
 import { useHindsightDirectives } from "./hindsight/useHindsightDirectives";
 import { useHindsightModels } from "./hindsight/useHindsightModels";

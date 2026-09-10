@@ -15,7 +15,7 @@ import { NextResponse } from "next/server";
 
 import { getMission } from "@/lib/missions/mission-repository";
 import { getCategory } from "@/lib/missions/mission-category-repository";
-import { badRequest, notFound } from "@/lib/api-response";
+import { badRequest, notFound } from "@/lib/api/api-response";
 
 function resolveMissionId(body: Record<string, unknown>): string | undefined {
   return (body.id ?? body.missionId) as string | undefined;

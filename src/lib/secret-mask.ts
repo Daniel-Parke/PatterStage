@@ -1,6 +1,10 @@
 // ═══════════════════════════════════════════════════════════════
 // Secret masking: values masked before they leave the server, shared by
 // /api/config and /api/models/import (credential keyHint).
+//
+// AT THE LIB ROOT ON PURPOSE (C7, T-0144): the config layer, the logger and
+// the API each mask with it, so it is owned by none of them and belongs to
+// no domain.
 // ═══════════════════════════════════════════════════════════════
 
 /** Mask an API key for client display — show first 4 + last 4 chars, or "••••" if too short. */

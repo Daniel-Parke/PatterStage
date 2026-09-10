@@ -8,7 +8,7 @@
 // diff's argument all extend or alias what is here.
 // ═══════════════════════════════════════════════════════════════
 
-import type { ApiStyle } from "@/lib/llm-endpoint";
+import type { ApiStyle } from "@/lib/models/llm-endpoint";
 import type { TaskType } from "@/lib/models/task-types";
 
 /** What makes a model the model it is, on either side of the sync. */

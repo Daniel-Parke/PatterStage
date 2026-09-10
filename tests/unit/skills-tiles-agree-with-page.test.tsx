@@ -61,7 +61,7 @@ jest.mock("@/hooks/useProfiles", () => ({
 }));
 
 const apiFetch = jest.fn();
-jest.mock("@/lib/api-fetch", () => ({
+jest.mock("@/lib/api/api-fetch", () => ({
   __esModule: true,
   apiFetch: (...args: unknown[]) => apiFetch(...args),
   // The page reads through useApiResource, which calls safeApiCall; routed

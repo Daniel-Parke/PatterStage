@@ -53,7 +53,7 @@ describe("GET /api/status/subsystems", () => {
       collectSubsystems: async () => ({ checkedAt: "2026-09-05T10:00:05Z", subsystems: rows }),
       liveSubsystemDeps: () => ({}),
     }));
-    jest.doMock("@/lib/api-logger", () => ({ serverErrorFromCatch: jest.fn() }));
+    jest.doMock("@/lib/api/api-logger", () => ({ serverErrorFromCatch: jest.fn() }));
     const { GET } = (await import("@/app/api/status/subsystems/route")) as { GET: () => Promise<Response> };
 
     const res = await GET();

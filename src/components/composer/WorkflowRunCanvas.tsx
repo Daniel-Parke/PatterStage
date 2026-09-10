@@ -9,7 +9,7 @@
 
 "use client";
 
-import { statusToneClasses } from "@/lib/theme";
+import { statusToneClasses } from "@/lib/ui/theme";
 import { useMemo, type ReactNode } from "react";
 import {
   ReactFlow,

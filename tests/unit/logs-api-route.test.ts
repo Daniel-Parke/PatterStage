@@ -5,7 +5,7 @@ jest.mock("@/modules/hermes/lib/agent-runtime", () => ({
   getActiveHermesPaths: () => ({ logs: "/tmp/hermes-logs-test" }),
 }));
 
-jest.mock("@/lib/api-auth", () => ({
+jest.mock("@/lib/api/api-auth", () => ({
 }));
 
 const mockExistsSync = jest.fn();

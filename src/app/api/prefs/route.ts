@@ -5,10 +5,10 @@
 
 import type { NextRequest } from "next/server";
 
-import { requireNotReadOnly } from "@/lib/api-auth";
-import { badRequest, ok } from "@/lib/api-response";
-import { readOperatorPrefs, validateOperatorPref, writeOperatorPref } from "@/lib/operator-prefs-repository";
-import { route } from "@/lib/api-route";
+import { requireNotReadOnly } from "@/lib/api/api-auth";
+import { badRequest, ok } from "@/lib/api/api-response";
+import { readOperatorPrefs, validateOperatorPref, writeOperatorPref } from "@/lib/system/operator-prefs-repository";
+import { route } from "@/lib/api/api-route";
 
 export const GET = route("GET /api/prefs", "reading preferences", "Failed to read preferences", async () => {
   return ok({ prefs: readOperatorPrefs() });

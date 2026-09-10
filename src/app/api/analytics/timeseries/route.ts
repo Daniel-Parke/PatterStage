@@ -9,11 +9,11 @@
 
 import { NextRequest } from "next/server";
 
-import { ok } from "@/lib/api-response";
+import { ok } from "@/lib/api/api-response";
 import { ensureDb } from "@/lib/db";
-import { analyticsTimeseriesQuerySchema, zodErrorResponse } from "@/lib/api-schemas";
+import { analyticsTimeseriesQuerySchema, zodErrorResponse } from "@/lib/api/api-schemas";
 import { timeseries } from "@/lib/analytics/analytics-repository";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 export const GET = route("GET /api/analytics/timeseries", "", "Failed to load analytics timeseries", async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);

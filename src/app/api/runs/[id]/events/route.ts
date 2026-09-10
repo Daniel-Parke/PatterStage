@@ -14,8 +14,8 @@
 
 import { NextRequest } from "next/server";
 import { runtime } from "@/lib/runtime";
-import { getRun } from "@/lib/runs-repository";
-import { messageFromError } from "@/lib/api-fetch";
+import { getRun } from "@/lib/runs/runs-repository";
+import { messageFromError } from "@/lib/api/api-fetch";
 
 /**
  * The run-level failure event.

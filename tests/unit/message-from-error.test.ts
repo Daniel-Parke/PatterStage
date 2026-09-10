@@ -1,5 +1,5 @@
 /**
- * Unit tests for `messageFromError` (and `toError`) from src/lib/api-fetch.ts.
+ * Unit tests for `messageFromError` (and `toError`) from src/lib/api/api-fetch.ts.
  *
  * `messageFromError(e, fallback)` is the canonical replacement for the
  *   err instanceof Error ? err.message : <fallback>
@@ -13,7 +13,7 @@
  * in session 77 was prompted by a real call site (useModelsPage.ts) where
  * an empty `throw new Error("")` would have produced a blank toast.
  */
-import { messageFromError, toError } from "@/lib/api-fetch";
+import { messageFromError, toError } from "@/lib/api/api-fetch";
 
 describe("messageFromError", () => {
   it("returns err.message for a normal Error", () => {

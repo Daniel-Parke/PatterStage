@@ -13,8 +13,8 @@ import { BookOpen, Clock, Trash2 } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import ConfirmButton from "@/components/ui/ConfirmButton";
-import { statusTone } from "@/lib/status-labels";
-import { statusToneClasses } from "@/lib/theme";
+import { statusTone } from "@/lib/ui/status-labels";
+import { statusToneClasses } from "@/lib/ui/theme";
 import { timeAgo } from "@/lib/utils";
 import { storyStatusLabel } from "@/modules/rec-room/lib/story-status-labels";
 

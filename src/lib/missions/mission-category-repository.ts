@@ -5,8 +5,8 @@
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "fs";
 
 import { getDb, inTransaction, now } from "../db";
-import { PATHS } from "../paths";
-import { listCatalogTemplates } from "../catalog-template-repository";
+import { PATHS } from "../host/paths";
+import { listCatalogTemplates } from "../templates/catalog-template-repository";
 
 export interface MissionCategory {
   id: string;

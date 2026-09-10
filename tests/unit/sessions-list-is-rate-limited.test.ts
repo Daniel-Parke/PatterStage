@@ -23,9 +23,9 @@ jest.mock("@/lib/sessions/session-repository", () => ({
 }));
 
 jest.mock("@/lib/sync", () => ({ ensureSyncLayer: jest.fn(), syncSessionsNow: jest.fn() }));
-jest.mock("@/lib/api-logger", () => ({
+jest.mock("@/lib/api/api-logger", () => ({
   logApiError: jest.fn(),
-  serverErrorFromCatch: jest.requireActual("@/lib/api-logger").serverErrorFromCatch,
+  serverErrorFromCatch: jest.requireActual("@/lib/api/api-logger").serverErrorFromCatch,
 }));
 
 import { NextRequest } from "next/server";

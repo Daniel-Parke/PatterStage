@@ -7,7 +7,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { syncHermesSessionsToDb } from "@/lib/sessions/session-sync";
-import { logApiError } from "@/lib/api-logger";
+import { logApiError } from "@/lib/api/api-logger";
 import { recordSyncFailure, recordSyncSuccess } from "@/lib/sync/sync-repository";
 import type { SyncSource, SyncResult } from "@/lib/sync/types";
 import { syncFailure, syncSuccess } from "@/lib/sync/types";

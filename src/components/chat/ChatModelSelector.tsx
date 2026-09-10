@@ -9,7 +9,7 @@
 import { useMemo, useCallback } from "react";
 import { InlineSelect } from "@/components/ui/Select";
 import { CHAT_DEFAULT_MODEL } from "@/types/chat";
-import { formatModelName } from "@/lib/chat-utils";
+import { formatModelName } from "@/lib/chat/chat-utils";
 
 export interface ChatModelSelectorProps {
   model: string;

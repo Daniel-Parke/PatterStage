@@ -109,7 +109,7 @@ function lintStepsBlock(): string {
 }
 
 async function configSectionsBlock(): Promise<string> {
-  const sections = await import("../../src/lib/config-sections");
+  const sections = await import("../../src/lib/config/config-sections");
   return table(
     ["Group", "Sections", "What it covers"],
     sections.SETTINGS_GROUPS.map((group) => [

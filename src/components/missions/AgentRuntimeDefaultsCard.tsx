@@ -11,7 +11,7 @@
 
 import { Clock, Timer } from "lucide-react";
 
-import { sectionHeadingClasses } from "@/lib/theme";
+import { sectionHeadingClasses } from "@/lib/ui/theme";
 import Card from "@/components/ui/Card";
 import Picker from "@/components/ui/Picker";
 import ProfilePicker from "@/components/ui/ProfilePicker";

@@ -17,7 +17,7 @@
 // product uses for "your move".
 // ═══════════════════════════════════════════════════════════════
 
-import type { StatusTone } from "@/lib/status-labels";
+import type { StatusTone } from "@/lib/ui/status-labels";
 
 export interface ChapterLike {
   status: string;

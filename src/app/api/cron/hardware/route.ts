@@ -1,8 +1,8 @@
 import { NextRequest } from "next/server";
 
-import { requireAuthenticatedHostWrites, isReadOnly } from "@/lib/api-auth";
-import { serviceUnavailable } from "@/lib/api-response";
-import { readOnlyMessage } from "@/lib/read-only";
+import { requireAuthenticatedHostWrites, isReadOnly } from "@/lib/api/api-auth";
+import { serviceUnavailable } from "@/lib/api/api-response";
+import { readOnlyMessage } from "@/lib/api/read-only";
 import { handleCreateHardwareCron } from "@/lib/hardware-cron-handlers/create";
 import { handleDeleteHardwareCron } from "@/lib/hardware-cron-handlers/delete";
 import { handleListHardwareCrons } from "@/lib/hardware-cron-handlers/list";

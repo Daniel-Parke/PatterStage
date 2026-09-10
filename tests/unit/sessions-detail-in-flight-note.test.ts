@@ -77,10 +77,10 @@ jest.mock("@/lib/sessions/sessions-api-guard", () => ({
   sessionsRateLimitResponse: jest.fn(() => null),
 }));
 
-jest.mock("@/lib/api-auth", () => ({
+jest.mock("@/lib/api/api-auth", () => ({
 }));
 
-jest.mock("@/lib/api-logger", () => ({
+jest.mock("@/lib/api/api-logger", () => ({
   logApiError: jest.fn(),
   serverErrorFromCatch: jest.fn(),
 }));
@@ -109,7 +109,7 @@ jest.mock("@/modules/hermes/lib/agent-runtime", () => ({
 }));
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
-jest.mock("@/lib/paths", () => require("../helpers/mocks").pathsMock({ getPsDataDir: () => "/tmp/ch-data" }));
+jest.mock("@/lib/host/paths", () => require("../helpers/mocks").pathsMock({ getPsDataDir: () => "/tmp/ch-data" }));
 
 import { NextRequest } from "next/server";
 

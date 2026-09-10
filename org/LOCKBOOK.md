@@ -78,7 +78,7 @@ styleguide route, and it carries a dated warrant and a review rather than an ope
 intention.
 
 - Token home: src/app/globals.css (@theme, Tailwind v4) · Code mirror:
-  src/lib/theme.ts. The two are held together by
+  src/lib/ui/theme.ts. The two are held together by
   tests/unit/lockbook-tokens.test.ts, which reads the CSS and fails on a mirror
   naming a token nobody declared. A class string for a token that does not exist
   compiles, lints and renders nothing, which is the failure this file's own
@@ -170,7 +170,7 @@ because the whole point of this section is that it cannot quietly stop being tru
 - **Core never imports a module.** ADR-0005, WG-ARCH-001. Module capability is
   reached through one of three named composition points, `src/lib/modules/server.ts`,
   `src/lib/frameworks/registry.ts` and `src/lib/runtime/`. Enforced by
-  `core-imports-no-module`. One exception exists, in `src/lib/api-schemas.ts`,
+  `core-imports-no-module`. One exception exists, in `src/lib/api/api-schemas.ts`,
   behind a pragma with a written reason.
 - **`AGENTS.md` stays within 40 lines and `CLAUDE.md` is byte-identical.**
   `check-agent-files.mjs`.

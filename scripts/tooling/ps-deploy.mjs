@@ -3,10 +3,10 @@
 // ps-deploy.mjs — cross-platform deploy runner (Windows/macOS/Linux)
 // ═══════════════════════════════════════════════════════════════
 // Single implementation of update / rebuild / restart, spawned detached by
-// src/lib/deploy-spawn.ts (the in-app Update/Rebuild/Restart buttons) and by
+// src/lib/deploy/deploy-spawn.ts (the in-app Update/Rebuild/Restart buttons) and by
 // the thin scripts/application/ps-deploy.sh CLI wrapper. Ports
 // scripts/lib/ps-deploy-impl.sh — writes the identical ps-deploy.status format
-// that src/lib/deploy-status.ts reads. Plain ESM so it runs in bare `node`
+// that src/lib/deploy/deploy-status.ts reads. Plain ESM so it runs in bare `node`
 // outside the Next build.
 
 import { spawnSync } from "child_process";
@@ -25,7 +25,7 @@ const SCRIPTS_TOOLING = dirname(fileURLToPath(import.meta.url));
 const SCRIPTS_ROOT = join(SCRIPTS_TOOLING, "..");
 const APP_DIR = join(SCRIPTS_ROOT, "..");
 
-// ── paths (mirror src/lib/paths.ts) ─────────────────────────────
+// ── paths (mirror src/lib/host/paths.ts) ─────────────────────────────
 
 function normDir(d) {
   return d.replace(/[/\\]+$/, "");
@@ -33,7 +33,7 @@ function normDir(d) {
 function dirHasDb(d) {
   return existsSync(join(d, "patterstage.db")) || existsSync(join(d, "control-hub.db"));
 }
-// Mirrors src/lib/paths.ts (resolveDataDir/getDbPath). Keep in lockstep: an
+// Mirrors src/lib/host/paths.ts (resolveDataDir/getDbPath). Keep in lockstep: an
 // explicit env var wins; else a dir that already holds a populated DB beats
 // creating/opening an empty one (the case-sensitive ~/PatterStage vs
 // ~/patterstage race); when both DB names exist, prefer the larger (populated).
@@ -280,7 +280,7 @@ async function restartBody() {
   const host = process.env.PS_NEXT_BIND_HOST || "0.0.0.0";
   // Grace before we tear down the listener. On a bare `restart`, the HTTP
   // request that spawned us is being served BY the very server on `port`;
-  // deploy-spawn (src/lib/deploy-spawn.ts) probes our liveness for ~2s before
+  // deploy-spawn (src/lib/deploy/deploy-spawn.ts) probes our liveness for ~2s before
   // returning 200 {started}. Wait past that window so the caller's response
   // flushes first — otherwise killByPort drops the connection mid-response and
   // the client sees HTTP 000. (For update/rebuild the build already took far

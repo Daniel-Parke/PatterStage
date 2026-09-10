@@ -11,7 +11,7 @@ import { Activity, AlertTriangle, EyeOff, Filter, Layers } from "lucide-react";
 import { SearchInput } from "@/components/ui/Input";
 import { LiveDot } from "@/components/ui/LiveDot";
 import { sourceMeta } from "@/components/session/constants";
-import { SESSION_STATUS_LABELS } from "@/lib/status-labels";
+import { SESSION_STATUS_LABELS } from "@/lib/ui/status-labels";
 
 export interface SessionFilterBarProps {
   search: string;

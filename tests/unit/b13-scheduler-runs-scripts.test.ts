@@ -30,7 +30,7 @@
 // assertable as what it did.
 // ═══════════════════════════════════════════════════════════════
 
-import type { ScheduleRecord } from "@/lib/schedules-repository";
+import type { ScheduleRecord } from "@/lib/schedule/schedules-repository";
 
 // ── the tick's collaborators ───────────────────────────────────
 
@@ -47,7 +47,7 @@ const getDueSchedules = jest.fn<unknown[], [string]>();
 const advanceSchedule = jest.fn<unknown, [string, AdvanceFields]>();
 const createSchedule = jest.fn<unknown, [Record<string, unknown>]>();
 const listSchedules = jest.fn<unknown[], []>(() => []);
-jest.mock("@/lib/schedules-repository", () => ({
+jest.mock("@/lib/schedule/schedules-repository", () => ({
   getDueSchedules: (asOf: string) => getDueSchedules(asOf),
   advanceSchedule: (id: string, fields: AdvanceFields) => advanceSchedule(id, fields),
   createSchedule: (input: Record<string, unknown>) => createSchedule(input),
@@ -56,7 +56,7 @@ jest.mock("@/lib/schedules-repository", () => ({
 }));
 
 const createRun = jest.fn<{ id: string } | null, [Record<string, unknown>]>();
-jest.mock("@/lib/runs-repository", () => ({
+jest.mock("@/lib/runs/runs-repository", () => ({
   createRun: (input: Record<string, unknown>) => createRun(input),
 }));
 
@@ -88,7 +88,7 @@ interface RunScriptResultShape {
 }
 const listScriptFiles = jest.fn<Promise<unknown[]>, []>();
 const runScriptFile = jest.fn<Promise<RunScriptResultShape>, [string]>();
-jest.mock("@/lib/scripts-manager", () => ({
+jest.mock("@/lib/scripts/scripts-manager", () => ({
   listScriptFiles: () => listScriptFiles(),
   runScriptFile: (name: string) => runScriptFile(name),
 }));
@@ -100,8 +100,8 @@ jest.mock("@/lib/analytics/record-event", () => ({
 
 jest.mock("@/lib/spend/spend-guard", () => ({ checkUnattendedSpend: () => ({ allowed: true }) }));
 
-jest.mock("@/lib/api-logger", () => ({
-  ...(jest.requireActual("@/lib/api-logger") as Record<string, unknown>),
+jest.mock("@/lib/api/api-logger", () => ({
+  ...(jest.requireActual("@/lib/api/api-logger") as Record<string, unknown>),
   logApiError: jest.fn(),
 }));
 
@@ -177,7 +177,7 @@ interface Availability {
 
 function availabilityWhereWindowsIs(isWindows: boolean): Availability {
   jest.resetModules();
-  jest.doMock("@/lib/platform", () => ({
+  jest.doMock("@/lib/host/platform", () => ({
     isWindows,
     isMac: false,
     isLinux: !isWindows,
@@ -185,16 +185,16 @@ function availabilityWhereWindowsIs(isWindows: boolean): Availability {
     homeDir: () => "/home/op",
     interpreterFor: () => null,
   }));
-  const mod = require("@/lib/host-scheduler") as {
+  const mod = require("@/lib/host/host-scheduler") as {
     hostSchedulerAvailability?: () => Availability;
   };
   if (typeof mod.hostSchedulerAvailability !== "function") {
-    jest.dontMock("@/lib/platform");
+    jest.dontMock("@/lib/host/platform");
     jest.resetModules();
     throw new Error("host-scheduler exports no hostSchedulerAvailability (contract 3.3)");
   }
   const out = mod.hostSchedulerAvailability();
-  jest.dontMock("@/lib/platform");
+  jest.dontMock("@/lib/host/platform");
   jest.resetModules();
   return out;
 }

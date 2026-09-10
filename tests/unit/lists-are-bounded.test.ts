@@ -73,7 +73,7 @@ describe("listMissions is bounded and newest-first", () => {
 
 describe("listModels is bounded and newest-first", () => {
   it("honours limit, newest first", () => {
-    const { createModel, listModels } = require("@/lib/models-repository") as typeof import("@/lib/models-repository");
+    const { createModel, listModels } = require("@/lib/models/models-repository") as typeof import("@/lib/models/models-repository");
     const a = createModel({ name: "a", provider: "openai", modelId: "m-a" });
     const b = createModel({ name: "b", provider: "openai", modelId: "m-b" });
     const c = createModel({ name: "c", provider: "openai", modelId: "m-c" });
@@ -90,9 +90,9 @@ describe("the routes plumb the bound through", () => {
     jest.resetModules();
     const listMissions = jest.fn(() => []);
     jest.doMock("@/lib/missions/mission-repository", () => ({ listMissions, getMission: jest.fn(), MISSION_LIST_BOUNDS: { defaultLimit: 200, maxLimit: 500 } }));
-    jest.doMock("@/lib/runs-repository", () => ({ listLatestRunsForMissions: () => new Map(), getLatestRunForMission: jest.fn() }));
+    jest.doMock("@/lib/runs/runs-repository", () => ({ listLatestRunsForMissions: () => new Map(), getLatestRunForMission: jest.fn() }));
     jest.doMock("@/lib/sync", () => ({ ensureSyncLayer: jest.fn() }));
-    jest.doMock("@/lib/api-auth", () => ({ requireNotReadOnly: () => null }));
+    jest.doMock("@/lib/api/api-auth", () => ({ requireNotReadOnly: () => null }));
     const { GET } = require("@/app/api/missions/route") as typeof import("@/app/api/missions/route");
 
     const res = await GET(req("/api/missions?limit=5&offset=10"));
@@ -105,9 +105,9 @@ describe("the routes plumb the bound through", () => {
     jest.resetModules();
     const listMissions = jest.fn(() => []);
     jest.doMock("@/lib/missions/mission-repository", () => ({ listMissions, getMission: jest.fn(), MISSION_LIST_BOUNDS: { defaultLimit: 200, maxLimit: 500 } }));
-    jest.doMock("@/lib/runs-repository", () => ({ listLatestRunsForMissions: () => new Map(), getLatestRunForMission: jest.fn() }));
+    jest.doMock("@/lib/runs/runs-repository", () => ({ listLatestRunsForMissions: () => new Map(), getLatestRunForMission: jest.fn() }));
     jest.doMock("@/lib/sync", () => ({ ensureSyncLayer: jest.fn() }));
-    jest.doMock("@/lib/api-auth", () => ({ requireNotReadOnly: () => null }));
+    jest.doMock("@/lib/api/api-auth", () => ({ requireNotReadOnly: () => null }));
     const { GET } = require("@/app/api/missions/route") as typeof import("@/app/api/missions/route");
 
     const res = await GET(req("/api/missions?limit=abc&offset=-3"));
@@ -119,7 +119,7 @@ describe("the routes plumb the bound through", () => {
   it("GET /api/artifacts?limit=3 asks the repository for three", async () => {
     jest.resetModules();
     const listArtifacts = jest.fn(() => []);
-    jest.doMock("@/lib/artifacts-repository", () => ({ listArtifacts, createArtifact: jest.fn(), SOURCE_KINDS: ["mission"] }));
+    jest.doMock("@/lib/runs/artifacts-repository", () => ({ listArtifacts, createArtifact: jest.fn(), SOURCE_KINDS: ["mission"] }));
     const { GET } = require("@/app/api/artifacts/route") as typeof import("@/app/api/artifacts/route");
 
     await GET(req("/api/artifacts?limit=3"));
@@ -131,8 +131,8 @@ describe("the routes plumb the bound through", () => {
     jest.resetModules();
     const listModels = jest.fn(() => []);
     const listSchedules = jest.fn(() => []);
-    jest.doMock("@/lib/models-repository", () => ({ listModels, createModel: jest.fn(), deleteModel: jest.fn(), MODEL_LIST_BOUNDS: { defaultLimit: 200, maxLimit: 500 } }));
-    jest.doMock("@/lib/schedules-repository", () => ({ listSchedules, createSchedule: jest.fn(), SCHEDULE_LIST_BOUNDS: { defaultLimit: 200, maxLimit: 500 } }));
+    jest.doMock("@/lib/models/models-repository", () => ({ listModels, createModel: jest.fn(), deleteModel: jest.fn(), MODEL_LIST_BOUNDS: { defaultLimit: 200, maxLimit: 500 } }));
+    jest.doMock("@/lib/schedule/schedules-repository", () => ({ listSchedules, createSchedule: jest.fn(), SCHEDULE_LIST_BOUNDS: { defaultLimit: 200, maxLimit: 500 } }));
     jest.doMock("@/modules/hermes/lib/config-sync", () => ({ syncDefaultsToHermesConfig: jest.fn() }));
     const models = require("@/app/api/models/route") as typeof import("@/app/api/models/route");
     const schedules = require("@/app/api/schedules/route") as typeof import("@/app/api/schedules/route");
@@ -149,7 +149,7 @@ describe("the routes plumb the bound through", () => {
     const listConversations = jest.fn(() => []);
     const listComposerRuns = jest.fn(() => []);
     const listResearchRuns = jest.fn(() => []);
-    jest.doMock("@/lib/chat-repository", () => ({ listConversations, createConversation: jest.fn() }));
+    jest.doMock("@/lib/chat/chat-repository", () => ({ listConversations, createConversation: jest.fn() }));
     jest.doMock("@/lib/runtime", () => ({ runtime: {} }));
     jest.doMock("@/lib/composer/composer-repository", () => ({ listComposerRuns, createComposerRun: jest.fn(), getComposerWorkflow: jest.fn() }));
     jest.doMock("@/lib/composer/engine", () => ({ advanceComposerRun: jest.fn() }));

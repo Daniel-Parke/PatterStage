@@ -2,7 +2,7 @@
  * @jest-environment node
  *
  * Unit test for `updateFallbackConfigBatch` SQL loop in
- * `src/lib/fallbacks-repository.ts` (List 4 refactor).
+ * `src/lib/models/fallbacks-repository.ts` (List 4 refactor).
  *
  * Background: the pre-refactor form was 3 hand-listed
  *   if (updates.X !== undefined) {
@@ -48,7 +48,7 @@ jest.mock("@/lib/db", () => ({
 }));
 
 // Import AFTER mocks are in place
-import { updateFallbackConfigBatch } from "@/lib/fallbacks-repository";
+import { updateFallbackConfigBatch } from "@/lib/models/fallbacks-repository";
 
 beforeEach(() => {
   runCalls.length = 0;

@@ -20,8 +20,8 @@ jest.mock("@/lib/sessions/session-repository", () => ({
   estimateSessionSize: jest.fn(() => 0),
 }));
 jest.mock("@/lib/sync", () => ({ ensureSyncLayer: jest.fn() }));
-jest.mock("@/lib/read-only", () => ({ isReadOnly: () => true }));
-jest.mock("@/lib/api-logger", () => ({
+jest.mock("@/lib/api/read-only", () => ({ isReadOnly: () => true }));
+jest.mock("@/lib/api/api-logger", () => ({
   logApiError: jest.fn(),
   serverErrorFromCatch: jest.fn(() => new Response("err", { status: 500 })),
 }));

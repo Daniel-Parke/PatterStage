@@ -45,7 +45,7 @@ jest.mock("@/components/layout/AppPageShell", () => require("../helpers/mocks").
 jest.mock("lucide-react", () => require("../helpers/mocks").lucideMock());
 
 import RestorePage from "@/app/agent/settings/restore/page";
-import { SETTINGS_TOOLS } from "@/lib/config-sections";
+import { SETTINGS_TOOLS } from "@/lib/config/config-sections";
 
 // ── fixtures ────────────────────────────────────────────────────
 

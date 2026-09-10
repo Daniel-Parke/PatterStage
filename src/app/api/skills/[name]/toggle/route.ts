@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { requireNotReadOnly } from "@/lib/api-auth";
-import { badRequest, methodNotAllowed, notFound, ok } from "@/lib/api-response";
+import { requireNotReadOnly } from "@/lib/api/api-auth";
+import { badRequest, methodNotAllowed, notFound, ok } from "@/lib/api/api-response";
 
 // Round 6, finding 15: GET/POST here answered Next's empty framework 405.
 // The verb is PUT; say so, in the body and in Allow (T-0089).
@@ -12,9 +12,9 @@ export async function GET() {
 export async function POST() {
   return methodNotAllowed(`POST is not supported here. ${NOT_THIS_VERB}`, ["PUT"]);
 }
-import { parseJsonBody } from "@/lib/parse-json-body";
+import { parseJsonBody } from "@/lib/api/parse-json-body";
 import { ensureDb } from "@/lib/db";
-import { getAgentRoot } from "@/lib/agent-root-repository";
+import { getAgentRoot } from "@/lib/agents/agent-root-repository";
 import {
   getDisabledSkills,
   getProfile,
@@ -24,7 +24,7 @@ import { requireSafeProfileName } from "@/lib/fs/path-security";
 import { serializeJsonArray } from "@/modules/hermes/lib/profile-config-builder";
 import { skillIsKnown } from "@/modules/hermes/lib/skills-known";
 import { recordEvent } from "@/lib/analytics/record-event";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 export const PUT = route("PUT /api/skills/[name]/toggle", (p) => `toggle ${p.name}`, "Failed to toggle skill", async (request: NextRequest, { params }: { params: Promise<{ name: string }> }) => {
   const ro = requireNotReadOnly("skill toggles are disabled");

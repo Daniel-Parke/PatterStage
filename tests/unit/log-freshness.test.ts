@@ -4,7 +4,7 @@
 // all of it, so a log that stopped being written three days ago looked
 // exactly like one being appended to right now.
 
-import { LOG_LIVE_WITHIN_MS, formatLogAge, isLogLive } from "@/lib/log-freshness";
+import { LOG_LIVE_WITHIN_MS, formatLogAge, isLogLive } from "@/lib/logs/log-freshness";
 
 const NOW = Date.parse("2026-08-23T12:00:00.000Z");
 const at = (msAgo: number) => new Date(NOW - msAgo).toISOString();

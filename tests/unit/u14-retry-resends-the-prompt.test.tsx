@@ -19,7 +19,7 @@ import { useState } from "react";
 
 import type { ChatMessage } from "@/types/chat";
 
-jest.mock("@/lib/chat-utils", () => ({
+jest.mock("@/lib/chat/chat-utils", () => ({
   fetchConversation: jest.fn(),
   createConversationApi: jest.fn(),
   sendMessageApi: jest.fn(),
@@ -30,7 +30,7 @@ jest.mock("@/lib/chat-utils", () => ({
   streamChatResponse: jest.fn(),
 }));
 
-import { fetchConversation, sendMessageApi } from "@/lib/chat-utils";
+import { fetchConversation, sendMessageApi } from "@/lib/chat/chat-utils";
 import { useChatSend } from "@/hooks/useChatSend";
 
 const PROMPT = "Summarise the last run";

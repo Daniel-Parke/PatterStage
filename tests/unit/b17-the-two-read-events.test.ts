@@ -28,13 +28,13 @@ jest.mock("@/lib/analytics/record-event", () => ({
   recordEvent: (...args: unknown[]) => recordEvent(...args),
 }));
 
-jest.mock("@/lib/api-logger", () => ({
+jest.mock("@/lib/api/api-logger", () => ({
   logApiError: jest.fn(),
   serverErrorFromCatch: jest.fn(() => ({ status: 500 })),
 }));
 
 const getArtifact = jest.fn();
-jest.mock("@/lib/artifacts-repository", () => ({
+jest.mock("@/lib/runs/artifacts-repository", () => ({
   getArtifact: (id: string) => getArtifact(id),
   deleteArtifact: jest.fn(),
 }));

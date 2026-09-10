@@ -29,7 +29,7 @@
 // the four numbers in one line.
 //
 // Presentational subcomponents live in src/components/skills/; the pure
-// derivations live in src/lib/skills-page-helpers.ts.
+// derivations live in src/lib/skills/skills-page-helpers.ts.
 
 "use client";
 
@@ -48,14 +48,14 @@ import ConceptHint from "@/components/help/ConceptHint";
 import SkillsSections from "@/components/skills/SkillsSections";
 import SkillsSearchResults from "@/components/skills/SkillsSearchResults";
 import SkillEditorModal from "@/components/skills/SkillEditorModal";
-import { API_FETCH_BULK_TIMEOUT_MS, apiFetch, toastError } from "@/lib/api-fetch";
-import { runWrite } from "@/lib/api-write";
+import { API_FETCH_BULK_TIMEOUT_MS, apiFetch, toastError } from "@/lib/api/api-fetch";
+import { runWrite } from "@/lib/api/api-write";
 import {
   clampPage,
   effectiveSkillEnabled,
   filterBySearch,
   groupCategories,
-} from "@/lib/skills-page-helpers";
+} from "@/lib/skills/skills-page-helpers";
 import { pluralise } from "@/lib/utils";
 import type { Skill, SkillsData } from "@/types/console";
 import { useApiResource } from "@/hooks/useApiResource";

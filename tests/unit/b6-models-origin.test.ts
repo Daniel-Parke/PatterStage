@@ -94,10 +94,10 @@ jest.mock("@/modules/hermes/lib/agent-runtime", () => {
 // `instanceof NextResponse`, and both hold against this class.
 jest.mock("next/server", () => require("../helpers/mocks").nextServerMock());
 
-jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
-jest.mock("@/lib/api-logger", () => ({
+jest.mock("@/lib/api/audit-log", () => ({ appendAuditLine: jest.fn() }));
+jest.mock("@/lib/api/api-logger", () => ({
   logApiError: jest.fn(),
-  serverErrorFromCatch: jest.requireActual("@/lib/api-logger").serverErrorFromCatch,
+  serverErrorFromCatch: jest.requireActual("@/lib/api/api-logger").serverErrorFromCatch,
 }));
 
 // jest.setup globally mocks "@/lib/db" and so does this file; runMigrations is
@@ -112,7 +112,7 @@ import {
   upsertModel,
   type ModelRecord,
   type UpsertModelResult,
-} from "@/lib/models-repository";
+} from "@/lib/models/models-repository";
 
 // ── pre-B6 type shims (see header) ──────────────────────────────
 
@@ -612,7 +612,7 @@ describe("upsertModel keeps operator edits (D10)", () => {
   });
 
   it("GREEN CONTROL: a matching import still claims its default slots", () => {
-    const { getModelDefaults } = require("@/lib/models-repository") as typeof import("@/lib/models-repository");
+    const { getModelDefaults } = require("@/lib/models/models-repository") as typeof import("@/lib/models/models-repository");
     const first = importSonnet();
 
     upsertModel({

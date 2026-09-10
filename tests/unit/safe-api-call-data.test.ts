@@ -18,7 +18,7 @@
  *   - network/parse error → returns `null`
  */
 
-import { safeApiCallData } from "@/lib/api-fetch";
+import { safeApiCallData } from "@/lib/api/api-fetch";
 
 describe("safeApiCallData envelope unwrapping", () => {
   const originalFetch = globalThis.fetch;
@@ -185,7 +185,7 @@ describe("safeApiCallData envelope unwrapping", () => {
       json: async () => ({ data: { value: 42 } }),
     });
 
-    const { safeApiCall } = await import("@/lib/api-fetch");
+    const { safeApiCall } = await import("@/lib/api/api-fetch");
     const manualResult = await safeApiCall<{ data?: { value: number } }>(
       "/api/test",
     );

@@ -16,13 +16,13 @@
 import { existsSync } from "fs";
 
 import { finalizeRootConfigOnDisk } from "./config-sync";
-import { messageFromError } from "@/lib/api-fetch";
+import { messageFromError } from "@/lib/api/api-fetch";
 import { buildHermesPathBundle } from "./paths";
 import { getHermesDefaultRoot } from "./profile-paths";
 import {
   getAgentRoot,
   setAgentRootSyncStatus,
-} from "@/lib/agent-root-repository";
+} from "@/lib/agents/agent-root-repository";
 import {
   assembleConfigYamlForProfile,
   getProfile,
@@ -34,7 +34,7 @@ import {
   getSkill,
   listSkills,
   setSkillSyncStatus,
-} from "@/lib/skills-repository";
+} from "@/lib/skills/skills-repository";
 import { ensureDir } from "@/lib/fs/fs-helpers";
 import { now } from "@/lib/db";
 import { detectProfileDrift } from "./profile-drift";

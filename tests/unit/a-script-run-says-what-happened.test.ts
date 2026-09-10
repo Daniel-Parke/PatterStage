@@ -20,7 +20,7 @@
 // assertable as what it did.
 // ═══════════════════════════════════════════════════════════════
 
-jest.mock("@/lib/paths", () => ({
+jest.mock("@/lib/host/paths", () => ({
   getPsScriptsDir: () => "/data/scripts",
   getPsHardwareLogDir: () => "/data/logs",
 }));
@@ -42,11 +42,11 @@ jest.mock("fs", () => ({
 }));
 
 const interpreterFor = jest.fn<{ cmd: string; args: string[] } | null, [string]>();
-jest.mock("@/lib/platform", () => ({
+jest.mock("@/lib/host/platform", () => ({
   interpreterFor: (abs: string) => interpreterFor(abs),
 }));
 
-jest.mock("@/lib/host-scheduler", () => ({
+jest.mock("@/lib/host/host-scheduler", () => ({
   getHostScheduler: () => ({
     readRaw: async () => "\n",
     writeRaw: async () => ({ ok: true }),
@@ -55,7 +55,7 @@ jest.mock("@/lib/host-scheduler", () => ({
   hostSchedulerAvailability: () => ({ available: true, reason: "crontab" }),
 }));
 
-jest.mock("@/lib/schedules-repository", () => ({
+jest.mock("@/lib/schedule/schedules-repository", () => ({
   listScriptSchedules: () => [],
 }));
 
@@ -78,7 +78,7 @@ jest.mock("child_process", () => ({
   execFile: (...a: unknown[]) => execFile(...a),
 }));
 
-import { listScriptFiles, runScriptFile, type ScriptFile } from "@/lib/scripts-manager";
+import { listScriptFiles, runScriptFile, type ScriptFile } from "@/lib/scripts/scripts-manager";
 
 /** Make execFile answer with one of node's real error shapes (or none). */
 function execAnswers(err: ExecError | null, stdout = "", stderr = ""): void {

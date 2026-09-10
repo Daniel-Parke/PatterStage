@@ -3,13 +3,13 @@
 // ═══════════════════════════════════════════════════════════════
 import { NextRequest, NextResponse } from "next/server";
 
-import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
-import { appendAuditLine } from "@/lib/audit-log";
-import { getFallbackConfig, updateFallbackConfigBatch } from "@/lib/fallbacks-repository";
-import { fallbackConfigPutSchema } from "@/lib/fallback-config-schema";
+import { parseAndValidateJsonBody } from "@/lib/api/parse-json-body";
+import { appendAuditLine } from "@/lib/api/audit-log";
+import { getFallbackConfig, updateFallbackConfigBatch } from "@/lib/models/fallbacks-repository";
+import { fallbackConfigPutSchema } from "@/lib/models/fallback-config-schema";
 import { syncEnabledFallbackChainToHermes } from "@/modules/hermes/lib/fallback-sync";
-import { ok } from "@/lib/api-response";
-import { route } from "@/lib/api-route";
+import { ok } from "@/lib/api/api-response";
+import { route } from "@/lib/api/api-route";
 
 export const GET = route("GET /api/models/fallbacks/config", "reading fallback config", "Failed to read fallback config", async (_request: NextRequest) => {
   return ok({ config: getFallbackConfig() });

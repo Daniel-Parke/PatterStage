@@ -11,7 +11,7 @@
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
 jest.mock("next/server", () => require("../helpers/mocks").nextServerMock());
 
-jest.mock("@/lib/api-logger", () => ({
+jest.mock("@/lib/api/api-logger", () => ({
   logApiError: jest.fn(),
 }));
 
@@ -19,7 +19,7 @@ jest.mock("@/modules/rec-room/lib/prompts", () => ({
   getStoryPrompt: jest.fn(() => "system prompt"),
 }));
 
-jest.mock("@/lib/api-auth", () => ({
+jest.mock("@/lib/api/api-auth", () => ({
 }));
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports

@@ -7,10 +7,10 @@
 
 import type { NextRequest } from "next/server";
 
-import { ok } from "@/lib/api-response";
-import { hostSchedulerAvailability } from "@/lib/host-scheduler";
-import { listScriptFiles } from "@/lib/scripts-manager";
-import { route } from "@/lib/api-route";
+import { ok } from "@/lib/api/api-response";
+import { hostSchedulerAvailability } from "@/lib/host/host-scheduler";
+import { listScriptFiles } from "@/lib/scripts/scripts-manager";
+import { route } from "@/lib/api/api-route";
 
 export const GET = route("GET /api/scripts", "list", "Failed to list scripts", async (_request: NextRequest) => {
   const scripts = await listScriptFiles();

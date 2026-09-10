@@ -24,7 +24,7 @@ import {
   X,
 } from "lucide-react";
 
-import { renderMarkdown } from "@/lib/chat-utils";
+import { renderMarkdown } from "@/lib/chat/chat-utils";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import MessageAvatar from "@/components/chat/MessageAvatar";

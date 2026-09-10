@@ -89,7 +89,7 @@ jest.mock("@/hooks/useGatewayHealth", () => ({
 }));
 
 // ── chat-utils mock: the server-API surface the hook imports ──
-jest.mock("@/lib/chat-utils", () => ({
+jest.mock("@/lib/chat/chat-utils", () => ({
   fetchConversations: jest.fn().mockResolvedValue([]),
   // fetchConversation answers `{ ok, error?, conversation?, messages? }` since
   // B13 (D43/D49) — it used to answer `… | null`, which could not tell an empty

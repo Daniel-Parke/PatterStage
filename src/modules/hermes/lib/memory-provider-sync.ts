@@ -13,7 +13,7 @@
 
 import { existsSync } from "fs";
 
-import { dumpYamlConfig } from "@/lib/yaml-config";
+import { dumpYamlConfig } from "@/lib/config/yaml-config";
 
 import { getActiveHermesPaths } from "./agent-runtime";
 import { readHermesYamlConfig } from "./hermes-config-read";

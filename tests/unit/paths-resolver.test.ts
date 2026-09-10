@@ -1,12 +1,12 @@
 // Resolver back-compat: PS_* supersedes CH_*/CONTROL_HUB_*, and the DB filename
 // prefers patterstage.db but falls back to a pre-existing control-hub.db so an
-// un-migrated install keeps working. See src/lib/paths.ts.
+// un-migrated install keeps working. See src/lib/host/paths.ts.
 
 import { mkdtempSync, writeFileSync, rmSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 
-import { readEnv, getPsDataDir, getDbPath, resolveDataDir } from "@/lib/paths";
+import { readEnv, getPsDataDir, getDbPath, resolveDataDir } from "@/lib/host/paths";
 
 const ENV_KEYS = ["PS_DATA_DIR", "CH_DATA_DIR", "CONTROL_HUB_DATA_DIR"] as const;
 

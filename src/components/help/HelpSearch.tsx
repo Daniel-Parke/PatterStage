@@ -20,7 +20,7 @@ import { useMemo, useState } from "react";
 
 import Card from "@/components/ui/Card";
 import type { HelpSearchEntry } from "@/lib/help/help-manifest";
-import { inputFieldClasses } from "@/lib/theme";
+import { inputFieldClasses } from "@/lib/ui/theme";
 
 /** Enough to find the page; more than this is a list nobody reads. */
 const MAX_RESULTS = 20;

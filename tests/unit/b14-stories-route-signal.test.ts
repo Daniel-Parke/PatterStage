@@ -50,7 +50,7 @@ jest.mock("@/modules/rec-room/handlers/library", () => ({
   handleCharacters: jest.fn(async () => ({ status: 200, body: { data: {} } })),
   handleThemes: jest.fn(async () => ({ status: 200, body: { data: {} } })),
 }));
-jest.mock("@/lib/api-logger", () => ({
+jest.mock("@/lib/api/api-logger", () => ({
   logApiError: jest.fn(),
   serverErrorFromCatch: jest.fn(() => ({ status: 500, body: { error: "boom" } })),
 }));

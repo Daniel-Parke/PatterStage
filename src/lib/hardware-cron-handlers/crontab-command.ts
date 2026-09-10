@@ -13,12 +13,12 @@
 
 import { NextResponse } from "next/server";
 
-import { badRequest } from "@/lib/api-response";
-import { expandHomeInString, normalizeHardwareCronPath } from "@/lib/hardware-cron";
-import { getPsScriptsDir, getPsHardwareLogDir } from "@/lib/paths";
-import { interpreterFor } from "@/lib/platform";
+import { badRequest } from "@/lib/api/api-response";
+import { expandHomeInString, normalizeHardwareCronPath } from "@/lib/host/hardware-cron";
+import { getPsScriptsDir, getPsHardwareLogDir } from "@/lib/host/paths";
+import { interpreterFor } from "@/lib/host/platform";
 import { SCRIPT_COMMAND_RE, SCRIPT_EXT_LIST } from "@/lib/scripts/script-ext";
-import { resolveScriptPath } from "@/lib/scripts-manager";
+import { resolveScriptPath } from "@/lib/scripts/scripts-manager";
 
 /**
  * A job label becomes a `# <name>` comment line in the crontab, so a newline in

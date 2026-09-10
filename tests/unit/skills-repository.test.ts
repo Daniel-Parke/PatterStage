@@ -21,7 +21,7 @@ import {
   parseSkillFrontmatter,
   stripSkillFrontmatter,
   upsertSkill,
-} from "@/lib/skills-repository";
+} from "@/lib/skills/skills-repository";
 
 beforeEach(() => {
   const Database = loadRealBetterSqlite3();

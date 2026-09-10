@@ -1,7 +1,7 @@
 /**
  * @jest-environment node
  *
- * Tests for the agent-chat persistence repository (src/lib/chat-repository.ts),
+ * Tests for the agent-chat persistence repository (src/lib/chat/chat-repository.ts),
  * driven against a real in-memory SQLite DB seeded with the baseline schema +
  * the v13 chat migration. `@/lib/db` is mocked so the repo's `getDb()` calls hit
  * the test DB; `inTransaction` is stubbed to run the callback directly.
@@ -11,7 +11,7 @@ import type Database from "better-sqlite3";
 import { readFileSync } from "fs";
 import { join } from "path";
 
-import type * as ChatRepo from "@/lib/chat-repository";
+import type * as ChatRepo from "@/lib/chat/chat-repository";
 
 const migrationsDir = join(__dirname, "..", "..", "src", "lib", "db", "migrations");
 const baselineSql = readFileSync(join(migrationsDir, "001_baseline.sql"), "utf-8");
@@ -50,7 +50,7 @@ describe("chat-repository", () => {
         inTransaction: (fn: () => unknown) => fn(),
       };
     });
-    repo = require("@/lib/chat-repository") as typeof ChatRepo;
+    repo = require("@/lib/chat/chat-repository") as typeof ChatRepo;
   });
 
   afterEach(() => {

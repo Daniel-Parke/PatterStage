@@ -16,7 +16,7 @@ const templatePackEntrySchema = z.object({
   suggestedToolsets: z.array(z.string()).optional(),
   // defaultModel + defaultProvider are pre-fill hints for the mission
   // form. Both are optional — when omitted, the dispatch falls back to
-  // PatterStage DB's `agent` default (see src/lib/models-repository.ts).
+  // PatterStage DB's `agent` default (see src/lib/models/models-repository.ts).
   defaultModel: z.string().optional(),
   defaultProvider: z.string().optional(),
   timeoutMinutes: z.number().int().min(1).max(120),

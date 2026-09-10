@@ -11,7 +11,7 @@
 // therefore preserves ordering, blank lines and `#` comments
 // verbatim, and appends only what is genuinely new.
 //
-// `serializeEnvFile` can't call the shared `parseEnvFile` (`@/lib/env-file`)
+// `serializeEnvFile` can't call the shared `parseEnvFile` (`@/lib/config/env-file`)
 // directly, because that would throw away the comments, so it reaches for
 // the shared `ENV_LINE_RE` to identify keyval lines while iterating the raw
 // file content.
@@ -20,7 +20,7 @@
 import { existsSync, readFileSync } from "fs";
 
 import { ensureDir } from "@/lib/fs/fs-helpers";
-import { parseEnvFile, ENV_LINE_RE } from "@/lib/env-file";
+import { parseEnvFile, ENV_LINE_RE } from "@/lib/config/env-file";
 import { getActiveHermesPaths } from "./agent-runtime";
 import { envVarForProvider, isHermesProvider, type HermesProvider } from "./providers";
 import { atomicWriteFile, backupFile } from "./hermes-config-write";

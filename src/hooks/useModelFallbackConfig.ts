@@ -17,8 +17,8 @@
 import { useCallback, useRef, useState, type Dispatch, type SetStateAction } from "react";
 
 import type { ToastType } from "@/components/ui/Toast";
-import { safeApiCall } from "@/lib/api-fetch";
-import { runWrite } from "@/lib/api-write";
+import { safeApiCall } from "@/lib/api/api-fetch";
+import { runWrite } from "@/lib/api/api-write";
 import type { FallbackConfig } from "@/types/console";
 
 type ToastFn = (message: string, type?: ToastType) => void;

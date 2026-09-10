@@ -9,15 +9,15 @@
 
 "use client";
 
-import { sectionHeadingClasses } from "@/lib/theme";
+import { sectionHeadingClasses } from "@/lib/ui/theme";
 import { useState } from "react";
 import { Telescope, Send, Save, Square } from "lucide-react";
 
 import PageHeader from "@/components/layout/PageHeader";
 import AppPageShell from "@/components/layout/AppPageShell";
 import Card from "@/components/ui/Card";
-import { statusTone, type StatusLabel } from "@/lib/status-labels";
-import { statusToneClasses } from "@/lib/theme";
+import { statusTone, type StatusLabel } from "@/lib/ui/status-labels";
+import { statusToneClasses } from "@/lib/ui/theme";
 import Button from "@/components/ui/Button";
 import ConfirmButton from "@/components/ui/ConfirmButton";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
@@ -26,7 +26,7 @@ import { Field, Textarea, Select, Input } from "@/components/ui/field";
 import ResearchReport from "@/components/research/ResearchReport";
 import ConceptHint from "@/components/help/ConceptHint";
 import { useToast } from "@/components/ui/Toast";
-import { runWrite } from "@/lib/api-write";
+import { runWrite } from "@/lib/api/api-write";
 import { useResearchRuns, useResearchRun, useResearchPresets } from "@/hooks/useDeepResearch";
 import { useModels } from "@/hooks/useModels";
 import { formatElapsed } from "@/lib/utils";

@@ -12,7 +12,7 @@ import {
   unlinkSync,
 } from "fs";
 import { dirname, join } from "path";
-import { PATHS } from "../paths";
+import { PATHS } from "../host/paths";
 import { ensureDir } from "../fs/fs-helpers";
 
 /** Squashed baseline schema, including profile/root/skills source-of-truth tables. */

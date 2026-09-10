@@ -10,7 +10,7 @@ import type { RefObject } from "react";
 import { AlertTriangle, PenLine, RefreshCw, Sparkles } from "lucide-react";
 
 import Button from "@/components/ui/Button";
-import { statusToneClasses } from "@/lib/theme";
+import { statusToneClasses } from "@/lib/ui/theme";
 import type { ReadingSettings } from "@/modules/rec-room/components/ReaderSettings";
 import type { Chapter } from "@/modules/rec-room/components/story-reader-types";
 import { chapterHeading } from "@/modules/rec-room/lib/chapter-title";

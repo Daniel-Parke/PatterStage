@@ -10,11 +10,11 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
-import { serverErrorFromCatch } from "@/lib/api-logger";
-import { ok, badRequest, notFound, serviceUnavailable } from "@/lib/api-response";
+import { serverErrorFromCatch } from "@/lib/api/api-logger";
+import { ok, badRequest, notFound, serviceUnavailable } from "@/lib/api/api-response";
 import { ensureDb } from "@/lib/db";
 import { isFeatureEnabled } from "@/lib/feature-flags";
-import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
+import { parseAndValidateJsonBody } from "@/lib/api/parse-json-body";
 import {
   WorkflowHistoryWouldBeLost,
   countWorkflowRuns,
@@ -25,7 +25,7 @@ import {
 } from "@/lib/composer/composer-repository";
 import { workflowDefSchema } from "@/lib/composer/schema";
 import { recordEvent } from "@/lib/analytics/record-event";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 interface Ctx {
   params: Promise<{ id: string }>;

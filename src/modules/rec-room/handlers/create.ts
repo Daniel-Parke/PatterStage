@@ -6,9 +6,9 @@
 
 import { NextResponse } from "next/server";
 
-import { logApiError } from "@/lib/api-logger";
+import { logApiError } from "@/lib/api/api-logger";
 import { getStoryPrompt } from "@/modules/rec-room/lib/prompts";
-import { callLLM } from "@/lib/llm";
+import { callLLM } from "@/lib/models/llm";
 import { createStory, updateStory } from "@/modules/rec-room/lib/story-repository";
 import { recordEvent } from "@/lib/analytics/record-event";
 import type { StoryArc as StoryArcType, ChapterOutline } from "@/modules/rec-room/types";

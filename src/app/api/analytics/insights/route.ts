@@ -6,10 +6,10 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextRequest } from "next/server";
-import { ok } from "@/lib/api-response";
+import { ok } from "@/lib/api/api-response";
 import { ensureDb } from "@/lib/db";
 import { getInsightsBundle } from "@/lib/analytics/insights-bundle";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 export const GET = route("GET /api/analytics/insights", "", "Failed to load insights", async (request: NextRequest) => {
   ensureDb();

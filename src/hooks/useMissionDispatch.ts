@@ -14,7 +14,7 @@
 
 "use client";
 
-import { scheduleBlocksDispatch } from "@/lib/dispatch-mode";
+import { scheduleBlocksDispatch } from "@/lib/ui/dispatch-mode";
 import { firstUnmetSubmitRequirement } from "@/lib/missions/mission-submit-requirement";
 import { useCallback, useState } from "react";
 

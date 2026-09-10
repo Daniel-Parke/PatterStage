@@ -13,7 +13,7 @@ import {
   summarizeAchievements,
   selectShowcase,
   byRarity,
-} from "@/lib/achievements-showcase";
+} from "@/lib/ui/achievements-showcase";
 
 function ach(over: Partial<Achievement>): Achievement {
   return {

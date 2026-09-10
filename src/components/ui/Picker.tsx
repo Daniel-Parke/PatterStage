@@ -29,7 +29,7 @@ import type { AccentColor } from "@/types/console";
 import { useDismissable } from "@/hooks/useDismissable";
 import IconButton from "@/components/ui/IconButton";
 import { POPOVER_PANEL } from "@/components/ui/Popover";
-import { iconColorMap } from "@/lib/theme";
+import { iconColorMap } from "@/lib/ui/theme";
 
 export interface PickerOption {
   value: string;

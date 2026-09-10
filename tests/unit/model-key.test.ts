@@ -6,7 +6,7 @@
  * produce the same string as the inline template literal it replaces.
  */
 
-import { fallbackKey, modelKey } from "@/lib/model-key";
+import { fallbackKey, modelKey } from "@/lib/models/model-key";
 
 describe("model-key: modelKey", () => {
   it("joins provider and modelId with ::", () => {

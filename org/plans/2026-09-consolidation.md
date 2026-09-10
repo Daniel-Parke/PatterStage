@@ -102,7 +102,7 @@ batch.
   fixture tree; the baseline committed at today's numbers.
 
 ### C1 — One route body [M] · T-0136
-- `route(name, doing, failed, handler)` in `src/lib/api-route.ts`: catches,
+- `route(name, doing, failed, handler)` in `src/lib/api/api-route.ts`: catches,
   logs through `serverErrorFromCatch` with the route's name, returns the
   handler's response; each of the three may be a function of the route's
   resolved params, so a dynamic segment's log keeps its id. The sites
@@ -133,7 +133,7 @@ batch.
   mission dispatch loop timed and unchanged; the model actions' contract
   suites green.
 - Corrected in the batch (T-0138): the helper is a function, `runWrite` in
-  `src/lib/api-write.ts`, not a hook, because the toast is per-page state
+  `src/lib/api/api-write.ts`, not a hook, because the toast is per-page state
   (`useToast`) rather than a context and the reload is the caller's own
   loader; react-query's `useMutation` stays for the hooks that own query keys
   and invalidate them, and the lint rule (`no-raw-write-outside-the-helper`,
@@ -200,6 +200,21 @@ batch.
   is path-insensitive.
 - Verify: `libRootFiles` 71 to ≤ 12; `tsc`, knip, the reachability gate,
   `docs:check` and `check-doc-links`.
+- Corrected in the batch (T-0144): 65 files moved into fifteen domains and
+  six stayed, at 6 against the line of 12. The six are not leftovers: each
+  says in its own header why it belongs to no domain, and `db-schema.ts` in
+  particular must stay outside `src/lib/db/` because the global `@/lib/db`
+  mock would otherwise intercept it inside the migration tests.
+- The real lesson is that a lib file is named FIVE ways, and a codemod that
+  rewrites one of them looks finished while four are broken: the alias
+  `@/lib/x`; the path `src/lib/x.ts` in prose or a doc; the segments
+  `"src", "lib", "x.ts"` a suite passes to `join()`; the relative
+  `../../src/lib/x` that scripts/ and tests/e2e/ use because the alias does
+  not reach them; and the alias escaped inside a regex literal. Each was
+  found by something breaking, in that order, and the oracle now reads all
+  five. A sixth shape has no mechanical fix and is recorded rather than
+  solved: a path ALTERNATION inside a regex, which makes a `not.toMatch`
+  pass vacuously the moment the path stops existing.
 
 ### C8 — Closing [S] · T-0145
 - The census after beside the census before, each measure read against its

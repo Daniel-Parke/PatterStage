@@ -92,7 +92,7 @@ Full table: **[ENV_REFERENCE.md](env-reference.md)**.
 
 `ps-backup.sh` is copied into `PS_DATA_DIR/scripts` during setup when missing, along with every other `.sh` and `.mjs` in `scripts/hardware/`. `backup-hermes-config.sh` is not scheduled by PatterStage.
 
-Run PatterStage where you trust the network, or place it behind your own reverse proxy and access controls. **`PS_REQUEST_SIGNING_SECRET`** can optionally protect specific flows (see `src/lib/api-auth.ts`).
+Run PatterStage where you trust the network, or place it behind your own reverse proxy and access controls. **`PS_REQUEST_SIGNING_SECRET`** can optionally protect specific flows (see `src/lib/api/api-auth.ts`).
 
 ## Docker, the CI parity rig
 

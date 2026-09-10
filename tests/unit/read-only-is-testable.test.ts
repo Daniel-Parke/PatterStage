@@ -9,7 +9,7 @@
  * Two mechanisms, and this file closes both.
  *
  * 1. READ-ONLY DID NOT EXIST IN THE SUITE. `tests/helpers/api-test-helpers.ts`
- *    mocked `@/lib/api-auth` wholesale with `isReadOnly: jest.fn(() => false)`,
+ *    mocked `@/lib/api/api-auth` wholesale with `isReadOnly: jest.fn(() => false)`,
  *    and forty test files repeat the pattern inline. Every test that touched a
  *    route ran with the mode hard-wired off, so no test could observe the bug
  *    even in principle. `tests/unit/missions-read-only-reads.test.ts:67` is the
@@ -31,7 +31,7 @@
 import { readdirSync, readFileSync, statSync } from "fs";
 import { join } from "path";
 
-import * as apiAuth from "@/lib/api-auth";
+import * as apiAuth from "@/lib/api/api-auth";
 
 const TESTS_ROOT = join(__dirname, "..");
 const HELPERS = join(TESTS_ROOT, "helpers", "api-test-helpers.ts");
@@ -49,7 +49,7 @@ function testFiles(dir = TESTS_ROOT, out: string[] = []): string[] {
 const rel = (f: string) => f.replace(/\\/g, "/").split("/tests/")[1];
 
 /**
- * The property names a `jest.mock("@/lib/api-auth", …)` factory returns.
+ * The property names a `jest.mock("@/lib/api/api-auth", …)` factory returns.
  *
  * Line-oriented rather than parsed, for the same reason design-lint is: a
  * parser is a dependency this repo will not take for a lint. The factories are
@@ -62,7 +62,7 @@ function mockedApiAuthNames(file: string): string[] {
   let depth = 0;
   let inside = false;
   for (const raw of lines) {
-    if (!inside && /jest\.mock\(\s*["']@\/lib\/api-auth["']/.test(raw)) {
+    if (!inside && /jest\.mock\(\s*["']@\/lib\/api\/api-auth["']/.test(raw)) {
       inside = true;
       depth = 0;
     }
@@ -98,10 +98,10 @@ describe("read-only mode is observable by the suite that guards it", () => {
 
   it("the shared helper keeps the real read-only implementation", () => {
     const src = readFileSync(HELPERS, "utf-8");
-    expect(src).toMatch(/requireActual\(["']@\/lib\/api-auth["']\)/);
+    expect(src).toMatch(/requireActual\(["']@\/lib\/api\/api-auth["']\)/);
   });
 
-  it("no test mocks a name `@/lib/api-auth` does not export", () => {
+  it("no test mocks a name `@/lib/api/api-auth` does not export", () => {
     const real = new Set(Object.keys(apiAuth));
     const offenders: string[] = [];
     for (const file of testFiles()) {

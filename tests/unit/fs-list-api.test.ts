@@ -8,7 +8,7 @@ jest.mock("@/lib/fs/path-security", () => ({
   resolveAllowedWorkspacePath: (input: string) => mockResolveAllowed(input),
 }));
 
-jest.mock("@/lib/api-logger", () => ({
+jest.mock("@/lib/api/api-logger", () => ({
   logApiError: jest.fn(),
   serverErrorFromCatch: jest.fn(
     (route: string, context: string, error: unknown, message: string) => {
@@ -16,7 +16,7 @@ jest.mock("@/lib/api-logger", () => ({
       // byte-equivalence contract is preserved when reading the test
       // results: route + context + error.message logged, then a 500
       // response with the fallback message.
-      const { logApiError: _log } = jest.requireMock("@/lib/api-logger") as {
+      const { logApiError: _log } = jest.requireMock("@/lib/api/api-logger") as {
         logApiError: (r: string, c: string, e: unknown) => void;
       };
       _log(route, context, error);

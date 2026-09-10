@@ -24,8 +24,8 @@ import LinkButton from "@/components/ui/LinkButton";
 import { Select } from "@/components/ui/field";
 import { useArtifacts, useArtifact } from "@/hooks/useArtifacts";
 import { renderReportHtml } from "@/lib/laboratory/deep-research/markdown";
-import { downloadFile } from "@/lib/chat-utils";
-import { runWrite } from "@/lib/api-write";
+import { downloadFile } from "@/lib/chat/chat-utils";
+import { runWrite } from "@/lib/api/api-write";
 import { useToast } from "@/components/ui/Toast";
 import { timeAgo, formatBytes } from "@/lib/utils";
 

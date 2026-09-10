@@ -23,7 +23,7 @@ import Card from "@/components/ui/Card";
 import IconButton from "@/components/ui/IconButton";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import SplitPane from "@/components/ui/SplitPane";
-import { inputFieldClasses } from "@/lib/theme";
+import { inputFieldClasses } from "@/lib/ui/theme";
 import { timeAgo } from "@/lib/utils";
 import GatewayBanner from "@/components/chat/GatewayBanner";
 import MessageAvatar from "@/components/chat/MessageAvatar";

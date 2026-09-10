@@ -13,13 +13,13 @@ jest.mock("@/lib/missions/mission-repository", () => ({
   updateMission: jest.fn(),
   getMission: jest.fn(),
 }));
-jest.mock("@/lib/models-repository", () => ({ findModelByModelId: () => null }));
-jest.mock("@/lib/schedules-repository", () => ({ createSchedule: jest.fn(() => ({ id: "sch_1" })) }));
+jest.mock("@/lib/models/models-repository", () => ({ findModelByModelId: () => null }));
+jest.mock("@/lib/schedule/schedules-repository", () => ({ createSchedule: jest.fn(() => ({ id: "sch_1" })) }));
 jest.mock("@/lib/missions/mission-dispatch", () => ({ dispatchMissionNow: jest.fn() }));
 jest.mock("@/lib/missions/mission-queue-tick", () => ({ runMissionQueueTick: jest.fn() }));
 jest.mock("@/lib/missions/mission-response", () => ({ missionResponse: (m: unknown) => ({ mission: m }) }));
-jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
-jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn(), serverErrorFromCatch: jest.fn() }));
+jest.mock("@/lib/api/audit-log", () => ({ appendAuditLine: jest.fn() }));
+jest.mock("@/lib/api/api-logger", () => ({ logApiError: jest.fn(), serverErrorFromCatch: jest.fn() }));
 jest.mock("@/lib/agents/roster", () => ({ resolveAgentSlug: (s: string) => s }));
 jest.mock("@/lib/missions/mission-category-repository", () => ({ getMissionCategory: () => null }));
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports

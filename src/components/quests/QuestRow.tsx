@@ -29,7 +29,7 @@ import LinkButton from "@/components/ui/LinkButton";
 import type { QuestState } from "@/lib/quests/evaluate";
 import { CONCEPT_LABELS, HOST_REQUIREMENT_COPY } from "@/lib/quests/quest-defs";
 import { ACHIEVEMENT_DEFS, achievementPoints, achievementTier, type Achievement } from "@/lib/stats/derive";
-import { statusToneClasses } from "@/lib/theme";
+import { statusToneClasses } from "@/lib/ui/theme";
 
 export interface QuestRowProps {
   /** The evaluated state, off the stats poll. */

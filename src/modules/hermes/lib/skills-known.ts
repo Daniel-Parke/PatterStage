@@ -13,7 +13,7 @@
 // keeps its skills is adapter knowledge, and ADR-0005 forbids core importing
 // a module.
 
-import { getSkill } from "@/lib/skills-repository";
+import { getSkill } from "@/lib/skills/skills-repository";
 import { scanDiskSkillsCatalog } from "./profile-discovery";
 
 /** True when the catalogue holds the skill, or the agent's disk does. */

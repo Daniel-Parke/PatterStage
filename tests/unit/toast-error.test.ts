@@ -1,5 +1,5 @@
 /**
- * Unit tests for `toastError` from src/lib/api-fetch.ts.
+ * Unit tests for `toastError` from src/lib/api/api-fetch.ts.
  *
  * `toastError(showToast, err, fallback)` is the canonical replacement for
  * the
@@ -11,7 +11,7 @@
  * (falls back to `fallback` when the error has no message), same
  * `"error"` toast type, same call to `showToast`.
  */
-import { toastError } from "@/lib/api-fetch";
+import { toastError } from "@/lib/api/api-fetch";
 
 describe("toastError", () => {
   it("calls showToast with err.message and type 'error' for a normal Error", () => {

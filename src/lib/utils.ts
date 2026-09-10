@@ -1,5 +1,10 @@
 // ═══════════════════════════════════════════════════════════════
 // Shared Utility Functions
+//
+// AT THE LIB ROOT ON PURPOSE (C7, T-0144). Four tiny helpers with no
+// subject of their own: every layer uses them, from a route handler to a
+// chart label, and filing them under one domain would say they belong to
+// it. A helper here has to be that: no domain, no dependencies.
 // ═══════════════════════════════════════════════════════════════
 
 /**

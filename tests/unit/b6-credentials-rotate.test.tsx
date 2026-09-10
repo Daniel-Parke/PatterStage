@@ -29,7 +29,7 @@ import CredentialsPanel from "@/components/models/CredentialsPanel";
 import type { ApiCredential } from "@/components/models/types";
 
 const mockApiFetch = jest.fn();
-jest.mock("@/lib/api-fetch", () => ({
+jest.mock("@/lib/api/api-fetch", () => ({
   API_FETCH_BULK_TIMEOUT_MS: 300_000,
   apiFetch: (...a: unknown[]) => mockApiFetch(...a),
   messageFromError: (e: unknown, fallback: string) => (e instanceof Error ? e.message : fallback),

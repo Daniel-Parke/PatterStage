@@ -8,7 +8,7 @@ import Link from "next/link";
 
 import type { AccentColor } from "@/types/console";
 import Card from "@/components/ui/Card";
-import { iconColorMap, pillBorderHoverMap, pillBorderMap } from "@/lib/theme";
+import { iconColorMap, pillBorderHoverMap, pillBorderMap } from "@/lib/ui/theme";
 import Sparkline from "@/components/viz/Sparkline";
 import type { NeonColor } from "@/components/viz/colors";
 

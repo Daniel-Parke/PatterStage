@@ -167,7 +167,7 @@ jest.mock("@/lib/db", () => require("../helpers/baseline-db").dbSingletonMock(()
 
 import { execBaselineSchema } from "../helpers/baseline-db";
 import { applyOperatorPrefsMigration } from "@/lib/db/sql-migrations";
-import { readOperatorPrefs, writeOperatorPref } from "@/lib/operator-prefs-repository";
+import { readOperatorPrefs, writeOperatorPref } from "@/lib/system/operator-prefs-repository";
 
 const migrationsDir = join(process.cwd(), "src", "lib", "db", "migrations");
 

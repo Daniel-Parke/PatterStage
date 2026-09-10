@@ -7,9 +7,9 @@ import type { NextRequest } from "next/server";
 // tests that don't want to wait a full tick). Idempotent and safe.
 // ═══════════════════════════════════════════════════════════════
 
-import { ok } from "@/lib/api-response";
+import { ok } from "@/lib/api/api-response";
 import { reconcileActiveRuns } from "@/lib/orchestration";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 export const POST = route("POST /api/runs/reconcile", "reconcile", "Failed to reconcile runs", async (_request: NextRequest) => {
   const advanced = await reconcileActiveRuns();

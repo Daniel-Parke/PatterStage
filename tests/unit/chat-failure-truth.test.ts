@@ -39,8 +39,8 @@ import {
   openRunEventStream,
   parseToolEvent,
   reframeToolsForFailedRun,
-} from "@/lib/chat-utils";
-import { API_FETCH_TIMEOUT_MS, apiFetch, errorChain, messageFromError } from "@/lib/api-fetch";
+} from "@/lib/chat/chat-utils";
+import { API_FETCH_TIMEOUT_MS, apiFetch, errorChain, messageFromError } from "@/lib/api/api-fetch";
 import type { ToolCall } from "@/types/chat";
 
 // ── The run-event proxy ─────────────────────────────────────────
@@ -51,7 +51,7 @@ const getRun = jest.fn();
 jest.mock("@/lib/runtime", () => ({
   runtime: { streamRunEvents: (...args: unknown[]) => streamRunEvents(...args) },
 }));
-jest.mock("@/lib/runs-repository", () => ({
+jest.mock("@/lib/runs/runs-repository", () => ({
   getRun: (...args: unknown[]) => getRun(...args),
 }));
 
@@ -59,7 +59,7 @@ jest.mock("@/lib/runs-repository", () => ({
 
 const dispatchChatTurn = jest.fn();
 
-jest.mock("@/lib/chat-repository", () => ({
+jest.mock("@/lib/chat/chat-repository", () => ({
   getConversation: jest.fn(() => ({ id: "conv-1" })),
 }));
 jest.mock("@/lib/orchestration/chat-dispatch", () => ({

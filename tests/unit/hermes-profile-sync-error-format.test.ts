@@ -8,7 +8,7 @@
  *   const message = err instanceof Error ? err.message : String(err);
  *
  * This session migrated them to the existing `messageFromError` helper
- * from `@/lib/api-fetch`:
+ * from `@/lib/api/api-fetch`:
  *
  *   const message = messageFromError(err, "");
  *
@@ -30,7 +30,7 @@
  * realistically reach a catch block in `hermes-profile-sync.ts`.
  */
 
-import { messageFromError, toError } from "@/lib/api-fetch";
+import { messageFromError, toError } from "@/lib/api/api-fetch";
 
 describe("hermes-profile-sync error format byte-equivalence", () => {
   // Inline form (pre-migration)

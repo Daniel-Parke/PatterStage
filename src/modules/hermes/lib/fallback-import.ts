@@ -10,20 +10,20 @@
 
 import { NextResponse } from "next/server";
 
-import { serverErrorFromCatch } from "@/lib/api-logger";
-import { appendAuditLine } from "@/lib/audit-log";
+import { serverErrorFromCatch } from "@/lib/api/api-logger";
+import { appendAuditLine } from "@/lib/api/audit-log";
 import {
   addFallbackEntry,
   getFallbackConfig,
   listFallbackChain,
   updateFallbackConfigBatch,
-} from "@/lib/fallbacks-repository";
-import { parseFallbackAgentSettingsFromYaml } from "@/lib/fallback-config-yaml";
-import { upsertModel } from "@/lib/models-repository";
+} from "@/lib/models/fallbacks-repository";
+import { parseFallbackAgentSettingsFromYaml } from "@/lib/models/fallback-config-yaml";
+import { upsertModel } from "@/lib/models/models-repository";
 import { syncEnabledFallbackChainToHermes } from "./fallback-sync";
 import { readHermesYamlConfig } from "./hermes-config-read";
-import { notFound, ok } from "@/lib/api-response";
-import { fallbackKey } from "@/lib/model-key";
+import { notFound, ok } from "@/lib/api/api-response";
+import { fallbackKey } from "@/lib/models/model-key";
 
 /** The (provider, modelId) keys already in the fallback chain. */
 function existingFallbackKeys(): Set<string> {

@@ -28,7 +28,7 @@ import type { ChatMessage } from "@/types/chat";
 
 jest.mock("lucide-react", () => require("../helpers/mocks").lucideMock());
 jest.mock("next/link", () => require("../helpers/mocks").nextLinkMock());
-jest.mock("@/lib/chat-utils", () => ({
+jest.mock("@/lib/chat/chat-utils", () => ({
   fetchConversation: jest.fn(),
   createConversationApi: jest.fn(),
   sendMessageApi: jest.fn(),
@@ -39,7 +39,7 @@ jest.mock("@/lib/chat-utils", () => ({
   streamChatResponse: jest.fn(),
 }));
 
-import { fetchConversation, sendMessageApi, streamChatResponse } from "@/lib/chat-utils";
+import { fetchConversation, sendMessageApi, streamChatResponse } from "@/lib/chat/chat-utils";
 import { useChatSend } from "@/hooks/useChatSend";
 import GatewayBanner from "@/components/chat/GatewayBanner";
 

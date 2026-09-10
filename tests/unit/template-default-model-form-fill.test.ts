@@ -19,14 +19,14 @@ jest.mock("fs", () => ({
   unlinkSync: jest.fn(),
 }));
 
-jest.mock("@/lib/paths", () => ({
+jest.mock("@/lib/host/paths", () => ({
   PATHS: { templates: "/tmp/ch/templates" },
   PS_DATA_DIR: "/tmp/ch",
 }));
 
 jest.mock("@/lib/db", () => require("../helpers/mocks").dbMock());
 
-jest.mock("@/lib/catalog-template-repository", () => ({
+jest.mock("@/lib/templates/catalog-template-repository", () => ({
   listCatalogTemplates: jest.fn(() => [
     {
       id: "bug-hunt",

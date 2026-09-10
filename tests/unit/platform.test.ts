@@ -1,9 +1,9 @@
-// Cross-platform OS seam (src/lib/platform.ts). Tests are deterministic and
+// Cross-platform OS seam (src/lib/host/platform.ts). Tests are deterministic and
 // run identically on Windows, macOS, and Linux CI runners.
 
 import { createServer, type AddressInfo } from "net";
 
-import * as platform from "@/lib/platform";
+import * as platform from "@/lib/host/platform";
 
 describe("platform", () => {
   it("homeDir / tmpDir resolve to non-empty paths", () => {

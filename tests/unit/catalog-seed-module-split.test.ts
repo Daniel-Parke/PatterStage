@@ -24,16 +24,16 @@ jest.mock("@/lib/modules/server", () => ({
 }));
 
 const mockUpsertSkill = jest.fn();
-jest.mock("@/lib/skills-repository", () => ({
+jest.mock("@/lib/skills/skills-repository", () => ({
   upsertSkill: (...a: unknown[]) => mockUpsertSkill(...a),
   getSkill: jest.fn(() => null),
 }));
 
-jest.mock("@/lib/catalog-template-repository", () => ({
+jest.mock("@/lib/templates/catalog-template-repository", () => ({
   upsertCatalogTemplate: jest.fn(),
   getCatalogTemplate: jest.fn(() => null),
 }));
-jest.mock("@/lib/tool-catalog-repository", () => ({
+jest.mock("@/lib/system/tool-catalog-repository", () => ({
   upsertToolBundle: jest.fn(),
   getToolBundle: jest.fn(() => null),
 }));

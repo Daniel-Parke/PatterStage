@@ -28,10 +28,10 @@
 let composerOn = true;
 jest.mock("@/lib/feature-flags", () => ({ isFeatureEnabled: () => composerOn }));
 
-jest.mock("@/lib/api-logger", () => ({
+jest.mock("@/lib/api/api-logger", () => ({
   logApiError: jest.fn(),
   serverErrorFromCatch: (_route: string, _ctx: string, _err: unknown, message: string) =>
-    (jest.requireActual("@/lib/api-response") as typeof import("@/lib/api-response")).serverError(message),
+    (jest.requireActual("@/lib/api/api-response") as typeof import("@/lib/api/api-response")).serverError(message),
 }));
 
 jest.mock("@/lib/analytics/record-event", () => ({ recordEvent: jest.fn() }));

@@ -11,7 +11,7 @@
 //        list confidently mislabels three real sources as a fourth.
 //   D30  status, exitCode and error are on the record and rendered nowhere:
 //        a mission that died with exit 137 looks exactly like one that
-//        finished. The word comes from src/lib/status-labels.ts, not from a
+//        finished. The word comes from src/lib/ui/status-labels.ts, not from a
 //        literal typed into the component.
 //   D32  The whole row is an <a> with a second <a> inside it for the mission
 //        badge, and the mission group is a <button> with an <a> inside it.
@@ -27,7 +27,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 
 import SessionCard from "@/components/session/SessionCard";
 import MissionGroupCard from "@/components/session/MissionGroupCard";
-import { SESSION_STATUS_LABELS } from "@/lib/status-labels";
+import { SESSION_STATUS_LABELS } from "@/lib/ui/status-labels";
 import type { SessionRecord } from "@/lib/sessions/session-repository";
 import type { MissionGroup } from "@/lib/sessions/sessions-grouping";
 
@@ -137,9 +137,9 @@ describe("a failed session is distinguishable from a successful one", () => {
   });
 
   it("takes the word from the one status vocabulary, not from a literal", () => {
-    // decision 13: thirteen ratified words, and src/lib/status-labels.ts is
+    // decision 13: thirteen ratified words, and src/lib/ui/status-labels.ts is
     // the only place a status becomes one of them.
-    expect(readSource("components/session/SessionCard.tsx")).toContain("@/lib/status-labels");
+    expect(readSource("components/session/SessionCard.tsx")).toContain("@/lib/ui/status-labels");
   });
 });
 

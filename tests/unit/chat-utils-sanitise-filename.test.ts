@@ -1,15 +1,15 @@
 /**
- * Tests for the `sanitiseFilename` helper in `@/lib/chat-utils`.
+ * Tests for the `sanitiseFilename` helper in `@/lib/chat/chat-utils`.
  *
  * History: the chat page's `handleDownloadSession` previously inlined
  * `s.title.replace(/[^a-zA-Z0-9_-]/g, "_")` to slugify the session title
  * into a filename. Session 104 promoted the inline regex to a named
- * helper in `@/lib/chat-utils` so any future "export as Markdown" or
+ * helper in `@/lib/chat/chat-utils` so any future "export as Markdown" or
  * "export as PDF" feature can reuse the same slug rule. These tests
  * lock the helper's shape and the rule (replace non-`[A-Za-z0-9_-]`
  * with `_`).
  */
-import { sanitiseFilename } from "@/lib/chat-utils";
+import { sanitiseFilename } from "@/lib/chat/chat-utils";
 
 describe("chat-utils — sanitiseFilename", () => {
   it("replaces whitespace with underscores", () => {

@@ -99,7 +99,7 @@ as the public pointer ADR-0008 made it.
   `org/EOS_OPERATORS_GUIDE.md`, an agent's is `org/START.md`.
 - Every inbound reference in the tree: `docs/adr/README.md`,
   `docs/design-tokens.md`, `ops/runbooks/deploy.md`, the lock-book citations
-  in `src/lib/theme.ts`, `src/lib/modules/registry.ts` and
+  in `src/lib/ui/theme.ts`, `src/lib/modules/registry.ts` and
   `tests/unit/lockbook-tokens.test.ts` (comments only), and the paths
   `scripts/tooling/eos-compile.mjs` and `scripts/tooling/check-derived-views.mjs`
   name in their comments and in `HAND_WRITTEN`.

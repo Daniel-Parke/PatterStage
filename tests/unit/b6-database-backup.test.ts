@@ -28,7 +28,7 @@ import { join, resolve } from "path";
 import { tmpdir } from "os";
 
 import { execBaselineSchema } from "../helpers/baseline-db";
-import { PS_DATA_DIR } from "@/lib/paths";
+import { PS_DATA_DIR } from "@/lib/host/paths";
 import * as backupModule from "@/lib/db/backup";
 
 type SqliteDatabase = import("better-sqlite3").Database;

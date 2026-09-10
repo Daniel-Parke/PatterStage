@@ -5,7 +5,7 @@ import Card from "@/components/ui/Card";
 import Donut from "@/components/viz/Donut";
 import ProgressRing from "@/components/viz/ProgressRing";
 import { countMissionsByColumn } from "@/lib/missions/mission-board";
-import { MISSION_COLUMN_LABELS } from "@/lib/status-labels";
+import { MISSION_COLUMN_LABELS } from "@/lib/ui/status-labels";
 import type { MissionRow } from "@/hooks/missions-page-types";
 
 /**

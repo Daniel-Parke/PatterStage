@@ -13,7 +13,7 @@
 
 import type { LucideIcon } from "lucide-react";
 import type { AccentColor } from "@/types/console";
-import { iconColorMap, iconMutedColorMap, sectionHeadingClasses } from "@/lib/theme";
+import { iconColorMap, iconMutedColorMap, sectionHeadingClasses } from "@/lib/ui/theme";
 
 type ModelsSectionHeaderTone = "full" | "muted";
 

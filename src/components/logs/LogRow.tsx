@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import type { ReactNode } from "react";
-import { parseLogLine } from "@/lib/log-line-format";
+import { parseLogLine } from "@/lib/logs/log-line-format";
 import { LedgerRow } from "@/components/dashboard/LedgerRow";
 import { LEVEL_TEXT_CLASS } from "./constants";
 

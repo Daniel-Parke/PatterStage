@@ -185,7 +185,7 @@ adds two tables. `chat_conversations` holds one row per thread with the Hermes
 carries `reasoning`, `tool_calls_json`, an optional `run_id`, and a `status`
 that moves `pending` to `streaming` to one of `complete`, `failed` or
 `cancelled`. Deleting a conversation cascades to its messages. The repository is
-`src/lib/chat-repository.ts` and the dispatch is
+`src/lib/chat/chat-repository.ts` and the dispatch is
 `src/lib/orchestration/chat-dispatch.ts`.
 
 | Route | What it does |

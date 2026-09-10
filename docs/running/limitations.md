@@ -30,7 +30,7 @@ account system, and adding one is not a setting.
   them everything.
 - **The audit trail records what happened, not who did it.** Each line is a
   timestamp, an action, a resource and whether it succeeded
-  ([`src/lib/audit-log.ts`](../../src/lib/audit-log.ts)). With one operator
+  ([`src/lib/api/audit-log.ts`](../../src/lib/api/audit-log.ts)). With one operator
   that is the whole answer. With two it is not, and the file will not tell you
   which of you it was.
 - **Console preferences are install wide.** The collapsed rail, the dispatch
@@ -65,7 +65,7 @@ if you try:
   own timer runs it. The honest cost, which the Scripts page states on the row
   and in the modal, is that it only fires while PatterStage is running. The
   answer comes from `hostSchedulerAvailability()` in
-  [`src/lib/host-scheduler.ts`](../../src/lib/host-scheduler.ts) and travels in
+  [`src/lib/host/host-scheduler.ts`](../../src/lib/host/host-scheduler.ts) and travels in
   the API response as `scheduler: { available, reason }`.
 - **The bundled shell scripts need a shell.** Setup copies every `.sh` and
   `.mjs` from the hardware directory into your data directory, so the Scripts

@@ -15,7 +15,7 @@
 
 "use client";
 
-import { sectionHeadingClasses } from "@/lib/theme";
+import { sectionHeadingClasses } from "@/lib/ui/theme";
 import { useEffect, useMemo, useState } from "react";
 import { GitBranch, HelpCircle, Plus } from "lucide-react";
 
@@ -34,11 +34,11 @@ import ComposerGatePrompt from "@/components/composer/ComposerGatePrompt";
 import ComposerNodeRunDetail from "@/components/composer/ComposerNodeRunDetail";
 import { profileOptionsFor } from "@/components/composer/profile-options";
 import ComposerRunForm from "@/components/composer/ComposerRunForm";
-import { runWrite } from "@/lib/api-write";
+import { runWrite } from "@/lib/api/api-write";
 import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
 import { composerWaitingReason, isTerminalComposerRunStatus } from "@/lib/composer/schema";
-import { COMPOSER_RUN_STATUS_LABELS, statusTone } from "@/lib/status-labels";
-import { statusToneClasses } from "@/lib/theme";
+import { COMPOSER_RUN_STATUS_LABELS, statusTone } from "@/lib/ui/status-labels";
+import { statusToneClasses } from "@/lib/ui/theme";
 import { timeAgo } from "@/lib/utils";
 import ElapsedSince from "@/components/composer/ElapsedSince";
 

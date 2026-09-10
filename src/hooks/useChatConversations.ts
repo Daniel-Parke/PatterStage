@@ -28,7 +28,7 @@ import {
   conversationToCsv,
   sanitiseFilename,
   downloadFile,
-} from "@/lib/chat-utils";
+} from "@/lib/chat/chat-utils";
 import { stopEvent, type PendingApproval } from "@/hooks/chat-local-message";
 
 type ToastFn = (message: string, type?: ToastType) => void;

@@ -26,8 +26,8 @@ import type { ChatMessage, ToolCall } from "@/types/chat";
 
 const finalizeMessageApi = jest.fn(async () => {});
 
-jest.mock("@/lib/chat-utils", () => ({
-  ...jest.requireActual("@/lib/chat-utils"),
+jest.mock("@/lib/chat/chat-utils", () => ({
+  ...jest.requireActual("@/lib/chat/chat-utils"),
   finalizeMessageApi: (...args: unknown[]) => finalizeMessageApi(...(args as [])),
 }));
 

@@ -30,8 +30,8 @@
  * It is also what the QA agent actually saw: a shouting row heading.
  */
 
-import { groupCategories } from "@/lib/skills-page-helpers";
-import { groupByCategory, titleCaseCategory } from "@/lib/skills-grouping";
+import { groupCategories } from "@/lib/skills/skills-page-helpers";
+import { groupByCategory, titleCaseCategory } from "@/lib/skills/skills-grouping";
 
 const skill = (name: string, category: string) =>
   ({ name, category, description: "", enabled: true }) as never;

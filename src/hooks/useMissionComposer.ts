@@ -28,7 +28,7 @@ import { parseMissionPrompt } from "@/lib/missions/build-mission-prompt";
 import type { MissionFormState } from "@/components/missions/MissionCreateForm";
 import type { MissionTemplate } from "@/components/missions/TemplateModals";
 import { splitGoals } from "@/lib/missions/mission-form-utils";
-import { scheduleForDispatch } from "@/lib/dispatch-mode";
+import { scheduleForDispatch } from "@/lib/ui/dispatch-mode";
 import { isMissionQueuedForRun } from "@/lib/missions/mission-board";
 import {
   getCategoryIdFromTemplate,

@@ -27,13 +27,13 @@ afterEach(() => {
 
 describe("credentials-repository — CRUD", () => {
   it("listCredentials starts empty", () => {
-    const { listCredentials } = require("@/lib/credentials-repository") as typeof import("@/lib/credentials-repository");
+    const { listCredentials } = require("@/lib/models/credentials-repository") as typeof import("@/lib/models/credentials-repository");
     expect(listCredentials()).toEqual([]);
   });
 
   it("createCredential writes label + provider + key + key_hint", () => {
     const { createCredential, getCredentialWithKey } =
-      require("@/lib/credentials-repository") as typeof import("@/lib/credentials-repository");
+      require("@/lib/models/credentials-repository") as typeof import("@/lib/models/credentials-repository");
     const c = createCredential({
       label: "Anthropic Personal",
       provider: "anthropic",
@@ -45,7 +45,7 @@ describe("credentials-repository — CRUD", () => {
     expect(c.keyHint).toMatch(/7890$/);
 
     // Listing must NOT expose api_key.
-    const summary = require("@/lib/credentials-repository").getCredential(c.id);
+    const summary = require("@/lib/models/credentials-repository").getCredential(c.id);
     expect("apiKey" in (summary as object)).toBe(false);
 
     // Internal helper must expose the plaintext.
@@ -54,7 +54,7 @@ describe("credentials-repository — CRUD", () => {
   });
 
   it("buildKeyHint masks short keys safely", () => {
-    const { buildKeyHint } = require("@/lib/credentials-repository") as typeof import("@/lib/credentials-repository");
+    const { buildKeyHint } = require("@/lib/models/credentials-repository") as typeof import("@/lib/models/credentials-repository");
     expect(buildKeyHint("")).toBe("");
     expect(buildKeyHint("ab")).toBe("ab...ab");
     // <=8 chars → 2-prefix/2-suffix to avoid overlap.
@@ -64,7 +64,7 @@ describe("credentials-repository — CRUD", () => {
   });
 
   it("rejects empty label/provider/apiKey", () => {
-    const { createCredential } = require("@/lib/credentials-repository") as typeof import("@/lib/credentials-repository");
+    const { createCredential } = require("@/lib/models/credentials-repository") as typeof import("@/lib/models/credentials-repository");
     expect(() => createCredential({ label: "", provider: "x", apiKey: "y" })).toThrow(/label/);
     expect(() => createCredential({ label: "x", provider: "", apiKey: "y" })).toThrow(/provider/);
     expect(() => createCredential({ label: "x", provider: "y", apiKey: "" })).toThrow(/apiKey/);
@@ -72,7 +72,7 @@ describe("credentials-repository — CRUD", () => {
 
   it("updateCredential rotates the key only when one is supplied", () => {
     const { createCredential, updateCredential, getCredentialWithKey } =
-      require("@/lib/credentials-repository") as typeof import("@/lib/credentials-repository");
+      require("@/lib/models/credentials-repository") as typeof import("@/lib/models/credentials-repository");
     const c = createCredential({ label: "X", provider: "anthropic", apiKey: "sk-old-key-12345" });
 
     // Update label only — key untouched.
@@ -88,7 +88,7 @@ describe("credentials-repository — CRUD", () => {
 
   it("updateCredential treats empty apiKey as 'do not rotate'", () => {
     const { createCredential, updateCredential, getCredentialWithKey } =
-      require("@/lib/credentials-repository") as typeof import("@/lib/credentials-repository");
+      require("@/lib/models/credentials-repository") as typeof import("@/lib/models/credentials-repository");
     const c = createCredential({ label: "X", provider: "anthropic", apiKey: "sk-original-12345" });
     updateCredential(c.id, { apiKey: "" });
     expect(getCredentialWithKey(c.id)?.apiKey).toBe("sk-original-12345");
@@ -96,7 +96,7 @@ describe("credentials-repository — CRUD", () => {
 
   it("deleteCredential returns true on success and false on miss", () => {
     const { createCredential, deleteCredential } =
-      require("@/lib/credentials-repository") as typeof import("@/lib/credentials-repository");
+      require("@/lib/models/credentials-repository") as typeof import("@/lib/models/credentials-repository");
     const c = createCredential({ label: "X", provider: "anthropic", apiKey: "sk-x-12345" });
     expect(deleteCredential(c.id)).toBe(true);
     expect(deleteCredential(c.id)).toBe(false);
@@ -105,7 +105,7 @@ describe("credentials-repository — CRUD", () => {
 
   it("listCredentials never includes api_key in the row shape", () => {
     const { createCredential, listCredentials } =
-      require("@/lib/credentials-repository") as typeof import("@/lib/credentials-repository");
+      require("@/lib/models/credentials-repository") as typeof import("@/lib/models/credentials-repository");
     createCredential({ label: "A", provider: "anthropic", apiKey: "sk-secret-1234" });
     createCredential({ label: "B", provider: "openrouter", apiKey: "sk-other-5678" });
     const rows = listCredentials();
@@ -122,7 +122,7 @@ describe("credentials-repository — CRUD", () => {
     // see tests/unit/models-import-oauth-skip.test.ts. This repository now
     // matches its own column: `provider TEXT NOT NULL`, no CHECK.
     const { upsertCredential, listCredentials } =
-      require("@/lib/credentials-repository") as typeof import("@/lib/credentials-repository");
+      require("@/lib/models/credentials-repository") as typeof import("@/lib/models/credentials-repository");
     const result = upsertCredential({ provider: "nous", apiKey: "no-key-needed" });
     expect(result).not.toBeNull();
     expect(listCredentials().some((c) => c.provider === "nous")).toBe(true);
@@ -130,7 +130,7 @@ describe("credentials-repository — CRUD", () => {
 
   it("upsertCredential works normally for API-key providers", () => {
     const { upsertCredential, listCredentials } =
-      require("@/lib/credentials-repository") as typeof import("@/lib/credentials-repository");
+      require("@/lib/models/credentials-repository") as typeof import("@/lib/models/credentials-repository");
     const result = upsertCredential({ provider: "minimax", apiKey: "test-key-123" });
     expect(result).not.toBeNull();
     expect(result?.action).toBe("inserted");
@@ -143,7 +143,7 @@ describe("credentials-repository — CRUD", () => {
 
   it("upsertCredential updates existing row when key changes", () => {
     const { upsertCredential, getCredentialWithKey, listCredentials } =
-      require("@/lib/credentials-repository") as typeof import("@/lib/credentials-repository");
+      require("@/lib/models/credentials-repository") as typeof import("@/lib/models/credentials-repository");
     upsertCredential({ provider: "openrouter", apiKey: "original-key" });
     const creds = listCredentials();
     const orCred = creds.find((c) => c.provider === "openrouter")!;

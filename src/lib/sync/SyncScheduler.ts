@@ -28,7 +28,7 @@
 // wedged for 20+ hours) was triggered by exactly this class of bug.
 // ═══════════════════════════════════════════════════════════════
 
-import { messageFromError } from "@/lib/api-fetch";
+import { messageFromError } from "@/lib/api/api-fetch";
 import type { SyncSource, SyncResult, SyncCycleResult } from "./types";
 
 // ── Constants ────────────────────────────────────────────────

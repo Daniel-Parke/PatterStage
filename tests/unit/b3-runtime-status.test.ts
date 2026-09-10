@@ -9,7 +9,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-jest.mock("@/lib/paths", () => ({
+jest.mock("@/lib/host/paths", () => ({
   PS_DATA_DIR: "/tmp/ps-data",
   getPsDataDir: () => "/tmp/ps-data",
   getDbPath: () => "/tmp/ps-data/patterstage.db",

@@ -25,7 +25,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useInterval } from "@/hooks/useInterval";
 
 import type { ToastType } from "@/components/ui/Toast";
-import { toastError } from "@/lib/api-fetch";
+import { toastError } from "@/lib/api/api-fetch";
 import { useMissionsApi } from "@/hooks/useMissionsApi";
 import { useMissionCategories } from "@/hooks/useMissionCategories";
 import type { useMissionComposer } from "@/hooks/useMissionComposer";

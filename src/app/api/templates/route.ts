@@ -13,14 +13,14 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
-import { parseJsonBody } from "@/lib/parse-json-body";
+import { parseJsonBody } from "@/lib/api/parse-json-body";
 import { handleCreateTemplate } from "@/lib/templates-handlers/create";
 import { handleDeleteTemplate } from "@/lib/templates-handlers/delete";
 import { handleImportTemplatePack } from "@/lib/templates-handlers/import-pack";
 import { handleListTemplates } from "@/lib/templates-handlers/list";
 import type { TemplateActionBody } from "@/lib/templates-handlers/shared";
 import { handleUpdateTemplate } from "@/lib/templates-handlers/update";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 export async function GET() {
   return handleListTemplates();

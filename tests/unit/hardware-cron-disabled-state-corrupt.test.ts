@@ -63,21 +63,21 @@ jest.mock("fs", () => ({
   mkdirSync: jest.fn(),
 }));
 
-jest.mock("@/lib/api-auth", () => ({ isReadOnly: jest.fn(() => false) }));
-jest.mock("@/lib/hardware-cron", () => ({ crontabLineUsesScriptsDir: jest.fn(() => true) }));
-jest.mock("@/lib/api-logger", () => ({
+jest.mock("@/lib/api/api-auth", () => ({ isReadOnly: jest.fn(() => false) }));
+jest.mock("@/lib/host/hardware-cron", () => ({ crontabLineUsesScriptsDir: jest.fn(() => true) }));
+jest.mock("@/lib/api/api-logger", () => ({
   logApiError: jest.fn(),
   serverErrorFromCatch: jest.fn(),
   serverErrorFromHelperResult: jest.fn(),
 }));
 
-jest.mock("@/lib/paths", () => ({
+jest.mock("@/lib/host/paths", () => ({
   PS_DATA_DIR: "/tmp/ch-data",
   getPsScriptsDir: () => "/tmp/ch-data/scripts",
   getPsHardwareLogDir: () => "/tmp/ch-data/logs",
 }));
 
-jest.mock("@/lib/host-scheduler", () => ({
+jest.mock("@/lib/host/host-scheduler", () => ({
   getHostScheduler: () => ({
     setEnabled: mockSetEnabled,
     readRaw: mockReadRaw,

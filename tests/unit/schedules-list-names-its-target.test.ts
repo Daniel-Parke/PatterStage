@@ -21,7 +21,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports -- better-sqlite3's package root is not newable under the jest transform */
 
 import type DatabaseNs from "better-sqlite3";
-import type * as SchedulesRepo from "@/lib/schedules-repository";
+import type * as SchedulesRepo from "@/lib/schedule/schedules-repository";
 
 import { execBaselineSchema } from "../helpers/baseline-db";
 import { describeScheduleTarget } from "@/lib/schedule/schedule-target";
@@ -47,7 +47,7 @@ beforeEach(() => {
     const actual = jest.requireActual("@/lib/db");
     return { ...actual, getDb: () => testDb!, inTransaction: (fn: () => unknown) => fn() };
   });
-  repo = require("@/lib/schedules-repository") as typeof SchedulesRepo;
+  repo = require("@/lib/schedule/schedules-repository") as typeof SchedulesRepo;
 });
 
 afterEach(() => {

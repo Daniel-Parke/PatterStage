@@ -9,16 +9,16 @@ import { existsSync } from "fs";
 
 import { NextRequest, NextResponse } from "next/server";
 
-import { requireNotReadOnly } from "@/lib/api-auth";
-import { ok, serverError } from "@/lib/api-response";
-import { appendAuditLine } from "@/lib/audit-log";
+import { requireNotReadOnly } from "@/lib/api/api-auth";
+import { ok, serverError } from "@/lib/api/api-response";
+import { appendAuditLine } from "@/lib/api/audit-log";
 import { snapshotDatabase } from "@/lib/db/backup";
-import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
-import { seedPostSchema } from "@/lib/api-schemas";
+import { parseAndValidateJsonBody } from "@/lib/api/parse-json-body";
+import { seedPostSchema } from "@/lib/api/api-schemas";
 import { runCatalogSeed, getSeedState, readShippedPackCounts } from "@/lib/seed/catalog-seed";
 import { importHermesStateFromDisk } from "@/modules/hermes/lib/state-import";
 import { getHermesHome } from "@/modules/hermes/lib/home";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 export const GET = route("GET /api/seed", "state", "Failed to read seed state", async () => {
   const state = getSeedState();

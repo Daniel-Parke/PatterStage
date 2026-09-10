@@ -7,7 +7,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { parseTimeoutMinutes } from "@/lib/missions/mission-timeout";
-import { findModelByModelId } from "../models-repository";
+import { findModelByModelId } from "../models/models-repository";
 import type { MissionDraftFields } from "@/lib/missions/mission-types";
 
 /** Shared fields destructured from mission action body (dispatch/promote/update). */

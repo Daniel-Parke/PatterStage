@@ -14,7 +14,7 @@ import Dialog from "@/components/ui/Dialog";
 import IconButton from "@/components/ui/IconButton";
 import type { SyncActionResult } from "@/lib/models/sync-result";
 import { pluralise } from "@/lib/utils";
-import { apiFetch } from "@/lib/api-fetch";
+import { apiFetch } from "@/lib/api/api-fetch";
 
 interface DiffEntry {
   id: string;

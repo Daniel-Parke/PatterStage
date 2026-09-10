@@ -14,7 +14,7 @@ import {
   getMemoryProviderType,
 } from "@/lib/memory/memory-providers";
 
-import { badRequest, ok } from "@/lib/api-response";
+import { badRequest, ok } from "@/lib/api/api-response";
 import type { MemoryReadResult } from "@/lib/memory/memory-providers";
 
 // ── GET — Memory status ──────────────────────────────────────

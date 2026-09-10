@@ -33,7 +33,7 @@ let testDb: import("better-sqlite3").Database | null = null;
 jest.mock("@/lib/db", () => require("../helpers/baseline-db").dbSingletonMock(() => testDb));
 
 const mockCountSkills = jest.fn();
-jest.mock("@/lib/skills-repository", () => ({
+jest.mock("@/lib/skills/skills-repository", () => ({
   countSkills: () => mockCountSkills(),
 }));
 
@@ -43,9 +43,9 @@ jest.mock("@/lib/sessions/session-repository", () => ({
 }));
 
 jest.mock("@/lib/sync", () => ({ ensureSyncLayer: jest.fn() }));
-jest.mock("@/lib/api-logger", () => ({
+jest.mock("@/lib/api/api-logger", () => ({
   logApiError: jest.fn(),
-  serverErrorFromCatch: jest.requireActual("@/lib/api-logger").serverErrorFromCatch,
+  serverErrorFromCatch: jest.requireActual("@/lib/api/api-logger").serverErrorFromCatch,
 }));
 
 const mockGetDashboardStats = jest.fn();

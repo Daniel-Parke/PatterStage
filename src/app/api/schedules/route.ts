@@ -8,15 +8,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-import { ok, created, badRequest } from "@/lib/api-response";
-import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
-import { listSchedules, createSchedule } from "@/lib/schedules-repository";
-import { boundsFrom, SCHEDULE_LIST_BOUNDS } from "@/lib/list-bounds";
+import { ok, created, badRequest } from "@/lib/api/api-response";
+import { parseAndValidateJsonBody } from "@/lib/api/parse-json-body";
+import { listSchedules, createSchedule } from "@/lib/schedule/schedules-repository";
+import { boundsFrom, SCHEDULE_LIST_BOUNDS } from "@/lib/ui/list-bounds";
 import { parseSchedule } from "@/lib/schedule/parse-schedule";
 import { computeNextRun, scheduleCanEverFire } from "@/lib/schedule/next-run";
 import { scheduleIntervalProblem } from "@/lib/schedule/interval-bounds";
 import { recordEvent } from "@/lib/analytics/record-event";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 const scheduleCreateSchema = z
   .object({

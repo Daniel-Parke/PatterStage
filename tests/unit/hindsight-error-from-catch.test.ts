@@ -35,7 +35,7 @@
  * logApiError primitive.
  */
 
-import { logApiError } from "@/lib/api-logger";
+import { logApiError } from "@/lib/api/api-logger";
 import {
   hindsightErrorFromCatch,
   hindsightErrorResponse,

@@ -9,9 +9,9 @@
 
 import { now } from "@/lib/db";
 import { runtime } from "@/lib/runtime";
-import { messageFromError } from "@/lib/api-fetch";
-import { logApiError } from "@/lib/api-logger";
-import { createRun, attachBackendRun, updateRun } from "@/lib/runs-repository";
+import { messageFromError } from "@/lib/api/api-fetch";
+import { logApiError } from "@/lib/api/api-logger";
+import { createRun, attachBackendRun, updateRun } from "@/lib/runs/runs-repository";
 import { createResearchRun } from "@/lib/laboratory/deep-research/research-repository";
 import { runResearchJob } from "@/lib/laboratory/deep-research/run-job";
 import type { ResearchConfig } from "@/lib/laboratory/deep-research/types";

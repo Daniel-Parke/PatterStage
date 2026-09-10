@@ -57,8 +57,8 @@ jest.mock("@/components/ui/ProfilePicker", () => require("../helpers/mocks").pro
 
 const mockApiFetch = jest.fn();
 const mockSafeApiCallData = jest.fn();
-jest.mock("@/lib/api-fetch", () => ({
-  ...(jest.requireActual("@/lib/api-fetch") as Record<string, unknown>),
+jest.mock("@/lib/api/api-fetch", () => ({
+  ...(jest.requireActual("@/lib/api/api-fetch") as Record<string, unknown>),
   apiFetch: (...a: unknown[]) => mockApiFetch(...a),
   // The pages read through useApiResource, which calls safeApiCall; routed
   // through the same mock so a read is still one of the paths asked for (C6, T-0143).

@@ -42,7 +42,7 @@
 // decomposition, the `valid` false-cases, and the `scheduleForDispatch`
 // schedule gate for each mode.
 
-import { parseDispatchMode, scheduleForDispatch } from "@/lib/dispatch-mode";
+import { parseDispatchMode, scheduleForDispatch } from "@/lib/ui/dispatch-mode";
 
 describe("parseDispatchMode", () => {
   // ── Mode recognition — each of the 4 supported modes ────────────

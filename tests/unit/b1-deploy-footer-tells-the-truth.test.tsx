@@ -14,8 +14,8 @@ import { act, render, renderHook, screen, waitFor } from "@testing-library/react
 import { queryWrapper } from "../helpers/render-with-query";
 
 const mockSafeApiCallData = jest.fn();
-jest.mock("@/lib/api-fetch", () => ({
-  ...jest.requireActual("@/lib/api-fetch"),
+jest.mock("@/lib/api/api-fetch", () => ({
+  ...jest.requireActual("@/lib/api/api-fetch"),
   safeApiCallData: (...a: unknown[]) => mockSafeApiCallData(...a),
   // The mount read of deployEnabled goes through useApiResource since C6
   // (T-0143), which calls safeApiCall; it answers from the same double, in

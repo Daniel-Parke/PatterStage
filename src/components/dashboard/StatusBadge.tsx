@@ -2,7 +2,7 @@
 // StatusBadge — status badge for missions
 // ═══════════════════════════════════════════════════════════════
 // Used by the dashboard's active-missions panel. The word comes from the one
-// vocabulary (src/lib/status-labels.ts): this badge used to title-case the
+// vocabulary (src/lib/ui/status-labels.ts): this badge used to title-case the
 // raw enum, so the same mission read "Successful" here and "Finished" on the
 // board (T-0096, decision 13).
 
@@ -13,8 +13,8 @@ import {
   XCircle,
 } from "lucide-react";
 
-import { missionStatusLabel } from "@/lib/status-labels";
-import { statusToneClasses } from "@/lib/theme";
+import { missionStatusLabel } from "@/lib/ui/status-labels";
+import { statusToneClasses } from "@/lib/ui/theme";
 
 // ── Shared shape ────────────────────────────────────────────
 

@@ -10,8 +10,8 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { now } from "@/lib/db";
-import { logApiError } from "@/lib/api-logger";
-import { captureArtifactOnce } from "@/lib/artifacts-repository";
+import { logApiError } from "@/lib/api/api-logger";
+import { captureArtifactOnce } from "@/lib/runs/artifacts-repository";
 import { recordEvent } from "@/lib/analytics/record-event";
 import type { RunStatus } from "@/lib/runtime/types";
 import { isFeatureEnabled } from "@/lib/feature-flags";

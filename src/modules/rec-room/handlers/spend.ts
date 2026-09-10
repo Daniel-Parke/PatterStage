@@ -13,7 +13,7 @@
 
 import { NextResponse } from "next/server";
 
-import { serverErrorFromCatch } from "@/lib/api-logger";
+import { serverErrorFromCatch } from "@/lib/api/api-logger";
 import { recordedSpendForStory } from "@/lib/spend/spend-window";
 import { getStory } from "@/modules/rec-room/lib/story-repository";
 

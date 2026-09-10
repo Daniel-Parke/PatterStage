@@ -63,8 +63,8 @@ jest.mock("@/hooks/useComposer", () => ({
 // double translates: the data on ok, otherwise a throw carrying the status and
 // the parsed body, which is what the real apiFetch throws.
 const mockSafeApiCall = jest.fn();
-jest.mock("@/lib/api-fetch", () => ({
-  ...jest.requireActual("@/lib/api-fetch"),
+jest.mock("@/lib/api/api-fetch", () => ({
+  ...jest.requireActual("@/lib/api/api-fetch"),
   // eslint-disable-next-line @typescript-eslint/no-require-imports -- hoisting-safe inside jest.mock
   apiFetch: require("../helpers/mocks").apiFetchOver((...a: unknown[]) => mockSafeApiCall(...a)),
 }));

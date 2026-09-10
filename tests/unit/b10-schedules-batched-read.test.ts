@@ -29,7 +29,7 @@ jest.mock("@/lib/db", () => {
   };
 });
 
-import { listSchedulesForMissions } from "@/lib/schedules-repository";
+import { listSchedulesForMissions } from "@/lib/schedule/schedules-repository";
 
 /** Insert one schedule row directly, so createdAt is ours to choose. */
 function insertSchedule(id: string, missionId: string, createdAt: string, name: string): void {

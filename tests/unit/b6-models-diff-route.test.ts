@@ -53,7 +53,7 @@ import * as yaml from "js-yaml";
 const mockGetModelWithKey = jest.fn();
 const mockListModels = jest.fn();
 const mockUpdateModel = jest.fn();
-jest.mock("@/lib/models-repository", () => ({
+jest.mock("@/lib/models/models-repository", () => ({
   getModelWithKey: (...a: unknown[]) => mockGetModelWithKey(...a),
   listModels: (...a: unknown[]) => mockListModels(...a),
   updateModel: (...a: unknown[]) => mockUpdateModel(...a),
@@ -78,8 +78,8 @@ jest.mock("@/modules/hermes/lib/agent-runtime", () => {
   };
 });
 
-jest.mock("@/lib/api-logger", () => ({
-  ...(jest.requireActual("@/lib/api-logger") as Record<string, unknown>),
+jest.mock("@/lib/api/api-logger", () => ({
+  ...(jest.requireActual("@/lib/api/api-logger") as Record<string, unknown>),
   logApiError: jest.fn(),
 }));
 
@@ -427,7 +427,11 @@ describe("src/modules/hermes/lib/model-diff.ts", () => {
 
     // Import statements, not any mention: the reason this module must stay
     // pure belongs in its own header, and a header that says so is not an import.
-    expect(source).not.toMatch(/^\s*import[^\n]*["']@\/lib\/(models|credentials)-repository["']/m);
+    //
+    // Any repository, not the two by name: C7 (T-0144) moved both under
+    // @/lib/models/, and an alternation naming their old paths would have gone
+    // on passing while saying nothing.
+    expect(source).not.toMatch(/^\s*import[^\n]*["'][^"']*-repository["']/m);
   });
 
   it("is what the pull route calls now, in place of its private computeDiffs", () => {

@@ -11,9 +11,9 @@ import { join } from "path";
 
 import { NextResponse } from "next/server";
 
-import { logApiError } from "@/lib/api-logger";
-import { conflict } from "@/lib/api-response";
-import { PS_DATA_DIR } from "@/lib/paths";
+import { logApiError } from "@/lib/api/api-logger";
+import { conflict } from "@/lib/api/api-response";
+import { PS_DATA_DIR } from "@/lib/host/paths";
 
 const DISABLED_STATE_FILE = join(PS_DATA_DIR, ".disabled_hardware_crons.json");
 

@@ -11,7 +11,7 @@ const mockAppendAuditLine = jest.fn();
 // resolve to harmless defaults, and `syncFallbacksToHermesConfig` returns
 // a stub result so the chain sync succeeds without doing real I/O.
 
-jest.mock("@/lib/audit-log", () => ({
+jest.mock("@/lib/api/audit-log", () => ({
   appendAuditLine: (...args: unknown[]) => mockAppendAuditLine(...args),
 }));
 

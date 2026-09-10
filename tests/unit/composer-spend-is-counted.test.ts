@@ -116,7 +116,7 @@ describe("the reconciler carries a stage's usage onto its run", () => {
       usage: { inputTokens: 800, outputTokens: 400, totalTokens: 1200 },
     }));
 
-    jest.doMock("@/lib/runs-repository", () => ({ listActiveRuns, updateRun }));
+    jest.doMock("@/lib/runs/runs-repository", () => ({ listActiveRuns, updateRun }));
     jest.doMock("@/lib/runtime", () => ({ runtime: { getRun, stopRun: jest.fn() } }));
     jest.doMock("@/lib/composer/engine", () => ({
       finalizeComposerNodeRun: jest.fn(() => null),
@@ -128,8 +128,8 @@ describe("the reconciler carries a stage's usage onto its run", () => {
     }));
     jest.doMock("@/lib/sessions/session-repository", () => ({ closeSessionForMission: jest.fn() }));
     jest.doMock("@/lib/analytics/record-event", () => ({ recordEvent: jest.fn() }));
-    jest.doMock("@/lib/artifacts-repository", () => ({ captureArtifactOnce: jest.fn() }));
-    jest.doMock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
+    jest.doMock("@/lib/runs/artifacts-repository", () => ({ captureArtifactOnce: jest.fn() }));
+    jest.doMock("@/lib/api/api-logger", () => ({ logApiError: jest.fn() }));
 
     const { reconcileActiveRuns } = await import("@/lib/orchestration/run-reconcile");
     await reconcileActiveRuns();
@@ -148,7 +148,7 @@ describe("the reconciler carries a stage's usage onto its run", () => {
     jest.resetModules();
 
     const updateRun = jest.fn();
-    jest.doMock("@/lib/runs-repository", () => ({
+    jest.doMock("@/lib/runs/runs-repository", () => ({
       updateRun,
       listActiveRuns: jest.fn(() => [
         {
@@ -179,8 +179,8 @@ describe("the reconciler carries a stage's usage onto its run", () => {
     }));
     jest.doMock("@/lib/sessions/session-repository", () => ({ closeSessionForMission: jest.fn() }));
     jest.doMock("@/lib/analytics/record-event", () => ({ recordEvent: jest.fn() }));
-    jest.doMock("@/lib/artifacts-repository", () => ({ captureArtifactOnce: jest.fn() }));
-    jest.doMock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
+    jest.doMock("@/lib/runs/artifacts-repository", () => ({ captureArtifactOnce: jest.fn() }));
+    jest.doMock("@/lib/api/api-logger", () => ({ logApiError: jest.fn() }));
 
     const { reconcileActiveRuns } = await import("@/lib/orchestration/run-reconcile");
     await reconcileActiveRuns();
@@ -203,7 +203,7 @@ describe("the reconciler carries a stage's usage onto its run", () => {
     jest.resetModules();
 
     const updateRun = jest.fn();
-    jest.doMock("@/lib/runs-repository", () => ({
+    jest.doMock("@/lib/runs/runs-repository", () => ({
       updateRun,
       listActiveRuns: jest.fn(() => [
         {
@@ -230,8 +230,8 @@ describe("the reconciler carries a stage's usage onto its run", () => {
     }));
     jest.doMock("@/lib/sessions/session-repository", () => ({ closeSessionForMission: jest.fn() }));
     jest.doMock("@/lib/analytics/record-event", () => ({ recordEvent: jest.fn() }));
-    jest.doMock("@/lib/artifacts-repository", () => ({ captureArtifactOnce: jest.fn() }));
-    jest.doMock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
+    jest.doMock("@/lib/runs/artifacts-repository", () => ({ captureArtifactOnce: jest.fn() }));
+    jest.doMock("@/lib/api/api-logger", () => ({ logApiError: jest.fn() }));
 
     const { reconcileActiveRuns } = await import("@/lib/orchestration/run-reconcile");
     await reconcileActiveRuns();

@@ -9,15 +9,15 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { listMissions } from "@/lib/missions/mission-repository";
-import { boundsFrom, MISSION_LIST_BOUNDS } from "@/lib/list-bounds";
-import { getLatestRunForMission, listLatestRunsForMissions } from "@/lib/runs-repository";
+import { boundsFrom, MISSION_LIST_BOUNDS } from "@/lib/ui/list-bounds";
+import { getLatestRunForMission, listLatestRunsForMissions } from "@/lib/runs/runs-repository";
 import { buildMissionRunView } from "@/lib/orchestration/run-deadline";
-import { getScheduleForMission, listSchedulesForMissions } from "@/lib/schedules-repository";
+import { getScheduleForMission, listSchedulesForMissions } from "@/lib/schedule/schedules-repository";
 import { toMissionScheduleView } from "@/lib/missions/mission-schedule-view";
-import { requireNotReadOnly } from "@/lib/api-auth";
-import { serverErrorFromCatch } from "@/lib/api-logger";
-import { parseJsonBody } from "@/lib/parse-json-body";
-import { badRequest, ok } from "@/lib/api-response";
+import { requireNotReadOnly } from "@/lib/api/api-auth";
+import { serverErrorFromCatch } from "@/lib/api/api-logger";
+import { parseJsonBody } from "@/lib/api/parse-json-body";
+import { badRequest, ok } from "@/lib/api/api-response";
 import { ensureSyncLayer } from "@/lib/sync";
 import { getMissionOrNotFound } from "@/lib/missions/mission-handlers/shared";
 import { handleDispatchMission } from "@/lib/missions/mission-handlers/dispatch";
@@ -25,7 +25,7 @@ import { handlePromoteMission } from "@/lib/missions/mission-handlers/promote";
 import { handleUpdateMission } from "@/lib/missions/mission-handlers/update";
 import { handleCancelMission } from "@/lib/missions/mission-handlers/cancel";
 import { handleDeleteMission } from "@/lib/missions/mission-handlers/delete";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 // ── GET ───────────────────────────────────────────────────────
 

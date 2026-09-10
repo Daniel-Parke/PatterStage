@@ -29,7 +29,7 @@ import {
   type CharacterInput,
   type ThemeInput,
 } from "@/modules/rec-room/lib/library-repository";
-import { serverErrorFromCatch } from "@/lib/api-logger";
+import { serverErrorFromCatch } from "@/lib/api/api-logger";
 
 const str = (v: unknown): string => (typeof v === "string" ? v : "");
 

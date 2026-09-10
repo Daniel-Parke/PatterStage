@@ -15,7 +15,7 @@
   "owner_session": "t0063-schedule-gate-2026-08-30",
   "claims": [
     "src/components/schedule/SchedulePicker.tsx",
-    "src/lib/dispatch-mode.ts",
+    "src/lib/ui/dispatch-mode.ts",
     "src/lib/schedule/picker-resolver.ts",
     "src/hooks/",
     "src/components/missions/",

@@ -8,7 +8,7 @@ import { promisify } from "util";
 import { existsSync } from "fs";
 import { resolve as pathResolve } from "path";
 
-import { logApiError } from "@/lib/api-logger";
+import { logApiError } from "@/lib/api/api-logger";
 import { normalizeGitCurrentForBranchesList } from "@/lib/git/git-branch-current";
 
 export type GitExecFileAsync = (

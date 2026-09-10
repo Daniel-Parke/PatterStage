@@ -13,15 +13,15 @@
 const KEY = "sk-live-1234567890abcdef";
 
 const mockReadCachedConfigResult = jest.fn();
-jest.mock("@/lib/config-cache", () => ({
+jest.mock("@/lib/config/config-cache", () => ({
   readCachedConfigResult: () => mockReadCachedConfigResult(),
   readCachedConfig: () => mockReadCachedConfigResult().config,
 }));
 jest.mock("@/lib/runtime/workspace", () => ({
   getAgentWorkspace: () => ({ config: "/tmp/ps-test/config.yaml", backups: "/tmp/ps-test/backups" }),
 }));
-jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
-jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn(), serverErrorFromCatch: jest.fn() }));
+jest.mock("@/lib/api/audit-log", () => ({ appendAuditLine: jest.fn() }));
+jest.mock("@/lib/api/api-logger", () => ({ logApiError: jest.fn(), serverErrorFromCatch: jest.fn() }));
 
 import { NextRequest } from "next/server";
 

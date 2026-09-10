@@ -22,7 +22,7 @@ import { join } from "node:path";
 
 import type { Mission, MissionDraftFields } from "@/lib/missions/mission-types";
 import type { ModelIdentity, ModelRow } from "@/lib/models/model-types";
-import type { ModelRecord } from "@/lib/models-repository";
+import type { ModelRecord } from "@/lib/models/models-repository";
 import { syncFailure, syncSuccess } from "@/lib/sync/types";
 
 const ROOT = join(__dirname, "..", "..");

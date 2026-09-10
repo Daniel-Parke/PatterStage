@@ -30,7 +30,7 @@ import { Input } from "@/components/ui/field";
 import { NativeSelect } from "@/components/ui/field/Select";
 import { InlineToggle } from "@/components/ui/Input";
 import { neonAlpha } from "@/components/viz/colors";
-import { sectionHeadingClasses } from "@/lib/theme";
+import { sectionHeadingClasses } from "@/lib/ui/theme";
 import {
   SPEND_PERIODS,
   formatUsd,

@@ -5,13 +5,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-import { ok, notFound, badRequest } from "@/lib/api-response";
-import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
-import { getSchedule, updateSchedule, deleteSchedule } from "@/lib/schedules-repository";
+import { ok, notFound, badRequest } from "@/lib/api/api-response";
+import { parseAndValidateJsonBody } from "@/lib/api/parse-json-body";
+import { getSchedule, updateSchedule, deleteSchedule } from "@/lib/schedule/schedules-repository";
 import { parseSchedule } from "@/lib/schedule/parse-schedule";
 import { computeNextRun, scheduleCanEverFire } from "@/lib/schedule/next-run";
 import { scheduleIntervalProblem } from "@/lib/schedule/interval-bounds";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 interface Ctx {
   params: Promise<{ id: string }>;

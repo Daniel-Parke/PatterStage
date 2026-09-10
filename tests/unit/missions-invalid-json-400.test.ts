@@ -10,11 +10,11 @@ import { NextRequest } from "next/server";
 
 // Mock everything the touched routes import so we can isolate the
 // parseJsonBody behaviour without standing up a full DB / sync layer.
-jest.mock("@/lib/api-logger", () => ({
+jest.mock("@/lib/api/api-logger", () => ({
   logApiError: jest.fn(),
 }));
 
-jest.mock("@/lib/api-auth", () => ({
+jest.mock("@/lib/api/api-auth", () => ({
   // requireNotReadOnly is the honest name of what these routes call now;
   // requireAuth stays mocked for the modules that have not been renamed yet.
   requireNotReadOnly: jest.fn(() => null),

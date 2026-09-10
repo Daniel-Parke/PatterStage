@@ -3,15 +3,15 @@
 // ═══════════════════════════════════════════════════════════════
 import { NextRequest, NextResponse } from "next/server";
 
-import { getModel, getModelDefaults, updateModel, deleteModel } from "@/lib/models-repository";
+import { getModel, getModelDefaults, updateModel, deleteModel } from "@/lib/models/models-repository";
 import { TASK_TYPES } from "@/lib/models/task-types";
 
-import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
-import { appendAuditLine } from "@/lib/audit-log";
-import { modelPutSchema } from "@/lib/api-schemas";
-import { notFound, ok } from "@/lib/api-response";
+import { parseAndValidateJsonBody } from "@/lib/api/parse-json-body";
+import { appendAuditLine } from "@/lib/api/audit-log";
+import { modelPutSchema } from "@/lib/api/api-schemas";
+import { notFound, ok } from "@/lib/api/api-response";
 import { finalizeRootConfigOnDisk } from "@/modules/hermes/lib/config-sync";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 interface Ctx {
   params: Promise<{ id: string }>;

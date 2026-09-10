@@ -21,11 +21,11 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextRequest, NextResponse } from "next/server";
-import { logApiError } from "@/lib/api-logger";
-import { messageFromError } from "@/lib/api-fetch";
+import { logApiError } from "@/lib/api/api-logger";
+import { messageFromError } from "@/lib/api/api-fetch";
 
-import { badRequest, ok } from "@/lib/api-response";
-import { parseJsonBody } from "@/lib/parse-json-body";
+import { badRequest, ok } from "@/lib/api/api-response";
+import { parseJsonBody } from "@/lib/api/parse-json-body";
 import { recordEvent } from "@/lib/analytics/record-event";
 import {
   defaultBank,
@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
 
   // Narrow the unknown body to the structural shape we expect from the
   // client. parseJsonBody returns Record<string, unknown>; this cast
-  // is the documented pattern in src/lib/parse-json-body.ts.
+  // is the documented pattern in src/lib/api/parse-json-body.ts.
   const body = bodyResult as {
     action?: string;
     bank?: string;

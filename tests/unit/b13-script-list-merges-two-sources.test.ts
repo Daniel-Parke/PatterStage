@@ -15,7 +15,7 @@
 // beside the script is not mistaken for the script.
 // ═══════════════════════════════════════════════════════════════
 
-jest.mock("@/lib/paths", () => ({
+jest.mock("@/lib/host/paths", () => ({
   getPsScriptsDir: () => "/data/scripts",
   getPsHardwareLogDir: () => "/data/logs",
 }));
@@ -45,7 +45,7 @@ const CRONTAB = [
   "",
 ].join("\n");
 
-jest.mock("@/lib/host-scheduler", () => ({
+jest.mock("@/lib/host/host-scheduler", () => ({
   getHostScheduler: () => ({
     readRaw: async () => CRONTAB,
     writeRaw: async () => ({ ok: true }),
@@ -54,7 +54,7 @@ jest.mock("@/lib/host-scheduler", () => ({
   hostSchedulerAvailability: () => ({ available: false, reason: "no crontab here" }),
 }));
 
-jest.mock("@/lib/platform", () => ({
+jest.mock("@/lib/host/platform", () => ({
   isWindows: true,
   isMac: false,
   isLinux: false,
@@ -64,11 +64,11 @@ jest.mock("@/lib/platform", () => ({
 }));
 
 const listScriptSchedules = jest.fn();
-jest.mock("@/lib/schedules-repository", () => ({
+jest.mock("@/lib/schedule/schedules-repository", () => ({
   listScriptSchedules: () => listScriptSchedules(),
 }));
 
-import { listScriptFiles, type ScriptFile } from "@/lib/scripts-manager";
+import { listScriptFiles, type ScriptFile } from "@/lib/scripts/scripts-manager";
 
 function ownRow(id: string, scriptName: string, schedule: string) {
   return { id, kind: "script" as const, scriptName, schedule, missionId: null };

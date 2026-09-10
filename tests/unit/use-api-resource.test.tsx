@@ -7,8 +7,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { useApiResource } from "@/hooks/useApiResource";
 
-jest.mock("@/lib/api-fetch", () => ({ safeApiCall: jest.fn() }));
-import { safeApiCall } from "@/lib/api-fetch";
+jest.mock("@/lib/api/api-fetch", () => ({ safeApiCall: jest.fn() }));
+import { safeApiCall } from "@/lib/api/api-fetch";
 const mockSafeApiCall = safeApiCall as jest.Mock;
 
 function makeWrapper() {

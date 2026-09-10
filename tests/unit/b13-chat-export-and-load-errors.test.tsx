@@ -56,15 +56,15 @@ jest.mock("@/hooks/useGatewayHealth", () => ({
 }));
 
 const safeApiCall = jest.fn();
-jest.mock("@/lib/api-fetch", () => ({
-  ...(jest.requireActual("@/lib/api-fetch") as Record<string, unknown>),
+jest.mock("@/lib/api/api-fetch", () => ({
+  ...(jest.requireActual("@/lib/api/api-fetch") as Record<string, unknown>),
   safeApiCall: (...a: unknown[]) => safeApiCall(...a),
 }));
 
 const fetchConversation = jest.fn();
 const downloadFile = jest.fn();
-jest.mock("@/lib/chat-utils", () => ({
-  ...(jest.requireActual("@/lib/chat-utils") as Record<string, unknown>),
+jest.mock("@/lib/chat/chat-utils", () => ({
+  ...(jest.requireActual("@/lib/chat/chat-utils") as Record<string, unknown>),
   fetchConversation: (...a: unknown[]) => fetchConversation(...a),
   downloadFile: (...a: unknown[]) => downloadFile(...a),
   openRunEventStream: jest.fn(() => ({ close: jest.fn() })),

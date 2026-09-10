@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextRequest } from "next/server";
-import { ok, notFound, serviceUnavailable } from "@/lib/api-response";
+import { ok, notFound, serviceUnavailable } from "@/lib/api/api-response";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import {
   getComposerRun,
@@ -11,7 +11,7 @@ import {
   listComposerApprovals,
   listNodeRuns,
 } from "@/lib/composer/composer-repository";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 interface Ctx {
   params: Promise<{ id: string }>;

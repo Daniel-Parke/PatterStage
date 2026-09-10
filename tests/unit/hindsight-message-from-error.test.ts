@@ -30,7 +30,7 @@
  * handleCount) and the empty-Error trap.
  */
 
-import { messageFromError } from "@/lib/api-fetch";
+import { messageFromError } from "@/lib/api/api-fetch";
 
 describe("hindsight messageFromError migration (session 128)", () => {
   describe("GET catch site (fallback = 'Hindsight error')", () => {

@@ -15,7 +15,7 @@ jest.mock("next/server", () => ({
   },
 }));
 
-jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
+jest.mock("@/lib/api/api-logger", () => ({ logApiError: jest.fn() }));
 
 const mockScheduler = {
   isRunning: true,

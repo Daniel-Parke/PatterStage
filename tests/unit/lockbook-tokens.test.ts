@@ -3,7 +3,7 @@
 // The tokens the first-build lock-in sitting ruled (T-0028, 2026-08-24).
 //
 // org/LOCKBOOK.md's Tokens section names two homes for a design token, the
-// @theme block in src/app/globals.css and the code mirror in src/lib/theme.ts,
+// @theme block in src/app/globals.css and the code mirror in src/lib/ui/theme.ts,
 // and states that the two must agree. Two homes and a promise is not a contract:
 // a class string in theme.ts naming a token nobody declared compiles, passes
 // eslint, renders nothing, and looks exactly like a working style. That is the
@@ -32,7 +32,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { MODULES, MODULE_ACCENTS } from "@/lib/modules/registry";
-import { edgeClasses, measureClasses, surfaceClasses } from "@/lib/theme";
+import { edgeClasses, measureClasses, surfaceClasses } from "@/lib/ui/theme";
 
 const CSS = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf-8");
 
@@ -220,7 +220,7 @@ describe("the RGB mirror tokens are usable by the rules that consume them", () =
   );
 
   it("keeps the code mirror in the same form, since it feeds the same syntax", async () => {
-    const theme = readFileSync(join(process.cwd(), "src/lib/theme.ts"), "utf-8");
+    const theme = readFileSync(join(process.cwd(), "src/lib/ui/theme.ts"), "utf-8");
     const block = theme.slice(theme.indexOf("const GLOW_RGBS"));
     const values = [...block.slice(0, block.indexOf("} as const;")).matchAll(/"([^"]+)"/g)];
     expect(values.length).toBeGreaterThan(0);

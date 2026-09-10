@@ -9,8 +9,8 @@
 
 "use client";
 
-import { statusToneClasses } from "@/lib/theme";
-import { sectionHeadingClasses } from "@/lib/theme";
+import { statusToneClasses } from "@/lib/ui/theme";
+import { sectionHeadingClasses } from "@/lib/ui/theme";
 import { useState } from "react";
 import { Save, Check } from "lucide-react";
 import { Panel } from "@/components/dashboard/Panel";
@@ -18,7 +18,7 @@ import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import Sheet from "@/components/ui/Sheet";
 import { useToast } from "@/components/ui/Toast";
-import { runWrite } from "@/lib/api-write";
+import { runWrite } from "@/lib/api/api-write";
 import { timeAgo } from "@/lib/utils";
 import ElapsedSince from "./ElapsedSince";
 import type { ComposerApproval, ComposerNode, ComposerNodeRun } from "@/lib/composer/schema";

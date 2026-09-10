@@ -8,13 +8,13 @@
 
 "use client";
 
-import { sectionHeadingClasses } from "@/lib/theme";
+import { sectionHeadingClasses } from "@/lib/ui/theme";
 import { useMemo } from "react";
 import { Radio, RefreshCw } from "lucide-react";
 
 import { Panel } from "@/components/dashboard/Panel";
 import { timeAgo, titleCase } from "@/lib/utils";
-import { statusToneClasses } from "@/lib/theme";
+import { statusToneClasses } from "@/lib/ui/theme";
 import type { HermesProcess } from "@/types/console";
 
 export interface ProcessesPanelProps {

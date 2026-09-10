@@ -151,7 +151,7 @@ Defects: 1 blocker, 7 major, 9 minor, 4 polish · candidates: 16
 ### Models & Seed
 Defects: 2 blocker, 7 major, 8 minor, 2 polish · candidates: 15
 - BLOCKER: Clearing a task default silently comes back — src/modules/hermes/lib/config-sync.ts
-- BLOCKER: Editing a model's name or base URL is undone by the auto-import on the next page load — src/lib/models-repository.ts
+- BLOCKER: Editing a model's name or base URL is undone by the auto-import on the next page load — src/lib/models/models-repository.ts
 - major: Push/pull report success when the server refused to write · Excluding a change in the Export modal can do nothing · The push "diff" is not a diff; the pull preview reads a different source than the pull · No way to rotate an API key · Local providers still demand an API key · "Reseed all" counts the seeded DB, not the shipped pack · Seed actions give no result feedback
 - carry: real diff or drop exclusions [refine/M] · credential manager: add/rotate/relabel [extend/M] · Seed page feedback + parity [refine/M] · merge the duplicated Agent-default control [merge/S] · two-way drift remedies [refine/M] · protocol override [extend/S] · first-run path on /config/models [new/M] · retire/re-frame "Refresh Models" [remove/S]
 
@@ -170,7 +170,7 @@ Defects: 2 blocker, 10 major, 4 minor, 2 polish · candidates: 18
 
 ### Scripts and Chat
 Defects: 2 blocker, 10 major, 6 minor, 4 polish · candidates: 16
-- BLOCKER: A scheduled non-.sh script never shows as scheduled, and the bundled scripts are .mjs — src/lib/scripts-manager.ts
+- BLOCKER: A scheduled non-.sh script never shows as scheduled, and the bundled scripts are .mjs — src/lib/scripts/scripts-manager.ts
 - BLOCKER: POST /api/scripts/run is the one host-executing endpoint with no requireAuthenticatedHostWrites() — src/app/api/scripts/run/route.ts
 - major: Download exports the ACTIVE conversation under another's title · Fast mode sends no Authorization header · Fast-mode turns counted twice · Non-.sh names get a double extension · .ps1/.bat/.cmd listed and runnable but not schedulable · Unschedule strips .sh only · Failed conversation list/load is silent · Agent mode silently degrades to a raw reply when no runId · Script delete uses window.confirm · CSV export reachable only by hover
 - carry: chat sidebar load/error states [refine/M] · tool cards show what the tool was asked [extend/M] · profile picker in Chat, persisted model [extend/M] · keyboard-reachable row actions, rename, search [refine/M] · stream Run-now output [extend/L] · say when scheduling is unavailable on this host [refine/M] · seven-extension copy + .mjs templates [refine/S]
@@ -219,7 +219,7 @@ Defects: 1 blocker, 9 major, 9 minor, 3 polish · candidates: 18
 
 ### Install, boot, update and operations
 Defects: 2 blocker, 7 major, 5 minor, 1 polish · candidates: 14
-- BLOCKER: Every sidebar deploy button 403s on a fresh production install and nothing warns — src/lib/api-auth.ts
+- BLOCKER: Every sidebar deploy button 403s on a fresh production install and nothing warns — src/lib/api/api-auth.ts
 - BLOCKER: install.sh "Reinstall" deletes the user's database with one keypress and never says so — scripts/bootstrap/install.sh
 - major: "Up to Date" shown when the version check failed · The 20-line failure log tail is computed then thrown away · Nothing in the product tells the user how it is configured (the [config] line is terminal-only) · The first-run checklist omits the model step that makes step 2 fail · A stuck deploy locks the sidebar · OPERATORS_GUIDE.md is not an operators guide for PatterStage · No in-app backup or restore
 - carry: boot diagnostics inside the product [new/M] · the missing first-run step: a model the agent can call [extend/S] · browser backup/restore [new/M] · a real OPERATORS_GUIDE.md [overhaul/M] · "how do I keep it running" [extend/M] · delete setup.mjs or make it the one implementation [remove/M] · move PatterStage's logs out of the agent's home [refine/M]
@@ -358,7 +358,7 @@ run from there (the shell's heredoc parser is unreliable here).
 `src/lib/modules/registry.ts` is the single source for the rail, page titles,
 `document.title`, the e2e route matrix, Help deep-links and quest hrefs. Each
 NavLink gains `order`; the config sections move into a React-free
-`src/lib/config-sections.ts` that the registry derives routes from. Old paths
+`src/lib/config/config-sections.ts` that the registry derives routes from. Old paths
 answer **307** from `next.config.ts` `redirects()` for one release; the API
 (`/api/*`) is untouched. The rail must not scroll at 1280×720 (Playwright
 assertion).
@@ -457,7 +457,7 @@ the guide for that screen is finished in B18 against the final state.
 - D118/D119/D120 the form-control gate rejects a placeholder-shaped name; the
   icon-button gate sees collapsed sidebar links; the mobile drawer is `inert`
   when closed and above the header.
-- Decision 13 `src/lib/status-labels.ts`: typed exhaustive label maps for
+- Decision 13 `src/lib/ui/status-labels.ts`: typed exhaustive label maps for
   mission, session, story, composer run, subsystem, sync; `StatusBadge` and the
   Story Weaver hub/library consume it first.
 - Read contract: `LoadErrorBanner` gains a compact variant and `onRetry`;

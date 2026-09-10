@@ -1,11 +1,11 @@
 import { NextResponse, NextRequest } from "next/server";
 import { existsSync } from "fs";
 
-import { parseJsonBody } from "@/lib/parse-json-body";
+import { parseJsonBody } from "@/lib/api/parse-json-body";
 import { safeStat } from "@/lib/fs/fs-stats";
 import { requireSafeProfileName } from "@/lib/fs/path-security";
 
-import { appendAuditLine } from "@/lib/audit-log";
+import { appendAuditLine } from "@/lib/api/audit-log";
 import { ensureDb } from "@/lib/db";
 import {
   listProfiles,
@@ -13,17 +13,17 @@ import {
   getProfile,
   defaultConfigYaml,
 } from "@/modules/hermes/lib/profiles-repository";
-import { getAgentRoot } from "@/lib/agent-root-repository";
+import { getAgentRoot } from "@/lib/agents/agent-root-repository";
 import { pushProfileToHermes } from "@/modules/hermes/lib/profile-push";
 import { recordEvent } from "@/lib/analytics/record-event";
 import { detectProfileDrift, detectRootDrift } from "@/modules/hermes/lib/profile-drift";
 import { createProfileSkillsCounter, countProfileToolsets } from "@/modules/hermes/lib/profile-counts";
-import { slugifyDisplayName, validateProfileDisplayName, DEFAULT_PROFILE_SLUG } from "@/lib/profile-slug";
+import { slugifyDisplayName, validateProfileDisplayName, DEFAULT_PROFILE_SLUG } from "@/lib/agents/profile-slug";
 import { buildProfileHermesPathBundle } from "@/modules/hermes/lib/profile-paths";
 import { isManagedKey, readManagedFileContent } from "@/modules/hermes/lib/agent-file-store";
 import type { AgentProfile, ProfileFile } from "@/types/console";
-import { badRequest, conflict, ok, serverError } from "@/lib/api-response";
-import { route } from "@/lib/api-route";
+import { badRequest, conflict, ok, serverError } from "@/lib/api/api-response";
+import { route } from "@/lib/api/api-route";
 
 const PROFILE_FILE_DEFS = [
   { key: "soul", name: "SOUL.md", getPath: (b: ReturnType<typeof buildProfileHermesPathBundle>) => b.soul },

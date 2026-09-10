@@ -36,8 +36,8 @@ jest.mock("@/components/layout/AppPageShell", () => require("../helpers/mocks").
 jest.mock("lucide-react", () => require("../helpers/mocks").lucideMock());
 
 const mockSafeApiCall = jest.fn();
-jest.mock("@/lib/api-fetch", () => ({
-  ...(jest.requireActual("@/lib/api-fetch") as Record<string, unknown>),
+jest.mock("@/lib/api/api-fetch", () => ({
+  ...(jest.requireActual("@/lib/api/api-fetch") as Record<string, unknown>),
   safeApiCall: (...a: unknown[]) => mockSafeApiCall(...a),
 }));
 

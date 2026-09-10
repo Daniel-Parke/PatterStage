@@ -6,7 +6,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextRequest } from "next/server";
-import { serviceUnavailable } from "@/lib/api-response";
+import { serviceUnavailable } from "@/lib/api/api-response";
 import { ensureDb } from "@/lib/db";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import { sseStream } from "@/lib/sse/event-stream";

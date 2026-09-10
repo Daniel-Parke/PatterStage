@@ -29,7 +29,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 const createSpendRun = jest.fn();
-jest.mock("@/lib/runs-repository", () => ({
+jest.mock("@/lib/runs/runs-repository", () => ({
   createSpendRun: (...args: unknown[]) => createSpendRun(...args),
   createRun: jest.fn(),
   getRun: jest.fn(),
@@ -37,7 +37,7 @@ jest.mock("@/lib/runs-repository", () => ({
 }));
 
 const getModelWithKey = jest.fn();
-jest.mock("@/lib/models-repository", () => ({
+jest.mock("@/lib/models/models-repository", () => ({
   getModelWithKey: (id: string) => getModelWithKey(id),
 }));
 
@@ -46,13 +46,13 @@ jest.mock("@/lib/runtime/gateway", () => ({
 }));
 jest.mock("@/lib/runtime/secrets", () => ({ getGatewayKey: () => null }));
 
-jest.mock("@/lib/api-logger", () => ({
+jest.mock("@/lib/api/api-logger", () => ({
   logApiError: jest.fn(),
   serverErrorFromCatch: jest.fn(),
 }));
 jest.mock("@/lib/analytics/record-event", () => ({ recordEvent: jest.fn() }));
 
-import { callLLM, type LLMOptions } from "@/lib/llm";
+import { callLLM, type LLMOptions } from "@/lib/models/llm";
 
 // ── pre-B14 type shim: the two options the contract adds ────────
 type B14Options = LLMOptions & {

@@ -13,14 +13,14 @@ jest.mock("@/lib/git/git-workspace-branches", () => ({
   readGitBranchMetadataForWorkspacePath: (abs: string) => mockReadGit(abs),
 }));
 
-jest.mock("@/lib/api-logger", () => ({
+jest.mock("@/lib/api/api-logger", () => ({
   logApiError: jest.fn(),
   // serverErrorFromCatch is the canonical 2-line catch-block shim that
   // composes logApiError + serverError. The real helper from
   // @/lib/api-logger is used here so the test exercises the same
   // wire-format contract as production (status 500, body
   // { error: <message> }).
-  serverErrorFromCatch: jest.requireActual("@/lib/api-logger").serverErrorFromCatch,
+  serverErrorFromCatch: jest.requireActual("@/lib/api/api-logger").serverErrorFromCatch,
 }));
 
 describe("GET /api/fs/git/branches (route)", () => {

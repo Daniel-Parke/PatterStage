@@ -8,14 +8,14 @@
  */
 import { act, render, renderHook, screen } from "@testing-library/react";
 
-jest.mock("@/lib/api-fetch", () => ({
+jest.mock("@/lib/api/api-fetch", () => ({
   // Amended 2026-09-10 (C3, T-0138): the write is runWrite over apiFetch, body as JSON.
   apiFetch: jest.fn(async () => ({ data: {} })),
   messageFromError: (e: unknown, f: string) => (e instanceof Error ? e.message : f),
   toastError: jest.fn(),
 }));
 
-import { apiFetch } from "@/lib/api-fetch";
+import { apiFetch } from "@/lib/api/api-fetch";
 import { useMissionTemplateActions } from "@/hooks/useMissionTemplateActions";
 import { MissionComposerActions } from "@/components/missions/MissionCreateForm";
 

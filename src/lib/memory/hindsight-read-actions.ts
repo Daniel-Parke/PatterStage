@@ -7,7 +7,7 @@
 // write. `handleHealth` and `handleCount` swallow their own errors on
 // purpose: a memory server that is down is a status to report, not a 500.
 
-import { messageFromError } from "@/lib/api-fetch";
+import { messageFromError } from "@/lib/api/api-fetch";
 import {
   mapMemoryItem,
   mapDirectiveItem,

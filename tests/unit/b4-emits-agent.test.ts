@@ -82,7 +82,7 @@ jest.mock("@/modules/hermes/lib/profile-paths", () => ({
   },
 }));
 
-jest.mock("@/lib/paths", () => ({
+jest.mock("@/lib/host/paths", () => ({
   PS_DATA_DIR: "/tmp/b4-data",
   PATHS: {
     missions: "/tmp/b4-data/missions",
@@ -102,13 +102,13 @@ jest.mock("@/lib/paths", () => ({
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
 jest.mock("@/lib/db", () => require("../helpers/mocks").dbMock({ now: () => "2026-09-05T00:00:00Z", uuid: () => "b4-uuid" }));
-jest.mock("@/lib/api-auth", () => ({}));
-jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
-jest.mock("@/lib/api-logger", () => ({
+jest.mock("@/lib/api/api-auth", () => ({}));
+jest.mock("@/lib/api/audit-log", () => ({ appendAuditLine: jest.fn() }));
+jest.mock("@/lib/api/api-logger", () => ({
   logApiError: jest.fn(),
-  serverErrorFromCatch: jest.requireActual("@/lib/api-logger").serverErrorFromCatch,
+  serverErrorFromCatch: jest.requireActual("@/lib/api/api-logger").serverErrorFromCatch,
 }));
-jest.mock("@/lib/system-repository", () => ({
+jest.mock("@/lib/system/system-repository", () => ({
   getMetaPair: jest.fn(() => []),
   setMultipleStats: jest.fn(),
   deleteMetaPair: jest.fn(),
@@ -138,7 +138,7 @@ jest.mock("@/modules/hermes/lib/profiles-repository", () => ({
   defaultConfigYaml: (p: string) => `agent:\n  personality: ${p}\n`,
   hydratePlatformToolsetsForSlug: jest.fn(),
 }));
-jest.mock("@/lib/agent-root-repository", () => ({
+jest.mock("@/lib/agents/agent-root-repository", () => ({
   getAgentRoot: jest.fn(() => ({
     id: 1, displayName: "Bob", description: "", personality: "technical",
     configYaml: "", soulMd: "", agentsMd: "", frameworkMd: "", userMd: "", memoryMd: "",

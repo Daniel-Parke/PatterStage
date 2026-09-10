@@ -35,13 +35,13 @@ committed tree, and a chore commit carrying the record and the derived views.
 | C0 the line census | T-0135 | `npm run census:lines`, twelve measures, shrink-only | yes |
 | C1 one route body | T-0136 | `route()` wrapper over 115 handlers; 13 routes keep their own catch with a reason | yes |
 | C2 one type each | T-0137 | MissionDraftFields, ModelIdentity/ModelRow/ApiModel, syncSuccess/syncFailure | yes |
-| C3 one way to write | T-0138 | `runWrite` in `src/lib/api-write.ts`; four helpers and toastFromResult deleted; Story Weaver reads on `useApiResource`; census reads by AST; lint rule `no-raw-write-outside-the-helper` | yes |
+| C3 one way to write | T-0138 | `runWrite` in `src/lib/api/api-write.ts`; four helpers and toastFromResult deleted; Story Weaver reads on `useApiResource`; census reads by AST; lint rule `no-raw-write-outside-the-helper` | yes |
 | (fix) Models page keeps its body | T-0139 | a reload no longer swaps the page for a spinner; found by C3's walk | yes |
 | (fix) custom fallback identity | T-0140 | migration 042 (head is 42): a custom fallback keeps its typed name, provider, model id | yes |
 | C4 the test harnesses | T-0141 | fifteen factories in `tests/helpers`; 130 suites adopted by six agents with per-file identity; census counts dbSingletonMock as a factory | yes |
 | C5 comments that narrate | T-0142 | narration cut file by file (two passes, ten agents); code proved unchanged by a stripped-code diff | yes |
 | C6 the page layer | T-0143 | eight agents over disjoint file groups: six design-lint rules to zero (the whole baseline, 369 to 0), the eleven effect reads onto `useApiResource`, 27 one-importer folds, two pages that swapped their body on reload fixed | yes |
-| C7 the lib root | T-0144 | 71 root files into domains, by script | no |
+| C7 the lib root | T-0144 | 65 of the 71 root files into fifteen domains, by codemod, with every import rewritten; six stay, each saying in its own header why it belongs to no domain | yes |
 | C8 closing | T-0145 | the census after beside the before; the plan marked done | no |
 
 The plan's remaining ids moved by two for the fixes taken in between; the
@@ -51,8 +51,8 @@ plan header says so.
 
 | Measure | Plan start | Now | Target |
 | --- | --- | --- | --- |
-| src lines | 107,123 | 100,872 | ≤ 98,000 |
-| tests lines | 121,651 | 121,422 | ≤ 116,000 |
+| src lines | 107,123 | 100,890 | ≤ 98,000 |
+| tests lines | 121,651 | 121,538 | ≤ 116,000 |
 | src lines in a repeated window | 1,416 | 1,190 | ≤ 600 |
 | tests lines in a repeated window | 6,028 | 4,786 | ≤ 2,500 |
 | routes with their own try/catch | 82 | 13 | ≤ 13 (met, corrected at C1) |
@@ -60,11 +60,11 @@ plan header says so.
 | named hooks writing on their own | 4 | 0 | 0 (met) |
 | repeated type shapes | 23 | 2 | 3 (met) |
 | one-importer components | 130 | 103 | ≤ 95 (missed by 8; see C7) |
-| lib root files | 71 | 71 | ≤ 12 (C7) |
-| comment essays | 107 | 8 | ≤ 60 |
+| lib root files | 71 | 6 | ≤ 12 (met) |
+| comment essays | 107 | 9 | ≤ 60 |
 | suites mocking db inline | 100 | 14 | ≤ 20 (met) |
 | design-lint debt (all rules) | 350 | 0 | 0 (met) |
-| jest | 6,860 | 6,893 (682 suites) | unchanged by a test batch |
+| jest | 6,860 | 6,902 (683 suites) | unchanged by a test batch |
 
 ## How a batch is landed (the discipline, verbatim from practice)
 
@@ -141,44 +141,25 @@ identity oracle, the census and the gate over the whole tree afterwards.
 - **T-0140's fallback rows** on the isolated instance's data dir are walk
   artefacts, not product data.
 
-## C7 · the lib root (start here tomorrow)
+## C8 · closing (start here tomorrow)
 
-- 71 files sit directly under `src/lib/` (`ls src/lib/*.ts`); the plan's
-  target is 12 or fewer. Domains that already exist beside them: agents,
-  analytics, composer, dashboard, db, frameworks, fs, git, help, laboratory,
-  memory, missions, models, modules, orchestration, quests, retention,
-  runtime, schedule, schema, scripts, search, seed, sessions, spend, sse,
-  stats, status, sync. The plan names the new ones: `chat/`, `models/`
-  (exists), `schedules/`, `scripts/` (exists), `credentials/`, `runs/`,
-  `skills/`, `artifacts/`, with each repository beside its types the way
-  T-0010 placed the first six.
-- By name the root falls into: the API layer (`api-auth`, `api-fetch`,
-  `api-logger`, `api-response`, `api-route`, `api-schemas`, `api-write`,
-  `parse-json-body`, `parse-optional-json-body`, `auth-throttle`,
-  `auth-token`, `read-only`); thirteen `*-repository` files; the config
-  family (`config-cache`, `config-schema`, `config-sections`, `yaml-config`,
-  `env-file`, `env-line`, `deep-merge`, `set-field`, `fallback-config-*`);
-  deploy and host (`deploy-*`, `platform`, `paths`, `host-scheduler`,
-  `hardware-cron`, `boot-diagnostics`, `scripts-manager`); models and LLM
-  (`llm`, `llm-endpoint`, `llm-output`, `gateway-client`, `model-key`,
-  `usage-shape`); logs (`log-freshness`, `log-line-format`); skills
-  (`skills-grouping`, `skills-page-helpers`, `profile-slug`,
-  `profile-sync-body`); and the presentation helpers (`theme`,
-  `status-labels`, `utils`, `list-bounds`, `list-search`, `dispatch-mode`,
-  `achievements-showcase`, `chat-utils`, `secret-mask`, `parse-bag-flags`,
-  `feature-flags*`, `audit-log`, `db-schema`).
-- Moves by script with every import rewritten (`@/lib/x` and relative
-  forms); the canary's module graph is path-insensitive so a pure move is
-  neutral; `docs/` names some of these paths (`check-doc-links`,
-  `docs:check`), and several suites read a lib file by path (grep
-  `tests/unit` for `src/lib/`). `design-lint`'s `sql-outside-repository`
-  and `core-imports-no-module` rules read paths too: check both after the
-  move.
-- The one-importer target (≤ 95) was missed at 103 in C6: the plan's fold
-  rule was "under sixty lines", every one of those is folded, and the 103
-  left are larger components or index re-exports. C7 may take siblings that
-  are one thing while it moves the lib; otherwise C8 records the miss as a
-  number.
+- The plan's last batch (T-0145) reads the census after beside the census
+  before, each measure against its target, and marks the plan done. The
+  numbers are in this page's table and in each batch's record; the two that
+  missed are `src` and `tests` lines (targets 98,000 and 116,000, currently
+  100,890 and 121,538) and one-importer components (target 95, currently
+  103).
+- Where the remaining src lines are, measured rather than guessed: the
+  census `--report` prints `srcDup.byFile` and `essays`. The largest single
+  duplication left is HindsightBrowser's 65 lines and the three hindsight
+  tab hooks that repeat each other, then the models page's handler lists,
+  which are a prop-drilling shape rather than copied code.
+- Docs that name a moved path are all updated (`docs:check` and
+  `check-doc-links` are in the gate), but the guides were written before C6
+  and C7 changed how a screen reads and where a lib file lives; the guide
+  for a screen a batch changed is the batch's own job, so nothing is
+  outstanding there. What C8 owes is the design-tokens page's account of
+  the primitives now that every screen uses them.
 
 ## Release
 

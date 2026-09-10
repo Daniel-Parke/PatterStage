@@ -8,7 +8,7 @@ import { basename, isAbsolute, join, relative, resolve } from "path";
 
 import { buildHermesPathBundle, normPath, type HermesPathBundle } from "@/modules/hermes/lib/paths";
 import { getHermesHome } from "@/modules/hermes/lib/home";
-import { DEFAULT_PROFILE_SLUG } from "@/lib/profile-slug";
+import { DEFAULT_PROFILE_SLUG } from "@/lib/agents/profile-slug";
 
 const NATIVE_HERMES_HOME = join(homedir(), ".hermes");
 

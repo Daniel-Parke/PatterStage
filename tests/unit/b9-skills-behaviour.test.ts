@@ -54,13 +54,13 @@ jest.mock("@/modules/hermes/lib/profile-push", () => ({
   ...(jest.requireActual("@/modules/hermes/lib/profile-push") as Record<string, unknown>),
   pushProfileToHermes: () => ({ success: true, error: null, filesWritten: [] }),
 }));
-jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
+jest.mock("@/lib/api/audit-log", () => ({ appendAuditLine: jest.fn() }));
 jest.mock("@/lib/analytics/record-event", () => ({ recordEvent: jest.fn() }));
 
 import { NextRequest } from "next/server";
 
-import { upsertSkill } from "@/lib/skills-repository";
-import { getAgentRoot } from "@/lib/agent-root-repository";
+import { upsertSkill } from "@/lib/skills/skills-repository";
+import { getAgentRoot } from "@/lib/agents/agent-root-repository";
 
 /** Write a SKILL.md into the agent's own skills tree. */
 function writeDiskSkill(key: string, body: string): void {

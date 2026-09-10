@@ -37,14 +37,14 @@ everywhere; the OS-specific code is PatterStage's *operational* layer
 
 | Seam | Used by |
 |------|---------|
-| [`src/lib/platform.ts`](../../src/lib/platform.ts) | everything inside the Next app: host-script scheduling and interpreter choice, the deploy spawn, port probes |
+| [`src/lib/host/platform.ts`](../../src/lib/host/platform.ts) | everything inside the Next app: host-script scheduling and interpreter choice, the deploy spawn, port probes |
 | [`scripts/tooling/_platform.mjs`](../../scripts/tooling/_platform.mjs) | the standalone deploy runner only |
 
 The runner ([`ps-deploy.mjs`](../../scripts/tooling/ps-deploy.mjs)) executes in bare
 `node`, outside the Next build, so it cannot import the first seam and carries
 its own copy of the same primitives (`isWindows`, `detachedSpawn`, `isPidAlive`,
 `killByPort`, `killPid`, `portInUse`). Change one and change the other: looking
-for the self-update OS coupling in `src/lib/platform.ts` alone will not find it.
+for the self-update OS coupling in `src/lib/host/platform.ts` alone will not find it.
 
 ## Install
 
@@ -93,7 +93,7 @@ The `PS_SOCAT_RELAY` LAN relay no longer exists. Its launcher went with the bash
 deploy implementation; nothing in the repo starts `socat` now, so the
 `PS_SOCAT_*` variables are inert. See [DEPLOY.md](DEPLOY.md).
 
-> `src/lib/platform.ts` still carries thin Windows fallbacks for its primitives,
+> `src/lib/host/platform.ts` still carries thin Windows fallbacks for its primitives,
 > so the dev server (`npm run dev`) incidentally runs on a native-Windows box,
 > but that path is **not** tested or supported; use WSL2.
 

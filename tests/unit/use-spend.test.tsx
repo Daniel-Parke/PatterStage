@@ -13,11 +13,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // The save goes through runWrite since C6 (T-0143), which reads
 // messageFromError off the same module, so the rest of it stays real.
-jest.mock("@/lib/api-fetch", () => ({
-  ...(jest.requireActual("@/lib/api-fetch") as Record<string, unknown>),
+jest.mock("@/lib/api/api-fetch", () => ({
+  ...(jest.requireActual("@/lib/api/api-fetch") as Record<string, unknown>),
   safeApiCall: jest.fn(),
 }));
-import { safeApiCall } from "@/lib/api-fetch";
+import { safeApiCall } from "@/lib/api/api-fetch";
 import { useSpend } from "@/hooks/useSpend";
 import { UNSET_SPEND_POLICY } from "@/lib/spend/spend-law";
 

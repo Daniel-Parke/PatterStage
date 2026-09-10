@@ -3,7 +3,7 @@ import { existsSync, writeFileSync } from "fs";
 import { resolve } from "path";
 
 import { getAgentWorkspace } from "@/lib/runtime/workspace";
-import { logApiError } from "@/lib/api-logger";
+import { logApiError } from "@/lib/api/api-logger";
 import {
   listLogFilesInDir,
   logFileUnderLogsDir,
@@ -11,12 +11,12 @@ import {
   readLastLines,
   resolveLogFilePath,
 } from "@/lib/fs/log-files";
-import { injectMissingTimestamps } from "@/lib/log-line-format";
+import { injectMissingTimestamps } from "@/lib/logs/log-line-format";
 
-import { badRequest, notFound, notFoundWith, ok } from "@/lib/api-response";
+import { badRequest, notFound, notFoundWith, ok } from "@/lib/api/api-response";
 import { recordEvent } from "@/lib/analytics/record-event";
 import type { LogFileMeta } from "@/lib/fs/log-files";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 // ── Shared log directory resolution ──────────────────────────
 

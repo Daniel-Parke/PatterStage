@@ -52,8 +52,8 @@ jest.mock("@/lib/runtime", () => ({
   },
 }));
 jest.mock("@/lib/feature-flags", () => ({ isFeatureEnabled: () => true }));
-jest.mock("@/lib/audit-log", () => ({ appendAuditLine: (...a: unknown[]) => mockAudit(...a) }));
-jest.mock("@/lib/api-logger", () => ({
+jest.mock("@/lib/api/audit-log", () => ({ appendAuditLine: (...a: unknown[]) => mockAudit(...a) }));
+jest.mock("@/lib/api/api-logger", () => ({
   logApiError: (...a: unknown[]) => mockLogApiError(...a),
   serverErrorFromCatch: jest.fn(),
 }));
@@ -73,7 +73,7 @@ import {
   deleteWorkflow,
 } from "@/lib/composer/composer-repository";
 import { advanceComposerRun, finalizeComposerNodeRun } from "@/lib/composer/engine";
-import { createRun, getRun, listActiveRuns, attachBackendRun, updateRun } from "@/lib/runs-repository";
+import { createRun, getRun, listActiveRuns, attachBackendRun, updateRun } from "@/lib/runs/runs-repository";
 import { POST as cancelPOST } from "@/app/api/composer/runs/[id]/cancel/route";
 
 const migrationsDir = join(process.cwd(), "src", "lib", "db", "migrations");

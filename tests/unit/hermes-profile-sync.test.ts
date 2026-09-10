@@ -137,7 +137,7 @@ describe("profile push / pull / drift", () => {
 
 describe("pull refuses a corrupt root config.yaml and names the repair (T-0086)", () => {
   it("leaves the row alone and points at the newest parseable backup", () => {
-    const rootRepo = require("@/lib/agent-root-repository") as typeof import("@/lib/agent-root-repository");
+    const rootRepo = require("@/lib/agents/agent-root-repository") as typeof import("@/lib/agents/agent-root-repository");
     const pull = require("@/modules/hermes/lib/profile-pull") as typeof import("@/modules/hermes/lib/profile-pull");
     rootRepo.updateAgentRoot({ configYaml: "skills:\n  disabled: []\nversion: 1\n" });
     const before = rootRepo.getAgentRoot().configYaml;

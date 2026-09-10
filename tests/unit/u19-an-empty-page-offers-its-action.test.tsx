@@ -50,8 +50,8 @@ jest.mock("@/hooks/useArtifacts", () => ({
   useArtifacts: () => mockUseArtifacts(),
   useArtifact: () => ({ data: null, isLoading: false, error: null, refetch: jest.fn() }),
 }));
-jest.mock("@/lib/api-fetch", () => ({
-  ...(jest.requireActual("@/lib/api-fetch") as Record<string, unknown>),
+jest.mock("@/lib/api/api-fetch", () => ({
+  ...(jest.requireActual("@/lib/api/api-fetch") as Record<string, unknown>),
   safeApiCall: jest.fn(),
 }));
 

@@ -8,7 +8,7 @@
 
 import { NextResponse } from "next/server";
 
-import { zodErrorResponse } from "@/lib/api-schemas";
+import { zodErrorResponse } from "@/lib/api/api-schemas";
 import { parseTemplatePackManifestV1 } from "@/lib/schema";
 
 import {

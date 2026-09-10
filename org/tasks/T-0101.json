@@ -33,7 +33,7 @@
     "src/app/api/logs/",
     "src/app/api/config/",
     "src/lib/memory/",
-    "src/lib/config-schema.ts",
+    "src/lib/config/config-schema.ts",
     "src/lib/status/",
     "src/lib/sync/sources/MemorySync.ts",
     "src/modules/hermes/lib/",

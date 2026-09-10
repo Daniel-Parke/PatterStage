@@ -5,7 +5,7 @@
 // fail clearly-stuck runs so the gate clears, WITHOUT killing legitimately-running
 // untimed missions the backend still reports running.
 
-jest.mock("@/lib/runs-repository", () => ({
+jest.mock("@/lib/runs/runs-repository", () => ({
   listActiveRuns: jest.fn(),
   updateRun: jest.fn(),
   // reconcile re-reads the row before finalizing, so a cancellation landing
@@ -28,7 +28,7 @@ jest.mock("@/lib/runtime", () => ({
 }));
 
 import { reconcileActiveRuns } from "@/lib/orchestration/run-reconcile";
-import { listActiveRuns, updateRun, getRun as getLocalRun } from "@/lib/runs-repository";
+import { listActiveRuns, updateRun, getRun as getLocalRun } from "@/lib/runs/runs-repository";
 import { getMission, updateMission } from "@/lib/missions/mission-repository";
 import { runtime } from "@/lib/runtime";
 

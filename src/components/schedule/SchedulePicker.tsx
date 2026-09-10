@@ -10,7 +10,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { ChevronDown, Clock, AlertCircle, Calendar } from "lucide-react";
 import Card from "@/components/ui/Card";
-import { baseInputStyles } from "@/lib/theme";
+import { baseInputStyles } from "@/lib/ui/theme";
 import { parseSchedule } from "@/lib/schedule/parse-schedule";
 import { computeNextRun } from "@/lib/schedule/next-run";
 import { describeSchedule } from "@/lib/schedule/types";

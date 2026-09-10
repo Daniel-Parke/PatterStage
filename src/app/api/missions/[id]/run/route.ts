@@ -15,10 +15,10 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextRequest } from "next/server";
-import { ok, notFound } from "@/lib/api-response";
+import { ok, notFound } from "@/lib/api/api-response";
 import { getMission } from "@/lib/missions/mission-repository";
-import { getLatestRunForMission } from "@/lib/runs-repository";
-import { route } from "@/lib/api-route";
+import { getLatestRunForMission } from "@/lib/runs/runs-repository";
+import { route } from "@/lib/api/api-route";
 
 interface Ctx {
   params: Promise<{ id: string }>;

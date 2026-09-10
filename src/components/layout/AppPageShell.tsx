@@ -8,7 +8,7 @@
 
 import type { ReactNode } from "react";
 
-import { shellHeaderBarClasses } from "@/lib/theme";
+import { shellHeaderBarClasses } from "@/lib/ui/theme";
 
 /**
  * What happens INSIDE the container, never what the container is. `board` is

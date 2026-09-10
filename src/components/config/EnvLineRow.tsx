@@ -6,7 +6,7 @@
 // in the page's `useMemo`, so the parsing cost is paid once per file
 // content change and this row is a pure presentational render.
 
-import type { EnvLine } from "@/lib/env-line";
+import type { EnvLine } from "@/lib/config/env-line";
 import { maskEnvValue } from "@/lib/secret-mask";
 
 interface EnvLineRowProps {

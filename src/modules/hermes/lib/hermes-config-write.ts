@@ -21,9 +21,9 @@ import { join, resolve } from "path";
 
 import * as yaml from "js-yaml";
 
-import { updateAgentRoot } from "@/lib/agent-root-repository";
-import { messageFromError } from "@/lib/api-fetch";
-import { invalidateConfigCache } from "@/lib/config-cache";
+import { updateAgentRoot } from "@/lib/agents/agent-root-repository";
+import { messageFromError } from "@/lib/api/api-fetch";
+import { invalidateConfigCache } from "@/lib/config/config-cache";
 import { backupFile as backupFileShared } from "@/lib/fs/fs-helpers";
 
 import { buildHermesPathBundle } from "./paths";

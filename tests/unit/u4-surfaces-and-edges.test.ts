@@ -183,7 +183,7 @@ describe("the rail is a surface with one edge", () => {
 });
 
 describe("the code mirror names the same rungs the CSS does", () => {
-  const theme = () => read("src/lib/theme.ts");
+  const theme = () => read("src/lib/ui/theme.ts");
 
   it.each([
     ["ground", "bg-ps-surface-ground"],
@@ -274,7 +274,7 @@ describe("the linter can read a block comment", () => {
  */
 describe("the shared control bases wear the control rung", () => {
   it.each([
-    ["the text input base", "src/lib/theme.ts", "baseInputStyles"],
+    ["the text input base", "src/lib/ui/theme.ts", "baseInputStyles"],
     ["the field primitive's base", "src/components/ui/field/Input.tsx", "BASE"],
     // The path moved in U8 (T-0122): Button's chrome was extracted so
     // IconButton wears the same one and the two cannot drift. The assertion is

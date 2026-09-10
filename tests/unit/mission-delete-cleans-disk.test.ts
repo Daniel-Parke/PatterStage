@@ -55,8 +55,8 @@ beforeEach(() => {
   }
   require("fs").mkdirSync(missionsDir, { recursive: true });
   jest.resetModules();
-  jest.doMock("@/lib/paths", () => {
-    const actual = jest.requireActual("@/lib/paths") as Record<string, unknown>;
+  jest.doMock("@/lib/host/paths", () => {
+    const actual = jest.requireActual("@/lib/host/paths") as Record<string, unknown>;
     return { ...actual, PATHS: { ...(actual.PATHS as object), missions: missionsDir } };
   });
   jest.doMock("@/lib/db", () => {
@@ -72,7 +72,7 @@ beforeEach(() => {
 afterEach(() => {
   jest.restoreAllMocks();
   jest.resetModules();
-  jest.dontMock("@/lib/paths");
+  jest.dontMock("@/lib/host/paths");
   jest.dontMock("@/lib/db");
 });
 

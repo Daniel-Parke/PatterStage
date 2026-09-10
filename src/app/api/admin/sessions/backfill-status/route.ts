@@ -30,11 +30,11 @@ import {
   closeOrphanedActiveSessions,
   previewOrphanSweep,
 } from "@/lib/sessions/session-orphan-sweep";
-import { isReadOnly } from "@/lib/api-auth";
-import { serviceUnavailable, methodNotAllowed } from "@/lib/api-response";
-import { readOnlyMessage } from "@/lib/read-only";
-import { appendAuditLine } from "@/lib/audit-log";
-import { logApiError } from "@/lib/api-logger";
+import { isReadOnly } from "@/lib/api/api-auth";
+import { serviceUnavailable, methodNotAllowed } from "@/lib/api/api-response";
+import { readOnlyMessage } from "@/lib/api/read-only";
+import { appendAuditLine } from "@/lib/api/audit-log";
+import { logApiError } from "@/lib/api/api-logger";
 
 export async function POST(request: NextRequest) {
   let body: { dryRun?: boolean } = {};

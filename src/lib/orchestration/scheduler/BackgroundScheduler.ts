@@ -18,7 +18,7 @@
 
 import { SyncScheduler } from "@/lib/sync/SyncScheduler";
 import type { SyncSource, SyncResult } from "@/lib/sync/types";
-import { getSystemStat, upsertMetaValue } from "@/lib/system-repository";
+import { getSystemStat, upsertMetaValue } from "@/lib/system/system-repository";
 import { RunSync } from "@/lib/orchestration/RunSync";
 import { reconcileRunsOnBoot } from "@/lib/orchestration/run-reconcile";
 import { SERVER_MODULES } from "@/lib/modules/server";

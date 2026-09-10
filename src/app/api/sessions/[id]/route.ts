@@ -5,14 +5,14 @@ import { basename } from "path";
 import { getAgentWorkspace } from "@/lib/runtime/workspace";
 import { readAgentSessionDetail } from "@/lib/runtime/state-db";
 import { getMaxSessionMessages } from "@/lib/sessions/sessions-api-guard";
-import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
+import { logApiError, serverErrorFromCatch } from "@/lib/api/api-logger";
 
-import { badRequest, notFound, ok, payloadTooLarge } from "@/lib/api-response";
+import { badRequest, notFound, ok, payloadTooLarge } from "@/lib/api/api-response";
 import { safeStat } from "@/lib/fs/fs-stats";
 import { getSession, estimateSessionSize } from "@/lib/sessions/session-repository";
 import type { SessionStatus } from "@/lib/sessions/session-repository";
 import { lookupMissionIdForCronSession } from "@/lib/sessions/session-mission-links";
-import { PATHS } from "@/lib/paths";
+import { PATHS } from "@/lib/host/paths";
 import {
   getMaxSessionFileBytes,
   sessionsRateLimitResponse,

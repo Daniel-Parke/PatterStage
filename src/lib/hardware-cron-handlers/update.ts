@@ -9,10 +9,10 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
-import { serverErrorFromError } from "@/lib/api-logger";
-import { badRequest, notFound, ok, serverErrorFromHelperResult } from "@/lib/api-response";
-import { getHostScheduler } from "@/lib/host-scheduler";
-import { parseJsonBody } from "@/lib/parse-json-body";
+import { serverErrorFromError } from "@/lib/api/api-logger";
+import { badRequest, notFound, ok, serverErrorFromHelperResult } from "@/lib/api/api-response";
+import { getHostScheduler } from "@/lib/host/host-scheduler";
+import { parseJsonBody } from "@/lib/api/parse-json-body";
 
 import {
   canonicaliseScriptsCommand,

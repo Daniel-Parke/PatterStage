@@ -19,7 +19,7 @@ jest.mock("@/modules/hermes/lib/agent-runtime", () => ({
   getHermesDefaultRoot: () => hermes,
 }));
 const stats: Record<string, string>[] = [];
-jest.mock("@/lib/system-repository", () => ({
+jest.mock("@/lib/system/system-repository", () => ({
   setMultipleStats: (s: Record<string, string>) => { stats.push(s); },
   setSystemStat: jest.fn(),
   getSystemStat: jest.fn(),

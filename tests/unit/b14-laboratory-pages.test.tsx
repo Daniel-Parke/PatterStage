@@ -40,8 +40,8 @@ jest.mock("next/navigation", () => ({
 }));
 
 const mockSafeApiCall = jest.fn();
-jest.mock("@/lib/api-fetch", () => ({
-  ...(jest.requireActual("@/lib/api-fetch") as Record<string, unknown>),
+jest.mock("@/lib/api/api-fetch", () => ({
+  ...(jest.requireActual("@/lib/api/api-fetch") as Record<string, unknown>),
   safeApiCall: (...a: unknown[]) => mockSafeApiCall(...a),
   // The pages' writes go through runWrite since C6 (T-0143), whose call is
   // apiFetch and which reads a throw as the failure. The one double keeps its
@@ -79,8 +79,8 @@ jest.mock("@/hooks/useArtifacts", () => ({
   useArtifact: (id: string | null) => mockUseArtifact(id),
 }));
 
-jest.mock("@/lib/chat-utils", () => ({
-  ...(jest.requireActual("@/lib/chat-utils") as Record<string, unknown>),
+jest.mock("@/lib/chat/chat-utils", () => ({
+  ...(jest.requireActual("@/lib/chat/chat-utils") as Record<string, unknown>),
   downloadFile: jest.fn(),
 }));
 

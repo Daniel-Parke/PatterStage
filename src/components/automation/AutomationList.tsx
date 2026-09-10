@@ -29,7 +29,7 @@
 import { useState } from "react";
 import { CalendarClock, Plus, Play, Trash2, ChevronDown } from "lucide-react";
 
-import { sectionHeadingClasses } from "@/lib/theme";
+import { sectionHeadingClasses } from "@/lib/ui/theme";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import ConfirmButton from "@/components/ui/ConfirmButton";
 import RunProgress from "@/components/schedule/RunProgress";

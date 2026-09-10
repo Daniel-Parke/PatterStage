@@ -16,7 +16,7 @@ I expect PRs to pass the same checks CI runs. This page is the map of Jest, Play
 
 | Path | Runner | Role |
 |------|--------|------|
-| `tests/unit/` | Jest | API contracts, parsers, security, repositories (heavy use of `jest.mock` for `@/lib/db`, `@/lib/api-logger`, `@/modules/hermes/lib/agent-runtime`, `fs`). |
+| `tests/unit/` | Jest | API contracts, parsers, security, repositories (heavy use of `jest.mock` for `@/lib/db`, `@/lib/api/api-logger`, `@/modules/hermes/lib/agent-runtime`, `fs`). |
 | `tests/e2e/` | Playwright | Browser flows against a real `next start` server (see `playwright.config.ts`). |
 | `tests/jest.setup.ts` | Jest | Global setup and shared mocks (`jest.config.js` → `setupFilesAfterEnv`). |
 | `tests/__mocks__/better-sqlite3.cjs` | Jest | CJS shim so the native `better-sqlite3` addon is never loaded in unit tests. |
@@ -212,12 +212,12 @@ replaced stanzas by hand, and names the few that keep their own with the reason.
 ## Auth in route tests
 
 Route tests use the shared helper in `tests/helpers/api-test-helpers.ts`, which
-mocks **`@/lib/api-auth`** by spreading the REAL module and stubbing only the
+mocks **`@/lib/api/api-auth`** by spreading the REAL module and stubbing only the
 signing check:
 
 ```ts
-jest.mock("@/lib/api-auth", () => ({
-  ...jest.requireActual("@/lib/api-auth"),
+jest.mock("@/lib/api/api-auth", () => ({
+  ...jest.requireActual("@/lib/api/api-auth"),
   requireSignedRequest: jest.fn(() => null),
 }));
 ```
@@ -236,9 +236,9 @@ the name the handler really imports (`requireNotReadOnly`, `isReadOnly`,
 `requireAuthenticatedHostWrites`) comes back undefined and the handler throws.
 
 `tests/unit/read-only-is-testable.test.ts` fails the build on a factory that names an
-export `@/lib/api-auth` does not have. Know its limit before you lean on it: it reads
+export `@/lib/api/api-auth` does not have. Know its limit before you lean on it: it reads
 names off their own indented line, so a **single-line** factory such as
-`jest.mock("@/lib/api-auth", () => ({ requireAuth: () => null }))` slips past. Nine
+`jest.mock("@/lib/api/api-auth", () => ({ requireAuth: () => null }))` slips past. Nine
 of those survive in `tests/unit/`, green only because the routes they exercise import
 nothing from `api-auth` at all, which makes the mock dead weight rather than harmless
 precedent. They are vestigial. Do not copy them.

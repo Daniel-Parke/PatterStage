@@ -10,11 +10,11 @@
 // meanwhile; label and function are one change (T-0070). Stopping the backend
 // run is deliberately NOT here: it is I/O that can fail, and only one caller awaits it.
 
-import { appendAuditLine } from "@/lib/audit-log";
-import { logApiError } from "@/lib/api-logger";
+import { appendAuditLine } from "@/lib/api/audit-log";
+import { logApiError } from "@/lib/api/api-logger";
 import { updateMission } from "@/lib/missions/mission-repository";
 import type { Mission } from "@/lib/missions/mission-types";
-import { getLatestRunForMission, updateRun } from "@/lib/runs-repository";
+import { getLatestRunForMission, updateRun } from "@/lib/runs/runs-repository";
 import { closeSessionForMission } from "@/lib/sessions/session-repository";
 
 /**

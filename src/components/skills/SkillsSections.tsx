@@ -22,7 +22,7 @@ import { ToggleLeft, ToggleRight, type LucideIcon } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SkillSection } from "@/components/skills/SkillSection";
 import { SkillCategoryList } from "@/components/skills/SkillCategoryList";
-import { categoriesOpenByDefault, groupCategories } from "@/lib/skills-page-helpers";
+import { categoriesOpenByDefault, groupCategories } from "@/lib/skills/skills-page-helpers";
 import type { Skill } from "@/types/console";
 
 interface SkillsSectionPanelProps {

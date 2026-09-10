@@ -15,8 +15,8 @@ import { useEffect, useRef } from "react";
 import Link from "next/link";
 
 import { InlineSelect } from "@/components/ui/Select";
-import type { SettingsTool } from "@/lib/config-sections";
-import type { SectionDef } from "@/lib/config-schema";
+import type { SettingsTool } from "@/lib/config/config-sections";
+import type { SectionDef } from "@/lib/config/config-schema";
 
 interface SettingsNavGroup {
   label: string;

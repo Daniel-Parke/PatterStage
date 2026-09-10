@@ -28,9 +28,9 @@ import { Textarea } from "@/components/ui/field";
 import ConfigField from "@/components/config/ConfigField";
 import EnvLineRow from "@/components/config/EnvLineRow";
 import type { SectionEditor } from "@/hooks/useSettingsEditor";
-import type { FieldDef } from "@/lib/config-schema";
-import { envLineKey, parseEnvLine } from "@/lib/env-line";
-import { iconColorMap } from "@/lib/theme";
+import type { FieldDef } from "@/lib/config/config-schema";
+import { envLineKey, parseEnvLine } from "@/lib/config/env-line";
+import { iconColorMap } from "@/lib/ui/theme";
 import { pluralise } from "@/lib/utils";
 
 /** Where an anchor lands: below the sticky header bar, with room to breathe. */

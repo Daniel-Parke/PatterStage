@@ -31,8 +31,8 @@
       "sensitive": [
         "src/proxy.ts",
         "src/instrumentation.ts",
-        "src/lib/api-auth.ts",
-        "src/lib/auth-token.ts",
+        "src/lib/api/api-auth.ts",
+        "src/lib/api/auth-token.ts",
         "src/lib/secret-mask.ts",
         "src/lib/runtime/secrets.ts",
         "src/lib/db*",

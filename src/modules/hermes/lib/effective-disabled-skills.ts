@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from "fs";
 
-import { getAgentRoot } from "@/lib/agent-root-repository";
+import { getAgentRoot } from "@/lib/agents/agent-root-repository";
 import { buildProfileHermesPathBundle } from "./profile-paths";
 import {
   collectSkillDirectoryNames,
@@ -10,7 +10,7 @@ import {
 } from "./skills-config";
 import { disabledSkillsFromJson } from "./profile-config-builder";
 import { getDisabledSkills } from "./profiles-repository";
-import { listSkillKeys } from "@/lib/skills-repository";
+import { listSkillKeys } from "@/lib/skills/skills-repository";
 
 /**
  * Union of SQLite catalog keys and on-disk skill directory paths.

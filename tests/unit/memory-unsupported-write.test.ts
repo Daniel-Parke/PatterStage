@@ -19,7 +19,7 @@
 
 import { NextRequest } from "next/server";
 
-jest.mock("@/lib/api-logger", () => ({
+jest.mock("@/lib/api/api-logger", () => ({
   logApiError: jest.fn(),
 }));
 
@@ -27,7 +27,7 @@ jest.mock("@/lib/memory/memory-providers", () => ({
   getMemoryProviderType: jest.fn(() => "hindsight"),
 }));
 
-jest.mock("@/lib/api-auth", () => ({
+jest.mock("@/lib/api/api-auth", () => ({
 }));
 
 const SUPPORTED_VERBS = ["POST", "PUT", "DELETE"] as const;

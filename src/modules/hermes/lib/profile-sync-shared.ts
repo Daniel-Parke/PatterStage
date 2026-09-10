@@ -22,7 +22,7 @@ import {
 import { backupTimestamp, ensureDir } from "@/lib/fs/fs-helpers";
 import { getHermesDefaultRoot, resolveProfileHermesHome } from "./profile-paths";
 import { buildHermesPathBundle } from "./paths";
-import { type AgentRootRow } from "@/lib/agent-root-repository";
+import { type AgentRootRow } from "@/lib/agents/agent-root-repository";
 import {
   buildConfigYaml,
   parseConfigYaml,

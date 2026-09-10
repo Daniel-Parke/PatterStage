@@ -14,7 +14,7 @@ import {
   invalidateTemplatesCache,
   saveTemplate,
 } from "./shared";
-import { isDispatchMode } from "@/lib/dispatch-mode";
+import { isDispatchMode } from "@/lib/ui/dispatch-mode";
 import { recordEvent } from "@/lib/analytics/record-event";
 
 export function handleCreateTemplate(body: TemplateActionBody): NextResponse {

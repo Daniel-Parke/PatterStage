@@ -31,7 +31,7 @@ jest.mock("@/modules/hermes/lib/profiles-repository", () => ({
   getProfile: jest.fn(() => ({ slug: "qa" })),
   updateProfileContent: jest.fn(),
 }));
-jest.mock("@/lib/agent-root-repository", () => ({ updateAgentRoot: jest.fn() }));
+jest.mock("@/lib/agents/agent-root-repository", () => ({ updateAgentRoot: jest.fn() }));
 jest.mock("@/modules/hermes/lib/profile-push", () => ({
   pushProfileToHermes: jest.fn(),
   pushRootToHermes: jest.fn(),
@@ -50,7 +50,7 @@ jest.mock("@/lib/sessions/sessions-api-helpers", () => ({
   triggerSyncOnce: (...a: unknown[]) => mockTriggerSyncOnce(...a),
 }));
 jest.mock("@/lib/sync", () => ({ ensureSyncLayer: jest.fn(), syncSessionsNow: jest.fn() }));
-jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn(), serverErrorFromCatch: jest.fn() }));
+jest.mock("@/lib/api/api-logger", () => ({ logApiError: jest.fn(), serverErrorFromCatch: jest.fn() }));
 
 import { NextRequest } from "next/server";
 

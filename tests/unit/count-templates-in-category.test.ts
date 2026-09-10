@@ -13,7 +13,7 @@ let testDb: import("better-sqlite3").Database | null = null;
 // at import).
 jest.mock("@/lib/db", () => require("../helpers/baseline-db").dbSingletonMock(() => testDb));
 // Custom-template dir is non-existent so only the DB catalog matters here.
-jest.mock("@/lib/paths", () => ({
+jest.mock("@/lib/host/paths", () => ({
   PATHS: { templates: "/tmp/__no_such_templates_dir__" },
 }));
 

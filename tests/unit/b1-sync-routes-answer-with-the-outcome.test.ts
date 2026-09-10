@@ -13,7 +13,7 @@
  *
  * One shape for every sync answer, and the helpers live in one place.
  */
-jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn(), serverErrorFromCatch: jest.fn() }));
+jest.mock("@/lib/api/api-logger", () => ({ logApiError: jest.fn(), serverErrorFromCatch: jest.fn() }));
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
 jest.mock("@/lib/db", () => require("../helpers/mocks").dbMock());
 
@@ -47,7 +47,7 @@ jest.mock("@/modules/hermes/lib/sync-manager", () => ({
   pushModelToHermes: (id: string) => mockPushModel(id),
   pushCredential: jest.fn(() => ({ success: true, details: [], backupPath: null })),
 }));
-jest.mock("@/lib/models-repository", () => ({ getModelWithKey: () => null }));
+jest.mock("@/lib/models/models-repository", () => ({ getModelWithKey: () => null }));
 
 import { NextRequest } from "next/server";
 

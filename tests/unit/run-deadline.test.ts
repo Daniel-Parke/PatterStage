@@ -13,7 +13,7 @@ import {
   parseRunTimestamp,
   runDeadline,
 } from "@/lib/orchestration/run-deadline";
-import type { RunRecord } from "@/lib/runs-repository";
+import type { RunRecord } from "@/lib/runs/runs-repository";
 import { MAX_TIMEOUT_MINUTES } from "@/lib/missions/mission-timeout";
 
 const SUBMITTED = "2026-08-23T12:00:00.000Z";

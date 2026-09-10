@@ -33,7 +33,7 @@ import {
   type RuntimeEndpoint,
 } from "./endpoint-registry";
 import { describeGatewayFailure } from "./gateway-error";
-import { normaliseUsage } from "@/lib/usage-shape";
+import { normaliseUsage } from "@/lib/models/usage-shape";
 
 const DEFAULT_TIMEOUT_MS = 30_000;
 

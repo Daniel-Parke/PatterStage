@@ -5,7 +5,7 @@
 "use client";
 
 import { useRef, useEffect, useCallback } from "react";
-import { inputFieldClasses } from "@/lib/theme";
+import { inputFieldClasses } from "@/lib/ui/theme";
 
 interface AutoTextareaProps {
   value: string;

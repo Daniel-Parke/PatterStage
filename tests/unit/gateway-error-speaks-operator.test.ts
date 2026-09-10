@@ -28,7 +28,7 @@
 import { HermesRuntime } from "@/lib/runtime/HermesRuntime";
 import { RuntimeRequestError } from "@/lib/runtime/types";
 import type { RuntimeEndpoint } from "@/lib/runtime/endpoint-registry";
-import { messageFromError } from "@/lib/api-fetch";
+import { messageFromError } from "@/lib/api/api-fetch";
 import { bannerStatesFor } from "@/components/chat/gateway-banner-states";
 
 const endpoint: RuntimeEndpoint = {

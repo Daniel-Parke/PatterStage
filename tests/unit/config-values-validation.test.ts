@@ -26,16 +26,16 @@ jest.mock("fs", () => ({
 
 jest.mock("@/modules/hermes/lib/agent-runtime", () => require("../helpers/mocks").agentRuntimeMock());
 
-jest.mock("@/lib/paths", () => require("../helpers/mocks").pathsMock());
+jest.mock("@/lib/host/paths", () => require("../helpers/mocks").pathsMock());
 
-jest.mock("@/lib/api-logger", () => ({
+jest.mock("@/lib/api/api-logger", () => ({
   logApiError: jest.fn(),
 }));
 
-jest.mock("@/lib/api-auth", () => ({
+jest.mock("@/lib/api/api-auth", () => ({
 }));
 
-jest.mock("@/lib/audit-log", () => ({
+jest.mock("@/lib/api/audit-log", () => ({
   appendAuditLine: jest.fn(),
 }));
 

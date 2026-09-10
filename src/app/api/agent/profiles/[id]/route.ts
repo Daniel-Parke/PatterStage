@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { renameSync, existsSync } from "fs";
 
-import { parseJsonBody } from "@/lib/parse-json-body";
+import { parseJsonBody } from "@/lib/api/parse-json-body";
 import { resolveSafeProfileName, requireSafeProfileName } from "@/lib/fs/path-security";
 
-import { appendAuditLine } from "@/lib/audit-log";
+import { appendAuditLine } from "@/lib/api/audit-log";
 import { ensureDb } from "@/lib/db";
 import {
   getProfile,
@@ -15,9 +15,9 @@ import {
 import { pushProfileToHermes } from "@/modules/hermes/lib/profile-push";
 import { removeProfileFromDisk } from "@/modules/hermes/lib/profile-discovery";
 import { resolveProfileHermesHome } from "@/modules/hermes/lib/profile-paths";
-import { slugifyDisplayName, validateProfileDisplayName, DEFAULT_PROFILE_SLUG } from "@/lib/profile-slug";
-import { badRequest, conflict, notFound, ok, serverError, methodNotAllowed } from "@/lib/api-response";
-import { route } from "@/lib/api-route";
+import { slugifyDisplayName, validateProfileDisplayName, DEFAULT_PROFILE_SLUG } from "@/lib/agents/profile-slug";
+import { badRequest, conflict, notFound, ok, serverError, methodNotAllowed } from "@/lib/api/api-response";
+import { route } from "@/lib/api/api-route";
 
 export const PUT = route("PUT /api/agent/profiles/[id]", "updating profile", "Failed to update profile", async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   const { id } = await params;

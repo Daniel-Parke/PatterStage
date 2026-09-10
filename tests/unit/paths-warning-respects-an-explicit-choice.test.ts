@@ -18,7 +18,7 @@ jest.mock("os", () => {
   return { ...actual, homedir: () => fake };
 });
 
-import { shadowedDataWarning, getDbPath } from "@/lib/paths";
+import { shadowedDataWarning, getDbPath } from "@/lib/host/paths";
 
 const home = homedir();
 

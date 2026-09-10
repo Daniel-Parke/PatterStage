@@ -17,7 +17,7 @@ jest.mock("fs", () => ({
 let mockCrontab = "";
 const mockWritten: string[] = [];
 const mockSetEnabled: Array<[string, boolean]> = [];
-jest.mock("@/lib/host-scheduler", () => ({
+jest.mock("@/lib/host/host-scheduler", () => ({
   getHostScheduler: () => ({
     readRaw: async () => mockCrontab,
     writeRaw: async (c: string) => {
@@ -30,7 +30,7 @@ jest.mock("@/lib/host-scheduler", () => ({
   }),
 }));
 
-jest.mock("@/lib/paths", () => ({
+jest.mock("@/lib/host/paths", () => ({
   PS_DATA_DIR: "/tmp/ch-data",
   getPsScriptsDir: () => "/tmp/ch-data/scripts",
   getPsHardwareLogDir: () => "/tmp/ch-data/logs",
@@ -46,12 +46,12 @@ jest.mock("@/lib/paths", () => ({
 // The route now REBUILDS the command from a resolved script path instead of
 // substring-checking the caller's text, so the test must say which script names
 // exist. `fs` is mocked above, so the real existsSync-backed resolver cannot run.
-jest.mock("@/lib/scripts-manager", () => ({
+jest.mock("@/lib/scripts/scripts-manager", () => ({
   resolveScriptPath: (name: string) =>
     ["ps-backup.mjs", "ps-health-check.mjs"].includes(name) ? `/tmp/ch-data/scripts/${name}` : null,
 }));
 
-jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
+jest.mock("@/lib/api/api-logger", () => ({ logApiError: jest.fn() }));
 
 import { mockRequest } from "../helpers/api-test-helpers";
 

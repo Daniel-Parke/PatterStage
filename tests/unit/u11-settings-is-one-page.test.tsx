@@ -21,8 +21,8 @@
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { renderWithQuery } from "../helpers/render-with-query";
 
-import { CONFIG_SECTIONS } from "@/lib/config-schema";
-import { SETTINGS_GROUPS, SETTINGS_TOOLS, settingsSectionIds } from "@/lib/config-sections";
+import { CONFIG_SECTIONS } from "@/lib/config/config-schema";
+import { SETTINGS_GROUPS, SETTINGS_TOOLS, settingsSectionIds } from "@/lib/config/config-sections";
 
 jest.mock("next/navigation", () => ({
   usePathname: () => "/agent/settings",
@@ -43,8 +43,8 @@ const mockUseConfig = jest.fn();
 jest.mock("@/hooks/useConfig", () => ({ useConfig: () => mockUseConfig() }));
 
 const mockApiFetch = jest.fn();
-jest.mock("@/lib/api-fetch", () => ({
-  ...(jest.requireActual("@/lib/api-fetch") as Record<string, unknown>),
+jest.mock("@/lib/api/api-fetch", () => ({
+  ...(jest.requireActual("@/lib/api/api-fetch") as Record<string, unknown>),
   apiFetch: (...a: unknown[]) => mockApiFetch(...a),
   // The two file sections and the toolsets preview read through
   // useApiResource since C6 (T-0143), which calls safeApiCall; it answers

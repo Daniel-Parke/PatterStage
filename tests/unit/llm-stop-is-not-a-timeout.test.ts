@@ -58,7 +58,7 @@ async function untilCalled(mock: jest.Mock): Promise<void> {
 describe("a caller abort is not a provider timeout", () => {
   it("reports a stopped direct-provider call as an abort, not a misconfigured base URL", async () => {
     jest.resetModules();
-    jest.doMock("@/lib/models-repository", () => ({
+    jest.doMock("@/lib/models/models-repository", () => ({
       getModelWithKey: jest.fn(() => ({
         id: "m-99",
         name: "A model",
@@ -77,7 +77,7 @@ describe("a caller abort is not a provider timeout", () => {
     const hanging = fetchThatHangsUntilAborted();
     global.fetch = hanging as unknown as typeof fetch;
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { callLLM } = require("@/lib/llm") as typeof import("@/lib/llm");
+    const { callLLM } = require("@/lib/models/llm") as typeof import("@/lib/models/llm");
 
     const controller = new AbortController();
     const settled = callLLM([{ role: "user", content: "write" }], {
@@ -101,7 +101,7 @@ describe("a caller abort is not a provider timeout", () => {
 
   it("does not retry a gateway call the operator stopped", async () => {
     jest.resetModules();
-    jest.doMock("@/lib/models-repository", () => ({
+    jest.doMock("@/lib/models/models-repository", () => ({
       getModelWithKey: jest.fn(() => {
         throw new Error("no such model");
       }),
@@ -124,7 +124,7 @@ describe("a caller abort is not a provider timeout", () => {
     });
     global.fetch = fetchMock as unknown as typeof fetch;
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { callLLM } = require("@/lib/llm") as typeof import("@/lib/llm");
+    const { callLLM } = require("@/lib/models/llm") as typeof import("@/lib/models/llm");
 
     const controller = new AbortController();
     const settled = callLLM([{ role: "user", content: "write" }], {
@@ -149,7 +149,7 @@ describe("a caller abort is not a provider timeout", () => {
 describe("GREEN CONTROL", () => {
   it("still blames the endpoint when the direct-provider timeout is what fired", async () => {
     jest.resetModules();
-    jest.doMock("@/lib/models-repository", () => ({
+    jest.doMock("@/lib/models/models-repository", () => ({
       getModelWithKey: jest.fn(() => ({
         id: "m-99",
         name: "A model",
@@ -167,7 +167,7 @@ describe("GREEN CONTROL", () => {
 
     global.fetch = fetchThatHangsUntilAborted() as unknown as typeof fetch;
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { callLLM } = require("@/lib/llm") as typeof import("@/lib/llm");
+    const { callLLM } = require("@/lib/models/llm") as typeof import("@/lib/models/llm");
 
     // No caller signal at all, and a timeout short enough to fire in a test.
     const err = await callLLM([{ role: "user", content: "write" }], {

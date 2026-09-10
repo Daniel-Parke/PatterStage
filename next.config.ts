@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-import { settingsSectionIds } from "./src/lib/config-sections";
+import { settingsSectionIds } from "./src/lib/config/config-sections";
 
 // Comma-separated full origins (scheme + host + port). scripts/bootstrap/setup.sh generates
 // PS_ALLOWED_DEV_ORIGINS for your chosen PORT (localhost, 127.0.0.1, LAN IPv4s).

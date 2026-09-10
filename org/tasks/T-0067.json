@@ -14,7 +14,7 @@
   "status": "done",
   "owner_session": "t0067-dispatch-mode-2026-08-31",
   "claims": [
-    "src/lib/dispatch-mode.ts",
+    "src/lib/ui/dispatch-mode.ts",
     "src/lib/missions/mission-handlers/dispatch.ts",
     "src/lib/templates-handlers/",
     "tests/"

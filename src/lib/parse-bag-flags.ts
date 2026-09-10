@@ -1,6 +1,9 @@
 // ═══════════════════════════════════════════════════════════════
 // parse-bag-flags — small field-accessors for the "bag of optional
 // flags" body shape that sync/* and similar multi-action routes use.
+//
+// AT THE LIB ROOT ON PURPOSE (C7, T-0144): the shape belongs to no one
+// domain -- sync, models and missions all post it -- so neither does this.
 // ═══════════════════════════════════════════════════════════════
 //
 // A missing or wrong-typed field reads as absent; nothing here throws or

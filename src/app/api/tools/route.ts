@@ -5,8 +5,8 @@ import type { NextRequest } from "next/server";
 // Runtime tool access is configured per profile via platform_toolsets
 // (Agent → Tools). This route does not control Hermes runtime.
 
-import { requireNotReadOnly } from "@/lib/api-auth";
-import { methodNotAllowed, ok } from "@/lib/api-response";
+import { requireNotReadOnly } from "@/lib/api/api-auth";
+import { methodNotAllowed, ok } from "@/lib/api/api-response";
 import {
   HERMES_CONFIGURABLE_TOOLSETS,
   HERMES_PLATFORMS,

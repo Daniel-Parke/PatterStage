@@ -1,17 +1,17 @@
 import { NextRequest } from "next/server";
 
-import { badRequest, ok } from "@/lib/api-response";
+import { badRequest, ok } from "@/lib/api/api-response";
 import { ensureDb } from "@/lib/db";
-import { parseOptionalJsonBody } from "@/lib/parse-optional-json-body";
+import { parseOptionalJsonBody } from "@/lib/api/parse-optional-json-body";
 import { booleanFlag, stringFlag } from "@/lib/parse-bag-flags";
 import {
   discoverLocalProfiles,
   importDiscoveredProfile,
   importAllSkillsFromDisk,
 } from "@/modules/hermes/lib/profile-discovery";
-import { isValidProfileSlug } from "@/lib/profile-slug";
+import { isValidProfileSlug } from "@/lib/agents/profile-slug";
 import { answerBatch, answerSingle } from "@/modules/hermes/lib/sync-answer";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 // Answers through sync-answer.ts, like push and pull: a 500 for the one
 // profile that did not import, a 200 that says so for a batch (T-0095, D19).

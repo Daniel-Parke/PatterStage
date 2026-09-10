@@ -4,22 +4,22 @@
 // ═══════════════════════════════════════════════════════════════
 import { NextRequest, NextResponse } from "next/server";
 
-import { getDefaultModel, getModelDefaults, setDefaultModel } from "@/lib/models-repository";
-import { serverErrorFromCatch } from "@/lib/api-logger";
-import { readCachedConfigResult } from "@/lib/config-cache";
+import { getDefaultModel, getModelDefaults, setDefaultModel } from "@/lib/models/models-repository";
+import { serverErrorFromCatch } from "@/lib/api/api-logger";
+import { readCachedConfigResult } from "@/lib/config/config-cache";
 import {
   modelFieldsFromConfig,
   resolveModelReadiness,
   type ModelReadiness,
 } from "@/lib/models/model-readiness";
 
-import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
-import { appendAuditLine } from "@/lib/audit-log";
-import { setDefaultPutSchema } from "@/lib/api-schemas";
-import { notFound, ok } from "@/lib/api-response";
+import { parseAndValidateJsonBody } from "@/lib/api/parse-json-body";
+import { appendAuditLine } from "@/lib/api/audit-log";
+import { setDefaultPutSchema } from "@/lib/api/api-schemas";
+import { notFound, ok } from "@/lib/api/api-response";
 import { finalizeRootConfigOnDisk } from "@/modules/hermes/lib/config-sync";
 import { recordEvent } from "@/lib/analytics/record-event";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 /**
  * The readiness sentence, or null when the file it is read from cannot answer.

@@ -66,7 +66,7 @@ export const RETENTION_LAW: Record<RetentionTable, RetentionDeclaration> = {
   },
   chat_messages: {
     table: "chat_messages",
-    owner: "src/lib/chat-repository.ts",
+    owner: "src/lib/chat/chat-repository.ts",
     consumer: "the Chat surface (whole-conversation transcript) and run reconciliation",
     // No windowed consumer exists; recorded as 0 rather than invented, and the
     // floor below is what actually protects this table.

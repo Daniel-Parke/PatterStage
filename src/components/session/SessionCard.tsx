@@ -36,7 +36,7 @@ import { LedgerRow } from "@/components/dashboard/LedgerRow";
 import { LiveDot } from "@/components/ui/LiveDot";
 import { timeAgo, formatElapsed, pluralise } from "@/lib/utils";
 import { sourceMeta } from "@/components/session/constants";
-import { SESSION_STATUS_LABELS } from "@/lib/status-labels";
+import { SESSION_STATUS_LABELS } from "@/lib/ui/status-labels";
 import { formatSessionTitle } from "@/lib/sessions/session-title";
 import type { SessionRecord } from "@/lib/sessions/session-repository";
 import { MISSIONS_PATH } from "@/lib/missions/mission-deep-link";

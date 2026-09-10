@@ -23,7 +23,7 @@ import PageLoading, { pendingCount } from "@/components/ui/PageLoading";
 import SegmentedControl from "@/components/ui/SegmentedControl";
 import { useApiResource } from "@/hooks/useApiResource";
 import { useToast } from "@/components/ui/Toast";
-import { runWrite } from "@/lib/api-write";
+import { runWrite } from "@/lib/api/api-write";
 import StoryCard from "@/modules/rec-room/components/StoryCard";
 import type { StorySummary } from "@/modules/rec-room/types";
 

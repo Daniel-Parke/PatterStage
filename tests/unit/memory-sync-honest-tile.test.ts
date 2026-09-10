@@ -14,7 +14,7 @@
 
 const mockSetMultipleStats = jest.fn();
 const mockSetSystemStatBoolean = jest.fn();
-jest.mock("@/lib/system-repository", () => ({
+jest.mock("@/lib/system/system-repository", () => ({
   setMultipleStats: (...a: unknown[]) => mockSetMultipleStats(...a),
   setSystemStatBoolean: (...a: unknown[]) => mockSetSystemStatBoolean(...a),
 }));
@@ -27,7 +27,7 @@ jest.mock("@/lib/memory/memory-providers", () => ({
   getActiveMemoryProvider: () => ({ stats: async () => providerStats }),
 }));
 jest.mock("@/modules/hermes/lib/agent-runtime", () => ({ getActiveHermesPaths: () => ({ memoryDb: "/nope/memory.db" }) }));
-jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
+jest.mock("@/lib/api/api-logger", () => ({ logApiError: jest.fn() }));
 
 import { MemorySync } from "@/lib/sync/sources/MemorySync";
 

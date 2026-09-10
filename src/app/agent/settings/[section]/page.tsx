@@ -24,8 +24,8 @@ import { AlertCircle } from "lucide-react";
 
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
-import { CONFIG_SECTIONS, getSectionDef, resolveSectionRedirect } from "@/lib/config-schema";
-import { iconColorMap } from "@/lib/theme";
+import { CONFIG_SECTIONS, getSectionDef, resolveSectionRedirect } from "@/lib/config/config-schema";
+import { iconColorMap } from "@/lib/ui/theme";
 
 function UnknownConfigSection({ slug }: { slug: string }) {
   return (

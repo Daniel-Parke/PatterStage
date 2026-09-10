@@ -5,7 +5,7 @@
 //   OUTCOME: <label> (optional branch label; routes on_<label>).
 // Non-assessing stages proceed (pass = true) unless they emit an OUTCOME.
 
-import { stripReasoning } from "@/lib/llm-output";
+import { stripReasoning } from "@/lib/models/llm-output";
 import type { NodeVerdict } from "./schema";
 
 /** Stage kinds that emit a PASS/FAIL verdict (drive conditional routing). */

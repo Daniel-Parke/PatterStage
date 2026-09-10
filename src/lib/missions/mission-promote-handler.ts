@@ -9,14 +9,14 @@ import {
 import { buildMissionFieldPatch } from "@/lib/missions/mission-field-updates";
 import { dispatchMissionNow } from "@/lib/missions/mission-dispatch";
 import { runMissionQueueTick } from "@/lib/missions/mission-queue-tick";
-import { createSchedule } from "@/lib/schedules-repository";
+import { createSchedule } from "@/lib/schedule/schedules-repository";
 import { parseSchedule, scheduleDisplayFromParsed } from "@/lib/schedule/parse-schedule";
 import { computeNextRun, scheduleCanEverFire } from "@/lib/schedule/next-run";
 import { scheduleIntervalProblem } from "@/lib/schedule/interval-bounds";
 import { enrichedMission } from "@/lib/missions/mission-response";
-import { logApiError } from "@/lib/api-logger";
+import { logApiError } from "@/lib/api/api-logger";
 import { isMissionDraft, isMissionQueuedForRun } from "@/lib/missions/mission-board";
-import { DISPATCH_MODES, parseDispatchMode } from "@/lib/dispatch-mode";
+import { DISPATCH_MODES, parseDispatchMode } from "@/lib/ui/dispatch-mode";
 import type { Mission, MissionDraftFields } from "@/lib/missions/mission-types";
 
 export interface PromoteMissionInput extends MissionDraftFields {

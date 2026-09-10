@@ -15,8 +15,8 @@ import { CalendarClock } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 import SchedulePicker from "@/components/schedule/SchedulePicker";
-import { safeApiCall } from "@/lib/api-fetch";
-import { runWrite } from "@/lib/api-write";
+import { safeApiCall } from "@/lib/api/api-fetch";
+import { runWrite } from "@/lib/api/api-write";
 import { stripScriptExt } from "@/lib/scripts/script-ext";
 import type { ScriptFile, SchedulerAvailability } from "@/hooks/useScripts";
 

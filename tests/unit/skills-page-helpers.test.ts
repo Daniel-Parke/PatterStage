@@ -11,7 +11,7 @@ import {
   pageCount,
   pageRangeLabel,
   pageSlice,
-} from "@/lib/skills-page-helpers";
+} from "@/lib/skills/skills-page-helpers";
 import type { Skill } from "@/types/console";
 
 const skill = (over: Partial<Skill> = {}): Skill =>

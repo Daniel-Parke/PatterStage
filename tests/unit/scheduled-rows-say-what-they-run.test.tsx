@@ -34,8 +34,8 @@ const safeApiCall = jest.fn(async (path: string, options?: { method?: string }) 
   return answers.get(`${method} ${path}`) ?? { ok: true, data: {} };
 });
 
-jest.mock("@/lib/api-fetch", () => ({
-  ...(jest.requireActual("@/lib/api-fetch") as Record<string, unknown>),
+jest.mock("@/lib/api/api-fetch", () => ({
+  ...(jest.requireActual("@/lib/api/api-fetch") as Record<string, unknown>),
   safeApiCall: (...a: unknown[]) => (safeApiCall as unknown as (...a: unknown[]) => unknown)(...a),
 }));
 

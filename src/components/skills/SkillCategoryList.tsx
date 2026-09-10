@@ -19,7 +19,7 @@
 import { ChevronRight } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { SkillRowList } from "@/components/skills/SkillRowList";
-import { categoryStateKey, type SkillCategoryGroup } from "@/lib/skills-page-helpers";
+import { categoryStateKey, type SkillCategoryGroup } from "@/lib/skills/skills-page-helpers";
 import type { Skill } from "@/types/console";
 
 interface CategoryRowProps {

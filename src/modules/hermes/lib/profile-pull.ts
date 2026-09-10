@@ -19,14 +19,14 @@
 
 import { existsSync, readFileSync, readdirSync, statSync } from "fs";
 
-import { messageFromError } from "@/lib/api-fetch";
+import { messageFromError } from "@/lib/api/api-fetch";
 import { buildHermesPathBundle } from "./paths";
 import { getHermesDefaultRoot } from "./profile-paths";
 import {
   getAgentRoot,
   setAgentRootSyncStatus,
   updateAgentRoot,
-} from "@/lib/agent-root-repository";
+} from "@/lib/agents/agent-root-repository";
 import {
   assembleConfigYamlForProfile,
   getProfile,
@@ -41,7 +41,7 @@ import {
   parseSkillFrontmatter,
   setSkillSyncStatus,
   upsertSkill,
-} from "@/lib/skills-repository";
+} from "@/lib/skills/skills-repository";
 import { now } from "@/lib/db";
 import {
   assembleRootConfig,

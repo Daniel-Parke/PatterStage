@@ -1,5 +1,5 @@
 /**
- * Unit tests for the `setField` helper (src/lib/set-field.ts).
+ * Unit tests for the `setField` helper (src/lib/config/set-field.ts).
  *
  * `setField(setter, key)` builds a `(value) => void` that updates a
  * single field of a React form via the partial-spread updater
@@ -22,7 +22,7 @@
 import { act, renderHook } from "@testing-library/react";
 import { useState } from "react";
 
-import { setField } from "@/lib/set-field";
+import { setField } from "@/lib/config/set-field";
 
 describe("setField", () => {
   it("returns a function that takes the new value", () => {

@@ -30,7 +30,7 @@ jest.mock("@/hooks/useTwoStepConfirm", () => ({
     cancel: jest.fn(),
   }),
 }));
-jest.mock("@/lib/api-fetch", () => ({
+jest.mock("@/lib/api/api-fetch", () => ({
   safeApiCallData: jest.fn(),
   setErrorFromCaught: jest.fn(),
 }));

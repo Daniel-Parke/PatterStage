@@ -9,9 +9,9 @@
 import { existsSync, statSync } from "fs";
 import { getAgentWorkspace } from "@/lib/runtime/workspace";
 import { readHolographicFactCount } from "@/lib/runtime/memory-db";
-import { setMultipleStats } from "@/lib/system-repository";
+import { setMultipleStats } from "@/lib/system/system-repository";
 import { getMemoryProviderType, getActiveMemoryProvider } from "@/lib/memory/memory-providers";
-import { logApiError } from "@/lib/api-logger";
+import { logApiError } from "@/lib/api/api-logger";
 import type { SyncSource, SyncResult } from "@/lib/sync/types";
 import { syncFailure, syncSuccess } from "@/lib/sync/types";
 

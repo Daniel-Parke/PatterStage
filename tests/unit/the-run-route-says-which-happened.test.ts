@@ -25,20 +25,20 @@ import { NextResponse } from "next/server";
 
 jest.mock("@/lib/analytics/record-event", () => ({ recordEvent: jest.fn() }));
 
-jest.mock("@/lib/api-logger", () => ({
-  ...jest.requireActual("@/lib/api-logger"),
+jest.mock("@/lib/api/api-logger", () => ({
+  ...jest.requireActual("@/lib/api/api-logger"),
   logApiError: jest.fn(),
 }));
-jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
+jest.mock("@/lib/api/audit-log", () => ({ appendAuditLine: jest.fn() }));
 
 const mockHostWrites = jest.fn<NextResponse | null, []>(() => null);
-jest.mock("@/lib/api-auth", () => ({
-  ...jest.requireActual("@/lib/api-auth"),
+jest.mock("@/lib/api/api-auth", () => ({
+  ...jest.requireActual("@/lib/api/api-auth"),
   requireAuthenticatedHostWrites: () => mockHostWrites(),
 }));
 
 const mockRunScriptFile = jest.fn();
-jest.mock("@/lib/scripts-manager", () => ({
+jest.mock("@/lib/scripts/scripts-manager", () => ({
   runScriptFile: (...a: unknown[]) => mockRunScriptFile(...a),
 }));
 

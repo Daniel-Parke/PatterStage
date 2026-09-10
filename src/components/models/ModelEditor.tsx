@@ -27,8 +27,8 @@ import CredentialPicker, {
   type CredentialOption,
 } from "@/components/models/CredentialPicker";
 import { Input, Select } from "@/components/ui/field";
-import { apiFetch } from "@/lib/api-fetch";
-import { runWrite } from "@/lib/api-write";
+import { apiFetch } from "@/lib/api/api-fetch";
+import { runWrite } from "@/lib/api/api-write";
 
 /**
  * Minimal model shape for the editor form — a subset of ApiModel

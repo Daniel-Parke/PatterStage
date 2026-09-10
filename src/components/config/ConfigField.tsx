@@ -22,7 +22,7 @@ import Link from "next/link";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import { Toggle, Select, NumberInput, TextInput } from "@/components/ui/Input";
-import type { FieldDef, SectionDef } from "@/lib/config-schema";
+import type { FieldDef, SectionDef } from "@/lib/config/config-schema";
 
 interface ConfigFieldProps {
   field: FieldDef;

@@ -41,8 +41,8 @@ jest.mock("@/components/agents/AgentGrowthPanel", () => ({
 }));
 
 const mockApiFetch = jest.fn();
-jest.mock("@/lib/api-fetch", () => ({
-  ...(jest.requireActual("@/lib/api-fetch") as Record<string, unknown>),
+jest.mock("@/lib/api/api-fetch", () => ({
+  ...(jest.requireActual("@/lib/api/api-fetch") as Record<string, unknown>),
   apiFetch: (...a: unknown[]) => mockApiFetch(...a),
   // The pages read through useApiResource, which calls safeApiCall; routed
   // through the same mock so a read is still one of the paths asked for (C6, T-0143).

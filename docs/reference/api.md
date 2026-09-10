@@ -18,7 +18,7 @@ All JSON API routes return the envelope:
 { data?: T; error?: string }
 ```
 
-Some error responses also include `details` (Zod validation). Handlers must call `logApiError(route, context, error)` from `@/lib/api-logger` in catch blocks.
+Some error responses also include `details` (Zod validation). Handlers must call `logApiError(route, context, error)` from `@/lib/api/api-logger` in catch blocks.
 
 Five routes deliberately sit outside the envelope, and a client integrator should special-case them:
 

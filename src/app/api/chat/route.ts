@@ -7,16 +7,16 @@
 // multi-turn continuity. See chat-repository + 013_chat.sql.
 // ═══════════════════════════════════════════════════════════════
 
-import { boundsFrom } from "@/lib/list-bounds";
+import { boundsFrom } from "@/lib/ui/list-bounds";
 import { NextRequest, NextResponse } from "next/server";
 
-import { logApiError } from "@/lib/api-logger";
-import { ok, created } from "@/lib/api-response";
-import { parseJsonBody } from "@/lib/parse-json-body";
+import { logApiError } from "@/lib/api/api-logger";
+import { ok, created } from "@/lib/api/api-response";
+import { parseJsonBody } from "@/lib/api/parse-json-body";
 import { runtime } from "@/lib/runtime";
 import { RuntimeRequestError } from "@/lib/runtime/types";
-import { listConversations, createConversation } from "@/lib/chat-repository";
-import { route } from "@/lib/api-route";
+import { listConversations, createConversation } from "@/lib/chat/chat-repository";
+import { route } from "@/lib/api/api-route";
 
 export const GET = route("GET /api/chat", "list", "Failed to list conversations", async (request?: NextRequest) => {
   return ok({ conversations: listConversations(boundsFrom(request, { defaultLimit: 100, maxLimit: 500 }).limit) });

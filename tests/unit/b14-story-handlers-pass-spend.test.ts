@@ -15,7 +15,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 const callLLMMock = jest.fn();
-jest.mock("@/lib/llm", () => ({
+jest.mock("@/lib/models/llm", () => ({
   callLLM: (...args: unknown[]) => callLLMMock(...args),
 }));
 
@@ -31,7 +31,7 @@ jest.mock("@/modules/rec-room/lib/story-repository", () => ({
 }));
 
 jest.mock("@/lib/analytics/record-event", () => ({ recordEvent: jest.fn() }));
-jest.mock("@/lib/api-logger", () => ({
+jest.mock("@/lib/api/api-logger", () => ({
   logApiError: jest.fn(),
   serverErrorFromCatch: jest.fn(() => ({ status: 500, body: { error: "boom" } })),
 }));
@@ -39,7 +39,7 @@ jest.mock("@/lib/api-logger", () => ({
 // The house NextResponse double: the handlers answer through NextResponse.json.
 jest.mock("next/server", () => require("../helpers/mocks").nextServerMock());
 
-import type { LLMOptions } from "@/lib/llm";
+import type { LLMOptions } from "@/lib/models/llm";
 import * as generate from "@/modules/rec-room/handlers/generate";
 import * as edit from "@/modules/rec-room/handlers/edit";
 

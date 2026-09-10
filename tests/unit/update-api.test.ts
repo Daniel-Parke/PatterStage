@@ -20,11 +20,11 @@ jest.mock("next/server", () => ({
   },
 }));
 
-jest.mock("@/lib/api-logger", () => ({
+jest.mock("@/lib/api/api-logger", () => ({
   logApiError: jest.fn(),
 }));
 
-jest.mock("@/lib/audit-log", () => ({
+jest.mock("@/lib/api/audit-log", () => ({
   appendAuditLine: jest.fn(),
 }));
 
@@ -43,7 +43,7 @@ jest.mock("fs", () => ({
 
 let deployApiEnabled = true;
 
-jest.mock("@/lib/api-auth", () => ({
+jest.mock("@/lib/api/api-auth", () => ({
   getCorrelationId: () => "cid-test",
   isDeployApiEnabled: () => deployApiEnabled,
   requireDeployApiEnabled: () =>
@@ -61,7 +61,7 @@ const mockIsDeployInProgress = jest.fn();
 const mockWriteDeployStatusRunning = jest.fn();
 const mockTailLogHint = jest.fn();
 
-jest.mock("@/lib/deploy-status", () => ({
+jest.mock("@/lib/deploy/deploy-status", () => ({
   readDeployStatus: () => mockReadDeployStatus(),
   isDeployInProgress: () => mockIsDeployInProgress(),
   writeDeployStatusRunning: (...args: unknown[]) =>
@@ -73,7 +73,7 @@ jest.mock("@/lib/deploy-status", () => ({
 // unit-tested in deploy-spawn-probe.test.ts. Mock it here so these tests
 // focus on the route's concerns (gating, dispatch, status writes).
 const mockSpawnChDeploy = jest.fn();
-jest.mock("@/lib/deploy-spawn", () => ({
+jest.mock("@/lib/deploy/deploy-spawn", () => ({
   spawnDeploy: (...args: unknown[]) => mockSpawnChDeploy(...args),
 }));
 
@@ -304,7 +304,7 @@ describe("POST /api/update", () => {
 
   // ── Probe failures are surfaced as 500 by the route ─────────────
   // The deep liveness-probe behaviour (systemd unit vs. nohup PID, status
-  // file as source of truth) lives in src/lib/deploy-spawn.ts and is
+  // file as source of truth) lives in src/lib/deploy/deploy-spawn.ts and is
   // unit-tested in deploy-spawn-probe.test.ts. Here we only assert the route
   // turns a probe failure into a 500 and a healthy start into a 200.
 

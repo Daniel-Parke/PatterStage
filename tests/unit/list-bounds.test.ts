@@ -5,7 +5,7 @@
 // Sessions had `LIMIT -1` (SQLite: unlimited) and `LIMIT NaN` (500) reachable
 // from the URL; missions had no limit at all.
 
-import { parseListBounds } from "@/lib/list-bounds";
+import { parseListBounds } from "@/lib/ui/list-bounds";
 
 const sp = (q: string) => new URLSearchParams(q);
 const o = { defaultLimit: 200, maxLimit: 500 };

@@ -24,7 +24,7 @@
     "src/app/api/logs/route.ts",
     "src/app/(main)/logs/page.tsx",
     "src/hooks/useApiResource.ts",
-    "src/lib/api-response.ts",
+    "src/lib/api/api-response.ts",
     "src/modules/rec-room/lib/chapter-title.ts",
     "src/modules/rec-room/handlers/create.ts",
     "src/lib/missions/mission-handlers/update.ts",

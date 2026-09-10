@@ -39,7 +39,7 @@ import { renderWithQuery } from "../helpers/render-with-query";
 
 import { NumberInput } from "@/components/ui/Input";
 import ConfigField from "@/components/config/ConfigField";
-import { CONFIG_SECTIONS } from "@/lib/config-schema";
+import { CONFIG_SECTIONS } from "@/lib/config/config-schema";
 
 const mockUseParams = jest.fn();
 const mockReplace = jest.fn();
@@ -52,8 +52,8 @@ jest.mock("next/navigation", () => ({
 }));
 
 const mockApiFetch = jest.fn();
-jest.mock("@/lib/api-fetch", () => ({
-  ...(jest.requireActual("@/lib/api-fetch") as Record<string, unknown>),
+jest.mock("@/lib/api/api-fetch", () => ({
+  ...(jest.requireActual("@/lib/api/api-fetch") as Record<string, unknown>),
   apiFetch: (...args: unknown[]) => mockApiFetch(...args),
   // The file sections read through useApiResource since C6 (T-0143), which
   // calls safeApiCall; it answers from the same double.

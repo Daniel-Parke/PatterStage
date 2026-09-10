@@ -30,7 +30,7 @@
     "src/components/viz/",
     "src/components/logs/LogsHeaderActions.tsx",
     "src/components/composer/WorkflowRunCanvas.tsx",
-    "src/lib/scripts-manager.ts",
+    "src/lib/scripts/scripts-manager.ts",
     "src/lib/models/model-readiness.ts",
     "src/modules/rec-room/handlers/generate.ts",
     "tests/e2e/",

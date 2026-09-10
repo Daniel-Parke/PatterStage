@@ -41,8 +41,8 @@ jest.mock("@/lib/runtime/gateway", () => ({
   getAgentGateway: (...a: unknown[]) => mockGetAgentGateway(...(a as [])),
 }));
 jest.mock("@/lib/runtime/secrets", () => ({ getGatewayKey: () => "" }));
-jest.mock("@/lib/models-repository", () => ({ getModelWithKey: () => null }));
-jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
+jest.mock("@/lib/models/models-repository", () => ({ getModelWithKey: () => null }));
+jest.mock("@/lib/api/api-logger", () => ({ logApiError: jest.fn() }));
 
 /** An OpenAI-shaped completion, which is what every non-Anthropic provider sends. */
 function openAiReply(usage: unknown) {
@@ -72,7 +72,7 @@ describe("callLLM reports usage in the shape its own type declares", () => {
     // meant nothing objected.
     global.fetch = jest.fn(async () => openAiReply(SNAKE)) as unknown as typeof fetch;
 
-    const { callLLM } = await import("@/lib/llm");
+    const { callLLM } = await import("@/lib/models/llm");
     const res = await callLLM([{ role: "user", content: "q" }], {});
 
     expect(res.usage).toEqual({ promptTokens: 20, completionTokens: 30, totalTokens: 50 });
@@ -83,7 +83,7 @@ describe("callLLM reports usage in the shape its own type declares", () => {
       openAiReply({ prompt_tokens: 7, completion_tokens: 5 }),
     ) as unknown as typeof fetch;
 
-    const { callLLM } = await import("@/lib/llm");
+    const { callLLM } = await import("@/lib/models/llm");
     const res = await callLLM([{ role: "user", content: "q" }], {});
 
     expect(res.usage).toEqual({ promptTokens: 7, completionTokens: 5, totalTokens: 12 });
@@ -96,7 +96,7 @@ describe("callLLM reports usage in the shape its own type declares", () => {
       openAiReply({ input_tokens: 11, output_tokens: 4 }),
     ) as unknown as typeof fetch;
 
-    const { callLLM } = await import("@/lib/llm");
+    const { callLLM } = await import("@/lib/models/llm");
     const res = await callLLM([{ role: "user", content: "q" }], {});
 
     expect(res.usage).toEqual({ promptTokens: 11, completionTokens: 4, totalTokens: 15 });
@@ -111,7 +111,7 @@ describe("callLLM reports usage in the shape its own type declares", () => {
       openAiReply({ total_tokens: 5 }),
     ) as unknown as typeof fetch;
 
-    const { callLLM } = await import("@/lib/llm");
+    const { callLLM } = await import("@/lib/models/llm");
     expect((await callLLM([{ role: "user", content: "q" }], {})).usage).toBeUndefined();
   });
 
@@ -123,7 +123,7 @@ describe("callLLM reports usage in the shape its own type declares", () => {
       openAiReply({ prompt_tokens: 10, completion_tokens: 5, total_tokens: 99 }),
     ) as unknown as typeof fetch;
 
-    const { callLLM } = await import("@/lib/llm");
+    const { callLLM } = await import("@/lib/models/llm");
     const res = await callLLM([{ role: "user", content: "q" }], {});
 
     expect(res.usage?.totalTokens).toBe(99);
@@ -135,7 +135,7 @@ describe("callLLM reports usage in the shape its own type declares", () => {
     // distinction is the whole point of the unmeasured discipline.
     global.fetch = jest.fn(async () => openAiReply(undefined)) as unknown as typeof fetch;
 
-    const { callLLM } = await import("@/lib/llm");
+    const { callLLM } = await import("@/lib/models/llm");
     const res = await callLLM([{ role: "user", content: "q" }], {});
 
     expect(res.usage).toBeUndefined();
@@ -151,7 +151,7 @@ describe("a research run's tokens survive the whole trip", () => {
     // ever been wrong.
     global.fetch = jest.fn(async () => openAiReply(SNAKE)) as unknown as typeof fetch;
 
-    const { callLLM } = await import("@/lib/llm");
+    const { callLLM } = await import("@/lib/models/llm");
     const { accumulateUsage } = await import("@/lib/laboratory/deep-research/usage");
 
     const a = await callLLM([{ role: "user", content: "q" }], {});

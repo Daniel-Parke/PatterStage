@@ -18,7 +18,7 @@ let testDb: Database.Database | null = null;
 
 jest.mock("@/lib/db", () => require("../helpers/baseline-db").dbSingletonMock(() => testDb, { uuid: () => "uuid" }));
 
-import { createRun, listLatestRunsForMissions, updateRun } from "@/lib/runs-repository";
+import { createRun, listLatestRunsForMissions, updateRun } from "@/lib/runs/runs-repository";
 
 function seedMission(id: string): void {
   testDb!

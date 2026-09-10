@@ -17,13 +17,13 @@
 import { NextRequest, NextResponse } from "next/server";
 
 
-import { badRequest, ok } from "@/lib/api-response";
-import { parseJsonBody } from "@/lib/parse-json-body";
+import { badRequest, ok } from "@/lib/api/api-response";
+import { parseJsonBody } from "@/lib/api/parse-json-body";
 import { ensureDb } from "@/lib/db";
 import { asSpendPeriod } from "@/lib/spend/spend-law";
 import { getSpendSummary } from "@/lib/spend/spend-summary";
 import { readSpendPolicy, writeSpendPolicy, type SpendPolicyPatch } from "@/lib/spend/spend-repository";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 export const GET = route("GET /api/spend", "", "Failed to load spend", async () => {
   ensureDb();

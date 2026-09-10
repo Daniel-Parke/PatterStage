@@ -15,11 +15,11 @@ import {
   buildMissionPrompt,
 } from "@/lib/missions/mission-repository";
 import { normalizeLocalDirsInput } from "@/lib/fs/local-dir-entry";
-import { logApiError } from "@/lib/api-logger";
-import { badRequest, serverError } from "@/lib/api-response";
-import { appendAuditLine } from "@/lib/audit-log";
+import { logApiError } from "@/lib/api/api-logger";
+import { badRequest, serverError } from "@/lib/api/api-response";
+import { appendAuditLine } from "@/lib/api/audit-log";
 import { resolveAgentSlug } from "@/lib/agents/roster";
-import { createSchedule } from "@/lib/schedules-repository";
+import { createSchedule } from "@/lib/schedule/schedules-repository";
 import { parseSchedule, scheduleDisplayFromParsed } from "@/lib/schedule/parse-schedule";
 import { computeNextRun, scheduleCanEverFire } from "@/lib/schedule/next-run";
 import { scheduleIntervalProblem } from "@/lib/schedule/interval-bounds";
@@ -28,7 +28,7 @@ import { parseMissionBodyFields } from "@/lib/missions/mission-body";
 import { missionTimeoutError } from "@/lib/missions/mission-timeout";
 import { runMissionQueueTick } from "@/lib/missions/mission-queue-tick";
 import { missionResponse } from "@/lib/missions/mission-response";
-import { parseDispatchMode, DISPATCH_MODES, type DispatchMode } from "@/lib/dispatch-mode";
+import { parseDispatchMode, DISPATCH_MODES, type DispatchMode } from "@/lib/ui/dispatch-mode";
 
 import { parseCategoryIdOrError } from "./shared";
 

@@ -28,10 +28,10 @@ jest.mock("@/lib/feature-flags", () => ({ isFeatureEnabled: () => composerOn }))
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
 jest.mock("@/lib/db", () => require("../helpers/mocks").dbMock({ now: () => "2026-09-05T12:00:00.000Z" }));
 
-jest.mock("@/lib/api-logger", () => ({
+jest.mock("@/lib/api/api-logger", () => ({
   logApiError: jest.fn(),
   serverErrorFromCatch: (_route: string, _ctx: string, _err: unknown, message: string) =>
-    (jest.requireActual("@/lib/api-response") as typeof import("@/lib/api-response")).serverError(message),
+    (jest.requireActual("@/lib/api/api-response") as typeof import("@/lib/api/api-response")).serverError(message),
 }));
 
 jest.mock("@/lib/analytics/record-event", () => ({ recordEvent: jest.fn() }));

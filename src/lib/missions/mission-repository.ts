@@ -2,13 +2,13 @@
 // mission-repository.ts — Mission CRUD via SQLite
 // ═══════════════════════════════════════════════════════════════
 
-import { clampLimit, MISSION_LIST_BOUNDS } from "@/lib/list-bounds";
+import { clampLimit, MISSION_LIST_BOUNDS } from "@/lib/ui/list-bounds";
 import { existsSync, unlinkSync } from "fs";
 import { join } from "path";
 
 import { getDb, inTransaction, uuid, now } from "../db";
 import { safeJsonParse } from "../utils";
-import { PATHS } from "../paths";
+import { PATHS } from "../host/paths";
 import type { Mission, MissionStatus, MissionDraftFields } from "@/lib/missions/mission-types";
 // Type-only, so it is erased at compile time and no runtime cycle is
 // created with the audit module that consumes these two functions.

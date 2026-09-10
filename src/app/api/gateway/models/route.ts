@@ -9,9 +9,9 @@
 // that aren't in the PatterStage Models registry.
 // ═══════════════════════════════════════════════════════════════
 
-import { logApiError } from "@/lib/api-logger";
-import { fetchGateway } from "@/lib/gateway-client";
-import { ok } from "@/lib/api-response";
+import { logApiError } from "@/lib/api/api-logger";
+import { fetchGateway } from "@/lib/models/gateway-client";
+import { ok } from "@/lib/api/api-response";
 
 /** GET /api/gateway/models — List models from Hermes Gateway. */
 export async function GET() {

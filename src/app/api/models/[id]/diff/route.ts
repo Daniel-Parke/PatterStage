@@ -16,11 +16,11 @@ import { existsSync } from "fs";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-import { notFound, ok, methodNotAllowed } from "@/lib/api-response";
-import { modelKey } from "@/lib/model-key";
-import { getModelWithKey } from "@/lib/models-repository";
+import { notFound, ok, methodNotAllowed } from "@/lib/api/api-response";
+import { modelKey } from "@/lib/models/model-key";
+import { getModelWithKey } from "@/lib/models/models-repository";
 import { getAgentWorkspace } from "@/lib/runtime/workspace";
-import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
+import { parseAndValidateJsonBody } from "@/lib/api/parse-json-body";
 import { maskKeyHint } from "@/lib/secret-mask";
 import {
   readHermesConfigModels,
@@ -28,7 +28,7 @@ import {
 } from "@/modules/hermes/lib/hermes-config-read";
 import { diffModelAgainstHermes } from "@/modules/hermes/lib/model-diff";
 import { envVarForProvider, isHermesProvider } from "@/modules/hermes/lib/providers";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 interface DiffEntry {
   id: string;

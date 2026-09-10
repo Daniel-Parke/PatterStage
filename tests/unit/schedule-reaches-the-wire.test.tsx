@@ -40,7 +40,7 @@ import { queryWrapper } from "../helpers/render-with-query";
 
 import SchedulePicker from "@/components/schedule/SchedulePicker";
 import { useMissionComposer } from "@/hooks/useMissionComposer";
-import { scheduleForDispatch, scheduleBlocksDispatch } from "@/lib/dispatch-mode";
+import { scheduleForDispatch, scheduleBlocksDispatch } from "@/lib/ui/dispatch-mode";
 
 /**
  * The composer's profile prune and default-model autofill read through

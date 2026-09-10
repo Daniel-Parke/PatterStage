@@ -21,7 +21,7 @@
     "src/components/dashboard/SubsystemsPanel.tsx",
     "src/lib/status/subsystems.ts",
     "src/app/page.tsx",
-    "src/lib/paths.ts",
+    "src/lib/host/paths.ts",
     "tests/"
   ],
   "invariants": [

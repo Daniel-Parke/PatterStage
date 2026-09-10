@@ -16,7 +16,7 @@
  * not the declared danger token.
  *
  * The fix is not a colour codemod. The product already has a module whose whole
- * job is that a status wears ONE word - `src/lib/status-labels.ts`, thirteen
+ * job is that a status wears ONE word - `src/lib/ui/status-labels.ts`, thirteen
  * ratified words, typed with `satisfies` so a new enum member without a word is
  * a compile error. The colour belongs to the word, so a thing cannot be called
  * Failed and painted green: `STATUS_TONE` is `Record<StatusLabel, StatusTone>`
@@ -40,8 +40,8 @@ import {
   STATUS_VOCABULARY,
   statusTone,
   type StatusLabel,
-} from "@/lib/status-labels";
-import { statusToneClasses } from "@/lib/theme";
+} from "@/lib/ui/status-labels";
+import { statusToneClasses } from "@/lib/ui/theme";
 
 const ROOT = join(__dirname, "..", "..");
 const read = (rel: string) => readFileSync(join(ROOT, rel), "utf-8").replace(/\r\n/g, "\n");

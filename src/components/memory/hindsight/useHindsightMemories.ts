@@ -14,7 +14,7 @@ import {
   HINDSIGHT_DEFAULT_MAX_AGE_DAYS,
 } from "@/lib/memory/hindsight-client";
 import { parseOptionalTagsInput } from "@/lib/memory/hindsight-tag-input";
-import { runWrite } from "@/lib/api-write";
+import { runWrite } from "@/lib/api/api-write";
 import { stringOr } from "./utils";
 import type { Memory, HealthState } from "./types";
 

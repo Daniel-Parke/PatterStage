@@ -36,14 +36,14 @@ jest.mock("@/lib/update-handlers/version-check", () => ({
     checkFailed: false,
   }),
 }));
-jest.mock("@/lib/deploy-status", () => ({
+jest.mock("@/lib/deploy/deploy-status", () => ({
   isDeployInProgress: () => false,
   readDeployStatus: () => ({ state: "idle", action: "", phase: "", message: "Ready", startedAt: "", finishedAt: "", exitCode: "", logHint: "" }),
   tailLogHint: () => [],
 }));
-jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
-jest.mock("@/lib/api-auth", () => ({
-  ...jest.requireActual("@/lib/api-auth"),
+jest.mock("@/lib/api/api-logger", () => ({ logApiError: jest.fn() }));
+jest.mock("@/lib/api/api-auth", () => ({
+  ...jest.requireActual("@/lib/api/api-auth"),
   requireSignedRequest: () => null,
 }));
 
@@ -57,8 +57,8 @@ afterEach(() => {
 
 describe("isDeployApiEnabled is one exported function", () => {
   it("reads the variable, and boot-diagnostics agrees with it", async () => {
-    const auth = await import("@/lib/api-auth");
-    const { describeOperationalFlags } = await import("@/lib/boot-diagnostics");
+    const auth = await import("@/lib/api/api-auth");
+    const { describeOperationalFlags } = await import("@/lib/deploy/boot-diagnostics");
     expect(typeof auth.isDeployApiEnabled).toBe("function");
 
     process.env.PS_ENABLE_DEPLOY_API = "false";
@@ -71,7 +71,7 @@ describe("isDeployApiEnabled is one exported function", () => {
   });
 
   it("boot-diagnostics no longer carries its own copy of the rule", () => {
-    const src = readFileSync(join(ROOT, "src", "lib", "boot-diagnostics.ts"), "utf-8");
+    const src = readFileSync(join(ROOT, "src", "lib", "deploy", "boot-diagnostics.ts"), "utf-8");
     expect(src).toMatch(/isDeployApiEnabled/);
     expect(src).not.toMatch(/NODE_ENV !== "production"/);
   });

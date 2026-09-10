@@ -4,7 +4,7 @@
 // unwrap `{ data: { ...inner } }`, type the payload per action. The POST
 // surface (create / update / refresh / delete) goes through `runMutation`.
 
-import { safeApiCall } from "@/lib/api-fetch";
+import { safeApiCall } from "@/lib/api/api-fetch";
 
 type ShowToast = (message: string, tone?: "success" | "error" | "info") => void;
 

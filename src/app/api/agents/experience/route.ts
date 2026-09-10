@@ -19,12 +19,12 @@
 // the numbers existed the whole time and nothing asked for them.
 // ═══════════════════════════════════════════════════════════════
 
-import { ok } from "@/lib/api-response";
+import { ok } from "@/lib/api/api-response";
 import { listProfiles } from "@/modules/hermes/lib/profiles-repository";
 import { agentExperienceFromPerformance } from "@/lib/stats/agent-experience";
 import { getAgentPerformance } from "@/lib/stats/agent-stats";
-import { DEFAULT_PROFILE_SLUG } from "@/lib/profile-slug";
-import { route } from "@/lib/api-route";
+import { DEFAULT_PROFILE_SLUG } from "@/lib/agents/profile-slug";
+import { route } from "@/lib/api/api-route";
 
 /** What the root agent is called when no profile row supplies a name. */
 const ROOT_AGENT_LABEL = "Bob (local default)";

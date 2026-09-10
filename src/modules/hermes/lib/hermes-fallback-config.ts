@@ -25,10 +25,10 @@
 import { existsSync, readFileSync } from "fs";
 import * as yaml from "js-yaml";
 
-import { dumpYamlConfig } from "@/lib/yaml-config";
+import { dumpYamlConfig } from "@/lib/config/yaml-config";
 import { ensureDir } from "@/lib/fs/fs-helpers";
-import { parseFallbackAgentSettingsFromYaml } from "@/lib/fallback-config-yaml";
-import type { FallbackConfigPutInput } from "@/lib/fallback-config-schema";
+import { parseFallbackAgentSettingsFromYaml } from "@/lib/models/fallback-config-yaml";
+import type { FallbackConfigPutInput } from "@/lib/models/fallback-config-schema";
 import { getActiveHermesPaths } from "./agent-runtime";
 import { loadHermesConfigFromString, type HermesConfig } from "./hermes-config-read";
 import { backupFile, writeHermesConfigFile } from "./hermes-config-write";

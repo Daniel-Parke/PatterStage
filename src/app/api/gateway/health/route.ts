@@ -4,10 +4,10 @@
 // GET /api/gateway/health
 // ═══════════════════════════════════════════════════════════════
 
-import { logApiError } from "@/lib/api-logger";
-import { fetchGateway } from "@/lib/gateway-client";
+import { logApiError } from "@/lib/api/api-logger";
+import { fetchGateway } from "@/lib/models/gateway-client";
 import { getAgentGateway } from "@/lib/runtime/gateway";
-import { ok } from "@/lib/api-response";
+import { ok } from "@/lib/api/api-response";
 
 /**
  * GET /api/gateway/health — Check if the Hermes Gateway is reachable AND

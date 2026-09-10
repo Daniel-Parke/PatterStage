@@ -7,13 +7,13 @@
 
 import type { NextRequest } from "next/server";
 
-import { ok, notFound, conflict } from "@/lib/api-response";
+import { ok, notFound, conflict } from "@/lib/api/api-response";
 import { recordEvent } from "@/lib/analytics/record-event";
 import {
   cancelResearchRun,
   getResearchRun,
 } from "@/lib/laboratory/deep-research/research-repository";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 interface Ctx {
   params: Promise<{ id: string }>;

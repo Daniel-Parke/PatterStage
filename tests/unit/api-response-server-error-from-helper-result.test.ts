@@ -1,7 +1,7 @@
 /** @jest-environment node */
 
 // Tests for the `serverErrorFromHelperResult` factory in
-// `src/lib/api-response.ts`. The factory collapses the
+// `src/lib/api/api-response.ts`. The factory collapses the
 // `if (!result.ok) return serverError(result.error ?? <fallback>)`
 // micro-pattern that 4 sites in the codebase repeat with byte-identical
 // bodies (3 in `src/app/api/cron/hardware/route.ts` and 1 in
@@ -13,7 +13,7 @@
 // is critical — every input shape must produce the same NextResponse
 // the inline form would have.
 
-import { serverErrorFromHelperResult } from "@/lib/api-response";
+import { serverErrorFromHelperResult } from "@/lib/api/api-response";
 
 describe("serverErrorFromHelperResult", () => {
   it("returns a 500 NextResponse with the helper's error string", async () => {

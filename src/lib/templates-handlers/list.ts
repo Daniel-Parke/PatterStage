@@ -9,8 +9,8 @@
 import { readFileSync, readdirSync } from "fs";
 import { NextResponse } from "next/server";
 
-import { serverErrorFromCatch } from "@/lib/api-logger";
-import { listCatalogTemplates } from "@/lib/catalog-template-repository";
+import { serverErrorFromCatch } from "@/lib/api/api-logger";
+import { listCatalogTemplates } from "@/lib/templates/catalog-template-repository";
 import { ensureDb } from "@/lib/db";
 import { resolveTemplateCategoryId } from "@/lib/missions/mission-category-repository";
 

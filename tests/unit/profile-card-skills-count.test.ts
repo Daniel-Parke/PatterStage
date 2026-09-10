@@ -26,13 +26,13 @@
 
 const mockCountSkills = jest.fn<number, []>();
 const mockListSkillKeys = jest.fn<string[], []>();
-jest.mock("@/lib/skills-repository", () => ({
+jest.mock("@/lib/skills/skills-repository", () => ({
   countSkills: () => mockCountSkills(),
   listSkillKeys: () => mockListSkillKeys(),
 }));
 
 const mockGetAgentRoot = jest.fn<{ disabledSkillsJson: string }, []>();
-jest.mock("@/lib/agent-root-repository", () => ({
+jest.mock("@/lib/agents/agent-root-repository", () => ({
   getAgentRoot: () => mockGetAgentRoot(),
 }));
 

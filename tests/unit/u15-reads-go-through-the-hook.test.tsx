@@ -24,10 +24,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 
-jest.mock("@/lib/api-fetch", () => ({ safeApiCall: jest.fn() }));
+jest.mock("@/lib/api/api-fetch", () => ({ safeApiCall: jest.fn() }));
 
 import { apiQueryKey, useApiResource } from "@/hooks/useApiResource";
-import { safeApiCall } from "@/lib/api-fetch";
+import { safeApiCall } from "@/lib/api/api-fetch";
 
 const mockSafeApiCall = safeApiCall as jest.Mock;
 const ROOT = join(__dirname, "..", "..");

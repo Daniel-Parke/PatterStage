@@ -52,22 +52,22 @@ jest.mock("next/server", () => {
   };
 });
 
-jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
+jest.mock("@/lib/api/api-logger", () => ({ logApiError: jest.fn() }));
 
-jest.mock("@/lib/api-auth", () => ({
+jest.mock("@/lib/api/api-auth", () => ({
   // requireNotReadOnly is the honest name of what these routes call now;
   // requireAuth stays mocked for the modules that have not been renamed yet.
   requireNotReadOnly: jest.fn(() => null),
   isReadOnly: jest.fn(() => false),
 }));
-jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
+jest.mock("@/lib/api/audit-log", () => ({ appendAuditLine: jest.fn() }));
 
 jest.mock("@/lib/orchestration", () => ({
   cancelMissionRun: jest.fn(() => Promise.resolve({ ok: true })),
   dispatchMissionRun: jest.fn(() => Promise.resolve({ ok: true })),
 }));
 
-jest.mock("@/lib/schedules-repository", () => ({
+jest.mock("@/lib/schedule/schedules-repository", () => ({
   createSchedule: jest.fn(),
   deleteSchedulesForMission: jest.fn(),
 }));

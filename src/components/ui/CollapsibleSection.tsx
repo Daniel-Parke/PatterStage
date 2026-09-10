@@ -14,7 +14,7 @@
 
 "use client";
 
-import { sectionHeadingClasses } from "@/lib/theme";
+import { sectionHeadingClasses } from "@/lib/ui/theme";
 import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import type { ReactNode } from "react";

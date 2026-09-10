@@ -12,7 +12,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiQueryKey, useApiResource } from "@/hooks/useApiResource";
-import { safeApiCall } from "@/lib/api-fetch";
+import { safeApiCall } from "@/lib/api/api-fetch";
 
 /** How a run ended. "not-started" never reached the script at all. */
 export type ScriptRunOutcome = "succeeded" | "failed" | "not-started";

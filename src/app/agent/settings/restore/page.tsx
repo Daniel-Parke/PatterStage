@@ -29,11 +29,11 @@ import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { useToast } from "@/components/ui/Toast";
 import { Panel } from "@/components/dashboard/Panel";
-import { API_FETCH_BULK_TIMEOUT_MS, apiFetch, messageFromError } from "@/lib/api-fetch";
-import { runWrite } from "@/lib/api-write";
+import { API_FETCH_BULK_TIMEOUT_MS, apiFetch, messageFromError } from "@/lib/api/api-fetch";
+import { runWrite } from "@/lib/api/api-write";
 import { useApiResource } from "@/hooks/useApiResource";
 import { describeRestoreResult } from "@/lib/seed/describe-restore-result";
-import { SYNC_STATUS_LABELS } from "@/lib/status-labels";
+import { SYNC_STATUS_LABELS } from "@/lib/ui/status-labels";
 import { pluralise } from "@/lib/utils";
 import type { AgentProfile } from "@/types/console";
 

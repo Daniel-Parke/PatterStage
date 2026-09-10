@@ -15,7 +15,7 @@
  * — the dashboard's core reads. The mode blanks the UI it exists to enable.
  *
  * WHY IT SURVIVED 33 ROUTES, which is what the structural tests below exist to
- * stop: `tests/helpers/api-test-helpers.ts` mocks `@/lib/api-auth` wholesale
+ * stop: `tests/helpers/api-test-helpers.ts` mocks `@/lib/api/api-auth` wholesale
  * with `isReadOnly: () => false`, and roughly fifteen files repeat that inline.
  * Read-only mode does not exist in the unit suite. A test that asserts a route
  * answers under read-only cannot be written against a mock that has already
@@ -28,7 +28,7 @@ import { join } from "path";
 
 import { NextRequest } from "next/server";
 
-import { SESSION_COOKIE } from "@/lib/auth-token";
+import { SESSION_COOKIE } from "@/lib/api/auth-token";
 
 const TOKEN = "test-token-abcdefghijklmnop";
 const API_ROOT = join(__dirname, "..", "..", "src", "app", "api");
@@ -162,7 +162,7 @@ describe("the read-only guard has left the route handlers", () => {
   });
 
   it("`requireAuth` is no longer exported at all", async () => {
-    const mod = await import("@/lib/api-auth");
+    const mod = await import("@/lib/api/api-auth");
     expect("requireAuth" in mod).toBe(false);
   });
 });
@@ -305,7 +305,7 @@ describe("the read-only refusal says one true thing", () => {
 
   it("no source file still carries the backwards wording", () => {
     const offenders = routeFiles()
-      .concat([join(__dirname, "..", "..", "src", "lib", "api-auth.ts")])
+      .concat([join(__dirname, "..", "..", "src", "lib", "api", "api-auth.ts")])
       .filter((f) => /set PS_READ_ONLY=true to allow writes/.test(readFileSync(f, "utf-8")));
     expect(offenders).toEqual([]);
   });

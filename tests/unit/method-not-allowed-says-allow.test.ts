@@ -7,7 +7,7 @@
 // that reads it can correct itself without a docs lookup.
 
 import { NextRequest } from "next/server";
-import { methodNotAllowed } from "@/lib/api-response";
+import { methodNotAllowed } from "@/lib/api/api-response";
 
 describe("methodNotAllowed", () => {
   it("sets the Allow header from the verbs the route serves", async () => {
@@ -27,11 +27,11 @@ describe("methodNotAllowed", () => {
 });
 
 describe("the skills toggle answers a stub, not a framework 405", () => {
-  jest.mock("@/lib/api-auth", () => ({ requireNotReadOnly: () => null }));
-  jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn(), serverErrorFromCatch: jest.fn() }));
+  jest.mock("@/lib/api/api-auth", () => ({ requireNotReadOnly: () => null }));
+  jest.mock("@/lib/api/api-logger", () => ({ logApiError: jest.fn(), serverErrorFromCatch: jest.fn() }));
   // eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
   jest.mock("@/lib/db", () => require("../helpers/mocks").dbMock({ now: () => "t", uuid: () => "u" }));
-  jest.mock("@/lib/agent-root-repository", () => ({ getAgentRoot: jest.fn() }));
+  jest.mock("@/lib/agents/agent-root-repository", () => ({ getAgentRoot: jest.fn() }));
   jest.mock("@/modules/hermes/lib/profiles-repository", () => ({ getDisabledSkills: jest.fn(), getProfile: jest.fn() }));
   jest.mock("@/modules/hermes/handlers/profile-patch", () => ({ applyProfileOrRootPatchOrFail: jest.fn() }));
 

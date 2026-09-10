@@ -10,7 +10,7 @@ import {
   parseSkillsDisabledFromYaml,
 } from "./skills-config";
 import { normalizePlatformToolsets } from "./toolset-normalize";
-import { dumpYamlConfig } from "@/lib/yaml-config";
+import { dumpYamlConfig } from "@/lib/config/yaml-config";
 import { parseStringArrayOrEmpty } from "@/lib/db/parse-json";
 
 export type PlatformToolsets = Record<string, string[]>;

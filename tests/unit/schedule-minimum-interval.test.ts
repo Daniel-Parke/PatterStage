@@ -25,7 +25,7 @@ const createRun = jest.fn();
 const hasDispatchedMission = jest.fn();
 const dispatchMissionRun = jest.fn();
 
-jest.mock("@/lib/schedules-repository", () => ({
+jest.mock("@/lib/schedule/schedules-repository", () => ({
   listSchedules: (...a: unknown[]) => listSchedules(...a),
   createSchedule: (...a: unknown[]) => createSchedule(...a),
   getSchedule: (...a: unknown[]) => getSchedule(...a),
@@ -35,8 +35,8 @@ jest.mock("@/lib/schedules-repository", () => ({
   getDueSchedules: (...a: unknown[]) => getDueSchedules(...a),
   advanceSchedule: (...a: unknown[]) => advanceSchedule(...a),
 }));
-jest.mock("@/lib/api-auth", () => ({ requireAuth: () => null }));
-jest.mock("@/lib/runs-repository", () => ({ createRun: (...a: unknown[]) => createRun(...a) }));
+jest.mock("@/lib/api/api-auth", () => ({ requireAuth: () => null }));
+jest.mock("@/lib/runs/runs-repository", () => ({ createRun: (...a: unknown[]) => createRun(...a) }));
 jest.mock("@/lib/missions/mission-repository", () => ({
   hasDispatchedMission: (...a: unknown[]) => hasDispatchedMission(...a),
 }));
@@ -47,14 +47,14 @@ jest.mock("@/lib/spend/spend-guard", () => ({ checkUnattendedSpend: () => ({ all
 jest.mock("@/lib/analytics/record-event", () => ({ recordEvent: jest.fn() }));
 // A 500 must be visible as a 500 rather than as a thrown mock, because "the
 // write path answers 500 instead of refusing" is one of the defects here.
-jest.mock("@/lib/api-logger", () => ({
+jest.mock("@/lib/api/api-logger", () => ({
   logApiError: jest.fn(),
   serverErrorFromCatch: () =>
     new Response(JSON.stringify({ error: "server error" }), { status: 500 }),
 }));
 
 import type { NextRequest } from "next/server";
-import type { ScheduleRecord } from "@/lib/schedules-repository";
+import type { ScheduleRecord } from "@/lib/schedule/schedules-repository";
 
 import { POST as createPOST } from "@/app/api/schedules/route";
 import { PATCH as idPATCH } from "@/app/api/schedules/[id]/route";

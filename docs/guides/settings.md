@@ -234,8 +234,8 @@ three stores and which of them a snapshot actually covers.
   the previous version into the same `backups` folder first. `.env` is served
   with its values masked and is never written from the console.
 - The page, its seven groups and the three page links are data in
-  `src/lib/config-sections.ts`; the fields of each section live in
-  `src/lib/config-schema.ts`. The 27 redirects from the old section addresses
+  `src/lib/config/config-sections.ts`; the fields of each section live in
+  `src/lib/config/config-schema.ts`. The 27 redirects from the old section addresses
   and the list the browser tests visit are derived from the same list, so a
   section added to the data appears on the page, in the redirects and in the
   tests with no second edit.

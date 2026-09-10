@@ -2,14 +2,14 @@
  * @jest-environment node
  *
  * Tests for the PatterStage-owned scheduler state repository
- * (src/lib/schedules-repository.ts), driven against a real in-memory
+ * (src/lib/schedule/schedules-repository.ts), driven against a real in-memory
  * SQLite DB seeded with the baseline schema. `@/lib/db` is mocked so the
  * repo's `getDb()` calls hit the test DB; `inTransaction` is stubbed to run
  * the callback directly (the real one closes over the real singleton).
  */
 /* eslint-disable @typescript-eslint/no-require-imports */
 import type Database from "better-sqlite3";
-import type * as SchedulesRepo from "@/lib/schedules-repository";
+import type * as SchedulesRepo from "@/lib/schedule/schedules-repository";
 import { execBaselineSchema } from "../helpers/baseline-db";
 
 function loadRealBetterSqlite3(): typeof import("better-sqlite3") {
@@ -54,7 +54,7 @@ describe("schedules-repository", () => {
         inTransaction: (fn: () => unknown) => fn(),
       };
     });
-    repo = require("@/lib/schedules-repository") as typeof SchedulesRepo;
+    repo = require("@/lib/schedule/schedules-repository") as typeof SchedulesRepo;
   });
 
   afterEach(() => {

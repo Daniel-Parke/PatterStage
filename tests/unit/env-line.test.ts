@@ -1,4 +1,4 @@
-import { parseEnvLine, envLineKey } from "@/lib/env-line";
+import { parseEnvLine, envLineKey } from "@/lib/config/env-line";
 
 describe("parseEnvLine", () => {
   it("returns 'blank' for empty string", () => {

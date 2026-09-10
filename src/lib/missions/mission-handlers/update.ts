@@ -8,8 +8,8 @@
 import { NextResponse } from "next/server";
 
 import { updateMission } from "@/lib/missions/mission-repository";
-import { badRequest, notFound } from "@/lib/api-response";
-import { appendAuditLine } from "@/lib/audit-log";
+import { badRequest, notFound } from "@/lib/api/api-response";
+import { appendAuditLine } from "@/lib/api/audit-log";
 import { buildMissionFieldPatch } from "@/lib/missions/mission-field-updates";
 import { parseMissionBodyFields } from "@/lib/missions/mission-body";
 import { missionTimeoutError } from "@/lib/missions/mission-timeout";

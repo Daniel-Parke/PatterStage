@@ -1,6 +1,6 @@
 /** @jest-environment node */
 
-// Tests for `deepMerge` in `src/lib/deep-merge.ts`. This was originally
+// Tests for `deepMerge` in `src/lib/config/deep-merge.ts`. This was originally
 // a regression-test for a shallow-merge bug in `/api/config` PUT: the
 // pre-fix test inlined a copy of the desired `deepMerge` function in
 // the test file and never exercised the actual route. After the fix
@@ -8,7 +8,7 @@
 // this test imports the real helper so a future refactor that
 // regresses back to a shallow merge fails loudly here.
 
-import { deepMerge } from "@/lib/deep-merge";
+import { deepMerge } from "@/lib/config/deep-merge";
 
 describe("deepMerge — config nested object merge", () => {
   it("preserves sibling keys when updating nested object", () => {

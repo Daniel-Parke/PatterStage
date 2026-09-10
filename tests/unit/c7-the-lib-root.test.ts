@@ -60,10 +60,22 @@ describe("C7 · the lib root", () => {
   });
 
   /**
-   * A move is not a rewrite. Nothing under `@/lib/` may be imported by a path
-   * that no longer exists, and no file may be left importing itself through
-   * its old home; `tsc` proves the first and this proves the second, cheaply,
-   * for the paths a string import would hide from the compiler.
+   * A move is not a rewrite, and this batch found that a file is named FIVE
+   * ways: the alias `@/lib/x`; the path `src/lib/x.ts` in prose or a doc; the
+   * segments `"src", "lib", "x.ts"` a suite passes to join(); the relative
+   * `../../src/lib/x` that scripts/ and tests/e2e/ use because the alias does
+   * not reach them; and the alias escaped inside a regex literal, which is how
+   * a suite matches an import line. The codemod rewrote the first at once and
+   * the rest only after each broke something: four suites read a source by
+   * segments, five scripts imported one relatively, and two matched one by an
+   * escaped regex. `tsc` proves the imports that resolve through the compiler;
+   * this proves the four spellings it cannot see.
+   *
+   * One more shape has no rule here and is worth knowing about: a path
+   * ALTERNATION inside a regex (`@/lib/(models|credentials)-repository`).
+   * Nothing can rewrite that mechanically, and a `not.toMatch` built on one
+   * passes vacuously the moment the path stops existing, which is what
+   * b6-models-diff-route did until C7 rewrote it as the rule it meant.
    */
   it("no source or test names a lib path that moved", () => {
     const gone = Object.keys(
@@ -79,7 +91,16 @@ describe("C7 · the lib root", () => {
         if (!/\.(ts|tsx|mjs|js|md)$/.test(rel)) continue;
         const text = readFileSync(join(ROOT, dir, rel), "utf8");
         for (const name of gone) {
-          if (new RegExp(`@/lib/${name}["'\`]`).test(text) || new RegExp(`src/lib/${name}\\.ts`).test(text)) {
+          const segments = new RegExp(`"src",\\s*"lib",\\s*"${name}\\.ts"`);
+          const relative = new RegExp(`(?:\\.\\./)+src/lib/${name}["'\`]`);
+          const escaped = new RegExp(`@\\\\/lib\\\\/${name}(?![\\w\\\\-])`);
+          if (
+            new RegExp(`@/lib/${name}["'\`]`).test(text) ||
+            new RegExp(`src/lib/${name}\\.ts`).test(text) ||
+            segments.test(text) ||
+            relative.test(text) ||
+            escaped.test(text)
+          ) {
             offenders.push(`${dir}/${rel.replace(/\\/g, "/")}: @/lib/${name}`);
           }
         }

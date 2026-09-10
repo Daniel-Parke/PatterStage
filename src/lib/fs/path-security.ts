@@ -6,9 +6,9 @@ import { relative, resolve } from "path";
 import { homedir } from "os";
 import { NextResponse } from "next/server";
 
-import { PS_DATA_DIR } from "@/lib/paths";
+import { PS_DATA_DIR } from "@/lib/host/paths";
 import { getAgentWorkspace } from "@/lib/runtime/workspace";
-import { badRequest } from "@/lib/api-response";
+import { badRequest } from "@/lib/api/api-response";
 
 const PROFILE_PATTERN = /^\.[a-zA-Z0-9][a-zA-Z0-9_-]{0,126}$|^[a-zA-Z0-9][a-zA-Z0-9_-]{0,127}$/;
 

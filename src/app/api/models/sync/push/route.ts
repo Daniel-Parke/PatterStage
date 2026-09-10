@@ -5,11 +5,11 @@
 // ═══════════════════════════════════════════════════════════════
 import { NextRequest, NextResponse } from "next/server";
 
-import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
-import { serverErrorFromCatch } from "@/lib/api-logger";
+import { parseAndValidateJsonBody } from "@/lib/api/parse-json-body";
+import { serverErrorFromCatch } from "@/lib/api/api-logger";
 import { pushModelToHermes, pushCredential } from "@/modules/hermes/lib/sync-manager";
-import { getModelWithKey } from "@/lib/models-repository";
-import { ok } from "@/lib/api-response";
+import { getModelWithKey } from "@/lib/models/models-repository";
+import { ok } from "@/lib/api/api-response";
 import { answerSingle } from "@/modules/hermes/lib/sync-answer";
 import { z } from "zod";
 

@@ -13,7 +13,7 @@ import ElapsedSince from "@/components/composer/ElapsedSince";
 import ComposerNodeRunDetail from "@/components/composer/ComposerNodeRunDetail";
 import type { ComposerNode, ComposerNodeRun } from "@/lib/composer/schema";
 
-jest.mock("@/lib/api-fetch", () => ({ safeApiCall: jest.fn() }));
+jest.mock("@/lib/api/api-fetch", () => ({ safeApiCall: jest.fn() }));
 
 // The Sheet reads a media query; jsdom has no matchMedia.
 beforeAll(() => {

@@ -17,7 +17,7 @@
 // to do date arithmetic in JSX.
 // ═══════════════════════════════════════════════════════════════
 
-import { missionStatusLabel, type StatusLabel } from "@/lib/status-labels";
+import { missionStatusLabel, type StatusLabel } from "@/lib/ui/status-labels";
 
 /**
  * The slice of a run row the console needs, plus the deadline the
@@ -58,7 +58,7 @@ export type MissionRunTone =
 
 export interface MissionRunState {
   tone: MissionRunTone;
-  /** The mission's word from the one vocabulary (src/lib/status-labels.ts): Draft, Queued, Running, Completed, Failed or Cancelled. */
+  /** The mission's word from the one vocabulary (src/lib/ui/status-labels.ts): Draft, Queued, Running, Completed, Failed or Cancelled. */
   label: StatusLabel;
   /** The duration itself, e.g. "12s", "2h 14m". */
   duration: string;

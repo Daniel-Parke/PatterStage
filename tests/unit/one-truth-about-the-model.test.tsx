@@ -49,8 +49,8 @@ const safeApiCallData = jest.fn();
 // The hook reads through useApiResource since C6 (T-0143), which calls
 // safeApiCall; both doubles are served from the same payload map below.
 const safeApiCall = jest.fn();
-jest.mock("@/lib/api-fetch", () => ({
-  ...(jest.requireActual("@/lib/api-fetch") as Record<string, unknown>),
+jest.mock("@/lib/api/api-fetch", () => ({
+  ...(jest.requireActual("@/lib/api/api-fetch") as Record<string, unknown>),
   safeApiCallData: (...a: unknown[]) => safeApiCallData(...a),
   safeApiCall: (...a: unknown[]) => safeApiCall(...a),
 }));

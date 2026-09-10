@@ -20,8 +20,8 @@ import { RuntimeRequestError, type HealthReport } from "@/lib/runtime/types";
 import { getActiveMemoryProvider, getMemoryProviderType } from "@/lib/memory/memory-providers";
 import type { MemoryHealth } from "@/lib/memory/memory-providers/types";
 import { getSyncScheduler } from "@/lib/sync";
-import { getSystemStat } from "@/lib/system-repository";
-import { messageFromError } from "@/lib/api-fetch";
+import { getSystemStat } from "@/lib/system/system-repository";
+import { messageFromError } from "@/lib/api/api-fetch";
 
 export type SubsystemState = "ok" | "degraded" | "down";
 type SubsystemId = "gateway" | "memory" | "sync" | "config" | "gate";

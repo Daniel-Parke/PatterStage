@@ -19,11 +19,11 @@
 
 import { existsSync, readFileSync, readdirSync, rmSync, statSync } from "fs";
 
-import { messageFromError } from "@/lib/api-fetch";
+import { messageFromError } from "@/lib/api/api-fetch";
 import { getHermesDefaultRoot } from "./profile-paths";
 import { getProfile, listProfiles, upsertProfile } from "./profiles-repository";
-import { parseSkillFrontmatter, upsertSkill } from "@/lib/skills-repository";
-import { isValidProfileSlug } from "@/lib/profile-slug";
+import { parseSkillFrontmatter, upsertSkill } from "@/lib/skills/skills-repository";
+import { isValidProfileSlug } from "@/lib/agents/profile-slug";
 import { pullProfileFromHermes } from "./profile-pull";
 import {
   globalSkillsRoot,

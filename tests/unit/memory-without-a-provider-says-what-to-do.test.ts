@@ -23,7 +23,7 @@ import { NextRequest } from "next/server";
 
 import { UnavailableMemoryProvider } from "@/lib/memory/memory-providers/unavailable-provider";
 
-jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
+jest.mock("@/lib/api/api-logger", () => ({ logApiError: jest.fn() }));
 
 // The whole point of the case: the active provider is "none", so nothing can
 // serve the write. Mocked at the module the transport imports, so the route

@@ -29,10 +29,10 @@ jest.mock("@/lib/orchestration", () => ({
   cancelMissionRun: jest.fn(),
   stopBackendRunForMission: jest.fn(),
 }));
-jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn(), serverErrorFromCatch: jest.fn() }));
+jest.mock("@/lib/api/api-logger", () => ({ logApiError: jest.fn(), serverErrorFromCatch: jest.fn() }));
 
 const mockGetRun = jest.fn((_id: string) => ({ id: "r1", runId: "backend-1", profileName: null }));
-jest.mock("@/lib/runs-repository", () => ({ getRun: (id: string) => mockGetRun(id) }));
+jest.mock("@/lib/runs/runs-repository", () => ({ getRun: (id: string) => mockGetRun(id) }));
 
 let receivedSignal: AbortSignal | undefined;
 jest.mock("@/lib/runtime", () => ({

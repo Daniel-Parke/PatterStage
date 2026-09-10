@@ -1,4 +1,4 @@
-import { readOperatorPrefs } from "@/lib/operator-prefs-repository";
+import { readOperatorPrefs } from "@/lib/system/operator-prefs-repository";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import localFont from "next/font/local";

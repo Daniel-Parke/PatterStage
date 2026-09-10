@@ -7,13 +7,13 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
-import { logApiError } from "@/lib/api-logger";
-import { ok, notFound } from "@/lib/api-response";
-import { parseJsonBody } from "@/lib/parse-json-body";
-import { getConversation, getMessages, getMessageByRunId, updateMessage } from "@/lib/chat-repository";
-import { getRun, updateRun } from "@/lib/runs-repository";
+import { logApiError } from "@/lib/api/api-logger";
+import { ok, notFound } from "@/lib/api/api-response";
+import { parseJsonBody } from "@/lib/api/parse-json-body";
+import { getConversation, getMessages, getMessageByRunId, updateMessage } from "@/lib/chat/chat-repository";
+import { getRun, updateRun } from "@/lib/runs/runs-repository";
 import { runtime } from "@/lib/runtime";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 type Ctx = { params: Promise<{ id: string }> };
 

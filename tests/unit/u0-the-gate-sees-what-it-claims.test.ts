@@ -235,8 +235,8 @@ describe("knip is green: four symbols are used only inside their own file", () =
   it.each([
     ["src/modules/rec-room/handlers/generate.ts", "CHAPTER_STOPPED_STATUS", "const"],
     ["src/lib/models/model-readiness.ts", "ModelReadinessState", "type"],
-    ["src/lib/scripts-manager.ts", "ScriptRunOutcome", "type"],
-    ["src/lib/scripts-manager.ts", "ScriptStartFailure", "type"],
+    ["src/lib/scripts/scripts-manager.ts", "ScriptRunOutcome", "type"],
+    ["src/lib/scripts/scripts-manager.ts", "ScriptStartFailure", "type"],
   ])("%s does not export %s", (path, symbol, kind) => {
     const source = read(path);
     expect(source).not.toContain(`export ${kind} ${symbol}`);

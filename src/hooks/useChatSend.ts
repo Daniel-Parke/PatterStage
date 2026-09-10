@@ -32,7 +32,7 @@ import {
   resolveApprovalApi,
   toApiMessages,
   streamChatResponse,
-} from "@/lib/chat-utils";
+} from "@/lib/chat/chat-utils";
 import { localMessage, type PendingApproval } from "@/hooks/chat-local-message";
 
 type ToastFn = (message: string, type?: ToastType) => void;

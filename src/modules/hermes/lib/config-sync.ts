@@ -28,7 +28,7 @@
 import { existsSync, readFileSync } from "fs";
 import * as yaml from "js-yaml";
 
-import { dumpYamlConfig } from "@/lib/yaml-config";
+import { dumpYamlConfig } from "@/lib/config/yaml-config";
 import { getActiveHermesPaths } from "./agent-runtime";
 import { AUXILIARY_TASK_TYPES, type TaskType } from "@/lib/models/task-types";
 
@@ -38,9 +38,9 @@ import { AUXILIARY_TASK_TYPES, type TaskType } from "@/lib/models/task-types";
 export interface SyncDefaultsOptions {
   cleared?: TaskType[];
 }
-import { updateAgentRoot } from "@/lib/agent-root-repository";
-import { getModelDefaults, getModel } from "@/lib/models-repository";
-import { toError } from "@/lib/api-fetch";
+import { updateAgentRoot } from "@/lib/agents/agent-root-repository";
+import { getModelDefaults, getModel } from "@/lib/models/models-repository";
+import { toError } from "@/lib/api/api-fetch";
 import { ensureDir } from "@/lib/fs/fs-helpers";
 import {
   loadHermesConfigFromString,

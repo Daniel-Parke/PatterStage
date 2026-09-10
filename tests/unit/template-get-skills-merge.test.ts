@@ -16,7 +16,7 @@ jest.mock("fs", () => ({
 }));
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
-jest.mock("@/lib/paths", () => require("../helpers/mocks").pathsMock({ PATHS: { templates: "/tmp/test-templates" } }));
+jest.mock("@/lib/host/paths", () => require("../helpers/mocks").pathsMock({ PATHS: { templates: "/tmp/test-templates" } }));
 
 jest.mock("@/lib/schema", () => ({
   parseTemplatePackManifestV1: jest.fn(),

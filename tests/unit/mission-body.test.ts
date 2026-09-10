@@ -1,10 +1,10 @@
 /** @jest-environment node */
 
-jest.mock("@/lib/models-repository", () => ({
+jest.mock("@/lib/models/models-repository", () => ({
   findModelByModelId: jest.fn(),
 }));
 
-import { findModelByModelId } from "@/lib/models-repository";
+import { findModelByModelId } from "@/lib/models/models-repository";
 import { parseMissionBodyFields } from "@/lib/missions/mission-body";
 
 const mockFindByModelId = findModelByModelId as jest.Mock;

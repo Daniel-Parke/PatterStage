@@ -10,10 +10,10 @@
 //        config at /config.
 import { NextRequest, NextResponse } from "next/server";
 
-import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
-import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
-import { toError } from "@/lib/api-fetch";
-import { appendAuditLine } from "@/lib/audit-log";
+import { parseAndValidateJsonBody } from "@/lib/api/parse-json-body";
+import { logApiError, serverErrorFromCatch } from "@/lib/api/api-logger";
+import { toError } from "@/lib/api/api-fetch";
+import { appendAuditLine } from "@/lib/api/audit-log";
 import {
   addFallbackEntry,
   getFallbackConfig,
@@ -22,13 +22,13 @@ import {
   toggleFallbackEntry,
   updateFallbackEntry,
   updateFallbackConfigBatch,
-} from "@/lib/fallbacks-repository";
-import { fallbackActionSchema } from "@/lib/fallback-config-schema";
+} from "@/lib/models/fallbacks-repository";
+import { fallbackActionSchema } from "@/lib/models/fallback-config-schema";
 import { commitFallbackChange, syncEnabledFallbackChainToHermes } from "@/modules/hermes/lib/fallback-sync";
 import { importFallbacksFromHermesYaml } from "@/modules/hermes/lib/fallback-import";
 import { inTransaction } from "@/lib/db";
-import { created, notFound, ok, serverError } from "@/lib/api-response";
-import { route } from "@/lib/api-route";
+import { created, notFound, ok, serverError } from "@/lib/api/api-response";
+import { route } from "@/lib/api/api-route";
 
 export const GET = route("GET /api/models/fallbacks", "reading fallback chain", "Failed to read fallback chain", async (_request: NextRequest) => {
   return ok({ entries: listFallbackChain(), config: getFallbackConfig() });

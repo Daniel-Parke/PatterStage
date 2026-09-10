@@ -52,8 +52,8 @@ const mockUseConfig = jest.fn();
 jest.mock("@/hooks/useConfig", () => ({ useConfig: () => mockUseConfig() }));
 
 const mockApiFetch = jest.fn();
-jest.mock("@/lib/api-fetch", () => ({
-  ...(jest.requireActual("@/lib/api-fetch") as Record<string, unknown>),
+jest.mock("@/lib/api/api-fetch", () => ({
+  ...(jest.requireActual("@/lib/api/api-fetch") as Record<string, unknown>),
   apiFetch: (...args: unknown[]) => mockApiFetch(...args),
   // The file sections read through useApiResource since C6 (T-0143), which
   // calls safeApiCall; it answers from the same double.

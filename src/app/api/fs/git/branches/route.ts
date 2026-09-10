@@ -4,10 +4,10 @@
 
 import { NextRequest } from "next/server";
 
-import { ok, badRequest } from "@/lib/api-response";
+import { ok, badRequest } from "@/lib/api/api-response";
 import { resolveAllowedWorkspacePath } from "@/lib/fs/path-security";
 import { readGitBranchMetadataForWorkspacePath } from "@/lib/git/git-workspace-branches";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 export const GET = route("GET /api/fs/git/branches", "git info", "Failed to read git branches", async (request: NextRequest) => {
   const pathParam = request.nextUrl.searchParams.get("path")?.trim();

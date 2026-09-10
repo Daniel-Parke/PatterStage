@@ -73,7 +73,7 @@ function flagValue(argv: string[], name: string): string | null {
 async function main(): Promise<void> {
   loadEnvLocal();
 
-  const { getPsDataDir, getDbPath } = await import("../../src/lib/paths");
+  const { getPsDataDir, getDbPath } = await import("../../src/lib/host/paths");
   const dataDir = getPsDataDir();
   process.env.PS_DATA_DIR = dataDir;
   console.log(`Database: ${getDbPath(dataDir)}`);

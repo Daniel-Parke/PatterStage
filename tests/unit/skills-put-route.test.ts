@@ -15,17 +15,17 @@ jest.mock("@/modules/hermes/lib/agent-runtime", () => ({
   getActiveHermesHome: jest.fn(() => "/tmp/test-hermes"),
 }));
 
-jest.mock("@/lib/api-logger", () => ({
+jest.mock("@/lib/api/api-logger", () => ({
   logApiError: jest.fn(),
 }));
 
-jest.mock("@/lib/audit-log", () => ({
+jest.mock("@/lib/api/audit-log", () => ({
   appendAuditLine: jest.fn(),
 }));
 
 const mockRequireAuth = jest.fn((..._a: unknown[]): NextResponse | null => null);
 
-jest.mock("@/lib/api-auth", () => ({
+jest.mock("@/lib/api/api-auth", () => ({
   requireNotReadOnly: jest.fn(() => null),
   isReadOnly: jest.fn(() => false),
 }));
@@ -34,7 +34,7 @@ jest.mock("@/lib/api-auth", () => ({
 jest.mock("@/lib/db", () => require("../helpers/mocks").dbMock());
 
 const mockUpsertSkill = jest.fn();
-jest.mock("@/lib/skills-repository", () => ({
+jest.mock("@/lib/skills/skills-repository", () => ({
   parseSkillFrontmatter: jest.fn(() => ({
     name: "demo",
     description: "Demo skill",

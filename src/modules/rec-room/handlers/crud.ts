@@ -5,7 +5,7 @@
 
 import { NextResponse } from "next/server";
 
-import { callLLM } from "@/lib/llm";
+import { callLLM } from "@/lib/models/llm";
 import { listStories, getStory, updateStory, deleteStory } from "@/modules/rec-room/lib/story-repository";
 
 import {

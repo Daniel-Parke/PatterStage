@@ -82,7 +82,7 @@ describe("defaultLlm stops discarding what callLLM reported", () => {
   // and fakes only the HTTP response.
   it("passes usage through", async () => {
     jest.resetModules();
-    jest.doMock("@/lib/llm", () => ({
+    jest.doMock("@/lib/models/llm", () => ({
       callLLM: async () => ({
         content: "hi",
         model: "m",
@@ -92,7 +92,7 @@ describe("defaultLlm stops discarding what callLLM reported", () => {
     const { defaultLlm } = await import("@/lib/laboratory/deep-research/engine");
     const res = await defaultLlm([{ role: "user", content: "q" }], {});
     expect(res.usage).toEqual({ promptTokens: 2, completionTokens: 3, totalTokens: 5 });
-    jest.dontMock("@/lib/llm");
+    jest.dontMock("@/lib/models/llm");
     jest.resetModules();
   });
 });

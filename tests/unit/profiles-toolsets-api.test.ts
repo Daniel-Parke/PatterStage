@@ -1,9 +1,9 @@
 /** @jest-environment node */
 
-jest.mock("@/lib/api-auth", () => ({
+jest.mock("@/lib/api/api-auth", () => ({
 }));
 
-jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
+jest.mock("@/lib/api/api-logger", () => ({ logApiError: jest.fn() }));
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
 jest.mock("@/lib/db", () => require("../helpers/mocks").dbMock());
 
@@ -25,7 +25,7 @@ jest.mock("@/modules/hermes/lib/profiles-repository", () => ({
   updateProfileContent: (...args: unknown[]) => mockUpdateProfile(...args),
 }));
 
-jest.mock("@/lib/agent-root-repository", () => ({
+jest.mock("@/lib/agents/agent-root-repository", () => ({
   updateAgentRoot: (...args: unknown[]) => mockUpdateRoot(...args),
 }));
 

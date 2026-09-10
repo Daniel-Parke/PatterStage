@@ -1,8 +1,8 @@
 import { NextRequest } from "next/server";
 
-import { badRequest } from "@/lib/api-response";
+import { badRequest } from "@/lib/api/api-response";
 import { ensureDb } from "@/lib/db";
-import { parseOptionalJsonBody } from "@/lib/parse-optional-json-body";
+import { parseOptionalJsonBody } from "@/lib/api/parse-optional-json-body";
 import { booleanFlag, stringFlag } from "@/lib/parse-bag-flags";
 import { listProfiles } from "@/modules/hermes/lib/profiles-repository";
 import {
@@ -18,7 +18,7 @@ import {
 import { answerBatch, answerSingle } from "@/modules/hermes/lib/sync-answer";
 import type { SyncResult } from "@/modules/hermes/lib/profile-sync-shared";
 import { recordEvent } from "@/lib/analytics/record-event";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 // Every branch answers through sync-answer.ts. This route used to return
 // `ok({ success: result.success, result })`, a 200 for a pull that did not

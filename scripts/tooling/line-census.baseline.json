@@ -1,8 +1,8 @@
 {
   "measuredAt": "2026-09-10",
   "counts": {
-    "srcLines": 100872,
-    "testLines": 121422,
+    "srcLines": 100890,
+    "testLines": 121538,
     "srcRepeatedWindowLines": 1190,
     "testRepeatedWindowLines": 4786,
     "routesWithTryCatch": 13,
@@ -10,8 +10,8 @@
     "writeHooksWithoutMutation": 0,
     "repeatedTypeShapeFiles": 2,
     "oneImporterComponents": 103,
-    "libRootFiles": 71,
-    "commentEssays": 8,
+    "libRootFiles": 6,
+    "commentEssays": 9,
     "suitesMockingDbInline": 14
   },
   "allowed": [
@@ -114,6 +114,21 @@
       "measuredAt": "2026-09-10",
       "rise": "testRepeatedWindowLines rose from 4783 to 4786",
       "reason": "C6 (T-0143): the baseline was cut before gate 8 caught two targets this batch introduced; src rises by the skip link's focus-only sizing and the rail chip's floor with the comments that say why, and tests by the oracle case that holds the skip link to the button's scale."
+    },
+    {
+      "measuredAt": "2026-09-10",
+      "rise": "srcLines rose from 100872 to 100890",
+      "reason": "C7 (T-0144): libRootFiles 71 to 6. src rises by the headers the six remaining root files now carry, each saying why it belongs to no domain, and one of them tips a file over the essay predicate; tests rise by the C7 oracle, which reads the five spellings of a lib path a codemod has to rewrite."
+    },
+    {
+      "measuredAt": "2026-09-10",
+      "rise": "testLines rose from 121422 to 121538",
+      "reason": "C7 (T-0144): libRootFiles 71 to 6. src rises by the headers the six remaining root files now carry, each saying why it belongs to no domain, and one of them tips a file over the essay predicate; tests rise by the C7 oracle, which reads the five spellings of a lib path a codemod has to rewrite."
+    },
+    {
+      "measuredAt": "2026-09-10",
+      "rise": "commentEssays rose from 8 to 9",
+      "reason": "C7 (T-0144): libRootFiles 71 to 6. src rises by the headers the six remaining root files now carry, each saying why it belongs to no domain, and one of them tips a file over the essay predicate; tests rise by the C7 oracle, which reads the five spellings of a lib path a codemod has to rewrite."
     }
   ]
 }

@@ -4,7 +4,7 @@
 
 import { ChevronDown } from "lucide-react";
 import type { AccentColor } from "@/types/console";
-import { focusColorMap } from "@/lib/theme";
+import { focusColorMap } from "@/lib/ui/theme";
 
 interface SelectOption {
   value: string;

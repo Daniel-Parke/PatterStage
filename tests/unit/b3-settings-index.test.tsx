@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 /**
  * B3 (T-0097), D79: the Settings index derives its grid from the one section
- * catalogue (src/lib/config-sections.ts), so it can no longer print a count
+ * catalogue (src/lib/config/config-sections.ts), so it can no longer print a count
  * that contradicts what it renders or omit two sections; it carries cards for
  * Models, Restore and System; and it gains a search across every field.
  */
@@ -10,7 +10,7 @@ import { fireEvent, screen, within } from "@testing-library/react";
 import { renderWithQuery } from "../helpers/render-with-query";
 import { pageSubtitle } from "../helpers/page-subtitle";
 
-import { CONFIG_SECTIONS } from "@/lib/config-schema";
+import { CONFIG_SECTIONS } from "@/lib/config/config-schema";
 
 jest.mock("next/navigation", () => ({
   usePathname: () => "/agent/settings",
@@ -20,8 +20,8 @@ jest.mock("next/link", () => require("../helpers/mocks").nextLinkMock());
 jest.mock("@/hooks/useConfig", () => ({ useConfig: () => ({ data: { agent: { max_turns: 40 } }, isLoading: false, error: null, refetch: jest.fn() }) }));
 // The two file sections read through apiFetch now that they sit on the page
 // beside the yaml ones (U11, T-0125).
-jest.mock("@/lib/api-fetch", () => ({
-  ...(jest.requireActual("@/lib/api-fetch") as Record<string, unknown>),
+jest.mock("@/lib/api/api-fetch", () => ({
+  ...(jest.requireActual("@/lib/api/api-fetch") as Record<string, unknown>),
   apiFetch: async () => ({ data: { content: "" } }),
   // The file sections read through useApiResource since C6 (T-0143), which
   // calls safeApiCall: the same empty file, in the envelope it returns.

@@ -12,7 +12,7 @@ import { AlertTriangle, X } from "lucide-react";
 
 import Button from "@/components/ui/Button";
 import IconButton from "@/components/ui/IconButton";
-import { statusToneClasses } from "@/lib/theme";
+import { statusToneClasses } from "@/lib/ui/theme";
 
 const FAIL = statusToneClasses.fail;
 

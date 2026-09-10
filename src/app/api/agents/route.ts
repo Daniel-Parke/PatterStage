@@ -7,9 +7,9 @@
 
 import { readAgentProcesses } from "@/lib/sync/sync-repository";
 import { ensureSyncLayer } from "@/lib/sync";
-import { ok } from "@/lib/api-response";
+import { ok } from "@/lib/api/api-response";
 import type { HermesProcess } from "@/types/console";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 export const GET = route("GET /api/agents", "querying Hermes processes", "Failed to query Hermes processes", async () => {
   // Ensure sync layer is active so process data is fresh

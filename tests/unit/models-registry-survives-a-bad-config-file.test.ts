@@ -50,7 +50,7 @@ jest.mock("@/modules/hermes/lib/agent-runtime", () => ({
 
 // The meta-keyed cache is not what is under test: keep it permanently empty so
 // every read takes the filesystem branch.
-jest.mock("@/lib/system-repository", () => ({
+jest.mock("@/lib/system/system-repository", () => ({
   getMetaPair: () => [],
   setMultipleStats: () => undefined,
   deleteMetaPair: () => undefined,
@@ -65,7 +65,7 @@ describe("config-cache reports an unreadable file instead of throwing", () => {
   // at its boundary. Its own imports (workspace paths, the meta cache) still
   // resolve through the mocks above, which is the point.
   const realConfigCache = () =>
-    jest.requireActual("@/lib/config-cache") as typeof import("@/lib/config-cache");
+    jest.requireActual("@/lib/config/config-cache") as typeof import("@/lib/config/config-cache");
 
   it("returns an error result for a config.yaml it cannot read", () => {
     activeConfigPath.value = unreadableConfigPath;
@@ -107,7 +107,7 @@ const configResult: {
   throws: null,
 };
 
-jest.mock("@/lib/config-cache", () => ({
+jest.mock("@/lib/config/config-cache", () => ({
   readCachedConfigResult: () => {
     if (configResult.throws) throw configResult.throws;
     return configResult.value;
@@ -132,8 +132,8 @@ jest.mock("next/server", () => ({
 
 // Keep serverErrorFromCatch REAL: a 500 that this file expects not to happen
 // must be a 500 the route really produces, not a mock artefact.
-jest.mock("@/lib/api-logger", () => {
-  const actual = jest.requireActual("@/lib/api-logger") as Record<string, unknown>;
+jest.mock("@/lib/api/api-logger", () => {
+  const actual = jest.requireActual("@/lib/api/api-logger") as Record<string, unknown>;
   return { ...actual, logApiError: jest.fn() };
 });
 
@@ -152,13 +152,13 @@ const DEFAULTS = {
   delegation: null,
 };
 
-jest.mock("@/lib/models-repository", () => ({
+jest.mock("@/lib/models/models-repository", () => ({
   getModelDefaults: () => DEFAULTS,
   getDefaultModel: () => ({ id: "m_1", name: "gpt-4o", modelId: "gpt-4o", provider: "openai" }),
   setDefaultModel: jest.fn(),
 }));
 
-jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
+jest.mock("@/lib/api/audit-log", () => ({ appendAuditLine: jest.fn() }));
 jest.mock("@/lib/analytics/record-event", () => ({ recordEvent: jest.fn() }));
 jest.mock("@/modules/hermes/lib/config-sync", () => ({
   finalizeRootConfigOnDisk: jest.fn(() => ({

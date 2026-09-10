@@ -8,11 +8,11 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
-import { ok, badRequest, notFound, serviceUnavailable, methodNotAllowed } from "@/lib/api-response";
-import { parseJsonBody } from "@/lib/parse-json-body";
-import { getConversation } from "@/lib/chat-repository";
+import { ok, badRequest, notFound, serviceUnavailable, methodNotAllowed } from "@/lib/api/api-response";
+import { parseJsonBody } from "@/lib/api/parse-json-body";
+import { getConversation } from "@/lib/chat/chat-repository";
 import { dispatchChatTurn, appendFastTurn } from "@/lib/orchestration/chat-dispatch";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 type Ctx = { params: Promise<{ id: string }> };
 

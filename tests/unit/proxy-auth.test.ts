@@ -16,7 +16,7 @@ import { join } from "path";
 
 import { NextRequest } from "next/server";
 
-import { SESSION_COOKIE, TOKEN_QUERY_PARAM } from "@/lib/auth-token";
+import { SESSION_COOKIE, TOKEN_QUERY_PARAM } from "@/lib/api/auth-token";
 
 const TOKEN = "test-token-abcdefghijklmnop";
 

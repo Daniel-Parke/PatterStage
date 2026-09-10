@@ -28,8 +28,8 @@ import { Select } from "@/components/ui/Input";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import { useToast } from "@/components/ui/Toast";
 import { useApiResource } from "@/hooks/useApiResource";
-import { safeApiCall, type SafeApiCallResult } from "@/lib/api-fetch";
-import { runWrite } from "@/lib/api-write";
+import { safeApiCall, type SafeApiCallResult } from "@/lib/api/api-fetch";
+import { runWrite } from "@/lib/api/api-write";
 import ConceptHint from "@/components/help/ConceptHint";
 
 import { healthBannerMessage } from "./hindsight/health-message";

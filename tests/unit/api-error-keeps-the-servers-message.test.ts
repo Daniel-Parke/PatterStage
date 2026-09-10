@@ -20,8 +20,8 @@
  * top-level `error` too): see memory-without-a-provider-says-what-to-do.test.ts.
  */
 
-import { apiFetch, safeApiCall } from "@/lib/api-fetch";
-import { runWrite } from "@/lib/api-write";
+import { apiFetch, safeApiCall } from "@/lib/api/api-fetch";
+import { runWrite } from "@/lib/api/api-write";
 
 const originalFetch = globalThis.fetch;
 

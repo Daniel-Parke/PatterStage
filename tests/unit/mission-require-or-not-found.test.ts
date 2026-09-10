@@ -49,14 +49,14 @@ jest.mock("next/server", () => {
   };
 });
 
-jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
-jest.mock("@/lib/api-auth", () => ({
+jest.mock("@/lib/api/api-logger", () => ({ logApiError: jest.fn() }));
+jest.mock("@/lib/api/api-auth", () => ({
   // requireNotReadOnly is the honest name of what these routes call now;
   // requireAuth stays mocked for the modules that have not been renamed yet.
   requireNotReadOnly: jest.fn(() => null),
   isReadOnly: jest.fn(() => false),
 }));
-jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
+jest.mock("@/lib/api/audit-log", () => ({ appendAuditLine: jest.fn() }));
 
 const mockGetMission = jest.fn();
 jest.mock("@/lib/missions/mission-repository", () => ({
@@ -89,7 +89,7 @@ jest.mock("@/lib/orchestration", () => ({
 }));
 
 // The seams the shared cancel finaliser touches (T-0070).
-jest.mock("@/lib/runs-repository", () => ({
+jest.mock("@/lib/runs/runs-repository", () => ({
   getLatestRunForMission: jest.fn(() => null),
   updateRun: jest.fn(),
 }));

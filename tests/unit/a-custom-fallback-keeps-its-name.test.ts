@@ -39,10 +39,10 @@ jest.mock("@/modules/hermes/lib/hermes-fallback-config", () => ({
     return { backupPath: null, configPath: "/tmp/config.yaml", hermesHome: "/tmp" };
   },
 }));
-jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
+jest.mock("@/lib/api/audit-log", () => ({ appendAuditLine: jest.fn() }));
 
-import { addFallbackEntry, getFallbackEntry, listFallbackChain } from "@/lib/fallbacks-repository";
-import { createModel } from "@/lib/models-repository";
+import { addFallbackEntry, getFallbackEntry, listFallbackChain } from "@/lib/models/fallbacks-repository";
+import { createModel } from "@/lib/models/models-repository";
 import { syncEnabledFallbackChainToHermes } from "@/modules/hermes/lib/fallback-sync";
 
 interface Applier {

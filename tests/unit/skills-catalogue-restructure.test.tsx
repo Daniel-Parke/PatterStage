@@ -57,7 +57,7 @@ jest.mock("@/hooks/useProfiles", () => ({
 }));
 
 const apiFetch = jest.fn();
-jest.mock("@/lib/api-fetch", () => ({
+jest.mock("@/lib/api/api-fetch", () => ({
   __esModule: true,
   apiFetch: (...args: unknown[]) => apiFetch(...args),
   // The page reads through useApiResource, which calls safeApiCall; routed
@@ -71,7 +71,7 @@ jest.mock("@/lib/api-fetch", () => ({
 }));
 
 import SkillsPage from "@/app/agent/skills/page";
-import { pageSlice } from "@/lib/skills-page-helpers";
+import { pageSlice } from "@/lib/skills/skills-page-helpers";
 import type { Skill } from "@/types/console";
 
 /**

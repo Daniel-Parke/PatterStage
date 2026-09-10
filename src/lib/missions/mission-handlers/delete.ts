@@ -9,9 +9,9 @@
 import { NextResponse } from "next/server";
 
 import { deleteMission } from "@/lib/missions/mission-repository";
-import { ok, notFound } from "@/lib/api-response";
-import { appendAuditLine } from "@/lib/audit-log";
-import { deleteSchedulesForMission } from "@/lib/schedules-repository";
+import { ok, notFound } from "@/lib/api/api-response";
+import { appendAuditLine } from "@/lib/api/audit-log";
+import { deleteSchedulesForMission } from "@/lib/schedule/schedules-repository";
 
 import { requireMissionOrNotFound } from "./shared";
 

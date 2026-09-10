@@ -28,15 +28,15 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useToast } from "@/components/ui/Toast";
 import { useApiResource } from "@/hooks/useApiResource";
 import { useConfig } from "@/hooks/useConfig";
-import { apiFetch, setErrorFromCaught } from "@/lib/api-fetch";
-import { runWrite } from "@/lib/api-write";
+import { apiFetch, setErrorFromCaught } from "@/lib/api/api-fetch";
+import { runWrite } from "@/lib/api/api-write";
 import {
   CONFIG_SECTIONS,
   fileKeyForFilePath,
   validateSectionValues,
   type FieldProblem,
   type SectionDef,
-} from "@/lib/config-schema";
+} from "@/lib/config/config-schema";
 
 export type SaveStatus = "idle" | "saving" | "saved" | "error";
 type Values = Record<string, unknown>;

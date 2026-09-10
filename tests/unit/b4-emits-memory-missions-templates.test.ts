@@ -60,7 +60,7 @@ jest.mock("fs", () => ({
   rmSync: jest.fn(),
 }));
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
-jest.mock("@/lib/paths", () => require("../helpers/mocks").pathsMock({
+jest.mock("@/lib/host/paths", () => require("../helpers/mocks").pathsMock({
   PATHS: { templates: "/tmp/test-templates" },
   getPsDataDir: () => "/tmp/ch-data",
   readEnv: (...keys: string[]) => {
@@ -84,26 +84,26 @@ jest.mock("@/lib/missions/mission-repository", () => ({
   getMission: (...a: unknown[]) => mockGetMission(...a),
   updateMission: (...a: unknown[]) => mockUpdateMission(...a),
 }));
-jest.mock("@/lib/runs-repository", () => ({
+jest.mock("@/lib/runs/runs-repository", () => ({
   getLatestRunForMission: jest.fn(() => null),
   updateRun: jest.fn(),
 }));
 jest.mock("@/lib/sessions/session-repository", () => ({
   closeSessionForMission: jest.fn(),
 }));
-jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
+jest.mock("@/lib/api/audit-log", () => ({ appendAuditLine: jest.fn() }));
 jest.mock("@/lib/orchestration", () => ({
   stopBackendRunForMission: jest.fn(() => Promise.resolve()),
 }));
 const mockRequireNotReadOnly = jest.fn();
-jest.mock("@/lib/api-auth", () => ({
+jest.mock("@/lib/api/api-auth", () => ({
   requireNotReadOnly: (...a: unknown[]) => mockRequireNotReadOnly(...a),
   isReadOnly: () => false,
 }));
 
 // Log-and-500 shim kept honest (a real 500 NextResponse), minus the console
 // line every negative below would otherwise print.
-jest.mock("@/lib/api-logger", () => {
+jest.mock("@/lib/api/api-logger", () => {
   const { NextResponse: NR } = jest.requireActual("next/server") as typeof import("next/server");
   return {
     logApiError: jest.fn(),

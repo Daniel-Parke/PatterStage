@@ -5,14 +5,14 @@
 // added. Guard the whole body. And action:update was a mass-assignment hole:
 // any column, including status and storyArc, from any client.
 
-jest.mock("@/lib/llm", () => ({
+jest.mock("@/lib/models/llm", () => ({
   callLLM: jest.fn(async () => ({
     content: "===ARC===\n{}\n===CHAPTER 1===\n" + "word ".repeat(500),
   })),
 }));
 jest.mock("@/modules/rec-room/lib/prompts", () => ({ getStoryPrompt: () => "sys" }));
 jest.mock("@/lib/analytics/record-event", () => ({ recordEvent: jest.fn() }));
-jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn(), serverErrorFromCatch: jest.fn() }));
+jest.mock("@/lib/api/api-logger", () => ({ logApiError: jest.fn(), serverErrorFromCatch: jest.fn() }));
 
 const mockCreateStory = jest.fn();
 const mockUpdateStory = jest.fn();

@@ -4,8 +4,8 @@
 
 import { NextResponse } from "next/server";
 
-import { notFound, serverErrorFromHelperResult } from "@/lib/api-response";
-import { updateAgentRoot, type AgentRootPatch } from "@/lib/agent-root-repository";
+import { notFound, serverErrorFromHelperResult } from "@/lib/api/api-response";
+import { updateAgentRoot, type AgentRootPatch } from "@/lib/agents/agent-root-repository";
 import { getProfile, updateProfileContent } from "../lib/profiles-repository";
 import { pushProfileToHermes, pushRootToHermes } from "../lib/profile-push";
 

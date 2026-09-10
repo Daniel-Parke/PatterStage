@@ -30,7 +30,7 @@
 import { render, screen } from "@testing-library/react";
 
 import * as missionBoard from "@/lib/missions/mission-board";
-import * as statusLabels from "@/lib/status-labels";
+import * as statusLabels from "@/lib/ui/status-labels";
 import type { MissionRow } from "@/hooks/missions-page-types";
 import type { MissionsPageViewModel } from "@/hooks/useMissionsPage";
 import { missionsViewModel } from "../helpers/fixtures";

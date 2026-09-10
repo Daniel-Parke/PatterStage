@@ -38,7 +38,7 @@
 // column would publish a process-local judgement as durable operator-facing
 // truth, and nothing renders it.
 
-jest.mock("@/lib/runs-repository", () => ({
+jest.mock("@/lib/runs/runs-repository", () => ({
   listActiveRuns: jest.fn(),
   updateRun: jest.fn(),
   getRun: jest.fn(),
@@ -66,7 +66,7 @@ import {
   resetNotFoundTracker,
   RUN_NOT_FOUND_GRACE_MS,
 } from "@/lib/orchestration/run-reconcile";
-import { listActiveRuns, updateRun, getRun as getLocalRun } from "@/lib/runs-repository";
+import { listActiveRuns, updateRun, getRun as getLocalRun } from "@/lib/runs/runs-repository";
 import { getMission } from "@/lib/missions/mission-repository";
 import { runtime } from "@/lib/runtime";
 import { RuntimeRequestError } from "@/lib/runtime/types";

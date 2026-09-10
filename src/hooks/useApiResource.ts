@@ -27,7 +27,7 @@
 
 import { useQuery, type QueryKey } from "@tanstack/react-query";
 
-import { safeApiCall } from "@/lib/api-fetch";
+import { safeApiCall } from "@/lib/api/api-fetch";
 
 export interface UseApiResourceOptions<T, M = unknown> {
   /** Pick the payload out of the envelope's `data`. `undefined` means "not there". */

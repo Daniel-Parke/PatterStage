@@ -37,7 +37,7 @@ import { readFileSync } from "fs";
 import { join } from "path";
 
 import ModelsSectionHeader from "@/components/models/ModelsSectionHeader";
-import { sectionHeadingClasses } from "@/lib/theme";
+import { sectionHeadingClasses } from "@/lib/ui/theme";
 
 const REPO_ROOT = join(__dirname, "..", "..");
 

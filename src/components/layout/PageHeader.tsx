@@ -15,7 +15,7 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import type { AccentColor } from "@/types/console";
-import { iconColorMap } from "@/lib/theme";
+import { iconColorMap } from "@/lib/ui/theme";
 import { StatusDot } from "@/components/ui/Card";
 import PageTitle, { useRegistryTitle } from "@/components/layout/PageTitle";
 import HelpLink from "@/components/help/HelpLink";

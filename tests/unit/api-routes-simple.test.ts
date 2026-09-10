@@ -33,11 +33,11 @@ jest.mock("@/lib/sync", () => ({
   runFullSync: jest.fn(),
 }));
 
-jest.mock("@/lib/skills-repository", () => ({
+jest.mock("@/lib/skills/skills-repository", () => ({
   countSkills: jest.fn(() => 0),
 }));
 
-jest.mock("@/lib/system-repository", () => ({
+jest.mock("@/lib/system/system-repository", () => ({
   getSystemStat: jest.fn(() => null),
   getSystemStatNumber: jest.fn(() => 0),
   getMultipleStats: jest.fn(() => ({})),
@@ -68,7 +68,7 @@ jest.mock("@/modules/hermes/lib/agent-runtime", () => ({
 }));
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
-jest.mock("@/lib/paths", () => require("../helpers/mocks").pathsMock({
+jest.mock("@/lib/host/paths", () => require("../helpers/mocks").pathsMock({
   getPsDataDir: () => "/tmp/ch-data",
   // The real reader, not a stub: GET /api/sessions now consults PS_READ_ONLY
   // before it syncs (T-0095, D124), and a paths mock without readEnv turned
@@ -82,7 +82,7 @@ jest.mock("@/lib/paths", () => require("../helpers/mocks").pathsMock({
   },
 }));
 
-jest.mock("@/lib/api-logger", () => ({
+jest.mock("@/lib/api/api-logger", () => ({
   logApiError: jest.fn(),
   // The monitor route's catch block calls `serverErrorFromCatch(...)` and
   // expects a NextResponse to be returned. The mock must mirror that
@@ -119,7 +119,7 @@ describe("GET /api/status", () => {
   beforeEach(() => jest.clearAllMocks());
 
   it("returns system status", async () => {
-    const { getSystemStat } = await import("@/lib/system-repository");
+    const { getSystemStat } = await import("@/lib/system/system-repository");
     (getSystemStat as jest.Mock).mockImplementation((key: string) => {
       if (key === "config.soul_present") return "true";
       if (key === "config.present") return "true";
@@ -133,7 +133,7 @@ describe("GET /api/status", () => {
     // real install while this suite proved the plumbing worked -- the
     // vacuous-sweep class T-0075 named. The counts are measured now (T-0081),
     // so the mocks moved to the repositories the route actually asks.
-    const { countSkills } = await import("@/lib/skills-repository");
+    const { countSkills } = await import("@/lib/skills/skills-repository");
     (countSkills as jest.Mock).mockReturnValueOnce(12);
     const { listSessions } = await import("@/lib/sessions/session-repository");
     // Once, not permanently: jest.clearAllMocks() clears calls but keeps

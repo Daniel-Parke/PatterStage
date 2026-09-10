@@ -21,7 +21,7 @@ import { screen, waitFor } from "@testing-library/react";
 import { renderWithQuery } from "../helpers/render-with-query";
 
 const mockSafeApiCall = jest.fn();
-jest.mock("@/lib/api-fetch", () => ({
+jest.mock("@/lib/api/api-fetch", () => ({
   safeApiCall: (...a: unknown[]) => mockSafeApiCall(...a),
 }));
 

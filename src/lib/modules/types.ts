@@ -12,7 +12,7 @@
 // links to sections it does not own (Research is Work, Artifacts and Insights
 // are Results), so the section is named from a fixed list, every link carries
 // an `order`, and the rail merges by section and sorts by order. The config
-// tree is the Settings index, derived from src/lib/config-sections.ts, not rail data.
+// tree is the Settings index, derived from src/lib/config/config-sections.ts, not rail data.
 // ═══════════════════════════════════════════════════════════════
 
 import type { AccentColor } from "@/types/console";

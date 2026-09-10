@@ -21,7 +21,7 @@ import { NextRequest } from "next/server";
 const TOKEN = "test-token-abcdefghijklmnop";
 
 const mockRunScriptFile = jest.fn();
-jest.mock("@/lib/scripts-manager", () => ({
+jest.mock("@/lib/scripts/scripts-manager", () => ({
   runScriptFile: (...a: unknown[]) => mockRunScriptFile(...a),
 }));
 
@@ -36,16 +36,16 @@ jest.mock("@/lib/update-handlers/deploy-actions", () => ({
 jest.mock("@/lib/update-handlers/remote-branches", () => ({ listRemoteBranches: () => [] }));
 jest.mock("@/lib/update-handlers/shared", () => ({ UPDATE_BRANCH: "dev" }));
 jest.mock("@/lib/update-handlers/version-check", () => ({ checkVersion: () => ({}) }));
-jest.mock("@/lib/deploy-status", () => ({
+jest.mock("@/lib/deploy/deploy-status", () => ({
   isDeployInProgress: () => false,
   readDeployStatus: () => ({ state: "idle" }),
   tailLogHint: () => [],
 }));
-jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn(), serverErrorFromCatch: jest.fn() }));
+jest.mock("@/lib/api/api-logger", () => ({ logApiError: jest.fn(), serverErrorFromCatch: jest.fn() }));
 // The real module: the guard under test lives in it. Only the two gates that
 // are not this test's subject are stubbed open.
-jest.mock("@/lib/api-auth", () => ({
-  ...jest.requireActual("@/lib/api-auth"),
+jest.mock("@/lib/api/api-auth", () => ({
+  ...jest.requireActual("@/lib/api/api-auth"),
   requireSignedRequest: () => null,
   requireDeployApiEnabled: () => null,
 }));

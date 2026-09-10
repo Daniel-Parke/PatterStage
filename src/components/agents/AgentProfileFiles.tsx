@@ -8,7 +8,7 @@
 
 "use client";
 
-import { sectionHeadingClasses } from "@/lib/theme";
+import { sectionHeadingClasses } from "@/lib/ui/theme";
 import { FileText } from "lucide-react";
 import Button from "@/components/ui/Button";
 import type { ProfileFile } from "@/types/console";

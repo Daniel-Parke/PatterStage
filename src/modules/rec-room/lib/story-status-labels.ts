@@ -3,12 +3,12 @@
 //
 // Lives in the module because the story status union is the module's
 // (story-repository.ts) and core may not import a module (ADR-0005); the
-// vocabulary itself is core's (src/lib/status-labels.ts), which a module may
+// vocabulary itself is core's (src/lib/ui/status-labels.ts), which a module may
 // import. `active` reads "Waiting for you" because that is what it is: a
 // story with chapters left that will not write another until asked (B14).
 // ═══════════════════════════════════════════════════════════════
 
-import type { StatusLabel } from "@/lib/status-labels";
+import type { StatusLabel } from "@/lib/ui/status-labels";
 
 export type StoryStatus = "generating" | "active" | "complete" | "failed";
 

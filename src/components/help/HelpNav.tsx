@@ -12,7 +12,7 @@
 // order helpNavOrder gave them — the same order prev/next walks.
 // ═══════════════════════════════════════════════════════════════
 
-import { sectionHeadingClasses } from "@/lib/theme";
+import { sectionHeadingClasses } from "@/lib/ui/theme";
 import Link from "next/link";
 
 import type { HelpNavSection, HelpPageMeta } from "@/lib/help/help-manifest";

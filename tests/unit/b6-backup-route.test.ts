@@ -25,11 +25,11 @@ import { readFileSync } from "fs";
 import { join } from "path";
 
 jest.mock("@/lib/analytics/record-event", () => ({ recordEvent: jest.fn() }));
-jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
-jest.mock("@/lib/api-logger", () => ({
+jest.mock("@/lib/api/audit-log", () => ({ appendAuditLine: jest.fn() }));
+jest.mock("@/lib/api/api-logger", () => ({
   // Spread the real module: the route may answer through serverErrorFromCatch
   // or through its sister serverErrorFromError, and the contract names neither.
-  ...(jest.requireActual("@/lib/api-logger") as object),
+  ...(jest.requireActual("@/lib/api/api-logger") as object),
   logApiError: jest.fn(),
 }));
 
@@ -37,13 +37,13 @@ const DATA_DIR = "/srv/ps/data";
 const DB_PATH = `${DATA_DIR}/control-hub.db`;
 const BACKUPS_DIR = `${DATA_DIR}/backups/db`;
 
-jest.mock("@/lib/paths", () => {
+jest.mock("@/lib/host/paths", () => {
   // The literals live INSIDE the factory: jest hoists this above the consts
   // below, and the module graph pulls @/lib/paths in through api-auth while
   // those consts are still in their temporal dead zone.
   const dataDir = "/srv/ps/data";
   const dbPath = `${dataDir}/control-hub.db`;
-  const actual = jest.requireActual("@/lib/paths") as typeof import("@/lib/paths");
+  const actual = jest.requireActual("@/lib/host/paths") as typeof import("@/lib/host/paths");
   return {
     // readEnv is the real one: isReadOnly() reads PS_READ_ONLY through it,
     // and the read-only tests below are about the real environment variable.
@@ -80,7 +80,7 @@ jest.mock("@/lib/db/backup", () => ({
 }));
 
 import { recordEvent } from "@/lib/analytics/record-event";
-import { appendAuditLine } from "@/lib/audit-log";
+import { appendAuditLine } from "@/lib/api/audit-log";
 import * as route from "@/app/api/backup/route";
 
 // The handlers, read off the namespace so the file type-checks before the

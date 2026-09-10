@@ -18,7 +18,7 @@ jest.mock("next/navigation", () => ({
 }));
 
 const mockApiFetch = jest.fn();
-jest.mock("@/lib/api-fetch", () => ({
+jest.mock("@/lib/api/api-fetch", () => ({
   apiFetch: (...args: unknown[]) => mockApiFetch(...args),
   // The page reads through useApiResource, which calls safeApiCall; routed
   // through the same mock so "the API was not called" is still one count (C6, T-0143).

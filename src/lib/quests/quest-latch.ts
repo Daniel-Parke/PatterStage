@@ -12,7 +12,7 @@
 // not go dark because bookkeeping is missing.
 // ═══════════════════════════════════════════════════════════════
 
-import { readOperatorPrefs, writeOperatorPref } from "@/lib/operator-prefs-repository";
+import { readOperatorPrefs, writeOperatorPref } from "@/lib/system/operator-prefs-repository";
 import type { QuestLatch } from "@/lib/quests/evaluate";
 
 const COMPLETED_AT_KEY = "quests.completedAt";

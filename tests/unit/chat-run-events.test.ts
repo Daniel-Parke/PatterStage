@@ -13,7 +13,7 @@ import {
   parseToolEvent,
   mergeToolCall,
   toApiMessages,
-} from "@/lib/chat-utils";
+} from "@/lib/chat/chat-utils";
 import type { ChatMessage, ToolCall } from "@/types/chat";
 
 describe("classifyRunEvent", () => {

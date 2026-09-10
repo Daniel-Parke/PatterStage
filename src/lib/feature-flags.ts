@@ -1,6 +1,10 @@
 // ═══════════════════════════════════════════════════════════════
 // feature-flags.ts — env-gated feature flags (default ON)
 //
+// AT THE LIB ROOT ON PURPOSE (C7, T-0144): read by every layer -- the rail,
+// the route guards, the engine and the module registry -- so it belongs to
+// no domain.
+//
 // Flags default to ENABLED so a page is shown in the sidebar, linkable, and
 // served out of the box. An operator opts OUT by setting the flag's env var to
 // a falsy value (0/false/no/off) — same convention as `isDeployApiEnabled`

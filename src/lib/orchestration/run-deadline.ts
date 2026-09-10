@@ -12,7 +12,7 @@
 
 import { MAX_TIMEOUT_MINUTES } from "@/lib/missions/mission-timeout";
 import type { MissionRunView } from "@/lib/missions/mission-run-state";
-import type { RunRecord } from "@/lib/runs-repository";
+import type { RunRecord } from "@/lib/runs/runs-repository";
 
 /** Slack added to every deadline before a run is treated as stuck. */
 export const GRACE_MINUTES = 5;

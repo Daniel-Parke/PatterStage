@@ -4,7 +4,7 @@
 // Next 16 renamed `middleware` to `proxy` and runs it on the Node.js runtime,
 // so this file can read the token file directly. It runs before every route.
 //
-// Why here and not in route handlers: `requireAuth()` in src/lib/api-auth.ts
+// Why here and not in route handlers: `requireAuth()` in src/lib/api/api-auth.ts
 // never authenticated anything (it only checked the read-only flag), so all 100
 // API routes were open to anyone who could reach the port — and BOTH start
 // scripts bind 0.0.0.0, not just `start:network`. `next start` has no loopback
@@ -30,14 +30,14 @@ import {
   getAuthMode,
   readAuthToken,
   tokenMatches,
-} from "@/lib/auth-token";
-import { isReadOnly, readOnlyMessage } from "@/lib/read-only";
+} from "@/lib/api/auth-token";
+import { isReadOnly, readOnlyMessage } from "@/lib/api/read-only";
 import {
   authClientKey,
   authPenaltySeconds,
   clearAuthFailures,
   recordAuthFailure,
-} from "@/lib/auth-throttle";
+} from "@/lib/api/auth-throttle";
 
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 
@@ -55,7 +55,7 @@ const PUBLIC_PATHS = new Set(["/api/health"]);
  * already has a shell on this machine and these are features. With
  * `PS_AUTH_MODE=none` they are unauthenticated remote code execution.
  *
- * `requireAuthenticatedHostWrites()` in src/lib/api-auth.ts is the same rule at
+ * `requireAuthenticatedHostWrites()` in src/lib/api/api-auth.ts is the same rule at
  * the route level, and it was applied to the script editor and the crontab
  * routes and forgotten on the two routes that EXECUTE (T-0095, D42/D123). A
  * guard a route has to remember is not a boundary; this list is. The routes

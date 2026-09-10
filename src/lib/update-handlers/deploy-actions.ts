@@ -15,10 +15,10 @@
 import { unlinkSync } from "fs";
 import { NextResponse } from "next/server";
 
-import { logApiError } from "@/lib/api-logger";
-import { appendAuditLine } from "@/lib/audit-log";
-import { spawnDeploy } from "@/lib/deploy-spawn";
-import { writeDeployStatusRunning } from "@/lib/deploy-status";
+import { logApiError } from "@/lib/api/api-logger";
+import { appendAuditLine } from "@/lib/api/audit-log";
+import { spawnDeploy } from "@/lib/deploy/deploy-spawn";
+import { writeDeployStatusRunning } from "@/lib/deploy/deploy-status";
 import { sanitizeGitBranch } from "@/lib/git/git-branch";
 
 import { verifyDeployBranchOnOrigin } from "./remote-branches";

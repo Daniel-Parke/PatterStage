@@ -6,10 +6,10 @@
 
 import { NextRequest } from "next/server";
 
-import { ok, notFound } from "@/lib/api-response";
-import { getConversation, deleteConversation } from "@/lib/chat-repository";
+import { ok, notFound } from "@/lib/api/api-response";
+import { getConversation, deleteConversation } from "@/lib/chat/chat-repository";
 import { reconcilePendingChatMessages } from "@/lib/orchestration/chat-dispatch";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 type Ctx = { params: Promise<{ id: string }> };
 

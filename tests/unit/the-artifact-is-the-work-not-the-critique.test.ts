@@ -36,7 +36,7 @@ jest.mock("@/lib/runtime", () => ({
 }));
 
 import { runtime } from "@/lib/runtime";
-import { getArtifact, listArtifacts } from "@/lib/artifacts-repository";
+import { getArtifact, listArtifacts } from "@/lib/runs/artifacts-repository";
 import {
   createComposerRun,
   createWorkflowFromDef,

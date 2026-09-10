@@ -57,8 +57,8 @@ jest.mock("@/hooks/useSpend", () => ({ useSpend: () => mockUseSpend() }));
 // The wire, for the one describe that runs the REAL timeseries hook; every
 // other export of api-fetch stays real and nothing else here fetches.
 const mockSafeApiCall = jest.fn();
-jest.mock("@/lib/api-fetch", () => ({
-  ...jest.requireActual("@/lib/api-fetch"),
+jest.mock("@/lib/api/api-fetch", () => ({
+  ...jest.requireActual("@/lib/api/api-fetch"),
   safeApiCall: (...a: unknown[]) => mockSafeApiCall(...a),
 }));
 

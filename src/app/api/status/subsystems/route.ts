@@ -3,10 +3,10 @@
 // act on. The rules live in @/lib/status/subsystems; this binds the live
 // dependencies and answers.
 
-import { ok } from "@/lib/api-response";
+import { ok } from "@/lib/api/api-response";
 import { ensureSyncLayer } from "@/lib/sync";
 import { collectSubsystems, liveSubsystemDeps } from "@/lib/status/subsystems";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 export const GET = route("GET /api/status/subsystems", "collecting", "Failed to check subsystems", async () => {
   // The sync row reads the scheduler's last cycle; make sure one exists to

@@ -1,7 +1,7 @@
 /** @jest-environment node */
 // Script-name validation for the write API (scripts-manager.scriptPathForName).
 
-import { scriptPathForName } from "@/lib/scripts-manager";
+import { scriptPathForName } from "@/lib/scripts/scripts-manager";
 
 describe("scriptPathForName", () => {
   it("rejects traversal, slashes, and non-.sh names", () => {

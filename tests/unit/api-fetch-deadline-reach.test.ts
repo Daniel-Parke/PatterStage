@@ -17,7 +17,7 @@
  * The deadline is right; its being a single un-overridable global is not.
  */
 
-import { API_FETCH_TIMEOUT_MS, API_FETCH_BULK_TIMEOUT_MS, apiFetch } from "@/lib/api-fetch";
+import { API_FETCH_TIMEOUT_MS, API_FETCH_BULK_TIMEOUT_MS, apiFetch } from "@/lib/api/api-fetch";
 
 const okJson = () => ({ ok: true, status: 200, json: async () => ({ data: {} }) });
 
@@ -86,7 +86,7 @@ describe("the bulk operations actually ask for the bulk deadline", () => {
     globalThis.fetch = jest.fn().mockResolvedValue(okJson()) as unknown as typeof fetch;
     const timeoutSpy = jest.spyOn(AbortSignal, "timeout");
     try {
-      const { runWrite } = await import("@/lib/api-write");
+      const { runWrite } = await import("@/lib/api/api-write");
       await runWrite({
         showToast: () => undefined,
         url: "/api/agent/profiles/sync/push",

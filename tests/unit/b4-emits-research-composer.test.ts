@@ -25,12 +25,12 @@ jest.mock("@/lib/analytics/record-event", () => ({ recordEvent: jest.fn() }));
 jest.mock("@/lib/db", () => require("../helpers/mocks").dbMock({ now: () => "2026-09-05T12:00:00.000Z" }));
 jest.mock("@/lib/feature-flags", () => ({ isFeatureEnabled: () => true }));
 // A real 500 on the failure path, without the console line the real helper writes.
-jest.mock("@/lib/api-logger", () => ({
+jest.mock("@/lib/api/api-logger", () => ({
   logApiError: jest.fn(),
   serverErrorFromCatch: (_route: string, _ctx: string, _err: unknown, message: string) =>
-    (jest.requireActual("@/lib/api-response") as typeof import("@/lib/api-response")).serverError(message),
+    (jest.requireActual("@/lib/api/api-response") as typeof import("@/lib/api/api-response")).serverError(message),
 }));
-jest.mock("@/lib/artifacts-repository", () => ({ captureArtifactOnce: jest.fn() }));
+jest.mock("@/lib/runs/artifacts-repository", () => ({ captureArtifactOnce: jest.fn() }));
 jest.mock("@/lib/spend/spend-guard", () => ({ checkUnattendedSpend: () => ({ allowed: true }) }));
 
 // ── research doubles ─────────────────────────────────────────────

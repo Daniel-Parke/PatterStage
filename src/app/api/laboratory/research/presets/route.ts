@@ -6,15 +6,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-import { ok, created, badRequest } from "@/lib/api-response";
+import { ok, created, badRequest } from "@/lib/api/api-response";
 import { ensureDb } from "@/lib/db";
-import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
+import { parseAndValidateJsonBody } from "@/lib/api/parse-json-body";
 import {
   listResearchPresets,
   createResearchPreset,
   deleteResearchPreset,
 } from "@/lib/laboratory/deep-research/research-repository";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 const createSchema = z.object({
   name: z.string().min(1).max(60),

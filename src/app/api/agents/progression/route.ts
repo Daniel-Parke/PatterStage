@@ -21,15 +21,15 @@
 
 import type { NextRequest } from "next/server";
 
-import { logApiError } from "@/lib/api-logger";
-import { ok } from "@/lib/api-response";
+import { logApiError } from "@/lib/api/api-logger";
+import { ok } from "@/lib/api/api-response";
 import { ensureDb } from "@/lib/db";
 import {
   readAgentProgressionHistory,
   readLatestAgentProgressionSnapshots,
 } from "@/lib/stats/agent-progression-repository";
 import { captureAgentProgressionFromLiveStats } from "@/lib/stats/agent-progression";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 export const GET = route("GET /api/agents/progression", "reading recorded agent progression", "Failed to load agent progression", async (request: NextRequest) => {
   ensureDb();

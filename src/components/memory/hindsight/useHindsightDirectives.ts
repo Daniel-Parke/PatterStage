@@ -9,7 +9,7 @@ import { useState, useCallback, useEffect } from "react";
 import type { ToastType } from "@/components/ui/Toast";
 import { loadHindsightList } from "@/lib/memory/hindsight-client";
 import { parseOptionalTagsInput, parseTagsInput } from "@/lib/memory/hindsight-tag-input";
-import { runWrite } from "@/lib/api-write";
+import { runWrite } from "@/lib/api/api-write";
 import type { Tab, Directive } from "./types";
 
 // The directive modal resets to these blank values on open, close, and

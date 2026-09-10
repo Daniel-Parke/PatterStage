@@ -1,6 +1,6 @@
 /** @jest-environment node */
 
-// Tests for `filterByCaseInsensitiveSubstring` in `src/lib/list-search.ts` —
+// Tests for `filterByCaseInsensitiveSubstring` in `src/lib/ui/list-search.ts` —
 // the generic case-insensitive substring search helper that replaces the
 // 2-line inline pattern (case-insensitive `.includes()` across N fields)
 // repeated in 4+ List 3 (and 6+ cross-list) call sites.
@@ -16,7 +16,7 @@
 // defensive copy of the input. Always-match predicate (when supplied)
 // short-circuits the per-field check.
 
-import { filterByCaseInsensitiveSubstring } from "@/lib/list-search";
+import { filterByCaseInsensitiveSubstring } from "@/lib/ui/list-search";
 
 interface Item {
   id: number;

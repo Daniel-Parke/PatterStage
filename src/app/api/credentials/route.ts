@@ -6,17 +6,17 @@
 // `keyHint` only.
 import { NextRequest, NextResponse } from "next/server";
 
-import { listCredentials, createCredential, deleteCredential } from "@/lib/credentials-repository";
-import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
+import { listCredentials, createCredential, deleteCredential } from "@/lib/models/credentials-repository";
+import { logApiError, serverErrorFromCatch } from "@/lib/api/api-logger";
 
-import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
-import { appendAuditLine } from "@/lib/audit-log";
-import { credentialPostSchema } from "@/lib/api-schemas";
-import { badRequest, created, ok } from "@/lib/api-response";
+import { parseAndValidateJsonBody } from "@/lib/api/parse-json-body";
+import { appendAuditLine } from "@/lib/api/audit-log";
+import { credentialPostSchema } from "@/lib/api/api-schemas";
+import { badRequest, created, ok } from "@/lib/api/api-response";
 import { syncCredentialToHermesEnv } from "@/modules/hermes/lib/hermes-env-sync";
 import { envVarForProvider } from "@/modules/hermes/lib/providers";
 import { recordEvent } from "@/lib/analytics/record-event";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 export const GET = route("GET /api/credentials", "listing credentials", "Failed to list credentials", async (_request: NextRequest) => {
   return ok({ credentials: listCredentials() });

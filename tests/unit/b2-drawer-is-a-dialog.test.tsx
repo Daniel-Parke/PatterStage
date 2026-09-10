@@ -39,7 +39,7 @@ jest.mock("@/hooks/useStats", () => ({
     refetch: jest.fn(),
   }),
 }));
-jest.mock("@/lib/api-fetch", () => ({ safeApiCall: jest.fn(async () => ({ ok: false, error: "offline" })) }));
+jest.mock("@/lib/api/api-fetch", () => ({ safeApiCall: jest.fn(async () => ({ ok: false, error: "offline" })) }));
 
 import Sidebar, { MobileHeader } from "@/components/layout/Sidebar";
 import { SidebarProvider } from "@/components/layout/SidebarContext";

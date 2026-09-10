@@ -11,7 +11,7 @@
 
 "use client";
 
-import { sectionHeadingClasses } from "@/lib/theme";
+import { sectionHeadingClasses } from "@/lib/ui/theme";
 import { useMemo, useState, type ReactNode } from "react";
 import {
   BarChart3, Sparkles, Activity, CalendarRange, Rocket, Clock,

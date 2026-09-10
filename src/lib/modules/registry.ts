@@ -10,7 +10,7 @@
 // The map (T-0097): five sections, verb-first, URLs renamed to match, the Rec
 // Room under /recroom/story-weaver/*; old paths answer 307 from next.config.ts
 // for one release. /agent/settings is ONE page
-// whose 27 sections are anchors derived from src/lib/config-sections.ts
+// whose 27 sections are anchors derived from src/lib/config/config-sections.ts
 // (decision 7, T-0125), so a section is not a route and the matrix visits anchors.
 // ═══════════════════════════════════════════════════════════════
 

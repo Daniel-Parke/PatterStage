@@ -10,8 +10,8 @@
  * one replace rather than a replace and then a redirect.
  */
 import nextConfig from "../../next.config";
-import { resolveSectionRedirect } from "@/lib/config-schema";
-import { settingsSectionIds } from "@/lib/config-sections";
+import { resolveSectionRedirect } from "@/lib/config/config-schema";
+import { settingsSectionIds } from "@/lib/config/config-sections";
 import { allModuleRoutes, documentedRoutes, labelFor } from "@/lib/modules/registry";
 
 type Redirect = { source: string; destination: string; permanent: boolean };

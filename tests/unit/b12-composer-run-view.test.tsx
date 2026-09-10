@@ -85,7 +85,7 @@ jest.mock("@/hooks/useProfiles", () => ({ useProfiles: () => ({ refetch: async (
 jest.mock("@/hooks/useEventStream", () => ({
   useEventStream: () => ({ data: null, connected: false, error: null }),
 }));
-jest.mock("@/lib/api-fetch", () => ({ safeApiCall: jest.fn(async () => ({ ok: true, data: {} })) }));
+jest.mock("@/lib/api/api-fetch", () => ({ safeApiCall: jest.fn(async () => ({ ok: true, data: {} })) }));
 
 import ComposerPage from "@/app/work/composer/page";
 import type { ComposerRun, ComposerWorkflow, ComposerWorkflowGraph } from "@/lib/composer/schema";

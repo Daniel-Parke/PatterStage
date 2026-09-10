@@ -6,7 +6,7 @@
  * the navigation matrix silently stopped covering a whole page. Deriving it
  * removes the class of bug rather than the instance.
  */
-import { settingsSectionIds } from "../../src/lib/config-sections";
+import { settingsSectionIds } from "../../src/lib/config/config-sections";
 import { allModuleRoutes, documentedRoutes } from "../../src/lib/modules/registry";
 
 export const APP_NAV_ROUTES: readonly string[] = allModuleRoutes();

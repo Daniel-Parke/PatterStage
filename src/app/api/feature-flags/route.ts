@@ -5,7 +5,7 @@
 // disabled features without a rebuild. Flags default ON; see feature-flags.ts.
 // ═══════════════════════════════════════════════════════════════
 
-import { ok } from "@/lib/api-response";
+import { ok } from "@/lib/api/api-response";
 import { getFeatureFlags } from "@/lib/feature-flags";
 
 export function GET() {

@@ -7,7 +7,7 @@
 // siblings do, and the inconsistency invites the belief that a route without
 // one is unprotected. Reading the code turns the finding inside out.
 //
-// `requireAuth()` in src/lib/api-auth.ts does not authenticate. Its own header
+// `requireAuth()` in src/lib/api/api-auth.ts does not authenticate. Its own header
 // says so: it is `requireNotReadOnly()` under a name it kept to avoid churning
 // call sites during the security hotfix. Authentication is enforced once, in
 // src/proxy.ts, on every request including this one — that is the lock-book's
@@ -30,18 +30,18 @@
 
 jest.mock("next/server", () => require("../helpers/mocks").nextServerMock());
 
-jest.mock("@/lib/api-logger", () => ({
+jest.mock("@/lib/api/api-logger", () => ({
   logApiError: jest.fn(),
   serverErrorFromCatch: jest.fn(() => ({ status: 500, json: async () => ({ error: "boom" }) })),
 }));
 jest.mock("@/lib/db", () => require("../helpers/mocks").dbMock());
 jest.mock("@/lib/sync", () => ({ ensureSyncLayer: jest.fn() }));
-jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
+jest.mock("@/lib/api/audit-log", () => ({ appendAuditLine: jest.fn() }));
 jest.mock("@/lib/missions/mission-repository", () => ({
   listMissions: jest.fn(() => [{ id: "m1", name: "Nightly digest" }]),
   getMission: jest.fn((id: string) => (id === "m1" ? { id: "m1", name: "Nightly digest" } : null)),
 }));
-jest.mock("@/lib/runs-repository", () => ({
+jest.mock("@/lib/runs/runs-repository", () => ({
   getLatestRunForMission: jest.fn(() => null),
   // A Map, because the handler calls .get() on it per row.
   listLatestRunsForMissions: jest.fn(() => new Map()),
@@ -49,7 +49,7 @@ jest.mock("@/lib/runs-repository", () => ({
 jest.mock("@/lib/orchestration/run-deadline", () => ({ buildMissionRunView: jest.fn(() => null) }));
 // GET /api/missions reads the schedule alongside the run now (T-0104, D68);
 // without these doubles the real repository reaches the real getDb.
-jest.mock("@/lib/schedules-repository", () => ({
+jest.mock("@/lib/schedule/schedules-repository", () => ({
   getScheduleForMission: jest.fn(() => null),
   listSchedulesForMissions: jest.fn(() => new Map()),
 }));
@@ -157,7 +157,7 @@ describe("no route handler authenticates", () => {
       // authentication but only checks a flag is the defect the finding found.
       // The name may still appear in prose, because explaining what was removed
       // and why is the whole point of removing it.
-      const imports = src.match(/import\s*{[^}]*}\s*from\s*"@\/lib\/api-auth"/g) ?? [];
+      const imports = src.match(/import\s*{[^}]*}\s*from\s*"@\/lib\/api\/api-auth"/g) ?? [];
       for (const line of imports) expect(line).not.toMatch(/\brequireAuth\b/);
       expect(src).not.toMatch(/\brequireAuth\s*\(\s*\w/);
     }

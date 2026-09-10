@@ -20,7 +20,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { act, render, screen, waitFor } from "@testing-library/react";
-import { CONFIG_SECTIONS } from "@/lib/config-schema";
+import { CONFIG_SECTIONS } from "@/lib/config/config-schema";
 
 const mockUseParams = jest.fn();
 const mockReplace = jest.fn();
@@ -33,7 +33,7 @@ jest.mock("next/navigation", () => ({
 }));
 
 const mockApiFetch = jest.fn();
-jest.mock("@/lib/api-fetch", () => ({
+jest.mock("@/lib/api/api-fetch", () => ({
   apiFetch: (...args: unknown[]) => mockApiFetch(...args),
   setErrorFromCaught: jest.fn(),
 }));

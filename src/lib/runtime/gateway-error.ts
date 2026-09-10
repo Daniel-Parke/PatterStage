@@ -10,7 +10,7 @@
 // message does not quote, so attaching the original would re-append the noise.
 // The transport CODE is carried in the message instead.
 
-import { errorChain } from "@/lib/api-fetch";
+import { errorChain } from "@/lib/api/api-fetch";
 import { RuntimeRequestError } from "./types";
 
 /**

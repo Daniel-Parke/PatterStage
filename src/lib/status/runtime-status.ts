@@ -20,12 +20,12 @@
 import { readFileSync } from "fs";
 import { join } from "path";
 
-import { isDeployApiEnabled, isReadOnly } from "@/lib/api-auth";
-import { getAuthMode } from "@/lib/auth-token";
+import { isDeployApiEnabled, isReadOnly } from "@/lib/api/api-auth";
+import { getAuthMode } from "@/lib/api/auth-token";
 import { getDb } from "@/lib/db";
 import { getSchemaVersion } from "@/lib/db-schema";
 import { isFeatureEnabled } from "@/lib/feature-flags";
-import { PS_DATA_DIR, getDbPath, readEnv } from "@/lib/paths";
+import { PS_DATA_DIR, getDbPath, readEnv } from "@/lib/host/paths";
 import type { RuntimeStatus } from "@/lib/status/runtime-status-format";
 import { runGit } from "@/lib/update-handlers/shared";
 

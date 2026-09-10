@@ -14,7 +14,7 @@ import {
 } from "./profile-config-builder";
 import { loadSeedPlatformToolsets } from "./seed-profile-toolsets";
 import { normalizePlatformToolsets } from "./toolset-normalize";
-import { getAgentRoot, updateAgentRoot } from "@/lib/agent-root-repository";
+import { getAgentRoot, updateAgentRoot } from "@/lib/agents/agent-root-repository";
 
 export interface AgentProfileRow {
   slug: string;

@@ -151,7 +151,7 @@ describe("one treatment for a section heading", () => {
    * reads as a HEADING rather than as a slightly smaller list item.
    */
   it("declares the section heading once, in the theme", () => {
-    const theme = read("src/lib/theme.ts");
+    const theme = read("src/lib/ui/theme.ts");
     expect(theme).toContain("sectionHeadingClasses");
     expect(theme).toContain("text-micro");
     expect(theme).toContain("uppercase");

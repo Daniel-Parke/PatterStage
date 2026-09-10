@@ -4,7 +4,7 @@
 // live DIRECTLY under the scripts dir may resolve. Traversal, nested paths, and
 // non-.sh names must be rejected (so run-now can never reach an arbitrary file).
 
-jest.mock("@/lib/paths", () => ({
+jest.mock("@/lib/host/paths", () => ({
   getPsScriptsDir: () => "/data/scripts",
   getPsHardwareLogDir: () => "/data/logs",
 }));
@@ -19,7 +19,7 @@ jest.mock("fs", () => ({
   mkdirSync: jest.fn(),
 }));
 
-import { resolveScriptPath } from "@/lib/scripts-manager";
+import { resolveScriptPath } from "@/lib/scripts/scripts-manager";
 
 beforeEach(() => {
   existsSync.mockReturnValue(true);

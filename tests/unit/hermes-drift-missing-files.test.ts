@@ -54,7 +54,7 @@ function profiles() {
 }
 
 function rootRepo() {
-  return require("@/lib/agent-root-repository") as typeof import("@/lib/agent-root-repository");
+  return require("@/lib/agents/agent-root-repository") as typeof import("@/lib/agents/agent-root-repository");
 }
 
 /** A profile whose disk root holds SOUL, AGENTS and config.yaml and nothing else. */

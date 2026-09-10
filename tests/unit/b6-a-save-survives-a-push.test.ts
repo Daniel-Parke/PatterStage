@@ -83,10 +83,10 @@ jest.mock("@/modules/hermes/lib/agent-runtime", () => {
 // assemble from it, and the call must be OBSERVABLE for the two "never
 // refreshes" lines.
 const mockUpdateAgentRoot = jest.fn();
-jest.mock("@/lib/agent-root-repository", () => {
+jest.mock("@/lib/agents/agent-root-repository", () => {
   const actual = jest.requireActual(
-    "@/lib/agent-root-repository",
-  ) as typeof import("@/lib/agent-root-repository");
+    "@/lib/agents/agent-root-repository",
+  ) as typeof import("@/lib/agents/agent-root-repository");
   return {
     ...actual,
     updateAgentRoot: (patch: Parameters<typeof actual.updateAgentRoot>[0]) => {
@@ -101,14 +101,14 @@ jest.mock("@/lib/db", () => require("../helpers/baseline-db").dbSingletonMock(()
 
 // The audit ledger and the analytics ledger both write under PS_DATA_DIR or
 // the database; neither is what this file measures.
-jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
+jest.mock("@/lib/api/audit-log", () => ({ appendAuditLine: jest.fn() }));
 jest.mock("@/lib/analytics/record-event", () => ({ recordEvent: jest.fn() }));
 
 import { NextRequest } from "next/server";
 
 import { execBaselineSchema } from "../helpers/baseline-db";
 import { PUT } from "@/app/api/config/route";
-import { getAgentRoot, updateAgentRoot } from "@/lib/agent-root-repository";
+import { getAgentRoot, updateAgentRoot } from "@/lib/agents/agent-root-repository";
 import { pushRootToHermes } from "@/modules/hermes/lib/profile-push";
 import { detectRootDrift } from "@/modules/hermes/lib/profile-drift";
 import { writeHermesConfigFile } from "@/modules/hermes/lib/hermes-config-write";

@@ -13,14 +13,14 @@
 // complete has to outlive the retention of the events it was derived from.
 // ═══════════════════════════════════════════════════════════════
 
-import { logApiError } from "@/lib/api-logger";
-import { ok } from "@/lib/api-response";
+import { logApiError } from "@/lib/api/api-logger";
+import { ok } from "@/lib/api/api-response";
 import { ensureDb } from "@/lib/db";
-import { isReadOnly } from "@/lib/read-only";
+import { isReadOnly } from "@/lib/api/read-only";
 import * as questLatch from "@/lib/quests/quest-latch";
 import { getDashboardStats } from "@/lib/stats/stats-repository";
 import { captureAgentProgressionSnapshots } from "@/lib/stats/agent-progression";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 export const GET = route("GET /api/stats", "", "Failed to load stats", async () => {
   ensureDb();

@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { setErrorFromCaught } from "@/lib/api-fetch";
-import { runWrite } from "@/lib/api-write";
+import { setErrorFromCaught } from "@/lib/api/api-fetch";
+import { runWrite } from "@/lib/api/api-write";
 import type { ManagedCategory } from "@/components/missions/CategoryManagerModal";
 
 type ToastFn = (message: string, type?: "success" | "error" | "info") => void;

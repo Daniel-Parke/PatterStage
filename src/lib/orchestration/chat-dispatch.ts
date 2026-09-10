@@ -9,7 +9,7 @@
 // it. Mirrors the createRun → submitRun → attachBackendRun → recordEvent pattern.
 // ═══════════════════════════════════════════════════════════════
 
-import { createRun, attachBackendRun, updateRun, getRun } from "@/lib/runs-repository";
+import { createRun, attachBackendRun, updateRun, getRun } from "@/lib/runs/runs-repository";
 import {
   getConversation,
   createMessage,
@@ -18,12 +18,12 @@ import {
   getMessages,
   type ChatMessage,
   type ChatMessageStatus,
-} from "@/lib/chat-repository";
+} from "@/lib/chat/chat-repository";
 import { runtime } from "@/lib/runtime";
 import { uuid } from "@/lib/db";
 import type { RunStatus } from "@/lib/runtime/types";
-import { messageFromError } from "@/lib/api-fetch";
-import { logApiError } from "@/lib/api-logger";
+import { messageFromError } from "@/lib/api/api-fetch";
+import { logApiError } from "@/lib/api/api-logger";
 import { recordEvent } from "@/lib/analytics/record-event";
 
 export interface ChatTurnResult {

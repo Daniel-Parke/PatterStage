@@ -53,7 +53,7 @@ import {
   failStuckChatMessages,
   getMessage,
   getMessages,
-} from "@/lib/chat-repository";
+} from "@/lib/chat/chat-repository";
 
 /** Minimal schema: the two chat tables plus the runs table the sweep consults. */
 beforeAll(() => {

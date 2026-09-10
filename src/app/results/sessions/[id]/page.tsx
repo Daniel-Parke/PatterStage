@@ -19,7 +19,7 @@ import { MessageBubble, type SessionMessage } from "@/components/session/Message
 import { isSessionStillRunning } from "@/lib/sessions/session-title";
 import { sessionLoadErrorHeading } from "@/lib/sessions/session-load-error";
 import { SESSIONS_LIVE_POLL_MS } from "@/hooks/useSessions";
-import { SESSION_STATUS_LABELS } from "@/lib/status-labels";
+import { SESSION_STATUS_LABELS } from "@/lib/ui/status-labels";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import { SearchInput } from "@/components/ui/Input";
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";

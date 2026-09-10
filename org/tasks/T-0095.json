@@ -14,7 +14,7 @@
   ],
   "status": "done",
   "owner_session": "t0095-security-and-truth-2026-09-05",
-  "claims": ["src/app/api/", "src/proxy.ts", "src/lib/api-auth.ts", "src/modules/hermes/lib/sync-answer.ts", "scripts/bootstrap/", "scripts/lib/", "scripts/tooling/design-lint.mjs", "docs/API.md", "tests/"],
+  "claims": ["src/app/api/", "src/proxy.ts", "src/lib/api/api-auth.ts", "src/modules/hermes/lib/sync-answer.ts", "scripts/bootstrap/", "scripts/lib/", "scripts/tooling/design-lint.mjs", "docs/API.md", "tests/"],
   "invariants": [
     "I1 A write that reaches the host (script save, script run, crontab line, deploy spawn) is refused under PS_AUTH_MODE=none twice: by the proxy from a list, and by the route itself. Reads beside them keep answering, and an ordinary write still passes, because auth mode none is not read-only.",
     "I2 No API key leaves GET /api/config in plaintext at any depth, in any array.",

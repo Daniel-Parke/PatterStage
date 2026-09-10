@@ -11,7 +11,7 @@
 
 import { NextResponse } from "next/server";
 
-import { ok, serverError } from "@/lib/api-response";
+import { ok, serverError } from "@/lib/api/api-response";
 
 /** The three facts every sync outcome carries, whatever else it carries. */
 export interface SyncOutcome {

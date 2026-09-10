@@ -17,9 +17,9 @@ const mockRecordEvent = jest.fn();
 const originalFetch = globalThis.fetch;
 const ORIGINAL_ENV = process.env;
 
-jest.mock("@/lib/api-logger", () => ({
+jest.mock("@/lib/api/api-logger", () => ({
   logApiError: jest.fn(),
-  serverErrorFromCatch: jest.requireActual("@/lib/api-logger").serverErrorFromCatch,
+  serverErrorFromCatch: jest.requireActual("@/lib/api/api-logger").serverErrorFromCatch,
 }));
 jest.mock("@/lib/analytics/record-event", () => ({
   recordEvent: (...a: unknown[]) => mockRecordEvent(...a),

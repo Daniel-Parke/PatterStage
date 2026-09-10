@@ -29,7 +29,7 @@
 import { useEffect } from "react";
 
 import { useToast } from "@/components/ui/Toast";
-import { COPY_BTN_CLASS, COPY_BTN_DATA_ATTR } from "@/lib/chat-utils";
+import { COPY_BTN_CLASS, COPY_BTN_DATA_ATTR } from "@/lib/chat/chat-utils";
 import { bannerStatesFor } from "@/components/chat/gateway-banner-states";
 import { useGatewayHealth } from "@/hooks/useGatewayHealth";
 import { useChatInput } from "@/hooks/useChatInput";

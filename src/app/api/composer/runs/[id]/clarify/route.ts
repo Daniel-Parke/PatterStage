@@ -11,12 +11,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-import { ok, badRequest, notFound, serviceUnavailable } from "@/lib/api-response";
+import { ok, badRequest, notFound, serviceUnavailable } from "@/lib/api/api-response";
 import { isFeatureEnabled } from "@/lib/feature-flags";
-import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
+import { parseAndValidateJsonBody } from "@/lib/api/parse-json-body";
 import { getComposerRun, getNode, updateComposerRun } from "@/lib/composer/composer-repository";
 import { dispatchComposerNode } from "@/lib/composer/dispatch";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 const bodySchema = z.object({ answer: z.string().min(1).max(20_000) }).strict();
 

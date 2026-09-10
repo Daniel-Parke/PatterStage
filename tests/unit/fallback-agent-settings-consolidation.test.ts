@@ -22,7 +22,7 @@ import { tmpdir } from "os";
 import { join } from "path";
 import * as yaml from "js-yaml";
 
-import { parseFallbackAgentSettingsFromYaml } from "@/lib/fallback-config-yaml";
+import { parseFallbackAgentSettingsFromYaml } from "@/lib/models/fallback-config-yaml";
 import { readFallbackAgentSettingsFromConfig } from "@/modules/hermes/lib/hermes-fallback-config";
 
 let fakeRoot: string;

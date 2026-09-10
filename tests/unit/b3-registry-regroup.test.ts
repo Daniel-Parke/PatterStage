@@ -13,8 +13,8 @@
  * Module ids and MODULE_ACCENTS do not move (tests/unit/module-registry.test.ts
  * and lockbook-tokens.test.ts pin them); only sections, labels and hrefs do.
  */
-import { CONFIG_SECTIONS } from "@/lib/config-schema";
-import { SETTINGS_GROUPS, SETTINGS_TOOLS, settingsSectionIds } from "@/lib/config-sections";
+import { CONFIG_SECTIONS } from "@/lib/config/config-schema";
+import { SETTINGS_GROUPS, SETTINGS_TOOLS, settingsSectionIds } from "@/lib/config/config-sections";
 import { MODULES, allModuleRoutes, getModule, labelFor } from "@/lib/modules/registry";
 import { NAV_SECTIONS, moduleRoutes } from "@/lib/modules/types";
 import { mainSections } from "@/components/layout/sidebar-config";

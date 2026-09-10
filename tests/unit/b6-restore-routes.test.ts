@@ -45,12 +45,12 @@ import { join } from "path";
 // ── doubles ──────────────────────────────────────────────────
 
 const mockRequireNotReadOnly = jest.fn((..._a: unknown[]): unknown => null);
-jest.mock("@/lib/api-auth", () => ({
+jest.mock("@/lib/api/api-auth", () => ({
   requireNotReadOnly: (...a: unknown[]) => mockRequireNotReadOnly(...a),
 }));
 
 const mockAppendAuditLine = jest.fn();
-jest.mock("@/lib/audit-log", () => ({
+jest.mock("@/lib/api/audit-log", () => ({
   appendAuditLine: (...a: unknown[]) => mockAppendAuditLine(...a),
 }));
 
@@ -132,12 +132,12 @@ jest.mock(
 // half is reached through the composition root, which this test never needs,
 // and the repositories must load without a database.
 jest.mock("@/lib/modules/server", () => ({ SERVER_MODULES: [] }));
-jest.mock("@/lib/skills-repository", () => ({ upsertSkill: jest.fn(), getSkill: jest.fn(() => null) }));
-jest.mock("@/lib/catalog-template-repository", () => ({
+jest.mock("@/lib/skills/skills-repository", () => ({ upsertSkill: jest.fn(), getSkill: jest.fn(() => null) }));
+jest.mock("@/lib/templates/catalog-template-repository", () => ({
   upsertCatalogTemplate: jest.fn(),
   getCatalogTemplate: jest.fn(() => null),
 }));
-jest.mock("@/lib/tool-catalog-repository", () => ({
+jest.mock("@/lib/system/tool-catalog-repository", () => ({
   upsertToolBundle: jest.fn(),
   getToolBundle: jest.fn(() => null),
 }));

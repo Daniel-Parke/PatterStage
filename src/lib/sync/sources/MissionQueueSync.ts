@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { runMissionQueueTick } from "@/lib/missions/mission-queue-tick";
-import { logApiError } from "@/lib/api-logger";
+import { logApiError } from "@/lib/api/api-logger";
 import type { SyncSource, SyncResult } from "@/lib/sync/types";
 import { syncFailure } from "@/lib/sync/types";
 

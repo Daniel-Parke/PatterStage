@@ -83,7 +83,7 @@ export default defineConfig({
     // Isolated, fresh DB per run (prepare-data-dir.mjs wipes it before boot),
     // independent of the developer's working DB and free of legacy schema drift.
     //
-    // PS_DATA_DIR as well as CH_DATA_DIR, because src/lib/paths.ts resolves
+    // PS_DATA_DIR as well as CH_DATA_DIR, because src/lib/host/paths.ts resolves
     // PS_DATA_DIR first and .env.local sets it. Next.js loads .env.local on
     // `next start` and does not override variables already present in the
     // environment, so setting only CH_DATA_DIR meant any developer with

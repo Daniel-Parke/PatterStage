@@ -9,7 +9,7 @@ import { ensureDb, getDb } from "@/lib/db";
 import { isProfilesToolsParityComplete } from "@/lib/db/profiles-tools-parity-ensure";
 import { countSkills } from "./profiles-repository";
 import { getHermesDefaultRoot } from "./profile-paths";
-import { getAgentRoot } from "@/lib/agent-root-repository";
+import { getAgentRoot } from "@/lib/agents/agent-root-repository";
 import { existsSync } from "fs";
 
 function assertProfilesToolsSchemaReady(): void {

@@ -14,7 +14,7 @@ jest.mock("@/modules/hermes/lib/agent-runtime", () => ({
   })),
 }));
 
-jest.mock("@/lib/models-repository", () => {
+jest.mock("@/lib/models/models-repository", () => {
   const getModelWithKey = jest.fn();
   return { getModelWithKey, __getModelWithKey: getModelWithKey };
 });
@@ -25,7 +25,7 @@ const originalFetch = global.fetch;
 beforeEach(() => {
   fetchMock.mockReset();
   global.fetch = fetchMock as unknown as typeof fetch;
-  const repo = require("@/lib/models-repository") as { __getModelWithKey: jest.Mock };
+  const repo = require("@/lib/models/models-repository") as { __getModelWithKey: jest.Mock };
   repo.__getModelWithKey.mockReset();
 });
 
@@ -52,7 +52,7 @@ function modelRow(over: Record<string, unknown>) {
 
 describe("callLLM direct-provider protocol", () => {
   it("uses the Anthropic protocol for an anthropic-style model", async () => {
-    const repo = require("@/lib/models-repository") as { __getModelWithKey: jest.Mock };
+    const repo = require("@/lib/models/models-repository") as { __getModelWithKey: jest.Mock };
     repo.__getModelWithKey.mockReturnValue(modelRow({}));
 
     fetchMock.mockResolvedValueOnce({
@@ -62,7 +62,7 @@ describe("callLLM direct-provider protocol", () => {
       text: async () => "",
     });
 
-    const { callLLM } = require("@/lib/llm") as typeof import("@/lib/llm");
+    const { callLLM } = require("@/lib/models/llm") as typeof import("@/lib/models/llm");
     const result = await callLLM([{ role: "user", content: "ping" }], { modelId: "mm" });
 
     expect(result.content).toBe("hi from minimax");
@@ -76,7 +76,7 @@ describe("callLLM direct-provider protocol", () => {
   });
 
   it("infers anthropic when api_style is null (provider/base heuristic)", async () => {
-    const repo = require("@/lib/models-repository") as { __getModelWithKey: jest.Mock };
+    const repo = require("@/lib/models/models-repository") as { __getModelWithKey: jest.Mock };
     repo.__getModelWithKey.mockReturnValue(modelRow({ apiStyle: null }));
 
     fetchMock.mockResolvedValueOnce({
@@ -86,7 +86,7 @@ describe("callLLM direct-provider protocol", () => {
       text: async () => "",
     });
 
-    const { callLLM } = require("@/lib/llm") as typeof import("@/lib/llm");
+    const { callLLM } = require("@/lib/models/llm") as typeof import("@/lib/models/llm");
     await callLLM([{ role: "user", content: "ping" }], { modelId: "mm" });
 
     const [url] = fetchMock.mock.calls[0] as [string, RequestInit];
@@ -94,33 +94,33 @@ describe("callLLM direct-provider protocol", () => {
   });
 
   it("honors a custom timeoutMs in the fast-fail message (benchmark parity)", async () => {
-    const repo = require("@/lib/models-repository") as { __getModelWithKey: jest.Mock };
+    const repo = require("@/lib/models/models-repository") as { __getModelWithKey: jest.Mock };
     repo.__getModelWithKey.mockReturnValue(modelRow({}));
     const abortErr = new Error("aborted");
     abortErr.name = "AbortError";
     fetchMock.mockRejectedValueOnce(abortErr);
 
-    const { callLLM } = require("@/lib/llm") as typeof import("@/lib/llm");
+    const { callLLM } = require("@/lib/models/llm") as typeof import("@/lib/models/llm");
     await expect(
       callLLM([{ role: "user", content: "ping" }], { modelId: "mm", timeoutMs: 120_000 }),
     ).rejects.toThrow(/timed out after 120s/);
   });
 
   it("defaults to the 45s fast-fail timeout when no override is given", async () => {
-    const repo = require("@/lib/models-repository") as { __getModelWithKey: jest.Mock };
+    const repo = require("@/lib/models/models-repository") as { __getModelWithKey: jest.Mock };
     repo.__getModelWithKey.mockReturnValue(modelRow({}));
     const abortErr = new Error("aborted");
     abortErr.name = "AbortError";
     fetchMock.mockRejectedValueOnce(abortErr);
 
-    const { callLLM } = require("@/lib/llm") as typeof import("@/lib/llm");
+    const { callLLM } = require("@/lib/models/llm") as typeof import("@/lib/models/llm");
     await expect(
       callLLM([{ role: "user", content: "ping" }], { modelId: "mm" }),
     ).rejects.toThrow(/timed out after 45s/);
   });
 
   it("surfaces the provider's response body in the error on a non-ok status", async () => {
-    const repo = require("@/lib/models-repository") as { __getModelWithKey: jest.Mock };
+    const repo = require("@/lib/models/models-repository") as { __getModelWithKey: jest.Mock };
     repo.__getModelWithKey.mockReturnValue(modelRow({}));
 
     fetchMock.mockResolvedValueOnce({
@@ -131,7 +131,7 @@ describe("callLLM direct-provider protocol", () => {
       text: async () => "404 page not found",
     });
 
-    const { callLLM } = require("@/lib/llm") as typeof import("@/lib/llm");
+    const { callLLM } = require("@/lib/models/llm") as typeof import("@/lib/models/llm");
     await expect(callLLM([{ role: "user", content: "ping" }], { modelId: "mm" })).rejects.toThrow(
       /LLM provider error 404: 404 page not found/,
     );

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { apiFetch } from "@/lib/api-fetch";
+import { apiFetch } from "@/lib/api/api-fetch";
 
 /**
  * Centralized fetch helpers for the Missions page (keeps route strings in one place).

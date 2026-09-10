@@ -49,38 +49,38 @@ describe("deploy-status: isDeployInProgress + stale-running persistence", () => 
 
   it("returns false when no status file exists", async () => {
     rmSync(realPath, { force: true });
-    const { isDeployInProgress } = await import("@/lib/deploy-status");
+    const { isDeployInProgress } = await import("@/lib/deploy/deploy-status");
     expect(isDeployInProgress()).toBe(false);
   });
 
   it("returns false when state is success", async () => {
     writeStatus("success", new Date().toISOString());
-    const { isDeployInProgress } = await import("@/lib/deploy-status");
+    const { isDeployInProgress } = await import("@/lib/deploy/deploy-status");
     expect(isDeployInProgress()).toBe(false);
   });
 
   it("returns false when state is failed", async () => {
     writeStatus("failed", new Date().toISOString());
-    const { isDeployInProgress } = await import("@/lib/deploy-status");
+    const { isDeployInProgress } = await import("@/lib/deploy/deploy-status");
     expect(isDeployInProgress()).toBe(false);
   });
 
   it("returns true when state is running and startedAt is recent", async () => {
     writeStatus("running", new Date().toISOString());
-    const { isDeployInProgress } = await import("@/lib/deploy-status");
+    const { isDeployInProgress } = await import("@/lib/deploy/deploy-status");
     expect(isDeployInProgress()).toBe(true);
   });
 
   it("returns false when state is running but startedAt is 50 min ago (stale)", async () => {
     const fiftyMinAgo = new Date(Date.now() - 50 * 60 * 1000).toISOString();
     writeStatus("running", fiftyMinAgo);
-    const { isDeployInProgress } = await import("@/lib/deploy-status");
+    const { isDeployInProgress } = await import("@/lib/deploy/deploy-status");
     expect(isDeployInProgress()).toBe(false);
   });
 
   it("returns false when state is running but startedAt is invalid", async () => {
     writeStatus("running", "not-a-date");
-    const { isDeployInProgress } = await import("@/lib/deploy-status");
+    const { isDeployInProgress } = await import("@/lib/deploy/deploy-status");
     // Invalid date: Date.parse returns NaN, we treat as "in progress" per
     // the safe-fallback in the implementation. Verify current contract.
     const result = isDeployInProgress();
@@ -90,7 +90,7 @@ describe("deploy-status: isDeployInProgress + stale-running persistence", () => 
   it("readDeployStatus auto-rewrites stale running to failed on disk", async () => {
     const fiftyMinAgo = new Date(Date.now() - 50 * 60 * 1000).toISOString();
     writeStatus("running", fiftyMinAgo);
-    const { readDeployStatus } = await import("@/lib/deploy-status");
+    const { readDeployStatus } = await import("@/lib/deploy/deploy-status");
     const status = readDeployStatus();
     expect(status.state).toBe("failed");
     expect(status.message).toMatch(/stale/i);
@@ -102,7 +102,7 @@ describe("deploy-status: isDeployInProgress + stale-running persistence", () => 
   it("readDeployStatus leaves fresh running unchanged on disk", async () => {
     const fresh = new Date().toISOString();
     writeStatus("running", fresh);
-    const { readDeployStatus } = await import("@/lib/deploy-status");
+    const { readDeployStatus } = await import("@/lib/deploy/deploy-status");
     const status = readDeployStatus();
     expect(status.state).toBe("running");
     const onDisk = readFileSync(realPath, "utf-8");

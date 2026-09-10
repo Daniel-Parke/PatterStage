@@ -12,7 +12,7 @@ compiled_from: normalised
 
 The design system as it exists after the 2026-09 overhaul (`org/plans/2026-09-ui-overhaul.md`):
 one source in `src/app/globals.css` (`@theme`), mirrored where TypeScript needs
-it in `src/lib/theme.ts`, and held by gates rather than by asking nicely
+it in `src/lib/ui/theme.ts`, and held by gates rather than by asking nicely
 (`design-lint`, `contrast-check`, the live census). Read it top to bottom once;
 after that, the rule for any new screen is the same everywhere: pick the role,
 not the value.
@@ -111,7 +111,7 @@ Text hierarchy is the `--color-ps-text-*` tiers in `globals.css`, gated by
 `scripts/tooling/contrast-check.mjs`; the derivation is in the comment beside
 them. Never spell hierarchy as a raw white opacity.
 
-`src/lib/theme.ts` mirrors the roles and the measures as `surfaceClasses` and
+`src/lib/ui/theme.ts` mirrors the roles and the measures as `surfaceClasses` and
 `measureClasses`, and `tests/unit/lockbook-tokens.test.ts` reads `globals.css`
 and fails if either map names a token the CSS does not declare.
 
@@ -138,7 +138,7 @@ Prose at `micro` is the defect this replaced: 291 sites set descriptions and
 empty states two steps below the body size, and 70% of every character rendered
 came out at 12px.
 
-**A section heading is `sectionHeadingClasses` in `src/lib/theme.ts`**, not a
+**A section heading is `sectionHeadingClasses` in `src/lib/ui/theme.ts`**, not a
 size you choose. Thirty h2 elements wore ten treatments between them and a
 section heading was indistinguishable from a slightly emphatic list item; the
 one treatment is micro-caps mono on the secondary tier with a hairline under it,
@@ -155,10 +155,10 @@ zero.
 Seven rungs, `--color-status-{idle,queued,running,ok,warn,fail,blocked}`, and
 you do not pick one. You pick a WORD.
 
-`src/lib/status-labels.ts` holds thirteen ratified words and the maps from each
+`src/lib/ui/status-labels.ts` holds thirteen ratified words and the maps from each
 domain enum onto them, typed with `satisfies` so an enum member with no word is
 a compile error. `STATUS_TONE` hangs a tone off the word by the same mechanism,
-and `statusToneClasses` in `src/lib/theme.ts` turns a tone into four literal
+and `statusToneClasses` in `src/lib/ui/theme.ts` turns a tone into four literal
 classes: `text`, `dot`, `fill` and `border`.
 
 ```tsx
@@ -298,7 +298,7 @@ measures.
 
 TypeScript `AccentColor` in `src/types/console.ts` has **eight** members:
 `cyan | purple | pink | green | orange | red | blue | yellow`. Every accent map
-in `src/lib/theme.ts` is a `Record<AccentColor, …>` and supplies all eight, so a
+in `src/lib/ui/theme.ts` is a `Record<AccentColor, …>` and supplies all eight, so a
 map written against a shorter list does not typecheck. This file listed only the
 first five for a long time; the other three are not new.
 
@@ -317,7 +317,7 @@ so on:
 The last three are status slots. `neon-red` is declared as the danger colour
 under its accent-slot name (the same value as `--color-semantic-danger`, by
 intent), so `text-neon-red` and `text-semantic-danger` paint the same pixel;
-there is no `neon-blue` and no `semantic-error`. The maps in `src/lib/theme.ts`
+there is no `neon-blue` and no `semantic-error`. The maps in `src/lib/ui/theme.ts`
 spell the status slots with Tailwind's own palette, written out literally.
 Reaching for a house token that is not declared is a red build: design-lint's
 `token-must-exist` rule checks every `text-`, `bg-`, `border-` and friends class
@@ -347,7 +347,7 @@ emit, which is why both spellings appear in the tree.
 
 ## Glow / TS parity
 
-`src/lib/theme.ts` exports `glowSurfaceRgbMap`, built by `makeMap` over the
+`src/lib/ui/theme.ts` exports `glowSurfaceRgbMap`, built by `makeMap` over the
 `GLOW_RGBS` literal, with **space-separated RGB triplets** (`0 191 255`) for each
 of the eight `AccentColor` slots. The separator is load-bearing, not a style
 choice: `GlowSurface` sets the triplet inline as `--glow-surface-rgb`, and
@@ -366,7 +366,7 @@ A form control is the Field Kit, `src/components/ui/field`: `Field` (the only
 label, associated to its control by construction), `Input`, `Textarea`,
 `Select` (the accessible listbox) and `Toggle`, at one control height, with
 captions above. None of them paints a focus ring of its own; the global ring
-below is the ring. `inputFieldClasses(accent)` in `src/lib/theme.ts` still
+below is the ring. `inputFieldClasses(accent)` in `src/lib/ui/theme.ts` still
 exists for the seven sites that predate the kit; do not add an eighth.
 
 ## The primitive set, and what ui/ means
@@ -461,7 +461,7 @@ the build on a `--ch-*` under `src/`.
 - Do not assemble a Tailwind class from a template literal
   (`` `border-${token}` ``). Tailwind scans statically, so the class is never
   generated and the style silently does not exist. That is why the accent maps
-  in `src/lib/theme.ts` are written out one literal per entry, and
+  in `src/lib/ui/theme.ts` are written out one literal per entry, and
   `no-template-literal-tailwind` keeps them that way.
 - The escape hatch is a single line:
   `// design-lint-disable-next-line <rule> -- <reason>`. The reason is required.
@@ -470,9 +470,9 @@ the build on a `--ch-*` under `src/`.
 
 1. Add the primitive to `@theme` in `globals.css`.
 2. If it needs a glow, add its **space-separated** triplet to `GLOW_RGBS` in
-   `src/lib/theme.ts` and mirror it as a `--ps-rgb-*` on `:root`.
+   `src/lib/ui/theme.ts` and mirror it as a `--ps-rgb-*` on `:root`.
 3. Extend `AccentColor` in `src/types/console.ts` only if it must appear on
    `Button` / `Badge`. Adding a member means filling it in on every
-   `Record<AccentColor, …>` map in `src/lib/theme.ts`, which is the point:
+   `Record<AccentColor, …>` map in `src/lib/ui/theme.ts`, which is the point:
    the compiler will list them for you.
 4. Document the hex + role in this file.

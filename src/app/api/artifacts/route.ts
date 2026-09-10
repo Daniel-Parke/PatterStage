@@ -2,19 +2,19 @@
 // /api/artifacts — list + manually create artifacts (the registry)
 // ═══════════════════════════════════════════════════════════════
 
-import { boundsFrom } from "@/lib/list-bounds";
+import { boundsFrom } from "@/lib/ui/list-bounds";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-import { ok } from "@/lib/api-response";
-import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
+import { ok } from "@/lib/api/api-response";
+import { parseAndValidateJsonBody } from "@/lib/api/parse-json-body";
 import {
   createArtifact,
   listArtifacts,
   type ArtifactSourceKind,
-} from "@/lib/artifacts-repository";
+} from "@/lib/runs/artifacts-repository";
 import { recordEvent } from "@/lib/analytics/record-event";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 const SOURCE_KINDS = ["research", "composer", "mission", "chat", "manual"] as const;
 

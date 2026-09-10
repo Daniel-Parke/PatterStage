@@ -7,7 +7,7 @@
  * The pre-refactor route had `readCachedConfig` + `invalidateConfigCache`
  * inline, with the 2 cache key strings repeated 4× across the read +
  * write + invalidate blocks. The refactor moved the logic into
- * `src/lib/config-cache.ts` with a single `CACHE_KEY_JSON` /
+ * `src/lib/config/config-cache.ts` with a single `CACHE_KEY_JSON` /
  * `CACHE_KEY_AT` const pair.
  *
  * This test pins the post-extraction shape so a future
@@ -23,7 +23,7 @@
  *     tests/unit/config-put-refuses-unparseable-yaml.test.ts (T-0060).
  */
 
-import { readCachedConfig, invalidateConfigCache } from "@/lib/config-cache";
+import { readCachedConfig, invalidateConfigCache } from "@/lib/config/config-cache";
 
 const metaStore: Map<string, string> = new Map();
 let prepareCallCount = 0;
@@ -221,7 +221,7 @@ describe("config-cache — List 4 extraction (session 187)", () => {
         }),
       }));
       // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const isolated = require("@/lib/config-cache");
+      const isolated = require("@/lib/config/config-cache");
       writeFileSync(fakeConfigPath, "from: disk-after-throw\n");
       const result = isolated.readCachedConfig();
       expect(result).toEqual({ from: "disk-after-throw" });

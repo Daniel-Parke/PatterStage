@@ -1,6 +1,6 @@
 /** @jest-environment node */
 
-import { injectMissingTimestamps, parseLogLine } from "@/lib/log-line-format";
+import { injectMissingTimestamps, parseLogLine } from "@/lib/logs/log-line-format";
 
 describe("parseLogLine", () => {
   describe("agent.log standard format", () => {

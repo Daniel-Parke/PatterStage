@@ -14,10 +14,10 @@
 import { NextResponse } from "next/server";
 
 import { ensureSyncLayer } from "@/lib/sync";
-import { getSystemStat } from "@/lib/system-repository";
-import { countSkills } from "@/lib/skills-repository";
+import { getSystemStat } from "@/lib/system/system-repository";
+import { countSkills } from "@/lib/skills/skills-repository";
 import { listSessions } from "@/lib/sessions/session-repository";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 export const GET = route("GET /api/status", "reading system status", "Failed to read system status", async () => {
   ensureSyncLayer();

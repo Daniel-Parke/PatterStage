@@ -26,9 +26,9 @@ let testDb: RealDb | null = null;
 
 jest.mock("@/lib/db", () => require("../helpers/baseline-db").dbSingletonMock(() => testDb));
 
-jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
+jest.mock("@/lib/api/api-logger", () => ({ logApiError: jest.fn() }));
 
-import { createSpendRun } from "@/lib/runs-repository";
+import { createSpendRun } from "@/lib/runs/runs-repository";
 
 interface RawRun {
   id: string;
@@ -96,7 +96,7 @@ describe("createSpendRun writes a row that says whose money it was", () => {
 
 describe("callLLM", () => {
   const fetchMock = jest.fn();
-  let callLLM: typeof import("@/lib/llm").callLLM;
+  let callLLM: typeof import("@/lib/models/llm").callLLM;
 
   function answer(usage: unknown) {
     return {
@@ -111,7 +111,7 @@ describe("callLLM", () => {
     jest.resetModules();
     fetchMock.mockReset();
     (globalThis as { fetch?: unknown }).fetch = fetchMock;
-    jest.doMock("@/lib/models-repository", () => ({
+    jest.doMock("@/lib/models/models-repository", () => ({
       getModelWithKey: () => ({
         id: "m-1",
         modelId: "test/model",
@@ -124,7 +124,7 @@ describe("callLLM", () => {
     }));
     // The gateway path is not what this file is about: a resolved direct model
     // means callLLM never reaches for one.
-    callLLM = (require("@/lib/llm") as typeof import("@/lib/llm")).callLLM;
+    callLLM = (require("@/lib/models/llm") as typeof import("@/lib/models/llm")).callLLM;
   });
 
   it("records nothing when the provider reported zero tokens", async () => {

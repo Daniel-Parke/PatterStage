@@ -13,14 +13,14 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { recordEvent } from "@/lib/analytics/record-event";
-import { requireNotReadOnly } from "@/lib/api-auth";
-import { serverErrorFromCatch } from "@/lib/api-logger";
-import { created, ok } from "@/lib/api-response";
-import { appendAuditLine } from "@/lib/audit-log";
+import { requireNotReadOnly } from "@/lib/api/api-auth";
+import { serverErrorFromCatch } from "@/lib/api/api-logger";
+import { created, ok } from "@/lib/api/api-response";
+import { appendAuditLine } from "@/lib/api/audit-log";
 import { databaseBackupsDir, listDatabaseBackups, restoreCommand, snapshotDatabase } from "@/lib/db/backup";
-import { getDbPath } from "@/lib/paths";
-import { messageFromError } from "@/lib/api-fetch";
-import { route } from "@/lib/api-route";
+import { getDbPath } from "@/lib/host/paths";
+import { messageFromError } from "@/lib/api/api-fetch";
+import { route } from "@/lib/api/api-route";
 
 export const GET = route("GET /api/backup", "listing the database backups", "Failed to list the database backups", async () => {
   const dbPath = getDbPath();

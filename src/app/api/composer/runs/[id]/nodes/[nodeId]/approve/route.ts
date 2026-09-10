@@ -9,9 +9,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-import { ok, badRequest, notFound, serviceUnavailable } from "@/lib/api-response";
+import { ok, badRequest, notFound, serviceUnavailable } from "@/lib/api/api-response";
 import { isFeatureEnabled } from "@/lib/feature-flags";
-import { parseJsonBody } from "@/lib/parse-json-body";
+import { parseJsonBody } from "@/lib/api/parse-json-body";
 import {
   getComposerRun,
   getNode,
@@ -21,7 +21,7 @@ import {
 import { advanceComposerRun } from "@/lib/composer/engine";
 import { approvalActionSchema } from "@/lib/composer/schema";
 import { recordEvent } from "@/lib/analytics/record-event";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 const bodySchema = z.object({ action: approvalActionSchema, note: z.string().optional() }).strict();
 

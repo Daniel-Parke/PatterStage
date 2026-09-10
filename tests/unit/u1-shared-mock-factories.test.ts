@@ -7,7 +7,7 @@
  * reading is not: measured, those 39,435 lines are jest.mock 7,402 + imports
  * 1,905 + comments 14,873 + per-file fixtures 15,255, and the comments are the
  * half worth keeping. The mocks are not interchangeable either. `@/lib/db` has
- * 42 distinct shapes across 99 calls; `@/lib/api-fetch` has 31 across 48. A
+ * 42 distinct shapes across 99 calls; `@/lib/api/api-fetch` has 31 across 48. A
  * mock with a per-file factory is testing something different, and hoisting it
  * would be a behaviour change wearing a refactor's clothes.
  *

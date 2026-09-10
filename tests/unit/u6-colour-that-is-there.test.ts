@@ -153,7 +153,7 @@ describe("the accent maps are written out, one class per entry", () => {
   });
 
   it("and the map has an entry for every accent, resting and hover", () => {
-    const theme = read("src/lib/theme.ts");
+    const theme = read("src/lib/ui/theme.ts");
     for (const accent of ["cyan", "purple", "green", "pink", "orange", "red", "blue", "yellow"]) {
       expect(theme).toMatch(new RegExp(`${accent}:\\s*"[^"]*border-`));
     }
@@ -165,7 +165,7 @@ describe("the accent maps are written out, one class per entry", () => {
   });
 
   it("and the muted map has an entry for every accent too", () => {
-    const theme = read("src/lib/theme.ts");
+    const theme = read("src/lib/ui/theme.ts");
     const at = theme.indexOf("iconMutedColorMap");
     expect(at).toBeGreaterThan(-1);
     const block = theme.slice(at, at + 500);

@@ -81,7 +81,7 @@ const rootRow = {
 };
 
 const mockSetAgentRootSyncStatus = jest.fn();
-jest.mock("@/lib/agent-root-repository", () => ({
+jest.mock("@/lib/agents/agent-root-repository", () => ({
   getAgentRoot: () => rootRow,
   setAgentRootSyncStatus: (...a: unknown[]) => mockSetAgentRootSyncStatus(...a),
   updateAgentRoot: jest.fn(),

@@ -15,7 +15,7 @@ import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import { Panel, PanelHeader } from "@/components/dashboard/Panel";
 import { LedgerRow } from "@/components/dashboard/LedgerRow";
 import SegmentedControl from "@/components/ui/SegmentedControl";
-import { statusToneClasses } from "@/lib/theme";
+import { statusToneClasses } from "@/lib/ui/theme";
 import type { MonitorData } from "@/types/console";
 
 type ErrorSeverity = "all" | "error" | "warning";

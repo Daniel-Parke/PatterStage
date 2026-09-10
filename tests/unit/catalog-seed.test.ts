@@ -22,7 +22,7 @@ jest.mock("@/modules/hermes/lib/profile-push", () => ({
   pushAllProfiles: jest.fn(() => [{ success: true, slug: "qa", backupPath: null, error: null }]),
 }));
 
-jest.mock("@/lib/paths", () => ({
+jest.mock("@/lib/host/paths", () => ({
   PS_DATA_DIR: join(repoRoot, "data"),
   PATHS: { patterStageDb: join(repoRoot, "data/control-hub.db") },
 }));

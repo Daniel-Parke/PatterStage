@@ -10,7 +10,7 @@
 
 "use client";
 
-import { sectionHeadingClasses } from "@/lib/theme";
+import { sectionHeadingClasses } from "@/lib/ui/theme";
 import { useState } from "react";
 import { Check, Copy, Download, ExternalLink, Loader2 } from "lucide-react";
 

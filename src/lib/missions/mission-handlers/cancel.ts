@@ -9,8 +9,8 @@
 
 import { NextResponse } from "next/server";
 
-import { logApiError } from "@/lib/api-logger";
-import { ok, notFound } from "@/lib/api-response";
+import { logApiError } from "@/lib/api/api-logger";
+import { ok, notFound } from "@/lib/api/api-response";
 import { finaliseCancelledMission } from "@/lib/missions/cancel-finalise";
 import { stopBackendRunForMission } from "@/lib/orchestration";
 import { recordEvent } from "@/lib/analytics/record-event";

@@ -10,7 +10,7 @@
 // for a stage that concluded FAIL.
 // ═══════════════════════════════════════════════════════════════
 
-import { stripReasoning, extractAnswerSpan } from "@/lib/llm-output";
+import { stripReasoning, extractAnswerSpan } from "@/lib/models/llm-output";
 
 describe("stripReasoning", () => {
   it("removes think/thinking blocks", () => {

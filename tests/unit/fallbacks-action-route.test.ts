@@ -20,7 +20,7 @@ const commitFallbackChange = jest.fn();
 const syncEnabledFallbackChainToHermes = jest.fn();
 const importFallbacksFromHermesYaml = jest.fn();
 
-jest.mock("@/lib/fallbacks-repository", () => ({
+jest.mock("@/lib/models/fallbacks-repository", () => ({
   addFallbackEntry: (...a: unknown[]) => addFallbackEntry(...a),
   toggleFallbackEntry: (...a: unknown[]) => toggleFallbackEntry(...a),
   getFallbackEntry: (...a: unknown[]) => getFallbackEntry(...a),
@@ -36,7 +36,7 @@ jest.mock("@/modules/hermes/lib/fallback-sync", () => ({
 jest.mock("@/modules/hermes/lib/fallback-import", () => ({
   importFallbacksFromHermesYaml: (...a: unknown[]) => importFallbacksFromHermesYaml(...a),
 }));
-jest.mock("@/lib/api-auth", () => ({ requireAuth: () => null }));
+jest.mock("@/lib/api/api-auth", () => ({ requireAuth: () => null }));
 jest.mock("@/lib/db", () => {
   const actual = jest.requireActual("@/lib/db");
   return { ...actual, inTransaction: (fn: () => unknown) => fn() };

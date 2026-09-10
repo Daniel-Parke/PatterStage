@@ -14,12 +14,12 @@ import {
   attachBackendRun,
   updateRun,
   getLatestRunForMission,
-} from "@/lib/runs-repository";
+} from "@/lib/runs/runs-repository";
 import { createSession, closeSessionForMission } from "@/lib/sessions/session-repository";
 import { runtime } from "@/lib/runtime";
 import { uuid, now } from "@/lib/db";
-import { messageFromError } from "@/lib/api-fetch";
-import { logApiError } from "@/lib/api-logger";
+import { messageFromError } from "@/lib/api/api-fetch";
+import { logApiError } from "@/lib/api/api-logger";
 import { recordEvent } from "@/lib/analytics/record-event";
 
 export interface DispatchResult {

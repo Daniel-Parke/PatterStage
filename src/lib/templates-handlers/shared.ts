@@ -14,9 +14,9 @@ import { writeFileSync, readFileSync, existsSync } from "fs";
 import { ensureDir } from "@/lib/fs/fs-helpers";
 import { normalizeLocalDirsInput } from "@/lib/fs/local-dir-entry";
 import { resolveTemplateCategoryId } from "@/lib/missions/mission-category-repository";
-import { PATHS } from "@/lib/paths";
+import { PATHS } from "@/lib/host/paths";
 import type { LocalDirEntry } from "@/types/console";
-import type { DispatchMode } from "@/lib/dispatch-mode";
+import type { DispatchMode } from "@/lib/ui/dispatch-mode";
 
 export const DATA_DIR = PATHS.templates;
 

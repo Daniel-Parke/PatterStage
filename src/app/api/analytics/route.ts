@@ -7,10 +7,10 @@
 // able to forge achievement progress).
 // ═══════════════════════════════════════════════════════════════
 
-import { ok } from "@/lib/api-response";
+import { ok } from "@/lib/api/api-response";
 import { ensureDb } from "@/lib/db";
 import { getAnalyticsSummary } from "@/lib/analytics/aggregates";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 export const GET = route("GET /api/analytics", "", "Failed to load analytics", async () => {
   ensureDb();

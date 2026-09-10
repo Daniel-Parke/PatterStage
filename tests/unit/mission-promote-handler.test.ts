@@ -1,8 +1,8 @@
 /** @jest-environment node */
 /* eslint-disable @typescript-eslint/no-require-imports */
 
-jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
-jest.mock("@/lib/schedules-repository", () => ({
+jest.mock("@/lib/api/api-logger", () => ({ logApiError: jest.fn() }));
+jest.mock("@/lib/schedule/schedules-repository", () => ({
   createSchedule: jest.fn(() => ({ id: "sched1" })),
 }));
 const mockDispatchMissionNow = jest.fn().mockResolvedValue({ ok: true });

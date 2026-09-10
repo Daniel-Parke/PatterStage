@@ -13,7 +13,7 @@
 
 "use client";
 
-import { sectionHeadingClasses } from "@/lib/theme";
+import { sectionHeadingClasses } from "@/lib/ui/theme";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   ReactFlow,
@@ -41,7 +41,7 @@ import Card from "@/components/ui/Card";
 import ConfirmButton from "@/components/ui/ConfirmButton";
 import { Field, Input, Select, Textarea, Toggle } from "@/components/ui/field";
 import type { ToastType } from "@/components/ui/Toast";
-import { runWrite } from "@/lib/api-write";
+import { runWrite } from "@/lib/api/api-write";
 import { useComposerWorkflowGraph } from "@/hooks/useComposer";
 import {
   autoLayout,

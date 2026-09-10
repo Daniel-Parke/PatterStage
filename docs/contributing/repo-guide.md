@@ -71,7 +71,7 @@ sign-in URL is printed to the log. See [SECURITY.md](../SECURITY.md).
 
 ## Where data lives
 
-PatterStage data lives under **`PS_DATA_DIR`** (`src/lib/paths.ts`). The local Hermes
+PatterStage data lives under **`PS_DATA_DIR`** (`src/lib/host/paths.ts`). The local Hermes
 install is resolved from **`HERMES_HOME`** / **`AGENT_HOME`** (default `~/.hermes`) via
 `getActiveHermesPaths()` / `getActiveHermesHome()` in
 `src/modules/hermes/lib/agent-runtime.ts`. System cron uses **`PS_SCRIPTS_DIR`** /
@@ -118,7 +118,14 @@ independent of HTTP traffic. State is SQLite (`src/lib/db/index.ts`, migrations 
 | `src/lib/git/` | Git domain: branch name sanitising, current branch, workspace branches |
 | `src/lib/fs/` | Filesystem domain: helpers, stats, path security, local dir entries, log files |
 | `src/lib/dashboard/` | Dashboard domain: initial load, error dedup, model subtitle, top templates, toasts |
-| `src/lib/*-repository.ts` | Data access, one module per aggregate; a domain's repository sits inside that domain's folder |
+| `src/lib/api/` | The request layer: auth, fetch, logger, response envelope, `route()`, `runWrite`, body parsing, read-only, the audit log |
+| `src/lib/config/` | `config.yaml` and `.env`: the cache, the schema, the sections, the YAML and env readers, deep merge |
+| `src/lib/models/` | The model registry, its repositories, the LLM clients, the gateway client, the fallback chain |
+| `src/lib/host/` | The machine: paths, platform, the host scheduler, the hardware cron |
+| `src/lib/deploy/` | Update and deploy: the spawner, the status, the action labels, boot diagnostics |
+| `src/lib/ui/` | What the server and the client both need to render: the theme, the status vocabulary, list bounds and search |
+| `src/lib/*-repository.ts` | Data access, one module per aggregate; a repository sits inside its own domain's folder |
+| `src/lib/*.ts` | Six files only, each saying in its own header why it belongs to no domain (C7, T-0144) |
 | `tests/unit` · `tests/e2e` · `tests/integration` | Jest · Playwright · Docker + runtime harnesses |
 | `scripts/` | `bootstrap/`, `application/`, `tooling/`, `hardware/`, `maintenance/` |
 
@@ -129,8 +136,8 @@ Next.js static files go in `public/` at the repo root; the Dockerfile runs
 
 - **TypeScript strict:** no `any`, no `@ts-ignore`.
 - **API routes return `{ data?, error? }`** via the status-code-locked factories in
-  `src/lib/api-response.ts`. Do not add overloads to those factories.
-- **Every catch calls `logApiError(route, context, error)`** (`src/lib/api-logger.ts`).
+  `src/lib/api/api-response.ts`. Do not add overloads to those factories.
+- **Every catch calls `logApiError(route, context, error)`** (`src/lib/api/api-logger.ts`).
 - **Authentication is not a route's job, and neither is read-only.** `src/proxy.ts`
   enforces both for every request, authentication first and read-only by HTTP
   method. Do not add either check to a handler: `requireAuth()` was exactly that
@@ -141,7 +148,7 @@ Next.js static files go in `public/` at the repo root; the Dockerfile runs
   handler are the narrow ones: `requireNotReadOnly` for a non-route caller,
   `requireDeployApiEnabled`, `requireAuthenticatedHostWrites`, `requireSignedRequest`.
 - **Whitelist body fields in PUT handlers** (no mass assignment) and validate any
-  path built from input. `resolveScriptPath()` in `src/lib/scripts-manager.ts` is
+  path built from input. `resolveScriptPath()` in `src/lib/scripts/scripts-manager.ts` is
   the reference implementation.
 - **Never validate an attacker-controlled command string. Regenerate it.** See
   `canonicaliseScriptsCommand` in
@@ -158,7 +165,7 @@ Next.js static files go in `public/` at the repo root; the Dockerfile runs
   `useQuery`, and no component reads the API inside a `useEffect`;
   `design-lint`'s `no-raw-fetch-in-component` and
   `tests/unit/u15-reads-go-through-the-hook` hold both (T-0129).
-- **A screen writes through `runWrite`** (`src/lib/api-write.ts`): busy, the
+- **A screen writes through `runWrite`** (`src/lib/api/api-write.ts`): busy, the
   call, what happened in the server's words, the reload, busy cleared, said
   once. A hook that owns query keys writes through react-query's `useMutation`
   and invalidates them instead. `design-lint`'s
@@ -176,7 +183,7 @@ Next.js static files go in `public/` at the repo root; the Dockerfile runs
 
 ## Design tokens
 
-Single source: `src/app/globals.css` (`@theme`) plus `src/lib/theme.ts`,
+Single source: `src/app/globals.css` (`@theme`) plus `src/lib/ui/theme.ts`,
 documented in [design-tokens.md](design-tokens.md). Use theme colours; do not
 introduce raw hex or ad-hoc `purple-500` / `rgba(...)` in TSX.
 

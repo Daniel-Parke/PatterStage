@@ -31,7 +31,7 @@ import type { NextRequest } from "next/server";
 
 jest.mock("next/server", () => require("../helpers/mocks").nextServerMock());
 
-jest.mock("@/lib/api-logger", () => ({
+jest.mock("@/lib/api/api-logger", () => ({
   logApiError: jest.fn(),
   serverErrorFromCatch: jest.fn((_a: string, _b: string, error: unknown) => {
     throw error;
@@ -39,7 +39,7 @@ jest.mock("@/lib/api-logger", () => ({
 }));
 jest.mock("@/lib/db", () => require("../helpers/mocks").dbMock());
 jest.mock("@/lib/sync", () => ({ ensureSyncLayer: jest.fn() }));
-jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
+jest.mock("@/lib/api/audit-log", () => ({ appendAuditLine: jest.fn() }));
 
 const listMissions = jest.fn();
 const getMission = jest.fn();
@@ -50,7 +50,7 @@ jest.mock("@/lib/missions/mission-repository", () => ({
 
 jest.mock("@/lib/missions/mission-category-repository", () => ({ getCategory: jest.fn(() => null) }));
 
-jest.mock("@/lib/runs-repository", () => ({
+jest.mock("@/lib/runs/runs-repository", () => ({
   getLatestRunForMission: jest.fn(() => null),
   listLatestRunsForMissions: jest.fn(() => new Map()),
 }));
@@ -58,7 +58,7 @@ jest.mock("@/lib/orchestration/run-deadline", () => ({ buildMissionRunView: jest
 
 const getScheduleForMission = jest.fn();
 const listSchedulesForMissions = jest.fn();
-jest.mock("@/lib/schedules-repository", () => ({
+jest.mock("@/lib/schedule/schedules-repository", () => ({
   // The two readers the contract names (section 1.4). `listSchedulesForMissions`
   // does not exist yet, which is one of this file's reds.
   getScheduleForMission: (...a: unknown[]) => getScheduleForMission(...a),

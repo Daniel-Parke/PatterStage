@@ -24,7 +24,7 @@ import {
   SECTION_ALIASES,
   getSectionDef,
   resolveSectionRedirect,
-} from "@/lib/config-schema";
+} from "@/lib/config/config-schema";
 
 const slugify = (text: string): string =>
   text

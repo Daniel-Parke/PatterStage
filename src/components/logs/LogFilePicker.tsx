@@ -9,7 +9,7 @@
 
 import { FileText } from "lucide-react";
 import { formatBytes } from "@/lib/utils";
-import { formatLogAge, isLogLive } from "@/lib/log-freshness";
+import { formatLogAge, isLogLive } from "@/lib/logs/log-freshness";
 import { GROUP_ORDER, GROUP_LABELS } from "@/components/logs/constants";
 import { Panel } from "@/components/dashboard/Panel";
 import { LedgerRowButton } from "@/components/dashboard/LedgerRow";

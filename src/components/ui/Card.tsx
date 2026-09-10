@@ -2,7 +2,7 @@
 // Card Component
 // ═══════════════════════════════════════════════════════════════
 
-import { statusToneClasses } from "@/lib/theme";
+import { statusToneClasses } from "@/lib/ui/theme";
 import type { AccentColor } from "@/types/console";
 import GlowSurface from "@/components/ui/GlowSurface";
 import type { SurfaceElement } from "@/components/ui/GlowSurface";

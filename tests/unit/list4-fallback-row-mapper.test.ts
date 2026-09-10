@@ -2,7 +2,7 @@
  * @jest-environment node
  *
  * Unit test for the `rowToFallbackEntry` mapper extraction in
- * `src/lib/fallbacks-repository.ts` (List 4 refactor).
+ * `src/lib/models/fallbacks-repository.ts` (List 4 refactor).
  *
  * The pre-refactor form had the same 8-field row-to-record projection
  * inline in BOTH `listFallbackChain` (called with `.all()`) and
@@ -19,7 +19,7 @@
  *     are preserved
  */
 
-jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
+jest.mock("@/lib/api/api-logger", () => ({ logApiError: jest.fn() }));
 
 const allCalls: Array<{ sql: string }> = [];
 const getCalls: Array<{ sql: string; args: unknown[] }> = [];
@@ -55,7 +55,7 @@ jest.mock("@/lib/db", () => ({
   now: () => "2026-06-12T00:00:00.000Z",
 }));
 
-import { getFallbackEntry, listFallbackChain } from "@/lib/fallbacks-repository";
+import { getFallbackEntry, listFallbackChain } from "@/lib/models/fallbacks-repository";
 
 beforeEach(() => {
   allCalls.length = 0;

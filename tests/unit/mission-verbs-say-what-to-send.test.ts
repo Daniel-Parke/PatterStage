@@ -24,8 +24,8 @@ jest.mock("@/lib/missions/mission-repository", () => ({
   getMission: (...a: unknown[]) => mockGetMission(...a),
   updateMission: (...a: unknown[]) => mockUpdateMission(...a),
 }));
-jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
-jest.mock("@/lib/schedules-repository", () => ({ createSchedule: jest.fn(() => ({ id: "s1" })) }));
+jest.mock("@/lib/api/api-logger", () => ({ logApiError: jest.fn() }));
+jest.mock("@/lib/schedule/schedules-repository", () => ({ createSchedule: jest.fn(() => ({ id: "s1" })) }));
 jest.mock("@/lib/missions/mission-dispatch", () => ({
   dispatchMissionNow: jest.fn().mockResolvedValue({ ok: true }),
 }));

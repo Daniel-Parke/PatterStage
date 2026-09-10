@@ -14,7 +14,7 @@ import {
   listActiveRuns,
   updateRun,
   type RunRecord,
-} from "@/lib/runs-repository";
+} from "@/lib/runs/runs-repository";
 import { updateMission, getMission } from "@/lib/missions/mission-repository";
 import { closeSessionForMission } from "@/lib/sessions/session-repository";
 import { runtime } from "@/lib/runtime";
@@ -22,8 +22,8 @@ import { now } from "@/lib/db";
 import { RuntimeRequestError, type RunStatus, type RunUsage } from "@/lib/runtime/types";
 import { recordEvent } from "@/lib/analytics/record-event";
 import { finalizeComposerNodeRun, advanceComposerRun } from "@/lib/composer/engine";
-import { captureArtifactOnce } from "@/lib/artifacts-repository";
-import { logApiError } from "@/lib/api-logger";
+import { captureArtifactOnce } from "@/lib/runs/artifacts-repository";
+import { logApiError } from "@/lib/api/api-logger";
 import {
   DEFAULT_MAX_RUN_MINUTES,
   GRACE_MINUTES,

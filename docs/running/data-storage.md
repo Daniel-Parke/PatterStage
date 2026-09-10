@@ -25,7 +25,7 @@ versioned migrations under `src/lib/db/migrations/*.sql`.
 
 - **File:** `$PS_DATA_DIR/patterstage.db`. On an un-migrated install the resolver
   falls back to a pre-existing `control-hub.db` (see `getDbPath()` in
-  [`src/lib/paths.ts`](../../src/lib/paths.ts)). When both exist it prefers the one
+  [`src/lib/host/paths.ts`](../../src/lib/host/paths.ts)). When both exist it prefers the one
   with data (larger file) so a stale empty `patterstage.db` never shadows a
   populated `control-hub.db`. The on-disk rename is an optimisation, not a
   requirement; the rename/relocate scripts (`scripts/lib/ps-rename-migrate.sh`,

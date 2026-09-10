@@ -3,11 +3,11 @@
 
 jest.mock("next/server", () => require("../helpers/mocks").nextServerMock());
 
-jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
-jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
-jest.mock("@/lib/api-auth", () => ({ requireAuth: jest.fn(() => null) }));
-jest.mock("@/lib/parse-json-body", () => {
-  const actual = jest.requireActual("@/lib/parse-json-body");
+jest.mock("@/lib/api/api-logger", () => ({ logApiError: jest.fn() }));
+jest.mock("@/lib/api/audit-log", () => ({ appendAuditLine: jest.fn() }));
+jest.mock("@/lib/api/api-auth", () => ({ requireAuth: jest.fn(() => null) }));
+jest.mock("@/lib/api/parse-json-body", () => {
+  const actual = jest.requireActual("@/lib/api/parse-json-body");
   return {
     parseJsonBody: jest.fn(async (req: { json: () => Promise<unknown> }) => req.json()),
     parseAndValidateJsonBody: actual.parseAndValidateJsonBody,
@@ -21,13 +21,13 @@ const mockUpsertCredential = jest.fn();
 const mockListModels = jest.fn();
 const mockUpdateModel = jest.fn();
 
-jest.mock("@/lib/models-repository", () => ({
+jest.mock("@/lib/models/models-repository", () => ({
   upsertModel: (...args: unknown[]) => mockUpsertModel(...args),
   listModels: (...args: unknown[]) => mockListModels(...args),
   updateModel: (...args: unknown[]) => mockUpdateModel(...args),
 }));
 
-jest.mock("@/lib/credentials-repository", () => ({
+jest.mock("@/lib/models/credentials-repository", () => ({
   upsertCredential: (...args: unknown[]) => mockUpsertCredential(...args),
 }));
 
@@ -49,7 +49,7 @@ jest.mock("@/modules/hermes/lib/config-import", () => ({
   parseHermesConfig: () => mockParsedConfig,
 }));
 
-const audit = require("@/lib/audit-log") as { appendAuditLine: jest.Mock };
+const audit = require("@/lib/api/audit-log") as { appendAuditLine: jest.Mock };
 
 beforeEach(() => {
   jest.clearAllMocks();

@@ -28,8 +28,8 @@
   "cost_accepted": "Lower-casing the remainder title-cases acronyms too, so MLOps renders Mlops. The module already documented that stance for the lowercase spelling, and a heading that flickers between Control Hub and CONTROL HUB depending on which row came back first is worse than one that is consistently plain. Recorded as a judgement so a future reader can overturn it on evidence rather than guess at intent.",
   "rollback": "Revert 85c1aa28. Both oracles at c660f814 then go red again.",
   "claims": [
-    "src/lib/skills-grouping.ts",
-    "src/lib/boot-diagnostics.ts",
+    "src/lib/skills/skills-grouping.ts",
+    "src/lib/deploy/boot-diagnostics.ts",
     "src/instrumentation.ts",
     "src/components/providers/QueryProvider.tsx",
     "tests/"

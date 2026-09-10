@@ -4,9 +4,9 @@
 
 import { NextRequest } from "next/server";
 
-import { serverErrorFromCatch } from "@/lib/api-logger";
-import { ok, badRequest } from "@/lib/api-response";
-import { tailScriptLog } from "@/lib/scripts-manager";
+import { serverErrorFromCatch } from "@/lib/api/api-logger";
+import { ok, badRequest } from "@/lib/api/api-response";
+import { tailScriptLog } from "@/lib/scripts/scripts-manager";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);

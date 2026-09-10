@@ -8,13 +8,13 @@
  * their suites are here, with the reasons that were on them.
  */
 
-import { isApiSuccessFalse, runWrite, type RunWriteOptions } from "@/lib/api-write";
+import { isApiSuccessFalse, runWrite, type RunWriteOptions } from "@/lib/api/api-write";
 
-jest.mock("@/lib/api-fetch", () => ({
-  ...(jest.requireActual("@/lib/api-fetch") as Record<string, unknown>),
+jest.mock("@/lib/api/api-fetch", () => ({
+  ...(jest.requireActual("@/lib/api/api-fetch") as Record<string, unknown>),
   apiFetch: jest.fn(),
 }));
-import { apiFetch as apiFetchMocked } from "@/lib/api-fetch";
+import { apiFetch as apiFetchMocked } from "@/lib/api/api-fetch";
 const apiFetch = apiFetchMocked as unknown as jest.Mock;
 
 const base = (overrides: Partial<RunWriteOptions> = {}): RunWriteOptions => ({

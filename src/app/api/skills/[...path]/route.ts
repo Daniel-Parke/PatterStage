@@ -4,8 +4,8 @@ import { resolveSkillDirUnderRoot } from "@/lib/fs/path-security";
 import { readSkillView, skillsRoot } from "@/modules/hermes/lib/skill-view";
 import { ensureDb } from "@/lib/db";
 
-import { badRequest, notFound, ok } from "@/lib/api-response";
-import { route } from "@/lib/api-route";
+import { badRequest, notFound, ok } from "@/lib/api/api-response";
+import { route } from "@/lib/api/api-route";
 
 export const GET = route("GET /api/skills/[...path]", "reading skill", "Failed to read skill", async (request: NextRequest, { params }: { params: Promise<{ path: string[] }> }) => {
   const { path } = await params;

@@ -16,7 +16,7 @@ jest.mock("lucide-react", () => require("../helpers/mocks").lucideMock());
 jest.mock("next/link", () => require("../helpers/mocks").nextLinkMock());
 
 import SettingsNav from "@/components/config/SettingsNav";
-import type { SectionDef } from "@/lib/config-schema";
+import type { SectionDef } from "@/lib/config/config-schema";
 
 const section = (id: string, label: string) => ({ id, label }) as unknown as SectionDef;
 const groups = [

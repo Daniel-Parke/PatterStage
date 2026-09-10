@@ -61,7 +61,7 @@ jest.mock("@/lib/runtime/workspace", () => ({
   }),
 }));
 
-jest.mock("@/lib/paths", () => ({
+jest.mock("@/lib/host/paths", () => ({
   PATHS: { missions: "/tmp/ps-data/missions" },
   getPsDataDir: () => "/tmp/ps-data",
 }));
@@ -88,7 +88,7 @@ jest.mock("@/lib/sessions/sessions-api-guard", () => ({
   sessionsRateLimitResponse: () => null,
 }));
 
-jest.mock("@/lib/api-logger", () => ({
+jest.mock("@/lib/api/api-logger", () => ({
   logApiError: jest.fn(),
   serverErrorFromCatch: jest.fn(),
 }));

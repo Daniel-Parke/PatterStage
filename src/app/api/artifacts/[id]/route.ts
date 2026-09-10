@@ -4,10 +4,10 @@
 
 import { NextRequest } from "next/server";
 
-import { ok, notFound } from "@/lib/api-response";
-import { deleteArtifact, getArtifact } from "@/lib/artifacts-repository";
+import { ok, notFound } from "@/lib/api/api-response";
+import { deleteArtifact, getArtifact } from "@/lib/runs/artifacts-repository";
 import { recordEvent } from "@/lib/analytics/record-event";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 interface Ctx {
   params: Promise<{ id: string }>;

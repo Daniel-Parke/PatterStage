@@ -7,7 +7,7 @@
 // string put a limit in the prompt the reconciler did not enforce. And the
 // four list fields crashed formatList when a string arrived.
 
-jest.mock("@/lib/models-repository", () => ({
+jest.mock("@/lib/models/models-repository", () => ({
   findModelByModelId: jest.fn(() => null),
 }));
 

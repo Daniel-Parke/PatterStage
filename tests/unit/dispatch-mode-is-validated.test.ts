@@ -83,17 +83,17 @@ jest.mock("@/lib/missions/mission-response", () => ({
 
 jest.mock("@/lib/agents/roster", () => ({ resolveAgentSlug: () => undefined }));
 
-jest.mock("@/lib/schedules-repository", () => ({
+jest.mock("@/lib/schedule/schedules-repository", () => ({
   createSchedule: (...a: unknown[]) => {
     mockCreateSchedule(...a);
     return { id: "s1" };
   },
 }));
 
-jest.mock("@/lib/audit-log", () => ({
+jest.mock("@/lib/api/audit-log", () => ({
   appendAuditLine: (...a: unknown[]) => mockAppendAuditLine(...a),
 }));
-jest.mock("@/lib/api-logger", () => ({
+jest.mock("@/lib/api/api-logger", () => ({
   logApiError: jest.fn(),
   serverErrorFromCatch: jest.fn(
     () =>

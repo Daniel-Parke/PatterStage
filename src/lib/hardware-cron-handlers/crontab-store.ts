@@ -7,9 +7,9 @@
 // recognised, how it maps to a job record, and how a job record maps back
 // to a line. The handlers work in job records, never in raw text.
 
-import { crontabLineUsesScriptsDir } from "@/lib/hardware-cron";
-import { getHostScheduler } from "@/lib/host-scheduler";
-import { getPsScriptsDir } from "@/lib/paths";
+import { crontabLineUsesScriptsDir } from "@/lib/host/hardware-cron";
+import { getHostScheduler } from "@/lib/host/host-scheduler";
+import { getPsScriptsDir } from "@/lib/host/paths";
 import { extractScriptName, SCRIPT_EXT_RE } from "@/lib/scripts/script-ext";
 
 import { loadDisabledIds } from "./disabled-state";
@@ -84,7 +84,7 @@ export function serialiseLine(
 
 // Cross-platform: crontab on Unix, Task Scheduler (schtasks) on Windows. The
 // scheduler presents the managed jobs as crontab-format text either way, so the
-// parse/serialise logic above is unchanged. See src/lib/host-scheduler.ts.
+// parse/serialise logic above is unchanged. See src/lib/host/host-scheduler.ts.
 export function readCrontab(): Promise<string> {
   return getHostScheduler().readRaw();
 }

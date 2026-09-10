@@ -36,8 +36,8 @@ import { join } from "path";
 
 import { NextRequest } from "next/server";
 
-import { SESSION_COOKIE } from "@/lib/auth-token";
-import { FREE_AUTH_ATTEMPTS, MAX_AUTH_PENALTY_SECONDS } from "@/lib/auth-throttle";
+import { SESSION_COOKIE } from "@/lib/api/auth-token";
+import { FREE_AUTH_ATTEMPTS, MAX_AUTH_PENALTY_SECONDS } from "@/lib/api/auth-throttle";
 
 const TOKEN = "test-token-abcdefghijklmnop";
 const WRONG = "wrong-token-0000000000000";
@@ -280,7 +280,7 @@ describe("GREEN CONTROLS: the boundary is otherwise unchanged", () => {
     jest.useFakeTimers();
     try {
       const proxy = await loadProxy();
-      const { authThrottleRecordCount } = await import("@/lib/auth-throttle");
+      const { authThrottleRecordCount } = await import("@/lib/api/auth-throttle");
 
       for (let i = 0; i < 50; i++) proxy(bearer(WRONG, `10.0.0.${i}`));
       expect(authThrottleRecordCount()).toBeGreaterThan(10);

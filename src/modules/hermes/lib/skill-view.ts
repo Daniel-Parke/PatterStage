@@ -15,8 +15,8 @@
 
 import { existsSync, readFileSync, readdirSync, statSync } from "fs";
 
-import { logApiError } from "@/lib/api-logger";
-import { getSkill, parseSkillFrontmatter, stripSkillFrontmatter } from "@/lib/skills-repository";
+import { logApiError } from "@/lib/api/api-logger";
+import { getSkill, parseSkillFrontmatter, stripSkillFrontmatter } from "@/lib/skills/skills-repository";
 // design-lint-disable-next-line hermes-outside-adapter -- this module is the adapter: reading the agent's own skills tree is its whole job, and it lives under modules/hermes for exactly that reason.
 import { getActiveHermesPaths } from "./agent-runtime";
 

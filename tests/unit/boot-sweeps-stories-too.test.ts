@@ -11,7 +11,7 @@ jest.mock("@/lib/sync/SyncScheduler", () => ({
     stop() {}
   },
 }));
-jest.mock("@/lib/system-repository", () => ({ getSystemStat: jest.fn(), upsertMetaValue: jest.fn() }));
+jest.mock("@/lib/system/system-repository", () => ({ getSystemStat: jest.fn(), upsertMetaValue: jest.fn() }));
 jest.mock("@/lib/orchestration/RunSync", () => ({ RunSync: class {} }));
 jest.mock("@/lib/composer/seed", () => ({ ensureDefaultComposerWorkflows: jest.fn() }));
 jest.mock("@/lib/composer/scheduler/composer-tick", () => ({ ComposerTickSource: class {} }));

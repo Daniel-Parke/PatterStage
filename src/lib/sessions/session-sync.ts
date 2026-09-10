@@ -28,7 +28,7 @@ import { getDb } from "../db";
 import { SERVER_MODULES } from "../modules/server";
 import { parseCronSessionId } from "./session-title";
 import { estimateSessionSize } from "./session-repository";
-import { messageFromError } from "@/lib/api-fetch";
+import { messageFromError } from "@/lib/api/api-fetch";
 import { readHermesSessionsFromStateDb } from "../runtime/state-db";
 import { hermesStatusFromEndReason } from "./hermes-state-sessions";
 import {

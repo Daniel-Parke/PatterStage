@@ -4,13 +4,13 @@ import { dirname } from "path";
 
 import { resolveProfileHermesHome, buildProfileHermesPathBundle } from "@/modules/hermes/lib/profile-paths";
 import { getBehaviorFiles } from "@/modules/hermes/lib/behavior-files";
-import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
-import { parseJsonBody } from "@/lib/parse-json-body";
+import { logApiError, serverErrorFromCatch } from "@/lib/api/api-logger";
+import { parseJsonBody } from "@/lib/api/parse-json-body";
 import { safeStat } from "@/lib/fs/fs-stats";
 import { ensureDir, backupTimestamp } from "@/lib/fs/fs-helpers";
 import { resolveSafeProfileName } from "@/lib/fs/path-security";
 
-import { appendAuditLine } from "@/lib/audit-log";
+import { appendAuditLine } from "@/lib/api/audit-log";
 import { ensureDb } from "@/lib/db";
 import { getProfile } from "@/modules/hermes/lib/profiles-repository";
 import {
@@ -23,7 +23,7 @@ import {
   applyProfileOrRootPatchOrFail,
   pushProfileOrRootOrFail,
 } from "@/modules/hermes/handlers/profile-patch";
-import { badRequest, notFound, ok } from "@/lib/api-response";
+import { badRequest, notFound, ok } from "@/lib/api/api-response";
 import { maskEnvFileContent } from "@/lib/secret-mask";
 import { recordEvent } from "@/lib/analytics/record-event";
 import {

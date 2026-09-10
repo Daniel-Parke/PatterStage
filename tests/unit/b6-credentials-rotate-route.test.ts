@@ -47,19 +47,19 @@ jest.mock("@/lib/db", () => {
   };
 });
 
-jest.mock("@/lib/api-logger", () => ({
+jest.mock("@/lib/api/api-logger", () => ({
   logApiError: jest.fn(),
-  serverErrorFromCatch: jest.requireActual("@/lib/api-logger").serverErrorFromCatch,
+  serverErrorFromCatch: jest.requireActual("@/lib/api/api-logger").serverErrorFromCatch,
 }));
-jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
-jest.mock("@/lib/api-auth", () => ({}));
+jest.mock("@/lib/api/audit-log", () => ({ appendAuditLine: jest.fn() }));
+jest.mock("@/lib/api/api-auth", () => ({}));
 
 jest.mock("@/modules/hermes/lib/hermes-env-sync", () => ({
   syncCredentialToHermesEnv: jest.fn(() => ({ backupPath: null })),
   removeCredentialFromHermesEnv: jest.fn(() => ({ backupPath: null })),
 }));
 
-jest.mock("@/lib/credentials-repository", () => {
+jest.mock("@/lib/models/credentials-repository", () => {
   const listCredentials = jest.fn();
   const getCredential = jest.fn();
   const getCredentialWithKey = jest.fn();
@@ -78,8 +78,8 @@ jest.mock("@/lib/credentials-repository", () => {
 
 import * as route from "@/app/api/credentials/[id]/route";
 
-const repo = require("@/lib/credentials-repository") as Record<string, jest.Mock>;
-const audit = require("@/lib/audit-log") as { appendAuditLine: jest.Mock };
+const repo = require("@/lib/models/credentials-repository") as Record<string, jest.Mock>;
+const audit = require("@/lib/api/audit-log") as { appendAuditLine: jest.Mock };
 const env = require("@/modules/hermes/lib/hermes-env-sync") as {
   syncCredentialToHermesEnv: jest.Mock;
 };
@@ -125,7 +125,7 @@ const WITH_KEY = { ...SAMPLE, apiKey: "sk-old-key-12345" };
 const NEW_KEY = "sk-new-key-98765";
 
 function realRepo() {
-  return jest.requireActual("@/lib/credentials-repository") as typeof import("@/lib/credentials-repository");
+  return jest.requireActual("@/lib/models/credentials-repository") as typeof import("@/lib/models/credentials-repository");
 }
 
 beforeEach(() => {

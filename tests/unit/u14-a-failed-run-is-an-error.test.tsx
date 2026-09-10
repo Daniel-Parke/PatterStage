@@ -22,7 +22,7 @@ import { join } from "node:path";
 import type { ChatMessage } from "@/types/chat";
 
 jest.mock("lucide-react", () => require("../helpers/mocks").lucideMock());
-jest.mock("@/lib/chat-utils", () => ({ renderMarkdown: (s: string) => s }));
+jest.mock("@/lib/chat/chat-utils", () => ({ renderMarkdown: (s: string) => s }));
 
 import MessageBubble from "@/components/chat/MessageBubble";
 

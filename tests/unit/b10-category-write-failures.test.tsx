@@ -34,11 +34,11 @@ import { act, renderHook } from "@testing-library/react";
 
 const apiFetch = jest.fn(async (_path: string, _options?: unknown) => ({ data: {} }));
 
-jest.mock("@/lib/api-fetch", () => ({
+jest.mock("@/lib/api/api-fetch", () => ({
   // messageFromError and setErrorFromCaught stay REAL: this oracle is about
   // what the user is told, and mocking the thing that tells them would assert
   // nothing.
-  ...(jest.requireActual("@/lib/api-fetch") as Record<string, unknown>),
+  ...(jest.requireActual("@/lib/api/api-fetch") as Record<string, unknown>),
   apiFetch: (...a: unknown[]) => (apiFetch as unknown as (...a: unknown[]) => unknown)(...a),
 }));
 

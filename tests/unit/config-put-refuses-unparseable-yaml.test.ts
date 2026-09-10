@@ -58,22 +58,22 @@ jest.mock("fs", () => ({
 
 jest.mock("@/modules/hermes/lib/agent-runtime", () => require("../helpers/mocks").agentRuntimeMock());
 
-jest.mock("@/lib/paths", () => require("../helpers/mocks").pathsMock());
+jest.mock("@/lib/host/paths", () => require("../helpers/mocks").pathsMock());
 
-jest.mock("@/lib/api-logger", () => ({
+jest.mock("@/lib/api/api-logger", () => ({
   logApiError: mockLogApiError,
   serverErrorFromCatch: jest.fn(() => mockServerError()),
 }));
 
-jest.mock("@/lib/api-auth", () => ({}));
+jest.mock("@/lib/api/api-auth", () => ({}));
 
-jest.mock("@/lib/audit-log", () => ({
+jest.mock("@/lib/api/audit-log", () => ({
   appendAuditLine: mockAppendAuditLine,
 }));
 
 // The config cache reads through this pair. Returning [] keeps the cache COLD,
 // which is the normal case; one test below deliberately warms it.
-jest.mock("@/lib/system-repository", () => ({
+jest.mock("@/lib/system/system-repository", () => ({
   getMetaPair: mockGetMetaPair,
   setMultipleStats: jest.fn(),
   deleteMetaPair: jest.fn(),

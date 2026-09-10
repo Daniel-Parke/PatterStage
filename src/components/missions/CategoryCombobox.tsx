@@ -7,7 +7,7 @@ import Button from "@/components/ui/Button";
 import { Input } from "@/components/ui/field";
 import { POPOVER_PANEL } from "@/components/ui/Popover";
 import { useDismissable } from "@/hooks/useDismissable";
-import { statusToneClasses } from "@/lib/theme";
+import { statusToneClasses } from "@/lib/ui/theme";
 import { CATEGORY_COLOR_CLASSES } from "@/lib/missions/mission-categories";
 
 export interface CategoryOption {

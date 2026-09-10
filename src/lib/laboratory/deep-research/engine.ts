@@ -8,7 +8,7 @@
 // step persistence are all injected so the engine is pure + testable.
 // ═══════════════════════════════════════════════════════════════
 
-import { callLLM, type LLMMessage } from "@/lib/llm";
+import { callLLM, type LLMMessage } from "@/lib/models/llm";
 import { visitPage } from "@/lib/search";
 import type { ResearchStepKind, SearchProvider, SearchResult, VisitedPage } from "./types";
 import { accumulateUsage, type ResearchUsage, type ResearchUsageTotal } from "./usage";

@@ -65,7 +65,7 @@ async function main(): Promise<void> {
   // else discovers an existing populated data dir). Replaces the old hardcoded
   // lowercase ~/patterstage/data + control-hub.db, which on a case-sensitive
   // install could create/migrate the WRONG (or an empty) database.
-  const { getPsDataDir, getDbPath } = await import("../../src/lib/paths");
+  const { getPsDataDir, getDbPath } = await import("../../src/lib/host/paths");
   const dataDir = getPsDataDir();
   process.env.PS_DATA_DIR = dataDir;
   if (!existsSync(dataDir)) mkdirSync(dataDir, { recursive: true });

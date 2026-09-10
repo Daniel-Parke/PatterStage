@@ -1,5 +1,5 @@
 // _platform.mjs — plain-ESM mirror of the deploy-relevant bits of
-// src/lib/platform.ts. The deploy runner (ps-deploy.mjs) runs in plain `node`
+// src/lib/host/platform.ts. The deploy runner (ps-deploy.mjs) runs in plain `node`
 // (outside the Next build) so it cannot import the TS module; keep this small
 // surface in sync with platform.ts.
 

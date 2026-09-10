@@ -23,7 +23,7 @@
   "status": "done",
   "owner_session": "t0136-c1-one-route-body-2026-09-10",
   "claims": [
-    "src/lib/api-route.ts",
+    "src/lib/api/api-route.ts",
     "src/app/api/",
     "scripts/tooling/check-read-only-guards.mjs",
     "scripts/tooling/line-census.mjs",

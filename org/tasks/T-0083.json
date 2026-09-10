@@ -14,11 +14,11 @@
   "status": "done",
   "owner_session": "t0083-guards-doors-2026-08-31",
   "claims": [
-    "src/lib/auth-throttle.ts",
+    "src/lib/api/auth-throttle.ts",
     "src/proxy.ts",
     "src/app/api/sessions/route.ts",
     "src/app/api/credentials/[id]/route.ts",
-    "src/lib/credentials-repository.ts",
+    "src/lib/models/credentials-repository.ts",
     "src/components/models/CredentialsPanel.tsx",
     "src/hooks/useModelActions.ts",
     "src/app/config/models/page.tsx",

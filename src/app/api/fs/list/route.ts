@@ -7,9 +7,9 @@ import { readdirSync, statSync, existsSync } from "fs";
 import { homedir } from "os";
 import { resolve as pathResolve } from "path";
 
-import { badRequest, ok } from "@/lib/api-response";
+import { badRequest, ok } from "@/lib/api/api-response";
 import { resolveAllowedWorkspacePath } from "@/lib/fs/path-security";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 export const GET = route("GET /api/fs/list", "listing path", "Failed to list directory", async (request: NextRequest) => {
   const url = request.nextUrl;

@@ -3,11 +3,11 @@ import type { NextRequest } from "next/server";
 // /api/seed/clean — preview (GET) + purge (POST) throwaway test data
 // ═══════════════════════════════════════════════════════════════
 
-import { ok, serverError } from "@/lib/api-response";
-import { appendAuditLine } from "@/lib/audit-log";
+import { ok, serverError } from "@/lib/api/api-response";
+import { appendAuditLine } from "@/lib/api/audit-log";
 import { snapshotDatabase } from "@/lib/db/backup";
 import { cleanDevData, previewDevDataCleanup } from "@/lib/seed/clean-dev-data";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 export const GET = route("GET /api/seed/clean", "preview", "Failed to preview dev data", async (_request: NextRequest) => {
   return ok({ preview: previewDevDataCleanup() });

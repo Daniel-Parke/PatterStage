@@ -20,7 +20,7 @@
  * `-p 3494` and no PORT in the environment: the boot line advertised 3494.
  */
 
-import { describeOperationalFlags } from "@/lib/boot-diagnostics";
+import { describeOperationalFlags } from "@/lib/deploy/boot-diagnostics";
 
 const saved = { ...process.env };
 afterEach(() => {

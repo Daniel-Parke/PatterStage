@@ -1,6 +1,6 @@
 /**
  * Unit tests for `fallbackForDeployMessage` from
- * src/lib/deploy-action-fallback.ts.
+ * src/lib/deploy/deploy-action-fallback.ts.
  *
  * The Sidebar's three deploy action click handlers
  * (handleUpdate/handleRestart/doRebuild) all need a "failed"
@@ -11,7 +11,7 @@
  * These tests lock the convention so a future message rewrite
  * ("Update in progress…") gets flagged in CI before it ships.
  */
-import { fallbackForDeployMessage } from "@/lib/deploy-action-fallback";
+import { fallbackForDeployMessage } from "@/lib/deploy/deploy-action-fallback";
 
 describe("fallbackForDeployMessage", () => {
   it("replaces 'started —' with 'failed' (the Update case)", () => {

@@ -8,17 +8,17 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuthenticatedHostWrites, isReadOnly } from "@/lib/api-auth";
-import { ok, badRequest, notFound, serviceUnavailable } from "@/lib/api-response";
-import { readOnlyMessage } from "@/lib/read-only";
-import { parseJsonBody } from "@/lib/parse-json-body";
+import { requireAuthenticatedHostWrites, isReadOnly } from "@/lib/api/api-auth";
+import { ok, badRequest, notFound, serviceUnavailable } from "@/lib/api/api-response";
+import { readOnlyMessage } from "@/lib/api/read-only";
+import { parseJsonBody } from "@/lib/api/parse-json-body";
 import {
   readScriptContent,
   writeScriptContent,
   deleteScriptFile,
-} from "@/lib/scripts-manager";
+} from "@/lib/scripts/scripts-manager";
 import { recordEvent } from "@/lib/analytics/record-event";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 type Ctx = { params: Promise<{ name: string }> };
 

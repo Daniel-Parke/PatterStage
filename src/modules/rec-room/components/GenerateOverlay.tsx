@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { Sparkles, CheckCircle2 } from "lucide-react";
 
 import Card from "@/components/ui/Card";
-import { statusToneClasses } from "@/lib/theme";
+import { statusToneClasses } from "@/lib/ui/theme";
 import { LOADING_MESSAGES } from "@/modules/rec-room/lib/prompts";
 
 interface GenerateOverlayProps {

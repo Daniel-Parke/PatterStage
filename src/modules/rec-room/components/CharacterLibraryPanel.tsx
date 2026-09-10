@@ -18,7 +18,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import IconButton from "@/components/ui/IconButton";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import Skeleton from "@/components/ui/Skeleton";
-import { sectionHeadingClasses } from "@/lib/theme";
+import { sectionHeadingClasses } from "@/lib/ui/theme";
 import type { CharacterSheet } from "@/modules/rec-room/types";
 
 type BadgeColor = NonNullable<ComponentProps<typeof Badge>["color"]>;

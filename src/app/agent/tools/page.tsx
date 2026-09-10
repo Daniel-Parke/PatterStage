@@ -11,7 +11,7 @@
 
 "use client";
 
-import { sectionHeadingClasses } from "@/lib/theme";
+import { sectionHeadingClasses } from "@/lib/ui/theme";
 import { useState, useEffect, useCallback } from "react";
 import {
   Wrench,
@@ -29,10 +29,10 @@ import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import ProfilePicker from "@/components/ui/ProfilePicker";
 import { Textarea } from "@/components/ui/field";
 import { LastResult, useToast } from "@/components/ui/Toast";
-import { API_FETCH_BULK_TIMEOUT_MS } from "@/lib/api-fetch";
-import { runWrite } from "@/lib/api-write";
+import { API_FETCH_BULK_TIMEOUT_MS } from "@/lib/api/api-fetch";
+import { runWrite } from "@/lib/api/api-write";
 import { useApiResource } from "@/hooks/useApiResource";
-import { profileSyncBody } from "@/lib/profile-sync-body";
+import { profileSyncBody } from "@/lib/agents/profile-sync-body";
 import type { PlatformToolsets } from "@/modules/hermes/lib/profile-config-builder";
 import type { AgentProfile } from "@/types/console";
 import {

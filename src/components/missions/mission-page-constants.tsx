@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { Clock, Loader2, CheckCircle2, XCircle } from "lucide-react";
 import type { MissionRunTone } from "@/lib/missions/mission-run-state";
-import { statusToneClasses } from "@/lib/theme";
+import { statusToneClasses } from "@/lib/ui/theme";
 
 export interface StatusConfig {
   dot: "online" | "warning" | "error" | "idle";

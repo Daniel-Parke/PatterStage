@@ -26,8 +26,8 @@
 import {
   logApiError,
   serverErrorFromCatch,
-} from "@/lib/api-logger";
-import { serverError } from "@/lib/api-response";
+} from "@/lib/api/api-logger";
+import { serverError } from "@/lib/api/api-response";
 
 describe("serverErrorFromCatch", () => {
   let consoleErrorSpy: jest.SpyInstance;

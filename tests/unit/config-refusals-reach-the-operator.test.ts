@@ -38,13 +38,13 @@ const CLEAN_ROW = {
   userMd: "", memoryMd: "", disabledSkillsJson: "[]", platformToolsetsJson: "{}",
   syncedAt: null, syncError: null, updatedAt: "",
 };
-jest.mock("@/lib/agent-root-repository", () => ({
+jest.mock("@/lib/agents/agent-root-repository", () => ({
   getAgentRoot: () => CLEAN_ROW,
   updateAgentRoot: jest.fn(),
   setAgentRootSyncStatus: (...a: unknown[]) => mockSetRootStatus(...a),
 }));
 
-jest.mock("@/lib/models-repository", () => ({
+jest.mock("@/lib/models/models-repository", () => ({
   getModel: (id: string) => (id === "m1" ? { id: "m1", name: "Model One", provider: "openai", modelId: "gpt" } : null),
   listModels: () => [],
   getModelDefaults: () => ({}),

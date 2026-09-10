@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { logApiError } from "@/lib/api-logger";
+import { logApiError } from "@/lib/api/api-logger";
 
 /** Default max session transcript size (bytes) before GET returns 413. Override with MAX_SESSION_FILE_BYTES. */
 const DEFAULT_MAX_SESSION_BYTES = 64 * 1024 * 1024;

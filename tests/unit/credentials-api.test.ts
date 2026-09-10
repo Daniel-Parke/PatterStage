@@ -10,10 +10,10 @@ import type { NextRequest } from "next/server";
 // existing call sites' usage (`NextResponse.json(data, init)`) intact.
 jest.mock("next/server", () => require("../helpers/mocks").nextServerMock());
 
-jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
-jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
+jest.mock("@/lib/api/api-logger", () => ({ logApiError: jest.fn() }));
+jest.mock("@/lib/api/audit-log", () => ({ appendAuditLine: jest.fn() }));
 
-jest.mock("@/lib/api-auth", () => ({
+jest.mock("@/lib/api/api-auth", () => ({
 }));
 
 jest.mock("@/modules/hermes/lib/config-sync", () => ({
@@ -25,7 +25,7 @@ jest.mock("@/modules/hermes/lib/hermes-env-sync", () => ({
   removeCredentialFromHermesEnv: jest.fn(() => ({ backupPath: null })),
 }));
 
-jest.mock("@/lib/credentials-repository", () => {
+jest.mock("@/lib/models/credentials-repository", () => {
   const listCredentials = jest.fn();
   const getCredential = jest.fn();
   const getCredentialWithKey = jest.fn();
@@ -42,8 +42,8 @@ jest.mock("@/lib/credentials-repository", () => {
   };
 });
 
-const repo = require("@/lib/credentials-repository") as Record<string, jest.Mock>;
-const audit = require("@/lib/audit-log") as { appendAuditLine: jest.Mock };
+const repo = require("@/lib/models/credentials-repository") as Record<string, jest.Mock>;
+const audit = require("@/lib/api/audit-log") as { appendAuditLine: jest.Mock };
 
 beforeEach(() => {
   jest.clearAllMocks();

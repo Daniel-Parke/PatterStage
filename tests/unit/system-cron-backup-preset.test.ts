@@ -2,8 +2,8 @@
 import { existsSync } from "fs";
 import { join } from "path";
 
-import { HARDWARE_CRON_UI_PRESETS, HARDWARE_CRON_PRESET_SCRIPT_FILES } from "@/lib/hardware-cron";
-import { isWindows } from "@/lib/platform";
+import { HARDWARE_CRON_UI_PRESETS, HARDWARE_CRON_PRESET_SCRIPT_FILES } from "@/lib/host/hardware-cron";
+import { isWindows } from "@/lib/host/platform";
 
 describe("hardware cron presets", () => {
   it("every preset script file is shipped under scripts/hardware", () => {

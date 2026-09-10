@@ -23,7 +23,7 @@ import CollapsibleSection from "@/components/ui/CollapsibleSection";
 import { EmptyState } from "@/components/ui/EmptyState";
 import Button from "@/components/ui/Button";
 import { useState } from "react";
-import { statusToneClasses } from "@/lib/theme";
+import { statusToneClasses } from "@/lib/ui/theme";
 import {
   CATEGORY_COLOR_CLASSES,
   resolveCategoryDisplay,
@@ -42,7 +42,7 @@ import {
   countMissionsByColumn,
   missionBoardColumn,
 } from "@/lib/missions/mission-board";
-import { MISSION_COLUMN_LABELS } from "@/lib/status-labels";
+import { MISSION_COLUMN_LABELS } from "@/lib/ui/status-labels";
 import { describeMissionRunState } from "@/lib/missions/mission-run-state";
 import MissionEditorPanel from "./MissionEditorPanel";
 import ConceptHint from "@/components/help/ConceptHint";

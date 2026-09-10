@@ -45,7 +45,7 @@ import {
   parseToolEvent,
   mergeToolCall,
   reframeToolsForFailedRun,
-} from "@/lib/chat-utils";
+} from "@/lib/chat/chat-utils";
 import type { PendingApproval } from "@/hooks/chat-local-message";
 
 export interface UseAgentRunStreamArgs {

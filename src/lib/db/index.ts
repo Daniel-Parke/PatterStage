@@ -26,7 +26,7 @@
 import Database, { type Database as _DatabaseType } from "better-sqlite3";
 import { join } from "path";
 import { existsSync, readFileSync } from "fs";
-import { PS_DATA_DIR, getDbPath } from "../paths";
+import { PS_DATA_DIR, getDbPath } from "../host/paths";
 import { getSchemaVersion, setSchemaVersion } from "../db-schema";
 import {
   countMissionCategories,

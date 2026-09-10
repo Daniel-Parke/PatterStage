@@ -1,5 +1,5 @@
 /**
- * Unit tests for `setErrorFromCaught` from src/lib/api-fetch.ts.
+ * Unit tests for `setErrorFromCaught` from src/lib/api/api-fetch.ts.
  *
  * `setErrorFromCaught(setError, err, fallback)` is the canonical replacement
  * for the
@@ -12,7 +12,7 @@
  * Same composition rules, different consumer (useState setter instead of
  * showToast). Tests mirror toast-error.test.ts to keep parity.
  */
-import { setErrorFromCaught } from "@/lib/api-fetch";
+import { setErrorFromCaught } from "@/lib/api/api-fetch";
 
 describe("setErrorFromCaught", () => {
   it("calls setError with err.message for a normal Error", () => {
@@ -85,7 +85,7 @@ describe("setErrorFromCaught", () => {
     // The "byte-equivalent to the inline form" guarantee. Import
     // messageFromError and verify that for the same inputs both code
     // paths produce the same setError call.
-    const { messageFromError } = await import("@/lib/api-fetch");
+    const { messageFromError } = await import("@/lib/api/api-fetch");
     const inputs: Array<[unknown, string]> = [
       [new Error("a"), "f1"],
       [new Error(""), "f2"],
@@ -138,7 +138,7 @@ describe("setErrorFromCaught", () => {
     // coercion rule, so the two must be byte-equivalent for every
     // input shape. This is the single-resolve guarantee that
     // motivated the return-value enhancement.
-    const { messageFromError } = await import("@/lib/api-fetch");
+    const { messageFromError } = await import("@/lib/api/api-fetch");
     const inputs: Array<[unknown, string]> = [
       [new Error("a"), "f1"],
       [new Error(""), "f2"],

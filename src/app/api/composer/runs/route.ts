@@ -7,14 +7,14 @@
 //        streams progress (SSE) / polls. Gated by the `composer` flag.
 // ═══════════════════════════════════════════════════════════════
 
-import { boundsFrom } from "@/lib/list-bounds";
+import { boundsFrom } from "@/lib/ui/list-bounds";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-import { ok, created, badRequest, serviceUnavailable } from "@/lib/api-response";
+import { ok, created, badRequest, serviceUnavailable } from "@/lib/api/api-response";
 import { ensureDb } from "@/lib/db";
 import { isFeatureEnabled } from "@/lib/feature-flags";
-import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
+import { parseAndValidateJsonBody } from "@/lib/api/parse-json-body";
 import {
   createComposerRun,
   getWorkflow,
@@ -23,7 +23,7 @@ import {
 } from "@/lib/composer/composer-repository";
 import { advanceComposerRun } from "@/lib/composer/engine";
 import { recordEvent } from "@/lib/analytics/record-event";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 const startSchema = z
   .object({

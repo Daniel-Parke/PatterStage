@@ -33,24 +33,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-import { logApiError } from "@/lib/api-logger";
-import { notFound, ok, methodNotAllowed } from "@/lib/api-response";
-import { appendAuditLine } from "@/lib/audit-log";
+import { logApiError } from "@/lib/api/api-logger";
+import { notFound, ok, methodNotAllowed } from "@/lib/api/api-response";
+import { appendAuditLine } from "@/lib/api/audit-log";
 import {
   deleteCredential,
   getCredential,
   getCredentialWithKey,
   listCredentials,
   updateCredential,
-} from "@/lib/credentials-repository";
-import { listModels } from "@/lib/models-repository";
-import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
+} from "@/lib/models/credentials-repository";
+import { listModels } from "@/lib/models/models-repository";
+import { parseAndValidateJsonBody } from "@/lib/api/parse-json-body";
 import {
   removeCredentialFromHermesEnv,
   syncCredentialToHermesEnv,
 } from "@/modules/hermes/lib/hermes-env-sync";
 import { envVarForProvider, isHermesProvider } from "@/modules/hermes/lib/providers";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 interface Ctx {
   params: Promise<{ id: string }>;

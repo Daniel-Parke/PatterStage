@@ -4,19 +4,19 @@ import { NextRequest } from "next/server";
 
 const mockRequireAuth = jest.fn();
 
-jest.mock("@/lib/api-auth", () => ({
+jest.mock("@/lib/api/api-auth", () => ({
 }));
 
-jest.mock("@/lib/api-logger", () => ({
+jest.mock("@/lib/api/api-logger", () => ({
   logApiError: jest.fn(),
 }));
 
-jest.mock("@/lib/audit-log", () => ({
+jest.mock("@/lib/api/audit-log", () => ({
   appendAuditLine: jest.fn(),
 }));
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
-jest.mock("@/lib/paths", () => require("../helpers/mocks").pathsMock({ PATHS: { templates: "/tmp/test-templates" } }));
+jest.mock("@/lib/host/paths", () => require("../helpers/mocks").pathsMock({ PATHS: { templates: "/tmp/test-templates" } }));
 
 jest.mock("@/lib/schema", () => ({
   parseTemplatePackManifestV1: jest.fn(),

@@ -82,23 +82,23 @@ jest.mock("@/lib/db", () => require("../helpers/baseline-db").dbSingletonMock(()
 
 // Neither the audit file nor the analytics table belongs in this oracle, and
 // the real audit writer resolves PS_DATA_DIR.
-jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
+jest.mock("@/lib/api/audit-log", () => ({ appendAuditLine: jest.fn() }));
 jest.mock("@/lib/analytics/record-event", () => ({ recordEvent: jest.fn() }));
 
 // The hook's transport. Everything else in api-fetch stays real because
 // config-sync and the writers import toError / messageFromError from the same
 // module.
 const mockApiFetch = jest.fn();
-jest.mock("@/lib/api-fetch", () => ({
-  ...(jest.requireActual("@/lib/api-fetch") as Record<string, unknown>),
+jest.mock("@/lib/api/api-fetch", () => ({
+  ...(jest.requireActual("@/lib/api/api-fetch") as Record<string, unknown>),
   apiFetch: (...a: unknown[]) => mockApiFetch(...a),
 }));
 
 import { NextRequest } from "next/server";
 
 import { execBaselineSchema } from "../helpers/baseline-db";
-import { createModel, getModelDefaults, setDefaultModel } from "@/lib/models-repository";
-import { getAgentRoot, updateAgentRoot } from "@/lib/agent-root-repository";
+import { createModel, getModelDefaults, setDefaultModel } from "@/lib/models/models-repository";
+import { getAgentRoot, updateAgentRoot } from "@/lib/agents/agent-root-repository";
 import {
   finalizeRootConfigOnDisk,
   syncDefaultsToHermesConfig,

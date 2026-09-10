@@ -6,17 +6,17 @@
 //        forget), return the pending run. The page polls GET /[id] for steps.
 // ═══════════════════════════════════════════════════════════════
 
-import { boundsFrom } from "@/lib/list-bounds";
+import { boundsFrom } from "@/lib/ui/list-bounds";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-import { ok, created } from "@/lib/api-response";
+import { ok, created } from "@/lib/api/api-response";
 import { ensureDb } from "@/lib/db";
-import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
+import { parseAndValidateJsonBody } from "@/lib/api/parse-json-body";
 import { createResearchRun, listResearchRuns } from "@/lib/laboratory/deep-research/research-repository";
 import { runResearchJob } from "@/lib/laboratory/deep-research/run-job";
 import { recordEvent } from "@/lib/analytics/record-event";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 const configSchema = z
   .object({

@@ -1,6 +1,6 @@
 "use client";
 
-import { sectionHeadingClasses } from "@/lib/theme";
+import { sectionHeadingClasses } from "@/lib/ui/theme";
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import { Send, Save, Wrench, X } from "lucide-react";
 

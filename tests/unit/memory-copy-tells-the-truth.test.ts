@@ -28,7 +28,7 @@ import { healthBannerMessage } from "@/components/memory/hindsight/health-messag
 import type { HealthState } from "@/components/memory/hindsight/types";
 import { UnavailableMemoryProvider } from "@/lib/memory/memory-providers/unavailable-provider";
 
-jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
+jest.mock("@/lib/api/api-logger", () => ({ logApiError: jest.fn() }));
 
 // A provider that is configured and simply is not running. The thrown shape is
 // undici's: a "fetch failed" wrapper with the fact one level down in `cause`,

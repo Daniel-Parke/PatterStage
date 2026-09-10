@@ -6,7 +6,7 @@ import {
   getCorrelationId,
   requireNotReadOnly,
   requireSignedRequest,
-} from "@/lib/api-auth";
+} from "@/lib/api/api-auth";
 
 describe("api-auth", () => {
   afterEach(() => {

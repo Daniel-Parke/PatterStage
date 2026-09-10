@@ -22,7 +22,7 @@
     "src/lib/composer/schema.ts",
     "src/lib/composer/composer-repository.ts",
     "src/app/api/composer/runs/[id]/nodes/[nodeId]/approve/route.ts",
-    "src/lib/api-response.ts",
+    "src/lib/api/api-response.ts",
     "src/app/api/skills/[name]/toggle/route.ts",
     "src/app/operations/personalities/page.tsx",
     "src/components/personalities/",

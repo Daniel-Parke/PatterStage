@@ -214,7 +214,7 @@ Hermes/Hindsight memory backups are separate (`scripts/hardware/ps-backup.sh`). 
 
 ## Data directory & paths
 
-- PatterStage data lives under **`PS_DATA_DIR`**. An explicit `PS_DATA_DIR` (or the legacy `CH_DATA_DIR` / `CONTROL_HUB_DATA_DIR`) always wins. With none set, `resolveDataDir()` in [`src/lib/paths.ts`](../../src/lib/paths.ts) probes `~/PatterStage/data`, `~/patterstage/data` and a pre-existing `~/control-hub/data`, takes the first that already holds a database, falls back to the first that merely exists, and creates `$HOME/patterstage/data` if none does. Set `PS_DATA_DIR` explicitly if your data is elsewhere. `$HERMES_HOME/control-hub/data` is **not** one of the candidates the app resolves; it survives only as a backup source in `scripts/bootstrap/backup-hermes-config.sh`.
+- PatterStage data lives under **`PS_DATA_DIR`**. An explicit `PS_DATA_DIR` (or the legacy `CH_DATA_DIR` / `CONTROL_HUB_DATA_DIR`) always wins. With none set, `resolveDataDir()` in [`src/lib/host/paths.ts`](../../src/lib/host/paths.ts) probes `~/PatterStage/data`, `~/patterstage/data` and a pre-existing `~/control-hub/data`, takes the first that already holds a database, falls back to the first that merely exists, and creates `$HOME/patterstage/data` if none does. Set `PS_DATA_DIR` explicitly if your data is elsewhere. `$HERMES_HOME/control-hub/data` is **not** one of the candidates the app resolves; it survives only as a backup source in `scripts/bootstrap/backup-hermes-config.sh`.
 - Hermes lives at **`HERMES_HOME`** (default `~/.hermes`), package at `~/.hermes/hermes-agent/`.
 - Full path/env reference: [ENV_REFERENCE.md](env-reference.md).
 

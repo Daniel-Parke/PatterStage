@@ -8,12 +8,12 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { now } from "@/lib/db";
-import { logApiError } from "@/lib/api-logger";
-import { messageFromError } from "@/lib/api-fetch";
+import { logApiError } from "@/lib/api/api-logger";
+import { messageFromError } from "@/lib/api/api-fetch";
 import { runDeepResearch, defaultLlm, defaultVisit } from "./engine";
 import { resolveSearchProvider } from "./search";
 import { getResearchRun, insertResearchStep, updateResearchRun } from "./research-repository";
-import { captureArtifactOnce } from "@/lib/artifacts-repository";
+import { captureArtifactOnce } from "@/lib/runs/artifacts-repository";
 import { recordEvent } from "@/lib/analytics/record-event";
 import type { ResearchConfig } from "./types";
 

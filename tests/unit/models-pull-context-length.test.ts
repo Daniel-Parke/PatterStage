@@ -1,13 +1,13 @@
 /** @jest-environment node */
 /* eslint-disable @typescript-eslint/no-require-imports */
 
-jest.mock("@/lib/api-auth", () => ({ requireAuth: jest.fn(() => null) }));
-jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
+jest.mock("@/lib/api/api-auth", () => ({ requireAuth: jest.fn(() => null) }));
+jest.mock("@/lib/api/api-logger", () => ({ logApiError: jest.fn() }));
 
 const mockListModels = jest.fn();
 const mockUpdateModel = jest.fn();
 
-jest.mock("@/lib/models-repository", () => ({
+jest.mock("@/lib/models/models-repository", () => ({
   listModels: () => mockListModels(),
   updateModel: (...args: unknown[]) => mockUpdateModel(...args),
 }));

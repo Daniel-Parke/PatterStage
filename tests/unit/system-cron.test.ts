@@ -15,7 +15,7 @@ import {
   HARDWARE_CRON_PRESET_SCRIPT_FILES,
   HARDWARE_CRON_UI_PRESETS,
   normalizeHardwareCronPath,
-} from "@/lib/hardware-cron";
+} from "@/lib/host/hardware-cron";
 
 describe("system-cron path helpers", () => {
   const scriptsDir = "/home/zoe/patterstage/data/scripts";

@@ -11,7 +11,7 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
 import { ensureSyncLayer, getSyncScheduler } from "@/lib/sync";
-import { getSystemStat, getSystemStatNumber } from "@/lib/system-repository";
+import { getSystemStat, getSystemStatNumber } from "@/lib/system/system-repository";
 import { listSessions } from "@/lib/sessions/session-repository";
 
 
@@ -19,7 +19,7 @@ import { readGatewayPlatforms, readRecentErrorLogEntries } from "@/lib/sync/sync
 import { getActiveFramework } from "@/lib/frameworks";
 import { readSchedulerHealth } from "@/lib/orchestration/scheduler/health";
 import type { SessionBrief, MonitorData } from "@/types/console";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 // ── Helpers ─────────────────────────────────────────────────
 

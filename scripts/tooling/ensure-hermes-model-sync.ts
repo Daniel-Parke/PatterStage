@@ -51,7 +51,7 @@ async function main(): Promise<void> {
   }
 
   const { ensureDb } = await import("../../src/lib/db");
-  const { getModelDefaults } = await import("../../src/lib/models-repository");
+  const { getModelDefaults } = await import("../../src/lib/models/models-repository");
   const { finalizeRootConfigOnDisk } = await import("../../src/modules/hermes/lib/config-sync");
 
   ensureDb();

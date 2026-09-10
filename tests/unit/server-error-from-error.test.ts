@@ -38,9 +38,9 @@
 import {
   logApiError,
   serverErrorFromError,
-} from "@/lib/api-logger";
-import { serverError } from "@/lib/api-response";
-import { toError } from "@/lib/api-fetch";
+} from "@/lib/api/api-logger";
+import { serverError } from "@/lib/api/api-response";
+import { toError } from "@/lib/api/api-fetch";
 
 describe("serverErrorFromError", () => {
   let consoleErrorSpy: jest.SpyInstance;

@@ -1,18 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 
 
-import { notFound, ok } from "@/lib/api-response";
+import { notFound, ok } from "@/lib/api/api-response";
 import { ensureDb } from "@/lib/db";
 import { safeStat } from "@/lib/fs/fs-stats";
 import { resolveEffectiveDisabledSkills } from "@/modules/hermes/lib/effective-disabled-skills";
 import { getProfile } from "@/modules/hermes/lib/profiles-repository";
-import { listSkillCatalog, deriveCategory } from "@/lib/skills-repository";
+import { listSkillCatalog, deriveCategory } from "@/lib/skills/skills-repository";
 import { skillFilePath, skillsRootForProfile } from "@/modules/hermes/lib/skills-config";
 import { requireSafeProfileName } from "@/lib/fs/path-security";
 import { scanDiskSkillsCatalog } from "@/modules/hermes/lib/profile-discovery";
-import { groupByCategory } from "@/lib/skills-grouping";
+import { groupByCategory } from "@/lib/skills/skills-grouping";
 import type { Skill } from "@/types/console";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 export const GET = route("GET /api/skills", "listing skills", "Failed to list skills", async (request: NextRequest) => {
   const profileParam = request.nextUrl.searchParams.get("profile") || "default";

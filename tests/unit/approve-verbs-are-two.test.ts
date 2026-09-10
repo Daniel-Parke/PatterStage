@@ -17,7 +17,7 @@ jest.mock("@/lib/composer/composer-repository", () => ({
   updateComposerRun: jest.fn(),
 }));
 jest.mock("@/lib/composer/engine", () => ({ advanceComposerRun: jest.fn(async () => undefined) }));
-jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn(), serverErrorFromCatch: jest.fn() }));
+jest.mock("@/lib/api/api-logger", () => ({ logApiError: jest.fn(), serverErrorFromCatch: jest.fn() }));
 
 import { POST } from "@/app/api/composer/runs/[id]/nodes/[nodeId]/approve/route";
 

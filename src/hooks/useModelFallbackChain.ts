@@ -14,7 +14,7 @@
 import { useCallback, useState } from "react";
 
 import type { ToastType } from "@/components/ui/Toast";
-import { runWrite, type RunWriteOptions } from "@/lib/api-write";
+import { runWrite, type RunWriteOptions } from "@/lib/api/api-write";
 import type { FallbackChainEntry } from "@/types/console";
 
 type ToastFn = (message: string, type?: ToastType) => void;

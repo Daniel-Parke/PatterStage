@@ -1,5 +1,5 @@
 /**
- * Liveness probe for the cross-platform deploy runner (src/lib/deploy-spawn.ts
+ * Liveness probe for the cross-platform deploy runner (src/lib/deploy/deploy-spawn.ts
  * `probeDeployLiveness`). The runner (scripts/tooling/ps-deploy.mjs) is spawned
  * detached via `node` on every OS and is the source of truth: it writes
  * state=running early and state=failed/success terminally. The probe fails fast
@@ -7,7 +7,7 @@
  *
  * Deps are injectable so these run on a virtual clock — no real processes.
  */
-import { probeDeployLiveness, type DeployProbeDeps } from "@/lib/deploy-spawn";
+import { probeDeployLiveness, type DeployProbeDeps } from "@/lib/deploy/deploy-spawn";
 
 type StatusShape = { state: string; phase: string; message: string; logHint: string };
 

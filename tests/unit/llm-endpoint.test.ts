@@ -10,7 +10,7 @@ import {
   normalizeApiStyle,
   buildDirectUrl,
   buildDirectRequest,
-} from "@/lib/llm-endpoint";
+} from "@/lib/models/llm-endpoint";
 
 describe("inferApiStyle", () => {
   it("treats an /anthropic base path as anthropic (MiniMax's Anthropic endpoint)", () => {

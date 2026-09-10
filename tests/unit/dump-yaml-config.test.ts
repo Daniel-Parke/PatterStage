@@ -12,7 +12,7 @@
 
 import * as yaml from "js-yaml";
 
-import { dumpYamlConfig } from "@/lib/yaml-config";
+import { dumpYamlConfig } from "@/lib/config/yaml-config";
 
 describe("dumpYamlConfig", () => {
   it("matches yaml.dump with lineWidth: -1, noRefs: true for a flat object", () => {

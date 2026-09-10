@@ -8,10 +8,10 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextRequest, NextResponse } from "next/server";
-import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
+import { logApiError, serverErrorFromCatch } from "@/lib/api/api-logger";
 
-import { parseJsonBody } from "@/lib/parse-json-body";
-import { badRequest, ok } from "@/lib/api-response";
+import { parseJsonBody } from "@/lib/api/parse-json-body";
+import { badRequest, ok } from "@/lib/api/api-response";
 import { getAgentGateway } from "@/lib/runtime/gateway";
 import { describeGatewayFailure } from "@/lib/runtime/gateway-error";
 import { getGatewayKey } from "@/lib/runtime/secrets";

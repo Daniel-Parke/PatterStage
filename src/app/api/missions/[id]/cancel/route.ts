@@ -11,9 +11,9 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextRequest } from "next/server";
-import { requireNotReadOnly } from "@/lib/api-auth";
+import { requireNotReadOnly } from "@/lib/api/api-auth";
 import { handleCancelMission } from "@/lib/missions/mission-handlers/cancel";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 interface Ctx {
   params: Promise<{ id: string }>;

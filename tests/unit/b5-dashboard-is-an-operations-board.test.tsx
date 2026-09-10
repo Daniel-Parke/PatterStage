@@ -74,8 +74,8 @@ jest.mock("@/hooks/useOperatorPrefs", () => ({ useOperatorPrefs: () => mockUseOp
 // mutation helpers import safeApiCall, and none of them are called here.
 const mockSafeApiCall = jest.fn();
 const mockSafeApiCallData = jest.fn();
-jest.mock("@/lib/api-fetch", () => ({
-  ...jest.requireActual("@/lib/api-fetch"),
+jest.mock("@/lib/api/api-fetch", () => ({
+  ...jest.requireActual("@/lib/api/api-fetch"),
   safeApiCall: (...a: unknown[]) => mockSafeApiCall(...a),
   safeApiCallData: (...a: unknown[]) => mockSafeApiCallData(...a),
 }));

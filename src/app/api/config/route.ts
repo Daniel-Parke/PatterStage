@@ -7,20 +7,20 @@ import { getAgentWorkspace } from "@/lib/runtime/workspace";
 import { writeHermesConfigFile } from "@/modules/hermes/lib/hermes-config-write";
 import { profileOfHermesHome } from "@/modules/hermes/lib/profile-paths";
 import { loadHermesConfigFromString } from "@/modules/hermes/lib/hermes-config-read";
-import { toError } from "@/lib/api-fetch";
-import { logApiError } from "@/lib/api-logger";
+import { toError } from "@/lib/api/api-fetch";
+import { logApiError } from "@/lib/api/api-logger";
 
-import { appendAuditLine } from "@/lib/audit-log";
-import { badRequest, conflict, forbidden, ok } from "@/lib/api-response";
-import { readCachedConfigResult } from "@/lib/config-cache";
-import { dumpYamlConfig } from "@/lib/yaml-config";
-import { CONFIG_SECTIONS, validateSectionValues } from "@/lib/config-schema";
+import { appendAuditLine } from "@/lib/api/audit-log";
+import { badRequest, conflict, forbidden, ok } from "@/lib/api/api-response";
+import { readCachedConfigResult } from "@/lib/config/config-cache";
+import { dumpYamlConfig } from "@/lib/config/yaml-config";
+import { CONFIG_SECTIONS, validateSectionValues } from "@/lib/config/config-schema";
 import { maskSecretsDeep } from "@/lib/secret-mask";
-import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
+import { parseAndValidateJsonBody } from "@/lib/api/parse-json-body";
 import { backupFile } from "@/lib/fs/fs-helpers";
-import { deepMerge } from "@/lib/deep-merge";
+import { deepMerge } from "@/lib/config/deep-merge";
 import { recordEvent } from "@/lib/analytics/record-event";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 // Dynamically derive writable sections from the schema
 // Only YAML sections with editable fields are writable
@@ -116,7 +116,7 @@ export const PUT = route("PUT /api/config", "updating config", "Failed to update
   //
   // This is the shape src/modules/hermes/lib/config-sync.ts:69-80 has always
   // used on the same file. Two sites is not three: the shape is mirrored, not
-  // extracted (see the Rule of Three in src/lib/api-response.ts).
+  // extracted (see the Rule of Three in src/lib/api/api-response.ts).
   const raw = existsSync(paths.config) ? readFileSync(paths.config, "utf-8") : "";
   let config: Record<string, unknown>;
   try {
@@ -148,7 +148,7 @@ export const PUT = route("PUT /api/config", "updating config", "Failed to update
   // The shallow `{...current, ...values}` form was a regression: any
   // PUT that touched a nested object wiped its siblings because the
   // spread replaced the whole nested object. See
-  // `src/lib/deep-merge.ts` for the contract and tests.
+  // `src/lib/config/deep-merge.ts` for the contract and tests.
   // `null` on the wire means "unset this key", which deepMerge cannot
   // express: it merges, so once a key existed nothing could remove it and
   // the UI's coercions turned an emptied field into `0` or `''` instead of

@@ -10,8 +10,8 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiQueryKey, useApiResource } from "@/hooks/useApiResource";
-import { safeApiCall } from "@/lib/api-fetch";
-import type { ScheduleListItem, CatchUpPolicy } from "@/lib/schedules-repository";
+import { safeApiCall } from "@/lib/api/api-fetch";
+import type { ScheduleListItem, CatchUpPolicy } from "@/lib/schedule/schedules-repository";
 
 export interface CreateScheduleBody {
   missionId: string;

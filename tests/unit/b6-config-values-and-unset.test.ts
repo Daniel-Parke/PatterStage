@@ -78,7 +78,7 @@ jest.mock("@/modules/hermes/lib/profile-paths", () => ({
   profileOfHermesHome: () => "default",
 }));
 
-jest.mock("@/lib/agent-root-repository", () => ({
+jest.mock("@/lib/agents/agent-root-repository", () => ({
   getAgentRoot: jest.fn(() => ({
     id: 1, displayName: "Bob", description: "", personality: "technical",
     configYaml: "", soulMd: "", agentsMd: "", frameworkMd: "", userMd: "", memoryMd: "",
@@ -88,20 +88,20 @@ jest.mock("@/lib/agent-root-repository", () => ({
   setAgentRootSyncStatus: jest.fn(),
 }));
 
-jest.mock("@/lib/paths", () => require("../helpers/mocks").pathsMock({ readEnv: () => undefined }));
+jest.mock("@/lib/host/paths", () => require("../helpers/mocks").pathsMock({ readEnv: () => undefined }));
 
-jest.mock("@/lib/api-logger", () => ({
+jest.mock("@/lib/api/api-logger", () => ({
   logApiError: jest.fn(),
   serverErrorFromCatch: jest.fn(() => mockServerError()),
 }));
-jest.mock("@/lib/api-auth", () => ({}));
-jest.mock("@/lib/audit-log", () => ({
+jest.mock("@/lib/api/api-auth", () => ({}));
+jest.mock("@/lib/api/audit-log", () => ({
   appendAuditLine: (...a: unknown[]) => mockAppendAuditLine(...a),
 }));
 jest.mock("@/lib/analytics/record-event", () => ({ recordEvent: jest.fn() }));
 
 // Cold cache: the GET after an unset must read the file, not a 15 s memory.
-jest.mock("@/lib/system-repository", () => ({
+jest.mock("@/lib/system/system-repository", () => ({
   getMetaPair: (...a: unknown[]) => mockGetMetaPair(...a),
   setMultipleStats: jest.fn(),
   deleteMetaPair: jest.fn(),
@@ -110,7 +110,7 @@ jest.mock("@/lib/system-repository", () => ({
 import * as yaml from "js-yaml";
 import { NextRequest } from "next/server";
 
-import * as configSchema from "@/lib/config-schema";
+import * as configSchema from "@/lib/config/config-schema";
 import { GET, PUT } from "@/app/api/config/route";
 
 // ── pre-B6 type shim (see header) ───────────────────────────────

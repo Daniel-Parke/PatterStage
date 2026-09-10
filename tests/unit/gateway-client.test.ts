@@ -14,7 +14,7 @@ describe("gateway-client", () => {
 
   it("gatewayUrl respects HERMES_GATEWAY_URL", async () => {
     process.env.HERMES_GATEWAY_URL = "http://192.168.1.50:9000";
-    const { gatewayUrl } = await import("@/lib/gateway-client");
+    const { gatewayUrl } = await import("@/lib/models/gateway-client");
     expect(gatewayUrl("/v1/models")).toBe("http://192.168.1.50:9000/v1/models");
   });
 
@@ -59,21 +59,21 @@ describe("fetchGateway — bearer key forwarding", () => {
 
   it("attaches Authorization: Bearer <key> when API_SERVER_KEY is set", async () => {
     process.env.API_SERVER_KEY = "sk-test-123";
-    const { fetchGateway } = await import("@/lib/gateway-client");
+    const { fetchGateway } = await import("@/lib/models/gateway-client");
     await fetchGateway("/v1/models", { method: "GET" });
     expect(headersFromLastCall().authorization).toBe("Bearer sk-test-123");
   });
 
   it("omits Authorization when no key is configured", async () => {
     delete process.env.API_SERVER_KEY;
-    const { fetchGateway } = await import("@/lib/gateway-client");
+    const { fetchGateway } = await import("@/lib/models/gateway-client");
     await fetchGateway("/v1/models", { method: "GET" });
     expect(headersFromLastCall().authorization).toBeUndefined();
   });
 
   it("lets a caller-supplied Authorization header win", async () => {
     process.env.API_SERVER_KEY = "sk-env-key";
-    const { fetchGateway } = await import("@/lib/gateway-client");
+    const { fetchGateway } = await import("@/lib/models/gateway-client");
     await fetchGateway("/v1/models", {
       method: "GET",
       headers: { Authorization: "Bearer caller-override" },

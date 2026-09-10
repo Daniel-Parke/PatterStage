@@ -14,14 +14,14 @@ import {
   getDueSchedules,
   advanceSchedule,
   type ScheduleRecord,
-} from "@/lib/schedules-repository";
-import { createRun } from "@/lib/runs-repository";
+} from "@/lib/schedule/schedules-repository";
+import { createRun } from "@/lib/runs/runs-repository";
 import { hasDispatchedMission } from "@/lib/missions/mission-repository";
 import { computeNextRun } from "@/lib/schedule/next-run";
 import { scheduleIntervalStatus } from "@/lib/schedule/interval-bounds";
 import { dispatchMissionRun } from "@/lib/orchestration/dispatch";
-import { runScriptFile } from "@/lib/scripts-manager";
-import { logApiError } from "@/lib/api-logger";
+import { runScriptFile } from "@/lib/scripts/scripts-manager";
+import { logApiError } from "@/lib/api/api-logger";
 import { recordEvent } from "@/lib/analytics/record-event";
 import { checkUnattendedSpend } from "@/lib/spend/spend-guard";
 

@@ -8,7 +8,7 @@
 // turned it into copy (T-0114).
 // ═══════════════════════════════════════════════════════════════
 
-import type { ScheduleKind } from "@/lib/schedules-repository";
+import type { ScheduleKind } from "@/lib/schedule/schedules-repository";
 
 /** The four fields on a schedule row that say what it fires. */
 export interface ScheduleTargetFields {

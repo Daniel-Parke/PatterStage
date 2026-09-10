@@ -7,7 +7,7 @@
 // a dot, which no primitive draws.
 "use client";
 
-import { statusToneClasses } from "@/lib/theme";
+import { statusToneClasses } from "@/lib/ui/theme";
 import { chapterTone } from "@/modules/rec-room/lib/chapter-tone";
 import type { Chapter } from "@/modules/rec-room/components/story-reader-types";
 

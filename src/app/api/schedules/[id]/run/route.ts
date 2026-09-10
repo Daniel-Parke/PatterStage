@@ -5,10 +5,10 @@
 
 import { NextRequest } from "next/server";
 
-import { ok, notFound, badRequest, serverError } from "@/lib/api-response";
-import { getSchedule, recordScheduleRun } from "@/lib/schedules-repository";
+import { ok, notFound, badRequest, serverError } from "@/lib/api/api-response";
+import { getSchedule, recordScheduleRun } from "@/lib/schedule/schedules-repository";
 import { dispatchMissionRun } from "@/lib/orchestration";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 interface Ctx {
   params: Promise<{ id: string }>;

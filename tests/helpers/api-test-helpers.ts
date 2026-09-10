@@ -48,7 +48,7 @@ export function setupFsMocks() {
 
 /**
  * @deprecated jest.mock inside a function is not hoisted — do not use for new tests.
- * Prefer top-of-file `jest.mock("@/modules/hermes/lib/agent-runtime", ...)` and `jest.mock("@/lib/paths", ...)`.
+ * Prefer top-of-file `jest.mock("@/modules/hermes/lib/agent-runtime", ...)` and `jest.mock("@/lib/host/paths", ...)`.
  */
 export function setupRouteMocks() {
   const root = "/tmp/test-hermes";
@@ -76,7 +76,7 @@ export function setupRouteMocks() {
     }),
   }));
 
-  jest.mock("@/lib/paths", () => ({
+  jest.mock("@/lib/host/paths", () => ({
     PS_DATA_DIR: "/tmp/ch-data",
     PATHS: {
       patterStageDb: "/tmp/ch-data/patterstage.db",
@@ -93,7 +93,7 @@ export function setupRouteMocks() {
     getPsHardwareLogDir: () => "/tmp/ch-data/logs",
   }));
 
-  jest.mock("@/lib/api-logger", () => ({
+  jest.mock("@/lib/api/api-logger", () => ({
     logApiError: jest.fn(),
     safeJsonParse: jest.fn(() => ({})),
     safeReadJsonFile: jest.fn(() => ({ ok: true, data: {} })),
@@ -115,16 +115,16 @@ export function setupRouteMocks() {
   // `requireSignedRequest` stays stubbed: it needs an HMAC over a shared secret
   // that no route test is about, and leaving it real would make every one of
   // them carry signing headers to test something else entirely.
-  jest.mock("@/lib/api-auth", () => ({
-    ...jest.requireActual("@/lib/api-auth"),
+  jest.mock("@/lib/api/api-auth", () => ({
+    ...jest.requireActual("@/lib/api/api-auth"),
     requireSignedRequest: jest.fn(() => null),
   }));
 
-  jest.mock("@/lib/parse-json-body", () => ({
+  jest.mock("@/lib/api/parse-json-body", () => ({
     parseJsonBody: jest.fn(async () => ({})),
   }));
 
-  jest.mock("@/lib/audit-log", () => ({
+  jest.mock("@/lib/api/audit-log", () => ({
     appendAuditLine: jest.fn(),
   }));
 }

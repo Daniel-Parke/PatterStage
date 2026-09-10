@@ -14,7 +14,7 @@
 // the page rather than a grid of doors. The old section URLs answer 307 to
 // their anchor here (next.config.ts), so nothing bookmarked is lost.
 //
-// The grid is still src/lib/config-sections.ts rendered: every section once,
+// The grid is still src/lib/config/config-sections.ts rendered: every section once,
 // in its group, so the count in the subtitle is the count on the page.
 // ═══════════════════════════════════════════════════════════════
 
@@ -36,9 +36,9 @@ import SettingsSection from "@/components/config/SettingsSection";
 import { useProfiles } from "@/hooks/useProfiles";
 import { useSelectedProfile } from "@/hooks/useSelectedProfile";
 import { useSettingsEditor } from "@/hooks/useSettingsEditor";
-import { CONFIG_SECTIONS, type FieldDef, type SectionDef } from "@/lib/config-schema";
-import { SETTINGS_GROUPS, SETTINGS_TOOLS, settingsSectionIds } from "@/lib/config-sections";
-import { sectionHeadingClasses } from "@/lib/theme";
+import { CONFIG_SECTIONS, type FieldDef, type SectionDef } from "@/lib/config/config-schema";
+import { SETTINGS_GROUPS, SETTINGS_TOOLS, settingsSectionIds } from "@/lib/config/config-sections";
+import { sectionHeadingClasses } from "@/lib/ui/theme";
 
 /**
  * Which agent these settings belong to.

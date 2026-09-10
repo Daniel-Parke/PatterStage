@@ -20,7 +20,7 @@ jest.mock("@/lib/missions/mission-repository", () => ({
 }));
 
 const mockDeleteSchedulesForMission = jest.fn();
-jest.mock("@/lib/schedules-repository", () => ({
+jest.mock("@/lib/schedule/schedules-repository", () => ({
   deleteSchedulesForMission: (...a: unknown[]) => mockDeleteSchedulesForMission(...a),
 }));
 
@@ -34,7 +34,7 @@ jest.mock("@/lib/sessions/session-repository", () => ({
 // T-0070 moved the local record into one shared writer; these are its seams.
 const mockGetLatestRunForMission = jest.fn(() => null as unknown);
 const mockUpdateRun = jest.fn();
-jest.mock("@/lib/runs-repository", () => ({
+jest.mock("@/lib/runs/runs-repository", () => ({
   getLatestRunForMission: (...a: unknown[]) => mockGetLatestRunForMission(...(a as [])),
   updateRun: (...a: unknown[]) => mockUpdateRun(...a),
 }));
@@ -49,12 +49,12 @@ jest.mock("@/lib/orchestration", () => ({
 }));
 
 const mockAppendAuditLine = jest.fn();
-jest.mock("@/lib/audit-log", () => ({
+jest.mock("@/lib/api/audit-log", () => ({
   appendAuditLine: (...a: unknown[]) => mockAppendAuditLine(...a),
 }));
 
 const mockLogApiError = jest.fn();
-jest.mock("@/lib/api-logger", () => ({
+jest.mock("@/lib/api/api-logger", () => ({
   logApiError: (...a: unknown[]) => mockLogApiError(...a),
 }));
 

@@ -21,7 +21,7 @@ import { basename, dirname, join } from "path";
 import type Database from "better-sqlite3";
 
 import { backupTimestamp, ensureDir } from "@/lib/fs/fs-helpers";
-import { PS_DATA_DIR, getDbPath, readEnv } from "@/lib/paths";
+import { PS_DATA_DIR, getDbPath, readEnv } from "@/lib/host/paths";
 
 import { getDb } from "./index";
 import type { BackupLabel, DatabaseBackup } from "./backup-types";

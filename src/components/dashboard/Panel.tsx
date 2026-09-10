@@ -5,7 +5,7 @@
 
 import type { ReactNode } from "react";
 import type { AccentColor } from "@/types/console";
-import { iconColorMap } from "@/lib/theme";
+import { iconColorMap } from "@/lib/ui/theme";
 
 /**
  * Tailwind static-border class for a panel accent. The panel uses
@@ -16,7 +16,7 @@ import { iconColorMap } from "@/lib/theme";
  * danger, info and the neon yellow (C6).
  */
 // Literal classes only — Tailwind cannot see an interpolated one, so
-// `border-${accent}-500/20` produced no border at all. See src/lib/theme.ts.
+// `border-${accent}-500/20` produced no border at all. See src/lib/ui/theme.ts.
 //
 // `accent` is optional as of T-0033. A record surface is usually not accented
 // at all — the sessions ledger, the log pane, the log file picker and the

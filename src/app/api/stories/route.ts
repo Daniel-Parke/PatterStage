@@ -4,11 +4,11 @@
 // mission-handlers layout). All LLM generation logic is preserved there.
 // ═══════════════════════════════════════════════════════════════
 
-import { methodNotAllowed } from "@/lib/api-response";
+import { methodNotAllowed } from "@/lib/api/api-response";
 import { NextRequest, NextResponse } from "next/server";
 
 
-import { parseJsonBody } from "@/lib/parse-json-body";
+import { parseJsonBody } from "@/lib/api/parse-json-body";
 import { handleCreate } from "@/modules/rec-room/handlers/create";
 import {
   handleGenerateChapter,
@@ -25,7 +25,7 @@ import {
 } from "@/modules/rec-room/handlers/crud";
 import { handleCharacters, handleThemes } from "@/modules/rec-room/handlers/library";
 import { handleStorySpend } from "@/modules/rec-room/handlers/spend";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 export const POST = route("POST /api/stories", "request", "Request failed", async (request: NextRequest) => {
   const body = await parseJsonBody(request);

@@ -4,11 +4,11 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
-import { logApiError } from "@/lib/api-logger";
+import { logApiError } from "@/lib/api/api-logger";
 
-import { parseJsonBody } from "@/lib/parse-json-body";
+import { parseJsonBody } from "@/lib/api/parse-json-body";
 import { ensureDb, getSchemaHealth } from "@/lib/db";
-import { toError } from "@/lib/api-fetch";
+import { toError } from "@/lib/api/api-fetch";
 import {
   badRequest,
   conflict,
@@ -17,7 +17,7 @@ import {
   notFound,
   ok,
   serverError,
-} from "@/lib/api-response";
+} from "@/lib/api/api-response";
 import {
   countMissionsInCategory,
   countTemplatesInCategory,

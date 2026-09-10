@@ -3,12 +3,12 @@
 // ═══════════════════════════════════════════════════════════════
 import { NextRequest, NextResponse } from "next/server";
 
-import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
-import { getFallbackEntry, updateFallbackEntry, deleteFallbackEntry } from "@/lib/fallbacks-repository";
-import { fallbackEntryPutSchema } from "@/lib/fallback-config-schema";
+import { parseAndValidateJsonBody } from "@/lib/api/parse-json-body";
+import { getFallbackEntry, updateFallbackEntry, deleteFallbackEntry } from "@/lib/models/fallbacks-repository";
+import { fallbackEntryPutSchema } from "@/lib/models/fallback-config-schema";
 import { commitFallbackChange } from "@/modules/hermes/lib/fallback-sync";
-import { notFound, ok } from "@/lib/api-response";
-import { route } from "@/lib/api-route";
+import { notFound, ok } from "@/lib/api/api-response";
+import { route } from "@/lib/api/api-route";
 
 export const GET = route("GET /api/models/fallbacks/[id]", (p) => `reading ${p.id}`, "Failed to read fallback", async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   const { id } = await params;

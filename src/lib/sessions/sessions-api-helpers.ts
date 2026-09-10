@@ -1,7 +1,7 @@
 // sessions-api-helpers.ts — the pieces of /api/sessions that need no DB access.
 
 import type { NextRequest } from "next/server";
-import { parseListBounds } from "@/lib/list-bounds";
+import { parseListBounds } from "@/lib/ui/list-bounds";
 import { ensureSyncLayer } from "@/lib/sync";
 import type {
   AgentType,

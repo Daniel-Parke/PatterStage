@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireNotReadOnly } from "@/lib/api-auth";
-import { badRequest, notFound, ok, serverError } from "@/lib/api-response";
-import { parseJsonBody } from "@/lib/parse-json-body";
-import { appendAuditLine } from "@/lib/audit-log";
+import { requireNotReadOnly } from "@/lib/api/api-auth";
+import { badRequest, notFound, ok, serverError } from "@/lib/api/api-response";
+import { parseJsonBody } from "@/lib/api/parse-json-body";
+import { appendAuditLine } from "@/lib/api/audit-log";
 import { ensureDb } from "@/lib/db";
-import { upsertSkill, parseSkillFrontmatter } from "@/lib/skills-repository";
+import { upsertSkill, parseSkillFrontmatter } from "@/lib/skills/skills-repository";
 import { readSkillView, skillsRoot } from "@/modules/hermes/lib/skill-view";
 import { resolveSkillDirUnderRoot } from "@/lib/fs/path-security";
 import { pushSkillToHermes } from "@/modules/hermes/lib/profile-push";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 export const GET = route("GET /api/skills/[name]", (p) => `reading skill ${p.name}`, "Failed to read skill", async (request: NextRequest, { params }: { params: Promise<{ name: string }> }) => {
   const { name } = await params;

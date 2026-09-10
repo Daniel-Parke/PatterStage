@@ -33,8 +33,8 @@
   "claims": [
     "src/lib/db/",
     "src/lib/db-schema.ts",
-    "src/lib/runs-repository.ts",
-    "src/lib/llm.ts",
+    "src/lib/runs/runs-repository.ts",
+    "src/lib/models/llm.ts",
     "src/lib/spend/",
     "src/lib/laboratory/deep-research/",
     "src/app/api/stories/",

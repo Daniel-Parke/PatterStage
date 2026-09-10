@@ -26,7 +26,7 @@ import { DeployControls } from "@/components/system/DeployControls";
 import { useApiResource } from "@/hooks/useApiResource";
 import { useVersionFooter } from "@/hooks/useVersionFooter";
 import { formatRuntimeStatus, type RuntimeStatus } from "@/lib/status/runtime-status-format";
-import { runWrite } from "@/lib/api-write";
+import { runWrite } from "@/lib/api/api-write";
 import type { BackupList } from "@/lib/db/backup-types";
 
 const onOff = (v: boolean) => (v ? "on" : "off");

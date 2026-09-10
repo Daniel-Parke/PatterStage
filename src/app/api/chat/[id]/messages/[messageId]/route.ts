@@ -9,15 +9,15 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
-import { ok, badRequest, notFound } from "@/lib/api-response";
-import { parseJsonBody } from "@/lib/parse-json-body";
+import { ok, badRequest, notFound } from "@/lib/api/api-response";
+import { parseJsonBody } from "@/lib/api/parse-json-body";
 import {
   getMessage,
   updateMessage,
   type ChatMessageStatus,
   type ToolCallRecord,
-} from "@/lib/chat-repository";
-import { route } from "@/lib/api-route";
+} from "@/lib/chat/chat-repository";
+import { route } from "@/lib/api/api-route";
 
 type Ctx = { params: Promise<{ id: string; messageId: string }> };
 

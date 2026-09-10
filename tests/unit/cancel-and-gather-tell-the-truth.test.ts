@@ -55,7 +55,7 @@ jest.mock("@/lib/sessions/session-repository", () => ({
 
 const mockGetLatestRunForMission = jest.fn(() => null as unknown);
 const mockUpdateRun = jest.fn();
-jest.mock("@/lib/runs-repository", () => ({
+jest.mock("@/lib/runs/runs-repository", () => ({
   getLatestRunForMission: (...a: unknown[]) => mockGetLatestRunForMission(...(a as [])),
   updateRun: (...a: unknown[]) => mockUpdateRun(...a),
 }));
@@ -67,9 +67,9 @@ jest.mock("@/lib/orchestration", () => ({
 }));
 
 const mockAppendAuditLine = jest.fn();
-jest.mock("@/lib/audit-log", () => ({ appendAuditLine: (...a: unknown[]) => mockAppendAuditLine(...a) }));
-jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
-jest.mock("@/lib/schedules-repository", () => ({ createSchedule: jest.fn(() => ({ id: "s1" })) }));
+jest.mock("@/lib/api/audit-log", () => ({ appendAuditLine: (...a: unknown[]) => mockAppendAuditLine(...a) }));
+jest.mock("@/lib/api/api-logger", () => ({ logApiError: jest.fn() }));
+jest.mock("@/lib/schedule/schedules-repository", () => ({ createSchedule: jest.fn(() => ({ id: "s1" })) }));
 const mockDispatchMissionNow = jest.fn().mockResolvedValue({ ok: true });
 jest.mock("@/lib/missions/mission-dispatch", () => ({
   dispatchMissionNow: (...a: unknown[]) => mockDispatchMissionNow(...a),

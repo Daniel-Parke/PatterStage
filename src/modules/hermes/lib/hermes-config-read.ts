@@ -19,7 +19,7 @@ import { existsSync, readFileSync } from "fs";
 import type { ModelIdentity } from "@/lib/models/model-types";
 import * as yaml from "js-yaml";
 
-import { modelKey } from "@/lib/model-key";
+import { modelKey } from "@/lib/models/model-key";
 import { getActiveHermesPaths } from "./agent-runtime";
 
 export interface AuxiliarySection {

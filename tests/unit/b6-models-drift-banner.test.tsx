@@ -71,13 +71,13 @@ jest.mock("next/server", () => ({
 const mockListModels = jest.fn();
 const mockGetModel = jest.fn();
 const mockGetModelDefaults = jest.fn();
-jest.mock("@/lib/models-repository", () => ({
+jest.mock("@/lib/models/models-repository", () => ({
   listModels: () => mockListModels(),
   getModel: (id: string) => mockGetModel(id),
   getModelDefaults: () => mockGetModelDefaults(),
   getModelWithKey: jest.fn(() => null),
 }));
-jest.mock("@/lib/credentials-repository", () => ({
+jest.mock("@/lib/models/credentials-repository", () => ({
   getCredentialWithKey: jest.fn(() => null),
 }));
 
@@ -91,7 +91,7 @@ jest.mock("@/modules/hermes/lib/hermes-config-read", () => ({
 // The closed api-fetch double of b1-model-actions-read-the-answer: any new
 // helper the hook imports must be added here, which is the constraint.
 const mockApiFetch = jest.fn();
-jest.mock("@/lib/api-fetch", () => ({
+jest.mock("@/lib/api/api-fetch", () => ({
   API_FETCH_BULK_TIMEOUT_MS: 300_000,
   apiFetch: (...a: unknown[]) => mockApiFetch(...a),
   messageFromError: (e: unknown, fallback: string) => (e instanceof Error ? e.message : fallback),

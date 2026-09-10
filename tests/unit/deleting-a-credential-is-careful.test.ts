@@ -27,7 +27,7 @@ const mockRemoveFromEnv = jest.fn();
 const mockAppendAuditLine = jest.fn();
 const mockListModels = jest.fn();
 
-jest.mock("@/lib/credentials-repository", () => ({
+jest.mock("@/lib/models/credentials-repository", () => ({
   getCredential: (id: string) => mockGetCredential(id),
   deleteCredential: (id: string) => mockDeleteCredential(id),
   listCredentials: () => mockListCredentials(),
@@ -35,15 +35,15 @@ jest.mock("@/lib/credentials-repository", () => ({
 jest.mock("@/modules/hermes/lib/hermes-env-sync", () => ({
   removeCredentialFromHermesEnv: (p: string) => mockRemoveFromEnv(p),
 }));
-jest.mock("@/lib/audit-log", () => ({
+jest.mock("@/lib/api/audit-log", () => ({
   appendAuditLine: (l: unknown) => mockAppendAuditLine(l),
 }));
-jest.mock("@/lib/models-repository", () => ({
+jest.mock("@/lib/models/models-repository", () => ({
   listModels: () => mockListModels(),
 }));
-jest.mock("@/lib/api-logger", () => ({
+jest.mock("@/lib/api/api-logger", () => ({
   logApiError: jest.fn(),
-  serverErrorFromCatch: jest.requireActual("@/lib/api-logger").serverErrorFromCatch,
+  serverErrorFromCatch: jest.requireActual("@/lib/api/api-logger").serverErrorFromCatch,
 }));
 
 import { DELETE } from "@/app/api/credentials/[id]/route";

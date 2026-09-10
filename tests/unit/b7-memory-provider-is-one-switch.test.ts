@@ -310,7 +310,7 @@ describe("PUT /api/memory/config keeps the file in step", () => {
 
 describe("the Settings memory field is a pointer, not a second switch", () => {
   it("memory.provider declares who manages it", () => {
-    const { CONFIG_SECTIONS } = require("@/lib/config-schema") as typeof import("@/lib/config-schema");
+    const { CONFIG_SECTIONS } = require("@/lib/config/config-schema") as typeof import("@/lib/config/config-schema");
     const field = CONFIG_SECTIONS.memory.fields.find((f) => f.key === "provider");
 
     expect(field).toBeDefined();
@@ -321,7 +321,7 @@ describe("the Settings memory field is a pointer, not a second switch", () => {
   });
 
   it("validateSectionValues refuses to set it, and names where it is set", () => {
-    const { validateSectionValues } = require("@/lib/config-schema") as typeof import("@/lib/config-schema");
+    const { validateSectionValues } = require("@/lib/config/config-schema") as typeof import("@/lib/config/config-schema");
 
     expect(validateSectionValues("memory", { provider: "holographic" })).toEqual([
       { key: "provider", message: "Provider is set on the Memory page" },
@@ -329,7 +329,7 @@ describe("the Settings memory field is a pointer, not a second switch", () => {
   });
 
   it("GREEN CONTROL: the section's other fields are still editable", () => {
-    const { validateSectionValues } = require("@/lib/config-schema") as typeof import("@/lib/config-schema");
+    const { validateSectionValues } = require("@/lib/config/config-schema") as typeof import("@/lib/config/config-schema");
 
     expect(validateSectionValues("memory", { memory_enabled: true, nudge_interval: 5 })).toEqual([]);
   });

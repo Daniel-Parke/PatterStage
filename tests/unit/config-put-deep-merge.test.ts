@@ -9,7 +9,7 @@
 // the spread replaced the whole `personalities` object, wiping every sibling
 // key. This test simulates that contract with a config.yaml that already
 // has `personalities` populated and a PUT body that patches one nested
-// key. After the fix (`deepMerge` in `src/lib/deep-merge.ts`), the
+// key. After the fix (`deepMerge` in `src/lib/config/deep-merge.ts`), the
 // untouched siblings survive.
 
 const mockReadFileSync = jest.fn();
@@ -34,17 +34,17 @@ jest.mock("fs", () => ({
 
 jest.mock("@/modules/hermes/lib/agent-runtime", () => require("../helpers/mocks").agentRuntimeMock());
 
-jest.mock("@/lib/paths", () => require("../helpers/mocks").pathsMock());
+jest.mock("@/lib/host/paths", () => require("../helpers/mocks").pathsMock());
 
-jest.mock("@/lib/api-logger", () => ({
+jest.mock("@/lib/api/api-logger", () => ({
   logApiError: jest.fn(),
   serverErrorFromCatch: jest.fn(),
 }));
 
-jest.mock("@/lib/api-auth", () => ({
+jest.mock("@/lib/api/api-auth", () => ({
 }));
 
-jest.mock("@/lib/audit-log", () => ({
+jest.mock("@/lib/api/audit-log", () => ({
   appendAuditLine: jest.fn(),
 }));
 

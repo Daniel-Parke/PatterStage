@@ -23,7 +23,7 @@ import {
   taskTypeSchema,
   credentialPostSchema,
   setDefaultPutSchema,
-} from "@/lib/api-schemas";
+} from "@/lib/api/api-schemas";
 import { HERMES_PROVIDERS } from "@/modules/hermes/lib/providers";
 import { TASK_TYPES } from "@/lib/models/task-types";
 

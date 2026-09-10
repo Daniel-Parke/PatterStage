@@ -27,15 +27,15 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 
-import { setErrorFromCaught, safeApiCallData } from "@/lib/api-fetch";
+import { setErrorFromCaught, safeApiCallData } from "@/lib/api/api-fetch";
 import { useApiResource } from "@/hooks/useApiResource";
 import { sanitizeGitBranch } from "@/lib/git/git-branch";
-import { fallbackForDeployMessage } from "@/lib/deploy-action-fallback";
+import { fallbackForDeployMessage } from "@/lib/deploy/deploy-action-fallback";
 import {
   DeployAction,
   deployCompletionLabel,
   deployPhaseLabel,
-} from "@/lib/deploy-action-labels";
+} from "@/lib/deploy/deploy-action-labels";
 import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
 
 // VersionCheckState and VersionInfo stay module-private, as they were

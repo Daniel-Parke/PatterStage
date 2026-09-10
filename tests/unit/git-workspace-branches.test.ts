@@ -2,7 +2,7 @@
 
 import { readGitBranchMetadataForWorkspacePath } from "@/lib/git/git-workspace-branches";
 
-jest.mock("@/lib/api-logger", () => ({
+jest.mock("@/lib/api/api-logger", () => ({
   logApiError: jest.fn(),
 }));
 

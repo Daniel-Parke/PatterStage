@@ -76,7 +76,7 @@ const WRITERS = [
 
 describe("C3 · one way to write", () => {
   it("the four helpers are one, and the fifth idiom is gone with them", () => {
-    expect(existsSync(join(ROOT, "src/lib/api-write.ts"))).toBe(true);
+    expect(existsSync(join(ROOT, "src/lib/api/api-write.ts"))).toBe(true);
     for (const gone of [
       "src/lib/operation-sync-action.ts",
       "src/lib/run-mutation.ts",
@@ -148,7 +148,7 @@ describe("C3 · one way to write", () => {
     const rule = RULES.find((r: { id: string }) => r.id === "no-raw-write-outside-the-helper");
     expect(rule).toBeDefined();
     const planted = violationsIn("src/components/Planted.tsx", [
-      'import { apiFetch } from "@/lib/api-fetch";',
+      'import { apiFetch } from "@/lib/api/api-fetch";',
       "async function save() {",
       '  await apiFetch("/api/x", {',
       '    method: "PUT",',

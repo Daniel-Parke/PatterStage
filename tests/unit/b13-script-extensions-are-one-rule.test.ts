@@ -37,7 +37,7 @@ import { join } from "path";
 
 // ── the fakes the script manager reads through ─────────────────
 
-jest.mock("@/lib/paths", () => ({
+jest.mock("@/lib/host/paths", () => ({
   getPsScriptsDir: () => "/data/scripts",
   getPsHardwareLogDir: () => "/data/logs",
 }));
@@ -64,7 +64,7 @@ const CRONTAB = [
   "",
 ].join("\n");
 
-jest.mock("@/lib/host-scheduler", () => ({
+jest.mock("@/lib/host/host-scheduler", () => ({
   getHostScheduler: () => ({
     readRaw: async () => CRONTAB,
     writeRaw: async () => ({ ok: true }),
@@ -77,7 +77,7 @@ jest.mock("@/lib/host-scheduler", () => ({
 // Fixed here so the extension assertions below mean the same thing on every OS:
 // a .bat legitimately has no interpreter on Linux, and that refusal must not be
 // mistaken for the "not a script" refusal D47 is about.
-jest.mock("@/lib/platform", () => ({
+jest.mock("@/lib/host/platform", () => ({
   isWindows: false,
   isMac: false,
   isLinux: true,
@@ -86,7 +86,7 @@ jest.mock("@/lib/platform", () => ({
   interpreterFor: (abs: string) => ({ cmd: "/usr/bin/node", args: [abs] }),
 }));
 
-jest.mock("@/lib/hardware-cron", () => ({
+jest.mock("@/lib/host/hardware-cron", () => ({
   crontabLineUsesScriptsDir: () => true,
   expandHomeInString: (v: string) => v,
   normalizeHardwareCronPath: (p: string) => p,
@@ -96,11 +96,11 @@ jest.mock("@/lib/hardware-cron", () => ({
 
 // The PatterStage-owned script rows (contract 3.1). Empty here: this file is
 // about extensions, and the fallback scheduler has an oracle of its own.
-jest.mock("@/lib/schedules-repository", () => ({
+jest.mock("@/lib/schedule/schedules-repository", () => ({
   listScriptSchedules: () => [],
 }));
 
-import { listScriptFiles, type ScriptFile } from "@/lib/scripts-manager";
+import { listScriptFiles, type ScriptFile } from "@/lib/scripts/scripts-manager";
 import { canonicaliseScriptsCommand } from "@/lib/hardware-cron-handlers/crontab-command";
 
 // ── the module the contract creates, loaded lazily ─────────────
@@ -157,13 +157,13 @@ function sourcesContaining(needle: string): string[] {
 
 describe("FUSE: the doubles are doubles and the scan reads the repo", () => {
   it("resolves a fake scripts directory, never the operator's", () => {
-    const { getPsScriptsDir } = require("@/lib/paths") as { getPsScriptsDir: () => string };
+    const { getPsScriptsDir } = require("@/lib/host/paths") as { getPsScriptsDir: () => string };
     expect(getPsScriptsDir()).toBe("/data/scripts");
   });
 
   it("walks the real src tree (guard the guard: a scan of nothing is not a pass)", () => {
     expect(SOURCES.length).toBeGreaterThan(400);
-    expect(sourcesContaining("export function interpreterFor")).toEqual(["src/lib/platform.ts"]);
+    expect(sourcesContaining("export function interpreterFor")).toEqual(["src/lib/host/platform.ts"]);
   });
 });
 

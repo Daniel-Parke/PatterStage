@@ -11,17 +11,17 @@ import type { NextRequest } from "next/server";
 //   writing anything to the database.
 
 import { parseHermesConfig } from "@/modules/hermes/lib/config-import";
-import { modelKey } from "@/lib/model-key";
-import { upsertModel, updateModel, listModels } from "@/lib/models-repository";
-import { upsertCredential } from "@/lib/credentials-repository";
+import { modelKey } from "@/lib/models/model-key";
+import { upsertModel, updateModel, listModels } from "@/lib/models/models-repository";
+import { upsertCredential } from "@/lib/models/credentials-repository";
 import { envVarForProvider } from "@/modules/hermes/lib/providers";
-import { logApiError } from "@/lib/api-logger";
-import { ok } from "@/lib/api-response";
-import { toError } from "@/lib/api-fetch";
+import { logApiError } from "@/lib/api/api-logger";
+import { ok } from "@/lib/api/api-response";
+import { toError } from "@/lib/api/api-fetch";
 
-import { appendAuditLine } from "@/lib/audit-log";
+import { appendAuditLine } from "@/lib/api/audit-log";
 import { maskKeyHint } from "@/lib/secret-mask";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 // GET /api/models/import — dry-run preview
 export const GET = route("GET /api/models/import", "previewing Hermes import", "Failed to preview import", async (_request: NextRequest) => {

@@ -22,7 +22,7 @@ import { NextResponse } from "next/server";
 // itself is the api-logger's (its own suite), so it is stood in for here and
 // answers the way it does.
 const mockLogApiError = jest.fn();
-jest.mock("@/lib/api-logger", () => ({
+jest.mock("@/lib/api/api-logger", () => ({
   serverErrorFromCatch: (routeName: string, doing: string, error: unknown, message: string) => {
     mockLogApiError(routeName, doing, error);
     // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -31,7 +31,7 @@ jest.mock("@/lib/api-logger", () => ({
   },
 }));
 
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 const ROOT = join(__dirname, "..", "..");
 function walk(dir: string, out: string[] = []): string[] {

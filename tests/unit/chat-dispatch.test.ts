@@ -5,14 +5,14 @@
 // stuck-"Thinking…" bug fix): the assistant placeholder is promoted to
 // `streaming` on submit and to `failed` on submit error — never left pending.
 
-jest.mock("@/lib/chat-repository", () => ({
+jest.mock("@/lib/chat/chat-repository", () => ({
   getConversation: jest.fn(),
   createMessage: jest.fn(),
   updateMessage: jest.fn(),
   updateConversation: jest.fn(),
   getMessages: jest.fn(),
 }));
-jest.mock("@/lib/runs-repository", () => ({
+jest.mock("@/lib/runs/runs-repository", () => ({
   createRun: jest.fn(),
   attachBackendRun: jest.fn(),
   updateRun: jest.fn(),
@@ -24,8 +24,8 @@ jest.mock("@/lib/runtime", () => ({
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
 jest.mock("@/lib/db", () => require("../helpers/mocks").dbMock({ uuid: jest.fn(() => "run-ch-1") }));
 jest.mock("@/lib/analytics/record-event", () => ({ recordEvent: jest.fn() }));
-jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
-jest.mock("@/lib/api-fetch", () => ({ messageFromError: (_e: unknown, f: string) => f }));
+jest.mock("@/lib/api/api-logger", () => ({ logApiError: jest.fn() }));
+jest.mock("@/lib/api/api-fetch", () => ({ messageFromError: (_e: unknown, f: string) => f }));
 
 import { dispatchChatTurn, reconcilePendingChatMessages } from "@/lib/orchestration/chat-dispatch";
 import {
@@ -34,8 +34,8 @@ import {
   updateMessage,
   updateConversation,
   getMessages,
-} from "@/lib/chat-repository";
-import { createRun, attachBackendRun, updateRun, getRun } from "@/lib/runs-repository";
+} from "@/lib/chat/chat-repository";
+import { createRun, attachBackendRun, updateRun, getRun } from "@/lib/runs/runs-repository";
 import { runtime } from "@/lib/runtime";
 import { recordEvent } from "@/lib/analytics/record-event";
 

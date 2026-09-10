@@ -19,7 +19,7 @@
 import { existsSync, readFileSync } from "fs";
 
 import { seedPath } from "@/lib/seed/seed-paths";
-import { getAgentRoot, updateAgentRoot } from "@/lib/agent-root-repository";
+import { getAgentRoot, updateAgentRoot } from "@/lib/agents/agent-root-repository";
 
 import {
   configYamlToColumnValues,

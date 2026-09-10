@@ -1,5 +1,5 @@
 /** @jest-environment node */
-import { getPsScriptsDir, getPsHardwareLogDir, PS_DATA_DIR } from "@/lib/paths";
+import { getPsScriptsDir, getPsHardwareLogDir, PS_DATA_DIR } from "@/lib/host/paths";
 
 describe("system cron paths (CH-owned)", () => {
   it("uses PS_DATA_DIR/scripts and PS_DATA_DIR/logs by default", () => {

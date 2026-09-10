@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { methodNotAllowed, notFound, ok } from "@/lib/api-response";
-import { parseJsonBody } from "@/lib/parse-json-body";
+import { methodNotAllowed, notFound, ok } from "@/lib/api/api-response";
+import { parseJsonBody } from "@/lib/api/parse-json-body";
 import { ensureDb } from "@/lib/db";
 import { applyProfileOrRootPatchOrFail } from "@/modules/hermes/handlers/profile-patch";
 import { hydratePlatformToolsetsForSlug } from "@/modules/hermes/lib/profiles-repository";
@@ -14,9 +14,9 @@ import {
   unionToolsetsFromPlatforms,
 } from "@/modules/hermes/lib/toolset-unify";
 import { requireSafeProfileName } from "@/lib/fs/path-security";
-import { isReadOnly } from "@/lib/read-only";
+import { isReadOnly } from "@/lib/api/read-only";
 import { recordEvent } from "@/lib/analytics/record-event";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 export const GET = route("GET /api/agent/profiles/[id]/toolsets", "reading toolsets", "Failed to read toolsets", async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   const { id } = await params;

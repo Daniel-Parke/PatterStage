@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { parseJsonBody } from "@/lib/parse-json-body";
-import { appendAuditLine } from "@/lib/audit-log";
+import { parseJsonBody } from "@/lib/api/parse-json-body";
+import { appendAuditLine } from "@/lib/api/audit-log";
 import { ensureDb } from "@/lib/db";
-import { getAgentRoot, updateAgentRoot } from "@/lib/agent-root-repository";
-import { badRequest, ok, methodNotAllowed } from "@/lib/api-response";
-import { route } from "@/lib/api-route";
+import { getAgentRoot, updateAgentRoot } from "@/lib/agents/agent-root-repository";
+import { badRequest, ok, methodNotAllowed } from "@/lib/api/api-response";
+import { route } from "@/lib/api/api-route";
 
 const MAX_NAME = 60;
 const MAX_DESCRIPTION = 400;

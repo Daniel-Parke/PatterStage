@@ -18,7 +18,7 @@ import {
   byRarity,
   TIER_LABEL,
   TIER_COLOR,
-} from "@/lib/achievements-showcase";
+} from "@/lib/ui/achievements-showcase";
 import type { AchievementTier } from "@/lib/stats/derive";
 import { Collapse, Stagger, StaggerItem } from "@/components/motion";
 import Card from "@/components/ui/Card";

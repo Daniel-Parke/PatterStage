@@ -24,24 +24,24 @@ jest.mock("@/lib/analytics/record-event", () => ({ recordEvent: jest.fn() }));
 
 // The real logger shapes (serverErrorFromCatch must still answer a 500);
 // only the console line is silenced.
-jest.mock("@/lib/api-logger", () => ({
-  ...jest.requireActual("@/lib/api-logger"),
+jest.mock("@/lib/api/api-logger", () => ({
+  ...jest.requireActual("@/lib/api/api-logger"),
   logApiError: jest.fn(),
 }));
-jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
+jest.mock("@/lib/api/audit-log", () => ({ appendAuditLine: jest.fn() }));
 
 // The real auth module, with the host-writes guard steerable per test so the
 // refusal can be exercised without touching PS_AUTH_MODE for the whole file.
 const mockHostWrites = jest.fn<NextResponse | null, []>(() => null);
-jest.mock("@/lib/api-auth", () => ({
-  ...jest.requireActual("@/lib/api-auth"),
+jest.mock("@/lib/api/api-auth", () => ({
+  ...jest.requireActual("@/lib/api/api-auth"),
   requireAuthenticatedHostWrites: () => mockHostWrites(),
 }));
 
 const mockReadScriptContent = jest.fn();
 const mockWriteScriptContent = jest.fn();
 const mockRunScriptFile = jest.fn();
-jest.mock("@/lib/scripts-manager", () => ({
+jest.mock("@/lib/scripts/scripts-manager", () => ({
   readScriptContent: (...a: unknown[]) => mockReadScriptContent(...a),
   writeScriptContent: (...a: unknown[]) => mockWriteScriptContent(...a),
   deleteScriptFile: jest.fn(),
@@ -52,7 +52,7 @@ jest.mock("@/lib/scripts-manager", () => ({
     ["ps-backup.mjs", "ps-health-check.mjs"].includes(name) ? `/tmp/ch-data/scripts/${name}` : null,
 }));
 
-jest.mock("@/lib/paths", () => ({
+jest.mock("@/lib/host/paths", () => ({
   PS_DATA_DIR: "/tmp/ch-data",
   getPsScriptsDir: () => "/tmp/ch-data/scripts",
   getPsHardwareLogDir: () => "/tmp/ch-data/logs",
@@ -78,7 +78,7 @@ jest.mock("fs", () => ({
 
 let mockCrontab = "";
 const mockWriteRaw = jest.fn();
-jest.mock("@/lib/host-scheduler", () => ({
+jest.mock("@/lib/host/host-scheduler", () => ({
   getHostScheduler: () => ({
     readRaw: async () => mockCrontab,
     writeRaw: (c: string) => mockWriteRaw(c),
@@ -87,14 +87,14 @@ jest.mock("@/lib/host-scheduler", () => ({
 }));
 
 const mockCreateArtifact = jest.fn();
-jest.mock("@/lib/artifacts-repository", () => ({
+jest.mock("@/lib/runs/artifacts-repository", () => ({
   createArtifact: (...a: unknown[]) => mockCreateArtifact(...a),
   listArtifacts: jest.fn(() => []),
 }));
 
 const mockCreateCredential = jest.fn();
 const mockDeleteCredential = jest.fn();
-jest.mock("@/lib/credentials-repository", () => ({
+jest.mock("@/lib/models/credentials-repository", () => ({
   listCredentials: jest.fn(() => []),
   createCredential: (...a: unknown[]) => mockCreateCredential(...a),
   deleteCredential: (...a: unknown[]) => mockDeleteCredential(...a),
@@ -107,7 +107,7 @@ jest.mock("@/modules/hermes/lib/hermes-env-sync", () => ({
 
 const mockCreateModel = jest.fn();
 const mockDeleteModel = jest.fn();
-jest.mock("@/lib/models-repository", () => ({
+jest.mock("@/lib/models/models-repository", () => ({
   listModels: jest.fn(() => []),
   createModel: (...a: unknown[]) => mockCreateModel(...a),
   deleteModel: (...a: unknown[]) => mockDeleteModel(...a),

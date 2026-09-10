@@ -13,12 +13,12 @@
 // ═══════════════════════════════════════════════════════════════
 
 const safeApiCall = jest.fn();
-jest.mock("@/lib/api-fetch", () => ({
+jest.mock("@/lib/api/api-fetch", () => ({
   safeApiCall: (...a: unknown[]) => safeApiCall(...a),
   messageFromError: (_e: unknown, fallback: string) => fallback,
 }));
 
-import { fetchConversation } from "@/lib/chat-utils";
+import { fetchConversation } from "@/lib/chat/chat-utils";
 
 const CONVERSATION = { id: "c-1", title: "Alpha", model: "m", createdAt: "", updatedAt: "" };
 const MESSAGES = [{ id: "m-1", role: "user", content: "hello", createdAt: "" }];

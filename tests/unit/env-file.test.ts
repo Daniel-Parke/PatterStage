@@ -1,7 +1,7 @@
 /** @jest-environment node */
 
 // Tests for `parseEnvFile` and the `ENV_LINE_RE` regex in
-// `src/lib/env-file.ts`. The helper was promoted from a private function
+// `src/lib/config/env-file.ts`. The helper was promoted from a private function
 // in `src/lib/hermes-config-sync.ts` (where it was used by
 // `syncCredentialToHermesEnv` and `removeCredentialFromHermesEnv`) and
 // is now also consumed by `src/lib/hermes-import.ts:parseEnvCredentials`.
@@ -13,7 +13,7 @@
 // the original sites had to defend against (CRLF, leading whitespace,
 // value with `=`, duplicate keys).
 
-import { parseEnvFile, ENV_LINE_RE } from "@/lib/env-file";
+import { parseEnvFile, ENV_LINE_RE } from "@/lib/config/env-file";
 
 describe("parseEnvFile", () => {
   it("returns an empty Map for empty input", () => {

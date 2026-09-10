@@ -3,11 +3,11 @@ import type { NextRequest } from "next/server";
 // /api/models/sync/drift — detect config drift between DB and config.yaml
 // ═══════════════════════════════════════════════════════════════
 
-import { ok } from "@/lib/api-response";
+import { ok } from "@/lib/api/api-response";
 
 import { buildDriftDetails, buildDriftLines, detectConfigDrift } from "@/modules/hermes/lib/sync-manager";
 import type { SyncDrift } from "@/components/models/types";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 export const GET = route("GET /api/models/sync/drift", "detecting drift", "Failed to detect drift", async (_request: NextRequest) => {
   // One report, read twice: the sentences the banner prints and the lines

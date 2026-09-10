@@ -11,9 +11,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-import { ok, badRequest } from "@/lib/api-response";
+import { ok, badRequest } from "@/lib/api/api-response";
 import { ensureDb } from "@/lib/db";
-import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
+import { parseAndValidateJsonBody } from "@/lib/api/parse-json-body";
 import {
   getActiveMemoryConfig,
   listMemoryProviders,
@@ -22,7 +22,7 @@ import {
 import { HindsightMemoryProvider } from "@/lib/memory/memory-providers/hindsight-provider";
 import { writeMemoryProviderToHermesConfig } from "@/modules/hermes/lib/memory-provider-sync";
 import { recordEvent } from "@/lib/analytics/record-event";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 const configSchema = z.object({
   host: z.string().min(1),

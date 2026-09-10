@@ -14,7 +14,7 @@
   "status": "done",
   "owner_session": "t0061-profile-names-2026-08-30",
   "claims": [
-    "src/lib/profile-slug.ts",
+    "src/lib/agents/profile-slug.ts",
     "src/app/api/agent/profiles/",
     "tests/"
   ],

@@ -48,14 +48,14 @@ jest.mock("@/lib/laboratory/deep-research/search", () => ({
 }));
 
 const captureArtifactOnce = jest.fn();
-jest.mock("@/lib/artifacts-repository", () => ({
+jest.mock("@/lib/runs/artifacts-repository", () => ({
   captureArtifactOnce: (...a: unknown[]) => captureArtifactOnce(...a),
 }));
 
 const recordEvent = jest.fn();
 jest.mock("@/lib/analytics/record-event", () => ({ recordEvent: (...a: unknown[]) => recordEvent(...a) }));
 
-jest.mock("@/lib/api-logger", () => ({
+jest.mock("@/lib/api/api-logger", () => ({
   logApiError: jest.fn(),
   serverErrorFromCatch: jest.fn(() => ({ status: 500, body: { error: "boom" } })),
 }));

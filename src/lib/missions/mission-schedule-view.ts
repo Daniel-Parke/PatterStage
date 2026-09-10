@@ -9,7 +9,7 @@
 // `schedules` table, and the composer's Schedule dispatch mode writes a row
 // there. So the field is renamed to what it is, and this is its shape.
 
-import type { ScheduleRecord } from "@/lib/schedules-repository";
+import type { ScheduleRecord } from "@/lib/schedule/schedules-repository";
 
 /** A mission's schedule, as /api/missions publishes it. */
 export interface MissionScheduleView {

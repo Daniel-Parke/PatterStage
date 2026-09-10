@@ -15,9 +15,9 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { sessionsRateLimitResponse } from "@/lib/sessions/sessions-api-guard";
-import { isReadOnly } from "@/lib/api-auth";
-import { badRequest, created, notFound, ok, serviceUnavailable } from "@/lib/api-response";
-import { parseJsonBody } from "@/lib/parse-json-body";
+import { isReadOnly } from "@/lib/api/api-auth";
+import { badRequest, created, notFound, ok, serviceUnavailable } from "@/lib/api/api-response";
+import { parseJsonBody } from "@/lib/api/parse-json-body";
 import {
   listSessions,
   getSession,
@@ -31,7 +31,7 @@ import {
   parseSessionQuery,
   triggerSyncOnce,
 } from "@/lib/sessions/sessions-api-helpers";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 export const GET = route("GET /api/sessions", "listing sessions", "Failed to load sessions", async (request: NextRequest) => {
   // The limiter has existed since the sessions API was written and was wired

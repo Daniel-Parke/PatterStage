@@ -13,11 +13,11 @@ import { RuntimeRequestError } from "@/lib/runtime/types";
 const mockCreateSession = jest.fn();
 jest.mock("@/lib/runtime", () => ({ runtime: { createSession: (...a: unknown[]) => mockCreateSession(...a) } }));
 const mockCreateConversation = jest.fn();
-jest.mock("@/lib/chat-repository", () => ({
+jest.mock("@/lib/chat/chat-repository", () => ({
   createConversation: (input: unknown) => mockCreateConversation(input),
   listConversations: jest.fn(() => []),
 }));
-jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn(), serverErrorFromCatch: jest.fn() }));
+jest.mock("@/lib/api/api-logger", () => ({ logApiError: jest.fn(), serverErrorFromCatch: jest.fn() }));
 
 import { POST } from "@/app/api/chat/route";
 

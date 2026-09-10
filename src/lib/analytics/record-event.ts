@@ -7,8 +7,8 @@
 // insert is logged and swallowed, never surfaced to the dispatch/route logic.
 // ═══════════════════════════════════════════════════════════════
 
-import { isReadOnly } from "../api-auth";
-import { logApiError } from "../api-logger";
+import { isReadOnly } from "../api/api-auth";
+import { logApiError } from "../api/api-logger";
 import { insertEvent } from "./analytics-repository";
 import type { AnalyticsEventType, AnalyticsEntityType } from "./event-types";
 

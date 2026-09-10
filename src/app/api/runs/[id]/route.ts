@@ -3,9 +3,9 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextRequest } from "next/server";
-import { ok, notFound } from "@/lib/api-response";
-import { getRun } from "@/lib/runs-repository";
-import { route } from "@/lib/api-route";
+import { ok, notFound } from "@/lib/api/api-response";
+import { getRun } from "@/lib/runs/runs-repository";
+import { route } from "@/lib/api/api-route";
 
 interface Ctx {
   params: Promise<{ id: string }>;

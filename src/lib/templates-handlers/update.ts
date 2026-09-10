@@ -17,8 +17,8 @@ import {
   sanitizeTemplateId,
   saveTemplate,
 } from "./shared";
-import { isDispatchMode, DISPATCH_MODES } from "@/lib/dispatch-mode";
-import { badRequest } from "@/lib/api-response";
+import { isDispatchMode, DISPATCH_MODES } from "@/lib/ui/dispatch-mode";
+import { badRequest } from "@/lib/api/api-response";
 import { recordEvent } from "@/lib/analytics/record-event";
 
 export function handleUpdateTemplate(body: TemplateActionBody): NextResponse {

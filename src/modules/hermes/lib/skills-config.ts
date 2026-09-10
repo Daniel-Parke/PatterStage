@@ -193,7 +193,7 @@ export function skillsRootForProfile(): string {
  *
  * String concatenation is intentional (no `path.join`) — the
  * project convention is to avoid `path.join` in shared libs per
- * the Turbopack NFT tracing issue (see `src/lib/paths.ts` header).
+ * the Turbopack NFT tracing issue (see `src/lib/host/paths.ts` header).
  * The skills root is already an absolute path produced by
  * `buildProfileHermesPathBundle`, so plain "/" joining is safe.
  *

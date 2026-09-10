@@ -17,7 +17,7 @@ const deleteSchedule = jest.fn();
 const recordScheduleRun = jest.fn();
 const dispatchMissionRun = jest.fn();
 
-jest.mock("@/lib/schedules-repository", () => ({
+jest.mock("@/lib/schedule/schedules-repository", () => ({
   listSchedules: (...a: unknown[]) => listSchedules(...a),
   createSchedule: (...a: unknown[]) => createSchedule(...a),
   getSchedule: (...a: unknown[]) => getSchedule(...a),
@@ -25,7 +25,7 @@ jest.mock("@/lib/schedules-repository", () => ({
   deleteSchedule: (...a: unknown[]) => deleteSchedule(...a),
   recordScheduleRun: (...a: unknown[]) => recordScheduleRun(...a),
 }));
-jest.mock("@/lib/api-auth", () => ({ requireAuth: () => null }));
+jest.mock("@/lib/api/api-auth", () => ({ requireAuth: () => null }));
 jest.mock("@/lib/orchestration", () => ({
   dispatchMissionRun: (...a: unknown[]) => dispatchMissionRun(...a),
 }));

@@ -8,9 +8,9 @@
 // the one resolver for what a dispatch says, so a renamed string or a new
 // mode lands in one place.
 
-export type { DispatchMode } from "@/lib/dispatch-mode";
-import type { DispatchMode } from "@/lib/dispatch-mode";
-import { runWrite, type RunWriteOptions } from "@/lib/api-write";
+export type { DispatchMode } from "@/lib/ui/dispatch-mode";
+import type { DispatchMode } from "@/lib/ui/dispatch-mode";
+import { runWrite, type RunWriteOptions } from "@/lib/api/api-write";
 
 /** What /api/missions answers with, inside `data`. */
 export interface MissionActionPayload {

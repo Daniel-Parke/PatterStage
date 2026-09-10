@@ -2,7 +2,7 @@
 
 import type { CSSProperties, ReactNode } from "react";
 import type { AccentColor } from "@/types/console";
-import { glowSurfaceRgbMap } from "@/lib/theme";
+import { glowSurfaceRgbMap } from "@/lib/ui/theme";
 
 /**
  * The elements a surface may be. Containers only, and closed on purpose: an

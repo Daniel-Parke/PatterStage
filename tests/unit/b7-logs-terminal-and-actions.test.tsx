@@ -28,14 +28,14 @@ const mockUseLogs = jest.fn();
 jest.mock("@/hooks/useLogs", () => ({ useLogs: (...a: unknown[]) => mockUseLogs(...a) }));
 
 const mockSafeApiCallData = jest.fn();
-jest.mock("@/lib/api-fetch", () => ({
+jest.mock("@/lib/api/api-fetch", () => ({
   safeApiCallData: (...a: unknown[]) => mockSafeApiCallData(...a),
   setErrorFromCaught: jest.fn(),
 }));
 
 const mockDownloadFile = jest.fn();
-jest.mock("@/lib/chat-utils", () => ({
-  ...(jest.requireActual("@/lib/chat-utils") as Record<string, unknown>),
+jest.mock("@/lib/chat/chat-utils", () => ({
+  ...(jest.requireActual("@/lib/chat/chat-utils") as Record<string, unknown>),
   downloadFile: (...a: unknown[]) => mockDownloadFile(...a),
 }));
 

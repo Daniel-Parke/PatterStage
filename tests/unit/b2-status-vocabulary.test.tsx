@@ -9,7 +9,7 @@
  * The same fact used to wear a different word on every screen: a finished
  * mission was "Successful" on the dashboard badge, "Finished" on the board and
  * "Completed" in the insights strip; a story was "Failed" on the hub and
- * counted as "In Progress" in the library. src/lib/status-labels.ts is the one
+ * counted as "In Progress" in the library. src/lib/ui/status-labels.ts is the one
  * map, typed exhaustively, and the badges read it.
  */
 import { readFileSync } from "node:fs";
@@ -23,7 +23,7 @@ import {
   SUBSYSTEM_STATE_LABELS,
   SYNC_STATUS_LABELS,
   missionStatusLabel,
-} from "@/lib/status-labels";
+} from "@/lib/ui/status-labels";
 import { STORY_STATUS_LABELS } from "@/modules/rec-room/lib/story-status-labels";
 import { describeMissionRunState } from "@/lib/missions/mission-run-state";
 import { MissionStatusBadge } from "@/components/dashboard/StatusBadge";

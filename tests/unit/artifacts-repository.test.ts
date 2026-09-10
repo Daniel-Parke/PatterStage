@@ -18,7 +18,7 @@ import {
   getArtifact,
   hasArtifactForSource,
   listArtifacts,
-} from "@/lib/artifacts-repository";
+} from "@/lib/runs/artifacts-repository";
 
 const migrationsDir = join(process.cwd(), "src", "lib", "db", "migrations");
 

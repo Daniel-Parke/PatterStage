@@ -9,8 +9,8 @@
 
 import { NextResponse } from "next/server";
 
-import { ok, badRequest } from "@/lib/api-response";
-import { appendAuditLine } from "@/lib/audit-log";
+import { ok, badRequest } from "@/lib/api/api-response";
+import { appendAuditLine } from "@/lib/api/audit-log";
 import { parseMissionBodyFields } from "@/lib/missions/mission-body";
 import { missionTimeoutError } from "@/lib/missions/mission-timeout";
 import { promoteMission } from "@/lib/missions/mission-promote-handler";

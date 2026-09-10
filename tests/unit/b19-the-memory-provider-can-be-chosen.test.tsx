@@ -28,7 +28,7 @@ const calls: Array<{ path: string; method: string; body: Record<string, unknown>
 
 let activeType = "hindsight";
 
-jest.mock("@/lib/api-fetch", () => ({
+jest.mock("@/lib/api/api-fetch", () => ({
   // The card LOADS its own row, so the GET has to answer with one or the
   // buttons stay disabled and every case below would pass vacuously.
   safeApiCall: jest.fn(async (path: string, init?: { method?: string; body?: Record<string, unknown> }) => {

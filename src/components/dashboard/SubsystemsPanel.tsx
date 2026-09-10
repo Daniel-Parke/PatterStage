@@ -12,8 +12,8 @@
 import { Activity } from "lucide-react";
 import { Panel, PanelHeader } from "@/components/dashboard/Panel";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
-import { SUBSYSTEM_STATE_LABELS, statusTone } from "@/lib/status-labels";
-import { statusToneClasses } from "@/lib/theme";
+import { SUBSYSTEM_STATE_LABELS, statusTone } from "@/lib/ui/status-labels";
+import { statusToneClasses } from "@/lib/ui/theme";
 import type { SubsystemRow, SubsystemState } from "@/lib/status/subsystems";
 
 /**

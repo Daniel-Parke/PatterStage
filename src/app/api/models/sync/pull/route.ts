@@ -5,13 +5,13 @@
 // ═══════════════════════════════════════════════════════════════
 import { NextRequest, NextResponse } from "next/server";
 
-import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
-import { updateModel, listModels } from "@/lib/models-repository";
+import { parseAndValidateJsonBody } from "@/lib/api/parse-json-body";
+import { updateModel, listModels } from "@/lib/models/models-repository";
 import { readHermesConfigModels } from "@/modules/hermes/lib/hermes-config-read";
 // One comparison, shared with the diff preview (T-0100, D13).
 import { diffModelAgainstHermes, type ModelDiff } from "@/modules/hermes/lib/model-diff";
-import { notFound, ok } from "@/lib/api-response";
-import { modelKey } from "@/lib/model-key";
+import { notFound, ok } from "@/lib/api/api-response";
+import { modelKey } from "@/lib/models/model-key";
 import { z } from "zod";
 
 export async function POST(request: NextRequest) {

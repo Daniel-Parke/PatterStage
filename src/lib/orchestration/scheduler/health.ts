@@ -10,7 +10,7 @@
 // the runtime adapter.
 // ═══════════════════════════════════════════════════════════════
 
-import { getMetaPair } from "@/lib/system-repository";
+import { getMetaPair } from "@/lib/system/system-repository";
 
 /** `meta` key: pid of the process that holds the scheduling lease. */
 export const META_OWNER_PID = "scheduler_owner_pid";

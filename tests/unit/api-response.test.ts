@@ -21,7 +21,7 @@ import {
   payloadTooLarge,
   serverError,
   serviceUnavailable,
-} from "@/lib/api-response";
+} from "@/lib/api/api-response";
 
 describe("badRequest", () => {
   it("returns a response with status 400", async () => {

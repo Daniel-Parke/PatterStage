@@ -34,9 +34,9 @@ let testDb: RealDb | null = null;
 
 jest.mock("@/lib/db", () => require("../helpers/baseline-db").dbSingletonMock(() => testDb));
 
-jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
+jest.mock("@/lib/api/api-logger", () => ({ logApiError: jest.fn() }));
 
-import { createSpendRun } from "@/lib/runs-repository";
+import { createSpendRun } from "@/lib/runs/runs-repository";
 import { recordedSpendSince } from "@/lib/spend/spend-window";
 
 interface StorySpendModule {

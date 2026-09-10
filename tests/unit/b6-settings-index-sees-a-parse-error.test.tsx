@@ -35,11 +35,11 @@ import { useApiResource, type UseApiResourceOptions } from "@/hooks/useApiResour
 
 // The two file sections read through apiFetch now that they are on the page
 // (U11, T-0125); the yaml read is still safeApiCall, through useConfig.
-jest.mock("@/lib/api-fetch", () => ({
+jest.mock("@/lib/api/api-fetch", () => ({
   safeApiCall: jest.fn(),
   apiFetch: async () => ({ data: { content: "" } }),
 }));
-import { safeApiCall } from "@/lib/api-fetch";
+import { safeApiCall } from "@/lib/api/api-fetch";
 const mockSafeApiCall = safeApiCall as jest.Mock;
 
 // The index is rendered against a mocked useConfig (the b3-settings-index

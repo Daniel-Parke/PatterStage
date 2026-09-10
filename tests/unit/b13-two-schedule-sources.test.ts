@@ -33,7 +33,7 @@ import {
   createSchedule,
   getSchedule,
   listScriptSchedules,
-} from "@/lib/schedules-repository";
+} from "@/lib/schedule/schedules-repository";
 
 beforeEach(() => {
   const Database = require("better-sqlite3/lib/index.js") as typeof import("better-sqlite3");

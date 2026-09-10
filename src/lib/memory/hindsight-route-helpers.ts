@@ -1,8 +1,8 @@
 // Hindsight route helpers — pure data-shaping for /api/memory/hindsight; no DB or fetch calls.
 
 import { NextResponse } from "next/server";
-import { messageFromError } from "@/lib/api-fetch";
-import { logApiError } from "@/lib/api-logger";
+import { messageFromError } from "@/lib/api/api-fetch";
+import { logApiError } from "@/lib/api/api-logger";
 import { memoryFailureMessage } from "@/lib/memory/memory-error-copy";
 import type { ApiResponse } from "@/types/console";
 

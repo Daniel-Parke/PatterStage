@@ -31,7 +31,7 @@ import { act, renderHook } from "@testing-library/react";
 // Amended 2026-09-10 (C3, T-0138): the write is runWrite over apiFetch, body as JSON.
 const apiFetch = jest.fn(async () => ({ data: {} }));
 
-jest.mock("@/lib/api-fetch", () => ({
+jest.mock("@/lib/api/api-fetch", () => ({
   apiFetch: (...a: unknown[]) => (apiFetch as unknown as (...a: unknown[]) => unknown)(...a),
   toastError: jest.fn(),
   messageFromError: (e: unknown, f: string) => (e instanceof Error ? e.message : f),

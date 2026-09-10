@@ -223,7 +223,7 @@ export const RULES = [
   },
   {
     id: "no-raw-colour-in-tsx",
-    law: "Colour comes from a token, never a literal. Design tokens are in globals.css @theme + src/lib/theme.ts (docs/contributing/design-tokens.md).",
+    law: "Colour comes from a token, never a literal. Design tokens are in globals.css @theme + src/lib/ui/theme.ts (docs/contributing/design-tokens.md).",
     files: (f) => f.startsWith("src/") && f.endsWith(".tsx"),
     // The lookbehind, not \b, and it excludes letters and digits but NOT the
     // underscore. Tailwind writes a space as `_` inside an arbitrary value, so
@@ -498,7 +498,7 @@ export const RULES = [
   },
   {
     id: "no-raw-write-outside-the-helper",
-    law: "A screen writes to the API through runWrite (src/lib/api-write.ts), which marks busy, calls, says what happened in the server's words, reloads and clears busy in one place; a hook that owns query keys writes through react-query's useMutation and invalidates them. A fetch call carrying a method anywhere else says those six things a fifth way, and four ways had to be folded into one (T-0138). A read, a call with no method, is the other rule's.",
+    law: "A screen writes to the API through runWrite (src/lib/api/api-write.ts), which marks busy, calls, says what happened in the server's words, reloads and clears busy in one place; a hook that owns query keys writes through react-query's useMutation and invalidates them. A fetch call carrying a method anywhere else says those six things a fifth way, and four ways had to be folded into one (T-0138). A read, a call with no method, is the other rule's.",
     files: (f) =>
       (f.startsWith("src/components/") || f.startsWith("src/app/") || f.startsWith("src/modules/") || f.startsWith("src/hooks/")) &&
       !f.startsWith("src/app/api/") &&

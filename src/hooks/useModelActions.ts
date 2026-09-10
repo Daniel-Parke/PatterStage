@@ -19,8 +19,8 @@
 import { useCallback, useState, type Dispatch, type SetStateAction } from "react";
 
 import type { ToastType } from "@/components/ui/Toast";
-import { API_FETCH_BULK_TIMEOUT_MS, apiFetch, messageFromError } from "@/lib/api-fetch";
-import { runWrite, type RunWriteOptions } from "@/lib/api-write";
+import { API_FETCH_BULK_TIMEOUT_MS, apiFetch, messageFromError } from "@/lib/api/api-fetch";
+import { runWrite, type RunWriteOptions } from "@/lib/api/api-write";
 import type { ModelEditorRecord } from "@/components/models/ModelEditor";
 import { type TaskType } from "@/lib/models/task-types";
 import type { SyncActionResult } from "@/lib/models/sync-result";

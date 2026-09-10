@@ -30,7 +30,7 @@
 // ── the leaves, mocked; the arithmetic and the loop under test are real ──
 
 const mockListSkillKeys = jest.fn<string[], []>();
-jest.mock("@/lib/skills-repository", () => ({
+jest.mock("@/lib/skills/skills-repository", () => ({
   listSkillKeys: () => mockListSkillKeys(),
 }));
 
@@ -77,7 +77,7 @@ interface Row {
 }
 const rows = new Map<string, Row>();
 
-jest.mock("@/lib/agent-root-repository", () => ({
+jest.mock("@/lib/agents/agent-root-repository", () => ({
   getAgentRoot: () => ({
     displayName: "Bob",
     description: "Main agent",
@@ -152,7 +152,7 @@ jest.mock("@/lib/stats/agent-stats-repository", () => ({
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
 jest.mock("@/lib/db", () => require("../helpers/mocks").dbMock());
-jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
+jest.mock("@/lib/api/audit-log", () => ({ appendAuditLine: jest.fn() }));
 jest.mock("@/lib/analytics/record-event", () => ({ recordEvent: jest.fn() }));
 jest.mock("@/modules/hermes/lib/profile-push", () => ({
   pushProfileToHermes: jest.fn(() => ({ success: true, slug: "", backupPath: null, error: null })),

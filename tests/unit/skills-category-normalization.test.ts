@@ -1,7 +1,7 @@
 /** @jest-environment node */
 
-import { groupByCategory, titleCaseCategory } from "@/lib/skills-grouping";
-import { categoryStateKey, groupCategories } from "@/lib/skills-page-helpers";
+import { groupByCategory, titleCaseCategory } from "@/lib/skills/skills-grouping";
+import { categoryStateKey, groupCategories } from "@/lib/skills/skills-page-helpers";
 import type { Skill } from "@/types/console";
 
 describe("groupByCategory", () => {

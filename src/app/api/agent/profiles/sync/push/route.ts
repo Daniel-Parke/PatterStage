@@ -1,8 +1,8 @@
 import { NextRequest } from "next/server";
 
-import { badRequest } from "@/lib/api-response";
+import { badRequest } from "@/lib/api/api-response";
 import { ensureDb } from "@/lib/db";
-import { parseOptionalJsonBody } from "@/lib/parse-optional-json-body";
+import { parseOptionalJsonBody } from "@/lib/api/parse-optional-json-body";
 import { booleanFlag, stringFlag } from "@/lib/parse-bag-flags";
 import {
   pushProfileToHermes,
@@ -14,7 +14,7 @@ import {
 import { answerBatch as answerAnyBatch, answerSingle as answerAnySingle } from "@/modules/hermes/lib/sync-answer";
 import type { SyncResult } from "@/modules/hermes/lib/profile-sync-shared";
 import { recordEvent } from "@/lib/analytics/record-event";
-import { route } from "@/lib/api-route";
+import { route } from "@/lib/api/api-route";
 
 // The two answer shapes were written here first (QA finding 7, T-0082) and now
 // live in sync-answer.ts so the pull, import and models routes answer the same

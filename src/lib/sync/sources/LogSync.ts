@@ -21,7 +21,7 @@ import { createInterface } from "readline";
 import { getAgentWorkspace } from "@/lib/runtime/workspace";
 import { now } from "@/lib/db";
 import { insertErrorLogEntries, pruneErrorLogEntries } from "@/lib/sync/sync-repository";
-import { logApiError } from "@/lib/api-logger";
+import { logApiError } from "@/lib/api/api-logger";
 import type { SyncSource, SyncResult } from "@/lib/sync/types";
 import { syncFailure, syncSuccess } from "@/lib/sync/types";
 

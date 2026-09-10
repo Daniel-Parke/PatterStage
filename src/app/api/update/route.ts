@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { logApiError } from "@/lib/api-logger";
+import { logApiError } from "@/lib/api/api-logger";
 import {
   getCorrelationId,
   isDeployApiEnabled,
   requireAuthenticatedHostWrites,
   requireDeployApiEnabled,
   requireSignedRequest,
-} from "@/lib/api-auth";
-import { isDeployInProgress, readDeployStatus, tailLogHint } from "@/lib/deploy-status";
+} from "@/lib/api/api-auth";
+import { isDeployInProgress, readDeployStatus, tailLogHint } from "@/lib/deploy/deploy-status";
 import { sanitizeGitBranch } from "@/lib/git/git-branch";
 import {
   handleRebuildAction,

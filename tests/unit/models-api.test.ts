@@ -4,25 +4,25 @@
 import type { NextRequest } from "next/server";
 jest.mock("next/server", () => require("../helpers/mocks").nextServerMock());
 
-jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
+jest.mock("@/lib/api/api-logger", () => ({ logApiError: jest.fn() }));
 // GET /api/models/defaults resolves the product's one "do I have a model?"
 // verdict, which needs the agent's config file. Mocked so the answer comes
 // from the test rather than from whatever config.yaml this machine happens to
 // have.
 const configOnDisk = { value: {} as Record<string, unknown> };
-jest.mock("@/lib/config-cache", () => ({
+jest.mock("@/lib/config/config-cache", () => ({
   readCachedConfigResult: () => ({ config: configOnDisk.value, error: null }),
 }));
-jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
+jest.mock("@/lib/api/audit-log", () => ({ appendAuditLine: jest.fn() }));
 
-jest.mock("@/lib/api-auth", () => ({
+jest.mock("@/lib/api/api-auth", () => ({
 }));
 
-jest.mock("@/lib/parse-json-body", () => {
+jest.mock("@/lib/api/parse-json-body", () => {
   // Re-expose the real parseAndValidateJsonBody so routes that switched
   // from parseJsonBody + zodErrorResponse to the combined helper still
   // exercise the schema. parseJsonBody stays mocked (legacy test shape).
-  const actual = jest.requireActual("@/lib/parse-json-body");
+  const actual = jest.requireActual("@/lib/api/parse-json-body");
   return {
     parseJsonBody: jest.fn(async (req: { json: () => Promise<unknown> }) => req.json()),
     parseAndValidateJsonBody: actual.parseAndValidateJsonBody,
@@ -38,7 +38,7 @@ jest.mock("@/modules/hermes/lib/config-sync", () => ({
   removeCredentialFromHermesEnv: jest.fn(() => ({ backupPath: null })),
 }));
 
-jest.mock("@/lib/models-repository", () => {
+jest.mock("@/lib/models/models-repository", () => {
   const listModels = jest.fn();
   const getModel = jest.fn();
   const createModel = jest.fn();
@@ -79,8 +79,8 @@ jest.mock("@/modules/hermes/lib/config-sync", () => ({
   syncFallbacksToHermesConfig: jest.fn(() => ({ backupPath: null })),
 }));
 
-const repo = require("@/lib/models-repository") as Record<string, jest.Mock>;
-const audit = require("@/lib/audit-log") as { appendAuditLine: jest.Mock };
+const repo = require("@/lib/models/models-repository") as Record<string, jest.Mock>;
+const audit = require("@/lib/api/audit-log") as { appendAuditLine: jest.Mock };
 
 beforeEach(() => {
   jest.clearAllMocks();

@@ -9,7 +9,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { ensureSyncLayer, getSyncScheduler, runFullSync } from "@/lib/sync";
-import { logApiError } from "@/lib/api-logger";
+import { logApiError } from "@/lib/api/api-logger";
 
 export async function GET(_request: NextRequest) {
   try {

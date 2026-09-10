@@ -35,18 +35,18 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
 jest.mock("next/server", () => require("../helpers/mocks").nextServerMock());
 
-jest.mock("@/lib/api-logger", () => ({
+jest.mock("@/lib/api/api-logger", () => ({
   logApiError: jest.fn(),
-  serverErrorFromCatch: jest.requireActual("@/lib/api-logger").serverErrorFromCatch,
+  serverErrorFromCatch: jest.requireActual("@/lib/api/api-logger").serverErrorFromCatch,
 }));
-jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
-jest.mock("@/lib/api-auth", () => ({}));
+jest.mock("@/lib/api/audit-log", () => ({ appendAuditLine: jest.fn() }));
+jest.mock("@/lib/api/api-auth", () => ({}));
 jest.mock("@/lib/analytics/record-event", () => ({ recordEvent: jest.fn() }));
 jest.mock("@/modules/hermes/lib/hermes-env-sync", () => ({
   syncCredentialToHermesEnv: jest.fn(() => ({ backupPath: null })),
   removeCredentialFromHermesEnv: jest.fn(() => ({ backupPath: null })),
 }));
-jest.mock("@/lib/credentials-repository", () => {
+jest.mock("@/lib/models/credentials-repository", () => {
   const listCredentials = jest.fn();
   const getCredential = jest.fn();
   const getCredentialWithKey = jest.fn();
@@ -70,7 +70,7 @@ import type { CredentialOption } from "@/components/models/CredentialPicker";
 import { POST as postCredentials } from "@/app/api/credentials/route";
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- the closed mock set is reached the way credentials-api.test.ts reaches it
-const repo = require("@/lib/credentials-repository") as Record<string, jest.Mock>;
+const repo = require("@/lib/models/credentials-repository") as Record<string, jest.Mock>;
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- same
 const env = require("@/modules/hermes/lib/hermes-env-sync") as { syncCredentialToHermesEnv: jest.Mock };
 

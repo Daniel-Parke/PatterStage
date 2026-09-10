@@ -4,12 +4,12 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextRequest, NextResponse } from "next/server";
-import { isReadOnly, requireAuthenticatedHostWrites } from "@/lib/api-auth";
-import { serverErrorFromCatch } from "@/lib/api-logger";
-import { ok, badRequest, notFound, serviceUnavailable } from "@/lib/api-response";
-import { readOnlyMessage } from "@/lib/read-only";
-import { parseJsonBody } from "@/lib/parse-json-body";
-import { runScriptFile } from "@/lib/scripts-manager";
+import { isReadOnly, requireAuthenticatedHostWrites } from "@/lib/api/api-auth";
+import { serverErrorFromCatch } from "@/lib/api/api-logger";
+import { ok, badRequest, notFound, serviceUnavailable } from "@/lib/api/api-response";
+import { readOnlyMessage } from "@/lib/api/read-only";
+import { parseJsonBody } from "@/lib/api/parse-json-body";
+import { runScriptFile } from "@/lib/scripts/scripts-manager";
 import { recordEvent } from "@/lib/analytics/record-event";
 
 export async function POST(request: NextRequest) {

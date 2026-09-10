@@ -51,14 +51,14 @@ jest.mock("@/lib/sync/sync-repository", () => ({
   readGatewayPlatforms: jest.fn(() => []),
   readRecentErrorLogEntries: jest.fn(() => []),
 }));
-jest.mock("@/lib/system-repository", () => ({
+jest.mock("@/lib/system/system-repository", () => ({
   getSystemStat: jest.fn(() => null),
   getSystemStatNumber: jest.fn(() => 0),
 }));
 jest.mock("@/lib/sessions/session-repository", () => ({
   listSessions: jest.fn(() => ({ sessions: [], total: 0 })),
 }));
-jest.mock("@/lib/api-logger", () => ({
+jest.mock("@/lib/api/api-logger", () => ({
   logApiError: jest.fn(),
   serverErrorFromCatch: jest.fn(() => ({ status: 500, json: async () => ({ error: "boom" }) })),
 }));

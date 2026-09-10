@@ -17,8 +17,8 @@
 import { useCallback, useState } from "react";
 
 import { useToast } from "@/components/ui/Toast";
-import { safeApiCall } from "@/lib/api-fetch";
-import { runWrite } from "@/lib/api-write";
+import { safeApiCall } from "@/lib/api/api-fetch";
+import { runWrite } from "@/lib/api/api-write";
 import { useApiResource } from "./useApiResource";
 import type { SpendPolicyDraft } from "@/components/spend/SpendPanel";
 import type { SpendSummary } from "@/lib/spend/spend-summary";

@@ -19,7 +19,7 @@ export async function register(): Promise<void> {
   // self-hosted tool should. src/proxy.ts enforces it on every request.
   try {
     const { ensureAuthToken, getAuthMode, getAuthTokenPath, TOKEN_QUERY_PARAM } =
-      await import("@/lib/auth-token");
+      await import("@/lib/api/auth-token");
     if (getAuthMode() === "none") {
       console.warn(
         "[auth] PS_AUTH_MODE=none — every endpoint is UNAUTHENTICATED. Only correct behind your own access control.",
@@ -41,7 +41,7 @@ export async function register(): Promise<void> {
   // to establish that nothing is, and three QA sessions were lost to a watchdog
   // restarting the server without their environment (T-0053).
   try {
-    const { describeOperationalFlags } = await import("@/lib/boot-diagnostics");
+    const { describeOperationalFlags } = await import("@/lib/deploy/boot-diagnostics");
     console.info(`[config] ${describeOperationalFlags()}`);
   } catch {
     /* non-fatal diagnostic */
@@ -50,7 +50,7 @@ export async function register(): Promise<void> {
   // Loud warning if we may be reading the wrong (emptier) DB than a sibling data
   // dir — e.g. an empty ~/patterstage/data shadowing a populated ~/PatterStage.
   try {
-    const { shadowedDataWarning } = await import("@/lib/paths");
+    const { shadowedDataWarning } = await import("@/lib/host/paths");
     const warning = shadowedDataWarning();
     if (warning) console.warn(`[paths] ${warning}`);
   } catch {
@@ -87,7 +87,7 @@ export async function register(): Promise<void> {
   // closed mid-stream left the row `streaming` for the life of the database.
   // Deep Research got this sweep years ago; chat never did (T-0052).
   try {
-    const { failStuckChatMessages } = await import("@/lib/chat-repository");
+    const { failStuckChatMessages } = await import("@/lib/chat/chat-repository");
     const failed = failStuckChatMessages();
     if (failed > 0) console.warn(`[chat] failed ${failed} interrupted chat turn(s) on boot`);
   } catch {

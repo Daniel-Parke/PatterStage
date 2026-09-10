@@ -27,7 +27,7 @@ import * as yaml from "js-yaml";
 import { getActiveHermesPaths } from "./agent-runtime";
 import { PROVIDER_ENV_VAR, isHermesProvider, type HermesProvider } from "./providers";
 import { TASK_TYPES, type TaskType } from "@/lib/models/task-types";
-import { parseEnvFile } from "@/lib/env-file";
+import { parseEnvFile } from "@/lib/config/env-file";
 
 // ── Types ────────────────────────────────────────────────────
 

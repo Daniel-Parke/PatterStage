@@ -62,7 +62,7 @@ import { existsSync, readFileSync } from "fs";
 import { fileHash, contentHash } from "@/lib/fs/fs-helpers";
 import { buildHermesPathBundle } from "./paths";
 import { getHermesDefaultRoot } from "./profile-paths";
-import { getAgentRoot } from "@/lib/agent-root-repository";
+import { getAgentRoot } from "@/lib/agents/agent-root-repository";
 import { assembleConfigYamlForProfile, getProfile } from "./profiles-repository";
 import {
   configYamlSemanticallyMatches,

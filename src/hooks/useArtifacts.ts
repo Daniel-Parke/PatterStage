@@ -5,7 +5,7 @@
 "use client";
 
 import { useApiResource } from "./useApiResource";
-import type { Artifact, ArtifactSummary } from "@/lib/artifacts-repository";
+import type { Artifact, ArtifactSummary } from "@/lib/runs/artifacts-repository";
 
 /** All artifacts (newest first), optionally filtered by source kind. */
 export function useArtifacts(kind?: string) {

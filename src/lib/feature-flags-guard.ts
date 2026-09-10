@@ -2,7 +2,9 @@
 // feature-flags-guard.ts — server-component / route guard.
 //
 // Kept separate from feature-flags.ts so the pure flag logic stays free of a
-// next/navigation import (the engine + jest import feature-flags directly).
+// next/navigation import (the engine + jest import feature-flags directly),
+// and beside the flags it guards at the lib root, which belongs to no
+// domain because every layer reads it (C7, T-0144).
 // ═══════════════════════════════════════════════════════════════
 
 import { notFound } from "next/navigation";

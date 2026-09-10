@@ -48,7 +48,7 @@ above the line that renders the sentence a user can act on.
 - **Sentence case** for headings, labels, buttons and titles. "Check for
   updates", not "Check for Updates"; "Story themes", not "Story Themes".
   Proper nouns keep their capitals: Hermes, PatterStage, Hindsight.
-- **One status vocabulary** (decision 13, held by `src/lib/status-labels.ts`
+- **One status vocabulary** (decision 13, held by `src/lib/ui/status-labels.ts`
   and its tests): Draft, Queued, Running, Waiting for you, Completed, Failed,
   Cancelled; Healthy, Degraded, Not running, Not installed; In sync, Out of
   sync. A screen that needs another word for a state has found a state the

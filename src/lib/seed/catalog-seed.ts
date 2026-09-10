@@ -9,9 +9,9 @@ import { ensureDb } from "../db";
 import { SERVER_MODULES } from "../modules/server";
 import { REPO_ROOT } from "./seed-paths";
 
-import { upsertCatalogTemplate, getCatalogTemplate } from "../catalog-template-repository";
-import { upsertSkill, getSkill } from "../skills-repository";
-import { upsertToolBundle, getToolBundle } from "../tool-catalog-repository";
+import { upsertCatalogTemplate, getCatalogTemplate } from "../templates/catalog-template-repository";
+import { upsertSkill, getSkill } from "../skills/skills-repository";
+import { upsertToolBundle, getToolBundle } from "../system/tool-catalog-repository";
 import { upsertMemoryFact } from "../memory/memory-catalog-repository";
 import {
   countSeededMissionCategories,
@@ -20,7 +20,7 @@ import {
   markCatalogSeeded,
   readCatalogSeededFlag,
 } from "./seed-repository";
-import { PS_DATA_DIR } from "../paths";
+import { PS_DATA_DIR } from "../host/paths";
 import { ensureDir } from "../fs/fs-helpers";
 
 const SKILLS_MANIFEST = join(REPO_ROOT, "data/seed/skills/manifest.json");
