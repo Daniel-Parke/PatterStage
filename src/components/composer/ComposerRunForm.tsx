@@ -14,6 +14,8 @@
 import { useState } from "react";
 import { Play, AlertTriangle, Rocket } from "lucide-react";
 
+import { Panel } from "@/components/dashboard/Panel";
+import Badge from "@/components/ui/Badge";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
@@ -78,7 +80,7 @@ export default function ComposerRunForm({
     <Card padding="md" glow="cyan">
       {/* Orientation: what this workflow is + the stages it runs */}
       {workflow ? (
-        <div className="mb-3 rounded-ps-md border border-ps-edge-hairline bg-ps-surface-panel px-3 py-2.5">
+        <Card variant="raised" padding="none" className="mb-3 px-3 py-2.5">
           {/* Named the way the review below names it, so the word an operator
               is about to launch one of is defined where they first read it. */}
           <p className="text-micro font-mono uppercase tracking-widest text-ps-text-muted">
@@ -108,7 +110,7 @@ export default function ComposerRunForm({
               ))}
             </div>
           ) : null}
-        </div>
+        </Card>
       ) : null}
 
       <Field label={objectiveLabel} htmlFor="composer-input">
@@ -197,7 +199,9 @@ export default function ComposerRunForm({
 
         <div>
           <p className="text-micro font-mono uppercase tracking-widest text-ps-text-muted">{objectiveLabel}</p>
-          <p className="mt-0.5 whitespace-pre-wrap rounded-ps-md border border-ps-edge-hairline bg-ps-surface-panel px-3 py-2 text-body text-ps-text-secondary">{input.trim()}</p>
+          <Card variant="raised" padding="none" className="mt-0.5 px-3 py-2">
+            <p className="whitespace-pre-wrap text-body text-ps-text-secondary">{input.trim()}</p>
+          </Card>
         </div>
 
         <div>
@@ -206,20 +210,22 @@ export default function ComposerRunForm({
             {stages.map((n) => {
               const writes = WRITE_KINDS.has(n.kind);
               return (
-                <span
+                <Badge
                   key={n.id}
-                  className={`rounded-full border px-2 py-0.5 text-body ${writes ? "border-neon-orange/40 bg-neon-orange/10 text-neon-orange" : "border-ps-edge-hairline text-ps-text-muted"}`}
+                  variant="outline"
+                  size="md"
+                  color={writes ? "orange" : "gray"}
                   title={writes ? "This stage can modify your repository" : n.kind}
                 >
                   {n.label}
-                </span>
+                </Badge>
               );
             })}
           </div>
         </div>
 
         {writeStages.length > 0 ? (
-          <div className="flex items-start gap-2 rounded-ps-md border border-neon-orange/40 bg-neon-orange/10 px-3 py-2.5">
+          <Panel accent="orange" tint="orange" className="flex items-start gap-2 px-3 py-2.5">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-neon-orange" />
             <div className="text-body text-neon-orange/90">
               <p className="font-semibold">This workflow can modify your repository.</p>
@@ -227,7 +233,7 @@ export default function ComposerRunForm({
                 {writeStages.map((n) => n.label).join(", ")} may write code, tests, or open a pull request. Make sure your objective and scope are what you intend before confirming.
               </p>
             </div>
-          </div>
+          </Panel>
         ) : null}
       </div>
     </Modal>

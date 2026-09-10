@@ -11,7 +11,9 @@
 
 import { useState } from "react";
 import { X } from "lucide-react";
-import { baseInputStyles } from "@/lib/theme";
+import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
+import { Input, Select } from "@/components/ui/field";
 import { allDays, DOW_LABELS, type DayOfWeek } from "@/lib/schedule/presets";
 import { previewCron } from "@/lib/schedule/picker-resolver";
 
@@ -26,6 +28,21 @@ export interface CustomScheduleBuilderProps {
   onClose: () => void;
 }
 
+const FREQUENCY_OPTIONS = [
+  { value: "1", label: "Every 1 minute" },
+  { value: "5", label: "Every 5 minutes" },
+  { value: "10", label: "Every 10 minutes" },
+  { value: "15", label: "Every 15 minutes" },
+  { value: "20", label: "Every 20 minutes" },
+  { value: "30", label: "Every 30 minutes" },
+  { value: "60", label: "Every 1 hour" },
+  { value: "120", label: "Every 2 hours" },
+  { value: "180", label: "Every 3 hours" },
+  { value: "360", label: "Every 6 hours" },
+  { value: "720", label: "Every 12 hours" },
+  { value: "1440", label: "Every 1 day" },
+];
+
 export function CustomScheduleBuilder({
   customTime,
   setCustomTime,
@@ -39,7 +56,7 @@ export function CustomScheduleBuilder({
   const [customFrequency, setCustomFrequency] = useState<string>("60");
 
   return (
-    <div className="rounded-ps-md border border-ps-edge-hairline bg-ps-surface-raised p-3 space-y-3">
+    <Card variant="raised" padding="sm" className="space-y-3">
       <div className="flex items-center justify-between">
         <span className="text-body font-medium text-ps-text-secondary">Custom schedule</span>
         <button
@@ -57,36 +74,25 @@ export function CustomScheduleBuilder({
           <label className="text-micro text-ps-text-muted font-mono block mb-1">
             Frequency
           </label>
-          <select aria-label="Frequency"
+          <Select
+            ariaLabel="Frequency"
             value={customFrequency}
-            onChange={(e) => setCustomFrequency(e.target.value)}
+            onChange={setCustomFrequency}
             disabled={disabled}
-            className={baseInputStyles}
-          >
-            <option value="1">Every 1 minute</option>
-            <option value="5">Every 5 minutes</option>
-            <option value="10">Every 10 minutes</option>
-            <option value="15">Every 15 minutes</option>
-            <option value="20">Every 20 minutes</option>
-            <option value="30">Every 30 minutes</option>
-            <option value="60">Every 1 hour</option>
-            <option value="120">Every 2 hours</option>
-            <option value="180">Every 3 hours</option>
-            <option value="360">Every 6 hours</option>
-            <option value="720">Every 12 hours</option>
-            <option value="1440">Every 1 day</option>
-          </select>
+            options={FREQUENCY_OPTIONS}
+          />
         </div>
         <div>
           <label className="text-micro text-ps-text-muted font-mono block mb-1">
             Time of day
           </label>
-          <input aria-label="Time of day"
+          <Input
+            aria-label="Time of day"
             type="time"
             value={customTime}
             onChange={(e) => setCustomTime(e.target.value)}
             disabled={disabled}
-            className={baseInputStyles}
+            className="font-mono"
           />
         </div>
       </div>
@@ -149,15 +155,10 @@ export function CustomScheduleBuilder({
         <div className="text-micro text-ps-text-muted font-mono">
           Preview: <code className="text-neon-orange">{previewCron(customTime, customDays)}</code>
         </div>
-        <button
-          type="button"
-          onClick={onApply}
-          disabled={disabled}
-          className="px-3 py-1.5 rounded-ps-md bg-neon-orange/20 text-neon-orange border border-neon-orange/40 text-micro font-mono hover:bg-neon-orange/30 disabled:opacity-50"
-        >
+        <Button variant="primary" color="orange" size="sm" onClick={onApply} disabled={disabled}>
           Apply
-        </button>
+        </Button>
       </div>
-    </div>
+    </Card>
   );
 }

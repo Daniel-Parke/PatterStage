@@ -116,7 +116,6 @@ describe("describeSchedulerHealth", () => {
   });
 });
 
-
 // ── A follower looks exactly like the owner (T-0064) ────────────
 //
 // Run a second PatterStage process and it stands down: BackgroundScheduler logs

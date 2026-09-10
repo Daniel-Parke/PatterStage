@@ -10,12 +10,13 @@
 
 "use client";
 
-import { useCallback } from "react";
-import { Globe, Loader2, Plus, RefreshCw } from "lucide-react";
+import { useCallback, useMemo } from "react";
+import { Globe, KeyRound, Loader2, Plus, RefreshCw, Settings } from "lucide-react";
 
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
 import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import ModelEditor from "@/components/models/ModelEditor";
@@ -23,11 +24,16 @@ import ModelEditor from "@/components/models/ModelEditor";
 import ModelsAgentDefaultSection from "@/components/models/ModelsAgentDefaultSection";
 import ModelsDriftBanner from "@/components/models/ModelsDriftBanner";
 import ModelsFallbackSection from "@/components/models/ModelsFallbackSection";
+import ModelsSectionHeader from "@/components/models/ModelsSectionHeader";
 import ModelsTableSection from "@/components/models/ModelsTableSection";
-import ModelInsights from "@/components/models/ModelInsights";
 import CredentialsPanel from "@/components/models/CredentialsPanel";
-import ModelsTaskDefaultsSection from "@/components/models/ModelsTaskDefaultsSection";
+import DefaultsGrid from "@/components/models/DefaultsGrid";
+import type { DefaultsModelOption } from "@/components/models/DefaultsGrid";
+import StatStrip from "@/components/viz/StatStrip";
+import type { DonutSegment } from "@/components/viz/Donut";
+import type { NeonColor } from "@/components/viz/colors";
 import ConceptHint from "@/components/help/ConceptHint";
+import type { TaskType } from "@/lib/models/task-types";
 import { pluralise } from "@/lib/utils";
 import { useModelsPage } from "@/hooks/useModelsPage";
 // app/ may consult a module; the editor component may not, so the provider list
@@ -39,6 +45,71 @@ import { HERMES_PROVIDERS, KEYLESS_PROVIDERS, envVarForProvider } from "@/module
 // instead), so offering it in the picker would only earn a 400 the operator
 // could do nothing about.
 const KEY_PROVIDERS = HERMES_PROVIDERS.filter((p) => Boolean(envVarForProvider(p)));
+
+const PROVIDER_CYCLE: NeonColor[] = ["cyan", "green", "purple", "orange", "pink", "yellow"];
+
+/**
+ * Model registry overview: the provider-mix donut and the count tile. Provider
+ * colours cycle the neon palette (providers are arbitrary strings). Hidden
+ * when the registry is empty. Was its own file; this page is its one reader
+ * (C6, T-0143).
+ */
+function ModelInsights({
+  models,
+  credentialCount,
+}: {
+  models: { provider: string }[];
+  credentialCount: number;
+}) {
+  const s = useMemo(() => {
+    const byProvider = new Map<string, number>();
+    for (const m of models) byProvider.set(m.provider, (byProvider.get(m.provider) ?? 0) + 1);
+    const entries = [...byProvider.entries()].sort((a, b) => b[1] - a[1]);
+    return { total: models.length, providers: byProvider.size, entries };
+  }, [models]);
+
+  if (models.length === 0) return null;
+  const segments: DonutSegment[] = s.entries
+    .slice(0, 6)
+    .map(([label, value], i) => ({ label, value, color: PROVIDER_CYCLE[i % PROVIDER_CYCLE.length] }));
+
+  return (
+    <StatStrip
+      className="mb-5"
+      donut={{ segments, center: s.total, centerSub: "models" }}
+      // Models is the number in the donut's centre and Providers is how many
+      // arcs it has. Credentials is the footnote (T-0124).
+      tiles={[
+        { icon: KeyRound, label: "Credentials", value: credentialCount, color: "purple" },
+      ]}
+    />
+  );
+}
+
+/** The Task Defaults section: the 12-slot grid under its heading. */
+function ModelsTaskDefaultsSection({
+  defaults,
+  modelOptions,
+  busyTaskType,
+  onChange,
+}: {
+  defaults: Record<TaskType, string | null>;
+  modelOptions: DefaultsModelOption[];
+  busyTaskType: TaskType | null;
+  onChange: (taskType: TaskType, modelId: string | null) => Promise<void>;
+}) {
+  return (
+    <section data-section="defaults" className="space-y-4">
+      <ModelsSectionHeader icon={Settings} title="Task Defaults" color="purple" iconTone="muted" />
+      <DefaultsGrid
+        defaults={defaults}
+        models={modelOptions}
+        onChange={onChange}
+        busyTaskType={busyTaskType}
+      />
+    </section>
+  );
+}
 
 export default function ModelsPage() {
   const {
@@ -176,13 +247,15 @@ export default function ModelsPage() {
       }
     >
       <div className="space-y-10">
-        <p className="text-micro text-ps-text-muted font-mono border border-ps-edge-hairline rounded-ps-md p-3 bg-ps-surface-panel">
-          PatterStage stores mission defaults and the <ConceptHint id="model">model</ConceptHint>{" "}
-          registry here. Hermes chat/gateway
-          runtime defaults live in each profile&apos;s <strong className="text-ps-text-secondary">config.yaml</strong>{" "}
-          (imported by the pull on Agent → Agents, or <code className="text-ps-text-muted">hermes model</code>).
-          Seeds never set <code className="text-ps-text-muted">model.default</code>.
-        </p>
+        <Card padding="sm" className="text-micro text-ps-text-muted font-mono">
+          <p>
+            PatterStage stores mission defaults and the <ConceptHint id="model">model</ConceptHint>{" "}
+            registry here. Hermes chat/gateway
+            runtime defaults live in each profile&apos;s <strong className="text-ps-text-secondary">config.yaml</strong>{" "}
+            (imported by the pull on Agent → Agents, or <code className="text-ps-text-muted">hermes model</code>).
+            Seeds never set <code className="text-ps-text-muted">model.default</code>.
+          </p>
+        </Card>
         {error && <LoadErrorBanner error={error} />}
 
         {drift && (

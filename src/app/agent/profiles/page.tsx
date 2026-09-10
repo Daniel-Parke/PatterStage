@@ -21,11 +21,12 @@
 
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
-import { Plus, Users } from "lucide-react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { Plus, Trash2, Users } from "lucide-react";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
 import Button from "@/components/ui/Button";
+import Modal from "@/components/ui/Modal";
 import PageLoading from "@/components/ui/PageLoading";
 import ProfilePicker from "@/components/ui/ProfilePicker";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
@@ -37,6 +38,7 @@ import { runWrite } from "@/lib/api-write";
 import { agentFileUrl } from "@/components/agents/agent-file-url";
 import { DEFAULT_PROFILE_SLUG, slugifyDisplayName } from "@/lib/profile-slug";
 import { pluralise } from "@/lib/utils";
+import { useApiResource } from "@/hooks/useApiResource";
 import { useSelectedProfile } from "@/hooks/useSelectedProfile";
 import AgentSetupNotice from "@/components/agents/AgentSetupNotice";
 import AgentProfilesOverview from "@/components/agents/AgentProfilesOverview";
@@ -46,7 +48,6 @@ import type { EditorState } from "@/components/agents/AgentFileEditor";
 import type { ProfileTab } from "@/components/agents/AgentProfileDetail";
 import CreateProfileModal from "@/components/agents/CreateProfileModal";
 import EditProfileModal from "@/components/agents/EditProfileModal";
-import DeleteProfileModal from "@/components/agents/DeleteProfileModal";
 
 /** An action the operator asked for while the editor held unsaved work. */
 type PendingDiscard =
@@ -54,12 +55,69 @@ type PendingDiscard =
   | { kind: "open"; profileId: string; file: ProfileFile }
   | { kind: "close" };
 
+/** Confirm deleting a profile and its files. */
+function DeleteProfileModal({
+  open,
+  deleting,
+  onClose,
+  onDelete,
+}: {
+  open: boolean;
+  deleting: boolean;
+  onClose: () => void;
+  onDelete: () => void;
+}) {
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title="Delete Profile"
+      icon={Trash2}
+      iconColor="text-semantic-danger"
+      size="sm"
+      footer={
+        <>
+          <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
+          <Button
+            variant="primary"
+            color="orange"
+            size="sm"
+            icon={Trash2}
+            onClick={onDelete}
+            disabled={deleting}
+          >
+            {deleting ? "Deleting..." : "Delete"}
+          </Button>
+        </>
+      }
+    >
+      <p className="text-body text-ps-text-secondary">
+        This will permanently delete the profile and all its files. This action cannot be undone.
+      </p>
+    </Modal>
+  );
+}
+
 export default function BehaviourPage() {
-  const [profiles, setProfiles] = useState<AgentProfile[]>([]);
-  const [loading, setLoading] = useState(true);
-  // The profiles read's failure, kept apart from the list: a failed load
-  // looked like an empty install with no way to retry (T-0096, D22).
-  const [loadError, setLoadError] = useState<string | null>(null);
+  // The profiles read. Its failure is kept apart from the list: a failed load
+  // looked like an empty install with no way to retry (T-0096, D22). Through
+  // the hook, the read shares its cache entry with the header's picker, so
+  // a reload after a write refreshes both (C6, T-0143).
+  const {
+    data: profilesData,
+    settled: profilesSettled,
+    error: loadError,
+    refetch: refetchProfiles,
+  } = useApiResource<AgentProfile[]>("/api/agent/profiles", {
+    select: (payload) => (payload as { profiles?: AgentProfile[] } | undefined)?.profiles,
+    fallback: [],
+    errorMessage: "Failed to load profiles",
+  });
+  const profiles = useMemo(() => profilesData ?? [], [profilesData]);
+  // The first read is worth a loading state; every one after it is a refetch
+  // behind work the operator just did. Making them watch the page blank out
+  // after every save was the single loudest thing on this screen (T-0102, D21).
+  const loading = !profilesSettled;
   // Shared with Skills and Tools (T-0113), and chosen with the same control
   // on all three (T-0125).
   const [selectedProfileId, setSelectedProfileId] = useSelectedProfile();
@@ -86,11 +144,6 @@ export default function BehaviourPage() {
   // another file overwrote the buffer, both in silence, next to a dirty flag
   // that was already driving an "Unsaved" badge two lines away (T-0102, D23).
   const [pendingDiscard, setPendingDiscard] = useState<PendingDiscard | null>(null);
-
-  // The first read is worth a loading state; every one after it is a refetch
-  // behind work the operator just did. Making them watch the page blank out
-  // after every save was the single loudest thing on this screen (T-0102, D21).
-  const loadedOnceRef = useRef(false);
 
   // Which half of the card is showing. The tab is in the URL because
   // /agent/personalities and /operations/personalities redirect to
@@ -182,18 +235,8 @@ export default function BehaviourPage() {
     );
 
   const loadProfiles = useCallback(async () => {
-    if (!loadedOnceRef.current) setLoading(true);
-    try {
-      const data = await apiFetch("/api/agent/profiles");
-      setProfiles(data.data?.profiles || []);
-      setLoadError(null);
-    } catch (err) {
-      setLoadError(err instanceof Error && err.message ? err.message : "Failed to load profiles");
-    } finally {
-      loadedOnceRef.current = true;
-      setLoading(false);
-    }
-  }, []);
+    await refetchProfiles();
+  }, [refetchProfiles]);
 
   // Close the New Agent Profile dialog. The modal's `onClose` (X / overlay)
   // and `handleCreate`'s success path both clear the form; the modal's Cancel
@@ -207,8 +250,6 @@ export default function BehaviourPage() {
   }, []);
 
   const openCreate = useCallback(() => setShowCreate(true), []);
-
-  useEffect(() => { loadProfiles(); }, [loadProfiles]);
 
   // A selection carried in from another screen may name a profile this install
   // no longer has (it was deleted, or the list is from a different machine).
@@ -415,7 +456,9 @@ export default function BehaviourPage() {
   // The ref keeps the effect's deps to the two facts that should retrigger it,
   // rather than to a handler that changes identity on every keystroke.
   const openFileRef = useRef(openFile);
-  openFileRef.current = openFile;
+  useEffect(() => {
+    openFileRef.current = openFile;
+  });
   const autoOpenedRef = useRef<string | null>(null);
   useEffect(() => {
     if (tab !== "identity" || !selectedProfile) {

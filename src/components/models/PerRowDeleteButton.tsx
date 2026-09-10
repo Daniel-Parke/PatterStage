@@ -55,8 +55,8 @@ export default function PerRowDeleteButton({
       disabled={disabled}
       className={`p-1.5 rounded-ps-md transition-colors disabled:opacity-50 ${
         isArmed
-          ? "text-red-300 bg-red-500/20 ring-1 ring-red-500/40"
-          : "text-ps-text-muted hover:text-red-400 hover:bg-red-500/10"
+          ? "text-semantic-danger bg-semantic-danger/20 ring-1 ring-semantic-danger/40"
+          : "text-ps-text-muted hover:text-semantic-danger hover:bg-semantic-danger/10"
       }`}
       aria-label={
         isArmed

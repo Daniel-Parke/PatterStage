@@ -3,7 +3,6 @@
 // deploy-status.test.ts — stale-running detection + isDeployInProgress
 // ═══════════════════════════════════════════════════════════════
 
-
 import { mkdirSync, readFileSync, writeFileSync, rmSync } from "fs";
 import { join } from "path";
 

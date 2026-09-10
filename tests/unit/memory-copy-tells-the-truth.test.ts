@@ -13,7 +13,7 @@
  *
  * 2. THE ADVICE THAT POINTS AT ITSELF. The unconfigured message said "Set one
  *    up in the memory provider card at the top of the Memory page", and
- *    HealthBanner is rendered inside that very card (MemoryProviderSettings.tsx
+ *    the health banner is rendered inside that very card (MemoryProviderSettings.tsx
  *    is its ONLY call site). It named a destination the reader was already
  *    standing in, and no action. healthBannerMessage then prefixed "Hindsight:"
  *    onto a sentence about there being no provider.

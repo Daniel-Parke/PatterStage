@@ -6,7 +6,8 @@
  * that contradicts what it renders or omit two sections; it carries cards for
  * Models, Restore and System; and it gains a search across every field.
  */
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, screen, within } from "@testing-library/react";
+import { renderWithQuery } from "../helpers/render-with-query";
 import { pageSubtitle } from "../helpers/page-subtitle";
 
 import { CONFIG_SECTIONS } from "@/lib/config-schema";
@@ -22,6 +23,9 @@ jest.mock("@/hooks/useConfig", () => ({ useConfig: () => ({ data: { agent: { max
 jest.mock("@/lib/api-fetch", () => ({
   ...(jest.requireActual("@/lib/api-fetch") as Record<string, unknown>),
   apiFetch: async () => ({ data: { content: "" } }),
+  // The file sections read through useApiResource since C6 (T-0143), which
+  // calls safeApiCall: the same empty file, in the envelope it returns.
+  safeApiCall: async () => ({ ok: true, data: { data: { content: "" } } }),
 }));
 
 import SettingsIndexPage from "@/app/agent/settings/page";
@@ -36,7 +40,7 @@ const sectionLinks = () =>
 
 describe("the Settings index", () => {
   it("renders one card per catalogue section, and the count it prints is the count it renders", () => {
-    render(<SettingsIndexPage />);
+    renderWithQuery(<SettingsIndexPage />);
     const ids = Object.keys(CONFIG_SECTIONS);
     const links = sectionLinks();
     expect(links.sort()).toEqual(ids.map((id) => `/agent/settings/${id}`).sort());
@@ -46,21 +50,21 @@ describe("the Settings index", () => {
   });
 
   it("carries the Models, Restore and System cards", () => {
-    render(<SettingsIndexPage />);
+    renderWithQuery(<SettingsIndexPage />);
     expect(document.querySelector('a[href="/agent/models"]')).not.toBeNull();
     expect(document.querySelector('a[href="/agent/settings/restore"]')).not.toBeNull();
     expect(document.querySelector('a[href="/agent/settings/system"]')).not.toBeNull();
   });
 
   it("no longer sends anyone to the retired Personalities activation or the old config paths", () => {
-    render(<SettingsIndexPage />);
+    renderWithQuery(<SettingsIndexPage />);
     expect(document.querySelector('a[href^="/config"]')).toBeNull();
     expect(document.querySelector('a[href^="/operations"]')).toBeNull();
     expect(screen.queryByText(/one-click activation/i)).toBeNull();
   });
 
   it("a search across every field narrows the grid to the sections that carry a match", () => {
-    render(<SettingsIndexPage />);
+    renderWithQuery(<SettingsIndexPage />);
     const search = screen.getByRole("searchbox", { name: /search settings/i });
     fireEvent.change(search, { target: { value: "reasoning" } });
     const links = sectionLinks();
@@ -74,7 +78,7 @@ describe("the Settings index", () => {
   });
 
   it("an empty search shows everything again", () => {
-    render(<SettingsIndexPage />);
+    renderWithQuery(<SettingsIndexPage />);
     const search = screen.getByRole("searchbox", { name: /search settings/i });
     fireEvent.change(search, { target: { value: "zzz-no-such-field" } });
     expect(sectionLinks()).toEqual([]);

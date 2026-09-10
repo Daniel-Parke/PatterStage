@@ -3,7 +3,6 @@
 // update-api.test.ts — /api/update GET/POST behaviour
 // ═══════════════════════════════════════════════════════════════
 
-
 const mockExecSync = jest.fn();
 const mockExecFileSync = jest.fn();
 const mockSpawn = jest.fn();

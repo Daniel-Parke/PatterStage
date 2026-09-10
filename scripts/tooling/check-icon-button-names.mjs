@@ -229,13 +229,17 @@ export function verdict(counts) {
   // Guard the guard. Floors chosen against a measured 227 files / 394 buttons /
   // 77 icon-only, low enough to survive ordinary churn and high enough that a
   // walk which stopped finding things cannot read as a pass.
-  if (counts.filesScanned < 150 || counts.buttonsSeen < 250 || counts.iconOnlySeen < 40) {
+  // The icon-only floor was 40 until C6 (T-0143) moved the page layer's raw
+  // icon-only buttons onto IconButton, which carries its name by construction
+  // and is not a raw <button>; 31 raw ones remain, mostly inside ui/ and kit/.
+  // Twenty is still far above what a classifier that stopped classifying reads.
+  if (counts.filesScanned < 150 || counts.buttonsSeen < 250 || counts.iconOnlySeen < 20) {
     return {
       code: 1,
       message:
         `icon-button names: refusing to pass on a population this small.\n` +
         `  files ${counts.filesScanned} (floor 150), buttons ${counts.buttonsSeen} (floor 250), ` +
-        `icon-only ${counts.iconOnlySeen} (floor 40).\n` +
+        `icon-only ${counts.iconOnlySeen} (floor 20).\n` +
         `Either the tree moved or the classifier stopped classifying. A guard that\n` +
         `inspects nothing passes everything, which is how the check this replaced\n` +
         `shipped 26 unnamed buttons while green.`,

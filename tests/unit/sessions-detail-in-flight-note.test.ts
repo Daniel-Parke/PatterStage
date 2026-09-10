@@ -21,7 +21,6 @@
  * interfere.
  */
 
-
 // Mock better-sqlite3 to return a controllable handle. The real module is
 // not loadable in tests because it requires the native addon. We override
 // the global mock in jest.setup.ts with a function that returns our

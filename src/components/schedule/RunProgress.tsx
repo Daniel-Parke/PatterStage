@@ -5,6 +5,7 @@
 "use client";
 
 import { Loader2, CheckCircle2, XCircle } from "lucide-react";
+import Card from "@/components/ui/Card";
 import { useRunProgress } from "@/hooks/useRunProgress";
 
 export default function RunProgress({ runId }: { runId: string }) {
@@ -14,22 +15,22 @@ export default function RunProgress({ runId }: { runId: string }) {
     status === "done" ? (
       <CheckCircle2 className="w-4 h-4 text-neon-green" />
     ) : status === "error" ? (
-      <XCircle className="w-4 h-4 text-red-400" />
+      <XCircle className="w-4 h-4 text-status-fail" />
     ) : (
       <Loader2 className="w-4 h-4 text-neon-cyan animate-spin" />
     );
 
   return (
-    <div className="rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel p-4">
+    <Card>
       <div className="flex items-center gap-2 mb-2 text-micro font-mono text-ps-text-muted">
         {icon}
         <span>live run · {status}</span>
         <span className="ml-auto text-ps-text-faint">{events.length} events</span>
       </div>
-      {error && <div className="text-micro text-red-300 mb-2 font-mono">{error}</div>}
+      {error && <div className="text-micro text-status-fail mb-2 font-mono">{error}</div>}
       <pre className="text-micro text-ps-text-secondary font-mono whitespace-pre-wrap max-h-48 overflow-y-auto">
         {text || "(waiting for output…)"}
       </pre>
-    </div>
+    </Card>
   );
 }

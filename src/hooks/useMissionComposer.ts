@@ -21,7 +21,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 
-import { apiFetch, safeApiCallData } from "@/lib/api-fetch";
+import { useApiResource } from "@/hooks/useApiResource";
 import type { LocalDirEntry, Mission } from "@/types/console";
 import { normalizeLocalDirsInput } from "@/lib/fs/local-dir-entry";
 import { parseMissionPrompt } from "@/lib/missions/build-mission-prompt";
@@ -225,34 +225,31 @@ export function useMissionComposer({ showCreate, editingId }: UseMissionComposer
   }, []);
 
   // When a profile is selected, prune the form's skills/toolsets to those
-  // the profile actually has enabled.
+  // the profile actually has enabled. Two reads, keyed on the profile, that
+  // do nothing until a profile is chosen; a read that failed prunes nothing.
+  const profileSlug = newProfile ? encodeURIComponent(newProfile) : null;
+  const profileSkills = useApiResource<string[]>(`/api/skills?profile=${profileSlug}`, {
+    enabled: profileSlug !== null,
+    select: (p) =>
+      ((p as { skills?: Array<{ name: string; enabled: boolean }> } | null)?.skills ?? [])
+        .filter((s) => s.enabled)
+        .map((s) => s.name),
+    errorMessage: "Failed to load the profile's skills",
+  });
+  // `unifiedEnabled` is the same union, computed server-side by the route
+  // (api/agent/profiles/[id]/toolsets/route.ts:42).
+  const profileToolsets = useApiResource<string[]>(`/api/agent/profiles/${profileSlug}/toolsets`, {
+    enabled: profileSlug !== null,
+    select: (p) => (p as { unifiedEnabled?: string[] } | null)?.unifiedEnabled ?? [],
+    errorMessage: "Failed to load the profile's toolsets",
+  });
   useEffect(() => {
-    if (!newProfile) return;
-    const controller = new AbortController();
-    const slug = encodeURIComponent(newProfile);
-    Promise.all([
-      apiFetch<{ data: { skills?: Array<{ name: string; enabled: boolean }> } }>(`/api/skills?profile=${slug}`, { signal: controller.signal }),
-      apiFetch<{ data: { unifiedEnabled?: string[] } }>(`/api/agent/profiles/${slug}/toolsets`, { signal: controller.signal }),
-    ])
-      .then(([skillsResult, toolsetsResult]) => {
-        const enabled = new Set(
-          (skillsResult.data?.skills ?? [])
-            .filter((s) => s.enabled)
-            .map((s) => s.name),
-        );
-        // `unifiedEnabled` is the same union, computed server-side by the route
-        // (api/agent/profiles/[id]/toolsets/route.ts:42).
-        const toolsetIds = new Set(toolsetsResult.data?.unifiedEnabled ?? []);
-        setNewSkills((prev) => prev.filter((s) => enabled.has(s)));
-        setNewToolsets((prev) => prev.filter((t) => toolsetIds.has(t)));
-      })
-      .catch((err) => {
-        if (err instanceof Error && err.name !== "AbortError") {
-          console.warn("[useMissionComposer] failed to load profile skills/toolsets:", err.message);
-        }
-      });
-    return () => controller.abort();
-  }, [newProfile]);
+    if (!newProfile || !profileSkills.data || !profileToolsets.data) return;
+    const enabled = new Set(profileSkills.data);
+    const toolsetIds = new Set(profileToolsets.data);
+    setNewSkills((prev) => prev.filter((s) => enabled.has(s)));
+    setNewToolsets((prev) => prev.filter((t) => toolsetIds.has(t)));
+  }, [newProfile, profileSkills.data, profileToolsets.data]);
 
   // Restore the user's last-used category when opening a fresh-create
   // composer (not edit, and only if no category is already selected).
@@ -354,40 +351,27 @@ export function useMissionComposer({ showCreate, editingId }: UseMissionComposer
   }, [setModelAndProvider]);
 
   // Default-agent model autofill: on opening a fresh-create composer with
-  // no model chosen, prefill the registry's default-agent model.
+  // no model chosen, prefill the registry's default-agent model. Both reads
+  // are the cache entries the models page and the chat already hold.
+  const wantsDefaultModel = showCreate && !editingId && !newModel.trim();
+  const agentDefault = useApiResource<string | null>("/api/models/defaults", {
+    enabled: wantsDefaultModel,
+    select: (p) => (p as { defaults?: { agent?: string | null } } | null)?.defaults?.agent ?? null,
+    errorMessage: "Failed to read the default model",
+  });
+  const registryModels = useApiResource<Array<{ id: string; modelId: string; provider: string }>>("/api/models", {
+    enabled: wantsDefaultModel,
+    select: (p) => (p as { models?: Array<{ id: string; modelId: string; provider: string }> } | null)?.models ?? [],
+    errorMessage: "Failed to load the model registry",
+  });
   useEffect(() => {
-    if (!showCreate || editingId) return;
-    if (newModel.trim()) return;
-
-    const controller = new AbortController();
-    void (async () => {
-      try {
-        const [defaults, models] = await Promise.all([
-          safeApiCallData<{ defaults?: { agent?: string | null } }>(
-            "/api/models/defaults",
-            { signal: controller.signal },
-          ),
-          safeApiCallData<{ models?: Array<{ id: string; modelId: string; provider: string }> }>(
-            "/api/models",
-            { signal: controller.signal },
-          ),
-        ]);
-        if (!defaults || !models) return;
-
-        const agentRegistryId = defaults.defaults?.agent;
-        if (!agentRegistryId) return;
-
-        const match = models.models?.find((m) => m.id === agentRegistryId);
-        if (!match) return;
-
-        setModelAndProvider(match.modelId, match.provider);
-      } catch {
-        /* aborted or network */
-      }
-    })();
-
-    return () => controller.abort();
-  }, [showCreate, editingId, newModel, setModelAndProvider]);
+    if (!wantsDefaultModel) return;
+    const agentRegistryId = agentDefault.data;
+    if (!agentRegistryId || !registryModels.data) return;
+    const match = registryModels.data.find((m) => m.id === agentRegistryId);
+    if (!match) return;
+    setModelAndProvider(match.modelId, match.provider);
+  }, [wantsDefaultModel, agentDefault.data, registryModels.data, setModelAndProvider]);
 
   return {
     // raw fields + setters

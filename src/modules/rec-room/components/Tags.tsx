@@ -1,7 +1,9 @@
 // Tags — a toggleable chip group, with an inline custom-value input when the
-// caller allows one. The chips stay raw buttons: a pressed chip is a toggle
-// with aria-pressed, which no primitive draws (U12, T-0126). The chrome is the
-// house green rather than the raw palette's.
+// caller allows one. A chip is a Button that carries aria-pressed (C6,
+// T-0143): pressed is the primary green chrome, unpressed the secondary, the
+// same pair the reader's font picker uses. The chips were raw buttons on the
+// belief that a toggle was a shape no primitive drew; Button passes every
+// button attribute through, and the pressed state is an attribute.
 
 "use client";
 
@@ -30,14 +32,16 @@ export default function Tags({ label, options, selected, onToggle, onAdd }: {
       <span className="mb-1.5 block font-mono text-micro uppercase tracking-wider text-ps-text-muted">{label}</span>
       <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label={label}>
         {options.map((t) => (
-          <button key={t} type="button" onClick={() => onToggle(t)} aria-pressed={selected.includes(t)}
-            // A border, not a ring: Tailwind renders a ring as a box-shadow with
-            // transparent layers, and the census counted it as two new shadows.
-            className={`rounded-ps-md border px-2.5 py-1 font-mono text-body transition-colors ${
-              selected.includes(t)
-                ? "border-neon-green/40 bg-neon-green/15 text-neon-green"
-                : "border-ps-edge text-ps-text-muted hover:text-ps-text-secondary"
-            }`}>{t}</button>
+          <Button
+            key={t}
+            variant={selected.includes(t) ? "primary" : "secondary"}
+            color="green"
+            size="sm"
+            aria-pressed={selected.includes(t)}
+            onClick={() => onToggle(t)}
+          >
+            {t}
+          </Button>
         ))}
         {onAdd && (adding ? (
           <div className="flex items-center gap-1">

@@ -494,8 +494,11 @@ describe("the UI shows the cancel and its refusal", () => {
 
   it("the handler checks the result rather than discarding it", () => {
     const fn = page.slice(page.indexOf("async function cancelRun"));
-    expect(fn.slice(0, 900)).toMatch(/\.ok/);
-    expect(fn.slice(0, 900)).toMatch(/setGateError/);
+    // Since C6 (T-0143) the write goes through runWrite, which checks the
+    // envelope and says the refusal in the server's words as a toast; the
+    // handler names the message for the case the server says nothing.
+    expect(fn.slice(0, 900)).toMatch(/runWrite/);
+    expect(fn.slice(0, 900)).toMatch(/errorMessage/);
   });
 
   it("cancelled is filterable, so a cancelled run is findable", () => {

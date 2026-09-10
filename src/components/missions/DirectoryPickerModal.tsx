@@ -5,6 +5,8 @@ import { ChevronUp, File, Folder, FolderOpen } from "lucide-react";
 
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
+import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import { useApiResource } from "@/hooks/useApiResource";
 
 interface Entry {
@@ -94,11 +96,9 @@ export default function DirectoryPickerModal({
           </div>
         </div>
         {error && (
-          <div className="text-micro text-red-400 font-mono border border-red-500/30 rounded-ps-md px-2 py-1.5">
-            {error}
-          </div>
+          <LoadErrorBanner compact error={error} onRetry={() => void listing.refetch()} />
         )}
-        <div className="max-h-72 overflow-y-auto rounded-ps-md border border-ps-edge-hairline bg-ps-surface-panel">
+        <Card padding="none" className="max-h-72 overflow-y-auto">
           {loading ? (
             <div className="p-6 text-center text-micro text-ps-text-muted font-mono">Loading…</div>
           ) : (
@@ -137,7 +137,7 @@ export default function DirectoryPickerModal({
               )}
             </ul>
           )}
-        </div>
+        </Card>
       </div>
     </Modal>
   );

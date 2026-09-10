@@ -280,7 +280,6 @@ describe("the PUT path does not read config through the degrading reader", () =>
   });
 });
 
-
 // ── The other half of the same defect (T-0064) ──────────────────
 //
 // Refusing the write stops the destruction. It does not stop the operator

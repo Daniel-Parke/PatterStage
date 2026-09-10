@@ -8,6 +8,10 @@
 import { useState, useEffect, useRef } from "react";
 import { X } from "lucide-react";
 
+import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
+import IconButton from "@/components/ui/IconButton";
+import { Field, Input, Select } from "@/components/ui/field";
 import { sanitizeGitBranch } from "@/lib/git/git-branch";
 
 export function BranchDropdown({
@@ -39,67 +43,48 @@ export function BranchDropdown({
   }, [onCancel]);
 
   return (
-    <div
-      ref={ref}
-      className="absolute bottom-full left-0 right-0 mb-1 rounded-ps-md border border-ps-edge-hairline bg-ps-surface-ground shadow-xl overflow-hidden z-50"
-    >
-      {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-ps-edge-hairline">
-        <span className="text-micro font-mono text-ps-text-muted">Branch</span>
-        <button
-          type="button"
-          aria-label="Close branch picker"
-          onClick={onCancel}
-          className="p-0.5 rounded-ps-sm text-ps-text-muted hover:text-ps-text-secondary transition-colors"
-        >
-          <X className="w-3.5 h-3.5" aria-hidden="true" />
-        </button>
-      </div>
+    <div ref={ref} className="absolute bottom-full left-0 right-0 mb-1 z-dropdown">
+      <Card padding="none" className="overflow-hidden shadow-xl">
+        {/* Header */}
+        <div className="flex items-center justify-between px-3 py-2 border-b border-ps-edge-hairline">
+          <span className="text-micro font-mono text-ps-text-muted">Branch</span>
+          <IconButton icon={X} label="Close branch picker" size="sm" onClick={onCancel} />
+        </div>
 
-      {/* Body */}
-      <div className="p-2">
-        <select aria-label="Branch"
-          value={selected}
-          onChange={(e) => setSelected(e.target.value)}
-          className="w-full px-2 py-1.5 rounded-ps-md bg-ps-surface-panel border border-ps-edge text-ps-text-primary text-body"
-        >
-          {branches.map((b) => (
-            <option key={b} value={b}>
-              {b}
-            </option>
-          ))}
-        </select>
-        <label className="block mt-2 text-micro font-mono text-ps-text-muted uppercase tracking-wide">
-          Other branch
-        </label>
-        <input
-          type="text"
-          value={customBranch}
-          onChange={(e) => setCustomBranch(e.target.value)}
-          placeholder="e.g. feature/my-branch" aria-label="Other branch name"
-          className="w-full mt-0.5 px-2 py-1.5 rounded-ps-md bg-ps-surface-panel border border-ps-edge text-ps-text-primary text-body placeholder:text-ps-text-faint"
-        />
-      </div>
+        {/* Body */}
+        <div className="p-2 space-y-2">
+          <Select
+            ariaLabel="Branch"
+            value={selected}
+            onChange={setSelected}
+            options={branches.map((b) => ({ value: b, label: b }))}
+          />
+          <Field label="Other branch">
+            <Input
+              type="text"
+              value={customBranch}
+              onChange={(e) => setCustomBranch(e.target.value)}
+              placeholder="e.g. feature/my-branch"
+              aria-label="Other branch name"
+            />
+          </Field>
+        </div>
 
-      {/* Footer */}
-      <div className="flex items-center justify-end gap-2 px-2 pb-2">
-        <button
-          onClick={onCancel}
-          disabled={loading}
-          className="px-3 py-1 rounded-ps-sm text-body text-ps-text-muted hover:text-ps-text-secondary transition-colors disabled:opacity-50"
-        >
-          Cancel
-        </button>
-        <button
-          onClick={() =>
-            onConfirm(customBranch.trim() ? sanitizeGitBranch(customBranch) : selected)
-          }
-          disabled={loading || (!customBranch.trim() && !selected)}
-          className="px-3 py-1 rounded-ps-sm text-body font-medium bg-neon-cyan text-dark-900 hover:brightness-110 transition disabled:opacity-50"
-        >
-          {loading ? "..." : "Confirm"}
-        </button>
-      </div>
+        {/* Footer */}
+        <div className="flex items-center justify-end gap-2 px-2 pb-2">
+          <Button variant="ghost" size="sm" onClick={onCancel} disabled={loading}>
+            Cancel
+          </Button>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => onConfirm(customBranch.trim() ? sanitizeGitBranch(customBranch) : selected)}
+            disabled={loading || (!customBranch.trim() && !selected)}
+          >
+            {loading ? "..." : "Confirm"}
+          </Button>
+        </div>
+      </Card>
     </div>
   );
 }

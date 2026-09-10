@@ -58,17 +58,18 @@ describe("the module's components", () => {
   const src = (name: string) => readFileSync(join(COMPONENTS, name), "utf-8");
 
   /**
-   * Five, not two. The oracle was written before the conversion and named a
+   * Four, not two. The oracle was written before the conversion and named a
    * toggle chip and a chapter row; the conversion found three more controls
    * with no primitive: a 24px chapter dot whose coloured fill IS its meaning
    * (ChapterDots), a disclosure row with a name, a summary and a role
-   * (CharacterCard), and the reader's two range sliders (ReaderSettings). Each
-   * is a real gap in the set, recorded on the task; none is a button that
-   * should have been a Button.
+   * (CharacterCard), and the reader's range slider (ReaderSettings). Each is
+   * a real gap in the set, recorded on the task; none is a button that should
+   * have been a Button. The toggle chip (Tags) turned out not to be a gap:
+   * Button passes aria-pressed through, and C6 (T-0143) made the chips Buttons.
    */
   it("draw a raw control only where there is no primitive for the thing", () => {
     const withButtons = names.filter((n) => RAW_CONTROL.test(src(n))).sort();
-    expect(withButtons).toEqual(["ChapterDots.tsx", "ChapterList.tsx", "CharacterCard.tsx", "ReaderSettings.tsx", "Tags.tsx"]);
+    expect(withButtons).toEqual(["ChapterDots.tsx", "ChapterList.tsx", "CharacterCard.tsx", "ReaderSettings.tsx"]);
   });
 
   it("hand-roll an overlay only for the progress status, which is not a dialog", () => {

@@ -40,7 +40,7 @@ committed tree, and a chore commit carrying the record and the derived views.
 | (fix) custom fallback identity | T-0140 | migration 042 (head is 42): a custom fallback keeps its typed name, provider, model id | yes |
 | C4 the test harnesses | T-0141 | fifteen factories in `tests/helpers`; 130 suites adopted by six agents with per-file identity; census counts dbSingletonMock as a factory | yes |
 | C5 comments that narrate | T-0142 | narration cut file by file (two passes, ten agents); code proved unchanged by a stripped-code diff | yes |
-| C6 the page layer | T-0143 | next: folds, card chromes onto `Card`, raw controls onto primitives, palette and z | no |
+| C6 the page layer | T-0143 | eight agents over disjoint file groups: six design-lint rules to zero (the whole baseline, 369 to 0), the eleven effect reads onto `useApiResource`, 27 one-importer folds, two pages that swapped their body on reload fixed | yes |
 | C7 the lib root | T-0144 | 71 root files into domains, by script | no |
 | C8 closing | T-0145 | the census after beside the before; the plan marked done | no |
 
@@ -51,20 +51,20 @@ plan header says so.
 
 | Measure | Plan start | Now | Target |
 | --- | --- | --- | --- |
-| src lines | 107,123 | 100,962 | ≤ 98,000 |
-| tests lines | 121,651 | 120,624 | ≤ 116,000 |
-| src lines in a repeated window | 1,416 | 1,176 | ≤ 600 |
-| tests lines in a repeated window | 6,028 | 4,637 | ≤ 2,500 |
+| src lines | 107,123 | 100,864 | ≤ 98,000 |
+| tests lines | 121,651 | 121,388 | ≤ 116,000 |
+| src lines in a repeated window | 1,416 | 1,190 | ≤ 600 |
+| tests lines in a repeated window | 6,028 | 4,783 | ≤ 2,500 |
 | routes with their own try/catch | 82 | 13 | ≤ 13 (met, corrected at C1) |
-| hand-rolled reads (by AST since C3) | 5 (regex) | 11 (honest 13, two converted) | 0 (moves to C6) |
+| hand-rolled reads (by AST since C3) | 5 (regex) | 0 | 0 (met) |
 | named hooks writing on their own | 4 | 0 | 0 (met) |
 | repeated type shapes | 23 | 2 | 3 (met) |
-| one-importer components | 130 | 130 | ≤ 95 (C6) |
+| one-importer components | 130 | 103 | ≤ 95 (missed by 8; see C7) |
 | lib root files | 71 | 71 | ≤ 12 (C7) |
 | comment essays | 107 | 8 | ≤ 60 |
 | suites mocking db inline | 100 | 14 | ≤ 20 (met) |
-| design-lint debt (all rules) | 350 | 369 (19 are the new write rule's baseline) | falls in C6 |
-| jest | 6,860 | 6,880 (679 suites) | unchanged by a test batch |
+| design-lint debt (all rules) | 350 | 0 | 0 (met) |
+| jest | 6,860 | 6,892 (682 suites) | unchanged by a test batch |
 
 ## How a batch is landed (the discipline, verbatim from practice)
 
@@ -111,15 +111,21 @@ identity oracle, the census and the gate over the whole tree afterwards.
 
 ## Open items (none blocking)
 
-- **C6, C7, C8** remain; C6's survey is done (below).
-- **Eleven effect reads** are held on the census by name (`--report`,
-  `reads.files`): profiles, skills, skills/[...path], tools, settings/restore,
-  useChatConversations, useGatewayHealth, useMissionComposer,
-  useModelsRegistry, useSettingsEditor, useVersionFooter. C6 takes them onto
-  `useApiResource` with the page layer.
-- **The same body-swap-on-reload** T-0139 fixed on Models is on
-  `agent/settings/restore` and `agent/skills` (they swap their body for a
-  spinner on every reload). C6.
+- **C7, C8** remain; C7's starting notes are below.
+- **Twelve design-lint pragmas** excuse the six C6 rules, each with its
+  reason on the line (react-flow nodes, a code block inside rendered HTML,
+  a range slider, a two-line list row, the chat composer's ref-focused
+  textarea, a POST that reads, a debounced autosave, a warning callout, a
+  pill that is a link). Three would go with small primitive changes:
+  `Card` taking `role`/`style`/`data-*`, `Textarea` taking a `ref`, a
+  warning tone on `LoadErrorBanner`.
+- **The useGatewayHealth probes** lost their per-call 3s/5s abort deadlines
+  when they moved onto `useApiResource` (apiFetch's default timeout applies).
+- **Two design census measures rose**, with the reason written into the
+  baseline: mono share 0.67 to 0.68 (the shared Button and Badge are mono by
+  decision 10, and the batch adopted them widely) and decorative borders
+  below 3:1 691 to 714 (Card's hairline rung is 1.63:1 on purpose). The
+  measure that is a target, control borders below 3:1, fell 102 to 82.
 - **Rows added as custom fallbacks before migration 042** read "Custom";
   their identity was never stored and cannot be recovered. The CHANGELOG
   says to add them again.
@@ -135,65 +141,44 @@ identity oracle, the census and the gate over the whole tree afterwards.
 - **T-0140's fallback rows** on the isolated instance's data dir are walk
   artefacts, not product data.
 
-## C6 · what the survey found (start here tomorrow)
+## C7 · the lib root (start here tomorrow)
 
-- 29 one-importer components under sixty lines, each with its one importer
-  (the census `--report` lists all 130 with line counts). Fold where the
-  fold reads better; `index.ts` re-exports (field/Input, field/Toggle,
-  achievements/*) are not folds. Lines, component, importer:
-
-  | Lines | Component | Its one importer |
-  | ---: | --- | --- |
-  | 18 | components/skills/SkillsDenylistNote | app/agent/skills/page |
-  | 22 | components/memory/hindsight/HealthBanner | components/memory/MemoryProviderSettings |
-  | 27 | components/ui/field/Input | components/ui/field/index (re-export) |
-  | 31 | components/achievements/StreakFlame | components/achievements/index (re-export) |
-  | 34 | components/chat/ReasoningPanel | components/chat/MessageBubble |
-  | 35 | components/models/ModelsTaskDefaultsSection | app/agent/models/page |
-  | 36 | components/scripts/ScriptLogsModal | app/work/scripts/page |
-  | 36 | components/skills/SkillsCatalogEmpty | app/agent/skills/page |
-  | 37 | components/providers/QueryProvider | app/layout |
-  | 39 | components/chat/TypingIndicator | app/work/chat/page |
-  | 39 | components/layout/MobileHeader | app/layout |
-  | 42 | components/ui/field/Toggle | components/ui/field/index (re-export) |
-  | 43 | components/chat/ApprovalPrompt | app/work/chat/page |
-  | 43 | components/chat/ToolCallList | components/chat/MessageBubble |
-  | 43 | components/missions/MissionLiveProgress | components/missions/MissionEditorPanel |
-  | 45 | components/profiles/ProfilesDriftBanner | components/agents/AgentProfilesOverview |
-  | 46 | components/help/HelpFragment | app/help/[[...slug]]/page |
-  | 46 | components/models/ModelInsights | app/agent/models/page |
-  | 46 | components/scripts/ScriptTemplateGallery | app/work/scripts/page |
-  | 47 | components/quests/QuestBadge | components/layout/Sidebar |
-  | 49 | components/composer/ComposerClarifyPrompt | app/work/composer/page |
-  | 49 | components/help/HelpPrevNext | app/help/[[...slug]]/page |
-  | 51 | components/chat/ChatModeToggle | app/work/chat/page |
-  | 52 | components/agents/DeleteProfileModal | app/agent/profiles/page |
-  | 52 | components/missions/ToolsetsPicker | components/missions/MissionCreateForm |
-  | 55 | components/models/FieldRow | components/models/ModelEditor |
-  | 56 | components/quests/QuestTracker | components/providers/FeedbackProvider |
-  | 57 | components/config/SettingsSubject | app/agent/settings/page |
-  | 59 | components/achievements/AgentLevelBadge | components/achievements/index (re-export) |
-
-  (`components/motion/index.tsx` is not on the list: it has two importers,
-  the insights page and AchievementShowcase.)
-- design-lint debt by rule: `no-inline-card-chrome` 221 in 86 files (top:
-  WorkflowCanvas 11, MissionCreateForm 11, CategoryManagerModal 10,
-  FallbackChainList 8); `palette-must-be-house` 74 in 33; `z-scale-only` 20
-  in 15 (`z-[9999]` in CategoryCombobox, `z-[55]` in Sidebar, `z-[90]` in
-  layout); `no-raw-control-outside-ui` 23 in 15 (raw selects in
-  CategoryManagerModal, ModelPicker, CustomScheduleBuilder; raw textareas in
-  chat, AgentFileEditor, ScriptEditorModal); `no-raw-border-alpha` 12 in 9.
-- `Card` already takes `as`, `variant` (panel/raised), `padding`, `glow`,
-  `id` and `data-testid`; the z scale has seven named layers as utilities
-  (`z-base` … `z-tooltip`); the primitives are in `src/components/ui/`.
-- The design census counts to ratchet: distinctCardChromes 63,
-  distinctButtonChromes 56, distinctBorderColours 28,
-  controlBordersBelowThree 102, decorativeBordersBelowThree 691. Re-measure
-  with `npm run census` after the walk; re-cut with `UPDATE_CENSUS=1 npm run census`.
-- Suites that name component file paths and would break on a fold:
-  `record-surface-containers`, `b2-overlays-are-dialogs`,
-  `b16-help-link-on-every-header`, `bloom-field`, `c3-one-way-to-write`,
-  `dashboard-helpers-unit` (grep `tests/unit` for `src/components/`).
+- 71 files sit directly under `src/lib/` (`ls src/lib/*.ts`); the plan's
+  target is 12 or fewer. Domains that already exist beside them: agents,
+  analytics, composer, dashboard, db, frameworks, fs, git, help, laboratory,
+  memory, missions, models, modules, orchestration, quests, retention,
+  runtime, schedule, schema, scripts, search, seed, sessions, spend, sse,
+  stats, status, sync. The plan names the new ones: `chat/`, `models/`
+  (exists), `schedules/`, `scripts/` (exists), `credentials/`, `runs/`,
+  `skills/`, `artifacts/`, with each repository beside its types the way
+  T-0010 placed the first six.
+- By name the root falls into: the API layer (`api-auth`, `api-fetch`,
+  `api-logger`, `api-response`, `api-route`, `api-schemas`, `api-write`,
+  `parse-json-body`, `parse-optional-json-body`, `auth-throttle`,
+  `auth-token`, `read-only`); thirteen `*-repository` files; the config
+  family (`config-cache`, `config-schema`, `config-sections`, `yaml-config`,
+  `env-file`, `env-line`, `deep-merge`, `set-field`, `fallback-config-*`);
+  deploy and host (`deploy-*`, `platform`, `paths`, `host-scheduler`,
+  `hardware-cron`, `boot-diagnostics`, `scripts-manager`); models and LLM
+  (`llm`, `llm-endpoint`, `llm-output`, `gateway-client`, `model-key`,
+  `usage-shape`); logs (`log-freshness`, `log-line-format`); skills
+  (`skills-grouping`, `skills-page-helpers`, `profile-slug`,
+  `profile-sync-body`); and the presentation helpers (`theme`,
+  `status-labels`, `utils`, `list-bounds`, `list-search`, `dispatch-mode`,
+  `achievements-showcase`, `chat-utils`, `secret-mask`, `parse-bag-flags`,
+  `feature-flags*`, `audit-log`, `db-schema`).
+- Moves by script with every import rewritten (`@/lib/x` and relative
+  forms); the canary's module graph is path-insensitive so a pure move is
+  neutral; `docs/` names some of these paths (`check-doc-links`,
+  `docs:check`), and several suites read a lib file by path (grep
+  `tests/unit` for `src/lib/`). `design-lint`'s `sql-outside-repository`
+  and `core-imports-no-module` rules read paths too: check both after the
+  move.
+- The one-importer target (≤ 95) was missed at 103 in C6: the plan's fold
+  rule was "under sixty lines", every one of those is folded, and the 103
+  left are larger components or index re-exports. C7 may take siblings that
+  are one thing while it moves the lib; otherwise C8 records the miss as a
+  number.
 
 ## Release
 

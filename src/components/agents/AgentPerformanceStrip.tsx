@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { Bot, Activity } from "lucide-react";
 import { useStats } from "@/hooks/useStats";
+import Card from "@/components/ui/Card";
 import { neon, neonAlpha, type NeonColor } from "@/components/viz/colors";
 
 function fmtTokens(n: number): string {
@@ -23,7 +24,7 @@ export default function AgentPerformanceStrip() {
   if (agents.length === 0) return null;
 
   return (
-    <div className="animate-float-in mb-5 rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel p-4">
+    <Card className="animate-float-in mb-5">
       <div className="mb-3 flex items-center gap-2 font-mono text-micro uppercase tracking-wider text-ps-text-muted">
         <Activity className="h-3.5 w-3.5 text-neon-cyan" /> Agent performance · from real activity
       </div>
@@ -64,7 +65,7 @@ export default function AgentPerformanceStrip() {
           );
         })}
       </div>
-    </div>
+    </Card>
   );
 }
 

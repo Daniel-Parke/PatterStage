@@ -32,7 +32,9 @@
 // the URL-keyed fetch double from b3-system-page-and-rail.
 // ═══════════════════════════════════════════════════════════════
 
-import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
+// The page reads through useApiResource since C6 (T-0143), which needs the query provider.
+import { renderWithQuery } from "../helpers/render-with-query";
 
 jest.mock("next/navigation", () => ({
   usePathname: () => "/agent/settings/restore",
@@ -156,7 +158,7 @@ function stubReads(opts: {
 }
 
 async function renderLoaded() {
-  render(<RestorePage />);
+  renderWithQuery(<RestorePage />);
   await screen.findByRole("heading", { name: "Professional agents" });
 }
 
@@ -211,7 +213,7 @@ describe("the counts on the page are the pack's, not the database's", () => {
 
   it("never says '0 professional agents' on an empty install: the shipped figure is the pack's", async () => {
     stubReads({ profiles: [BOB], templates: [] });
-    render(<RestorePage />);
+    renderWithQuery(<RestorePage />);
     // The intro line and the section sentence both carry "7 professional
     // agents", so a getByText on it would find two elements. The line that is
     // unique is the installed figure.
@@ -227,7 +229,7 @@ describe("the counts on the page are the pack's, not the database's", () => {
       templates: [SEEDED_TEMPLATES[0]],
       pack: { ...PACK, profiles: 9, templates: 3 },
     });
-    render(<RestorePage />);
+    renderWithQuery(<RestorePage />);
     await screen.findByText("Installed now: 1 of 9 agents · 1 of 3 templates");
     expect(document.body.textContent).toContain("9 professional agents");
     expect(document.body.textContent).toContain("3 mission templates");
@@ -241,7 +243,7 @@ describe("the counts on the page are the pack's, not the database's", () => {
 describe("a failed read", () => {
   it("shows the banner with Retry, and Retry re-issues the three GETs", async () => {
     answers["GET /api/seed"] = { status: 500, body: { error: "the database is locked" } };
-    render(<RestorePage />);
+    renderWithQuery(<RestorePage />);
     const alert = await screen.findByRole("alert");
     expect(alert).toHaveTextContent("Couldn't read the restore status");
     const retry = within(alert).getByRole("button", { name: /retry/i });
@@ -256,7 +258,7 @@ describe("a failed read", () => {
 
   it("renders no empty state over the failure", async () => {
     answers["GET /api/agent/profiles"] = { status: 500, body: { error: "the database is locked" } };
-    render(<RestorePage />);
+    renderWithQuery(<RestorePage />);
     await screen.findByRole("alert");
     expect(screen.queryByText("No professional agents installed")).toBeNull();
     expect(screen.queryByText("No mission templates installed")).toBeNull();
@@ -271,7 +273,7 @@ describe("a failed read", () => {
       }
       return { body: { data: { state: { lastRun: LAST_RUN }, pack: PACK } } };
     };
-    render(<RestorePage />);
+    renderWithQuery(<RestorePage />);
     const alert = await screen.findByRole("alert");
     fireEvent.click(within(alert).getByRole("button", { name: /retry/i }));
     await screen.findByText("QA Engineer");
@@ -282,14 +284,14 @@ describe("a failed read", () => {
 describe("the empty states, only after a successful read", () => {
   it("says no professional agents are installed and how to get the 7", async () => {
     stubReads({ profiles: [BOB, MINE] });
-    render(<RestorePage />);
+    renderWithQuery(<RestorePage />);
     await screen.findByText("No professional agents installed");
     expect(screen.getByText("Restore everything to install the 7 the pack ships.")).toBeInTheDocument();
   });
 
   it("says no mission templates are installed and how to get the 12", async () => {
     stubReads({ templates: [CUSTOM_TEMPLATE] });
-    render(<RestorePage />);
+    renderWithQuery(<RestorePage />);
     await screen.findByText("No mission templates installed");
     expect(screen.getByText("Restore everything to install the 12 the pack ships.")).toBeInTheDocument();
   });

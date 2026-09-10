@@ -1,9 +1,47 @@
 /** @jest-environment jsdom */
 
+import { useState } from "react";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { renderWithQuery } from "../helpers/render-with-query";
-// The Selector became a Picker in missions/ (U11, T-0125): one caller, one shape.
-import ToolsetsPicker from "@/components/missions/ToolsetsPicker";
+import { composerFormState } from "../helpers/fixtures";
+// The Selector became a Picker in missions/ (U11, T-0125), then folded into
+// its one caller, the composer (C6): the toolsets picker is reached through
+// the form's Mission parameters step.
+import MissionCreateForm, {
+  type MissionFormState,
+} from "@/components/missions/MissionCreateForm";
+
+function Harness({ onField }: { onField: jest.Mock }) {
+  const [formState, setFormState] = useState<MissionFormState>(
+    composerFormState({ newProfile: "creative-lead" }),
+  );
+  const setFormField = <K extends keyof MissionFormState>(
+    field: K,
+    value: MissionFormState[K],
+  ) => {
+    onField(field, value);
+    setFormState((s) => ({ ...s, [field]: value }));
+  };
+  return (
+    <MissionCreateForm
+      editingId={null}
+      missions={[]}
+      scheduleDraftError={null}
+      onScheduleDraftError={jest.fn()}
+      formState={formState}
+      setFormField={setFormField}
+      categories={[]}
+      categoryId={null}
+      onCategoryChange={() => {}}
+      onSubmit={() => {}}
+      onSaveAsTemplate={() => {}}
+      onClose={() => {}}
+      dispatching={false}
+      dispatchAcknowledged={false}
+      onDispatchOpenChange={() => {}}
+    />
+  );
+}
 
 describe("ToolsetsPicker", () => {
   beforeEach(() => {
@@ -36,8 +74,11 @@ describe("ToolsetsPicker", () => {
   });
 
   it("loads toolsets for profile and allows selection", async () => {
-    const onChange = jest.fn();
-    renderWithQuery(<ToolsetsPicker value={[]} onChange={onChange} profileId="creative-lead" max={5} />);
+    const onField = jest.fn();
+    renderWithQuery(<Harness onField={onField} />);
+
+    // The picker lives under the collapsed Mission parameters step.
+    fireEvent.click(screen.getByRole("button", { name: /Mission parameters/ }));
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
@@ -49,6 +90,6 @@ describe("ToolsetsPicker", () => {
     fireEvent.click(screen.getByRole("button", { name: "Toolsets" }));
     const webOption = await screen.findByRole("option", { name: /^Web/i });
     fireEvent.click(webOption);
-    expect(onChange).toHaveBeenCalledWith(["web"]);
+    expect(onField).toHaveBeenCalledWith("newToolsets", ["web"]);
   });
 });

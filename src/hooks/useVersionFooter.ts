@@ -28,6 +28,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 
 import { setErrorFromCaught, safeApiCallData } from "@/lib/api-fetch";
+import { useApiResource } from "@/hooks/useApiResource";
 import { sanitizeGitBranch } from "@/lib/git/git-branch";
 import { fallbackForDeployMessage } from "@/lib/deploy-action-fallback";
 import {
@@ -113,7 +114,6 @@ export function useVersionFooter(): VersionFooterState {
   const [restarting, setRestarting] = useState(false);
   const [rebuilding, setRebuilding] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const [deployEnabled, setDeployEnabled] = useState<boolean | null>(null);
   const [deployLogTail, setDeployLogTail] = useState<string[]>([]);
   // Synchronous busy guard — ref, not state, so it updates immediately on click
   const busyRef = useRef(false);
@@ -147,18 +147,14 @@ export function useVersionFooter(): VersionFooterState {
   }, []);
 
   // Learn on mount whether the deploy API is on, so the block can say so
-  // before the click rather than 403 after it (D53).
-  useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      const data = await safeApiCallData<DeployStatusAnswer>("/api/update?deploy=1");
-      if (cancelled || !isMountedRef.current) return;
-      if (typeof data?.deployEnabled === "boolean") setDeployEnabled(data.deployEnabled);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  // before the click rather than 403 after it (D53). A read like any other
+  // (T-0129); `null` until it answers, and null when it could not.
+  const deployStatus = useApiResource<DeployStatusAnswer>("/api/update?deploy=1", {
+    select: (p) => (p as DeployStatusAnswer | null) ?? undefined,
+    errorMessage: "Could not read the deploy status",
+  });
+  const deployEnabled =
+    typeof deployStatus.data?.deployEnabled === "boolean" ? deployStatus.data.deployEnabled : null;
 
   const openCheckDropdown = async () => {
     setDropdownOpen(true);

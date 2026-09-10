@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { SearchInput } from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
 import { useToast } from "@/components/ui/Toast";
 import { HINDSIGHT_DEFAULT_MAX_AGE_DAYS } from "@/lib/memory/hindsight-client";
 import type { HealthState, Tab } from "./hindsight/types";
@@ -173,13 +174,13 @@ export default function HindsightBrowser({ onHealthChange, reloadToken = 0 }: Hi
 
       {/* Reflect Result */}
       {reflectResult && (
-        <div className="mb-6 p-4 rounded-ps-lg border border-purple-500/20 bg-purple-500/5">
+        <Card glow="purple" className="mb-6">
           <div className="flex items-center gap-2 mb-2">
-            <Sparkles className="w-4 h-4 text-purple-400" />
-            <span className="text-body font-semibold text-purple-300">Reflection</span>
+            <Sparkles className="w-4 h-4 text-neon-purple" />
+            <span className="text-body font-semibold text-neon-purple">Reflection</span>
           </div>
           <p className="text-body text-ps-text-secondary leading-relaxed">{reflectResult}</p>
-        </div>
+        </Card>
       )}
 
       {/* Tabs */}
@@ -190,7 +191,7 @@ export default function HindsightBrowser({ onHealthChange, reloadToken = 0 }: Hi
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-ps-md text-body transition-colors ${
-              activeTab === tab.id ? "bg-pink-500/20 text-pink-300" : "text-ps-text-muted hover:text-ps-text-secondary"
+              activeTab === tab.id ? "bg-neon-pink/20 text-neon-pink" : "text-ps-text-muted hover:text-ps-text-secondary"
             }`}
           >
             <tab.icon className="w-3.5 h-3.5" />

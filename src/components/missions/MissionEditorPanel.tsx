@@ -11,8 +11,14 @@ import {
   Zap,
 } from "lucide-react";
 import { ChevronRight } from "lucide-react";
+import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
 import ConfirmButton from "@/components/ui/ConfirmButton";
+import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
+import RunProgress from "@/components/schedule/RunProgress";
+import ConceptHint from "@/components/help/ConceptHint";
+import { useApiResource } from "@/hooks/useApiResource";
 import { timeAgo, timeUntil } from "@/lib/utils";
 import { describeScheduleFiring } from "@/lib/missions/mission-schedule-view";
 import type { MissionDetail, MissionRow } from "@/hooks/missions-page-types";
@@ -22,7 +28,6 @@ import {
 } from "@/lib/missions/mission-board";
 import { describeMissionRunState } from "@/lib/missions/mission-run-state";
 import { RUN_TONE_TEXT } from "@/components/missions/mission-page-constants";
-import MissionLiveProgress from "@/components/missions/MissionLiveProgress";
 
 export interface MissionEditorPanelProps {
   detail: MissionDetail | null;
@@ -36,6 +41,43 @@ export interface MissionEditorPanelProps {
   isCancelling?: boolean;
   onDelete: (id: string) => void;
   onDuplicate?: (m: MissionRow) => void;
+}
+
+/** The run id, or null while dispatch has not created one. */
+interface RunLookup {
+  runId: string | null;
+}
+
+/**
+ * The run streaming under a dispatched mission. This panel is its one caller,
+ * so it lives here (C6).
+ */
+function MissionLiveProgress({ missionId }: { missionId: string }) {
+  // Polls every two seconds until the run exists, then stops: the interval is
+  // a function of what was read (T-0129), which is what the raw useQuery did
+  // with its own state before every read went through the one hook.
+  const { data, error } = useApiResource<RunLookup>(`/api/missions/${missionId}/run`, {
+    select: (p) => ({ runId: (p as { run?: { id?: string } | null } | null)?.run?.id ?? null }),
+    errorMessage: "Could not read the mission's run",
+    refetchInterval: (value) => (value?.runId ? false : 2000),
+  });
+
+  if (error) {
+    return <LoadErrorBanner compact error={`Live run unavailable: ${error}`} />;
+  }
+
+  if (!data?.runId) return null;
+
+  return (
+    <div>
+      {/* Where the word "run" is actually met on this screen: one dispatch of
+          this mission, streaming underneath. */}
+      <div className="text-micro font-mono text-ps-text-muted uppercase mb-1">
+        Live <ConceptHint id="run">run</ConceptHint>
+      </div>
+      <RunProgress runId={data.runId} />
+    </div>
+  );
 }
 
 export default function MissionEditorPanel({
@@ -172,9 +214,9 @@ export default function MissionEditorPanel({
             <div
               className={`overflow-hidden transition-all duration-200 ${promptCollapsed ? "max-h-20" : "max-h-none"}`}
             >
-              <div className="text-micro text-ps-text-muted font-mono whitespace-pre-wrap bg-ps-surface-panel rounded-ps-md p-2 border border-ps-edge-hairline">
+              <Card padding="none" className="p-2 text-micro text-ps-text-muted font-mono whitespace-pre-wrap">
                 {detail.mission.prompt}
-              </div>
+              </Card>
             </div>
           </div>
 
@@ -187,12 +229,7 @@ export default function MissionEditorPanel({
                 {(detail.mission.goals ?? [])
                   .slice(0, 3)
                   .map((goal, i) => (
-                    <span
-                      key={i}
-                      className="text-micro font-mono px-1.5 py-0.5 rounded-ps-sm bg-ps-surface-raised text-ps-text-muted border border-ps-edge-hairline"
-                    >
-                      {goal}
-                    </span>
+                    <Badge key={i}>{goal}</Badge>
                   ))}
                 {(detail.mission.goals?.length ?? 0) > 3 && (
                   <span className="text-micro font-mono text-ps-text-faint">
@@ -207,7 +244,7 @@ export default function MissionEditorPanel({
           )}
 
           {detail.schedule && (
-            <div className="rounded-ps-md border border-neon-orange/20 bg-ps-surface-panel p-2">
+            <Card padding="none" className="p-2">
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-1">
                   <Zap className="w-3 h-3 text-neon-orange" />
@@ -246,11 +283,11 @@ export default function MissionEditorPanel({
               )}
               {/* Scheduled and going to happen are not the same thing. */}
               {describeScheduleFiring(detail.schedule) && (
-                <p className="mt-1 rounded-ps-sm border border-neon-orange/30 bg-neon-orange/5 px-1.5 py-1 text-body text-neon-orange">
+                <p className="mt-1 text-body text-status-warn">
                   {describeScheduleFiring(detail.schedule)}
                 </p>
               )}
-            </div>
+            </Card>
           )}
 
           {/* The timing note is the "is it stuck" answer: how long is left
@@ -277,9 +314,9 @@ export default function MissionEditorPanel({
               <div className="text-micro font-mono text-ps-text-muted uppercase mb-1">
                 Result
               </div>
-              <div className="text-micro text-ps-text-secondary font-mono whitespace-pre-wrap bg-ps-surface-panel rounded-ps-md p-2 border border-ps-edge-hairline max-h-40 overflow-y-auto">
+              <Card padding="none" className="p-2 text-micro text-ps-text-secondary font-mono whitespace-pre-wrap max-h-40 overflow-y-auto">
                 {detail.mission.result}
-              </div>
+              </Card>
             </div>
           )}
 
@@ -287,14 +324,14 @@ export default function MissionEditorPanel({
               run row and never shown: the panel read `mission.error`, a field
               no route sets, so a failed mission explained nothing. */}
           {run?.error && (
-            <div className="rounded-ps-md bg-red-500/5 border border-red-500/10 p-2">
-              <div className="text-micro font-mono text-red-400 uppercase mb-0.5">
+            <Card padding="none" className="p-2">
+              <div className="text-micro font-mono text-status-fail uppercase mb-0.5">
                 Run error
               </div>
-              <div className="text-micro font-mono text-red-300 whitespace-pre-wrap break-words">
+              <div className="text-micro font-mono text-ps-text-secondary whitespace-pre-wrap break-words">
                 {run.error}
               </div>
-            </div>
+            </Card>
           )}
 
           <div className="flex flex-wrap gap-1.5 pt-1">

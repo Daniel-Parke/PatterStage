@@ -21,7 +21,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { withQuery } from "../helpers/render-with-query";
 
 let pathname = "/quests";
 jest.mock("next/navigation", () => ({
@@ -203,11 +203,6 @@ function installFetch() {
       headers: { "content-type": "application/json" },
     });
   }) as unknown as typeof fetch;
-}
-
-function withQuery(ui: React.ReactElement) {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return <QueryClientProvider client={client}>{ui}</QueryClientProvider>;
 }
 
 beforeEach(() => {

@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Copy } from "lucide-react";
+import Card from "@/components/ui/Card";
+import SegmentedControl from "@/components/ui/SegmentedControl";
 import {
   buildMissionPrompt,
   buildMissionPromptHuman,
@@ -43,6 +45,11 @@ function buildOptions(props: MissionPromptPreviewProps) {
   };
 }
 
+const MODES: ReadonlyArray<{ value: PromptPreviewMode; label: string }> = [
+  { value: "human", label: "Human" },
+  { value: "ai", label: "AI" },
+];
+
 export default function MissionPromptPreview(props: MissionPromptPreviewProps) {
   const [mode, setMode] = useState<PromptPreviewMode>("human");
   const [copied, setCopied] = useState(false);
@@ -77,30 +84,12 @@ export default function MissionPromptPreview(props: MissionPromptPreviewProps) {
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="inline-flex rounded-ps-md border border-ps-edge-hairline p-0.5 bg-ps-surface-ground/80">
-          <button
-            type="button"
-            onClick={() => setMode("human")}
-            className={`px-3 py-1.5 text-micro font-mono rounded-ps-md transition-colors ${
-              mode === "human"
-                ? "bg-ps-surface-raised text-ps-text-primary"
-                : "text-ps-text-muted hover:text-ps-text-secondary"
-            }`}
-          >
-            Human
-          </button>
-          <button
-            type="button"
-            onClick={() => setMode("ai")}
-            className={`px-3 py-1.5 text-micro font-mono rounded-ps-md transition-colors ${
-              mode === "ai"
-                ? "bg-ps-surface-raised text-ps-text-primary"
-                : "text-ps-text-muted hover:text-ps-text-secondary"
-            }`}
-          >
-            AI
-          </button>
-        </div>
+        <SegmentedControl<PromptPreviewMode>
+          label="Preview mode"
+          options={MODES}
+          value={mode}
+          onChange={setMode}
+        />
         <button
           type="button"
           onClick={() => void handleCopy()}
@@ -120,9 +109,11 @@ export default function MissionPromptPreview(props: MissionPromptPreviewProps) {
           ? "Human view mirrors your form fields."
           : "AI view is the XML prompt stored and sent to the agent."}
       </p>
-      <pre className="rounded-ps-md border border-ps-edge-hairline bg-ps-surface-ground/50 px-3 py-3 text-micro font-mono text-ps-text-secondary whitespace-pre-wrap max-h-72 overflow-y-auto">
-        {activePreview || "(empty)"}
-      </pre>
+      <Card variant="raised" padding="none" className="max-h-72 overflow-y-auto">
+        <pre className="px-3 py-3 text-micro font-mono text-ps-text-secondary whitespace-pre-wrap">
+          {activePreview || "(empty)"}
+        </pre>
+      </Card>
     </div>
   );
 }

@@ -21,6 +21,7 @@ import {
 } from "@/lib/achievements-showcase";
 import type { AchievementTier } from "@/lib/stats/derive";
 import { Collapse, Stagger, StaggerItem } from "@/components/motion";
+import Card from "@/components/ui/Card";
 
 type Filter = "all" | "unlocked" | "locked";
 
@@ -74,9 +75,7 @@ export default function AchievementShowcase({
   const pct = summary.total > 0 ? Math.round((summary.unlocked / summary.total) * 100) : 0;
 
   return (
-    <div
-      className={`rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel p-4 ${className}`}
-    >
+    <Card className={className}>
       {/* Header */}
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
@@ -84,7 +83,9 @@ export default function AchievementShowcase({
           <span className="text-micro font-mono uppercase tracking-widest text-ps-text-muted">
             Achievements
           </span>
-          <span className="rounded-full border border-neon-yellow/30 bg-neon-yellow/10 px-2 py-0.5 text-micro font-mono text-neon-yellow">
+          {/* Badge's solid chrome (a tint and its text, no outline), spelled
+              here only because Badge has no yellow rung. */}
+          <span className="rounded-full bg-neon-yellow/10 px-2 py-0.5 text-micro font-mono text-neon-yellow">
             {summary.points} / {summary.totalPoints} pts
           </span>
         </div>
@@ -190,6 +191,6 @@ export default function AchievementShowcase({
           className={`h-3.5 w-3.5 transition-transform ${expanded ? "rotate-180" : ""}`}
         />
       </button>
-    </div>
+    </Card>
   );
 }

@@ -2,7 +2,13 @@
 
 import { useState } from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
+import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
+import IconButton from "@/components/ui/IconButton";
+import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import Modal from "@/components/ui/Modal";
+import { InlineSelect } from "@/components/ui/Select";
+import { Input } from "@/components/ui/field";
 import { CATEGORY_COLOR_CLASSES } from "@/lib/missions/mission-categories";
 
 export interface ManagedCategory {
@@ -30,6 +36,7 @@ export interface CategoryManagerModalProps {
 }
 
 const COLORS = ["cyan", "purple", "pink", "green", "orange", "blue", "red"];
+const COLOR_OPTIONS = COLORS.map((col) => ({ value: col, label: col }));
 
 export default function CategoryManagerModal({
   open,
@@ -92,12 +99,12 @@ export default function CategoryManagerModal({
 
   return (
     <Modal open={open} onClose={onClose} title="Manage categories" size="lg">
-      <div className="mb-4 p-3 rounded-ps-md border border-ps-edge-hairline bg-ps-surface-panel space-y-2">
+      <Card padding="sm" className="mb-4 space-y-2">
         <label className="text-micro text-ps-text-muted font-mono block">
           New category
         </label>
         <div className="flex flex-wrap gap-2 items-center">
-          <input
+          <Input
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             onKeyDown={(e) => {
@@ -106,43 +113,31 @@ export default function CategoryManagerModal({
                 void handleCreate();
               }
             }}
-            placeholder="Category name" aria-label="New category name"
-            className="flex-1 min-w-[140px] h-9 px-3 text-body font-mono bg-ps-surface-ground border border-ps-edge rounded-ps-md text-ps-text-primary"
+            placeholder="Category name"
+            aria-label="New category name"
+            className="flex-1 min-w-[140px] font-mono"
           />
-          <select aria-label="Category colour"
+          <InlineSelect
+            ariaLabel="Category colour"
             value={newColor}
-            onChange={(e) => setNewColor(e.target.value)}
-            className="h-9 px-2 text-micro font-mono bg-ps-surface-ground border border-ps-edge rounded-ps-md"
-          >
-            {COLORS.map((col) => (
-              <option key={col} value={col}>
-                {col}
-              </option>
-            ))}
-          </select>
-          <button
-            type="button"
+            onChange={setNewColor}
+            options={COLOR_OPTIONS}
+            className="w-32"
+          />
+          <Button
+            variant="primary"
+            color="cyan"
+            icon={Plus}
             onClick={() => void handleCreate()}
             disabled={!newName.trim() || creating}
-            className="inline-flex items-center gap-1.5 h-9 px-3 rounded-ps-md text-micro font-mono border border-neon-cyan/40 bg-neon-cyan/10 text-neon-cyan disabled:opacity-40"
           >
-            <Plus className="w-3.5 h-3.5" />
             Create category
-          </button>
+          </Button>
         </div>
-      </div>
+      </Card>
 
       {categoriesLoadError && (
-        <div className="mb-4 p-3 rounded-ps-md border border-neon-orange/30 bg-neon-orange/5 text-micro font-mono text-neon-orange/90">
-          {categoriesLoadError}
-          <button
-            type="button"
-            onClick={() => onRefresh()}
-            className="ml-2 text-neon-cyan underline"
-          >
-            Retry
-          </button>
-        </div>
+        <LoadErrorBanner error={categoriesLoadError} onRetry={onRefresh} />
       )}
 
       <div className="space-y-2 max-h-[50vh] overflow-y-auto">
@@ -154,42 +149,28 @@ export default function CategoryManagerModal({
           </p>
         )}
         {categories.map((c) => (
-          <div
-            key={c.id}
-            className="flex items-center gap-2 p-2 rounded-ps-md border border-ps-edge-hairline bg-ps-surface-panel"
-          >
+          <Card key={c.id} padding="none" className="flex items-center gap-2 p-2">
             {editingId === c.id ? (
               <div className="flex-1 flex flex-wrap gap-2 items-center">
-                <input aria-label="Category name"
+                <Input
+                  aria-label="Category name"
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
-                  className="flex-1 min-w-[120px] px-2 py-1 text-micro font-mono bg-ps-surface-ground border border-ps-edge rounded-ps-sm"
+                  className="flex-1 min-w-[120px] font-mono"
                 />
-                <select aria-label="Category colour"
+                <InlineSelect
+                  ariaLabel="Category colour"
                   value={editColor}
-                  onChange={(e) => setEditColor(e.target.value)}
-                  className="px-2 py-1 text-micro font-mono bg-ps-surface-ground border border-ps-edge rounded-ps-sm"
-                >
-                  {COLORS.map((col) => (
-                    <option key={col} value={col}>
-                      {col}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  onClick={() => void saveEdit()}
-                  className="text-micro font-mono text-neon-cyan"
-                >
+                  onChange={setEditColor}
+                  options={COLOR_OPTIONS}
+                  className="w-32"
+                />
+                <Button variant="ghost" size="sm" onClick={() => void saveEdit()}>
                   Save
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setEditingId(null)}
-                  className="text-micro font-mono text-ps-text-muted"
-                >
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => setEditingId(null)}>
                   Cancel
-                </button>
+                </Button>
               </div>
             ) : (
               <>
@@ -210,69 +191,52 @@ export default function CategoryManagerModal({
                     {c.missionCount} missions · {c.templateCount} templates
                   </div>
                 </div>
-                <button
-                  type="button"
-                  aria-label={`Rename category ${c.name}`}
+                <IconButton
+                  icon={Pencil}
+                  label={`Rename category ${c.name}`}
+                  size="sm"
                   onClick={() => startEdit(c)}
-                  className="p-1 text-ps-text-muted hover:text-neon-cyan"
-                >
-                  <Pencil className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  type="button"
-                  aria-label={`Delete category ${c.name}`}
+                />
+                <IconButton
+                  icon={Trash2}
+                  label={`Delete category ${c.name}`}
+                  size="sm"
                   onClick={() => {
                     setDeleteTarget(c.id);
                     setReassignId(null);
                   }}
-                  className="p-1 text-ps-text-muted hover:text-red-400"
-                >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                />
               </>
             )}
-          </div>
+          </Card>
         ))}
       </div>
 
       {deleteTarget && (
-        <div className="mt-4 p-3 rounded-ps-md border border-red-500/30 bg-red-500/5">
-          <p className="text-micro font-mono text-ps-text-secondary mb-2">
+        <Card padding="sm" className="mt-4 space-y-2">
+          <p className="text-micro font-mono text-status-fail">
             Reassign missions and templates before deleting:
           </p>
-          <select aria-label="Reassign missions to category"
+          <InlineSelect
+            ariaLabel="Reassign missions to category"
             value={reassignId ?? ""}
-            onChange={(e) =>
-              setReassignId(e.target.value === "" ? null : e.target.value)
-            }
-            className="w-full mb-2 px-2 py-1.5 text-micro font-mono bg-ps-surface-ground border border-ps-edge rounded-ps-sm"
-          >
-            <option value="">Uncategorized</option>
-            {categories
-              .filter((c) => c.id !== deleteTarget)
-              .map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-          </select>
+            onChange={(v) => setReassignId(v === "" ? null : v)}
+            options={[
+              { value: "", label: "Uncategorized" },
+              ...categories
+                .filter((c) => c.id !== deleteTarget)
+                .map((c) => ({ value: c.id, label: c.name })),
+            ]}
+          />
           <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => void confirmDelete()}
-              className="px-3 py-1.5 text-micro font-mono bg-red-500/20 text-red-300 rounded-ps-sm"
-            >
+            <Button variant="danger" size="sm" onClick={() => void confirmDelete()}>
               Delete category
-            </button>
-            <button
-              type="button"
-              onClick={() => setDeleteTarget(null)}
-              className="px-3 py-1.5 text-micro font-mono text-ps-text-muted"
-            >
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => setDeleteTarget(null)}>
               Cancel
-            </button>
+            </Button>
           </div>
-        </div>
+        </Card>
       )}
     </Modal>
   );

@@ -8,7 +8,7 @@
 
 "use client";
 
-import GlowSurface from "@/components/ui/GlowSurface";
+import Card from "@/components/ui/Card";
 import ModelSelectDropdown from "@/components/models/ModelSelectDropdown";
 
 import { TASK_TYPES, type TaskType } from "@/lib/models/task-types";
@@ -99,11 +99,13 @@ export default function DefaultsGrid({
         const modelForSlot = selected ? models.find((m) => m.id === selected) : null;
 
         return (
-          <GlowSurface
-            key={slot}
-            data-task-slot={slot}
-            accent={slot === "agent" ? "orange" : modelForSlot ? "purple" : undefined}
-            className="rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel p-4 space-y-2 min-h-[120px] relative overflow-hidden"
+          // The slot's name is on a wrapper, not the card: Card carries an id
+          // and a test id and nothing else, and `data-task-slot` is what the
+          // page suite and the e2e specs find a slot by.
+          <div key={slot} data-task-slot={slot}>
+          <Card
+            glow={slot === "agent" ? "orange" : modelForSlot ? "purple" : undefined}
+            className="relative h-full min-h-[120px] space-y-2 overflow-hidden"
           >
             {/* Left accent bar — matches the glow accent */}
             {slot === "agent" && (
@@ -143,7 +145,8 @@ export default function DefaultsGrid({
                 }}
               />
             </div>
-          </GlowSurface>
+          </Card>
+          </div>
         );
       })}
     </div>

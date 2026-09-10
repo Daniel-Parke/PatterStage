@@ -16,15 +16,20 @@
 //
 // The yaml sections read through useConfig, which is one cached request for
 // the whole file. The two file sections and the platform-toolsets preview are
-// their own routes and are read once, here, on mount.
+// their own routes, read through useApiResource (T-0129); a file's editable
+// copy is seeded from its read and replaced only when the server's content
+// changes, so a draft survives a re-read. Every save goes through runWrite.
 // ═══════════════════════════════════════════════════════════════
 
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { useToast } from "@/components/ui/Toast";
+import { useApiResource } from "@/hooks/useApiResource";
 import { useConfig } from "@/hooks/useConfig";
 import { apiFetch, setErrorFromCaught } from "@/lib/api-fetch";
+import { runWrite } from "@/lib/api-write";
 import {
   CONFIG_SECTIONS,
   fileKeyForFilePath,
@@ -63,17 +68,16 @@ export interface SectionEditor {
   file?: FileEditor;
 }
 
+/** The editable copy of a file: what is on screen, and what was loaded. */
 interface FileState {
   content: string;
   original: string;
-  loading: boolean;
-  error: string | null;
 }
 
-const FILE_KEYS = ["hermes", "env"] as const;
-type FileKey = (typeof FILE_KEYS)[number];
+type FileKey = "hermes" | "env";
 
 const SAVED_FOR_MS = 2000;
+const NO_TOOLSETS: Values = {};
 
 /** Everything a settled section holds: what was saved, with the deleted keys gone. */
 function settle(values: Values): Values {
@@ -82,8 +86,13 @@ function settle(values: Values): Values {
   return out;
 }
 
+function selectContent(p: unknown): string {
+  return (p as { content?: string } | null)?.content ?? "";
+}
+
 export function useSettingsEditor() {
   const config = useConfig();
+  const { showToast } = useToast();
 
   const [drafts, setDrafts] = useState<Record<string, Values>>({});
   // What a save landed, per section. Overlays the config read until the next
@@ -93,12 +102,9 @@ export function useSettingsEditor() {
   const [status, setStatus] = useState<Record<string, SaveStatus>>({});
   const [errors, setErrors] = useState<Record<string, string | null>>({});
   const [files, setFiles] = useState<Record<FileKey, FileState>>({
-    hermes: { content: "", original: "", loading: true, error: null },
-    env: { content: "", original: "", loading: true, error: null },
+    hermes: { content: "", original: "" },
+    env: { content: "", original: "" },
   });
-  // The root agent's platform_toolsets, read-only here: the page that edits
-  // them is Agent → Tools.
-  const [toolsets, setToolsets] = useState<Values>({});
   const timers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
   useEffect(() => {
@@ -108,35 +114,46 @@ export function useSettingsEditor() {
     };
   }, []);
 
+  const hermesRead = useApiResource<string>("/api/agent/files/hermes", {
+    select: selectContent,
+    errorMessage: "Could not read the file",
+  });
+  const envRead = useApiResource<string>("/api/agent/files/env", {
+    select: selectContent,
+    errorMessage: "Could not read the file",
+  });
+  // The root agent's platform_toolsets, read-only here: the page that edits
+  // them is Agent → Tools. A preview that could not be read renders as not
+  // configured; the page that owns these values says the rest.
+  const toolsetsRead = useApiResource<Values>("/api/agent/profiles/default/toolsets", {
+    select: (p) => (p as { platformToolsets?: Values } | null)?.platformToolsets ?? {},
+    fallback: {},
+  });
+  const toolsets = toolsetsRead.data ?? NO_TOOLSETS;
+
+  // A file's read seeds its editable copy, and replaces it only when what the
+  // server holds has changed: a re-read that answers the same content leaves
+  // an unsaved draft where it is.
+  const hermesContent = hermesRead.data;
   useEffect(() => {
-    const controller = new AbortController();
-    for (const key of FILE_KEYS) {
-      void (async () => {
-        try {
-          const json = await apiFetch(`/api/agent/files/${key}`, { signal: controller.signal });
-          const content = (json.data?.content as string | undefined) ?? "";
-          setFiles((f) => ({ ...f, [key]: { content, original: content, loading: false, error: null } }));
-        } catch (err) {
-          if (err instanceof DOMException && err.name === "AbortError") return;
-          setErrorFromCaught(
-            (m) => setFiles((f) => ({ ...f, [key]: { ...f[key], loading: false, error: m } })),
-            err,
-            "Could not read the file",
-          );
-        }
-      })();
-    }
-    void (async () => {
-      try {
-        const json = await apiFetch("/api/agent/profiles/default/toolsets", { signal: controller.signal });
-        setToolsets((json.data?.platformToolsets as Values | undefined) ?? {});
-      } catch {
-        // A preview that could not be read renders as not configured; the
-        // page that owns these values says the rest.
-      }
-    })();
-    return () => controller.abort();
-  }, []);
+    if (hermesContent === null) return;
+    setFiles((f) =>
+      f.hermes.original === hermesContent ? f : { ...f, hermes: { content: hermesContent, original: hermesContent } },
+    );
+  }, [hermesContent]);
+  const envContent = envRead.data;
+  useEffect(() => {
+    if (envContent === null) return;
+    setFiles((f) => (f.env.original === envContent ? f : { ...f, env: { content: envContent, original: envContent } }));
+  }, [envContent]);
+
+  const fileReads = useMemo(
+    () => ({
+      hermes: { loading: !hermesRead.settled, error: hermesRead.error, refetch: hermesRead.refetch },
+      env: { loading: !envRead.settled, error: envRead.error, refetch: envRead.refetch },
+    }),
+    [hermesRead.settled, hermesRead.error, hermesRead.refetch, envRead.settled, envRead.error, envRead.refetch],
+  );
 
   const setSectionStatus = useCallback((id: string, next: SaveStatus) => {
     setStatus((s) => ({ ...s, [id]: next }));
@@ -176,7 +193,7 @@ export function useSettingsEditor() {
       if (!def) return null;
       const isFile = def.type === "file";
       const fileKey = isFile && def.filePath ? (fileKeyForFilePath(def.filePath) as FileKey) : null;
-      const fileState = fileKey ? files[fileKey] : null;
+      const fileState = fileKey ? { ...files[fileKey], ...fileReads[fileKey] } : null;
       const original = originalOf(id);
       const values = { ...original, ...(drafts[id] ?? {}) };
       const changed = isFile ? {} : changedOf(def, values, original);
@@ -203,38 +220,57 @@ export function useSettingsEditor() {
       const save = async () => {
         setSectionStatus(id, "saving");
         setErrors((e) => ({ ...e, [id]: null }));
-        try {
-          if (fileKey) {
-            const content = files[fileKey].content;
-            await apiFetch(`/api/agent/files/${fileKey}`, {
-              method: "PUT",
-              body: JSON.stringify({ content, backup: true }),
-            });
-            setFiles((f) => ({ ...f, [fileKey]: { ...f[fileKey], original: content } }));
-          } else {
-            const res = await apiFetch("/api/config", {
-              method: "PUT",
-              body: JSON.stringify({ section: id, values: changed }),
-            });
-            if (!res?.data) throw new Error("Failed to save");
-            setSettled((s) => ({ ...s, [id]: settle({ ...original, ...changed }) }));
-            setDrafts((d) => {
-              const next = { ...d };
-              delete next[id];
-              return next;
-            });
-          }
-          setSectionStatus(id, "saved");
-        } catch (err) {
-          setSectionStatus(id, "error");
-          setErrorFromCaught((m) => setErrors((e) => ({ ...e, [id]: m })), err, "Save failed");
-        }
+        const content = fileKey ? files[fileKey].content : null;
+        await runWrite({
+          showToast,
+          // Neither route answers the `{ success }` envelope; the request
+          // itself says whether the save landed.
+          checkSuccess: false,
+          request: fileKey
+            ? () =>
+                apiFetch(`/api/agent/files/${fileKey}`, {
+                  method: "PUT",
+                  body: JSON.stringify({ content, backup: true }),
+                })
+            : async () => {
+                const res = await apiFetch("/api/config", {
+                  method: "PUT",
+                  body: JSON.stringify({ section: id, values: changed }),
+                });
+                if (!res?.data) throw new Error("Failed to save");
+                return res;
+              },
+          successMessage: `${def.label} saved`,
+          errorMessage: "Save failed",
+          onSuccess: () => {
+            if (fileKey) {
+              setFiles((f) => ({ ...f, [fileKey]: { ...f[fileKey], original: content ?? "" } }));
+              // The cache holds what was read; make it hold what was saved.
+              void fileReads[fileKey].refetch();
+            } else {
+              setSettled((s) => ({ ...s, [id]: settle({ ...original, ...changed }) }));
+              setDrafts((d) => {
+                const next = { ...d };
+                delete next[id];
+                return next;
+              });
+            }
+            setSectionStatus(id, "saved");
+          },
+          onError: (err) => {
+            setSectionStatus(id, "error");
+            setErrorFromCaught((m) => setErrors((e) => ({ ...e, [id]: m })), err, "Save failed");
+          },
+        });
       };
 
       const file: FileEditor | undefined =
         fileKey && fileState
           ? {
-              ...fileState,
+              content: fileState.content,
+              original: fileState.original,
+              loading: fileState.loading,
+              error: fileState.error,
               readOnly: def.sensitive === true,
               update: (content: string) =>
                 setFiles((f) => ({ ...f, [fileKey]: { ...f[fileKey], content } })),
@@ -255,7 +291,7 @@ export function useSettingsEditor() {
         file,
       };
     },
-    [changedOf, drafts, errors, files, originalOf, setSectionStatus, status],
+    [changedOf, drafts, errors, fileReads, files, originalOf, setSectionStatus, showToast, status],
   );
 
   return useMemo(

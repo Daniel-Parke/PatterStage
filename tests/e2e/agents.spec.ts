@@ -31,11 +31,12 @@ test.describe("Agents page", () => {
   test("profile sync controls are visible", async ({ page }) => {
     await openAgentsPage(page);
     // Exact names, because /Push all/i is ambiguous: ProfileSyncBar renders
-    // "Push all" always, and ProfilesDriftBanner renders "Push all to Hermes"
-    // whenever the database and the Hermes disk disagree. The loose regex made
-    // this test pass or fail on whether the run's data happened to have drifted
-    // (a strict-mode violation on a drifted DB, green on a clean one). The two
-    // sync-bar controls are what the test is about, so it names them.
+    // "Push all" always, and the drift banner (a local of AgentProfilesOverview)
+    // rendered "Push all to Hermes" whenever the database and the Hermes disk
+    // disagree. The loose regex made this test pass or fail on whether the
+    // run's data happened to have drifted (a strict-mode violation on a drifted
+    // DB, green on a clean one). The two sync-bar controls are what the test is
+    // about, so it names them.
     // READY here too, since U11 (T-0125): the header renders while the body is
     // still loading, so the heading above no longer means the profiles have
     // arrived, and the default 5s ran out twice under a full worker pool while

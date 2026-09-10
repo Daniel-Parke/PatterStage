@@ -37,6 +37,8 @@ import { useState } from "react";
 
 import { KeyRound, Plus, Trash2, Check } from "lucide-react";
 
+import { Panel } from "@/components/dashboard/Panel";
+import Card from "@/components/ui/Card";
 import { Input, Select } from "@/components/ui/field";
 import ConceptHint from "@/components/help/ConceptHint";
 import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
@@ -111,7 +113,7 @@ export default function CredentialsPanel({
   };
 
   return (
-    <section className="mb-6 rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-raised p-4">
+    <Card as="section" variant="raised" className="mb-6">
       <div className="mb-3 flex items-center gap-2">
         <KeyRound className="h-4 w-4 text-ps-text-muted" />
         {/* "Credentials" is this screen's word for the thing the corpus calls
@@ -138,7 +140,7 @@ export default function CredentialsPanel({
       )}
 
       {addOpen && (
-        <div className="mb-3 space-y-2 rounded-ps-md border border-neon-cyan/20 bg-neon-cyan/[0.04] p-3">
+        <Panel accent="cyan" tint="cyan" className="mb-3 space-y-2 p-3">
           <div className="grid gap-2 sm:grid-cols-2">
             <Input
               type="text"
@@ -184,7 +186,7 @@ export default function CredentialsPanel({
               Cancel
             </button>
           </div>
-        </div>
+        </Panel>
       )}
 
       <ul className="space-y-1">
@@ -269,6 +271,6 @@ export default function CredentialsPanel({
           );
         })}
       </ul>
-    </section>
+    </Card>
   );
 }

@@ -27,7 +27,8 @@
  * case-folding path is exercised rather than assumed.
  */
 
-import { render, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
+import { renderWithQuery } from "../helpers/render-with-query";
 
 import type { Skill } from "@/types/console";
 
@@ -63,6 +64,10 @@ const apiFetch = jest.fn();
 jest.mock("@/lib/api-fetch", () => ({
   __esModule: true,
   apiFetch: (...args: unknown[]) => apiFetch(...args),
+  // The page reads through useApiResource, which calls safeApiCall; routed
+  // through the same mock so a read is still one of the calls asked for (C6, T-0143).
+   
+  safeApiCall: require("../helpers/mocks").safeApiCallOver((...a: unknown[]) => apiFetch(...a)),
   toastError: jest.fn(),
   // Amended 2026-09-10 (C3, T-0138): the toggle writes through runWrite, which says a
   // failure through messageFromError.
@@ -141,7 +146,7 @@ beforeEach(() => {
 });
 
 async function renderPage() {
-  const view = render(<SkillsPage />);
+  const view = renderWithQuery(<SkillsPage />);
   await waitFor(() =>
     expect(screen.getAllByTestId("skill-category-row").length).toBeGreaterThan(0),
   );

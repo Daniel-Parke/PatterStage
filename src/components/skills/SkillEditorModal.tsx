@@ -7,6 +7,7 @@
 import { Edit3, RotateCcw, Save } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
+import { Textarea } from "@/components/ui/field";
 
 export interface SkillEditorModalProps {
   skillName: string | null;
@@ -65,11 +66,11 @@ export default function SkillEditorModal({
         </>
       }
     >
-      <textarea
+      <Textarea
         aria-label="Skill source"
         value={content}
         onChange={(e) => onContentChange(e.target.value)}
-        className="w-full min-h-[320px] bg-ps-surface-inset border border-ps-edge rounded-ps-md p-4 text-body text-ps-text-primary font-mono resize-y"
+        className="min-h-[320px]"
         spellCheck={false}
       />
     </Modal>

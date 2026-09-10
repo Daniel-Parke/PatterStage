@@ -7,11 +7,10 @@ import { helpScreenIndex } from "@/lib/help/help-manifest";
 import { loadHelpConcepts, loadHelpManifest } from "@/lib/help/help-source";
 import { HelpProvider } from "@/components/help/HelpProvider";
 import { SidebarProvider } from "@/components/layout/SidebarContext";
-import Sidebar from "@/components/layout/Sidebar";
-import MobileHeader from "@/components/layout/MobileHeader";
+import Sidebar, { MobileHeader } from "@/components/layout/Sidebar";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+import { buttonChrome } from "@/components/ui/button-chrome";
 import { FeedbackProvider } from "@/components/providers/FeedbackProvider";
-import QueryProvider from "@/components/providers/QueryProvider";
 import BloomField from "@/kit/BloomField";
 import "./globals.css";
 
@@ -98,19 +97,29 @@ export default function RootLayout({
         {/*
           The skip link: the first tab stop on every page, visible only while
           focused, so a keyboard user is not made to tab through thirty nav
-          links to reach what they came for (T-0096, D117).
+          links to reach what they came for (T-0096, D117). A native anchor,
+          not LinkButton: Next's Link scrolls to a hash without moving focus
+          to it, and moving focus is the whole point. It wears Button's chrome
+          from the shared source, on the tooltip layer so it beats everything.
         */}
         <a
           href="#main"
-          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[90] focus:rounded-ps-md focus:border focus:bg-ps-surface-panel focus:px-3 focus:py-2 focus:text-body focus:font-mono focus:text-ps-text-primary"
+          // The paint is the shared button's; the SIZE is focus-only, spelled
+          // literally because a `focus:` prefix cannot be composed at runtime
+          // (Tailwind compiles what it can read in the source). It mirrors
+          // buttonHeights.sm and buttonPadding.sm, and a test holds the two
+          // together. Unprefixed, they override sr-only's 1x1 clip and the
+          // hidden link becomes a 22x26 target on every route. The border goes
+          // the same way: sr-only zeroes border-width, and the chrome's own
+          // border puts it back, which is a 2x2 box (C6, T-0143).
+          className={`sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-tooltip focus:h-6.5 focus:px-2.5 focus:text-body focus:gap-1.5 border-0 focus:border ${buttonChrome({ variant: "secondary" })}`}
         >
           Skip to main content
         </a>
-        <QueryProvider>
         {/*
           One feedback surface for the whole shell: the toast stack and the
-          achievement-unlock toast live here, not on each page (T-0096, D122).
-          Inside QueryProvider because it reads the stats poll.
+          achievement-unlock toast live here, not on each page (T-0096, D122),
+          and the query client with them (C6).
         */}
         <FeedbackProvider>
         {/*
@@ -141,7 +150,6 @@ export default function RootLayout({
         </SidebarProvider>
         </HelpProvider>
         </FeedbackProvider>
-        </QueryProvider>
       </body>
     </html>
   );

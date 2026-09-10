@@ -332,7 +332,7 @@ export function InlineToggle({
           className={`absolute top-0.5 h-4 w-4 rounded-full transition-transform ${
             value
               ? `translate-x-4 ${colors.thumb}`
-              : "translate-x-0.5 bg-white/40"
+              : "translate-x-0.5 bg-ps-edge-emphasis"
           }`}
         />
       </span>

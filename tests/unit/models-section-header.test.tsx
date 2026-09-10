@@ -142,7 +142,10 @@ describe("ModelsSectionHeader", () => {
         title: "Agent Default",
       },
       {
-        file: "src/components/models/ModelsTaskDefaultsSection.tsx",
+        // Folded into its one reader (C6, T-0143): the Task Defaults section
+        // is a local function of the Models page now, and the page is the
+        // call site that imports the shared header.
+        file: "src/app/agent/models/page.tsx",
         title: "Task Defaults",
       },
     ] as const;

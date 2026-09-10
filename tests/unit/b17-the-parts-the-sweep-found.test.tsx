@@ -12,6 +12,9 @@
  *   questsInChapter(c)      -> chapter + 1        "counts the chapter it was asked about"
  *   questsMetInChapter      -> counts every quest  "a chapter counter is not a total"
  *   QuestTracker `=== null` -> `!== null`          "the first poll seeds and says nothing"
+ *     (the tracker is FeedbackProvider's own hook since C6, T-0143, and its
+ *     four cases live in b2-toasts-stack.test.tsx with the rest of the shell's
+ *     feedback)
  *   QuestBadge  hides at N/N -> never hides        "the badge gets out of the way when finished"
  *   NextQuestCard !completed -> true               "the card never offers finished work"
  *
@@ -26,9 +29,16 @@ import { render, screen } from "@testing-library/react";
 import React from "react";
 
 import NextQuestCard from "@/components/dashboard/NextQuestCard";
-import QuestBadge from "@/components/quests/QuestBadge";
-import QuestTracker from "@/components/quests/QuestTracker";
+import Sidebar from "@/components/layout/Sidebar";
+import { SidebarProvider } from "@/components/layout/SidebarContext";
 import type { QuestProgress, QuestState } from "@/lib/quests/evaluate";
+import { renderWithQuery } from "../helpers/render-with-query";
+
+// The badge is the rail's own since C6 (T-0143), so its cases mount the rail
+// on a desktop, where the Quests row carries it in full.
+jest.mock("next/navigation", () => ({ usePathname: () => "/" }));
+jest.mock("@/hooks/useFeatureFlags", () => ({ useFeatureFlags: () => ({ data: {} }) }));
+jest.mock("@/components/layout/RailFooter", () => ({ RailFooter: () => null }));
 import { QUEST_DEFS, questsInChapter, questsMetInChapter } from "@/lib/quests/quest-defs";
 import type { RawMetrics } from "@/lib/stats/derive";
 
@@ -37,11 +47,6 @@ import type { RawMetrics } from "@/lib/stats/derive";
 let statsValue: { quests?: QuestProgress } | undefined;
 jest.mock("@/hooks/useStats", () => ({
   useStats: () => ({ stats: statsValue }),
-}));
-
-const showToast = jest.fn();
-jest.mock("@/components/ui/Toast", () => ({
-  useToast: () => ({ showToast }),
 }));
 
 jest.mock("next/link", () => ({
@@ -88,7 +93,6 @@ const metrics = (over: Partial<RawMetrics> = {}): RawMetrics =>
 
 beforeEach(() => {
   statsValue = undefined;
-  showToast.mockClear();
 });
 
 // ═══════════════════════════════════════════════════════════════
@@ -131,74 +135,32 @@ describe("the chapter helpers count the chapter they were asked about", () => {
 });
 
 // ═══════════════════════════════════════════════════════════════
-// QuestTracker
-// ═══════════════════════════════════════════════════════════════
-
-describe("the tracker greets a completion, never a history", () => {
-  it("the first poll seeds and says nothing, however much is already done", () => {
-    statsValue = { quests: progress([quest({ id: "1.1", completed: true }), quest({ id: "1.2", completed: true })]) };
-    render(<QuestTracker />);
-    expect(showToast).not.toHaveBeenCalled();
-  });
-
-  it("toasts only what became complete after that", () => {
-    statsValue = { quests: progress([quest({ id: "1.1", completed: true }), quest({ id: "1.2" })]) };
-    const { rerender } = render(<QuestTracker />);
-    expect(showToast).not.toHaveBeenCalled();
-
-    statsValue = {
-      quests: progress([
-        quest({ id: "1.1", completed: true }),
-        quest({ id: "1.2", completed: true, title: "Dispatch a mission" }),
-      ]),
-    };
-    rerender(<QuestTracker />);
-
-    expect(showToast).toHaveBeenCalledTimes(1);
-    expect(showToast).toHaveBeenCalledWith(expect.stringContaining("Dispatch a mission"), "success");
-  });
-
-  it("says nothing on a seeding poll, which is the server's half of the same rule", () => {
-    statsValue = { quests: progress([quest({ id: "1.1" })]) };
-    const { rerender } = render(<QuestTracker />);
-
-    statsValue = { quests: { ...progress([quest({ id: "1.1", completed: true })]), seeding: true } };
-    rerender(<QuestTracker />);
-
-    expect(showToast).not.toHaveBeenCalled();
-  });
-
-  it("never congratulates the operator for a quest they skipped", () => {
-    statsValue = { quests: progress([quest({ id: "1.1" })]) };
-    const { rerender } = render(<QuestTracker />);
-
-    statsValue = { quests: progress([quest({ id: "1.1", completed: true, skipped: true })]) };
-    rerender(<QuestTracker />);
-
-    expect(showToast).not.toHaveBeenCalled();
-  });
-});
-
-// ═══════════════════════════════════════════════════════════════
 // QuestBadge
 // ═══════════════════════════════════════════════════════════════
 
 describe("the rail badge", () => {
+  const mountRail = () =>
+    renderWithQuery(
+      <SidebarProvider>
+        <Sidebar />
+      </SidebarProvider>,
+    );
+
   it("carries the count while there is one to carry", () => {
     statsValue = { quests: progress([quest({ id: "1.1", completed: true }), quest({ id: "1.2" })]) };
-    render(<QuestBadge />);
+    mountRail();
     expect(screen.getByTestId("quest-badge")).toHaveTextContent("1/2");
   });
 
   it("gets out of the way once every quest is done", () => {
     statsValue = { quests: progress([quest({ id: "1.1", completed: true })]) };
-    render(<QuestBadge />);
+    mountRail();
     expect(screen.queryByTestId("quest-badge")).not.toBeInTheDocument();
   });
 
   it("says nothing at all before the poll has answered", () => {
     statsValue = undefined;
-    render(<QuestBadge />);
+    mountRail();
     expect(screen.queryByTestId("quest-badge")).not.toBeInTheDocument();
   });
 });

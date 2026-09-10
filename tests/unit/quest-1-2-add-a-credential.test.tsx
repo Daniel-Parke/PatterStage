@@ -22,7 +22,8 @@
 // ═══════════════════════════════════════════════════════════════
 
 import "@testing-library/jest-dom";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { renderWithQuery } from "../helpers/render-with-query";
 import { jsonResponse } from "../helpers/fetch-map";
 
 import ModelsPage from "@/app/agent/models/page";
@@ -101,7 +102,7 @@ function credentialPosts(): Array<Record<string, unknown>> {
 
 async function renderLoaded(credentials: unknown[] = []) {
   setFetch(credentials);
-  const utils = render(<ModelsPage />);
+  const utils = renderWithQuery(<ModelsPage />);
   await waitFor(() => expect(screen.getByText(/No models yet/i)).toBeInTheDocument());
   return utils;
 }

@@ -19,10 +19,11 @@
  * each query by its width, the way the b2 drawer suite answers one.
  */
 
-import { render, waitFor, within } from "@testing-library/react";
+import { waitFor, within } from "@testing-library/react";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { matchMediaMock } from "../helpers/mocks";
+import { renderWithQuery } from "../helpers/render-with-query";
 
 jest.mock("next/navigation", () => ({ usePathname: () => "/" }));
 jest.mock("next/link", () => require("../helpers/mocks").nextLinkMock());
@@ -39,8 +40,7 @@ jest.mock("@/hooks/useStats", () => ({
 }));
 jest.mock("@/lib/api-fetch", () => ({ safeApiCall: jest.fn(async () => ({ ok: false, error: "offline" })) }));
 
-import Sidebar from "@/components/layout/Sidebar";
-import MobileHeader from "@/components/layout/MobileHeader";
+import Sidebar, { MobileHeader } from "@/components/layout/Sidebar";
 import { SidebarProvider } from "@/components/layout/SidebarContext";
 
 const ROOT = join(__dirname, "..", "..");
@@ -59,8 +59,10 @@ function mockViewport(width: number) {
   });
 }
 
+// Under a query client: the collapse preference is written through a
+// react-query mutation since C6 (T-0143).
 function mountShell(initialCollapsed = false) {
-  return render(
+  return renderWithQuery(
     <SidebarProvider>
       <MobileHeader />
       <Sidebar initialCollapsed={initialCollapsed} />
@@ -117,7 +119,9 @@ describe("U14 · the rail between 768 and 1024", () => {
     expect(read("src/hooks/useIsMobile.ts")).toMatch(/MOBILE_QUERY = "\(max-width: 767px\)"/);
     expect(read("src/hooks/useIsMobile.ts")).toMatch(/TABLET_QUERY = "\(min-width: 768px\) and \(max-width: 1023px\)"/);
 
-    const header = read("src/components/layout/MobileHeader.tsx");
+    // The mobile header lives in the rail's file since C6 (T-0143); the
+    // backdrop assertion below already reads the same file.
+    const header = read("src/components/layout/Sidebar.tsx");
     expect(header).toMatch(/\bmd:hidden\b/);
     expect(header).not.toMatch(/\blg:hidden\b/);
 

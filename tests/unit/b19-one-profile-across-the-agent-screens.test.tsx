@@ -60,6 +60,10 @@ const mockSafeApiCallData = jest.fn();
 jest.mock("@/lib/api-fetch", () => ({
   ...(jest.requireActual("@/lib/api-fetch") as Record<string, unknown>),
   apiFetch: (...a: unknown[]) => mockApiFetch(...a),
+  // The pages read through useApiResource, which calls safeApiCall; routed
+  // through the same mock so a read is still one of the paths asked for (C6, T-0143).
+   
+  safeApiCall: require("../helpers/mocks").safeApiCallOver((...a: unknown[]) => mockApiFetch(...a)),
   safeApiCallData: (...a: unknown[]) => mockSafeApiCallData(...a),
 }));
 
@@ -162,7 +166,7 @@ beforeEach(() => {
 
 describe("the choice made on one agent screen is the choice on the next", () => {
   it("carries from Tools to Skills", async () => {
-    const tools = render(<ToolsPage />);
+    const tools = render(withQuery(<ToolsPage />));
     await waitFor(() => expect(screen.getByText("Enabled toolsets")).toBeInTheDocument());
 
     fireEvent.change(picker(), { target: { value: "qa" } });
@@ -170,14 +174,14 @@ describe("the choice made on one agent screen is the choice on the next", () => 
     tools.unmount();
 
     mockApiFetch.mockClear();
-    render(<SkillsPage />);
+    render(withQuery(<SkillsPage />));
 
     await waitFor(() => expect(paths()).toContain("/api/skills?profile=qa"));
     expect(picker().value).toBe("qa");
   });
 
   it("carries from Skills to Agents", async () => {
-    const skills = render(<SkillsPage />);
+    const skills = render(withQuery(<SkillsPage />));
     await waitFor(() => expect(paths()).toContain("/api/skills?profile=default"));
 
     fireEvent.change(picker(), { target: { value: "qa" } });
@@ -199,19 +203,19 @@ describe("the choice made on one agent screen is the choice on the next", () => 
     agents.unmount();
 
     mockApiFetch.mockClear();
-    render(<ToolsPage />);
+    render(withQuery(<ToolsPage />));
 
     await waitFor(() => expect(paths()).toContain("/api/agent/profiles/qa/toolsets"));
     expect(picker().value).toBe("qa");
   });
 
   it("GREEN CONTROL: with no choice made, every screen starts on the root agent", async () => {
-    const tools = render(<ToolsPage />);
+    const tools = render(withQuery(<ToolsPage />));
     await waitFor(() => expect(paths()).toContain("/api/agent/profiles/default/toolsets"));
     expect(picker().value).toBe("default");
     tools.unmount();
 
-    render(<SkillsPage />);
+    render(withQuery(<SkillsPage />));
     await waitFor(() => expect(paths()).toContain("/api/skills?profile=default"));
     expect(picker().value).toBe("default");
   });

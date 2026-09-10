@@ -18,6 +18,7 @@
 
 import { AlertTriangle, ArrowUpRight } from "lucide-react";
 
+import Card from "@/components/ui/Card";
 import { useApiResource } from "@/hooks/useApiResource";
 import { AGENT_INSTALL_DOCS } from "@/lib/dashboard/first-run-steps";
 import type { MonitorData } from "@/types/console";
@@ -42,7 +43,7 @@ export default function AgentSetupNotice({ what }: { what: string }) {
   if (!data || data.available) return null;
 
   return (
-    <div className="mx-6 mt-4 flex items-start gap-3 rounded-ps-lg border border-neon-orange/40 bg-neon-orange/10 px-4 py-3">
+    <Card padding="sm" className="mx-6 mt-4 flex items-start gap-3">
       <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-neon-orange" />
       <div className="min-w-0 text-body">
         <p className="font-semibold text-neon-orange">{data.name} is not installed</p>
@@ -59,6 +60,6 @@ export default function AgentSetupNotice({ what }: { what: string }) {
           Install {data.name} <ArrowUpRight className="h-3 w-3" />
         </a>
       </div>
-    </div>
+    </Card>
   );
 }

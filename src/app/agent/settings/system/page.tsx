@@ -17,6 +17,8 @@ import { Copy, HardDrive, Settings, Archive, Download } from "lucide-react";
 
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
+import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { useToast } from "@/components/ui/Toast";
@@ -24,7 +26,7 @@ import { DeployControls } from "@/components/system/DeployControls";
 import { useApiResource } from "@/hooks/useApiResource";
 import { useVersionFooter } from "@/hooks/useVersionFooter";
 import { formatRuntimeStatus, type RuntimeStatus } from "@/lib/status/runtime-status-format";
-import { safeApiCall } from "@/lib/api-fetch";
+import { runWrite } from "@/lib/api-write";
 import type { BackupList } from "@/lib/db/backup-types";
 
 const onOff = (v: boolean) => (v ? "on" : "off");
@@ -35,15 +37,16 @@ function humanSize(bytes: number): string {
   return mb >= 1 ? `${mb.toFixed(1)} MB` : `${(bytes / 1024).toFixed(0)} KB`;
 }
 
-function Card({ icon: Icon, title, children }: { icon: typeof Settings; title: string; children: React.ReactNode }) {
+/** One of the page's three cards: a section, headed by its icon and title. */
+function SystemCard({ icon: Icon, title, children }: { icon: typeof Settings; title: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel p-5 space-y-4">
+    <Card as="section" padding="lg" className="space-y-4">
       <h2 className="flex items-center gap-2 text-body font-semibold text-ps-text-primary">
         <Icon className="w-4 h-4 text-neon-orange" />
         {title}
       </h2>
       {children}
-    </section>
+    </Card>
   );
 }
 
@@ -91,20 +94,20 @@ export default function SystemPage() {
   }, [backups.data?.restoreCommand, showToast]);
 
   // Taking a backup is not destructive, so it is one click, not a ConfirmButton.
+  const { refetch: refetchBackups } = backups;
   const backUpNow = useCallback(async () => {
-    setBackingUp(true);
-    try {
-      const res = await safeApiCall<{ data?: { backup?: { name?: string } } }>("/api/backup", { method: "POST" });
-      if (!res.ok) {
-        showToast(res.error ?? "Failed to take a database backup", "error");
-        return;
-      }
-      showToast(`Backed up to ${res.data?.data?.backup?.name ?? "the backups folder"}.`, "success");
-      await backups.refetch();
-    } finally {
-      setBackingUp(false);
-    }
-  }, [backups, showToast]);
+    await runWrite<{ data?: { backup?: { name?: string } } } | undefined>({
+      setBusy: setBackingUp,
+      showToast,
+      url: "/api/backup",
+      method: "POST",
+      successMessage: (res) => `Backed up to ${res?.data?.backup?.name ?? "the backups folder"}.`,
+      errorMessage: "Failed to take a database backup",
+      onSuccess: async () => {
+        await refetchBackups();
+      },
+    });
+  }, [refetchBackups, showToast]);
 
   const s = runtime.data;
   const readOnly = runtime.data?.readOnly === true;
@@ -117,7 +120,7 @@ export default function SystemPage() {
     >
       {toastElement}
       <div className="space-y-6">
-        <Card icon={HardDrive} title="This install">
+        <SystemCard icon={HardDrive} title="This install">
           {runtime.error ? (
             <LoadErrorBanner error={runtime.error} onRetry={() => void runtime.refetch()} className="mb-0" />
           ) : !s ? (
@@ -140,33 +143,30 @@ export default function SystemPage() {
                 <Row label="Node" value={s.node} />
                 <Row label="Platform" value={s.platform} />
               </dl>
-              <button
-                type="button"
-                onClick={() => void copy()}
-                className="flex items-center gap-2 px-3 py-2 rounded-ps-md bg-ps-surface-raised border border-ps-edge text-micro font-mono text-ps-text-secondary hover:bg-ps-surface-raised transition-colors"
-              >
-                <Copy className="w-3.5 h-3.5" />
+              <Button variant="secondary" size="sm" icon={Copy} onClick={() => void copy()}>
                 Copy for a bug report
-              </button>
+              </Button>
             </>
           )}
-        </Card>
+        </SystemCard>
 
-        <Card icon={Download} title="Updates">
+        <SystemCard icon={Download} title="Updates">
           <DeployControls state={deploy} />
-        </Card>
+        </SystemCard>
 
-        <Card icon={Archive} title="Backups">
+        <SystemCard icon={Archive} title="Backups">
           <div className="flex flex-wrap items-center gap-3">
-            <button
-              type="button"
+            <Button
+              variant="secondary"
+              color="orange"
+              size="sm"
+              icon={Archive}
+              loading={backingUp}
               onClick={() => void backUpNow()}
-              disabled={backingUp || readOnly}
-              className="flex items-center gap-2 px-3 py-2 rounded-ps-md bg-neon-orange/10 border border-neon-orange/20 text-micro font-mono text-neon-orange hover:bg-neon-orange/20 transition-colors disabled:opacity-50"
+              disabled={readOnly}
             >
-              <Archive className={`w-3.5 h-3.5 ${backingUp ? "animate-pulse" : ""}`} />
               {backingUp ? "Backing up…" : "Back up now"}
-            </button>
+            </Button>
             {readOnly && (
               <p className="text-micro font-mono text-semantic-warning">
                 Read-only is on, so a backup cannot be taken from here.
@@ -203,18 +203,13 @@ export default function SystemPage() {
                 <pre className="max-h-40 overflow-auto rounded-ps-md bg-ps-surface-inset px-3 py-2 text-micro font-mono text-ps-text-muted whitespace-pre-wrap break-words">
                   {backups.data.restoreCommand}
                 </pre>
-                <button
-                  type="button"
-                  onClick={() => void copyRestore()}
-                  className="flex items-center gap-2 px-3 py-2 rounded-ps-md bg-ps-surface-raised border border-ps-edge text-micro font-mono text-ps-text-secondary hover:bg-ps-surface-raised transition-colors"
-                >
-                  <Copy className="w-3.5 h-3.5" />
+                <Button variant="secondary" size="sm" icon={Copy} onClick={() => void copyRestore()}>
                   Copy the restore command
-                </button>
+                </Button>
               </>
             )}
           </div>
-        </Card>
+        </SystemCard>
       </div>
     </AppPageShell>
   );

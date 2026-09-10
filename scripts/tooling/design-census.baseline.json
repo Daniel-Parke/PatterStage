@@ -8,17 +8,17 @@
     "routes": 21,
     "distinctFontSizes": 7,
     "twelvePxShare": 0.5,
-    "monoShare": 0.67,
+    "monoShare": 0.68,
     "textBelowFloor": 0,
-    "distinctBorderColours": 28,
-    "distinctCardChromes": 63,
-    "distinctButtonHeights": 21,
-    "distinctButtonChromes": 56,
+    "distinctBorderColours": 24,
+    "distinctCardChromes": 54,
+    "distinctButtonHeights": 20,
+    "distinctButtonChromes": 45,
     "distinctRadii": 5,
-    "distinctBoxShadows": 10,
+    "distinctBoxShadows": 8,
     "distinctZLayers": 1,
-    "controlBordersBelowThree": 102,
-    "decorativeBordersBelowThree": 691,
+    "controlBordersBelowThree": 82,
+    "decorativeBordersBelowThree": 714,
     "hitTargetsBelowTwentyFour": 0,
     "routesWithMisalignedHeading": 0,
     "worstHeadingOffset": 0,
@@ -73,6 +73,14 @@
       "rose": [
         "monoShare rose from 0.63 to 0.68",
         "decorativeBordersBelowThree rose from 602 to 728"
+      ]
+    },
+    {
+      "when": "2026-09-10",
+      "reason": "C6 (T-0143): both rises are the primitives being adopted, not a screen getting worse. monoShare 0.67 to 0.68 because the shared Button and Badge are mono by decision 10 (a button label is a machine word) and 23 raw controls plus dozens of hand-drawn pills became them; the programme's 45% target is a type-register goal that the conversion batches move toward by replacing 12px mono elsewhere, not by unmaking this. decorativeBordersBelowThree 691 to 714 because Card's hairline rung is 1.63:1 on purpose, as this file's own note says: a card whose fill already sits 1.47:1 off the page does not also need a 3:1 stroke, so every inline chrome that became a Card adds one counted hairline. controlBordersBelowThree, the measure that is a target, did not rise.",
+      "rose": [
+        "monoShare rose from 0.67 to 0.68",
+        "decorativeBordersBelowThree rose from 691 to 714"
       ]
     }
   ]

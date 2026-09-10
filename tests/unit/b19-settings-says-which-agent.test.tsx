@@ -18,7 +18,8 @@
  * settings live.
  */
 
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
+import { renderWithQuery } from "../helpers/render-with-query";
 import type { ReactNode } from "react";
 
 const mockUseParams = jest.fn();
@@ -52,7 +53,12 @@ jest.mock("@/hooks/useConfig", () => ({ useConfig: () => mockUseConfig() }));
 
 const mockApiFetch = jest.fn();
 jest.mock("@/lib/api-fetch", () => ({
+  ...(jest.requireActual("@/lib/api-fetch") as Record<string, unknown>),
   apiFetch: (...args: unknown[]) => mockApiFetch(...args),
+  // The file sections read through useApiResource since C6 (T-0143), which
+  // calls safeApiCall; it answers from the same double.
+   
+  safeApiCall: require("../helpers/mocks").safeApiCallOver((...a: unknown[]) => mockApiFetch(...a)),
   setErrorFromCaught: jest.fn(),
 }));
 
@@ -82,7 +88,7 @@ function renderIndex(subject: string | null) {
     configError: null,
     subject,
   });
-  render(<SettingsIndexPage />);
+  renderWithQuery(<SettingsIndexPage />);
 }
 
 beforeEach(() => {

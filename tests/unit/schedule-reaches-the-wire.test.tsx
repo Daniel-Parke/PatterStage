@@ -36,10 +36,17 @@
 
 import { act, renderHook } from "@testing-library/react";
 import { fireEvent, render, screen } from "@testing-library/react";
+import { queryWrapper } from "../helpers/render-with-query";
 
 import SchedulePicker from "@/components/schedule/SchedulePicker";
 import { useMissionComposer } from "@/hooks/useMissionComposer";
 import { scheduleForDispatch, scheduleBlocksDispatch } from "@/lib/dispatch-mode";
+
+/**
+ * The composer's profile prune and default-model autofill read through
+ * useApiResource since C6 (T-0143), so the hook renders under a query
+ * client. Nothing answers the reads here: the schedule is what is under test.
+ */
 
 function openAdvanced(value: string) {
   fireEvent.click(screen.getByRole("button", { name: /Show advanced/i }));
@@ -48,7 +55,7 @@ function openAdvanced(value: string) {
 
 describe("a schedule typed into the picker reaches the dispatch payload", () => {
   it("carries a raw cron committed on blur", () => {
-    const { result } = renderHook(() => useMissionComposer({ showCreate: true, editingId: null }));
+    const { result } = renderHook(() => useMissionComposer({ showCreate: true, editingId: null }), { wrapper: queryWrapper() });
 
     // The picker, driven exactly as an operator drives it.
     const onChange = jest.fn((s: string) => act(() => result.current.setNewSchedule(s)));
@@ -65,7 +72,7 @@ describe("a schedule typed into the picker reaches the dispatch payload", () => 
   });
 
   it("carries a raw cron committed on Enter", () => {
-    const { result } = renderHook(() => useMissionComposer({ showCreate: true, editingId: null }));
+    const { result } = renderHook(() => useMissionComposer({ showCreate: true, editingId: null }), { wrapper: queryWrapper() });
     const onChange = jest.fn((s: string) => act(() => result.current.setNewSchedule(s)));
     render(<SchedulePicker value={result.current.newSchedule} onChange={onChange} onDraftError={jest.fn()} />);
     const input = openAdvanced("*/5 * * * *");
@@ -79,7 +86,7 @@ describe("a schedule typed into the picker reaches the dispatch payload", () => 
     // The precise thing the QA pass observed. It was caused by an invalid draft
     // reverting in silence, not by the field being dead, and the silence is
     // what T-0051 removed.
-    const { result } = renderHook(() => useMissionComposer({ showCreate: true, editingId: null }));
+    const { result } = renderHook(() => useMissionComposer({ showCreate: true, editingId: null }), { wrapper: queryWrapper() });
     const onChange = jest.fn((s: string) => act(() => result.current.setNewSchedule(s)));
     render(<SchedulePicker value={result.current.newSchedule} onChange={onChange} onDraftError={jest.fn()} />);
     const input = openAdvanced("*/5 * * * *");
@@ -90,7 +97,7 @@ describe("a schedule typed into the picker reaches the dispatch payload", () => 
   });
 
   it("sends no schedule at all when the mission is not scheduled", () => {
-    const { result } = renderHook(() => useMissionComposer({ showCreate: true, editingId: null }));
+    const { result } = renderHook(() => useMissionComposer({ showCreate: true, editingId: null }), { wrapper: queryWrapper() });
     act(() => result.current.setNewSchedule("5 1 * * *"));
     // A schedule on a `now` dispatch would be a cadence nobody asked for.
     expect(result.current.dispatchPayload({ dispatchMode: "now" }).schedule).toBeUndefined();
@@ -104,7 +111,7 @@ describe("a schedule typed into the picker reaches the dispatch payload", () => 
     // `dispatchPayload({ dispatchMode: "now" })`, so re-running a completed
     // mission with the form left in cron mode sent `dispatchMode: "now"` AND a
     // cron: a one-off that quietly asks to become recurring.
-    const { result } = renderHook(() => useMissionComposer({ showCreate: true, editingId: null }));
+    const { result } = renderHook(() => useMissionComposer({ showCreate: true, editingId: null }), { wrapper: queryWrapper() });
     act(() => {
       result.current.setNewDispatch("cron");
       result.current.setNewSchedule("5 1 * * *");
@@ -114,7 +121,6 @@ describe("a schedule typed into the picker reaches the dispatch payload", () => 
   });
 
 });
-
 
 // ── The seam this file is named after, finally rendered ─────────
 //
@@ -144,7 +150,6 @@ describe("the click that submits the mission", () => {
       });
     }) as unknown as typeof fetch;
   });
-
 
   it("reports an unusable draft to the parent as soon as it is typed", () => {
     // Reported on CHANGE, not on blur. jsdom does not move focus on click, and

@@ -109,7 +109,9 @@ describe("an icon-only button has an accessible name", () => {
     // THE floor that matters. The two above only prove the walk ran. Break
     // rendersText so every button reads as text-bearing and the offender list
     // empties while both of those stay green; only this one goes red.
-    expect(counts.iconOnlySeen).toBeGreaterThan(40);
+    // 40 until C6 (T-0143): the page layer's raw icon-only buttons went onto
+    // IconButton, and 31 raw ones remain. Still far above a dead classifier's zero.
+    expect(counts.iconOnlySeen).toBeGreaterThan(20);
   });
 
   it("names every icon-only button", () => {

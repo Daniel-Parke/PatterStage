@@ -173,7 +173,9 @@ describe("the Active days tile follows the range", () => {
 
   it("shows the 7d bundle's activeDays after the 7d button, and asks useInsights for 7", () => {
     render(<InsightsPage />);
-    fireEvent.click(screen.getByRole("button", { name: "7d" }));
+    // The range switch is a SegmentedControl since C6 (T-0143): one named
+    // radiogroup, so each option answers as a radio.
+    fireEvent.click(screen.getByRole("radio", { name: "7d" }));
     expect(mockUseInsights).toHaveBeenCalledWith(7);
     expect(tileValue(/active days \(7d\)/i)).toBe("4");
   });

@@ -75,7 +75,7 @@ export default function SessionCard({ session }: { session: SessionRecord }) {
       </h3>
 
       {isFailed && (
-        <span title={failureTitle} className="relative z-10 shrink-0">
+        <span title={failureTitle} className="relative z-sticky shrink-0">
           <Badge color="red">
             {session.exitCode !== null && session.exitCode !== undefined
               ? `${SESSION_STATUS_LABELS.failed} · exit ${session.exitCode}`
@@ -86,7 +86,7 @@ export default function SessionCard({ session }: { session: SessionRecord }) {
       {session.missionId && (
         <Link
           href={`${MISSIONS_PATH}?mission=${session.missionId}`}
-          className="relative z-10 shrink-0"
+          className="relative z-sticky shrink-0"
           title="Open parent mission"
         >
           <Badge color="green">mission</Badge>

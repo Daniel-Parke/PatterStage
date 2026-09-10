@@ -17,7 +17,6 @@
  *     AUTH_HEADER should yield a 401, not a 400).
  */
 
-
 import { NextRequest } from "next/server";
 
 jest.mock("@/lib/api-logger", () => ({

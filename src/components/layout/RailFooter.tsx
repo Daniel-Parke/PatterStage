@@ -20,6 +20,7 @@
 import Link from "next/link";
 import { ArrowUpCircle } from "lucide-react";
 
+import Badge from "@/components/ui/Badge";
 import { useApiResource } from "@/hooks/useApiResource";
 
 interface RuntimeSlice {
@@ -61,9 +62,13 @@ export function RailFooter({ collapsed }: { collapsed: boolean }) {
       href="/agent/settings/system"
       aria-label="Update available"
       title={`Update available: ${behind} commit${behind === 1 ? "" : "s"} behind. Open System to install it.`}
-      className="flex items-center rounded-ps-md bg-orange-500/10 border border-orange-500/20 p-1 text-neon-orange hover:bg-orange-500/20 transition-colors"
+      className="flex items-center min-h-6"
     >
-      <ArrowUpCircle className="w-3.5 h-3.5 flex-shrink-0" />
+      {/* A badge, on the rail's attention accent (the quest count wears the
+          same orange), not a card: it is a chip beside the version line. */}
+      <Badge color="orange" variant="outline" className="p-1 hover:bg-neon-orange/10 transition-colors">
+        <ArrowUpCircle className="w-3.5 h-3.5 flex-shrink-0" />
+      </Badge>
     </Link>
   ) : null;
 

@@ -261,7 +261,11 @@ export function formatSummary(c) {
  * the verdict. A gate that reports and does not fail the build is decoration.
  */
 /** The exit code and the text to print, plus `ok` for a caller that reads the decision rather than the code. */
-export function verdict(counts, floors = { files: 150, controls: 40 }) {
+// The controls floor was 40 until C6 (T-0143) moved the page layer's raw inputs,
+// selects and textareas onto the field kit, which names its control through
+// Field by construction; 27 raw ones remain. Fifteen is still far above what a
+// matcher that stopped matching reads.
+export function verdict(counts, floors = { files: 150, controls: 15 }) {
   const v = verdictCore(counts, floors);
   return { ...v, ok: v.code === 0 };
 }

@@ -10,6 +10,7 @@ import Donut, { type DonutSegment } from "./Donut";
 import ProgressRing from "./ProgressRing";
 import { neon, neonAlpha, type NeonColor } from "./colors";
 import { useCountUp } from "@/hooks/useCountUp";
+import Card from "@/components/ui/Card";
 
 export interface StatTileSpec {
   icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
@@ -32,27 +33,28 @@ function compactNum(n: number): string {
 function Tile({ icon: Icon, label, value, color, suffix, compact, hint }: StatTileSpec) {
   const n = useCountUp(value);
   return (
-    <div
-      className="rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-raised px-3 py-2"
-      style={{ boxShadow: `inset 0 0 16px ${neonAlpha(color, 5)}` }}
-      title={hint}
-      // A stat tile is a CLAIM about the list beneath it, and that claim has
-      // been wrong twice (T-0037 on skills, T-0042 on sessions) and painted as
-      // a literal 0 on first frame once (T-0035). These two hooks let a test
-      // read the rendered number rather than the props behind it, which is the
-      // only reading that catches all three.
-      data-testid="stat-tile"
-      data-stat-label={label}
-    >
-      <div className="flex items-center gap-1.5">
-        <Icon className="h-3 w-3" style={{ color: neon(color) }} />
-        <span className="text-micro uppercase tracking-wider text-ps-text-muted">{label}</span>
+    // A stat tile is a CLAIM about the list beneath it, and that claim has
+    // been wrong twice (T-0037 on skills, T-0042 on sessions) and painted as
+    // a literal 0 on first frame once (T-0035). The test id and the label let
+    // a test read the rendered number rather than the props behind it, which
+    // is the only reading that catches all three.
+    <Card variant="raised" padding="none" data-testid="stat-tile">
+      <div
+        className="rounded-ps-lg px-3 py-2"
+        style={{ boxShadow: `inset 0 0 16px ${neonAlpha(color, 5)}` }}
+        title={hint}
+        data-stat-label={label}
+      >
+        <div className="flex items-center gap-1.5">
+          <Icon className="h-3 w-3" style={{ color: neon(color) }} />
+          <span className="text-micro uppercase tracking-wider text-ps-text-muted">{label}</span>
+        </div>
+        <div className="mt-0.5 font-mono text-title font-bold leading-none text-ps-text-primary">
+          {compact ? compactNum(n) : Math.round(n).toLocaleString()}
+          {suffix && <span className="ml-0.5 text-body font-normal text-ps-text-muted">{suffix}</span>}
+        </div>
       </div>
-      <div className="mt-0.5 font-mono text-title font-bold leading-none text-ps-text-primary">
-        {compact ? compactNum(n) : Math.round(n).toLocaleString()}
-        {suffix && <span className="ml-0.5 text-body font-normal text-ps-text-muted">{suffix}</span>}
-      </div>
-    </div>
+    </Card>
   );
 }
 
@@ -82,9 +84,7 @@ export default function StatStrip({
           ? "sm:grid-cols-[1fr_auto]"
           : "";
   return (
-    <div
-      className={`animate-float-in grid grid-cols-1 items-center gap-5 rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel p-4 ${layout} ${className}`}
-    >
+    <Card className={`animate-float-in grid grid-cols-1 items-center gap-5 ${layout} ${className}`}>
       {/* A phone gets one row of the numbers and none of the pictures: on
           /results/sessions at 390 the donut, the tile and the ring stacked to
           350px before the search field (the review of 2026-09-08, T-0133).
@@ -159,6 +159,6 @@ export default function StatStrip({
           <ProgressRing value={ring.value} color={ring.color} size={84} thickness={8} label={ring.label} sublabel={ring.sublabel} />
         </div>
       )}
-    </div>
+    </Card>
   );
 }

@@ -8,6 +8,8 @@ import { useState, useCallback } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { AUXILIARY_TASK_TYPES, type TaskType } from "@/lib/models/task-types";
 import { pluralise } from "@/lib/utils";
+import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
 import ModelSelectDropdown from "@/components/models/ModelSelectDropdown";
 
 interface BulkAuxiliaryUpdaterProps {
@@ -54,7 +56,9 @@ export default function BulkAuxiliaryUpdater({
   }, [applying, mode, selected, targetModelId, onChange]);
 
   return (
-    <div className="rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel overflow-hidden">
+    // Raised: this sits inside the Agent Default card, and the panel rung on
+    // the panel rung read as a rule rather than a surface (T-0122).
+    <Card variant="raised" padding="none" className="overflow-hidden">
       {/* Collapsed header */}
       <button
         type="button"
@@ -147,16 +151,17 @@ export default function BulkAuxiliaryUpdater({
           )}
 
           {/* Apply button */}
-          <button
-            type="button"
+          <Button
+            variant="primary"
+            color="purple"
+            className="w-full"
             onClick={() => void handleApply()}
             disabled={disabled || applying || !targetModelId}
-            className="w-full h-9 bg-neon-purple/10 border border-neon-purple/30 text-neon-purple text-micro font-mono rounded-ps-md hover:bg-neon-purple/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {applying ? "Applying…" : `Apply to ${selected.size} slot${pluralise(selected.size)}`}
-          </button>
+          </Button>
         </div>
       )}
-    </div>
+    </Card>
   );
 }

@@ -35,6 +35,7 @@
 
 import React, { useState } from "react";
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { renderWithQuery } from "../helpers/render-with-query";
 
 import { NumberInput } from "@/components/ui/Input";
 import ConfigField from "@/components/config/ConfigField";
@@ -52,7 +53,12 @@ jest.mock("next/navigation", () => ({
 
 const mockApiFetch = jest.fn();
 jest.mock("@/lib/api-fetch", () => ({
+  ...(jest.requireActual("@/lib/api-fetch") as Record<string, unknown>),
   apiFetch: (...args: unknown[]) => mockApiFetch(...args),
+  // The file sections read through useApiResource since C6 (T-0143), which
+  // calls safeApiCall; it answers from the same double.
+   
+  safeApiCall: require("../helpers/mocks").safeApiCallOver((...a: unknown[]) => mockApiFetch(...a)),
   setErrorFromCaught: (setError: (m: string) => void, err: unknown, fallback: string) => {
     const msg = err instanceof Error ? err.message : fallback;
     setError(msg);
@@ -446,7 +452,7 @@ async function renderAgentPage(agent: Record<string, unknown>) {
     if (path === "/api/config" && init?.method === "PUT") return { data: { success: true } };
     return { data: { content: "" } };
   });
-  render(<SettingsPage />);
+  renderWithQuery(<SettingsPage />);
   await screen.findByTestId("settings-section-agent");
 }
 

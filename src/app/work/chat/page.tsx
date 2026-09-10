@@ -5,27 +5,131 @@
 // "Agent" mode a turn is a real run (tools + memory) streamed from the
 // run-event SSE; in "Fast" mode it's a raw model reply. The stateful core
 // lives in useChatPage; this file is the render shell.
+//
+// The three pieces of chrome this screen alone draws live here (C6,
+// T-0143): the mode toggle in the header, the approval prompt above the
+// composer, and the typing indicator in the transcript. Each was a file of
+// its own with one importer, which is a seam with nothing on the other side.
 // ═══════════════════════════════════════════════════════════════
 
 "use client";
 
 import { useEffect } from "react";
-import { MessageCircle, Send, Plus, X, Download, Square, Check } from "lucide-react";
+import { MessageCircle, Send, Plus, X, Download, Square, Check, ShieldQuestion, Bot, Zap } from "lucide-react";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
 import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
+import IconButton from "@/components/ui/IconButton";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import SplitPane from "@/components/ui/SplitPane";
+import { inputFieldClasses } from "@/lib/theme";
 import { timeAgo } from "@/lib/utils";
-import TypingIndicator from "@/components/chat/TypingIndicator";
 import GatewayBanner from "@/components/chat/GatewayBanner";
+import MessageAvatar from "@/components/chat/MessageAvatar";
 import MessageBubble from "@/components/chat/MessageBubble";
 import { ChatModelSelector } from "@/components/chat/ChatModelSelector";
-import { ChatModeToggle } from "@/components/chat/ChatModeToggle";
-import ApprovalPrompt from "@/components/chat/ApprovalPrompt";
 import ConceptHint from "@/components/help/ConceptHint";
 import { useChatPage } from "@/hooks/useChatPage";
 import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
+import type { ChatMode } from "@/types/chat";
+
+// ── The mode toggle ────────────────────────────────────────────
+//   Agent → a real run (tools + memory, streamed run events).
+//   Fast  → a raw model completion (no tools), straight from the gateway.
+//
+// Two Buttons, not a SegmentedControl: the toggle is disabled while a turn
+// streams, and the radiogroup primitive carries no disabled state.
+
+const MODES: { value: ChatMode; label: string; Icon: typeof Bot; title: string }[] = [
+  { value: "agent", label: "Agent", Icon: Bot, title: "Tools + memory, via a real agent run" },
+  { value: "fast", label: "Fast", Icon: Zap, title: "Raw model reply, no tools" },
+];
+
+function ChatModeToggle({
+  mode,
+  onChange,
+  disabled,
+}: {
+  mode: ChatMode;
+  onChange: (mode: ChatMode) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <div className="flex items-center gap-1">
+      {MODES.map((m) => {
+        const active = m.value === mode;
+        return (
+          <Button
+            key={m.value}
+            variant={active ? "primary" : "ghost"}
+            color="cyan"
+            size="sm"
+            icon={m.Icon}
+            aria-pressed={active}
+            onClick={() => onChange(m.value)}
+            disabled={disabled}
+            title={m.title}
+          >
+            {m.label}
+          </Button>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── The approval prompt ────────────────────────────────────────
+// HITL gate for a tool the agent wants to run. Shown above the composer when
+// a run emits an approval-required event; Approve/Deny forwards to
+// runtime.resolveApproval via the chat API.
+
+function ApprovalPrompt({
+  toolName,
+  onApprove,
+  onDeny,
+}: {
+  toolName: string;
+  onApprove: () => void;
+  onDeny: () => void;
+}) {
+  return (
+    <Card variant="raised" glow="yellow" padding="none" className="mb-3 flex flex-wrap items-center gap-3 px-4 py-2.5">
+      <ShieldQuestion className="h-4 w-4 text-neon-yellow shrink-0" />
+      <span className="text-body text-ps-text-secondary">
+        The agent wants to run <span className="font-mono text-neon-yellow">{toolName}</span>. Allow it?
+      </span>
+      <div className="ml-auto flex items-center gap-2">
+        <Button variant="secondary" size="sm" onClick={onDeny}>
+          Deny
+        </Button>
+        <Button variant="primary" color="green" size="sm" onClick={onApprove}>
+          Approve
+        </Button>
+      </div>
+    </Card>
+  );
+}
+
+// ── The typing indicator ───────────────────────────────────────
+// The avatar is the same chip MessageBubble draws (MessageAvatar), so the two
+// cannot drift. The three-dot bounce is an in-flight indicator rendered
+// outside the messages map, not a message.
+
+function TypingIndicator() {
+  return (
+    <div className="flex gap-3 justify-start">
+      <MessageAvatar role="assistant" />
+      <Card variant="raised" padding="none" className="max-w-[70%] px-4 py-3">
+        <div className="flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 bg-ps-text-faint rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+          <span className="w-1.5 h-1.5 bg-ps-text-faint rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+          <span className="w-1.5 h-1.5 bg-ps-text-faint rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+        </div>
+      </Card>
+    </div>
+  );
+}
 
 export default function ChatPage() {
   const {
@@ -177,14 +281,17 @@ export default function ChatPage() {
                         {/* focus-within as well as hover: gated on hover alone,
                             the CSV option was unreachable by keyboard and by
                             touch — you could Tab to the JSON button and the
-                            second format never appeared (D52). */}
-                        <div className="absolute right-0 top-full mt-0.5 hidden group-hover/download:block group-focus-within/download:block z-50">
-                          <button
+                            second format never appeared (D52). A dropdown's
+                            rung, because that is what it is. */}
+                        <div className="absolute right-0 top-full mt-0.5 hidden group-hover/download:block group-focus-within/download:block z-dropdown">
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            className="whitespace-nowrap shadow-lg"
                             onClick={(e) => void handleDownloadConversation(c, "csv", e)}
-                            className="whitespace-nowrap text-micro font-mono px-2 py-1 rounded-ps-sm bg-ps-surface-panel border border-ps-edge text-ps-text-secondary hover:text-ps-text-primary hover:bg-ps-surface-raised transition-colors shadow-lg"
                           >
                             as CSV
-                          </button>
+                          </Button>
                         </div>
                       </div>
                       <button
@@ -246,9 +353,9 @@ export default function ChatPage() {
                 />
               ) : messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-center py-24">
-                  <div className="w-16 h-16 rounded-ps-lg bg-ps-surface-raised border border-ps-edge-hairline flex items-center justify-center mb-4">
+                  <Card variant="raised" padding="none" className="w-16 h-16 flex items-center justify-center mb-4">
                     <MessageCircle className="w-8 h-8 text-ps-text-muted" />
-                  </div>
+                  </Card>
                   {/* h2, not h3. PageHeader renders the page's only h1, and this
                       empty-state title is the next level down — a jump to h3
                       tells a screen-reader user there is a section they missed
@@ -295,6 +402,7 @@ export default function ChatPage() {
                 />
               )}
               <div className="flex items-end gap-2">
+                {/* design-lint-disable-next-line no-raw-control-outside-ui -- the hook focuses this box through inputRef after a send and a new chat, and the field kit's Textarea forwards no ref; the day it does, this is a Textarea */}
                 <textarea aria-label="Message"
                   ref={inputRef}
                   value={input}
@@ -312,7 +420,8 @@ export default function ChatPage() {
                         : "Type a message… (Enter to send, Shift+Enter for newline)"
                   }
                   rows={1}
-                  className="flex-1 bg-ps-surface-raised border border-ps-edge rounded-ps-md px-4 py-2.5 text-body text-ps-text-primary placeholder-ps-text-muted transition-colors font-mono resize-none"
+                  // The kit's own chrome, from the one place it is spelled.
+                  className={`${inputFieldClasses("cyan")} flex-1 resize-none`}
                   style={{ minHeight: "42px", maxHeight: "120px" }}
                   onInput={(e) => {
                     const ta = e.target as HTMLTextAreaElement;
@@ -320,18 +429,15 @@ export default function ChatPage() {
                     ta.style.height = Math.min(ta.scrollHeight, 120) + "px";
                   }}
                 />
-                <button
+                <IconButton
+                  icon={isStreaming ? Square : Send}
+                  label={isStreaming ? "Stop" : "Send"}
+                  variant="primary"
+                  color={isStreaming ? "red" : "cyan"}
+                  size="lg"
                   onClick={isStreaming ? () => void handleStop() : () => void handleSend()}
                   disabled={(!input.trim() && !isStreaming) || gatewayOffline}
-                  className={`w-9 h-9 flex items-center justify-center rounded-ps-md border transition-colors ${
-                    isStreaming
-                      ? "bg-neon-red/20 border-neon-red/30 text-neon-red hover:bg-neon-red/30"
-                      : "bg-neon-cyan/20 border-neon-cyan/30 text-neon-cyan hover:bg-neon-cyan/30 disabled:opacity-30 disabled:cursor-not-allowed"
-                  }`}
-                  title={isStreaming ? "Stop" : "Send"}
-                >
-                  {isStreaming ? <Square className="w-4 h-4 fill-current" /> : <Send className="w-4 h-4" />}
-                </button>
+                />
               </div>
             </div>
       </SplitPane>

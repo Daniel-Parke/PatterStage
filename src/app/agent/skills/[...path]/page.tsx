@@ -5,7 +5,7 @@
 "use client";
 
 import { sectionHeadingClasses } from "@/lib/theme";
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -14,9 +14,10 @@ import {
 } from "lucide-react";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
+import Card from "@/components/ui/Card";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { SimpleMarkdown } from "@/components/skills/SimpleMarkdown";
-import { apiFetch, setErrorFromCaught } from "@/lib/api-fetch";
+import { useApiResource } from "@/hooks/useApiResource";
 
 /**
  * What the viewer renders.
@@ -56,32 +57,18 @@ export default function SkillDetailPage() {
     pathSegments.length === 0 ||
     pathSegments.some((seg) => seg.length === 0 || seg.includes("/"));
   const skillPath = hasMalformedPath ? "" : pathSegments.join("/");
-  const [data, setData] = useState<SkillData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [showRaw, setShowRaw] = useState(false);
 
-  const loadSkill = useCallback(async () => {
-    if (hasMalformedPath) {
-      setError("Invalid skill path. Use the skills list to navigate.");
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      const json = await apiFetch(`/api/skills/${skillPath}`);
-      setData(json.data || json);
-    } catch (err) {
-      setErrorFromCaught(setError, err, "Unknown error");
-    } finally {
-      setLoading(false);
-    }
-  }, [hasMalformedPath, skillPath]);
-
-  useEffect(() => {
-    loadSkill();
-  }, [loadSkill]);
+  // A malformed path is never asked for: the read is disabled and the page
+  // says why below, rather than sending a URL with a slash in it to the API.
+  const skill = useApiResource<SkillData>(`/api/skills/${skillPath}`, {
+    select: (payload) => payload as SkillData | undefined,
+    errorMessage: "Unknown error",
+    enabled: !hasMalformedPath,
+  });
+  const data = skill.data;
+  const loading = !hasMalformedPath && !skill.settled;
+  const error = hasMalformedPath ? "Invalid skill path. Use the skills list to navigate." : skill.error;
 
   if (loading) {
     return (
@@ -145,7 +132,7 @@ export default function SkillDetailPage() {
         <div className="flex gap-6">
           {/* Main content */}
           <div className="flex-1 min-w-0">
-            <div className="rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel p-6">
+            <Card padding="lg">
               {showRaw ? (
                 <pre className="text-body font-mono text-ps-text-secondary whitespace-pre-wrap break-words">
                   {data.rawContent ?? data.content}
@@ -153,14 +140,14 @@ export default function SkillDetailPage() {
               ) : (
                 <SimpleMarkdown content={data.content} />
               )}
-            </div>
+            </Card>
           </div>
 
           {/* Sidebar */}
           <div className="w-56 flex-shrink-0 hidden lg:block space-y-4">
             {/* Frontmatter */}
             {Object.keys(frontmatter).length > 0 && (
-              <div className="rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel p-4">
+              <Card>
                 <h3 className={sectionHeadingClasses}>
                   Metadata
                 </h3>
@@ -176,12 +163,12 @@ export default function SkillDetailPage() {
                     </div>
                   ))}
                 </div>
-              </div>
+              </Card>
             )}
 
             {/* Linked files */}
             {linkedFiles.length > 0 && (
-              <div className="rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel p-4">
+              <Card>
                 <h3 className={sectionHeadingClasses}>
                   Linked Files
                 </h3>
@@ -201,7 +188,7 @@ export default function SkillDetailPage() {
                     </div>
                   ))}
                 </div>
-              </div>
+              </Card>
             )}
           </div>
         </div>

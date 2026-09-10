@@ -21,6 +21,7 @@ export default function ChapterList({ chapters, currentChapter, onSelect }: {
         const isCurrent = ch.number === currentChapter;
         const tone = chapterTone(ch);
         return (
+          // design-lint-disable-next-line no-raw-control-outside-ui -- a two-line list row with a status dot and a trailing check; Button is a single-line control at one of three fixed heights, and no primitive draws a row
           <button key={ch.number} type="button" onClick={() => canRead && onSelect(ch.number)}
             disabled={!canRead}
             aria-current={isCurrent ? "true" : undefined}

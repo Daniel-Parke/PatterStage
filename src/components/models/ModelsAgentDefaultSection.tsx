@@ -2,7 +2,7 @@
 
 import { CheckCircle2, Star } from "lucide-react";
 
-import GlowSurface from "@/components/ui/GlowSurface";
+import Card from "@/components/ui/Card";
 import { Select } from "@/components/ui/field";
 import BulkAuxiliaryUpdater from "@/components/models/BulkAuxiliaryUpdater";
 import ModelsSectionHeader from "@/components/models/ModelsSectionHeader";
@@ -61,8 +61,7 @@ export default function ModelsAgentDefaultSection({
     <section data-section="agent-default" className="space-y-4">
       <ModelsSectionHeader icon={Star} title="Agent Default" color="orange" />
 
-      <GlowSurface accent="orange">
-        <div className="rounded-ps-lg border border-neon-orange/20 bg-ps-surface-panel p-6">
+      <Card glow="orange" padding="lg">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <BulkAuxiliaryUpdater
               models={modelOptions}
@@ -103,7 +102,7 @@ export default function ModelsAgentDefaultSection({
                         so a drifted install stamped Active on gpt-4o while the
                         agent answered on MiniMax-M3. */}
                     {slotIsRunning && (
-                      <span className="inline-flex items-center gap-1 text-green-400 text-micro font-mono">
+                      <span className="inline-flex items-center gap-1 text-status-ok text-micro font-mono">
                         <CheckCircle2 className="w-3.5 h-3.5" /> Active
                       </span>
                     )}
@@ -143,8 +142,7 @@ export default function ModelsAgentDefaultSection({
               </div>
             </div>
           </div>
-        </div>
-      </GlowSurface>
+      </Card>
     </section>
   );
 }

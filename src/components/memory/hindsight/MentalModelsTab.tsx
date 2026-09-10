@@ -5,6 +5,7 @@
 import { Settings, Plus, Zap, RefreshCw, Clock } from "lucide-react";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { pluralise, timeAgo } from "@/lib/utils";
@@ -64,10 +65,7 @@ export default function MentalModelsTab({
       ) : (
         <div className="space-y-3">
           {models.map((m) => (
-            <div
-              key={m.id}
-              className="rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel p-4 hover:border-pink-500/20 transition-colors"
-            >
+            <Card key={m.id} className="transition-colors hover:border-neon-pink/20">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
@@ -101,12 +99,12 @@ export default function MentalModelsTab({
                     className="p-1.5 rounded-ps-md hover:bg-ps-surface-raised text-ps-text-muted hover:text-ps-text-secondary transition-colors disabled:opacity-30"
                     title="Refresh (re-run reflect)"
                   >
-                    <Zap className={`w-4 h-4 ${refreshingModelId === m.id ? "animate-pulse text-yellow-400" : ""}`} />
+                    <Zap className={`w-4 h-4 ${refreshingModelId === m.id ? "animate-pulse text-status-running" : ""}`} />
                   </button>
                   <RowDeleteButton onClick={() => onDelete(m.id)} label={m.name} />
                 </div>
               </div>
-            </div>
+            </Card>
           ))}
         </div>
       )}

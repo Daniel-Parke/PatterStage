@@ -37,13 +37,22 @@ export function InlineSelect({
   className = "",
   disabled = false,
   ariaLabel,
-}: Omit<SelectProps, "label" | "description">) {
+  id,
+  title,
+}: Omit<SelectProps, "label" | "description"> & {
+  /** The id a visible label or a test finds the control by. */
+  id?: string;
+  /** Long copy the control speaks through its tooltip. */
+  title?: string;
+}) {
   const focusClass = focusColorMap[accentColor];
 
   return (
     <div className={`relative ${className}`}>
       <select
         aria-label={ariaLabel}
+        id={id}
+        title={title}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}

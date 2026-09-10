@@ -10,7 +10,8 @@
  * `linkedFiles` walked through every other case.
  */
 
-import { render, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
+import { renderWithQuery as render } from "../helpers/render-with-query";
 
 jest.mock("next/navigation", () => ({
   usePathname: () => "/agent/skills/writing",
@@ -24,6 +25,9 @@ const mockApiFetch = jest.fn();
 jest.mock("@/lib/api-fetch", () => ({
   ...(jest.requireActual("@/lib/api-fetch") as Record<string, unknown>),
   apiFetch: (...a: unknown[]) => mockApiFetch(...a),
+  // The page reads through useApiResource, which calls safeApiCall (C6, T-0143).
+   
+  safeApiCall: require("../helpers/mocks").safeApiCallOver((...a: unknown[]) => mockApiFetch(...a)),
 }));
 
 import SkillDetailPage from "@/app/agent/skills/[...path]/page";

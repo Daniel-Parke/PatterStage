@@ -27,9 +27,11 @@ import PageLoading from "@/components/ui/PageLoading";
 import SegmentedControl from "@/components/ui/SegmentedControl";
 import { InlineSelect } from "@/components/ui/Select";
 import { Field, Input, Textarea } from "@/components/ui/field";
+import { useToast } from "@/components/ui/Toast";
 import { useApiResource } from "@/hooks/useApiResource";
 import { useModelDefaults, useModels } from "@/hooks/useModels";
-import { safeApiCall } from "@/lib/api-fetch";
+import { messageFromError } from "@/lib/api-fetch";
+import { runWrite } from "@/lib/api-write";
 import { sectionHeadingClasses } from "@/lib/theme";
 import CharacterCard from "@/modules/rec-room/components/CharacterCard";
 import CharacterEditorDialog, { type SheetValues } from "@/modules/rec-room/components/CharacterEditorDialog";
@@ -105,8 +107,9 @@ function CreateStoryPage() {
   const [genDone, setGenDone] = useState(false);
   const [genStoryId, setGenStoryId] = useState<string | null>(null);
   const [genError, setGenError] = useState<string | null>(null);
-  /** A failed write on this page (a delete, a save), never swallowed. */
-  const [writeError, setWriteError] = useState<string | null>(null);
+  // A failed write on this page (a delete, a save) is never swallowed: every
+  // one goes through runWrite, which says the server's reason (C6, T-0143).
+  const { showToast, toastElement } = useToast();
 
   const [title, setTitle] = useState("");
   const [titleManuallyEdited, setTitleManuallyEdited] = useState(false);
@@ -288,8 +291,9 @@ function CreateStoryPage() {
     if (!char.name.trim() || !char.description.trim()) return;
     // The gate used to read `d.data.id`; the handler answers `{data:{character}}`,
     // so the save always worked and nothing on screen ever said so (T-0108, D94).
-    const res = await safeApiCall("/api/stories", {
-      method: "POST",
+    await runWrite({
+      showToast,
+      url: "/api/stories",
       body: {
         action: "characters",
         subAction: "create",
@@ -303,24 +307,23 @@ function CreateStoryPage() {
         relationships: char.relationships || "",
         tags: [],
       },
+      successMessage: `${char.name} saved to the library`,
+      errorMessage: "Could not save that character",
+      onSuccess: async () => {
+        const idx = characters.indexOf(char);
+        setSavedChars((prev) => ({ ...prev, [idx]: true }));
+        setTimeout(
+          () =>
+            setSavedChars((prev) => {
+              const n = { ...prev };
+              delete n[idx];
+              return n;
+            }),
+          2000,
+        );
+        await charactersRead.refetch();
+      },
     });
-    if (!res.ok) {
-      setWriteError(res.error ?? "Could not save that character");
-      return;
-    }
-    setWriteError(null);
-    const idx = characters.indexOf(char);
-    setSavedChars((prev) => ({ ...prev, [idx]: true }));
-    setTimeout(
-      () =>
-        setSavedChars((prev) => {
-          const n = { ...prev };
-          delete n[idx];
-          return n;
-        }),
-      2000,
-    );
-    await charactersRead.refetch();
   };
 
   const toggleCharExpand = (idx: number) => {
@@ -344,61 +347,89 @@ function CreateStoryPage() {
       },
     });
 
-  const saveTheme = async (values: ThemeValues, id?: string): Promise<string | null> => {
+  /**
+   * A library save, from either editor. The dialog shows the reason inline and
+   * stays open on a failure, so the write answers the reason as well as
+   * saying it: a 200 without the row the handler promises (`{data:{theme}}`,
+   * `{data:{character}}`, D94) is a failure too, or the save would close a
+   * dialog over nothing saved.
+   */
+  const saveToLibrary = async (
+    body: Record<string, unknown>,
+    fallback: string,
+    saved: string,
+    onSaved: () => Promise<void>,
+  ): Promise<string | null> => {
+    let problem: string | null = null;
+    await runWrite<{ data?: unknown }>({
+      showToast,
+      url: "/api/stories",
+      body,
+      successMessage: (res) => (res?.data ? saved : { message: fallback, type: "error" }),
+      errorMessage: fallback,
+      onError: (err) => {
+        problem = messageFromError(err, fallback);
+      },
+      onSuccess: async (res) => {
+        if (!res?.data) {
+          problem = fallback;
+          return;
+        }
+        await onSaved();
+      },
+    });
+    return problem;
+  };
+
+  const saveTheme = (values: ThemeValues, id?: string): Promise<string | null> => {
     const body: Record<string, unknown> = { action: "themes", subAction: id ? "update" : "create", ...values };
     if (id) body.themeId = id;
-    // Same gate as the character save, same defect it replaces: the handler
-    // answers `{data:{theme}}` (D94).
-    const res = await safeApiCall<{ data?: unknown }>("/api/stories", { method: "POST", body });
-    if (!res.ok || !res.data?.data) return res.error ?? "Could not save that theme";
-    setWriteError(null);
-    await themesRead.refetch();
-    setThemeEditor({ open: false });
-    return null;
+    return saveToLibrary(body, "Could not save that theme", id ? "Theme updated" : "Theme saved", async () => {
+      await themesRead.refetch();
+      setThemeEditor({ open: false });
+    });
   };
 
   const deleteTheme = async (id: string) => {
     // The field is `themeId`; this posted `promptId`, the handler 400d, and the
     // catch swallowed it while the row was filtered off the screen anyway, so a
     // theme that was still in the database looked deleted (T-0108, D89). The
-    // optimistic filter runs on success only.
-    const res = await safeApiCall("/api/stories", {
-      method: "POST",
+    // re-read runs on success only.
+    await runWrite({
+      showToast,
+      url: "/api/stories",
       body: { action: "themes", subAction: "delete", themeId: id },
+      successMessage: "Theme deleted",
+      errorMessage: "Could not delete that theme",
+      onSuccess: () => {
+        void themesRead.refetch();
+        if (selectedTheme === id) setSelectedTheme("");
+      },
     });
-    if (!res.ok) {
-      setWriteError(res.error ?? "Could not delete that theme");
-      return;
-    }
-    setWriteError(null);
-    void themesRead.refetch();
-    if (selectedTheme === id) setSelectedTheme("");
   };
 
   // ── the character library ──────────────────────────────────────
 
-  const saveSheet = async (values: SheetValues, id?: string): Promise<string | null> => {
+  const saveSheet = (values: SheetValues, id?: string): Promise<string | null> => {
     const body: Record<string, unknown> = { action: "characters", subAction: id ? "update" : "create", ...values };
     if (id) body.charId = id;
-    const res = await safeApiCall<{ data?: unknown }>("/api/stories", { method: "POST", body });
-    if (!res.ok || !res.data?.data) return res.error ?? "Could not save that character";
-    setWriteError(null);
-    await charactersRead.refetch();
-    setSheetEditor({ open: false });
-    return null;
+    return saveToLibrary(body, "Could not save that character", id ? "Character updated" : "Character saved", async () => {
+      await charactersRead.refetch();
+      setSheetEditor({ open: false });
+    });
   };
 
   const deleteSheet = async (id: string) => {
-    const res = await safeApiCall("/api/stories", {
-      method: "POST",
+    await runWrite({
+      showToast,
+      url: "/api/stories",
       body: { action: "characters", subAction: "delete", charId: id },
+      successMessage: "Character deleted",
+      errorMessage: "Could not delete that character",
+      onSuccess: () => {
+        void charactersRead.refetch();
+      },
     });
-    if (!res.ok) {
-      setWriteError(res.error ?? "Could not delete that character");
-      return;
-    }
-    setWriteError(null);
-    void charactersRead.refetch();
   };
 
   // ── the form ───────────────────────────────────────────────────
@@ -509,8 +540,6 @@ function CreateStoryPage() {
             error={`Story generation failed: ${genError}. Your configuration has been saved, so you can retry without re-entering everything.`}
           />
         )}
-        {writeError && <LoadErrorBanner error={writeError} />}
-
         {/* ═══ Quick start ═══ */}
         <Card as="section" padding="lg" className="space-y-3">
           <div className="flex items-start justify-between gap-3">
@@ -709,6 +738,7 @@ function CreateStoryPage() {
           Begin Writing
         </Button>
       </div>
+      {toastElement}
     </AppPageShell>
   );
 }

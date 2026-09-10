@@ -7,8 +7,10 @@
 "use client";
 
 import {
-  Terminal, Play, ScrollText, CalendarClock, Loader2, X, FileCode,
+  Terminal, Play, ScrollText, CalendarClock, X, FileCode,
 } from "lucide-react";
+import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
 import { timeAgo } from "@/lib/utils";
 import type { ScriptFile } from "@/hooks/useScripts";
 
@@ -75,7 +77,7 @@ export default function ScriptRow({
 }: ScriptRowProps) {
   const lastRun = lastRunNote(s);
   return (
-    <div className="flex flex-wrap items-center gap-3 rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel px-4 py-3">
+    <Card padding="none" className="flex flex-wrap items-center gap-3 px-4 py-3">
       <Terminal className="h-4 w-4 shrink-0 text-neon-cyan" />
       <div className="min-w-0 flex-1">
         <div className="truncate font-mono text-body text-ps-text-primary">{s.name}</div>
@@ -100,45 +102,24 @@ export default function ScriptRow({
           ) : null}
         </div>
       </div>
-      <button
-        type="button"
-        onClick={() => onRun(s)}
-        disabled={busy}
-        className="flex items-center gap-1 rounded-ps-md border border-neon-green/30 px-2.5 py-1 font-mono text-micro text-neon-green hover:bg-neon-green/10 disabled:opacity-50"
-      >
-        {busy ? <Loader2 className="h-3 w-3 animate-spin" /> : <Play className="h-3 w-3" />} Run
-      </button>
-      <button
-        type="button"
-        onClick={() => onEdit(s)}
-        className="flex items-center gap-1 rounded-ps-md border border-ps-edge px-2.5 py-1 font-mono text-micro text-ps-text-secondary hover:bg-ps-surface-raised"
-      >
-        <FileCode className="h-3 w-3" /> Edit
-      </button>
-      <button
-        type="button"
-        onClick={() => onLogs(s)}
-        className="flex items-center gap-1 rounded-ps-md border border-ps-edge px-2.5 py-1 font-mono text-micro text-ps-text-secondary hover:bg-ps-surface-raised"
-      >
-        <ScrollText className="h-3 w-3" /> Logs
-      </button>
+      <Button variant="primary" color="green" size="sm" icon={Play} onClick={() => onRun(s)} loading={busy}>
+        Run
+      </Button>
+      <Button variant="secondary" size="sm" icon={FileCode} onClick={() => onEdit(s)}>
+        Edit
+      </Button>
+      <Button variant="secondary" size="sm" icon={ScrollText} onClick={() => onLogs(s)}>
+        Logs
+      </Button>
       {s.schedule ? (
-        <button
-          type="button"
-          onClick={() => onUnschedule(s)}
-          className="flex items-center gap-1 rounded-ps-md border border-ps-edge px-2.5 py-1 font-mono text-micro text-ps-text-muted hover:bg-ps-surface-raised"
-        >
-          <X className="h-3 w-3" /> Unschedule
-        </button>
+        <Button variant="secondary" size="sm" icon={X} onClick={() => onUnschedule(s)}>
+          Unschedule
+        </Button>
       ) : (
-        <button
-          type="button"
-          onClick={() => onSchedule(s)}
-          className="flex items-center gap-1 rounded-ps-md border border-neon-orange/30 px-2.5 py-1 font-mono text-micro text-neon-orange hover:bg-neon-orange/10"
-        >
-          <CalendarClock className="h-3 w-3" /> Schedule
-        </button>
+        <Button variant="primary" color="orange" size="sm" icon={CalendarClock} onClick={() => onSchedule(s)}>
+          Schedule
+        </Button>
       )}
-    </div>
+    </Card>
   );
 }

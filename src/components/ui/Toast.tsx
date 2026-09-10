@@ -64,9 +64,9 @@ const typeConfig = {
   },
   error: {
     icon: AlertCircle,
-    bg: "bg-red-500/10",
-    border: "border-red-500/30",
-    text: "text-red-400",
+    bg: "bg-semantic-danger/10",
+    border: "border-semantic-danger/30",
+    text: "text-semantic-danger",
   },
   info: {
     icon: Info,
@@ -118,7 +118,7 @@ export function ToastView({
       // root while mounted, so the stack rests above the box the operator is
       // typing in rather than over it (chat, T-0132). Unset, it is 0.
       style={{ bottom: `calc(1.5rem + var(--ps-toast-lift, 0rem) + ${index * STACK_STRIDE_REM}rem)` }}
-      className={`fixed right-6 z-[80] flex items-center gap-2 ${config.bg} border ${config.border} ${config.text} text-body font-mono px-4 py-2.5 rounded-ps-lg shadow-lg transition-all duration-200 ${
+      className={`fixed right-6 z-toast flex items-center gap-2 ${config.bg} border ${config.border} ${config.text} text-body font-mono px-4 py-2.5 rounded-ps-lg shadow-lg transition-all duration-200 ${
         visible ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"
       }`}
     >
@@ -163,7 +163,7 @@ export interface ToastResult {
  */
 export function LastResult({ result }: { result: ToastResult | null }) {
   if (!result) return null;
-  const tone = result.type === "error" ? "text-red-400" : "text-ps-text-muted";
+  const tone = result.type === "error" ? "text-semantic-danger" : "text-ps-text-muted";
   const time = result.at.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   return (
     <p data-testid="last-result" className={`text-micro font-mono ${tone}`}>

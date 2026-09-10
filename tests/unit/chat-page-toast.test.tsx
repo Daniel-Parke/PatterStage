@@ -18,7 +18,8 @@
  * fetch timers, chat-utils with localStorage, sub-components), so we
  * mock aggressively.
  */
-import { render, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
+import { renderWithQuery } from "../helpers/render-with-query";
 
 // ── Icon mocks (lucide-react is a peer dep of every component) ──
 jest.mock("lucide-react", () => {
@@ -63,10 +64,8 @@ jest.mock("@/components/ui/Select", () => ({
   ),
 }));
 
-jest.mock("@/components/chat/TypingIndicator", () => ({
-  __esModule: true,
-  default: () => <div data-testid="typing-indicator" />,
-}));
+// The typing indicator is the page's own since C6 (T-0143); it renders only
+// while a turn streams, which this suite never starts.
 
 jest.mock("@/components/chat/GatewayBanner", () => ({
   __esModule: true,
@@ -162,7 +161,7 @@ describe("ChatPage — an offline gateway, said where the operator is looking", 
   // it, so the old path cannot be walked. What the page owes now is the
   // disabled composer, its reason, and the toast stack lifted above it.
   it("disables the composer, says why, and lifts the toast stack above it", async () => {
-    const { unmount } = render(<ChatPage />);
+    const { unmount } = renderWithQuery(<ChatPage />);
     const textarea = screen.getByRole("textbox", { name: "Message" }) as HTMLTextAreaElement;
     await waitFor(() => expect(textarea).toBeDisabled());
     expect(textarea.placeholder).toMatch(/hermes gateway start/);

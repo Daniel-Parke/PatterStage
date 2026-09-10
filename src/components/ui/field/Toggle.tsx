@@ -34,7 +34,7 @@ export function Toggle({
           : "border-ps-edge text-ps-text-muted hover:text-ps-text-secondary"
       }`}
     >
-      <span className={`h-2 w-2 rounded-full ${checked ? "bg-neon-cyan" : "bg-white/20"}`} />
+      <span className={`h-2 w-2 rounded-full ${checked ? "bg-neon-cyan" : "bg-ps-edge"}`} />
       {label}
     </button>
   );

@@ -22,7 +22,7 @@
 // POST and a GET to the same path can answer differently.
 
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { withQuery } from "../helpers/render-with-query";
 import { matchMediaMock } from "../helpers/mocks";
 
 jest.mock("next/navigation", () => ({
@@ -123,11 +123,6 @@ function installFetch() {
       headers: { "content-type": "application/json" },
     });
   }) as unknown as typeof fetch;
-}
-
-function withQuery(ui: React.ReactElement) {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return <QueryClientProvider client={client}>{ui}</QueryClientProvider>;
 }
 
 const backupGets = () => calls.filter((c) => c.method === "GET" && /\/api\/backup$/.test(c.url.split("?")[0]));

@@ -37,14 +37,16 @@ import { useState, useEffect, useCallback } from "react";
 import { FileText } from "lucide-react";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
+import Button from "@/components/ui/Button";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { SearchInput } from "@/components/ui/Input";
+import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import PageLoading, { pendingCount } from "@/components/ui/PageLoading";
 import { LastResult, useToast } from "@/components/ui/Toast";
 import ProfilePicker from "@/components/ui/ProfilePicker";
+import ConceptHint from "@/components/help/ConceptHint";
 import SkillsSections from "@/components/skills/SkillsSections";
 import SkillsSearchResults from "@/components/skills/SkillsSearchResults";
-import SkillsDenylistNote from "@/components/skills/SkillsDenylistNote";
-import SkillsCatalogEmpty from "@/components/skills/SkillsCatalogEmpty";
 import SkillEditorModal from "@/components/skills/SkillEditorModal";
 import { API_FETCH_BULK_TIMEOUT_MS, apiFetch, toastError } from "@/lib/api-fetch";
 import { runWrite } from "@/lib/api-write";
@@ -56,17 +58,57 @@ import {
 } from "@/lib/skills-page-helpers";
 import { pluralise } from "@/lib/utils";
 import type { Skill, SkillsData } from "@/types/console";
+import { useApiResource } from "@/hooks/useApiResource";
 import { useProfiles } from "@/hooks/useProfiles";
 import { useSelectedProfile } from "@/hooks/useSelectedProfile";
 
+/** The standing explainer above the skill lists. Static copy, no props. */
+function SkillsDenylistNote() {
+  return (
+    <p className="text-micro text-ps-text-muted font-mono mb-4 max-w-3xl">
+      Hermes uses a <strong className="text-ps-text-secondary">denylist</strong> (
+      <code className="text-ps-text-muted">skills.disabled</code> in config.yaml). Short names in YAML
+      are matched to catalog paths (e.g. <code className="text-ps-text-muted">apple-notes</code> →{" "}
+      <code className="text-ps-text-muted">apple/apple-notes</code>). If you edited disk config,
+      use <strong className="text-ps-text-secondary">Agent → Agents</strong> and pull that profile
+      before toggling <ConceptHint id="skill">skills</ConceptHint> here.
+    </p>
+  );
+}
+
+/** What the page shows with no catalog. The import call itself stays on the page. */
+function SkillsCatalogEmpty({ importing, onImport }: { importing: boolean; onImport: () => void }) {
+  return (
+    <EmptyState
+      icon={FileText}
+      title="No skills in catalog"
+      // design-lint-disable-next-line hermes-outside-adapter -- empty-state copy for an import button. It tells the operator where the skills are being imported FROM, which is the one thing they need before pressing a button that writes to the catalog.
+      description="Import the global skills tree from ~/.hermes/skills into PatterStage SQLite, then push to sync disk."
+      action={
+        <Button variant="primary" color="green" onClick={onImport} disabled={importing}>
+          {importing ? "Importing…" : "Import skills from Hermes"}
+        </Button>
+      }
+    />
+  );
+}
+
 export default function SkillsPage() {
-  const [data, setData] = useState<SkillsData | null>(null);
-  const [loading, setLoading] = useState(true);
   // Shared with Agents and Tools, so a profile chosen on one of them is the
   // profile whose skills this page turns on and off (T-0113).
   const [selectedProfile, setSelectedProfile] = useSelectedProfile();
   const { data: profiles } = useProfiles();
   const profileName = profiles?.find((p) => p.id === selectedProfile)?.name ?? selectedProfile;
+
+  // The catalogue, keyed on the profile: a profile switch is a new read with
+  // its own first-load state, and a reload after a write keeps the list on
+  // screen (C6, T-0143).
+  const skills = useApiResource<SkillsData>(`/api/skills?profile=${selectedProfile}`, {
+    select: (payload) => payload as SkillsData | undefined,
+    errorMessage: "Failed to load skills",
+  });
+  const data = skills.data;
+  const loading = !skills.settled;
 
   // ── View state ─────────────────────────────────────────────────────────────
   //
@@ -131,22 +173,18 @@ export default function SkillsPage() {
   const skillApiUrl = (name: string) =>
     `/api/skills/${encodeURIComponent(name)}?profile=${selectedProfile}`;
 
+  const { refetch: refetchSkills } = skills;
   const loadSkills = useCallback(async () => {
-    setLoading(true);
-    try {
-      const d = await apiFetch(`/api/skills?profile=${selectedProfile}`);
-      setData(d.data);
-      // Nothing to seed. An override is the exception, and a profile switch
-      // drops whatever the previous profile's exceptions were rather than
-      // carrying stale keys across.
-      setExpandedCategories({});
-      setCategoryPage({});
-    } catch (err) {
-      toastError(showToast, err, "Failed to load skills");
-    } finally {
-      setLoading(false);
-    }
-  }, [selectedProfile, showToast]);
+    await refetchSkills();
+  }, [refetchSkills]);
+
+  // Nothing to seed. An override is the exception, and a profile switch drops
+  // whatever the previous profile's exceptions were rather than carrying
+  // stale keys across.
+  useEffect(() => {
+    setExpandedCategories({});
+    setCategoryPage({});
+  }, [selectedProfile]);
 
   const importSkillsFromHermes = () =>
     runWrite({
@@ -160,8 +198,6 @@ export default function SkillsPage() {
       errorMessage: "Import failed",
       onSuccess: loadSkills,
     });
-
-  useEffect(() => { loadSkills(); }, [loadSkills]);
 
   // ── Derivations ────────────────────────────────────────────────────────────
 
@@ -188,23 +224,16 @@ export default function SkillsPage() {
     : [];
 
   // ── Toggle — fires API immediately, optimistic update, reverts on failure ───
+  //
+  // The pending map IS the optimistic row: every row reads its effective
+  // state through it. On success the catalogue is reloaded before the pending
+  // entry clears, so the row never flickers back; on failure the entry clears
+  // and the row is the catalogue's again.
 
   const toggleSkill = useCallback(
     async (skillName: string, currentEnabled: boolean) => {
       const next = !currentEnabled;
-      // Optimistic
       setToggling((prev) => ({ ...prev, [skillName]: next }));
-      const prevData = data; // Snapshot for revert on failure
-      setData((prev) =>
-        prev
-          ? {
-              ...prev,
-              skills: prev.skills.map((s) =>
-                s.name === skillName ? { ...s, enabled: next } : s,
-              ),
-            }
-          : prev,
-      );
       await runWrite({
         // The pending toggle clears whatever the answer was.
         setBusy: (busy) => {
@@ -221,13 +250,10 @@ export default function SkillsPage() {
         body: { profile: selectedProfile, enabled: next },
         successMessage: next ? `${skillName} enabled` : `${skillName} disabled`,
         errorMessage: "Failed to update skill",
-        // Put the optimistic row back.
-        onError: () => {
-          if (prevData) setData(prevData);
-        },
+        onSuccess: loadSkills,
       });
     },
-    [data, selectedProfile, showToast],
+    [loadSkills, selectedProfile, showToast],
   );
 
   // One dispatch shape for every row on the page, whether it is rendered in
@@ -318,6 +344,9 @@ export default function SkillsPage() {
       {toastElement}
       <div>
         <SkillsDenylistNote />
+        {/* The read contract (T-0096, D22): a failed catalogue read is this,
+            with a Retry, and never the empty state under it. */}
+        {skills.error && <LoadErrorBanner error={skills.error} onRetry={() => void loadSkills()} />}
         {loading ? (
           <PageLoading label="Loading skills" rows={8} rowClassName="h-11" />
         ) : total === 0 ? (

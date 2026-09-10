@@ -14,12 +14,12 @@
 
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Dispatch, MouseEvent, RefObject, SetStateAction } from "react";
 
 import type { ToastType } from "@/components/ui/Toast";
 import type { ChatConversation, ChatMessage } from "@/types/chat";
-import { safeApiCall } from "@/lib/api-fetch";
+import { useApiResource } from "@/hooks/useApiResource";
 import {
   fetchConversation,
   createConversationApi,
@@ -60,33 +60,39 @@ export function useChatConversations({
   inputRef,
   showToast,
 }: UseChatConversationsArgs) {
+  // The list is a read like any other (T-0129): cached, deduped, and re-read
+  // through `refetch` after a send lands. The local copy below exists because
+  // the row actions edit the list ahead of the server (a new row is prepended
+  // the moment it is created, a deleted one drops at once) and the send hook
+  // writes titles through `setConversations`; the read seeds it and every
+  // later answer replaces it.
+  const list = useApiResource<ChatConversation[]>("/api/chat", {
+    select: (p) => (p as { conversations?: ChatConversation[] } | null)?.conversations ?? [],
+    errorMessage: "Failed to load conversations",
+  });
   const [conversations, setConversations] = useState<ChatConversation[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   // The list read's failure, kept apart from the list: the sidebar rendered
   // "No conversations yet" over a 500 because the reader swallowed the
   // failure into an empty array (T-0096, the read contract).
-  const [listError, setListError] = useState<string | null>(null);
+  const listError = list.error;
 
-  // ── Load conversations on mount ─────────────────────────────
-  const loadConversations = useCallback(async () => {
-    const res = await safeApiCall<{ data?: { conversations?: ChatConversation[] } }>("/api/chat");
-    if (!res.ok) {
-      setListError(res.error ?? "Failed to load conversations");
-      return [] as ChatConversation[];
-    }
-    const list = res.data?.data?.conversations ?? [];
-    setListError(null);
-    setConversations(list);
-    return list;
-  }, []);
-
+  // The first answer picks the active row, and only the first: a later
+  // re-read must not move the operator off the conversation they opened.
+  const seededRef = useRef(false);
   useEffect(() => {
-    void (async () => {
-      const list = await loadConversations();
-      if (list.length > 0) setActiveId(list[0].id);
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (!list.data) return;
+    setConversations(list.data);
+    if (seededRef.current) return;
+    seededRef.current = true;
+    if (list.data.length > 0) setActiveId(list.data[0].id);
+  }, [list.data]);
+
+  const { refetch: refetchList } = list;
+  const loadConversations = useCallback(async () => {
+    const answer = await refetchList();
+    return answer.data?.value ?? ([] as ChatConversation[]);
+  }, [refetchList]);
 
   const refreshActiveConversation = useCallback(async () => {
     if (!activeId) return;

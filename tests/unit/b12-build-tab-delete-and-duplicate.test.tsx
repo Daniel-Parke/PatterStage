@@ -64,8 +64,16 @@ jest.mock("@/hooks/useComposer", () => ({
   useComposerWorkflowGraph: (...a: unknown[]) => mockUseGraph(...(a as [])),
 }));
 
+// The board writes through runWrite (C6), which calls apiFetch. The suite's
+// answers keep safeApiCall's shape ({ ok, status, data, error, body }), and this
+// double translates: the data on ok, otherwise a throw carrying the status and
+// the parsed body, which is what the real apiFetch throws.
 const mockSafeApiCall = jest.fn();
-jest.mock("@/lib/api-fetch", () => ({ safeApiCall: (...a: unknown[]) => mockSafeApiCall(...(a as [])) }));
+jest.mock("@/lib/api-fetch", () => ({
+  ...jest.requireActual("@/lib/api-fetch"),
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- hoisting-safe inside jest.mock
+  apiFetch: require("../helpers/mocks").apiFetchOver((...a: unknown[]) => mockSafeApiCall(...a)),
+}));
 
 import WorkflowCanvas from "@/components/composer/WorkflowCanvas";
 import type { ComposerWorkflow, ComposerWorkflowGraph } from "@/lib/composer/schema";

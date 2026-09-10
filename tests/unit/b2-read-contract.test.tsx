@@ -42,7 +42,9 @@ describe("ErrorBanner is retired", () => {
   it("is no longer exported and no longer imported", async () => {
     const mod = await import("@/components/ui/LoadingSpinner");
     expect("ErrorBanner" in mod).toBe(false);
-    for (const f of ["src/app/agent/settings/[section]/page.tsx", "src/app/agent/models/page.tsx", "src/components/memory/hindsight/HealthBanner.tsx"]) {
+    // The memory health banner lives in MemoryProviderSettings since C6 folded
+    // HealthBanner into the card that renders it.
+    for (const f of ["src/app/agent/settings/[section]/page.tsx", "src/app/agent/models/page.tsx", "src/components/memory/MemoryProviderSettings.tsx"]) {
       const src = readFileSync(join(ROOT, f), "utf-8");
       expect({ f, uses: /\bErrorBanner\b/.test(src) }).toEqual({ f, uses: false });
     }

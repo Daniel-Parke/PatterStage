@@ -15,16 +15,22 @@
  * column that is narrow at every width, so its Retry always wraps under.
  */
 
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 
 jest.mock("lucide-react", () => require("../helpers/mocks").lucideMock());
+jest.mock("@/components/agents/AgentPerformanceStrip", () => ({ __esModule: true, default: () => null }));
+jest.mock("@/components/help/ConceptHint", () => ({
+  __esModule: true,
+  default: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
+}));
 
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
-import ProfilesDriftBanner from "@/components/profiles/ProfilesDriftBanner";
+import AgentProfilesOverview from "@/components/agents/AgentProfilesOverview";
 import ModelsDriftBanner from "@/components/models/ModelsDriftBanner";
 import MessageBubble from "@/components/chat/MessageBubble";
 import type { SyncDrift } from "@/components/models/types";
 import type { ChatMessage } from "@/types/chat";
+import type { AgentProfile } from "@/types/console";
 
 const drift: SyncDrift = {
   hasDrift: true,
@@ -69,9 +75,24 @@ describe("U17 · banners wrap their action", () => {
     // took the button out altogether, the bar under the banner being the one
     // Push all (u18-one-push-all). What is left to hold is that the words
     // are not sharing their row with anything.
-    render(<ProfilesDriftBanner driftCount={2} errorCount={0} />);
-    expect(screen.queryByRole("button")).toBeNull();
-    expect(screen.getByText(/2 profiles drifted/).parentElement).toHaveClass("flex-1");
+    // The banner is a local of AgentProfilesOverview since C6 (T-0143), so it
+    // is rendered through the overview and its bar's buttons sit OUTSIDE it.
+    const drifted = [
+      { id: "p1", name: "Bob", syncStatus: "drift" },
+      { id: "p2", name: "QA", syncStatus: "drift" },
+    ] as unknown as AgentProfile[];
+    render(
+      <AgentProfilesOverview
+        profiles={drifted}
+        syncBusy={false}
+        onPushAll={() => {}}
+        onPullAll={() => {}}
+        onImportDiscovered={() => {}}
+      />,
+    );
+    const words = screen.getByText(/2 profiles drifted/).parentElement!;
+    expect(words).toHaveClass("flex-1");
+    expect(within(words.parentElement!).queryByRole("button")).toBeNull();
   });
 
   it("ModelsDriftBanner: every line's controls wrap under its sentence below sm", () => {

@@ -10,8 +10,10 @@ import {
   X,
   Zap,
 } from "lucide-react";
-import { StatusDot } from "@/components/ui/Card";
+import Card, { StatusDot } from "@/components/ui/Card";
+import IconButton from "@/components/ui/IconButton";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
+import { Input } from "@/components/ui/field";
 import { Panel } from "@/components/dashboard/Panel";
 import { LedgerRowButton } from "@/components/dashboard/LedgerRow";
 import CategoryAccordion from "@/components/ui/CategoryAccordion";
@@ -21,6 +23,7 @@ import CollapsibleSection from "@/components/ui/CollapsibleSection";
 import { EmptyState } from "@/components/ui/EmptyState";
 import Button from "@/components/ui/Button";
 import { useState } from "react";
+import { statusToneClasses } from "@/lib/theme";
 import {
   CATEGORY_COLOR_CLASSES,
   resolveCategoryDisplay,
@@ -233,21 +236,21 @@ export default function MissionsList({ vm }: MissionsListProps) {
           />
           <div className="relative flex-1 min-w-[200px] max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-ps-viz-glyph-idle" />
-            <input
+            <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search missions..." aria-label="Mission search"
-              className="w-full bg-ps-surface-panel border border-ps-edge rounded-ps-md pl-9 pr-8 py-1.5 text-micro text-ps-text-primary placeholder-ps-text-muted font-mono"
+              placeholder="Search missions..."
+              aria-label="Mission search"
+              className="pl-9 pr-8 font-mono"
             />
             {search && (
-              <button
-                type="button"
-                aria-label="Clear the mission search"
+              <IconButton
+                icon={X}
+                label="Clear the mission search"
+                size="sm"
                 onClick={() => setSearch("")}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded-ps-sm text-ps-text-muted hover:text-ps-text-secondary transition-colors"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
+                className="absolute right-1.5 top-1/2 -translate-y-1/2"
+              />
             )}
           </div>
         </div>
@@ -319,7 +322,7 @@ export default function MissionsList({ vm }: MissionsListProps) {
                   <div className="flex items-center justify-between mb-3 px-1">
                     <div className="flex items-center gap-2">
                       <div
-                        className={`w-2 h-2 rounded-full ${sc?.columnDot || "bg-white/20"}`}
+                        className={`w-2 h-2 rounded-full ${sc?.columnDot || statusToneClasses.idle.dot}`}
                       />
                       <span className="text-micro font-mono text-ps-text-muted uppercase tracking-wider">
                         {MISSION_COLUMN_LABELS[status]}
@@ -345,9 +348,9 @@ export default function MissionsList({ vm }: MissionsListProps) {
                   </div>
                   <div className="space-y-2 flex-1">
                     {columnMissions.length === 0 ? (
-                      <div className="rounded-ps-lg border border-dashed border-ps-edge-hairline bg-ps-surface-panel p-4 text-center text-micro font-mono text-ps-text-faint">
+                      <Card className="border-dashed text-center text-micro font-mono text-ps-text-faint">
                         No missions
-                      </div>
+                      </Card>
                     ) : (
                       <>
                         {/* One container per COLUMN, not per mission. A mission
@@ -428,8 +431,8 @@ export default function MissionsList({ vm }: MissionsListProps) {
                                                 className={
                                                   mission.scheduleStatus.lastStatus ===
                                                   "ok"
-                                                    ? "text-neon-green"
-                                                    : "text-red-400"
+                                                    ? statusToneClasses.ok.text
+                                                    : statusToneClasses.fail.text
                                                 }
                                               >
                                                 {mission.scheduleStatus.lastStatus}

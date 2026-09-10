@@ -83,6 +83,41 @@ function saveSettings(s: ReadingSettings) {
 
 const ROW = "mb-1.5 flex items-center justify-between font-mono text-micro text-ps-text-muted";
 
+/**
+ * A labelled range slider. The reader's two sliders were two copies of the
+ * same three lines; this is the one copy, and the one raw control the file
+ * keeps: the field kit's Input paints a boxed text control (a border, a fill,
+ * padding), and a slider is a track. No primitive draws one.
+ */
+function Slider({
+  label,
+  readout,
+  min,
+  max,
+  value,
+  onChange,
+}: {
+  label: string;
+  readout: string;
+  min: number;
+  max: number;
+  value: number;
+  onChange: (value: number) => void;
+}) {
+  return (
+    <div>
+      <div className={ROW}>
+        <span>{label}</span>
+        <span>{readout}</span>
+      </div>
+      {/* design-lint-disable-next-line no-raw-control-outside-ui -- a range slider is a track, not a boxed text control, and the field kit draws no slider */}
+      <input aria-label={label} type="range" min={min} max={max} value={value}
+        onChange={(e) => onChange(parseInt(e.target.value))}
+        className="h-1 w-full accent-neon-purple" />
+    </div>
+  );
+}
+
 export default function ReaderSettings({ settings, onChange }: {
   settings: ReadingSettings;
   onChange: (s: ReadingSettings) => void;
@@ -124,26 +159,24 @@ export default function ReaderSettings({ settings, onChange }: {
       <div role="dialog" aria-label="Reading settings" className="space-y-4">
         <div className="font-mono text-micro uppercase tracking-widest text-ps-text-muted">Reading settings</div>
 
-        <div>
-          <div className={ROW}>
-            <span>Font size</span>
-            <span>{settings.fontSize}px</span>
-          </div>
-          {/* A range slider has no primitive; the two here are the reader's own. */}
-          <input aria-label="Font size" type="range" min={12} max={28} value={settings.fontSize}
-            onChange={(e) => update({ fontSize: parseInt(e.target.value) })}
-            className="h-1 w-full accent-neon-purple" />
-        </div>
+        <Slider
+          label="Font size"
+          readout={`${settings.fontSize}px`}
+          min={12}
+          max={28}
+          value={settings.fontSize}
+          onChange={(v) => update({ fontSize: v })}
+        />
 
-        <div>
-          <div className={ROW}>
-            <span>Line spacing</span>
-            <span>{settings.lineHeight.toFixed(1)}</span>
-          </div>
-          <input aria-label="Line spacing" type="range" min={12} max={25} value={Math.round(settings.lineHeight * 10)}
-            onChange={(e) => update({ lineHeight: parseInt(e.target.value) / 10 })}
-            className="h-1 w-full accent-neon-purple" />
-        </div>
+        <Slider
+          label="Line spacing"
+          readout={settings.lineHeight.toFixed(1)}
+          min={12}
+          max={25}
+          value={Math.round(settings.lineHeight * 10)}
+          onChange={(v) => update({ lineHeight: v / 10 })}
+        />
+
 
         <div className="space-y-1.5">
           <span className="block font-mono text-micro text-ps-text-muted">Font</span>

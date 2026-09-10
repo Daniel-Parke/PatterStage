@@ -22,7 +22,8 @@ import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import PageLoading, { pendingCount } from "@/components/ui/PageLoading";
 import SegmentedControl from "@/components/ui/SegmentedControl";
 import { useApiResource } from "@/hooks/useApiResource";
-import { safeApiCall } from "@/lib/api-fetch";
+import { useToast } from "@/components/ui/Toast";
+import { runWrite } from "@/lib/api-write";
 import StoryCard from "@/modules/rec-room/components/StoryCard";
 import type { StorySummary } from "@/modules/rec-room/types";
 
@@ -44,7 +45,7 @@ function isComplete(s: StorySummary): boolean {
 export default function StoryWeaverPage() {
   const router = useRouter();
   const [filter, setFilter] = useState<Filter>("all");
-  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const { showToast, toastElement } = useToast();
   const read = useApiResource<StorySummary[]>("/api/stories", {
     body: { action: "list" },
     select: (d) => (d as { stories?: StorySummary[] } | null)?.stories ?? [],
@@ -52,20 +53,22 @@ export default function StoryWeaverPage() {
   });
   const stories = read.data ?? [];
   const loaded = read.settled;
-  const error = read.error ?? deleteError;
+  const error = read.error;
 
-  // The row's ConfirmButton has already asked; this is the second click.
+  // The row's ConfirmButton has already asked; this is the second click. A
+  // refusal is a toast in the server's words, and the shelf is re-read only
+  // on a success (C6, T-0143).
   const handleDelete = async (id: string) => {
-    const res = await safeApiCall("/api/stories", {
-      method: "POST",
+    await runWrite({
+      showToast,
+      url: "/api/stories",
       body: { action: "delete", storyId: id },
+      successMessage: "Story deleted",
+      errorMessage: "Failed to delete story",
+      onSuccess: async () => {
+        await read.refetch();
+      },
     });
-    if (!res.ok) {
-      setDeleteError(res.error ?? "Failed to delete story");
-      return;
-    }
-    setDeleteError(null);
-    void read.refetch();
   };
 
   const completed = stories.filter(isComplete).length;
@@ -149,6 +152,7 @@ export default function StoryWeaverPage() {
           </ul>
         )}
       </div>
+      {toastElement}
     </AppPageShell>
   );
 }

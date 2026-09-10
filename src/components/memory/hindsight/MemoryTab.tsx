@@ -10,6 +10,8 @@
 
 import { Brain, Clock, Tag } from "lucide-react";
 import Badge from "@/components/ui/Badge";
+import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { timeAgo } from "@/lib/utils";
@@ -78,13 +80,9 @@ export default function MemoryTab({
           />
           {onClearQuery && (
             <div className="flex justify-center">
-              <button
-                type="button"
-                onClick={onClearQuery}
-                className="px-3 py-1.5 rounded-ps-md border border-pink-500/30 text-micro font-mono text-pink-300 transition-colors hover:bg-pink-500/10"
-              >
+              <Button variant="primary" color="pink" size="sm" onClick={onClearQuery}>
                 Clear search
-              </button>
+              </Button>
             </div>
           )}
         </div>
@@ -116,7 +114,7 @@ export default function MemoryTab({
           say: "Hiding 0 memories" on an empty store is noise, and it is not
           even true (found on the proof walk). */}
       {showStaleToggle && (showStaleToggle.hiddenCount > 0 || showStaleToggle.showStale) && (
-        <div className="flex items-center justify-between gap-3 px-4 py-2 rounded-ps-md border border-ps-edge-hairline bg-ps-surface-panel text-body text-ps-text-secondary">
+        <Card padding="none" className="flex items-center justify-between gap-3 px-4 py-2 text-body text-ps-text-secondary">
           <div className="flex items-center gap-2">
             <Clock className="w-3.5 h-3.5 text-ps-text-muted" />
             <span>
@@ -126,15 +124,16 @@ export default function MemoryTab({
               }
             </span>
           </div>
-          <button
-            type="button"
+          <Button
+            variant="primary"
+            color="pink"
+            size="sm"
             onClick={showStaleToggle.onToggle}
-            className="px-2.5 py-1 rounded-ps-sm border border-pink-500/30 text-pink-300 hover:bg-pink-500/10 transition-colors"
             title={showStaleToggle.showStale ? "Hide stale memories" : "Show all memories including stale ones"}
           >
             {showStaleToggle.showStale ? "Hide stale" : "Show stale"}
-          </button>
-        </div>
+          </Button>
+        </Card>
       )}
       {memories.length === 0 && emptyState()}
       {memories.map((memory, i) => {
@@ -150,10 +149,7 @@ export default function MemoryTab({
           ? rawTags.filter((t): t is string => typeof t === "string")
           : [];
         return (
-          <div
-            key={memory.id || i}
-            className="rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel p-4 hover:border-pink-500/20 transition-colors"
-          >
+          <Card key={memory.id || i} className="transition-colors hover:border-neon-pink/20">
             <p className="text-body text-ps-text-secondary leading-relaxed mb-2">{text}</p>
             <div className="flex flex-wrap items-center gap-3 text-body text-ps-text-muted">
               {type && type !== "unknown" && (
@@ -187,7 +183,7 @@ export default function MemoryTab({
                 </span>
               )}
             </div>
-          </div>
+          </Card>
         );
       })}
     </div>

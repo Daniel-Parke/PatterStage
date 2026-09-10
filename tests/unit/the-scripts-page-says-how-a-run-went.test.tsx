@@ -25,6 +25,9 @@ jest.mock("lucide-react", () => require("../helpers/mocks").lucideMock());
 const safeApiCall = jest.fn();
 jest.mock("@/lib/api-fetch", () => ({
   safeApiCall: (...a: unknown[]) => safeApiCall(...a),
+  // The page's writes go through runWrite since C6 (T-0143), whose call is
+  // apiFetch; one double stands for both.
+  apiFetch: (...a: unknown[]) => safeApiCall(...a),
   safeApiCallData: jest.fn(async () => null),
   messageFromError: (_e: unknown, f: string) => f,
 }));

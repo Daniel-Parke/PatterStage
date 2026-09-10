@@ -133,7 +133,10 @@ describe("C3 · one way to write", () => {
   it("the census sees a loader called from an effect, not a write in a click handler", () => {
     const out = execFileSync(process.execPath, [join(ROOT, "scripts", "tooling", "line-census.mjs"), "--report"], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
     const report = JSON.parse(out) as { counts: { handRolledReadHooks: number; writeHooksWithoutMutation: number }; reads: { files: string[] } };
-    expect(report.reads.files).toContain("src/app/agent/skills/page.tsx");
+    // The Skills page was the loader-from-an-effect this case was written
+    // against; it reads through useApiResource since C6 (T-0143), so the
+    // census no longer names it either.
+    expect(report.reads.files).not.toContain("src/app/agent/skills/page.tsx");
     expect(report.reads.files).not.toContain("src/app/work/composer/page.tsx");
     expect(report.reads.files).not.toContain("src/app/recroom/story-weaver/create/page.tsx");
     expect(report.reads.files).not.toContain("src/app/recroom/story-weaver/page.tsx");
@@ -167,10 +170,13 @@ describe("C3 · one way to write", () => {
       "});",
     ]);
     expect([...quiet.keys()].filter((k) => k.startsWith("no-raw-write-outside-the-helper"))).toEqual([]);
-    // A real site each way: the composer page still writes by hand (held by
-    // the baseline), the model actions hook does not.
+    // Two real sites. The composer page wrote by hand when this was written
+    // (held by the baseline) and was the positive; C6 (T-0143) put its four
+    // writes through the helper, so it is the second clean site now, and the
+    // planted file above is the one that still offends. The model actions
+    // hook was clean from C3.
     const composer = violationsIn("src/app/work/composer/page.tsx", read("src/app/work/composer/page.tsx").split(/\r?\n/));
-    expect([...composer.keys()]).toContain("no-raw-write-outside-the-helper::src/app/work/composer/page.tsx");
+    expect([...composer.keys()].filter((k) => k.startsWith("no-raw-write-outside-the-helper"))).toEqual([]);
     const models = violationsIn("src/hooks/useModelActions.ts", read("src/hooks/useModelActions.ts").split(/\r?\n/));
     expect([...models.keys()].filter((k) => k.startsWith("no-raw-write-outside-the-helper"))).toEqual([]);
   });

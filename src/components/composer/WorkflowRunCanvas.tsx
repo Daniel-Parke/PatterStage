@@ -23,6 +23,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 
+import Card from "@/components/ui/Card";
 import { graphToCanvas } from "@/lib/composer/canvas-graph";
 import type { ComposerNodeRun, ComposerWorkflowGraph } from "@/lib/composer/schema";
 
@@ -72,14 +73,13 @@ interface LiveNodeData extends Record<string, unknown> {
 type LiveNode = Node<LiveNodeData, "live">;
 
 function LiveNodeView({ data }: NodeProps<LiveNode>) {
+  const outline = `${STATUS_BORDER[data.status] ?? "border-ps-edge-emphasis"} ${data.isCurrent ? "ring-1 ring-neon-cyan/60 shadow-[0_0_12px_2px_rgb(var(--ps-rgb-neon-cyan)_/_0.4)]" : ""} ${data.hasRun ? "cursor-pointer hover:border-ps-edge-emphasis" : "cursor-default"}`;
   return (
-    <div
-      title={data.hasRun ? "Click for stage details" : undefined}
-      className={`min-w-[150px] rounded-ps-md border bg-ps-surface-panel px-3 py-2 shadow-lg backdrop-blur transition-colors ${STATUS_BORDER[data.status] ?? "border-ps-edge-emphasis"} ${data.isCurrent ? "ring-1 ring-neon-cyan/60 shadow-[0_0_12px_2px_rgb(var(--ps-rgb-neon-cyan)_/_0.4)]" : ""} ${data.hasRun ? "cursor-pointer hover:border-ps-edge-emphasis" : "cursor-default"}`}
-    >
-      <Handle type="target" position={Position.Top} className="!h-2 !w-2 !border-0 !bg-white/40" />
+    // design-lint-disable-next-line no-inline-card-chrome -- a react-flow node, not a card: its border is the status ladder STATUS_BORDER keys (T-0120), which Card cannot carry over the hairline rung it paints, and Panel clips its overflow, which would take the connection handles with it.
+    <div title={data.hasRun ? "Click for stage details" : undefined} className={`min-w-[150px] rounded-ps-md border bg-ps-surface-panel px-3 py-2 shadow-lg backdrop-blur transition-colors ${outline}`}>
+      <Handle type="target" position={Position.Top} className="!h-2 !w-2 !border-0 !bg-ps-edge-emphasis" />
       <div className="flex items-center gap-1.5">
-        <span className={`h-2 w-2 rounded-full ${STATUS_DOT[data.status] ?? "bg-white/25"} ${data.isCurrent ? "animate-pulse" : ""}`} />
+        <span className={`h-2 w-2 rounded-full ${STATUS_DOT[data.status] ?? statusToneClasses.idle.dot} ${data.isCurrent ? "animate-pulse" : ""}`} />
         <span className="truncate text-body text-ps-text-primary">{data.label}</span>
         {data.gate === "hil" ? <span className="rounded-ps-sm bg-neon-yellow/15 px-1 text-micro font-mono text-neon-yellow">HIL</span> : null}
         {data.attempt > 1 ? <span className="ml-auto rounded-ps-sm bg-ps-surface-raised px-1 text-micro font-mono text-ps-text-muted">×{data.attempt}</span> : null}
@@ -158,7 +158,9 @@ function RunCanvasInner({
   }, [graph, latestNodeRun, currentNodeId]);
 
   return (
-    <div className="relative h-[68vh] min-h-[560px] w-full overflow-hidden rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-ground/60">
+    // The card is the frame; the board inside it is the ground the nodes sit on.
+    <Card padding="none" className="overflow-hidden">
+    <div className="relative h-[68vh] min-h-[560px] w-full bg-ps-surface-ground/60">
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -176,8 +178,13 @@ function RunCanvasInner({
       </ReactFlow>
       {/* Wider and bounded since the gate carries the stage's output: the panel
           scrolls inside the board rather than growing past the bottom of it. */}
-      {gate ? <div className="absolute right-3 top-3 z-10 w-[22rem] max-w-[calc(100%-1.5rem)] max-h-[calc(100%-1.5rem)] overflow-y-auto rounded-ps-md border border-ps-edge-hairline bg-ps-surface-panel p-3 backdrop-blur">{gate}</div> : null}
+      {gate ? (
+        <Card padding="sm" className="absolute right-3 top-3 z-sticky w-[22rem] max-w-[calc(100%-1.5rem)] max-h-[calc(100%-1.5rem)] overflow-y-auto backdrop-blur">
+          {gate}
+        </Card>
+      ) : null}
     </div>
+    </Card>
   );
 }
 

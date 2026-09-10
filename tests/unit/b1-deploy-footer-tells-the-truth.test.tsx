@@ -11,12 +11,22 @@
  *       after the attempt cap, which used to count only thrown polls.
  */
 import { act, render, renderHook, screen, waitFor } from "@testing-library/react";
+import { queryWrapper } from "../helpers/render-with-query";
 
 const mockSafeApiCallData = jest.fn();
 jest.mock("@/lib/api-fetch", () => ({
   ...jest.requireActual("@/lib/api-fetch"),
   safeApiCallData: (...a: unknown[]) => mockSafeApiCallData(...a),
+  // The mount read of deployEnabled goes through useApiResource since C6
+  // (T-0143), which calls safeApiCall; it answers from the same double, in
+  // the envelope the real call returns.
+  safeApiCall: async (path: string) => {
+    const data = await mockSafeApiCallData(path);
+    return data ? { ok: true, data: { data } } : { ok: false, error: "unavailable" };
+  },
 }));
+
+/** The hook reads through react-query now, so it renders under a client. */
 
 import { useVersionFooter, type VersionFooterState } from "@/hooks/useVersionFooter";
 // The block moved from the rail to Settings > System in T-0097; the state
@@ -49,7 +59,7 @@ describe("D53: the block knows before the click", () => {
     mockSafeApiCallData.mockImplementation(async (path: string) =>
       path.startsWith("/api/update?deploy=1") ? { deploy: { state: "idle" }, deployEnabled: false } : null,
     );
-    const { result } = renderHook(() => useVersionFooter());
+    const { result } = renderHook(() => useVersionFooter(), { wrapper: queryWrapper() });
     await waitFor(() => expect(result.current.deployEnabled).toBe(false));
   });
 
@@ -72,7 +82,7 @@ describe("D107: a failed check is a fourth state", () => {
       }
       return null;
     });
-    const { result } = renderHook(() => useVersionFooter());
+    const { result } = renderHook(() => useVersionFooter(), { wrapper: queryWrapper() });
     await act(async () => {
       await result.current.handleDropdownConfirm("main");
     });
@@ -104,7 +114,7 @@ describe("D108: the failure tail reaches the footer", () => {
         },
       });
     });
-    const { result } = renderHook(() => useVersionFooter());
+    const { result } = renderHook(() => useVersionFooter(), { wrapper: queryWrapper() });
     await act(async () => {
       result.current.onRestartClick();
     });
@@ -131,7 +141,7 @@ describe("D111: a deploy that never ends still lets go", () => {
       if (init?.method === "POST") return jsonRes({ data: { started: true } });
       return jsonRes({ data: { deploy: { state: "running", action: "restart", phase: "build", message: "building" } } });
     });
-    const { result } = renderHook(() => useVersionFooter());
+    const { result } = renderHook(() => useVersionFooter(), { wrapper: queryWrapper() });
     await act(async () => {
       result.current.onRestartClick();
     });

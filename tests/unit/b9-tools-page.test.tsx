@@ -15,7 +15,8 @@
  *   D84  Switching profile discards unsaved toolset changes with no warning.
  */
 
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
+import { renderWithQuery } from "../helpers/render-with-query";
 
 jest.mock("next/navigation", () => ({
   usePathname: () => "/agent/tools",
@@ -34,6 +35,10 @@ const mockSafeApiCallData = jest.fn();
 jest.mock("@/lib/api-fetch", () => ({
   ...(jest.requireActual("@/lib/api-fetch") as Record<string, unknown>),
   apiFetch: (...a: unknown[]) => mockApiFetch(...a),
+  // The Tools page reads through useApiResource, which calls safeApiCall; routed
+  // through the same mock so a read is still one of the paths asked for (C6, T-0143).
+   
+  safeApiCall: require("../helpers/mocks").safeApiCallOver((...a: unknown[]) => mockApiFetch(...a)),
   safeApiCallData: (...a: unknown[]) => mockSafeApiCallData(...a),
 }));
 
@@ -79,7 +84,7 @@ function chip(label: string): HTMLButtonElement {
 
 async function renderLoaded(unified: string[]) {
   answerToolsets(unified);
-  render(<ToolsPage />);
+  renderWithQuery(<ToolsPage />);
   await waitFor(() => expect(screen.getByText("Enabled toolsets")).toBeInTheDocument());
 }
 

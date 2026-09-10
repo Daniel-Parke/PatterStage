@@ -12,6 +12,7 @@ import { sectionHeadingClasses } from "@/lib/theme";
 import { useMemo } from "react";
 import { Radio, RefreshCw } from "lucide-react";
 
+import { Panel } from "@/components/dashboard/Panel";
 import { timeAgo, titleCase } from "@/lib/utils";
 import { statusToneClasses } from "@/lib/theme";
 import type { HermesProcess } from "@/types/console";
@@ -41,20 +42,16 @@ export default function ProcessesPanel({ processes, onRefresh }: ProcessesPanelP
         />
       </div>
       {processes.length === 0 ? (
-        <div className="rounded-ps-lg border border-neon-purple/20 bg-ps-surface-panel p-6 text-center">
+        <Panel accent="purple" className="p-6 text-center">
           <Radio className="w-8 h-8 text-ps-viz-glyph-idle mx-auto mb-2" />
           <div className="text-body text-ps-text-muted">No Active Processes Detected</div>
-        </div>
+        </Panel>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {processes.map((proc) => (
-            <div
-              key={proc.id}
-              // Card-shaped container, so the full 200px field rather than the
-              // tight one the flat ledger rows take.
-              data-bloom=""
-              className="rounded-ps-lg border border-neon-purple/20 bg-ps-surface-panel p-4"
-            >
+            // Card-shaped container: Panel carries the full 200px bloom field
+            // rather than the tight one the flat ledger rows take.
+            <Panel key={proc.id} accent="purple" className="p-4">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <Radio className={`w-4 h-4 ${proc.status === "running" ? `${statusToneClasses.running.text} pulse-glow` : statusToneClasses.idle.text}`} />
@@ -92,7 +89,7 @@ export default function ProcessesPanel({ processes, onRefresh }: ProcessesPanelP
                   </div>
                 )}
               </div>
-            </div>
+            </Panel>
           ))}
         </div>
       )}

@@ -18,6 +18,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
+import Card from "@/components/ui/Card";
 import type { HelpSearchEntry } from "@/lib/help/help-manifest";
 import { inputFieldClasses } from "@/lib/theme";
 
@@ -71,21 +72,23 @@ export default function HelpSearch({ entries }: { entries: HelpSearchEntry[] }) 
       </p>
 
       {results.length > 0 && (
-        <ul className="divide-y divide-ps-edge-hairline rounded-ps-md border border-ps-edge-hairline bg-ps-surface-panel">
-          {results.map((entry) => (
-            <li key={`${entry.slug}#${entry.anchor ?? ""}`}>
-              <Link
-                href={href(entry)}
-                className="block px-3 py-2 transition-colors hover:bg-ps-surface-raised"
-              >
-                <span className="block text-body text-ps-text-primary">
-                  {entry.heading ?? entry.title}
-                </span>
-                <span className="block text-micro font-mono text-ps-text-muted">{entry.title}</span>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <Card padding="none" className="overflow-hidden">
+          <ul className="divide-y divide-ps-edge-hairline">
+            {results.map((entry) => (
+              <li key={`${entry.slug}#${entry.anchor ?? ""}`}>
+                <Link
+                  href={href(entry)}
+                  className="block px-3 py-2 transition-colors hover:bg-ps-surface-raised"
+                >
+                  <span className="block text-body text-ps-text-primary">
+                    {entry.heading ?? entry.title}
+                  </span>
+                  <span className="block text-micro font-mono text-ps-text-muted">{entry.title}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </Card>
       )}
     </div>
   );

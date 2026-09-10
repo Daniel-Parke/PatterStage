@@ -14,12 +14,12 @@ interface CategoryAccordionProps {
 }
 
 const dotColorMap: Record<string, string> = {
-  pink: "bg-pink-400",
-  cyan: "bg-cyan-400",
-  purple: "bg-purple-400",
-  green: "bg-green-400",
-  orange: "bg-orange-400",
-  blue: "bg-blue-400",
+  pink: "bg-neon-pink",
+  cyan: "bg-neon-cyan",
+  purple: "bg-neon-purple",
+  green: "bg-neon-green",
+  orange: "bg-neon-orange",
+  blue: "bg-cherenkov-300",
 };
 
 export default function CategoryAccordion({

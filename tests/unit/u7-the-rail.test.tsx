@@ -192,7 +192,9 @@ describe("the product is named once", () => {
    * lockup says "PatterStage". One mark, one name.
    */
   it("the mobile header wears the same mark as the rail", () => {
-    const header = code(read("src/components/layout/MobileHeader.tsx"));
+    // The header is a function of the rail's own file since C6 (T-0143).
+    const header = code(read("src/components/layout/Sidebar.tsx"));
+    expect(header).toMatch(/function MobileHeader\b/);
     expect(header).not.toMatch(/Hermes/);
     expect(header).toMatch(/BrandMark/);
   });
@@ -203,12 +205,13 @@ describe("the product is named once", () => {
    * assertion still green.
    */
   it("and there is exactly one place that draws it", () => {
-    expect(() => read("src/components/layout/BrandMark.tsx")).not.toThrow();
-    expect(code(read("src/components/layout/Sidebar.tsx"))).toMatch(/<BrandMark\b/);
-    expect(code(read("src/components/layout/MobileHeader.tsx"))).toMatch(/<BrandMark\b/);
-    // And nobody else redraws the mark by hand.
-    for (const path of ["src/components/layout/Sidebar.tsx", "src/components/layout/MobileHeader.tsx"]) {
-      expect(code(read(path))).not.toContain("animated-border");
-    }
+    // The mark is a function of the rail's file since C6 (T-0143): its one
+    // importer was the rail once the mobile header moved in. Drawn there once,
+    // placed twice: the rail's lockup and the mobile header's mark.
+    const rail = code(read("src/components/layout/Sidebar.tsx"));
+    expect(rail.match(/function BrandMark\b/g)).toHaveLength(1);
+    expect(rail.match(/<BrandMark\b/g)).toHaveLength(2);
+    // And nobody redraws the mark by hand: its ring is spelled once, in it.
+    expect(rail.match(/animated-border/g)).toHaveLength(1);
   });
 });

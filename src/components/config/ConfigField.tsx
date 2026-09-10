@@ -20,6 +20,7 @@
 import Link from "next/link";
 
 import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
 import { Toggle, Select, NumberInput, TextInput } from "@/components/ui/Input";
 import type { FieldDef, SectionDef } from "@/lib/config-schema";
 
@@ -84,9 +85,9 @@ export default function ConfigField({ field, value, sectionDef, onUpdate }: Conf
       <div className="space-y-1.5">
         <label className="text-body font-medium text-ps-text-secondary">{field.label}</label>
         {field.description && <p className="text-body text-ps-text-muted">{field.description}</p>}
-        <div className="rounded-ps-md border border-ps-edge-hairline bg-ps-surface-panel px-3 py-2 font-mono text-body text-ps-text-muted">
+        <Card variant="raised" padding="none" className="px-3 py-2 font-mono text-body text-ps-text-muted">
           {isUnset(value) ? "Not set" : String(value)}
-        </div>
+        </Card>
         <p className="text-body text-ps-text-faint">
           Set this on the{" "}
           <Link href={field.managedBy.href} className="text-neon-pink hover:underline">

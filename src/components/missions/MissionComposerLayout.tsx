@@ -51,7 +51,7 @@ export function ComposerAccordion({
 
   return (
     <section
-      className={`pt-6 border-t border-ps-edge-hairline overflow-visible border-l-2 pl-3 -ml-0.5 ${!open ? borderAccent : "border-l-white/10"}`}
+      className={`pt-6 border-t border-ps-edge-hairline overflow-visible border-l-2 pl-3 -ml-0.5 ${!open ? borderAccent : "border-l-ps-edge-hairline"}`}
     >
       <div className="flex items-start justify-between gap-3">
         <button

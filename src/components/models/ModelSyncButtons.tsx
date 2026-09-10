@@ -22,6 +22,11 @@ interface DiffEntry {
   detail: string;
 }
 
+/** What POST /api/models/[id]/diff answers with. */
+type DiffEnvelope = {
+  data?: { diffs?: DiffEntry[]; inSync?: boolean; note?: string | null };
+};
+
 interface ModelSyncButtonsProps {
   modelId: string;
   provider: string;
@@ -186,15 +191,11 @@ export default function ModelSyncButtons({
   const fetchDiffs = useCallback(async (direction: "push" | "pull") => {
     setLoadingDiff(direction);
     try {
-      const json = await apiFetch<{
-        data?: { diffs?: DiffEntry[]; inSync?: boolean; note?: string | null };
-      }>(
-        `/api/models/${encodeURIComponent(modelId)}/diff`,
-        {
-          method: "POST",
-          body: JSON.stringify({ direction }),
-        },
-      );
+      // design-lint-disable-next-line no-raw-write-outside-the-helper -- a POST that reads: the diff route compares this row with config.yaml and writes nothing. Its answer opens the dialog and its failure opens the same dialog with the fallback rows below, so there is nothing to say in a toast and nothing to reload.
+      const json = await apiFetch<DiffEnvelope>(`/api/models/${encodeURIComponent(modelId)}/diff`, {
+        method: "POST",
+        body: JSON.stringify({ direction }),
+      });
       const diffs = json.data?.diffs ?? [];
       setModalState({
         direction,

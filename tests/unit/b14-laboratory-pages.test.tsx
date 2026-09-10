@@ -43,6 +43,15 @@ const mockSafeApiCall = jest.fn();
 jest.mock("@/lib/api-fetch", () => ({
   ...(jest.requireActual("@/lib/api-fetch") as Record<string, unknown>),
   safeApiCall: (...a: unknown[]) => mockSafeApiCall(...a),
+  // The pages' writes go through runWrite since C6 (T-0143), whose call is
+  // apiFetch and which reads a throw as the failure. The one double keeps its
+  // safeApiCall shape, and this adapter turns each answer into apiFetch's:
+  // the data on ok, a throw carrying the reason otherwise.
+  apiFetch: async (...a: unknown[]) => {
+    const res = (await mockSafeApiCall(...a)) as { ok: boolean; data?: unknown; error?: string };
+    if (!res.ok) throw new Error(res.error ?? "Request failed");
+    return res.data;
+  },
 }));
 
 const mockUseResearchRuns = jest.fn();

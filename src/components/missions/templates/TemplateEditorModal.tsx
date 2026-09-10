@@ -13,13 +13,15 @@ import {
 } from "lucide-react";
 import AutoTextarea from "@/components/ui/AutoTextarea";
 import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
+import IconButton from "@/components/ui/IconButton";
 import Modal from "@/components/ui/Modal";
+import { Input } from "@/components/ui/field";
 import AgentRuntimeDefaultsCard from "@/components/missions/AgentRuntimeDefaultsCard";
 import CategoryCombobox, {
   type CategoryOption,
 } from "@/components/missions/CategoryCombobox";
 import LocalDirRow from "@/components/missions/LocalDirRow";
-import { inputFieldClasses } from "@/lib/theme";
 import type { LocalDirEntry } from "@/types/console";
 import { commitLocalDirDraft } from "@/lib/fs/local-dir-entry";
 
@@ -166,6 +168,12 @@ export function TemplateEditorModal({
   newSkills,
   onNewSkillsChange,
 }: TemplateEditorModalProps) {
+  const addReference = () => {
+    if (!referenceInput.trim()) return;
+    onNewReferencesChange((r) => [...r, referenceInput.trim()]);
+    onReferenceInputChange("");
+  };
+
   return (
     <Modal
       open={open}
@@ -205,22 +213,24 @@ export function TemplateEditorModal({
             <label className="text-micro text-ps-text-muted font-mono block mb-1">
               Template Name
             </label>
-            <input
+            <Input
               value={templateName}
               onChange={(e) => onTemplateNameChange(e.target.value)}
-              placeholder="e.g., My Custom Review" aria-label="Template name"
-              className={inputFieldClasses("cyan")}
+              placeholder="e.g., My Custom Review"
+              aria-label="Template name"
+              className="font-mono"
             />
           </div>
           <div>
             <label className="text-micro text-ps-text-muted font-mono block mb-1">
               Description
             </label>
-            <input
+            <Input
               value={templateDescription}
               onChange={(e) => onTemplateDescriptionChange(e.target.value)}
-              placeholder="What this template does" aria-label="Template description"
-              className={inputFieldClasses("cyan")}
+              placeholder="What this template does"
+              aria-label="Template description"
+              className="font-mono"
             />
           </div>
         </div>
@@ -293,10 +303,7 @@ export function TemplateEditorModal({
               }}
             />
             {newLocalDirs.map((dir, i) => (
-              <div
-                key={`tmpl-${dir.path}-${i}`}
-                className="rounded-ps-md border border-neon-cyan/15 bg-ps-surface-raised px-2 py-2"
-              >
+              <Card key={`tmpl-${dir.path}-${i}`} variant="raised" padding="none" className="px-2 py-2">
                 <LocalDirRow
                   mode="saved"
                   entry={dir}
@@ -309,7 +316,7 @@ export function TemplateEditorModal({
                     onNewLocalDirsChange((d) => d.filter((_, j) => j !== i))
                   }
                 />
-              </div>
+              </Card>
             ))}
           </div>
         </div>
@@ -320,59 +327,42 @@ export function TemplateEditorModal({
           </label>
           <div className="space-y-1.5">
             {newReferences.map((ref, i) => (
-              <div
+              <Card
                 key={i}
-                className="flex items-center gap-2 bg-ps-surface-raised border border-neon-pink/20 rounded-ps-md px-3 py-1.5"
+                variant="raised"
+                padding="none"
+                className="flex items-center gap-2 px-3 py-1.5"
               >
                 <span className="text-micro font-mono text-neon-pink truncate flex-1">
                   {ref}
                 </span>
-                <button
-                  type="button"
-                  aria-label={`Remove reference ${ref}`}
+                <IconButton
+                  icon={X}
+                  label={`Remove reference ${ref}`}
+                  size="sm"
                   onClick={() =>
                     onNewReferencesChange((r) => r.filter((_, j) => j !== i))
                   }
-                  className="text-ps-text-muted hover:text-red-400 transition-colors flex-shrink-0"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </div>
+                />
+              </Card>
             ))}
             <div className="flex gap-2">
-              <input
+              <Input
                 value={referenceInput}
                 onChange={(e) => onReferenceInputChange(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();
-                    if (referenceInput.trim()) {
-                      onNewReferencesChange((r) => [
-                        ...r,
-                        referenceInput.trim(),
-                      ]);
-                      onReferenceInputChange("");
-                    }
+                    addReference();
                   }
                 }}
-                placeholder="URL or file path…" aria-label="Reference to add"
-                className={`flex-1 ${inputFieldClasses("pink")} py-1.5 text-body`}
+                placeholder="URL or file path…"
+                aria-label="Reference to add"
+                className="flex-1 font-mono"
               />
-              <button
-                type="button"
-                onClick={() => {
-                  if (referenceInput.trim()) {
-                    onNewReferencesChange((r) => [
-                      ...r,
-                      referenceInput.trim(),
-                    ]);
-                    onReferenceInputChange("");
-                  }
-                }}
-                className="px-3 py-1.5 rounded-ps-md bg-neon-pink/10 border border-neon-pink/30 text-micro text-neon-pink hover:bg-neon-pink/20 font-mono transition-colors"
-              >
+              <Button variant="primary" color="pink" onClick={addReference}>
                 + Add
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -382,25 +372,16 @@ export function TemplateEditorModal({
               Icon
             </label>
             <div className="flex flex-wrap gap-1.5">
-              {TEMPLATE_ICONS.map((icon) => {
-                const Icon = ICON_MAP[icon] || Zap;
-                return (
-                  <button
-                    key={icon}
-                    onClick={() => onTemplateIconChange(icon)}
-                    className={`p-1.5 rounded-ps-sm border transition-colors ${
-                      templateIcon === icon
-                        ? "border-neon-cyan/50 bg-cyan-500/10"
-                        : "border-ps-edge hover:border-ps-edge-emphasis"
-                    }`}
-                    title={icon}
-                  >
-                    <Icon
-                      className={`w-4 h-4 ${templateIcon === icon ? "text-neon-cyan" : "text-ps-text-muted"}`}
-                    />
-                  </button>
-                );
-              })}
+              {TEMPLATE_ICONS.map((icon) => (
+                <IconButton
+                  key={icon}
+                  icon={ICON_MAP[icon] || Zap}
+                  label={icon}
+                  size="sm"
+                  variant={templateIcon === icon ? "primary" : "secondary"}
+                  onClick={() => onTemplateIconChange(icon)}
+                />
+              ))}
             </div>
           </div>
           <div>
@@ -411,6 +392,7 @@ export function TemplateEditorModal({
               {TEMPLATE_COLORS.map((color) => (
                 <button
                   key={color}
+                  type="button"
                   onClick={() => onTemplateColorChange(color)}
                   className={`w-8 h-8 rounded-ps-md border-2 transition-colors ${
                     templateColor === color

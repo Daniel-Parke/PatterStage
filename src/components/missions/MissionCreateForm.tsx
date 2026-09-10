@@ -1,11 +1,15 @@
 "use client";
 
 import { sectionHeadingClasses } from "@/lib/theme";
-import { useEffect, useId, useRef } from "react";
-import { Send, Save } from "lucide-react";
+import { useEffect, useId, useRef, type ReactNode } from "react";
+import { Send, Save, Wrench, X } from "lucide-react";
 
 import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
+import IconButton from "@/components/ui/IconButton";
+import Picker from "@/components/ui/Picker";
 import AutoTextarea from "@/components/ui/AutoTextarea";
+import { Input } from "@/components/ui/field";
 import SchedulePicker from "@/components/schedule/SchedulePicker";
 import LocalDirRow from "@/components/missions/LocalDirRow";
 import AgentRuntimeDefaultsCard from "@/components/missions/AgentRuntimeDefaultsCard";
@@ -14,7 +18,6 @@ import CategoryCombobox, {
 } from "@/components/missions/CategoryCombobox";
 import MissionPromptPreview from "@/components/missions/MissionPromptPreview";
 import SkillsPicker from "@/components/missions/SkillsPicker";
-import ToolsetsPicker from "@/components/missions/ToolsetsPicker";
 import {
   ComposerAccordion,
   ComposerFieldLabel,
@@ -26,6 +29,8 @@ import {
   isMissionQueuedForRun,
 } from "@/lib/missions/mission-board";
 import { firstUnmetSubmitRequirement } from "@/lib/missions/mission-submit-requirement";
+import { useProfileToolsets } from "@/hooks/useProfileAttachables";
+import { useToolsetCatalog } from "@/hooks/useToolsetCatalog";
 
 export interface MissionFormState {
   newName: string;
@@ -200,6 +205,72 @@ export function dispatchSubmitLabel(
   return DEFAULT_DISPATCH_LABEL[dispatch];
 }
 
+const NOTICE_TONE = {
+  info: "text-neon-cyan/80",
+  warn: "text-status-warn",
+  neutral: "text-ps-text-muted",
+} as const;
+
+/** The banner at the top of an edit that says what kind of edit it is. */
+function EditNotice({
+  tone,
+  children,
+}: {
+  tone: keyof typeof NOTICE_TONE;
+  children: ReactNode;
+}) {
+  return (
+    <Card padding="sm" className={`text-micro font-mono ${NOTICE_TONE[tone]}`}>
+      {children}
+    </Card>
+  );
+}
+
+/**
+ * The toolsets a mission recommends. Prompt hints only: what a mission RUNS
+ * with comes from the profile's own toolset policy on Agent → Tools; this is
+ * what the prompt suggests. It was ui/ToolsetSelector, then a Picker of its
+ * own beside SkillsPicker (T-0125); this form is its one caller, so it lives
+ * here (C6).
+ */
+function ToolsetsPicker({
+  value,
+  onChange,
+  profileId,
+  max = 10,
+}: {
+  value: string[];
+  onChange: (toolsets: string[]) => void;
+  profileId?: string;
+  max?: number;
+}) {
+  const { toolsetLabel } = useToolsetCatalog();
+  const { data, isLoading } = useProfileToolsets(profileId);
+  const options = (data ?? []).map((id) => ({ value: id, label: toolsetLabel(id), hint: id }));
+  return (
+    <div>
+      <Picker
+        label="Toolsets"
+        multiple
+        searchable
+        max={max}
+        size="lg"
+        icon={Wrench}
+        color="orange"
+        loading={isLoading}
+        options={options}
+        value={value}
+        onChange={onChange}
+        placeholder="Recommend Hermes toolsets (optional)…"
+        emptyText="No toolsets on this profile. Configure them on Agent → Tools."
+      />
+      <p className="mt-1 px-0.5 font-mono text-micro text-ps-text-faint">
+        Prompt hints only. Runtime tools come from the profile&apos;s own toolset policy.
+      </p>
+    </div>
+  );
+}
+
 export function MissionComposerActions({
   editingId,
   missions,
@@ -371,32 +442,32 @@ export default function MissionCreateForm({
   const inner = (
     <div className="space-y-4">
       {editingId && isReDispatch && (
-        <div className="rounded-ps-md bg-neon-cyan/5 border border-neon-cyan/20 p-3 text-micro text-neon-cyan/80 font-mono">
+        <EditNotice tone="info">
           A new mission will be created and dispatched immediately with your
           changes. The previous mission record will be kept for history.
-        </div>
+        </EditNotice>
       )}
       {editingId && isRunningEdit && (
-        <div className="rounded-ps-md bg-neon-orange/5 border border-neon-orange/20 p-3 text-micro text-neon-orange/90 font-mono">
+        <EditNotice tone="warn">
           Updates apply to this running mission. Linked cron jobs sync when
           schedule, profile, model, or prompt fields change.
-        </div>
+        </EditNotice>
       )}
       {editingId && isDraftEdit && (
-        <div className="rounded-ps-md bg-ps-surface-raised border border-ps-edge-hairline p-3 text-micro text-ps-text-muted font-mono">
+        <EditNotice tone="neutral">
           This mission is a draft. Choose how to run it in Dispatch — save,
           queue for when the agent is idle, run now, or schedule.
-        </div>
+        </EditNotice>
       )}
       {editingId && isQueuedEdit && (
-        <div className="rounded-ps-md bg-neon-orange/5 border border-neon-orange/20 p-3 text-micro text-neon-orange/90 font-mono">
+        <EditNotice tone="warn">
           This mission is waiting in the queue. You can update fields, dispatch
           immediately, or move it back to drafts.
-        </div>
+        </EditNotice>
       )}
 
       {(categoriesLoadError || categories.length === 0) && (
-        <p className="text-micro font-mono text-neon-orange/90 bg-neon-orange/5 border border-neon-orange/20 rounded-ps-md px-3 py-2">
+        <p className="text-micro font-mono text-status-warn">
           {categoriesLoadError ??
             "No categories loaded — run npm run db:migrate or restart PatterStage, then"}{" "}
           {onRetryCategories && (
@@ -432,11 +503,12 @@ export default function MissionCreateForm({
 
       <div>
         <ComposerFieldLabel>Mission Name</ComposerFieldLabel>
-        <input
+        <Input
           value={formState.newName}
           onChange={(e) => setFormField("newName", e.target.value)}
-          placeholder="e.g., Research quantum computing trends" aria-label="Mission name"
-          className="w-full h-9 bg-ps-surface-inset border border-ps-edge rounded-ps-md px-3 text-body text-ps-text-primary placeholder-ps-text-muted font-mono"
+          placeholder="e.g., Research quantum computing trends"
+          aria-label="Mission name"
+          className="font-mono"
         />
       </div>
 
@@ -483,7 +555,7 @@ export default function MissionCreateForm({
               onClick={() => setFormField("newDispatch", mode.id)}
               className={`h-9 px-3 rounded-ps-md text-micro font-mono border transition-colors ${
                 formState.newDispatch === mode.id
-                  ? "border-neon-cyan/50 bg-cyan-500/10 text-neon-cyan"
+                  ? "border-neon-cyan/50 bg-neon-cyan/10 text-neon-cyan"
                   : "border-ps-edge text-ps-text-muted hover:text-ps-text-secondary"
               }`}
             >
@@ -525,10 +597,7 @@ export default function MissionCreateForm({
               onAdd={addLocalDirFromDraft}
             />
             {formState.newLocalDirs.map((dir, i) => (
-              <div
-                key={`${dir.path}-${i}`}
-                className="rounded-ps-md border border-neon-cyan/15 bg-ps-surface-raised px-2 py-2"
-              >
+              <Card key={`${dir.path}-${i}`} variant="raised" padding="none" className="px-2 py-2">
                 <LocalDirRow
                   mode="saved"
                   entry={dir}
@@ -547,7 +616,7 @@ export default function MissionCreateForm({
                     )
                   }
                 />
-              </div>
+              </Card>
             ))}
           </div>
         </div>
@@ -556,29 +625,30 @@ export default function MissionCreateForm({
           <ComposerFieldLabel>References</ComposerFieldLabel>
           <div className="space-y-1.5">
             {formState.newReferences.map((ref, i) => (
-              <div
+              <Card
                 key={i}
-                className="flex items-center gap-2 bg-ps-surface-raised border border-neon-pink/20 rounded-ps-md px-3 py-1.5 h-9"
+                variant="raised"
+                padding="none"
+                className="flex items-center gap-2 px-3 py-1.5"
               >
                 <span className="text-micro font-mono text-neon-pink truncate flex-1">
                   {ref}
                 </span>
-                <button
-                  type="button"
+                <IconButton
+                  icon={X}
+                  label={`Remove reference ${ref}`}
+                  size="sm"
                   onClick={() =>
                     setFormField(
                       "newReferences",
                       formState.newReferences.filter((_, j) => j !== i),
                     )
                   }
-                  className="text-ps-text-muted hover:text-red-400 text-body"
-                >
-                  ×
-                </button>
-              </div>
+                />
+              </Card>
             ))}
             <div className="flex items-center gap-2">
-              <input
+              <Input
                 value={formState.referenceInput}
                 onChange={(e) =>
                   setFormField("referenceInput", e.target.value)
@@ -589,16 +659,18 @@ export default function MissionCreateForm({
                     addReferenceFromInput();
                   }
                 }}
-                placeholder="URL, doc path..." aria-label="Reference to add"
-                className="flex-1 h-9 bg-ps-surface-inset border border-ps-edge rounded-ps-md px-3 text-micro text-ps-text-primary placeholder-ps-text-muted font-mono"
+                placeholder="URL, doc path..."
+                aria-label="Reference to add"
+                className="flex-1 font-mono"
               />
-              <button
-                type="button"
+              <Button
+                variant="primary"
+                color="pink"
+                className="shrink-0"
                 onClick={addReferenceFromInput}
-                className="h-9 px-3 rounded-ps-md bg-neon-pink/10 border border-neon-pink/30 text-micro text-neon-pink font-mono shrink-0"
               >
                 + Add
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -726,11 +798,11 @@ export default function MissionCreateForm({
   }
 
   return (
-    <div className="rounded-ps-lg border border-neon-cyan/20 bg-ps-surface-panel p-4 mb-6">
+    <Card className="mb-6">
       <h3 className={sectionHeadingClasses}>
         {editingId ? "Edit Mission" : "New Mission"}
       </h3>
       {inner}
-    </div>
+    </Card>
   );
 }

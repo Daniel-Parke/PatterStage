@@ -213,7 +213,7 @@ export function SimpleMarkdown({ content }: { content: string }) {
         elements.push(
           <div
             key={`code-${i}`}
-            className="my-3 rounded-ps-md border border-ps-edge-hairline bg-ps-surface-inset overflow-hidden"
+            className="my-3 rounded-ps-md bg-ps-surface-inset overflow-hidden"
           >
             {codeBlockLang && (
               <div className="px-3 py-1.5 border-b border-ps-edge-hairline text-micro font-mono text-ps-text-muted uppercase">

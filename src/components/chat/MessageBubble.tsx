@@ -8,14 +8,94 @@
 // of a permanent "Thinking…" placeholder (the bug this rewrite fixes).
 // ═══════════════════════════════════════════════════════════════
 
-import { AlertTriangle, RotateCcw } from "lucide-react";
+"use client";
+
+import { useState } from "react";
+import {
+  AlertTriangle,
+  Brain,
+  Check,
+  ChevronDown,
+  ChevronRight,
+  Loader2,
+  RotateCcw,
+  ShieldQuestion,
+  Wrench,
+  X,
+} from "lucide-react";
 
 import { renderMarkdown } from "@/lib/chat-utils";
 import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
 import MessageAvatar from "@/components/chat/MessageAvatar";
-import ReasoningPanel from "@/components/chat/ReasoningPanel";
-import ToolCallList from "@/components/chat/ToolCallList";
-import type { ChatMessage } from "@/types/chat";
+import type { ChatMessage, ToolCall } from "@/types/chat";
+
+/**
+ * The collapsible "thinking" trace for an assistant turn. Streamed from the
+ * run's reasoning.* events; collapsed by default so the reply stays the
+ * focus, expandable for operators who want the chain.
+ */
+function ReasoningPanel({ reasoning }: { reasoning: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Card variant="raised" padding="none" className="mb-2">
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        title="Show the model's thinking trace for this reply"
+        className="w-full justify-start"
+      >
+        <Brain className="h-3 w-3 text-neon-purple" />
+        <span className="text-micro uppercase tracking-wider">Reasoning</span>
+        {open ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+      </Button>
+      {open && (
+        <div className="border-t border-ps-edge-hairline px-3 py-2 text-body leading-relaxed text-ps-text-muted whitespace-pre-wrap">
+          {reasoning}
+        </div>
+      )}
+    </Card>
+  );
+}
+
+/** Each tool an agent turn invoked, with its status chip. Streamed from the run's tool.* events. */
+const TOOL_STATUS_META: Record<
+  ToolCall["status"],
+  { label: string; className: string; Icon: typeof Check }
+> = {
+  invoked: { label: "running", className: "text-neon-cyan", Icon: Loader2 },
+  completed: { label: "done", className: "text-neon-green", Icon: Check },
+  failed: { label: "failed", className: "text-neon-red", Icon: X },
+  approval_required: { label: "awaiting approval", className: "text-neon-yellow", Icon: ShieldQuestion },
+};
+
+function ToolCallList({ toolCalls }: { toolCalls: ToolCall[] }) {
+  return (
+    <div className="mb-2 space-y-1">
+      {toolCalls.map((tc, i) => {
+        const meta = TOOL_STATUS_META[tc.status];
+        const Icon = meta.Icon;
+        return (
+          <Card
+            key={`${tc.name}-${i}`}
+            variant="raised"
+            padding="none"
+            className="flex items-center gap-2 px-2.5 py-1.5"
+          >
+            <Wrench className="h-3 w-3 text-ps-text-muted" />
+            <span className="font-mono text-micro text-ps-text-secondary">{tc.name}</span>
+            <span className={`ml-auto flex items-center gap-1 text-micro font-mono ${meta.className}`}>
+              <Icon className={`h-3 w-3 ${tc.status === "invoked" ? "animate-spin" : ""}`} />
+              {meta.label}
+            </span>
+          </Card>
+        );
+      })}
+    </div>
+  );
+}
 
 function AssistantBody({ msg, onRetry }: { msg: ChatMessage; onRetry?: () => void }) {
   const hasContent = msg.content.trim().length > 0;

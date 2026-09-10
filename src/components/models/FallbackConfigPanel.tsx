@@ -6,6 +6,10 @@
 
 import { RefreshCw, Upload, Info } from "lucide-react";
 import type { FallbackConfig } from "@/types/console";
+import { Panel } from "@/components/dashboard/Panel";
+import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
+import { Input } from "@/components/ui/field";
 
 interface FallbackConfigPanelProps {
   config: FallbackConfig;
@@ -58,20 +62,24 @@ export default function FallbackConfigPanel({
   return (
     <div className="space-y-4">
       {/* Settings section */}
-      <div className="rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel p-4 space-y-4">
+      <Card className="space-y-4">
         {/* Retry threshold */}
         <div>
           <label className="block text-micro font-mono text-ps-text-muted uppercase tracking-widest mb-2">
             Retry Threshold
           </label>
-          <input aria-label="Retry threshold"
-            type="number"
-            min="0"
-            max="10"
-            value={config.apiMaxRetries}
-            onChange={(e) => handleRetriesChange(e.target.value)}
-            className="w-24 h-9 min-h-9 bg-ps-surface-inset border border-ps-edge rounded-ps-md px-3 text-body text-ps-text-primary font-mono transition-colors"
-          />
+          {/* The kit's input fills its box, so the box is what sets the width. */}
+          <span className="inline-block w-24 align-middle">
+            <Input
+              aria-label="Retry threshold"
+              type="number"
+              min="0"
+              max="10"
+              value={config.apiMaxRetries}
+              onChange={(e) => handleRetriesChange(e.target.value)}
+              className="h-9 font-mono"
+            />
+          </span>
           <span className="ml-2 text-micro text-ps-text-muted font-mono">
             attempts before falling back
           </span>
@@ -127,16 +135,16 @@ export default function FallbackConfigPanel({
             Sends a notification when the agent switches to a fallback model
           </p>
         </div>
-      </div>
+      </Card>
 
       {/* Info banner */}
-      <div className="flex items-start gap-2 px-3 py-2.5 rounded-ps-md bg-neon-purple/5 border border-neon-purple/10">
+      <Panel accent="purple" tint="purple" className="flex items-start gap-2 px-3 py-2.5">
         <Info className="w-4 h-4 text-neon-purple flex-shrink-0 mt-0.5" />
         <p className="text-micro text-ps-text-muted font-mono">
           Fallback settings apply globally. Sync to save these settings
           to your Hermes agent configuration.
         </p>
-      </div>
+      </Panel>
 
       {(saving || dirty || saveError) && (
         <p className="text-micro font-mono text-ps-text-muted">
@@ -150,24 +158,25 @@ export default function FallbackConfigPanel({
 
       {/* Action buttons */}
       <div className="flex items-center gap-2">
-        <button
-          type="button"
+        <Button
+          variant="primary"
+          color="purple"
+          icon={RefreshCw}
+          loading={syncing}
           onClick={() => void onSyncToHermes()}
           disabled={syncBlocked}
-          className="flex items-center gap-2 px-4 h-9 bg-neon-purple/10 border border-neon-purple/30 text-neon-purple text-micro font-mono rounded-ps-md hover:bg-neon-purple/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${syncing ? "animate-spin" : ""}`} />
           {syncing ? "Syncing…" : saving || dirty ? "Save pending…" : "Sync to Hermes"}
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
+          variant="secondary"
+          icon={Upload}
+          loading={importing}
           onClick={() => void onImportFromConfig()}
           disabled={importing}
-          className="flex items-center gap-2 px-4 h-9 bg-ps-surface-raised border border-ps-edge text-ps-text-secondary text-micro font-mono rounded-ps-md hover:bg-ps-surface-raised transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <Upload className={`w-3.5 h-3.5 ${importing ? "animate-bounce" : ""}`} />
           {importing ? "Importing…" : "Import from config"}
-        </button>
+        </Button>
       </div>
     </div>
   );

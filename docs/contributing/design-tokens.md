@@ -435,8 +435,9 @@ default, and `tests/e2e/motion.spec.ts` fails on anything else found running.
   own, never disabled by being armed. `no-native-confirm` refuses
   `window.confirm`.
 - Feedback is the shell's: `FeedbackProvider` in the root layout owns the
-  toast stack (three at most; a success never evicts an error) and the
-  achievement toast. `useToast()` keeps its API on every page.
+  toast stack (three at most; a success never evicts an error), the
+  achievement toast and the quest toast. `useToast()` keeps its API on every
+  page.
 - A list read that failed shows `LoadErrorBanner` with a Retry, never the
   page's empty state; `EmptyState` renders only after a successful read.
 

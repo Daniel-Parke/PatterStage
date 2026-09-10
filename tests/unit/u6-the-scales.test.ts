@@ -133,7 +133,8 @@ describe("paint nobody applies", () => {
     // In BrandMark since T-0121, which is where the lockup moved when the
     // mobile header stopped calling the product something else. Still one call
     // site, still the product's own name.
-    expect(read("src/components/layout/BrandMark.tsx")).toContain("text-glow-cyan");
+    // The lockup is a function of the rail's own file since C6 (T-0143).
+    expect(read("src/components/layout/Sidebar.tsx")).toContain("text-glow-cyan");
   });
 });
 

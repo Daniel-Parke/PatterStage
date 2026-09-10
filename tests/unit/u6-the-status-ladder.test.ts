@@ -68,7 +68,6 @@ function sources(): Array<[string, string]> {
   return out;
 }
 
-
 describe("the word decides the colour", () => {
   it("gives every ratified word a tone, and no word is missed", () => {
     expect(STATUS_VOCABULARY.length).toBe(13);

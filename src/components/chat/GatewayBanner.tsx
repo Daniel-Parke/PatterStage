@@ -14,9 +14,9 @@
 
 "use client";
 
-import Link from "next/link";
 import { AlertTriangle, Loader2 } from "lucide-react";
 
+import LinkButton from "@/components/ui/LinkButton";
 import type { GatewayBannerState } from "./gateway-banner-states";
 
 type GatewayStatus = GatewayBannerState;
@@ -165,12 +165,9 @@ export default function GatewayBanner({
             the same screen, so the banner takes the operator there rather than
             describing three routes and leaving them to pick. */}
         {status === "model-missing" && (
-          <Link
-            href={MODELS_HREF}
-            className="mt-2 inline-flex items-center rounded-ps-md border border-neon-orange/40 px-3 py-1.5 text-body font-medium text-neon-orange hover:bg-neon-orange/10"
-          >
+          <LinkButton href={MODELS_HREF} variant="primary" color="orange" size="sm" className="mt-2">
             Open models
-          </Link>
+          </LinkButton>
         )}
       </div>
     </div>

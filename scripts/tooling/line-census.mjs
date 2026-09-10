@@ -189,14 +189,16 @@ function oneImporterComponents() {
   const comps = src.filter((f) => f.includes("/src/components/") && f.endsWith(".tsx"));
   const rows = [];
   for (const c of comps) {
-    const stem = c.replace(/\.tsx$/, "");
+    // An index file is imported by its directory's name (C6 corrected this:
+    // motion/index.tsx read as one importer, db/backup's "./index", when it has two).
+    const stem = c.replace(/\.tsx$/, "").replace(/\/index$/, "");
     const alias = stem.replace(/.*\/src\//, "@/");
     const base = stem.split("/").pop();
     let n = 0;
     for (const f of tsFiles(src)) {
       if (f === c) continue;
       const t = text.get(f);
-      if (t.includes(`"${alias}"`) || new RegExp(`from "\\.{1,2}/[^"]*\\b${base}"`).test(t)) n += 1;
+      if (t.includes(`"${alias}"`) || t.includes(`"${alias}/index"`) || new RegExp(`from "\\.{1,2}/[^"]*\\b${base}(?:/index)?"`).test(t)) n += 1;
     }
     if (n === 1) rows.push([rel(c), lines(c).length]);
   }

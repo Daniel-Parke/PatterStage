@@ -17,8 +17,9 @@
  * rail are the same aside, told apart by matchMedia, so this test says which
  * it is.
  */
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { matchMediaMock } from "../helpers/mocks";
+import { renderWithQuery } from "../helpers/render-with-query";
 
 jest.mock("next/navigation", () => ({ usePathname: () => "/" }));
 jest.mock("next/link", () => require("../helpers/mocks").nextLinkMock());
@@ -40,12 +41,13 @@ jest.mock("@/hooks/useStats", () => ({
 }));
 jest.mock("@/lib/api-fetch", () => ({ safeApiCall: jest.fn(async () => ({ ok: false, error: "offline" })) }));
 
-import Sidebar from "@/components/layout/Sidebar";
-import MobileHeader from "@/components/layout/MobileHeader";
+import Sidebar, { MobileHeader } from "@/components/layout/Sidebar";
 import { SidebarProvider } from "@/components/layout/SidebarContext";
 
+// Under a query client: the collapse preference is written through a
+// react-query mutation since C6 (T-0143). Nothing here toggles it.
 function mountShell() {
-  return render(
+  return renderWithQuery(
     <SidebarProvider>
       <MobileHeader />
       <Sidebar />
@@ -80,7 +82,9 @@ describe("D120: the mobile drawer", () => {
     expect(d).not.toHaveAttribute("inert");
     expect(d).toHaveAttribute("role", "dialog");
     expect(d).toHaveAttribute("aria-modal", "true");
-    expect(d.className).toMatch(/z-\[6\d\]/);
+    // The modal layer of the seven named ones (C6, T-0143): above the sticky
+    // header and the overlay its backdrop sits on.
+    expect(d.className).toMatch(/\bz-modal\b/);
     fireEvent.keyDown(document, { key: "Escape" });
     expect(rail()).toHaveAttribute("inert");
   });
@@ -90,6 +94,7 @@ describe("D120: the mobile drawer", () => {
     await waitFor(() => expect(rail()).toHaveAttribute("inert"));
     fireEvent.click(screen.getByRole("button", { name: /open navigation/i }));
     const backdrop = screen.getByRole("button", { name: /close navigation/i });
+    expect(backdrop.className).toMatch(/\bz-overlay\b/);
     fireEvent.click(backdrop);
     expect(rail()).toHaveAttribute("inert");
   });

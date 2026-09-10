@@ -70,6 +70,27 @@ describe("C6 · the page layer", () => {
     expect(pragmas.length).toBeLessThanOrEqual(PRAGMA_CEILING);
   });
 
+  /**
+   * The skip link is `sr-only` until it is focused, so its SIZE has to be
+   * focus-only too: unprefixed height and padding utilities override the 1x1
+   * clip and the hidden link becomes a 22x26 target on every route, which is
+   * how C6 first broke gate 8. The literals cannot be composed from the scale
+   * at runtime (Tailwind compiles what it reads in the source), so this holds
+   * them to it instead.
+   */
+  it("the skip link wears the button's scale, on focus only", () => {
+    const layout = readFileSync(join(ROOT, "src", "app", "layout.tsx"), "utf8");
+    const chrome = readFileSync(join(ROOT, "src", "components", "ui", "button-chrome.ts"), "utf8");
+    const size = [/buttonHeights[\s\S]*?sm: "([^"]+)"/, /buttonPadding[\s\S]*?sm: "([^"]+)"/]
+      .flatMap((re) => (chrome.match(re)?.[1] ?? "").split(/\s+/))
+      .filter(Boolean);
+    expect(size.length).toBeGreaterThanOrEqual(4);
+    const link = layout.split(/\r?\n/).find((l) => l.includes("sr-only focus:not-sr-only")) ?? "";
+    for (const cls of size) expect(link).toContain(`focus:${cls}`);
+    // And nothing that sizes the box unprefixed.
+    expect(link.replace(/focus:\S+/g, "")).not.toMatch(/(?:^|\s)(?:h|w|p[xytblr]?)-/);
+  });
+
   it("no screen or hook reads the API from an effect of its own", () => {
     const out = execFileSync(process.execPath, [join(ROOT, "scripts", "tooling", "line-census.mjs"), "--report"], {
       encoding: "utf8",

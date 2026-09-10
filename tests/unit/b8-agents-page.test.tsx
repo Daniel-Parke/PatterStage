@@ -26,7 +26,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { withQuery } from "../helpers/render-with-query";
 
 jest.mock("next/navigation", () => ({
   usePathname: () => "/agent/profiles",
@@ -44,6 +44,10 @@ const mockApiFetch = jest.fn();
 jest.mock("@/lib/api-fetch", () => ({
   ...(jest.requireActual("@/lib/api-fetch") as Record<string, unknown>),
   apiFetch: (...a: unknown[]) => mockApiFetch(...a),
+  // The pages read through useApiResource, which calls safeApiCall; routed
+  // through the same mock so a read is still one of the paths asked for (C6, T-0143).
+   
+  safeApiCall: require("../helpers/mocks").safeApiCallOver((...a: unknown[]) => mockApiFetch(...a)),
 }));
 
 import AgentsPage from "@/app/agent/profiles/page";
@@ -85,10 +89,6 @@ const QA: AgentProfile = {
 } as unknown as AgentProfile;
 
 /** AgentSetupNotice reads through react-query, which needs its provider. */
-function withQuery(ui: React.ReactElement) {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return <QueryClientProvider client={client}>{ui}</QueryClientProvider>;
-}
 
 /** Every path the page asked for, in order. */
 const paths = () => mockApiFetch.mock.calls.map((c) => String(c[0]));

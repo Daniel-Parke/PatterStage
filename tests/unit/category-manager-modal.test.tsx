@@ -3,6 +3,7 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 
 jest.mock("lucide-react", () => ({
+  ChevronDown: () => "v",
   Pencil: () => "P",
   Plus: () => "+",
   Trash2: () => "T",

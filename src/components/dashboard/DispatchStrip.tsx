@@ -18,6 +18,7 @@ import { Rocket, ChevronRight, ChevronDown } from "lucide-react";
 
 import CategoryAccordion from "@/components/ui/CategoryAccordion";
 import TemplatePill from "@/components/ui/TemplatePill";
+import { Panel } from "@/components/dashboard/Panel";
 import {
   groupTemplatesByCategory,
   type TemplateLike,
@@ -62,7 +63,7 @@ export default function DispatchStrip({ templates, categories }: DispatchStripPr
   );
 
   return (
-    <div className="rounded-ps-lg border border-neon-cyan/20 bg-ps-surface-panel overflow-hidden">
+    <Panel accent="cyan">
       <button
         onClick={toggle}
         className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-ps-surface-raised transition-colors"
@@ -128,6 +129,6 @@ export default function DispatchStrip({ templates, categories }: DispatchStripPr
           ))}
         </div>
       )}
-    </div>
+    </Panel>
   );
 }

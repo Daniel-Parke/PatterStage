@@ -92,6 +92,18 @@ The work leading to the 1.0.0 release.
 
 ### Changed
 
+- **A refused write says why, in the same place every time.** On Composer,
+  Research, Artifacts, Logs, Scripts, the Story Weaver library, the memory
+  provider card, the system backup and the Insights budget, a write that the
+  server refused used to show an inline banner, a sentence under the form, or
+  (for the budget) nothing at all. Every write now reports through the one
+  toast, in the server's own words, so the answer is in the same corner
+  whichever screen you are on.
+- **Every control and card is the shared one.** The last 221 hand-drawn card
+  frames, 23 hand-drawn inputs and buttons, 74 off-palette colours and 20
+  home-made stacking orders on the screens now use the same primitives as the
+  rest of the product, so a select on Missions looks like a select on Memory
+  and a warning on Tools looks like a warning on Composer.
 - **Four small things, each a line.** The sidebar's version line shows the
   version alone (the commit is in its tooltip and on Settings › System)
   instead of truncating both. Research's Search picker takes its own row on
@@ -366,6 +378,10 @@ The work leading to the 1.0.0 release.
 
 ### Fixed
 
+- **Skills and Restore keep what is on screen across a reload.** Like Models
+  before them, both replaced the whole page with a spinner on every refresh
+  after a save, closing whatever you had open. The spinner is for the first
+  read only; a reload keeps the page and updates it in place.
 - **A custom fallback model keeps what you typed.** Adding a fallback that is
   not in the registry stored none of its name, provider or model id: the row
   read "Custom / custom" with an empty model id from then on, and that empty

@@ -103,8 +103,8 @@ function schedule(over: Partial<ScheduleView> = {}): ScheduleView {
 function renderPanel(detail: B10Detail, onCancel = jest.fn()) {
   return {
     onCancel,
-    // A dispatched mission renders <MissionLiveProgress>, which reads through
-    // TanStack Query, so every render in this file needs the provider.
+    // A dispatched mission renders the panel's live-progress read, which goes
+    // through TanStack Query, so every render in this file needs the provider.
     ...renderWithQuery(
       <Panel
         detail={detail}

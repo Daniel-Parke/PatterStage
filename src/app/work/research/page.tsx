@@ -25,7 +25,8 @@ import SplitPane from "@/components/ui/SplitPane";
 import { Field, Textarea, Select, Input } from "@/components/ui/field";
 import ResearchReport from "@/components/research/ResearchReport";
 import ConceptHint from "@/components/help/ConceptHint";
-import { safeApiCall } from "@/lib/api-fetch";
+import { useToast } from "@/components/ui/Toast";
+import { runWrite } from "@/lib/api-write";
 import { useResearchRuns, useResearchRun, useResearchPresets } from "@/hooks/useDeepResearch";
 import { useModels } from "@/hooks/useModels";
 import { formatElapsed } from "@/lib/utils";
@@ -98,9 +99,10 @@ export default function DeepResearchPage() {
   const [submitting, setSubmitting] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [presetName, setPresetName] = useState("");
-  /** A failed write on this page. Every one of them used to be fire-and-forget:
-   *  a 400 left the screen exactly as it was (D99). */
-  const [writeError, setWriteError] = useState<string | null>(null);
+  // Every write on this page used to be fire-and-forget: a 400 left the screen
+  // exactly as it was (D99). They go through runWrite now, which says the
+  // server's reason as a toast (C6, T-0143).
+  const { showToast, toastElement } = useToast();
 
   const { data: runs, refetch, error: runsError } = useResearchRuns();
   const { data: polled } = useResearchRun(selectedId);
@@ -128,25 +130,27 @@ export default function DeepResearchPage() {
   async function start() {
     const q = query.trim();
     if (q.length < 3 || submitting) return;
-    setSubmitting(true);
-    try {
-      const config: ResearchConfig = { ...cfg, modelId: cfg.modelId || undefined };
-      const res = await safeApiCall<{ data?: { run?: { id: string } } }>("/api/laboratory/research", {
-        method: "POST",
-        body: { query: q, config },
-      });
-      if (!res.ok) { setWriteError(res.error ?? "Could not start that run"); return; }
-      const id = res.data?.data?.run?.id;
+    const config: ResearchConfig = { ...cfg, modelId: cfg.modelId || undefined };
+    await runWrite<{ data?: { run?: { id: string } } }>({
+      showToast,
+      setBusy: setSubmitting,
+      url: "/api/laboratory/research",
+      body: { query: q, config },
       // A 200 with no id is still a failure: nothing is running, and the form
       // would otherwise clear itself as though something were.
-      if (!id) { setWriteError("The run started but no id came back, so there is nothing to follow."); return; }
-      setWriteError(null);
-      setQuery("");
-      setSelectedId(id);
-      await refetch();
-    } finally {
-      setSubmitting(false);
-    }
+      successMessage: (res) =>
+        res?.data?.run?.id
+          ? "Research started"
+          : { message: "The run started but no id came back, so there is nothing to follow.", type: "error" },
+      errorMessage: "Could not start that run",
+      onSuccess: async (res) => {
+        const id = res?.data?.run?.id;
+        if (!id) return;
+        setQuery("");
+        setSelectedId(id);
+        await refetch();
+      },
+    });
   }
 
   function applyPreset(id: string) {
@@ -158,23 +162,31 @@ export default function DeepResearchPage() {
   async function savePreset() {
     const name = presetName.trim();
     if (!name) return;
-    const res = await safeApiCall("/api/laboratory/research/presets", {
-      method: "POST",
+    await runWrite({
+      showToast,
+      url: "/api/laboratory/research/presets",
       body: { name, config: { ...cfg, modelId: cfg.modelId || undefined } },
+      successMessage: `Preset "${name}" saved`,
+      errorMessage: "Could not save that preset",
+      onSuccess: async () => {
+        setPresetName("");
+        await refetchPresets();
+      },
     });
-    if (!res.ok) { setWriteError(res.error ?? "Could not save that preset"); return; }
-    setWriteError(null);
-    setPresetName("");
-    await refetchPresets();
   }
 
   /** Stop a run in flight. The row the route writes is the final word; the job
    *  bails out rather than overwriting it (D98). */
   async function cancelRun(id: string) {
-    const res = await safeApiCall(`/api/laboratory/research/${id}/cancel`, { method: "POST" });
-    if (!res.ok) { setWriteError(res.error ?? "Could not stop that run"); return; }
-    setWriteError(null);
-    await refetch();
+    await runWrite({
+      showToast,
+      url: `/api/laboratory/research/${id}/cancel`,
+      successMessage: "Run stopped",
+      errorMessage: "Could not stop that run",
+      onSuccess: async () => {
+        await refetch();
+      },
+    });
   }
 
   return (
@@ -194,7 +206,6 @@ export default function DeepResearchPage() {
       {/* A failed live read, as distinct from a dropped socket. The run
           detail below still renders from the polled copy (T-0046). */}
       {liveError ? <LoadErrorBanner error={`Live updates: ${liveError}`} /> : null}
-      {writeError ? <LoadErrorBanner error={writeError} /> : null}
 
       {/* Launch form */}
       <Card padding="md" glow="cyan">
@@ -355,6 +366,7 @@ export default function DeepResearchPage() {
         </Card>
       </SplitPane>
     </div>
+    {toastElement}
     </AppPageShell>
   );
 }

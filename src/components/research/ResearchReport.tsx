@@ -14,7 +14,9 @@ import { sectionHeadingClasses } from "@/lib/theme";
 import { useState } from "react";
 import { Check, Copy, Download, ExternalLink, Loader2 } from "lucide-react";
 
+import { Panel } from "@/components/dashboard/Panel";
 import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
 import { renderReport } from "@/lib/laboratory/deep-research/markdown";
 import {
   collectSources,
@@ -60,6 +62,7 @@ const PROSE =
   "[&_p]:my-2 [&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-1 " +
   "[&_a]:text-neon-cyan hover:[&_a]:underline " +
   "[&_code]:rounded-ps-sm [&_code]:bg-ps-surface-inset [&_code]:px-1 [&_code]:text-micro [&_code]:text-neon-green " +
+  // design-lint-disable-next-line no-inline-card-chrome -- a code block inside the renderer's HTML: there is no element here to make a Card, only a selector reaching into markup this file does not emit
   "[&_pre.dr-code]:my-3 [&_pre.dr-code]:overflow-x-auto [&_pre.dr-code]:rounded-ps-md [&_pre.dr-code]:border [&_pre.dr-code]:border-ps-edge-hairline [&_pre.dr-code]:bg-ps-surface-ground [&_pre.dr-code]:p-3 " +
   "[&_pre.dr-code_code]:bg-transparent [&_pre.dr-code_code]:p-0 [&_pre.dr-code_code]:text-ps-text-secondary " +
   "[&_blockquote]:my-2 [&_blockquote]:border-l-2 [&_blockquote]:border-neon-cyan/50 [&_blockquote]:pl-3 [&_blockquote]:text-ps-text-secondary " +
@@ -74,20 +77,19 @@ const PROSE =
 // no-sub-12px-type baseline shrinks only, so the labels are text-body (12px) and
 // the links are text-body. Fewer sections listed, not smaller ones.
 const BRIEF =
-  "rounded-ps-lg border border-neon-cyan/25 bg-neon-cyan/5 px-4 py-3 " +
   "[&_.dr-brief-lbl]:mb-2 [&_.dr-brief-lbl]:font-mono [&_.dr-brief-lbl]:text-micro [&_.dr-brief-lbl]:uppercase [&_.dr-brief-lbl]:tracking-widest [&_.dr-brief-lbl]:text-neon-cyan " +
   "[&_ul]:list-disc [&_ul]:space-y-1.5 [&_ul]:pl-5 " +
   "[&_li]:text-body [&_li]:leading-relaxed [&_li]:text-ps-text-primary " +
   "[&_a]:text-neon-cyan hover:[&_a]:underline";
 
 const NAV =
-  "rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel px-4 py-3 " +
   "[&_.dr-nav-lbl]:mb-2 [&_.dr-nav-lbl]:font-mono [&_.dr-nav-lbl]:text-micro [&_.dr-nav-lbl]:uppercase [&_.dr-nav-lbl]:tracking-widest [&_.dr-nav-lbl]:text-ps-text-muted " +
   "[&_ol]:flex [&_ol]:list-none [&_ol]:flex-wrap [&_ol]:gap-x-5 [&_ol]:gap-y-1 [&_ol]:p-0 " +
   "[&_li]:text-body [&_a]:text-ps-text-secondary hover:[&_a]:text-neon-cyan hover:[&_a]:underline";
 
 const SOURCES =
   "[&_ol.dr-sources]:list-none [&_ol.dr-sources]:space-y-2 [&_ol.dr-sources]:pl-0 " +
+  // design-lint-disable-next-line no-inline-card-chrome -- a source row inside renderSourcesHtml's HTML: a selector into markup this file does not emit, with no element of its own to make a Card
   "[&_ol.dr-sources_li]:rounded-ps-md [&_ol.dr-sources_li]:border [&_ol.dr-sources_li]:border-ps-edge-hairline [&_ol.dr-sources_li]:bg-ps-surface-panel [&_ol.dr-sources_li]:p-2.5 [&_ol.dr-sources_li]:scroll-mt-20 " +
   "[&_.n]:font-semibold [&_.n]:text-neon-cyan [&_a]:text-ps-text-primary hover:[&_a]:text-neon-cyan "
   // `.h` is a source whose URL is not http(s), so renderSourcesHtml refuses
@@ -135,12 +137,16 @@ export default function ResearchReport({ run, steps }: { run: ResearchRun; steps
 
       {/* Skim layer: the In brief band, then the navigator, then the prose. */}
       {briefHtml ? (
-        /* design-lint-disable-next-line no-unsanitised-html -- renderInBriefHtml only wraps bullets that renderReport produced, escaped at the Markdown boundary by the same renderer as the prose below. */
-        <div className={BRIEF} dangerouslySetInnerHTML={{ __html: briefHtml }} />
+        <Panel accent="cyan" tint="cyan" className="px-4 py-3">
+          {/* design-lint-disable-next-line no-unsanitised-html -- renderInBriefHtml only wraps bullets that renderReport produced, escaped at the Markdown boundary by the same renderer as the prose below. */}
+          <div className={BRIEF} dangerouslySetInnerHTML={{ __html: briefHtml }} />
+        </Panel>
       ) : null}
       {navHtml ? (
-        /* design-lint-disable-next-line no-unsanitised-html -- renderReportNavHtml emits only escaped heading text and the slugs it was given, no model HTML. */
-        <div className={NAV} dangerouslySetInnerHTML={{ __html: navHtml }} />
+        <Card padding="none" className="px-4 py-3">
+          {/* design-lint-disable-next-line no-unsanitised-html -- renderReportNavHtml emits only escaped heading text and the slugs it was given, no model HTML. */}
+          <div className={NAV} dangerouslySetInnerHTML={{ __html: navHtml }} />
+        </Card>
       ) : null}
 
       {/* Report */}
@@ -186,22 +192,24 @@ export default function ResearchReport({ run, steps }: { run: ResearchRun; steps
                     />
                   ) : null}
                   <span
-                    className={`absolute left-1 top-3 h-3.5 w-3.5 rounded-full ring-2 ring-dark-900 ${STEP_DOT[s.kind] ?? "bg-white/30"} ${active ? "animate-pulse" : ""}`}
+                    className={`absolute left-1 top-3 h-3.5 w-3.5 rounded-full ring-2 ring-dark-900 ${STEP_DOT[s.kind] ?? "bg-status-idle"} ${active ? "animate-pulse" : ""}`}
                     aria-hidden
                   />
-                  <details open={active} className="rounded-ps-md border border-ps-edge-hairline bg-ps-surface-panel">
-                    <summary className="cursor-pointer list-none px-3 py-2 text-body">
-                      <span className={`font-mono uppercase tracking-wider ${STEP_COLOR[s.kind] ?? "text-ps-text-secondary"}`}>
-                        {STEP_LABEL[s.kind] ?? s.kind}
-                      </span>
-                      {s.input ? <span className="ml-2 text-ps-text-muted">{s.input.slice(0, 70)}</span> : null}
-                    </summary>
-                    {s.output ? (
-                      <pre className="max-h-60 overflow-y-auto whitespace-pre-wrap px-3 pb-3 text-body text-ps-text-muted">
-                        {s.output}
-                      </pre>
-                    ) : null}
-                  </details>
+                  <Card padding="none">
+                    <details open={active}>
+                      <summary className="cursor-pointer list-none px-3 py-2 text-body">
+                        <span className={`font-mono uppercase tracking-wider ${STEP_COLOR[s.kind] ?? "text-ps-text-secondary"}`}>
+                          {STEP_LABEL[s.kind] ?? s.kind}
+                        </span>
+                        {s.input ? <span className="ml-2 text-ps-text-muted">{s.input.slice(0, 70)}</span> : null}
+                      </summary>
+                      {s.output ? (
+                        <pre className="max-h-60 overflow-y-auto whitespace-pre-wrap px-3 pb-3 text-body text-ps-text-muted">
+                          {s.output}
+                        </pre>
+                      ) : null}
+                    </details>
+                  </Card>
                 </li>
               );
             })}

@@ -7,6 +7,7 @@
 import Link from "next/link";
 
 import type { AccentColor } from "@/types/console";
+import Card from "@/components/ui/Card";
 import { iconColorMap, pillBorderHoverMap, pillBorderMap } from "@/lib/theme";
 import Sparkline from "@/components/viz/Sparkline";
 import type { NeonColor } from "@/components/viz/colors";
@@ -51,6 +52,7 @@ export function StatPill({
   const borderClass = pillBorderMap[color];
   // items-start, not items-center: a pill with a subtitle and one without sat
   // on different baselines in the same row (T-0127).
+  // design-lint-disable-next-line no-inline-card-chrome -- the pill is a Link wearing its accent edge from pillBorderMap (T-0120); Card renders a container element with the hairline edge, so it can be neither the link nor the accent
   const base = `rounded-ps-md border ${borderClass} bg-ps-surface-panel px-4 py-3 flex items-start gap-3 min-w-0`;
 
   const inner = (
@@ -99,12 +101,12 @@ export function StatPill({
  */
 export function StatPillSkeleton() {
   return (
-    <div className="rounded-ps-md border border-ps-edge-hairline bg-ps-surface-panel px-4 py-3 flex items-center gap-3 animate-pulse">
+    <Card padding="none" className="px-4 py-3 flex items-center gap-3 animate-pulse">
       <div className="w-4 h-4 rounded-ps-sm bg-ps-surface-raised flex-shrink-0" />
       <div className="flex-1 space-y-2">
         <div className="h-3 w-16 rounded-ps-sm bg-ps-surface-raised" />
         <div className="h-5 w-24 rounded-ps-sm bg-ps-surface-raised" />
       </div>
-    </div>
+    </Card>
   );
 }

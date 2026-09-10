@@ -51,9 +51,9 @@ interface RowDeleteButtonProps {
  * (T-0096, D66). The armed state clears itself after four seconds, so a stray
  * click hours later is a no-op rather than a deletion.
  *
- * Distinguishing styling from the Edit button: hover bg is `bg-red-500/10` (not
- * `bg-ps-surface-raised`) and the hover text is `text-red-400`; armed reverses the pair so
- * the second click is visibly the loaded one.
+ * Distinguishing styling from the Edit button: hover bg is the danger tint (not
+ * `bg-ps-surface-raised`) and the hover text is `text-semantic-danger`; armed
+ * reverses the pair so the second click is visibly the loaded one.
  */
 export function RowDeleteButton({ onClick, label }: RowDeleteButtonProps) {
   const confirm = useTwoStepConfirm({ autoDismissMs: 4000 });
@@ -65,8 +65,8 @@ export function RowDeleteButton({ onClick, label }: RowDeleteButtonProps) {
       onClick={() => (confirm.isArmed ? void confirm.confirm(onClick) : confirm.arm())}
       className={`p-1.5 rounded-ps-md transition-colors ${
         confirm.isArmed
-          ? "bg-red-500/20 text-red-300 ring-1 ring-red-500/40"
-          : "hover:bg-red-500/10 text-ps-text-muted hover:text-red-400"
+          ? "bg-semantic-danger/20 text-semantic-danger ring-1 ring-semantic-danger/40"
+          : "hover:bg-semantic-danger/10 text-ps-text-muted hover:text-semantic-danger"
       }`}
       aria-label={confirm.isArmed ? `Click again to confirm deleting${named}` : `Delete${named}`}
       title={confirm.isArmed ? "Click again to confirm" : "Delete"}

@@ -83,8 +83,8 @@ export default function ActiveMissionsPanel({
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); onCancel(m.id, m.name); }}
                 className={`text-micro font-mono transition-colors px-1.5 py-0.5 rounded-ps-sm ${
                   isArmedFor(m.id)
-                    ? "bg-red-500/20 text-red-400"
-                    : "text-ps-text-faint hover:text-red-400 hover:bg-red-500/10"
+                    ? "bg-semantic-danger/20 text-semantic-danger"
+                    : "text-ps-text-faint hover:text-semantic-danger hover:bg-semantic-danger/10"
                 }`}
                 title="Cancel mission"
               >

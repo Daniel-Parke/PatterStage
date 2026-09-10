@@ -7,20 +7,47 @@
 // draws it was tested by nobody. Replacing `{headline}` with the old hardcoded
 // sentence changed no test result, so the fix could have been reverted in the
 // one file that matters and every suite would have stayed green.
+//
+// The banner is a local of AgentProfilesOverview since C6 (T-0143): it is
+// rendered through the overview, from profiles whose syncStatus gives the
+// counts the banner used to take as props.
 
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 
 jest.mock("lucide-react", () => {
   const passthrough = (name: string) => () => `[${name}]`;
   return new Proxy({}, { get: (_t, prop: string) => passthrough(prop) });
 });
+jest.mock("@/components/agents/AgentPerformanceStrip", () => ({ __esModule: true, default: () => null }));
+jest.mock("@/components/help/ConceptHint", () => ({
+  __esModule: true,
+  default: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
+}));
 
-import ProfilesDriftBanner from "@/components/profiles/ProfilesDriftBanner";
+import AgentProfilesOverview from "@/components/agents/AgentProfilesOverview";
+import type { AgentProfile } from "@/types/console";
 
 // No onPushAll and no pushing since U18 (T-0132): the bar under the banner
 // owns the one Push all.
 function renderBanner(driftCount: number, errorCount: number) {
-  return render(<ProfilesDriftBanner driftCount={driftCount} errorCount={errorCount} />);
+  const profiles = [
+    ...Array.from({ length: driftCount }, (_, i) => ({ id: `d${i}`, name: `Drifted ${i}`, syncStatus: "drift" })),
+    ...Array.from({ length: errorCount }, (_, i) => ({ id: `e${i}`, name: `Errored ${i}`, syncStatus: "error" })),
+  ] as unknown as AgentProfile[];
+  return render(
+    <AgentProfilesOverview
+      profiles={profiles}
+      syncBusy={false}
+      onPushAll={() => {}}
+      onPullAll={() => {}}
+      onImportDiscovered={() => {}}
+    />,
+  );
+}
+
+/** The banner's own element: the headline's grandparent. */
+function bannerOf(headline: HTMLElement): HTMLElement {
+  return headline.parentElement!.parentElement!;
 }
 
 describe("the profiles banner says what is actually wrong", () => {
@@ -63,13 +90,18 @@ describe("the profiles banner says what is actually wrong", () => {
 
     // The banner carried its own Push all button until U18 (T-0132); the bar
     // under it has the one Push all now, and the sentence points at it.
-    expect(screen.queryByRole("button")).toBeNull();
-    expect(screen.getByText(/Push all/)).toBeTruthy();
+    const banner = bannerOf(screen.getByText(/1 sync error/));
+    expect(within(banner).queryByRole("button")).toBeNull();
+    expect(within(banner).getByText(/Push all/)).toBeTruthy();
+    expect(screen.getAllByRole("button", { name: /push all/i })).toHaveLength(1);
   });
 
   it("GREEN CONTROL: renders nothing at all when nothing is wrong", () => {
-    const { container } = renderBanner(0, 0);
+    renderBanner(0, 0);
 
-    expect(container.firstChild).toBeNull();
+    // The overview still stands (its note and its bar); the banner does not.
+    const text = document.body.textContent ?? "";
+    expect(text).not.toMatch(/drifted from database|sync error/i);
+    expect(screen.queryByText(/Push all, below/)).toBeNull();
   });
 });

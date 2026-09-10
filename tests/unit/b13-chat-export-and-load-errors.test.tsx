@@ -24,7 +24,8 @@
 // the assertion reads the bytes the operator would have got.
 // ═══════════════════════════════════════════════════════════════
 
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { renderWithQuery } from "../helpers/render-with-query";
 
 import type { ChatConversation, ChatMessage } from "@/types/chat";
 
@@ -141,7 +142,8 @@ beforeEach(() => {
 });
 
 async function renderChat() {
-  render(<ChatPage />);
+  // The list reads through useApiResource since C6 (T-0143).
+  renderWithQuery(<ChatPage />);
   // The list read settles and the first conversation becomes active.
   await screen.findByText("Beta");
   await screen.findByText(ALPHA_TEXT);

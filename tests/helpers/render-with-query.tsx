@@ -20,3 +20,17 @@ export function renderWithQuery(
   }
   return render(ui, { wrapper: Wrapper, ...options });
 }
+
+/** A fresh client with retries off, as a wrapper for `renderHook` or `render`. */
+export function queryWrapper() {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return function Wrapper({ children }: { children: React.ReactNode }) {
+    return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+  };
+}
+
+/** The tree under a fresh client, for a suite that composes its own render. */
+export function withQuery(ui: React.ReactElement) {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return <QueryClientProvider client={client}>{ui}</QueryClientProvider>;
+}

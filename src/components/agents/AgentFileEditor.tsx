@@ -10,6 +10,7 @@
 import { AlertCircle, Check, Eye, EyeOff, RotateCcw, Save } from "lucide-react";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
+import { Textarea } from "@/components/ui/field";
 
 /** The file currently open in the editor, and the buffer being edited. */
 export interface EditorState {
@@ -98,10 +99,11 @@ export default function AgentFileEditor({
           {editor.content}
         </pre>
       ) : (
-        <textarea aria-label="File content"
+        <Textarea
+          aria-label="File content"
           value={editor.content}
           onChange={(e) => onContentChange(e.target.value)}
-          className="w-full min-h-[200px] max-h-64 bg-ps-surface-inset border border-ps-edge rounded-ps-md p-4 text-body text-ps-text-primary font-mono resize-y"
+          className="min-h-[200px] max-h-64"
           spellCheck={false}
         />
       )}

@@ -18,6 +18,7 @@ jest.mock("@/hooks/useStats", () => ({ useStats: () => mockUseStats() }));
 
 import { FeedbackProvider } from "@/components/providers/FeedbackProvider";
 import { useToast } from "@/components/ui/Toast";
+import type { QuestProgress, QuestState } from "@/lib/quests/evaluate";
 
 const ROOT = join(__dirname, "..", "..");
 
@@ -111,6 +112,103 @@ describe("useToast under the provider", () => {
     const { result } = renderHook(() => useToast());
     act(() => result.current.showToast("hello", "success"));
     expect(result.current.toastElement).not.toBeNull();
+  });
+});
+
+// ── the quest toast ─────────────────────────────────────────────
+//
+// T-0111's four cases, written against QuestTracker when it was a child that
+// rendered nothing. The tracker is the provider's own hook since C6 (T-0143),
+// so the proof is the toast on screen rather than a mocked showToast. Every
+// case answers a mutant that lived: `=== null` -> `!== null` is the one the
+// sweep found ("the first poll seeds and says nothing").
+
+const quest = (over: Partial<QuestState> & { id: string }): QuestState => ({
+  chapter: 1,
+  title: `Quest ${over.id}`,
+  action: `Do ${over.id}`,
+  screen: "/work/missions",
+  teaches: [],
+  requires: undefined,
+  earns: undefined,
+  proof: { kind: "event", event: "mission.dispatched", target: 1 },
+  met: false,
+  completed: false,
+  completedAt: null,
+  skipped: false,
+  ...over,
+});
+
+const progress = (quests: QuestState[]): QuestProgress => ({
+  chapters: [],
+  quests,
+  completed: quests.filter((q) => q.completed && !q.skipped).length,
+  total: quests.filter((q) => !q.skipped).length,
+  nextCompletedAt: {},
+  latchChanged: false,
+  seeding: false,
+});
+
+function shell() {
+  return (
+    <FeedbackProvider>
+      <div>page</div>
+    </FeedbackProvider>
+  );
+}
+
+describe("the tracker greets a completion, never a history", () => {
+  it("the first poll seeds and says nothing, however much is already done", () => {
+    mockUseStats.mockReturnValue({
+      stats: { quests: progress([quest({ id: "1.1", completed: true }), quest({ id: "1.2", completed: true })]) },
+    });
+    render(shell());
+    expect(toasts()).toHaveLength(0);
+  });
+
+  it("toasts only what became complete after that", () => {
+    mockUseStats.mockReturnValue({
+      stats: { quests: progress([quest({ id: "1.1", completed: true }), quest({ id: "1.2" })]) },
+    });
+    const view = render(shell());
+    expect(toasts()).toHaveLength(0);
+
+    mockUseStats.mockReturnValue({
+      stats: {
+        quests: progress([
+          quest({ id: "1.1", completed: true }),
+          quest({ id: "1.2", completed: true, title: "Dispatch a mission" }),
+        ]),
+      },
+    });
+    view.rerender(shell());
+
+    expect(toasts().map((t) => t.textContent)).toEqual([expect.stringContaining("Dispatch a mission")]);
+    expect(screen.getByRole("status")).toHaveTextContent("Quest complete");
+  });
+
+  it("says nothing on a seeding poll, which is the server's half of the same rule", () => {
+    mockUseStats.mockReturnValue({ stats: { quests: progress([quest({ id: "1.1" })]) } });
+    const view = render(shell());
+
+    mockUseStats.mockReturnValue({
+      stats: { quests: { ...progress([quest({ id: "1.1", completed: true })]), seeding: true } },
+    });
+    view.rerender(shell());
+
+    expect(toasts()).toHaveLength(0);
+  });
+
+  it("never congratulates the operator for a quest they skipped", () => {
+    mockUseStats.mockReturnValue({ stats: { quests: progress([quest({ id: "1.1" })]) } });
+    const view = render(shell());
+
+    mockUseStats.mockReturnValue({
+      stats: { quests: progress([quest({ id: "1.1", completed: true, skipped: true })]) },
+    });
+    view.rerender(shell());
+
+    expect(toasts()).toHaveLength(0);
   });
 });
 

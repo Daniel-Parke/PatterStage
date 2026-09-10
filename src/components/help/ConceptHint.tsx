@@ -24,6 +24,7 @@ import Link from "next/link";
 import { useEffect, useId, useRef, useState, type FocusEvent, type KeyboardEvent, type ReactNode } from "react";
 
 import { useConcepts } from "@/components/help/HelpProvider";
+import { POPOVER_PANEL } from "@/components/ui/Popover";
 
 export interface ConceptHintProps {
   /** A concepts.json id. An id the corpus does not carry renders as text. */
@@ -101,10 +102,10 @@ export default function ConceptHint({ id, children, className }: ConceptHintProp
         {children ?? entry.term}
       </button>
       {open && (
-        <span
-          id={panelId}
-          className="absolute left-0 top-full z-50 mt-1 block w-64 rounded-ps-md border border-ps-edge-hairline bg-ps-surface-panel p-3 text-left shadow-lg"
-        >
+        // A span, and the popover's chrome by name rather than by hand: the
+        // panel is the same surface a Picker or a Popover opens, on the same
+        // layer. Popover itself renders a div, which a paragraph cannot hold.
+        <span id={panelId} className={`${POPOVER_PANEL} left-0 block w-64 p-3 text-left shadow-lg`}>
           {/* Styled as a heading, not tagged as one. A real <h3> here would
               push an extra level into the outline of every screen that carries
               a hint, and it would come and go with the panel. */}

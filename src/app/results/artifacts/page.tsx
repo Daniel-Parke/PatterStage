@@ -25,7 +25,8 @@ import { Select } from "@/components/ui/field";
 import { useArtifacts, useArtifact } from "@/hooks/useArtifacts";
 import { renderReportHtml } from "@/lib/laboratory/deep-research/markdown";
 import { downloadFile } from "@/lib/chat-utils";
-import { safeApiCall } from "@/lib/api-fetch";
+import { runWrite } from "@/lib/api-write";
+import { useToast } from "@/components/ui/Toast";
 import { timeAgo, formatBytes } from "@/lib/utils";
 
 const KIND_ICON: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -67,16 +68,23 @@ export default function ArtifactsPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const { data: artifacts, error, refetch, isLoading } = useArtifacts(kind || undefined);
   const { data: detail } = useArtifact(selectedId);
-  /** A failed write on this page. It used to refetch straight over its own
-   *  failure, so a refused delete left the screen exactly as it was (D99). */
-  const [writeError, setWriteError] = useState<string | null>(null);
+  // The delete used to refetch straight over its own failure, so a refused
+  // delete left the screen exactly as it was (D99). runWrite says the server's
+  // reason, and reloads only on a success (C6, T-0143).
+  const { showToast, toastElement } = useToast();
 
   async function remove(id: string) {
-    const res = await safeApiCall(`/api/artifacts/${id}`, { method: "DELETE" });
-    if (!res.ok) { setWriteError(res.error ?? "Could not delete that artifact"); return; }
-    setWriteError(null);
-    if (selectedId === id) setSelectedId(null);
-    await refetch();
+    await runWrite({
+      showToast,
+      url: `/api/artifacts/${id}`,
+      method: "DELETE",
+      successMessage: "Artifact deleted",
+      errorMessage: "Could not delete that artifact",
+      onSuccess: async () => {
+        if (selectedId === id) setSelectedId(null);
+        await refetch();
+      },
+    });
   }
 
   function download() {
@@ -100,7 +108,6 @@ export default function ArtifactsPage() {
     >
     <div className="space-y-4">
       {error ? <LoadErrorBanner error={error} onRetry={() => void refetch()} /> : null}
-      {writeError ? <LoadErrorBanner error={writeError} /> : null}
 
       <Card padding="sm">
         <div className="flex items-center gap-2 px-1">
@@ -141,24 +148,28 @@ export default function ArtifactsPage() {
           {list.map((a) => {
             const Icon = KIND_ICON[a.sourceKind] ?? FileText;
             return (
-              <button
-                key={a.id}
-                type="button"
-                onClick={() => setSelectedId(a.id)}
-                className="flex flex-col gap-2 rounded-ps-lg border border-ps-edge bg-ps-surface-panel p-3 text-left transition hover:border-ps-edge-emphasis"
-              >
-                <div className="flex items-center gap-2">
-                  <Icon className={`h-4 w-4 shrink-0 ${KIND_TONE[a.sourceKind] ?? "text-ps-text-muted"}`} />
-                  <span className="truncate text-body text-ps-text-primary">{a.name}</span>
-                </div>
-                <div className="flex items-center gap-2 text-micro font-mono uppercase tracking-wider text-ps-text-muted">
-                  <span>{a.sourceKind}</span>
-                  <span>·</span>
-                  <span>{extForMime(a.mimeType)}</span>
-                  <span className="ml-auto normal-case">{formatBytes(a.sizeBytes)}</span>
-                </div>
-                <div className="text-body text-ps-text-muted">{timeAgo(a.createdAt)}</div>
-              </button>
+              // The card is the surface and the button inside it is the whole
+              // of its face: Card renders containers only, and a button is
+              // not one (T-0122).
+              <Card key={a.id} padding="none" hover>
+                <button
+                  type="button"
+                  onClick={() => setSelectedId(a.id)}
+                  className="flex w-full flex-col gap-2 p-3 text-left"
+                >
+                  <div className="flex items-center gap-2">
+                    <Icon className={`h-4 w-4 shrink-0 ${KIND_TONE[a.sourceKind] ?? "text-ps-text-muted"}`} />
+                    <span className="truncate text-body text-ps-text-primary">{a.name}</span>
+                  </div>
+                  <div className="flex w-full items-center gap-2 text-micro font-mono uppercase tracking-wider text-ps-text-muted">
+                    <span>{a.sourceKind}</span>
+                    <span>·</span>
+                    <span>{extForMime(a.mimeType)}</span>
+                    <span className="ml-auto normal-case">{formatBytes(a.sizeBytes)}</span>
+                  </div>
+                  <div className="text-body text-ps-text-muted">{timeAgo(a.createdAt)}</div>
+                </button>
+              </Card>
             );
           })}
         </div>
@@ -203,13 +214,16 @@ export default function ArtifactsPage() {
               dangerouslySetInnerHTML={{ __html: renderReportHtml(detail.content ?? "") }}
             />
           ) : (
-            <pre className="max-h-[70vh] overflow-auto whitespace-pre-wrap rounded-ps-md border border-ps-edge-hairline bg-ps-surface-panel px-3 py-2 text-body leading-relaxed text-ps-text-secondary">
-              {detail.content ?? "(empty)"}
-            </pre>
+            <Card variant="raised" padding="none" className="max-h-[70vh] overflow-auto px-3 py-2">
+              <pre className="whitespace-pre-wrap text-body leading-relaxed text-ps-text-secondary">
+                {detail.content ?? "(empty)"}
+              </pre>
+            </Card>
           )}
         </div>
       </Sheet>
     </div>
+    {toastElement}
     </AppPageShell>
   );
 }

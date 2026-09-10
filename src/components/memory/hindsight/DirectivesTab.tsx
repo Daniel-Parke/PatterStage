@@ -5,6 +5,7 @@
 import { FileText, Plus, ToggleRight, ToggleLeft, RefreshCw } from "lucide-react";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { pluralise } from "@/lib/utils";
@@ -62,13 +63,9 @@ export default function DirectivesTab({
       ) : (
         <div className="space-y-3">
           {directives.map((d) => (
-            <div
+            <Card
               key={d.id}
-              className={`rounded-ps-lg border p-4 transition-colors ${
-                d.is_active
-                  ? "border-ps-edge-hairline bg-ps-surface-panel hover:border-pink-500/20"
-                  : "border-ps-edge-hairline bg-ps-surface-panel opacity-60"
-              }`}
+              className={d.is_active ? "transition-colors hover:border-neon-pink/20" : "opacity-60"}
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
@@ -95,12 +92,12 @@ export default function DirectivesTab({
                     className="p-1.5 rounded-ps-md hover:bg-ps-surface-raised text-ps-text-muted hover:text-ps-text-secondary transition-colors"
                     title={d.is_active ? "Deactivate" : "Activate"}
                   >
-                    {d.is_active ? <ToggleRight className="w-4 h-4 text-green-400" /> : <ToggleLeft className="w-4 h-4" />}
+                    {d.is_active ? <ToggleRight className="w-4 h-4 text-status-ok" /> : <ToggleLeft className="w-4 h-4" />}
                   </button>
                   <RowDeleteButton onClick={() => onDelete(d.id)} label={d.name} />
                 </div>
               </div>
-            </div>
+            </Card>
           ))}
         </div>
       )}

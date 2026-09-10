@@ -435,9 +435,11 @@ describe("the UI shows the refusal instead of swallowing it", () => {
     ) as string;
     const fn = page.slice(page.indexOf("async function decideGate"));
     const body = fn.slice(0, fn.indexOf("\n  }"));
-    expect(body).toMatch(/res\.ok|result\.ok|\.ok\b/);
-    expect(body).toMatch(/setGateError/);
-    // …and the state it sets has to actually render.
-    expect(page).toMatch(/gateError\s*\?/);
+    // Since C6 (T-0143) the write goes through runWrite, which checks the
+    // envelope and says the refusal in the server's words as a toast.
+    expect(body).toMatch(/runWrite/);
+    expect(body).toMatch(/errorMessage/);
+    // …and the toast it says has to actually render.
+    expect(page).toMatch(/\{toastElement\}/);
   });
 });

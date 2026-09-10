@@ -16,7 +16,8 @@
  */
 
 import "@testing-library/jest-dom";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { renderWithQuery } from "../helpers/render-with-query";
 import { jsonResponse, type FetchAnswer } from "../helpers/fetch-map";
 
 import ModelsPage from "@/app/agent/models/page";
@@ -89,7 +90,7 @@ function installFetch(map: Record<string, FetchAnswer>) {
 describe("a reload keeps the registry on screen", () => {
   it("the Fallback Chain an operator opened is still open, and the body still there, while a write reloads the page", async () => {
     const net = installFetch(answers());
-    render(<ModelsPage />);
+    renderWithQuery(<ModelsPage />);
     const disclosure = await screen.findByRole("button", { name: /Fallback Chain/ });
     expect(disclosure).toHaveAttribute("aria-expanded", "false");
     fireEvent.click(disclosure);
@@ -120,7 +121,7 @@ describe("a reload keeps the registry on screen", () => {
   it("the first read still shows the spinner under a header that says what it can", async () => {
     const net = installFetch(answers());
     net.hold();
-    render(<ModelsPage />);
+    renderWithQuery(<ModelsPage />);
     expect(screen.getByRole("heading", { name: /^Models$/ })).toBeInTheDocument();
     expect(screen.getByText(/Loading models/)).toBeInTheDocument();
     net.open();

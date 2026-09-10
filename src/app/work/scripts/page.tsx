@@ -8,28 +8,99 @@
 // is one and to PatterStage's own table where there is not, so unscheduling
 // has to ask the row which of the two it is on (T-0107, decision 10).
 //
-// Thin page shell: the row, the template gallery and the three modals are
-// presentational components under src/components/scripts/.
+// Thin page shell: the row, the editor modal and the schedule modal are
+// presentational components under src/components/scripts/. The logs modal
+// and the template gallery are this page's own (C6, T-0143): each had one
+// importer, and a file with one importer is a seam with nothing behind it.
 // ═══════════════════════════════════════════════════════════════
 
 "use client";
 
 import { useCallback, useState } from "react";
-import { Terminal, RefreshCw, Plus } from "lucide-react";
+import { Terminal, RefreshCw, Plus, FileCode, ScrollText } from "lucide-react";
 import AppPageShell from "@/components/layout/AppPageShell";
 import { SCRIPT_EXT_LIST, hasScriptExt, stripScriptExt } from "@/lib/scripts/script-ext";
 import PageHeader from "@/components/layout/PageHeader";
+import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
+import Modal from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
 import { useScripts, fetchScriptLog, type ScriptFile } from "@/hooks/useScripts";
 import { safeApiCall } from "@/lib/api-fetch";
+import { runWrite } from "@/lib/api-write";
+import { sectionHeadingClasses } from "@/lib/theme";
 import ScriptRow from "@/components/scripts/ScriptRow";
-import ScriptTemplateGallery from "@/components/scripts/ScriptTemplateGallery";
 import ScriptEditorModal from "@/components/scripts/ScriptEditorModal";
-import ScriptLogsModal from "@/components/scripts/ScriptLogsModal";
 import ScheduleScriptModal from "@/components/scripts/ScheduleScriptModal";
+import { SCRIPT_TEMPLATES } from "@/components/scripts/script-templates";
+
+// ── The logs modal ─────────────────────────────────────────────
+// The tail of a script's run log. The fetch stays on the page; this renders
+// the text it is handed.
+
+function ScriptLogsModal({
+  scriptName,
+  text,
+  loading,
+  onClose,
+}: {
+  scriptName: string | null;
+  text: string;
+  loading: boolean;
+  onClose: () => void;
+}) {
+  return (
+    <Modal open={scriptName !== null} onClose={onClose} title={scriptName ? `Logs · ${scriptName}` : "Logs"} icon={ScrollText} iconColor="text-neon-cyan" size="lg">
+      {loading ? (
+        <div className="py-8"><LoadingSpinner text="Loading log..." /></div>
+      ) : (
+        <pre className="max-h-[60vh] overflow-auto rounded-ps-md bg-ps-surface-inset p-4 font-mono text-micro text-ps-text-secondary whitespace-pre-wrap">
+          {text || "(no log output yet — run the script first)"}
+        </pre>
+      )}
+    </Modal>
+  );
+}
+
+// ── The template gallery ───────────────────────────────────────
+// Picking a card opens the template in the editor; nothing is written here.
+
+function ScriptTemplateGallery({
+  onOpenTemplate,
+}: {
+  onOpenTemplate: (name: string, content: string) => void;
+}) {
+  return (
+    <div className="mt-8">
+      <h2 className={`${sectionHeadingClasses} flex items-center gap-2`}>
+        <FileCode className="h-3.5 w-3.5" /> Examples — open in the editor, tweak, then save
+      </h2>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {SCRIPT_TEMPLATES.map((t) => (
+          <Card key={t.id} padding="none" hover className="group">
+            <button
+              type="button"
+              onClick={() => onOpenTemplate(t.name, t.content)}
+              className="w-full p-3 text-left"
+            >
+              <div className="flex items-center gap-2">
+                <FileCode className="h-4 w-4 text-neon-cyan" />
+                <span className="font-mono text-body text-ps-text-primary">{t.label}</span>
+              </div>
+              <p className="mt-1.5 text-body leading-relaxed text-ps-text-muted">{t.description}</p>
+              <span className="mt-2 inline-flex items-center gap-1 font-mono text-micro text-ps-text-muted group-hover:text-neon-cyan">
+                <Plus className="h-3 w-3" /> {t.name}
+              </span>
+            </button>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function ScriptsPage() {
   const { scripts, scheduler, isLoading, error, refetch, run } = useScripts();
@@ -80,38 +151,36 @@ export default function ScriptsPage() {
       showToast("Give the script a name", "error");
       return;
     }
-    setEditorSaving(true);
-    try {
-      const res = await safeApiCall(`/api/scripts/${encodeURIComponent(name)}`, {
-        method: "PUT",
-        body: { content: editorContent },
-      });
-      if (!res.ok) {
-        showToast(res.error ?? "Failed to save script", "error");
-        return;
-      }
-      showToast(`Saved ${name}`, "success");
-      setEditorOpen(false);
-      void refetch();
-    } finally {
-      setEditorSaving(false);
-    }
+    await runWrite({
+      showToast,
+      setBusy: setEditorSaving,
+      url: `/api/scripts/${encodeURIComponent(name)}`,
+      method: "PUT",
+      body: { content: editorContent },
+      successMessage: `Saved ${name}`,
+      errorMessage: "Failed to save script",
+      onSuccess: () => {
+        setEditorOpen(false);
+        void refetch();
+      },
+    });
   }, [editorName, editorIsNew, editorContent, refetch, showToast]);
 
   // The editor's ConfirmButton has already asked; this is the second click.
   const deleteEditor = useCallback(async () => {
     if (editorIsNew || !editorName) return;
-    setEditorSaving(true);
-    try {
-      const res = await safeApiCall(`/api/scripts/${encodeURIComponent(editorName)}`, { method: "DELETE" });
-      showToast(res.ok ? `Deleted ${editorName}` : "Failed to delete", res.ok ? "success" : "error");
-      if (res.ok) {
+    await runWrite({
+      showToast,
+      setBusy: setEditorSaving,
+      url: `/api/scripts/${encodeURIComponent(editorName)}`,
+      method: "DELETE",
+      successMessage: `Deleted ${editorName}`,
+      errorMessage: "Failed to delete",
+      onSuccess: () => {
         setEditorOpen(false);
         void refetch();
-      }
-    } finally {
-      setEditorSaving(false);
-    }
+      },
+    });
   }, [editorIsNew, editorName, refetch, showToast]);
 
   const handleRun = useCallback(
@@ -163,15 +232,20 @@ export default function ScriptsPage() {
       // Whichever table holds it. The id was also stripped with a .sh-only
       // regex, so unscheduling a .mjs asked the crontab to delete a job called
       // "backup.mjs" and got nothing (T-0107, D48).
-      const res =
+      const url =
         s.scheduleSource === "patterstage" && s.scheduleId
-          ? await safeApiCall(`/api/schedules/${encodeURIComponent(s.scheduleId)}`, { method: "DELETE" })
-          : await safeApiCall(
-              `/api/cron/hardware?id=${encodeURIComponent(stripScriptExt(s.name))}`,
-              { method: "DELETE" },
-            );
-      showToast(res.ok ? `Unscheduled ${s.name}` : "Failed to unschedule", res.ok ? "success" : "error");
-      if (res.ok) void refetch();
+          ? `/api/schedules/${encodeURIComponent(s.scheduleId)}`
+          : `/api/cron/hardware?id=${encodeURIComponent(stripScriptExt(s.name))}`;
+      await runWrite({
+        showToast,
+        url,
+        method: "DELETE",
+        successMessage: `Unscheduled ${s.name}`,
+        errorMessage: "Failed to unschedule",
+        onSuccess: () => {
+          void refetch();
+        },
+      });
     },
     [refetch, showToast],
   );
@@ -186,20 +260,12 @@ export default function ScriptsPage() {
           color="cyan"
           actions={
             <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => openNew()}
-                className="flex items-center gap-1.5 rounded-ps-md border border-neon-cyan/30 px-3 py-1.5 font-mono text-micro text-neon-cyan transition-colors hover:bg-neon-cyan/10"
-              >
-                <Plus className="h-3 w-3" /> New script
-              </button>
-              <button
-                type="button"
-                onClick={() => refetch()}
-                className="flex items-center gap-1.5 rounded-ps-md border border-ps-edge px-3 py-1.5 font-mono text-micro text-ps-text-muted transition-colors hover:bg-ps-surface-raised hover:text-ps-text-primary"
-              >
-                <RefreshCw className="h-3 w-3" /> Refresh
-              </button>
+              <Button variant="primary" color="cyan" size="sm" icon={Plus} onClick={() => openNew()}>
+                New script
+              </Button>
+              <Button variant="secondary" size="sm" icon={RefreshCw} onClick={() => refetch()}>
+                Refresh
+              </Button>
             </div>
           }
         />
@@ -218,13 +284,13 @@ export default function ScriptsPage() {
         {isLoading ? (
           <LoadingSpinner text="Loading scripts..." />
         ) : scripts.length === 0 ? (
-          <div className="rounded-ps-lg border border-cyan-500/20 bg-ps-surface-panel">
+          <Card padding="none">
             <EmptyState
               icon={Terminal}
               title="No scripts yet"
               description={`Create one with “New script”, install an example below, or drop a ${SCRIPT_EXT_LIST} file under PS_DATA_DIR/scripts.`}
             />
-          </div>
+          </Card>
         ) : (
           <div className="space-y-2">
             {scripts.map((s) => (

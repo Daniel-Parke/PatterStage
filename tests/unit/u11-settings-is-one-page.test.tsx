@@ -18,7 +18,8 @@
  * and the nested keys that were never editable sit behind a disclosure rather
  * than a page.
  */
-import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { renderWithQuery } from "../helpers/render-with-query";
 
 import { CONFIG_SECTIONS } from "@/lib/config-schema";
 import { SETTINGS_GROUPS, SETTINGS_TOOLS, settingsSectionIds } from "@/lib/config-sections";
@@ -45,6 +46,11 @@ const mockApiFetch = jest.fn();
 jest.mock("@/lib/api-fetch", () => ({
   ...(jest.requireActual("@/lib/api-fetch") as Record<string, unknown>),
   apiFetch: (...a: unknown[]) => mockApiFetch(...a),
+  // The two file sections and the toolsets preview read through
+  // useApiResource since C6 (T-0143), which calls safeApiCall; it answers
+  // from the same double, in the envelope the real call returns.
+   
+  safeApiCall: require("../helpers/mocks").safeApiCallOver((...a: unknown[]) => mockApiFetch(...a)),
 }));
 
 import SettingsPage from "@/app/agent/settings/page";
@@ -81,7 +87,7 @@ function puts(): Array<{ section: string; values: Record<string, unknown> }> {
 
 async function renderLoaded(config: Record<string, unknown> = { agent: { max_turns: 40 } }) {
   answer(config);
-  render(<SettingsPage />);
+  renderWithQuery(<SettingsPage />);
   await screen.findByTestId("settings-section-agent");
 }
 

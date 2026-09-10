@@ -55,20 +55,20 @@ export default function LoadErrorBanner({
   return (
     <div
       role="alert"
-      className={`flex flex-wrap items-start border border-red-500/30 bg-red-500/10 text-red-200 ${chrome} ${className ?? ""}`}
+      className={`flex flex-wrap items-start border border-semantic-danger/30 bg-semantic-danger/10 text-semantic-danger ${chrome} ${className ?? ""}`}
     >
       <AlertTriangle className={`${compact ? "w-4 h-4" : "w-5 h-5"} shrink-0 mt-0.5`} />
       <div className="flex-1 min-w-0">
         <div>{error}</div>
         {hint && (
-          <div className="mt-1 text-micro text-red-200/70 font-mono">{hint}</div>
+          <div className="mt-1 text-micro text-ps-text-muted font-mono">{hint}</div>
         )}
       </div>
       {onRetry && (
         <button
           type="button"
           onClick={onRetry}
-          className={`flex w-fit items-center gap-1.5 rounded-ps-md text-micro font-mono border border-red-500/40 text-red-200 hover:bg-red-500/20 transition-colors shrink-0 ${wrap} ${compact ? "px-2 py-0.5" : "px-2.5 py-1"}`}
+          className={`flex w-fit items-center gap-1.5 rounded-ps-md text-micro font-mono border border-semantic-danger/40 text-semantic-danger hover:bg-semantic-danger/20 transition-colors shrink-0 ${wrap} ${compact ? "px-2 py-0.5" : "px-2.5 py-1"}`}
         >
           <RefreshCw className="w-3 h-3" />
           {retryLabel}

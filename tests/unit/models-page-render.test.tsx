@@ -6,7 +6,8 @@
 // ═══════════════════════════════════════════════════════════════
 
 import "@testing-library/jest-dom";
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
+import { renderWithQuery } from "../helpers/render-with-query";
 import { fetchMap, type FetchAnswer } from "../helpers/fetch-map";
 
 import ModelsPage from "@/app/agent/models/page";
@@ -61,7 +62,7 @@ describe("ModelsPage", () => {
       ...defaultFallbacks(),
     });
 
-    render(<ModelsPage />);
+    renderWithQuery(<ModelsPage />);
 
     await waitFor(() =>
       expect(screen.getByText(/No models yet/i)).toBeInTheDocument()
@@ -93,7 +94,7 @@ describe("ModelsPage", () => {
       ...defaultFallbacks(),
     });
 
-    const { container } = render(<ModelsPage />);
+    const { container } = renderWithQuery(<ModelsPage />);
 
     await waitFor(() =>
       expect(container.querySelectorAll("[data-task-slot]").length).toBe(
@@ -150,7 +151,7 @@ describe("ModelsPage", () => {
       ...defaultFallbacks(),
     });
 
-    const { container } = render(<ModelsPage />);
+    const { container } = renderWithQuery(<ModelsPage />);
 
     await waitFor(() =>
       expect(screen.getAllByText("MiniMax M2.1").length).toBeGreaterThanOrEqual(1)

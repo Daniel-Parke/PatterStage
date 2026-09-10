@@ -37,11 +37,11 @@ import type { MissionsPageViewModel } from "@/hooks/useMissionsPage";
 import type { MissionRow } from "@/hooks/missions-page-types";
 import { missionsViewModel } from "../helpers/fixtures";
 
-// The detail panel opens an EventSource when a mission expands. These tests are
-// about which rows render and what the row's click does, not the stream.
-jest.mock("@/components/missions/MissionLiveProgress", () => ({
-  __esModule: true,
-  default: () => null,
+// The detail panel polls for a run and opens an EventSource when a mission
+// expands. These tests are about which rows render and what the row's click
+// does, not the stream, so the read hook answers nothing.
+jest.mock("@/hooks/useApiResource", () => ({
+  useApiResource: () => ({ data: undefined, error: null, settled: false, isLoading: false, refetch: jest.fn() }),
 }));
 
 const HOUR_AGO = new Date(Date.now() - 3_600_000).toISOString();

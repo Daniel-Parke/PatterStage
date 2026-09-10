@@ -5,28 +5,36 @@
 // bug report; the engine runs each stage as an agent run, routes on PASS/FAIL
 // (looping back on failures), and pauses at HIL gates for your call. The live
 // pipeline shows the graph (conditional + loop-back edges). SSE + polling.
+//
+// Every write on this screen goes through runWrite (C6, T-0143): a refusal is
+// said in the server's words as a toast. It used to be a banner above the
+// canvas, placed there because the commonest cause of a refused gate
+// decision, the run having already ended, also removes the gate panel on the
+// next poll; a toast outlives the panel the same way.
 // ═══════════════════════════════════════════════════════════════
 
 "use client";
 
 import { sectionHeadingClasses } from "@/lib/theme";
 import { useEffect, useMemo, useState } from "react";
-import { GitBranch, Plus } from "lucide-react";
+import { GitBranch, HelpCircle, Plus } from "lucide-react";
 
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
+import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
+import Skeleton from "@/components/ui/Skeleton";
 import SplitPane from "@/components/ui/SplitPane";
-import { Select } from "@/components/ui/field";
+import { Select, Textarea } from "@/components/ui/field";
+import { useToast } from "@/components/ui/Toast";
 import dynamic from "next/dynamic";
 
 import ComposerGatePrompt from "@/components/composer/ComposerGatePrompt";
-import ComposerClarifyPrompt from "@/components/composer/ComposerClarifyPrompt";
 import ComposerNodeRunDetail from "@/components/composer/ComposerNodeRunDetail";
 import { profileOptionsFor } from "@/components/composer/profile-options";
 import ComposerRunForm from "@/components/composer/ComposerRunForm";
-import { safeApiCall } from "@/lib/api-fetch";
+import { runWrite } from "@/lib/api-write";
 import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
 import { composerWaitingReason, isTerminalComposerRunStatus } from "@/lib/composer/schema";
 import { COMPOSER_RUN_STATUS_LABELS, statusTone } from "@/lib/status-labels";
@@ -34,14 +42,15 @@ import { statusToneClasses } from "@/lib/theme";
 import { timeAgo } from "@/lib/utils";
 import ElapsedSince from "@/components/composer/ElapsedSince";
 
-// react-flow needs the DOM — load the canvases client-only.
+// react-flow needs the DOM — load the canvases client-only. The placeholder
+// is the house skeleton, the shape of the canvas that is coming (T-0122).
 const WorkflowCanvas = dynamic(() => import("@/components/composer/WorkflowCanvas"), {
   ssr: false,
-  loading: () => <div className="h-[640px] animate-pulse rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel" />,
+  loading: () => <Skeleton className="h-[640px]" />,
 });
 const WorkflowRunCanvas = dynamic(() => import("@/components/composer/WorkflowRunCanvas"), {
   ssr: false,
-  loading: () => <div className="h-[560px] animate-pulse rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel" />,
+  loading: () => <Skeleton className="h-[560px]" />,
 });
 import { useComposerWorkflows, useComposerRuns, useComposerRun } from "@/hooks/useComposer";
 import { useProfiles } from "@/hooks/useProfiles";
@@ -79,7 +88,51 @@ const STATUS_FILTERS = [
   { value: "cancelled", label: "Cancelled" },
 ];
 
+// ── The clarification prompt ───────────────────────────────────
+// Shown in the run canvas when a stage paused to ask the user something (the
+// run is awaiting_approval with a `__clarify` context marker). Submitting the
+// answer enriches the objective and re-runs the asking stage. Sibling of
+// ComposerGatePrompt (the approve/reject gate), and this page's own since C6.
+
+function ClarifyPrompt({
+  question,
+  busy,
+  onSubmit,
+}: {
+  question: string;
+  busy?: boolean;
+  onSubmit: (answer: string) => void;
+}) {
+  const [answer, setAnswer] = useState("");
+  return (
+    <Card variant="raised" glow="cyan" padding="none" className="space-y-2 px-3 py-2.5">
+      <div className="flex items-start gap-2">
+        <HelpCircle className="mt-0.5 h-4 w-4 shrink-0 text-neon-cyan" />
+        <span className="text-body text-ps-text-primary">{question}</span>
+      </div>
+      <Textarea
+        value={answer}
+        onChange={(e) => setAnswer(e.target.value)}
+        rows={3}
+        placeholder="Your answer…"
+        aria-label="Answer to the agent's question"
+      />
+      <Button
+        variant="primary"
+        color="cyan"
+        size="sm"
+        className="w-full"
+        disabled={busy || answer.trim().length === 0}
+        onClick={() => onSubmit(answer.trim())}
+      >
+        Submit answer
+      </Button>
+    </Card>
+  );
+}
+
 export default function ComposerPage() {
+  const { showToast, toastElement } = useToast();
   const [mode, setMode] = useState<"run" | "build">("run");
   // The canvas mounts the first time Build is opened and stays mounted after.
   // next/dynamic deferred its 400 KB but still loaded it on the route, and
@@ -94,10 +147,6 @@ export default function ComposerPage() {
   const [submitting, setSubmitting] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [gateBusy, setGateBusy] = useState(false);
-  // A gate decision that the server REFUSED. safeApiCall returns rather than
-  // throws, so before T-0069 the 400 was dropped on the floor and the only
-  // visible effect of a refused click was the button ceasing to spin.
-  const [gateError, setGateError] = useState<string | null>(null);
   const cancelConfirm = useTwoStepConfirm();
   const [selectedNodeKey, setSelectedNodeKey] = useState<string | null>(null);
   // When a run is selected the launch form collapses to a compact bar to free the
@@ -146,7 +195,6 @@ export default function ComposerPage() {
   function selectRun(id: string) {
     setSelectedId(id);
     setForceForm(false);
-    setGateError(null); // a refusal belongs to the run it was refused on
   }
 
   function latestNodeRun(nodeId: string): ComposerNodeRun | null {
@@ -160,75 +208,74 @@ export default function ComposerPage() {
   async function start() {
     const text = input.trim();
     if (text.length < 3 || submitting || !activeWorkflowId) return;
-    setSubmitting(true);
-    try {
-      const res = await safeApiCall<{ data?: { run?: { id: string } } }>("/api/composer/runs", {
-        method: "POST",
-        body: { workflowId: activeWorkflowId, input: text, profileName: profileName || undefined },
-      });
-      const id = res.data?.data?.run?.id;
-      if (id) {
+    await runWrite<{ data?: { run?: { id: string } } }>({
+      showToast,
+      setBusy: setSubmitting,
+      url: "/api/composer/runs",
+      body: { workflowId: activeWorkflowId, input: text, profileName: profileName || undefined },
+      // A 200 with no id is still a failure: nothing is being followed, and
+      // the form would otherwise clear itself as though something were.
+      successMessage: (res) =>
+        res?.data?.run?.id
+          ? "Run started"
+          : { message: "The run started but no id came back, so there is nothing to follow.", type: "error" },
+      errorMessage: "Could not start that run",
+      onSuccess: async (res) => {
+        const id = res?.data?.run?.id;
+        if (!id) return;
         setInput("");
         setSelectedId(id);
-        setGateError(null);
         setForceForm(false); // collapse the launch form onto the new run
         await refetch();
-      }
-    } finally {
-      setSubmitting(false);
-    }
+      },
+    });
   }
 
   async function decideGate(action: "accept" | "reject", note?: string) {
     if (!run || !run.currentNodeId || gateBusy) return;
-    setGateBusy(true);
-    setGateError(null);
-    try {
-      const res = await safeApiCall(
-        `/api/composer/runs/${run.id}/nodes/${run.currentNodeId}/approve`,
-        { method: "POST", body: { action, note } },
-      );
-      // The gate panel renders from a POLLED copy, so a run that ended between
-      // the poll and the click still shows Accept/Reject. That refusal explains
-      // what happened to the run, and it is the whole reason the route composes
-      // a state-aware message.
-      // The fallback is load-bearing, not defensive noise: SafeApiCallResult
-      // types `error` as optional, and setting the banner to undefined would
-      // hide the refusal again -- the exact defect being fixed.
-      if (!res.ok) setGateError(res.error ?? "The server refused that decision.");
-    } finally {
-      setGateBusy(false);
-    }
+    // The gate panel renders from a POLLED copy, so a run that ended between
+    // the poll and the click still shows Accept/Reject. The refusal explains
+    // what happened to the run, which is the whole reason the route composes
+    // a state-aware message (T-0069); runWrite says it in those words.
+    await runWrite({
+      showToast,
+      setBusy: setGateBusy,
+      url: `/api/composer/runs/${run.id}/nodes/${run.currentNodeId}/approve`,
+      body: { action, note },
+      successMessage: action === "accept" ? "Stage accepted" : "Stage rejected",
+      errorMessage: "The server refused that decision.",
+    });
   }
 
   async function cancelRun() {
     if (!run || gateBusy) return;
-    setGateBusy(true);
-    setGateError(null);
-    try {
-      const res = await safeApiCall(`/api/composer/runs/${run.id}/cancel`, { method: "POST" });
-      // Same reasoning as decideGate: safeApiCall RETURNS rather than throws,
-      // and a refusal the operator cannot see is the defect T-0069 removed.
-      if (!res.ok) setGateError(res.error ?? "The server refused to cancel that run.");
-      await refetch();
-    } finally {
-      setGateBusy(false);
-    }
+    // The list is re-read whichever way it went: a refused cancel most often
+    // means the run already ended, and the row should say so.
+    await runWrite({
+      showToast,
+      setBusy: setGateBusy,
+      url: `/api/composer/runs/${run.id}/cancel`,
+      successMessage: "Run cancelled",
+      errorMessage: "The server refused to cancel that run.",
+      onSuccess: async () => {
+        await refetch();
+      },
+      onError: async () => {
+        await refetch();
+      },
+    });
   }
 
   async function submitClarification(answer: string) {
     if (!run || gateBusy) return;
-    setGateBusy(true);
-    setGateError(null);
-    try {
-      const res = await safeApiCall(`/api/composer/runs/${run.id}/clarify`, {
-        method: "POST",
-        body: { answer },
-      });
-      if (!res.ok) setGateError(res.error ?? "The server refused that answer.");
-    } finally {
-      setGateBusy(false);
-    }
+    await runWrite({
+      showToast,
+      setBusy: setGateBusy,
+      url: `/api/composer/runs/${run.id}/clarify`,
+      body: { answer },
+      successMessage: "Answer sent",
+      errorMessage: "The server refused that answer.",
+    });
   }
 
   return (
@@ -386,15 +433,15 @@ export default function ComposerPage() {
           ) : !run || !graph ? (
             // A run IS selected but its graph is still loading — show a skeleton,
             // never the "select a run" empty state (that read as "click did nothing").
-            <div className="flex h-[60vh] min-h-[420px] items-center justify-center rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel">
+            <Card variant="raised" padding="none" className="flex h-[60vh] min-h-[420px] items-center justify-center">
               <div className="flex flex-col items-center gap-2 text-center">
                 <div className="h-5 w-5 animate-spin rounded-full border-2 border-ps-edge-emphasis border-t-neon-cyan" />
                 <p className="text-body text-ps-text-muted">Loading run…</p>
               </div>
-            </div>
+            </Card>
           ) : (
             <div className="space-y-4">
-              <div className="flex items-start justify-between gap-3 rounded-ps-md border border-ps-edge-hairline bg-ps-surface-panel px-3 py-2.5">
+              <Card variant="raised" padding="none" className="flex items-start justify-between gap-3 px-3 py-2.5">
                 <div className="min-w-0">
                   <div className="truncate text-body text-ps-text-primary">{runTitle(run.input)}</div>
                   {run.error ? (
@@ -443,20 +490,7 @@ export default function ComposerPage() {
                     </button>
                   )}
                 </div>
-              </div>
-              {/* A gate decision the server refused. It sits above the canvas
-                  rather than inside the gate panel because the commonest cause
-                  -- the run already ended -- also REMOVES the gate panel on the
-                  next poll, and an error rendered inside it would vanish with
-                  it (T-0069). */}
-              {gateError ? (
-                <LoadErrorBanner
-                  error={gateError}
-                  onRetry={() => setGateError(null)}
-                  retryLabel="Dismiss"
-                  className="mb-0"
-                />
-              ) : null}
+              </Card>
               <WorkflowRunCanvas
                 graph={graph}
                 latestNodeRun={latestNodeRun}
@@ -465,7 +499,7 @@ export default function ComposerPage() {
                 gate={
                   run.status === "awaiting_approval" && run.currentNodeId ? (
                     run.context?.__clarify ? (
-                      <ComposerClarifyPrompt
+                      <ClarifyPrompt
                         question={String((run.context.__clarify as { question?: string }).question ?? "Please clarify your objective.")}
                         busy={gateBusy}
                         onSubmit={(answer) => void submitClarification(answer)}
@@ -499,6 +533,7 @@ export default function ComposerPage() {
       />
         </>
       </div>
+      {toastElement}
     </AppPageShell>
   );
 }

@@ -33,7 +33,7 @@ export default function AgentProfileFiles({
             key={file.key}
             className={`flex items-center justify-between py-2 px-3 rounded-ps-md border transition-colors ${
               openFileKey === file.key
-                ? "border-purple-500/40 bg-purple-500/5"
+                ? "border-neon-purple/40 bg-neon-purple/5"
                 : "border-transparent hover:bg-ps-surface-raised"
             }`}
           >

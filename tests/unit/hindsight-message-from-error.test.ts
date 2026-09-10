@@ -30,7 +30,6 @@
  * handleCount) and the empty-Error trap.
  */
 
-
 import { messageFromError } from "@/lib/api-fetch";
 
 describe("hindsight messageFromError migration (session 128)", () => {

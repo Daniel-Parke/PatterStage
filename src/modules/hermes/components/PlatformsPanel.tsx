@@ -11,6 +11,7 @@
 import Link from "next/link";
 import { Globe, RefreshCw } from "lucide-react";
 
+import Button from "@/components/ui/Button";
 import { StatusDot } from "@/components/ui/Card";
 import { Panel, PanelHeader } from "@/components/dashboard/Panel";
 import { HERMES_PLATFORMS } from "../lib/toolset-catalog";
@@ -85,23 +86,18 @@ export default function PlatformsPanel({ monitor, syncNowBusy, onSyncNow }: Plat
             <>
               Sync: {timeAgo(monitor.sync.lastRun)}
               {monitor.sync.allSuccessful ? (
-                <span className="text-neon-green">✓</span>
+                <span className="text-status-ok">✓</span>
               ) : (
-                <span className="text-red-400">✗</span>
+                <span className="text-status-fail">✗</span>
               )}
             </>
           ) : (
             <span>Background sync idle</span>
           )}
         </div>
-        <button
-          type="button"
-          disabled={syncNowBusy}
-          onClick={onSyncNow}
-          className="shrink-0 px-2 py-1 text-micro font-mono rounded-ps-sm border border-neon-cyan/30 text-neon-cyan/80 hover:bg-neon-cyan/10 disabled:opacity-50"
-        >
+        <Button variant="primary" color="cyan" size="sm" disabled={syncNowBusy} onClick={onSyncNow} className="shrink-0">
           {syncNowBusy ? "Syncing…" : "Sync now"}
-        </button>
+        </Button>
       </div>
       {failures.length > 0 && (
         // The cross above says something broke. This says what, which is the
@@ -111,7 +107,7 @@ export default function PlatformsPanel({ monitor, syncNowBusy, onSyncNow }: Plat
         <div className="px-4 pb-3 space-y-1">
           {failures.map((f) => (
             <div key={f.name} className="text-micro font-mono leading-snug">
-              <span className="text-red-400">{f.name}</span>{" "}
+              <span className="text-status-fail">{f.name}</span>{" "}
               <span className="text-ps-text-muted break-words">
                 {f.reason ?? "failed on its last run, with no message recorded."}
               </span>

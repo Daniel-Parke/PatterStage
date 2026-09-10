@@ -14,6 +14,7 @@
 
 import { RefreshCw, AlertTriangle, Check, Hammer, Power } from "lucide-react";
 
+import Button from "@/components/ui/Button";
 import type { VersionFooterState } from "@/hooks/useVersionFooter";
 import { BranchDropdown } from "@/components/layout/BranchDropdown";
 
@@ -46,59 +47,57 @@ export function DeployControls({ state }: { state: VersionFooterState }) {
   const renderCheckButton = () => {
     if (checkState === "idle") {
       return (
-        <button
-          type="button"
+        <Button
+          variant="primary"
+          color="cyan"
+          icon={RefreshCw}
           onClick={() => openCheckDropdown()}
           disabled={locked}
           title={offline ? DEPLOY_OFF_TITLE : undefined}
-          className="flex items-center justify-center gap-2 px-3 py-2 rounded-ps-md bg-blue-500/10 border border-blue-500/20 text-micro font-mono text-blue-400 hover:bg-blue-500/20 transition-colors disabled:opacity-50"
         >
-          <RefreshCw className="w-3.5 h-3.5 flex-shrink-0" />
           Check for updates
-        </button>
+        </Button>
       );
     }
     if (checkState === "checking") {
       return (
-        <button type="button" disabled className="flex items-center justify-center gap-2 px-3 py-2 rounded-ps-md bg-blue-500/10 border border-blue-500/20 text-micro font-mono text-blue-400 opacity-70">
-          <RefreshCw className="w-3.5 h-3.5 flex-shrink-0 animate-spin" />
+        <Button variant="primary" color="cyan" loading disabled>
           Checking...
-        </button>
+        </Button>
       );
     }
     if (checkState === "check-failed") {
       // Not green. "unknown" against "unknown" is not "up to date" (D107).
       return (
-        <button
-          type="button"
+        <Button
+          variant="primary"
+          color="yellow"
+          icon={AlertTriangle}
           onClick={() => openCheckDropdown()}
           disabled={locked}
-          className="flex items-center justify-center gap-2 px-3 py-2 rounded-ps-md bg-semantic-warning/10 border border-semantic-warning/20 text-micro font-mono text-semantic-warning hover:bg-semantic-warning/20 transition-colors disabled:opacity-50"
         >
-          <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
           Could not check. Try again
-        </button>
+        </Button>
       );
     }
     if (checkState === "up-to-date") {
       return (
-        <button type="button" disabled className="flex items-center justify-center gap-2 px-3 py-2 rounded-ps-md bg-green-500/10 border border-green-500/20 text-micro font-mono text-green-400 cursor-default">
-          <Check className="w-3.5 h-3.5 flex-shrink-0" />
+        <Button variant="primary" color="green" icon={Check} disabled>
           Up to date
-        </button>
+        </Button>
       );
     }
     return (
-      <button
-        type="button"
+      <Button
+        variant="primary"
+        color="orange"
+        icon={AlertTriangle}
         onClick={handleUpdate}
         disabled={locked}
         title={offline ? DEPLOY_OFF_TITLE : undefined}
-        className="flex items-center justify-center gap-2 px-3 py-2 rounded-ps-md bg-orange-500/10 border border-orange-500/20 text-micro font-mono text-neon-orange hover:bg-orange-500/20 transition-colors disabled:opacity-50"
       >
-        <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
         Update available. Install it
-      </button>
+      </Button>
     );
   };
 
@@ -128,7 +127,7 @@ export function DeployControls({ state }: { state: VersionFooterState }) {
 
       <div className="relative">
         {dropdownOpen && (
-          <div className="absolute top-full left-0 mt-1.5 w-64 z-50">
+          <div className="absolute top-full left-0 mt-1.5 w-64 z-dropdown">
             <BranchDropdown
               branches={branches}
               defaultBranch={selectedBranch}
@@ -140,34 +139,29 @@ export function DeployControls({ state }: { state: VersionFooterState }) {
         )}
         <div className="flex flex-wrap gap-2">
           {renderCheckButton()}
-          <button
-            type="button"
+          {/* Armed is a ring on the same chrome, the way ConfirmButton says it;
+              the two-step state itself stays with useVersionFooter. */}
+          <Button
+            variant="primary"
+            color="purple"
             title={offline ? DEPLOY_OFF_TITLE : isArmedFor("rebuild") ? "Click again to confirm: rebuilds and restarts the app" : "npm run build, then restart, on the current checkout"}
             onClick={onRebuildClick}
             disabled={locked}
-            className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-ps-md text-micro font-mono transition-colors disabled:opacity-50 ${
-              rebuilding || isArmedFor("rebuild")
-                ? "bg-neon-purple/20 border border-neon-purple/30 text-neon-purple"
-                : "bg-neon-purple/10 border border-neon-purple/20 text-neon-purple hover:bg-neon-purple/20"
-            }`}
+            className={isArmedFor("rebuild") ? "ring-1 ring-neon-purple/60" : ""}
           >
             <Hammer className={`w-3.5 h-3.5 flex-shrink-0 ${rebuilding ? "animate-spin" : ""}`} />
             {isArmedFor("rebuild") ? "Rebuild. Confirm?" : "Rebuild"}
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="danger"
             title={offline ? DEPLOY_OFF_TITLE : isArmedFor("restart") ? "Click again to confirm: restarts the server" : "Restart the server only (no build)"}
             onClick={onRestartClick}
             disabled={locked}
-            className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-ps-md text-micro font-mono transition-colors disabled:opacity-50 ${
-              restarting || isArmedFor("restart")
-                ? "bg-red-500/20 border border-red-500/30 text-red-300"
-                : "bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20"
-            }`}
+            className={isArmedFor("restart") ? "ring-1 ring-semantic-danger/60" : ""}
           >
             <Power className={`w-3.5 h-3.5 flex-shrink-0 ${restarting ? "animate-spin" : ""}`} />
             {isArmedFor("restart") ? "Restart. Confirm?" : "Restart"}
-          </button>
+          </Button>
         </div>
       </div>
 

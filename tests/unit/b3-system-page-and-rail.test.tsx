@@ -9,7 +9,7 @@
  * persisted through /api/prefs.
  */
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { withQuery } from "../helpers/render-with-query";
 import { matchMediaMock } from "../helpers/mocks";
 
 let pathname = "/";
@@ -43,8 +43,7 @@ const versionState = {
 };
 jest.mock("@/hooks/useVersionFooter", () => ({ useVersionFooter: () => versionState }));
 
-import Sidebar from "@/components/layout/Sidebar";
-import MobileHeader from "@/components/layout/MobileHeader";
+import Sidebar, { MobileHeader } from "@/components/layout/Sidebar";
 import { SidebarProvider } from "@/components/layout/SidebarContext";
 import SystemPage from "@/app/agent/settings/system/page";
 
@@ -115,11 +114,6 @@ function installFetch() {
     const a = answers[path] ?? { status: 404, body: { error: "no stub for " + path } };
     return new Response(JSON.stringify(a.body), { status: a.status ?? 200, headers: { "content-type": "application/json" } });
   }) as unknown as typeof fetch;
-}
-
-function withQuery(ui: React.ReactElement) {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return <QueryClientProvider client={client}>{ui}</QueryClientProvider>;
 }
 
 function mountShell(initialCollapsed = false) {

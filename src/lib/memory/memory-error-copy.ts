@@ -4,8 +4,8 @@
 // so a sentence true in only one is a bug in the other two.
 //
 // Two rules, both learned the hard way. NAME AN ACTION, NOT A DESTINATION: the
-// copy once said "in the memory provider card", and HealthBanner is rendered
-// INSIDE that card (MemoryProviderSettings.tsx is its only call site), so it
+// copy once said "in the memory provider card", and the health banner is
+// rendered INSIDE that card (MemoryProviderSettings.tsx draws it), so it
 // sent the reader where they already stood; naming Host, Port and Save works
 // from every reader. PROMISE ONLY CONTROLS THAT EXIST: it also said "Choose a
 // different provider", and there is no provider chooser in src/components/memory

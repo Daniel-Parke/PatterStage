@@ -23,7 +23,11 @@ import ConfirmButton from "@/components/ui/ConfirmButton";
 import MissionEditorPanel from "@/components/missions/MissionEditorPanel";
 import type { MissionDetail, MissionRow } from "@/hooks/missions-page-types";
 
-jest.mock("@/components/missions/MissionLiveProgress", () => ({ __esModule: true, default: () => null }));
+// The panel's live-progress read (a poll on the mission's run, then an
+// EventSource) is not what this file is about; the hook answers nothing.
+jest.mock("@/hooks/useApiResource", () => ({
+  useApiResource: () => ({ data: undefined, error: null, settled: false, isLoading: false, refetch: jest.fn() }),
+}));
 
 const ROOT = join(__dirname, "..", "..");
 

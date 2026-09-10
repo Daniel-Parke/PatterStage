@@ -255,21 +255,14 @@ export default function SessionDetailPage() {
     >
       {/* Messages */}
       <div>
+        {/* A failed session's status, exit code and error are on the record
+            and on the screen (D30). The one error surface says it, with the
+            error itself as its hint, in the words the runtime recorded. */}
         {data.status === "failed" && (
-          <div
-            role="alert"
-            className="mb-4 rounded-ps-md border border-semantic-danger/40 bg-semantic-danger/10 p-3"
-          >
-            <p className="text-body font-semibold text-semantic-danger">
-              {SESSION_STATUS_LABELS.failed}
-              {typeof data.exitCode === "number" ? ` · exit ${data.exitCode}` : ""}
-            </p>
-            {data.error && (
-              <p className="mt-1 text-micro font-mono text-semantic-danger/90 whitespace-pre-wrap break-words">
-                {data.error}
-              </p>
-            )}
-          </div>
+          <LoadErrorBanner
+            error={`${SESSION_STATUS_LABELS.failed}${typeof data.exitCode === "number" ? ` · exit ${data.exitCode}` : ""}`}
+            hint={data.error || undefined}
+          />
         )}
         {data.truncated && (
           <p className="mb-3 text-micro font-mono text-ps-text-muted">

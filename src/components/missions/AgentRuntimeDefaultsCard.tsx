@@ -12,6 +12,7 @@
 import { Clock, Timer } from "lucide-react";
 
 import { sectionHeadingClasses } from "@/lib/theme";
+import Card from "@/components/ui/Card";
 import Picker from "@/components/ui/Picker";
 import ProfilePicker from "@/components/ui/ProfilePicker";
 import ModelPicker from "@/components/missions/ModelPicker";
@@ -87,14 +88,8 @@ export default function AgentRuntimeDefaultsCard({
     ? TIMEOUT_PRESETS
     : [...TIMEOUT_PRESETS, { minutes: timeoutMinutes, label: `${timeoutMinutes}m` }];
 
-  return (
-    <div
-      className={
-        embedded
-          ? "space-y-4"
-          : "rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-raised p-3 sm:p-4 space-y-4"
-      }
-    >
+  const fields = (
+    <>
       {!embedded && (
         <div className="space-y-1">
           <h3 className={sectionHeadingClasses}>
@@ -171,6 +166,15 @@ export default function AgentRuntimeDefaultsCard({
           />
         </div>
       )}
-    </div>
+    </>
+  );
+
+  // Embedded, the composer's accordion is the surface; on its own (the
+  // template editor) it is a card nested in a modal, so the raised rung.
+  if (embedded) return <div className="space-y-4">{fields}</div>;
+  return (
+    <Card variant="raised" padding="sm" className="sm:p-4 space-y-4">
+      {fields}
+    </Card>
   );
 }

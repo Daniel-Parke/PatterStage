@@ -13,7 +13,6 @@
  */
 import { execIdempotent, isAlreadyAppliedError } from "@/lib/db/apply-sql";
 
-
 /** Minimal better-sqlite3 stand-in: exec throws whatever it is told to. */
 function fakeDb(onExec: (sql: string) => void) {
   return { exec: (sql: string) => onExec(sql) } as unknown as Parameters<

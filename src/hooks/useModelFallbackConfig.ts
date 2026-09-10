@@ -51,6 +51,7 @@ export function useModelFallbackConfig({
       // `safeApiCall<T>` does NOT unwrap — `data` is the full body —
       // so the type is the envelope shape and the inner config is read
       // via `res?.data?.config` (two indirections).
+      // design-lint-disable-next-line no-raw-write-outside-the-helper -- a debounced autosave, silent on success by design: the fields show their own saving and dirty state, and the answer must be checked against the generation counter (a superseded PUT is dropped) before anything is said, which runWrite cannot express
       const { ok, data: res, error } = await safeApiCall<{ data?: { config: FallbackConfig } }>(
         "/api/models/fallbacks/config",
         {

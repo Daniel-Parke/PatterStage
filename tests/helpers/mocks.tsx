@@ -309,3 +309,38 @@ export function agentRuntimeFakeRootMock() {
     getActiveHermesHome: () => root(),
   };
 }
+
+/**
+ * `safeApiCall` over an `apiFetch` double: `{ ok, data }` on a resolve,
+ * `{ ok: false, error }` on a throw. A screen that reads through
+ * useApiResource calls safeApiCall; a suite that answers reads through an
+ * apiFetch mock routes both through the one map so a read is still one of
+ * the paths it asked for (C6, T-0143). Inside `jest.mock`, through the
+ * hoisting-safe `require` form.
+ */
+export function safeApiCallOver(fetchDouble: (...a: unknown[]) => unknown) {
+  return async (...a: unknown[]) => {
+    try {
+      return { ok: true, data: await fetchDouble(...a) };
+    } catch (e) {
+      return { ok: false, error: e instanceof Error ? e.message : String(e) };
+    }
+  };
+}
+
+/**
+ * The inverse: `apiFetch` over a `safeApiCall` double whose answers keep
+ * safeApiCall's shape (`{ ok, status, data, error, body }`). The data on ok;
+ * otherwise a throw carrying the status and the parsed body, which is what
+ * the real apiFetch throws. A JSON body is parsed back so the double sees
+ * the object the suite's answers are keyed on (C6, T-0143).
+ */
+export function apiFetchOver(
+  safeDouble: (url: string, init?: Record<string, unknown>) => Promise<{ ok: boolean; status?: number; data?: unknown; error?: string; body?: unknown }>,
+) {
+  return async (url: string, init?: { method?: string; body?: string }) => {
+    const answer = await safeDouble(url, { ...init, body: init?.body === undefined ? undefined : JSON.parse(init.body) });
+    if (answer.ok) return answer.data;
+    throw Object.assign(new Error(answer.error ?? `HTTP ${answer.status}`), { status: answer.status, body: answer.body });
+  };
+}

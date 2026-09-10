@@ -3,6 +3,10 @@
 import { useState } from "react";
 import { FolderOpen, Plus, Trash2 } from "lucide-react";
 
+import Button from "@/components/ui/Button";
+import IconButton from "@/components/ui/IconButton";
+import { InlineSelect } from "@/components/ui/Select";
+import { Input } from "@/components/ui/field";
 import type { LocalDirEntry } from "@/types/console";
 import { useGitBranches } from "@/hooks/useGitBranches";
 
@@ -34,63 +38,43 @@ export default function LocalDirRow({
         : "";
 
   return (
-    <div className="flex flex-wrap items-end gap-2">
+    <div className="flex flex-wrap items-center gap-2">
       <div className="flex-1 min-w-[160px]">
-        <input
+        <Input
           value={entry.path}
           onChange={(e) =>
             onChange({ ...entry, path: e.target.value, branch: entry.branch })
           }
-          placeholder="~/projects/my-app/" aria-label="Local directory path"
-          className="w-full bg-ps-surface-inset border border-ps-edge rounded-ps-md px-3 py-1.5 text-micro text-ps-text-primary placeholder-ps-text-muted font-mono"
+          placeholder="~/projects/my-app/"
+          aria-label="Local directory path"
+          className="font-mono"
         />
       </div>
       {git?.isGitRepo && git.branches.length > 0 && (
-        <select aria-label="Git branch"
+        <InlineSelect
+          ariaLabel="Git branch"
           value={branchValue}
-          onChange={(e) =>
-            onChange({
-              ...entry,
-              branch: e.target.value === "" ? null : e.target.value,
-            })
-          }
-          className="bg-ps-surface-inset border border-ps-edge rounded-ps-md px-2 py-1.5 text-micro text-ps-text-primary font-mono max-w-[140px]"
-        >
-          <option value="">branch</option>
-          {git.branches.map((b) => (
-            <option key={b} value={b}>
-              {b}
-            </option>
-          ))}
-        </select>
+          onChange={(v) => onChange({ ...entry, branch: v === "" ? null : v })}
+          options={[
+            { value: "", label: "branch" },
+            ...git.branches.map((b) => ({ value: b, label: b })),
+          ]}
+          className="max-w-[140px]"
+        />
       )}
-      <button
-        type="button"
-        title="Browse"
+      <IconButton
+        icon={FolderOpen}
+        label="Browse"
+        variant="secondary"
         onClick={() => setPickerOpen(true)}
-        className="p-1.5 rounded-ps-md border border-ps-edge text-ps-text-muted hover:text-neon-cyan hover:border-neon-cyan/30 transition-colors"
-      >
-        <FolderOpen className="w-4 h-4" />
-      </button>
+      />
       {mode === "draft" && onAdd && (
-        <button
-          type="button"
-          onClick={onAdd}
-          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-ps-md bg-neon-cyan/10 border border-neon-cyan/30 text-micro text-neon-cyan hover:bg-neon-cyan/20 font-mono transition-colors"
-        >
-          <Plus className="w-3 h-3" />
+        <Button variant="primary" color="cyan" icon={Plus} onClick={onAdd}>
           Add
-        </button>
+        </Button>
       )}
       {mode === "saved" && onDelete && (
-        <button
-          type="button"
-          onClick={onDelete}
-          className="p-1.5 rounded-ps-md border border-ps-edge text-ps-text-muted hover:text-red-400 hover:border-red-500/30 transition-colors"
-          title="Remove"
-        >
-          <Trash2 className="w-4 h-4" />
-        </button>
+        <IconButton icon={Trash2} label="Remove" variant="secondary" onClick={onDelete} />
       )}
       <DirectoryPickerModal
         open={pickerOpen}

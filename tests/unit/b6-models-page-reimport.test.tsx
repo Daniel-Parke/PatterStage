@@ -27,7 +27,8 @@
 // ═══════════════════════════════════════════════════════════════
 
 import "@testing-library/jest-dom";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { renderWithQuery } from "../helpers/render-with-query";
 import { fetchMap, type FetchAnswer } from "../helpers/fetch-map";
 
 import ModelsPage from "@/app/agent/models/page";
@@ -103,7 +104,8 @@ const REIMPORT = /^Re-import from config$/;
 
 async function renderLoaded(over: Parameters<typeof fixture>[0] = {}) {
   setFetch(fixture(over));
-  const utils = render(<ModelsPage />);
+  // The registry reads through useApiResource since C6 (T-0143).
+  const utils = renderWithQuery(<ModelsPage />);
   // Loading is over once the table section has decided between the empty
   // state and rows; both render the "Models" h2, so wait on the content.
   if (over.models && over.models.length > 0) {

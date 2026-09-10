@@ -31,6 +31,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { render, renderHook, screen, waitFor } from "@testing-library/react";
+import { queryWrapper } from "../helpers/render-with-query";
 
 import { bannerStatesFor } from "@/components/chat/gateway-banner-states";
 import type { ApiModel } from "@/components/models/types";
@@ -45,9 +46,13 @@ jest.mock("lucide-react", () => require("../helpers/mocks").lucideMock());
 jest.mock("@/hooks/useInterval", () => ({ useInterval: () => undefined }));
 
 const safeApiCallData = jest.fn();
+// The hook reads through useApiResource since C6 (T-0143), which calls
+// safeApiCall; both doubles are served from the same payload map below.
+const safeApiCall = jest.fn();
 jest.mock("@/lib/api-fetch", () => ({
   ...(jest.requireActual("@/lib/api-fetch") as Record<string, unknown>),
   safeApiCallData: (...a: unknown[]) => safeApiCallData(...a),
+  safeApiCall: (...a: unknown[]) => safeApiCall(...a),
 }));
 
 import GatewayBanner from "@/components/chat/GatewayBanner";
@@ -76,10 +81,20 @@ const NOT_SENT: ModelReadiness = {
 };
 
 function serve(payloads: Record<string, unknown>) {
-  safeApiCallData.mockImplementation(async (url: string) => {
+  const answer = (url: string) => {
     const key = Object.keys(payloads).find((k) => url.startsWith(k));
     return key ? payloads[key] : null;
+  };
+  safeApiCallData.mockImplementation(async (url: string) => answer(url));
+  safeApiCall.mockImplementation(async (url: string) => {
+    const data = answer(url);
+    return data ? { ok: true, data: { data } } : { ok: false, error: "unavailable" };
   });
+}
+
+/** Every URL either double was asked for. */
+function urlsRead(): string[] {
+  return [...safeApiCallData.mock.calls, ...safeApiCall.mock.calls].map((c) => String(c[0]));
 }
 
 const WORKING_INSTALL = {
@@ -91,13 +106,14 @@ const WORKING_INSTALL = {
 
 beforeEach(() => {
   safeApiCallData.mockReset();
+  safeApiCall.mockReset();
 });
 
 describe("chat does not accuse a working install of having no model", () => {
   it("shows no banner when the agent's config file names a model and the registry slot is empty", async () => {
     serve(WORKING_INSTALL);
 
-    const { result } = renderHook(() => useGatewayHealth());
+    const { result } = renderHook(() => useGatewayHealth(), { wrapper: queryWrapper() });
     await waitFor(() => {
       expect(result.current.online).not.toBeNull();
       expect(result.current.modelReadiness).not.toBeNull();
@@ -122,10 +138,11 @@ describe("chat does not accuse a working install of having no model", () => {
     // the server now, so the second read is gone.
     serve(WORKING_INSTALL);
 
-    const { result } = renderHook(() => useGatewayHealth());
+    const { result } = renderHook(() => useGatewayHealth(), { wrapper: queryWrapper() });
     await waitFor(() => expect(result.current.modelReadiness).not.toBeNull());
 
-    const urls = safeApiCallData.mock.calls.map((c) => String(c[0]));
+    const urls = urlsRead();
+    expect(urls).toContain("/api/models/defaults");
     expect(urls).not.toContain("/api/config");
   });
 
@@ -135,7 +152,7 @@ describe("chat does not accuse a working install of having no model", () => {
       "/api/models/defaults": { defaults: { agent: null }, modelReadiness: NOT_SENT },
     });
 
-    const { result } = renderHook(() => useGatewayHealth());
+    const { result } = renderHook(() => useGatewayHealth(), { wrapper: queryWrapper() });
     await waitFor(() => {
       expect(result.current.online).not.toBeNull();
       expect(result.current.modelReadiness).not.toBeNull();

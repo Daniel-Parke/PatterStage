@@ -19,17 +19,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CheckCircle2, Loader2, Plug, XCircle } from "lucide-react";
+import { Plug } from "lucide-react";
 
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import { Field, Input } from "@/components/ui/field";
 import { Select } from "@/components/ui/Input";
+import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
+import { useToast } from "@/components/ui/Toast";
 import { useApiResource } from "@/hooks/useApiResource";
-import { safeApiCall } from "@/lib/api-fetch";
+import { safeApiCall, type SafeApiCallResult } from "@/lib/api-fetch";
+import { runWrite } from "@/lib/api-write";
 import ConceptHint from "@/components/help/ConceptHint";
 
-import HealthBanner from "./hindsight/HealthBanner";
+import { healthBannerMessage } from "./hindsight/health-message";
 import type { HealthState } from "./hindsight/types";
 import type { MemoryProviderType } from "@/lib/memory/memory-providers/types";
 
@@ -91,11 +94,10 @@ export default function MemoryProviderSettings({
   onReconnected,
   onRetry,
 }: MemoryProviderSettingsProps) {
+  const { showToast, toastElement } = useToast();
   const [cfg, setCfg] = useState<Cfg>({ host: "127.0.0.1", port: 9177, bank: "hermes" });
   const [testing, setTesting] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [health, setHealth] = useState<Health | null>(null);
-  const [savedMsg, setSavedMsg] = useState("");
   // The row as loaded. Save edits THIS provider: hardcoding hindsight here is
   // how editing a port on a holographic install silently switched the whole
   // memory backend (T-0101, D65).
@@ -129,38 +131,48 @@ export default function MemoryProviderSettings({
     setLoaded(true);
   }, [configRead.settled, configRead.data]);
 
-  async function test(): Promise<Health | null> {
-    setTesting(true);
-    setHealth(null);
-    try {
-      // TWO levels. `ok({ health })` is `{ data: { health } }` and safeApiCall
-      // hands back the raw body in `.data`, so reading `res.data.health` was
-      // always undefined and every probe of a healthy Hindsight reported
-      // failure (T-0101, D58).
-      const res = await safeApiCall<{ data?: { health?: Health } }>("/api/memory/config", {
-        method: "POST",
-        body: { action: "test", config: cfg },
-      });
-      const h = (res.data as { data?: { health?: Health } } | undefined)?.data?.health ?? {
-        available: false,
-        error: res.error ?? "Connection test failed",
-      };
-      setHealth(h);
-      if (h.available) onReconnected?.();
-      return h;
-    } finally {
-      setTesting(false);
-    }
+  // TWO levels. `ok({ health })` is `{ data: { health } }` and safeApiCall
+  // hands back the raw body in `.data`, so reading `res.data.health` was
+  // always undefined and every probe of a healthy Hindsight reported
+  // failure (T-0101, D58).
+  function probeHealth(res: SafeApiCallResult<{ data?: { health?: Health } }>): Health {
+    return res.data?.data?.health ?? { available: false, error: res.error ?? "Connection test failed" };
+  }
+
+  // The probe's answer is said once, as a toast, in the store's own words: the
+  // card used to paint it a second time beside the button, and this card is
+  // the page's one voice about memory (T-0101). Through safeApiCall rather
+  // than a throwing request because a refused probe is an answer, not a fault.
+  async function test(): Promise<void> {
+    await runWrite<SafeApiCallResult<{ data?: { health?: Health } }>>({
+      showToast,
+      setBusy: setTesting,
+      request: () =>
+        safeApiCall<{ data?: { health?: Health } }>("/api/memory/config", {
+          method: "POST",
+          body: { action: "test", config: cfg },
+        }),
+      checkSuccess: false,
+      successMessage: (res) => {
+        const h = probeHealth(res);
+        return h.available
+          ? `Connected (${h.status ?? "healthy"})`
+          : { message: h.error ?? "Unreachable", type: "error" };
+      },
+      errorMessage: "Connection test failed",
+      onSuccess: (res) => {
+        if (probeHealth(res).available) onReconnected?.();
+      },
+    });
   }
 
   async function save() {
-    setSaving(true);
-    setSavedMsg("");
-    try {
-      const current = row ?? FALLBACK_ROW;
-      const res = await safeApiCall<{ data?: { configYaml?: { written: boolean; error: string | null } } }>(
-        "/api/memory/config",
-        {
+    const current = row ?? FALLBACK_ROW;
+    await runWrite<SafeApiCallResult<{ data?: { configYaml?: { written: boolean; error: string | null } } }>>({
+      showToast,
+      setBusy: setSaving,
+      request: () =>
+        safeApiCall<{ data?: { configYaml?: { written: boolean; error: string | null } } }>("/api/memory/config", {
           method: "PUT",
           body: {
             // The chosen provider, falling back to the loaded one when the
@@ -179,24 +191,22 @@ export default function MemoryProviderSettings({
               : { makeActive: true }),
             config: cfg,
           },
-        },
-      );
-      const yamlNote = (res.data as { data?: { configYaml?: { written: boolean; error: string | null } } } | undefined)
-        ?.data?.configYaml;
-      setSavedMsg(
-        res.ok
-          ? yamlNote && !yamlNote.written
-            ? `Saved. ${yamlNote.error}`
-            : "Saved — endpoint updated."
-          : res.error ?? "Save failed",
-      );
-      if (res.ok) {
+        }),
+      checkSuccess: false,
+      successMessage: (res) => {
+        if (!res.ok) return { message: res.error ?? "Save failed", type: "error" };
+        const yamlNote = res.data?.data?.configYaml;
+        return yamlNote && !yamlNote.written
+          ? { message: `Saved. ${yamlNote.error}`, type: "info" }
+          : "Saved — endpoint updated.";
+      },
+      errorMessage: "Save failed",
+      onSuccess: async (res) => {
+        if (!res.ok) return;
         setRow({ ...current, isActive: true, confirmed: true });
         await test();
-      }
-    } finally {
-      setSaving(false);
-    }
+      },
+    });
   }
 
   // Nothing answered: this card is the whole story, and its heading says so.
@@ -208,6 +218,7 @@ export default function MemoryProviderSettings({
 
   return (
     <Card padding="md" glow="pink">
+      {toastElement}
       <div className="mb-3 flex items-center gap-2">
         <Plug className="h-4 w-4 text-neon-pink" />
         <h2 className="text-body font-semibold text-ps-text-primary">
@@ -223,9 +234,11 @@ export default function MemoryProviderSettings({
         PatterStage owns this connection — edit it here, no Hermes file edits. Stored in the database.
       </p>
 
-      {/* The page's one health voice, inside the card that can fix it. */}
+      {/* The page's one health voice, inside the card that can fix it. One
+          error surface with its Retry inside it (T-0096); the sentence is
+          healthBannerMessage's, which reads the health payload's shape. */}
       {storeUnreachable && storeHealth && (
-        <HealthBanner health={storeHealth} loadingInitial={false} onRetry={() => onRetry?.()} />
+        <LoadErrorBanner error={healthBannerMessage(storeHealth)} onRetry={() => onRetry?.()} />
       )}
 
       {/* Say out loud that the endpoint below is a guess until somebody confirms
@@ -237,17 +250,16 @@ export default function MemoryProviderSettings({
           it is what makes a fresh install work with no setup; what changes is
           that the product stops presenting a guess as a decision (T-0077). */}
       {unconfirmedGuess && (
-        <div
-          role="status"
-          className="mb-4 rounded-ps-md border border-neon-orange/30 bg-neon-orange/10 px-3 py-2 text-body text-neon-orange"
-        >
-          Using the built-in default — not yet confirmed. PatterStage guessed{" "}
-          <span className="font-mono">
-            {cfg.host}:{cfg.port}
-          </span>
-          . If another memory service is already running there, this will show its
-          memories rather than yours. Check the values and press Save to confirm.
-        </div>
+        <Card variant="raised" padding="none" className="mb-4 px-3 py-2 text-body text-neon-orange">
+          <p role="status">
+            Using the built-in default — not yet confirmed. PatterStage guessed{" "}
+            <span className="font-mono">
+              {cfg.host}:{cfg.port}
+            </span>
+            . If another memory service is already running there, this will show its
+            memories rather than yours. Check the values and press Save to confirm.
+          </p>
+        </Card>
       )}
 
       {/* The provider itself. The config page renders memory.provider read-only
@@ -304,19 +316,6 @@ export default function MemoryProviderSettings({
         <Button variant="primary" color="pink" size="sm" loading={saving} disabled={!loaded} onClick={() => void save()}>
           Save
         </Button>
-        {health ? (
-          <span
-            className={`inline-flex items-center gap-1.5 text-body ${health.available ? "text-neon-green" : "text-neon-pink"}`}
-          >
-            {health.available ? <CheckCircle2 className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
-            {health.available ? `Connected (${health.status ?? "healthy"})` : health.error ?? "Unreachable"}
-          </span>
-        ) : testing ? (
-          <span className="inline-flex items-center gap-1.5 text-body text-ps-text-muted">
-            <Loader2 className="h-4 w-4 animate-spin" /> Probing…
-          </span>
-        ) : null}
-        {savedMsg ? <span className="text-body text-ps-text-muted">{savedMsg}</span> : null}
       </div>
     </Card>
   );

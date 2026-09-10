@@ -7,7 +7,6 @@
  * constructed request with a synthetic URL is sufficient.
  */
 
-
 import { NextRequest } from "next/server";
 
 import {

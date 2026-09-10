@@ -12,7 +12,7 @@
 "use client";
 
 import { sectionHeadingClasses } from "@/lib/theme";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Wrench,
   Info,
@@ -25,11 +25,13 @@ import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
 import PageLoading from "@/components/ui/PageLoading";
 import Button from "@/components/ui/Button";
+import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import ProfilePicker from "@/components/ui/ProfilePicker";
 import { Textarea } from "@/components/ui/field";
 import { LastResult, useToast } from "@/components/ui/Toast";
-import { API_FETCH_BULK_TIMEOUT_MS, apiFetch, toastError } from "@/lib/api-fetch";
+import { API_FETCH_BULK_TIMEOUT_MS } from "@/lib/api-fetch";
 import { runWrite } from "@/lib/api-write";
+import { useApiResource } from "@/hooks/useApiResource";
 import { profileSyncBody } from "@/lib/profile-sync-body";
 import type { PlatformToolsets } from "@/modules/hermes/lib/profile-config-builder";
 import type { AgentProfile } from "@/types/console";
@@ -48,6 +50,30 @@ import ConceptHint from "@/components/help/ConceptHint";
 import { useProfiles } from "@/hooks/useProfiles";
 import { useSelectedProfile } from "@/hooks/useSelectedProfile";
 
+/** What the toolsets read says, once the envelope is unwrapped. */
+interface ToolsetsRead {
+  platformToolsets: PlatformToolsets;
+  unifiedEnabled: string[];
+  platformsDiverged: boolean;
+  source: string | null;
+}
+
+/**
+ * A warning callout above the grid: something the operator should know
+ * before they save, said in the warning tint. Three of them shared this
+ * chrome by hand; the pending-profile one now carries its buttons in the
+ * same box (C6, T-0143).
+ */
+function WarningNotice({ icon, children }: { icon?: boolean; children: React.ReactNode }) {
+  return (
+    // design-lint-disable-next-line no-inline-card-chrome -- a warning callout, not a surface: the warning border and wash are the message, and Card cannot carry them (its own hairline border would fight the warning one).
+    <div className="mb-4 flex items-start gap-2 rounded-ps-md border border-semantic-warning/30 bg-semantic-warning/10 p-3">
+      {icon && <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-semantic-warning" aria-hidden="true" />}
+      <div className="min-w-0 flex-1">{children}</div>
+    </div>
+  );
+}
+
 export default function ToolsPage() {
   // Shared with Agents and Skills. Three pickers in three useStates meant three
   // subjects for one word (T-0113).
@@ -55,19 +81,14 @@ export default function ToolsPage() {
   const { data: profiles, refetch: refetchProfiles } = useProfiles();
   const profileName = profiles?.find((p) => p.id === selectedProfile)?.name ?? selectedProfile;
   const [toolsetsJson, setToolsetsJson] = useState("{}");
-  const [toolsetsSource, setToolsetsSource] = useState<string | null>(null);
-  const [loadingToolsets, setLoadingToolsets] = useState(true);
   const [savingToolsets, setSavingToolsets] = useState(false);
   const [syncing, setSyncing] = useState<"pull" | "push" | null>(null);
   const [unifiedEnabled, setUnifiedEnabled] = useState<string[]>([]);
-  const [platformsDiverged, setPlatformsDiverged] = useState(false);
   const [showAdvancedJson, setShowAdvancedJson] = useState(false);
   // The JSON has been typed into. It is the payload from then until it is
   // saved or discarded: toggling a chip used to overwrite it and hiding the
   // panel used to drop it, both without a word (T-0103, D82).
   const [jsonDirty, setJsonDirty] = useState(false);
-  // What the last read gave us, so "changed" is a fact rather than a guess.
-  const [loadedEnabled, setLoadedEnabled] = useState<string[]>([]);
   // A profile the operator asked for while changes were unsaved (D84).
   const [pendingProfile, setPendingProfile] = useState<string | null>(null);
   // Read off the profiles the page already has, rather than a second raw
@@ -76,49 +97,59 @@ export default function ToolsPage() {
     profiles?.find((p) => p.id === selectedProfile)?.syncStatus ?? null;
   const { showToast, toastElement, lastResult } = useToast();
 
-  // The selected profile's syncStatus (drift | error | null), best-effort: a
-  // failed read resets to null, which the page reads as nothing to say.
+  // The profile's toolsets, keyed on the profile: a switch is a first read of
+  // another profile's list, and a reload after a save keeps the grid on
+  // screen (C6, T-0143). A payload with nothing in it is an empty policy.
+  const toolsets = useApiResource<ToolsetsRead>(`/api/agent/profiles/${selectedProfile}/toolsets`, {
+    select: (payload) => {
+      const p = (payload ?? {}) as {
+        platformToolsets?: PlatformToolsets;
+        unifiedEnabled?: string[];
+        platformsDiverged?: unknown;
+        source?: string | null;
+      };
+      const loaded = p.platformToolsets ?? {};
+      return {
+        platformToolsets: loaded,
+        unifiedEnabled: p.unifiedEnabled ?? unionToolsetsFromPlatforms(loaded),
+        platformsDiverged: Boolean(p.platformsDiverged),
+        source: p.source ?? null,
+      };
+    },
+    errorMessage: "Failed to load toolsets",
+  });
+  const loadingToolsets = !toolsets.settled;
+  // What the last read gave us, so "changed" is a fact rather than a guess.
+  const loadedEnabled = toolsets.data?.unifiedEnabled ?? [];
+  const platformsDiverged = toolsets.data?.platformsDiverged ?? false;
+  const toolsetsSource = toolsets.data?.source ?? null;
 
+  // The editable copy of the read: the chips and the JSON start as what the
+  // profile has, and a read that lands anew (a profile switch, a reload
+  // after a save or a pull) is the new starting point. The read's data keeps
+  // its identity while its content is unchanged, so a refetch that brings
+  // back the same policy leaves an unsaved edit alone.
+  useEffect(() => {
+    if (!toolsets.data) return;
+    setUnifiedEnabled(toolsets.data.unifiedEnabled);
+    setToolsetsJson(JSON.stringify(toolsets.data.platformToolsets, null, 2));
+    setJsonDirty(false);
+  }, [toolsets.data]);
+
+  const { refetch: refetchToolsets } = toolsets;
   const loadToolsets = useCallback(async () => {
-    setLoadingToolsets(true);
-    try {
-      const data = await apiFetch(`/api/agent/profiles/${selectedProfile}/toolsets`);
-      const loaded = (data.data?.platformToolsets ?? {}) as PlatformToolsets;
-      const unified = (data.data?.unifiedEnabled as string[] | undefined) ??
-        unionToolsetsFromPlatforms(loaded);
-      setUnifiedEnabled(unified);
-      setLoadedEnabled(unified);
-      setJsonDirty(false);
-      setPlatformsDiverged(Boolean(data.data?.platformsDiverged));
-      setToolsetsJson(JSON.stringify(loaded, null, 2));
-      setToolsetsSource(data.data?.source ?? null);
-    } catch (err) {
-      setToolsetsJson("{}");
-      setToolsetsSource(null);
-      setLoadedEnabled([]);
-      setJsonDirty(false);
-      toastError(showToast, err, "Failed to load toolsets");
-    } finally {
-      setLoadingToolsets(false);
-    }
-  }, [selectedProfile, showToast]);
+    await refetchToolsets();
+  }, [refetchToolsets]);
 
-  // Both reads, for the mount and for a pull or push that may have changed
-  // the sync status of the active profile. A local save reloads only the
-  // toolsets: the sync status moves only when Hermes disk is touched.
-  // Through a ref, so the reload effect below depends on the toolsets loader
-  // alone: a consumer that hands back a fresh refetch on every render would
-  // otherwise re-run the effect on every render (T-0129).
-  const refetchProfilesRef = useRef(refetchProfiles);
-  refetchProfilesRef.current = refetchProfiles;
+  // Both reads, for a pull or push that may have changed the sync status of
+  // the active profile. A local save reloads only the toolsets: the sync
+  // status moves only when Hermes disk is touched. No effect depends on this
+  // any more (the mount read is the hook's), so it may depend on the
+  // profiles' refetch directly.
   const reloadAll = useCallback(async () => {
     await loadToolsets();
-    await refetchProfilesRef.current();
-  }, [loadToolsets]);
-
-  useEffect(() => {
-    void reloadAll();
-  }, [reloadAll]);
+    await refetchProfiles();
+  }, [loadToolsets, refetchProfiles]);
 
   const toggleUnifiedToolset = (toolsetId: string) => {
     // A covered toolset is already on, through the bundle. Adding it as its
@@ -158,7 +189,12 @@ export default function ToolsPage() {
       body: { platformToolsets: payload },
       successMessage: "Toolsets saved and pushed to Hermes",
       errorMessage: "Failed to save toolsets",
-      onSuccess: loadToolsets,
+      onSuccess: async () => {
+        // The JSON is what was saved, so it is no longer ahead of the profile,
+        // even when the reload brings back a policy identical to the last.
+        setJsonDirty(false);
+        await loadToolsets();
+      },
     });
   };
 
@@ -271,8 +307,7 @@ export default function ToolsPage() {
       <div>
         <LastResult result={lastResult} />
         {profileSyncStatus === "drift" && (
-          <div className="mb-4 flex items-start gap-2 rounded-ps-md border border-semantic-warning/30 bg-semantic-warning/10 p-3">
-            <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-semantic-warning" aria-hidden="true" />
+          <WarningNotice icon>
             <p className="text-body text-semantic-warning/90">
               Toolset policy on disk differs from PatterStage (format or values).{" "}
               <strong>Pull from Hermes</strong> imports disk into SQLite;{" "}
@@ -280,27 +315,27 @@ export default function ToolsPage() {
               <code className="text-ps-text-muted">config.yaml</code> to{" "}
               <code className="text-ps-text-muted">~/.hermes</code>.
             </p>
-          </div>
+          </WarningNotice>
         )}
         {profileSyncStatus === "error" && (
-          <div className="mb-4 rounded-ps-md border border-semantic-danger/30 bg-semantic-danger/10 p-3">
-            <p className="text-body text-semantic-danger">
-              Last sync failed. Check gateway logs, then retry Pull or Push.
-            </p>
-          </div>
+          <LoadErrorBanner error="Last sync failed. Check gateway logs, then retry Pull or Push." />
+        )}
+        {/* The read contract (T-0096, D22): a failed toolsets read is this,
+            with a Retry, and the grid under it is not an empty policy. */}
+        {toolsets.error && (
+          <LoadErrorBanner error={toolsets.error} onRetry={() => void loadToolsets()} />
         )}
         {platformsDiverged && (
-          <div className="mb-4 flex items-start gap-2 rounded-ps-md border border-semantic-warning/30 bg-semantic-warning/10 p-3">
-            <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-semantic-warning" aria-hidden="true" />
+          <WarningNotice icon>
             <p className="text-body text-semantic-warning/90">
               Platforms have different toolsets on disk. The grid below shows the union.{" "}
               <strong>Save &amp; push</strong> applies one list to all gateways (like{" "}
               <code className="text-ps-text-muted">hermes tools</code> configure all).
             </p>
-          </div>
+          </WarningNotice>
         )}
         {pendingProfile && (
-          <div className="mb-4 rounded-ps-md border border-semantic-warning/40 bg-semantic-warning/10 p-3">
+          <WarningNotice>
             <p className="text-body text-ps-text-primary">
               You have unsaved toolset changes on this profile.
             </p>
@@ -317,7 +352,7 @@ export default function ToolsPage() {
                 Keep editing
               </Button>
             </div>
-          </div>
+          </WarningNotice>
         )}
 
         {/* Was a hand-rolled copy of the accented panel, down to the class

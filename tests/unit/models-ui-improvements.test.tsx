@@ -7,7 +7,8 @@
 // ═══════════════════════════════════════════════════════════════
 
 import "@testing-library/jest-dom";
-import { render, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
+import { renderWithQuery } from "../helpers/render-with-query";
 import { fetchMap, type FetchAnswer } from "../helpers/fetch-map";
 
 import ModelsPage from "@/app/agent/models/page";
@@ -59,7 +60,7 @@ function defaultModelsFetch(models: unknown[] = []) {
 describe("ModelsPage UI improvements", () => {
   it("renders section titles with icons: Models, Agent Default, Task Defaults", async () => {
     setFetch(defaultModelsFetch());
-    const { container: _c1 } = render(<ModelsPage />);
+    const { container: _c1 } = renderWithQuery(<ModelsPage />);
 
     await waitFor(() =>
       expect(screen.getByText(/No models yet/i)).toBeInTheDocument()
@@ -76,7 +77,7 @@ describe("ModelsPage UI improvements", () => {
 
   it("does not render verbose 'Universal Agent Default (Framework-scoped)' title", async () => {
     setFetch(defaultModelsFetch());
-    render(<ModelsPage />);
+    renderWithQuery(<ModelsPage />);
 
     await waitFor(() =>
       expect(screen.queryByText(/Universal Agent Default/i)).not.toBeInTheDocument()
@@ -85,7 +86,7 @@ describe("ModelsPage UI improvements", () => {
 
   it("does not render 'Framework' label next to dropdown", async () => {
     setFetch(defaultModelsFetch());
-    render(<ModelsPage />);
+    renderWithQuery(<ModelsPage />);
 
     await waitFor(() =>
       expect(screen.queryByText(/^Framework$/i)).not.toBeInTheDocument()
@@ -133,7 +134,7 @@ describe("ModelsPage UI improvements", () => {
       },
     });
 
-    const { container: _c2 } = render(<ModelsPage />);
+    const { container: _c2 } = renderWithQuery(<ModelsPage />);
 
     await waitFor(() =>
       expect(screen.getByText("Active")).toBeInTheDocument()
@@ -146,7 +147,7 @@ describe("ModelsPage UI improvements", () => {
 
   it("does not render verbose 'Default Models' title", async () => {
     setFetch(defaultModelsFetch());
-    render(<ModelsPage />);
+    renderWithQuery(<ModelsPage />);
 
     await waitFor(() =>
       expect(screen.queryByText("Default Models")).not.toBeInTheDocument()
@@ -155,7 +156,7 @@ describe("ModelsPage UI improvements", () => {
 
   it("section headers do not contain long bracketed descriptions", async () => {
     setFetch(defaultModelsFetch());
-    render(<ModelsPage />);
+    renderWithQuery(<ModelsPage />);
 
     await waitFor(() =>
       expect(screen.queryByText(/\(Framework-scoped\)/i)).not.toBeInTheDocument()

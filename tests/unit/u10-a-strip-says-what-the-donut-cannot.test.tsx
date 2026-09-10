@@ -32,7 +32,10 @@
  * distinct tags, how many credentials, how many messages. One or two per strip,
  * which is the point - the donut is the picture, the tiles are the footnote.
  */
-import { render } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
+import { fetchMap, type FetchAnswer } from "../helpers/fetch-map";
+import { renderWithQuery } from "../helpers/render-with-query";
+import { TASK_TYPES } from "@/lib/models/task-types";
 
 interface Captured {
   donut?: { segments?: Array<{ label: string; value: number }>; center?: unknown };
@@ -51,57 +54,109 @@ jest.mock("@/components/viz/StatStrip", () => ({
 import LogInsights from "@/components/logs/LogInsights";
 import MemoryInsights from "@/components/memory/MemoryInsights";
 import SessionInsights from "@/components/session/SessionInsights";
-import ModelInsights from "@/components/models/ModelInsights";
+import ModelsPage from "@/app/agent/models/page";
 // SkillsInsights and ToolsInsights are gone (U11, T-0125): on a list screen the
 // strip was a dashboard about the list, and its one fact moved into the
 // subtitle. The rule holds for the strips that remain.
+//
+// The Models strip is a local function of the Models page since C6 (T-0143),
+// so it is reached the way an operator reaches it: the page, over a registry
+// of three models from two providers and two credentials, hands StatStrip the
+// same donut and tile the old component did.
 
-/** Each strip, with enough data that it renders rather than returning null. */
-const STRIPS: Array<[string, () => React.ReactElement]> = [
+const originalFetch = global.fetch;
+afterEach(() => {
+  global.fetch = originalFetch;
+});
+
+function model(id: string, provider: string) {
+  return {
+    id,
+    name: id,
+    provider,
+    modelId: id,
+    baseUrl: null,
+    contextLength: null,
+    credentialsId: null,
+    createdAt: "2026-09-01T00:00:00Z",
+    updatedAt: "2026-09-01T00:00:00Z",
+  };
+}
+
+/** The registry's reads, for the Models page. */
+function registry(): Record<string, FetchAnswer> {
+  const config = { restorePrimaryOnFallback: true, fallbackNotification: false, apiMaxRetries: 2 };
+  const credential = (id: string) => ({ id, provider: "anthropic", label: id, createdAt: "2026-09-01T00:00:00Z", updatedAt: "2026-09-01T00:00:00Z" });
+  return {
+    "/api/models/sync/drift": { body: { data: null } },
+    "/api/models/fallbacks/config": { body: { data: { config } } },
+    "/api/models/fallbacks": { body: { data: { entries: [], config } } },
+    "/api/models/defaults": {
+      body: { data: { defaults: TASK_TYPES.reduce<Record<string, string | null>>((acc, t) => ({ ...acc, [t]: null }), {}) } },
+    },
+    "/api/credentials": { body: { data: { credentials: [credential("c-1"), credential("c-2")] } } },
+    "/api/models": {
+      body: { data: { models: [model("m-1", "anthropic"), model("m-2", "anthropic"), model("m-3", "openai")] } },
+    },
+  };
+}
+
+/** Each strip, mounted with enough data that it renders rather than returning null. */
+const STRIPS: Array<[string, () => Promise<void>]> = [
   [
     "Logs",
-    () => <LogInsights lines={["ERROR boom", "WARN careful", "info fine", "info also fine"]} />,
+    async () => {
+      render(<LogInsights lines={["ERROR boom", "WARN careful", "info fine", "info also fine"]} />);
+    },
   ],
   [
     "Memory",
-    () => (
-      <MemoryInsights
-        memories={[{ tags: ["a", "b"] }, { tags: ["b"] }]}
-        hiddenStaleCount={3}
-        totalFacts={42}
-      />
-    ),
+    async () => {
+      render(
+        <MemoryInsights
+          memories={[{ tags: ["a", "b"] }, { tags: ["b"] }]}
+          hiddenStaleCount={3}
+          totalFacts={42}
+        />,
+      );
+    },
   ],
   [
     "Sessions",
-    () => (
-      <SessionInsights
-        totals={
-          {
-            total: 20,
-            active: 2,
-            messages: 300,
-            bySource: { cli: 8, mission: 6, cron: 4, api: 2 },
-          } as never
-        }
-      />
-    ),
+    async () => {
+      render(
+        <SessionInsights
+          totals={
+            {
+              total: 20,
+              active: 2,
+              messages: 300,
+              bySource: { cli: 8, mission: 6, cron: 4, api: 2 },
+            } as never
+          }
+        />,
+      );
+    },
   ],
   [
     "Models",
-    () => (
-      <ModelInsights
-        models={[{ provider: "anthropic" }, { provider: "anthropic" }, { provider: "openai" }]}
-        credentialCount={2}
-      />
-    ),
+    async () => {
+      fetchMap(registry());
+      // The page's registry reads go through react-query, so it takes the provider.
+      renderWithQuery(<ModelsPage />);
+      // The strip renders once per read that lands; the one the operator
+      // sees is the last, after the whole registry is on screen.
+      await screen.findByRole("button", { name: /Fallback Chain/ });
+      await waitFor(() => expect(captured.length).toBeGreaterThan(0));
+      captured.splice(0, captured.length - 1);
+    },
   ],
 ];
 
 describe("a tile says something the donut cannot", () => {
-  it.each(STRIPS)("%s", (_name, renderStrip) => {
+  it.each(STRIPS)("%s", async (_name, mountStrip) => {
     captured.length = 0;
-    render(renderStrip());
+    await mountStrip();
     expect(captured).toHaveLength(1);
 
     const { donut, tiles = [] } = captured[0];
@@ -121,9 +176,9 @@ describe("a tile says something the donut cannot", () => {
    * Anti-vacuity twice over: the strips must actually be handing StatStrip a
    * donut with segments, or "no tile restates a segment" is true of nothing.
    */
-  it.each(STRIPS)("%s draws a donut with segments to compare against", (_name, renderStrip) => {
+  it.each(STRIPS)("%s draws a donut with segments to compare against", async (_name, mountStrip) => {
     captured.length = 0;
-    render(renderStrip());
+    await mountStrip();
     expect((captured[0].donut?.segments ?? []).length).toBeGreaterThan(1);
   });
 
@@ -134,9 +189,9 @@ describe("a tile says something the donut cannot", () => {
    * file is. Nothing is left for a tile to say, and inventing one would be the
    * defect this rule exists to stop.
    */
-  it.each(STRIPS)("%s carries at most three tiles", (_name, renderStrip) => {
+  it.each(STRIPS)("%s carries at most three tiles", async (_name, mountStrip) => {
     captured.length = 0;
-    render(renderStrip());
+    await mountStrip();
     expect((captured[0].tiles ?? []).length).toBeLessThanOrEqual(3);
   });
 });

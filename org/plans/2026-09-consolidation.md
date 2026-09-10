@@ -175,6 +175,22 @@ batch.
 - Verify: `oneImporterComponents`; the design census and design-lint
   baselines re-cut downward; the isolated instance walked at 1440 and 390;
   screenshots recaptured.
+- Corrected in the batch (T-0143): the six rules went to ZERO, not down,
+  and with them the whole design-lint baseline (369 to 0), with twelve
+  pragmas whose reasons are on their lines. The batch also took the
+  eleven effect reads C3 had held by name onto `useApiResource` (the
+  census reads 0), the nineteen page-level writes onto `runWrite`, and
+  fixed the body-swap-on-reload on Skills and Restore the way T-0139 fixed
+  Models, each with its own behaviour test. Twenty-seven folds, not the
+  twenty-five surveyed: `BrandMark` had one importer once the mobile
+  header moved into the rail, and `QueryProvider` folded into
+  `FeedbackProvider` because a server layout cannot hold a client. The
+  one-importer count reads 103 against ≤ 95: every component under sixty
+  lines is folded and the rest are larger, so the miss is recorded as a
+  number for C8 unless C7 takes siblings. The census's index predicate was
+  corrected (an index file is imported by its directory). Two gate floors
+  moved with the tree: icon-only raw buttons 40 to 20 and raw controls 40
+  to 15, because the primitives absorbed the population they counted.
 
 ### C7 — The lib root [M] · T-0144
 - The 71 root files into their domains: `chat/`, `models/`, `schedules/`,

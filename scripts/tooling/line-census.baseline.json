@@ -1,15 +1,15 @@
 {
-  "measuredAt": "2026-09-09",
+  "measuredAt": "2026-09-10",
   "counts": {
-    "srcLines": 100962,
-    "testLines": 120624,
-    "srcRepeatedWindowLines": 1176,
-    "testRepeatedWindowLines": 4651,
+    "srcLines": 100864,
+    "testLines": 121388,
+    "srcRepeatedWindowLines": 1190,
+    "testRepeatedWindowLines": 4783,
     "routesWithTryCatch": 13,
-    "handRolledReadHooks": 11,
+    "handRolledReadHooks": 0,
     "writeHooksWithoutMutation": 0,
     "repeatedTypeShapeFiles": 2,
-    "oneImporterComponents": 130,
+    "oneImporterComponents": 103,
     "libRootFiles": 71,
     "commentEssays": 8,
     "suitesMockingDbInline": 14
@@ -84,6 +84,21 @@
       "measuredAt": "2026-09-09",
       "rise": "testRepeatedWindowLines rose from 4637 to 4651",
       "reason": "C5 (T-0142): the oracle suite adds its 75 lines to tests; every other measure fell or held."
+    },
+    {
+      "measuredAt": "2026-09-10",
+      "rise": "testLines rose from 120624 to 121388",
+      "reason": "C6 (T-0143): tests grow by two keeps-its-body suites modelled on T-0139's and by the api-fetch preamble that now routes safeApiCall through the same map in five suites; the src windows are the models page's handler lists, unchanged, re-counted after the folds moved lines around them."
+    },
+    {
+      "measuredAt": "2026-09-10",
+      "rise": "srcRepeatedWindowLines rose from 1176 to 1190",
+      "reason": "C6 (T-0143): tests grow by two keeps-its-body suites modelled on T-0139's and by the api-fetch preamble that now routes safeApiCall through the same map in five suites; the src windows are the models page's handler lists, unchanged, re-counted after the folds moved lines around them."
+    },
+    {
+      "measuredAt": "2026-09-10",
+      "rise": "testRepeatedWindowLines rose from 4651 to 4783",
+      "reason": "C6 (T-0143): tests grow by two keeps-its-body suites modelled on T-0139's and by the api-fetch preamble that now routes safeApiCall through the same map in five suites; the src windows are the models page's handler lists, unchanged, re-counted after the folds moved lines around them."
     }
   ]
 }

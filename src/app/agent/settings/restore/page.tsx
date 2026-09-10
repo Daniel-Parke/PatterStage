@@ -17,17 +17,21 @@
 // once as a toast. And the mechanics live behind a disclosure, so a first-time
 // reader meets plain sentences and an operator still gets the detail.
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { RotateCcw, Bot, ListTodo, Database, Trash2 } from "lucide-react";
 
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
 import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
 import ConfirmButton from "@/components/ui/ConfirmButton";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { useToast } from "@/components/ui/Toast";
+import { Panel } from "@/components/dashboard/Panel";
 import { API_FETCH_BULK_TIMEOUT_MS, apiFetch, messageFromError } from "@/lib/api-fetch";
+import { runWrite } from "@/lib/api-write";
+import { useApiResource } from "@/hooks/useApiResource";
 import { describeRestoreResult } from "@/lib/seed/describe-restore-result";
 import { SYNC_STATUS_LABELS } from "@/lib/status-labels";
 import { pluralise } from "@/lib/utils";
@@ -94,49 +98,61 @@ function countedRemovals(counts: { workflows: number; stories: number; missions:
   return parts.join(", ");
 }
 
+/** What GET /api/seed says: when it last ran, and what the pack on disk holds. */
+interface SeedRead {
+  state: SeedState | null;
+  pack: PackCounts;
+}
+
 export default function RestorePage() {
-  const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
   const isBusy = busy !== null;
-  const [loadError, setLoadError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<{ section: SectionKey; message: string } | null>(null);
-  const [state, setState] = useState<SeedState | null>(null);
-  const [pack, setPack] = useState<PackCounts>(EMPTY_PACK);
-  const [profiles, setProfiles] = useState<AgentProfile[]>([]);
-  const [templates, setTemplates] = useState<CatalogTemplate[]>([]);
   const [result, setResult] = useState<{ section: SectionKey; text: string; at: Date } | null>(null);
   const [cleanPreview, setCleanPreview] = useState<CleanPreview | null>(null);
   const { showToast, toastElement } = useToast();
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setLoadError(null);
-    try {
-      const [seedRes, profRes, tplRes] = await Promise.all([
-        apiFetch("/api/seed"),
-        apiFetch("/api/agent/profiles"),
-        apiFetch("/api/templates"),
-      ]);
-      setState((seedRes.data?.state as SeedState | null) ?? null);
-      setPack((seedRes.data?.pack as PackCounts | undefined) ?? EMPTY_PACK);
-      setProfiles(
-        ((profRes.data?.profiles ?? []) as AgentProfile[]).filter((p) => p.isBundled && !p.isDefault),
-      );
-      setTemplates(
-        ((tplRes.data?.templates ?? []) as CatalogTemplate[]).filter((t) => !t.isCustom && t.seedKey),
-      );
-    } catch (e) {
-      // The banner, not an empty list: an install with nothing in it and an
-      // install this page could not read look identical otherwise.
-      setLoadError(messageFromError(e, "The read failed"));
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  // The three reads, together: the pack and its last run, the bundled
+  // profiles, the seeded templates. The spinner is for the first read only;
+  // a restore reloads all three and the page keeps what it has while they
+  // land (C6, T-0143).
+  const seed = useApiResource<SeedRead>("/api/seed", {
+    select: (payload) => {
+      const p = payload as { state?: SeedState | null; pack?: PackCounts } | undefined;
+      if (!p) return undefined;
+      return { state: p.state ?? null, pack: p.pack ?? EMPTY_PACK };
+    },
+    errorMessage: "The read failed",
+  });
+  const bundled = useApiResource<AgentProfile[]>("/api/agent/profiles", {
+    select: (payload) =>
+      ((payload as { profiles?: AgentProfile[] } | undefined)?.profiles ?? []).filter(
+        (p) => p.isBundled && !p.isDefault,
+      ),
+    errorMessage: "The read failed",
+  });
+  const seeded = useApiResource<CatalogTemplate[]>("/api/templates", {
+    select: (payload) =>
+      ((payload as { templates?: CatalogTemplate[] } | undefined)?.templates ?? []).filter(
+        (t) => !t.isCustom && t.seedKey,
+      ),
+    errorMessage: "The read failed",
+  });
+  const loading = !(seed.settled && bundled.settled && seeded.settled);
+  // The banner, not an empty list: an install with nothing in it and an
+  // install this page could not read look identical otherwise.
+  const loadError = seed.error ?? bundled.error ?? seeded.error;
+  const state = seed.data?.state ?? null;
+  const pack = seed.data?.pack ?? EMPTY_PACK;
+  const profiles = bundled.data ?? [];
+  const templates = seeded.data ?? [];
 
-  useEffect(() => {
-    void load();
-  }, [load]);
+  const { refetch: refetchSeed } = seed;
+  const { refetch: refetchBundled } = bundled;
+  const { refetch: refetchSeeded } = seeded;
+  const load = useCallback(async () => {
+    await Promise.all([refetchSeed(), refetchBundled(), refetchSeeded()]);
+  }, [refetchSeed, refetchBundled, refetchSeeded]);
 
   const runSeed = useCallback(
     async (
@@ -144,27 +160,27 @@ export default function RestorePage() {
       body: { target: string; mode: "merge" | "replace"; slug?: string; templateId?: string },
       name?: string,
     ) => {
-      setBusy(`${body.target}-${body.mode}-${body.slug ?? body.templateId ?? "all"}`);
+      const key = `${body.target}-${body.mode}-${body.slug ?? body.templateId ?? "all"}`;
       setActionError(null);
       setResult(null);
-      try {
-        const res = await apiFetch<{ data?: Record<string, unknown> }>("/api/seed", {
-          method: "POST",
-          body: JSON.stringify(body),
-          // Bulk: work scales with the install, not the request (T-0047).
-          timeoutMs: API_FETCH_BULK_TIMEOUT_MS,
-        });
-        const summary = describeRestoreResult(body.target, body.mode, res?.data ?? {}, name);
-        setResult({ section, text: summary, at: new Date() });
-        showToast(summary, "success");
-        await load();
-      } catch (e) {
-        const message = messageFromError(e, "Restore failed");
-        setActionError({ section, message });
-        showToast(message, "error");
-      } finally {
-        setBusy(null);
-      }
+      const summarise = (res: { data?: Record<string, unknown> } | undefined) =>
+        describeRestoreResult(body.target, body.mode, res?.data ?? {}, name);
+      await runWrite<{ data?: Record<string, unknown> } | undefined>({
+        setBusy: (on) => setBusy(on ? key : null),
+        showToast,
+        url: "/api/seed",
+        method: "POST",
+        body,
+        // Bulk: work scales with the install, not the request (T-0047).
+        timeoutMs: API_FETCH_BULK_TIMEOUT_MS,
+        successMessage: summarise,
+        errorMessage: "Restore failed",
+        onSuccess: async (res) => {
+          setResult({ section, text: summarise(res), at: new Date() });
+          await load();
+        },
+        onError: (e) => setActionError({ section, message: messageFromError(e, "Restore failed") }),
+      });
     },
     [load, showToast],
   );
@@ -180,30 +196,32 @@ export default function RestorePage() {
   }, []);
 
   const runClean = useCallback(async () => {
-    setBusy("clean");
     setActionError(null);
     setResult(null);
-    try {
-      const res = await apiFetch<{
-        data?: { counts?: { workflows: number; stories: number; missions: number; total: number } };
-      }>("/api/seed/clean", {
-        method: "POST",
-        // Bulk: deletes across every seeded table (T-0047).
-        timeoutMs: API_FETCH_BULK_TIMEOUT_MS,
-      });
+    const summarise = (
+      res: { data?: { counts?: { workflows: number; stories: number; missions: number; total: number } } } | undefined,
+    ) => {
       const counts = res?.data?.counts ?? { workflows: 0, stories: 0, missions: 0, total: 0 };
-      const summary = `Removed ${counts.total} item${pluralise(counts.total)} (${countedRemovals(counts)})`;
-      setResult({ section: "clean", text: summary, at: new Date() });
-      showToast(summary, "success");
-      setCleanPreview(null);
-      await load();
-    } catch (e) {
-      const message = messageFromError(e, "Restore failed");
-      setActionError({ section: "clean", message });
-      showToast(message, "error");
-    } finally {
-      setBusy(null);
-    }
+      return `Removed ${counts.total} item${pluralise(counts.total)} (${countedRemovals(counts)})`;
+    };
+    await runWrite<
+      { data?: { counts?: { workflows: number; stories: number; missions: number; total: number } } } | undefined
+    >({
+      setBusy: (on) => setBusy(on ? "clean" : null),
+      showToast,
+      url: "/api/seed/clean",
+      method: "POST",
+      // Bulk: deletes across every seeded table (T-0047).
+      timeoutMs: API_FETCH_BULK_TIMEOUT_MS,
+      successMessage: summarise,
+      errorMessage: "Restore failed",
+      onSuccess: async (res) => {
+        setResult({ section: "clean", text: summarise(res), at: new Date() });
+        setCleanPreview(null);
+        await load();
+      },
+      onError: (e) => setActionError({ section: "clean", message: messageFromError(e, "Restore failed") }),
+    });
   }, [load, showToast]);
 
   /** The result line and the failure line, rendered under the section that ran. */
@@ -253,78 +271,86 @@ export default function RestorePage() {
               {`PatterStage ships a starter set: Bob (the default agent), ${pack.profiles} professional agents, ${pack.templates} mission templates, ${pack.categories} mission categories, ${pack.skills} skills, ${pack.tools} tool bundles and ${pack.memories} memory facts. Use this page to put any of it back. Anything you restore is backed up first.`}
             </p>
 
-            <details className="rounded-ps-md border border-ps-edge-hairline bg-ps-surface-panel p-3 text-body text-ps-text-muted">
-              <summary className="cursor-pointer text-ps-text-secondary">How this works</summary>
-              <div className="mt-2 space-y-2 font-mono">
-                <p>
-                  A restore reads the shipped pack under{" "}
-                  <code className="text-ps-text-secondary">data/seed</code> and writes it into the
-                  database, overwriting the rows it covers. Before it does, PatterStage copies the
-                  database so the previous state can be put back.
-                </p>
-                <p>
-                  Restoring also reads your Hermes home folder first, so files you already have are
-                  imported rather than overwritten. The command line equivalent is{" "}
-                  <code className="text-ps-text-secondary">
-                    npx tsx scripts/tooling/import-hermes-state.ts
-                  </code>
-                  , which the setup and deploy scripts run for you.
-                </p>
-                <p>
-                  &quot;Add what&apos;s missing&quot; installs only the rows that are absent, so
-                  anything you have edited is left alone. Restoring one agent or one template
-                  replaces just that row.
-                </p>
-              </div>
-            </details>
+            {/* A <details> is not a container Card renders, so the card is
+                around it: the disclosure is the card's whole content. */}
+            <Card padding="sm" className="text-body text-ps-text-muted">
+              <details>
+                <summary className="cursor-pointer text-ps-text-secondary">How this works</summary>
+                <div className="mt-2 space-y-2 font-mono">
+                  <p>
+                    A restore reads the shipped pack under{" "}
+                    <code className="text-ps-text-secondary">data/seed</code> and writes it into the
+                    database, overwriting the rows it covers. Before it does, PatterStage copies the
+                    database so the previous state can be put back.
+                  </p>
+                  <p>
+                    Restoring also reads your Hermes home folder first, so files you already have are
+                    imported rather than overwritten. The command line equivalent is{" "}
+                    <code className="text-ps-text-secondary">
+                      npx tsx scripts/tooling/import-hermes-state.ts
+                    </code>
+                    , which the setup and deploy scripts run for you.
+                  </p>
+                  <p>
+                    &quot;Add what&apos;s missing&quot; installs only the rows that are absent, so
+                    anything you have edited is left alone. Restoring one agent or one template
+                    replaces just that row.
+                  </p>
+                </div>
+              </details>
+            </Card>
 
-            <section className="border border-neon-cyan/30 rounded-ps-lg p-6 bg-ps-surface-panel">
-              <h2 className="text-title font-semibold text-ps-text-primary mb-2 flex items-center gap-2">
-                <RotateCcw className="w-5 h-5 text-neon-cyan" />
-                Restore everything
-              </h2>
-              <p className="text-body text-ps-text-secondary mb-2">
-                {`Puts back Bob, ${pack.profiles} professional agents, ${pack.templates} mission templates, ${pack.categories} categories, ${pack.skills} skills, ${pack.tools} tool bundles and ${pack.memories} memory facts, overwriting any changes you made to them.`}
-              </p>
-              <p className="text-micro font-mono text-ps-text-muted mb-4">
-                {`Installed now: ${profiles.length} of ${pack.profiles} agents · ${templates.length} of ${pack.templates} templates`}
-              </p>
-              <div className="flex flex-wrap items-center gap-3">
-                <ConfirmButton
-                  variant="primary"
-                  color="cyan"
-                  autoDismissMs={0}
-                  confirmLabel="Restore everything?"
-                  disabled={isBusy && busy !== "all-replace-all"}
-                  loading={busy === "all-replace-all"}
-                  onConfirm={() => void runSeed("all", { target: "all", mode: "replace" })}
-                >
+            {/* The accented panel, as the Tools page's toolsets card is: the
+                cyan rule says this is the one that puts everything back. */}
+            <Panel accent="cyan" className="p-6">
+              <section>
+                <h2 className="text-title font-semibold text-ps-text-primary mb-2 flex items-center gap-2">
+                  <RotateCcw className="w-5 h-5 text-neon-cyan" />
                   Restore everything
-                </ConfirmButton>
-                <ConfirmButton
-                  autoDismissMs={0}
-                  confirmLabel="Restore Bob?"
-                  disabled={isBusy && busy !== "root-replace-all"}
-                  loading={busy === "root-replace-all"}
-                  onConfirm={() => void runSeed("all", { target: "root", mode: "replace" })}
-                >
-                  Restore Bob
-                </ConfirmButton>
-                <Button
-                  disabled={isBusy}
-                  loading={busy === "all-merge-all"}
-                  onClick={() => void runSeed("all", { target: "all", mode: "merge" })}
-                >
-                  Add what&apos;s missing
-                </Button>
-              </div>
-              {state?.lastRun && (
-                <p className="text-micro font-mono text-ps-text-muted mt-3">
-                  {`Last restored: ${new Date(state.lastRun).toLocaleString()}`}
+                </h2>
+                <p className="text-body text-ps-text-secondary mb-2">
+                  {`Puts back Bob, ${pack.profiles} professional agents, ${pack.templates} mission templates, ${pack.categories} categories, ${pack.skills} skills, ${pack.tools} tool bundles and ${pack.memories} memory facts, overwriting any changes you made to them.`}
                 </p>
-              )}
-              {outcome("all")}
-            </section>
+                <p className="text-micro font-mono text-ps-text-muted mb-4">
+                  {`Installed now: ${profiles.length} of ${pack.profiles} agents · ${templates.length} of ${pack.templates} templates`}
+                </p>
+                <div className="flex flex-wrap items-center gap-3">
+                  <ConfirmButton
+                    variant="primary"
+                    color="cyan"
+                    autoDismissMs={0}
+                    confirmLabel="Restore everything?"
+                    disabled={isBusy && busy !== "all-replace-all"}
+                    loading={busy === "all-replace-all"}
+                    onConfirm={() => void runSeed("all", { target: "all", mode: "replace" })}
+                  >
+                    Restore everything
+                  </ConfirmButton>
+                  <ConfirmButton
+                    autoDismissMs={0}
+                    confirmLabel="Restore Bob?"
+                    disabled={isBusy && busy !== "root-replace-all"}
+                    loading={busy === "root-replace-all"}
+                    onConfirm={() => void runSeed("all", { target: "root", mode: "replace" })}
+                  >
+                    Restore Bob
+                  </ConfirmButton>
+                  <Button
+                    disabled={isBusy}
+                    loading={busy === "all-merge-all"}
+                    onClick={() => void runSeed("all", { target: "all", mode: "merge" })}
+                  >
+                    Add what&apos;s missing
+                  </Button>
+                </div>
+                {state?.lastRun && (
+                  <p className="text-micro font-mono text-ps-text-muted mt-3">
+                    {`Last restored: ${new Date(state.lastRun).toLocaleString()}`}
+                  </p>
+                )}
+                {outcome("all")}
+              </section>
+            </Panel>
 
             <section>
               <h2 className="text-lead font-semibold text-ps-text-primary mb-3 flex items-center gap-2">
@@ -341,9 +367,10 @@ export default function RestorePage() {
               ) : (
                 <div className="grid gap-3">
                   {profiles.map((p) => (
-                    <div
+                    <Card
                       key={p.id}
-                      className="flex flex-wrap items-center justify-between gap-2 border border-ps-edge-hairline rounded-ps-md p-3 bg-ps-surface-ground/60"
+                      padding="sm"
+                      className="flex flex-wrap items-center justify-between gap-2"
                     >
                       <div>
                         <div className="font-mono text-ps-text-primary">{p.name}</div>
@@ -369,7 +396,7 @@ export default function RestorePage() {
                       >
                         Restore this agent
                       </ConfirmButton>
-                    </div>
+                    </Card>
                   ))}
                 </div>
               )}
@@ -438,58 +465,60 @@ export default function RestorePage() {
               {outcome("categories")}
             </section>
 
-            <section className="border border-neon-orange/20 rounded-ps-lg p-6 bg-neon-orange/5">
-              <h2 className="text-title font-semibold text-ps-text-primary mb-2 flex items-center gap-2">
-                <Trash2 className="w-5 h-5 text-neon-orange" />
-                Clear test clutter
-              </h2>
-              <p className="text-body text-ps-text-secondary mb-4">
-                Removes throwaway workflows, stories and missions whose names look like tests.
-                Agents, templates and your own work are never touched. Look first, then remove.
-              </p>
-
-              {cleanPreview && cleanTotal > 0 && (
-                <div className="text-micro font-mono text-ps-text-muted mb-3 rounded-ps-md border border-ps-edge-hairline bg-ps-surface-panel p-3 space-y-1 max-h-48 overflow-auto">
-                  {(
-                    [
-                      ["Workflows", cleanPreview.workflows],
-                      ["Stories", cleanPreview.stories],
-                      ["Missions", cleanPreview.missions],
-                    ] as Array<[string, RemovedItem[]]>
-                  ).map(([label, items]) =>
-                    items.length > 0 ? (
-                      <div key={label}>
-                        <span className="text-ps-text-muted uppercase tracking-wider">{label}:</span>{" "}
-                        {items.map((i) => i.label).join(", ")}
-                      </div>
-                    ) : null,
-                  )}
-                </div>
-              )}
-              {cleanPreview && cleanTotal === 0 && (
-                <p className="text-micro font-mono text-ps-text-muted mb-3">
-                  Nothing here looks like test data.
+            <Panel accent="orange" tint="orange" className="p-6">
+              <section>
+                <h2 className="text-title font-semibold text-ps-text-primary mb-2 flex items-center gap-2">
+                  <Trash2 className="w-5 h-5 text-neon-orange" />
+                  Clear test clutter
+                </h2>
+                <p className="text-body text-ps-text-secondary mb-4">
+                  Removes throwaway workflows, stories and missions whose names look like tests.
+                  Agents, templates and your own work are never touched. Look first, then remove.
                 </p>
-              )}
 
-              {cleanPreview && cleanTotal > 0 ? (
-                <ConfirmButton
-                  variant="danger"
-                  autoDismissMs={0}
-                  confirmLabel={`Remove ${cleanTotal} item${pluralise(cleanTotal)}?`}
-                  disabled={isBusy && busy !== "clean"}
-                  loading={busy === "clean"}
-                  onConfirm={() => void runClean()}
-                >
-                  {`Remove ${cleanTotal} item${pluralise(cleanTotal)}`}
-                </ConfirmButton>
-              ) : (
-                <Button disabled={isBusy} onClick={() => void lookForTestData()}>
-                  Look for test data
-                </Button>
-              )}
-              {outcome("clean")}
-            </section>
+                {cleanPreview && cleanTotal > 0 && (
+                  <Card variant="raised" padding="sm" className="text-micro font-mono text-ps-text-muted mb-3 space-y-1 max-h-48 overflow-auto">
+                    {(
+                      [
+                        ["Workflows", cleanPreview.workflows],
+                        ["Stories", cleanPreview.stories],
+                        ["Missions", cleanPreview.missions],
+                      ] as Array<[string, RemovedItem[]]>
+                    ).map(([label, items]) =>
+                      items.length > 0 ? (
+                        <div key={label}>
+                          <span className="text-ps-text-muted uppercase tracking-wider">{label}:</span>{" "}
+                          {items.map((i) => i.label).join(", ")}
+                        </div>
+                      ) : null,
+                    )}
+                  </Card>
+                )}
+                {cleanPreview && cleanTotal === 0 && (
+                  <p className="text-micro font-mono text-ps-text-muted mb-3">
+                    Nothing here looks like test data.
+                  </p>
+                )}
+
+                {cleanPreview && cleanTotal > 0 ? (
+                  <ConfirmButton
+                    variant="danger"
+                    autoDismissMs={0}
+                    confirmLabel={`Remove ${cleanTotal} item${pluralise(cleanTotal)}?`}
+                    disabled={isBusy && busy !== "clean"}
+                    loading={busy === "clean"}
+                    onConfirm={() => void runClean()}
+                  >
+                    {`Remove ${cleanTotal} item${pluralise(cleanTotal)}`}
+                  </ConfirmButton>
+                ) : (
+                  <Button disabled={isBusy} onClick={() => void lookForTestData()}>
+                    Look for test data
+                  </Button>
+                )}
+                {outcome("clean")}
+              </section>
+            </Panel>
           </>
         )}
       </div>

@@ -20,6 +20,9 @@ import { sectionHeadingClasses } from "@/lib/theme";
 import { useState } from "react";
 import { ShieldQuestion } from "lucide-react";
 
+import { Panel } from "@/components/dashboard/Panel";
+import Button from "@/components/ui/Button";
+import { Textarea } from "@/components/ui/field";
 import ConceptHint from "@/components/help/ConceptHint";
 import type { NodeVerdict } from "@/lib/composer/schema";
 
@@ -49,7 +52,9 @@ export default function ComposerGatePrompt({
   const body = (output ?? "").trim();
 
   return (
-    <div className="space-y-2 rounded-ps-md border border-neon-yellow/30 bg-neon-yellow/[0.08] px-3 py-2.5">
+    // The accented surface, in the gate's yellow: the chain is stopped on this
+    // panel until the operator answers, and the tint is how it says so.
+    <Panel accent="yellow" tint="yellow" className="space-y-2 px-3 py-2.5">
       <div className="flex items-center gap-2">
         <ShieldQuestion className="h-4 w-4 shrink-0 text-neon-yellow" />
         {/* The one moment the word costs something: the chain is stopped here
@@ -85,7 +90,7 @@ export default function ComposerGatePrompt({
       <div className="space-y-1">
         <Label>What this stage produced</Label>
         {body ? (
-          <pre className="max-h-44 overflow-auto whitespace-pre-wrap break-words rounded-ps-sm border border-ps-edge-hairline bg-ps-surface-ground/60 px-2 py-1.5 text-body leading-relaxed text-ps-text-secondary">
+          <pre className="max-h-44 overflow-auto whitespace-pre-wrap break-words rounded-ps-md bg-ps-surface-inset px-2 py-1.5 text-body leading-relaxed text-ps-text-secondary">
             {body}
           </pre>
         ) : (
@@ -93,31 +98,21 @@ export default function ComposerGatePrompt({
         )}
       </div>
 
-      <textarea
+      <Textarea
         value={note}
         onChange={(e) => setNote(e.target.value)}
         rows={2}
-        placeholder="Optional note (e.g. what to change on reject)…" aria-label="Gate note"
-        className="w-full rounded-ps-sm border border-ps-edge bg-ps-surface-ground/60 px-2 py-1 text-body text-ps-text-primary placeholder:text-ps-text-faint"
+        placeholder="Optional note (e.g. what to change on reject)…"
+        aria-label="Gate note"
       />
       <div className="flex items-center gap-2">
-        <button
-          type="button"
-          disabled={busy}
-          onClick={() => decide("accept")}
-          className="flex-1 rounded-ps-md border border-neon-green/30 bg-neon-green/15 px-3 py-1 text-micro font-mono text-neon-green transition hover:bg-neon-green/25 disabled:opacity-40"
-        >
+        <Button variant="primary" color="green" size="sm" className="flex-1" disabled={busy} onClick={() => decide("accept")}>
           Accept
-        </button>
-        <button
-          type="button"
-          disabled={busy}
-          onClick={() => decide("reject")}
-          className="flex-1 rounded-ps-md border border-neon-pink/30 bg-neon-pink/10 px-3 py-1 text-micro font-mono text-neon-pink transition hover:bg-neon-pink/20 disabled:opacity-40"
-        >
+        </Button>
+        <Button variant="primary" color="pink" size="sm" className="flex-1" disabled={busy} onClick={() => decide("reject")}>
           Reject
-        </button>
+        </Button>
       </div>
-    </div>
+    </Panel>
   );
 }

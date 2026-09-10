@@ -10,6 +10,7 @@
 
 import { sectionHeadingClasses } from "@/lib/theme";
 import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
 import AgentProfileHeader from "@/components/agents/AgentProfileHeader";
 import AgentProfileFiles from "@/components/agents/AgentProfileFiles";
 import AgentFileEditor, {
@@ -69,7 +70,7 @@ export default function AgentProfileDetail({
   onCloseEditor,
 }: AgentProfileDetailProps) {
   return (
-    <div className="flex-1 min-w-0 rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel flex flex-col">
+    <Card padding="none" className="flex-1 flex flex-col">
       {!profile ? (
         <div className="flex-1 flex items-center justify-center text-body text-ps-text-muted p-8">
           Select a profile
@@ -80,8 +81,8 @@ export default function AgentProfileDetail({
 
           {/* The work is still in the editor below; this asks before it goes. */}
           {pendingDiscard && (
-            <div className="m-4 rounded-ps-md border border-semantic-warning/40 bg-semantic-warning/10 p-3">
-              <p className="text-body text-ps-text-primary">
+            <Card variant="raised" padding="sm" className="m-4">
+              <p className="text-body text-status-warn">
                 You have unsaved changes to {pendingDiscard.fileName}.
               </p>
               <div className="mt-2 flex flex-wrap gap-2">
@@ -92,7 +93,7 @@ export default function AgentProfileDetail({
                   Keep editing
                 </Button>
               </div>
-            </div>
+            </Card>
           )}
 
           {/* Personalities was a second page editing the same SOUL.md through a
@@ -164,6 +165,6 @@ export default function AgentProfileDetail({
           )}
         </>
       )}
-    </div>
+    </Card>
   );
 }

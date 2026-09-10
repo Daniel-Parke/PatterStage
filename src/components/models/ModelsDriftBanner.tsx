@@ -13,6 +13,7 @@
 
 import { AlertTriangle } from "lucide-react";
 
+import { Panel } from "@/components/dashboard/Panel";
 import { driftLineKey, type DriftLine, type SyncDrift } from "./types";
 
 interface ModelsDriftBannerProps {
@@ -40,7 +41,7 @@ export default function ModelsDriftBanner({
   const lines = drift.lines ?? [];
 
   return (
-    <div className="px-4 py-3 rounded-ps-lg border border-neon-orange/20 bg-neon-orange/5">
+    <Panel accent="orange" tint="orange" className="px-4 py-3">
       <div className="flex items-center gap-3">
         <AlertTriangle className="w-4 h-4 text-neon-orange/90 flex-shrink-0" aria-hidden="true" />
         <span className="text-micro font-mono text-neon-orange/90">
@@ -115,6 +116,6 @@ export default function ModelsDriftBanner({
           <div className="mt-1 text-micro font-mono text-ps-text-muted">{drift.driftDetails.join(" · ")}</div>
         )
       )}
-    </div>
+    </Panel>
   );
 }

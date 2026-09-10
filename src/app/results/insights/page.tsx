@@ -13,7 +13,6 @@
 
 import { sectionHeadingClasses } from "@/lib/theme";
 import { useMemo, useState, type ReactNode } from "react";
-import Link from "next/link";
 import {
   BarChart3, Sparkles, Activity, CalendarRange, Rocket, Clock,
   Timer, Cpu, TrendingUp, Info, Award,
@@ -21,8 +20,11 @@ import {
 
 import PageHeader from "@/components/layout/PageHeader";
 import AppPageShell from "@/components/layout/AppPageShell";
+import Card from "@/components/ui/Card";
+import LinkButton from "@/components/ui/LinkButton";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import PageLoading from "@/components/ui/PageLoading";
+import SegmentedControl from "@/components/ui/SegmentedControl";
 import {
   AreaTrend, ActivityHeatmap, Donut, RadialActivityClock,
   DistributionHistogram, TopList, StackedAreaTrend,
@@ -37,19 +39,13 @@ import SpendPanel from "@/components/spend/SpendPanel";
 import { categoryForEventType } from "@/lib/analytics/categories";
 
 const RANGES = [7, 30, 90] as const;
+/** The range switch's options: a radiogroup the way every other filter is (T-0122). */
+const RANGE_OPTIONS = RANGES.map((r) => ({ value: String(r), label: `${r}d` }));
 
 function compactNum(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(n % 1_000_000 === 0 ? 0 : 1)}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(n % 1_000 === 0 ? 0 : 1)}k`;
   return String(Math.round(n));
-}
-
-function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return (
-    <div className={`rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel p-4 ${className}`}>
-      {children}
-    </div>
-  );
 }
 
 function CardTitle({ icon: Icon, hint, children }: { icon: React.ComponentType<{ className?: string }>; hint?: string; children: ReactNode }) {
@@ -69,13 +65,17 @@ function CardTitle({ icon: Icon, hint, children }: { icon: React.ComponentType<{
 // `hint` is a title on the tile itself rather than an icon beside it: these
 // tiles are three words wide and a second glyph would crowd the number. It is
 // what lets a tile say which rows it counted, which is the whole reason the
-// token figures on this page could not be told apart.
+// token figures on this page could not be told apart. The title sits on the
+// tile's whole face, because Card carries no title of its own; the accent is
+// the card's glow, quiet, where it was a hand-painted inset shadow.
 function MetricTile({ label, value, color = "cyan", hint }: { label: string; value: string; color?: NeonColor; hint?: string }) {
   return (
-    <div className="rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel p-3" title={hint} style={{ boxShadow: `inset 0 0 18px ${neonAlpha(color, 5)}` }}>
-      <div className="font-mono text-display font-bold text-ps-text-primary">{value}</div>
-      <div className="mt-0.5 text-micro uppercase tracking-wider text-ps-text-muted">{label}</div>
-    </div>
+    <Card padding="none" glow={color} glowIntensity={0.4}>
+      <div className="p-3" title={hint}>
+        <div className="font-mono text-display font-bold text-ps-text-primary">{value}</div>
+        <div className="mt-0.5 text-micro uppercase tracking-wider text-ps-text-muted">{label}</div>
+      </div>
+    </Card>
   );
 }
 
@@ -155,20 +155,12 @@ export default function InsightsPage() {
           subtitle="Interaction analytics & achievements"
           color="cyan"
           actions={
-            <div className="flex items-center gap-1 rounded-ps-md border border-ps-edge-hairline bg-ps-surface-panel p-0.5">
-              {RANGES.map((r) => (
-                <button
-                  key={r}
-                  type="button"
-                  onClick={() => setDays(r)}
-                  className={`rounded-ps-md px-2.5 py-1 text-micro font-mono transition-colors ${
-                    days === r ? "bg-neon-cyan/20 text-neon-cyan" : "text-ps-text-muted hover:text-ps-text-secondary"
-                  }`}
-                >
-                  {r}d
-                </button>
-              ))}
-            </div>
+            <SegmentedControl
+              label="Range"
+              options={RANGE_OPTIONS}
+              value={String(days)}
+              onChange={(v) => setDays(Number(v))}
+            />
           }
         />
       }
@@ -194,20 +186,17 @@ export default function InsightsPage() {
           <>
             {/* ── First-run nudge (analytics start empty) ── */}
             {!error && stats && totalEvents === 0 && (
-              <div className="rounded-ps-lg border border-neon-cyan/20 bg-ps-surface-panel p-6 text-center" style={{ boxShadow: `0 0 24px ${neonAlpha("cyan", 6)}` }}>
+              <Card glow="cyan" padding="lg" className="text-center">
                 <Sparkles className="mx-auto h-6 w-6 text-neon-cyan" />
                 <h2 className="mt-2 text-body font-semibold text-ps-text-primary">No activity yet</h2>
                 <p className="mx-auto mt-1 max-w-md text-body leading-relaxed text-ps-text-muted">
                   Dispatch a mission, write a Story Weaver chapter, or fire a schedule — your
                   interaction analytics and achievements will start filling in here.
                 </p>
-                <Link
-                  href="/work/missions"
-                  className="mt-3 inline-flex items-center gap-1.5 rounded-ps-md border border-neon-cyan/40 px-3 py-1.5 text-micro font-mono text-neon-cyan transition-colors hover:bg-neon-cyan/10"
-                >
-                  <Rocket className="h-3.5 w-3.5" /> Go to Missions
-                </Link>
-              </div>
+                <LinkButton href="/work/missions" variant="primary" color="cyan" size="sm" icon={Rocket} className="mt-3">
+                  Go to Missions
+                </LinkButton>
+              </Card>
             )}
 
             {/* ── Streak / headline metrics ──

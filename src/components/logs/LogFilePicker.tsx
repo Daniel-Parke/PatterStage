@@ -7,12 +7,13 @@
 
 "use client";
 
-import { FileText, Search } from "lucide-react";
+import { FileText } from "lucide-react";
 import { formatBytes } from "@/lib/utils";
 import { formatLogAge, isLogLive } from "@/lib/log-freshness";
 import { GROUP_ORDER, GROUP_LABELS } from "@/components/logs/constants";
 import { Panel } from "@/components/dashboard/Panel";
 import { LedgerRowButton } from "@/components/dashboard/LedgerRow";
+import { SearchInput } from "@/components/ui/Input";
 import type { LogFileMeta } from "@/lib/fs/log-files";
 
 export interface LogFilePickerProps {
@@ -45,16 +46,12 @@ export default function LogFilePicker({
         <label className="text-micro font-mono uppercase tracking-wide text-ps-text-muted">
           Log file
         </label>
-        <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-ps-text-muted" />
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => onQueryChange(e.target.value)}
-            placeholder="Filter by name…" aria-label="Log file name filter"
-            className="w-full bg-ps-surface-ground/80 border border-ps-edge rounded-ps-md pl-8 pr-2 py-2 text-micro text-ps-text-primary placeholder:text-ps-text-faint font-mono"
-          />
-        </div>
+        <SearchInput
+          value={query}
+          onChange={onQueryChange}
+          placeholder="Filter by name…"
+          ariaLabel="Log file name filter"
+        />
         <div className="flex-1 min-h-[12rem] max-h-[40vh] lg:max-h-[calc(100vh-280px)] overflow-y-auto space-y-3 pr-1">
           {GROUP_ORDER.map((group) => {
             const items = files.filter((l) => l.group === group);

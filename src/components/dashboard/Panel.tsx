@@ -11,8 +11,9 @@ import { iconColorMap } from "@/lib/theme";
  * Tailwind static-border class for a panel accent. The panel uses
  * `/20` opacity (a static, no-hover state) — distinct from the
  * hover-aware `colorBorderMap` in `theme.ts` which uses `/30`/`/40`
- * base opacities. The `red` / `blue` / `yellow` base accents get
- * `-500` because their token is a bare colour name (not `neon-*`).
+ * base opacities. `red`, `blue` and `yellow` have no `neon-*` token of
+ * their own, so they paint through the house tokens that mean them:
+ * danger, info and the neon yellow (C6).
  */
 // Literal classes only — Tailwind cannot see an interpolated one, so
 // `border-${accent}-500/20` produced no border at all. See src/lib/theme.ts.
@@ -26,11 +27,11 @@ import { iconColorMap } from "@/lib/theme";
 function panelBorderClass(accent?: AccentColor): string {
   switch (accent) {
     case "red":
-      return "border-red-500/20";
+      return "border-semantic-danger/20";
     case "blue":
-      return "border-blue-500/20";
+      return "border-semantic-info/20";
     case "yellow":
-      return "border-yellow-500/20";
+      return "border-neon-yellow/20";
     case "cyan":
       return "border-neon-cyan/20";
     case "purple":
@@ -58,11 +59,11 @@ function panelBorderClass(accent?: AccentColor): string {
 function panelTintClass(tint?: AccentColor): string {
   switch (tint) {
     case "red":
-      return "bg-red-500/5";
+      return "bg-semantic-danger/5";
     case "blue":
-      return "bg-blue-500/5";
+      return "bg-semantic-info/5";
     case "yellow":
-      return "bg-yellow-500/5";
+      return "bg-neon-yellow/5";
     case "cyan":
       return "bg-neon-cyan/5";
     case "purple":

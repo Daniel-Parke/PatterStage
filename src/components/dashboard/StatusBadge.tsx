@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 
 import { missionStatusLabel } from "@/lib/status-labels";
+import { statusToneClasses } from "@/lib/theme";
 
 // ── Shared shape ────────────────────────────────────────────
 
@@ -53,9 +54,10 @@ const MISSION_BADGE_STYLES: Record<string, StatusBadgeDef> = {
     text: "text-neon-green",
     icon: <CheckCircle2 className="w-3 h-3" />,
   },
+  // The fail rung of the ladder, not a red of its own (T-0120).
   failed: {
-    bg: "bg-red-500/10",
-    text: "text-red-400",
+    bg: statusToneClasses.fail.fill,
+    text: statusToneClasses.fail.text,
     icon: <XCircle className="w-3 h-3" />,
   },
 };

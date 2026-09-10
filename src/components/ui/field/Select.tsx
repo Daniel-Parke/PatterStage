@@ -8,7 +8,7 @@
 
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, type SelectHTMLAttributes } from "react";
 import { ChevronDown, Check } from "lucide-react";
 
 export interface SelectOption {
@@ -103,7 +103,7 @@ export function Select({
         <ul
           id={listId}
           role="listbox"
-          className="absolute z-30 mt-1 max-h-60 w-full overflow-auto rounded-ps-md border border-ps-edge-hairline bg-ps-surface-ground/95 p-1 shadow-xl backdrop-blur"
+          className="absolute z-dropdown mt-1 max-h-60 w-full overflow-auto rounded-ps-md border border-ps-edge-hairline bg-ps-surface-ground/95 p-1 shadow-xl backdrop-blur"
         >
           {options.map((o, i) => (
             <li
@@ -132,4 +132,19 @@ export function Select({
       ) : null}
     </div>
   );
+}
+
+// ── NativeSelect ──────────────────────────────────────────────
+//
+// The browser's own <select>, wearing the kit's chrome. The listbox above is
+// the product's dropdown; this is for the sites that need the native control
+// (a form driven by change events, a picker the OS should draw), so that a
+// native select is still a primitive and not a raw element on a page.
+
+const NATIVE_BASE =
+  "rounded-ps-md border border-ps-edge bg-ps-surface-panel px-3 py-2 text-body text-ps-text-primary transition-colors hover:border-ps-edge-emphasis disabled:cursor-not-allowed disabled:opacity-40";
+
+export function NativeSelect({ className = "", ...rest }: SelectHTMLAttributes<HTMLSelectElement>) {
+  // form-control-names-disable-next-line -- a pure pass-through: every select attribute including aria-label arrives in {...rest}, so the name is the caller's to supply
+  return <select {...rest} className={`${NATIVE_BASE} ${className}`} />;
 }

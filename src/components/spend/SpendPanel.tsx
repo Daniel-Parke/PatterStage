@@ -24,8 +24,13 @@
 import { useState } from "react";
 import { Wallet, AlertTriangle, ShieldAlert, Info } from "lucide-react";
 
+import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
+import { Input } from "@/components/ui/field";
+import { NativeSelect } from "@/components/ui/field/Select";
+import { InlineToggle } from "@/components/ui/Input";
 import { neonAlpha } from "@/components/viz/colors";
-import { inputFieldClasses, sectionHeadingClasses } from "@/lib/theme";
+import { sectionHeadingClasses } from "@/lib/theme";
 import {
   SPEND_PERIODS,
   formatUsd,
@@ -55,12 +60,9 @@ export default function SpendPanel({ summary, onSave, saving = false }: SpendPan
 
   if (!summary) {
     return (
-      <div
-        data-testid="spend-loading"
-        className="rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel p-4 text-body text-ps-text-muted"
-      >
+      <Card data-testid="spend-loading" className="text-body text-ps-text-muted">
         Loading provider spend…
-      </div>
+      </Card>
     );
   }
 
@@ -91,7 +93,7 @@ export default function SpendPanel({ summary, onSave, saving = false }: SpendPan
   const meterPct = verdict.fraction === null ? 0 : Math.min(100, Math.round(verdict.fraction * 100));
 
   return (
-    <div className="rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel p-4">
+    <Card>
       <div className="mb-3 flex items-center gap-2">
         <Wallet className="h-4 w-4 text-neon-green" />
         <h2 className={sectionHeadingClasses}>
@@ -115,36 +117,41 @@ export default function SpendPanel({ summary, onSave, saving = false }: SpendPan
       {/* ── Per period. Always on screen, budget or no budget. ── */}
       <div className="grid grid-cols-3 gap-3">
         {summary.periods.map((p) => (
-          <div
+          <Card
             key={p.period}
+            variant="raised"
+            padding="none"
             data-testid={`spend-total-${p.period}`}
-            className="rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel p-3"
-            style={{ boxShadow: `inset 0 0 18px ${neonAlpha("green", 5)}` }}
           >
-            <div className="font-mono text-display font-bold text-ps-text-primary">
-              {formatUsd(p.totalUsd)}
-            </div>
-            <div className="mt-0.5 text-micro uppercase tracking-wider text-ps-text-muted">{p.label}</div>
-            {/* Driven by the row's OWN note, not by its basis.
-                The mark used to key off `basis.estimatedUsd > 0` and point at a
-                sentence built from the budget period alone, which broke twice:
-                a week can be estimated while the month it hangs under is not
-                (the ISO week opens on a Monday, so early in most months the
-                week window reaches back past the month boundary), and the note
-                that did render carried the budget period's dollars, not this
-                tile's. The note is per period now, and the mark and its
-                explanation come from the same field so neither can outlive the
-                other. */}
-            {p.estimateNote && (
-              <div
-                data-testid={`spend-estimated-${p.period}`}
-                title={p.estimateNote}
-                className="mt-1 text-body text-ps-text-faint"
-              >
-                {p.basis.knownUsd > 0 ? "Part estimated" : "Estimated"}
+            {/* The inset glow is painted on the tile's own inner box: Card
+                carries no style prop, and an inset shadow on a wrapper would
+                sit behind the card's opaque fill. */}
+            <div className="rounded-ps-lg p-3" style={{ boxShadow: `inset 0 0 18px ${neonAlpha("green", 5)}` }}>
+              <div className="font-mono text-display font-bold text-ps-text-primary">
+                {formatUsd(p.totalUsd)}
               </div>
-            )}
-          </div>
+              <div className="mt-0.5 text-micro uppercase tracking-wider text-ps-text-muted">{p.label}</div>
+              {/* Driven by the row's OWN note, not by its basis.
+                  The mark used to key off `basis.estimatedUsd > 0` and point at a
+                  sentence built from the budget period alone, which broke twice:
+                  a week can be estimated while the month it hangs under is not
+                  (the ISO week opens on a Monday, so early in most months the
+                  week window reaches back past the month boundary), and the note
+                  that did render carried the budget period's dollars, not this
+                  tile's. The note is per period now, and the mark and its
+                  explanation come from the same field so neither can outlive the
+                  other. */}
+              {p.estimateNote && (
+                <div
+                  data-testid={`spend-estimated-${p.period}`}
+                  title={p.estimateNote}
+                  className="mt-1 text-body text-ps-text-faint"
+                >
+                  {p.basis.knownUsd > 0 ? "Part estimated" : "Estimated"}
+                </div>
+              )}
+            </div>
+          </Card>
         ))}
       </div>
 
@@ -224,23 +231,27 @@ export default function SpendPanel({ summary, onSave, saving = false }: SpendPan
 
       {/* ── Clause 3: a figure warns. Clause 4: only an armed stop stops. ── */}
       {verdict.state === "over" && !verdict.blocksUnattended && (
-        <p
+        <Card
+          variant="raised"
+          padding="none"
           data-testid="spend-warning"
-          className="mt-3 flex items-start gap-2 rounded-ps-md border border-neon-orange/30 bg-neon-orange/5 p-2.5 text-body leading-relaxed text-ps-text-secondary"
+          className="mt-3 flex items-start gap-2 p-2.5 text-body leading-relaxed text-ps-text-secondary"
         >
-          <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-neon-orange" />
+          <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-status-warn" />
           <span>{verdict.message}</span>
-        </p>
+        </Card>
       )}
 
       {verdict.blocksUnattended && (
-        <p
+        <Card
+          variant="raised"
+          padding="none"
           data-testid="spend-stopped"
-          className="mt-3 flex items-start gap-2 rounded-ps-md border border-neon-pink/30 bg-neon-pink/5 p-2.5 text-body leading-relaxed text-ps-text-secondary"
+          className="mt-3 flex items-start gap-2 p-2.5 text-body leading-relaxed text-ps-text-secondary"
         >
-          <ShieldAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-neon-pink" />
+          <ShieldAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-status-blocked" />
           <span>{verdict.message}</span>
-        </p>
+        </Card>
       )}
 
       {/* ── The budget control. One line until it is asked for. ── */}
@@ -262,20 +273,21 @@ export default function SpendPanel({ summary, onSave, saving = false }: SpendPan
               <label className="text-body text-ps-text-muted" htmlFor="spend-limit">
                 USD per
               </label>
-              <select aria-label="Spend limit period"
+              <NativeSelect
+                aria-label="Spend limit period"
                 id="spend-period"
                 data-testid="spend-period-select"
                 value={draftPeriod}
                 onChange={(e) => setPeriod(e.target.value as SpendPeriod)}
-                className={`${inputFieldClasses("green")} w-28`}
+                className="w-28 font-mono"
               >
                 {SPEND_PERIODS.map((p) => (
                   <option key={p} value={p}>
                     {p}
                   </option>
                 ))}
-              </select>
-              <input
+              </NativeSelect>
+              <Input
                 id="spend-limit"
                 data-testid="spend-limit-input"
                 type="text"
@@ -283,24 +295,24 @@ export default function SpendPanel({ summary, onSave, saving = false }: SpendPan
                 value={draftLimit}
                 placeholder="no budget"
                 onChange={(e) => setLimitText(e.target.value)}
-                className={`${inputFieldClasses("green")} w-32`}
+                className="w-32 font-mono"
               />
             </div>
 
-            <label className="flex items-start gap-2 text-body leading-relaxed text-ps-text-secondary">
-              <input
-                type="checkbox"
+            <div className="flex items-start gap-2 text-body leading-relaxed text-ps-text-secondary">
+              <InlineToggle
                 data-testid="spend-hard-stop"
-                checked={draftHardStop}
+                value={draftHardStop}
                 disabled={draftLimitValue === null}
-                onChange={(e) => setHardStop(e.target.checked)}
-                className="mt-0.5"
+                onChange={setHardStop}
+                color="green"
+                labelledBy="spend-hard-stop-label"
               />
-              <span>
+              <span id="spend-hard-stop-label">
                 Hard stop: pause unattended dispatch when this figure is passed. Off by default.
                 Scheduled runs, the queue and Composer wait; dispatching by hand always works.
               </span>
-            </label>
+            </div>
 
             {formError && (
               <p data-testid="spend-form-error" className="text-body text-neon-pink">
@@ -308,18 +320,19 @@ export default function SpendPanel({ summary, onSave, saving = false }: SpendPan
               </p>
             )}
 
-            <button
-              type="button"
+            <Button
+              variant="primary"
+              color="green"
+              size="sm"
               data-testid="spend-save"
               disabled={saving}
               onClick={save}
-              className="rounded-ps-md border border-neon-green/40 px-3 py-1.5 text-micro font-mono text-neon-green transition-colors hover:bg-neon-green/10 disabled:opacity-50"
             >
               {saving ? "Saving…" : "Save budget"}
-            </button>
+            </Button>
           </div>
         )}
       </div>
-    </div>
+    </Card>
   );
 }

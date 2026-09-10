@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import Card from "@/components/ui/Card";
 import Donut from "@/components/viz/Donut";
 import ProgressRing from "@/components/viz/ProgressRing";
 import { countMissionsByColumn } from "@/lib/missions/mission-board";
@@ -37,7 +38,7 @@ export default function MissionInsights({ missions }: { missions: MissionRow[] }
   const successPct = Math.round(s.successRate * 100);
 
   return (
-    <div className="animate-float-in mb-5 grid grid-cols-1 items-center gap-5 rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel p-4 sm:grid-cols-2">
+    <Card className="animate-float-in mb-5 grid grid-cols-1 items-center gap-5 sm:grid-cols-2">
       <div className="flex justify-center">
         <Donut
           size={96}
@@ -63,6 +64,6 @@ export default function MissionInsights({ missions }: { missions: MissionRow[] }
           sublabel="success"
         />
       </div>
-    </div>
+    </Card>
   );
 }

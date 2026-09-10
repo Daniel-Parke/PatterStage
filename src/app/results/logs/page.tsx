@@ -14,10 +14,13 @@ import { Terminal, Search, ChevronDown, X, Copy, Check, Download } from "lucide-
 import PageHeader from "@/components/layout/PageHeader";
 import AppPageShell from "@/components/layout/AppPageShell";
 import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
+import { Input } from "@/components/ui/field";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import SplitPane from "@/components/ui/SplitPane";
-import { safeApiCallData, setErrorFromCaught } from "@/lib/api-fetch";
+import { useToast } from "@/components/ui/Toast";
+import { runWrite } from "@/lib/api-write";
 import { downloadFile } from "@/lib/chat-utils";
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 import { useLogs } from "@/hooks/useLogs";
@@ -64,7 +67,9 @@ export default function LogsPage() {
   const [autoScroll, setAutoScroll] = useState(true);
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [lineCount, setLineCount] = useState(200);
-  const [actionMessage, setActionMessage] = useState<string | null>(null);
+  // What a delete did is a toast, the one channel a write answers on (C6,
+  // T-0143); it was a banner of this page's own with its own Dismiss.
+  const { showToast, toastElement } = useToast();
   const terminalRef = useRef<HTMLDivElement>(null);
   // "Delete all logs" is a destructive singleton action — no auto-dismiss
   // (the user must explicitly confirm or cancel).
@@ -86,30 +91,23 @@ export default function LogsPage() {
 
   const handleDeleteAllLogs = useCallback(async () => {
     if (!deleteArmed) {
-      setActionMessage(null);
       armDelete();
       return;
     }
     await confirmDelete(async () => {
-      try {
-        const delData = await safeApiCallData<{ cleared?: number }>("/api/logs", {
-          method: "DELETE",
-        });
-        if (!delData) {
-          setActionMessage("Delete failed");
-          return;
-        }
-        setActionMessage(
-          typeof delData.cleared === "number"
-            ? `Cleared ${delData.cleared} log file(s).`
-            : "Logs cleared.",
-        );
-        void refetch();
-      } catch (err) {
-        setErrorFromCaught(setActionMessage, err, "Delete failed (network error)");
-      }
+      await runWrite<{ data?: { cleared?: number } }>({
+        showToast,
+        url: "/api/logs",
+        method: "DELETE",
+        successMessage: (res) =>
+          typeof res?.data?.cleared === "number" ? `Cleared ${res.data.cleared} log file(s).` : "Logs cleared.",
+        errorMessage: "Delete failed",
+        onSuccess: () => {
+          void refetch();
+        },
+      });
     });
-  }, [deleteArmed, armDelete, confirmDelete, refetch]);
+  }, [deleteArmed, armDelete, confirmDelete, refetch, showToast]);
 
   // The list of logs that exist, from a successful read OR from a 404 body.
   //
@@ -152,11 +150,6 @@ export default function LogsPage() {
       terminalRef.current.scrollTop = 0;
     }
   }, [setAutoScroll, terminalRef]);
-  const dismissActionMessage = useCallback(
-    () => setActionMessage(null),
-    [setActionMessage],
-  );
-
   const handleScroll = () => {
     if (!terminalRef.current) return;
     const { scrollTop } = terminalRef.current;
@@ -243,12 +236,12 @@ export default function LogsPage() {
       <div className="flex-1 flex flex-col min-h-0">
         {loadError && noLogsYet(errorBody) ? (
           // A normal condition in a red banner is the other kind of lie
-          // (T-0087). Same reason, calm tone, still a live region.
-          <div
-            role="status"
-            className="mb-4 rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel px-4 py-3 text-body text-ps-text-secondary"
-          >
-            {loadError}
+          // (T-0087). Same reason, calm tone, still a live region: the role
+          // sits on the wrapper, because a card carries none.
+          <div role="status" className="mb-4">
+            <Card padding="none" className="px-4 py-3 text-body text-ps-text-secondary">
+              {loadError}
+            </Card>
           </div>
         ) : loadError ? (
           <LoadErrorBanner
@@ -256,19 +249,6 @@ export default function LogsPage() {
             onRetry={() => void handleRefresh()}
           />
         ) : null}
-        {actionMessage && (
-          <div className="mb-4 flex items-center justify-between gap-3 rounded-ps-lg border border-ps-edge-hairline bg-ps-surface-panel px-4 py-2 text-micro font-mono text-ps-text-secondary">
-            <span>{actionMessage}</span>
-            <button
-              type="button"
-              onClick={dismissActionMessage}
-              className="p-1 rounded-ps-sm text-ps-text-muted hover:text-ps-text-secondary"
-              aria-label="Dismiss"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        )}
 
         {/* The file picker is the aside and the terminal is the pane: two
             columns from lg, and on a phone the picker behind a "Log files"
@@ -294,13 +274,16 @@ export default function LogsPage() {
                 <div className="flex items-center gap-2 flex-1 min-w-0">
                   <div className="relative flex-1 max-w-md min-w-0">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ps-text-muted" />
-                    <input
+                    {/* The kit's Input rather than SearchInput: this box opens
+                        on a click and takes the focus with it, and SearchInput
+                        carries no autoFocus. The magnifier is its own. */}
+                    <Input
                       type="text"
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
                       placeholder="Filter log lines…" aria-label="Log line filter"
                       autoFocus
-                      className="w-full bg-ps-surface-panel border border-ps-edge rounded-ps-md pl-10 pr-4 py-2 text-body text-ps-text-primary placeholder-ps-text-muted transition-colors font-mono"
+                      className="pl-10 font-mono"
                     />
                   </div>
                   {search && (
@@ -388,6 +371,7 @@ export default function LogsPage() {
             ) : null}
         </SplitPane>
       </div>
+      {toastElement}
     </AppPageShell>
   );
 }

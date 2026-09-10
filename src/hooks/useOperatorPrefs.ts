@@ -7,10 +7,10 @@
 // preferences in particular, because `quests.skipped` is an ARRAY and a client
 // that assumed its own copy was current would write the wrong one back.
 //
-// The Sidebar keeps its own hand-rolled read of `sidebar.collapsed`. That is
-// deliberate for now: the rail reads once at mount, before any provider is
-// guaranteed, and folding it onto this hook is a change to the shell rather
-// than to the quests page.
+// The Sidebar reads `sidebar.collapsed` once, server-side, before any provider
+// is mounted, and writes it through a mutation that invalidates this hook's
+// key (C6); it does not read through this hook, because the rail paints before
+// the query layer exists.
 //
 // A failed write is reported, never swallowed. Under PS_READ_ONLY the PUT is
 // refused by design, and an operator who clicks Skip and sees nothing happen

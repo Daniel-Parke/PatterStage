@@ -9,7 +9,7 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, type ReactNode } from "react";
 import type { ModelRow } from "@/lib/models/model-types";
 import {
   Plus,
@@ -19,14 +19,16 @@ import {
   Check,
 } from "lucide-react";
 
+import { Panel } from "@/components/dashboard/Panel";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
+import type { ToastType } from "@/components/ui/Toast";
 import CredentialPicker, {
   type CredentialOption,
 } from "@/components/models/CredentialPicker";
-import FieldRow from "@/components/models/FieldRow";
 import { Input, Select } from "@/components/ui/field";
-import { apiFetch, setErrorFromCaught } from "@/lib/api-fetch";
+import { apiFetch } from "@/lib/api-fetch";
+import { runWrite } from "@/lib/api-write";
 
 /**
  * Minimal model shape for the editor form — a subset of ApiModel
@@ -113,6 +115,33 @@ function parseOptionalStringField(
   return trimmed === "" ? null : parse(trimmed);
 }
 
+/**
+ * The labelled field shell this form repeats seven times: a label, the
+ * control, and an optional caption under it. The label takes a node so a
+ * call site can carry an inline "(optional)" marker; the control is passed
+ * through as-is and owns its own chrome. It was a file of its own
+ * (FieldRow.tsx) with one importer, which is this one (C6).
+ */
+function FieldRow({
+  label,
+  children,
+  description,
+}: {
+  label: ReactNode;
+  children: ReactNode;
+  description?: string;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <label className="text-body font-medium text-ps-text-secondary">{label}</label>
+      {children}
+      {description && (
+        <p className="text-micro text-ps-text-muted font-mono">{description}</p>
+      )}
+    </div>
+  );
+}
+
 export default function ModelEditor({
   model,
   credentials,
@@ -139,6 +168,15 @@ export default function ModelEditor({
   // and the provider vocabulary belongs to the agent framework (ADR-0005).
   const keyless = keylessProviders.includes(form.provider);
 
+  // runWrite's words, said where this modal says things. A failure goes under
+  // the title, as the alert the fields sit beneath. The success is not said
+  // here: the page announces "Model saved" once the registry has reloaded
+  // (useModelActions.handleSaved), and by then this modal has unmounted, so a
+  // toast from here would say it twice.
+  const sayInline = (message: string, type?: ToastType) => {
+    if (type === "error") setError(message);
+  };
+
   const handleSubmit = async () => {
     const validationError = validateModelForm(form, isEdit, usingExisting, keyless);
     if (validationError) {
@@ -150,67 +188,63 @@ export default function ModelEditor({
       update("credentialLabel", `${form.provider} key`);
     }
 
-    setSaving(true);
     setError(null);
 
-    try {
-      let credentialsId = form.credentialsId;
+    // One write as far as the operator is concerned, in two calls: the
+    // credential first when a key was pasted, then the model that points at
+    // it. A throw from either lands in the alert above the fields.
+    await runWrite({
+      showToast: sayInline,
+      setBusy: setSaving,
+      request: async () => {
+        let credentialsId = form.credentialsId;
 
-      if (!usingExisting && form.apiKey.trim().length > 0) {
-        const label =
-          form.credentialLabel.trim() || `${form.provider} key`;
-        const result = await apiFetch<{ data?: { credential?: { id: string } } }>("/api/credentials", {
-          method: "POST",
-          body: JSON.stringify({
-            label,
-            provider: form.provider,
-            apiKey: form.apiKey.trim(),
-          }),
-        });
-        const newId = result.data?.credential?.id;
-        if (!newId) throw new Error("Credential creation returned no id");
-        credentialsId = newId;
-      }
+        if (!usingExisting && form.apiKey.trim().length > 0) {
+          const label =
+            form.credentialLabel.trim() || `${form.provider} key`;
+          const result = await apiFetch<{ data?: { credential?: { id: string } } }>("/api/credentials", {
+            method: "POST",
+            body: JSON.stringify({
+              label,
+              provider: form.provider,
+              apiKey: form.apiKey.trim(),
+            }),
+          });
+          const newId = result.data?.credential?.id;
+          if (!newId) throw new Error("Credential creation returned no id");
+          credentialsId = newId;
+        }
 
-      const baseUrl = parseOptionalStringField(form.baseUrl, (t) => t) as string | null;
-      const contextLength = parseOptionalStringField(
-        form.contextLength,
-        Number,
-      ) as number | null;
+        const baseUrl = parseOptionalStringField(form.baseUrl, (t) => t) as string | null;
+        const contextLength = parseOptionalStringField(
+          form.contextLength,
+          Number,
+        ) as number | null;
 
-      if (
-        contextLength !== null &&
-        (!Number.isFinite(contextLength) || contextLength <= 0)
-      ) {
-        throw new Error("Context length must be a positive number");
-      }
+        if (
+          contextLength !== null &&
+          (!Number.isFinite(contextLength) || contextLength <= 0)
+        ) {
+          throw new Error("Context length must be a positive number");
+        }
 
-      const body: Record<string, unknown> = {
-        name: form.name.trim(),
-        provider: form.provider,
-        modelId: form.modelId.trim(),
-        baseUrl,
-        contextLength,
-        credentialsId,
-      };
+        const body: Record<string, unknown> = {
+          name: form.name.trim(),
+          provider: form.provider,
+          modelId: form.modelId.trim(),
+          baseUrl,
+          contextLength,
+          credentialsId,
+        };
 
-      if (isEdit && model) {
-        await apiFetch(`/api/models/${encodeURIComponent(model.id)}`, { method: "PUT", body: JSON.stringify(body) });
-      } else {
-        await apiFetch("/api/models", { method: "POST", body: JSON.stringify(body) });
-      }
-
-      onSaved();
-    } catch (err) {
-      setErrorFromCaught(setError, err, "Save failed");
-    } finally {
-      // Always clear the saving state, regardless of success or failure.
-      // The success path unmounts the modal via `onSaved()`, so this is
-      // currently invisible — but if the parent ever defers the unmount, or
-      // the modal is reused for a second edit without remount, the saving
-      // spinner would stay stuck on the success path.
-      setSaving(false);
-    }
+        return isEdit && model
+          ? apiFetch(`/api/models/${encodeURIComponent(model.id)}`, { method: "PUT", body: JSON.stringify(body) })
+          : apiFetch("/api/models", { method: "POST", body: JSON.stringify(body) });
+      },
+      successMessage: "Model saved",
+      errorMessage: "Save failed",
+      onSuccess: onSaved,
+    });
   };
 
   return (
@@ -240,13 +274,15 @@ export default function ModelEditor({
     >
       <div className="space-y-4">
         {error && (
-          <div
+          <Panel
             role="alert"
-            className="flex items-center gap-2 text-body text-red-400 bg-red-500/10 border border-red-500/20 rounded-ps-md px-3 py-2"
+            accent="red"
+            tint="red"
+            className="flex items-center gap-2 px-3 py-2 text-body text-semantic-danger"
           >
             <AlertCircle className="w-4 h-4 flex-shrink-0" />
             <span>{error}</span>
-          </div>
+          </Panel>
         )}
 
         <FieldRow
@@ -327,7 +363,7 @@ export default function ModelEditor({
         />
 
         {!usingExisting && (
-          <div className="space-y-3 rounded-ps-md border border-neon-purple/15 bg-neon-purple/5 p-3">
+          <Panel accent="purple" tint="purple" className="space-y-3 p-3">
             <p className="text-micro font-mono text-neon-purple uppercase tracking-widest">
               {keyless ? "Credential (optional)" : "New credential"}
             </p>
@@ -363,7 +399,7 @@ export default function ModelEditor({
                 }
               />
             </FieldRow>
-          </div>
+          </Panel>
         )}
       </div>
     </Modal>

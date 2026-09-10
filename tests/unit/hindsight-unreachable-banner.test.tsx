@@ -7,7 +7,7 @@
  * The regression this pins: the list endpoint answers 503 when nothing is
  * listening, `hindsightGet` turns a non-2xx into `null`, and that null used to
  * land in the SUCCESS branch of loadRecentMemories. `health` stayed null, the
- * HealthBanner never rendered, and the page told a first-time user "No memories
+ * health banner never rendered, and the page told a first-time user "No memories
  * yet. Hermes will start storing them as you converse" while there was no
  * memory provider at all.
  *

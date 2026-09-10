@@ -67,7 +67,6 @@ describe("POST /api/tools configure action auth", () => {
   // guarantee is asserted per route, in both directions, in
   // tests/unit/read-only-actually-reads.test.ts.
 
-
   // Restored from the T-0048 sweep. The mock plumbing this was entangled with is
   // gone; the 405 it asserts is real behaviour and worth keeping: the tools
   // registry is a read-only catalogue and POST is not a verb it supports.

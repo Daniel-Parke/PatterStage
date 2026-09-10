@@ -189,7 +189,7 @@ describe("the Settings index with a parse error", () => {
       configError: PARSE_ERROR,
     });
 
-    render(<SettingsIndexPage />);
+    render(<SettingsIndexPage />, { wrapper: makeWrapper() });
 
     const alert = screen.getByRole("alert");
     expect(alert).toHaveTextContent("Hermes config.yaml cannot be parsed");
@@ -212,7 +212,7 @@ describe("the Settings index with a parse error", () => {
       configError: PARSE_ERROR,
     });
 
-    render(<SettingsIndexPage />);
+    render(<SettingsIndexPage />, { wrapper: makeWrapper() });
 
     expect(screen.getByRole("alert")).toBeTruthy();
     expect(configuredPills()).toHaveLength(0);
@@ -229,7 +229,7 @@ describe("the Settings index with a parse error", () => {
       configError: PARSE_ERROR,
     });
 
-    render(<SettingsIndexPage />);
+    render(<SettingsIndexPage />, { wrapper: makeWrapper() });
 
     const alert = screen.getByRole("alert");
     // querySelectorAll answers in document order, so the alert must come first.
@@ -250,7 +250,7 @@ describe("the Settings index with a parse error", () => {
       configError: message,
     });
 
-    render(<SettingsIndexPage />);
+    render(<SettingsIndexPage />, { wrapper: makeWrapper() });
 
     const alert = screen.getByRole("alert");
     expect(alert).toHaveTextContent(message);
@@ -268,7 +268,7 @@ describe("the Settings index with a parse error", () => {
       configError: null,
     });
 
-    render(<SettingsIndexPage />);
+    render(<SettingsIndexPage />, { wrapper: makeWrapper() });
 
     expect(screen.queryByRole("alert")).toBeNull();
     expect(configuredPills()).toHaveLength(0);
@@ -283,7 +283,7 @@ describe("the Settings index with a parse error", () => {
       refetch: jest.fn(),
     });
 
-    render(<SettingsIndexPage />);
+    render(<SettingsIndexPage />, { wrapper: makeWrapper() });
 
     expect(screen.queryByRole("alert")).toBeNull();
     const agentCard = document.querySelector('[data-testid="settings-section-agent"]') as HTMLElement;

@@ -10,7 +10,7 @@
  * per action, and the words say where it is.
  */
 
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -21,7 +21,6 @@ jest.mock("@/components/help/ConceptHint", () => ({
   default: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
 }));
 
-import ProfilesDriftBanner from "@/components/profiles/ProfilesDriftBanner";
 import AgentProfilesOverview from "@/components/agents/AgentProfilesOverview";
 import type { AgentProfile } from "@/types/console";
 
@@ -34,13 +33,25 @@ const drifted = [
 ] as unknown as AgentProfile[];
 
 describe("U18 · one Push all", () => {
+  // The banner is a local of AgentProfilesOverview since C6 (T-0143); it is
+  // reached through the overview, and found by its own headline.
   it("the banner states the drift and names the action, and carries no button", () => {
-    render(<ProfilesDriftBanner driftCount={2} errorCount={0} />);
-    expect(screen.getByText(/Profile drift/)).toBeInTheDocument();
+    render(
+      <AgentProfilesOverview
+        profiles={drifted}
+        syncBusy={false}
+        onPushAll={() => {}}
+        onPullAll={() => {}}
+        onImportDiscovered={() => {}}
+      />,
+    );
+    const headline = screen.getByText(/Profile drift/);
+    expect(headline).toBeInTheDocument();
     expect(screen.getByText(/2 profiles drifted/)).toBeInTheDocument();
-    expect(screen.queryByRole("button")).toBeNull();
+    const banner = headline.parentElement!.parentElement!;
+    expect(within(banner).queryByRole("button")).toBeNull();
     // The sentence points at the control that exists.
-    expect(screen.getByText(/Push all/)).toBeInTheDocument();
+    expect(within(banner).getByText(/Push all, below/)).toBeInTheDocument();
   });
 
   it("the overview offers Push all once, in the bar beside Pull all", () => {
@@ -59,7 +70,7 @@ describe("U18 · one Push all", () => {
   });
 
   it("the banner's source has no control, and the guide names one Push all", () => {
-    expect(read("src/components/profiles/ProfilesDriftBanner.tsx")).not.toMatch(/<button\b|<Button\b/);
+    expect(read("src/components/agents/AgentProfilesOverview.tsx")).not.toMatch(/<button\b|<Button\b/);
     expect(read("docs/guides/agents.md")).not.toMatch(/Push all to Hermes/);
   });
 });

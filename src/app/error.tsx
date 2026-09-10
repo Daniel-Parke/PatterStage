@@ -8,6 +8,8 @@
 import { useEffect } from "react";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 
+import Button from "@/components/ui/Button";
+
 export default function Error({
   error,
   reset,
@@ -31,13 +33,9 @@ export default function Error({
           The application encountered an unexpected error. This is usually
           temporary — try refreshing the page.
         </p>
-        <button
-          onClick={reset}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-ps-md bg-neon-cyan/15 text-neon-cyan border border-neon-cyan/30 hover:bg-neon-cyan/25 transition-colors font-mono text-body"
-        >
-          <RefreshCw className="w-4 h-4" />
+        <Button variant="primary" color="cyan" icon={RefreshCw} onClick={reset}>
           Try Again
-        </button>
+        </Button>
       </div>
     </div>
   );

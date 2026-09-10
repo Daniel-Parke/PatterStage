@@ -11,6 +11,7 @@ import { FileCode, Save, Trash2 } from "lucide-react";
 import Button from "@/components/ui/Button";
 import ConfirmButton from "@/components/ui/ConfirmButton";
 import Modal from "@/components/ui/Modal";
+import { Input, Textarea } from "@/components/ui/field";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 export interface ScriptEditorModalProps {
@@ -65,7 +66,7 @@ export default function ScriptEditorModal({
               onConfirm={onDelete}
               disabled={saving}
               confirmLabel="Delete for good?"
-              armedClassName="text-red-400 bg-red-500/10 ring-1 ring-red-500/30"
+              armedClassName="text-semantic-danger bg-semantic-danger/10 ring-1 ring-semantic-danger/30"
             >
               Delete
             </ConfirmButton>
@@ -89,13 +90,13 @@ export default function ScriptEditorModal({
         {isNew && (
           <div>
             <label htmlFor="script-filename" className="mb-1 block font-mono text-micro text-ps-text-muted">Filename</label>
-            <input
+            <Input
               id="script-filename"
               value={name}
               onChange={(e) => onNameChange(e.target.value)}
               placeholder="my-script.mjs"
               spellCheck={false}
-              className="w-full rounded-ps-md border border-ps-edge bg-ps-surface-inset px-3 py-2 font-mono text-body text-ps-text-primary"
+              className="font-mono"
             />
           </div>
         )}
@@ -103,7 +104,8 @@ export default function ScriptEditorModal({
           <div className="py-8"><LoadingSpinner text="Loading script…" /></div>
         ) : (
           <>
-            <textarea aria-label="Script content"
+            <Textarea
+              aria-label="Script content"
               value={content}
               onChange={(e) => onContentChange(e.target.value)}
               onKeyDown={(e) => {
@@ -122,7 +124,7 @@ export default function ScriptEditorModal({
               }}
               spellCheck={false}
               rows={20}
-              className="block w-full resize-y rounded-ps-md border border-ps-edge bg-ps-surface-inset p-3 font-mono text-body leading-relaxed text-ps-text-primary"
+              className="block leading-relaxed"
               style={{ tabSize: 2 }}
             />
             <div className="flex items-center justify-between font-mono text-micro text-ps-text-muted">

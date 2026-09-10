@@ -21,7 +21,8 @@
  * centre, Categories was the only fact it carried, and the subtitle now
  * carries all four in one line.
  */
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { renderWithQuery } from "../helpers/render-with-query";
 
 jest.mock("lucide-react", () => require("../helpers/mocks").lucideMock());
 jest.mock("@/components/layout/AppPageShell", () => require("../helpers/mocks").appPageShellMock());
@@ -45,6 +46,10 @@ const apiFetch = jest.fn();
 jest.mock("@/lib/api-fetch", () => ({
   __esModule: true,
   apiFetch: (...args: unknown[]) => apiFetch(...args),
+  // The page reads through useApiResource, which calls safeApiCall; routed
+  // through the same mock so a read is still one of the calls asked for (C6, T-0143).
+   
+  safeApiCall: require("../helpers/mocks").safeApiCallOver((...a: unknown[]) => apiFetch(...a)),
   toastError: jest.fn(),
   // Amended 2026-09-10 (C3, T-0138): the toggle writes through runWrite, which says a
   // failure through messageFromError.
@@ -94,7 +99,7 @@ describe("the rule", () => {
 describe("a modest catalogue opens with its skills on screen", () => {
   it("renders every active skill as a row without a click, and no strip above them", async () => {
     answer(catalogue(30, 0));
-    render(<SkillsPage />);
+    renderWithQuery(<SkillsPage />);
     await waitFor(() => expect(rows()).toHaveLength(30));
     expect(screen.queryByTestId("stat-tile")).toBeNull();
     expect(screen.queryByTestId("stat-ring")).toBeNull();
@@ -103,7 +108,7 @@ describe("a modest catalogue opens with its skills on screen", () => {
 
   it("a row is one line: name, description, state, a switch, View and Edit", async () => {
     answer(catalogue(3, 0));
-    render(<SkillsPage />);
+    renderWithQuery(<SkillsPage />);
     await waitFor(() => expect(rows()).toHaveLength(3));
     const row = rows()[0];
     expect(row).toHaveAttribute("data-skill", "cat-00-skill-000");
@@ -118,7 +123,7 @@ describe("a modest catalogue opens with its skills on screen", () => {
 
   it("a category can still be collapsed, and collapsing takes its rows out", async () => {
     answer(catalogue(8, 0, 2));
-    render(<SkillsPage />);
+    renderWithQuery(<SkillsPage />);
     await waitFor(() => expect(rows()).toHaveLength(8));
     const row = screen.getAllByTestId("skill-category-row")[0];
     expect(row).toHaveAttribute("aria-expanded", "true");
@@ -129,13 +134,13 @@ describe("a modest catalogue opens with its skills on screen", () => {
 
   it("an empty Inactive section is not drawn; an empty Active one is, because it is the point of the screen", async () => {
     answer(catalogue(3, 0));
-    render(<SkillsPage />);
+    renderWithQuery(<SkillsPage />);
     await waitFor(() => expect(rows()).toHaveLength(3));
     expect(screen.queryByText(/No inactive skills/)).toBeNull();
     expect(screen.queryByRole("button", { name: /^Inactive/ })).toBeNull();
 
     answer(catalogue(0, 3));
-    render(<SkillsPage />);
+    renderWithQuery(<SkillsPage />);
     expect(await screen.findByText(/No active skills/)).toBeInTheDocument();
   });
 });
@@ -143,7 +148,7 @@ describe("a modest catalogue opens with its skills on screen", () => {
 describe("a large catalogue still opens as a list of categories", () => {
   it("collapses every category when a section exceeds four page windows", async () => {
     answer(catalogue(4 * PAGE + 1, 0, 6));
-    render(<SkillsPage />);
+    renderWithQuery(<SkillsPage />);
     await waitFor(() => expect(screen.getAllByTestId("skill-category-row").length).toBe(6));
     expect(rows()).toHaveLength(0);
     for (const row of screen.getAllByTestId("skill-category-row")) {
@@ -153,7 +158,7 @@ describe("a large catalogue still opens as a list of categories", () => {
 
   it("an opened category still renders at most one page window", async () => {
     answer(catalogue(4 * PAGE + 1, 0, 1));
-    render(<SkillsPage />);
+    renderWithQuery(<SkillsPage />);
     await waitFor(() => expect(screen.getAllByTestId("skill-category-row").length).toBe(1));
     fireEvent.click(screen.getAllByTestId("skill-category-row")[0]);
     expect(rows()).toHaveLength(PAGE);
@@ -163,7 +168,7 @@ describe("a large catalogue still opens as a list of categories", () => {
 describe("the subtitle carries what the strip carried", () => {
   it("total, active, categories and the profile, in one line", async () => {
     answer(catalogue(30, 5, 4));
-    render(<SkillsPage />);
+    renderWithQuery(<SkillsPage />);
     await waitFor(() => expect(rows()).toHaveLength(35));
     const header = screen.getByTestId("page-header");
     expect(header).toHaveTextContent(/35 skills/);
@@ -176,7 +181,7 @@ describe("the subtitle carries what the strip carried", () => {
 describe("what does not change", () => {
   it("search still replaces the view with matches across both sections, flat", async () => {
     answer(catalogue(30, 5, 4));
-    render(<SkillsPage />);
+    renderWithQuery(<SkillsPage />);
     await waitFor(() => expect(rows()).toHaveLength(35));
     const box = within(screen.getByTestId("skills-search")).getByRole("textbox");
     fireEvent.change(box, { target: { value: "skill-03" } });
@@ -189,7 +194,7 @@ describe("what does not change", () => {
 
   it("the switch asks the API to flip the skill it is on", async () => {
     answer(catalogue(2, 1, 1));
-    render(<SkillsPage />);
+    renderWithQuery(<SkillsPage />);
     await waitFor(() => expect(rows()).toHaveLength(3));
     const inactive = rows().find((r) => r.getAttribute("data-skill") === "cat-00-skill-002")!;
     fireEvent.click(within(inactive).getByTestId("skill-toggle"));

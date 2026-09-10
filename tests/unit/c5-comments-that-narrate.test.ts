@@ -68,4 +68,6 @@ describe("C5 · comments that narrate", () => {
 
 // Measured on the tree at the batch's base (filled in when the oracle lands).
 const PRAGMA_LINES_AT_BASE = 37;
-const DIRECTIVES_AT_BASE = 13;
+// 13 at C5; C6 (T-0143) took useChatConversations' effect read onto
+// useApiResource, and the exhaustive-deps directive on that effect went with it.
+const DIRECTIVES_AT_BASE = 12;

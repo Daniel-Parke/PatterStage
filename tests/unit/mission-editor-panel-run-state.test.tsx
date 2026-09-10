@@ -15,11 +15,11 @@ import { render, screen } from "@testing-library/react";
 import MissionEditorPanel from "@/components/missions/MissionEditorPanel";
 import type { MissionDetail, MissionRow } from "@/hooks/missions-page-types";
 
-// The live-progress child opens an EventSource; this panel test is about the
-// static run facts, not the stream.
-jest.mock("@/components/missions/MissionLiveProgress", () => ({
-  __esModule: true,
-  default: () => null,
+// The panel's live-progress read polls for the run and then opens an
+// EventSource; this panel test is about the static run facts, not the
+// stream, so the hook answers nothing.
+jest.mock("@/hooks/useApiResource", () => ({
+  useApiResource: () => ({ data: undefined, error: null, settled: false, isLoading: false, refetch: jest.fn() }),
 }));
 
 const WEEK_AGO = new Date(Date.now() - 7 * 24 * 3_600_000).toISOString();

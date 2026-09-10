@@ -106,7 +106,7 @@ independent of HTTP traffic. State is SQLite (`src/lib/db/index.ts`, migrations 
 | `src/app/api/` | REST routes, `{ data?, error? }` envelope |
 | `src/app/` | Pages: dashboard, `(main)/` sessions·memory·logs, `orchestration/`, `operations/`, `laboratory/`, `config/`, `recroom/` |
 | `src/proxy.ts` | **The** authentication / CSRF / read-only boundary |
-| `src/components/layout/` | Sidebar, `PageHeader`, `AppPageShell`, `MobileHeader` |
+| `src/components/layout/` | Sidebar (with the phone's `MobileHeader` and the rail's quest badge), `PageHeader`, `AppPageShell` |
 | `src/components/ui/field/` | The Field Kit form primitives |
 | `src/components/viz/` | Hand-rolled SVG charts |
 | `src/lib/runtime/` | `AgentRuntime` port + `HermesRuntime` adapter + gateway manager |

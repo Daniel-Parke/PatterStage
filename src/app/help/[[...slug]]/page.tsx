@@ -16,14 +16,16 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { notFound } from "next/navigation";
+import { AlertTriangle, ChevronLeft, ChevronRight } from "lucide-react";
 import type { ReactElement } from "react";
 
-import HelpFragment from "@/components/help/HelpFragment";
 import HelpNav from "@/components/help/HelpNav";
-import HelpPrevNext from "@/components/help/HelpPrevNext";
 import HelpSearch from "@/components/help/HelpSearch";
 import AppPageShell from "@/components/layout/AppPageShell";
 import HelpHeader from "@/components/help/HelpHeader";
+import { Panel } from "@/components/dashboard/Panel";
+import Card from "@/components/ui/Card";
+import LinkButton from "@/components/ui/LinkButton";
 import { recordEvent } from "@/lib/analytics/record-event";
 import {
   helpIndexSlug,
@@ -31,6 +33,7 @@ import {
   helpNeighbours,
   helpPageBySlug,
   isSafeHelpSlug,
+  type HelpPageMeta,
 } from "@/lib/help/help-manifest";
 import { loadHelpFragment, loadHelpManifest, loadHelpSearchIndex } from "@/lib/help/help-source";
 
@@ -55,7 +58,7 @@ function HelpNotBuilt(): ReactElement {
   return (
     <AppPageShell header={<HelpHeader subtitle="A guide for every screen, and the ideas behind it" />}>
       <div className={CONTENT_FRAME}>
-        <div className="min-w-0 flex-1 space-y-4 rounded-ps-md border border-ps-edge-hairline bg-ps-surface-panel px-4 py-4">
+        <Card className="flex-1 space-y-4">
           <h2 className="text-lead font-bold text-ps-text-primary">Help has not been built yet.</h2>
           <p className="text-body text-ps-text-secondary">
             The guides are generated from the repository&apos;s docs folder at build time, and the
@@ -65,9 +68,71 @@ function HelpNotBuilt(): ReactElement {
           <pre className="overflow-x-auto rounded-ps-sm bg-ps-surface-inset px-3 py-2 text-micro font-mono text-neon-cyan">
             {"npm run docs:build"}
           </pre>
-        </div>
+        </Card>
       </div>
     </AppPageShell>
+  );
+}
+
+/**
+ * One generated page body, in this page's own DOM.
+ *
+ * Not an iframe. An iframe would need its own stylesheet, its own scroll, its
+ * own focus order and its own answer to every link inside it, and the operator
+ * would meet all four as "the docs feel bolted on". The fragment is body-only
+ * HTML with no <h1> (the header owns that one), so it drops straight in.
+ *
+ * This is Help's ONLY dangerouslySetInnerHTML: the exemption is one line with
+ * one reason beside it rather than a habit spread over four components.
+ */
+function HelpFragment({ html, slug }: { html: string | null; slug: string }): ReactElement {
+  if (html === null) {
+    // The manifest and the fragments are written by the same build, so a page
+    // listed with no file on disk means a half-finished or interrupted one. An
+    // empty article would read as a page with nothing to say; this says which
+    // page, and what to run.
+    return (
+      <Panel role="alert" accent="orange" className="flex items-start gap-3 px-4 py-3">
+        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-neon-orange" aria-hidden="true" />
+        <p className="text-body text-ps-text-secondary">
+          The guide <span className="font-mono">{slug}</span> is listed in the manifest but its page
+          was not generated. Run <span className="font-mono">npm run docs:build</span> to rebuild the
+          corpus.
+        </p>
+      </Panel>
+    );
+  }
+
+  // design-lint-disable-next-line no-unsanitised-html -- the HTML is markdown-it output built by scripts/docs/build-site.mjs from docs/**.md at prebuild; it escapes at the boundary and never carries model output
+  return <article className="ps-help-prose" data-testid="help-fragment" dangerouslySetInnerHTML={{ __html: html }} />;
+}
+
+/**
+ * The two ends of the reading path.
+ *
+ * The chain is the whole corpus flattened in helpNavOrder, so "next" at the end
+ * of a tour stop is the next tour stop and not the next file in an alphabet.
+ *
+ * One end missing renders one link and nothing else. A disabled control at the
+ * front of the corpus would be a thing to tab to that answers nothing, and the
+ * pair reads perfectly well as a single link.
+ */
+function HelpPrevNext({ prev, next }: { prev: HelpPageMeta | null; next: HelpPageMeta | null }): ReactElement | null {
+  if (!prev && !next) return null;
+  return (
+    <nav aria-label="Help pages" className="flex flex-wrap items-center gap-3">
+      {prev && (
+        <LinkButton href={`/help/${prev.slug}`} rel="prev" aria-label={`Previous: ${prev.title}`} icon={ChevronLeft}>
+          <span className="truncate">{prev.title}</span>
+        </LinkButton>
+      )}
+      {next && (
+        <LinkButton href={`/help/${next.slug}`} rel="next" aria-label={`Next: ${next.title}`} className="ms-auto">
+          <span className="truncate">{next.title}</span>
+          <ChevronRight className="h-4 w-4 shrink-0" aria-hidden="true" />
+        </LinkButton>
+      )}
+    </nav>
   );
 }
 

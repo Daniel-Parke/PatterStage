@@ -16,6 +16,7 @@ import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 import SchedulePicker from "@/components/schedule/SchedulePicker";
 import { safeApiCall } from "@/lib/api-fetch";
+import { runWrite } from "@/lib/api-write";
 import { stripScriptExt } from "@/lib/scripts/script-ext";
 import type { ScriptFile, SchedulerAvailability } from "@/hooks/useScripts";
 
@@ -62,33 +63,39 @@ export default function ScheduleScriptModal({
     const label = stripScriptExt(script.name)
       .replace(/[-_]/g, " ")
       .replace(/\b\w/g, (c) => c.toUpperCase());
-    setSaving(true);
-    try {
-      const res = scheduler.available
-        ? await safeApiCall("/api/cron/hardware", {
-            method: "POST",
-            body: { name: label, schedule: schedule.trim(), command: script.path },
-          })
-        : await safeApiCall("/api/schedules", {
-            method: "POST",
-            // No missionId key at all: the body schema is .strict(), and a
-            // script schedule has no mission to name.
-            body: {
-              kind: "script",
-              scriptName: script.name,
-              name: label,
-              schedule: schedule.trim(),
-              scheduleDisplay: schedule.trim(),
-            },
-          });
-      if (!res.ok) {
-        onError(res.error ?? "Failed to schedule");
-        return;
-      }
-      onSaved();
-    } finally {
-      setSaving(false);
-    }
+    // The page owns the toast, the way it always has: it says "Scheduled X"
+    // through onSaved and routes a failure's words through onError. runWrite's
+    // own words go to those two, so the modal keeps its contract.
+    await runWrite({
+      setBusy: setSaving,
+      showToast: (message, type) => {
+        if (type === "error") onError(message);
+      },
+      request: async () => {
+        const res = scheduler.available
+          ? await safeApiCall("/api/cron/hardware", {
+              method: "POST",
+              body: { name: label, schedule: schedule.trim(), command: script.path },
+            })
+          : await safeApiCall("/api/schedules", {
+              method: "POST",
+              // No missionId key at all: the body schema is .strict(), and a
+              // script schedule has no mission to name.
+              body: {
+                kind: "script",
+                scriptName: script.name,
+                name: label,
+                schedule: schedule.trim(),
+                scheduleDisplay: schedule.trim(),
+              },
+            });
+        if (!res.ok) throw new Error(res.error ?? "Failed to schedule");
+        return res.data;
+      },
+      successMessage: "",
+      errorMessage: "Failed to schedule",
+      onSuccess: onSaved,
+    });
   };
 
   return (

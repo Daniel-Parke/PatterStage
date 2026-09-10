@@ -13,6 +13,10 @@
 // are not here any more (decision 12): Settings is one entry, System holds
 // the deploy block, and the footer is a version line with an update badge.
 // The collapsed state is the operator's preference, kept in /api/prefs.
+//
+// Two small parts of the rail live here with it (C6): the quest count that
+// hangs on the Quests row, and the phone's header bar, whose one job is to
+// open this drawer.
 // ═══════════════════════════════════════════════════════════════
 
 "use client";
@@ -20,23 +24,107 @@
 import { useState, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronRight, ChevronLeft } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { ChevronRight, ChevronLeft, Menu, Terminal } from "lucide-react";
 
 import { useSidebar } from "./SidebarContext";
 import { useDialogA11y } from "@/hooks/useDialogA11y";
 import { TABLET_QUERY, useIsMobile } from "@/hooks/useIsMobile";
+import { apiQueryKey } from "@/hooks/useApiResource";
+import { useStats } from "@/hooks/useStats";
 import { iconColorMap, railAccentBarMap } from "@/lib/theme";
 import { safeApiCall } from "@/lib/api-fetch";
 import { useFeatureFlags } from "@/hooks/useFeatureFlags";
+import IconButton from "@/components/ui/IconButton";
 import { mainSections } from "./sidebar-config";
 import type { SidebarLink } from "./sidebar-config";
 import { RailFooter } from "./RailFooter";
-import BrandMark from "./BrandMark";
-import QuestBadge from "@/components/quests/QuestBadge";
 
 function isActive(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";
   return pathname === href || pathname.startsWith(href + "/");
+}
+
+// ── QuestBadge ──────────────────────────────────────────────────
+// How many quests are left, in the rail. It reads the same deduped stats
+// poll every quest surface reads, renders nothing while stats are unread and
+// nothing once every quest is done (32/32 forever is a nag).
+//
+// Collapsed, it is a DOT rather than "n/N": the 64px rail's footer stacks its
+// links vertically and mono text there would widen or wrap the row; the rail
+// must fit 1280x720 without scrolling (tests/e2e/rail-no-scroll.spec.ts).
+// Decorative, deliberately: the link's own aria-label ("Quests") is the name
+// D119 pins, a second name inside it would be ignored, and a live region would
+// re-announce a count every poll. The count is said in full on the page and in a title.
+function QuestBadge({ collapsed = false }: { collapsed?: boolean }) {
+  const { stats } = useStats();
+  const quests = stats?.quests;
+
+  // Unread, empty, or finished: say nothing at all.
+  if (!quests || quests.total <= 0 || quests.completed >= quests.total) return null;
+
+  const label = `${quests.completed} of ${quests.total} quests complete`;
+
+  if (collapsed) {
+    return (
+      <span
+        data-testid="quest-badge"
+        aria-hidden="true"
+        title={label}
+        className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-neon-orange"
+      />
+    );
+  }
+
+  return (
+    <span
+      data-testid="quest-badge"
+      aria-hidden="true"
+      title={label}
+      className="flex-shrink-0 font-mono text-micro text-neon-orange"
+    >
+      {quests.completed}/{quests.total}
+    </span>
+  );
+}
+
+// ── MobileHeader ────────────────────────────────────────────────
+// Compact mobile chrome (3rem): the drawer's entrypoint, intentionally
+// shorter than desktop `--ps-shell-header-min-height` (5rem). Below md only:
+// from 768 the rail is on the screen as the icon column and there is nothing
+// for a hamburger to open (T-0128). Rendered by the root layout beside the
+// rail; a client component, which is why it lives here and not there.
+export function MobileHeader() {
+  const { toggleMobile } = useSidebar();
+
+  // Opaque, and no backdrop blur, for the reason the rail gives below: at
+  // 95% the bar was a translucent surface paying a compositing layer on every
+  // scroll to blur the 5% of the page it let through.
+  return (
+    <div className="md:hidden sticky top-0 z-sticky flex items-center min-h-[var(--ps-mobile-header-min-height)] px-3 bg-ps-surface-ground border-b border-ps-edge-hairline flex-shrink-0 gap-3">
+      {/* 44px square whatever the size ladder says: a thumb target on a phone. */}
+      <IconButton
+        icon={Menu}
+        label="Open navigation"
+        size="lg"
+        onClick={toggleMobile}
+        className="min-w-[44px] min-h-[44px] text-ps-text-secondary"
+      />
+      {/* One mark, one name. This said "PT / Hermes": an abbreviation of the
+          product beside the name of its dependency, so on a phone the product
+          appeared to be called something else than it does on a desktop. */}
+      {/* Named, because the words are gone: the compact lockup is the mark
+          alone, and an icon-only link with no name is what D119 refuses. Same
+          name the rail's own home link carries. */}
+      <Link
+        href="/"
+        aria-label="PatterStage home"
+        className="flex items-center gap-2 min-w-0 hover:opacity-80 transition-opacity"
+      >
+        <BrandMark size="bar" />
+      </Link>
+    </div>
+  );
 }
 
 /**
@@ -58,14 +146,26 @@ export default function Sidebar({ initialCollapsed = false }: { initialCollapsed
   const drawerOpen = isMobile && mobileOpen;
   const drawerRef = useDialogA11y({ open: drawerOpen, onClose: closeMobile });
 
-  // The preference arrives with the markup now; only the WRITE is a fetch.
-  // A failed write (read-only, offline) leaves the rail where the operator put
-  // it for this session and the server keeps its old answer.
+  // The preference arrives with the markup now; only the WRITE is a fetch,
+  // through react-query's mutation so the prefs map every other reader holds
+  // is re-read afterwards. A failed write (read-only, offline) leaves the
+  // rail where the operator put it for this session and the server keeps its
+  // old answer; nothing is said, because the rail is already where they put it.
+  const queryClient = useQueryClient();
+  const { mutate: savePref } = useMutation({
+    mutationFn: async (next: boolean) => {
+      const res = await safeApiCall("/api/prefs", { method: "PUT", body: { key: "sidebar.collapsed", value: next } });
+      if (!res.ok) throw new Error(res.error ?? "Failed to save the preference");
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: apiQueryKey("/api/prefs") });
+    },
+  });
   const toggleCollapsed = useCallback(() => {
     const next = !collapsed;
     setCollapsed(next);
-    void safeApiCall("/api/prefs", { method: "PUT", body: { key: "sidebar.collapsed", value: next } });
-  }, [collapsed]);
+    savePref(next);
+  }, [collapsed, savePref]);
 
   // Flags default ON: hide a link only when its flag is explicitly disabled,
   // so the nav never flashes while flags load (or if the fetch fails).
@@ -147,13 +247,14 @@ export default function Sidebar({ initialCollapsed = false }: { initialCollapsed
 
   return (
     <>
-      {/* Mobile backdrop: a real control with a name, above the header (z-50). */}
+      {/* Mobile backdrop: a real control with a name, on the overlay layer,
+          above the sticky header; the drawer itself is on the modal layer. */}
       {drawerOpen && (
         <button
           type="button"
           aria-label="Close navigation"
           onClick={closeMobile}
-          className="md:hidden fixed inset-0 bg-black/60 z-[55] cursor-default"
+          className="md:hidden fixed inset-0 bg-black/60 z-overlay cursor-default"
         />
       )}
 
@@ -176,7 +277,7 @@ export default function Sidebar({ initialCollapsed = false }: { initialCollapsed
         // `transition-[width]`, not `transition-all`: the second animated colour
         // as well, so the active row faded in over 200ms on every navigation
         // instead of appearing where you clicked.
-        className={`flex flex-col h-screen border-r border-ps-edge transition-[width] duration-200 fixed inset-y-0 left-0 z-[60] w-56 bg-ps-surface-panel transform ${
+        className={`flex flex-col h-screen border-r border-ps-edge transition-[width] duration-200 fixed inset-y-0 left-0 z-modal w-56 bg-ps-surface-panel transform ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         } md:static md:z-auto md:translate-x-0 ${iconsOnly ? "md:w-16" : "md:w-56"}`}
       >
@@ -271,6 +372,51 @@ export default function Sidebar({ initialCollapsed = false }: { initialCollapsed
           </div>
         </div>
       </aside>
+    </>
+  );
+}
+
+// ── The product's name, drawn once ──────────────────────────────────────
+// It used to be drawn twice and they disagreed: the rail said "PatterStage /
+// The Stage is Yours" and the mobile header "PT / Hermes", the product's
+// abbreviation beside its dependency's name (T-0121). The words are optional
+// because a collapsed rail has 64px and no room for them; the mark is not.
+
+/**
+ * `rail` is the desktop lockup at the top of the sidebar; `bar` is the compact
+ * one in the mobile header, which is 3rem tall against the rail's 5rem.
+ */
+function BrandMark({
+  size = "rail",
+  words = true,
+}: {
+  size?: "rail" | "bar";
+  words?: boolean;
+}) {
+  const box = size === "rail" ? "w-8 h-8" : "w-7 h-7";
+  return (
+    <>
+      <div className={`${box} rounded-ps-md animated-border p-[1.5px] shrink-0`}>
+        <div className="w-full h-full bg-ps-surface-panel rounded-ps-sm flex items-center justify-center">
+          <Terminal className="w-4 h-4 text-neon-cyan" />
+        </div>
+      </div>
+      {words && (
+        <div className="leading-tight min-w-0">
+          <div className="text-body font-bold tracking-tight text-ps-text-primary truncate">
+            PatterStage
+          </div>
+          {size === "rail" && (
+            <div className="text-micro text-ps-text-muted mt-0.5 truncate">
+              The Stage is{" "}
+              {/* The one call site of .text-glow-cyan in the product. Seven
+                  sibling glow classes had none and were deleted at T-0120;
+                  this one is the product's own name and stays. */}
+              <span className="font-bold text-neon-cyan text-glow-cyan">Yours</span>
+            </div>
+          )}
+        </div>
+      )}
     </>
   );
 }

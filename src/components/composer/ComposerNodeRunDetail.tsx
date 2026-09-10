@@ -13,10 +13,14 @@ import { statusToneClasses } from "@/lib/theme";
 import { sectionHeadingClasses } from "@/lib/theme";
 import { useState } from "react";
 import { Save, Check } from "lucide-react";
+import { Panel } from "@/components/dashboard/Panel";
+import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
 import Sheet from "@/components/ui/Sheet";
+import { useToast } from "@/components/ui/Toast";
+import { runWrite } from "@/lib/api-write";
 import { timeAgo } from "@/lib/utils";
 import ElapsedSince from "./ElapsedSince";
-import { safeApiCall } from "@/lib/api-fetch";
 import type { ComposerApproval, ComposerNode, ComposerNodeRun } from "@/lib/composer/schema";
 
 /**
@@ -60,11 +64,17 @@ export default function ComposerNodeRunDetail({
     ? `${node.kind} · ${node.gate === "hil" ? "human gate" : "auto"}`
     : undefined;
 
+  // The sheet's own toast, because the composer page has none to hand down:
+  // under the shell's FeedbackProvider the words reach the shell and
+  // `toastElement` is null, and in a bare render they show here.
+  const { showToast, toastElement } = useToast();
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
   async function saveAsArtifact() {
     if (!nodeRun?.output || saveState !== "idle") return;
     setSaveState("saving");
-    const res = await safeApiCall("/api/artifacts", {
+    const saved = await runWrite({
+      showToast,
+      url: "/api/artifacts",
       method: "POST",
       body: {
         sourceKind: "composer",
@@ -76,8 +86,12 @@ export default function ComposerNodeRunDetail({
         content: nodeRun.output,
         tags: ["composer", "saved"],
       },
+      successMessage: "Saved as an artifact",
+      errorMessage: "Could not save the output as an artifact",
     });
-    setSaveState(res.ok ? "saved" : "idle");
+    // `saved` stays: the button reads it, so a second click cannot file the
+    // same output twice.
+    setSaveState(saved ? "saved" : "idle");
   }
 
   return (
@@ -142,15 +156,17 @@ export default function ComposerNodeRunDetail({
                 <Label>Gate decisions</Label>
                 <ul className="space-y-2">
                   {approvals.map((a) => (
-                    <li key={a.id} className="rounded-ps-md border border-ps-edge-hairline bg-ps-surface-panel px-3 py-2">
-                      <span
-                        className={`font-mono text-micro ${a.action === "accept" ? "text-neon-green" : "text-neon-pink"}`}
-                      >
-                        {a.action === "accept" ? "Accepted" : "Rejected"}
-                      </span>
-                      <p className="mt-1 text-body text-ps-text-secondary whitespace-pre-wrap break-words">
-                        {a.note && a.note.trim() ? a.note : "No note"}
-                      </p>
+                    <li key={a.id}>
+                      <Card padding="none" className="px-3 py-2">
+                        <span
+                          className={`font-mono text-micro ${a.action === "accept" ? "text-neon-green" : "text-neon-pink"}`}
+                        >
+                          {a.action === "accept" ? "Accepted" : "Rejected"}
+                        </span>
+                        <p className="mt-1 text-body text-ps-text-secondary whitespace-pre-wrap break-words">
+                          {a.note && a.note.trim() ? a.note : "No note"}
+                        </p>
+                      </Card>
                     </li>
                   ))}
                 </ul>
@@ -160,9 +176,9 @@ export default function ComposerNodeRunDetail({
             {nodeRun.error ? (
               <div className="space-y-2">
                 <Label>Error</Label>
-                <p className="rounded-ps-md border border-neon-pink/30 bg-neon-pink/10 px-3 py-2 text-body text-neon-pink">
+                <Panel accent="pink" tint="pink" className="px-3 py-2 text-body text-neon-pink">
                   {nodeRun.error}
-                </p>
+                </Panel>
               </div>
             ) : null}
 
@@ -170,16 +186,17 @@ export default function ComposerNodeRunDetail({
               <div className="space-y-2">
                 <div className="flex items-center justify-between gap-2">
                   <Label>Output</Label>
-                  <button
-                    type="button"
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    icon={saveState === "saved" ? Check : Save}
                     onClick={() => void saveAsArtifact()}
                     disabled={saveState !== "idle"}
-                    className="inline-flex items-center gap-1 rounded-ps-sm border border-ps-edge px-2 py-0.5 text-micro font-mono text-ps-text-muted transition hover:border-neon-orange/40 hover:text-neon-orange disabled:opacity-60"
                   >
-                    {saveState === "saved" ? <><Check className="h-3 w-3" /> Saved</> : <><Save className="h-3 w-3" /> {saveState === "saving" ? "Saving…" : "Save as artifact"}</>}
-                  </button>
+                    {saveState === "saved" ? "Saved" : saveState === "saving" ? "Saving…" : "Save as artifact"}
+                  </Button>
                 </div>
-                <pre className="max-h-[50vh] overflow-auto whitespace-pre-wrap rounded-ps-md border border-ps-edge-hairline bg-ps-surface-panel px-3 py-2 text-body leading-relaxed text-ps-text-secondary">
+                <pre className="max-h-[50vh] overflow-auto whitespace-pre-wrap rounded-ps-md bg-ps-surface-inset px-3 py-2 text-body leading-relaxed text-ps-text-secondary">
                   {nodeRun.output}
                 </pre>
               </div>
@@ -189,6 +206,7 @@ export default function ComposerNodeRunDetail({
           </>
         )}
       </div>
+      {toastElement}
     </Sheet>
   );
 }
