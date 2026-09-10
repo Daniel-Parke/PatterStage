@@ -43,8 +43,16 @@ describe("C7 · the lib root", () => {
     expect(rootFiles).toEqual(Object.keys(STAYS).sort());
   });
 
-  it.each(Object.keys(STAYS).sort())("%s says in its own header why it is not in a domain", (name) => {
+  /**
+   * The marker AND the reason. The reason alone was too soft to hold: the
+   * mutation sweep cut the marker off `utils.ts` and the check still passed,
+   * because the words "every layer" survived in ordinary prose underneath it.
+   * A file at the root has to say, in those words, that it is there on
+   * purpose, and then say why.
+   */
+  it.each(Object.keys(STAYS).sort())("%s says in its own header that it is at the root on purpose, and why", (name) => {
     const head = readFileSync(join(LIB, name), "utf8").split(/\r?\n/).slice(0, 40).join("\n");
+    expect(head).toContain("AT THE LIB ROOT ON PURPOSE");
     expect(head).toMatch(STAYS[name]);
   });
 

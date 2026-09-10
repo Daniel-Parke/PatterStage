@@ -1,8 +1,12 @@
 // ═══════════════════════════════════════════════════════════════
 // db-schema.ts — SQLite schema version helpers
-// These are extracted to a separate module so they can be imported
-// by migration files without being intercepted by the global
-// @/lib/db mock in Jest tests.
+//
+// AT THE LIB ROOT ON PURPOSE (C7, T-0144), and not under src/lib/db/ where
+// its subject would put it: these are extracted to a separate module so they
+// can be imported by migration files without being intercepted by the global
+// @/lib/db mock in Jest tests. Inside that folder the mock would reach them
+// and the schema constant below would read as undefined in the very tests
+// that check it.
 // ═══════════════════════════════════════════════════════════════
 
 const SCHEMA_VERSION_KEY = "schema_version";
