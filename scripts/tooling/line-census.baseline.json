@@ -1,10 +1,10 @@
 {
   "measuredAt": "2026-09-10",
   "counts": {
-    "srcLines": 100864,
-    "testLines": 121388,
+    "srcLines": 100872,
+    "testLines": 121422,
     "srcRepeatedWindowLines": 1190,
-    "testRepeatedWindowLines": 4783,
+    "testRepeatedWindowLines": 4786,
     "routesWithTryCatch": 13,
     "handRolledReadHooks": 0,
     "writeHooksWithoutMutation": 0,
@@ -99,6 +99,21 @@
       "measuredAt": "2026-09-10",
       "rise": "testRepeatedWindowLines rose from 4651 to 4783",
       "reason": "C6 (T-0143): tests grow by two keeps-its-body suites modelled on T-0139's and by the api-fetch preamble that now routes safeApiCall through the same map in five suites; the src windows are the models page's handler lists, unchanged, re-counted after the folds moved lines around them."
+    },
+    {
+      "measuredAt": "2026-09-10",
+      "rise": "srcLines rose from 100864 to 100872",
+      "reason": "C6 (T-0143): the baseline was cut before gate 8 caught two targets this batch introduced; src rises by the skip link's focus-only sizing and the rail chip's floor with the comments that say why, and tests by the oracle case that holds the skip link to the button's scale."
+    },
+    {
+      "measuredAt": "2026-09-10",
+      "rise": "testLines rose from 121388 to 121422",
+      "reason": "C6 (T-0143): the baseline was cut before gate 8 caught two targets this batch introduced; src rises by the skip link's focus-only sizing and the rail chip's floor with the comments that say why, and tests by the oracle case that holds the skip link to the button's scale."
+    },
+    {
+      "measuredAt": "2026-09-10",
+      "rise": "testRepeatedWindowLines rose from 4783 to 4786",
+      "reason": "C6 (T-0143): the baseline was cut before gate 8 caught two targets this batch introduced; src rises by the skip link's focus-only sizing and the rail chip's floor with the comments that say why, and tests by the oracle case that holds the skip link to the button's scale."
     }
   ]
 }

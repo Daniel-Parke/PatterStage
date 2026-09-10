@@ -51,10 +51,10 @@ plan header says so.
 
 | Measure | Plan start | Now | Target |
 | --- | --- | --- | --- |
-| src lines | 107,123 | 100,864 | ≤ 98,000 |
-| tests lines | 121,651 | 121,388 | ≤ 116,000 |
+| src lines | 107,123 | 100,872 | ≤ 98,000 |
+| tests lines | 121,651 | 121,422 | ≤ 116,000 |
 | src lines in a repeated window | 1,416 | 1,190 | ≤ 600 |
-| tests lines in a repeated window | 6,028 | 4,783 | ≤ 2,500 |
+| tests lines in a repeated window | 6,028 | 4,786 | ≤ 2,500 |
 | routes with their own try/catch | 82 | 13 | ≤ 13 (met, corrected at C1) |
 | hand-rolled reads (by AST since C3) | 5 (regex) | 0 | 0 (met) |
 | named hooks writing on their own | 4 | 0 | 0 (met) |
@@ -64,7 +64,7 @@ plan header says so.
 | comment essays | 107 | 8 | ≤ 60 |
 | suites mocking db inline | 100 | 14 | ≤ 20 (met) |
 | design-lint debt (all rules) | 350 | 0 | 0 (met) |
-| jest | 6,860 | 6,892 (682 suites) | unchanged by a test batch |
+| jest | 6,860 | 6,893 (682 suites) | unchanged by a test batch |
 
 ## How a batch is landed (the discipline, verbatim from practice)
 
