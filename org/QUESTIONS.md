@@ -66,6 +66,54 @@ execution waits on the answer.
 
 ## Folded
 
+- Q-009 (process): is CI the binding gate from now on? Folded 2026-09-12. Answer, from the
+  operator: yes. `dev` is made green first (six case-broken doc links, the `tsx` data-URL resolution in `scripts/docs/extract.ts`, and the runtime smoke's two stale contracts), then every batch waits for its pushed commit's CI before the next starts. `npm run gate` runs the chain by exit code, the line census becomes a CI step, `main` requires acceptance-gate and build-test-ubuntu with `enforce_admins` on and required reviews at 0, and the pre-push hook is installed once.
+  - the per-item detail, with each option's consequence and the ruling, is in
+    `org/reviews/2026-09-decision-register.md`. The operator's words on adopting them: correct any of them and
+    I will unwind that one.
+
+- Q-010 (process): does the programme follow governance as written? Folded 2026-09-12. Answer, from the
+  operator: as written. ADR-0011 ratifies T-0144's four protected path lines and names the restore as its reversal; the 47 closed records get their original text back; at most two writing lanes, each with claims committed before dispatch; R2 runs high-assurance with an independent review; and public contract means routes, npm scripts, env vars, config keys and documented exports, not any exported symbol.
+  - the per-item detail, with each option's consequence and the ruling, is in
+    `org/reviews/2026-09-decision-register.md`. The operator's words on adopting them: correct any of them and
+    I will unwind that one.
+
+- Q-011 (product): when does v1.0.0 ship, and what happens to the pre-rename names? Folded 2026-09-12. Answer, from the
+  operator: rc.1 and v1.0.0 are cut after CI is green, the security fixes and the build-before-backup fix, and the structural batches follow. Every CH_, CONTROL_HUB_ and AGENT_HOME name, the x-ch-* headers, the ch-* shims, the ch.sessions.* keys and the 52 redirects stay through 1.0 with a boot warning, and retire together in the first release after it, with a tripwire refusing to boot on CH_READ_ONLY or CH_REQUEST_SIGNING_SECRET without its PS_ twin.
+  - the per-item detail, with each option's consequence and the ruling, is in
+    `org/reviews/2026-09-decision-register.md`. The operator's words on adopting them: correct any of them and
+    I will unwind that one.
+
+- Q-012 (security): mitigation in code, or a recorded exclusion? Folded 2026-09-12. Answer, from the
+  operator: both, item by item. Framing is forbidden everywhere; read-only is the proxy's, with the host-side routes keeping their own guard; the signature's gap and the deploy buttons it disables are documented; one on/off vocabulary for boolean env vars; RUL-SEC-002's pre-commit scan and deny list land. Two residual risks are recorded as ASVS 4.0.3 exclusions in one ADR: the throttle's per-caller keys, and the sign-in URL printed on the start that creates the token.
+  - the per-item detail, with each option's consequence and the ruling, is in
+    `org/reviews/2026-09-decision-register.md`. The operator's words on adopting them: correct any of them and
+    I will unwind that one.
+
+- Q-013 (product): which shipped surface goes, and which is kept? Folded 2026-09-12. Answer, from the
+  operator: delete what is dead, uncallable or undocumented; keep and label what is documented, ruled or holds data. Deleted: the bench-gateway harness and its npm script, `hindsight-rederive.sh`, the five ch-* shims and the .sh hardware twins, the pnpm settings, ts-jest, four unused rgb tokens, and the deploy-only Windows branches. Kept and labelled: the four uncalled documented routes behind a new caller gate, the benchmark tables, sync_registry, the seed toolset YAML with a drift test, the Story Weaver fonts, MODULE_ACCENTS, the declared test-only APIs, the composer flag and every npm script name.
+  - the per-item detail, with each option's consequence and the ruling, is in
+    `org/reviews/2026-09-decision-register.md`. The operator's words on adopting them: correct any of them and
+    I will unwind that one.
+
+- Q-014 (product): how do the build, migrations and boot treat the database? Folded 2026-09-12. Answer, from the
+  operator: the build touches no database, once a build on an empty `PS_DATA_DIR` proves it needs none and `db:seed` is shown to cover the build-time Hermes import. The unreachable baseline-rebuild path goes with its documented promise, migrations converge in one pass and fail loudly, duplicate error rows are hidden at read rather than deleted, and boot runs its recovery sweeps before it can fail fast.
+  - the per-item detail, with each option's consequence and the ruling, is in
+    `org/reviews/2026-09-decision-register.md`. The operator's words on adopting them: correct any of them and
+    I will unwind that one.
+
+- Q-015 (process): how do test and lint policy change, and may a closed oracle be amended? Folded 2026-09-12. Answer, from the
+  operator: a closed programme's oracle changes only by a dated amendment, for the one rule or key the ruled item fixes, authored by a session other than the implementer; c8 is re-anchored to the numbers frozen at C8. `no-require-imports` is turned off for tests in one commit, keeping the specific reasons as plain comments. Provenance headers get a ratchet rather than a trim, batch names stay with a subject-first rule for new suites, and the flat test layout stays.
+  - the per-item detail, with each option's consequence and the ruling, is in
+    `org/reviews/2026-09-decision-register.md`. The operator's words on adopting them: correct any of them and
+    I will unwind that one.
+
+- Q-016 (product): how far does product structure converge? Folded 2026-09-12. Answer, from the
+  operator: Field labels and track switches on Settings, Memory and Composer; Select and Picker stay separate primitives as the UI overhaul decided, and the ten unnamed dropdowns simply gain names; chat renders through SimpleMarkdown with a Copy button per code block; the missions board reads through the cache with errors shown in place; Laboratory waits under ADR-0005; the hermes module owns agent_root; and a superseding ADR records globals.css as the token source.
+  - the per-item detail, with each option's consequence and the ruling, is in
+    `org/reviews/2026-09-decision-register.md`. The operator's words on adopting them: correct any of them and
+    I will unwind that one.
+
 - Q-002 (legal): which licence does the public repository carry? Folded
   2026-07-26. Answer, from the operator: Apache-2.0. The relicence commit
   `a18063be` sits on `dev` with NOTICE, TRADEMARK.md and REBRANDING.md and

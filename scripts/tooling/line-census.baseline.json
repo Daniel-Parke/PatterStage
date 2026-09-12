@@ -1,8 +1,8 @@
 {
-  "measuredAt": "2026-09-10",
+  "measuredAt": "2026-09-12",
   "counts": {
     "srcLines": 100881,
-    "testLines": 121114,
+    "testLines": 121259,
     "srcRepeatedWindowLines": 1000,
     "testRepeatedWindowLines": 4343,
     "routesWithTryCatch": 13,
@@ -144,6 +144,16 @@
       "measuredAt": "2026-09-10",
       "rise": "testLines rose from 121112 to 121114",
       "reason": "C8 (T-0145): two lines of comment on C0's status assertion, saying which status a filed plan may have and that C8 is what makes it done."
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "testLines rose from 121114 to 121204",
+      "reason": "K0's oracle: 90 test lines that hold the decision register complete (T-0146)"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "testLines rose from 121204 to 121259",
+      "reason": "K0 (T-0146): the register oracle, 4 tests, and the c8 amendment its own growth forced (POLICY-closed-oracles, ruled 2026-09-12)"
     }
   ]
 }
