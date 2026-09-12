@@ -1,0 +1,47 @@
+{
+  "id": "T-0156",
+  "intent": "The in-app Help is broken for every guide. /help renders its index at 200, and every guide page under it answers 500: 'Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with \"use server\"', naming `render: function ChevronLeft`. A lucide icon component is being passed as a prop across the React Server Component boundary at src/app/help/[[...slug]]/page.tsx. Measured on an isolated instance, authenticated: /help 200, /help/running/deploy 500, /help/reference/api 500, /help/contributing/testing 500, /help/running/troubleshooting 500. The recon's repo dimension found it by accident in a CI log; nothing in the repository can see it, because `grep -c help tests/e2e/app-routes.ts` is 0 and no unit suite renders the route.",
+  "declared": {
+    "capabilities": [
+      "edit-source",
+      "edit-tests"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {
+      "factor": "size-threshold",
+      "tier_floor": "R1",
+      "source": "derived:diff-size",
+      "evidence": "one prop across one boundary, plus the e2e coverage whose absence is why nobody saw it"
+    }
+  ],
+  "status": "proposed",
+  "owner_session": "unassigned",
+  "claims": [
+    "src/app/help/[[...slug]]/page.tsx",
+    "tests/e2e/app-routes.ts",
+    "tests/e2e/help.spec.ts"
+  ],
+  "programme": "Found by K7's recon (T-0155) and raised rather than folded in. It is a product defect, not a refactor finding, and it is the recon's own best argument for itself: the review's docs list left 'public/help/ output shape and the in-app Help resolver were not examined' open, and a live 500 on 74 of 75 guide URLs was sitting behind that line.",
+  "timestamps": {
+    "opened": "2026-09-12T19:30:00Z",
+    "updated": "2026-09-12T19:30:00Z",
+    "closed": null
+  },
+  "invariants": [
+    "I1 THE FIX IS THE BOUNDARY, NOT THE SYMPTOM. A lucide icon is a function component; passing it from a Server Component to a Client Component cannot work. Pass a name the client maps, or move the boundary. Do not make the page a Client Component to silence it without saying why.",
+    "I2 A GATE MUST BE ABLE TO SEE IT NEXT TIME. tests/e2e/app-routes.ts lists the routes the e2e suite walks and /help is not in it. Whatever the fix, a check that fails on a 500 from a guide URL lands with it. That absence is the actual defect; the icon is only what fell through it.",
+    "I3 EVERY GUIDE, NOT ONE. The oracle walks the manifest rather than a sample: docs/manifest.json holds 75 pages, and the claim to hold is that each resolves.",
+    "I4 THE ERRORS WERE ALREADY IN THE LOG. The same message appears in passing e2e runs from earlier the same day. A fix that leaves the server log carrying it has not finished."
+  ],
+  "notes": "Evidence, 2026-09-12, isolated instance on port 3333, authenticated through the token exchange. The three log lines are identical, digest 1261740971, and name ChevronLeft. The index page at /help works because it does not pass the icon. Two of the six slugs probed answered 404 rather than 500 (/help/getting-started, /help/concepts/missions), so the manifest's slug shape needs reading before the oracle is written: the count of affected URLs is 'every guide the resolver resolves', which the recon put at 74 of 75, and that number should be re-derived from docs/manifest.json rather than taken.",
+  "commits": "",
+  "verification": "",
+  "review": "",
+  "mutation": "",
+  "deviation": ""
+}
