@@ -1,6 +1,14 @@
 {
   "version": 1,
-  "assigned": "2026-08-22",
-  "lanes": [],
-  "note": "Seeded empty at the ADR-0008 cutover. PatterStage has never run a parallel lane, and org/policy.json caps max_lanes at 2 until a run record exists to argue it higher. An integrator writes and commits this file before any dispatch; lanes receive claims and never acquire or mutate them."
+  "assigned": "2026-09-12",
+  "lanes": [
+    {
+      "lane": "T-0146-oracle-amendment",
+      "owner": "ORACLE session, not the implementer (CONSTITUTION.md:40-41, org/roles/ORACLE.md)",
+      "claims": ["tests/unit/c8-the-programme-is-closed.test.ts"],
+      "expires": "2026-09-13T09:00:00Z",
+      "why": "POLICY-closed-oracles, ruled by the operator on 2026-09-12: a closed programme's oracle is re-anchored by a dated amendment that the implementer does not author. K0's own oracle raised testLines, which is what turned c8 red."
+    }
+  ],
+  "note": "Seeded empty at the ADR-0008 cutover and first used here. An integrator writes and commits this file before any dispatch; lanes receive claims and never acquire or mutate them. org/policy.json caps max_lanes at 2."
 }
