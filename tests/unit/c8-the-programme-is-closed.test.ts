@@ -51,11 +51,48 @@ const TARGET: Record<keyof typeof AT_C0, number> = {
 };
 
 /**
+ * What C8 read when the programme closed, taken from the plan's closing table
+ * and from T-0145's verification field, which agree number for number.
+ *
+ * Amended 2026-09-12 (T-0146), under POLICY-closed-oracles (ruled by the
+ * operator, 2026-09-12). This constant is new, and the two checks that name it
+ * below used to read scripts/tooling/line-census.baseline.json live. That
+ * coupling was wrong in one direction: the baseline is a ratchet that moves
+ * whenever a batch adds a line for a written reason — T-0146's own oracle took
+ * testLines from 121114 to 121204, with the reason in the baseline's growth log
+ * — while the plan's closing section is a CLOSED record quoting the numbers as
+ * they stood at C8. Read live, the two disagreed by construction: no later
+ * batch could add a single test without either editing a closed record or
+ * leaving this suite red. What the plan said at C8 is a fact about C8, so it is
+ * frozen here the way AT_C0 and TARGET are.
+ *
+ * Nothing about the ratchet is given up. The per-measure check below still
+ * reads the census live and still refuses any measure that goes backwards from
+ * C0, the met-target check below still reads it live and still refuses a met
+ * measure that regresses above its target, and the baseline itself is still
+ * policed, live, by `npm run census:lines`.
+ */
+const AT_C8: Record<keyof typeof AT_C0, number> = {
+  srcLines: 100881,
+  testLines: 121114,
+  srcRepeatedWindowLines: 1000,
+  testRepeatedWindowLines: 4343,
+  routesWithTryCatch: 13,
+  handRolledReadHooks: 0,
+  writeHooksWithoutMutation: 0,
+  repeatedTypeShapeFiles: 2,
+  oneImporterComponents: 103,
+  libRootFiles: 6,
+  commentEssays: 9,
+  suitesMockingDbInline: 14,
+};
+
+/**
  * The measures that did not reach their target, each with the number it
- * actually reads. A miss belongs in the record and in the plan, not in a
+ * actually read at C8. A miss belongs in the record and in the plan, not in a
  * softened target: this list is the batch's own account of what is left, and
- * the test fails if a measure misses that is not on it, or if one on it turns
- * out to have met its target after all.
+ * the test fails if a measure missed at C8 that is not on it, or if one on it
+ * turns out to have met its target after all.
  */
 const MISSED: (keyof typeof AT_C0)[] = [
   "srcLines",
@@ -92,8 +129,12 @@ describe("C8 · the programme is closed", () => {
   });
 
   it("the measures on the missed list really did miss, so the list cannot flatter", () => {
-    const notActuallyMissed = MISSED.filter((k) => now[k] <= TARGET[k]).map((k) => `${k}: ${now[k]} <= ${TARGET[k]}`);
-    expect(notActuallyMissed).toEqual([]);
+    // Amended 2026-09-12 (T-0146), POLICY-closed-oracles: the list is what the
+    // plan recorded at C8, so it is read against AT_C8 rather than against a
+    // live count that a later batch moves. See AT_C8 for why. The test name is
+    // unchanged, as the ruling requires.
+    const missedAtC8 = keys.filter((k) => AT_C8[k] > TARGET[k]);
+    expect(missedAtC8.slice().sort()).toEqual(MISSED.slice().sort());
   });
 
   /**
@@ -101,26 +142,27 @@ describe("C8 · the programme is closed", () => {
    * in a test record is a miss nobody sees. Each missed measure's key has to
    * appear in the plan's closing section with its number beside it.
    *
-   * Against the COMMITTED baseline, not a live count. A live count would put
-   * the plan in a loop with itself: writing this test changed `testLines`, so
-   * the number the plan had just stated stopped being true the moment it was
-   * checked. The baseline is the number the programme committed to, it moves
-   * only with a written reason, and when it moves this fails until the plan
-   * says the new one, which is the coupling that should exist.
+   * Against the numbers frozen AT C8, not a live count and not the live
+   * baseline. A live count would put the plan in a loop with itself: writing
+   * this test changed `testLines`, so the number the plan had just stated
+   * stopped being true the moment it was checked.
+   *
+   * Amended 2026-09-12 (T-0146), POLICY-closed-oracles: it read the live
+   * scripts/tooling/line-census.baseline.json, which has the same loop one step
+   * out. The baseline is a ratchet that moves with a written reason on every
+   * batch that adds a line; the plan's closing section is closed and quotes C8.
+   * So this now reads AT_C8, the closed record's own numbers, and what the two
+   * must agree on is the account the operator reads, not today's count. The
+   * test name is unchanged, as the ruling requires. See AT_C8.
    */
   it("the plan says what missed, with the number the baseline holds", () => {
-    const committed = (
-      JSON.parse(readFileSync(join(ROOT, "scripts", "tooling", "line-census.baseline.json"), "utf8")) as {
-        counts: Record<string, number>;
-      }
-    ).counts;
     const plan = readFileSync(join(ROOT, "org", "plans", "2026-09-consolidation.md"), "utf8");
     const closing = plan.slice(plan.indexOf("## What the programme did"));
     expect(closing.length).toBeGreaterThan(400);
     // A number written for a person carries thousands separators; 100,881 and
     // 100881 are the same number, and the plan is prose before it is data.
     const asWritten = closing.replace(/(\d),(?=\d{3}\b)/g, "$1");
-    const silent = MISSED.filter((k) => !closing.includes(k) || !asWritten.includes(String(committed[k])));
+    const silent = MISSED.filter((k) => !closing.includes(k) || !asWritten.includes(String(AT_C8[k])));
     expect(silent).toEqual([]);
   });
 
