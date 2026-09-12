@@ -55,7 +55,11 @@ export default function AgentSetupNotice({ what }: { what: string }) {
           href={AGENT_INSTALL_DOCS}
           target="_blank"
           rel="noreferrer noopener"
-          className="mt-1.5 inline-flex items-center gap-1 font-mono text-neon-orange hover:underline"
+          // min-h-6 is the 24px hit-target floor gate 8 enforces. Without it this
+          // link renders 128x21 on the Linux runner, where the mono line box is
+          // shorter, and the notice only appears on a machine with no agent
+          // installed, which is every runner and no developer box.
+          className="mt-1.5 inline-flex min-h-6 items-center gap-1 font-mono text-neon-orange hover:underline"
         >
           Install {data.name} <ArrowUpRight className="h-3 w-3" />
         </a>

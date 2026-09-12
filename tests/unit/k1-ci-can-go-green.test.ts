@@ -141,3 +141,19 @@ describe("K1 · the census report survives the pipe it is read through", () => {
     expect(() => JSON.parse(out)).not.toThrow();
   });
 });
+
+describe("K1 · the notice only a machine without an agent ever draws", () => {
+  it("gives its link the 24px floor gate 8 measures", () => {
+    // AgentSetupNotice renders only when no agent is installed, so it appears on
+    // every CI runner and on no developer box with Hermes. Its link came out
+    // 128x21 on Linux and failed hit-targets on /agent/profiles,
+    // /results/sessions and /work/missions, while the local full e2e passed
+    // because the component returned null here.
+    //
+    // A class check, not a measurement: only a browser can measure, and the e2e
+    // gate that does is in the PR run. This is the part that can be held here.
+    const source = readFileSync(join(ROOT, "src", "components", "agents", "AgentSetupNotice.tsx"), "utf-8");
+    const link = source.slice(source.indexOf("<a"));
+    expect(link).toMatch(/className="[^"]*min-h-6/);
+  });
+});
