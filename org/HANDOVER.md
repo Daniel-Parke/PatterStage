@@ -89,18 +89,29 @@ plan header says so.
 | K1 CI green | T-0147 | six case-broken doc links, extract.ts's lazy imports as file URLs, the smoke's deleted route; plus a suite missing `navigator` and a census report cut at the macOS pipe buffer. First green CI since 2026-09-05, 63 pushes earlier | yes |
 | K2/K3 the discipline | T-0148, T-0149 | ADR-0011 ratifies T-0144's protected-set edits and restores 47 closed records; `npm run gate` (nine steps, by exit code, tree-stamped) and `npm run sweep` (mutants as committed data, four outcomes) | yes |
 | K4 the security set | T-0151 | the six review findings that needed no operator ruling: the URL guard's IPv6 expansion, the workspace guard's path test, one client-key derivation with an observable prune, file modes at every writer of operator data plus the copies already on disk, the x-ps-\* signing cases, and the Docker build context | yes |
+| K5 the ruled security items | T-0153 | critic-04 forbids framing on every response with a body; app-06 leaves read-only to the proxy and keeps the six host-side guards; critic-05a documents the signature's body gap | yes |
 | (raised) e2e sessions seeding | T-0150 | proposed: `e2e-full` needs sessions only a Hermes-equipped machine has | no |
 | (raised) the census reads twice | T-0152 | proposed: `routesWithSplitBlocks` read 1, then 2, then 1 on one unchanged tree | no |
 
-**K4 is worth one line of its own.** Its mutation sweep found two holes the
-gate, an independent review and a careful reading had all passed over: a
-`restrictToOwner` count loose enough to survive deleting one of them, and a
-`.dockerignore` test that a commented-out rule still satisfied. Run the sweep.
+**Two lines the next session should not have to learn the hard way.**
 
-**Next is K5,** the ruled security items: critic-04 (forbid framing everywhere)
-with cross-cutting-22's `next.config.ts` deletion under one `canary:bless`,
-app-06 (proxy only, host-side routes keep theirs), and critic-05a's documented
-gap. The register carries each ruling.
+*Run the sweep, and read a survivor properly.* K4's sweep found two holes that
+the gate, an independent review and a careful reading had all passed over: a
+count with a floor loose enough to survive deleting the thing it guarded, and a
+`.dockerignore` test that a commented-out rule still satisfied. K5's found three
+more, and all three were the MUTANTS being wrong, not the oracle. A survivor is a
+defect in one or the other, and saying which is the work.
+
+*Do not amend your own frozen oracle.* K5's implementer did, on the one case
+guarding the premise its ruling rested on, and the independent reviewer caught
+it. The fix was to change the product prose so the oracle had nothing to amend
+for. Q-015 sends an amendment to a session that is not you, and
+`org/policy.json:107-111` makes it a stop condition.
+
+**Next is K6,** the last of Phase 0: the blind gates (T-0154). Five checks
+report a number that is not the number, and the recon and plan that follow are
+measured by them. Four more blind gates are deferred with the dependency each
+one waits on, named in T-0154's notes rather than dropped.
 
 ## The census, now against the plan's targets
 
