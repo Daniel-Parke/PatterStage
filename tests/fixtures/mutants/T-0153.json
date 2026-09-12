@@ -1,0 +1,126 @@
+{
+  "task": "T-0153",
+  "why": "app-06 deletes eleven refusals, which is the one thing in this programme a batch can get catastrophically right-looking and wrong. Most of these mutants therefore break the layer that is supposed to be carrying the load — the proxy, or one of the six host-side guards the ruling kept — rather than the code the batch wrote. If the oracle only knew that eleven call sites were gone, it would survive every one of them.",
+  "mutants": [
+    {
+      "id": "m1-the-proxy-stops-refusing-a-write-under-read-only",
+      "file": "src/proxy.ts",
+      "anchor": "  const readOnlyRefusal = !isSafe && isReadOnly();",
+      "replacement": "  const readOnlyRefusal = false && !isSafe && isReadOnly();",
+      "tests": [
+        "tests/unit/k5-the-ruled-security-fixes.test.ts"
+      ],
+      "why": "the batch's whole premise is that this line is the boundary. With the eleven route-level checks gone it is the ONLY thing refusing a write to /api/backup, /api/prefs, /api/missions and the rest, so an oracle that does not go red here has not been told what the batch depends on"
+    },
+    {
+      "id": "m2-the-refusal-stops-carrying-its-remedy",
+      "file": "src/lib/api/read-only.ts",
+      "anchor": "  const remedy = \"unset PS_READ_ONLY to allow writes\";",
+      "replacement": "  const remedy = \"read-only\";",
+      "tests": [
+        "tests/unit/k5-the-ruled-security-fixes.test.ts"
+      ],
+      "why": "the deleted route-level guards named the resource and told the operator how to undo the mode; a 503 that says only 'read-only mode' is a worse answer than the one the batch removed, and status alone would not notice"
+    },
+    {
+      "id": "m3-a-host-side-guard-goes-with-the-others",
+      "file": "src/app/api/scripts/run/route.ts",
+      "anchor": "  if (isReadOnly()) return serviceUnavailable(readOnlyMessage(\"scripts cannot be run\"));",
+      "replacement": "  // the guard the ruling kept",
+      "tests": [
+        "tests/unit/k5-the-ruled-security-fixes.test.ts"
+      ],
+      "why": "the six that stay are the point of the ruling that was chosen over 'proxy only': a harness calling this handler without the proxy runs a script on the host. Deleting all seventeen would have looked tidier and is the option the operator did not pick"
+    },
+    {
+      "id": "m4-a-documented-get-skip-disappears",
+      "file": "src/app/api/stats/route.ts",
+      "anchor": "  if (!isReadOnly()) {",
+      "replacement": "  if (true) {",
+      "tests": [
+        "tests/unit/k5-the-ruled-security-fixes.test.ts"
+      ],
+      "why": "the three GET skips let a read answer while its bookkeeping write is skipped; losing one makes PS_READ_ONLY write on a poll, which is the mode failing at the one job it has"
+    },
+    {
+      "id": "m5-a-deleted-guard-comes-back-under-another-name",
+      "file": "src/lib/api/api-auth.ts",
+      "anchor": "export { isReadOnly };",
+      "replacement": "export { isReadOnly };\n\nexport function requireNotReadOnly(): NextResponse | null {\n  return null;\n}",
+      "tests": [
+        "tests/unit/k5-the-ruled-security-fixes.test.ts"
+      ],
+      "why": "the ruling says to delete the function once unused, and an oracle that only counted CALL SITES would not see it return as an export that nothing calls yet"
+    },
+    {
+      "id": "m6-framing-relaxes-to-sameorigin",
+      "file": "next.config.ts",
+      "anchor": "          { key: \"X-Frame-Options\", value: \"DENY\" },",
+      "replacement": "          { key: \"X-Frame-Options\", value: \"SAMEORIGIN\" },",
+      "tests": [
+        "tests/unit/k5-the-ruled-security-fixes.test.ts"
+      ],
+      "why": "SAMEORIGIN is the plausible wrong answer, and it is wrong here for the exact reason critic-04 exists: same-origin is decided by scheme, host AND port for this header, but the cookie that makes the frame dangerous is same-SITE, which ignores the port"
+    },
+    {
+      "id": "m7-frame-ancestors-relaxes-to-self",
+      "file": "next.config.ts",
+      "anchor": "          { key: \"Content-Security-Policy\", value: \"frame-ancestors 'none'\" },",
+      "replacement": "          { key: \"Content-Security-Policy\", value: \"frame-ancestors 'self'\" },",
+      "tests": [
+        "tests/unit/k5-the-ruled-security-fixes.test.ts"
+      ],
+      "why": "same relaxation on the modern header, and a case that only checked the header was PRESENT would pass"
+    },
+    {
+      "id": "m8-the-headers-stop-covering-every-path",
+      "file": "next.config.ts",
+      "anchor": "        source: \"/:path*\",",
+      "replacement": "        source: \"/api/:path*\",",
+      "tests": [
+        "tests/unit/k5-the-ruled-security-fixes.test.ts"
+      ],
+      "why": "the pages are what a frame would show an operator; an entry that covers only the API leaves every screen frameable and still sends both headers on something"
+    },
+    {
+      "id": "m9-the-cron-header-goes-back-to-its-false-sentence",
+      "file": "src/app/api/cron/hardware/route.ts",
+      "anchor": " * The three handlers below nonetheless carry an isReadOnly() check of their",
+      "replacement": " * No route in this directory carries either check (T-0048). The three handlers below nonetheless carry an isReadOnly() check of their",
+      "tests": [
+        "tests/unit/k5-the-ruled-security-fixes.test.ts"
+      ],
+      "why": "the sentence sat directly above three checks that contradicted it, and a batch touching this file is the one chance to notice; a comment nobody can fail is a comment that drifts"
+    },
+    {
+      "id": "m10-the-signature-gap-stops-being-documented",
+      "file": "docs/reference/api.md",
+      "anchor": "**The signature does not cover the request body,**",
+      "replacement": "**The signature covers the whole request,**",
+      "tests": [
+        "tests/unit/k5-the-ruled-security-fixes.test.ts"
+      ],
+      "why": "critic-05a's ruling was to keep the format and document the gap, so the document IS the deliverable; a wrong sentence here is worse than the silence it replaced"
+    },
+    {
+      "id": "m11-the-buttons-warning-disappears",
+      "file": "docs/running/env-reference.md",
+      "anchor": "**Setting it also turns off the in-app deploy buttons**",
+      "replacement": "Setting it changes nothing in the app",
+      "tests": [
+        "tests/unit/k5-the-ruled-security-fixes.test.ts"
+      ],
+      "why": "an operator who sets the secret and then finds Update, Rebuild and Restart answering 401 has been misled by their own reference page"
+    },
+    {
+      "id": "m12-security-md-stops-mentioning-framing",
+      "file": "docs/SECURITY.md",
+      "anchor": "- **Framing is refused everywhere.**",
+      "replacement": "- Framing:",
+      "tests": [
+        "tests/unit/k5-the-ruled-security-fixes.test.ts"
+      ],
+      "why": "the access-model section is where an operator checks what the product promises; a guarantee the code makes and the document does not is a guarantee nobody relies on"
+    }
+  ]
+}
