@@ -2,7 +2,7 @@
   "measuredAt": "2026-09-12",
   "counts": {
     "srcLines": 101050,
-    "testLines": 122386,
+    "testLines": 122396,
     "srcRepeatedWindowLines": 1000,
     "testRepeatedWindowLines": 4343,
     "routesWithTryCatch": 13,
@@ -209,6 +209,11 @@
       "measuredAt": "2026-09-12",
       "rise": "testLines rose from 122301 to 122386",
       "reason": "K4/T-0151, the security fixes: the url-guard's IPv6 expansion and carrier decoding, the workspace guard's path test, the sessions limiter sharing one client-key derivation and exporting its window count, and critic-03b's chmod at every writer of operator data plus the sweep of the copies already on disk, with the K4 oracle and critic-05c's x-ps-* signing cases"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "testLines rose from 122386 to 122396",
+      "reason": "T-0151: the two holes the mutation sweep found in the K4 oracle — a restrictToOwner count loose enough to survive deleting one, and a .dockerignore substring test that a commented-out rule still satisfies"
     }
   ]
 }

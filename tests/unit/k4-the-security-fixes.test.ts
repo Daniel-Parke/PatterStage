@@ -206,6 +206,10 @@ describe("K4 · the two client-key derivations are one function", () => {
 
 describe("K4 · the Docker build context leaves the operator's data out", () => {
   const ignored = readFileSync(join(ROOT, ".dockerignore"), "utf-8");
+  // Rules, not substrings. The mutation sweep killed the substring form: `#`
+  // opens a comment here, so a commented-out `/data/*` still CONTAINS the
+  // string and the image would carry the operator's database again.
+  const rules = ignored.split(/\r?\n/).map((line) => line.trim());
 
   it.each([
     ["/data/*", "the local database, its WAL and SHM, and the auth token"],
@@ -215,13 +219,12 @@ describe("K4 · the Docker build context leaves the operator's data out", () => 
     ["/public/help", "the built help, which prebuild regenerates"],
     [".claude", "editor session config"],
   ])("excludes %s", (entry) => {
-    expect(ignored).toContain(entry);
+    expect(rules).toContain(entry);
   });
 
   it("keeps docs/, because the build reads it", () => {
     // prebuild runs build-site --help-only, which walks docs/. Excluding it
     // would break the image build rather than shrink it.
-    const rules = ignored.split(/\r?\n/).map((line) => line.trim());
     expect(rules).not.toContain("/docs");
     expect(rules).not.toContain("docs/");
     expect(existsSync(join(ROOT, "docs"))).toBe(true);
@@ -296,9 +299,16 @@ describe("K4 · every writer of operator data names the mode", () => {
   });
 
   it("opens both deploy logs with 0600 and narrows the file that is already there", () => {
+    // Counting restrictToOwner calls was the first form of this, and the
+    // mutation sweep killed it: the batch ended with five of them, so deleting
+    // the one beside an open still left more than the floor. What holds is the
+    // pairing — every opener is followed by the narrow, because the mode
+    // argument beside it does nothing for a log the last start left behind.
     const deploy = readRepoFile("scripts", "tooling", "ps-deploy.mjs");
-    expect([...deploy.matchAll(/openSync\(/g)]).toHaveLength(2);
-    expect([...deploy.matchAll(/restrictToOwner\(/g)].length).toBeGreaterThanOrEqual(3);
+    const lines = deploy.split(/\r?\n/);
+    const openers = lines.flatMap((line, i) => (line.includes("openSync(") ? [i] : []));
+    expect(openers).toHaveLength(2);
+    for (const i of openers) expect(lines[i + 1]).toContain("restrictToOwner(logFile(base)");
     // The runtime log is truncated on every start, and truncation keeps the
     // old mode, so the mode option alone would not fix an existing install.
     expect(deploy).toMatch(/writeFileSync\(RUNTIME_LOG\(\), "", \{ mode: OWNER_ONLY_FILE \}\)/);
