@@ -1,19 +1,16 @@
 import { z } from "zod";
 
-/** Semantic version of the mission JSON contract (Control Hub + Hermes file on disk). */
-export const MISSION_SCHEMA_VERSION = "1.0.0" as const;
-
-export const missionStatusSchema = z.enum([
+const missionStatusSchema = z.enum([
   "queued",
   "dispatched",
   "successful",
   "failed",
 ]);
 
-export const dispatchModeSchema = z.enum(["save", "now", "cron", "queue"]);
+const dispatchModeSchema = z.enum(["save", "now", "cron", "queue"]);
 
 /**
- * Mission record as persisted under CH_DATA_DIR/missions/{id}.json.
+ * Mission record as persisted under PS_DATA_DIR/missions/{id}.json.
  * Forward-compatible fields may appear under `extensions` and must be ignored by validators.
  */
 export const missionV1Schema = z
@@ -51,10 +48,3 @@ export const missionV1Schema = z
   })
   .passthrough();
 
-export type MissionV1 = z.infer<typeof missionV1Schema>;
-
-export function parseMissionV1(input: unknown): { ok: true; data: MissionV1 } | { ok: false; error: z.ZodError } {
-  const r = missionV1Schema.safeParse(input);
-  if (!r.success) return { ok: false, error: r.error };
-  return { ok: true, data: r.data };
-}

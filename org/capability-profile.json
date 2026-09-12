@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "level": "conservative",
+  "evidence": {
+    "benchmark_runs": [],
+    "sampled_review": {
+      "n": 0,
+      "pass_rate": null,
+      "note": "No sampled review has run in this venture. A null rate says the threshold is not evaluable; it does not say the venture passed."
+    },
+    "escaped_defects": 0,
+    "period": "None. The venture has run no measured period under v2 modes; this record is seeded at the cutover."
+  },
+  "authorised_by": "Daniel Parke",
+  "authorised_date": "2026-08-22",
+  "authorisation_note": "Seeded at the ADR-0008 cutover at the conservative floor, with no evidence behind it and none claimed. The escaped_defects count of zero is a starting value rather than a measurement. Promotion above conservative needs a measured period and the operator's authorisation on this record.",
+  "expires": "2027-02-22",
+  "regression_rule": {
+    "thresholds": {
+      "sampled_review_pass_rate_min": 0.8,
+      "escaped_defects_max": 2
+    },
+    "on_breach": "regress-one-level",
+    "evaluable": false,
+    "not_evaluable_reason": "sampled_review.n is 0 and the venture is already at the lowest level, so neither threshold can move anything until a sampled review runs."
+  }
+}

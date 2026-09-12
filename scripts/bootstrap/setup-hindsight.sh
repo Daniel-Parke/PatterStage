@@ -1,9 +1,9 @@
 #!/bin/bash
 # ═══════════════════════════════════════════════════════════════
-# Control Hub — Hindsight Memory Provider Setup
+# PatterStage — Hindsight Memory Provider Setup
 # ═══════════════════════════════════════════════════════════════
 # Installs and configures Hindsight memory with PostgreSQL backend.
-# Run this on an existing Control Hub installation.
+# Run this on an existing PatterStage installation.
 #
 # Usage:
 #   bash scripts/bootstrap/setup-hindsight.sh
@@ -21,14 +21,20 @@ HERMES_HOME="${HERMES_HOME:-$HOME/.hermes}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
-# ── Wire-only mode ───────────────────────────────────────────
-# When --wire-only is passed, skip PostgreSQL / server / systemd
-# setup and only update config.yaml + sync to Control Hub SQLite.
+# ── Modes ────────────────────────────────────────────────────
+# --wire-only : skip PostgreSQL / server / systemd; only update config.yaml
+#               + sync to PatterStage SQLite (re-wire an existing install).
+# --docker    : cross-platform path — bring up Postgres + pgvector + the
+#               Hindsight server in containers (no host Postgres/venv/systemd),
+#               then wire config. Works on Linux, macOS, and Windows.
 WIRE_ONLY=false
-if [ "${1:-}" = "--wire-only" ]; then
-    WIRE_ONLY=true
-    shift
-fi
+DOCKER_MODE=false
+for arg in "$@"; do
+    case "$arg" in
+        --wire-only) WIRE_ONLY=true ;;
+        --docker)    DOCKER_MODE=true; WIRE_ONLY=true ;;  # skip native steps; config still runs
+    esac
+done
 
 # ── Helpers ──────────────────────────────────────────────────
 RED='\033[0;31m'
@@ -59,6 +65,33 @@ if [ -f "$HERMES_HOME/hindsight/config.json" ]; then
         exit 0
     fi
     warn "Config exists but server not responding — will attempt to restart"
+fi
+
+# ── Docker mode: cross-platform Postgres + pgvector + server ─
+if [ "$DOCKER_MODE" = true ]; then
+step "Docker: Hindsight stack (Postgres + pgvector + server)"
+if ! command -v docker >/dev/null 2>&1; then
+    fail "Docker not found. Install Docker Desktop / Docker Engine, then re-run with --docker (or use the native Linux path: bash $SCRIPT_DIR/setup-hindsight.sh)."
+fi
+# Pass the gateway LLM key through to the container if the Hermes .env has one.
+if [ -f "$HERMES_HOME/.env" ]; then
+    HINDSIGHT_LLM_API_KEY="$(grep '^HINDSIGHT_LLM_API_KEY=' "$HERMES_HOME/.env" 2>/dev/null | cut -d= -f2- | tr -d '"' | tr -d "'")"
+    export HINDSIGHT_LLM_API_KEY
+fi
+( cd "$SCRIPT_DIR" && docker compose -f docker-compose.hindsight.yml up -d --build ) \
+    || fail "docker compose up failed — check Docker is running"
+info "Waiting for Hindsight to become healthy (first build can take a few minutes)..."
+for i in $(seq 1 60); do
+    if curl -s --max-time 3 http://127.0.0.1:9177/health 2>/dev/null | grep -q healthy; then
+        ok "Hindsight (Docker) is healthy"
+        break
+    fi
+    if [ "$i" -eq 60 ]; then
+        warn "Hindsight not healthy yet — inspect with:"
+        echo "  docker compose -f $SCRIPT_DIR/docker-compose.hindsight.yml logs -f hindsight"
+    fi
+    sleep 3
+done
 fi
 
 # ── Check sudo access ────────────────────────────────────────
@@ -259,17 +292,17 @@ else
     echo "    provider: hindsight"
 fi
 
-# ── Step 6b: Sync to Control Hub SQLite ─────────────────────
-step "Step 6b: Syncing to Control Hub SQLite"
-CH_DATA_DIR="${CH_DATA_DIR:-$HOME/control-hub/data}"
-CH_DB="$CH_DATA_DIR/control-hub.db"
-if [ -f "$CH_DB" ]; then
+# ── Step 6b: Sync to PatterStage SQLite ─────────────────────
+step "Step 6b: Syncing to PatterStage SQLite"
+PS_DATA_DIR="${PS_DATA_DIR:-${CH_DATA_DIR:-${CONTROL_HUB_DATA_DIR:-$( [ ! -d "$HOME/patterstage/data" ] && [ -d "$HOME/control-hub/data" ] && echo "$HOME/control-hub/data" || echo "$HOME/patterstage/data" )}}}"
+# Prefer the canonical patterstage.db; fall back to a legacy control-hub.db (un-migrated install) — mirrors getDbPath() in src/lib/paths.ts.
+PS_DB="$( [ ! -f "$PS_DATA_DIR/patterstage.db" ] && [ -f "$PS_DATA_DIR/control-hub.db" ] && echo "$PS_DATA_DIR/control-hub.db" || echo "$PS_DATA_DIR/patterstage.db" )"
+if [ -f "$PS_DB" ]; then
     if command -v python3 &>/dev/null; then
-        python3 -c "
+        PS_DB="$PS_DB" python3 -c "
 import json, os, sqlite3
-ch_dir = os.environ.get('CH_DATA_DIR', os.path.expanduser('~/control-hub/data'))
 hermes_home = os.environ.get('HERMES_HOME', os.path.expanduser('~/.hermes'))
-db_path = os.path.join(ch_dir, 'control-hub.db')
+db_path = os.environ['PS_DB']
 if os.path.exists(db_path):
     with open(os.path.join(hermes_home, 'config.yaml')) as f:
         config_yaml = f.read()
@@ -280,16 +313,41 @@ if os.path.exists(db_path):
     print('ok')
 " 2>/dev/null && ok "SQLite agent_root.config_yaml synced" || warn "SQLite sync failed — may need hermes migrate first"
     else
-        warn "python3 not found — cannot sync to Control Hub SQLite"
+        warn "python3 not found — cannot sync to PatterStage SQLite"
     fi
 else
-    info "Control Hub database not found at $CH_DB — SQLite sync skipped"
+    info "PatterStage database not found at $PS_DB — SQLite sync skipped"
     echo "  SQLite sync will happen on next deploy update via seed-catalog"
 fi
 
 # ── Step 7: Systemd Service ──────────────────────────────────
 if [ "$WIRE_ONLY" = false ]; then
 step "Step 7: Systemd service"
+
+# Canonical install path for the Hindsight daemon. We pin the binary the
+# unit will execute to the live venv at $HERMES_HOME/hermes-agent/venv/
+# (the one setup-hindsight.sh installs into). We do NOT trust any other
+# path — historically, `~/.local/share/hermes-agent/venv/bin/hindsight-embed`
+# was written to /etc/systemd/system/hindsight.service by a different
+# (older) installer and produced 203/EXEC restart loops every 10s that
+# thrashed the host. Verified on 2026-06-19 after a multi-hour device
+# freeze incident.
+HS_VENV="$HERMES_HOME/hermes-agent/venv"
+HS_BIN="$HS_VENV/bin/hindsight-api"
+if [ ! -x "$HS_BIN" ]; then
+    fail "Hindsight binary not found at $HS_BIN — re-run setup-hindsight.sh from the top so the venv is populated (Step 4), or install with: $HS_VENV/bin/python -m pip install hindsight-all"
+fi
+
+# Load LLM + DB env vars from the profile env file before exec'ing the
+# daemon. Without this, the daemon raises
+# "ValueError: LLM API key is required. Set HINDSIGHT_API_LLM_API_KEY
+# environment variable." at startup because hindsight-api reads LLM
+# config from os.environ, not from ~/.hermes/hindsight/config.json.
+HS_ENV="$HERMES_HOME/profiles/hermes.env"
+if [ ! -f "$HS_ENV" ]; then
+    warn "$HS_ENV not found — daemon will fail with 'LLM API key is required' on start. Create it before the next watchdog tick."
+fi
+
 sudo tee /etc/systemd/system/hindsight.service > /dev/null << EOF
 [Unit]
 Description=Hindsight Memory Server
@@ -299,12 +357,14 @@ Requires=postgresql.service
 [Service]
 Type=simple
 User=$USER
-WorkingDirectory=$HERMES_HOME
-ExecStart=$VENV_PYTHON $HERMES_HOME/scripts/hindsight_server.py
+WorkingDirectory=$HS_VENV
+EnvironmentFile=$HS_ENV
+ExecStart=$HS_BIN --daemon --idle-timeout 0 --port 9177
 Restart=on-failure
 RestartSec=10
 StandardOutput=append:$HERMES_HOME/logs/hindsight.log
 StandardError=append:$HERMES_HOME/logs/hindsight.log
+TimeoutStartSec=90
 
 [Install]
 WantedBy=multi-user.target
@@ -313,7 +373,7 @@ EOF
 mkdir -p "$HERMES_HOME/logs"
 sudo systemctl daemon-reload
 sudo systemctl enable hindsight
-sudo systemctl start hindsight
+sudo systemctl restart hindsight
 ok "Systemd service created and started"
 
 # ── Step 8: Verify ───────────────────────────────────────────
@@ -350,20 +410,33 @@ echo "╔═══════════════════════�
 echo "║   Hindsight Setup Complete!               ║"
 echo "╚══════════════════════════════════════════╝"
 echo ""
+if [ "$DOCKER_MODE" = true ]; then
+echo "Services (Docker):"
+echo "  docker compose -f $SCRIPT_DIR/docker-compose.hindsight.yml ps"
+echo "  docker compose -f $SCRIPT_DIR/docker-compose.hindsight.yml logs -f hindsight"
+echo "  docker compose -f $SCRIPT_DIR/docker-compose.hindsight.yml down   # stop"
+else
 echo "Services:"
 echo "  Hindsight: sudo systemctl status hindsight"
 echo "  PostgreSQL: sudo systemctl status postgresql"
+fi
 echo ""
-CH_WEB_PORT="${CONTROL_HUB_PORT:-3000}"
+PS_WEB_PORT="${CONTROL_HUB_PORT:-3000}"
 if [ -f "$REPO_ROOT/.env.local" ]; then
   _p="$(grep -E '^PORT=' "$REPO_ROOT/.env.local" 2>/dev/null | tail -n1 | sed 's/^PORT=//' | tr -d '\r')"
-  [ -n "$_p" ] && CH_WEB_PORT="$_p"
+  [ -n "$_p" ] && PS_WEB_PORT="$_p"
 fi
 echo "Dashboard:"
-echo "  Memory page at http://localhost:${CH_WEB_PORT}/memory"
+echo "  Memory page at http://localhost:${PS_WEB_PORT}/memory"
 echo ""
 echo "Useful commands:"
+if [ "$DOCKER_MODE" = true ]; then
+echo "  docker compose -f $SCRIPT_DIR/docker-compose.hindsight.yml restart hindsight"
+echo "  docker compose -f $SCRIPT_DIR/docker-compose.hindsight.yml logs -f hindsight"
+echo "  curl http://localhost:9177/health    # Check health"
+else
 echo "  sudo systemctl restart hindsight    # Restart server"
 echo "  sudo journalctl -u hindsight -f     # View logs"
 echo "  curl http://localhost:9177/health    # Check health"
+fi
 echo ""

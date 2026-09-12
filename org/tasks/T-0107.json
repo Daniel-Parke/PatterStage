@@ -1,0 +1,74 @@
+{
+  "id": "T-0107",
+  "intent": "B13 of the final-release programme: Scripts and Chat. One SCRIPT_EXT_RE in src/lib/scripts/script-ext.ts used everywhere, seven extensions end to end, .mjs templates, no double extensions (D41 blocker, D46, D47, D48). Decision 10: GET /api/scripts returns scheduler {available, reason}, and where no crontab exists migration 041 adds schedules.kind ('mission'|'script') and script_name so PatterStage's own tick runs scripts, with the Schedule modal writing that row when the host scheduler is unavailable. Download exports the clicked conversation (D43, blocker); the CSV export reachable by keyboard (D52); conversation list and load errors surfaced (D49); ConfirmButton on script delete with a scheduled-job warning (D51).",
+  "declared": {
+    "capabilities": [
+      "edit-code",
+      "database",
+      "filesystem"
+    ],
+    "side_effects": [
+      "migrates-schema"
+    ]
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [
+    {
+      "factor": "schema-change",
+      "tier_floor": "R2",
+      "source": "declared",
+      "evidence": "migration 041 adds kind and script_name to schedules; no data loss"
+    },
+    {
+      "factor": "auth-surface",
+      "tier_floor": "R2",
+      "source": "paths:sensitive",
+      "evidence": "the fallback scheduler executes host scripts; it inherits B1's requireAuthenticatedHostWrites path and runs only from the server tick"
+    }
+  ],
+  "status": "done",
+  "owner_session": "unassigned",
+  "claims": [
+    "src/lib/scripts/",
+    "src/lib/scripts-manager.ts",
+    "src/lib/scheduler/",
+    "src/lib/db/migrations/041_schedules_kind.sql",
+    "src/lib/db/",
+    "src/app/api/scripts/",
+    "src/app/work/scripts/",
+    "src/components/scripts/",
+    "src/components/chat/",
+    "src/app/api/chat/",
+    "tests/"
+  ],
+  "programme": "B13, depends on B2 (T-0096) and B4 (T-0098). Reserved: migration 041. Schedule-map and extension tests; the fallback scheduler test with a stubbed win32; a download-handler test; a native Windows browser walk.",
+  "timestamps": {
+    "opened": "2026-09-05T10:30:00Z",
+    "updated": "2026-09-06T13:00:00Z",
+    "closed": "2026-09-06T13:00:00Z"
+  },
+  "invariants": [
+    "I1 What counts as a script is written once, in src/lib/scripts/script-ext.ts. A test asserts the alternation appears in no other file, that no file hand-rolls a .sh-only strip, and that ALLOWED_SCRIPT_EXTS is gone.",
+    "I2 All seven extensions go end to end: a .mjs is listed with its schedule, runnable, schedulable, unschedulable by the id it was saved under, and saved from the editor without gaining a second extension.",
+    "I3 The crontab parser reads the script token and not the redirect target beside it, requires a directory separator, and keeps the FIRST line for a script.",
+    "I4 A schedules row can name a script. Migration 041 adds kind (NOT NULL DEFAULT 'mission', CHECKed) and script_name, with no backfill, because the default is already true of every row that existed.",
+    "I5 fireSchedule branches on kind BEFORE the orphan check. A script row has no mission, so the reverse order would disable every row 041 creates on the first tick that saw it.",
+    "I6 A script run is not an agent run: it claims no runs row, dispatches no mission, and is not held behind the one-mission-at-a-time single flight. It does share the catch-up policy and the advance, which are statements about the schedule.",
+    "I7 A script row that names no script disables itself and says so; a failed script advances with its error, does not count as fired, and records no script.run event.",
+    "I8 GET /api/scripts answers with scheduler: {available, reason}, and every row says whether its schedule is the host's or PatterStage's. The host wins where both hold one. A database that cannot be read costs the PatterStage rows and nothing else.",
+    "I9 POST /api/schedules refuses a mission row with no missionId and a script row with no scriptName, each by name, before it looks at the cron.",
+    "I10 A row PatterStage schedules says 'Runs while PatterStage is running', on the row and in the modal, and Unschedule deletes that row rather than asking the crontab for a job that was never installed.",
+    "I11 The download button exports the conversation whose button was pressed. fetchConversation reports a refused read and an empty payload as failures rather than as an empty transcript.",
+    "I12 A conversation that fails to load shows the reason with a Retry in place of the transcript, never the empty state, and never the previous conversation's turns.",
+    "I13 The CSV export is reachable by keyboard: the second format reveals itself on focus as well as on hover."
+  ],
+  "commits": "03998b4e the oracle alone (5 files, 90 cases, measured red: 65 failing, 25 green controls); 0b81cb36 the implementation (script-ext.ts and its five consumers, migration 041 and its applier wired last, the repository's kind and scriptName, fireScriptSchedule ahead of the orphan check, hostSchedulerAvailability, the two-source merge in listScriptFiles, the route payloads and refusals, the row label, the modal's two destinations, the delete warning, two .mjs templates, the chat download and load-error work, and the docs); d76f0628 four sharper oracles the sweep asked for.",
+  "verification": "Gate on the implementation tree by exit code: lint 0 (agent-files, doc-links, derived views, read-only guards, icon-button names, form-control names, design-lint 0 baselined, contrast, coverage floors, eslint, typecheck:tests), tsc 0, jest 0 (5370 tests after the sweep answers), knip 0, canary 0 after one blessing, build 0, Playwright 132 passed 9 skipped. The bless was diffed first against a worktree of the last blessed commit: exactly one golden surface moved, generatedArtefacts by +migration:041_schedule_kind.sql, which is what a migration-only batch should move.",
+  "mutation": "52 mutants against the committed tree, 39 killed on the first pass and 50 after two new oracle files. Every gap was the same shape: the thing under test was standing in for itself. listScriptFiles's merge was only ever reached with listScriptSchedules stubbed to an empty list, so a version that let a PatterStage row shadow a crontab one, labelled everything 'host', or dropped the row id Unschedule needs, walked through; createSchedule and listScriptSchedules were only seen through doubles that returned the fields for them; and fetchConversation was mocked by the chat oracle that is about which conversation gets asked for. Two mutants are recorded as EQUIVALENT rather than killed: the 041 applier's >= gate versus > (at exactly the head the file re-execs, and with no backfill and a swallowed duplicate-column error nothing observable differs, so the gate is kept for the next migration rather than for this one), and clearing the transcript in the chat load's failure branch (the page renders the banner in place of the bubbles, so the cleared state is never on screen either way). One mutant was retired rather than killed: rowToSchedule's ?? \"mission\" fallback was unreachable behind a NOT NULL DEFAULT column, so the fallback is deleted and the schema is the single answer.",
+  "proof": "Isolated instance (production build of d76f0628, e2e-b1 data dir, mock-hermes 8747), five scenes, 20 checks, all PASS. (1) GET /api/scripts answers scheduler {available:false} with the native-Windows reason, and a seeded PatterStage row reaches the page as scheduleSource 'patterstage' with its id and its cron. (2) POST /api/schedules refuses a script row with no scriptName by name, and a mission row with no mission. (3) The page's intro names .mjs, the row prints 'Runs while PatterStage is running', a new walk-b13-new.mjs saves as itself and gains no .sh, and the editor of a scheduled script warns that deleting the file removes its schedule. (4) Unschedule sends DELETE /api/schedules/WB13-own, not a crontab request, and the row is unscheduled afterwards. (5) The real BackgroundScheduler loop, not a stub: a due script row was left in the database and fifteen seconds later its last_status was 'ran', it was still enabled with a next occurrence, and the script's log file existed. That last scene is the one the batch turns on, because it is the branch order in fireSchedule. Screenshots: scratchpad walk-b13/{scripts-list,editor-warning,scripts-unscheduled}.png.",
+  "deviation": "(1) rowToSchedule has no kind fallback: the column is NOT NULL DEFAULT 'mission', so an unreachable second answer would only be a place for the two to disagree. (2) The walk drives the real scheduler loop rather than a tick route, because there is no tick route: the BackgroundScheduler owns the loop on a 15-second period. (3) schedules-repository.test.ts now builds its fixture through execBaselineSchema rather than reading 001_baseline.sql directly, which is what every other repository fixture already did and what keeps it climbing with the ladder. (4) The spend gate still pauses script schedules along with missions. Moving it inside the mission branch would change the pause semantics two existing oracles describe; it is flagged in the contract's section 9 and left for a batch that owns the spend guard.",
+  "harness_amendments": "Four. tests/helpers/baseline-db.ts applies 041, so createSchedule's two new columns exist in every baseline-only fixture. tests/unit/scheduler-tick.test.ts's ScheduleRecord literal gains kind and scriptName, which are now required. tests/unit/run-migrations-upgrade.integration.test.ts points its head assertion at 041's gate and gains the new rung. And tests/unit/b14-runs-spend-source-migration.test.ts's two 'last rung' assertions retire to the ladder form, exactly as B13's contract section 0 said they would have to when 041 landed: 040's oracle now asserts its gate is one above models-origin and at or below the head, and the head belongs to whichever oracle owns the last rung. A fifth, chat-page-toast.test.tsx's fetchConversation mock, was corrected by the agent that owned that slice: it returned null, which no longer describes the module.",
+  "deferred": "A native Windows Task Scheduler backend stays deferred: the fallback is PatterStage's own tick, with its limit printed rather than hidden. Reconciling a script that holds BOTH a crontab line and a PatterStage row is deliberate rather than solved: the host wins on the page, and the orphan row keeps firing until it is deleted. Streaming Run-now output, a profile picker in Chat, keyboard-reachable row actions and rename, and the chat sidebar's remaining load states stay on the candidate list. docs/USER_WALKTHROUGH_GUIDE.md still describes the crontab as the only path; B18 rewrites it, and API.md, CROSS_PLATFORM.md and SYSTEM-CRON.md are corrected here in the meantime."
+}

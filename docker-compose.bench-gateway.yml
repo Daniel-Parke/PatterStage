@@ -1,0 +1,39 @@
+# BD4: combined CH+Hermes stack that PROVES the benchmark gateway manager.
+# Unlike docker-compose.real-hermes.yml (Hermes in its own container), here CH
+# can spawn per-profile `hermes gateway` processes itself, so an agentic
+# benchmark actually exercises the toggled config.
+#
+#   docker compose -f docker-compose.bench-gateway.yml -p hermes-benchgw up --build -d
+#   node test-harness/bench-gateway-e2e.mjs
+#   docker compose -f docker-compose.bench-gateway.yml -p hermes-benchgw down -v
+name: hermes-benchgw
+
+services:
+  mock-llm:
+    build:
+      context: .
+      dockerfile: mock-llm/Dockerfile
+
+  patterstage-bench:
+    build:
+      context: .
+      dockerfile: test-harness/bench-gateway.Dockerfile
+    environment:
+      PORT: "42069"
+      PS_DATA_DIR: /data/ch
+      HERMES_HOME: /data/hermes
+      API_SERVER_KEY: hermes-real-itest-key
+      # Default-gateway fallback URL (used only when no bench gateway is live).
+      HERMES_GATEWAY_URL: http://127.0.0.1:8642
+    ports:
+      - "${BENCH_PORT:-42070}:42069"
+    depends_on:
+      mock-llm:
+        condition: service_healthy
+    volumes:
+      - ch_data:/data/ch
+      - ch_hermes:/data/hermes
+
+volumes:
+  ch_data:
+  ch_hermes:

@@ -1,0 +1,98 @@
+{
+  "id": "T-0130",
+  "intent": "U16 of the UI overhaul programme: documentation, records, release readiness. The contributor docs described a colour system with three widths and one rhythm; the plan still said approved when its sixteen batches were done; and the programme owed its own account: the after-census beside the before-census, each measure read against the target it was set, and the two goals it missed said plainly. This batch finishes the docs against the system that exists, closes the plan with its numbers, runs the whole gate one more time on the finished tree, and walks every screen at two widths.",
+  "declared": {
+    "capabilities": [
+      "edit-docs",
+      "edit-tests"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {
+      "factor": "size-threshold",
+      "tier_floor": "R1",
+      "source": "derived:diff-size",
+      "evidence": "three contributor docs and one plan amended, one oracle suite added, no source change, no route, no schema, no protected path"
+    }
+  ],
+  "status": "done",
+  "owner_session": "t0130-u16-docs-and-readiness-2026-09-08",
+  "claims": [
+    "docs/contributing/design-tokens.md",
+    "docs/contributing/repo-guide.md",
+    "docs/contributing/testing.md",
+    "docs/manifest.json",
+    "org/plans/2026-09-ui-overhaul.md",
+    "tests/unit/u16-the-docs-describe-the-system.test.ts"
+  ],
+  "programme": "U16, depends on U15. Documentation, records, release readiness; the last batch of the UI overhaul programme.",
+  "timestamps": {
+    "opened": "2026-09-08T12:00:00Z",
+    "updated": "2026-09-08T14:00:00Z",
+    "closed": "2026-09-08T14:00:00Z"
+  },
+  "invariants": [
+    "I1 THE DOCS NAME WHAT EXISTS AND NOTHING THAT IS GONE. design-tokens.md carries a section for every declared scale and the primitive set; a rule the tree no longer has is not in it; u16-the-docs-describe-the-system holds it.",
+    "I2 THE RULE FOR ui/ IS WRITTEN WHERE A CONTRIBUTOR LOOKS. Three or more independent callers; the files below it are named with their reason.",
+    "I3 A PLAN THAT IS DONE SAYS SO, WITH ITS NUMBERS. status: done, the before-census beside the after-census, each row read against its target, and the missed goals stated as numbers.",
+    "I4 THE PROGRAMME ENDS ON A GREEN GATE AND A FULL WALK. Every gate by exit code on the finished tree, every documented route walked at 1440 and 390."
+  ],
+  "commits": "cfbee5c2 the U16 oracle, red at 10 of 10; 5879e337 the docs and the plan's closing; the chore commit that carries this record and the derived views.",
+  "verification": "Gate by exit code on the finished tree: lint 0, tsc 0, jest 0 (6802 tests, 661 suites), knip 0, canary 0, build 0, Playwright 0 (263 passed, 24 skipped, two projects), census 0; design-lint 355 baselined violations. The full walk on the isolated instance, every documented route (21) at 1440x900 and 390x844 with a screenshot of each: every route renders an h1 at both widths; main overflows its own box on no route-widths; 17 elements pass the viewport's right edge; role=alert banners on 4 route-widths (/work/chat@1440: The run failed.POST /v1/runs → 500 Internal Server Error: {\"error\":{\"message\":\"t; The run failed.POST /v1/runs → 500 Internal Server Error: {\"error\":{\"message\":\"t; /agent/memory@1440: No memory provider is answering at the configured host and port. Start your memo; /work/chat@390: The run failed.POST /v1/runs → 500 Internal Server Error: {\"error\":{\"message\":\"t; The run failed.POST). JavaScript loaded: the dashboard 67 KB, /work/composer 524 KB (the recon read 546 KB; the plan's target was 160). Screenshots regenerated. The before-census and the after-census are in this record as before_census and after_census; the plan's closing reads each row against its target.",
+  "before_census": {
+    "routes": 23,
+    "distinctFontSizes": 7,
+    "twelvePxShare": 0.7,
+    "monoShare": 0.63,
+    "textBelowFloor": 0,
+    "distinctBorderColours": 36,
+    "distinctCardChromes": 108,
+    "distinctButtonHeights": 23,
+    "distinctButtonChromes": 89,
+    "distinctRadii": 7,
+    "distinctBoxShadows": 16,
+    "distinctZLayers": 1,
+    "controlBordersBelowThree": 320,
+    "decorativeBordersBelowThree": 619,
+    "hitTargetsBelowTwentyFour": 85,
+    "routesWithMisalignedHeading": 21,
+    "worstHeadingOffset": 289,
+    "distinctContentWidths": 8,
+    "routesOverflowingX": 0,
+    "railVsPageContrast": 1.06,
+    "railDividerContrast": 1.26
+  },
+  "after_census": {
+    "routes": 21,
+    "distinctFontSizes": 7,
+    "twelvePxShare": 0.52,
+    "monoShare": 0.68,
+    "textBelowFloor": 0,
+    "distinctBorderColours": 28,
+    "distinctCardChromes": 64,
+    "distinctButtonHeights": 21,
+    "distinctButtonChromes": 57,
+    "distinctRadii": 5,
+    "distinctBoxShadows": 10,
+    "distinctZLayers": 1,
+    "controlBordersBelowThree": 102,
+    "decorativeBordersBelowThree": 691,
+    "hitTargetsBelowTwentyFour": 0,
+    "routesWithMisalignedHeading": 0,
+    "worstHeadingOffset": 0,
+    "distinctContentWidths": 1,
+    "distinctHeadingLefts": 1,
+    "routesWithSplitBlocks": 1,
+    "worstBlockLeftSpread": 538,
+    "routesOverflowingX": 0,
+    "railVsPageContrast": 1.47,
+    "railDividerContrast": 4.4
+  },
+  "what_the_programme_met_and_missed": "Met, by construction and measured: every surface has a visible edge (rail 1.06:1 to 1.47:1, divider 1.26:1 to 4.40:1); one left edge and one content width on every screen (misaligned headings 21 to 0, widths 8 to 1); every control at least 24x24 (85 to 0); one focus ring, never removed (46 outline-none to 0); motion halted under reduce (28 to 0); state is a word (22 colour maps to 1); every filter row a radiogroup (13 without ARIA state to 0); the reads one cache (22 requests with four doubled to 17 with none). Moved by a third to a half and no further: card chromes 108 to 64, button chromes 89 to 57, border colours 36 to 28, box-shadows 16 to 10, control borders below 3:1 320 to 102, because the census counts every bordered thing on a screen and the product carries a legitimate variety of status- and category-tinted surfaces; those are the ratchet's to hold. Missed outright: the mono share as the census counts text nodes rose from 0.63 to 0.68, because the conversions added more machine-word nodes than they moved prose out of mono; and the line count of src did not fall (105,975 to 105,942 against a target of 6,000 to 9,600 fewer), because the deletions were paid back by the primitive set, the conversions and the comments that name each decision, while tests grew by 9,634 lines of oracles against a target of 1,750 fewer.",
+  "what_is_left_for_the_next_programme": "128 of 201 components with exactly one importer (the split reached the primitive layer and not the page layer); 222 inline card chromes in 87 files, 24 raw controls in 16 files, 77 raw palette hits in 34 files and 20 arbitrary z values in 15 files, all held in design-lint's baseline and only able to fall; the seven ui/ files below the three-caller rule; the on-demand API reads in click handlers; the chat failure toast beside the alert; the Disclosure, Chip and Slider primitives; the Composer/Research/Logs/Chat split-pane; the Artifacts preview pane; a character-weighted mono share in the census.",
+  "deviation": "(1) The plan's U16 said 'the seventeen task records written'; they were written one per batch as each landed, so this batch writes only its own and closes the plan. (2) The plan's U16 said 'the operator's own read'; that is the operator's, and the review that follows this batch (org/reviews/2026-09-ui-review.md) is what it reads."
+}

@@ -1,0 +1,53 @@
+{
+  "id": "T-0083",
+  "intent": "Operator rulings 2 and 3 plus QA finding 15: a failed-auth throttle and the sessions limiter wiring, a way to delete a credential, and 405s on the routes where a GET is a natural mistake.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0083-guards-doors-2026-08-31",
+  "claims": [
+    "src/lib/auth-throttle.ts",
+    "src/proxy.ts",
+    "src/app/api/sessions/route.ts",
+    "src/app/api/credentials/[id]/route.ts",
+    "src/lib/credentials-repository.ts",
+    "src/components/models/CredentialsPanel.tsx",
+    "src/hooks/useModelActions.ts",
+    "src/app/config/models/page.tsx",
+    "src/app/api/stories/route.ts",
+    "src/app/api/agent/personality/route.ts",
+    "scripts/tooling/output-canary.golden.json",
+    "tests/"
+  ],
+  "invariants": [
+    "I1 A failed-auth penalty REFUSES TO PROCESS. A throttle that still compares does not slow an attacker down at all.",
+    "I2 Because it refuses valid tokens too, it is bounded at seconds. On loopback the operator and an attacker are the same client; an unbounded lock is a denial of service against the operator.",
+    "I3 A correct token clears the record outright, restoring the WHOLE free budget.",
+    "I4 A request carrying no credentials is not an attempt. A browser arriving at a page it is not signed into does that dozens of times.",
+    "I5 One client cannot throttle another, and the record map is bounded -- x-forwarded-for is attacker-controlled.",
+    "I6 The 429 says nothing about the token.",
+    "I7 The Hermes .env var is removed only when NO credential for that provider survives.",
+    "I8 Models unlinked by the foreign key are named -- as information, never as a veto.",
+    "I9 A .env write that fails does not deny a row deletion that happened.",
+    "I10 A 405 on a route where a GET reads naturally; nothing added to action endpoints, where a GET was never a plausible mistake."
+  ],
+  "the_design_decision_that_mattered": "The tempting throttle is 'compare as usual, answer 429 instead of 401 once over budget', because it never inconveniences a valid token. It is worthless: the attacker still gets a comparison on every request and their guess rate is unchanged. A throttle that does not refuse to PROCESS is decoration. Refusing outright is what makes the rate collapse -- and is exactly why the ceiling is 15 seconds rather than minutes. The reasoning is recorded in the oracle, not only in the module, because the next person to 'improve' this will reach for the softer version first.",
+  "finding_13_had_two_halves": "The limiter was never missing. sessions-api-guard.ts has enforced 120/min since the sessions API was written -- attached to /api/sessions/[id] and not to the LIST route, which is what the tester hit, and which is the more expensive read of the two: it syncs from Hermes and scans the table where the [id] route reads one row.",
+  "the_credentials_hazard": "upsertCredential's docstring claimed credentials are 'matched by provider (unique constraint)'. Migration 001 creates a plain CREATE INDEX -- there is no unique constraint -- so two rows can share a provider while the .env variable is per-PROVIDER. A naive delete would blank OPENAI_API_KEY out from under a credential the operator never touched. The docstring is corrected in place with why it mattered, which is the point: a reader who believed it would not have thought to check for a sibling.",
+  "canary_bless": "httpSurface moved by exactly seven lines: six routes gaining a GET stub and one new route (credentials/[id] [DELETE,GET]). The delta was diffed route-by-route against a detached worktree of HEAD before blessing, so the bless was a review rather than a shrug.",
+  "mutation_finding": "Twenty-four mutations, sixteen caught, eight survivors -- six of them real, and one of the six was a route I had wired with no test at all. THE CEILING WAS UNPINNED: reading Retry-After off the first 429 proves nothing, because the first penalty is one second whether or not a cap exists; the cap only matters after the doubling has run away, which is the case that would lock the operator out for hours. CLEARING WAS UNPINNED on both auth paths: the test advanced the clock past the penalty and asserted one 401, which passes whether the record was cleared or merely expired. A CREDENTIAL-LESS REQUEST could have started counting. THE RECORD MAP could have grown unbounded, and that it shrinks is invisible from any response -- authThrottleRecordCount exists for that one assertion. THE MODEL WARNING could have been read AFTER the delete, where ON DELETE SET NULL guarantees it matches nothing. AND THE SESSIONS LIMITER HAD NO TEST: removing the wiring again changed nothing. Two survivors were noted rather than chased -- one mutation only broke the x-real-ip fallback while x-forwarded-for still separated the clients, so it proved nothing and was re-expressed; pruning on write is unobservable once the read path already expires stale records. 24/24 after.",
+  "verification": "Proved live on the isolated instance. Twenty bad tokens from one client: six 401s (the five free attempts plus the one that arms the penalty) then 429 with Retry-After: 1 and a body that names neither token -- while a VALID token from a different client answered 200 throughout. GET /api/stories and GET /api/agent/personality answer 405 with a sentence pointing at the right place. Two credentials created for the SAME provider: deleting the first kept OPENAI_API_KEY (envVarKeptForSibling: true, still present in .env), deleting the second removed it (envVarRemoved: true, gone from .env), and a repeat delete answered 404. The UI was driven in a browser: arm, the button relabels to 'Confirm delete credential panel probe', confirm, the row goes, the count drops to 0, and the toast reads 'Deleted panel probe - removed from ~/.hermes/.env'. Gate: lint 0, tsc 0, 3684 tests / 413 suites, knip 0, canary blessed after review, build 0.",
+  "timestamps": {
+    "opened": "2026-08-31T23:30:00Z",
+    "updated": "2026-09-01T02:10:00Z",
+    "closed": "2026-09-01T02:10:00Z"
+  }
+}

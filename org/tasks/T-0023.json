@@ -1,0 +1,24 @@
+{
+  "id": "T-0023",
+  "intent": "Add the skim layer to long reports, so a long report can be skimmed and deep-linked. Warrant WG-WEB-006 (reference-first, skim-first where a surface is read once). Source row WO-0016. Outside the consolidation programme. Acceptance: (1) the synthesize step emits a leading In brief heading of 3 to 5 bullets, rendered as a band above the prose; (2) slugged ids on the heading branch of renderReportHtml, mirrored in the HTML export; (3) an on-page navigator when a report carries four or more h2s. Done when a long report can be skimmed and deep-linked. Note carried from the row: do not lower type to fit, because the no-sub-12px-type baseline stays shrink-only. Tier proposal R1, anticipated factor size-threshold from derived signal diff-size. Closed 2026-08-23 in c5a3ff71. Deep Research reports gain a leading In brief band, slugged heading ids mirrored into the HTML export so a long report can be deep-linked, and an on-page navigator once a report carries four or more h2s. The renderer tolerates a report with no In brief section, which matters because every report already sitting in someone's database predates this change and must still render. No type was lowered to fit.",
+  "declared": {
+    "capabilities": [
+      "filesystem"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R0",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "final-skim-layer-2026-08-23",
+  "claims": [
+    "src/"
+  ],
+  "timestamps": {
+    "opened": "2026-07-25T00:00:00Z",
+    "updated": "2026-08-23T05:00:00Z",
+    "closed": "2026-08-23T05:00:00Z"
+  }
+}

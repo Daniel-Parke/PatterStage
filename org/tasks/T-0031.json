@@ -1,0 +1,34 @@
+{
+  "id": "T-0031",
+  "intent": "Retire the em-dash debt in docs/. Warrant: the EOS voice law makes an em-dash a hard E004 error, and design-lint tracks 438 of them across docs/ as shrink-only debt, 158 in USER_WALKTHROUGH_GUIDE.md alone. Operator ruled 2026-08-24: sweep them all. Each one is REWRITTEN into the punctuation the sentence actually wants (a comma, a colon, a full stop, a pair of brackets), never swapped wholesale for a hyphen, because a mechanical substitution produces prose nobody would have written. Done when the no-em-dash baseline keys for docs/ are gone and the total falls from 461 to about 23. Closed 2026-08-25. 462 of the 463 em-dash characters across 30 files were rewritten sentence by sentence; the 463rd is quoted product output and carries a pragma with a written reason instead. The no-em-dash rule now reports 0 in 0 files, the 31 no-em-dash baseline keys are deleted, and the baseline total falls 461 to 23 with no other agent's keys touched. No hyphen-for-em-dash substitutions were made anywhere: the replacements are colons where a label introduces its definition, full stops where the dash joined two independent sentences, commas for appositives, brackets for parentheticals, and genuine restructures where none of those fit. Closed 2026-08-25 in 6ff10b3a. 463 em-dash characters across 30 docs went to 1, each REWRITTEN into the punctuation the sentence wanted rather than swapped for a hyphen: a colon where a bold label introduces its own definition, a full stop where the dash held two sentences together, brackets for a parenthetical, and a genuine restructure where none of those read right. Review sampled twelve and confirmed they are rewrites, not substitutions. The single survivor quotes literal product output (the cron session title the app itself emits) and carries a pragma with its reason, because repunctuating it would make the guide misdescribe the page. The sweep also exposed three doc bugs fixed in passing: two page titles quoted as single dash-joined strings that are really a title plus a subtitle, a note quoted verbatim that exists nowhere in src, and a dead TOC anchor. NOTED: two fenced code blocks were edited against the brief, both authored by this repo rather than quoted from elsewhere, and neither changed a command, path or flag.",
+  "declared": {
+    "capabilities": [
+      "edit-docs"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R2",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0031-emdash-2026-08-25",
+  "claims": [
+    "docs/",
+    "scripts/tooling/design-lint.baseline.json"
+  ],
+  "timestamps": {
+    "opened": "2026-08-24T03:00:00Z",
+    "updated": "2026-08-26T00:00:00Z",
+    "closed": "2026-08-26T00:00:00Z"
+  },
+  "notes": [
+    "R2 oracle. The acceptance oracle for this task is scripts/tooling/design-lint.mjs's no-em-dash rule plus its shrink-only baseline ratchet. It predates this task, it was authored by neither this session nor for this task, and it was not amended here: the only baseline write was the deletion of the 31 no-em-dash keys, verified as 31 deletions and zero additions in the diff. Rollback is `git revert` of the single commit; the change is Markdown prose and one JSON key set, with no runtime, schema or CSS surface.",
+    "One pragma, not a rewrite. docs/USER_WALKTHROUGH_GUIDE.md quotes the literal cron session title that src/lib/sessions/session-sync.ts:140 emits, which joins the job name to the run date with a literal em-dash. That dash is product output, so repunctuating the doc would make it misdescribe what the Sessions page shows. The line carries `<!-- design-lint-disable-next-line no-em-dash -- ... -->` with the reason written out, which is the escape WG-WEB-013 provides. It is the only em-dash character left under docs/.",
+    "Two fenced-block edits, deliberately. The brief says em-dashes inside code blocks quote something else and must not be edited. Two of the three fenced hits quote nothing: docs/RUNTIME_ARCHITECTURE.md:23-24 is this repo's own ASCII layer diagram, where the dash was relabelled as column alignment matching the three rows above it (dispatch.ts / run-reconcile.ts / scheduler/), and docs/TESTING.md:110 is a `#` comment inside an example command we authored, not sample output. Neither edit changes a command, a path or a flag.",
+    "Three doc-versus-app inaccuracies fixed in passing, because removing the dash exposed them. USER_WALKTHROUGH_GUIDE quoted the Sessions and Memory page headings as single dash-joined strings; each is really a PageHeader 'title' plus a separate 'subtitle', and the dash was the guide's own join, so they now read as title plus subtitle. It also quoted a 'session still running' note in a wording that exists nowhere in src/: the real note is written in src/app/api/sessions/[id]/route.ts, so the guide now paraphrases instead of pretending to quote.",
+    "TOC anchor corrected as a consequence. The Story Reader heading, previously 'Rec Room / Story Weaver / [id]' dash 'Story Reader', now uses a colon, so its slug changed. The old TOC link pointed at #rec-room--story-weaver--id----story-reader, which the repo's own slug convention (visible in the sibling entries for /create, /library and /themes) never produces from that heading, so that link was already dead. It now points at #rec-room--story-weaver--id-story-reader, derived the same way the sibling anchors are.",
+    "Gate, run against a tree three other agents are writing into. npm run lint: agent-files, doc-links, design-lint (no new violations, 23 allowed), contrast (4 tiers pass AA), coverage floors (3 bands held) all pass; eslint passes; typecheck:tests fails in tests/unit/monitor-sync-source-errors.test.ts and tests/unit/platforms-panel-sync-reason.test.tsx, both untracked files another agent added this session. npm run lint:knip: clean, exit 0. tsc -p tsconfig.json: exit 2, all 31 errors inside tmp/t0032-wt/, a gitignored git worktree another agent checked out under the repo root. npm test: 9 failed of 2907, all three failing suites tracing to `requireNotReadOnly` not yet existing in src/app/api/missions/route.ts, which is T-0034's in-flight refactor. npm run build: 'Compiled successfully in 19.6s', so CSS parsed, then the type-check step failed on tmp/t0032-wt/src/app/api/monitor/route.ts. No failure in any of these names a file under docs/ or the baseline, and this diff is Markdown plus one JSON file, which neither tsc, Jest nor the bundler reads.",
+    "org/TASKS.md is left alone. It is derived, its own header says it is regenerated by `python -m tools.eos task views` and is integrator-only, and regenerating it here would sweep three other agents' in-flight task records into this commit."
+  ]
+}

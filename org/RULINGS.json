@@ -1,0 +1,528 @@
+{
+ "version": 1,
+ "venture": "PatterStage",
+ "eos_commit": "727bee44bdd83ce569a8d711d51eccf79851af92",
+ "selection_log": [
+  {
+   "wargame": "WG-EOS-001",
+   "disposition": "selected",
+   "reason": "Scale is always walked at Session 0, and the recompile re-walks it because the v2 scale set has no M column.",
+   "ruling": "RUL-EOS-001",
+   "facts": [
+    "runs_agents=true",
+    "going_concern=true",
+    "server_state_or_auth=true",
+    "ops_burden=true",
+    "money_changes_hands=false",
+    "personal_or_regulated_data=false",
+    "second_human=false"
+   ]
+  },
+  {
+   "wargame": "WG-EOS-002",
+   "disposition": "selected",
+   "reason": "Repository shape is always walked; PatterStage is one public repository with one remote and is handed over as a unit.",
+   "ruling": "RUL-EOS-002",
+   "facts": [
+    "runs_agents=true",
+    "contractual_boundary=whole-venture",
+    "lifespan_divergence=false",
+    "deploy_coupling=one-tree",
+    "shared_contracts=in-repo"
+   ]
+  },
+  {
+   "wargame": "WG-SEC-001",
+   "disposition": "selected",
+   "reason": "Injection defence is an always-walk floor for any agent run. Session 0 never walked it because the v1 corpus PatterStage compiled against carried no security module, so this is new judgement taken at the recompile.",
+   "ruling": "RUL-SEC-001",
+   "facts": [
+    "runs_agents=true",
+    "deterministic_monitor_validated=false",
+    "task_class_plannable=false",
+    "reads_untrusted_content=true"
+   ]
+  },
+  {
+   "wargame": "WG-SEC-002",
+   "disposition": "selected",
+   "reason": "Always-walk, and both of its hard triggers fire here: agents commit to this repository and the remote is public.",
+   "ruling": "RUL-SEC-002",
+   "facts": [
+    "runs_agents=true",
+    "agents_commit=true",
+    "repository_public=true",
+    "holds_third_party_credentials=true",
+    "short_lived_credentials_available=false"
+   ]
+  },
+  {
+   "wargame": "WG-SEC-003",
+   "disposition": "selected",
+   "reason": "Always-walk, and the venture is a going concern that already holds another party's provider credentials.",
+   "ruling": "RUL-SEC-003",
+   "facts": [
+    "runs_agents=true",
+    "long_lived=true",
+    "handles_personal_data=false",
+    "moves_money=false",
+    "holds_third_party_credentials=true"
+   ]
+  },
+  {
+   "wargame": "WG-SEC-004",
+   "disposition": "selected",
+   "reason": "Always-walk, and ADR-0008 compiles org/policy.json with guard.validated false, which is the fact this wargame turns on.",
+   "ruling": "RUL-SEC-004",
+   "facts": [
+    "runs_agents=true",
+    "guard.adapter=manual",
+    "guard.validated=false"
+   ]
+  },
+  {
+   "wargame": "WG-ARCH-001",
+   "disposition": "selected",
+   "reason": "Carried from Session 0. The id is live in packs/architecture and asks the same question, where module boundaries live.",
+   "ruling": "RUL-ARCH-001",
+   "facts": [
+    "has_server_code=true",
+    "boundary_declared=true",
+    "boundary_machine_checked=partial",
+    "output_canary_exists=false",
+    "requires_independent_deployability=false"
+   ]
+  },
+  {
+   "wargame": "WG-ARCH-002",
+   "disposition": "selected",
+   "reason": "Carried from Session 0. The id is live and asks the same question, how a service reaches its data and where the seam is.",
+   "ruling": "RUL-ARCH-002",
+   "facts": [
+    "has_cross_language_contract=true",
+    "owns_all_tables=true",
+    "orm_present=false",
+    "repository_layer_present=true",
+    "seam_enforced=false"
+   ]
+  },
+  {
+   "wargame": "WG-ARCH-003",
+   "disposition": "selected",
+   "reason": "Carried from Session 0. The id is live and asks the same question, computed on read against owned cache against immutable snapshot.",
+   "ruling": "RUL-ARCH-003",
+   "facts": [
+    "has_server_code=true",
+    "derived_inputs_erasable=true",
+    "attestation_weight=per-body-progression-only",
+    "config_cache_invalidated_by_writer=false"
+   ]
+  },
+  {
+   "wargame": "WG-ARCH-004",
+   "disposition": "selected",
+   "reason": "Carried from Session 0. The id is live and asks the same question, where background work runs.",
+   "ruling": "RUL-ARCH-004",
+   "facts": [
+    "has_server_code=true",
+    "idempotent_claim_exists=true",
+    "unit_builder_registry_exists=false",
+    "boot_recovery_rebuilds=false"
+   ]
+  },
+  {
+   "wargame": "WG-ARCH-005",
+   "disposition": "selected",
+   "reason": "Carried from Session 0. The id is live and asks the same question, how the two sides of a contract seam agree on types.",
+   "ruling": "RUL-ARCH-005",
+   "facts": [
+    "has_cross_language_contract=true",
+    "single_language_in_repo=true",
+    "generated_artefacts_committed=true",
+    "generated_artefacts_gated=false"
+   ]
+  },
+  {
+   "wargame": "WG-ARCH-006",
+   "disposition": "selected",
+   "reason": "Carried from Session 0. The id is live and asks the same question, what proves a change changed nothing.",
+   "ruling": "RUL-ARCH-006",
+   "facts": [
+    "has_server_code=true",
+    "snapshot_or_golden_tests=0",
+    "deterministic_output_artefact=seed-pack"
+   ]
+  },
+  {
+   "wargame": "WG-ARCH-007",
+   "disposition": "selected",
+   "reason": "Carried from Session 0. The id is live and asks the same question, SDK against owned adapter against raw protocol.",
+   "ruling": "RUL-ARCH-007",
+   "facts": [
+    "has_server_code=true",
+    "vendor_sdk_in_dependencies=false",
+    "handover_bound_vendor=hermes",
+    "raw_protocol_surface=llm-wire"
+   ]
+  },
+  {
+   "wargame": "WG-ARCH-008",
+   "disposition": "selected",
+   "reason": "Carried from Session 0. The id is live and asks the same question, though v2 renumbers the options; see the ruling.",
+   "ruling": "RUL-ARCH-008",
+   "facts": [
+    "has_server_code=true",
+    "database_count=1",
+    "second_real_owner=false",
+    "readings_tables=analytics_events,chat_messages"
+   ]
+  },
+  {
+   "wargame": "WG-DEVOPS-005",
+   "disposition": "selected",
+   "reason": "Carried from Session 0's WG-OPS-003 through the live alias in registry/identifier-aliases.json, which maps WG-OPS-003 to WG-DEVOPS-005. The restore-test add-on is on the lock-book header.",
+   "ruling": "RUL-DEVOPS-001",
+   "facts": [
+    "deploys_to_environment=true",
+    "production_data_present=true",
+    "backup_writers=3",
+    "restore_path_exists=false",
+    "restore_tests=0"
+   ]
+  },
+  {
+   "wargame": "WG-WRIT-003",
+   "disposition": "candidate",
+   "reason": "Successor to retired WG-VOX-001 per org/migration/WARGAME_MIGRATION.json. PatterStage's B professional-calm ruling stays enforced as a lock-book contract; the voice scope is re-argued here as a task rather than silently re-keyed."
+  },
+  {
+   "wargame": "WG-HOUSE-003",
+   "disposition": "candidate",
+   "reason": "Successor to retired WG-WEB-001. WG-HOUSE-003 states in its own text that it carries WG-WEB-001 forward, and its option A is word for word the option PatterStage ruled. org/migration/WARGAME_MIGRATION.json instead records WG-WEB-001 as superseded by GD-UIUX-001, now WG-UIUX-003, which is a weaker match than the pack's own carry-forward line."
+  },
+  {
+   "wargame": "WG-HOUSE-002",
+   "disposition": "candidate",
+   "reason": "Successor to retired WG-WEB-003, both in org/migration/WARGAME_MIGRATION.json and in WG-HOUSE-002's own carry-forward line. The table-for-record-surfaces ruling is re-argued here as a task."
+  },
+  {
+   "wargame": "WG-HOUSE-001",
+   "disposition": "candidate",
+   "reason": "Successor to retired WG-WEB-005 and retired WG-WEB-011. Two Session 0 rulings, the full light budget and the field-reactive surface, now land on one wargame, which is why this is a re-argument rather than a re-key."
+  },
+  {
+   "wargame": "WG-UIUX-003",
+   "disposition": "candidate",
+   "reason": "Successor to retired WG-WEB-006 per org/migration/WARGAME_MIGRATION.json and per WG-UIUX-003's own reference. The reference-first ruling for the 27 operator routes is re-argued here."
+  },
+  {
+   "wargame": "WG-UIUX-001",
+   "disposition": "candidate",
+   "reason": "The live wargame that asks retired WG-WEB-007's question, how the interface is delivered. WARGAME_MIGRATION.json records WG-WEB-007 as historical-only because WG-UIUX-001 did not exist at the migration baseline 7f56e4e; it was added afterwards with gap_domain web-delivery-shape. PatterStage's server-rendered ruling maps to option B here."
+  },
+  {
+   "wargame": "WG-HOUSE-004",
+   "disposition": "candidate",
+   "reason": "Successor to retired WG-WEB-012 and retired WG-WEB-014 per org/migration/WARGAME_MIGRATION.json. The generated-only imagery ruling and the media-is-a-citation ruling both land here."
+  },
+  {
+   "wargame": "WG-UIUX-004",
+   "disposition": "candidate",
+   "reason": "One of two successors to retired WG-WEB-013 per org/migration/WARGAME_MIGRATION.json, resolved through the GD-UIUX-002 alias. Where the kit comes from, and therefore where its laws can be enforced, is re-argued here."
+  },
+  {
+   "wargame": "WG-UIUX-006",
+   "disposition": "candidate",
+   "reason": "The second successor to retired WG-WEB-013, resolved through the GD-UIUX-004 alias, and the wargame that governs the lock-book's eleven token and measure deferrals."
+  },
+  {
+   "wargame": "WG-DEL-005",
+   "disposition": "candidate",
+   "reason": "The v2 delivery pack asks different questions from retired WG-DEL-001 to WG-DEL-004, so nothing re-keys. Which double stands in for a port has never been walked here, and the venture already runs mock-hermes, mock-llm and mock-hindsight."
+  },
+  {
+   "wargame": "WG-DEL-006",
+   "disposition": "candidate",
+   "reason": "Oracle independence has never been walked here. Retired WG-DEL-001's coverage floors and retired WG-DEL-003's pixel baselines are evidence for it but do not answer it."
+  },
+  {
+   "wargame": "WG-DEL-007",
+   "disposition": "candidate",
+   "reason": "What has to exist before work starts has never been walked here. Retired WG-DEL-002's blocking-set ruling is evidence for it but does not answer it."
+  },
+  {
+   "wargame": "WG-DEL-008",
+   "disposition": "candidate",
+   "reason": "The incident hotfix gate has never been walked here, and the venture has a worked case in the Phase S1 unauthenticated-RCE hotfix."
+  },
+  {
+   "wargame": "WG-IDENT-001",
+   "disposition": "candidate",
+   "reason": "PatterStage drafted WG-DRAFT-001 at Session 0 because the v1 corpus named no auth wargame. That draft's rule is now the binding estate Doctrine DOC-IDENT-001, so the draft retires rather than being carried. The authorisation model itself has still not been walked."
+  }
+ ],
+ "rulings": [
+  {
+   "id": "RUL-EOS-001",
+   "wargame": "WG-EOS-001",
+   "doctrines": [],
+   "decision": "Compile the ORG seed.",
+   "execution": "argued",
+   "reason": "Server state, auth and standing ops force at least M; every L trigger silent on the operator's answers. v1's M and L merge into ORG in the v2 scale set, so the same argument lands on ORG, which the operator ruled directly in ADR-0008 on 2026-08-22.",
+   "decided": "2026-08-22",
+   "review": "on-change-of:venture-scale",
+   "departures": [],
+   "binding_scope_changes": [],
+   "legacy_text": "  - WG-EOS-001 · M · argued · server state, auth and standing ops force at least M; every L trigger silent on the operator's answers"
+  },
+  {
+   "id": "RUL-EOS-002",
+   "wargame": "WG-EOS-002",
+   "doctrines": [],
+   "decision": "A. Monorepo.",
+   "execution": "argued",
+   "reason": "the repo exists, is public with one remote, and is handed over as a unit; claimed rather than created",
+   "decided": "2026-07-25",
+   "review": "on-change-of:contractual-boundary-or-independent-lifespan",
+   "departures": [],
+   "binding_scope_changes": [],
+   "legacy_text": "  - WG-EOS-002 · A monorepo · argued · the repo exists, is public with one remote, and is handed over as a unit; claimed rather than created"
+  },
+  {
+   "id": "RUL-SEC-001",
+   "wargame": "WG-SEC-001",
+   "doctrines": [
+    "DOC-SEC-002",
+    "DOC-SEC-003"
+   ],
+   "decision": "D as the floor, filesystem and egress containment together, applied WHEN ALL THREE of private data, untrusted content and outbound communication are present in one run. Two of the three is normal operation and is permitted: an agent reading the operator's own files and calling a model provider has private data and egress but no untrusted content, and nothing here restricts it. The rule binds on the third leg, content the run did not author. In PatterStage today that means Deep Research and any future surface that fetches the open web, where the fetched page is untrusted content arriving beside file access and an outbound channel. In-band detection runs in parallel as a tripwire and is never counted as the boundary, because a model asked to spot its own manipulation is not a control.",
+   "execution": "argued",
+   "reason": "PatterStage runs agent sessions with tool access and ships an app that dispatches inference over content it did not author. RE-RULED by the operator 2026-08-23 (session S-0004): the original draft read as forbidding the coexistence of the three legs without saying that two of them together is ordinary and safe, which would have read as a prohibition on normal Hermes use. The softening is a clarification of scope, not a lowering of the floor: containment is still the boundary for a genuine three-leg run, and the operator's instruction was to soften the rule so it does not constrain how he actually uses Hermes. What it costs: a web-fetching research run must be contained rather than trusted, which is the capability loss taken knowingly. ACCEPTED by Daniel Parke (operator), 2026-08-23, session S-0004.",
+   "decided": "2026-08-23",
+   "review": "on-change-of:task-plannability-or-validated-monitor",
+   "departures": [],
+   "binding_scope_changes": []
+  },
+  {
+   "id": "RUL-SEC-002",
+   "wargame": "WG-SEC-002",
+   "doctrines": [
+    "DOC-SEC-004",
+    "DOC-SEC-018"
+   ],
+   "decision": "B and C together: a staged pre-commit secret scan and a push-path scan, with the credential files and secret environment variables named explicitly in the deny list rather than left to the scanner's defaults. A bypass records a stated reason and leaves an audit record. D is not reachable, because no platform in this venture issues short-lived credentials.",
+   "execution": "argued",
+   "reason": "Agents commit in this repository and the remote is public, which the decision rule treats as making B and C non-optional rather than a choice. The venture also holds long-lived provider keys in .env and config.yaml, which is the carrier the default deny list misses. This is new judgement at the v2 recompile, not migrated judgement. ACCEPTED by Daniel Parke (operator), 2026-08-23, session S-0004.",
+   "decided": "2026-08-23",
+   "review": "on-change-of:credential-storage-or-scanner-maintenance",
+   "departures": [],
+   "binding_scope_changes": []
+  },
+  {
+   "id": "RUL-SEC-003",
+   "wargame": "WG-SEC-003",
+   "doctrines": [
+    "DOC-SEC-011"
+   ],
+   "decision": "C. ASVS level 1 as the entry bar on every surface, level 2 on any surface holding another party's credentials, which today means the provider-key path and the session-auth path, with exclusions recorded per surface.",
+   "execution": "argued",
+   "reason": "The venture outlives the quarter, so the rule's first clause gives C. It holds no third-party personal data and moves no money, but it does hold the operator's and the installing user's provider credentials, which is the rule's own level 2 trigger. This is new judgement at the v2 recompile, not migrated judgement. ACCEPTED by Daniel Parke (operator), 2026-08-23, session S-0004.",
+   "decided": "2026-08-23",
+   "review": "on-change-of:data-sensitivity-or-external-assurance-audience",
+   "departures": [],
+   "binding_scope_changes": []
+  },
+  {
+   "id": "RUL-SEC-004",
+   "wargame": "WG-SEC-004",
+   "doctrines": [
+    "DOC-SEC-006"
+   ],
+   "decision": "Classify consequential actions through C and fall closed to D: for every guarded class the agent proposes and the operator executes, until a validated enforcement adapter and its mapping ship together.",
+   "execution": "argued",
+   "reason": "ADR-0008 compiles org/policy.json with guard.validated false, so no adapter mapping exists and C resolves to D by falling closed, which the decision rule states is a working state rather than a failure. The named floors bind regardless of the option taken. This is new judgement at the v2 recompile, not migrated judgement. ACCEPTED by Daniel Parke (operator), 2026-08-23, session S-0004.",
+   "decided": "2026-08-23",
+   "review": "on-change-of:guard-validation-or-action-reversibility",
+   "departures": [],
+   "binding_scope_changes": []
+  },
+  {
+   "id": "RUL-ARCH-001",
+   "wargame": "WG-ARCH-001",
+   "doctrines": [
+    "DOC-ARCH-001"
+   ],
+   "decision": "B (machine contract over any layout). C is the recorded target, blocked on the canary WG-ARCH-006 must produce. The src/modules/ move already made stands as an unproven move, not as warrant for C.",
+   "execution": "argued",
+   "reason": "B, machine contract: two of design-lint's three boundary rules are clean contracts, hermes-outside-adapter's 21 baselined crossings are not; C stays the dated target, blocked on WG-ARCH-006's canary, which the src/modules/ move was made without.",
+   "decided": "2026-07-25",
+   "review": "on-change-of:boundary-enforcement-mechanism",
+   "departures": [],
+   "binding_scope_changes": [],
+   "legacy_text": "  - WG-ARCH-001 · B · argued · B, machine contract: two of design-lint's three boundary rules are clean contracts, hermes-outside-adapter's 21 baselined crossings are not"
+  },
+  {
+   "id": "RUL-ARCH-002",
+   "wargame": "WG-ARCH-002",
+   "doctrines": [
+    "DOC-ARCH-001",
+    "DOC-ARCH-019"
+   ],
+   "decision": "B, and B is not met. The seam is bypassed in 19 files holding 49 prepare() sites, not the three route handlers named, and those three are the smallest, at 4 statements between them. A design-lint rule confining `.prepare(` to the repository layer and src/lib/db/ is owed, baselined at today's count and shrink-only.",
+   "execution": "argued",
+   "reason": "B stands as the option and is unmet in fact: 19 files hold 49 prepare() sites outside the 25 repositories and the db/ plumbing, so the seam needs a shrink-only design-lint rule to become the contract B describes.",
+   "decided": "2026-07-25",
+   "review": "on-change-of:persistence-seam-or-orm-adoption",
+   "departures": [],
+   "binding_scope_changes": [],
+   "legacy_text": "  - WG-ARCH-002 · B and B is not met · argued · B stands as the option and is unmet in fact: 19 files hold 49 prepare() sites outside the 25 repositories and the db/ plumbing, so the seam needs a shrink-only"
+  },
+  {
+   "id": "RUL-ARCH-003",
+   "wargame": "WG-ARCH-003",
+   "doctrines": [
+    "DOC-ARCH-008"
+   ],
+   "decision": "A for stats generally; C for the per-Body progression record, an immutable per-profile snapshot carrying its inputs digest, landed before any prune, because WG-ARCH-008's retention makes its inputs erasable; and B for the config read only once its invalidation owner is complete, since four in-app writers of config.yaml never invalidate.",
+   "execution": "argued",
+   "reason": "A for stats, C for the per-Body progression snapshot (inputs digest, written before any analytics_events prune), and B for the config read only once every config.yaml writer invalidates. Today four in-app writers do not, so the 15s TTL is the owner.",
+   "decided": "2026-07-25",
+   "review": "on-change-of:retention-policy-or-attestation-weight",
+   "departures": [
+    {
+     "doctrine": "DOC-ARCH-008",
+     "reason": "The per-Body progression record is stored as an immutable snapshot rather than computed, because RUL-ARCH-008's retention makes its inputs erasable and a record that shrinks when the log is pruned is not a record. The departure is scoped to that one record; every other derived value stays computed."
+    }
+   ],
+   "binding_scope_changes": [],
+   "legacy_text": "  - WG-ARCH-003 · A for stats generally; C for the per-Body progression · argued · A for stats, C for the per-Body progression snapshot (inputs digest, written before any analytics_events prune), and B for the config read only once every config.yaml"
+  },
+  {
+   "id": "RUL-ARCH-004",
+   "wargame": "WG-ARCH-004",
+   "doctrines": [
+    "DOC-ARCH-009"
+   ],
+   "decision": "A with B's seam designed in, the doctrine's own default. PatterStage has B's idempotent claim and none of B's rebuildable unit: boot recovery re-fails work, it never rebuilds it, and the durability of what does survive is the Hermes backend's property, not the queue's. B is the target, promoted when the unit-builder registry exists.",
+   "execution": "argued",
+   "reason": "A with B's seam designed in: the deterministic-occurrence claim is real, the unit-builder registry is absent everywhere, and boot recovery re-fails rather than rebuilds, so durability today is the Hermes backend's, not the queue's.",
+   "decided": "2026-07-25",
+   "review": "on-change-of:job-durability-or-unit-rebuildability",
+   "departures": [
+    {
+     "doctrine": "DOC-ARCH-009",
+     "reason": "The durable database claim queue is the recorded target rather than today's state. A is taken with B's seam designed in and is promoted to B once the unit-builder registry exists, so the departure is dated rather than open."
+    }
+   ],
+   "binding_scope_changes": [],
+   "legacy_text": "  - WG-ARCH-004 · A with B's seam designed in, the doctrine's own · argued · A with B's seam designed in: the deterministic-occurrence claim is real, the unit-builder registry is absent everywhere, and boot recovery re-fails rather than rebuilds"
+  },
+  {
+   "id": "RUL-ARCH-005",
+   "wargame": "WG-ARCH-005",
+   "doctrines": [
+    "DOC-ARCH-002",
+    "DOC-ARCH-003"
+   ],
+   "decision": "C for the in-repo TypeScript seam, B for every contract that leaves the repo: the JSON Schemas regenerated and diff-gated in CI, and agentruntime-wire.json vendored and asserted as a merge gate. Not a fork, because ADR-0002 decision 3 already ordered it, accepted 2026-07-25 and unexecuted.",
+   "execution": "argued",
+   "reason": "C in-repo (one language, apiFetch throws on non-2xx), B for everything that leaves it: generate:schema-json runs in no gate anywhere, and ADR-0002 decision 3's agentruntime-wire merge gate is accepted and unbuilt, so no owner question remains.",
+   "decided": "2026-07-25",
+   "review": "on-change-of:cross-language-contract-or-generated-artefact-gate",
+   "departures": [],
+   "binding_scope_changes": [],
+   "legacy_text": "  - WG-ARCH-005 · C for the in-repo TypeScript seam · argued · C in-repo (one language, apiFetch throws on non-2xx), B for everything that leaves it: generate:schema-json runs in no gate anywhere, and ADR-0002 decision 3's"
+  },
+  {
+   "id": "RUL-ARCH-006",
+   "wargame": "WG-ARCH-006",
+   "doctrines": [
+    "DOC-ARCH-013"
+   ],
+   "decision": "B (behaviour pinned first), with C on the seed-pack generator.",
+   "execution": "argued",
+   "reason": "All 2,279 tests are option A: tests/ holds no snapshot, golden or characterisation test and no output hash, while npm run seed-pack emits deterministic artefacts that no test references at all.",
+   "decided": "2026-07-25",
+   "review": "on-change-of:output-determinism-or-canary-coverage",
+   "departures": [],
+   "binding_scope_changes": [],
+   "legacy_text": "  - WG-ARCH-006 · B · argued · All 2,279 tests are option A: tests/ holds no snapshot, golden or characterisation test and no output hash, while npm run seed-pack emits deterministic artefacts that"
+  },
+  {
+   "id": "RUL-ARCH-007",
+   "wargame": "WG-ARCH-007",
+   "doctrines": [
+    "DOC-ARCH-010"
+   ],
+   "decision": "B (owned adapter) for Hermes, C (raw protocol) for the LLM wire.",
+   "execution": "argued",
+   "reason": "No vendor SDK appears in package.json at all; llm.ts speaks raw fetch through buildDirectRequest/inferApiStyle, and Hermes reaches the app only via the AgentRuntime port with frameworks/registry.ts as the declared swap point.",
+   "decided": "2026-07-25",
+   "review": "on-change-of:vendor-lock-or-handover-boundary",
+   "departures": [],
+   "binding_scope_changes": [],
+   "legacy_text": "  - WG-ARCH-007 · B · argued · No vendor SDK appears in package.json at all"
+  },
+  {
+   "id": "RUL-ARCH-008",
+   "wargame": "WG-ARCH-008",
+   "doctrines": [
+    "DOC-ARCH-011",
+    "DOC-ARCH-012"
+   ],
+   "decision": "A with D's seam. One patterstage.db, with analytics_events and chat_messages declared the readings class, named consumer, retention window and prune path, and the physical split written now as the migration that fires if volume forces it. The Session 0 text calls that seam C, which was v1's letter for records core plus a separate ingestion store; v2 renumbers it to D and gives C to one database per deployable, which PatterStage does not take.",
+   "execution": "argued",
+   "reason": "A with C's seam: one patterstage.db, but analytics_events and chat_messages are declared readings, consumer, retention window and prune path designed now, and the split written as the migration that fires if volume forces it.",
+   "decided": "2026-07-25",
+   "review": "on-change-of:database-owner-count-or-readings-volume",
+   "departures": [],
+   "binding_scope_changes": [],
+   "legacy_text": "  - WG-ARCH-008 · A with C 's seam · argued · A with C's seam: one patterstage.db, but analytics_events and chat_messages are declared readings, consumer, retention window and prune path designed now, and the"
+  },
+  {
+   "id": "RUL-DEVOPS-001",
+   "wargame": "WG-DEVOPS-005",
+   "doctrines": [
+    "DOC-DEVOPS-005"
+   ],
+   "decision": "C. Evidenced restore drill: snapshots plus a scheduled restore test that restores a real backup, proves the application reads it, records the evidence, and files an order for anything that failed. The Session 0 text calls this B, which was v1's letter for snapshots plus a scheduled restore test with recorded evidence; v2 splits that option, leaving B as a tick with no evidence record and giving C the evidenced drill, which is also what the binding DOC-DEVOPS-005 requires.",
+   "execution": "argued",
+   "reason": "Production data exists at schema v30 across ~43 tables and backups are written in three places, yet grep for pre-migrate/pre-baseline/.bak across src, scripts and tests returns only writers: no restore script, no restore path, and zero restore tests among 2,279.",
+   "decided": "2026-07-25",
+   "review": "on-change-of:backup-topology-or-restore-evidence",
+   "departures": [],
+   "binding_scope_changes": [],
+   "legacy_text": "  - WG-OPS-003 · B - snapshots plus a scheduled restore test · argued · Production data exists at schema v30 across ~43 tables and backups are written in three places, yet grep for pre-migrate/pre-baseline/.bak across src, scripts and tests"
+  }
+ ],
+ "legacy_migration": {
+  "source": "docs/LOCKBOOK.md front-matter rulings, compiled at EOS v1.0 pin c6f94df (recorded as cc18755 before the EOS history rewrite), with the full argued texts restored from docs/eos-session0/WALK_RAW.json and docs/eos-session0/CORRECTIVE_RAW.json",
+  "migrated_at": "2026-08-22T00:00:00Z",
+  "unparsed_rows": [
+   "Rows below are retired-identity provenance. The v2 Rulings schema has no field for a ruling against an id the estate has retired, and the seed check refuses a retired Wargame in either rulings[].wargame or selection_log[].wargame, so these 23 rows are carried here as text rather than as structured Rulings. Their contracts stay enforced through docs/LOCKBOOK.md's Structural contracts section; re-ruling against a live analogue happens as a task, and each analogue carries a candidate row in selection_log above.",
+   "WG-VOX-001 · retired identity, provenance only · B professional-calm · argued · triage: live analogue WG-WRIT-003 (voice scope), recorded as the successor in org/migration/WARGAME_MIGRATION.json.",
+   "WG-WEB-001 · retired identity, provenance only · A Dark-first · argued · triage: live analogue WG-HOUSE-003 (polarity register), which states in its own text that it carries WG-WEB-001 forward and whose option A is the option PatterStage ruled. WARGAME_MIGRATION.json instead records GD-UIUX-001, now WG-UIUX-003, which is the weaker match.",
+   "WG-WEB-002 · retired identity, provenance only · App shell for all 27 routes; long read (article kit) · argued · triage: no successor, recorded historical-only in org/migration/WARGAME_MIGRATION.json. No live wargame asks the page-archetype question.",
+   "WG-WEB-003 · retired identity, provenance only · D · argued · triage: live analogue WG-HOUSE-002 (container choice), recorded in WARGAME_MIGRATION.json and in WG-HOUSE-002's own carry-forward line.",
+   "WG-WEB-004 · retired identity, provenance only · B Concentrated · argued · triage: no successor, recorded historical-only. The nearest live rule is DOC-HOUSE-004, motion is judged by moving area and scroll coupling, which binds as a preference without a venture ruling.",
+   "WG-WEB-005 · retired identity, provenance only · C full · argued · triage: live analogue WG-HOUSE-001 (light posture), which states in its own text that it carries the ornament-budget scenario forward with its numbers moved to packs/pattertech-house/references/BUDGETS.md.",
+   "WG-WEB-006 · retired identity, provenance only · Reference-first for the 27 operator routes · argued · triage: live analogue WG-UIUX-003 (design philosophy), recorded in WARGAME_MIGRATION.json and referenced in WG-UIUX-003's own text.",
+   "WG-WEB-007 · retired identity, provenance only · C Server-rendered app · argued · triage: live analogue WG-UIUX-001 (web delivery shape), whose option B is PatterStage's ruling. WARGAME_MIGRATION.json records this id as historical-only because WG-UIUX-001 was added after the migration baseline 7f56e4e.",
+   "WG-WEB-008 · retired identity, provenance only · B next/image with the built-in local loader · argued · triage: no successor, recorded historical-only. No live wargame asks the media-pipeline question. · premise corrected by T-0022 (WO-0015), ruling untouched: the Session 0 note argued from \"the repo's only binary asset is src/app/favicon.ico\", which was false when written and is false now. `git ls-files` at this commit returns fourteen tracked binaries: seven PNG screenshots in docs/images/ totalling 687,806 bytes, six woff2 faces in src/app/fonts/, and the favicon. branding/ holds documents only (README.md, LICENSE.md, guidelines/COLORS.md) and no assets, so the directory name is not the counterexample a reader might expect it to be. The parts of the note that were actually checked still hold: there is no public/ directory, no <img> or next/image call anywhere in src/, and next.config.ts declares no images.loader and no remotePatterns policy, so the forward-looking gap the ruling names is real. What the correction changes is the scope of the premise, not the letter: B stands, and re-ruling it is not this task's to do.",
+   "WG-WEB-009 · retired identity, provenance only · B · argued · triage: no successor, recorded historical-only. The nearest live surface is WG-UIUX-006 (token source), where the module-to-accent map becomes a token question rather than a brand-family question.",
+   "WG-WEB-010 · retired identity, provenance only · The house trio: Space Grotesk display, Inter text · argued · triage: no successor, recorded historical-only. The nearest live surface is WG-UIUX-006 (token source), where the type stack becomes a token question.",
+   "WG-WEB-011 · retired identity, provenance only · C Field-reactive · argued · triage: live analogue WG-HOUSE-001 (light posture), the same wargame that succeeds WG-WEB-005, so both rulings are re-argued together.",
+   "WG-WEB-012 · retired identity, provenance only · A generated only · argued · triage: live analogue WG-HOUSE-004 (figure austerity), recorded in WARGAME_MIGRATION.json. · premise corrected by T-0022 (WO-0015), ruling untouched: the Session 0 note argued from \"the whole repo holds one binary (src/app/favicon.ico)\". It holds fourteen; the WG-WEB-008 row above carries the count and its provenance. The correction cuts towards A rather than away from it. The seven screenshots are 687,806 bytes that every clone pays at install, which is precisely the asset weight the ruling was made to protect, so the cost the note treated as hypothetical is already being paid. What is corrected is the claim that the tree was empty of media, not the judgement that generated imagery is the right default: A stands, and re-ruling it is not this task's to do.",
+   "WG-WEB-013 · retired identity, provenance only · C · argued · triage: live analogues WG-UIUX-004 (component sourcing) and WG-UIUX-006 (token source), recorded in WARGAME_MIGRATION.json as GD-UIUX-002 and GD-UIUX-004.",
+   "WG-WEB-014 · retired identity, provenance only · A argued · argued · triage: live analogue WG-HOUSE-004 (figure austerity), recorded in WARGAME_MIGRATION.json. Session 0 corrected this row from inherited to argued, and the argued mark carries.",
+   "WG-DEL-001 · retired identity, provenance only · B with the two clauses the original left out · argued · triage: no successor. WG-DEL-005 to WG-DEL-008 ask different questions, so this needs re-arguing rather than re-keying. The header note read \"undefined\" because the v1 compiler took the note field from a corrective record that carried none; the restored argument is that CI exists, so B is the only reachable letter, that coverage needs three bands and not two because jest.config.js excludes src/app/** from measurement outright, and that the floors must move into a shrink-only baseline of the kind design-lint already runs, because this venture has lowered them once already at commit 0e3fef9b.",
+   "WG-DEL-002 · retired identity, provenance only · B letter unchanged · argued · triage: no successor; re-argue against WG-DEL-007. The header note read \"undefined\" for the same compile defect; the restored argument is that the letter stands but the walk's premise that only wiring separates PatterStage from B is false, because PLAYWRIGHT_SMOKE=1 leaves 38 of 42 tests and 12 of 13 spec files running on no branch, real-hermes-integration is push-only, and the acceptance journeys are render assertions rather than journeys. Ordered behind WG-DEL-004's determinism fix.",
+   "WG-DEL-003 · retired identity, provenance only · B · argued · triage: no successor; re-argue against WG-DEL-006. The header note read \"undefined\" for the same compile defect; the restored argument is that the decision rule conditions B on a component kit existing rather than on which kit, that src/components/ui holds 24 primitives plus a field kit while src/kit does not exist on disk, and that deferring the first baselines to a vendored kit is taking option A behind an accepted and unexecuted ADR for an unbounded period. The fork was withdrawn.",
+   "WG-DEL-004 · retired identity, provenance only · C Determinism first · argued · triage: no successor; re-argue against WG-DEL-008 and WG-DEL-007. Confirmed unchanged by the corrective pass, with one ordering clause added: retries must reach 0 in playwright.config.ts before the suite is un-smoked, and the fonts must be local before any install job can gate a pull request.",
+   "WG-OPS-001 · retired identity, provenance only · C - self-hosting · argued · triage: no successor in the v2 corpus. The nearest live surface is WG-UIUX-001 option E, installed native client, which is a delivery-shape question rather than a hosting-venue one, so the contract stands on the lock-book alone.",
+   "WG-OPS-002 · retired identity, provenance only · A One deployment model · argued · triage: no successor in the v2 corpus. The nearest live surface is WG-ARCH-013 (deployment shape), which asks how many deployables rather than native install against container. The header note read \"undefined\" because the v1 compiler took the note field from a corrective record that carried none; the restored argument is that only the parity clause of the decision rule fires, that it produces A rather than C, that the walk relabelled C to mean its opposite, and that A's OCI form is a named deviation because the product's job is to drive the host it runs on. The artefact CI proves must be the artefact a stranger receives.",
+   "WG-OPS-004 · retired identity, provenance only · B and C split by whose money it is · argued · triage: no successor in the v2 corpus and no live wargame asks the cost-ceiling question. The contract stands on the operator's standing rule, no spend without my approval, recorded in the lock-book's Structural contracts. The header note read \"undefined\" for the same compile defect; the restored argument is that B fires on the operator's own install because four unattended loops dispatch inference with no ceiling, that C is located at the LLM provider's console rather than built into the product, and that because PatterStage ships, enabling unattended work must require a provider ceiling and show the running total against it.",
+   "WG-DRAFT-001 · venture-drafted wargame, retired at the v2 recompile · B, authentication enforced once in src/proxy.ts and never in a route handler · argued · triage: the rule is now the binding estate Doctrine DOC-IDENT-001, deny unless something permitted and decide at one layer, which binds without a venture ruling. The lock-book's Structural contracts line cites DOC-IDENT-001 in place of WG-DRAFT-001; the design-lint rule no-auth-in-route-handler is unchanged. The authorisation-model fork the draft did not ask is a candidate at WG-IDENT-001."
+  ]
+ }
+}

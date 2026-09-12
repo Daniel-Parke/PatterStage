@@ -1,0 +1,49 @@
+{
+  "id": "T-0089",
+  "intent": "Round-6 findings 5, 6, 13, 14, 15 and 17 with rulings 1 and 3: a cancel that logged a success as an error, a chat that silently lost its session on a title collision, a composer stage with no sign of life, a gate with four verbs and no documentation, a 405 with no Allow, and a Personalities control that changed nothing.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0089-operator-ergonomics-2026-09-05",
+  "claims": [
+    "src/lib/runtime/HermesRuntime.ts",
+    "src/app/api/chat/route.ts",
+    "src/components/composer/ElapsedSince.tsx",
+    "src/components/composer/ComposerNodeRunDetail.tsx",
+    "src/app/orchestration/composer/page.tsx",
+    "src/lib/composer/schema.ts",
+    "src/lib/composer/composer-repository.ts",
+    "src/app/api/composer/runs/[id]/nodes/[nodeId]/approve/route.ts",
+    "src/lib/api-response.ts",
+    "src/app/api/skills/[name]/toggle/route.ts",
+    "src/app/operations/personalities/page.tsx",
+    "src/components/personalities/",
+    "scripts/tooling/output-canary.golden.json",
+    "tests/"
+  ],
+  "invariants": [
+    "I1 Stop means 'ensure it is not running'. A run the gateway no longer knows is not running; a 404 from stop is a success.",
+    "I2 A session-title collision is a name problem. Retry once with a suffix; only then fall back to no session, and say so in the log.",
+    "I3 A running stage and a running run show a live elapsed time from the startedAt every snapshot already carries. No server change.",
+    "I4 The gate has two verbs, accept and reject. A guessed verb gets both real ones and the hint. Nothing else can approve a gate.",
+    "I5 A 405 carries Allow, and every stub says its verbs. A verb the framework would answer with an empty 405 gets a stub that says what to do.",
+    "I6 A control that changes nothing does not exist. The Personalities page has no activate button, badge, sort, tile, toast or config write."
+  ],
+  "the_report_was_right_about_the_symptom_and_wrong_about_the_surface": "Finding 5 said the gateway's 400 on a title collision surfaced as an opaque failure. It never surfaced: the catch swallowed it, created the conversation with sessionId null and answered 201. Finding 13 asked for server heartbeats; the node run's startedAt was already in every snapshot, so a one-second client ticker fixed it with zero server change. Finding 14's four verbs were worse than undocumented: add_feature routed as APPROVE and review as REJECT.",
+  "mutation_finding": "Nine mutants, nine killed on the first pass: the 404 rethrown, the collision not retried, a retry with the same title, a ticker that never updates, the stale timeAgo restored, four verbs restored, the guessed verb handed a Zod flatten, Allow dropped from the helper, and the toggle stubs without Allow. No mutant was written for the removed Personalities control: reintroducing a control is not a one-line mutation, and the oracle asserts its absence and that the config read is gone.",
+  "the_canary_was_blessed_once_and_the_diff_was_one_line": "httpSurface changed from 129 lines to 129 lines with one difference: route /api/skills/[name]/toggle went from [PUT] to [GET,POST,PUT]. The diagnostics route list was diffed against a report from the committed tree before the golden was rewritten.",
+  "verification": "Isolated instance, production build: POST approve with action 'approve' answered 400 'action must be \"accept\" or \"reject\" (got \"approve\"). To approve a gate, send \"accept\".'; GET and POST on /api/skills/[name]/toggle answered 405 with Allow: PUT and a body naming the PUT contract; GET /api/stories answered 405 with Allow: POST; a mission dispatched to the mock gateway reached successful/completed and a cancel after that answered 200 with zero error lines added to the server log; two chats with the same title both kept a session (the mock gateway does not collide, so this shows no regression rather than the retry). Gate by exit code: lint 0, tsc 0, 3859 tests / 435 suites, knip 0, canary OK after the one-line bless, build 0.",
+  "timestamps": {
+    "opened": "2026-09-05T01:50:00Z",
+    "updated": "2026-09-05T03:30:00Z",
+    "closed": "2026-09-05T03:30:00Z"
+  }
+}

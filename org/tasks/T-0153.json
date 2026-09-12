@@ -1,0 +1,86 @@
+{
+  "id": "T-0153",
+  "intent": "K5: the three security findings the operator ruled on. critic-04 — no response forbids framing, so a page served on another port of the same host counts as same-site, receives the Lax session cookie inside a frame, and can trick clicks on the deploy, script and credential controls; nothing in src, docs, scripts or public embeds PatterStage in a frame, so DENY removes nothing that is used. app-06 — read-only mode is enforced in one place, src/proxy.ts, by HTTP method before any handler runs, and 17 route-level checks sit behind it: 11 of them cannot fire over HTTP at all, while 69 other write handlers have none, so the tree states a rule it does not keep. critic-05a — the optional deploy signature covers METHOD:path:ts and not the body, so a captured signed request can be replayed with another action or branch; the operator ruled the format stays and the gap is documented, because a replayer already holds the token and the token alone can save and run a host script.",
+  "declared": {
+    "capabilities": [
+      "edit-source",
+      "edit-docs",
+      "edit-tests",
+      "edit-tooling"
+    ],
+    "side_effects": []
+  },
+  "mode": "high-assurance",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [
+    {
+      "factor": "auth-surface",
+      "tier_floor": "R2",
+      "source": "paths:sensitive",
+      "evidence": "app-06 deletes an exported guard from src/lib/api/api-auth.ts and eleven of its call sites; critic-04 adds response headers on every path. Both are authorisation surfaces."
+    },
+    {
+      "factor": "weakening-a-check",
+      "tier_floor": "R2",
+      "source": "org/policy.json:132, operator ruling app-06 (2026-09-12)",
+      "evidence": "eleven refusals are deleted. They cannot fire over HTTP — the proxy answers 503 on the method first — but a direct handler call loses them, and policy.json:132 escalates the removal of a check whatever the reason. The ruling names which ones go and which six stay."
+    },
+    {
+      "factor": "high-assurance-for-r2",
+      "tier_floor": "R2",
+      "source": "org/roles/EXECUTOR.md:41, org/policy.json:100-105, operator ruling Q-014 (2026-09-12)",
+      "evidence": "invariants, a rollback plan, an oracle authored by a session that will not implement it, and an independent REVIEWER verdict on the record"
+    }
+  ],
+  "status": "done",
+  "owner_session": "t0153-k5-ruled-security-2026-09-12",
+  "claims": [
+    "next.config.ts",
+    "scripts/tooling/output-canary.golden.json",
+    "src/lib/api/api-auth.ts",
+    "src/lib/api/api-response.ts",
+    "src/lib/api/read-only.ts",
+    "src/app/api/backup/route.ts",
+    "src/app/api/composer/runs/[id]/cancel/route.ts",
+    "src/app/api/missions/route.ts",
+    "src/app/api/missions/[id]/cancel/route.ts",
+    "src/app/api/prefs/route.ts",
+    "src/app/api/seed/route.ts",
+    "src/app/api/skills/[name]/route.ts",
+    "src/app/api/skills/[name]/toggle/route.ts",
+    "src/app/api/tools/route.ts",
+    "src/app/api/admin/sessions/backfill-status/route.ts",
+    "src/app/api/sessions/route.ts",
+    "src/app/api/cron/hardware/route.ts",
+    "docs/SECURITY.md",
+    "docs/reference/api.md",
+    "docs/running/env-reference.md",
+    "docs/contributing/repo-guide.md",
+    "docs/contributing/testing.md",
+    "tests/unit/k5-the-ruled-security-fixes.test.ts",
+    "tests/fixtures/mutants/T-0153.json",
+    "scripts/tooling/line-census.baseline.json",
+    "org/tasks/T-0153.json"
+  ],
+  "programme": "K5 of the refactor and clean-up programme, and the last of the security set. K4 (T-0151) landed the six findings that needed no ruling; these three needed one and have it, each dated and attributed in org/reviews/2026-09-decision-register.md.",
+  "timestamps": {
+    "opened": "2026-09-12T19:10:00Z",
+    "updated": "2026-09-12T21:30:00Z",
+    "closed": "2026-09-12T21:30:00Z"
+  },
+  "invariants": [
+    "I1 OVER HTTP, READ-ONLY REFUSES EXACTLY WHAT IT REFUSED. The proxy answers 503 on every unsafe method before a handler runs, and that is untouched. Every route whose route-level check is deleted keeps a test proving the refusal still arrives — moved to a proxy() assertion, not deleted.",
+    "I2 THE SIX HOST-SIDE CHECKS STAY. cron/hardware and the two scripts routes keep their guards, beside their requireAuthenticatedHostWrites calls, because proxy.ts:58-63 and docs/reference/api.md:259 state that a harness bypassing the proxy must still be refused there. Deleting them would contradict a documented promise.",
+    "I3 THE THREE DOCUMENTED GET SKIPS STAY. toolsets:27, sessions:58 and stats:29 skip a bookkeeping write under the mode and still answer; api.md:255 names them and check-read-only-guards.mjs accepts exactly those three.",
+    "I4 NOTHING EMBEDS PATTERSTAGE. Before the framing headers land, re-run the search for iframe, frameElement, window.top and window.parent across src, docs, scripts, public, README and ops. DENY is only safe because the answer is nothing; if the search finds an embedder, the batch stops and the operator is asked again.",
+    "I5 NO ENV VAR, ROUTE OR CONFIG KEY IS REMOVED. next.config.ts:27-29 stays: cross-cutting-22 was ruled 'all fixes except next.config.ts'. The canary is re-blessed for the headers() entry alone, with the reason in the commit.",
+    "I6 THE SIGNATURE FORMAT DOES NOT CHANGE. critic-05a is documentation. METHOD:path:ts, the five-minute window and both header spellings are exactly as they were; only what the documents say about them changes."
+  ],
+  "rollback": "Three independent parts, revertable one at a time. critic-04 is one headers() entry plus a golden hash: reverting both restores the previous responses, and nothing else reads the entry. critic-05a is prose. app-06 is the one with a cost: reverting it restores eleven deleted call sites and an exported function, so a revert must take the feat commit whole rather than a file at a time, and the test commit that moved the pins with it. If only app-06 must go back, `git revert` of its commit is clean because no other batch part touches src/app/api. Nothing here migrates data, writes to disk or changes a schema, so there is no state to undo.",
+  "commits": "e63b7e2f the two lanes, written before dispatch; c35ef5bc the K5 oracle, red at 14 of 65, authored by an ORACLE session (sha256 2346e48b558356dca27b6d2740cd91251a1c250a7cc56d9da373afc236821d0f); bfaf33af the three fixes; 9c13fdb6 the mutants as data; e6ad4c96 the three the sweep would not kill, re-aimed; the chore commit that carries this record.",
+  "verification": "Gate by exit code on the finished tree, stamp unmoved: lint 0 (53.7s), tsc 0 (3.4s), jest 0 (51.9s), knip 0 (2.7s), canary 0 (0.7s), build 0 (25.4s), e2e 0 (137.6s), census 0 (49.6s), census:lines 0 (2.4s). The oracle is 65 of 65, and no case in it skips on any platform. BEYOND THE GATE, the thing the register left unchecked: whether a next.config headers() entry reaches responses the PROXY builds rather than only those Next renders. Measured against a running server: both headers arrive on the 401 sign-in page, on a 401 to POST /api/missions, on the open /api/health 200, on a 404, and on the destination of the /sessions redirect. The independent reviewer then measured the class nobody had: the redirects() entries answer a bodiless 307 carrying NEITHER header. That costs nothing, because a redirect has no document to frame and every destination refuses, but the prose said every response and now says what is true. The canary moved on appConfig alone; httpSurface did not move, which is independent confirmation that no route, method or URL was removed. TEST IDENTITY: the batch removes twelve cases and adds sixty-five, net +53, and the coverage floors held (three bands at baseline). The twelve test a function the ruling deletes, so they cannot survive it; each removal site names where its assertion went, and the oracle re-makes every one of them through proxy(), which is where the refusal now lives. Two of the twelve had mocked the guard to RETURN a 503 and asserted the handler forwarded it, so what they proved was the forwarding, and the sentence they checked came from the mock rather than from the product. TWO FLAKES, neither of them this batch's: one gate run failed e2e at requests.spec.ts with 3x /api/monitor and then lost the dev server, and two further runs of the same step on the same tree passed; and the Functions cannot be passed directly to Client Components lines in the server log are present in the PASSING runs too and predate this batch, so they belong to the recon.",
+  "review": "Independent REVIEWER, clean context, verdict ACCEPT WITH FIXES. Both blocking findings and seven of the nine non-blocking ones are fixed in the tree. BLOCKING 1: the implementing session had amended the frozen oracle, adding docs/SECURITY.md:64 to the set-equality expectation that guards invariant I4, because the batch's own SECURITY.md prose contained the word iframe. It was not a weakening and the added entry was true, but it was made by the party with the incentive, on the one case the framing ruling's premise rests on, and org/policy.json:107-111 makes an oracle amendment a high-assurance STOP condition. The reviewer's fix is better than the amendment was: the prose now says in a frame rather than in an iframe, the hit disappears, and the oracle reverts to its committed form untouched. git diff c35ef5bc on that path is empty. It also removes the amendment's own defect, which was pinning a document LINE NUMBER inside a security oracle. BLOCKING 2: docs/contributing/repo-guide.md:148 still told a contributor to call requireNotReadOnly. The file was claimed by the lane and the edit had not been made. Fixed, with docs/contributing/testing.md:235 beside it. Also taken: two false pointer comments in api-auth.test.ts, which named a read-only.test.ts that does not exist and said six cases where five went; seed-api.test.ts's now-empty whole-module mock and its false comment; a dead requireAuth mock key on a line the batch had already touched; the redirect qualifier above; and the api-auth tombstone, which read as a complete account of HOST_SIDE_EFFECT_PREFIXES when /api/update is the third prefix and never carried a read-only check. The reviewer verified I1 independently rather than on the oracle's word, with its own probe driving src/proxy.ts for all eleven routes across four auth paths, 48 of 48, and established that no bypass exists: no use server directive anywhere, the only import of a route module in src or scripts is a type import at src/hooks/useLogs.ts:13, no custom server, no rewrites, and the matcher covers all eleven paths. It also confirmed the deletion is exactly the ruled set by enumerating the route tree itself. One finding recorded and deliberately not acted on: critic-05a's ruled option text says the branch to another one already on origin, and both documents drop already on origin. Reading the code, verifyDeployBranchOnOrigin runs only in handleUpdateAction; handleRebuildAction sanitises the branch and does not check origin. The qualifier is therefore true of update and false of rebuild, and the unqualified wording is the more accurate of the two. The divergence from the ruling's own text is deliberate and is recorded here rather than left to be found.",
+  "mutation": "Twelve mutants against the committed tree, committed as tests/fixtures/mutants/T-0153.json. Most of them break the layer that is supposed to be carrying the load rather than the code the batch wrote: the proxy's own read-only branch, the remedy sentence, one of the six host-side guards, one of the three documented GET skips. app-06's whole argument is that the proxy answered first, so an oracle that only knew eleven call sites were gone would survive every one of those. First run at 9c13fdb6: 9 killed, 3 not. None of the three was an oracle hole, and the sweep was right about each. m9 came back INEFFECTIVE because its anchor is a comment and the tool refuses a comment-only mutant unless told that is the point; here it is, and it now carries force. m11 and m12 SURVIVED because each replaced only a lead-in phrase and left the FACT standing in the rest of the sentence, and the oracle matches facts per sentence, so it was correct not to fire. Both were re-aimed at the fact in e6ad4c96. A survivor is a defect in the oracle OR in the mutant, and saying which is the work; these were the mutants. Re-run at e6ad4c96: 12 killed, 0 not.",
+  "deviation": "Four.\n\nThe oracle was amended by the implementing session and then un-amended. What matters here is that it happened at all, on a batch whose own record names the ORACLE hand-off as a tier reason, and that it was the independent reviewer who called it rather than the implementer. The tree ends with the oracle byte-identical to c35ef5bc.\n\nThe diff reached two files outside the claims array: src/lib/api/api-response.ts, whose docstring named requireNotReadOnly and would have gone stale the moment it was deleted, and src/lib/api/read-only.ts, which a mutant anchors in. Both are added to the claims above; the record is corrected rather than the edit defended. The twenty non-oracle test files the mock sweep touched were named in the lane's prose but not enumerated in its array, which is the same slip one level down.\n\ncritic-05a's documented wording drops the ruling's already on origin qualifier, deliberately, because it is true of update and false of rebuild. The reasoning is under review above.\n\nThe census baseline was re-cut three times during the batch, and the third re-cut broke the C8 growth chain: testLines FELL by six after the review's fixes, below the number the second re-cut had recorded as a rise, and C8 requires the chain to end exactly on the held number. The repair was not to hand-edit the growth log, which is the thing that check exists to catch, but to restore the committed baseline and re-cut once from it, so the tool itself wrote one truthful entry: testLines rose from 122396 to 123081, with the reason."
+}

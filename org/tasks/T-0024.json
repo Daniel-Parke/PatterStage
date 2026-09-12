@@ -1,0 +1,41 @@
+{
+  "id": "T-0024",
+  "intent": "Vendor the bloom field, so brightness reads as energy in the system rather than as decoration. Warrant WG-WEB-011 (C, field-reactive) and WG-WEB-005 (C, full). Source row WO-0017. Outside the consolidation programme. Acceptance: (1) BloomField.tsx copied verbatim from PatterTech_Website into src/kit/ with a PROVENANCE.md naming the source repository and commit, per ADR-0003 Part 1; (2) mounted once in the root layout; (3) the [data-bloom]::after paint rule ported using the existing Cherenkov RGB, so no new token is minted; (4) data-bloom set on the ledger rows, panels, cards and buttons that WG-WEB-003 names as the console's containers; (5) the fine-pointer and reduced-motion opt-outs carried across exactly. Done when brightness reads as energy in the system rather than decoration. Tier proposal R1, anticipated factor size-threshold from derived signal diff-size; the copy reads a second repository on the same filesystem, which is declared as a capability and reaches no factor, because capabilities are context for the reviewer and side effects are what rule the tier. Closed 2026-08-24 in 3b7b63c0. Genuinely VENDORED, not reimplemented: PatterTech_Website was reachable and the committed blob SHA-1 equals the source blob SHA-1 exactly, which review verified independently rather than reading off PROVENANCE.md. Mounted once in the root layout; data-bloom on Card, Panel, Button and the dashboard ledger rows. Both opt-outs are belt and braces, the listener refuses to attach AND the paint rule refuses to paint, so reduced motion is honoured even if the JS never runs. Cost measured, not asserted: 0.279ms per pointermove, 1.7% of a 60fps frame, 874B gzipped, and nothing at all on an idle console. DEVIATION on acceptance item 3, evidenced: the row named --ps-rgb-cherenkov-glow, but written that way the field painted NOTHING, because that token held a comma list and rgb(var(x) / a) then produced invalid CSS. The executor shipped it the row's way first, built it, and read 'background: none' out of Chrome before believing it. The rule uses color-mix against --color-cherenkov-100, which is the same colour (#33ddff IS 51 221 255) and an existing token, so nothing was minted. That discovery led to the eighteen dead paint rules fixed in 9698240c. HONEST LIMIT recorded: data-bloom sits on the container components, and most of this console does not go through them, so the field currently lights a minority of surfaces. Closing that is the WG-WEB-003 container migration, not sprinkling the attribute across 500 call sites.",
+  "declared": {
+    "capabilities": [
+      "filesystem-outside-repo"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R0",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0024-bloom-2026-08-24",
+  "claims": [
+    "src/kit/",
+    "src/app/globals.css",
+    "src/app/layout.tsx",
+    "src/components/ui/Card.tsx",
+    "src/components/ui/Button.tsx",
+    "src/components/dashboard/Panel.tsx",
+    "src/components/dashboard/ActiveMissionsPanel.tsx",
+    "src/components/dashboard/ErrorsPanel.tsx",
+    "src/components/dashboard/ProcessesPanel.tsx",
+    "tests/unit/bloom-field.test.tsx",
+    "tests/unit/bloom-paint-rule.test.ts",
+    "tests/unit/kit-provenance.test.ts"
+  ],
+  "timestamps": {
+    "opened": "2026-07-25T00:00:00Z",
+    "updated": "2026-08-24T02:00:00Z",
+    "closed": "2026-08-24T02:00:00Z"
+  },
+  "notes": [
+    "Claims widened from the two directory globs on the record to the exact files touched. The record's own acceptance (4) puts data-bloom on the console's container COMPONENTS, and those live under src/components/, which the original two globs did not cover. The widening is recorded rather than silent.",
+    "Deviation, criterion 3. The paint rule does NOT spell the colour as --ps-rgb-cherenkov-glow. That token holds a comma list, '51, 221, 255', so rgb(var(token) / a) expands to rgb(51, 221, 255 / 0.07), which mixes a comma list with a slash alpha and is invalid: the declaration is dropped and the field paints nothing. Writing rgba(var(token), a) does not survive either, because Lightning CSS normalises it back to the slash form during minification. Verified against a production build in Chrome. The rule uses color-mix(in srgb, var(--color-cherenkov-100) X%, transparent) instead: --color-cherenkov-100 is #33ddff, which IS 51, 221, 255, and is an existing token, so no token is minted and the ruled colour is unchanged.",
+    "Coverage limit worth knowing. data-bloom is set on the container COMPONENTS (Card, Panel, Button) and on the three dashboard ledger-row sites. Most of the console does not go through those components: 313 raw <button> elements and 209 inline rounded-*-border boxes bypass them. Lighting those means the WG-WEB-003 container migration, not sprinkling the attribute across 500 call sites, so it is left to that work.",
+    "Discovered, not fixed here: nineteen pre-existing sites in globals.css use rgb(var(--ps-rgb-*) / a) and therefore paint nothing at all, including .scanlines, .grid-bg, .text-glow-* and every .glow-* box-shadow. GlowSurface is affected too, since src/lib/theme.ts GLOW_RGBS holds comma lists as well, so the Card `glow` prop is a no-op. Filed separately."
+  ]
+}

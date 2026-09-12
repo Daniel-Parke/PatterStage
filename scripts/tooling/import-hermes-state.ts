@@ -1,6 +1,6 @@
 #!/usr/bin/env npx tsx
 /**
- * Import Hermes disk state into Control Hub SQLite (profiles, root, skills).
+ * Import Hermes disk state into PatterStage SQLite (profiles, root, skills).
  * Usage: npx tsx scripts/tooling/import-hermes-state.ts [--pull]
  */
 
@@ -43,17 +43,17 @@ function applyHermesHomeArg(): void {
 async function main(): Promise<void> {
   loadEnvLocal();
   applyHermesHomeArg();
-  if (!process.env.CH_DATA_DIR) {
-    process.env.CH_DATA_DIR = join(homedir(), "control-hub", "data");
+  if (!process.env.PS_DATA_DIR && !process.env.CH_DATA_DIR && !process.env.CONTROL_HUB_DATA_DIR) {
+    process.env.PS_DATA_DIR = join(homedir(), "patterstage", "data");
   }
 
   const hermesHome = process.env.HERMES_HOME || join(homedir(), ".hermes");
   console.log(`HERMES_HOME=${hermesHome}`);
-  console.log(`CH_DATA_DIR=${process.env.CH_DATA_DIR}`);
+  console.log(`PS_DATA_DIR=${process.env.PS_DATA_DIR || process.env.CH_DATA_DIR}`);
 
   const pull = process.argv.includes("--pull");
 
-  const { importHermesStateFromDisk } = await import("../../src/lib/hermes-state-import");
+  const { importHermesStateFromDisk } = await import("../../src/modules/hermes/lib/state-import");
   const result = importHermesStateFromDisk(pull ? { force: true } : undefined);
 
   console.log(

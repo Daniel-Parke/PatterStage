@@ -8,6 +8,8 @@ import { homedir } from "os";
 import { fileURLToPath } from "url";
 import yaml from "js-yaml";
 
+import { columnExists } from "./db-schema-ensure.mjs";
+
 const PROVIDER_ENV_VAR = {
   openrouter: "OPENROUTER_API_KEY",
   nous: "NOUS_API_KEY",
@@ -171,6 +173,14 @@ export function importHermesRegistry(database, options = {}) {
   }
 
   let modelsUpserted = 0;
+  // This runs at PREBUILD, against a database that has only the v001 baseline
+  // and is pinned at schema_version 3: the TypeScript ladder has not run, so
+  // models.origin does not exist yet and naming it would throw "no such
+  // column", be swallowed, and ship a database with no models at all. When the
+  // columns are absent the script writes today's set and migration 039's
+  // backfill classifies these rows (they carry import_key) on the app's first
+  // open (T-0100).
+  const hasOrigin = columnExists(database, "models", "origin");
   const upsertAll = database.transaction(() => {
     for (const [, m] of modelsToUpsert) {
       const existing = database.prepare("SELECT id FROM models WHERE import_key = ?").get(m.importKey);
@@ -178,19 +188,55 @@ export function importHermesRegistry(database, options = {}) {
       let modelRowId;
       if (existing) {
         modelRowId = existing.id;
-        database
-          .prepare(
-            "UPDATE models SET name=?, provider=?, model_id=?, base_url=?, updated_at=? WHERE id=?"
-          )
-          .run(m.name, m.provider, m.modelId, m.baseUrl, ts, modelRowId);
+        if (hasOrigin) {
+          // The same keep-rule the repository applies: a row the operator has
+          // renamed since the last import keeps its name.
+          const row = database
+            .prepare("SELECT name, base_url, last_imported_name, last_imported_base_url FROM models WHERE id=?")
+            .get(modelRowId);
+          const neverImported = row.last_imported_name === null;
+          const keepName = neverImported || row.name !== row.last_imported_name;
+          const keepBaseUrl = neverImported || row.base_url !== row.last_imported_base_url;
+          database
+            .prepare(
+              "UPDATE models SET name=?, provider=?, model_id=?, base_url=?," +
+                " last_imported_name=?, last_imported_base_url=?, updated_at=? WHERE id=?"
+            )
+            .run(
+              keepName ? row.name : m.name,
+              m.provider,
+              m.modelId,
+              keepBaseUrl ? row.base_url : m.baseUrl,
+              m.name,
+              m.baseUrl,
+              ts,
+              modelRowId,
+            );
+        } else {
+          database
+            .prepare(
+              "UPDATE models SET name=?, provider=?, model_id=?, base_url=?, updated_at=? WHERE id=?"
+            )
+            .run(m.name, m.provider, m.modelId, m.baseUrl, ts, modelRowId);
+        }
       } else {
         modelRowId = randomUUID();
-        database
-          .prepare(
-            "INSERT INTO models (id,name,provider,model_id,base_url,context_length,credentials_id,import_key,created_at,updated_at)" +
-              " VALUES (?,?,?,?,?,NULL,NULL,?,?,?)"
-          )
-          .run(modelRowId, m.name, m.provider, m.modelId, m.baseUrl, m.importKey, ts, ts);
+        if (hasOrigin) {
+          database
+            .prepare(
+              "INSERT INTO models (id,name,provider,model_id,base_url,context_length,credentials_id,import_key," +
+                "origin,last_imported_name,last_imported_base_url,created_at,updated_at)" +
+                " VALUES (?,?,?,?,?,NULL,NULL,?,'import',?,?,?,?)"
+            )
+            .run(modelRowId, m.name, m.provider, m.modelId, m.baseUrl, m.importKey, m.name, m.baseUrl, ts, ts);
+        } else {
+          database
+            .prepare(
+              "INSERT INTO models (id,name,provider,model_id,base_url,context_length,credentials_id,import_key,created_at,updated_at)" +
+                " VALUES (?,?,?,?,?,NULL,NULL,?,?,?)"
+            )
+            .run(modelRowId, m.name, m.provider, m.modelId, m.baseUrl, m.importKey, ts, ts);
+        }
       }
       for (const slot of m.defaultSlots) {
         database.prepare("DELETE FROM model_defaults WHERE task_type = ?").run(slot);
@@ -243,7 +289,10 @@ if (isMain) {
   const { join: joinPath, dirname } = await import("path");
   const { fileURLToPath: toPath } = await import("url");
   const scriptDir = dirname(toPath(import.meta.url));
-  const defaultDb = joinPath(scriptDir, "..", "..", "data", "control-hub.db");
+  const dataDir = joinPath(scriptDir, "..", "..", "data");
+  const nextDb = joinPath(dataDir, "patterstage.db");
+  const legacyDb = joinPath(dataDir, "control-hub.db");
+  const defaultDb = !existsSync(nextDb) && existsSync(legacyDb) ? legacyDb : nextDb;
   const dbPath = process.argv[2] ?? defaultDb;
 
   if (!existsSync(dbPath)) {

@@ -1,0 +1,49 @@
+{
+  "_comment": "Phase D fill values. COMPILE.md: 'Filling is transcription and condensation of the operator's words and the rulings, not composition.' Every value here traces to the interview, a phase B/C ruling, or a measured repo fact. Sanctioned deferrals read 'set at first build' plus where they get ruled.",
+
+  "VENTURE_NAME": "PatterStage",
+  "OPERATOR": "Daniel Parke",
+  "SCALE": "M",
+  "SESSION_ID": "session-0-2026-07-25",
+  "COMPILED_DATE": "2026-07-25",
+  "ADOPTED_DATE": "2026-07-25",
+  "SIGNOFF_DATE": "set at phase E, by the operator",
+  "AMENDMENT_HISTORY": "None. Compiled at Session 0, 2026-07-25.",
+  "N": "3",
+
+  "EOS_ROOT": "../PatterTech_EOS",
+  "EOS_VERSION": "v1.0",
+  "EOS_COMMIT": "cc18755",
+
+  "STACK_PROFILE": "none of the three registry profiles fits; see docs/EOS_FEEDBACK.md EOS-FB-004. PatterStage is a local-first Next.js application with an EMBEDDED database (better-sqlite3), no separate backend service and no hosting: the user runs it on their own machine. Pinned as `local-app (authored, pending a registry profile)`",
+
+  "ADDONS": "ops-runbook, restore-test",
+
+  "PRODUCT_DOCTRINE": "PatterStage hosts WORK, not SURFACES (ADR-0001). Other products register work (job kinds, cadences) and keep their own front doors; PatterStage never renders another product's UI. The Brain is the LLM, selected and never grown; the Body is the framework, profile, skills, tools and memory, built up over time (ADR-0004). Progression measures the Body, per-Body rather than per-operator.",
+
+  "FEEL": "instrument",
+  "MOTIF": "the lit console in a dark room: a dense operator surface where the only bright things are live state",
+  "SIGNATURE_PIECES": "set at first build, ruled by WG-WEB-011 (C, field-reactive) and WG-WEB-005 (C, full)",
+
+  "NARRATIVE": "A single operator sits at a dark console and watches work they did not do themselves. The surface should feel like an instrument rather than a dashboard: dense, legible at arm's length, and honest about what is happening right now versus what merely finished. What stays concealed is the machinery, the framework, the ports, the seams; what escapes anyway is liveness, because a run in flight must look different from a run that ended. The physics the brand draws from is a field: brightness is not decoration but a readout of energy in the system, so an idle console is dim and a working one is not. That is what makes the light budget a mechanism rather than a mood.",
+
+  "TOKEN_HOME": "src/app/globals.css (@theme, Tailwind v4)",
+  "TOKEN_MIRROR": "src/lib/theme.ts",
+  "STYLEGUIDE_ROUTE": "set at first build; owed by WG-DEL-003, which rules pixel baselines against a styleguide surface that does not yet exist",
+  "SURFACE_LADDER": "set at first build. Currently 32 appearance-named primitives (dark-950 and siblings) with no semantic layer, which TOKENS.md forbids by name; the ladder is ruled when the vendored @pattertech/ui lands",
+  "ACCENTS": "set at first build. Ruled by WG-WEB-009 (B): one registered module-to-accent map of four entries. Today five accents are applied decoratively and the map does not exist",
+  "TEXT_TIERS": "set at first build. Measured contrast is owed: the design-lint baseline records sub-12px type as the single largest debt category",
+
+  "MEASURE_READING": "set at first build",
+  "MEASURE_WIDE": "set at first build",
+  "MEASURE_FULL": "set at first build",
+  "BLOCK_GAP": "set at first build",
+
+  "GATE_BUILD": "npm run lint && npx tsc --noEmit && npm test && npm run build",
+  "GATE_OVERFLOW": "set at first build; owed by WG-WEB-003, no 375px overflow check exists today",
+  "GATE_WEIGHT": "set at first build; owed by WG-WEB-008",
+  "GATE_SCREENSHOTS": "npm run screenshots (Playwright, PORT=3477, CAPTURE_SCREENSHOTS=1)",
+  "GATE_SMOKES": "npx playwright test (PLAYWRIGHT_SMOKE unset). CI runs smoke-only today, which WG-DEL-002 rules against",
+
+  "STRUCTURAL_CONTRACTS": "Authentication is enforced ONCE, in src/proxy.ts, and never in a route handler (WG-DRAFT-001, ruled B; design-lint no-auth-in-route-handler makes it a red build). Core never imports a module; module capability is reached through one of three named composition points, src/lib/modules/server.ts, src/lib/frameworks/registry.ts and src/lib/runtime/ (ADR-0005; design-lint core-imports-no-module). AGENTS.md stays within 40 lines and CLAUDE.md is byte-identical (check-agent-files.mjs). The design-lint baseline shrinks and never grows. Every relative link in docs/ resolves (check-doc-links.mjs). Migration history is a record, not a description: historical migrations are never edited, and schema_version is a strictly increasing chain."
+}

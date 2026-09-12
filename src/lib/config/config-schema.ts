@@ -1,0 +1,608 @@
+// ═══════════════════════════════════════════════════════════════
+// Config Section Definitions — drives the UI form rendering
+// ═══════════════════════════════════════════════════════════════
+//
+// Each SectionDef carries a direct LucideIcon component reference
+// rather than a string name — this eliminates the need for a
+// separate icon-mapping module and prevents drift between the
+// section schema and available icon imports.
+
+import type { LucideIcon } from "lucide-react";
+import {
+  Activity,
+  Clock,
+  Cpu,
+  FileText,
+  GitBranch,
+  Globe,
+  HardDrive,
+  Layers,
+  ListTodo,
+  Lock,
+  MessageCircle,
+  Mic,
+  RotateCcw,
+  ScrollText,
+  Shield,
+  ShieldCheck,
+  Terminal,
+  Volume2,
+  Wrench,
+  Zap,
+} from "lucide-react";
+import type { AccentColor } from "@/types/console";
+
+export interface FieldDef {
+  key: string;
+  label: string;
+  type: "string" | "number" | "boolean" | "select" | "textarea";
+  options?: string[];
+  description?: string;
+  min?: number;
+  max?: number;
+  placeholder?: string;
+  /**
+   * This field is owned by another surface, which writes it as a side effect of
+   * a decision made there. The section page renders it read-only and points at
+   * that surface, and the PUT refuses it: two controls writing one setting from
+   * two sources of truth is the defect this replaces (T-0101, D64).
+   */
+  managedBy?: { label: string; href: string };
+}
+
+export interface SectionDef {
+  id: string;
+  label: string;
+  description: string;
+  icon: LucideIcon;
+  color: AccentColor;
+  fields: FieldDef[];
+  // Sections with complex/nested values that can't be edited inline
+  complexKeys?: string[];
+  // File-based sections (HERMES.md, .env)
+  type?: "yaml" | "file";
+  filePath?: string;
+  sensitive?: boolean;
+}
+
+export const CONFIG_SECTIONS: Record<string, SectionDef> = {
+  agent: {
+    id: "agent",
+    label: "Agent Settings",
+    description: "Core agent behavior, reasoning, and personality configuration",
+    icon: Cpu,
+    color: "cyan",
+    fields: [
+      { key: "max_turns", label: "Max Turns", type: "number", min: 1, max: 500, description: "Maximum conversation turns before stopping" },
+      { key: "reasoning_effort", label: "Reasoning Effort", type: "select", options: ["none", "low", "medium", "high", "xhigh"], description: "How much reasoning the model should use" },
+      { key: "tool_use_enforcement", label: "Tool Use Enforcement", type: "select", options: ["auto", "strict", "off"], description: "When to enforce tool usage rules" },
+      { key: "verbose", label: "Verbose Mode", type: "boolean", description: "Enable verbose logging in terminal" },
+      { key: "gateway_timeout", label: "Gateway Timeout (s)", type: "number", min: 60, max: 7200, description: "Seconds before gateway connections timeout" },
+    ],
+    complexKeys: ["personalities"],
+  },
+  display: {
+    id: "display",
+    label: "Display Settings",
+    description: "Visual presentation, streaming, and tool output options",
+    icon: Activity,
+    color: "green",
+    fields: [
+      { key: "skin", label: "CLI Skin", type: "string", description: "Visual theme name (e.g. default, ares, mono)" },
+      { key: "show_cost", label: "Show Cost", type: "boolean", description: "Display token cost after each response" },
+      { key: "show_reasoning", label: "Show Reasoning", type: "boolean", description: "Display model reasoning content" },
+      { key: "streaming", label: "Streaming", type: "boolean", description: "Stream responses as they generate" },
+      { key: "tool_progress", label: "Tool Progress", type: "boolean", description: "Show tool execution progress in terminal" },
+      { key: "compact", label: "Compact Mode", type: "boolean", description: "Reduce whitespace in terminal output" },
+      { key: "personality", label: "Active Personality", type: "string", description: "Currently active personality name (empty = default)" },
+      { key: "tool_preview_length", label: "Tool Preview Length", type: "number", min: 50, max: 5000, description: "Max characters shown for tool output preview" },
+      { key: "background_process_notifications", label: "Background Process Notifications", type: "boolean", description: "Notify when background processes complete" },
+      { key: "bell_on_complete", label: "Bell on Complete", type: "boolean", description: "Terminal bell when task completes" },
+      { key: "busy_input_mode", label: "Busy Input Mode", type: "select", options: ["queue", "reject", "cancel"], description: "How to handle input while agent is busy" },
+      { key: "inline_diffs", label: "Inline Diffs", type: "boolean", description: "Show file diffs inline in terminal" },
+      { key: "resume_display", label: "Resume Display", type: "boolean", description: "Resume display state on reconnect" },
+      { key: "tool_progress_command", label: "Tool Progress Command", type: "boolean", description: "Show progress for command-based tools" },
+    ],
+  },
+  memory: {
+    id: "memory",
+    label: "Memory Settings",
+    description: "Memory provider (Holographic, Hindsight, or others), limits, and user profile",
+    icon: Layers,
+    color: "pink",
+    fields: [
+      { key: "memory_enabled", label: "Memory Enabled", type: "boolean", description: "Enable memory system" },
+      { key: "provider", label: "Provider", type: "select", options: ["holographic", "hindsight"], description: "Which memory backend the agent uses. Choose it on the Memory page and this file is written to match.", managedBy: { label: "Memory", href: "/agent/memory" } },
+      { key: "memory_char_limit", label: "Memory Char Limit", type: "number", min: 500, max: 10000, description: "Max characters per memory entry" },
+      { key: "user_char_limit", label: "User Char Limit", type: "number", min: 500, max: 10000, description: "Max characters for user profile" },
+      { key: "nudge_interval", label: "Nudge Interval", type: "number", min: 1, max: 100, description: "Turns between memory flush nudges" },
+      { key: "user_profile_enabled", label: "User Profile Enabled", type: "boolean", description: "Maintain a persistent user profile" },
+      { key: "flush_min_turns", label: "Flush Min Turns", type: "number", min: 1, max: 100, description: "Minimum turns before memory flush" },
+    ],
+  },
+  terminal: {
+    id: "terminal",
+    label: "Terminal Settings",
+    description: "Shell backend, timeouts, and container configuration",
+    icon: Terminal,
+    color: "orange",
+    fields: [
+      { key: "backend", label: "Backend", type: "select", options: ["local", "docker", "ssh", "modal", "daytona", "singularity"], description: "Terminal execution backend" },
+      { key: "timeout", label: "Timeout (s)", type: "number", min: 10, max: 600, description: "Command execution timeout in seconds" },
+      { key: "persistent_shell", label: "Persistent Shell", type: "boolean", description: "Keep shell session alive between commands" },
+      { key: "docker_image", label: "Docker Image", type: "string", description: "Docker image for terminal backend" },
+      { key: "container_cpu", label: "Container CPU", type: "number", min: 1, max: 32, description: "CPU cores for container" },
+      { key: "container_memory", label: "Container Memory (MB)", type: "number", min: 256, max: 32768, description: "Memory in MB for container" },
+      { key: "container_disk", label: "Container Disk (GB)", type: "number", min: 1, max: 500, description: "Disk space in GB for container" },
+    ],
+  },
+  compression: {
+    id: "compression",
+    label: "Compression",
+    description: "Automatic context compression to manage token limits",
+    icon: HardDrive,
+    color: "cyan",
+    fields: [
+      { key: "enabled", label: "Enabled", type: "boolean", description: "Enable automatic context compression" },
+      { key: "threshold", label: "Threshold", type: "number", min: 0.1, max: 0.95, description: "Context usage ratio to trigger compression (0.0–1.0)" },
+      { key: "target_ratio", label: "Target Ratio", type: "number", min: 0.05, max: 0.8, description: "Compress down to this ratio of original" },
+      { key: "protect_last_n", label: "Protect Last N", type: "number", min: 0, max: 50, description: "Number of recent messages to protect from compression" },
+    ],
+  },
+  security: {
+    id: "security",
+    label: "Security",
+    description: "Guardrails, secret handling, and website access controls",
+    icon: Shield,
+    color: "cyan",
+    fields: [
+      { key: "tirith_enabled", label: "Tirith Enabled", type: "boolean", description: "Enable Tirith content guardrails" },
+      { key: "tirith_fail_open", label: "Tirith Fail Open", type: "boolean", description: "Allow requests if Tirith is unreachable" },
+      { key: "redact_secrets", label: "Redact Secrets", type: "boolean", description: "Auto-redact API keys and secrets from output" },
+    ],
+  },
+  tts: {
+    id: "tts",
+    label: "Text-to-Speech",
+    description: "Voice synthesis provider and voice selection",
+    icon: Volume2,
+    color: "pink",
+    fields: [
+      { key: "provider", label: "Provider", type: "select", options: ["edge", "elevenlabs", "openai", "kokoro", "fish"], description: "TTS provider" },
+    ],
+  },
+  stt: {
+    id: "stt",
+    label: "Speech-to-Text",
+    description: "Voice recognition provider and model",
+    icon: Mic,
+    color: "purple",
+    fields: [
+      { key: "enabled", label: "Enabled", type: "boolean", description: "Enable speech-to-text" },
+      { key: "provider", label: "Provider", type: "select", options: ["local", "groq", "openai"], description: "STT provider" },
+      { key: "model", label: "Model", type: "string", description: "STT model identifier" },
+    ],
+  },
+  delegation: {
+    id: "delegation",
+    label: "Delegation",
+    description: "Sub-agent delegation settings for autonomous tasks",
+    icon: GitBranch,
+    color: "green",
+    fields: [
+      { key: "model", label: "Model", type: "string", description: "Model used for delegated sub-agents" },
+      { key: "provider", label: "Provider", type: "string", description: "Provider for delegation model" },
+      { key: "max_iterations", label: "Max Iterations", type: "number", min: 5, max: 200, description: "Max tool-calling turns for sub-agents" },
+    ],
+  },
+  cron: {
+    id: "cron",
+    label: "Cron Settings",
+    description: "Scheduled job configuration",
+    icon: ListTodo,
+    color: "orange",
+    fields: [
+      { key: "wrap_response", label: "Wrap Response", type: "boolean", description: "Wrap cron job responses with context" },
+    ],
+  },
+  checkpoints: {
+    id: "checkpoints",
+    label: "Checkpoints",
+    description: "Session snapshot and restore settings",
+    icon: Zap,
+    color: "cyan",
+    fields: [
+      { key: "enabled", label: "Enabled", type: "boolean", description: "Enable session checkpointing" },
+      { key: "max_snapshots", label: "Max Snapshots", type: "number", min: 1, max: 500, description: "Maximum number of snapshots to keep" },
+    ],
+  },
+  approvals: {
+    id: "approvals",
+    label: "Approvals",
+    description: "Command approval mode and timeout settings",
+    icon: ShieldCheck,
+    color: "purple",
+    fields: [
+      { key: "mode", label: "Mode", type: "select", options: ["manual", "auto"], description: "Approval mode for dangerous commands" },
+      { key: "timeout", label: "Timeout (s)", type: "number", min: 10, max: 300, description: "Seconds to wait for manual approval" },
+    ],
+  },
+  browser: {
+    id: "browser",
+    label: "Browser",
+    description: "Browser automation settings and timeouts",
+    icon: Globe,
+    color: "green",
+    fields: [
+      { key: "cloud_provider", label: "Cloud Provider", type: "select", options: ["local", "browserbase"], description: "Browser automation backend" },
+      { key: "command_timeout", label: "Command Timeout (s)", type: "number", min: 10, max: 120, description: "Timeout for individual browser commands" },
+      { key: "inactivity_timeout", label: "Inactivity Timeout (s)", type: "number", min: 30, max: 600, description: "Seconds before closing idle browser sessions" },
+      { key: "record_sessions", label: "Record Sessions", type: "boolean", description: "Record browser sessions for debugging" },
+      { key: "allow_private_urls", label: "Allow Private URLs", type: "boolean", description: "Allow navigation to private/local network URLs" },
+      { key: "camofox", label: "Camofox", type: "boolean", description: "Enable anti-detection browser mode" },
+    ],
+  },
+  session_reset: {
+    id: "session_reset",
+    label: "Session Reset",
+    description: "Automatic session reset based on idle time or schedule",
+    icon: RotateCcw,
+    color: "orange",
+    fields: [
+      { key: "mode", label: "Mode", type: "select", options: ["both", "idle", "scheduled", "off"], description: "When to auto-reset sessions" },
+      { key: "idle_minutes", label: "Idle Minutes", type: "number", min: 5, max: 1440, description: "Minutes of inactivity before reset" },
+      { key: "at_hour", label: "Reset at Hour", type: "number", min: 0, max: 23, description: "Hour of day for scheduled reset (0-23)" },
+    ],
+  },
+  skills: {
+    id: "skills",
+    label: "Skills",
+    description: "Skill discovery and external directory configuration",
+    icon: FileText,
+    color: "green",
+    fields: [
+      { key: "creation_nudge_interval", label: "Creation Nudge Interval", type: "number", min: 1, max: 100, description: "Turns between skill creation reminders" },
+    ],
+    complexKeys: ["external_dirs"],
+  },
+  platform_toolsets: {
+    id: "platform_toolsets",
+    label: "Platform Toolsets",
+    description: "Per-platform tool availability (cli, discord, telegram, etc.)",
+    icon: Wrench,
+    color: "purple",
+    fields: [],
+    // Note: complexKeys here serves as a static fallback hint for config index page.
+    // The actual keys are derived dynamically from loaded values in ConfigSectionPage
+    // (see sectionId === "platform_toolsets" branch) so new platforms added by Hermes
+    // appear automatically without schema changes.
+    complexKeys: ["cli", "discord", "telegram", "slack", "whatsapp", "signal", "homeassistant"],
+  },
+  code_execution: {
+    id: "code_execution",
+    label: "Code Execution",
+    description: "Settings for the code execution sandbox",
+    icon: Cpu,
+    color: "green",
+    fields: [
+      { key: "max_tool_calls", label: "Max Tool Calls", type: "number", min: 1, max: 200, description: "Maximum tool calls per code execution" },
+      { key: "timeout", label: "Timeout (s)", type: "number", min: 10, max: 600, description: "Code execution timeout in seconds" },
+    ],
+  },
+  logging: {
+    id: "logging",
+    label: "Logging",
+    description: "Log level, rotation, and file size settings",
+    icon: ScrollText,
+    color: "green",
+    fields: [
+      { key: "level", label: "Log Level", type: "select", options: ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"], description: "Minimum log level to record" },
+      { key: "max_size_mb", label: "Max File Size (MB)", type: "number", min: 1, max: 500, description: "Maximum log file size before rotation" },
+      { key: "backup_count", label: "Backup Count", type: "number", min: 1, max: 50, description: "Number of rotated log files to keep" },
+    ],
+  },
+  discord: {
+    id: "discord",
+    label: "Discord",
+    description: "Discord platform-specific settings",
+    icon: MessageCircle,
+    color: "purple",
+    fields: [
+      { key: "auto_thread", label: "Auto Thread", type: "boolean", description: "Automatically create threads for responses" },
+      { key: "reactions", label: "Reactions", type: "boolean", description: "React to messages with emoji" },
+      { key: "require_mention", label: "Require Mention", type: "boolean", description: "Only respond when mentioned" },
+    ],
+    complexKeys: ["free_response_channels"],
+  },
+  human_delay: {
+    id: "human_delay",
+    label: "Human Delay",
+    description: "Simulated human-like typing delay settings",
+    icon: Clock,
+    color: "orange",
+    fields: [
+      { key: "mode", label: "Mode", type: "select", options: ["off", "natural", "fixed"], description: "Human delay simulation mode" },
+      { key: "min_ms", label: "Min Delay (ms)", type: "number", min: 0, max: 5000, description: "Minimum delay in milliseconds" },
+      { key: "max_ms", label: "Max Delay (ms)", type: "number", min: 0, max: 10000, description: "Maximum delay in milliseconds" },
+    ],
+  },
+  voice: {
+    id: "voice",
+    label: "Voice",
+    description: "Voice recording and auto-TTS settings",
+    icon: Mic,
+    color: "pink",
+    fields: [
+      { key: "auto_tts", label: "Auto TTS", type: "boolean", description: "Automatically convert responses to speech" },
+      { key: "max_recording_seconds", label: "Max Recording (s)", type: "number", min: 5, max: 300, description: "Maximum voice recording duration" },
+      { key: "silence_threshold", label: "Silence Threshold", type: "number", min: 0, max: 1, description: "Audio level threshold for silence detection" },
+      { key: "silence_duration", label: "Silence Duration (s)", type: "number", min: 0.5, max: 10, description: "Seconds of silence to end recording" },
+    ],
+  },
+  privacy: {
+    id: "privacy",
+    label: "Privacy",
+    description: "PII redaction and privacy settings",
+    icon: Shield,
+    color: "cyan",
+    fields: [
+      { key: "redact_pii", label: "Redact PII", type: "boolean", description: "Automatically redact personally identifiable information" },
+    ],
+  },
+  streaming: {
+    id: "streaming",
+    label: "Streaming",
+    description: "Response streaming configuration",
+    icon: Globe,
+    color: "cyan",
+    fields: [
+      { key: "enabled", label: "Enabled", type: "boolean", description: "Enable response streaming" },
+    ],
+  },
+  smart_model_routing: {
+    id: "smart_model_routing",
+    label: "Smart Model Routing",
+    description: "Intelligent model routing based on task complexity",
+    icon: GitBranch,
+    color: "purple",
+    fields: [
+      { key: "enabled", label: "Enabled", type: "boolean", description: "Enable smart model routing" },
+    ],
+  },
+  web: {
+    id: "web",
+    label: "Web",
+    description: "Web search and extraction backend settings",
+    icon: Globe,
+    color: "green",
+    fields: [
+      { key: "backend", label: "Backend", type: "select", options: ["parallel", "firecrawl", "builtin"], description: "Web search backend" },
+    ],
+  },
+  hermes_md: {
+    id: "hermes_md",
+    label: "HERMES.md",
+    description: "Priority project instructions — loaded every message",
+    icon: FileText,
+    color: "cyan",
+    type: "file",
+    filePath: "HERMES.md",
+    fields: [],
+  },
+  env: {
+    id: "env",
+    label: "Environment Variables",
+    description: "API keys and secrets (.env file)",
+    icon: Lock,
+    color: "orange",
+    type: "file",
+    filePath: ".env",
+    sensitive: true,
+    fields: [],
+  },
+};
+
+/**
+ * Common typo and alias redirects to the real config routes.
+ *
+ * Values are FULL paths rather than section ids, because an alias may point
+ * at a route that is not a CONFIG_SECTIONS entry at all: /config/models is
+ * its own page and there is no `models` section. Anything derived from
+ * CONFIG_SECTIONS therefore has to build `/agent/settings#<id>` itself rather
+ * than hand a bare id to the same consumer.
+ */
+export const SECTION_ALIASES: Record<string, string> = {
+  model: "/agent/models",
+};
+
+/**
+ * Own-key lookup.
+ *
+ * A plain object literal answers truthily to `constructor`, `toString` and
+ * every other Object.prototype key, so a bare `map[key]` reports those as
+ * sections and hands the caller a Function where a SectionDef was expected.
+ * /config/constructor took that path and crashed the render on
+ * `sectionDef.fields.length`.
+ */
+function ownValue<T>(map: Record<string, T>, key: string): T | undefined {
+  return Object.prototype.hasOwnProperty.call(map, key) ? map[key] : undefined;
+}
+
+/** Lowercase; each run of non-alphanumerics becomes one hyphen; ends trimmed. */
+function slugifyLabel(label: string): string {
+  return label
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+/, "")
+    .replace(/-+$/, "");
+}
+
+/**
+ * slugify(label) to section id, built once at module load. First writer wins,
+ * which is a formality: tests/unit/config-section-redirect.test.ts asserts
+ * that no two section labels slugify the same.
+ */
+const ID_BY_LABEL_SLUG: Record<string, string> = (() => {
+  const map: Record<string, string> = {};
+  for (const id of Object.keys(CONFIG_SECTIONS)) {
+    const slug = slugifyLabel(CONFIG_SECTIONS[id].label);
+    if (!Object.prototype.hasOwnProperty.call(map, slug)) map[slug] = id;
+  }
+  return map;
+})();
+
+export function getSectionDef(sectionId: string): SectionDef | null {
+  return ownValue(CONFIG_SECTIONS, sectionId) ?? null;
+}
+
+/**
+ * Where an unknown `/agent/settings/<slug>` should be sent, or null to stay put and
+ * let the page offer the operator the whole list.
+ *
+ * A section is an anchor on the one Settings page since U11 (T-0125), so a
+ * rescue answers `/agent/settings#<id>`: one hop, to a page that is not this
+ * one, rather than a replace to a section page and a 307 from there.
+ *
+ * The two ways this can do harm are both closed here rather than at the call
+ * site, because the call site is a useEffect that has already fired by the
+ * time anyone notices:
+ *
+ * - It never redirects a slug that IS a section. That is the first check.
+ * - It never sends a slug somewhere that redirects again. Every non-null
+ *   result is either a literal SECTION_ALIASES value or `/agent/settings#<id>` for a
+ *   known id, and an anchor never re-enters this route, so one replace
+ *   always terminates.
+ *
+ * Ambiguity is a deliberate non-answer. A slug prefixing several sections
+ * resolves to null, because guessing one of six is worse than showing all of
+ * them, which is what the page does with a null.
+ */
+export function resolveSectionRedirect(slug: string): string | null {
+  if (!slug) return null;
+  if (ownValue(CONFIG_SECTIONS, slug)) return null;
+
+  const alias = ownValue(SECTION_ALIASES, slug);
+  if (alias) return alias;
+
+  // 1. Hyphen to underscore. Section ids are snake_case and every link the
+  //    console renders is already correct, so a slug that reaches here was
+  //    typed or guessed, and kebab-case is the usual guess. This step alone
+  //    rescues session-reset, platform-toolsets, code-execution,
+  //    smart-model-routing, human-delay and hermes-md.
+  const underscored = slug.replace(/-/g, "_");
+  if (ownValue(CONFIG_SECTIONS, underscored)) return `/agent/settings#${underscored}`;
+
+  // 2. The label, slugified. "agent-settings" is exactly
+  //    slugify("Agent Settings"), and the label is what the operator read on
+  //    the card they were trying to reach; the id is the thing they never saw.
+  const byLabel = ownValue(ID_BY_LABEL_SLUG, slug);
+  if (byLabel) return `/agent/settings#${byLabel}`;
+
+  // 3. A unique id prefix. Uniqueness is the whole rule.
+  const prefixed = Object.keys(CONFIG_SECTIONS).filter((id) =>
+    id.startsWith(underscored),
+  );
+  if (prefixed.length === 1) return `/agent/settings#${prefixed[0]}`;
+
+  return null;
+}
+
+/**
+ * Map a file-section's `filePath` (e.g. ".env") to the file key used by
+ * /api/agent/files/[key] (e.g. "env"). Centralised so the two file
+ * sections in this schema (hermes_md, env) and any future file sections
+ * don't drift from the behavior-files module's key namespace.
+ */
+export function fileKeyForFilePath(filePath: string): string {
+  return filePath === ".env" ? "env" : "hermes";
+}
+
+// ── Value validation ────────────────────────────────────────────
+
+/** One field, one reason it was refused. */
+export interface FieldProblem {
+  key: string;
+  message: string;
+}
+
+/**
+ * Check a section's submitted values against the field definitions.
+ *
+ * `min`/`max` used to be decorative: the number input carried them, the server
+ * merged whatever arrived, and `max_turns: 9999` or `threshold: 0.96` was
+ * written with a 200 for Hermes to choke on later (T-0100, D77). The same walk
+ * covers the other three declared types, because a boolean field holding the
+ * string "yes" is the same class of defect.
+ *
+ * Rules that matter:
+ *  - `null` is D78's unset sentinel and is skipped, never read as "not a
+ *    number"; `undefined` likewise.
+ *  - Keys with no `FieldDef` are ignored. `complexKeys` such as
+ *    `agent.personalities` are edited as nested objects and have no field
+ *    shape to check.
+ *  - Bounds are inclusive and fractional; there is no integer coercion.
+ *  - At most one problem per field: after a type failure the range check is
+ *    skipped, so a bad value is reported once and in its own terms.
+ */
+export function validateSectionValues(
+  sectionId: string,
+  values: Record<string, unknown>,
+): FieldProblem[] {
+  const section = CONFIG_SECTIONS[sectionId];
+  if (!section) return [];
+  const byKey = new Map(section.fields.map((f) => [f.key, f]));
+  const problems: FieldProblem[] = [];
+
+  for (const [key, value] of Object.entries(values)) {
+    const field = byKey.get(key);
+    if (!field) continue;
+    // A field another surface owns is not editable here at any value, null
+    // included: the write that sets it belongs to the page that decides it.
+    if (field.managedBy) {
+      problems.push({ key, message: `${field.label} is set on the ${field.managedBy.label} page` });
+      continue;
+    }
+    if (value === null || value === undefined) continue;
+
+    if (field.type === "number") {
+      if (typeof value !== "number" || !Number.isFinite(value)) {
+        problems.push({ key, message: `${field.label} must be a number` });
+        continue;
+      }
+      const belowMin = field.min !== undefined && value < field.min;
+      const aboveMax = field.max !== undefined && value > field.max;
+      if (belowMin || aboveMax) {
+        problems.push({
+          key,
+          message: `${field.label} must be between ${field.min} and ${field.max} (got ${value})`,
+        });
+      }
+      continue;
+    }
+
+    if (field.type === "boolean") {
+      if (typeof value !== "boolean") {
+        problems.push({ key, message: `${field.label} must be true or false` });
+      }
+      continue;
+    }
+
+    if (field.type === "select") {
+      const options = field.options ?? [];
+      if (typeof value !== "string" || !options.includes(value)) {
+        problems.push({
+          key,
+          message: `${field.label} must be one of: ${options.join(", ")}`,
+        });
+      }
+      continue;
+    }
+
+    // string | textarea
+    if (typeof value !== "string") {
+      problems.push({ key, message: `${field.label} must be text` });
+    }
+  }
+
+  return problems;
+}

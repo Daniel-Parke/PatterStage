@@ -1,0 +1,44 @@
+{
+  "id": "T-0052",
+  "intent": "Make a chat turn always reach a terminal state. Source: the operator's second live Hermes QA pass, 2026-08-29, finding A9, which saw assistant rows with status failed and error null, and one stuck at streaming showing 'No response', and guessed the cause was environmental. Half right: the trigger is usually a gateway that returned nothing, but the reason it looks like a silent failure and never heals is app code in three places. useChatSend finalised fast mode without the error it had just displayed; reconcilePendingChatMessages heals a turn by looking up its run and fast mode never has one, so a tab closed mid-stream left a row streaming for the life of the database; and undefined means leave-unchanged in the reconciler, so a failed run carrying no error left the column as it was. Closed 2026-08-29.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0052-chat-terminal-state-2026-08-29",
+  "invariants": [
+    "I1 A turn that cannot be healed is eventually failed, with a reason. failStuckChatMessages sweeps rows with no run behind them and rows whose run has been pruned away.",
+    "I2 A turn that CAN be healed is left alone. A row whose run still exists belongs to the reconciler however old it is, because sweeping it would race a live agent turn that is simply taking its time. Asserted explicitly, and the mutation that removes the exemption turns it red.",
+    "I3 The sweep respects an age cutoff. Without it the sweep would fail live streams; the mutation that removes the cutoff turns all eleven red.",
+    "I4 A displayed reason is a saved reason. Fast mode persists the error it shows, as agent mode always has.",
+    "I5 A failure always says something, a success clears what a previous attempt left behind."
+  ],
+  "oracle_provenance": "Authored BEFORE any production file was opened for edit and committed on its own at 1b943f07, ahead of the implementation at 1ac31b49. One file, tests/unit/chat-does-not-wedge.test.ts, measured against dev@4861bd68: 11 red of 11. The oracle commit message says '11 failed, 1 passed' and is WRONG: a new function cannot be behaviourally red before it exists, so every assertion in the file failed on the missing export. Recorded here rather than amended, as with T-0049.",
+  "verification": "Five mutations against the committed implementation, tree restored and confirmed clean after each: stopping the sweep turns 4 red; removing the age cutoff turns all 11 red; removing the run-still-exists exemption turns 1 red; narrowing the sweep back to run_id IS NULL turns 1 red (the pruned-run case); dropping the reason turns 2 red.",
+  "harness_defect_found": "Worth recording because it cost real time and will cost the next person the same. better-sqlite3 is mapped to a stub in jest.config.js, so `new Database(':memory:')` inside a test yields a no-op driver that swallows every write and returns nothing. The first version of this oracle asserted against an empty database and reported `rows in db: []` with no error anywhere, which reads exactly like a product bug. Every repository test in this repo reaches past the mapper with jest.requireActual for the real driver; this one now does too, and the file says why in a comment so the next author does not spend the same hour.",
+  "scope_beyond_the_report": "The report asked what happens when the SSE drops client-side. The answer turned out to have two shapes, not one. The fast-mode wedge is the one it saw. The other is a turn whose RUN has since been pruned: the reconciler looks the run up, finds nothing, and moves on forever. Same permanent wedge, different route, and it is covered here.",
+  "rollback": "Revert 1ac31b49. The oracle at 1b943f07 then goes red again. No schema change involved.",
+  "claims": [
+    "src/lib/chat-repository.ts",
+    "src/lib/orchestration/chat-dispatch.ts",
+    "src/hooks/useChatSend.ts",
+    "src/instrumentation.ts",
+    "tests/"
+  ],
+  "deferred": [
+    "The sweep runs at boot only, like the Deep Research one it mirrors. A long-lived server that never restarts will hold a wedged row until it does. Putting it on the BackgroundScheduler tick is the obvious next step and is deliberately not done here: the research sweep has the same shape, and changing one without the other would leave two recovery paths that disagree. Worth one record covering both.",
+    "The PATCH route at chat/[id]/messages/[messageId] still treats a non-string error as leave-unchanged. The reconciler no longer relies on that, and the client now always sends a string on failure, so nothing reaches it with the old shape today. Left alone rather than changed speculatively."
+  ],
+  "timestamps": {
+    "opened": "2026-08-29T21:30:00Z",
+    "updated": "2026-08-30T00:00:00Z",
+    "closed": "2026-08-30T00:00:00Z"
+  }
+}

@@ -1,0 +1,412 @@
+// ═══════════════════════════════════════════════════════════════
+// Insights — interaction analytics + achievements
+//
+// A user-facing read-model over the analytics_events log (via /api/analytics)
+// plus the derived stats (/api/stats): activity over time, a per-category
+// breakdown, the streak/milestone strip, the mission mix, and the full
+// achievement grid. This is the history page (T-0099, B5): what the dashboard
+// gave up lives here and nowhere else. Read-only; the unlock toast belongs to
+// the shell's FeedbackProvider, so this page does NOT use useAchievementUnlocks.
+// ═══════════════════════════════════════════════════════════════
+
+"use client";
+
+import { sectionHeadingClasses } from "@/lib/ui/theme";
+import { useMemo, useState, type ReactNode } from "react";
+import {
+  BarChart3, Sparkles, Activity, CalendarRange, Rocket, Clock,
+  Timer, Cpu, TrendingUp, Info, Award,
+} from "lucide-react";
+
+import PageHeader from "@/components/layout/PageHeader";
+import AppPageShell from "@/components/layout/AppPageShell";
+import Card from "@/components/ui/Card";
+import LinkButton from "@/components/ui/LinkButton";
+import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
+import PageLoading from "@/components/ui/PageLoading";
+import SegmentedControl from "@/components/ui/SegmentedControl";
+import {
+  AreaTrend, ActivityHeatmap, Donut, RadialActivityClock,
+  DistributionHistogram, TopList, StackedAreaTrend,
+} from "@/components/viz";
+import { neon, neonAlpha, type NeonColor } from "@/components/viz/colors";
+import { AchievementShowcase, StreakFlame } from "@/components/achievements";
+import { Stagger, StaggerItem } from "@/components/motion";
+import { useStats } from "@/hooks/useStats";
+import { useAnalytics, useAnalyticsTimeseries, useInsights } from "@/hooks/useAnalytics";
+import { useSpend } from "@/hooks/useSpend";
+import SpendPanel from "@/components/spend/SpendPanel";
+import { categoryForEventType } from "@/lib/analytics/categories";
+
+const RANGES = [7, 30, 90] as const;
+/** The range switch's options: a radiogroup the way every other filter is (T-0122). */
+const RANGE_OPTIONS = RANGES.map((r) => ({ value: String(r), label: `${r}d` }));
+
+function compactNum(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(n % 1_000_000 === 0 ? 0 : 1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(n % 1_000 === 0 ? 0 : 1)}k`;
+  return String(Math.round(n));
+}
+
+function CardTitle({ icon: Icon, hint, children }: { icon: React.ComponentType<{ className?: string }>; hint?: string; children: ReactNode }) {
+  return (
+    <div className="mb-3 flex items-center gap-2">
+      <Icon className="h-4 w-4 text-neon-cyan" />
+      <h2 className={sectionHeadingClasses}>{children}</h2>
+      {hint ? (
+        <span title={hint} aria-label={hint} className="ml-0.5 cursor-help text-ps-text-faint transition-colors hover:text-ps-text-secondary">
+          <Info className="h-3 w-3" />
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
+// `hint` is a title on the tile itself rather than an icon beside it: these
+// tiles are three words wide and a second glyph would crowd the number. It is
+// what lets a tile say which rows it counted, which is the whole reason the
+// token figures on this page could not be told apart. The title sits on the
+// tile's whole face, because Card carries no title of its own; the accent is
+// the card's glow, quiet, where it was a hand-painted inset shadow.
+function MetricTile({ label, value, color = "cyan", hint }: { label: string; value: string; color?: NeonColor; hint?: string }) {
+  return (
+    <Card padding="none" glow={color} glowIntensity={0.4}>
+      <div className="p-3" title={hint}>
+        <div className="font-mono text-display font-bold text-ps-text-primary">{value}</div>
+        <div className="mt-0.5 text-micro uppercase tracking-wider text-ps-text-muted">{label}</div>
+      </div>
+    </Card>
+  );
+}
+
+export default function InsightsPage() {
+  const [days, setDays] = useState<number>(30);
+  const { stats, isLoading: statsLoading, error: statsError, refetch: refetchStats } = useStats();
+  const { summary, error: summaryError, refetch: refetchSummary } = useAnalytics();
+  const { points, refetch: refetchTimeseries } = useAnalyticsTimeseries(undefined, days);
+  const { insights, error: insightsError, refetch: refetchInsights } = useInsights(days);
+  // Provider spend is the one number here that is money rather than activity
+  // (T-0021, WO-0014). It carries its own periods, so it does not follow the
+  // 7/30/90 range switch above: a budget is a calendar month, not a window.
+  const { spend, saving, saveBudget } = useSpend();
+
+  const totalEvents = useMemo(
+    () => Object.values(summary?.totals ?? {}).reduce((a, b) => a + b, 0),
+    [summary],
+  );
+
+  const segments = useMemo(() => {
+    const byCat = new Map<string, { value: number; color: NeonColor }>();
+    for (const [type, count] of Object.entries(summary?.totals ?? {})) {
+      const cat = categoryForEventType(type);
+      if (!cat) continue;
+      const prev = byCat.get(cat.label);
+      byCat.set(cat.label, { value: (prev?.value ?? 0) + count, color: cat.color });
+    }
+    return [...byCat.entries()].map(([label, v]) => ({ label, value: v.value, color: v.color }));
+  }, [summary]);
+
+  const areaData = useMemo(() => points.map((p) => ({ date: p.date, completed: p.value })), [points]);
+
+  // The headline strip used to carry an "Est. spend" tile summing
+  // insights.modelUsage. It is gone, and its removal is part of T-0021 rather
+  // than tidying. That figure came from a query that INNER JOINs missions, so
+  // every Composer stage run was missing from it, and it was drawn over the
+  // 7/30/90 range switch, which is not a period anybody budgets in. Two spend
+  // numbers on one page, one of them quietly incomplete, is worse than one.
+  // SpendPanel below is the single answer: all recorded sources, calendar
+  // periods, and an explicit note about what it cannot measure.
+
+  const error = statsError ?? summaryError ?? insightsError;
+  const achievements = stats?.achievements ?? [];
+  const unlocked = achievements.filter((a) => a.unlocked).length;
+
+  // The mission mix the dashboard gave up (T-0099). All-time, by status.
+  const missionMix = useMemo(() => {
+    const m = stats?.missions;
+    if (!m) return [];
+    return [
+      { label: "Successful", value: m.successful, color: "green" as NeonColor },
+      { label: "Failed", value: m.failed, color: "pink" as NeonColor },
+      { label: "Dispatched", value: m.dispatched, color: "yellow" as NeonColor },
+      { label: "Queued", value: m.queued, color: "cyan" as NeonColor },
+      { label: "Draft", value: m.draft, color: "purple" as NeonColor },
+    ];
+  }, [stats?.missions]);
+
+  // Retry retries EVERY query the page reads (T-0099, D100). It used to
+  // re-fetch stats and the summary and leave the bundle and the timeseries
+  // to their own polls, so the chart that failed stayed failed for 30s.
+  const retryAll = () => {
+    void refetchStats();
+    void refetchSummary();
+    void refetchInsights();
+    void refetchTimeseries();
+  };
+
+  return (
+    // B3 split the Laboratory into two route groups, so its single layout no
+    // longer reached these three pages and they lost the app's grid (D103).
+    <AppPageShell
+      header={
+        <PageHeader
+          icon={BarChart3}
+          title="Insights"
+          subtitle="Interaction analytics & achievements"
+          color="cyan"
+          actions={
+            <SegmentedControl
+              label="Range"
+              options={RANGE_OPTIONS}
+              value={String(days)}
+              onChange={(v) => setDays(Number(v))}
+            />
+          }
+        />
+      }
+    >
+    <div className="flex h-full flex-col">
+      <div className="flex-1 space-y-4 overflow-y-auto">
+        {error && (
+          <LoadErrorBanner
+            error={error}
+            onRetry={retryAll}
+            hint="Analytics start empty and fill in as you use PatterStage."
+          />
+        )}
+
+        {!stats && statsLoading ? (
+          // The loading contract (T-0122), and the reason it exists. A 40px
+          // spinner standing in for an 800px body is most of this page's 0.054
+          // CLS: the whole screen jumps when the read lands. Skeletons the
+          // shape of what is coming hold the space instead, and the header has
+          // already rendered because the shell takes it as a prop.
+          <PageLoading label="Loading insights" rows={3} rowClassName="h-64" />
+        ) : (
+          <>
+            {/* ── First-run nudge (analytics start empty) ── */}
+            {!error && stats && totalEvents === 0 && (
+              <Card glow="cyan" padding="lg" className="text-center">
+                <Sparkles className="mx-auto h-6 w-6 text-neon-cyan" />
+                <h2 className="mt-2 text-body font-semibold text-ps-text-primary">No activity yet</h2>
+                <p className="mx-auto mt-1 max-w-md text-body leading-relaxed text-ps-text-muted">
+                  Dispatch a mission, write a Story Weaver chapter, or fire a schedule — your
+                  interaction analytics and achievements will start filling in here.
+                </p>
+                <LinkButton href="/work/missions" variant="primary" color="cyan" size="sm" icon={Rocket} className="mt-3">
+                  Go to Missions
+                </LinkButton>
+              </Card>
+            )}
+
+            {/* ── Streak / headline metrics ──
+                ADR-0004: the global operator LevelBadge is gone. A level belongs
+                to a Body (an agent profile), not to the person clicking; each
+                agent's level is on the Agents page, beside what it accumulated. */}
+            <Card>
+              <div className="flex flex-wrap items-center justify-between gap-x-8 gap-y-4">
+                <div className="flex items-center gap-5">
+                  {stats && <StreakFlame current={stats.streak.current} longest={stats.streak.longest} />}
+                </div>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  <MetricTile label="Interactions" value={totalEvents.toLocaleString()} color="cyan" />
+                  {/* From the window's bundle, so the number follows the switch the label names (D96). */}
+                  <MetricTile label={`Active days (${days}d)`} value={String(insights?.activeDays ?? 0)} color="green" />
+                  {/* THREE token totals used to sit on this page with nothing
+                      saying what any of them covered: this tile (91 days, every
+                      run), the model list (the range switch, mission runs only)
+                      and the per-mission figures (the range, completed runs).
+                      They cannot agree, and unlabelled they made each other
+                      look wrong. Each one now names its own scope. This one is
+                      91 days because that is the window the stats query reads;
+                      it deliberately does not follow the 7/30/90 switch. */}
+                  <MetricTile
+                    label="Tokens (91d)"
+                    value={compactNum(stats?.runs.totalTokens ?? 0)}
+                    color="yellow"
+                    hint="Tokens from every run recorded in the last 91 days, whatever started it: missions, Composer stages and Story Weaver. Not affected by the range switch above."
+                  />
+                  <MetricTile label="Achievements" value={`${unlocked}/${achievements.length}`} color="orange" />
+                </div>
+              </div>
+            </Card>
+
+            {/* ── Provider spend (T-0021, WO-0014) ──
+                The only money in this product. Visible by default; silent until
+                the operator sets a figure of his own. */}
+            <SpendPanel
+              summary={spend}
+              saving={saving}
+              onSave={(draft) => {
+                void saveBudget(draft);
+              }}
+            />
+
+            <Stagger className="space-y-4">
+              {/* ── Activity by category (stacked) + breakdown ── */}
+              <StaggerItem>
+                <div className="grid gap-4 lg:grid-cols-3">
+                  <Card className="lg:col-span-2">
+                    <CardTitle icon={Activity} hint="Daily volume of recorded events per category over the selected range. Colours match the legend below.">Activity by category — last {days} days</CardTitle>
+                    {insights && insights.categoryDaily.some((d) => Object.values(d.values).some((v) => v > 0)) ? (
+                      <>
+                        <StackedAreaTrend data={insights.categoryDaily} series={insights.categorySeries} height={150} />
+                        <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
+                          {insights.categorySeries.map((s) => (
+                            <span key={s.key} className="flex items-center gap-1.5 text-body text-ps-text-muted">
+                              <span className="h-2 w-2 rounded-ps-sm" style={{ background: neonAlpha(s.color, 90) }} />
+                              {s.label}
+                            </span>
+                          ))}
+                        </div>
+                      </>
+                    ) : (
+                      <AreaTrend data={areaData} color="cyan" height={150} />
+                    )}
+                  </Card>
+
+                  <Card>
+                    <CardTitle icon={BarChart3} hint="All-time share of recorded interaction events, grouped by category.">By category (all-time)</CardTitle>
+                    <div className="flex items-center gap-4">
+                      <Donut segments={segments} size={120} center={totalEvents.toLocaleString()} centerSub="events" />
+                      {/* Columns, not one tall list. Measured on the running
+                          product, this legend put a label at one end of a
+                          944px row and its value at the other: the worst
+                          label-to-value gap anywhere in the product, and five
+                          pairs on this page were over 400px. A pair you have
+                          to track across a thousand pixels is two facts, not
+                          one. auto-fill keeps them together at any width the
+                          card happens to be.
+
+                          Plain responsive columns rather than
+                          `repeat(auto-fill,minmax(...))`: the arbitrary value
+                          produced no rule at all, so the first version of this
+                          fix changed the source and not the screen. Checked
+                          against the built stylesheet and re-measured on the
+                          running product (T-0124). */}
+                      <ul className="grid flex-1 grid-cols-1 gap-x-6 gap-y-1.5 sm:grid-cols-2 xl:grid-cols-3">
+                        {segments.length === 0 && (
+                          <li className="text-body text-ps-text-muted">No activity recorded yet.</li>
+                        )}
+                        {segments.map((s) => (
+                          <li key={s.label} className="flex items-center justify-between gap-2 text-body">
+                            <span className="flex items-center gap-2 text-ps-text-secondary">
+                              <span className="h-2 w-2 rounded-full" style={{ background: neonAlpha(s.color, 90) }} />
+                              {s.label}
+                            </span>
+                            <span className="font-mono text-ps-text-muted">{s.value.toLocaleString()}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </Card>
+                </div>
+              </StaggerItem>
+
+              {/* ── Hour-of-day clock + run-duration distribution + success trend ── */}
+              <StaggerItem>
+                <div className="grid gap-4 lg:grid-cols-3">
+                  <Card>
+                    <CardTitle icon={Clock} hint="Which hours of the day you are most active (all-time). A longer spoke = more activity in that hour.">When you work (hour of day)</CardTitle>
+                    <div className="mx-auto h-44 w-44">
+                      <RadialActivityClock hours={insights?.hourOfDay ?? new Array(24).fill(0)} color="cyan" />
+                    </div>
+                  </Card>
+                  <Card>
+                    <CardTitle icon={Timer} hint="How long agent runs take, bucketed (e.g. <5s, 5–15s, …). Taller bars = more runs in that range.">Run duration</CardTitle>
+                    <DistributionHistogram bins={insights?.durationBuckets ?? []} color="purple" height={150} />
+                  </Card>
+                  <Card>
+                    <CardTitle icon={TrendingUp} hint="Completed vs failed missions per day over the selected range.">Mission success trend</CardTitle>
+                    <AreaTrend data={insights?.successTrend ?? []} color="green" failColor="pink" height={150} />
+                    <div className="mt-2 flex gap-3 text-body text-ps-text-muted">
+                      <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-ps-sm bg-neon-green" />completed</span>
+                      <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-ps-sm bg-neon-pink" />failed</span>
+                    </div>
+                  </Card>
+                </div>
+              </StaggerItem>
+
+              {/* ── Tokens by model + top missions + mission mix ──
+                  One money number on this page, and it is the spend panel's
+                  (D97): the model list is tokens, nothing with a dollar sign. */}
+              <StaggerItem>
+                <div className="grid gap-4 lg:grid-cols-3">
+                  <Card>
+                    <CardTitle icon={Cpu} hint="Tokens per model over the selected range, counting only runs that belong to a mission. Composer stages and Story Weaver chapters have no mission, so they are not in this list and it totals less than the tokens tile above. Spend is in the provider spend panel.">Tokens by model (last {days} days)</CardTitle>
+                    <TopList
+                      color="orange"
+                      rows={(insights?.modelUsage ?? []).map((m) => ({
+                        label: m.model,
+                        value: m.totalTokens,
+                      }))}
+                      format={compactNum}
+                    />
+                  </Card>
+                  <Card>
+                    <CardTitle icon={Rocket} hint="Your most-run missions over the selected range, by number of runs. The tokens beside each one are from that mission's completed runs in the same range.">Top missions</CardTitle>
+                    <TopList
+                      color="cyan"
+                      rows={(insights?.topMissions ?? []).map((m) => ({
+                        label: m.name,
+                        value: m.runs,
+                        sub: `${compactNum(m.totalTokens)} tok`,
+                      }))}
+                      format={(v) => `${v} run${v === 1 ? "" : "s"}`}
+                    />
+                  </Card>
+                  <Card>
+                    <CardTitle icon={Award} hint="Every mission you have ever composed, by where it is now.">Mission mix (all-time)</CardTitle>
+                    <div className="flex items-center gap-4">
+                      <Donut
+                        size={120}
+                        thickness={14}
+                        segments={missionMix}
+                        center={stats?.missions.total ?? 0}
+                        centerSub="missions"
+                      />
+                      <ul className="flex-1 space-y-1.5 text-body">
+                        {missionMix.map((s) => (
+                          <li key={s.label} className="flex items-center gap-2">
+                            <span className="h-2.5 w-2.5 rounded-full" style={{ background: neon(s.color), boxShadow: `0 0 6px ${neonAlpha(s.color, 60)}` }} />
+                            <span className="text-ps-text-muted">{s.label}</span>
+                            <span className="ml-auto font-mono text-ps-text-primary">{s.value}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </Card>
+                </div>
+              </StaggerItem>
+
+              {/* ── Run activity heatmap ── */}
+              <StaggerItem>
+                <Card>
+                  <div className="mb-3 flex items-center gap-2">
+                    <CalendarRange className="h-4 w-4 text-neon-cyan" />
+                    <h2 className={sectionHeadingClasses}>Run activity — last 91 days</h2>
+                    {(() => {
+                      const pts = stats?.runActivity ?? [];
+                      const activeDays = pts.filter((p) => p.value > 0).length;
+                      const totalRuns = pts.reduce((sum, p) => sum + p.value, 0);
+                      return (
+                        <span className="ml-auto text-micro font-mono text-ps-text-muted" title="Days with at least one run · total runs in the window">
+                          {activeDays} active {activeDays === 1 ? "day" : "days"} · {totalRuns} run{totalRuns === 1 ? "" : "s"}
+                        </span>
+                      );
+                    })()}
+                  </div>
+                  <ActivityHeatmap data={stats?.runActivity ?? []} color="green" />
+                </Card>
+              </StaggerItem>
+            </Stagger>
+
+            {/* ── Achievements (compact trophy case; expands to full grid) ── */}
+            <AchievementShowcase achievements={achievements} />
+          </>
+        )}
+      </div>
+    </div>
+    </AppPageShell>
+  );
+}

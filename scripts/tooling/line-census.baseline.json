@@ -1,0 +1,260 @@
+{
+  "measuredAt": "2026-09-12",
+  "counts": {
+    "srcLines": 100983,
+    "testLines": 124351,
+    "scriptsLines": 12961,
+    "srcRepeatedWindowLines": 1000,
+    "testRepeatedWindowLines": 4345,
+    "routesWithTryCatch": 18,
+    "handRolledReadHooks": 0,
+    "writeHooksWithoutMutation": 0,
+    "repeatedTypeShapeFiles": 2,
+    "oneImporterComponents": 103,
+    "libRootFiles": 6,
+    "commentEssays": 9,
+    "suitesMockingDbInline": 14
+  },
+  "allowed": [
+    {
+      "measuredAt": "2026-09-09",
+      "rise": "testLines rose from 121762 to 121900",
+      "reason": "C1 (T-0136): the oracle suites add their lines to tests; api-route.ts sits at the lib root beside api-logger.ts and api-response.ts until C7 moves the three"
+    },
+    {
+      "measuredAt": "2026-09-09",
+      "rise": "libRootFiles rose from 71 to 72",
+      "reason": "C1 (T-0136): the oracle suites add their lines to tests; api-route.ts sits at the lib root beside api-logger.ts and api-response.ts until C7 moves the three"
+    },
+    {
+      "measuredAt": "2026-09-09",
+      "rise": "testLines rose from 121900 to 121915",
+      "reason": "C1 (T-0136): the oracle suite adds its lines to tests"
+    },
+    {
+      "measuredAt": "2026-09-09",
+      "rise": "testLines rose from 121915 to 121926",
+      "reason": "C1 (T-0136): four suites that read the handler spelling say why they read two"
+    },
+    {
+      "measuredAt": "2026-09-09",
+      "rise": "testLines rose from 121926 to 122030",
+      "reason": "C2 (T-0137): the oracle suite adds its lines to tests; src/components/models/types.ts lost fourteen code lines to the library's ApiModel and kept its comments, so it crossed the essay line without gaining a comment"
+    },
+    {
+      "measuredAt": "2026-09-09",
+      "rise": "commentEssays rose from 107 to 108",
+      "reason": "C2 (T-0137): the oracle suite adds its lines to tests; src/components/models/types.ts lost fourteen code lines to the library's ApiModel and kept its comments, so it crossed the essay line without gaining a comment"
+    },
+    {
+      "measuredAt": "2026-09-09",
+      "rise": "handRolledReadHooks rose from 5 to 11",
+      "reason": "C3 (T-0138): the read measure walks the AST for a fetch reachable from a useEffect callback through the file's own functions; the regex before it counted 5, three of them click handlers, and missed eight loaders called from effects. Two of the honest thirteen (the Story Weaver pages) moved onto useApiResource in C3; the eleven left are named by --report and held here."
+    },
+    {
+      "measuredAt": "2026-09-09",
+      "rise": "srcLines rose from 105410 to 105422",
+      "reason": "T-0139: the Models page reload fix adds twelve source lines (the settled flag, its comment, the page's note) and its oracle suite 167 test lines; the oracle's fetch double repeats the models suites' stanza, which C4 (T-0140) folds into tests/helpers."
+    },
+    {
+      "measuredAt": "2026-09-09",
+      "rise": "testLines rose from 121189 to 121356",
+      "reason": "T-0139: the Models page reload fix adds twelve source lines (the settled flag, its comment, the page's note) and its oracle suite 167 test lines; the oracle's fetch double repeats the models suites' stanza, which C4 (T-0140) folds into tests/helpers."
+    },
+    {
+      "measuredAt": "2026-09-09",
+      "rise": "testRepeatedWindowLines rose from 6027 to 6044",
+      "reason": "T-0139: the Models page reload fix adds twelve source lines (the settled flag, its comment, the page's note) and its oracle suite 167 test lines; the oracle's fetch double repeats the models suites' stanza, which C4 (T-0140) folds into tests/helpers."
+    },
+    {
+      "measuredAt": "2026-09-09",
+      "rise": "testLines rose from 121356 to 121516",
+      "reason": "T-0140: the custom-fallback oracle adds 160 test lines and mocks the db through dbSingletonMock, which the predicate counts as inline until C4 (T-0141) names that factory too."
+    },
+    {
+      "measuredAt": "2026-09-09",
+      "rise": "suitesMockingDbInline rose from 100 to 101",
+      "reason": "T-0140: the custom-fallback oracle adds 160 test lines and mocks the db through dbSingletonMock, which the predicate counts as inline until C4 (T-0141) names that factory too."
+    },
+    {
+      "measuredAt": "2026-09-09",
+      "rise": "testLines rose from 120549 to 120624",
+      "reason": "C5 (T-0142): the oracle suite adds its 75 lines to tests; every other measure fell or held."
+    },
+    {
+      "measuredAt": "2026-09-09",
+      "rise": "testRepeatedWindowLines rose from 4637 to 4651",
+      "reason": "C5 (T-0142): the oracle suite adds its 75 lines to tests; every other measure fell or held."
+    },
+    {
+      "measuredAt": "2026-09-10",
+      "rise": "testLines rose from 120624 to 121388",
+      "reason": "C6 (T-0143): tests grow by two keeps-its-body suites modelled on T-0139's and by the api-fetch preamble that now routes safeApiCall through the same map in five suites; the src windows are the models page's handler lists, unchanged, re-counted after the folds moved lines around them."
+    },
+    {
+      "measuredAt": "2026-09-10",
+      "rise": "srcRepeatedWindowLines rose from 1176 to 1190",
+      "reason": "C6 (T-0143): tests grow by two keeps-its-body suites modelled on T-0139's and by the api-fetch preamble that now routes safeApiCall through the same map in five suites; the src windows are the models page's handler lists, unchanged, re-counted after the folds moved lines around them."
+    },
+    {
+      "measuredAt": "2026-09-10",
+      "rise": "testRepeatedWindowLines rose from 4651 to 4783",
+      "reason": "C6 (T-0143): tests grow by two keeps-its-body suites modelled on T-0139's and by the api-fetch preamble that now routes safeApiCall through the same map in five suites; the src windows are the models page's handler lists, unchanged, re-counted after the folds moved lines around them."
+    },
+    {
+      "measuredAt": "2026-09-10",
+      "rise": "srcLines rose from 100864 to 100872",
+      "reason": "C6 (T-0143): the baseline was cut before gate 8 caught two targets this batch introduced; src rises by the skip link's focus-only sizing and the rail chip's floor with the comments that say why, and tests by the oracle case that holds the skip link to the button's scale."
+    },
+    {
+      "measuredAt": "2026-09-10",
+      "rise": "testLines rose from 121388 to 121422",
+      "reason": "C6 (T-0143): the baseline was cut before gate 8 caught two targets this batch introduced; src rises by the skip link's focus-only sizing and the rail chip's floor with the comments that say why, and tests by the oracle case that holds the skip link to the button's scale."
+    },
+    {
+      "measuredAt": "2026-09-10",
+      "rise": "testRepeatedWindowLines rose from 4783 to 4786",
+      "reason": "C6 (T-0143): the baseline was cut before gate 8 caught two targets this batch introduced; src rises by the skip link's focus-only sizing and the rail chip's floor with the comments that say why, and tests by the oracle case that holds the skip link to the button's scale."
+    },
+    {
+      "measuredAt": "2026-09-10",
+      "rise": "srcLines rose from 100872 to 100890",
+      "reason": "C7 (T-0144): libRootFiles 71 to 6. src rises by the headers the six remaining root files now carry, each saying why it belongs to no domain, and one of them tips a file over the essay predicate; tests rise by the C7 oracle, which reads the five spellings of a lib path a codemod has to rewrite."
+    },
+    {
+      "measuredAt": "2026-09-10",
+      "rise": "testLines rose from 121422 to 121538",
+      "reason": "C7 (T-0144): libRootFiles 71 to 6. src rises by the headers the six remaining root files now carry, each saying why it belongs to no domain, and one of them tips a file over the essay predicate; tests rise by the C7 oracle, which reads the five spellings of a lib path a codemod has to rewrite."
+    },
+    {
+      "measuredAt": "2026-09-10",
+      "rise": "commentEssays rose from 8 to 9",
+      "reason": "C7 (T-0144): libRootFiles 71 to 6. src rises by the headers the six remaining root files now carry, each saying why it belongs to no domain, and one of them tips a file over the essay predicate; tests rise by the C7 oracle, which reads the five spellings of a lib path a codemod has to rewrite."
+    },
+    {
+      "measuredAt": "2026-09-10",
+      "rise": "srcLines rose from 100890 to 100894",
+      "reason": "C7 (T-0144): the mutation sweep found the root-header check soft, so every root file now carries the marker the oracle demands and the oracle demands the marker as well as the reason; four src lines and eight test lines are that sharpening."
+    },
+    {
+      "measuredAt": "2026-09-10",
+      "rise": "testLines rose from 121538 to 121546",
+      "reason": "C7 (T-0144): the mutation sweep found the root-header check soft, so every root file now carries the marker the oracle demands and the oracle demands the marker as well as the reason; four src lines and eight test lines are that sharpening."
+    },
+    {
+      "measuredAt": "2026-09-10",
+      "rise": "testLines rose from 121112 to 121114",
+      "reason": "C8 (T-0145): two lines of comment on C0's status assertion, saying which status a filed plan may have and that C8 is what makes it done."
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "testLines rose from 121114 to 121204",
+      "reason": "K0's oracle: 90 test lines that hold the decision register complete (T-0146)"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "testLines rose from 121204 to 121259",
+      "reason": "K0 (T-0146): the register oracle, 4 tests, and the c8 amendment its own growth forced (POLICY-closed-oracles, ruled 2026-09-12)"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "testLines rose from 121259 to 121398",
+      "reason": "K1 (T-0147): the oracle that holds the three CI failures, each checkable on Windows"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "testLines rose from 121398 to 121402",
+      "reason": "the navigator install in b6-cleared-defaults-stay-cleared: four lines that let a node suite build the whole DOM it needs, not just part of it"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "testLines rose from 121402 to 121426",
+      "reason": "the pipe regression check in k1-ci-can-go-green: 18 lines for the truncation only macOS saw"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "srcLines rose from 100881 to 100885",
+      "reason": "K2 (T-0148): the discipline oracle, 14 tests; plus the hit-target and pipe checks the CI-green batch added in 9df98afc and a68597ae"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "testLines rose from 121426 to 121568",
+      "reason": "K2 (T-0148): the discipline oracle, 14 tests; plus the hit-target and pipe checks the CI-green batch added in 9df98afc and a68597ae"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "testLines rose from 121568 to 121978",
+      "reason": "K3 (T-0149): the K3 oracle's 309 lines, authored by an ORACLE session, and the 100 lines of the c8 testLines amendment the operator ruled on 2026-09-12"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "srcLines rose from 100885 to 100978",
+      "reason": "K4/T-0151, the security fixes: the url-guard's IPv6 carrier decoding, the workspace guard's path test, the sessions limiter sharing one client-key derivation, and critic-03b's chmod at six writers of operator data, with the K4 oracle and critic-05c's x-ps-* signing cases"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "testLines rose from 121978 to 122275",
+      "reason": "K4/T-0151, the security fixes: the url-guard's IPv6 carrier decoding, the workspace guard's path test, the sessions limiter sharing one client-key derivation, and critic-03b's chmod at six writers of operator data, with the K4 oracle and critic-05c's x-ps-* signing cases"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "testLines rose from 122275 to 122301",
+      "reason": "K4/T-0151, the security fixes: the url-guard's IPv6 carrier decoding, the workspace guard's path test, the sessions limiter sharing one client-key derivation, and critic-03b's chmod at six writers of operator data, with the K4 oracle and critic-05c's x-ps-* signing cases"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "srcLines rose from 100978 to 101050",
+      "reason": "K4/T-0151, the security fixes: the url-guard's IPv6 expansion and carrier decoding, the workspace guard's path test, the sessions limiter sharing one client-key derivation and exporting its window count, and critic-03b's chmod at every writer of operator data plus the sweep of the copies already on disk, with the K4 oracle and critic-05c's x-ps-* signing cases"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "testLines rose from 122301 to 122386",
+      "reason": "K4/T-0151, the security fixes: the url-guard's IPv6 expansion and carrier decoding, the workspace guard's path test, the sessions limiter sharing one client-key derivation and exporting its window count, and critic-03b's chmod at every writer of operator data plus the sweep of the copies already on disk, with the K4 oracle and critic-05c's x-ps-* signing cases"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "testLines rose from 122386 to 122396",
+      "reason": "T-0151: the two holes the mutation sweep found in the K4 oracle — a restrictToOwner count loose enough to survive deleting one, and a .dockerignore substring test that a commented-out rule still satisfies"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "testLines rose from 122396 to 123081",
+      "reason": "K5/T-0153, the ruled security items: the K5 oracle, 65 cases and 771 lines, which drives every route losing a route-level read-only check through proxy() and calls the six host-side handlers directly. Net of the eleven cases app-06's ruling deletes with the function they tested, each replaced in the oracle and each removal site carrying a pointer to where the assertion went"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "testLines rose from 123081 to 123849",
+      "reason": "K6/T-0154, the gates see. routesWithTryCatch rises because the measure was widened, not because the tree grew a catch: it counted the serverErrorFromCatch helper by name, and eleven catches in six files logged and answered 500 by hand (app-04a, ruled 2026-09-12). Every one of the eighteen was already there. testLines and testRepeatedWindowLines are the K6 oracle, which proves each of the five gates BLIND before it is fixed, so it carries the shipped predicate beside the fixed one. scriptsLines is a new key: the census walked src and tests alone, so the tooling that referees every batch was measured by nothing (tooling-22)"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "testRepeatedWindowLines rose from 4334 to 4345",
+      "reason": "K6/T-0154, the gates see. routesWithTryCatch rises because the measure was widened, not because the tree grew a catch: it counted the serverErrorFromCatch helper by name, and eleven catches in six files logged and answered 500 by hand (app-04a, ruled 2026-09-12). Every one of the eighteen was already there. testLines and testRepeatedWindowLines are the K6 oracle, which proves each of the five gates BLIND before it is fixed, so it carries the shipped predicate beside the fixed one. scriptsLines is a new key: the census walked src and tests alone, so the tooling that referees every batch was measured by nothing (tooling-22)"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "routesWithTryCatch rose from 13 to 18",
+      "reason": "K6/T-0154, the gates see. routesWithTryCatch rises because the measure was widened, not because the tree grew a catch: it counted the serverErrorFromCatch helper by name, and eleven catches in six files logged and answered 500 by hand (app-04a, ruled 2026-09-12). Every one of the eighteen was already there. testLines and testRepeatedWindowLines are the K6 oracle, which proves each of the five gates BLIND before it is fixed, so it carries the shipped predicate beside the fixed one. scriptsLines is a new key: the census walked src and tests alone, so the tooling that referees every batch was measured by nothing (tooling-22)"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "scriptsLines rose from 8975 to 8978",
+      "reason": "K6/T-0154: three lines in check-doc-links.mjs, rewording the SCOPE comment so it no longer writes the pre-C7 theme path that c7's own gate refuses. The first scripts measure of the batch is necessarily cut before the last edit to a script, because the census now measures the tooling it is part of"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "testLines rose from 123849 to 123864",
+      "reason": "K6/T-0154, the independent review's fixes. scriptsLines rises because the measure was widened again, not because scripts/ grew: it counted only the four extensions the APP is written in, and the review found 3,501 lines of .sh, .mts, .cjs and .py under scripts/ that a measure named for that tree was silently leaving out - the same defect class the batch exists to fix. testLines is the two test files the review corrected: a case whose name said the opposite of what it asserted, and a header claiming in the present tense that the shared helper mocks api-auth"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "scriptsLines rose from 8978 to 12961",
+      "reason": "K6/T-0154, the independent review's fixes. scriptsLines rises because the measure was widened again, not because scripts/ grew: it counted only the four extensions the APP is written in, and the review found 3,501 lines of .sh, .mts, .cjs and .py under scripts/ that a measure named for that tree was silently leaving out - the same defect class the batch exists to fix. testLines is the two test files the review corrected: a case whose name said the opposite of what it asserted, and a header claiming in the present tense that the shared helper mocks api-auth"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "testLines rose from 123864 to 124351",
+      "reason": "K6/T-0154: the ORACLE session's amendment closing the two mutation-sweep survivors and three rot risks it found in its own work. An AST probe that shares none of the census's brace matching (m5 moved routes.sites 25 to 26 without moving the file list, which is why the first differential, sharing the algorithm AND comparing only file lists, saw nothing); a scripts-extension property derived from the tree rather than a list (m10); a JSX walk that cross-checks the raw-control rule's file set; and two pins replaced by properties so a later burn-down does not turn them red"
+    }
+  ]
+}

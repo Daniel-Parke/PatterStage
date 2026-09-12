@@ -1,5 +1,5 @@
 -- ============================================================
--- control-hub.db — Baseline Schema (v1)
+-- patterstage.db — Baseline Schema (v1)
 -- Single migration replacing the historical 001–032 chain.
 -- ============================================================
 
@@ -33,7 +33,8 @@ CREATE TABLE missions (
   cron_job_id          TEXT,
   category_id          TEXT,
   output_format        TEXT,
-  constraints          TEXT
+  constraints          TEXT,
+  run_id               TEXT
 );
 
 CREATE INDEX idx_missions_status   ON missions(status);
@@ -162,6 +163,56 @@ CREATE INDEX idx_sessions_mission_id   ON sessions(mission_id);
 CREATE INDEX idx_sessions_agent_source ON sessions(agent_type, source);
 CREATE INDEX idx_sessions_started_at   ON sessions(started_at DESC);
 
+-- ── schedules (PatterStage-owned scheduler — replaces Hermes jobs.json) ──
+-- The "when to run" decision lives HERE, not in the agent. The scheduler tick
+-- computes due rows from next_run_at and dispatches a run via the runtime.
+CREATE TABLE schedules (
+  id               TEXT PRIMARY KEY,
+  mission_id       TEXT REFERENCES missions(id) ON DELETE CASCADE,
+  name             TEXT NOT NULL DEFAULT '',
+  schedule         TEXT NOT NULL,                       -- canonical: 5-field cron or interval shorthand
+  schedule_display TEXT NOT NULL DEFAULT '',
+  enabled          INTEGER NOT NULL DEFAULT 1 CHECK (enabled IN (0, 1)),
+  catch_up_policy  TEXT NOT NULL DEFAULT 'fire_once'
+                     CHECK (catch_up_policy IN ('fire_once', 'skip')),
+  repeat_times     INTEGER,                             -- NULL = infinite
+  repeat_done      INTEGER NOT NULL DEFAULT 0,
+  profile_name     TEXT,
+  next_run_at      TEXT,                                -- drives restart-safe firing
+  last_run_at      TEXT,
+  last_run_id      TEXT,
+  last_status      TEXT,
+  created_at       TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at       TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX idx_schedules_next_run ON schedules(next_run_at) WHERE enabled = 1;
+CREATE INDEX idx_schedules_mission  ON schedules(mission_id);
+
+-- ── runs (one agent execution; replaces pid/status-file IPC) ──
+-- id is the PatterStage-owned run id (also the Idempotency-Key); run_id is the
+-- backend's id. Reconciled by polling the runtime, not status.json files.
+CREATE TABLE runs (
+  id           TEXT PRIMARY KEY,
+  run_id       TEXT,
+  mission_id   TEXT REFERENCES missions(id) ON DELETE CASCADE,
+  schedule_id  TEXT REFERENCES schedules(id) ON DELETE SET NULL,
+  profile_name TEXT,
+  session_id   TEXT,
+  status       TEXT NOT NULL DEFAULT 'started'
+                 CHECK (status IN ('started', 'completed', 'failed', 'cancelled')),
+  output       TEXT,
+  usage_json   TEXT,
+  error        TEXT,
+  submitted_at TEXT NOT NULL DEFAULT (datetime('now')),
+  completed_at TEXT,
+  updated_at   TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX idx_runs_active   ON runs(status) WHERE status = 'started';
+CREATE INDEX idx_runs_mission  ON runs(mission_id);
+CREATE INDEX idx_runs_run_id   ON runs(run_id) WHERE run_id IS NOT NULL;
+
 -- ── stories ─────────────────────────────────────────────────
 CREATE TABLE stories (
   id               TEXT PRIMARY KEY,
@@ -228,7 +279,7 @@ CREATE UNIQUE INDEX idx_mission_categories_name
 CREATE UNIQUE INDEX idx_mission_categories_seed_key
   ON mission_categories(seed_key) WHERE seed_key IS NOT NULL;
 
--- ── agent_profiles (Control Hub source of truth) ─────────────
+-- ── agent_profiles (PatterStage source of truth) ─────────────
 CREATE TABLE agent_profiles (
   slug            TEXT PRIMARY KEY,
   display_name    TEXT NOT NULL,
@@ -244,6 +295,11 @@ CREATE TABLE agent_profiles (
   seed_key        TEXT,
   synced_at       TEXT,
   sync_error      TEXT,
+  -- Per-profile gateway endpoint (each Hermes profile is its own gateway
+  -- process on its own port/key). NULL = use the default gateway.
+  gateway_host    TEXT,
+  gateway_port    INTEGER,
+  api_key_ref     TEXT,
   created_at      TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at      TEXT NOT NULL DEFAULT (datetime('now'))
 );

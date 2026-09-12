@@ -1,6 +1,6 @@
 import { mkdtempSync, rmSync, writeFileSync } from "fs";
 import { tmpdir } from "os";
-import { join } from "path";
+import { join, resolve } from "path";
 import {
   categorizeLogFileGroup,
   compareLogFileNames,
@@ -8,7 +8,7 @@ import {
   readLastLines,
   resolveLogFilePath,
   sanitizeLogBasename,
-} from "@/lib/log-files";
+} from "@/lib/fs/log-files";
 
 describe("sanitizeLogBasename", () => {
   it("accepts letters digits dot underscore hyphen", () => {
@@ -124,7 +124,9 @@ describe("resolveLogFilePath", () => {
     expect(r.ok).toBe(true);
     if (r.ok) {
       expect(r.safeName).toBe("agent");
-      expect(r.absolutePath).toBe("/tmp/test-logs/agent.log");
+      // resolve() (not a hardcoded POSIX string) keeps this portable: the
+      // source uses path.resolve, which yields C:\… on Windows, /tmp/… on Linux.
+      expect(r.absolutePath).toBe(resolve(logsDir, "agent.log"));
     }
   });
 
@@ -144,7 +146,7 @@ describe("resolveLogFilePath", () => {
     expect(r.ok).toBe(true);
     if (r.ok) {
       expect(r.safeName).toBe("ch-backup");
-      expect(r.absolutePath).toBe("/tmp/test-logs/ch-backup.log");
+      expect(r.absolutePath).toBe(resolve(logsDir, "ch-backup.log"));
     }
   });
 

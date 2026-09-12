@@ -1,0 +1,40 @@
+{
+  "version": "1.0.0",
+  "tools": [
+    {
+      "toolKey": "core",
+      "displayName": "Core",
+      "description": "General-purpose: files, terminal, and the web.",
+      "category": "general",
+      "toolsetIds": ["file", "terminal", "web"]
+    },
+    {
+      "toolKey": "research",
+      "displayName": "Research",
+      "description": "Browse and search the web and prior sessions.",
+      "category": "research",
+      "toolsetIds": ["web", "browser", "session_search"]
+    },
+    {
+      "toolKey": "code",
+      "displayName": "Code Execution",
+      "description": "Write and run code: files, terminal, sandboxed execution.",
+      "category": "engineering",
+      "toolsetIds": ["file", "terminal", "code_execution"]
+    },
+    {
+      "toolKey": "automation",
+      "displayName": "Automation",
+      "description": "Schedule, delegate, and track multi-step work.",
+      "category": "automation",
+      "toolsetIds": ["cronjob", "delegation", "todo"]
+    },
+    {
+      "toolKey": "memory-tool",
+      "displayName": "Memory Tool",
+      "description": "Read and write the agent's semantic memory.",
+      "category": "memory",
+      "toolsetIds": ["memory"]
+    }
+  ]
+}

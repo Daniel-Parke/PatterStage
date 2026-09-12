@@ -2,9 +2,10 @@
 // sync/sources/MissionQueueSync.ts — Background dispatch for queued missions
 // ═══════════════════════════════════════════════════════════════
 
-import { runMissionQueueTick } from "@/lib/mission-queue-tick";
-import { logApiError } from "@/lib/api-logger";
+import { runMissionQueueTick } from "@/lib/missions/mission-queue-tick";
+import { logApiError } from "@/lib/api/api-logger";
 import type { SyncSource, SyncResult } from "@/lib/sync/types";
+import { syncFailure } from "@/lib/sync/types";
 
 export class MissionQueueSync implements SyncSource {
   readonly name = "mission-queue";
@@ -15,10 +16,14 @@ export class MissionQueueSync implements SyncSource {
     try {
       const tick = await runMissionQueueTick();
       if (!tick.ran) {
+        // `blocked` is the operator's hard spend stop refusing an unattended
+        // dispatch. That is a deliberate refusal, not a failure, so success
+        // stays true and the reason rides along for the monitor surface.
         return {
           sourceName: this.name,
           success: true,
           syncedCount: 0,
+          error: tick.blocked,
           durationMs: Math.round(performance.now() - start),
         };
       }
@@ -32,13 +37,7 @@ export class MissionQueueSync implements SyncSource {
       };
     } catch (err) {
       logApiError("MissionQueueSync", "sync", err);
-      return {
-        sourceName: this.name,
-        success: false,
-        syncedCount: 0,
-        error: String(err),
-        durationMs: Math.round(performance.now() - start),
-      };
+      return syncFailure(this.name, err, start);
     }
   }
 }

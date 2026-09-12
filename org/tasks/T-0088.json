@@ -1,0 +1,56 @@
+{
+  "id": "T-0088",
+  "intent": "Round-6 findings 11, 12, 16 and 21 and the Draft orphan dispatch.ts admitted in its own comment: an unvalidated timeout that could replace the safety cap, list fields that crashed on a string, a rename path that bypassed dispatch's hygiene, a schedule refused after the row was written, and lists with no bound or a bound that could be bypassed.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0088-missions-bounds-2026-09-05",
+  "claims": [
+    "src/lib/list-bounds.ts",
+    "src/lib/missions/mission-timeout.ts",
+    "src/lib/missions/mission-body.ts",
+    "src/lib/missions/mission-name.ts",
+    "src/lib/missions/mission-field-updates.ts",
+    "src/lib/missions/mission-handlers/",
+    "src/lib/missions/mission-repository.ts",
+    "src/lib/orchestration/run-deadline.ts",
+    "src/lib/models-repository.ts",
+    "src/lib/schedules-repository.ts",
+    "src/lib/sessions/sessions-api-helpers.ts",
+    "src/app/api/missions/route.ts",
+    "src/app/api/artifacts/route.ts",
+    "src/app/api/models/route.ts",
+    "src/app/api/schedules/route.ts",
+    "src/app/api/chat/route.ts",
+    "src/app/api/composer/runs/route.ts",
+    "src/app/api/laboratory/research/route.ts",
+    "src/hooks/",
+    "tests/"
+  ],
+  "invariants": [
+    "I1 A timeout is a whole number of minutes from 1 to 4320, judged once. The body parser stores nothing else; dispatch, update and promote answer 400 naming the field, the value and the range.",
+    "I2 Nothing a row declares can exceed the ceiling. declaredTimeoutMinutes caps what it reads, so an older row cannot make the unreachable-backend deadline infinite.",
+    "I3 The four list fields are lists of non-empty strings, or nothing.",
+    "I4 A mission name is collapsed and capped on every path that writes it, through one function.",
+    "I5 A refusal happens before the row exists. A schedule that can never fire creates no Draft.",
+    "I6 Every list is bounded: a limit is never NaN, negative, fractional or above its ceiling, and an offset is never negative. Ordering is newest-first and stated.",
+    "I7 The bounds live in core, not in the repositories, so a test that mocks a repository wholesale cannot strip them."
+  ],
+  "sharper_than_reported": "Finding 12 said timeoutMinutes was unvalidated. It was; the consequence was worse than 'surprising': run-reconcile's cap is `declared ?? DEFAULT_MAX_RUN_MINUTES`, so 1e9 did not exceed the safety cap, it replaced it. A mission whose backend vanished never self-healed and held the single-flight gate forever. Finding 16 said names accept newlines and HTML; the dispatch path already collapsed and capped since T-0079, and only the update/promote path bypassed it. Finding 11 said missions ignored limit; the audit found sessions could bind LIMIT -1 (unlimited) and LIMIT NaN (a 500) from the URL, and four other routes never read the limit their repositories already accepted.",
+  "mutation_finding": "Sixteen mutants on the first pass, fifteen killed. The survivor was the timeout 400 in the update handler: the dispatch oracle pinned the guard in one of the three handlers that carry it. An oracle for update and promote was added and both mutants (M16, M17) killed. The rest: both timeout rules, the deadline belt, the list-field coercion, name hygiene at both call sites, the never-fires check and its position, the clamp, the NaN rule, the repository order and limit, the route plumbing, the sessions parser and the models limit.",
+  "the_gate_caught_a_seam": "Moving the bounds constants into the repositories broke four legacy route tests that mock repository modules wholesale, and five routes declared GET() with no request. Both were the product's problem to solve, not the tests': the constants moved to core list-bounds.ts, and boundsFrom reads a NextRequest, a plain Request, or nothing.",
+  "verification": "Isolated instance, production build: dispatch with timeoutMinutes 1e9 answered 400 'timeoutMinutes must be a whole number of minutes from 1 to 4320 (got 1000000000)' and the mission count did not move; a cron schedule '0 0 30 2 *' answered 400 'can never fire' and the count did not move; ?limit=5 returned five, newest first; ?limit=abc answered 200; ?limit=-1 returned one; sessions ?limit=-1 and ?limit=abc answered 200; promote with a newline name stored 'Line one line two'; a 200-character name stored at 80 ending in an ellipsis; promote with missionTimeMinutes '60' answered 400. Playwright at baseline (89 passed, 1 known failure for Batch 7, 8 skipped). Gate by exit code: lint 0, tsc 0, 3837 tests / 428 suites, knip 0, canary OK, build 0.",
+  "timestamps": {
+    "opened": "2026-09-05T00:10:00Z",
+    "updated": "2026-09-05T01:40:00Z",
+    "closed": "2026-09-05T01:40:00Z"
+  }
+}

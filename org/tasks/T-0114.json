@@ -1,0 +1,67 @@
+{
+  "id": "T-0114",
+  "intent": "U0 of the UI overhaul programme: the baselines the rest of it is measured against, and the three places where a gate or a comment says something about this tree that is not true. Two design-lint rules report zero because they cannot see the syntax they exist to refuse; globals.css asserts that twenty of its own rules paint nothing and instructs the next maintainer not to repair them; and the design census does not exist at all, so every claim the programme makes would be an adjective. Nothing about the product's appearance is changed here beyond five sites the two repaired rules now refuse.",
+  "declared": {
+    "capabilities": [
+      "edit-source",
+      "edit-tests",
+      "edit-tooling",
+      "edit-docs"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {
+      "factor": "size-threshold",
+      "tier_floor": "R1",
+      "source": "derived:diff-size",
+      "evidence": "fourteen files edited plus five added; no protected or sensitive path is touched; org/plans/ is a reversible path"
+    }
+  ],
+  "status": "done",
+  "owner_session": "t0114-u0-baselines-2026-09-06",
+  "claims": [
+    "scripts/tooling/design-lint.mjs",
+    "scripts/tooling/design-census.baseline.json",
+    "src/app/globals.css",
+    "src/components/viz/",
+    "src/components/logs/LogsHeaderActions.tsx",
+    "src/components/composer/WorkflowRunCanvas.tsx",
+    "src/lib/scripts-manager.ts",
+    "src/lib/models/model-readiness.ts",
+    "src/modules/rec-room/handlers/generate.ts",
+    "tests/e2e/",
+    "tests/unit/",
+    "org/plans/2026-09-ui-overhaul.md",
+    "docs/images/",
+    "package.json",
+    "tsconfig.tests.json"
+  ],
+  "programme": "U0, the first batch of the UI overhaul programme (org/plans/2026-09-ui-overhaul.md), depends on nothing. Everything after it measures against the census this batch takes, so it lands before any token, geometry or codemod work.",
+  "timestamps": {
+    "opened": "2026-09-06T18:00:00Z",
+    "updated": "2026-09-06T23:30:00Z",
+    "closed": "2026-09-06T23:30:00Z"
+  },
+  "invariants": [
+    "I1 A gate reporting zero is worth exactly what its blindest case is worth. Every rule repaired here is proved to FIRE on a planted fixture AND to reach the real file it was missing, before its zero is believed.",
+    "I2 A rule must fire for the right reason. `rgb(var(--ps-rgb-neon-cyan) / 0.3)` is a token reference wearing the same punctuation as a raw colour, four live call sites use it, and the repaired rule leaves it alone.",
+    "I3 No claim in this repository asserts something the build disproves. The bloom comment, the bloom test's own name and tsconfig.tests.json's header all said things that stopped being true and were not corrected; all three now say what is measured.",
+    "I4 The census reads what was PAINTED. Colour is normalised through the browser's own engine, never a regex, because Tailwind v4 emits oklab() for the commonest surface in the tree and a parser that skips it reports zero for the wrong reason.",
+    "I5 The census arithmetic is checked against numbers derived independently, and two of them agree with the reconnaissance's live measurement to the second decimal.",
+    "I6 A measurement that changes when nothing changed is not a measurement. The screenshot capture and the census were both made deterministic before either was trusted."
+  ],
+  "commits": "52a324f0 the oracle alone, measured red at 17 of 31: two blind gate rules, one false comment and a knip failure that a green lint had hidden since T-0113; 13537cb1 the repairs, the five sites the repaired rules now refuse, the deleted essay and the four de-exports; 537d658c the census, the deterministic capture and the approved plan filed at org/plans/2026-09-ui-overhaul.md; the sharper-oracle commit the sweep asked for; and the record commit that follows.",
+  "verification": "Gate by exit code on the finished tree: lint 0, tsc 0, jest 0 (6166 tests, 617 suites), knip 0, canary 0, build 0, Playwright 140 passed and 26 skipped, census 0. The skipped count rises by one because the census spec is opt-in for the same reason the capture spec is. BEFORE the batch the same chain read knip 1: `npm run lint:knip` had been failing since T-0113 and `npm run lint` does not include knip, so a green lint hid a red tree.",
+  "census": "The before-census, measured on the running product at 1440x900 over the 23 documented routes and committed as scripts/tooling/design-census.baseline.json: routes 23, distinctFontSizes 7, twelvePxShare 0.7, monoShare 0.63, textBelowFloor 0, distinctBorderColours 36, distinctCardChromes 108, distinctButtonHeights 23, distinctButtonChromes 89, distinctRadii 7, distinctBoxShadows 16, distinctZLayers 1, controlBordersBelowThree 320, decorativeBordersBelowThree 619, hitTargetsBelowTwentyFour 85, routesWithMisalignedHeading 21, worstHeadingOffset 289, distinctContentWidths 8, routesOverflowingX 0, railVsPageContrast 1.06, railDividerContrast 1.26. Five of these can be checked against the reconnaissance, which measured the same quantities by a different route on a different day: 12px share 0.70 against its 70.6%, mono share 0.63 against its 62%, worst heading offset 289px against its +289px on /results/logs, rail against page 1.06:1 against its 1.06:1, and the rail divider 1.26:1 against its 1.25:1. Where the two disagree it is the predicate, not the product: the census counts a card chrome on any bordered surface at least 24x24 that is not a control (108 against the walk's narrower 47) and exempts an inline-in-sentence link from the hit-target floor as WCAG 2.5.8 does (85 against 127).",
+  "mutation": "Two rounds against the committed tree, twenty mutants over the two design-lint patterns and the census arithmetic. Round one: 20 mutants, 18 killed. Both survivors were the ORACLE's fault rather than the code's, which is the only interesting kind. (1) The word-boundary case wrote `cssFontSize={8}`, whose capital F could never match a lowercase pattern, so removing \b from the rule changed nothing and the case proved nothing; it reads `labelfontSize={8}` now. A batch whose entire subject is a word boundary in the wrong place does not get to leave its own boundary untested. (2) The census ratchet exempts `routes` because adding a screen changes what every other number is measured over; the oracle only ever ADDED one, so deleting the exemption survived. It asserts both directions now, and the second is the one this programme will hit, since the Rec Room merge takes twenty-three routes to twenty. Round two: 2 mutants, 2 killed. The census collector is not covered: jsdom has no layout and no canvas, so nothing in jest can reach it. What stands in for an oracle there is that five of its readings agree with the reconnaissance's independent live measurement, and four anti-vacuity refusals inside the spec that fail loudly if it ever returns an empty page, an unparseable colour or no rail.",
+  "proof": "Measured in the stylesheet `npm run build` emits, not reasoned about: `.glow-cyan` compiles to `box-shadow:0 0 14px rgb(var(--ps-rgb-neon-cyan) / .08)`, `.grid-bg` and `.text-glow-cyan` likewise, the mirror compiles to space-separated channels, and the Tailwind arbitrary-value form `shadow-[0_0_15px_rgb(var(--ps-rgb-neon-purple)_/_0.06)]` compiles to a real `--tw-shadow`. That is the evidence the deleted comment was wrong and the evidence that the two repaired sites had somewhere correct to go. The two charts were then read in a live browser: both render at 12px and neither clips, the clock because its viewBox is now padded.",
+  "found_by_running_the_gate": "`npm run lint:knip` had been exiting 1 since T-0113, and `npm run lint` does not include knip, so a green lint hid it for a batch. Four symbols were exported and used only inside their own file. docs/contributing/testing.md warns about exactly this shape ('the step named ESLint is not eslint', and canary and knip are not in the chain); the warning was right and nobody was running the other half.",
+  "found_by_measuring_twice": "Two identical `npm run screenshots` runs produced 22 of 23 images different. The captures ran in parallel against one server, and every route visit writes an analytics event that feeds the quest badge, the achievement count and every chart on Insights, so each screen was photographed in whatever state the workers had left. Serialising took it to 17. The remaining sixteen were one 32x32 square: the rail's animated-border logo, whose gradient runs on a 4s loop, so its phase at the shutter was whatever the machine felt like. Freezing animation at capture took it to one. The one that is left is dashboard.png, whose Subsystems panel reads the server clock; normalising every clock-shaped string would fix it and would also flatten every timestamp in the Logs and Sessions images into one repeated value, which is a worse manual, so it is left and written down. The same measurement caught the census drifting by four counts inside `npm run test:e2e` while two dedicated runs agreed exactly; the census is opt-in for that reason and runs in the batch gate.",
+  "deviation": "(1) The plan sizes U0 [S] and lists two gate holes. It is [M] and it closed a third thing the plan had put in U14: nothing, in the end, was moved out of U14, but the batch grew a measurement apparatus (the census: an analysis module, a collector, a spec, a baseline and 44 unit cases) that the plan had described in one line. That apparatus is what every later batch's claims rest on. (2) The plan's gate list said three existing holes are closed in U0; `no-bare-outline-none` is not one of them. Tightening it makes 46 controls in 30 files red with no fix in place, which is U14's work, and the plan's own U14 entry already says so. (3) The approved plan was filed at org/plans/2026-09-ui-overhaul.md here rather than in U17, so that every session after this one reads it from disk rather than from a conversation. (4) Oracle-first held for the three gate repairs, which were committed alone and measured red at 17 of 31. It did NOT hold for the census arithmetic: that module was written first and its 44 cases after. The constants in them are derived independently of the code, from the WCAG formulae and the app's own painted ground, and two of them agree with the reconnaissance's live measurement to the second decimal; the mutation sweep is what actually proves they can fail. Recorded rather than dressed up.",
+  "harness_amendments": "Four. tests/e2e/screenshots.spec.ts runs serially and freezes animation before the shutter. tests/e2e/design-census.spec.ts is new and opt-in. package.json gains `census` and `census:update`. tsconfig.tests.json's header no longer says typecheck:tests is unwired at 73 errors; it is wired, as the last step of npm run lint, and it is at zero. tests/unit/bloom-paint-rule.test.ts keeps its assertion exactly and loses a name that asserted a falsehood: the pipeline CAN compute the triplet form now, and the reason to keep color-mix is that it is the form the rule was measured in, not that the alternative is broken.",
+  "deferred": "Two findings discovered while verifying this batch, both recorded at their sites and in the plan rather than fixed here. (1) DistributionHistogram is the only chart in viz/ carrying text inside a preserveAspectRatio=\"none\" stretch: in a 323px card the horizontal scale is 0.48, so its 12px labels render 14.4px tall and about 3.2px per character. Raising them off 8px and 9px made both dimensions 1.5x larger and did not change the ratio, so the tree is strictly better and not yet right; fixing it needs the chart to know its own rendered width, which needs the first ResizeObserver in src/, and it belongs with the Insights rebuild in U10. (2) distinctZLayers reads 1 on a tree whose source carries thirteen z values, seven of them arbitrary, because every overlay is closed while a census runs. It guards against a new resting layer; the source sprawl is design-lint's to refuse in U6."
+}

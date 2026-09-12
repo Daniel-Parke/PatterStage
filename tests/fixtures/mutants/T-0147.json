@@ -1,0 +1,30 @@
+{
+  "task": "T-0147",
+  "why": "Each mutant puts back one of the three defects that kept CI red for six days. If the oracle does not go red, this machine still cannot see what Linux sees.",
+  "mutants": [
+    {
+      "id": "m1-a-link-goes-back-to-the-wrong-case",
+      "file": "docs/reference/api.md",
+      "anchor": "See [SPEND.md](spend.md).",
+      "replacement": "See [SPEND.md](SPEND.md).",
+      "tests": ["tests/unit/k1-ci-can-go-green.test.ts"],
+      "why": "existsSync is case-blind on Windows, so only a directory read catches what stops Ubuntu at lint step 2"
+    },
+    {
+      "id": "m2-a-lazy-import-goes-back-to-relative",
+      "file": "scripts/docs/extract.ts",
+      "anchor": "appModule(\"src\", \"lib\", \"analytics\", \"event-types.ts\"),",
+      "replacement": "\"../../src/lib/analytics/event-types\",",
+      "tests": ["tests/unit/k1-ci-can-go-green.test.ts"],
+      "why": "a relative specifier cannot resolve from the data: URL tsx compiles this file into, which is the macOS failure"
+    },
+    {
+      "id": "m3-the-smoke-drives-the-deleted-route",
+      "file": "tests/integration/runtime/full-stack-smoke.mjs",
+      "anchor": "  const promoted = await req(\"POST\", `${CH}/api/missions`, {",
+      "replacement": "  const promoted = await req(\"POST\", `${CH}/api/missions/${missionId}/dispatch`, {",
+      "tests": ["tests/unit/k1-ci-can-go-green.test.ts"],
+      "why": "T-0129 deleted that route as an orphan; the smoke was the caller nobody counted, and nothing but this check notices"
+    }
+  ]
+}

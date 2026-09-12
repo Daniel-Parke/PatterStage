@@ -1,18 +1,45 @@
-# Example stack: Control Hub with mounted Hermes + CH data dirs.
-# Hermes Python runtime is not included — run the agent/gateway on host or another compose service.
+# Full PatterStage stack with a mock Hermes API Server — runs anywhere with
+# Docker, no real agent / API keys required. Great for trying the app and for
+# end-to-end tests of the orchestration core (missions → HTTP runs → reconcile,
+# PatterStage-owned schedules).
+#
+#   docker compose up --build
+#   # PatterStage:  http://localhost:42069
+#   # then, against the running stack:
+#   CH_URL=http://localhost:42069 API_SERVER_KEY=change-me-local-dev \
+#     node tests/integration/runtime/full-stack-smoke.mjs
+#
+# For a REAL Hermes: run `hermes gateway` with API_SERVER_ENABLED=true on the
+# host, delete the `mock-hermes` service + the `depends_on` block below, and set
+# HERMES_GATEWAY_URL to your gateway (e.g. http://host.docker.internal:8642).
 services:
-  control-hub:
+  patterstage:
     build: .
     ports:
       - "${PORT:-42069}:${PORT:-42069}"
     environment:
       PORT: "${PORT:-42069}"
       HERMES_HOME: /data/hermes
-      CH_DATA_DIR: /data/ch
-      # Run on a trusted network or behind a reverse proxy; see docs/DEPLOY.md
+      PS_DATA_DIR: /data/ch
+      # Point the runtime adapter at the (mock) Hermes API Server.
+      HERMES_GATEWAY_URL: "${HERMES_GATEWAY_URL:-http://mock-hermes:8642}"
+      API_SERVER_KEY: "${API_SERVER_KEY:-change-me-local-dev}"
     volumes:
       - hermes_home:/data/hermes
       - ch_data:/data/ch
+    depends_on:
+      mock-hermes:
+        condition: service_healthy
+
+  mock-hermes:
+    build:
+      context: .
+      dockerfile: mock-hermes/Dockerfile
+    environment:
+      API_SERVER_KEY: "${API_SERVER_KEY:-change-me-local-dev}"
+      RUN_DELAY_MS: "${RUN_DELAY_MS:-1200}"
+    ports:
+      - "${HERMES_PORT:-8642}:8642"
 
 volumes:
   hermes_home:

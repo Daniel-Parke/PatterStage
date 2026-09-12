@@ -7,7 +7,7 @@ import {
   PROVIDER_ENV_VAR,
   isHermesProvider,
   envVarForProvider,
-} from "@/lib/hermes-providers";
+} from "@/modules/hermes/lib/providers";
 
 describe("HERMES_PROVIDERS", () => {
   it("includes 'nous' as a valid provider", () => {

@@ -1,0 +1,54 @@
+{
+  "id": "T-0121",
+  "intent": "U7 of the UI overhaul programme: the rail gets a hierarchy, and loses a tier. U4 gave it a surface it can be seen against; it still had no hierarchy inside it. 63 elements shared one tone, so a section heading, an item label, an icon and the active row were all the same weight, and the accent the registry declares per destination was spent on one hovered icon at a time rather than on saying where you are.",
+  "declared": {
+    "capabilities": [
+      "edit-source",
+      "edit-tests"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {
+      "factor": "size-threshold",
+      "tier_floor": "R1",
+      "source": "derived:diff-size",
+      "evidence": "the rail, the mobile header, one new component, the module registry's nav type and the root layout; a signed-off tier removal, no route removed, no schema, no protected path"
+    }
+  ],
+  "status": "done",
+  "owner_session": "t0121-u7-the-rail-2026-09-08",
+  "claims": [
+    "src/components/layout/",
+    "src/lib/modules/",
+    "src/app/layout.tsx",
+    "src/lib/theme.ts",
+    "tests/e2e/rail-no-scroll.spec.ts",
+    "tests/unit/"
+  ],
+  "programme": "U7, depends on U4. The rail is the shell, so it is settled before the screens inside it are rebuilt.",
+  "timestamps": {
+    "opened": "2026-09-08T12:00:00Z",
+    "updated": "2026-09-08T16:00:00Z",
+    "closed": "2026-09-08T16:00:00Z"
+  },
+  "invariants": [
+    "I1 THREE TIERS, NOT ONE. Measured on the running product: a section heading at white 50%, an inactive label at 70%, the active row at 92%. An inactive row that is already the quietest thing on the rail leaves the active one nowhere to go, which is how 63 elements came to share one tone.",
+    "I2 'YOU ARE HERE' IS A BAR, IN THE DESTINATION'S OWN COLOUR. 3px, edge-anchored, and rgb(0, 191, 255) on Missions because that is what the registry says Missions is. A fill cannot say it: a fill is what hover says.",
+    "I3 A COLLAPSED ROW IS 40x40. It was 39x22, under WCAG 2.5.8's 24x24 and smaller than the same row expanded, which is backwards for the mode that exists to be reachable.",
+    "I4 THE WIDTH IN THE FIRST FRAME IS THE WIDTH IN THE LAST. The collapse preference is read on the server and handed down; only the write is a fetch.",
+    "I5 THE REGISTRY STILL NAMES EVERY ROUTE IT OWNS. Decision 8 deletes the rail's second TIER, not the registry's knowledge of the six routes that tier used to draw."
+  ],
+  "commits": "560785b4 the oracle, red at 10 of 13; dc2cffaa the hierarchy, the bar, the reachable rows, the server-side collapse, the one brand mark and the tier's removal; the commit that tightens four assertions the sweep found loose; and this record.",
+  "verification": "Gate by exit code: lint 0, tsc 0, jest 0 (6447 tests, 628 suites), knip 0, canary 0, build 0, Playwright 0, census 0. rail-no-scroll now runs 25 tests rather than 2. Walked on the isolated instance, where the three tiers and the bar's colour were measured rather than looked at.",
+  "the_plan_was_wrong_about_the_budget": "The plan says deleting the sub-link tier pays for taller rows. It does not. The tier rendered only under the ACTIVE link, so it never cost more than one route's worth at a time, and there was nothing banked to spend: at py-1.5 the nav measured 673px against the 572px budget, and at py-1 it measured 597. The expanded row therefore keeps its 3px rhythm and the arithmetic is written beside it in the source. What this batch is actually about - tone, the bar, and space above a heading - fits inside the budget, and the collapsed row's 40px square is unaffected because a collapsed rail has no labels to stack.",
+  "the_deletion_was_two_things": "`subLinks` was doing two jobs and only one was the rail's. `labelFor` reads the registry to name a page, and a sub-link's label was the only place six routes were named, so deleting the field outright made /agent/settings/restore title itself 'Settings' and /recroom/story-weaver/create title itself 'Story Weaver'. It also dropped all six out of allModuleRoutes, which is the e2e matrix. The field survives as `childRoutes`, named for the job that remains: routes a nav link owns, NAMED by the registry and VISITED by the matrix, and not drawn in the rail. Decision 8 is honoured exactly - the tier is gone - and nothing lost a name.",
+  "the_test_could_not_have_caught_it": "rail-no-scroll loaded `/` and asserted the nav does not scroll at 1280x720. The sub-link tier rendered only under the active link, and the one route that could never show it is the dashboard, which has no children. The test written to catch the rail overflowing was structurally incapable of seeing the thing that overflowed it. It walks all 23 routes now, and carries a new assertion the server-side collapse makes possible: the width the server rendered and the width after hydration must agree.",
+  "mutation": "10 mutants against the committed tree, three rounds. Round one: 6 killed, 4 survived, and all four for one reason - each assertion asked whether a string appears anywhere in a 250-line component, and each string appears somewhere else in it for an unrelated reason. `iconColorMap` is also the icon's, so the bar could go grey; `text-ps-text-secondary` is also the collapse button's hover, so a row could go back to the quietest tier; `BrandMark` is also the import line, so the rail could go back to drawing its own square. The fourth was worse: nothing asserted that the registry NAMES a child route, so renaming a label would have done silently what deleting the field did loudly. Round two: 9 of 10, the last survivor being my own error - the mutant listed a suite that did not contain the new assertion. Round three: 10 of 10.",
+  "deviation": "(1) The plan says RailFooter's /api/update fetch folds into 'the poll the rail already makes'. There is no such poll: RailFooter is the only thing in the rail that fetches, and it reads two endpoints once on mount. Two reads that never repeat are not a polling cost, and the rule that covers this class, no-raw-fetch-in-component, is baselined at 11 and belongs to U15's data layer. (2) The 18 unused IconName variants are not trimmed here. ICONS is exhaustive over IconName by type, so an unused name is a name the registry could use tomorrow rather than dead code, and knip does not flag it. Recorded rather than done. (3) The expanded row's height is unchanged, per the budget arithmetic above.",
+  "the_growth_recorded": "twelvePxShare 0.56 -> 0.58 and monoShare 0.63 -> 0.64, both in the baseline's `allowed` with the reason. The first is the rail's brand tagline moving from text-body to text-micro: two text nodes across 23 routes, exactly the +46 measured, and a tagline set at the same size as the product name above it is the absence of hierarchy this programme removes. The second is arithmetic on a smaller denominator: deleting the tier removed 22 INTER labels, so the mono count is unchanged and nothing became more mono.",
+  "deferred": "The primitive set is U8, and it takes the z ladder and the elevation token with it. The 322 accent-tinted borders sorted by the U6 survey are U8's too."
+}

@@ -114,4 +114,31 @@ describe("CollapsibleSection", () => {
     );
     expect(badge).toBeInTheDocument();
   });
+  // ── the disclosure announces its own state ──────────────────────
+  //
+  // Found while fixing an e2e locator that read `/Dispatch.*Expand/i` and had
+  // never matched anything: the words "Expand" and "Collapse" appear in no
+  // disclosure in this codebase, and this one carried no aria-expanded either,
+  // so its open/closed state existed only as a chevron glyph. A screen reader,
+  // and any automated pass, read a working control as an inert one — the same
+  // defect as Modal announcing itself as a plain div (T-0036).
+
+  it("announces itself as collapsed before it is opened", () => {
+    render(<CollapsibleSection {...defaultProps} />);
+    expect(screen.getByRole("button", { expanded: false })).toBeInTheDocument();
+  });
+
+  it("announces itself as expanded when opened by default", () => {
+    render(<CollapsibleSection {...defaultProps} defaultExpanded />);
+    expect(screen.getByRole("button", { expanded: true })).toBeInTheDocument();
+  });
+
+  it("updates the announcement when the operator toggles it", () => {
+    render(<CollapsibleSection {...defaultProps} />);
+    const header = screen.getByRole("button", { expanded: false });
+    fireEvent.click(header);
+    expect(screen.getByRole("button", { expanded: true })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { expanded: true }));
+    expect(screen.getByRole("button", { expanded: false })).toBeInTheDocument();
+  });
 });

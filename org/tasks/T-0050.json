@@ -1,0 +1,48 @@
+{
+  "id": "T-0050",
+  "intent": "Make a mutation's outcome perceivable. The operator's second live Hermes QA pass, 2026-08-29, named this as the single thing it would fix: 'silent success and silent failure look identical'. It filed the evidence as three separate observations, a dialog that stays open with no toast, a Save and push with no confirmation, and toasts that vanish mid-keystroke, and diagnosed none of them. Two concrete causes, both in src/components/ui/Toast.tsx: the toast rendered at z-50 inline on the page while Sheet portals to document.body at z-[61] and Modal sits at z-[70], so every confirmation of a mutation made from inside an overlay was covered by that overlay; and the component carried no role and no aria-live, so nothing announced it to a screen reader or to a harness counting live regions. A third decision predated both: one duration governed everything, so the reason a write failed destroyed itself in four seconds. Operator ruled 2026-08-29 to include persistent success state. Closed 2026-08-29.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0050-feedback-durability-2026-08-29",
+  "invariants": [
+    "I1 A success is announced politely, a failure assertively. role=status/aria-live=polite for success and info; role=alert/aria-live=assertive for an error, because a failure interrupts: the operator is about to act on the belief that the write landed.",
+    "I2 The confirmation is never buried by the thing that produced it. The toast is BOTH numerically above every overlay (z-[80] against Modal's z-[70]) and portaled to document.body. The portal is not redundancy: any ancestor with a transform, a filter or a backdrop-blur creates a stacking context a child cannot escape, and this app puts backdrop-blur on its overlays.",
+    "I3 An error waits to be dismissed. It is the only place its own reason appears. A success still auto-dismisses, because the operator asked for it and it happened.",
+    "I4 The outcome outlives the toast. LastResult renders a durable line that is still on screen after the toast has gone, which is what an operator who looked away actually needs.",
+    "I5 An icon-only button has an accessible name. Enforced by a guard, not by inspection."
+  ],
+  "oracle_provenance": "Authored BEFORE any production file was opened for edit and committed on its own at 7e3ba120, ahead of the implementation at 0cb317ed. One file, tests/unit/feedback-is-perceivable.test.tsx, measured against dev@03ed8c29: 9 red, 2 green. The harness renders the last-result value inline rather than through a shared component that did not exist yet, deliberately: routed through a missing module, the accessibility, stacking and duration assertions would have gone red for a filename instead of for the behaviour they describe. That mistake was made once in this session and corrected before the freeze.",
+  "verification": "Six mutations against the committed implementation, tree restored and confirmed clean after each: dropping the live-region roles turns 6 red; returning the toast to z-50 turns 2 red; removing the portal turns 1 red; letting errors auto-dismiss turns 1 red; not recording the last result turns 2 red; unnaming the dismiss control turns 1 red. Beyond jest, verified in a real browser on a booted server: the toast fires with role=status, aria-live=polite, zIndex 80 and parentElement === document.body, and the durable line is still on screen five seconds later when the toast has gone.",
+  "modal_case_note": "The Modal case is asserted in the oracle rather than in the browser, and the reason is worth recording rather than hiding. I could not drive the category form into firing a toast from inside the modal, and rather than keep poking at a form to manufacture evidence I settled the question deterministically: the toast is a direct child of body and numerically above z-[70], so no ordering of the two can bury it. Three independent proofs stand behind the claim: the unit assertion, the z-index invariant test, and the live measurement on a running server.",
+  "sixth_button": "The QA sweep found five icon-only buttons with no accessible name. The new guard found a SIXTH on its first run, src/modules/rec-room/components/ReaderBanners.tsx:38, which is the argument for having the guard rather than a one-off sweep. Three of the six were the only way to close the UI they sat in, so an assistive-technology user got an unnamed button as the sole exit.",
+  "rollback": "Revert 0cb317ed. The oracle at 7e3ba120 then goes red again.",
+  "claims": [
+    "src/components/ui/Toast.tsx",
+    "src/components/layout/BranchDropdown.tsx",
+    "src/components/models/ModelSyncButtons.tsx",
+    "src/modules/rec-room/components/ReaderBanners.tsx",
+    "src/app/(main)/logs/page.tsx",
+    "src/app/recroom/story-weaver/characters/page.tsx",
+    "src/app/operations/",
+    "tests/"
+  ],
+  "deferred": [
+    "LastResult is wired into the four operations surfaces only. The config section pages do not use useToast at all and have their own feedback path, so giving them the durable line is a separate piece of work rather than a line to add. Worth its own record once someone decides what those pages should say.",
+    "The icon-button guard catches the single-line <button><Icon /></button> shape, which is what all six offenders were. A multi-line icon-only button would slip past it. Widening the check needs a measured baseline first; per WG-WEB-013 it stays line-oriented rather than taking a parser.",
+    "The house convention leans on `title` (112 uses against 27 aria-label). `title` IS a valid accessible-name source per HTML-AAM, so the guard accepts it, but it is not exposed to touch or keyboard-only users. Migrating the 112 is a separate ruling, not a defect fix."
+  ],
+  "timestamps": {
+    "opened": "2026-08-29T15:30:00Z",
+    "updated": "2026-08-29T18:00:00Z",
+    "closed": "2026-08-29T18:00:00Z"
+  }
+}

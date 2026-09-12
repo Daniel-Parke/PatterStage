@@ -1,0 +1,60 @@
+{
+  "id": "T-0124",
+  "intent": "U10 of the UI overhaul programme: Results. Sessions, Artifacts, Insights and Logs, whose density decision is DENSE on all four because every one of them is a list you come to in order to find one thing among many.",
+  "declared": {
+    "capabilities": [
+      "edit-source",
+      "edit-tests"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {
+      "factor": "size-threshold",
+      "tier_floor": "R1",
+      "source": "derived:diff-size",
+      "evidence": "one row component, one chart, one shared strip, seven strip adapters and two contract suites; no route added or removed, no schema, no protected path"
+    }
+  ],
+  "status": "done",
+  "owner_session": "t0124-u10-results-2026-09-09",
+  "claims": [
+    "src/components/session/",
+    "src/components/viz/",
+    "src/components/logs/LogInsights.tsx",
+    "src/components/memory/MemoryInsights.tsx",
+    "src/components/models/ModelInsights.tsx",
+    "src/components/skills/SkillsInsights.tsx",
+    "src/modules/hermes/components/ToolsInsights.tsx",
+    "src/components/spend/SpendPanel.tsx",
+    "src/app/results/insights/page.tsx",
+    "tests/unit/"
+  ],
+  "programme": "U10, depends on U8. Converts the Results group onto the primitive set.",
+  "timestamps": {
+    "opened": "2026-09-09T12:00:00Z",
+    "updated": "2026-09-09T18:00:00Z",
+    "closed": "2026-09-09T18:00:00Z"
+  },
+  "invariants": [
+    "I1 DENSITY IS NOT DELETION. The session row went from 77px to 46 by putting its eight fields in columns rather than wrapping them, not by dropping any of them; the ones that matter least give way first as the viewport narrows.",
+    "I2 ONE TRAILING AFFORDANCE, AT A FIXED RIGHT OFFSET. Three x positions in one list is what makes a list look ragged even when every row is level.",
+    "I3 A TILE SAYS SOMETHING THE PICTURES CANNOT. Not a donut segment's label, not the number in its centre, not the number in the ring.",
+    "I4 A CHART DOES NOT DISTORT ITS OWN LABELS. Text inside a `preserveAspectRatio=none` stretch is squashed by whatever ratio the container happens to have.",
+    "I5 A CONTROL HAS A RESTING BOUNDARY. A filter chip with none reads as a word, and WCAG 1.4.11 asks 3:1 of the boundary that identifies a component."
+  ],
+  "commits": "1d10d7ea the session row's oracle, red at 12 of 13; d22f80a8 the row, the legend gaps and the histogram; the strip oracle, red at 6 of 18; 687d86f7 the donut's legend and the trimmed tiles; and the commit that gives the filter chips a resting edge.",
+  "verification": "Gate by exit code: lint 0, tsc 0, jest 0 (6590 tests, 637 suites), knip 0, canary 0, build 0, Playwright 0 (189 passed, 27 skipped), census 0. Screenshots regenerated. Measured before and after on the running product at 1440x900: the session row 77px -> 46-47px; the worst label-to-value gap 944px -> 606px with pairs over 400px falling 5 -> 1, and that one is a section header; stretched text nodes 7 -> 0.",
+  "the_rule_was_false_as_written": "The first pass deleted every tile restating a donut segment, on the rule that a donut IS those numbers. It is not. `Donut` uses `segment.label` as a REACT KEY and renders nothing from it, so the tiles were not repeating the picture - they were the only place those numbers appeared anywhere on screen. Deleting them would have deleted the information rather than the duplication, and what said so was the pair of contract suites that read those numbers off the DOM. So the strip grew a LEGEND, and the rule became true instead of merely asserted: the picture says the mix, the legend says the numbers, and a tile is free to be a fact neither carries. Logs ends with no tiles at all, which is the honest answer for a screen whose donut is the severity mix, whose donut centre is the line count and whose ring is how clean the file is.",
+  "the_chart_did_not_need_a_coordinate_system": "DistributionHistogram was the one chart in viz/ carrying text inside a `preserveAspectRatio=none` stretch: measured on /results/insights it rendered 345px wide from a 600px viewBox, so every glyph was squashed to 57% of its width at full height. T-0114 raised the sizes off 8px and 9px, which made both dimensions larger and left the ratio exactly where it was. The note left there offered a ResizeObserver or moving the labels out; this is the second, taken further, because a bar chart is a row of rectangles with a number over each and a word under it and none of that needs a viewBox. As HTML the distortion cannot come back, and the labels are on the type scale where `no-sub-12px-type` can see them.",
+  "the_gate_saw_something_new": "That change handed the live contrast gate a boundary it could not previously reach - the axis, as a real border rather than an SVG stroke - and it failed at 1.27:1 against the 1.55 a boundary needs to be visible. `--color-ps-viz-axis` is white at 8%. An axis is a subdivision inside one surface, which is what the hairline rung is for, so the token that was always right is now the one in use. The other two charts still stroke ps-viz-axis at 1.27:1 where no gate can see them; recorded, not changed from here.",
+  "three_of_the_plan_s_claims_had_already_been_answered": "The plan says Artifacts shows 'eight items in 59% of the column with 62% of the viewport empty' and that three Results screens carry 0.09-0.10 CLS. Measured at 1440x900: every Results route's widest block is 100% of the content column, and CLS is 0.000 on artifacts, 0.000 on logs and 0.015 on sessions against a 0.02 target. U3's geometry work answered the first and most of the second before this batch reached them. The artifacts preview pane is therefore the only part of that item still open, and it is a new feature rather than a correction.",
+  "one_target_is_not_met": "/results/insights carries 0.054 CLS against the 0.02 the plan asks. It is not the motion layer - identical under reducedMotion: reduce - and not the loading swap, which now uses U8's PageLoading and measured identically before and after. The shift lands inside the first 400ms and is attributed to the page's own content stack. It is recorded as unmet rather than quietly dropped, and it belongs with whichever batch next rebuilds that page's header region.",
+  "mutation": "12 mutants against the committed tree, one round, 12 killed. The two that matter most are the pair aimed at the legend: deleting it, and printing its labels without their numbers. Both are killed by the two contract suites rather than by this batch's own oracle, which is the right way round - those suites hold T-0042's rule that the strip prints the WHOLE TABLE and never the loaded page, and they now follow each figure to whichever of centre, ring, legend or tile it landed on.",
+  "the_selectors_were_wrong_twice": "Re-pointing the session contract suite at the ring took three attempts, and both wrong ones read a real number that was not the one asked for. `.font-mono.font-semibold` matched the donut's CENTRE, which comes first in the DOM, and reported the table total as the active count. `div[title] .font-mono` matched a TILE carrying a hint, and reported the message count. The ring carries a test id now. A selector that finds something is not a selector that finds the right thing, and a suite about quiet wrong numbers is the last place to accept one.",
+  "deviation": "(1) The artifacts preview pane is not built. The item it belongs to was mostly a fill complaint that measurement retired, and a preview pane is a new feature rather than a conversion; it wants its own decision about what a preview of an arbitrary artifact is. (2) DataList is deferred again, to U11: 41 grid-faked tables is the evidence for it and the ones on Agent are the richest, so a primitive shaped by the Results tables alone would be shaped by the simplest half. (3) The shared split-pane for Composer, Research, Logs and Chat is deferred with it, for the reason U9 gave and this batch did not change: Logs is here, but the other three are U9's and the shape needs all four.",
+  "deferred": "Artifacts preview pane; DataList and the split-pane to U11; /results/insights CLS; the two charts still stroking ps-viz-axis at 1.27:1."
+}

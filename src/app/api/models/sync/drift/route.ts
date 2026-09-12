@@ -1,41 +1,25 @@
+import type { NextRequest } from "next/server";
 // ═══════════════════════════════════════════════════════════════
 // /api/models/sync/drift — detect config drift between DB and config.yaml
 // ═══════════════════════════════════════════════════════════════
-import { NextRequest, NextResponse } from "next/server";
-import { logApiError } from "@/lib/api-logger";
-import { requireAuth } from "@/lib/api-auth";
-import { detectConfigDrift } from "@/lib/sync-manager";
+
+import { ok } from "@/lib/api/api-response";
+
+import { buildDriftDetails, buildDriftLines, detectConfigDrift } from "@/modules/hermes/lib/sync-manager";
 import type { SyncDrift } from "@/components/models/types";
+import { route } from "@/lib/api/api-route";
 
-export async function GET(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
+export const GET = route("GET /api/models/sync/drift", "detecting drift", "Failed to detect drift", async (_request: NextRequest) => {
+  // One report, read twice: the sentences the banner prints and the lines
+  // it hangs a Pull or a Push on. `lines[i].text === driftDetails[i]`.
+  const report = detectConfigDrift();
+  const driftDetails = buildDriftDetails(report);
 
-  try {
-    const drift = detectConfigDrift();
+  const syncDrift: SyncDrift = {
+    hasDrift: driftDetails.length > 0,
+    driftDetails,
+    lines: buildDriftLines(report),
+  };
 
-    // Transform DriftReport → SyncDrift for the UI
-    const driftDetails: string[] = [];
-    if (drift.primaryDiffers) {
-      driftDetails.push(
-        `Primary model drift: DB has "${drift.primaryDiffers.dbModel}", Hermes has "${drift.primaryDiffers.hermesModel}"`
-      );
-    }
-    for (const m of drift.modelsInHermesNotInDb) {
-      driftDetails.push(`Model "${m.modelId}" (${m.provider}) is in Hermes but not in Control Hub`);
-    }
-    for (const m of drift.modelsInDbNotInHermes) {
-      driftDetails.push(`Model "${m.modelId}" (${m.provider}) is in Control Hub but not pushed to Hermes`);
-    }
-
-    const syncDrift: SyncDrift = {
-      hasDrift: driftDetails.length > 0,
-      driftDetails,
-    };
-
-    return NextResponse.json({ data: syncDrift });
-  } catch (error) {
-    logApiError("GET /api/models/sync/drift", "detecting drift", error);
-    return NextResponse.json({ error: "Failed to detect drift" }, { status: 500 });
-  }
-}
+  return ok(syncDrift);
+});

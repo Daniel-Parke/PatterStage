@@ -5,7 +5,7 @@ import {
   mergeAdvancedOverrides,
   platformsDiffer,
   unionToolsetsFromPlatforms,
-} from "@/lib/hermes-toolset-unify";
+} from "@/modules/hermes/lib/toolset-unify";
 
 describe("hermes-toolset-unify", () => {
   it("unionToolsetsFromPlatforms returns sorted unique ids", () => {

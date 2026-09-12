@@ -7,21 +7,21 @@ import { spawnSync } from "child_process";
 import {
   copyFileSync,
   existsSync,
-  mkdirSync,
   readdirSync,
   readFileSync,
   unlinkSync,
 } from "fs";
 import { dirname, join } from "path";
-import { PATHS } from "../paths";
+import { PATHS } from "../host/paths";
+import { OWNER_ONLY_FILE, ensureDir, restrictToOwner } from "../fs/fs-helpers";
 
 /** Squashed baseline schema, including profile/root/skills source-of-truth tables. */
 export const BASELINE_SCHEMA_VERSION = 3;
 
 const SCHEMA_VERSION_KEY = "schema_version";
 
-/** Mission precedence: JSON files in CH_DATA_DIR/missions override SQLite export on same id. */
-export const MISSION_JSON_OVERLAY_WINS = true;
+/** Mission precedence: JSON files in PS_DATA_DIR/missions override SQLite export on same id. */
+const MISSION_JSON_OVERLAY_WINS = true;
 
 interface MissionRow {
   id: string;
@@ -300,6 +300,9 @@ export function rebuildToBaseline(
   const backupPath = `${dbPath}.pre-baseline-${Date.now()}`;
   if (existsSync(dbPath)) {
     copyFileSync(dbPath, backupPath);
+    // copyFileSync carries the source's mode, which is libuv behaviour rather
+    // than a promise this repo makes. The copy is a whole database; say it.
+    restrictToOwner(backupPath, OWNER_ONLY_FILE);
     unlinkSync(dbPath);
     for (const suffix of ["-wal", "-shm"]) {
       const p = dbPath + suffix;
@@ -307,7 +310,7 @@ export function rebuildToBaseline(
     }
   }
 
-  mkdirSync(dirname(dbPath), { recursive: true });
+  ensureDir(dirname(dbPath));
 
   // Real driver (avoids Jest mock when integration tests unmock better-sqlite3).
   // eslint-disable-next-line @typescript-eslint/no-require-imports

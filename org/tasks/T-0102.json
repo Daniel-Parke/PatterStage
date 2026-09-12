@@ -1,0 +1,59 @@
+{
+  "id": "T-0102",
+  "intent": "B8 of the final-release programme: Agents. Clone From: Default actually clones the root files (D18, blocker); silent refetch after first load, error card with Retry, empty state only on a successful empty read (D21, D22); a discard guard on select, open file and close (D23); Edit profile name and description through the existing PUT and a PatterStage display name for the root agent, decision 16 (D24, D25); missing never shown for a file the editor opens, syncError and Last pushed rendered, PUT of HERMES.md for a named profile answers 400 (D26 to D28); the explanatory paragraph in the novice register with the file names and the ADR reference behind a disclosure; the level card's not-implemented sentence removed.",
+  "declared": {
+    "capabilities": [
+      "edit-code",
+      "filesystem"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {
+      "factor": "size-threshold",
+      "tier_floor": "R1",
+      "source": "derived:diff-size",
+      "evidence": "the profiles route and page"
+    }
+  ],
+  "status": "done",
+  "owner_session": "session-b8",
+  "claims": [
+    "src/app/api/agent/",
+    "src/app/agent/profiles/",
+    "src/components/agents/",
+    "src/modules/hermes/lib/agent-file-store.ts",
+    "src/modules/hermes/lib/profiles-repository.ts",
+    "src/lib/agent-root-repository.ts",
+    "docs/",
+    "tests/"
+  ],
+  "programme": "B8, depends on B4 (T-0098) and B6 (T-0100). Route and page tests per defect; mutation sweep on the clone branch and the discard guard.",
+  "timestamps": {
+    "opened": "2026-09-05T10:30:00Z",
+    "updated": "2026-09-05T17:30:00Z",
+    "closed": "2026-09-05T17:30:00Z"
+  },
+  "invariants": [
+    "I1 A clone clones. cloneFrom names a source and the new profile carries that source's SOUL.md, AGENTS.md, config.yaml and personality; the root agent is read from its own row, and only an empty cloneFrom starts from the boilerplate.",
+    "I2 The root agent has a name and a control for it. PUT /api/agent/root writes a PatterStage label, trims it, refuses a blank one and a body that asks for nothing, and writes no byte into the agent's home.",
+    "I3 A refusal points at a control that exists. The create path's 409 names Edit profile on the agent's own card, not a page that never had it.",
+    "I4 A file the editor can open is not missing. A managed file counts as present when the database holds it, whether or not it has reached disk; only a file that is on disk is stat'd.",
+    "I5 A write that did not happen is not a 200. writeManagedFileContent's answer is read, and a PUT of HERMES.md against a named profile is a 400 that names the file, with no push and no audit line.",
+    "I6 The first read is worth a spinner and every refetch after it is silent. While a refetch is in flight the header, the list, the selection and the open editor are all still on screen.",
+    "I7 Unsaved work is not thrown away in silence. Selecting another profile, opening another file or closing the editor while the buffer is dirty asks first, naming the file, with the work still on screen; re-selecting the profile being edited discards nothing and so asks nothing.",
+    "I8 A profile's name and description can be changed. The dialog opens on what is stored, the root agent's field holds its name rather than the list's decoration of it, and the root goes to its own route with its own field name.",
+    "I9 The sync facts are on the row. A stored syncError is rendered in full under the badge, and every row says when it last reached Hermes or that it never has.",
+    "I10 The copy leads with what a profile is. File names, storage engines and the ADR reference are unchanged and one click away in a disclosure; no ADR reference and no not-implemented sentence reaches the rendered page."
+  ],
+  "commits": "449aaf66 the oracle alone (2 files, 28 tests, measured red: 19 failing, 9 green controls); a44ec3ae the implementation (the clone branch, the root route, the reworded refusal, the managed-file exists check, the read write-result, the silent refetch, the discard guard, the edit dialog, the sync line, the two disclosures, and the docs); the sharper-oracle commit that follows it, seven cases the sweep asked for.",
+  "verification": "Gate b8 on the implementation tree by exit code: lint 0 (agent-files, doc-links, derived views, read-only guards, icon-button names, form-control names, design-lint 0 baselined, contrast, coverage floors, eslint, typecheck:tests), tsc 0, jest 0 (510 suites, 4821 tests), knip 0, canary blessed once on httpSurface alone, the diff against a worktree of 449aaf66 showing exactly one added line, route /api/agent/root [GET,POST,PUT], build 0, Playwright 128 passed 8 skipped.",
+  "mutation": "40 mutants against the committed tree, 28 killed on the first pass and 36 after seven sharper oracles. The six real gaps: the blank page was only ever a flash, so the case watching for it looked after it was over and a mutant that blanks on every load survived; the guard was asserted on the act of clicking rather than on work being at risk, so a guard that fires when the operator re-selects the profile they are editing survived; the prompt's wording was matched on the phrase and not the file name; the edit dialog's seeding was never asked for, so a dialog that opens empty and one that keeps the list's (local default) decoration both survived; and the rename's trim and its empty-body refusal had no case at all. Four survivors are equivalent: clone-catches-every-slug, because getProfile on an empty slug finds nothing and the boilerplate is kept either way, which the Blank Slate case already pins; exists-ignores-the-managed-set, because every key in PROFILE_FILE_DEFS is a managed key, so the type guard changes no answer today and is there for the next key that is not; stat-reads-a-file-that-is-not-there, because safeStat answers null for a path that is absent, so the size and the mtime are the same either way; and the-first-load-is-silent-too, because loading starts true, so skipping the first setLoading(true) leaves the first render identical.",
+  "proof": "Isolated instance (production build of the implementation tree, e2e-b1 data dir, mock-hermes 8747), five scenes, 22 checks, all PASS. (1) The Agents page leads with 'A profile is one agent', carries two disclosures, shows no ADR reference and no not-implemented sentence, and opening 'Where a profile is stored' brings skills.disabled back. (2) Edit profile on the root agent opens an aria-modal dialog; saving 'Atlas' changed the name in the API and on screen while GET /api/agent/files/soul returned the same 664 bytes it had before. (3) A profile created with cloneFrom default carried the root agent's SOUL.md byte for byte, appeared on the page, reported no file as missing, and every row read 'Never pushed' or 'Last pushed'. (4) With SOUL.md edited and unsaved, selecting another profile asked, the text stayed in the textarea, Keep editing left it exactly as it was and took the prompt away, and Discard changes switched the profile and closed the editor. (5) Saving a file polled the page every 120ms for three seconds and never once saw 'Loading profiles'; the list and the editor were still there afterwards.",
+  "deviation": "(1) The root agent's route answers GET and refuses POST as well as taking the PUT the contract named: a route that can be renamed should be able to say what the name is, and the 405 keeps the create path's one door. (2) A rename that moves the slug now moves the selection with it, computed with slugifyDisplayName rather than read back from the route's answer, because runSyncAction does not hand the response to its caller and threading it through would touch nine call sites for one screen. (3) The copy fix landed in two places rather than one: the identity card's note was the defect as written, but the page's own intro paragraph above the list carried the same three file names, and moving only one of them would have left the operator reading the other first. (4) Five agents prepared B10-B14's oracles in parallel with this batch and commit 449aaf66 swept thirteen of their files into B8's oracle commit. A red oracle in the tree fails the gate of every batch after it, so they were removed from the tree in a44ec3ae and wait in the scratchpad; each batch's own oracle commit puts its own back.",
+  "harness_amendments": "Three in b8-agents-page, all found while the implementation was being measured against the oracle. leavePreview walked every button named Edit and each file row has one, so it was opening other files and racing their reads against the buffer it was meant to return; it clicks the editor card's own toggle, which is the last one. renderLoaded waited for the list, which arrives one render before the auto-selection, so the detail column was not yet up; it waits for the selection. The save case clicked a Save button that is disabled until there is something to save, so it typed nothing and saved nothing; it types first. One in b4-emits-agent: its writeManagedFileContent double returned undefined, and the route reads that answer now, so every managed PUT in that file was a 400; the double answers true, which is what the real function answers.",
+  "deferred": "The Identity tab (decision 11, the Personalities fold) is B9's, so the header's note still links to /agent/personalities. D22's error card and Retry were already in place from T-0096 and were re-asserted rather than rebuilt. A profile's files still cannot be created from the list when neither disk nor database holds them, which is the Create button's job and unchanged here. Field's label association does not reach Select, so a custom dropdown's label points at nothing; found while B12's oracles were being written, recorded here because it is a design-system defect rather than any one batch's."
+}

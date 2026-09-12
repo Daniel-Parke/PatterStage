@@ -1,0 +1,36 @@
+{
+  "id": "T-0043",
+  "intent": "By-design friction must be legible. Two controls are working as specified and a competent tester concluded both were broken. Operator ruled 2026-08-26 on all three parts. (1) Rename Composer's 'Review & run' to 'Review...': the ellipsis is the convention for a control that opens a further step, and the two-step confirm flow is untouched. (2) Open the mission Dispatch accordion BY DEFAULT, satisfying the acknowledgement by showing the choice rather than demanding a click. (3) Keep the gate and its hint for the collapsed path, and surface the requirement on the disabled button itself rather than only in a paragraph elsewhere on the form. TWO EXISTING TESTS ENCODE THE GATE as a requirement and are to be REWRITTEN to encode the new intent, NOT weakened: the gate still exists and is still asserted for the collapsed case, and what changes is the default. The operator's ruling is the warrant and belongs in the commit message. Source: the operator's live Hermes QA pass on dev@43d16c30, 2026-08-26; root cause traced and independently re-verified. Not a regression from the consolidation work. Closed 2026-08-26. All three parts landed as ruled. The label is 'Review...' written as the single ellipsis character, matching the convention already in this tree ('Workflow...', 'Manage all categories...'). The acknowledgement now MIRRORS the Dispatch step's open state rather than latching on first open: the step opens by default and reports that on mount, so the choice is shown instead of demanded, and collapsing it withdraws the acknowledgement so the gate returns. One file outside the declared claims was needed and is recorded below.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R2",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0043-legible-friction-2026-08-26",
+  "invariants": [
+    "I1 The gate is not removed. A new mission whose dispatch choice is hidden still cannot be submitted: the submit button is disabled, the hint is shown, and useMissionDispatch.handleCreate still refuses an unacknowledged create before any POST. Proved by deleting the gate (needsDispatchAck forced false) and watching 4 of the 7 cases in tests/unit/mission-dispatch-gate.test.tsx go red, then restoring it.",
+    "I2 The Composer two-step confirm is untouched. The renamed control only opens the review modal; the run still fires exclusively from 'Confirm & launch' inside it. Pinned by tests/unit/composer-review-control.test.tsx, which asserts onRun is not called by the first click and is called once by the second.",
+    "I3 No check is weakened. design-lint stays at 0 in 0 files across all eleven rules, the coverage floors are untouched, and the two tests that encoded the gate are rewritten to the new intent rather than deleted or relaxed: the collapsed case is asserted in both the unit and the e2e oracle.",
+    "I4 The acknowledgement and the accordion cannot disagree. One source of truth, the Dispatch step's open state, reported in both directions to the single owner of dispatchAcknowledged. The mount report is guarded by a ref so a re-render cannot silently undo a deliberate collapse."
+  ],
+  "oracle_provenance": "Authored by the executor in this session BEFORE any production file was edited, per the EXECUTOR R2 clause, and committed on its own at 388d832e ahead of the implementation. Three files: tests/unit/mission-dispatch-gate.test.tsx (rewritten: default-open satisfies the acknowledgement, the collapsed path still disables submit and shows the hint, the requirement is stated on the disabled button itself, and MissionComposerActions still refuses an unacknowledged new mission), tests/unit/composer-review-control.test.tsx (new: the label reads 'Review...', the first click opens the review without running, the run fires only from 'Confirm & launch'), tests/e2e/missions-flows.spec.ts (rewritten: openDispatchAccordion deleted, since the helper's whole existence was the defect, and a default-open plus collapsed-gate case added). Measured red before the implementation: 2 suites failed, 8 of 10 cases failed. The 2 that already passed are green-state guards (no title when nothing is required; an acknowledged mission submits). No amendment was made to the oracle after it was frozen.",
+  "rollback": "One-command revert. No migration, no schema element, no new route, no persisted state, no dependency change and no new public contract, so `git revert` of this task's two commits returns the tree to 841ebd9c behaviour. The two commits revert together or not at all: the oracle commit encodes the new intent and would be red against the old implementation.",
+  "claims": [
+    "src/components/composer/ComposerRunForm.tsx",
+    "src/components/missions/MissionCreateForm.tsx",
+    "src/app/orchestration/missions/page.tsx",
+    "tests/"
+  ],
+  "claim_extension": "src/app/orchestration/missions/page.tsx was not in the declared claims and was needed: dispatchAcknowledged is owned by the missions page, and its wiring latched the flag true on first open and ignored every close. Without that one line the collapsed path could never re-arm the gate in the real app, which is exactly what part 3 of the ruling requires. No other lane claims the file, and it was unmodified when this task took it.",
+  "timestamps": {
+    "opened": "2026-08-26T09:30:00Z",
+    "updated": "2026-08-26T12:00:00Z",
+    "closed": "2026-08-26T12:00:00Z"
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "id": "T-0138",
+  "intent": "C3 of the consolidation programme: one way to write. A write from a screen said the same six things around the call, mark busy, call, say what happened, reload, say why on a throw, clear busy, in four helpers (runSyncAction, runMutation, hindsightMutate, runFallbackMutation) and by hand around toastFromResult in the mission and model hooks. runWrite in lib/api-write.ts says them once; every named writer is the call and its words; the Story Weaver pages read through useApiResource; the census's read measure walks the AST; design-lint refuses a write outside the helper.",
+  "declared": {
+    "capabilities": [
+      "edit-source",
+      "edit-tests",
+      "edit-tooling"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {
+      "factor": "size-threshold",
+      "tier_floor": "R1",
+      "source": "derived:diff-size",
+      "evidence": "one helper added and four deleted with their suites; nineteen source files rewritten or patched onto it; two pages onto useApiResource; the census's read and write predicates and one design-lint rule; sixteen suites amended at the changed line; no route, no schema, no protected path; behaviour held by the hooks' contract suites, the e2e run and a driven walk"
+    }
+  ],
+  "status": "done",
+  "owner_session": "t0138-c3-one-way-to-write-2026-09-10",
+  "claims": [
+    "src/lib/api-write.ts",
+    "src/hooks/useModelActions.ts",
+    "src/hooks/useModelFallbackChain.ts",
+    "src/hooks/useModelFallbackConfig.ts",
+    "src/hooks/useMissionDispatch.ts",
+    "src/hooks/useMissionTemplateActions.ts",
+    "src/hooks/useMissionCategories.ts",
+    "src/hooks/useMissionsApi.ts",
+    "src/hooks/useMissionsData.ts",
+    "src/hooks/success-message-for-dispatch.ts",
+    "src/components/memory/hindsight/",
+    "src/app/page.tsx",
+    "src/app/agent/profiles/page.tsx",
+    "src/app/agent/skills/page.tsx",
+    "src/app/agent/tools/page.tsx",
+    "src/app/recroom/story-weaver/page.tsx",
+    "src/app/recroom/story-weaver/create/page.tsx",
+    "scripts/tooling/line-census.mjs",
+    "scripts/tooling/line-census.baseline.json",
+    "scripts/tooling/design-lint.mjs",
+    "scripts/tooling/design-lint.baseline.json",
+    "docs/contributing/repo-guide.md",
+    "org/plans/2026-09-consolidation.md",
+    "tests/unit/c3-one-way-to-write.test.ts",
+    "tests/unit/api-write.test.ts"
+  ],
+  "programme": "C3 of org/plans/2026-09-consolidation.md; C4 (the test harnesses) follows.",
+  "timestamps": {
+    "opened": "2026-09-10T09:30:00Z",
+    "updated": "2026-09-10T13:30:00Z",
+    "closed": "2026-09-10T13:30:00Z"
+  },
+  "invariants": [
+    "I1 ONE WAY TO WRITE. runWrite in src/lib/api-write.ts marks busy, calls, says what happened in the server's words, reloads and clears busy; a hook that owns query keys writes through react-query's useMutation and invalidates them; design-lint's no-raw-write-outside-the-helper refuses a fetch call carrying a method anywhere else and the baseline holds the nineteen files that still do.",
+    "I2 THE WORDS ARE THE SERVER'S. A throw is said through messageFromError, so the route's reason reaches the operator and the fallback is for a throw with no words; a 2xx whose envelope says success:false is said as the failure it is, and the reload still runs (T-0095, D20).",
+    "I3 THE NAMED WRITERS SAY NOTHING THEMSELVES. useModelActions, useMissionDispatch, useMissionTemplateActions, useModelFallbackChain, useModelFallbackConfig's sync, useMissionCategories, the dashboard, the three agent pages and the three hindsight hooks write through runWrite or its mission shorthand and carry no try/catch/toastError of their own; the census's writeHooksWithoutMutation reads 0.",
+    "I4 A SCREEN READS THROUGH THE HOOK. The Story Weaver pages list themes, characters and stories through useApiResource with a body and re-read after a write; the census's read measure walks the AST for a fetch reachable from a useEffect callback, so a loader called from an effect is counted and a write in a click handler is not, and the eleven it still finds are held by name.",
+    "I5 THE AUTOSAVE IS THE ONE SILENT WRITE. useModelFallbackConfig's debounced settings save says nothing on success by design and shows its failure inline; it is the one raw write the lint baseline holds for that file."
+  ],
+  "commits": "88aa228e the C3 oracle, red at 6 of 6 and a suite without its subject; d47e5cb3 the one helper, the writers, the reads, the measures and the rule; f31b5b8d the test the sweep's survivor asked for; the chore commit that carries this record and the derived views.",
+  "verification": "Gate by exit code on the finished tree: lint 0, tsc 0, jest 0 (6840 tests, 675 suites), knip 0, canary 0, build 0, Playwright 0 (272 passed, 24 skipped, 0 failed, two projects), census 0, census:lines 1 on the gate's tree because the baseline had been cut two lines before the two design-lint pragmas were restored to useModelActions, so the tree read 105410 against a held 105408; the baseline was re-cut from the committed one (a fall from 106274, with the read measure's rise held by its reason) and census:lines reads 0 on the committed tree. The line census before and after: src 106274 to 105410 lines; hand-rolled reads 5 to 11 (the measure walks the AST now, and found thirteen where the regex found five; two moved onto the hook); named hooks writing on their own 4 to 0; repeated six-line windows in src 1192 to 1176; tests 122030 to 121189; comment essays 108 to 104. design-lint's new rule lands at 19 files (350 to 369 violations, the growth recorded with its reason), and the write measure's four hooks read 0. The isolated instance was driven through every converted write by a Playwright walk and each said its words: credential: add: Added C3 walk mzjsu: sk-c...cdef; credential: rotate: Rotated C3 walk mzjsu: now sk-c...3210; Hermes .env updated; credential: delete (two clicks): Deleted C3 walk mzjsu — another credential for this provider still uses the key in ~/.hermes/.env; fallback: add custom: Custom fallback model added; fallback: toggle: Fallback model disabled; fallback: delete: Fallback model removed; defaults: set the agent default (if any model): Default updated for agent; mission: save draft: Mission saved as draft; template: save as template: Template saved!; mission: delete (two clicks): Mission deleted; category: create: Category \"c3-cat-mzjsu\" created; category: rename: Category updated; category: delete: Category deleted; template: delete from Edit Templates: Template deleted; dashboard: sync now: Background sync completed. The Story Weaver themes and stories re-read after a write and the library's subtitle counts the shelf.",
+  "mutation": "Nine mutants against the committed tree, eight killed on the first pass: busy never cleared after a throw; the reload not awaited before busy clears; a 2xx that says no said as a success; a throw said with the fallback only; a DELETE sending an empty body; the census's read walk stopping at the effect; the lint rule forgetting the helper's own request; the shelf reading one story. One survived: dispatchMission resolving to the envelope rather than the payload, which no suite saw because the composer suite mocks the shorthand whole. api-write.test.ts gained the assertion (f31b5b8d) and the mutant re-run against it is killed, 9 of 9.",
+  "deviation": "The plan's row named a hook, useApiMutation on react-query's useMutation with the toast through a feedback context and the refetch by query key. The helper is a function, runWrite, because the toast is per-page state (useToast) rather than a context, the reload is the caller's own loader, and a hook would have put a QueryClientProvider under every suite that renders the four action hooks for no behaviour; react-query's useMutation stays for useSchedules, useScripts, useOperatorPrefs and useSpend, which own query keys, and the lint rule sanctions both. The row counted five hand-rolled reads; walked on the AST the honest number is thirteen (the regex counted three click handlers and missed eight loaders called from effects), two of which moved in this batch; the target of 0 for handRolledReadHooks moves to C6 with the page layer and the eleven are named by --report and held. The lint extension is a new rule beside the read rule rather than the read rule widened, so each keeps one law. Four helpers folded, not one: runMutation and hindsightMutate were found in the survey with the same six things under other names, and toastFromResult went with them; their suites' assertions moved to api-write.test.ts with their reasons. Two behaviours changed on purpose and are recorded: a failed re-import used to toast 'Re-imported 0 models' as a success because safeApiCallData answered null, and now says the failure; a push or pull that the route refused reloads the registry, the way the profile sync pages have since T-0095."
+}

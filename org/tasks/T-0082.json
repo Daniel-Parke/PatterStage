@@ -1,0 +1,51 @@
+{
+  "id": "T-0082",
+  "intent": "QA finding 7: a toolset PUT reports ENOENT and the change persists anyway. One missing line caused the crash; four separate defects meant the product could not say what had happened.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0082-push-truth-2026-08-31",
+  "claims": [
+    "src/modules/hermes/lib/profile-push.ts",
+    "src/modules/hermes/lib/hermes-config-write.ts",
+    "src/modules/hermes/handlers/profile-patch.ts",
+    "src/components/profiles/drift-banner-headline.ts",
+    "src/components/profiles/ProfilesDriftBanner.tsx",
+    "src/app/api/agent/profiles/sync/push/route.ts",
+    "tests/"
+  ],
+  "invariants": [
+    "I1 A push creates the directories it writes into. Every fresh install is a Hermes home without memories/, so this is the first save an operator ever makes.",
+    "I2 An error names the file the operator meant, never the atomic-write staging file, which does not exist and never will.",
+    "I3 An error keeps its errno. ENOENT and EPERM need different fixes.",
+    "I4 A failure over a change that WAS committed says so, and says where to retry.",
+    "I5 A 404 says nothing about saving, because nothing was saved.",
+    "I6 The banner headlines what actually happened. Drift and errors are different problems.",
+    "I7 A single-target push that failed is not a 200. A BATCH is, because partial success is a real outcome -- but it names its failures where the client reads."
+  ],
+  "root_cause": "pushProfileToHermes calls ensureProfileDirs(root) before it writes. pushRootToHermes did not, with the import sitting three lines above it in the same file. On a Hermes home with no memories/ directory, write #5 of 7 (memories/USER.md) ENOENTs after four have already landed.",
+  "why_nothing_caught_it": "The existing suite mocks pushRootToHermes wholesale. A push that never touches a filesystem cannot notice a missing directory. The oracle drives the real function against a real, deliberately-bare directory, and its first assertion reproduced the reported error verbatim, staging path included.",
+  "the_plan_was_wrong_about_the_ordering": "The approved plan proposed inverting the order -- push first, commit the DB on success -- as 'the smaller behavioural change'. It is not available: BOTH push functions READ the committed row (pushRootToHermes calls getAgentRoot, pushProfileToHermes calls getProfile), so there is nothing to push before the commit without restructuring them to take a proposed state. The goal the plan named -- ordering honesty -- is met by saying what actually happened, which is what the operator needed either way: saved here, not mirrored there, retry from Operations.",
+  "the_four_honesty_defects": [
+    "The error named the .tmp-<pid>-<ms> staging path -- a file that does not exist, never existed, and in this case sat inside the very directory that was missing.",
+    "The 500 said 'failed' about a change that WAS saved, so an operator who reloaded saw their edit and could not tell whether it had taken.",
+    "The drift banner headlined 'Profile drift -- database and Hermes disk differ' when driftCount was 0 and the only problem was a sync ERROR, sending the reader to reconcile a difference that did not exist.",
+    "POST /api/agent/profiles/sync/push answered 200 {success:false} for the same failure the toolsets route answered 500 for, AND buried the reason at data.result.error while runSyncAction reads data.error -- so every push failure surfaced as a bare 'Push failed' and the ENOENT was never visible at all. Single-target pushes are 500 now; batches stay 200 because one failure in twelve is not a server error, but they name their failures where the client reads."
+  ],
+  "an_incident_and_the_fuse_it_produced": "While this oracle was being written it mocked getHermesDefaultRoot on @/modules/hermes/lib/agent-runtime. profile-push imports it from @/modules/hermes/lib/profile-paths, so the real resolver stayed in place and the test wrote fixture content over the operator's genuine %LOCALAPPDATA%\\hermes -- SOUL.md, AGENTS.md, HERMES.md, config.yaml and both memories. writeWithBackup had taken a backup immediately before each overwrite, so all six files were restored byte-for-byte from the 2026-08-31T15-03-23 backups; .env and auth.json were never touched. The test now opens with a FUSE: two assertions that read the value the code under test will actually use and fail if it resolves anywhere outside the OS temp directory. The backups made it recoverable; nothing about the test made it preventable, and that is what the fuse fixes.",
+  "mutation_finding": "Twenty-one mutations, seventeen caught, four survivors, three of them real. The staging-suffix strip was unanchored-safe only by luck -- a directory legitimately named `notes.tmp-1-2` would have been mangled into a path that never existed. describeWriteFailure was tested nowhere while its own helper was, so inverting its guard changed no result. And THE BANNER COPY was unasserted, one batch after the identical finding in T-0080: the headline decision was tested and the component drawing it was not. The fourth mutant is EQUIVALENT and recorded as such: with ensureProfileDirs in place, no failure the push can still reach produces a staging path, because every remaining failure comes from the BACKUP copy, which names the real target. That is the fix working rather than a hole, and the contract is pinned one layer down where it can be exercised.",
+  "verification": "Proved live on the isolated instance. With memories/ deleted -- the fresh-install shape -- a toolsets PUT answers 200 and memories/USER.md exists afterwards. With USER.md replaced by a directory to force a genuine failure, the same PUT answers 500 'Saved to PatterStage, but the push to Hermes did not complete: EPERM ... memories\\USER.md. Your change is not lost - retry the push from Operations -> Agents.' The same failure through sync/push answers 500 carrying the reason, where it used to answer 200 with the reason buried. Gate: lint 0, tsc 0, 3653 tests / 410 suites, knip 0, canary OK, build 0.",
+  "timestamps": {
+    "opened": "2026-08-31T21:10:00Z",
+    "updated": "2026-08-31T23:20:00Z",
+    "closed": "2026-08-31T23:20:00Z"
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "id": "T-0151",
+  "intent": "K4: land the six security findings that need no operator ruling, because install.sh:45 tracks dev and so a defect on this branch is a defect on real installs today. critic-01: Deep Research's URL guard knew only the dotted spelling of an IPv4-mapped address, but new URL() reports [::ffff:127.0.0.1] as [::ffff:7f00:1], so loopback, the cloud metadata endpoint and the operator's LAN were reachable from a research run. critic-14: the workspace path guard asked whether a relative path contained '..' rather than whether its first segment climbed out, so it refused legal directories called a..b, ..foo and notes..old. critic-02s: the sessions rate limiter carried its own copy of the 'which client is this' derivation, with no prune, so a caller varying one header grew a map without bound. critic-03b: six writers of operator data created files at the default umask on a shared Unix box, and one of them is the log the boot line prints the access token into. critic-05c: every request-signing test spelled the secret CH_REQUEST_SIGNING_SECRET and the headers x-ch-*, so the PS_ names the documentation gives were untested and would have gone untested the moment the CH_ aliases retired. tooling-05: Dockerfile:16 is COPY . ., and .dockerignore excluded neither the local database nor the auth token nor the governance corpus.",
+  "declared": {
+    "capabilities": [
+      "edit-source",
+      "edit-tooling",
+      "edit-tests"
+    ],
+    "side_effects": []
+  },
+  "mode": "high-assurance",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [
+    {
+      "factor": "auth-surface",
+      "tier_floor": "R2",
+      "source": "paths:sensitive",
+      "evidence": "the diff changes src/lib/api/auth-token.ts, src/lib/api/auth-throttle.ts and src/lib/sessions/sessions-api-guard.ts: how the token file is protected, how a failing caller is identified, and how a session reader is throttled"
+    },
+    {
+      "factor": "size-threshold",
+      "tier_floor": "R1",
+      "source": "derived:diff-size",
+      "evidence": "eleven source and tooling files, well over the express limit"
+    },
+    {
+      "factor": "high-assurance-for-r2",
+      "tier_floor": "R2",
+      "source": "org/roles/EXECUTOR.md:41, org/policy.json:100-105, operator ruling Q-014 (2026-09-12)",
+      "evidence": "R2 runs high-assurance: invariants, a rollback plan, an oracle written by a session that will not implement it, and an independent REVIEWER verdict recorded here"
+    }
+  ],
+  "status": "done",
+  "owner_session": "t0151-k4-security-2026-09-12",
+  "claims": [
+    "src/lib/search/url-guard.ts",
+    "src/lib/fs/path-security.ts",
+    "src/lib/fs/fs-helpers.ts",
+    "src/lib/sessions/sessions-api-guard.ts",
+    "src/lib/api/auth-throttle.ts",
+    "src/lib/api/auth-token.ts",
+    "src/lib/db/index.ts",
+    "src/lib/db/upgrade.ts",
+    "scripts/tooling/_platform.mjs",
+    "scripts/tooling/ps-deploy.mjs",
+    ".dockerignore",
+    "docs/SECURITY.md",
+    "tests/unit/k4-the-security-fixes.test.ts",
+    "tests/unit/api-auth.test.ts",
+    "tests/fixtures/mutants/T-0151.json",
+    "scripts/tooling/line-census.baseline.json",
+    "org/tasks/T-0151.json"
+  ],
+  "programme": "K4 of the refactor and clean-up programme. The register's landing order puts the security set before the full recon (register :893, 'rows that need no ruling'), because installs track dev. The four entries that DO need a ruling — critic-04 framing, critic-05a body signing, critic-05b header aliases and app-06 read-only — are K5 and are not in this batch.",
+  "timestamps": {
+    "opened": "2026-09-12T16:05:00Z",
+    "updated": "2026-09-12T18:40:00Z",
+    "closed": "2026-09-12T18:40:00Z"
+  },
+  "invariants": [
+    "I1 THE GUARD STILL LETS THE PUBLIC WEB THROUGH. A URL guard that refuses everything is not a fix, it is an outage. The oracle asserts a public v4 host and a public v6 literal (2606:4700:4700::1111) still pass, beside every carrier spelling it now refuses.",
+    "I2 NO DOCUMENTED NAME, ROUTE OR ENV VAR IS REMOVED. The CH_ secret name and the x-ch-* headers keep working; critic-05c only adds the PS_ cases beside them. The x-ch-* retirement is cross-cutting-04b, ruled for the release after v1.0.0.",
+    "I3 WINDOWS DEVELOPMENT KEEPS WORKING. restrictToOwner returns before touching the filesystem on win32, so no call site changes behaviour here, and the cases that assert what chmod DOES skip on win32 rather than assert something untrue. What each call site ASKS for is source text and is asserted on every platform.",
+    "I4 A TIGHTER MODE NEVER FAILS A BOOT. Every chmod is best-effort: a missing path or an EPERM on a bind mount owned by another uid is swallowed. A permission tidy-up must not become a startup failure.",
+    "I5 THE IMAGE STILL BUILDS. .dockerignore keeps docs/, because prebuild runs build-site --help-only over it, and keeps data/seed/, because the runner stage copies it."
+  ],
+  "rollback": "Every change is additive at a call site or a one-line predicate, and none of it migrates data or moves a file, so `git revert` of the feat commit restores the previous behaviour with no cleanup. Two things a revert does NOT undo, and neither is harmful: files already chmodded to 0600/0700 stay at that mode until an operator widens them, and the census baseline holds the reverted line count until it is re-cut. If only one fix has to go, each lives in its own file or its own predicate and can be reverted alone; the oracle case that then fails names which one.",
+  "commits": "c82f1db1 the K4 oracle, red at 13 of 19; 4fa998c6 the oracle extended to every file-mode site, red at 6 of 25, with critic-05c's five signing cases; 668dff7f the two lanes; 69966869 the six fixes; 93c4e26d the mutants as data; 4b7fe825 the two holes the sweep found in the oracle; the chore commit that carries this record.",
+  "verification": "Gate by exit code on the finished tree, stamp unmoved: lint 0 (55.2s), tsc 0 (3.3s), jest 0 (51.6s), knip 0 (2.6s), canary 0 (0.7s), build 0 (25.3s), e2e 0 (145.0s), census 0 (49.5s), census:lines 0 (2.3s). Beside the gate: docs:check 0 (75 pages, 21 routes) and check-doc-links 0 for the SECURITY.md line, check-derived-views 0 for the record. The oracle reads 39 passed and 3 skipped on this host; the 3 are the chmod-behaviour cases, which skip on win32 because chmod is a no-op here. The URL guard was also probed directly, outside the oracle, over 19 addresses covering every carrier prefix in both a private and a public spelling: all 19 as intended, no false positive on 2606:4700:4700::1111, 2001:db8::1, 64:ff9b::808:808 or 2002:0102:0304::1. One gate run went red at the design census on 'routesWithSplitBlocks rose from 1 to 2', with the extra route /work/chat and the block a right-aligned message row; two further runs of the same step on the same tree passed, so it is a flake in that measure and not this batch — raised as T-0152 rather than folded in or ignored.",
+  "review": "Independent REVIEWER, clean context, verdict ACCEPT WITH FIXES, and every fix is in the tree. One BLOCKING: critic-03b's own Fix line says 'chmod existing .pre-baseline-* copies once', and the batch had narrowed only copies made from then on, leaving eight whole databases plus a hotfix backup and its WAL at 0644 in this machine's own data directory — restrictExistingDatabaseFiles now sweeps them at the first open. Six non-blocking findings taken: the deploy runner's backupDb was a seventh writer with no chmod; the 6to4 branch read the wrong position on a compressed address, so 2002:a9fe::1 (the cloud metadata range) was admitted, and the fix replaced four prefix regexes with a proper expansion; the prune had no oracle and no mutant, and the count it needed was free at a tier already ruled R2; two oracle cases asserted the ABSENCE of an old comment or line and so tested nothing; the isAbsolute clause, which closes a real pre-existing cross-drive escape on Windows, had no case; and a .dockerignore citation named the wrong file and lines. The reviewer also independently found the openSync regex defect described under deviation, and confirmed by building the real Docker context that /data/*, !/data/seed/, /org, /site, /public/help, .claude and .swc leave a 13.1M context holding data/seed and docs/ and no database, WAL or token. Two observations recorded rather than acted on: the sessions map is bounded to one window's distinct headers rather than to something small, which the exported count's comment now states plainly; and the oracle's 'one chmod helper' case reads only fs-helpers.ts, so it would not see a third copy appear.",
+  "mutation": "Sixteen mutants against the committed tree, one per defect closed, committed as tests/fixtures/mutants/T-0151.json. First run at 93c4e26d: 14 killed, 2 survived. m6 deleted the chmod beside a deploy log's openSync and lived, because the case counted restrictToOwner calls with a floor of three and the batch ended with five; it now asserts that each opener is followed by the narrow. m14 commented out /data/* and lived, because the case asked whether the file CONTAINED the rule and '# /data/*' contains it; it now compares trimmed rule lines. Both survivors got their own test commit (4b7fe825), and the re-run at 4b7fe825 is 16 killed, 0 not. Neither hole was caught by the gate, by the independent review or by reading.",
+  "deviation": "Five, and none of them is small enough to leave unsaid.\n\nThe oracle was amended twice by the session that implemented it, which is exactly what an ORACLE hand-off exists to prevent, so each amendment has to earn itself. The first added the five file-mode sites the ORACLE session had left out and critic-05c's signing cases, before any fix existed, and was committed red at 6 of 25. The second corrected a case that could not have passed anywhere: it matched /openSync\\([^)]*\\)/, and [^)]* stops at the FIRST ')' — the inner one in logFile(base) — so it read 'openSync(logFile(base)' and could never see a third argument. It was inside a describe that skipped on win32, so it would have gone red on Linux CI for a reason unrelated to the fix. It was rewritten line-wise, and moved out of the skip, because source text reads the same on every host and skipping it put a Linux-only failure where this machine could not see it — the thing that cost six days in K1. The independent reviewer found the same defect without being told, which is the only reason to believe the correction rather than the corrector.\n\nThe claims file was written mid-batch rather than before the oracle lane was dispatched. Recorded, not back-dated.\n\ncritic-03b landed at src/lib/db/index.ts module scope and first open rather than in src/instrumentation.ts, where the register's landing order puts it (register :246, the boot lane). The register's order exists to serialise the boot file against critic-03a, POLICY-aliases, app-16 and cross-cutting-11, none of which have landed; putting the chmod where the directory and the database are already being opened needs no lane and no later merge. The register's other requirement is met either way: the dir is created by setup.sh or by ensureAuthToken, and both are covered.\n\ndocs/SECURITY.md:58 gained a sentence saying boot narrows PS_DATA_DIR to 0700 and the database to 0600. The register did not ask for it, so it is scope the batch added: a security document that does not state a guarantee the software now makes is a document that is wrong. It removes nothing and the claim is added to the record.\n\nThe Unix half of critic-03b cannot be proved on this machine. chmod is a no-op on Windows, so the three cases that assert what restrictToOwner DOES skip here rather than assert something untrue; every call site is asserted on both platforms, and the behaviour is proved by the ubuntu and macOS CI jobs on the pushed commit, which is read before the next batch starts."
+}

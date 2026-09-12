@@ -1,0 +1,41 @@
+{
+  "id": "T-0090",
+  "intent": "Round-6 architecture recommendation, ruling 2: a circuit breaker on the LLM endpoint. Built as what this process actually needs and can prove: a bounded admission gate per gateway endpoint inside the runtime every caller shares.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [
+    "Sits inside HermesRuntime.fetchJson, the one path every gateway request/response call takes; a fault here touches dispatch, chat, composer, research and the reconciler at once."
+  ],
+  "status": "done",
+  "owner_session": "t0090-gateway-gate-2026-09-05",
+  "claims": [
+    "src/lib/runtime/gateway-gate.ts",
+    "src/lib/runtime/HermesRuntime.ts",
+    "docs/ENV_REFERENCE.md",
+    "tests/"
+  ],
+  "invariants": [
+    "I1 Per endpoint, at most PS_GATEWAY_MAX_INFLIGHT request/response calls are in flight; at most PS_GATEWAY_MAX_QUEUE wait, for at most PS_GATEWAY_QUEUE_TIMEOUT_MS. Junk in the environment never disables the gate.",
+    "I2 Beyond the limits a call is refused with a 503 that names the gate, the endpoint and the counts. Saturation is a refusal, never a hang.",
+    "I3 A slot is released on completion and on throw, and handed straight to the next waiter, first in first out.",
+    "I4 One saturated endpoint cannot starve another. The gate is keyed by base URL.",
+    "I5 Streams hold no slot. An SSE subscription is open for the life of a run; the gate is for the calls that pile up.",
+    "I6 The gate publishes a snapshot, and the process has exactly one gate, on globalThis, the way the scheduler singleton lives."
+  ],
+  "why_a_gate_and_not_a_breaker": "A classic breaker trips open on an error rate and then refuses everything for a cooling period, which for a single-operator control plane means a gateway that hiccups once locks the operator out for the length of the window. The failure round 6 actually saw was a gateway that stopped keeping up: requests piling into it, callers waiting on it, and the healthy profile behind the same runtime waiting too. A per-endpoint admission gate answers exactly that, degrades to a named 503 instead of a cliff, and recovers the instant the gateway answers again, with no window to wait out.",
+  "mutation_finding": "Nine mutants, nine killed on the first pass: the gate never gating, an unbounded queue, a slot never released, the queue timeout multiplied a thousandfold, one shared endpoint, a refusal that is a 500, the runtime keying every endpoint the same, the injected gate ignored, and the in-flight limit not read from the environment.",
+  "the_proof_found_my_own_script": "The first end-to-end run parked for fifteen minutes on a request the server had in fact answered at thirty seconds; the server log showed the timeout firing on schedule. The hang was the proof script's `wait` in a non-interactive shell, not the product. The measurement was repeated with two slots and a wall clock: chat creation against a dead gateway took 30s and answered with no session, and the message was refused at exactly 30s with the gateway timeout message.",
+  "verification": "Isolated instance, production build, a blackhole gateway that accepts every connection and never answers, gate limits 1 in flight and 0 queued: the second of two concurrent chat messages answered 503 'gateway gate saturated for http://127.0.0.1:8749: 1 in flight (limit 1), 0 queued (limit 0). The gateway is not keeping up; try again shortly.' Re-pointed at the healthy mock, a message answered 200. Gate by exit code: lint 0, tsc 0, 3872 tests / 437 suites, knip 0, canary OK, build 0.",
+  "timestamps": {
+    "opened": "2026-09-05T03:40:00Z",
+    "updated": "2026-09-05T05:10:00Z",
+    "closed": "2026-09-05T05:10:00Z"
+  }
+}

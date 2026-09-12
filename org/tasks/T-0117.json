@@ -1,0 +1,61 @@
+{
+  "id": "T-0117",
+  "intent": "U3 of the UI overhaul programme: one container owns the left edge, and the header stops being a child. AppPageShell owned no measure, so twenty pages centred their own column in one of seven widths and nine declared none at all, in eight padding rhythms. Measured across 23 routes, every one of them put its h1 on a different left edge from its own content, by up to 237px. The header is a PROP now rather than a child, because a child cannot be both full-bleed and contained and both is exactly what a header bar is: its background and rule span the viewport while its words line up with the page.",
+  "declared": {
+    "capabilities": [
+      "edit-source",
+      "edit-tooling",
+      "edit-tests",
+      "edit-docs"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {
+      "factor": "size-threshold",
+      "tier_floor": "R1",
+      "source": "derived:diff-size",
+      "evidence": "29 page components, the shell, PageHeader, theme.ts, the census instrument and three docs; no protected path, no schema, no route added or removed"
+    }
+  ],
+  "status": "done",
+  "owner_session": "t0117-u3-page-geometry-2026-09-07",
+  "claims": [
+    "src/components/layout/AppPageShell.tsx",
+    "src/components/layout/PageHeader.tsx",
+    "src/lib/theme.ts",
+    "src/app/",
+    "tests/e2e/lib/census-analysis.ts",
+    "tests/e2e/lib/census-collect.ts",
+    "scripts/tooling/design-lint.mjs",
+    "scripts/tooling/design-census.baseline.json",
+    "docs/guides/dashboard.md",
+    "docs/contributing/"
+  ],
+  "programme": "U3, depends on U2. Every conversion batch from U9 onward puts screens inside this container, so the geometry lands before any of them.",
+  "timestamps": {
+    "opened": "2026-09-07T06:00:00Z",
+    "updated": "2026-09-07T14:20:00Z",
+    "closed": "2026-09-07T14:20:00Z"
+  },
+  "invariants": [
+    "I1 ONE MEASURE, USED VERBATIM TWICE. PAGE_MEASURE is a single exported string and both containers carry it, so a change to the page width changes both or neither. The density's classes go on a CHILD, never the same element: max-w-ps-page and max-w-ps-prose together are resolved by the order the two rules happen to sit in the emitted stylesheet, which no call site can see.",
+    "I2 THE BAR IS FULL-BLEED, ITS CONTENT IS NOT. The header element carries no measure, no data-ps-container and no gutter of its own; the container inside it carries all three. A bar that is measured stops its own rule short of the viewport, which is what /results/artifacts did by 180px at each side.",
+    "I3 DENSITY DECIDES WHAT IS INSIDE THE CONTAINER, NEVER WHAT THE CONTAINER IS. prose is a narrower column LEFT-aligned inside the page container rather than centred in one of its own: a second centred container is exactly what put one screen's content 400px from its neighbour's.",
+    "I4 NO PAGE OWNS A CONTAINER. Held by an oracle over every page.tsx and by design-lint's one-container-per-page, now scoped to the page's own scale. Not to every cap: holding a paragraph to a reading measure is something this programme asks for, and a rule that banned it would push that width somewhere worse.",
+    "I5 A HEADER RENDERS WHILE THE PAGE LOADS. /work/missions has two shells and only the loaded one had a header, so the busiest screen in the product opened as an unnamed spinner. One header value, handed to both, which is only possible because the shell takes it as a prop."
+  ],
+  "commits": "22051084 the shell, the header, 29 pages and the census corrections; ab414832 cases for both halves of the narrowed container rule and for the inline-control exemption; and the commit that closes the sweep's one survivor, then this record. The oracle went in on fcece2c9 before any of it, red at 16 of 20.",
+  "verification": "Gate by exit code on the swept tree: lint 0, tsc 0, jest 0 (6322 tests, 621 suites), knip 0, canary 0, build 0, Playwright 140 passed and 26 skipped, census 0. One e2e run in between failed on ECONNRESET against /api/composer/workflows and passed on a rerun with the same tree; recorded as a transport flake rather than quietly re-run until green.",
+  "the_measurement": "Census over 23 routes at 1440, before and after, both taken with the corrected instrument. worstHeadingOffset 237 -> 0. routesWithMisalignedHeading 23 -> 0. distinctContentWidths 8 -> 1. distinctHeadingLefts 7 -> 1. Every h1 in the product now sits at x=249 and every content column is 1215 wide. design-lint one-container-per-page 36 -> 0, total baseline 3107 -> 3065.",
+  "the_instrument_was_wrong": "Three corrections, all made because a number moved the wrong way and the product had not. (1) contentLeft was the COMMONEST left among painted blocks inside <main>, which is a vote: /results/logs paints several hundred log lines inside its terminal pane and elected the pane's inner left, so putting the h1 on the shared container made that route's reported offset RISE from 289 to 321 while the page became more aligned. It is now the leftmost outermost painted block that is not the page's own ground. The ground clause is not incidental: AppPageShell's root paints the page background across the whole of main, and being outermost it swallowed every real block inside it, which read as a flat 24px offset on all 23 routes that was actually the container's padding. (2) distinctHeadingLefts is new, and states cause 2 with no heuristic at all: how many different x the product's h1 sits at. (3) A control that is inline in a sentence has a line box rather than a height, which the hit-target measure already knew and the button-height measure did not; it surfaced as a false regression when /help's prose column widened by one batch and one link rewrapped. Re-measured on the tree U0 baselined, the corrected instrument reads 237 across 23 of 23 routes rather than 289 across 21: it was understating both the size and the reach of the defect. The reason is written into the baseline's own note, because a number that fell by 289 in one commit needs to say which part was the product.",
+  "mutation": "15 mutants against the committed tree, two rounds. Round one: 14 killed, 1 survived. The survivor put px-6 back on the header BAR's chrome: the oracle asserted the bar is not measured and carries no max-width, and said nothing about padding. That is not cosmetic. The container inside the bar already pads, so a bar that pads as well indents the header's words past the body's by a whole gutter on every screen, which is this batch's defect at a smaller size. Round two: 15 of 15.",
+  "deviation": "(1) The plan put the back link in a fixed-width slot. It is on its own row above the title instead. A fixed slot makes the offset the SAME on every page rather than zero, and the gate measures zero. (2) The plan put the domain icon beside the h1; it is inside it, for the same reason: beside it, the heading's box started one icon and one gap to the right of every block below it, so every screen with a header disagreed with itself by 32px before anything else went wrong. (3) The Section primitive is deferred to U8, where the rest of the primitive set lands and is adopted in the same batch. An exported component with no callers fails knip, and a component with no callers is what this programme is deleting; the two spacing steps it was to carry are in the shell's density map instead. (4) Help is board density, not prose, though it is the most spacious screen in the product: prose caps the container at a reading measure and Help's container holds a nav column BESIDE the reading column. Its comfort comes from its typography, not from squashing both into 46rem. (5) The page gutter is px-4 sm:px-6 rather than a flat px-6, found by walking rather than by test: at 375 the flat gutter cost /work/missions 16px of column against what that page used to give itself, and truncated its own h1 to 'Missi...'.",
+  "found_by_walking": "Three things no unit test would have said. The mobile gutter above. /work/missions still overflows <main> by 88px at 375, down from 96, and the remainder is the mission status filter group, a non-wrapping row of six chips 417px wide: pre-existing, U9's FilterBar, and U14's containment gate. And the ? deep-link spec, which waited for the h1 as its stand-in for 'this page has hydrated'. That inference held only because missions rendered NO header while it loaded; the h1 is in the server HTML now, so the spec pressed ? into a page with no listener yet and timed out under the parallel suite while passing alone. It presses until the navigation happens, within the same budget, which is stricter rather than looser.",
+  "harness_amendments": "design-lint's one-container-per-page is narrowed from any max-w- on a page to the page's own scale, with cases for four refusals and four permissions. tests/helpers/mocks.tsx's appPageShellMock forwards the header; a mock that dropped it would have silently erased every page's title, subtitle and header actions and left six suites asserting against nothing. Two U3 oracle assertions were sharpened at the line with the reason written there: 'no page declares a max-width' also banned the reading measures the programme asks for, and 'no page renders a <header>' caught the wrong thing twice, missing the dashboard, which painted its bar with shellHeaderBarClasses inside a plain <div>, and flagging /quests, whose <header> is a banner for the quest list inside <main> and is not a landmark. shellHeaderBarClasses is the predicate now: red on the committed tree, green here.",
+  "found_by_the_tooling_failing": "A quoted bash heredoc halved the backslashes on the way in, so a regex written as \\\\b reached Python as a real 0x08 and went into design-lint.mjs requiring a literal BACKSPACE after 'prose' and at the end of the match. It parsed, it ran, and it reported zero violations for the wrong reason. CLAUDE.md names this exact failure and says to write patch scripts to a file; the fix was to do that, and then to scan every changed file for control characters before committing.",
+  "deferred": "The surfaces still have no edges: U4 is the batch the operator sees. The type scale is declared and unused until U5. The Section primitive, the loading contract and the rest of the primitive set are U8. /work/missions' 88px overflow at 375 is U9 and U14. docs/contributing/design-tokens.md gets its measures table corrected here and its full rewrite in U16."
+}

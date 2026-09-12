@@ -1,0 +1,77 @@
+{
+  "id": "T-0128",
+  "intent": "U14 of the UI overhaul programme: interaction, motion, responsiveness. The token layer made promises the tree did not keep: one focus ring, declared once, that the field kit then removed; a house transition that faded that ring in from grey; a reduced-motion guard that was an allowlist of seven names over fourteen keyframes. A tablet got a phone's drawer. The drawer's focus trap walked out behind its own backdrop. A failed chat run was red italic prose with no way forward. And the four live gates the plan promised - hit targets, containment, motion, loading - existed only as census counts. This batch keeps the promises and turns the four gates hard, with the 390x844 Playwright project the last programme deferred.",
+  "declared": {
+    "capabilities": [
+      "edit-source",
+      "edit-tests",
+      "edit-docs"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {
+      "factor": "size-threshold",
+      "tier_floor": "R1",
+      "source": "derived:diff-size",
+      "evidence": "one hook split and one hook filtered, one hook's query moved, four shell files' breakpoints, three field-kit class strings, one stylesheet block inverted and one utility overridden, one bubble redesigned, seven components given wrap or height, three headers given the loading contract, the census collector's exemptions, four new live specs and a Playwright project; no route added or removed, no schema, no protected path; five oracle suites new, two existing suites amended at the changed line"
+    }
+  ],
+  "status": "done",
+  "owner_session": "t0128-u14-interaction-2026-09-08",
+  "claims": [
+    "src/app/globals.css",
+    "src/app/layout.tsx",
+    "src/components/layout/",
+    "src/components/ui/field/",
+    "src/components/ui/SegmentedControl.tsx",
+    "src/components/chat/MessageBubble.tsx",
+    "src/hooks/useDialogA11y.ts",
+    "src/hooks/useIsMobile.ts",
+    "src/hooks/useChatSend.ts",
+    "src/hooks/useChatPage.ts",
+    "src/app/work/chat/page.tsx",
+    "src/components/agents/AgentProfileHeader.tsx",
+    "src/components/agents/AgentProfilesOverview.tsx",
+    "src/components/missions/MissionsList.tsx",
+    "src/components/spend/SpendPanel.tsx",
+    "src/components/memory/HindsightBrowser.tsx",
+    "src/app/results/sessions/page.tsx",
+    "src/app/results/artifacts/page.tsx",
+    "src/app/agent/models/page.tsx",
+    "tests/e2e/",
+    "tests/unit/",
+    "playwright.config.ts",
+    "docs/guides/chat.md",
+    "docs/contributing/design-tokens.md"
+  ],
+  "programme": "U14, depends on U9-U13. Interaction, motion, responsiveness; gates 8-11 turn hard.",
+  "timestamps": {
+    "opened": "2026-09-08T03:00:00Z",
+    "updated": "2026-09-08T06:30:00Z",
+    "closed": "2026-09-08T06:30:00Z"
+  },
+  "invariants": [
+    "I1 ONE RING, NEVER REMOVED. :focus-visible in @layer base is the focus indicator; no control in src carries outline-none, and the house transition-colors leaves outline-color alone so the ring is instant.",
+    "I2 MOTION IS DENIED BY DEFAULT. Under prefers-reduced-motion a `*` rule halts every animation and transition; only a spinner is put back, because a spinner is information. A new keyframe is halted until someone argues otherwise in the reduce block.",
+    "I3 THE DRAWER STARTS BELOW md. From 768 the rail is on the screen, icons only until lg, and there is no hamburger; the phone's chrome is the phone's.",
+    "I4 THE TRAP'S RING IS WHAT IS DRAWN. useDialogA11y filters by getClientRects, guarded so a world with no layout keeps DOM order; a hidden control at the ring's end cannot leak focus.",
+    "I5 A FAILED WRITE GETS THE READ CONTRACT. A failed chat run is role=alert with an icon, the reason and Retry, where the reply would have been; Retry re-sends the same words as one attempt.",
+    "I6 THE FOUR LIVE GATES ARE HARD. No control under 24x24 after WCAG 2.5.8's own exemptions; main.scrollWidth <= clientWidth at 390 and 1024 on every route; nothing runs under reduce but a spinner; the header renders before the data and no route counts to 0 before its fetch resolves.",
+    "I7 THE CENSUS EXEMPTS WHAT WCAG EXEMPTS, AND NO MORE. In a sentence, clipped to a pixel until focused, or a stretched link measured by the row it covers."
+  ],
+  "commits": "c54d97db the U14 oracles, red at 20 of 22 unit and 53 of 93 live; 522a8a00 the implementation: the ring, the transition, the reduce block, the rail's breakpoints, the trap's filter, the failed run and Retry, the census exemptions and five real targets, four containers that wrap, three headers on the loading contract, the guide and the CHANGELOG; ec2662bf the Retry oracle sharpened after the sweep, so a retry of a completed turn can be seen.",
+  "verification": "Gate by exit code on the finished tree: lint 0, tsc 0, jest 0 (6800 tests, 659 suites), knip 0, canary 0, build 0, Playwright 0 (262 passed, 24 skipped, two projects: chromium and the new 390x844 phone project), census 0. The Playwright step was red twice before it was green: on the first full pass with six findings from the new gates (three heading hints, the Artifacts count, sub-frame transitions, the tablet spec's pre-hydration measurement), each fixed and the gate re-run; on the second with the agents spec's own click-before-hydration race, fixed at its helper and the whole suite re-run on the finished tree. design-lint 362 baselined violations, unchanged. Walked on the isolated instance: at 900 the rail is a static 64px column at x=0 with no hamburger and a title on every icon row, and at 1024 it reads the preference (224px, expanded); at 390 thirty Tabs inside the open drawer land on drawn controls inside the aside every time, the ring running home, the twenty-one nav links, Quests, Help and the update badge; under prefers-reduced-motion the dashboard, Missions and Insights report zero running animations from document.getAnimations(); a focused field on Skills measures outline 'solid 2px rgb(0, 191, 255)', transition-property without outline-color, box-shadow none; against a stub gateway that answers /v1/models and refuses every POST, a chat turn fails into role=alert with the icon, 'The run failed.', the gateway's own error text and Retry, and after Retry the prompt appears once and there is one failed turn; the six routes that overflowed main at 390 (Missions 988px, Tools 506, Memory 463, Profiles 434, Logs 433, Models 424) measure 390/390. The built stylesheet carries the outline-free .transition-colors after Tailwind's own. Screenshots regenerated.",
+  "the_ring_was_declared_and_then_removed": "globals.css declares the console's one focus indicator in @layer base. The field kit, T-0122's own primitives, removed it on every text input, select and toggle with outline-none and painted a 1px ring at 30% alpha on :focus in its place: a mouse click drew it, and a keyboard user got a third of the indicator every other control has. The three class strings lose both halves and the kit paints nothing of its own; the oracle walks src for outline-none and finds none. The transition was the subtler half: Tailwind's transition-colors lists outline-color, so on every control wearing it the ring faded in from grey over the transition's duration and a fast tabber never saw it cyan. The override is the same class in @layer utilities after Tailwind's, setting only transition-property, so duration-* and ease-* keep working; the built stylesheet was read to confirm the order, and the walk read the computed transition-property off a focused field.",
+  "an_allowlist_names_what_its_author_knew": "The reduce block named seven classes when there were seven animations, and it had already been wrong once (T-0120 found it naming .animate-pulse-glow while the tree used .pulse-glow). The recon counted 28 animations still running under reduce. The block is now one `*` rule - duration 0.01ms, one iteration, transition 0.01ms, scroll-behavior auto - with the two spinners put back and .viz-draw's end state pinned, because its keyframes draw a line in from nothing. One iteration of nothing means an entrance animation lands on its end state and an infinite one never starts. The u6 suite pinned the old allowlist by name and is amended at that line to ask for the halt and for no rule putting .pulse-glow back, which is the same intent held more strongly. Gate 10 counts document.getAnimations() on every route and found gradient-shift on all 21, pulse-glow and ping; it finds nothing now.",
+  "the_trap_acts_at_the_ends": "The oracle's first draft put the hidden control in the MIDDLE of the panel and passed against the unchanged hook, which was the lesson: the trap only intercepts Tab on the last control and Shift+Tab on the first, and between them the browser's own Tab skips display:none by itself. So a hidden control is harmless in the middle and a leak at an end, where the trap believes the ring has one more stop, never intercepts Tab from the last drawn control, and the browser walks out of the panel. That is the rail's collapse button, hidden lg:flex and last in the drawer on a phone. focusableWithin filters by getClientRects().length, guarded so that when nothing has a rect - jsdom - the ring is the unfiltered list; the existing dialog suites keep asserting the trap without stubbing layout, and the new suite stubs it and sees the filter work. The live walk pressed Tab thirty times in the open drawer at 390.",
+  "a_tablet_is_not_a_phone": "Below lg the rail was the drawer, so a 900px screen with room for the 64px icon column got a 48px header, a hamburger and a sheet. The change is a breakpoint over code that already existed: the phone query ends at 767, a tablet query spans 768 to 1023 and forces icons-only whatever the collapse preference says, and the aside, backdrop, mobile header and layout row move from lg: to md:. The collapse button stays lg-only because at tablet width there is nothing to expand into. Every icon-only row carries its title, as the collapsed desktop rail already did.",
+  "a_failed_write_gets_the_read_contract": "T-0105 gave a failed READ an error with Retry where the content would have been. A failed chat run was still a line of red italic prose, unannounced and with nothing to do but retype. The bubble renders role=alert with an icon, 'The run failed.', the reason the gateway gave (or 'No reason came back with it'), and Retry when the page hands one in. What a retry IS was decided once, in the hook: the failed turn and the user turn that asked for it leave the transcript and the same words go again as a new turn, so the screen reads as one attempt; a second failure lands on the new turn with its own Retry. The hook's send body now runs for any text, and handleSend and handleRetry both call it. Walked against a stub gateway that answers the health probe and refuses every run, because the instance has no real gateway and the send path rightly refuses to send while the gateway reads offline.",
+  "the_four_gates_and_what_they_found": "Gate 8 read the same collector as the census and found 40 targets under 24px: 21 were the skip link, a 1px clip until focused; 11 were concept hints, dotted words inside sentences; 5 were real - two 16px text buttons on Missions, two 21px disclosures on Profiles, the 21px budget line on Insights - and are Button's small height now. The collector's exemptions are WCAG 2.5.8's own and no others: in a sentence (the control or its inline wrapper has words for siblings), clipped to a pixel, or a stretched link measured by the row it covers. Gate 9 found six routes overflowing main at 390, Missions by 598px: a SegmentedControl with eight options that could not wrap, the PageHeader actions slot that was shrink-0 and could not wrap, and the Memory tab row; all three wrap now. Gate 10 found the logo's gradient on every route. Gate 11 found three headers counting before their fetch resolved - '0 models in registry', '0 recorded sessions', '0 ARTIFACTS' - and each says the words without the number, or an em space, until it knows.",
+  "mutation": "Twelve mutants against the committed tree (522a8a00), each aimed at one decision: the trap's filter and its guard, the tablet's icons-only rule, the aside's breakpoint, the phone query's edge, the alert's role, the Retry's presence, the failed pair leaving the transcript, the retry's role and status checks, the reduce block's single iteration, the transition's property list, the field kit's outline. Eleven killed at once. One survived: handleRetry with its role and status checks dropped, because the oracle's 'not a failed turn' was a user turn, which has no user turn before it and stopped for that reason. The oracle gained a completed assistant turn (ec2662bf), the mutant was re-run and killed; 12 of 12. Gates 8 to 11 are live-only and were not swept; the first gate's six findings, each fixed and re-measured, are the record of what they catch.",
+  "deviation": "(1) The plan said no-bare-outline-none would be 'tightened to refuse a border-colour replacement'; T-0122 had already done that, so this batch deletes the survivors rather than re-tightening the rule. (2) The oracle drafts carried three defects of their own, all fixed before the implementation and recorded here because each is a trap for the next author: jest's expect takes no message argument; `\\s*(?!x)` backtracks past the space and needs a `\\S` after the lookahead; a jest.fn() created per render re-runs any effect that depends on it. (3) The failure toast at the foot of the chat screen still fires beside the alert and overlaps the composer; it is the toast's placement, pre-existing, and goes to the review rather than into this batch.",
+  "deferred": "The chat failure toast duplicating the alert and overlapping the composer (toast placement, for the review); Disclosure/Chip/Slider primitives; the Composer/Research/Logs/Chat split-pane; the Artifacts preview pane; the ps-viz-axis strokes and /results/insights CLS; all carried from earlier records."
+}

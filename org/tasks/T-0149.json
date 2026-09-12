@@ -1,0 +1,90 @@
+{
+  "id": "T-0149",
+  "intent": "K3: settle T-0144's unsanctioned org edits the way the operator ruled on 2026-09-12 (Q-010, register entry org-01a). ADR-0011 ratifies the four protected path lines the C7 codemod rewrote, because reverting them would take the auth-surface signal off the two files that carry it and re-edit two immutable ADRs to reinsert paths that no longer exist. The 47 closed records it also rewrote are restored to their pre-cdf95b10 text, because ADR-0010 section 3 says records are historical. A codemod is confined to its claims from here.",
+  "declared": {
+    "capabilities": [
+      "edit-docs",
+      "edit-tests"
+    ],
+    "side_effects": []
+  },
+  "mode": "high-assurance",
+  "tier_proposed": "R3",
+  "tier_ruled": "R3",
+  "reasons": [
+    {
+      "factor": "protected-set-contact",
+      "tier_floor": "R3",
+      "source": "paths:protected",
+      "evidence": "org/decisions/ADR-0011 is a new file in the protected set (org/policy.json:56). The operator's approval is on record as the Q-010 ruling of 2026-09-12, the oracle is authored by a session that is not the implementer, and the record carries a rollback plan."
+    },
+    {
+      "factor": "size-threshold",
+      "tier_floor": "R1",
+      "source": "derived:diff-size",
+      "evidence": "47 restored files at 90 line pairs, plus the ADR"
+    }
+  ],
+  "status": "done",
+  "owner_session": "t0149-k3-the-ratification-2026-09-12",
+  "claims": [
+    "org/decisions/ADR-0011-t-0144-unsanctioned-org-edits.md",
+    "org/tasks/",
+    "org/eos-session0/",
+    "org/EOS_FEEDBACK.md",
+    "org/plans/2026-09-ui-overhaul.md",
+    "org/reviews/",
+    "docs/adr/README.md",
+    "tests/unit/k3-a-closed-record-keeps-its-spelling.test.ts",
+    "org/tasks/T-0149.json",
+    "tests/unit/c8-the-programme-is-closed.test.ts (the ORACLE lane, not this session)",
+    "org/reviews/2026-09-decision-register.md (Q-018 and the Q-015 pointer)",
+    "scripts/tooling/line-census.baseline.json",
+    "tests/fixtures/mutants/T-0149.json",
+    "org/claims.json"
+  ],
+  "programme": "K3 of the refactor and clean-up programme, executing the operator's ruling on Q-010 (governance as written).",
+  "timestamps": {
+    "opened": "2026-09-12T15:00:00Z",
+    "updated": "2026-09-12T17:30:00Z",
+    "closed": "2026-09-12T17:30:00Z"
+  },
+  "invariants": [
+    "I1 THE PROTECTED LINES ARE RATIFIED, NOT RE-EDITED. org/policy.json, ADR-0009 and ADR-0010 keep the paths the codemod wrote; ADR-0011 is the sanction and says so plainly, including that it is dated after the fact.",
+    "I2 A CLOSED RECORD SAYS WHAT WAS TRUE WHEN IT WAS WRITTEN. Every record closed before 2026-09-10 names no path C7 created. The oracle reads that property from the move map rather than from a list of files, so it keeps holding for every later move.",
+    "I3 THE RESTORE REVERSES THE CODEMOD AND NOTHING ELSE. It reverse-applies exactly cdf95b10's hunks, so anything a later batch legitimately changed in those files stays. Net zero lines.",
+    "I4 EIGHT FILES ARE KEPT, EACH NAMED WITH ITS REASON. The three protected files, the two inside T-0144's own claims, the one live record (T-0055), and the two living documents.",
+    "I5 THE ADR INDEX IS COMPLETE. docs/adr/README.md gains the missing ADR-0010 row beside the new ADR-0011 row (org-14)."
+  ],
+  "rollback": "Not one revert, which the first draft of this record claimed. git revert 9ae649e4 would restore the 47 files to their post-codemod text and remove ADR-0011, but that commit also carries the census baseline bump, the register correction, T-0150 and the ADR-0010 index row: the revert would leave the tree at todays test-line count against a baseline that no longer holds it, so census:lines exits 1, and it would strip the ADR-0010 row while ADR-0010 still exists, which turns the K3 oracle red. To roll back cleanly: revert 9ae649e4, then re-cut the baseline with a reason, then put back the ADR-0010 row. The ORACLE lane commits (661e4e3e, a634d89e) stand on their own and need not be reverted with it. No schema, no runtime code, no data.",
+  "commits": "013dcb0e the two lanes; 661e4e3e the K3 oracle, red at 4 of 8, by the ORACLE lane; f6ab7f94 the oracle lane also claims c8; a634d89e c8's testLines ratchet asserts the account, by the ORACLE lane; 9ae649e4 the ratification and the restore; 40f2d548 the mutants; the chore commit that carries this record and the views.",
+  "verification": "Gate by the in-repo runner on the finished tree, stamp unmoved: lint 0 (54.6s), tsc 0 (3.5s), jest 0 (51.1s: 6951 tests, 688 suites), knip 0 (3.0s), canary 0 (0.7s), build 0 (25.4s), e2e 0 (137.8s), census 0 (49.8s), census:lines 0 (2.5s). The restore is 47 files, 90 insertions and 90 deletions, net zero, which is what a reverse-apply of one commit's hunks should be. The oracle went 4 of 8 red to 8 of 8 green. The first gate run stopped at jest on c8's testLines ratchet, which is recorded as a deviation below.",
+  "mutation": "Three mutants against the committed tree at 40f2d548, all killed: a closed record rewritten again with the path the move created, the ADR-0010 row taken out of the public index, and a ratified protected line reverted to a path that no longer exists. The third is the batch's own argument, so it is the one worth having: the oracle sees the sensitive pattern stop resolving, which is why ratifying beat reverting.",
+  "deviation": "Four. (1) The gate's first run stopped at jest: c8 held twelve measures at or below what C0 found, and this programme's oracles had taken testLines 116 lines past it. Every oracle a later batch writes would take it further, so it was put to the operator on its own and ruled the same day; a third ORACLE-lane amendment now asserts the growth account rather than a live count, and the census baseline keeps the live refusal. (2) The chosen option's wording, re-anchor to C8, does not survive the numbers: C8 left 121,114, which is stricter than C0's 121,762. The ORACLE session said so rather than implementing it, and the register's ruling line carries a dated correction. (3) That session also found the K3 oracle's 309 lines had landed in 661e4e3e without re-cutting the baseline, so census:lines was red at HEAD between the two commits; re-cut with its reason. (4) The oracle gates 43 of the 47 restored files. The four closed plans and reviews are not gated, because nothing in the tree separates a closed plan from a living one without a filename list, and a rule that fails a keep is worse than no rule. Named rather than faked; the cheap fix is a closed date in plan and review front matter.",
+  "oracle_provenance": {
+    "method": "clean-context authorship: an ORACLE session that had not seen the implementation and was told not to look for it",
+    "session": "t0149-oracle-2026-09-12",
+    "files": [
+      {
+        "path": "tests/unit/k3-a-closed-record-keeps-its-spelling.test.ts",
+        "sha256": "23a94321bcee6f2e335a56c1000f36ff5f8830fe74f3824bfae401f4c62fb389"
+      },
+      {
+        "path": "tests/unit/c8-the-programme-is-closed.test.ts",
+        "sha256": "8754b87618f1baf0dba0d3c74943d1f1b69695b687b92e6ea748c9eacd762fe0",
+        "note": "the third amendment, authored by the same ORACLE lane on 2026-09-12"
+      }
+    ],
+    "frozen": "2026-09-12, committed red at 4 of 8 in 661e4e3e before any implementation existed",
+    "not_gated": "The four closed plans and reviews. The ORACLE session found no property in the tree that separates a closed plan from a living one without a filename list: status front matter is absent from two of them and present on the consolidation plan, which must be KEPT. It named the gap rather than writing a rule that would fail a keep. The cheap honest fix, if the operator wants them covered, is a closed date in plan and review front matter. The independent review found the gap is six files, not four: org/LOCKBOOK.md and org/plans/2026-09-final-release.md are ungated in both directions too, and reverting LOCKBOOK to its pre-move text leaves the suite green.",
+    "amendment": "c8 blocked this batch on its twelve C0 ratchet cases: testLines read 121878 against C0 121762, and every oracle this programme writes raises it. Put to the operator on its own and ruled the same day: the committed census baseline governs growth, and c8 stops blocking on a live count for that one measure. Re-anchoring to C8 would have been STRICTER (121114), which the option wording missed and the ORACLE session said so rather than implementing it; the amended case instead asserts the account, that the growth log chains unbroken from C8 to the number the baseline holds and every rise carries a reason. The other eleven cases are untouched and still live against C0."
+  },
+  "review": {
+    "verdict": "accept with findings",
+    "session": "t0149-reviewer-2026-09-12, which wrote none of the batch",
+    "method": "org/policy.json modes.high-assurance.verification: independent-review, as Q-010 rules for R2 and above",
+    "what_it_proved": "Every one of the 90 changed line pairs is the exact reverse of a pair cdf95b10 wrote, and every pair differs only inside a src/lib or @/lib substring. All 39 restored records are status done and closed before the commit; no live record was restored. Both oracle files hash to what oracle_provenance records, and the frozen K3 oracle at 661e4e3e is byte-identical to the one at HEAD, so the implementer never touched it. Reverting a Session-0 artefact or the feedback entry turns the oracle red; reverting a closed plan does not, as declared.",
+    "findings_taken": "F1, F2 and F3 corrected in ADR-0011 in this batch, before it was pushed, with the correction recorded in the ADR itself. F5 taken: the second ruling on the testLines ratchet is now Q-018 in the register and folded in the queue, signed and dated, instead of an unsigned correction inside the ruling it supersedes. F4, F2b, F7 and F8 taken here in the record.",
+    "findings_left": "F6, in two parts, and both are recorded rather than fixed. The amended c8 case keeps the name \"testLines did not go backwards from where C0 found it\" while asserting the growth account instead, because POLICY-closed-oracles forbids deleting an it() block and renaming one changes the identity set the same amendment proved unchanged. And that case now resolves against a baseline file the implementer lane edits, where before it resolved against a constant no lane could touch. Both belong to whoever rules on the ratchet next."
+  }
+}

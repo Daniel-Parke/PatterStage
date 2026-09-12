@@ -1,0 +1,539 @@
+// ═══════════════════════════════════════════════════════════════
+// Orchestration → Composer — graph-orchestrated, multi-stage agent workflows.
+//
+// Launch a seeded workflow (e.g. "Software Delivery") from a feature request /
+// bug report; the engine runs each stage as an agent run, routes on PASS/FAIL
+// (looping back on failures), and pauses at HIL gates for your call. The live
+// pipeline shows the graph (conditional + loop-back edges). SSE + polling.
+//
+// Every write on this screen goes through runWrite (C6, T-0143): a refusal is
+// said in the server's words as a toast. It used to be a banner above the
+// canvas, placed there because the commonest cause of a refused gate
+// decision, the run having already ended, also removes the gate panel on the
+// next poll; a toast outlives the panel the same way.
+// ═══════════════════════════════════════════════════════════════
+
+"use client";
+
+import { sectionHeadingClasses } from "@/lib/ui/theme";
+import { useEffect, useMemo, useState } from "react";
+import { GitBranch, HelpCircle, Plus } from "lucide-react";
+
+import AppPageShell from "@/components/layout/AppPageShell";
+import PageHeader from "@/components/layout/PageHeader";
+import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
+import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
+import Skeleton from "@/components/ui/Skeleton";
+import SplitPane from "@/components/ui/SplitPane";
+import { Select, Textarea } from "@/components/ui/field";
+import { useToast } from "@/components/ui/Toast";
+import dynamic from "next/dynamic";
+
+import ComposerGatePrompt from "@/components/composer/ComposerGatePrompt";
+import ComposerNodeRunDetail from "@/components/composer/ComposerNodeRunDetail";
+import { profileOptionsFor } from "@/components/composer/profile-options";
+import ComposerRunForm from "@/components/composer/ComposerRunForm";
+import { runWrite } from "@/lib/api/api-write";
+import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
+import { composerWaitingReason, isTerminalComposerRunStatus } from "@/lib/composer/schema";
+import { COMPOSER_RUN_STATUS_LABELS, statusTone } from "@/lib/ui/status-labels";
+import { statusToneClasses } from "@/lib/ui/theme";
+import { timeAgo } from "@/lib/utils";
+import ElapsedSince from "@/components/composer/ElapsedSince";
+
+// react-flow needs the DOM — load the canvases client-only. The placeholder
+// is the house skeleton, the shape of the canvas that is coming (T-0122).
+const WorkflowCanvas = dynamic(() => import("@/components/composer/WorkflowCanvas"), {
+  ssr: false,
+  loading: () => <Skeleton className="h-[640px]" />,
+});
+const WorkflowRunCanvas = dynamic(() => import("@/components/composer/WorkflowRunCanvas"), {
+  ssr: false,
+  loading: () => <Skeleton className="h-[560px]" />,
+});
+import { useComposerWorkflows, useComposerRuns, useComposerRun } from "@/hooks/useComposer";
+import { useProfiles } from "@/hooks/useProfiles";
+import { useEventStream } from "@/hooks/useEventStream";
+import type { ComposerNodeRun, ComposerRun, ComposerRunStatus } from "@/lib/composer/schema";
+
+/** A short, human-readable title from a run's raw input (first line, no markdown #). */
+function runTitle(input: string | null): string {
+  const firstLine = (input ?? "").split("\n").map((l) => l.trim()).find((l) => l.length > 0) ?? "";
+  const cleaned = firstLine.replace(/^#+\s*/, "");
+  if (!cleaned) return "(no input)";
+  return cleaned.length > 60 ? `${cleaned.slice(0, 60)}…` : cleaned;
+}
+
+/**
+ * The colour of a run's status, composed rather than chosen (T-0120):
+ * enum -> the ratified word the row already PRINTS -> that word's tone.
+ * A run cannot now read "Failed" and wear the colour of "Completed", which
+ * this map allowed - it painted failed `text-neon-pink`, an accent, while the
+ * declared danger token sat unused.
+ */
+function statusColor(status: string): string {
+  const label = COMPOSER_RUN_STATUS_LABELS[status as ComposerRunStatus];
+  return label ? statusToneClasses[statusTone(label)].text : statusToneClasses.idle.text;
+}
+
+const STATUS_FILTERS = [
+  { value: "", label: "All runs" },
+  { value: "running", label: "Running" },
+  // The ratified word, and the one the rows print (decision 13).
+  { value: "awaiting_approval", label: "Waiting for you" },
+  { value: "completed", label: "Completed" },
+  { value: "failed", label: "Failed" },
+  { value: "rejected", label: "Rejected" },
+  { value: "cancelled", label: "Cancelled" },
+];
+
+// ── The clarification prompt ───────────────────────────────────
+// Shown in the run canvas when a stage paused to ask the user something (the
+// run is awaiting_approval with a `__clarify` context marker). Submitting the
+// answer enriches the objective and re-runs the asking stage. Sibling of
+// ComposerGatePrompt (the approve/reject gate), and this page's own since C6.
+
+function ClarifyPrompt({
+  question,
+  busy,
+  onSubmit,
+}: {
+  question: string;
+  busy?: boolean;
+  onSubmit: (answer: string) => void;
+}) {
+  const [answer, setAnswer] = useState("");
+  return (
+    <Card variant="raised" glow="cyan" padding="none" className="space-y-2 px-3 py-2.5">
+      <div className="flex items-start gap-2">
+        <HelpCircle className="mt-0.5 h-4 w-4 shrink-0 text-neon-cyan" />
+        <span className="text-body text-ps-text-primary">{question}</span>
+      </div>
+      <Textarea
+        value={answer}
+        onChange={(e) => setAnswer(e.target.value)}
+        rows={3}
+        placeholder="Your answer…"
+        aria-label="Answer to the agent's question"
+      />
+      <Button
+        variant="primary"
+        color="cyan"
+        size="sm"
+        className="w-full"
+        disabled={busy || answer.trim().length === 0}
+        onClick={() => onSubmit(answer.trim())}
+      >
+        Submit answer
+      </Button>
+    </Card>
+  );
+}
+
+export default function ComposerPage() {
+  const { showToast, toastElement } = useToast();
+  const [mode, setMode] = useState<"run" | "build">("run");
+  // The canvas mounts the first time Build is opened and stays mounted after.
+  // next/dynamic deferred its 400 KB but still loaded it on the route, and
+  // the Run tab, a form and a list, never needs it (the review of 2026-09-08,
+  // T-0133). Staying mounted keeps T-0106 D7: a look at a running workflow
+  // does not throw away what is on the board.
+  const [buildOpened, setBuildOpened] = useState(false);
+  const [input, setInput] = useState("");
+  const [workflowId, setWorkflowId] = useState<string>("");
+  const [profileName, setProfileName] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [submitting, setSubmitting] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [gateBusy, setGateBusy] = useState(false);
+  const cancelConfirm = useTwoStepConfirm();
+  const [selectedNodeKey, setSelectedNodeKey] = useState<string | null>(null);
+  // When a run is selected the launch form collapses to a compact bar to free the
+  // vertical space; "New run" re-expands it.
+  const [forceForm, setForceForm] = useState(false);
+
+  const { data: workflows, error: workflowsError, refetch: refetchWorkflows } = useComposerWorkflows();
+  const { data: runs, error: runsError, refetch } = useComposerRuns();
+  const { data: profiles } = useProfiles();
+  const { data: detail, error: detailError, refetch: refetchDetail } = useComposerRun(selectedId);
+  const { data: live, error: liveError } = useEventStream<{ run: ComposerRun; nodeRuns: ComposerNodeRun[] }>(
+    selectedId ? `/api/composer/runs/${selectedId}/events` : null,
+  );
+
+  const activeWorkflowId = workflowId || workflows?.[0]?.id || "";
+  const run = live?.run ?? detail?.run ?? null;
+  const nodeRuns = live?.nodeRuns ?? detail?.nodeRuns ?? [];
+  const graph = detail?.graph ?? null;
+
+  const profileOptions = profileOptionsFor(profiles);
+  const visibleRuns = useMemo(
+    () => (runs ?? []).filter((r) => !statusFilter || r.status === statusFilter),
+    [runs, statusFilter],
+  );
+
+  const launchOpen = forceForm || !selectedId;
+
+  // Deep-link / restore the selected workflow + run from the URL (?workflow=&runId=)
+  // so reloads and shared links land on the same view. Uses history API directly to
+  // avoid the useSearchParams Suspense requirement.
+  useEffect(() => {
+    const sp = new URLSearchParams(window.location.search);
+    const w = sp.get("workflow");
+    const r = sp.get("runId");
+    if (w) setWorkflowId(w);
+    if (r) setSelectedId(r);
+  }, []);
+  useEffect(() => {
+    const sp = new URLSearchParams(window.location.search);
+    if (activeWorkflowId) sp.set("workflow", activeWorkflowId); else sp.delete("workflow");
+    if (selectedId) sp.set("runId", selectedId); else sp.delete("runId");
+    const qs = sp.toString();
+    window.history.replaceState(null, "", qs ? `?${qs}` : window.location.pathname);
+  }, [activeWorkflowId, selectedId]);
+
+  function selectRun(id: string) {
+    setSelectedId(id);
+    setForceForm(false);
+  }
+
+  function latestNodeRun(nodeId: string): ComposerNodeRun | null {
+    const all = nodeRuns.filter((nr) => nr.nodeId === nodeId);
+    return all.length ? all.reduce((a, b) => (b.attempt >= a.attempt ? b : a)) : null;
+  }
+
+  const selectedNode = selectedNodeKey && graph ? graph.nodes.find((n) => n.key === selectedNodeKey) ?? null : null;
+  const selectedNodeRun = selectedNode ? latestNodeRun(selectedNode.id) : null;
+
+  async function start() {
+    const text = input.trim();
+    if (text.length < 3 || submitting || !activeWorkflowId) return;
+    await runWrite<{ data?: { run?: { id: string } } }>({
+      showToast,
+      setBusy: setSubmitting,
+      url: "/api/composer/runs",
+      body: { workflowId: activeWorkflowId, input: text, profileName: profileName || undefined },
+      // A 200 with no id is still a failure: nothing is being followed, and
+      // the form would otherwise clear itself as though something were.
+      successMessage: (res) =>
+        res?.data?.run?.id
+          ? "Run started"
+          : { message: "The run started but no id came back, so there is nothing to follow.", type: "error" },
+      errorMessage: "Could not start that run",
+      onSuccess: async (res) => {
+        const id = res?.data?.run?.id;
+        if (!id) return;
+        setInput("");
+        setSelectedId(id);
+        setForceForm(false); // collapse the launch form onto the new run
+        await refetch();
+      },
+    });
+  }
+
+  async function decideGate(action: "accept" | "reject", note?: string) {
+    if (!run || !run.currentNodeId || gateBusy) return;
+    // The gate panel renders from a POLLED copy, so a run that ended between
+    // the poll and the click still shows Accept/Reject. The refusal explains
+    // what happened to the run, which is the whole reason the route composes
+    // a state-aware message (T-0069); runWrite says it in those words.
+    await runWrite({
+      showToast,
+      setBusy: setGateBusy,
+      url: `/api/composer/runs/${run.id}/nodes/${run.currentNodeId}/approve`,
+      body: { action, note },
+      successMessage: action === "accept" ? "Stage accepted" : "Stage rejected",
+      errorMessage: "The server refused that decision.",
+    });
+  }
+
+  async function cancelRun() {
+    if (!run || gateBusy) return;
+    // The list is re-read whichever way it went: a refused cancel most often
+    // means the run already ended, and the row should say so.
+    await runWrite({
+      showToast,
+      setBusy: setGateBusy,
+      url: `/api/composer/runs/${run.id}/cancel`,
+      successMessage: "Run cancelled",
+      errorMessage: "The server refused to cancel that run.",
+      onSuccess: async () => {
+        await refetch();
+      },
+      onError: async () => {
+        await refetch();
+      },
+    });
+  }
+
+  async function submitClarification(answer: string) {
+    if (!run || gateBusy) return;
+    await runWrite({
+      showToast,
+      setBusy: setGateBusy,
+      url: `/api/composer/runs/${run.id}/clarify`,
+      body: { answer },
+      successMessage: "Answer sent",
+      errorMessage: "The server refused that answer.",
+    });
+  }
+
+  return (
+    <AppPageShell
+      header={
+        <PageHeader
+          icon={GitBranch}
+          title="Composer"
+          subtitle="Graph-orchestrated, multi-stage agent workflows — with loops and human-in-the-loop gates"
+          color="cyan"
+        />
+      }
+    >
+      {workflowsError ? <LoadErrorBanner error={workflowsError} onRetry={() => void refetchWorkflows()} /> : null}
+      {/* A failed live read, as distinct from a dropped socket. The run
+          detail below still renders from the polled copy (T-0046). */}
+      {liveError ? <LoadErrorBanner error={`Live updates: ${liveError}`} /> : null}
+
+      {/* Run / Build tabs */}
+      <div className="flex gap-1 border-b border-ps-edge-hairline">
+        {(["run", "build"] as const).map((m) => (
+          <button
+            key={m}
+            type="button"
+            onClick={() => {
+              setMode(m);
+              if (m === "build") setBuildOpened(true);
+            }}
+            className={`-mb-px border-b-2 px-3 py-2 text-micro font-mono uppercase tracking-widest transition ${
+              mode === m ? "border-neon-cyan text-neon-cyan" : "border-transparent text-ps-text-muted hover:text-ps-text-secondary"
+            }`}
+          >
+            {m === "run" ? "Run" : "Build"}
+          </button>
+        ))}
+      </div>
+
+      {/* Both panes stay mounted. The ternary unmounted the editor on every
+          switch to Run, so a look at a running workflow threw away whatever was
+          on the board (T-0106, D7). */}
+      {buildOpened && (
+        <div hidden={mode !== "build"}>
+          <WorkflowCanvas workflows={workflows ?? []} onSaved={() => void refetchWorkflows()} />
+        </div>
+      )}
+      <div hidden={mode !== "run"}>
+        <>
+      {/* Launch form — self-describing per the selected workflow's input contract.
+          Collapses to a compact bar once a run is selected to free vertical space. */}
+      {launchOpen ? (
+        <ComposerRunForm
+          workflows={workflows ?? []}
+          activeWorkflowId={activeWorkflowId}
+          onWorkflowChange={setWorkflowId}
+          profileOptions={profileOptions}
+          profileName={profileName}
+          onProfileChange={setProfileName}
+          input={input}
+          onInputChange={setInput}
+          submitting={submitting}
+          onRun={() => void start()}
+        />
+      ) : (
+        <Card padding="sm">
+          <button
+            type="button"
+            onClick={() => setForceForm(true)}
+            className="flex w-full items-center gap-2 px-1 py-1 text-left text-body text-ps-text-secondary transition hover:text-neon-cyan"
+          >
+            <Plus className="h-4 w-4" />
+            New run
+            <span className="ml-auto truncate text-body text-ps-text-muted">
+              {workflows?.find((w) => w.id === activeWorkflowId)?.name ?? ""}
+            </span>
+          </button>
+        </Card>
+      )}
+
+      {/* The runs are the aside and the pipeline is the pane: two columns
+          from lg, and on a phone the runs behind a "Runs" button that closes
+          when one is chosen (T-0131). */}
+      <SplitPane
+        gap="md"
+        asideLabel="Runs"
+        asideWidth="lg:w-80"
+        closeOnChange={selectedId}
+        aside={
+        <Card padding="sm">
+          <div className="mb-2 flex items-center gap-2 px-1">
+            {/* The column's heading from lg; below lg the sheet's title is the word. */}
+            <h2 className={`${sectionHeadingClasses} hidden lg:block`}>Runs</h2>
+            <div className="ml-auto w-36">
+              <Select value={statusFilter} onChange={setStatusFilter} options={STATUS_FILTERS} />
+            </div>
+          </div>
+          {/* The read contract (T-0096): a failed list read is an error with
+              Retry, never "no runs yet". The hook's fallback is [] on failure,
+              which is exactly the false empty state this guards against. */}
+          {runsError ? (
+            <LoadErrorBanner compact error={runsError} onRetry={() => void refetch()} className="mx-1" />
+          ) : visibleRuns.length === 0 ? (
+            <p className="px-1 py-4 text-body text-ps-text-muted">
+              {(runs ?? []).length === 0 ? "No workflow runs yet." : "No runs match this filter."}
+            </p>
+          ) : (
+            <ul className="space-y-1">
+              {visibleRuns.map((r) => (
+                <li key={r.id}>
+                  <button
+                    type="button"
+                    onClick={() => selectRun(r.id)}
+                    className={`w-full rounded-ps-md px-2 py-2 text-left text-body transition hover:bg-ps-surface-raised ${selectedId === r.id ? "bg-ps-surface-raised" : ""}`}
+                  >
+                    <div className="truncate text-ps-text-primary">{runTitle(r.input)}</div>
+                    {/* Which workflow this is a run OF. The rows were a list of
+                        objectives with no way to tell one workflow's from
+                        another's (T-0106). */}
+                    {workflows?.find((w) => w.id === r.workflowId)?.name ? (
+                      <div className="truncate text-body text-ps-text-muted">
+                        {workflows.find((w) => w.id === r.workflowId)?.name}
+                      </div>
+                    ) : null}
+                    <div className="mt-0.5 flex items-center justify-between gap-2 font-mono text-micro">
+                      <span className={statusColor(r.status)}>
+                        {COMPOSER_RUN_STATUS_LABELS[r.status] ?? r.status}
+                        {composerWaitingReason(r) === "question"
+                          ? " · answer a question"
+                          : composerWaitingReason(r) === "gate"
+                            ? " · at a gate"
+                            : ""}
+                      </span>
+                      <span className="text-ps-text-muted">{timeAgo(r.createdAt)}</span>
+                    </div>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Card>
+        }
+      >
+        {/* Pipeline detail */}
+        <Card padding="md">
+          {!selectedId ? (
+            // Nothing selected yet — the genuine empty state.
+            <div className="flex h-[60vh] min-h-[420px] flex-col items-center justify-center gap-2 text-center">
+              <GitBranch className="h-6 w-6 text-ps-viz-glyph-idle" />
+              <p className="text-body text-ps-text-muted">Select a run to watch it live</p>
+              <p className="text-body text-ps-text-muted">Stages light up as they run — click any stage for its details.</p>
+            </div>
+          ) : detailError && !graph ? (
+            // A failed detail read used to render the skeleton below for ever
+            // (T-0106, D3). The banner says what happened and offers a retry.
+            <LoadErrorBanner error={detailError} onRetry={() => void refetchDetail()} />
+          ) : !run || !graph ? (
+            // A run IS selected but its graph is still loading — show a skeleton,
+            // never the "select a run" empty state (that read as "click did nothing").
+            <Card variant="raised" padding="none" className="flex h-[60vh] min-h-[420px] items-center justify-center">
+              <div className="flex flex-col items-center gap-2 text-center">
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-ps-edge-emphasis border-t-neon-cyan" />
+                <p className="text-body text-ps-text-muted">Loading run…</p>
+              </div>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              <Card variant="raised" padding="none" className="flex items-start justify-between gap-3 px-3 py-2.5">
+                <div className="min-w-0">
+                  <div className="truncate text-body text-ps-text-primary">{runTitle(run.input)}</div>
+                  {run.error ? (
+                    // Orange, not pink, when the run was cancelled. "Cancelled by
+                    // user" rendered in the failure colour under an orange status
+                    // pill is the contradiction T-0069 and T-0070 both removed.
+                    <p
+                      className={`mt-1 text-body ${
+                        run.status === "cancelled" ? "text-neon-orange" : "text-neon-pink"
+                      }`}
+                    >
+                      {run.error}
+                    </p>
+                  ) : (
+                    <p className="mt-1 text-body text-ps-text-muted">Click a stage for its verdict & output</p>
+                  )}
+                </div>
+                <div className="shrink-0 text-right">
+                  <div className={`font-mono text-micro uppercase ${statusColor(run.status)}`}>
+                    {run.status}
+                  </div>
+                  <div className="mt-0.5 text-body text-ps-text-muted">
+                    {isTerminalComposerRunStatus(run.status) ? (
+                      timeAgo(run.createdAt)
+                    ) : (
+                      <>running for <ElapsedSince since={run.createdAt} /></>
+                    )}
+                  </div>
+                  {!isTerminalComposerRunStatus(run.status) && (
+                    // Two-step, because one click ends a multi-stage run that may
+                    // be parked at a gate waiting for a person.
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!cancelConfirm.isArmedFor(run.id)) cancelConfirm.arm(run.id);
+                        else void cancelConfirm.confirm(cancelRun);
+                      }}
+                      disabled={gateBusy}
+                      className={`mt-1.5 rounded-ps-md border px-2 py-1 text-micro font-mono transition-colors disabled:opacity-40 ${
+                        cancelConfirm.isArmedFor(run.id)
+                          ? "border-neon-orange/60 bg-neon-orange/20 text-neon-orange"
+                          : "border-ps-edge-emphasis text-ps-text-muted hover:border-neon-orange/50 hover:text-neon-orange"
+                      }`}
+                    >
+                      {cancelConfirm.isArmedFor(run.id) ? "Confirm cancel?" : "Cancel run"}
+                    </button>
+                  )}
+                </div>
+              </Card>
+              <WorkflowRunCanvas
+                graph={graph}
+                latestNodeRun={latestNodeRun}
+                currentNodeId={run.currentNodeId}
+                onSelectNode={setSelectedNodeKey}
+                gate={
+                  run.status === "awaiting_approval" && run.currentNodeId ? (
+                    run.context?.__clarify ? (
+                      <ClarifyPrompt
+                        question={String((run.context.__clarify as { question?: string }).question ?? "Please clarify your objective.")}
+                        busy={gateBusy}
+                        onSubmit={(answer) => void submitClarification(answer)}
+                      />
+                    ) : (
+                      // The stage being decided on goes to the panel with the
+                      // decision: its output and its verdict are the evidence,
+                      // and the sheet that used to be the only place to read
+                      // them covers this panel when it opens.
+                      <ComposerGatePrompt
+                        nodeLabel={graph.nodes.find((n) => n.id === run.currentNodeId)?.label ?? "stage"}
+                        output={latestNodeRun(run.currentNodeId)?.output ?? null}
+                        verdict={latestNodeRun(run.currentNodeId)?.verdict ?? null}
+                        busy={gateBusy}
+                        onAction={decideGate}
+                      />
+                    )
+                  ) : null
+                }
+              />
+            </div>
+          )}
+        </Card>
+      </SplitPane>
+      <ComposerNodeRunDetail
+        open={selectedNode != null}
+        onClose={() => setSelectedNodeKey(null)}
+        node={selectedNode}
+        nodeRun={selectedNodeRun}
+        approvals={(detail?.approvals ?? []).filter((a) => selectedNode && a.nodeId === selectedNode.id)}
+      />
+        </>
+      </div>
+      {toastElement}
+    </AppPageShell>
+  );
+}

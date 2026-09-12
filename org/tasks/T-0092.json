@@ -1,0 +1,43 @@
+{
+  "id": "T-0092",
+  "intent": "The six findings this device's own browser pass carried into the round-6 brief: a requirement stated before anyone had typed, a placeholder that contradicted its hint, a dispatch mode below the fold, a 'not installed, nothing will run' banner beside a working gateway, overlapping stats labels at 1280px, and a boot warning that told the operator to set what they had set.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0092-browser-findings-2026-09-05",
+  "claims": [
+    "src/components/missions/MissionCreateForm.tsx",
+    "src/components/missions/MissionInsights.tsx",
+    "src/lib/dashboard/first-run-steps.ts",
+    "src/components/dashboard/FirstRunPanel.tsx",
+    "src/components/dashboard/SubsystemsPanel.tsx",
+    "src/lib/status/subsystems.ts",
+    "src/app/page.tsx",
+    "src/lib/paths.ts",
+    "tests/"
+  ],
+  "invariants": [
+    "I1 A submit requirement is stated after the person has started, never before. The button stays disabled and keeps the reason in its title.",
+    "I2 A placeholder is one line and agrees with the hint beneath it.",
+    "I3 The dispatch mode is chosen where it can be seen: Dispatch is the first section of the New Mission sheet.",
+    "I4 With no local install and a reachable gateway, the first-run panel, its agent step and the header pill say the agent runs through the gateway at its address. The gateway row carries that address as data.",
+    "I5 Stats tiles wrap rather than squeeze, and their labels truncate. No two labels intersect at 1280px, measured by bounding boxes.",
+    "I6 The shadowed-data warning is for the discovery case. When PS_DATA_DIR (or a legacy name) was set, it stays quiet."
+  ],
+  "the_standing_playwright_failure_was_finding_A": "missions-compose.spec.ts had failed on every run since round 5 with a strict-mode ambiguity. The premature requirement sentence was the second match. It passes now, and the suite is 91 passed, 0 failed, 8 skipped, including the new 1280px probe.",
+  "mutation_finding": "Seven mutants. Five killed on the first pass. The two survivors were both the oracle's fault: the placeholder assertion passed vacuously when the attribute read was empty, and the headline assertion was satisfied by the checklist step's own mention of the URL. Both made exact, both mutants killed. C (dispatch order) is pinned by DOM order in the unit oracle; E (tile wrapping) is a layout fact only the Playwright probe can judge, and it does.",
+  "verification": "Driven in the Browser pane on the isolated instance at 1280x720, production build: the dashboard shows the Subsystems panel with five rows and reasons; the New Mission sheet opens with no requirement sentence (the only match is the disabled button's tooltip), the Goals placeholder reads 'e.g. Gather data', and Dispatch sits directly under Goals as step 1 above Mission parameters; the Missions stats strip shows Total 10, Active 0, Done 8, Failed 2 as four separate tiles. The REMOTE pill and the gateway headline could not be shown on this instance because its Hermes home is detected as a local install; they are pinned by the unit oracle. Gate by exit code: lint 0, tsc 0, 3907 tests / 444 suites, knip 0, canary OK, build 0.",
+  "timestamps": {
+    "opened": "2026-09-05T07:10:00Z",
+    "updated": "2026-09-05T08:40:00Z",
+    "closed": "2026-09-05T08:40:00Z"
+  }
+}

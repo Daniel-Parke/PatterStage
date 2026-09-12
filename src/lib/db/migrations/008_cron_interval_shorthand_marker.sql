@@ -1,0 +1,18 @@
+-- Marker migration for the cron interval-shorthand canonicalisation fix.
+--
+-- The actual data-rewriting work (converting "every Nm / Nh / Nd" shorthand
+-- stored in `cron_jobs.schedule` to raw 5-field cron expressions) happens
+-- in TypeScript at startup, in `applyCronScheduleCanonicalisation()`.
+-- This file just exists so the migration index increments and the
+-- schema_version is bumped to 7.
+--
+-- See src/lib/db/apply-cron-schedule-canonicalisation.ts for the
+-- implementation and the rationale. The bug being fixed: the live
+-- "Review & Refactor" recurring mission (id 5585c131) had
+-- `schedule = "every 30m"` stored verbatim, which the Hermes
+-- `syncAllJobsToHermes` push path left as `{kind: "every 30m", ...}`
+-- in `~/.hermes/cron/jobs.json` — an invalid `kind` that the Python
+-- scheduler cannot parse for `next_run_at`, so the job never fired.
+--
+-- Ref: session 2026-06-10 investigation of the silent cron-dispatch
+-- failure on the Review & Refactor mission.

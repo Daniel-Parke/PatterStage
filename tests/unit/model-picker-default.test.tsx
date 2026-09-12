@@ -1,6 +1,7 @@
 /** @jest-environment jsdom */
 
-import { render, waitFor } from "@testing-library/react";
+import { waitFor } from "@testing-library/react";
+import { renderWithQuery } from "../helpers/render-with-query";
 import ModelPicker from "@/components/missions/ModelPicker";
 
 describe("ModelPicker defaults", () => {
@@ -13,6 +14,8 @@ describe("ModelPicker defaults", () => {
     global.fetch = jest.fn((url: string | Request) => {
       const u = typeof url === "string" ? url : url.toString();
       if (u.includes("/api/models/defaults")) {
+        // The on-the-wire envelope is `{ data: { defaults: ... } }`,
+        // which is exactly what `safeApiCall<T>` returns in `result.data`.
         return Promise.resolve({
           ok: true,
           json: () => Promise.resolve({ data: { defaults: { agent: "reg-2" } } }),
@@ -21,6 +24,7 @@ describe("ModelPicker defaults", () => {
       if (u.includes("/api/models")) {
         return Promise.resolve({
           ok: true,
+          // See above — wire envelope shape.
           json: () =>
             Promise.resolve({
               data: {
@@ -35,7 +39,7 @@ describe("ModelPicker defaults", () => {
       return Promise.reject(new Error("unexpected fetch: " + u));
     }) as jest.Mock;
 
-    render(<ModelPicker modelId="" provider="" onChange={onChange} id="t-model-picker" />);
+    renderWithQuery(<ModelPicker modelId="" provider="" onChange={onChange} id="t-model-picker" />);
 
     await waitFor(() => {
       expect(onChange).toHaveBeenCalledWith("m2", "p2");
@@ -47,6 +51,7 @@ describe("ModelPicker defaults", () => {
     global.fetch = jest.fn((url: string | Request) => {
       const u = typeof url === "string" ? url : url.toString();
       if (u.includes("/api/models/defaults")) {
+        // See above — wire envelope shape.
         return Promise.resolve({
           ok: true,
           json: () => Promise.resolve({ data: { defaults: { agent: null } } }),
@@ -55,6 +60,7 @@ describe("ModelPicker defaults", () => {
       if (u.includes("/api/models")) {
         return Promise.resolve({
           ok: true,
+          // See above — wire envelope shape.
           json: () =>
             Promise.resolve({
               data: {
@@ -69,9 +75,9 @@ describe("ModelPicker defaults", () => {
       return Promise.reject(new Error("unexpected fetch: " + u));
     }) as jest.Mock;
 
-    render(<ModelPicker modelId="" provider="" onChange={onChange} id="t-model-picker-2" />);
+    renderWithQuery(<ModelPicker modelId="" provider="" onChange={onChange} id="t-model-picker-2" />);
 
-    // ModelPicker uses safeApiCall which returns { ok, data } — auto-fill with first model
+    // ModelPicker uses safeApiCall which returns { ok, data } where data is the full envelope; auto-fill reads result.data?.data?.models[0].
     await waitFor(() => {
       expect(onChange).toHaveBeenCalledWith("mv", "pv");
     });
@@ -81,6 +87,7 @@ describe("ModelPicker defaults", () => {
     global.fetch = jest.fn((url: string | Request) => {
       const u = typeof url === "string" ? url : url.toString();
       if (u.includes("/api/models/defaults")) {
+        // See above — wire envelope shape.
         return Promise.resolve({
           ok: true,
           json: () => Promise.resolve({ data: { defaults: { agent: null } } }),
@@ -89,13 +96,14 @@ describe("ModelPicker defaults", () => {
       if (u.includes("/api/models")) {
         return Promise.resolve({
           ok: true,
+          // See above — wire envelope shape.
           json: () => Promise.resolve({ data: { models: [] } }),
         } as Response);
       }
       return Promise.reject(new Error("unexpected fetch: " + u));
     }) as jest.Mock;
 
-    const { container } = render(
+    const { container } = renderWithQuery(
       <ModelPicker
         modelId=""
         provider=""
@@ -123,6 +131,7 @@ describe("ModelPicker defaults", () => {
     global.fetch = jest.fn((url: string | Request) => {
       const u = typeof url === "string" ? url : url.toString();
       if (u.includes("/api/models/defaults")) {
+        // See above — wire envelope shape.
         return Promise.resolve({
           ok: true,
           json: () => Promise.resolve({ data: { defaults: { agent: null } } }),
@@ -131,13 +140,14 @@ describe("ModelPicker defaults", () => {
       if (u.includes("/api/models")) {
         return Promise.resolve({
           ok: true,
+          // See above — wire envelope shape.
           json: () => Promise.resolve({ data: { models: [] } }),
         } as Response);
       }
       return Promise.reject(new Error("unexpected fetch: " + u));
     }) as jest.Mock;
 
-    const { getByText } = render(
+    const { getByText } = renderWithQuery(
       <ModelPicker modelId="" provider="" onChange={() => {}} id="t-model-picker-3" />,
     );
 
@@ -145,4 +155,5 @@ describe("ModelPicker defaults", () => {
       expect(getByText(/No models registered/)).toBeInTheDocument();
     });
   });
+
 });

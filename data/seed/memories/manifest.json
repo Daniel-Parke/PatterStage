@@ -1,0 +1,30 @@
+{
+  "version": "1.0.0",
+  "facts": [
+    {
+      "seedKey": "ch.mem.codename",
+      "category": "project",
+      "content": "The internal project codename for the benchmarking initiative is Project Lodestar."
+    },
+    {
+      "seedKey": "ch.mem.maintenance",
+      "category": "operations",
+      "content": "The standard maintenance window is every Tuesday at 02:00 UTC."
+    },
+    {
+      "seedKey": "ch.mem.escalation",
+      "category": "operations",
+      "content": "The primary on-call escalation contact is the Platform Reliability team."
+    },
+    {
+      "seedKey": "ch.mem.retention",
+      "category": "policy",
+      "content": "The data retention policy keeps benchmark run logs for 90 days."
+    },
+    {
+      "seedKey": "ch.mem.default-suite",
+      "category": "benchmark",
+      "content": "The default benchmark suite shipped with PatterStage is named Core Capabilities."
+    }
+  ]
+}

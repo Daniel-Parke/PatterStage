@@ -1,0 +1,35 @@
+{
+  "id": "T-0012",
+  "intent": "Phase 5: pull SQL through the repository seam until the measured count is zero. Warrant WG-ARCH-002 (B, and B is not met); this is the task that makes the shrink-only counter actually shrink. Source row WO-0026. Depends on T-0011. Scope: the disposition table in the committed plan section 6. Operator ruling D8, 2026-08-22: src/lib/db.ts relocates to src/lib/db/index.ts as this task's final, canary-proved commit. Acceptance: (1) the 18 other baselined files clear entirely per the section 6 dispositions, and the two Hermes state.db reads at session-sync.ts:77 and :92 go to the runtime adapter under src/lib/runtime/, NOT to any file whose name contains repository, because a repository name would drop them out of lint sight via the /repository/i exemption; (2) in db.ts, getGatewayPlatforms at :99 and getSchemaHealth's queries at :295 and :303 are extracted to repositories, leaving a residual of 3 plumbing sites, the :133 sqlite_master probe and the :162 and :179 migration execs, with reasons recorded here; (3) baseline entries deleted in the same commits, so the count only ever falls via migration; (4) the final commit, per D8, moves db.ts and keeps @/lib/db imports byte-identical, smoke-testing scripts/tooling/migrate-db.ts whose relative dynamic import at :82 may need /index, after which the file is exempt-by-location and its 3-site baseline entry is deleted BY the sanctioned move and recorded as such; (5) the .exec( receiver gap is NOT chased, because closing it needs a parser and the dependency-free constraint is carried by design-lint.mjs's own header and by the WO-0003 note; (6) one meta-table repository serves both the config cache and the scheduler lease, not two; (7) the scheduler extraction preserves the deliberate try/catch swallows at BackgroundScheduler.ts:36 and :48; (8) an independent reviewer diffs a sample of migrated queries against git history for changed semantics. Done when sql-outside-repository's measured count is 0, 54 sites removed by migration and 3 by the sanctioned relocation with recorded reasons. Merge gate: the real-Hermes suite plus the upgrade-path test, and the operator approves and merges. Tier proposal R3, matching the declared facts: rollback-cost is declared because every database access path in a shipped application moves across many commits, so a mid-way revert is expensive, which is the same judgement the v1 row made when it alone in the queue carried tier T3 with an operator merge. Closed 2026-08-23 across 13 commits, 7ea2d547 to 15cf3b9c. sql-outside-repository went 57 sites in 22 files to ZERO, with each baseline entry deleted in the commit that earned it and the design-lint baseline falling 905 to 847 with no key grown and none added. Final disposition of the 57: 49 migrated behind repository seams, 5 relocated to the runtime adapter because they read FOREIGN databases (the agent's own state.db and memory_store.db, which are not PatterStage's to have a repository for) each carrying an inline pragma with a written reason, and 3 exempt by location in src/lib/db/index.ts after the D8 relocation, each reason recorded in that file's header. Independent review specifically checked for exemption laundering, established for every disappeared key whether the SQL genuinely moved or was merely renamed into the /repository/i exemption, and approved. BackgroundScheduler's two deliberate try/catch swallows survive verbatim, protecting the exactly-once guarantee.",
+  "declared": {
+    "capabilities": [
+      "filesystem",
+      "database"
+    ],
+    "side_effects": [
+      "rollback-cost"
+    ]
+  },
+  "mode": "high-assurance",
+  "tier_proposed": "R3",
+  "tier_ruled": "R3",
+  "reasons": [
+    {
+      "factor": "irreversible-action",
+      "tier_floor": "R3",
+      "source": "declared",
+      "evidence": "declared side effect: rollback-cost"
+    }
+  ],
+  "status": "done",
+  "owner_session": "phase5-repository-seam-2026-08-22",
+  "claims": [
+    "src/",
+    "scripts/tooling/design-lint.baseline.json"
+  ],
+  "timestamps": {
+    "opened": "2026-08-22T00:00:00Z",
+    "updated": "2026-08-23T01:00:00Z",
+    "closed": "2026-08-23T01:00:00Z"
+  }
+}

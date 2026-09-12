@@ -1,0 +1,377 @@
+// ═══════════════════════════════════════════════════════════════
+// System Logs — Live log viewer for Hermes log files
+//
+// Thin page shell: the query, the auto-scroll bookkeeping and the
+// two-step delete live here. The header controls, the file sidebar and
+// the terminal pane are presentational components under
+// src/components/logs/.
+// ═══════════════════════════════════════════════════════════════
+
+"use client";
+
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { Terminal, Search, ChevronDown, X, Copy, Check, Download } from "lucide-react";
+import PageHeader from "@/components/layout/PageHeader";
+import AppPageShell from "@/components/layout/AppPageShell";
+import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
+import { Input } from "@/components/ui/field";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
+import SplitPane from "@/components/ui/SplitPane";
+import { useToast } from "@/components/ui/Toast";
+import { runWrite } from "@/lib/api/api-write";
+import { downloadFile } from "@/lib/chat/chat-utils";
+import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
+import { useLogs } from "@/hooks/useLogs";
+import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
+import { formatBytes } from "@/lib/utils";
+import { formatLogAge } from "@/lib/logs/log-freshness";
+import LogInsights from "@/components/logs/LogInsights";
+import LogsHeaderActions from "@/components/logs/LogsHeaderActions";
+import LogFilePicker from "@/components/logs/LogFilePicker";
+import LogTerminal from "@/components/logs/LogTerminal";
+
+import type { LogFileMeta } from "@/lib/fs/log-files";
+/**
+ * The available-log list a FAILED /logs read still carried.
+ *
+ * `errorBody` is the response's `data` field, typed `unknown` because a failure
+ * body is not schema-checked anywhere. Narrowed here rather than cast, since the
+ * whole point is that this arrived on a path nothing validates.
+ */
+/**
+ * The route says there is nothing to read yet: the directory is missing, or
+ * it exists and holds no log files. Either is a fresh install's normal state.
+ */
+function noLogsYet(errorBody: unknown): boolean {
+  if (!errorBody || typeof errorBody !== "object") return false;
+  const b = errorBody as { logsDirMissing?: unknown; noLogsYet?: unknown };
+  return b.noLogsYet === true || b.logsDirMissing === true;
+}
+
+function errorAvailableLogs(errorBody: unknown): LogFileMeta[] | null {
+  if (!errorBody || typeof errorBody !== "object") return null;
+  const logs = (errorBody as { availableLogs?: unknown }).availableLogs;
+  return Array.isArray(logs) ? (logs as LogFileMeta[]) : null;
+}
+
+/** What separates one log line from the next, on the clipboard and on disk. */
+const LINE_BREAK = String.fromCharCode(10);
+
+export default function LogsPage() {
+  const [activeLog, setActiveLog] = useState("agent");
+  const [search, setSearch] = useState("");
+  const [searchVisible, setSearchVisible] = useState(false);
+  const [fileQuery, setFileQuery] = useState("");
+  const [autoScroll, setAutoScroll] = useState(true);
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [lineCount, setLineCount] = useState(200);
+  // What a delete did is a toast, the one channel a write answers on (C6,
+  // T-0143); it was a banner of this page's own with its own Dismiss.
+  const { showToast, toastElement } = useToast();
+  const terminalRef = useRef<HTMLDivElement>(null);
+  // "Delete all logs" is a destructive singleton action — no auto-dismiss
+  // (the user must explicitly confirm or cancel).
+  const { isArmed: deleteArmed, arm: armDelete, confirm: confirmDelete, cancel: cancelDelete } =
+    useTwoStepConfirm({ autoDismissMs: 0 });
+
+  // Auto-refresh is owned by the query: a 5s `refetchInterval` gated by
+  // the `autoRefresh` toggle (src/hooks/useLogs.ts). The reactive log
+  // name + line count live in the query key, so switching files or line
+  // counts refetches. `isLoading` drives the first-load full-page
+  // spinner; `isFetching` (any in-flight fetch on top of cached data)
+  // drives the "Refresh" button spinner.
+  const { data, isLoading: loading, isFetching, error: loadError, errorBody, refetch } = useLogs(
+    activeLog,
+    lineCount,
+    { autoRefresh },
+  );
+  const refreshing = !!data && isFetching;
+
+  const handleDeleteAllLogs = useCallback(async () => {
+    if (!deleteArmed) {
+      armDelete();
+      return;
+    }
+    await confirmDelete(async () => {
+      await runWrite<{ data?: { cleared?: number } }>({
+        showToast,
+        url: "/api/logs",
+        method: "DELETE",
+        successMessage: (res) =>
+          typeof res?.data?.cleared === "number" ? `Cleared ${res.data.cleared} log file(s).` : "Logs cleared.",
+        errorMessage: "Delete failed",
+        onSuccess: () => {
+          void refetch();
+        },
+      });
+    });
+  }, [deleteArmed, armDelete, confirmDelete, refetch, showToast]);
+
+  // The list of logs that exist, from a successful read OR from a 404 body.
+  //
+  // `activeLog` starts at a hard-coded "agent". On an install whose logs
+  // directory holds anything else, the first request 404s -- and a 404 that
+  // carried no list left the effect below with nothing to act on, so the page
+  // asked for the same missing file on every 5s poll, forever. The route now
+  // sends the list with the 404 and this is the line that reads it (T-0071).
+  const availableLogs = data?.availableLogs ?? errorAvailableLogs(errorBody);
+
+  // Auto-set activeLog to first available log when the list arrives.
+  useEffect(() => {
+    if (!availableLogs?.length) return;
+    const ok = availableLogs.some((l) => l.name === activeLog);
+    if (!ok) {
+      setActiveLog(availableLogs[0].name);
+    }
+  }, [availableLogs, activeLog]);
+
+  // Auto-scroll to top on new data
+  useEffect(() => {
+    if (autoScroll && terminalRef.current) {
+      terminalRef.current.scrollTop = 0;
+    }
+  }, [data?.lines, autoScroll]);
+
+  const openSearchInput = useCallback(
+    () => setSearchVisible(true),
+    [setSearchVisible],
+  );
+  const closeSearchInput = useCallback(() => {
+    setSearch("");
+    setSearchVisible(false);
+  }, [setSearch, setSearchVisible]);
+  // terminalRef.current is null only on the first render, in which case the
+  // autoScroll state still flips so the next render scrolls correctly.
+  const jumpToLatestLines = useCallback(() => {
+    setAutoScroll(true);
+    if (terminalRef.current) {
+      terminalRef.current.scrollTop = 0;
+    }
+  }, [setAutoScroll, terminalRef]);
+  const handleScroll = () => {
+    if (!terminalRef.current) return;
+    const { scrollTop } = terminalRef.current;
+    setAutoScroll(scrollTop < 50);
+  };
+
+  const handleRefresh = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
+
+  const toggleAutoRefresh = useCallback(
+    () => setAutoRefresh(!autoRefresh),
+    [autoRefresh, setAutoRefresh],
+  );
+
+  const filteredFiles = useMemo(() => {
+    if (!availableLogs) return [];
+    const q = fileQuery.trim().toLowerCase();
+    if (!q) return availableLogs;
+    return availableLogs.filter((l) => l.name.toLowerCase().includes(q));
+  }, [availableLogs, fileQuery]);
+
+  const allLines = useMemo(() => data?.lines || [], [data?.lines]);
+  // Pre-normalize the search term once instead of calling
+  // `search.toLowerCase()` per-line in the filter (was 200 redundant
+  // calls for a 200-line log). Empty search short-circuits the filter.
+  const filteredLines = useMemo(() => {
+    if (!search) return allLines;
+    const needle = search.toLowerCase();
+    return allLines.filter((line) => line.toLowerCase().includes(needle));
+  }, [allLines, search]);
+
+  // Copy takes what is on screen, filter included: a copy that quietly
+  // included the lines the filter is hiding would not be the thing the
+  // operator is looking at.
+  const [copied, copy] = useCopyToClipboard();
+
+  const handleDownload = useCallback(() => {
+    if (!data) return;
+    downloadFile(allLines.join(LINE_BREAK), `${data.name}.log`, "text/plain;charset=utf-8");
+  }, [data, allLines]);
+
+  const searchMatches = search ? filteredLines.length : 0;
+  // Recomputed on every poll tick (the query refetches every 5s while
+  // auto-refresh is on), which is what makes the age visibly count up.
+  /* eslint-disable-next-line react-hooks/purity -- a freshness readout is a wall-clock fact; the 5s refetch is what advances it */
+  const logAge = formatLogAge(data?.modified, Date.now());
+
+  return (
+    <AppPageShell density="pane"
+      header={
+        <PageHeader
+          icon={Terminal}
+          subtitle={
+            data
+              ? [
+                  `${data.name}.log`,
+                  `${data.totalLines} lines`,
+                  formatBytes(data.size),
+                  // The mtime has always been in the response and never on the
+                  // screen, so a log that stopped being written three days ago
+                  // looked exactly like one being appended to right now.
+                  logAge ? `written ${logAge} ago` : null,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")
+              : "Hermes agent and gateway logs"
+          }
+          color="cyan"
+          actions={
+            <LogsHeaderActions
+              hasLogs={(availableLogs?.length ?? 0) > 0}
+              refreshing={refreshing}
+              onRefresh={() => void handleRefresh()}
+              deleteArmed={deleteArmed}
+              onDeleteAll={() => void handleDeleteAllLogs()}
+              onCancelDelete={cancelDelete}
+            />
+          }
+        />
+      }
+    >
+      <div className="flex-1 flex flex-col min-h-0">
+        {loadError && noLogsYet(errorBody) ? (
+          // A normal condition in a red banner is the other kind of lie
+          // (T-0087). Same reason, calm tone, still a live region: the role
+          // sits on the wrapper, because a card carries none.
+          <div role="status" className="mb-4">
+            <Card padding="none" className="px-4 py-3 text-body text-ps-text-secondary">
+              {loadError}
+            </Card>
+          </div>
+        ) : loadError ? (
+          <LoadErrorBanner
+            error={loadError}
+            onRetry={() => void handleRefresh()}
+          />
+        ) : null}
+
+        {/* The file picker is the aside and the terminal is the pane: two
+            columns from lg, and on a phone the picker behind a "Log files"
+            button that closes when a file is chosen (T-0131). */}
+        <SplitPane
+          fill
+          gap="md"
+          asideLabel="Log files"
+          asideWidth="lg:w-72"
+          closeOnChange={activeLog}
+          aside={
+            <LogFilePicker
+              files={filteredFiles}
+              query={fileQuery}
+              onQueryChange={setFileQuery}
+              activeLog={activeLog}
+              onSelect={setActiveLog}
+            />
+          }
+        >
+            <div className="flex items-center gap-3 mb-4 flex-wrap">
+              {searchVisible ? (
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <div className="relative flex-1 max-w-md min-w-0">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ps-text-muted" />
+                    {/* The kit's Input rather than SearchInput: this box opens
+                        on a click and takes the focus with it, and SearchInput
+                        carries no autoFocus. The magnifier is its own. */}
+                    <Input
+                      type="text"
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      placeholder="Filter log lines…" aria-label="Log line filter"
+                      autoFocus
+                      className="pl-10 font-mono"
+                    />
+                  </div>
+                  {search && (
+                    <span className="text-micro font-mono text-neon-cyan shrink-0">
+                      {searchMatches} matches
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    aria-label="Close log search"
+                    onClick={closeSearchInput}
+                    className="p-1.5 rounded-ps-md text-ps-text-muted hover:text-ps-text-secondary hover:bg-ps-surface-raised shrink-0"
+                  >
+                    <X className="w-4 h-4" aria-hidden="true" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={openSearchInput}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-ps-md text-micro text-ps-text-muted hover:text-ps-text-secondary hover:bg-ps-surface-raised font-mono"
+                >
+                  <Search className="w-3 h-3" />
+                  Filter lines
+                </button>
+              )}
+
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  icon={copied ? Check : Copy}
+                  disabled={filteredLines.length === 0}
+                  onClick={() => copy(filteredLines.join(LINE_BREAK))}
+                  title={
+                    filteredLines.length === 0
+                      ? "Nothing on screen to copy"
+                      : "Copy the lines on screen"
+                  }
+                >
+                  {copied ? "Copied" : "Copy"}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  icon={Download}
+                  disabled={!data || allLines.length === 0}
+                  onClick={handleDownload}
+                  title={data ? `Save ${data.name}.log` : "Nothing to download"}
+                >
+                  Download
+                </Button>
+              </div>
+
+              {!autoScroll && (
+                <button
+                  type="button"
+                  onClick={jumpToLatestLines}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-ps-md text-micro text-neon-cyan bg-neon-cyan/10 font-mono"
+                >
+                  <ChevronDown className="w-3 h-3 rotate-180" />
+                  Latest lines
+                </button>
+              )}
+            </div>
+
+            {data && <LogInsights lines={allLines} />}
+            {loading && !data ? (
+              <LoadingSpinner text="Loading logs..." />
+            ) : data ? (
+              <LogTerminal
+                scrollRef={terminalRef}
+                onScroll={handleScroll}
+                logName={data.name}
+                activeLog={activeLog}
+                showingLines={data.showingLines}
+                totalLines={data.totalLines}
+                lines={filteredLines}
+                searchTerm={search}
+                autoRefresh={autoRefresh}
+                onToggleAutoRefresh={toggleAutoRefresh}
+                lineCount={lineCount}
+                onLineCountChange={setLineCount}
+              />
+            ) : null}
+        </SplitPane>
+      </div>
+      {toastElement}
+    </AppPageShell>
+  );
+}

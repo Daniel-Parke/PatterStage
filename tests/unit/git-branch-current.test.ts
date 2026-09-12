@@ -1,6 +1,6 @@
 /** @jest-environment node */
 
-import { normalizeGitCurrentForBranchesList } from "@/lib/git-branch-current";
+import { normalizeGitCurrentForBranchesList } from "@/lib/git/git-branch-current";
 
 describe("normalizeGitCurrentForBranchesList", () => {
   it("returns null for empty or HEAD", () => {

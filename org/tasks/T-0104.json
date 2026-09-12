@@ -1,0 +1,58 @@
+{
+  "id": "T-0104",
+  "intent": "B10 of the final-release programme: Missions. Cancel and Remove-from-queue confirmable on the B2 primitive (D66, blocker); per-row two-step confirm on scheduled-mission delete with failures surfaced (D73); category rename and delete failures surfaced (D71); a failed fetch renders an error with Retry, never the first-run state (D67); the API sends the schedule and sessionId so the panel card and badge light up, View sessions links into /results/sessions?missionId=, a why-is-it-not-firing line on the schedule card (D68, D69); the template editor gets its own draft state and Save-as-Template cannot overwrite the last-open template (D70); the insights strip agrees with the board under decision 13 labels (D72).",
+  "declared": {
+    "capabilities": [
+      "edit-code"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {
+      "factor": "size-threshold",
+      "tier_floor": "R1",
+      "source": "derived:diff-size",
+      "evidence": "the missions page, hook and route"
+    }
+  ],
+  "status": "done",
+  "owner_session": "session-b10",
+  "claims": [
+    "src/lib/missions/",
+    "src/lib/status-labels.ts",
+    "src/lib/schedules-repository.ts",
+    "src/app/api/missions/",
+    "src/app/work/missions/",
+    "src/app/results/sessions/page.tsx",
+    "src/components/missions/",
+    "src/hooks/",
+    "docs/",
+    "tests/"
+  ],
+  "programme": "B10, depends on B2 (T-0096) and B4 (T-0098). Hook and route tests; the Playwright missions specs.",
+  "timestamps": {
+    "opened": "2026-09-05T10:30:00Z",
+    "updated": "2026-09-05T23:00:00Z",
+    "closed": "2026-09-05T23:00:00Z"
+  },
+  "invariants": [
+    "I1 A mission's schedule reaches the client under the name it has. Both GET branches send it, the list reads every schedule for the page in one query, and nothing answers cronJob any more.",
+    "I2 The panel's card is fed. Cadence reads the schedule, Next and Last read its times, its last result is shown when there is one, and when it will not fire the card says which of the four derivable reasons is why, in a fixed precedence.",
+    "I3 A mission that has run links to what it produced, by mission id, and the sessions surface honours the filter its repository has always accepted.",
+    "I4 There is one mission counter. Five mutually exclusive columns, one pass, and both the board and the strip beside it read it, so a saved draft cannot be a Draft on one and Active on the other.",
+    "I5 The words are the ratified ones, from one map typed against the column union, so an off-vocabulary label is a compile error rather than a badge.",
+    "I6 A scheduled mission is deleted in two clicks, per row, and the armed button is never disabled. A delete, a pause and a Run now that fail say so on the section that holds them.",
+    "I7 A category write answers whether it landed. Nothing reloads over a refusal, the editor keeps the operator's typed name, and reassignToId is always sent, so choosing Uncategorized is a choice that can be carried out.",
+    "I8 The template editor owns its own draft. Opening it cannot touch the composer, saving it sends what the editor holds, its soft close clears the edit target exactly as the hard close did, and Save as Template resolves its target by name only."
+  ],
+  "commits": "bc4abb4d the oracle alone (7 files, 79 cases, measured red: 67 failing, 12 green controls); cfdafd7a the implementation (the schedule view and its firing reasons, the batched read, both GET branches, the panel card, the sessions link and its filter, the one counter and the ratified labels, the two-click schedule delete and its three surfaced failures, the category writes that answer, and the template editor's own draft); then three sharper oracles the sweep asked for and the delete panel's own case.",
+  "verification": "Gate b10 on the implementation tree by exit code: lint 0 (agent-files, doc-links, derived views, read-only guards, icon-button names, form-control names, design-lint 0 baselined, contrast, coverage floors, eslint, typecheck:tests), tsc 0, jest 0 (519 suites, 4935 tests), knip 0, canary unchanged and re-checked (no route, migration, seed or app-config surface moved), build 0, Playwright 127 passed 8 skipped.",
+  "mutation": "51 mutants against the committed tree, 46 killed on the first pass and 50 after four sharper oracles. The four real gaps: the route oracle counts the schedule read's CALL, so a reader that queries the database for an empty page and one that hands a rescheduled mission its oldest row both walked through it, and a repository test now asks the repository; and the category oracle pins the hook without rendering the modal, so a modal that closes its editor over a refused rename, and one that closes its delete panel over a refused delete, both survived. One survivor is equivalent: board-counts-per-column-again, because the per-column filter and the counter agree on every number today. What C126 changed is where the number comes from, and the strip's own cases hold that.",
+  "proof": "Isolated instance (production build of the implementation tree, e2e-b1 data dir, mock-hermes 8747), five scenes, 27 checks, all PASS. (1) A mission and a schedule made through the product's own routes: the detail branch and the list branch both answer 'every 1h', and the word cronJob appears nowhere in the payload. (2) The row expands to a Schedule card with the cadence and an Edit schedule link, no Cron Job heading anywhere; pausing the schedule through the API and reloading puts 'Paused. It will not fire until you resume it.' on the card. (3) The strip reads Total, Running, Completed and Failed, and the words Active, Done, Successful, Dispatched and Drafts appear nowhere on the page. (4) The schedule's delete control has a name, one click arms it and says Confirm? while staying enabled and leaving the row in place, and the second deletes it. (5) A template written in the editor saved the editor's own instruction, and the composer opened afterwards was not holding it.",
+  "deviation": "(1) MissionDetail.sessions was deleted rather than filled. It was declared required, no route has ever sent it, and every MissionDetail in the tree was built with a sessions: [] that was a lie; the mission-to-sessions affordance is the link. (2) The board's badge number moved to countMissionsByColumn but the per-column row list stays a filter: the contract allowed either, and one pass for the numbers with the rows still grouped by the same predicate is the smaller change. (3) The proof walk's template scene proves the direction that is provable: the composer sheet hides the board while it is open, so the two surfaces cannot be on screen together, and what the walk shows is that the editor's text reaches the template and not the composer. The unit oracle holds the other direction. (4) C125 is only half closed, as the contract said it would be: the tick's own refusals (another mission is running, the spend stop is armed) are recorded nowhere, so describeScheduleFiring covers the four reasons that are derivable and claims no more.",
+  "harness_amendments": "Four existing suites re-aimed at renamed facts, none weakened. b2-confirm-button and mission-editor-panel-run-state built a MissionDetail with `cronJob: null, sessions: []`, two fields that no longer exist; they build `schedule: null`. missions-read-only-reads gained doubles for the GET's two new collaborators, without which the real repository reaches the real getDb. mission-filters lost its computeMissionCounts block with the function, and says where the one counter went. In e2e, missions-stats-strip asserts the ratified tile words, and missions-runtime's delete step names the control it clicks and clicks it twice, which also retires its note about an unnamed icon button.",
+  "deferred": "The templates slice of the missions page still only toasts a failed read, which is deliberate: the quick-templates strip renders nothing at all when the list is empty, so there is no first-run state lying over the failure. The scheduler does not stamp why it skipped a due schedule, so two true reasons stay unsayable (see the deviation). MissionDetail carries no session list. The Hermes-cron provenance line for a mission with a legacy cronJobId is not added: that path is superseded by schedules, and B10 renames the surface away from Hermes cron rather than adding a second one."
+}

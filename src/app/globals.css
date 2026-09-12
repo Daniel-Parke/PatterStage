@@ -1,4 +1,19 @@
-@import "tailwindcss";
+/* Tailwind scans SOURCE, and by default it scans the whole project: org/,
+   docs/, tests/, every task record and every markdown file. This repository
+   documents its own class names, so that default made prose load-bearing.
+   Measured at T-0120: 94 candidate-shaped strings, 46 of them naming a colour,
+   were in the shipped stylesheet only because a file outside src/ mentioned
+   them - several of them classes the codemods had just removed from the
+   product. One was worse than dead weight: /`s Spend pill had a border because
+   `border-yellow-400/20` appears once in the repository, in the reconnaissance
+   document REPORTING that the border does not work.
+
+   The app is entirely in src/. The generated help fragments carry no class
+   attribute at all - they are styled by the .ps-help-prose descendant rules
+   below - so nothing outside src/ needs scanning. Widen this only for a
+   directory that actually renders markup. */
+@import "tailwindcss" source(none);
+@source "../../src";
 
 @theme {
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
@@ -11,12 +26,18 @@
   --color-cherenkov-400: #008bd1;
   --color-cherenkov-500: #0071c2;
 
-  /* Accent slots — semantic roles (see docs/design-tokens.md) */
+  /* Accent slots — semantic roles (see docs/contributing/design-tokens.md) */
   --color-neon-cyan: #00bfff;
-  --color-neon-purple: #8b5cff;
+  /* Brightened from #8b5cff on 2026-08-23. The original measured 4.78:1 on
+     --color-dark-950 flat, and 4.03:1 as actually painted on a card, so it
+     failed WCAG AA as text even at FULL opacity: no opacity rule could rescue
+     it. This value keeps the hue (257deg) and saturation (1.00) exactly and
+     raises only lightness, to 6.68:1. It is the one accent that needed the
+     token changed rather than its usage. */
+  --color-neon-purple: #a480ff;
   --color-neon-pink: #e879f9;
   --color-neon-green: #a3ff12;
-  --color-neon-orange: #ff9f1c;
+  --color-neon-orange: #ff6622;
   --color-neon-yellow: #facc15;
 
   /* Blue-tinted surfaces */
@@ -31,18 +52,346 @@
   --color-semantic-warning: #fbbf24;
   --color-semantic-danger: #f87171;
   --color-semantic-info: #00a1e6;
+  /* The danger colour under its accent-slot name. Thirteen sites reached for
+     `neon-red` before any token declared it and rendered with no colour at
+     all, the global error fallback among them (T-0095, D114). Same value as
+     --color-semantic-danger, by intent; design-lint's token-must-exist rule
+     now fails the build on the next undeclared house colour. */
+  --color-neon-red: #f87171;
+
+  /* ── Text tiers ───────────────────────────────────────────────────────────
+     The semantic layer WG-WEB-003 asks for and the lock-book deferred as "set
+     at first build". Before this, hierarchy was written as ad-hoc white
+     opacities (text-white/20 through /90) chosen by eye, and 2,377 rendered
+     elements failed WCAG AA as a result.
+
+     These four are DERIVED, not picked. Measured against --color-dark-950
+     (#040b12), the app's actual painted background, white at 45% is exactly
+     the 4.5:1 AA floor for normal text and white at 34% the 3:1 floor for
+     large or bold text. Every tier below therefore sits at 50% or above, so
+     all four pass AA for body text with headroom rather than balancing on the
+     boundary.
+
+       tier        alpha   contrast   use
+       primary      92%     16.7:1    headings, the number you came to read
+       secondary    70%      9.7:1    body copy, most labels
+       muted        55%      6.3:1    supporting detail, timestamps, units
+       faint        50%      5.3:1    the quietest thing still meant to be READ
+
+     There is deliberately no tier below `faint`. Anything quieter than this is
+     decoration, not text, and it should be a border, a background or absent.
+     Re-derive with scripts/tooling/contrast-check.mjs if the background moves. */
+  --color-ps-text-primary: rgb(255 255 255 / 0.92);
+  --color-ps-text-secondary: rgb(255 255 255 / 0.70);
+  --color-ps-text-muted: rgb(255 255 255 / 0.55);
+  --color-ps-text-faint: rgb(255 255 255 / 0.50);
+
+  /* ── Surface ladder ────────────────────────────────────────────────────────
+     The semantic layer the lock-book's Tokens section owed, ruled at the
+     first-build lock-in sitting of 2026-08-24. The five `--color-dark-*` rungs
+     above are named for how they LOOK; docs/contributing/design-tokens.md forbids that as
+     the only layer, because "dark-900" says nothing about whether a surface is
+     a panel or a well and so nothing stops the two diverging.
+
+     Until 2026-09-07 no colour was minted here: each role aliased the primitive
+     the tree already painted in that role, counted across the tsx tree on
+     2026-08-24 (ground dark-950 x50, panel dark-900 x160, well dark-800 x68,
+     hairline white/10 x280). That was honest recording and it is precisely why
+     the ladder is flat, because what the tree already painted was three
+     surfaces inside 1.19:1 of one another.
+
+     `panel` is now a value in its own right, solved for 1.45:1 against the
+     ground by scripts/tooling/derive-surface-ladder.mjs, and it is no longer
+     dark-900. Re-valuing it repaints nothing: `bg-ps-surface-panel` had zero
+     call sites outside src/lib/theme.ts. `well` and `hairline` keep the values
+     their three and 280 call sites paint today and are retired by U4's codemod,
+     which replaces the call sites rather than the values under them.
+
+     dark-700 (#1c2d40) and dark-600 (#263d54) stay un-roled on purpose: four
+     backgrounds and the scrollbar thumb between them is not a role. */
+  --color-ps-surface-ground: #040b12;
+  --color-ps-surface-panel: #1e3042;
+
+  /* ── The derived ladder ────────────────────────────────────────────────────
+     The four text tiers above are derived rather than chosen: white at 92, 70,
+     55 and 50 percent, because those are the alphas that clear AA against the
+     ground the product actually paints. The SURFACES were never given the same
+     treatment. They are named for how they look, and measured across the
+     running product the whole ladder spans 1.00 to 1.19:1 against the page: the
+     rail is 1.06:1 against the column beside it, the commonest card fill is
+     1.03:1, and every rule in the tree is a 1px white/10 hairline at 1.25:1,
+     against the 3:1 WCAG 1.4.11 asks of a boundary that identifies a component.
+     That is the whole of "the sidebar is quite hard to see", and it is a
+     surface problem: the rail's own labels already measure 6.18:1.
+
+     These five are the output of scripts/tooling/derive-surface-ladder.mjs,
+     which solves for the DIMMEST colour on a hue ray that reaches a target
+     ratio. Do not hand-edit them. Change the requirement in that file and re-run
+     it; tests/unit/u2-the-token-layer.test.ts recomputes every ratio from the
+     hexes written here, so an edit that looks nicer and measures worse fails.
+
+       rung       hex       against  target  measured   vs ground
+       panel      #1e3042   ground   1.45    1.466      1.466
+       raised     #2e4a66   panel    1.45    1.470      2.154
+       edge       #6c7887   panel    3.00    3.003      4.402
+       hairline   #474f59   panel    1.60    1.626      2.383
+       emphasis   #8797aa   panel    4.50    4.521      6.628
+
+     Two rays, because a surface and a rule are not the same object. Surfaces
+     travel the palette's own line (#263d54 is 38:61:84, its brightest existing
+     rung), so the identity does not move. Rules travel a cooler, far less
+     saturated one: on the surface ray a 3:1 stroke comes out a mid blue that
+     reads as a coloured line rather than as an edge.
+
+     WHICH RULE WHERE, decided by looking at both in a browser before writing
+     it down. `edge` is for the boundary of a CONTROL and for the shell's own
+     seams, which is what 1.4.11 is about. `hairline` is for a card outline and
+     for a subdivision inside one surface: a card whose fill already sits
+     1.47:1 off the page does not also need a 3:1 stroke to be found, and
+     drawing one round every tile reads as wireframe. `emphasis` is selected,
+     armed or focused, a boundary that has to win against a boundary.
+
+     `inset` is the ground. A well is normally a step DOWN, and a page this
+     close to black has nowhere to go: an input inside a panel reads as sunken
+     by being its parent's lower rung, which costs no new colour at all.
+
+     Nothing here repaints anything. `--color-ps-surface-panel` had zero
+     consumers in .tsx, `well` and `hairline` keep the values their three and
+     280 call sites already paint, and the codemod that moves those is U4. */
+  --color-ps-surface-raised: #2e4a66;
+  --color-ps-surface-inset: var(--color-ps-surface-ground);
+  --color-ps-edge: #6c7887;
+  --color-ps-edge-hairline: #474f59;
+  --color-ps-edge-emphasis: #8797aa;
+
+  /* ── Type ──────────────────────────────────────────────────────────────────
+     There was no type scale. `@theme` declared no --text-*, no --leading-* and
+     no --tracking-*, so the scale was Tailwind's default, untouched, and it was
+     used as if it had two steps: text-xs 919 times and text-sm 241 against 36
+     uses of everything larger combined. Rendered across 23 routes, 70% of every
+     character in the product is 12px and 63% is JetBrains Mono, so the eye has
+     nothing to land on and every screen reads as one undifferentiated block.
+
+       micro    12/16   mono micro-caps, IDs, paths, timestamps, table cells
+       body     14/21   the default: body copy, list rows, form values, buttons
+       lead     16/24   prose: Help, descriptions, empty states, the reader
+       title    20/28   h1, panel titles
+       display  28/34   the one number a screen exists to show
+
+     Five steps, and the floor is the 12px this project already declares
+     readable. `body` and `lead` carry a 1.5 line height because WCAG 1.4.12
+     asks it of prose and seventeen blocks in this product run at 1.33. `micro`
+     is a one-line mono label, which is not prose.
+
+     The register, ruled by the operator: mono keeps the machine words (values,
+     IDs, paths, timestamps, status words, counts, commands and therefore button
+     labels, and the uppercase micro-caps section labels). Inter takes the human
+     sentences and the headings. */
+  --text-micro: 0.75rem;
+  --text-micro--line-height: 1rem;
+  --text-body: 0.875rem;
+  --text-body--line-height: 1.3125rem;
+  --text-lead: 1rem;
+  --text-lead--line-height: 1.5rem;
+  --text-title: 1.25rem;
+  --text-title--line-height: 1.75rem;
+  --text-display: 1.75rem;
+  --text-display--line-height: 2.125rem;
+
+  /* ── Radius ────────────────────────────────────────────────────────────────
+     Seven radii render across the product and eleven spellings produce them.
+     Three: 4 for a chip or a dot, 8 for a control, 12 for a surface.
+
+     House-prefixed, and that is not decoration. Tailwind already ships
+     --radius-sm/md/lg, and `rounded-lg` appears 324 times in this tree, so
+     redefining the built-in names would repaint every one of them in a batch
+     whose whole contract is that nothing repaints. U6's codemod moves the call
+     sites onto these; the built-in names are not touched. */
+  --radius-ps-sm: 4px;
+  --radius-ps-md: 8px;
+  --radius-ps-lg: 12px;
+
+  /* ── Elevation ─────────────────────────────────────────────────────────────
+     Twenty-six distinct box-shadows render, including near-duplicate inner
+     glows at 16px and 18px on five different accents. Two survive: this one,
+     which is a dialog or a popover being above the page, and `glow-surface`,
+     which is the product's live signal and is not elevation at all. */
+  --shadow-ps-raised: 0 8px 24px -4px rgb(0 0 0 / 0.55), 0 2px 6px -2px rgb(0 0 0 / 0.4);
+
+  /* ── Layers ────────────────────────────────────────────────────────────────
+     Thirteen z values are in use and seven of them are arbitrary. `z-[61]`
+     exists because somebody needed to sit on top of `z-[60]`, which is how a
+     modal ends up under a toast. Named, ordered, and gapped by ten so there is
+     room to insert without inventing a decimal. */
+  /* ── Status ────────────────────────────────────────────────────────────────
+     Twenty-two files each invented their own state-to-colour map, so `failed`
+     renders as neon-pink in the composer, neon-pink again for a down
+     subsystem, and red-400 in two other places, none of them the danger token
+     the design system declares. One ladder, aliasing colours that already
+     exist, so nothing new is minted and nothing can drift.
+
+     This is state. It is NOT the categorical scale a chart legend needs, which
+     lives in src/components/viz/colors.ts and is deliberately separate: on
+     Insights the same six accents currently serve as both, so green means
+     "healthy" and "Sessions" at once and orange means seven different things. */
+  --color-status-idle: var(--color-ps-text-muted);
+  --color-status-queued: var(--color-semantic-warning);
+  --color-status-running: var(--color-neon-cyan);
+  --color-status-ok: var(--color-semantic-success);
+  --color-status-warn: var(--color-semantic-warning);
+  --color-status-fail: var(--color-semantic-danger);
+  --color-status-blocked: var(--color-neon-orange);
+
+  /* The Story Weaver reader's warm register: the page you read, the ink on
+     it, and the rule between them - and nothing else. It was thirteen
+     tokens in :root: a dark tint and a black tint with a page, an ink and a
+     panel each, an accent that was the house purple by another name, a rule,
+     and five chapter-state tints that were a second status ladder drawn
+     beside the one every other screen uses. The chapter dots read the house
+     ladder now, the reader's chrome (its bars, its chapter list) sits on the
+     console's surfaces, and the register keeps the three colours that ARE
+     the register (U12, T-0126). WG-WEB-001 still holds: dark-first, one
+     register, no exception. */
+  --color-ps-reader-page: #0f0d0b;
+  --color-ps-reader-ink: #e8dcc8;
+  --color-ps-reader-rule: #2a2520;
+
+  /* ── Viz chrome ────────────────────────────────────────────────────────────
+     The furniture a chart is drawn ON, as opposed to the data drawn IN it.
+     Series colour was never the problem: it already goes through a named scale
+     in src/components/viz/colors.ts, which resolves to the --color-neon-*
+     tokens. What stayed inline was the chrome, and design-lint counted it as
+     nineteen raw colours across eleven files (T-0034).
+
+     Every rung is the value the tree already painted, read off the components
+     on 2026-08-25. Naming is not repainting: not one pixel moves by declaring
+     these, and re-valuing a rung is a design decision for the lock-book's
+     Tokens section rather than something a refactor may do quietly.
+
+       role        alpha  what it is                          where it was
+       empty       4%     the disc behind a locked badge or   AchievementBadge,
+                          a cold streak: nothing here yet     StreakFlame
+       guide       5%     a ring or cell marking where data   RadialActivityClock
+                          would be, if there were any         (x2), ActivityHeatmap
+       track       6%     the unfilled remainder of a gauge,  Donut,
+                          and the rule round an unearned badge AchievementBadge
+       axis        8%     the baseline a chart is measured    DistributionHistogram,
+                          against, and its quadrant ticks     StackedAreaTrend,
+                                                              RadialActivityClock
+       inert      15%     a graph edge that is not on the     WorkflowRunCanvas
+                          live path
+       glyph-idle 22%     a locked achievement's icon. NOT a  AchievementBadge
+                          text tier: the badge's name is text
+                          and already reads at ps-text-muted,
+                          with a lock glyph beside it, so this
+                          carries state and not meaning
+       scrim      black   the veil the minimap draws over the WorkflowCanvas
+                  at 60%  canvas it is not showing
+
+     There is deliberately no rung here for chart TEXT. An axis label is text,
+     it reads through --color-ps-text-*, and scripts/tooling/contrast-check.mjs
+     measures those four and nothing else. The tick labels used to be painted
+     white at 30 and 35 percent, below the 50 percent floor the `faint` tier
+     sets; they are on the tier now. */
+  --color-ps-viz-empty: rgb(255 255 255 / 0.04);
+  --color-ps-viz-guide: rgb(255 255 255 / 0.05);
+  --color-ps-viz-track: rgb(255 255 255 / 0.06);
+  --color-ps-viz-axis: rgb(255 255 255 / 0.08);
+  --color-ps-viz-inert: rgb(255 255 255 / 0.15);
+  --color-ps-viz-glyph-idle: rgb(255 255 255 / 0.22);
+  --color-ps-viz-scrim: rgb(0 0 0 / 0.6);
+
+  /* ── Measures ──────────────────────────────────────────────────────────────
+     Three column widths and one block rhythm, also owed by the Tokens section
+     and ruled in the same sitting. Read off the tree's own page shells rather
+     than chosen: every `mx-auto` page container under src/app was measured on
+     2026-08-24, sixteen in all.
+
+       reading  48rem  the longform column, already set during the UX pass on
+                       the Story Weaver reader, the research report and the
+                       artifact viewer, and cited to WG-WEB-014 in two of them.
+                       This records that number; it does not mint a second one.
+       wide     56rem  the modal page shell, 7 of the 16 (sessions, seed,
+                       personalities, skills, three Story Weaver surfaces).
+       full     80rem  the widest shell in the tree, 4 of the 16: the two dense
+                       boards (dashboard, config index) and the missions board,
+                       which spells the same width `max-w-screen-xl`.
+       block   1.5rem  the gap between blocks on a page shell: `space-y-6` on 3
+                       shells against `space-y-8` on 3, broken by the shells'
+                       own `px-6 py-6` gutter, which is 1.5rem on 7 of them. One
+                       step for the gutter and the rhythm, not two.
+
+     Tailwind reads `--container-*` for max-w-* and `--spacing-*` for gap,
+     padding and space-y, so these are utilities the moment they are declared. */
+  /* Two measures replace the three above, in U3. `page` is every screen's
+     container and owns the left edge the h1 and the content both sit on; the
+     h1 misses that edge on 21 of 23 routes today, by up to 289px. `prose` is a
+     column INSIDE it, left-aligned rather than centred, because a second
+     centred container is what puts a screen 400px away from its neighbour. */
+  --container-ps-page: 82rem;
+  --container-ps-prose: 46rem;
+  --container-ps-reading: 48rem;
+  --container-ps-wide: 56rem;
+  --container-ps-full: 80rem;
+  --spacing-ps-block: 1.5rem;
 }
 
-/* Shell + RGB mirrors for effects (keep aligned with @theme / docs/design-tokens.md) */
+/* Shell + RGB mirrors for effects (keep aligned with @theme / docs/contributing/design-tokens.md) */
 :root {
-  --ch-shell-header-min-height: 5rem;
-  --ch-mobile-header-min-height: 3rem;
-  --ch-rgb-neon-cyan: 0, 191, 255;
-  --ch-rgb-neon-purple: 139, 92, 255;
-  --ch-rgb-neon-green: 163, 255, 18;
-  --ch-rgb-neon-pink: 232, 121, 249;
-  --ch-rgb-neon-orange: 255, 159, 28;
-  --ch-rgb-cherenkov-glow: 51, 221, 255;
+  /* The layer ladder. In :root rather than @theme because z-index is not one of
+     Tailwind's theme namespaces: declared there it produces no utility and is
+     dropped from the stylesheet entirely, which was measured rather than
+     assumed. The @utility rules below turn each rung into a real class, so a
+     call site writes `z-modal` and not `z-[var(--z-modal)]` -- which the
+     z-scale-only rule flags as an arbitrary value, correctly.
+
+     Gapped by ten so a new layer can be inserted without inventing a decimal.
+     Thirteen z values are in use today and seven of them are arbitrary; z-[61]
+     exists because somebody needed to sit on top of z-[60]. */
+  --z-base: 0;
+  --z-sticky: 10;
+  --z-dropdown: 30;
+  --z-overlay: 50;
+  --z-modal: 60;
+  --z-toast: 70;
+  --z-tooltip: 80;
+  --ps-shell-header-min-height: 5rem;
+  --ps-mobile-header-min-height: 3rem;
+  /* One pair, so a transition is either the one you notice or the one you do
+     not. The house transition-colors (below the z ladder) leaves outline-color
+     alone: Tailwind's includes it, so the focus ring faded in from grey over
+     150ms and a fast tabber never saw it cyan (T-0128). */
+  --ps-duration-fast: 120ms;
+  --ps-duration: 200ms;
+  --ps-rgb-neon-cyan: 0 191 255;
+  --ps-rgb-neon-purple: 164 128 255;
+  --ps-rgb-neon-green: 163 255 18;
+  --ps-rgb-neon-pink: 232 121 249;
+  --ps-rgb-neon-orange: 255 102 34;
+  --ps-rgb-cherenkov-glow: 51 221 255;
+}
+
+/* One class per rung of the layer ladder (see :root above). */
+@utility z-base { z-index: var(--z-base); }
+@utility z-sticky { z-index: var(--z-sticky); }
+@utility z-dropdown { z-index: var(--z-dropdown); }
+@utility z-overlay { z-index: var(--z-overlay); }
+@utility z-modal { z-index: var(--z-modal); }
+@utility z-toast { z-index: var(--z-toast); }
+@utility z-tooltip { z-index: var(--z-tooltip); }
+
+/* ── The house transition-colors ──────────────────────────────────────────
+   Tailwind's transition-colors transitions outline-color too, so on every
+   control wearing it the one focus ring ("Focus, once", below) faded in from
+   grey over the transition's duration, and a fast tabber never saw it cyan.
+   Same utility, same name, without outline-color: the ring is instant and
+   everything else still fades. Only the property list is set, so duration-*
+   and ease-* keep working beside it. In the utilities layer after Tailwind's
+   own, so it wins by order at equal specificity (T-0128). */
+@layer utilities {
+  .transition-colors {
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  }
 }
 
 /* Scrollbar styling */
@@ -58,34 +407,122 @@
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgb(var(--ch-rgb-neon-cyan) / 0.35);
+  background: rgb(var(--ps-rgb-neon-cyan) / 0.35);
 }
 
-/* Glow effects — legacy classes used across the app */
-.glow-cyan {
-  box-shadow:
-    0 0 20px rgb(var(--ch-rgb-neon-cyan) / 0.15),
-    0 0 40px rgb(var(--ch-rgb-neon-cyan) / 0.05);
+/* Glow effects — restrained, deep-space Cherenkov. Glow reads as a subtle
+   luminescence on cards, not a flat light source; the brand's "reactor core"
+   signature lives in the stronger pulse-glow / glow-surface reserved for
+   live/active states (running process, live session). */
+/* ── Motion (transform/opacity only — GPU-friendly) ──────────── */
+@keyframes ch-flame {
+  0%, 100% { transform: scale(1) rotate(-1deg); opacity: 1; }
+  25% { transform: scale(1.08) rotate(2deg); opacity: 0.9; }
+  50% { transform: scale(0.96) rotate(-2deg); opacity: 1; }
+  75% { transform: scale(1.05) rotate(1deg); opacity: 0.95; }
 }
-.glow-purple {
-  box-shadow:
-    0 0 20px rgb(var(--ch-rgb-neon-purple) / 0.15),
-    0 0 40px rgb(var(--ch-rgb-neon-purple) / 0.05);
+.animate-flame { animation: ch-flame 1.6s ease-in-out infinite; transform-origin: center bottom; }
+
+@keyframes ch-float-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
-.glow-green {
-  box-shadow:
-    0 0 20px rgb(var(--ch-rgb-neon-green) / 0.15),
-    0 0 40px rgb(var(--ch-rgb-neon-green) / 0.05);
+.animate-float-in { animation: ch-float-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* The stagger the motion wrappers lean on (T-0129): each child floats in,
+   50ms after the one before it, by child order, so an item carries no state
+   and no library. Twelve steps is more than any grid on the product shows in
+   one row; a thirteenth child lands with the twelfth. */
+.ps-stagger > * { animation: ch-float-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.ps-stagger > :nth-child(2) { animation-delay: 50ms; }
+.ps-stagger > :nth-child(3) { animation-delay: 100ms; }
+.ps-stagger > :nth-child(4) { animation-delay: 150ms; }
+.ps-stagger > :nth-child(5) { animation-delay: 200ms; }
+.ps-stagger > :nth-child(6) { animation-delay: 250ms; }
+.ps-stagger > :nth-child(7) { animation-delay: 300ms; }
+.ps-stagger > :nth-child(8) { animation-delay: 350ms; }
+.ps-stagger > :nth-child(9) { animation-delay: 400ms; }
+.ps-stagger > :nth-child(10) { animation-delay: 450ms; }
+.ps-stagger > :nth-child(11) { animation-delay: 500ms; }
+.ps-stagger > :nth-child(n + 12) { animation-delay: 550ms; }
+
+@keyframes ch-shimmer {
+  100% { transform: translateX(100%); }
 }
-.glow-pink {
-  box-shadow:
-    0 0 20px rgb(var(--ch-rgb-neon-pink) / 0.15),
-    0 0 40px rgb(var(--ch-rgb-neon-pink) / 0.05);
+.animate-shimmer {
+  position: relative;
+  overflow: hidden;
 }
-.glow-orange {
-  box-shadow:
-    0 0 20px rgb(var(--ch-rgb-neon-orange) / 0.15),
-    0 0 40px rgb(var(--ch-rgb-neon-orange) / 0.05);
+.animate-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgb(var(--ps-rgb-neon-cyan) / 0.08), transparent);
+  animation: ch-shimmer 2.2s ease-in-out infinite;
+}
+
+/* SVG line draw-in: pair with pathLength={1} on the <path>. Reduced-motion
+   users skip the animation (the line renders fully via the override below). */
+@keyframes viz-draw {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}
+.viz-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: viz-draw 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Composer active-pathway "flow": cyan energy dashes travelling down a vertical
+   connector so the live route through a workflow reads as electrified. */
+@keyframes ps-rail-flow {
+  to { background-position: 0 12px; }
+}
+.ps-rail-flow {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgb(var(--ps-rgb-neon-cyan) / 0.95) 0 3px,
+    transparent 3px 9px
+  );
+  animation: ps-rail-flow 0.5s linear infinite;
+  box-shadow: 0 0 5px rgb(var(--ps-rgb-neon-cyan) / 0.6);
+}
+/* Active edge on the live run canvas (react-flow): cyan glow on the stroke. */
+.ps-edge-glow .react-flow__edge-path { filter: drop-shadow(0 0 3px rgb(var(--ps-rgb-neon-cyan) / 0.7)); }
+
+@media (prefers-reduced-motion: reduce) {
+  /* Deny by default. This was an allowlist of seven class names, written when
+     there were seven animations, and it was already wrong once: it named
+     `.animate-pulse-glow` for months while the class in the tree was
+     `.pulse-glow`, so every StatusDot pulsed for ever under reduce (found at
+     T-0120). The reconnaissance then measured 28 animations still running
+     under reduce, the logo's flame on every screen among them (WCAG 2.3.3).
+     An allowlist can only ever name what its author knew about. Everything
+     halts: one iteration of nothing, so an entrance animation lands on its
+     end state and an infinite one never starts. Two things are put back, the
+     spinners, which say "still working" and are the one motion in the product
+     that is information rather than decoration. `.viz-draw` keeps its end
+     state pinned because its keyframes draw a line in from nothing, and a
+     halted draw would be no line. tests/e2e/motion.spec.ts is what counts
+     what actually runs (T-0128). */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .animate-spin {
+    animation-duration: 1s !important;
+    animation-iteration-count: infinite !important;
+  }
+  .animate-spin-slow {
+    animation-duration: 3s !important;
+    animation-iteration-count: infinite !important;
+  }
+  .viz-draw { stroke-dasharray: none; stroke-dashoffset: 0; }
 }
 
 /* Variable-driven surface glow (see GlowSurface.tsx); --glow-surface-rgb set inline */
@@ -115,12 +552,8 @@
 }
 
 .text-glow-cyan {
-  text-shadow: 0 0 10px rgb(var(--ch-rgb-neon-cyan) / 0.55);
+  text-shadow: 0 0 10px rgb(var(--ps-rgb-neon-cyan) / 0.55);
 }
-.text-glow-purple {
-  text-shadow: 0 0 10px rgb(var(--ch-rgb-neon-purple) / 0.55);
-}
-
 /* Animated gradient border */
 @keyframes gradient-shift {
   0%, 100% { background-position: 0% 50%; }
@@ -156,46 +589,20 @@
     0deg,
     transparent,
     transparent 2px,
-    rgb(var(--ch-rgb-cherenkov-glow) / 0.015) 2px,
-    rgb(var(--ch-rgb-cherenkov-glow) / 0.015) 4px
+    rgb(var(--ps-rgb-cherenkov-glow) / 0.015) 2px,
+    rgb(var(--ps-rgb-cherenkov-glow) / 0.015) 4px
   );
   pointer-events: none;
 }
 
 /* Slide in animation (for toasts) */
-@keyframes slide-in-from-bottom {
-  from { transform: translateY(0.5rem); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-.animate-in {
-  animation: slide-in-from-bottom 0.2s ease-out;
-}
-
 /* Skeleton shimmer animation */
-@keyframes skeleton-shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-.skeleton-shimmer {
-  animation: skeleton-shimmer 1.8s ease-in-out infinite;
-}
-
 /* Grid background */
 .grid-bg {
   background-image:
-    linear-gradient(rgb(var(--ch-rgb-neon-cyan) / 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(var(--ch-rgb-neon-cyan) / 0.03) 1px, transparent 1px);
+    linear-gradient(rgb(var(--ps-rgb-neon-cyan) / 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(var(--ps-rgb-neon-cyan) / 0.03) 1px, transparent 1px);
   background-size: 40px 40px;
-}
-
-/* Auto-refresh button pulse — fires on each log refresh tick */
-@keyframes auto-refresh-tick {
-  0% { box-shadow: 0 0 0px rgba(6, 214, 214, 0); }
-  30% { box-shadow: 0 0 12px rgba(6, 214, 214, 0.55); }
-  100% { box-shadow: 0 0 0px rgba(6, 214, 214, 0); }
-}
-.animate-auto-refresh-tick {
-  animation: auto-refresh-tick 0.8s ease-out forwards;
 }
 
 /* Slow spin for auto-refresh icon */
@@ -205,4 +612,197 @@
 }
 .animate-spin-slow {
   animation: spin-slow 3s linear infinite;
+}
+
+/* ── Bloom tier: the field answering presence ────────────────────────────────
+   Brightness is a readout of energy in the system rather than decoration, so an
+   idle console is dim and a working one is not. src/kit/BloomField.tsx, one
+   delegated listener mounted once in layout.tsx, sets --bx/--by/--bloom on the
+   [data-bloom] element under the cursor; this is the paint half.
+
+   The colour is a color-mix of --color-cherenkov-100 (#33ddff). That is the
+   form it was measured in and there is no reason to change it. An earlier
+   version of this comment said the --ps-rgb-* triplet form could not work in
+   this pipeline at all, and instructed the next maintainer not to repair the
+   twenty rules it called dead. That was true only while the mirrors held comma
+   lists, which they stopped doing on 2026-08-24; the comment never caught up.
+   Measured in the stylesheet npm run build emits, .glow-cyan compiles to a real
+   box-shadow through rgb(var(...) / .08) and the mirrors compile to
+   space-separated channels, so both spellings paint (T-0114).
+
+   The values are deliberately not restated here. lockbook-tokens.test.ts reads
+   this file as text, and a declaration written inside a comment is
+   indistinguishable from a real one.
+
+   The 0.07 alpha under a 0.4s fade sits far below the pulse-glow / glow-surface
+   threshold this console reserves for live and active state, so the bloom does
+   not compete with "glow means running".
+
+   The fine-pointer guard wraps the whole paint rule, because a touch device has
+   no cursor to answer and would otherwise be left with a permanently lit
+   ::after. The reduced-motion guard removes the pseudo-element outright: the
+   field IS the motion, so there is nothing left to soften once it is off. */
+@media (hover: hover) and (pointer: fine) {
+  [data-bloom] {
+    position: relative;
+  }
+  [data-bloom]::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: radial-gradient(
+      200px circle at var(--bx, 50%) var(--by, 50%),
+      color-mix(in srgb, var(--color-cherenkov-100) 7%, transparent),
+      transparent 70%
+    );
+    opacity: var(--bloom, 0);
+    transition: opacity 0.4s ease;
+  }
+  [data-bloom="tight"]::after {
+    background: radial-gradient(
+      90px circle at var(--bx, 50%) var(--by, 50%),
+      color-mix(in srgb, var(--color-cherenkov-100) 10%, transparent),
+      transparent 70%
+    );
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-bloom]::after {
+    display: none;
+  }
+}
+
+/* ── In-app Help prose ─────────────────────────────────────────────────────
+   The Help fragments are markdown-it output: bare h2/h3, p, ul, ol, pre, code,
+   table, blockquote, img and a, with not one class between them. They cannot
+   carry utilities, so the one class the article does carry has to style its
+   descendants, and this is the only place in the tree that earns that.
+
+   Every value is a declared token. token-must-exist only reads .tsx, so nothing
+   would have caught a colour invented here, which is exactly why it must not be.
+
+   The two overflow rules are the mobile answer. A wide table or a long shell
+   command scrolls inside its own box; without them the whole page scrolls
+   sideways at 390px and the rail goes with it. */
+.ps-help-prose {
+  color: var(--color-ps-text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.7;
+}
+.ps-help-prose > * + * {
+  margin-top: 1rem;
+}
+.ps-help-prose h2,
+.ps-help-prose h3,
+.ps-help-prose h4 {
+  color: var(--color-ps-text-primary);
+  font-weight: 700;
+  line-height: 1.3;
+  margin-top: 2rem;
+}
+.ps-help-prose h2 {
+  font-size: 1.125rem;
+  border-bottom: 1px solid var(--color-ps-edge-hairline);
+  padding-bottom: 0.375rem;
+}
+.ps-help-prose h3 {
+  font-size: 1rem;
+}
+.ps-help-prose h4 {
+  font-size: 0.875rem;
+  color: var(--color-ps-text-secondary);
+}
+.ps-help-prose a {
+  color: var(--color-neon-cyan);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.ps-help-prose strong {
+  color: var(--color-ps-text-primary);
+  font-weight: 700;
+}
+.ps-help-prose ul,
+.ps-help-prose ol {
+  padding-left: 1.25rem;
+  list-style-position: outside;
+}
+.ps-help-prose ul {
+  list-style-type: disc;
+}
+.ps-help-prose ol {
+  list-style-type: decimal;
+}
+.ps-help-prose li + li {
+  margin-top: 0.375rem;
+}
+.ps-help-prose code {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--color-ps-text-primary);
+  background: var(--color-ps-surface-inset);
+  border-radius: 0.25rem;
+  padding: 0.0625rem 0.25rem;
+}
+.ps-help-prose pre {
+  overflow-x: auto;
+  background: var(--color-ps-surface-inset);
+  border: 1px solid var(--color-ps-edge-hairline);
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+}
+.ps-help-prose pre code {
+  background: transparent;
+  padding: 0;
+}
+.ps-help-prose blockquote {
+  border-left: 2px solid var(--color-neon-cyan);
+  padding-left: 0.75rem;
+  color: var(--color-ps-text-muted);
+}
+.ps-help-prose table {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+.ps-help-prose th,
+.ps-help-prose td {
+  border: 1px solid var(--color-ps-edge-hairline);
+  padding: 0.375rem 0.625rem;
+  text-align: left;
+  vertical-align: top;
+}
+.ps-help-prose th {
+  color: var(--color-ps-text-primary);
+  font-weight: 700;
+  background: var(--color-ps-surface-inset);
+}
+.ps-help-prose hr {
+  border: 0;
+  border-top: 1px solid var(--color-ps-edge-hairline);
+}
+.ps-help-prose img {
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--color-ps-edge-hairline);
+  border-radius: 0.5rem;
+}
+
+/* ── Focus, once ──────────────────────────────────────────────────────────
+   One visible focus ring for the whole console, from a token. Sixteen Story
+   Weaver controls set `outline-none` with nothing to replace it, and in
+   Tailwind v4 that is outline-style:none unconditionally, so tabbing through
+   those forms showed no focus at all (T-0096, D117). This rule is what a
+   control gets when it does not paint its own ring; design-lint's
+   no-bare-outline-none refuses a control that removes it without putting a
+   focus ring back on the same line. :focus-visible, not :focus, so a mouse
+   click does not draw it. */
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--color-neon-cyan);
+    outline-offset: 2px;
+  }
 }

@@ -1,0 +1,45 @@
+{
+  "id": "T-0051",
+  "intent": "Make the mission composer finish what it starts, and make the schedule field honest. Source: the operator's second live Hermes QA pass, 2026-08-29, findings A3 and A4. A4 reported that the New Mission dialog stays open after a successful create and read the missing toast as a missing showToast call; the toast fired every time and was rendering under the sheet, which T-0050 fixed. What remained is that ending was a per-branch decision: resetForm() and closeComposer() were two ways to finish, chosen per branch, and three of seven branches chose neither. A3 reported that the raw-cron field is ignored and that one of the two schedule fields is dead; that diagnosis is wrong, the field binds and commits, and what actually happened is that an INVALID draft reverted in silence. Closed 2026-08-29.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0051-composer-finishes-2026-08-29",
+  "invariants": [
+    "I1 Every successful branch ends. One finishComposer, called by all seven. Asserted parametrically over the four create modes plus the edit re-dispatch, so a new mode cannot quietly opt out.",
+    "I2 A FAILED request does not end. The composer stays open holding the operator's work, which is the one case where leaving it open is correct.",
+    "I3 The editing id is cleared AFTER the request settles, never before. Clearing first flips the sheet mid-flight and can re-arm the dispatch gate.",
+    "I4 A schedule never rides along with a one-off dispatch. `schedule` is derived from the EFFECTIVE mode, not from the form's.",
+    "I5 An invalid schedule says so and keeps the operator's text on screen. Refusing the value is right; refusing it silently is what shipped a cadence nobody chose.",
+    "I6 Escape inside the cron field does not reach the dialog behind it."
+  ],
+  "oracle_provenance": "Authored BEFORE any production file was opened for edit and committed on its own at 98b7e706, ahead of the implementation at 0ad9c4ae. tests/unit/mission-composer-finishes.test.tsx measured against dev@ce590ac8: 6 red, 4 green, and the reds matched the predicted branch table exactly. The three greens are no-regression guards: save and queue still close, and a failed request still leaves the composer open.",
+  "verification": "Seven mutations against the committed implementation, tree restored and confirmed clean after each: stopping finishComposer closing turns 6 red; clearing the editing id before the request turns 1 red; silencing the not-on-the-board branch turns 1 red; removing stopPropagation turns 1 red; reverting an invalid draft in silence turns 4 red; deriving the schedule from form state turns 3 red; forgetting the schedule on reset turns 1 red.",
+  "report_claim_corrected": "A3 said the raw-cron field is ignored and 'one of the two fields is dead'. Refuted: SchedulePicker binds to advancedDraft, commits on blur and on Enter, and the value reaches the POST body, which is now asserted end to end. What the QA agent actually hit is that an invalid draft reverted with no error, no toast and no trace, so a typed cron could sit in the box, never commit, and ship the preset default. The observation was real; the mechanism was not the one named.",
+  "found_while_testing": "The worst defect in this batch was not reported by anyone. `schedule` is a DERIVED field and it was derived from the form's own dispatch mode while the caller was overriding that mode. The re-dispatch branch calls dispatchPayload({ dispatchMode: 'now' }), so re-running a completed mission with the form left in cron mode sent dispatchMode 'now' AND a cron expression: a one-off that quietly asks to become recurring. Money-adjacent, because a schedule dispatches runs.",
+  "pinned_defect_corrected": "tests/unit/components/schedule/SchedulePicker.test.tsx carried 'reverts an invalid advanced draft on blur (does not emit onChange)' with a comment calling the silence approvingly deliberate. Rewritten, not weakened: the half it protected (no garbage reaches the parent) is still asserted, and the half that was a defect (saying nothing about it) is now asserted the other way, with the reason written beside it.",
+  "rollback": "Revert 0ad9c4ae. The oracle at 98b7e706 then goes red again.",
+  "claims": [
+    "src/hooks/useMissionDispatch.ts",
+    "src/hooks/useMissionComposer.ts",
+    "src/components/schedule/SchedulePicker.tsx",
+    "tests/"
+  ],
+  "deferred": [
+    "There is still no commit-on-SUBMIT for the advanced cron draft. Clicking the submit button blurs the input, which commits, so the mouse path is covered; a keyboard submit that never blurs the field is not. Closing it properly means the picker exposing an imperative commit through a ref, which is a shape change for a case that now fails loudly rather than silently. Worth its own record rather than a rushed ref.",
+    "The advanced input is pre-filled with the canonical cron, so typing without clearing appends to it and produces garbage. That is ordinary input behaviour and no longer silent, but a field whose contents must be cleared before use is a papercut worth a UI decision."
+  ],
+  "timestamps": {
+    "opened": "2026-08-29T18:30:00Z",
+    "updated": "2026-08-29T21:00:00Z",
+    "closed": "2026-08-29T21:00:00Z"
+  }
+}

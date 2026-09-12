@@ -8,10 +8,13 @@
 
 import { exec } from "child_process";
 import { access, constants, readFile } from "fs/promises";
-import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
-import { db, now } from "@/lib/db";
-import { logApiError } from "@/lib/api-logger";
+import { getAgentWorkspace } from "@/lib/runtime/workspace";
+import { now } from "@/lib/db";
+import { deleteAllAgentProcesses, insertAgentProcesses } from "@/lib/sync/sync-repository";
+import { setSystemStat } from "@/lib/system/system-repository";
+import { logApiError } from "@/lib/api/api-logger";
 import type { SyncSource, SyncResult } from "@/lib/sync/types";
+import { syncFailure, syncSuccess } from "@/lib/sync/types";
 
 interface ParsedProcess {
   id: string;
@@ -81,7 +84,7 @@ export class ProcessSync implements SyncSource {
         // Check .env for platform labels
         let platformLabel = "Gateway";
         try {
-          const H = getActiveHermesPaths();
+          const H = getAgentWorkspace();
           const envPath = H.env;
           let envExists = false;
           try {
@@ -152,33 +155,13 @@ export class ProcessSync implements SyncSource {
       }
 
       // ── Write to DB ───────────────────────────────────────
-      const database = db();
       const timestamp = now();
 
       // Clear stale entries first
-      database.prepare("DELETE FROM agent_processes").run();
+      deleteAllAgentProcesses();
 
       if (processes.length > 0) {
-        const insert = database.prepare(
-          `INSERT INTO agent_processes (id, type, name, status, pid, model, turns, last_activity, last_seen_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
-        );
-        const tx = database.transaction(() => {
-          for (const p of processes) {
-            insert.run(
-              p.id,
-              p.type,
-              p.name,
-              p.status,
-              p.pid,
-              p.model,
-              p.turns,
-              p.lastActivity,
-              timestamp
-            );
-          }
-        });
-        tx();
+        insertAgentProcesses(processes, timestamp);
       }
 
       // ── Track system uptime from /proc/uptime ─────────────
@@ -189,31 +172,16 @@ export class ProcessSync implements SyncSource {
           const hours = Math.floor(uptimeSeconds / 3600);
           const minutes = Math.floor((uptimeSeconds % 3600) / 60);
           const uptimeStr = `${hours}h ${minutes}m`;
-          db()
-            .prepare(
-              "INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)"
-            )
-            .run("system.uptime", uptimeStr);
+          setSystemStat("system.uptime", uptimeStr);
         }
       } catch {
         // /proc/uptime not available (non-Linux) — skip silently
       }
 
-      return {
-        sourceName: this.name,
-        success: true,
-        syncedCount: processes.length,
-        durationMs: Math.round(performance.now() - start),
-      };
+      return syncSuccess(this.name, processes.length, start);
     } catch (err) {
       logApiError("ProcessSync", "syncing processes", err);
-      return {
-        sourceName: this.name,
-        success: false,
-        syncedCount: 0,
-        error: String(err),
-        durationMs: Math.round(performance.now() - start),
-      };
+      return syncFailure(this.name, err, start);
     }
   }
 }

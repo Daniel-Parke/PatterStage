@@ -41,7 +41,7 @@ export function ensureProfilesToolsParity(database) {
         config_yaml         TEXT NOT NULL DEFAULT '',
         soul_md             TEXT NOT NULL DEFAULT '',
         agents_md           TEXT NOT NULL DEFAULT '',
-        hermes_md           TEXT NOT NULL DEFAULT '',
+        framework_md           TEXT NOT NULL DEFAULT '',
         user_md             TEXT NOT NULL DEFAULT '',
         memory_md           TEXT NOT NULL DEFAULT '',
         disabled_skills     TEXT NOT NULL DEFAULT '[]',

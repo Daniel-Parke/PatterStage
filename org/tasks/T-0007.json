@@ -1,0 +1,27 @@
+{
+  "id": "T-0007",
+  "intent": "Phase 1d to 1e: delete the dead exports and make the full knip report clean signal. Warrant: approved-plan warrant, sanctioned at plan approval per section 9 ruling D2. Source row WO-0022. Input: the full knip report photographed verbatim at T-0001's close. That photograph was never taken. Commit 47b59b01 closed the CI defects but captured no baseline and none exists anywhere in the tree, so this task takes it first, from a clean dev, before deleting anything. Operator rulings folded, all 2026-08-22: D5, delete ALL possibly-intentional unused exports, being credentials-repository, memory-providers, tool-catalog and the frameworks barrel, because git history preserves them; D7, widen the gate at zero; D9, add the engines field. Acceptance: (1) the 38 unused exports and 18 unused exported types deleted, except NEUTRAL_COLUMN_NAMES_SCHEMA_VERSION at src/lib/db/apply-neutral-column-names.ts:35, which is reserved for T-0013's head-constant tie; (2) any export the operator later keeps gets a knip suppression, a /** @public */ marker or a knip.json ignore, with a reason, so the widened gate still lands at zero; (3) LevelBadge with its baseline key at design-lint.baseline.json:84 and ChipGroup with its key at :145 deleted in the same commits; (4) the 7 OS binaries, sqlite3, tasklist, taskkill, netstat, ss, lsof and where, added to knip.json ignoreBinaries, where 5 entries already exist; (5) the gate widened to files, dependencies, unlisted, unresolved, exports, types, duplicates and binaries once the counts are zero; (6) the engines field added to package.json, Node 20 or above, which CI pins in five places; (7) baseline keys for deleted files removed in the same commits. Done when the full report is empty or every surviving line carries a recorded sanction, and none of it can regrow silently. Tier proposal R2, anticipated factor public-contract from derived signal public-api-delta, evidence deleting 38 exported symbols and 18 exported types is an exported-interface delta and the sweep reaches src/app/api paths; ci-stateful-infra activates if the gate widening lands in the workflow file. Closed 2026-08-22 in 966d8dc4. 33 exports and 18 types deleted, LevelBadge and ChipGroup removed with their baseline keys (911 to 905). Five exports kept with a written @public reason each: four are genuinely reached by tests through a path-aliased require() knip cannot follow, and deleting them would have broken a passing suite; one is reserved for T-0016. The knip gate now runs all eight checks and is empty.",
+  "declared": {
+    "capabilities": [
+      "filesystem"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R0",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "phase1-deadcode-2026-08-22",
+  "claims": [
+    "src/",
+    "knip.json",
+    "package.json",
+    "scripts/tooling/design-lint.baseline.json"
+  ],
+  "timestamps": {
+    "opened": "2026-08-22T00:00:00Z",
+    "updated": "2026-08-22T22:45:00Z",
+    "closed": "2026-08-22T19:20:00Z"
+  }
+}

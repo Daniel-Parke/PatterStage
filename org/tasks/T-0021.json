@@ -1,0 +1,40 @@
+{
+  "id": "T-0021",
+  "intent": "Make LLM provider spend visible and, at the user's option, stoppable. Warrant WG-OPS-004 (B for the operator's own install, C for shipped ones) and the operator's standing rule, no spend without my approval. Source row WO-0014. Scope: LLM provider spend, the only thing in PatterStage that costs money, which is agent runs, Composer stages and Deep Research. ACCEPTANCE REWRITTEN 2026-08-23 against the operator's 2026-07-26 ruling, which the row itself said must happen before anyone starts. His words: 'We should just have a warning here, AND the ability for the user to have a hard stop, but we should not force this in a way that is awkward for users.' (1) Spend is VISIBLE by default: run-aggregate provider spend surfaced in the console, per period and per source (agent runs, Composer, Deep Research), computed from data already recorded rather than by adding new tracking. (2) A budget figure is OPTIONAL and unset on a fresh install. Nothing ships pre-set and nothing refuses to dispatch because a number was never entered. An install with no figure shows spend and warns about nothing. (3) When a figure IS set, the default behaviour is a WARNING, not a stop. (4) A hard stop exists, is OFF by default, and is the user's to switch on beside his own figure. When it is on and the figure is breached, unattended dispatch stops and says why. (5) The figure's home is re-decided at start: the old acceptance named the venture state file, which the v2 recompile retired. It is a user setting, so it belongs in the database with the other settings, not in a governing file. (6) Attended use is never blocked. A human clicking dispatch is answering for the spend himself; the stop governs UNATTENDED work, which is what the operator's rule is actually about. Done when: an unattended agent cannot spend past a number the operator set, ON AN INSTALL WHERE HE SET ONE, and an install where he did not is not nagged, blocked or pre-configured. Recorded because it reverses a session's recommendation: a tool that refuses to work until you have filled in a budget field teaches you to resent it, and the operator's rule is about HIS install, served by the figure being visible rather than by the software policing everyone else's. Tier R2, matching the declared financial-impact fact: the money factor floors at R2.",
+  "declared": {
+    "capabilities": [
+      "database",
+      "filesystem"
+    ],
+    "side_effects": [
+      "financial-impact"
+    ]
+  },
+  "mode": "high-assurance",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [
+    {
+      "factor": "money",
+      "tier_floor": "R2",
+      "source": "declared",
+      "evidence": "declared side effect: financial-impact"
+    }
+  ],
+  "status": "done",
+  "owner_session": "t0021-provider-spend-2026-08-24",
+  "claims": [
+    "src/lib/spend/",
+    "src/lib/db/migrations/033_spend_policy.sql",
+    "src/lib/db/apply-spend-policy-migration.ts",
+    "src/app/api/spend/",
+    "src/components/spend/",
+    "src/hooks/useSpend.ts",
+    "docs/SPEND.md"
+  ],
+  "timestamps": {
+    "opened": "2026-07-25T00:00:00Z",
+    "updated": "2026-08-24T00:00:00Z",
+    "closed": "2026-08-24T00:00:00Z"
+  }
+}

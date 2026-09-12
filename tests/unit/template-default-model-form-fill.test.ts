@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
 /** @jest-environment node */
+/* eslint-disable @typescript-eslint/no-require-imports */
 
 /**
  * PR 7 — built-in mission templates surface model defaults via /api/templates
@@ -8,24 +8,7 @@
  * the form must derive the model from the registry agent default instead.
  */
 
-jest.mock("next/server", () => ({
-  NextRequest: class NextRequest {
-    url: string;
-    constructor(url: string) {
-      this.url = url;
-    }
-  },
-  NextResponse: {
-    json: (data: unknown, init?: ResponseInit) => {
-      const status = init?.status ?? 200;
-      return {
-        ok: status >= 200 && status < 300,
-        status,
-        json: () => Promise.resolve(data),
-      };
-    },
-  },
-}));
+jest.mock("next/server", () => require("../helpers/mocks").nextServerMock());
 
 jest.mock("fs", () => ({
   existsSync: jest.fn(() => false),
@@ -36,16 +19,14 @@ jest.mock("fs", () => ({
   unlinkSync: jest.fn(),
 }));
 
-jest.mock("@/lib/paths", () => ({
+jest.mock("@/lib/host/paths", () => ({
   PATHS: { templates: "/tmp/ch/templates" },
-  CH_DATA_DIR: "/tmp/ch",
+  PS_DATA_DIR: "/tmp/ch",
 }));
 
-jest.mock("@/lib/db", () => ({
-  ensureDb: jest.fn(),
-}));
+jest.mock("@/lib/db", () => require("../helpers/mocks").dbMock());
 
-jest.mock("@/lib/catalog-template-repository", () => ({
+jest.mock("@/lib/templates/catalog-template-repository", () => ({
   listCatalogTemplates: jest.fn(() => [
     {
       id: "bug-hunt",

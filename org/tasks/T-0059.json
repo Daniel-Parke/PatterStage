@@ -1,0 +1,27 @@
+{
+  "id": "T-0059",
+  "intent": "Product defects surfaced BY the T-0057 documentation audit rather than by testing. Recorded separately because T-0057 is a documentation task and fixing product behaviour is outside it. Each was found the same way: an agent checking whether a document told the truth discovered the document was honest and the code was not.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [],
+  "status": "proposed",
+  "owner_session": "unassigned",
+  "claims": [],
+  "items": [
+    "THE 'ACTIVE DAYS' TILE STATES A NUMBER IT DOES NOT MEASURE. src/app/laboratory/insights/page.tsx renders MetricTile label={`Active days (${days}d)`} with value={summary?.activeDays}. The label follows the range switch; the value comes from getAnalyticsSummary() in src/lib/analytics/aggregates.ts, which is hard-coded to distinctActiveDays(30). Select 7d and the tile reads 'ACTIVE DAYS (7D)' above a 30-day figure. The walkthrough guide documents this honestly in three places, so this is not a documentation defect: the docs are right and the product is wrong. Two possible fixes and they differ in cost. Cheap: drop the range from the label so it reads 'Active days (30d)' always. Correct: thread the selected range into the summary read so the number answers the question the label asks.",
+    "THE INSIGHTS RANGE SWITCH GOVERNS LESS THAN IT APPEARS TO. Beyond Active days, the guide records that the Interactions tile, the donut, the heatmap, the streak, the token tile, the spend panel and the achievements grid all ignore the range control, which drives only useAnalyticsTimeseries and useInsights. A control that visibly changes one chart while seven neighbours hold still reads as a bug even where each number is individually defensible. Worth a product decision about whether the control should be scoped visually to what it actually governs.",
+    "THE TOKENS TILE IS A 91-DAY FIGURE WITH NO LABEL SAYING SO. It reads stats.runs.totalTokens, and the stats repository selects runs with submitted_at >= datetime('now','-91 days'), summing across every status. Neither all-time nor tied to the range switch. Recorded with the two above because they are one story: the Insights page mixes windows without saying which is which."
+  ],
+  "provenance": "Found during the T-0057 remediation on 2026-08-30 by verification agents re-checking documentation against source. The pattern is worth keeping: auditing docs against code finds code defects, because a careful document is a specification, and comparing it to behaviour is a test.",
+  "timestamps": {
+    "opened": "2026-08-30T16:00:00Z",
+    "updated": "2026-08-30T16:00:00Z"
+  }
+}

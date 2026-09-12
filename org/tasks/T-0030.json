@@ -1,0 +1,57 @@
+{
+  "id": "T-0030",
+  "intent": "Record Deep Research token usage so its spend can be counted. Discovered by T-0021 (WO-0014) and proposed rather than absorbed into it, because that row said to compute spend from data ALREADY RECORDED and this is the one source where none is. Deep Research drives callLLM directly and discards the usage it returns: research_runs holds query/status/provider/model_id/config/report and no token or cost column, and research_steps holds prompt and output text but no counts. So T-0021 reports Deep Research as 'cost not recorded' with a run count, states the exclusion on the summary and in the console, and documents it in docs/SPEND.md, rather than drawing it as $0.00. That is honest but incomplete, and it has one consequence worth naming: the optional hard stop measures recorded spend only, so an install that leans on Deep Research is under-counted and can pass its ceiling by an amount nothing can see. Scope: thread usage through the engine's LlmFn contract (src/lib/laboratory/deep-research/engine.ts, which today returns { content } and drops LLMResponse.usage), persist it on the research run, and have src/lib/spend/spend-summary.ts report the research source as recorded. A schema change means a new numbered .sql plus a version-gated applier appended to the chain in src/lib/db/index.ts and the head constant in src/lib/db-schema.ts moved with it; head is 33 after T-0021. Done when the research row in the console carries a real cost, the summary's `unmeasured` list is empty on an install whose only unmeasured source was this one, and the guard's total includes it. Tier proposed R2 on the same money factor as T-0021: it changes what a hard stop measures. Closed 2026-08-26 at fb0d7bc0. Migration 034 adds three nullable token columns to research_runs; the engine sums the usage of every LLM call it makes and hands the total back; run-job persists it; and the spend summary prices research like the other two sources. The console's research row now carries a real cost and the period total the budget is measured against includes it.",
+  "declared": {
+    "capabilities": [
+      "database"
+    ],
+    "side_effects": [
+      "financial-impact"
+    ]
+  },
+  "mode": "high-assurance",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [
+    {
+      "factor": "money",
+      "tier_floor": "R2",
+      "source": "declared",
+      "evidence": "declared side effect: financial-impact"
+    }
+  ],
+  "status": "done",
+  "owner_session": "t0030-research-spend-2026-08-26",
+  "claims": [
+    "src/lib/laboratory/deep-research/",
+    "src/lib/spend/",
+    "src/lib/db/",
+    "docs/SPEND.md",
+    "docs/MIGRATION.md",
+    "scripts/tooling/output-canary.golden.json",
+    "tests/"
+  ],
+  "timestamps": {
+    "opened": "2026-08-24T00:00:00Z",
+    "updated": "2026-08-26T21:30:00Z",
+    "closed": "2026-08-26T21:30:00Z"
+  },
+  "oracle_provenance": "Authored BEFORE any production file was opened for edit and committed on its own at 2e2c5233, ahead of the implementation at fb0d7bc0. Three files, measured against dev@461ba2f1: research-usage-accumulate could not resolve (its module did not exist), research-usage-engine 3 red / 1 green, research-spend-counted 6 red / 2 green. The accumulate half is a SEPARATE file deliberately: folded in with the others its resolution failure would have taken the engine tests down with it, and a suite that cannot resolve hides behavioural reds behind a missing filename. The engine half ran and failed with 'Received: undefined' where a usage total belongs.",
+  "decision_null_is_not_zero": "The load-bearing design call. NULL and 0 are different facts: NULL means nobody reported usage and the cost is UNKNOWN; 0 means a provider reported zero tokens, which is a real measurement. Migration 034 therefore has no DEFAULT, no backfill and no NOT NULL, so every pre-034 run reads NULL, stays out of the priced total and stays DECLARED in the console. Folding them in at zero would have taken a real uncounted cost and painted it as free, which is the same misreporting this task removes, one layer further down where it is harder to see. spend-summary.ts already argued exactly that against itself in a comment about unparseable usage JSON, and the argument still holds. accumulateUsage returns null rather than a zeroed object for an empty input for the same reason.",
+  "invariants": [
+    "I1 A run whose usage was never recorded is not priced at zero. It stays out of the total and stays in `unmeasured`. Five oracle cases pin this, including an install carrying both kinds of run in one period, and the mutation that reintroduces the defect (folding NULLs in) turns 2 red.",
+    "I2 A genuine zero-token run counts as RECORDED, not as missing. The distinction is asserted at three layers: accumulateUsage, the repository read, and the summary.",
+    "I3 A non-finite count is treated as absent rather than added. NaN in a spend figure is worse than a missing one: it renders as 'NaN' beside real money and survives every arithmetic check downstream, the budget comparison included.",
+    "I4 Research cost reaches the period total the hard stop measures. Without that the task changes a report and not the thing it was filed to fix; the mutation that drops it from the sum turns 1 red."
+  ],
+  "verification": "Five mutations against the COMMITTED implementation, tree restored and confirmed clean after each. accumulateUsage returning a zeroed total instead of null turns 1 red; defaultLlm going back to dropping usage turns 1 red; the summary folding pre-034 runs in at zero turns 2 red; research cost not reaching the period total turns 1 red; the repository filtering the pre-034 runs out turns 1 red.",
+  "canary_note": "generatedArtefacts moved, as a new migration file must make it. Before re-blessing, the change was proved to be exactly that: with 034 temporarily removed the surface matched the committed golden byte for byte, so nothing else had moved. Re-blessed in the same commit, per docs/OUTPUT_CANARY.md.",
+  "pinned_defect_corrected": "Two assertions in tests/unit/spend-summary.test.ts pinned the old behaviour: research reported as unrecorded with a null cost. They were RIGHT when written, because before 034 the source was unrecorded by construction. Corrected in place with a comment saying why they now read the other way, and the fact they protected is re-asserted where it now lives. Not deleted, not skipped, not weakened.",
+  "dead_code_removed": "countResearchRunsSince is deleted. Once readResearchUsageSince returns a row per run its COUNT is strictly redundant, and it was left with no production caller. Its behaviour is covered by five new real-SQLite tests on the replacement, including the load-bearing one: a pre-034 run comes back WITH its nulls rather than being filtered out, because filtering at the repository would silently resume reporting old research as free.",
+  "rollback": "Revert fb0d7bc0 and re-bless the canary. The schema change is additive and nullable, so a database that has already applied 034 is harmless to the reverted code: the columns are simply unread. Shipped migrations are immutable, so 034 itself is NOT removed.",
+  "claims_note": "Extended beyond the record's original three by the docs and the canary golden. Both follow necessarily rather than by choice: MIGRATION.md stated head 33 and 'thirty-two files' (its own text warns about exactly that drift, having once claimed 13 while the chain climbed to 30), SPEND.md's central claim that Deep Research is not counted became false, and the canary golden must be re-blessed in the same commit as the output change it records.",
+  "deferred": [
+    "A run that CRASHES mid-way still records nothing. The engine throws before it can return a total, so the tokens it burned are genuinely unknowable and the run is recorded as unmeasured rather than as free. Closing this properly means the engine accumulating into a caller-visible sink as it goes rather than returning a total at the end, which changes its shape for a case that is rare and already reported honestly. Documented in docs/SPEND.md so it is a known limit rather than a surprise.",
+    "The per-step token counts are not stored. research_steps still holds prompt and output text with no counts, so the console can say what a RUN cost but not which of its calls cost the most. Nothing asked for that, and the columns would be dead until something does."
+  ]
+}

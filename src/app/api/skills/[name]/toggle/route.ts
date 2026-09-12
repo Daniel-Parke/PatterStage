@@ -1,28 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { logApiError } from "@/lib/api-logger";
-import { requireAuth, requireNotReadOnly } from "@/lib/api-auth";
-import { parseJsonBody } from "@/lib/parse-json-body";
+import { badRequest, methodNotAllowed, notFound, ok } from "@/lib/api/api-response";
+
+// Round 6, finding 15: GET/POST here answered Next's empty framework 405.
+// The verb is PUT; say so, in the body and in Allow (T-0089).
+const NOT_THIS_VERB = "Toggle a skill with PUT /api/skills/[name]/toggle and a JSON body { enabled: boolean, profile?: string }";
+export async function GET() {
+  return methodNotAllowed(`GET is not supported here. ${NOT_THIS_VERB}`, ["PUT"]);
+}
+export async function POST() {
+  return methodNotAllowed(`POST is not supported here. ${NOT_THIS_VERB}`, ["PUT"]);
+}
+import { parseJsonBody } from "@/lib/api/parse-json-body";
 import { ensureDb } from "@/lib/db";
-import { getAgentRoot } from "@/lib/agent-root-repository";
+import { getAgentRoot } from "@/lib/agents/agent-root-repository";
 import {
   getDisabledSkills,
   getProfile,
-} from "@/lib/profiles-repository";
-import { applyProfileOrRootPatch, toPatchResponse } from "@/lib/apply-profile-or-root-patch";
-import { resolveSafeProfileName } from "@/lib/path-security";
-import { serializeJsonArray } from "@/lib/profile-config-builder";
-import { getSkill } from "@/lib/skills-repository";
+} from "@/modules/hermes/lib/profiles-repository";
+import { applyProfileOrRootPatchOrFail } from "@/modules/hermes/handlers/profile-patch";
+import { requireSafeProfileName } from "@/lib/fs/path-security";
+import { serializeJsonArray } from "@/modules/hermes/lib/profile-config-builder";
+import { skillIsKnown } from "@/modules/hermes/lib/skills-known";
+import { recordEvent } from "@/lib/analytics/record-event";
+import { route } from "@/lib/api/api-route";
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ name: string }> },
-) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-  const ro = requireNotReadOnly("skill toggles are disabled");
-  if (ro) return ro;
-
+export const PUT = route("PUT /api/skills/[name]/toggle", (p) => `toggle ${p.name}`, "Failed to toggle skill", async (request: NextRequest, { params }: { params: Promise<{ name: string }> }) => {
   const { name } = await params;
 
   const bodyResult = await parseJsonBody(request);
@@ -32,60 +35,58 @@ export async function PUT(
   const { profile: profileParam, enabled } = bodyResult;
 
   if (typeof enabled !== "boolean") {
-    return NextResponse.json({ error: "enabled (boolean) is required" }, { status: 400 });
+    return badRequest("enabled (boolean) is required");
+  }
+  const profileResult = requireSafeProfileName(
+    typeof profileParam === "string" ? profileParam : null,
+  );
+  if (profileResult instanceof NextResponse) return profileResult;
+  const profile = profileResult.profile;
+
+  // The list this row came from merges the catalogue with the agent's disk,
+  // so refusing on the catalogue alone denied skills the product had just
+  // shown (T-0103, D82).
+  if (!skillIsKnown(name)) {
+    return notFound(`Skill not found in the catalogue or on disk: ${name}`);
   }
 
-  try {
-    const profileResult = resolveSafeProfileName(
-      typeof profileParam === "string" ? profileParam : null,
-    );
-    if (!profileResult.ok) {
-      return NextResponse.json({ error: profileResult.error }, { status: 400 });
-    }
-    const profile = profileResult.profile;
-
-    if (!getSkill(name)) {
-      return NextResponse.json({ error: `Skill not in catalog: ${name}` }, { status: 404 });
-    }
-
-    let currentDisabled: string[];
-    if (profile === "default") {
-      const row = getAgentRoot();
-      currentDisabled = JSON.parse(row.disabledSkillsJson || "[]") as string[];
-    }
-    else {
-      if (!getProfile(profile)) {
-        return NextResponse.json({ error: "Profile not found" }, { status: 404 });
-      }
-      currentDisabled = getDisabledSkills(profile);
-    }
-
-    const newDisabled = enabled
-      ? currentDisabled.filter((s) => s !== name)
-      : currentDisabled.includes(name)
-        ? currentDisabled
-        : [...currentDisabled, name].sort();
-
-    // applyProfileOrRootPatch handles default-vs-non-default dispatch
-    // + 500 on push failure. The pre-check above for "Profile not
-    // found" is preserved because getDisabledSkills would silently
-    // return [] for a missing profile — we want a real 404 instead.
-    const disabledSkillsJson = serializeJsonArray(newDisabled);
-    const result = applyProfileOrRootPatch(
-      profile,
-      { disabledSkillsJson },
-      { disabledSkillsJson },
-    );
-    const err = toPatchResponse(result, "Failed to toggle skill");
-    if (err) return err;
-    if (!result.ok) throw new Error("unreachable: toPatchResponse returned null on failure");
-
-    return NextResponse.json({
-      data: { success: true, skill: name, profile, enabled },
-    });
+  let currentDisabled: string[];
+  if (profile === "default") {
+    const row = getAgentRoot();
+    currentDisabled = JSON.parse(row.disabledSkillsJson || "[]") as string[];
   }
-  catch (error) {
-    logApiError("PUT /api/skills/[name]/toggle", `toggle ${name}`, error);
-    return NextResponse.json({ error: "Failed to toggle skill" }, { status: 500 });
+  else {
+    if (!getProfile(profile)) {
+      return notFound("Profile not found");
+    }
+    currentDisabled = getDisabledSkills(profile);
   }
-}
+
+  const newDisabled = enabled
+    ? currentDisabled.filter((s) => s !== name)
+    : currentDisabled.includes(name)
+      ? currentDisabled
+      : [...currentDisabled, name].sort();
+
+  // applyProfileOrRootPatchOrFail collapses the 4-line
+  // apply+toPatchResponse+assert+return-err dance into 1 call +
+  // 1 instanceof check. The pre-check above for "Profile not
+  // found" is preserved because getDisabledSkills would silently
+  // return [] for a missing profile — we want a real 404 instead.
+  const disabledSkillsJson = serializeJsonArray(newDisabled);
+  const result = applyProfileOrRootPatchOrFail(
+    profile,
+    { disabledSkillsJson },
+    { disabledSkillsJson },
+    "Failed to toggle skill",
+  );
+  if (result instanceof NextResponse) return result;
+
+  recordEvent("skill.toggled", {
+    entityType: "skill",
+    entityId: name,
+    profile,
+    metadata: { enabled },
+  });
+  return ok({ success: true, skill: name, profile, enabled });
+});

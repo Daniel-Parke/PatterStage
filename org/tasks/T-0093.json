@@ -1,0 +1,36 @@
+{
+  "id": "T-0093",
+  "intent": "The records for round 6: where the report's mechanisms were wrong and what was actually true, what was already done when it arrived, what this programme fixed, what was environment rather than product, and what was deferred on purpose. Written where the next round's tester will look.",
+  "declared": {
+    "capabilities": [
+      "edit-docs"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R0",
+  "tier_ruled": "R0",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0093-round-6-records-2026-09-05",
+  "claims": [
+    "docs/QA_NOTES.md",
+    "docs/QA_ROUND_6_BRIEF.md",
+    "org/tasks/"
+  ],
+  "invariants": [
+    "I1 A refuted mechanism is recorded beside the true one, with the task that fixed it. The next tester reads why, not only what.",
+    "I2 A finding that was already done when the report arrived is cross-referenced to the task that did it, so it is not re-filed and not re-fixed.",
+    "I3 Environment findings are named as environment. A stale build and a stale port are not product defects.",
+    "I4 A deferral says where the work is recorded, so 'deferred' cannot become 'forgotten'."
+  ],
+  "the_programme": "Eight batches from one report: T-0086 (config assembler, CRITICAL), T-0087 (stories), T-0088 (mission bounds and bounded lists), T-0089 (operator ergonomics), T-0090 (gateway gate), T-0091 (subsystem health summary), T-0092 (this device's six browser findings), T-0093 (records). Every batch: oracle committed alone and measured red, implementation gated by exit code, mutation-swept against the commit with every survivor either killed by a sharper oracle or recorded as equivalent, end-to-end proof on an isolated instance, Playwright before and after, pushed to dev.",
+  "what_the_sweeps_kept_finding": "Vacuous oracles. Across the eight batches, eleven mutants survived a first pass, and every one of them was a test that could pass without the behaviour: a fixture where the database never disagreed with the file, a placeholder assertion satisfied by a missing attribute, a headline assertion satisfied by a neighbouring sentence, a guard pinned in one of three handlers that carried it. None was a product fault the oracle had missed by accident; each was an oracle that had not been made to fail. That is the argument for sweeping every batch, not the ones that feel risky.",
+  "what_the_proofs_kept_finding": "My own scripts. A proof parked for fifteen minutes on a request the server had answered at thirty seconds; a server that 'vanished' when a kill loop matched its port; a memory mock on a port the provider never reads. Each was diagnosed to the script, the product behaviour was reproduced cleanly, and the reproduction was recorded in the task. A proof that blames the product without a second run is the same class of error as a report that names the wrong corrupter.",
+  "verification": "design-lint (the voice law on docs) and doc-links pass on the edited documents; derived views match all 93 records; the final gate on dev is lint 0, tsc 0, 3907 tests / 444 suites, knip 0, canary OK, build 0; Playwright 91 passed, 0 failed, 8 skipped.",
+  "timestamps": {
+    "opened": "2026-09-05T08:50:00Z",
+    "updated": "2026-09-05T09:20:00Z",
+    "closed": "2026-09-05T09:20:00Z"
+  }
+}

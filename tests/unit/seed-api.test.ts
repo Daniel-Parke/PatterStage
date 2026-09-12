@@ -1,18 +1,39 @@
 /** @jest-environment node */
 
-jest.mock("@/lib/api-auth", () => ({
-  requireAuth: jest.fn(() => null),
+// The api-auth double that was here replaced the whole module so the route's
+// requireNotReadOnly("restore") would answer null. app-06 (T-0153) deleted that
+// guard, and /api/seed now imports nothing from api-auth, so a factory here
+// would be dead weight — which is what tests/unit/read-only-is-testable.test.ts
+// and docs/contributing/testing.md both call the vestigial pattern.
+// The refusal itself is driven through proxy() in
+// tests/unit/k5-the-ruled-security-fixes.test.ts.
+
+jest.mock("@/lib/api/api-logger", () => ({
+  logApiError: jest.fn(),
+  serverErrorFromCatch: jest.requireActual("@/lib/api/api-logger").serverErrorFromCatch,
 }));
 
-jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
+jest.mock("@/lib/api/audit-log", () => ({ appendAuditLine: jest.fn() }));
 
-const mockImportHermesState = jest.fn(() => null);
+// A replace snapshots the database first (T-0100, D113); these cases are merges,
+// so it never fires, but the route imports it either way.
+jest.mock("@/lib/db/backup", () => ({
+  snapshotDatabase: jest.fn(async () => ({
+    name: "patterstage.pre-restore.db",
+    path: "/tmp/patterstage.pre-restore.db",
+    bytes: 1,
+    takenAt: "2026-09-05T00:00:00.000Z",
+    kind: "snapshot",
+  })),
+}));
 
-jest.mock("@/lib/hermes-state-import", () => ({
+const mockImportHermesState = jest.fn((..._a: unknown[]) => null);
+
+jest.mock("@/modules/hermes/lib/state-import", () => ({
   importHermesStateFromDisk: (...args: unknown[]) => mockImportHermesState(...args),
 }));
 
-const mockRunCatalogSeed = jest.fn(() => ({
+const mockRunCatalogSeed = jest.fn((..._a: unknown[]) => ({
   profiles: 6,
   templates: 12,
   categories: 6,
@@ -21,9 +42,21 @@ const mockRunCatalogSeed = jest.fn(() => ({
 
 const mockGetSeedState = jest.fn(() => ({ lastRun: "2026-05-15T00:00:00.000Z" }));
 
+const mockReadShippedPackCounts = jest.fn(() => ({
+  catalogVersion: "patterstage-professional-v1",
+  root: 1,
+  profiles: 7,
+  templates: 12,
+  categories: 8,
+  skills: 4,
+  tools: 5,
+  memories: 5,
+}));
+
 jest.mock("@/lib/seed/catalog-seed", () => ({
   runCatalogSeed: (...args: unknown[]) => mockRunCatalogSeed(...args),
   getSeedState: () => mockGetSeedState(),
+  readShippedPackCounts: () => mockReadShippedPackCounts(),
 }));
 
 describe("/api/seed", () => {

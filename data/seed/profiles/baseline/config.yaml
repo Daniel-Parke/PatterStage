@@ -1,0 +1,8 @@
+# Baseline — a stripped reference agent for fair benchmarking.
+# No platform toolsets and no memory, so it runs brain-only (the model alone).
+# `model:` is intentionally omitted so it inherits the configured agent default.
+skills:
+  disabled: []
+platform_toolsets: {}
+agent:
+  max_turns: 20

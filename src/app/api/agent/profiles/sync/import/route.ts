@@ -1,83 +1,55 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 
-import { requireAuth } from "@/lib/api-auth";
-import { logApiError } from "@/lib/api-logger";
+import { badRequest, ok } from "@/lib/api/api-response";
 import { ensureDb } from "@/lib/db";
-import { parseOptionalJsonBody } from "@/lib/parse-optional-json-body";
+import { parseOptionalJsonBody } from "@/lib/api/parse-optional-json-body";
+import { booleanFlag, stringFlag } from "@/lib/parse-bag-flags";
 import {
   discoverLocalProfiles,
   importDiscoveredProfile,
   importAllSkillsFromDisk,
-} from "@/lib/hermes-profile-sync";
-import { isValidProfileSlug } from "@/lib/profile-slug";
+} from "@/modules/hermes/lib/profile-discovery";
+import { isValidProfileSlug } from "@/lib/agents/profile-slug";
+import { answerBatch, answerSingle } from "@/modules/hermes/lib/sync-answer";
+import { route } from "@/lib/api/api-route";
 
-export async function GET(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
+// Answers through sync-answer.ts, like push and pull: a 500 for the one
+// profile that did not import, a 200 that says so for a batch (T-0095, D19).
+const VERB = "Import from Hermes";
 
-  try {
-    ensureDb();
-    const discovered = discoverLocalProfiles();
-    return NextResponse.json({ data: { profiles: discovered } });
-  }
-  catch (error) {
-    logApiError("GET /api/agent/profiles/sync/import", "discover", error);
-    return NextResponse.json({ error: "Failed to discover profiles" }, { status: 500 });
-  }
-}
+export const GET = route("GET /api/agent/profiles/sync/import", "discover", "Failed to discover profiles", async (_request: NextRequest) => {
+  ensureDb();
+  const discovered = discoverLocalProfiles();
+  return ok({ profiles: discovered });
+});
 
-export async function POST(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
+export const POST = route("POST /api/agent/profiles/sync/import", "import", "Failed to import profile", async (request: NextRequest) => {
   // Body is a bag of optional flags (slug, importSkills,
   // importAllDiscovered); missing or malformed body is treated as {}.
   const body = await parseOptionalJsonBody(request);
-  const slug = typeof body.slug === "string" ? body.slug.trim() : undefined;
-  const importSkills = body.importSkills === true;
-  const importAllDiscovered = body.importAllDiscovered === true;
+  // The trim is part of the route's slug-validity contract, not a nice-to-have.
+  const slug = stringFlag(body, "slug", { trim: true });
+  const importSkills = booleanFlag(body, "importSkills");
+  const importAllDiscovered = booleanFlag(body, "importAllDiscovered");
+  ensureDb();
+  const results: { slug: string; success: boolean; error: string | null }[] = [];
 
-  try {
-    ensureDb();
-    const results: { slug: string; success: boolean; error: string | null }[] = [];
-
-    if (importSkills) {
-      const skillResults = importAllSkillsFromDisk();
-      return NextResponse.json({
-        data: {
-          success: skillResults.every((r) => r.success),
-          skills: skillResults,
-        },
-      });
-    }
-
-    if (importAllDiscovered) {
-      for (const d of discoverLocalProfiles().filter((p) => !p.inDatabase)) {
-        const r = importDiscoveredProfile(d.slug);
-        results.push({ slug: d.slug, success: r.success, error: r.error });
-      }
-      return NextResponse.json({
-        data: {
-          success: results.every((r) => r.success),
-          results,
-        },
-      });
-    }
-
-    if (!slug || !isValidProfileSlug(slug)) {
-      return NextResponse.json({ error: "Valid slug is required" }, { status: 400 });
-    }
-
-    const result = importDiscoveredProfile(slug);
-    return NextResponse.json({
-      data: {
-        success: result.success,
-        result,
-      },
-    });
+  if (importSkills) {
+    const skillResults = importAllSkillsFromDisk();
+    return answerBatch("import", skillResults, { skills: skillResults });
   }
-  catch (error) {
-    logApiError("POST /api/agent/profiles/sync/import", "import", error);
-    return NextResponse.json({ error: "Failed to import profile" }, { status: 500 });
+
+  if (importAllDiscovered) {
+    for (const d of discoverLocalProfiles().filter((p) => !p.inDatabase)) {
+      const r = importDiscoveredProfile(d.slug);
+      results.push({ slug: d.slug, success: r.success, error: r.error });
+    }
+    return answerBatch("import", results, { results });
   }
-}
+
+  if (!slug || !isValidProfileSlug(slug)) {
+    return badRequest("Valid slug is required");
+  }
+
+  return answerSingle(VERB, importDiscoveredProfile(slug));
+});

@@ -1,0 +1,26 @@
+{
+  "id": "T-0011",
+  "intent": "Phase 4: decompose the god files. Warrant WG-ARCH-006 plus the approved-plan warrant. Source row WO-0025. Depends on T-0009 for the canary, and the plan sequences it after T-0010. Scope: the 18 files with verified line counts in Appendix A, a 400-line ceiling and a 350 target, with exceptions carrying their reason here and in a header comment. Operator ruling D6, 2026-08-22: session-sync's pragma-guarded lazy self-heal, ensureMessageCountColumn at line 240, is kept and sanctioned, and the ruling is recorded in T-0013's documentation so the lint comment and the file agree. Acceptance: (1) one file per work item, split by responsibility, and any file still over 350 carries its reason here and in a header comment; (2) useMissionsPage splits into focused hooks, and useMissionsApi, useSchedules and useDashboard are NOT folded into useApiResource, whose header deliberately excludes them; (3) the session-sync.ts split preserves ensureMessageCountColumn and the lastOrphanCloseCount log suppression, and all 13 SQL sites stay in place, re-keyed at identical counts if their file paths change, because their migration belongs to T-0012; (4) the config-sync.ts split keeps every config.yaml write inside writeHermesConfigFile, with tests/unit/config-cache-invalidation.test.ts green throughout; (5) auth stays out of route handlers in the four API-route splits; (6) the VersionFooter split re-keys its hermes-outside-adapter baseline entry; (7) compatibility re-exports deleted in the final commit, or their retention justified here. Done when every listed file is at or under 400 lines with 350 the norm, callers are migrated, and the full suite, config-cache-invalidation and the e2e smoke are green. Tier proposal R2, anticipated factors size-threshold from diff-size and public-contract from public-api-delta, evidence four of the eighteen files are src/app/api route handlers and the router matches any path containing api/. Closed 2026-08-22 across 21 commits on dev. All 18 files are inside the 400 ceiling and 16 are under the 350 target. TWO EXCEPTIONS, recorded here as acceptance item 1 requires, each also carrying its reason in a header comment: src/app/recroom/story-weaver/[id]/page.tsx at 385 lines, because what remains is all markup and reshaping it would be a behaviour change the programme rules out (Story Weaver behaviour is explicitly out of scope); and src/app/operations/agents/page.tsx at 386 lines, because the residue is data wiring whose obvious next cut is a hook, and that cut is deliberately not made here. profile-sync.ts was deleted rather than left as a barrel, so its callers name the half they use: a jest.mock pointing at a module the route no longer imports fails open and lets the real module touch the filesystem. Independent review approved all four sets; the three load-bearing survivals in session-sync (the pragma-guarded self-heal per operator ruling D6, the lastOrphanCloseCount suppression, and all 13 SQL sites re-keyed not dropped) were each verified by diff against the pre-split file, and the crontab injection boundary moved byte-identical.",
+  "declared": {
+    "capabilities": [
+      "filesystem"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R0",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "phase4-god-files-2026-08-22",
+  "claims": [
+    "src/",
+    "tests/unit/",
+    "scripts/tooling/design-lint.baseline.json"
+  ],
+  "timestamps": {
+    "opened": "2026-08-22T00:00:00Z",
+    "updated": "2026-08-22T23:30:00Z",
+    "closed": "2026-08-22T23:30:00Z"
+  }
+}

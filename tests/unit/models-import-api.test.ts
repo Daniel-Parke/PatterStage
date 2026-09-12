@@ -1,45 +1,18 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
 /** @jest-environment node */
+/* eslint-disable @typescript-eslint/no-require-imports */
 
-jest.mock("next/server", () => ({
-  NextRequest: class NextRequest {
-    url: string;
-    method: string;
-    headers: Headers;
-    nextUrl: URL;
-    bodyUsed: boolean = false;
-    private _body: string;
-    constructor(url: string, init?: RequestInit) {
-      this.url = url;
-      this.method = init?.method ?? "GET";
-      this.headers = new Headers(init?.headers as HeadersInit);
-      this._body = typeof init?.body === "string" ? init.body : JSON.stringify(init?.body ?? {});
-      this.nextUrl = new URL(url);
-    }
-    async json() {
-      return JSON.parse(this._body);
-    }
-  },
-  NextResponse: class NextResponse {
-    status: number;
-    body: unknown;
-    constructor(status: number, body: unknown) {
-      this.status = status;
-      this.body = body;
-    }
-    async json() { return this.body; }
-    static json(data: unknown, init?: ResponseInit) {
-      return new NextResponse(init?.status ?? 200, data);
-    }
-  },
-}));
+jest.mock("next/server", () => require("../helpers/mocks").nextServerMock());
 
-jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
-jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
-jest.mock("@/lib/api-auth", () => ({ requireAuth: jest.fn(() => null) }));
-jest.mock("@/lib/parse-json-body", () => ({
-  parseJsonBody: jest.fn(async (req: { json: () => Promise<unknown> }) => req.json()),
-}));
+jest.mock("@/lib/api/api-logger", () => ({ logApiError: jest.fn() }));
+jest.mock("@/lib/api/audit-log", () => ({ appendAuditLine: jest.fn() }));
+jest.mock("@/lib/api/api-auth", () => ({ requireAuth: jest.fn(() => null) }));
+jest.mock("@/lib/api/parse-json-body", () => {
+  const actual = jest.requireActual("@/lib/api/parse-json-body");
+  return {
+    parseJsonBody: jest.fn(async (req: { json: () => Promise<unknown> }) => req.json()),
+    parseAndValidateJsonBody: actual.parseAndValidateJsonBody,
+  };
+});
 
 // Capture the order and arguments of the calls so the test can assert
 // the credential-link pass uses the upserted ids (not a fresh DB read).
@@ -48,13 +21,13 @@ const mockUpsertCredential = jest.fn();
 const mockListModels = jest.fn();
 const mockUpdateModel = jest.fn();
 
-jest.mock("@/lib/models-repository", () => ({
+jest.mock("@/lib/models/models-repository", () => ({
   upsertModel: (...args: unknown[]) => mockUpsertModel(...args),
   listModels: (...args: unknown[]) => mockListModels(...args),
   updateModel: (...args: unknown[]) => mockUpdateModel(...args),
 }));
 
-jest.mock("@/lib/credentials-repository", () => ({
+jest.mock("@/lib/models/credentials-repository", () => ({
   upsertCredential: (...args: unknown[]) => mockUpsertCredential(...args),
 }));
 
@@ -72,11 +45,11 @@ const mockParsedConfig = {
   credentials: [] as Array<{ provider: string; apiKey: string }>,
   details: [] as string[],
 };
-jest.mock("@/lib/hermes-import", () => ({
+jest.mock("@/modules/hermes/lib/config-import", () => ({
   parseHermesConfig: () => mockParsedConfig,
 }));
 
-const audit = require("@/lib/audit-log") as { appendAuditLine: jest.Mock };
+const audit = require("@/lib/api/audit-log") as { appendAuditLine: jest.Mock };
 
 beforeEach(() => {
   jest.clearAllMocks();

@@ -1,0 +1,27 @@
+{
+  // Type-checks tests/ as well as src/. See docs/REPO_GUIDE.md.
+  //
+  // The main tsconfig EXCLUDES tests, and Jest transpiles via Next's SWC
+  // transformer, which does no type checking. So the ~2,300 tests were
+  // type-blind: several advertise themselves as a "TypeScript-level lock" while
+  // asserting nothing at compile time, and jest.mock factories drifted out of
+  // step with the real signatures they stand in for.
+  //
+  // moduleDetection: force is required because many tests deliberately use
+  // require() rather than import, to control DB init order. A file with no
+  // top-level import/export is a global script to TypeScript, so those files
+  // collided on every shared identifier (41 errors on their own).
+  //
+  // Wired into `npm run lint` as its last step, and at zero. It was not always:
+  // this comment used to say 73 errors remained and that the gate should adopt
+  // it "once it reaches zero". It reached zero and the gate adopted it; the
+  // comment did not follow until T-0114.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "incremental": false,
+    "moduleDetection": "force"
+  },
+  "include": ["next-env.d.ts", "tests/**/*.ts", "tests/**/*.tsx", "src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["node_modules"]
+}

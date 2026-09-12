@@ -1,0 +1,67 @@
+// ═══════════════════════════════════════════════════════════════
+// /api/chat — agent-chat conversations (server-persisted).
+//   GET  → { conversations: [...] }   (most-recent first)
+//   POST → create a conversation, mapped to a fresh Hermes session
+//          ({ title?, profileName?, model? }) → { conversation }
+// Each conversation is backed by a Hermes session for agent memory /
+// multi-turn continuity. See chat-repository + 013_chat.sql.
+// ═══════════════════════════════════════════════════════════════
+
+import { boundsFrom } from "@/lib/ui/list-bounds";
+import { NextRequest, NextResponse } from "next/server";
+
+import { logApiError } from "@/lib/api/api-logger";
+import { ok, created } from "@/lib/api/api-response";
+import { parseJsonBody } from "@/lib/api/parse-json-body";
+import { runtime } from "@/lib/runtime";
+import { RuntimeRequestError } from "@/lib/runtime/types";
+import { listConversations, createConversation } from "@/lib/chat/chat-repository";
+import { route } from "@/lib/api/api-route";
+
+export const GET = route("GET /api/chat", "list", "Failed to list conversations", async (request?: NextRequest) => {
+  return ok({ conversations: listConversations(boundsFrom(request, { defaultLimit: 100, maxLimit: 500 }).limit) });
+});
+
+export const POST = route("POST /api/chat", "create", "Failed to create conversation", async (request: NextRequest) => {
+  const body = await parseJsonBody(request);
+  if (body instanceof NextResponse) return body;
+  const { title, profileName, model } = body as {
+    title?: string;
+    profileName?: string;
+    model?: string;
+  };
+  // Register a Hermes session for memory continuity. Best-effort: if the
+  // gateway is offline we still create the conversation (the first message's
+  // run handle backfills the session id).
+  let sessionId: string | null = null;
+  const sessionTitle = title || "New Chat";
+  try {
+    const session = await runtime.createSession({ title: sessionTitle, source: "chat" });
+    sessionId = session.id || null;
+  } catch (err) {
+    // The gateway answers 400 when a session title already exists. That
+    // used to be swallowed here: the conversation was created with no
+    // session and answered 201, and its memory continuity was silently
+    // gone. A collision is a name problem, not a gateway problem; retry
+    // once with a suffix, and only then fall back to no session (T-0089).
+    if (err instanceof RuntimeRequestError && err.status === 400) {
+      const retitled = `${sessionTitle} (${new Date().toISOString().slice(11, 19)})`;
+      try {
+        const session = await runtime.createSession({ title: retitled, source: "chat" });
+        sessionId = session.id || null;
+      } catch (retryErr) {
+        logApiError("POST /api/chat", "createSession (retry after title collision)", retryErr);
+      }
+    } else {
+      logApiError("POST /api/chat", "createSession", err);
+    }
+  }
+
+  const conversation = createConversation({
+    title: title || "New Chat",
+    sessionId,
+    profileName: profileName ?? null,
+    model: model ?? null,
+  });
+  return created({ conversation });
+});

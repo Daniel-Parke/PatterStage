@@ -13,6 +13,14 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
     "coverage/**",
+    // `tmp/` is gitignored scratch space, and agents put git worktrees in it,
+    // each with its own `.next` build output. The `.next/**` pattern above is
+    // anchored at the repository root, so it does not cover `tmp/<wt>/.next`,
+    // and `eslint .` was walking into minified build artefacts and failing the
+    // gate on code nobody wrote. Nothing under `tmp/` is repository content,
+    // so nothing under `tmp/` is lintable. tsconfig.json excludes it for the
+    // same reason and the same incident (T-0034).
+    "tmp/**",
   ]),
   {
     rules: {

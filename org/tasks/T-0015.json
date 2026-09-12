@@ -1,0 +1,27 @@
+{
+  "id": "T-0015",
+  "intent": "Phase 7, second: gate the schemas that leave the repository. Warrant WG-ARCH-005 (B for every contract that leaves the repo). generate:schema-json runs in no gate, so the committed JSON Schemas can lag their Zod source silently. Source row WO-0007. Acceptance: (1) a CI step or jest test regenerates mission-v1.schema.json and template-pack-v1.schema.json and fails on a diff; (2) agentruntime-wire.json vendored into tests/fixtures/ and the port's wire shapes asserted against it, executing ADR-0002 decision 3. Done when a Zod edit that changes the wire shape cannot merge silently. Note carried from the row: any change of mind about the PatterStudio coupling is an ADR-0002 amendment, not a decision taken here. Tier proposal R2, anticipated factors public-contract from derived signal public-api-delta, evidence these schemas are the contracts that leave the repository, and ci-stateful-infra from ci-config if the regeneration check lands as a workflow step rather than a jest test. Closed 2026-08-23 in 3d79fbbe. Both halves read one buildSchemaJsonArtefacts, so the gate cannot agree only with itself, which was the obvious way this would have been fake. Review perturbed a Zod max() and watched the drift test go red, and dropped a status case and watched the wire test go red. It also found a real hole the fixture could not close: HermesRuntime's documented SSE type precedence (event: field, else data.event, else data.type, verified against Hermes 0.16) was pinned by nothing, and inverting it left all 2361 tests green. Five local supplementary cases now pin it, deliberately NOT by editing the vendored fixture, whose byte-identity with PatterStudio is asserted by sha256 and would have been forked. Proved: the inverted precedence now fails.",
+  "declared": {
+    "capabilities": [
+      "filesystem",
+      "build"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R0",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "phase7-schema-gate-2026-08-23",
+  "claims": [
+    "src/",
+    "tests/fixtures/",
+    "scripts/tooling/"
+  ],
+  "timestamps": {
+    "opened": "2026-07-25T00:00:00Z",
+    "updated": "2026-08-23T03:00:00Z",
+    "closed": "2026-08-23T03:00:00Z"
+  }
+}

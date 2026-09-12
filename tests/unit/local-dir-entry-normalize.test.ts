@@ -1,4 +1,4 @@
-import { normalizeLocalDirsInput, formatLocalDirEntryLine } from "@/lib/local-dir-entry";
+import { normalizeLocalDirsInput, formatLocalDirEntryLine } from "@/lib/fs/local-dir-entry";
 
 describe("normalizeLocalDirsInput", () => {
   it("maps string[] to LocalDirEntry[]", () => {

@@ -1,0 +1,63 @@
+{
+  "id": "T-0123",
+  "intent": "U9 of the UI overhaul programme: the Work group, and decision 9's Automation view. The busiest screen in the product gets its column back, a board that does not clip its own last column, and filters that exist in the accessibility tree; and the two surfaces that each half-answered 'what runs tonight' become one.",
+  "declared": {
+    "capabilities": [
+      "edit-source",
+      "edit-tests",
+      "edit-docs"
+    ],
+    "side_effects": [
+      "adds the route /work/automation",
+      "removes the schedules section from /work/missions"
+    ]
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [
+    {
+      "factor": "surface-change",
+      "tier_floor": "R2",
+      "source": "derived:route-added",
+      "evidence": "a new documented route, a new rail entry, a new guide and screenshot, a canary bless; no schema, no protected path, no route deleted"
+    }
+  ],
+  "status": "done",
+  "owner_session": "t0123-u9-work-and-automation-2026-09-09",
+  "claims": [
+    "src/app/work/",
+    "src/components/missions/",
+    "src/components/automation/",
+    "src/components/layout/Sidebar.tsx",
+    "src/lib/modules/registry.ts",
+    "src/lib/help/concept-attachments.ts",
+    "scripts/tooling/design-lint.mjs",
+    "tests/e2e/lib/",
+    "docs/guides/automation.md"
+  ],
+  "programme": "U9, depends on U8. Converts the Work group onto the primitive set U8 built.",
+  "timestamps": {
+    "opened": "2026-09-09T03:00:00Z",
+    "updated": "2026-09-09T11:00:00Z",
+    "closed": "2026-09-09T11:00:00Z"
+  },
+  "invariants": [
+    "I1 THE SHELL OWNS THE MEASURE. A page component adds no horizontal padding and no width of its own; MissionsList did both, and put the board 24px right of the strip beside it.",
+    "I2 A BOARD WRAPS, IT DOES NOT SCROLL SIDEWAYS. Five columns at a fixed 240px minimum are wider than the content column at every viewport the rail leaves, and overflow-x hides that silently.",
+    "I3 FILTER STATE LIVES IN THE ACCESSIBILITY TREE, NOT ONLY IN COLOUR. Both of this screen's filter groups are radiogroups with names, aria-checked and one tab stop.",
+    "I4 ONE COUNT SET, DRAWN WHERE IT IS USEFUL AND NOWHERE ELSE. B10's contract is unchanged; the counts moved from four tiles that restated the board onto the filter, where a number says what you are about to filter TO.",
+    "I5 THE UNION IS A REAL UNION. A script scheduled through PatterStage appears in both reads, and listing it twice would be a worse answer than the two screens Automation replaces."
+  ],
+  "commits": "7aa2f90b the board's oracle, red at 14 of 15; e32ff1db the board, the filters and the instrument; 5e9d8305 and 905f5075 the dangling-variant rule and the eleven half-classes it found; edb4c95a the Automation oracle; e888c706 the Automation view; and the commit that tightens three assertions the sweep found loose.",
+  "verification": "Gate by exit code: lint 0, tsc 0, jest 0 (6557 tests, 635 suites), knip 0, canary 0 (blessed for the new route), build 0, Playwright 0 (189 passed, 27 skipped), census 0. design-lint 706 -> 704.",
+  "the_instrument_was_wrong_before_it_was_right": "Gate 6 asserts h1.left === contentLeft, and contentLeft is the LEFTMOST content block - so a page whose blocks disagree with EACH OTHER passes it, because the leftmost one is always the one measured. That is exactly how MissionsList's own px-6 survived U3: the insights strip sat on the column, the board sat inside it, and the gate compared the heading to the strip. The first cut of `splitBlocks` compared every block to the leftmost and reported 15 of 23 routes split by up to 789px, almost all of it GRID - the second and third cards of a three-column layout are content blocks at +395 and +789 and are exactly where they belong. A page's blocks do not share a left edge; its ROWS do. Grouped by vertical overlap first, the reading is 2 routes and 538px, both /agent/*, both U11's, and one of those may be a right-aligned action rather than a misalignment. That is why it is a count that ratchets rather than a gate that fails.",
+  "the_rail_paid_for_its_own_row": "Decision 9 ADDS a rail entry while the deletions that would pay for it (decision 6, Rec Room five entries to two) are U12's. Measured: the nav wanted 590px in a 571px box, and the rail had 7px of slack. It comes back from the nav's own padding (py-2 to py-1) and from the expanded row (3px to 2px). A 24px row is still exactly the 24x24 WCAG 2.5.8 asks of a target, and the collapsed row is a 40px square either way.",
+  "a_u7_claim_that_never_painted": "Measuring that turned up a defect in T-0121. The section heading read `mt-3 first:mt-1`, and every heading is the FIRST CHILD of its own section div - so the `first:` variant won every time. All four rendered at 4px, and the 'space above a heading' T-0121 records as delivered never painted at all. It is `mt-2` with no variant now, which is a FIX rather than a tightening, and the row rhythm pays for it. The T-0121 record's claim was wrong and this is the correction.",
+  "the_debris_from_u8": "T-0122's focus pass deleted `outline-none` with a \\b anchor, and `:` is a word boundary - so it matched inside `focus:outline-none` and left a bare `focus:` standing at eleven sites across nine files. A variant prefix with no utility after it is a class Tailwind can never generate: inert, which is why it survived a full gate, a mutation sweep and a browser walk. `no-dangling-variant` ends the class, and is narrow in three ways that were each earned - the variants are spelled out because prose ends in a colon, it anchors on the closing quote because a ternary puts a colon before a space, and the prefix must FOLLOW another class because skills-config.ts writes `\"  disabled:\"` as a YAML key and a rule without that lookbehind would have broken a config writer to tidy a class list.",
+  "two_plan_items_were_already_done": "(1) The plan says WorkflowCanvas 'is next/dynamic-ed with ssr:false'. It already is, at composer/page.tsx:37 and :41, and has been since before this programme. Measured on the running product, /work/composer transfers 1137 KB of JavaScript against 777 KB for /work/missions and 640 KB for /work/chat, so the canvas is still the heaviest thing in the Work group - but the remedy the plan names is in place, and what remains is the INSPECTOR AND TOOLBAR shedding, which is a screen rebuild rather than a code-split. (2) The plan says MissionCreateForm's 305-line form body becomes '~11 <Field> rows'. It already routes its labels through a shared `ComposerFieldLabel` and its controls through AutoTextarea and the Selectors; its remaining eleven design-lint findings are accent-tinted panels, which are decisions rather than duplication. Neither is a case of the plan being wrong about the defect; both are cases of the reconnaissance measuring a tree that had already moved.",
+  "deviation": "(1) The shared split-pane layout for Composer, Research, Logs and Chat is NOT done. Logs is U10's screen and Chat, Composer and Research are this batch's, so the shared shape cannot be settled without a screen from the next batch to check it against; extracting it from three of four callers is how a fifth near-clone gets written. It moves to U10, which converts Logs. (2) The composer's inspector and toolbar shedding moves with it, for the same reason and with the measurement above. (3) Dialog, Picker and DataList, deferred out of U8 into U9, move again to U10 and U11: their common shape is still a hypothesis, and the screens that would settle it (41 grid-faked tables on Results, five Selectors on Agent) are those batches'. Deferring twice is worth naming; what would be worse is a third overlay component and a table primitive shaped by one caller.",
+  "mutation": "21 mutants against the committed tree, two rounds. Round one: 18 killed, 3 survived. All three were assertions true of the fix AND of the mutant. Two were splitBlocks, and for the same reason: my cases put the leftmost block first within a row and the leftmost row first on the page, which is the order they usually arrive in - so an implementation taking the FIRST rather than the LEFTMOST passed. It shows only when they do not start level, which is a tall card with a shorter one beside it starting lower, and a page whose first block is inset. The third asked whether a host row says 'host' anywhere, and it does: its next-run column reads 'next: ask the host'. Round two: 21 of 21.",
+  "census": "routes 23 -> 24, and the growth is recorded with its reason: distinctButtonHeights 27 -> 28, controlBordersBelowThree 153 -> 154, decorativeBordersBelowThree 598 -> 601, hitTargetsBelowTwentyFour 84 -> 86 are all counts over MORE PRODUCT rather than more sprawl per screen - a new destination brings its own skip link, help link and concept hint. The one reading that is not the extra route is distinctButtonHeights: the rail's expanded row went 26px to 24px, and the rail's rows are not Button-based, so 24 joined the set while 26 stayed. Falling in the same run: twelvePxShare 0.58 -> 0.57, monoShare 0.64 -> 0.63, distinctCardChromes 86 -> 85, distinctButtonChromes 80 -> 79. New: routesWithSplitBlocks 2, worstBlockLeftSpread 538.",
+  "the_census_caught_the_primitive": "SegmentedControl first shipped at text-micro, and twelvePxShare rose 0.58 -> 0.59. S3 names 14/21 as the size of a button, and a filter is what a dense screen is operated with; it sits on the body step now. A primitive set off the scale takes every screen that adopts it off the scale too, which is the thing a census is for."
+}

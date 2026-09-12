@@ -7,10 +7,11 @@
 
 import { access, constants } from "fs/promises";
 import { readFile } from "fs/promises";
-import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
-import { db } from "@/lib/db";
-import { logApiError } from "@/lib/api-logger";
+import { getAgentWorkspace } from "@/lib/runtime/workspace";
+import { upsertGatewayPlatforms } from "@/lib/sync/sync-repository";
+import { logApiError } from "@/lib/api/api-logger";
 import type { SyncSource, SyncResult } from "@/lib/sync/types";
+import { syncFailure, syncSuccess } from "@/lib/sync/types";
 
 /** Parse .env content into a key-value map. */
 function parseEnvVars(content: string): Record<string, string> {
@@ -38,7 +39,7 @@ export class EnvSync implements SyncSource {
   async sync(): Promise<SyncResult> {
     const start = performance.now();
     try {
-      const envPath = getActiveHermesPaths().env;
+      const envPath = getAgentWorkspace().env;
       let envExists = false;
       try {
         await access(envPath, constants.F_OK);
@@ -47,12 +48,7 @@ export class EnvSync implements SyncSource {
         envExists = false;
       }
       if (!envExists) {
-        return {
-          sourceName: this.name,
-          success: true,
-          syncedCount: 0,
-          durationMs: Math.round(performance.now() - start),
-        };
+        return syncSuccess(this.name, 0, start);
       }
 
       const content = await readFile(envPath, "utf-8");
@@ -94,33 +90,12 @@ export class EnvSync implements SyncSource {
       ];
 
       const now = new Date().toISOString();
-      const database = db();
-      const upsert = database.prepare(
-        `INSERT OR REPLACE INTO gateway_platforms (platform, enabled, bot_token_present, last_synced_at)
-         VALUES (?, ?, ?, ?)`
-      );
-      const tx = database.transaction(() => {
-        for (const p of platforms) {
-          upsert.run(p.platform, p.enabled, p.bot_token_present, now);
-        }
-      });
-      tx();
+      upsertGatewayPlatforms(platforms, now);
 
-      return {
-        sourceName: this.name,
-        success: true,
-        syncedCount: platforms.length,
-        durationMs: Math.round(performance.now() - start),
-      };
+      return syncSuccess(this.name, platforms.length, start);
     } catch (err) {
       logApiError("EnvSync", "syncing env", err);
-      return {
-        sourceName: this.name,
-        success: false,
-        syncedCount: 0,
-        error: String(err),
-        durationMs: Math.round(performance.now() - start),
-      };
+      return syncFailure(this.name, err, start);
     }
   }
 }

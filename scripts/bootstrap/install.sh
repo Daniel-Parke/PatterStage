@@ -1,12 +1,12 @@
 #!/bin/bash
 # ═══════════════════════════════════════════════════════════════
-# Control Hub — Install Script
+# PatterStage — Install Script
 # ═══════════════════════════════════════════════════════════════
-# One-command installer for Control Hub (Hermes Control Hub OSS).
+# One-command installer for PatterStage (OSS control plane for the Hermes Agent).
 # Handles fresh install, re-install, optional Hermes bootstrap (two-pass), and Hindsight.
 #
 # Usage:
-#   Bootstrap (clones to INSTALL_DIR, default ~/control-hub):
+#   Bootstrap (clones to INSTALL_DIR, default ~/patterstage):
 #     bash path/to/scripts/bootstrap/install.sh
 #   Already cloned this repo (runs setup only):
 #     bash scripts/bootstrap/install.sh --in-repo
@@ -14,7 +14,7 @@
 #     bash scripts/bootstrap/setup.sh
 #
 # Environment (non-interactive / CI / VPS):
-#   CH_INSTALL_NONINTERACTIVE=1  or  CI=1
+#   PS_INSTALL_NONINTERACTIVE=1  or  CI=1
 #     Requires either a working `hermes` on PATH, or:
 #     INSTALL_HERMES=yes   — run upstream Hermes install + `hermes setup`, then exit (re-run this script after)
 #     INSTALL_HERMES=no    — continue without Hermes CLI (limited profile/gateway steps)
@@ -24,11 +24,11 @@
 #   HERMES_HOME — override Hermes root (default $HOME/.hermes); optional Hermes profile step requires config.yaml there
 #
 # Hermes two-pass: if you choose to install Hermes when prompted, this script runs the official
-# installer and `hermes setup`, then exits — run install.sh again to finish Control Hub setup.
+# installer and `hermes setup`, then exits — run install.sh again to finish PatterStage setup.
 #
 # Override: INSTALL_DIR=/path/to/hub bash scripts/bootstrap/install.sh
 # Git branch for initial clone only: BRANCH=dev (default). Ongoing deploy pulls use
-# CH_UPDATE_GIT_BRANCH in .env.local (see scripts/application/ch-deploy.sh), not BRANCH.
+# PS_UPDATE_GIT_BRANCH in .env.local (see scripts/application/ps-deploy.sh), not BRANCH.
 # Prerequisites: Node.js 20+, git. Hermes recommended (see prompts). macOS and Linux only.
 # ═══════════════════════════════════════════════════════════════
 
@@ -40,8 +40,8 @@ while [ "${1:-}" = "--in-repo" ]; do
     shift
 done
 
-REPO_URL="${REPO_URL:-https://github.com/Daniel-Parke/hermes-control-hub.git}"
-INSTALL_DIR="${INSTALL_DIR:-$HOME/control-hub}"
+REPO_URL="${REPO_URL:-https://github.com/Daniel-Parke/PatterStage.git}"
+INSTALL_DIR="${INSTALL_DIR:-$HOME/patterstage}"
 BRANCH="${BRANCH:-dev}"
 
 SCRIPT_PATH="${BASH_SOURCE[0]:-$0}"
@@ -63,21 +63,22 @@ hermes_cli_ok() {
 }
 
 noninteractive() {
-  [[ "${CI:-}" == "1" || "${CH_INSTALL_NONINTERACTIVE:-}" == "1" ]]
+  [[ "${CI:-}" == "1" || "${PS_INSTALL_NONINTERACTIVE:-}" == "1" ]]
 }
 
 HERMES_HOME="${HERMES_HOME:-$HOME/.hermes}"
 HERMES_INSTALL_URL="https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh"
 
-# shellcheck source=../lib/ch-env.sh
-source "$(cd "$(dirname "${BASH_SOURCE[0]}")/../lib" && pwd)/ch-env.sh"
+# shellcheck source=../lib/ps-env.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")/../lib" && pwd)/ps-env.sh"
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")/../lib" && pwd)/ps-reinstall.sh"
 
 echo ""
 echo "╔══════════════════════════════════════════╗"
-echo "║   Control Hub — Installer                 ║"
+echo "║   PatterStage — Installer                 ║"
 echo "╚══════════════════════════════════════════╝"
 echo ""
-ch_print_hermes_install_paths
+ps_print_hermes_install_paths
 
 if [ "$IN_REPO" = true ]; then
     if ! command -v node &>/dev/null; then
@@ -87,14 +88,14 @@ if [ "$IN_REPO" = true ]; then
     cd "$SCRIPT_REPO_ROOT"
     bash scripts/bootstrap/setup.sh
 
-    # shellcheck source=../lib/ch-dotenv-local.sh
-    source "$SCRIPT_REPO_ROOT/scripts/lib/ch-dotenv-local.sh"
-    ch_load_control_hub_env_local "$SCRIPT_REPO_ROOT"
-    # shellcheck source=../lib/ch-hermes-profile-templates.sh
-    source "$SCRIPT_REPO_ROOT/scripts/lib/ch-hermes-profile-templates.sh"
-    ch_resolve_hermes_home
+    # shellcheck source=../lib/ps-dotenv-local.sh
+    source "$SCRIPT_REPO_ROOT/scripts/lib/ps-dotenv-local.sh"
+    ps_load_patterstage_env_local "$SCRIPT_REPO_ROOT"
+    # shellcheck source=../lib/ps-hermes-profile-templates.sh
+    source "$SCRIPT_REPO_ROOT/scripts/lib/ps-hermes-profile-templates.sh"
+    ps_resolve_hermes_home
 
-    if ! ch_hermes_config_present; then
+    if ! ps_hermes_config_present; then
         info "Skipping optional Hermes profile templates (no $HERMES_HOME/config.yaml). Run Hermes setup, then re-run install or apply templates from data/seed/profiles/."
     else
         run_profile_templates=false
@@ -128,8 +129,8 @@ if [ "$IN_REPO" = true ]; then
             esac
         fi
         if [ "$run_profile_templates" = true ]; then
-            ch_profiles_log() { info "$*"; }
-            ch_bundled_profiles_install "$SCRIPT_REPO_ROOT"
+            ps_profiles_log() { info "$*"; }
+            ps_bundled_profiles_install "$SCRIPT_REPO_ROOT"
             ok "Bundled Hermes profile templates installed (missing files only)."
         fi
     fi
@@ -159,7 +160,7 @@ if ! hermes_cli_ok; then
                 echo "════════════════════════════════════════════════════════════"
                 echo "  Next: open a new terminal if \`hermes\` is not on PATH, then run:"
                 echo "    bash $(basename "$SCRIPT_PATH")"
-                echo "  (from your Control Hub repo or re-download install.sh)"
+                echo "  (from your PatterStage repo or re-download install.sh)"
                 echo "  Full path hint: $SCRIPT_PATH"
                 echo "════════════════════════════════════════════════════════════"
                 exit 0
@@ -193,7 +194,7 @@ if ! hermes_cli_ok; then
             ok "Hermes install step finished."
             echo ""
             echo "════════════════════════════════════════════════════════════"
-            echo "  Re-run this script to finish Control Hub setup:"
+            echo "  Re-run this script to finish PatterStage setup:"
             echo "    bash scripts/bootstrap/install.sh --in-repo"
             echo "    # or: bash scripts/bootstrap/setup.sh"
             echo "  (from your repo clone, or the path you used to start the installer)"
@@ -231,11 +232,11 @@ Use one of:
 
 Or clone into a different INSTALL_DIR, or remove this directory and re-run the installer."
     fi
-    read -p "   Reinstall? This will DELETE the directory. (y/N): " -n 1 -r
-    echo ""
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        info "Removing existing installation..."
-        rm -rf "$INSTALL_DIR"
+    # The data directory is moved to $HOME/patterstage-data-backup-<stamp>
+    # before anything is removed, and the prompt takes a typed word (T-0095,
+    # D106). The function lives in scripts/lib/ps-reinstall.sh with its own
+    # checks.
+    if ps_reinstall_confirm_and_remove "$INSTALL_DIR" "$HOME"; then
         ok "Removed"
     else
         info "Using existing installation"
@@ -254,7 +255,7 @@ fi
 
 # ── Clone Repository ─────────────────────────────────────────
 echo ""
-info "Cloning Control Hub..."
+info "Cloning PatterStage..."
 if ! git clone --branch "$BRANCH" --single-branch "$REPO_URL" "$INSTALL_DIR" 2>&1; then
     fail "Clone failed. Check your internet connection and try again."
 fi
@@ -266,7 +267,7 @@ if hermes_cli_ok && [ -f "$HERMES_HOME/config.yaml" ]; then
         info "Enabling gateway API server for Rec Room..."
         mkdir -p "$HERMES_HOME"
         echo "" >> "$HERMES_HOME/.env"
-        echo "# Enable API server for Control Hub Rec Room" >> "$HERMES_HOME/.env"
+        echo "# Enable API server for PatterStage Rec Room" >> "$HERMES_HOME/.env"
         echo "API_SERVER_ENABLED=true" >> "$HERMES_HOME/.env"
         ok "API server enabled in ~/.hermes/.env"
     else
@@ -291,15 +292,15 @@ if [ ! -f "scripts/bootstrap/setup.sh" ]; then
 fi
 bash scripts/bootstrap/setup.sh
 
-# shellcheck source=lib/ch-dotenv-local.sh
-source "$INSTALL_DIR/scripts/lib/ch-dotenv-local.sh"
-ch_load_control_hub_env_local "$INSTALL_DIR"
-# shellcheck source=lib/ch-hermes-profile-templates.sh
-source "$INSTALL_DIR/scripts/lib/ch-hermes-profile-templates.sh"
-ch_resolve_hermes_home
+# shellcheck source=lib/ps-dotenv-local.sh
+source "$INSTALL_DIR/scripts/lib/ps-dotenv-local.sh"
+ps_load_patterstage_env_local "$INSTALL_DIR"
+# shellcheck source=lib/ps-hermes-profile-templates.sh
+source "$INSTALL_DIR/scripts/lib/ps-hermes-profile-templates.sh"
+ps_resolve_hermes_home
 
 # ── Optional: bundled Hermes profile templates ───────────────
-if ! ch_hermes_config_present; then
+if ! ps_hermes_config_present; then
     info "Skipping optional Hermes profile templates (no $HERMES_HOME/config.yaml). Re-run install after Hermes setup, or set HERMES_HOME in .env.local if Hermes lives elsewhere."
 else
     run_profile_templates=false
@@ -322,7 +323,7 @@ else
                 ;;
             *)
                 echo ""
-                info "Optional: install Control Hub bundled Hermes profile templates under $HERMES_HOME/profiles/"
+                info "Optional: install PatterStage bundled Hermes profile templates under $HERMES_HOME/profiles/"
                 echo "  Existing SOUL.md and AGENTS.md files are never overwritten."
                 read -r -p "Install bundled profile templates now? [y/N]: " REPLY_PROFILES
                 echo ""
@@ -333,8 +334,8 @@ else
         esac
     fi
     if [ "$run_profile_templates" = true ]; then
-        ch_profiles_log() { info "$*"; }
-        ch_bundled_profiles_install "$INSTALL_DIR"
+        ps_profiles_log() { info "$*"; }
+        ps_bundled_profiles_install "$INSTALL_DIR"
         ok "Bundled Hermes profile templates installed (missing files only)."
     fi
 fi
@@ -346,9 +347,13 @@ echo "  Memory Provider Setup (Optional)"
 echo "════════════════════════════════════════════════════════════"
 echo ""
 echo "  Hindsight provides long-term memory with semantic search"
-echo "  using a knowledge graph. Requires PostgreSQL + ~2GB disk."
+echo "  using a knowledge graph (Postgres + pgvector)."
 echo ""
-echo "  If your Hermes memory provider already differs, see docs: CONTROL_HUB.md,"
+echo "  Two ways to run it:"
+echo "    • Docker  — cross-platform (Linux/macOS/Windows), no host Postgres/Python."
+echo "    • Native  — Linux only (apt + systemd), runs on the Hermes agent venv."
+echo ""
+echo "  If your Hermes memory provider already differs, see docs: MEMORY.md,"
 echo "  HERMES_CONFIG_INTEGRATION.md — this script will not overwrite your config."
 echo ""
 
@@ -361,11 +366,19 @@ if [ -f "$HERMES_HOME/hindsight/config.json" ]; then
 fi
 
 if [ "$HINDSIGHT_ALREADY" = false ]; then
+    HS_SETUP="$INSTALL_DIR/scripts/bootstrap/setup-hindsight.sh"
     if noninteractive; then
         case "${INSTALL_HINDSIGHT:-auto}" in
+            docker|DOCKER)
+                if [ -f "$HS_SETUP" ]; then
+                    bash "$HS_SETUP" --docker || warn "Hindsight (Docker) setup encountered issues"
+                else
+                    warn "setup-hindsight.sh not found — skipping"
+                fi
+                ;;
             yes|YES|1|true|True)
-                if [ -f "$INSTALL_DIR/scripts/bootstrap/setup-hindsight.sh" ]; then
-                    bash "$INSTALL_DIR/scripts/bootstrap/setup-hindsight.sh" || warn "Hindsight setup encountered issues"
+                if [ -f "$HS_SETUP" ]; then
+                    bash "$HS_SETUP" || warn "Hindsight setup encountered issues"
                 else
                     warn "setup-hindsight.sh not found — skipping"
                 fi
@@ -374,27 +387,44 @@ if [ "$HINDSIGHT_ALREADY" = false ]; then
                 info "Skipping Hindsight (INSTALL_HINDSIGHT=no)"
                 ;;
             *)
-                info "Skipping Hindsight prompt (non-interactive). Set INSTALL_HINDSIGHT=yes|no to control."
+                info "Skipping Hindsight prompt (non-interactive). Set INSTALL_HINDSIGHT=docker|yes|no to control."
                 ;;
         esac
     else
-        read -p "  Set up Hindsight memory? [y/N]: " -n 1 -r SETUP_HINDSIGHT
+        # Native path is apt + systemd (Linux-only); Docker works everywhere.
+        echo "  Set up Hindsight memory?"
+        echo "    [d] Docker (cross-platform)   [n] Native (Linux)   [s] Skip"
+        read -p "  Choice [d/n/s]: " -n 1 -r SETUP_HINDSIGHT
         echo ""
-        if [[ $SETUP_HINDSIGHT =~ ^[Yy]$ ]]; then
-            echo ""
-            if [ -f "$INSTALL_DIR/scripts/bootstrap/setup-hindsight.sh" ]; then
-                bash "$INSTALL_DIR/scripts/bootstrap/setup-hindsight.sh" || {
-                    warn "Hindsight setup encountered issues"
-                    echo "  You can retry later with: bash $INSTALL_DIR/scripts/bootstrap/setup-hindsight.sh"
-                }
-            else
-                warn "setup-hindsight.sh not found — skipping Hindsight setup"
-                echo "  Set up later with: bash $INSTALL_DIR/scripts/bootstrap/setup-hindsight.sh"
-            fi
-        else
-            info "Skipping Hindsight — set up later with:"
-            echo "  bash $INSTALL_DIR/scripts/bootstrap/setup-hindsight.sh"
-        fi
+        case "$SETUP_HINDSIGHT" in
+            d|D)
+                echo ""
+                if [ -f "$HS_SETUP" ]; then
+                    bash "$HS_SETUP" --docker || {
+                        warn "Hindsight (Docker) setup encountered issues"
+                        echo "  Retry later: bash $HS_SETUP --docker"
+                    }
+                else
+                    warn "setup-hindsight.sh not found — skipping"
+                fi
+                ;;
+            n|N|y|Y)
+                echo ""
+                if [ -f "$HS_SETUP" ]; then
+                    bash "$HS_SETUP" || {
+                        warn "Hindsight setup encountered issues"
+                        echo "  Retry later: bash $HS_SETUP"
+                    }
+                else
+                    warn "setup-hindsight.sh not found — skipping"
+                fi
+                ;;
+            *)
+                info "Skipping Hindsight — set up later with:"
+                echo "  bash $HS_SETUP --docker   # cross-platform"
+                echo "  bash $HS_SETUP            # native (Linux)"
+                ;;
+        esac
     fi
 fi
 
@@ -403,14 +433,14 @@ echo "╔═══════════════════════�
 echo "║   Installation Complete!                  ║"
 echo "╚══════════════════════════════════════════╝"
 echo ""
-CH_DONE_PORT="(see .env.local PORT)"
+PS_DONE_PORT="(see .env.local PORT)"
 if [ -f "$INSTALL_DIR/.env.local" ]; then
-    CH_DONE_PORT="$(grep -E '^PORT=' "$INSTALL_DIR/.env.local" | tail -n1 | sed 's/^PORT=//' | tr -d '\r')"
+    PS_DONE_PORT="$(grep -E '^PORT=' "$INSTALL_DIR/.env.local" | tail -n1 | sed 's/^PORT=//' | tr -d '\r')"
 fi
 echo "Start the server:"
 echo "  cd $INSTALL_DIR"
 echo "  npm run start:network"
 echo ""
-echo "Listen port: $CH_DONE_PORT  →  http://127.0.0.1:${CH_DONE_PORT}/"
+echo "Listen port: $PS_DONE_PORT  →  http://127.0.0.1:${PS_DONE_PORT}/"
 echo ""
 ok "Install complete. Start the server with: cd $INSTALL_DIR && npm run start:network"

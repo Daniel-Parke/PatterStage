@@ -1,0 +1,81 @@
+{
+  "id": "T-0129",
+  "intent": "U15 of the UI overhaul programme: deletion and the data layer. Two data layers coexisted, one cached and one not, and the same endpoint was cached under different names, so the dashboard asked four of its questions twice on every load. Three modules were alive only because a test imported them, which knip cannot see because its Jest plugin makes every test an entry. Three API routes had no caller and two of their documentation rows were wrong. A 669 KB animation library served two screens' fade-ins that the stylesheet already performed. Seventeen migration wrappers were the same twenty-line stanza. This batch makes the endpoint the cache key by construction, deletes what nothing reaches, and adds the gate knip cannot be: an import walk from the real entrypoints.",
+  "declared": {
+    "capabilities": [
+      "edit-source",
+      "edit-tests",
+      "edit-docs",
+      "edit-dependencies"
+    ],
+    "side_effects": [
+      "package.json and package-lock.json lose the `motion` dependency",
+      "the canary golden is re-blessed for three route deletions"
+    ]
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {
+      "factor": "size-threshold",
+      "tier_floor": "R1",
+      "source": "derived:diff-size",
+      "evidence": "one hook re-signed and 22 callers codemodded, five hooks and five components moved onto it, one loader deleted, three modules and three tests deleted, three API routes deleted with their doc rows and the canary blessed, one dependency dropped and three wrappers rewritten in CSS, seventeen migration wrappers folded into one table, one lint rule refined and its baseline re-cut; no schema change, no protected path; four oracle suites and one live gate new, twenty-three migration suites retargeted at their import line, twelve suites amended for a QueryClient or a mock's shape"
+    }
+  ],
+  "status": "done",
+  "owner_session": "t0129-u15-deletion-2026-09-08",
+  "claims": [
+    "src/hooks/useApiResource.ts",
+    "src/hooks/useDashboard.ts",
+    "src/hooks/useSchedules.ts",
+    "src/hooks/useScripts.ts",
+    "src/hooks/useSessionDetail.ts",
+    "src/hooks/useOperatorPrefs.ts",
+    "src/hooks/useProfiles.ts",
+    "src/hooks/",
+    "src/components/layout/RailFooter.tsx",
+    "src/components/agents/AgentSetupNotice.tsx",
+    "src/components/memory/MemoryProviderSettings.tsx",
+    "src/components/missions/DirectoryPickerModal.tsx",
+    "src/components/missions/MissionLiveProgress.tsx",
+    "src/components/motion/index.tsx",
+    "src/app/agent/tools/page.tsx",
+    "src/lib/db/",
+    "src/modules/hermes/lib/profile-drift.ts",
+    "src/app/globals.css",
+    "scripts/tooling/design-lint.mjs",
+    "knip.json",
+    "package.json",
+    "docs/reference/api.md",
+    "docs/contributing/repo-guide.md",
+    "tests/e2e/requests.spec.ts",
+    "tests/unit/"
+  ],
+  "programme": "U15, depends on U14. Deletion and the data layer.",
+  "timestamps": {
+    "opened": "2026-09-08T07:00:00Z",
+    "updated": "2026-09-08T11:30:00Z",
+    "closed": "2026-09-08T11:30:00Z"
+  },
+  "invariants": [
+    "I1 THE ENDPOINT IS THE KEY. useApiResource takes the endpoint and derives the cache key from it; two readers of one endpoint are one request whatever they select, because the cache holds the envelope and each reader selects through react-query's own select. A POST read keys on endpoint and body.",
+    "I2 REACT-QUERY IS REACHED ONLY THROUGH THE HOOK. No component or hook calls useQuery; no one invalidates by a hand-written key; no component reads the API inside a useEffect (the lint rule, refined to that exact shape, is hard).",
+    "I3 THE DASHBOARD ASKS EACH QUESTION ONCE. No endpoint twice on load; 18 or fewer requests; the idle poll under the ceiling its intervals compute to. tests/e2e/requests.spec.ts holds it.",
+    "I4 NOTHING IN SRC LIVES ONLY FOR ITS TEST. Every src module is reachable from a page, a route, the server, the proxy, a script or a mock server, by an import walk that does not count tests. knip's Jest plugin counts them, so knip cannot ask this.",
+    "I5 A ONE-FILE MIGRATION IS A ROW IN A TABLE. SQL_MIGRATIONS names version and file; applySqlMigration applies it once and refuses a version it does not know; a step that does real work keeps its own file.",
+    "I6 MOTION IS THE STYLESHEET'S. Stagger, StaggerItem and Collapse are CSS over ch-float-in; there is no animation library in the dependencies.",
+    "I7 A ROUTE WITH NO CALLER IS NOT A ROUTE. The three orphan routes and their api.md rows are gone; b1-api-md-matches-the-route-tree holds the doc to the tree and the reachability walk holds the tree to its callers' side."
+  ],
+  "commits": "55cd1fa5 the U15 oracles, red at 14 of 14 and a suite without its subject; 9ff7312d the walk's root-entry pattern; 0d7ae16a the implementation: the hook re-signed and its callers, the conversions, the loader, the three modules, the three routes, the dependency, the stylesheet's three orphans and the stagger, the migration table, the refined lint rule, the docs and the CHANGELOG; 7642cbda the picker oracle sharpened after the sweep, so a closed picker that lists the disk can be seen.",
+  "verification": "Gate by exit code on the finished tree: lint 0, tsc 0, jest 0 (6791 tests, 660 suites), knip 0, canary 0 (golden blessed for three route deletions), build 0, Playwright 0 (263 passed, 24 skipped, two projects), census 0. design-lint 376 -> 355 baselined violations. Walked on the isolated instance: loading the dashboard makes 17 API requests, 17 distinct, no endpoint twice (22 with four doubled before), and 14 in thirty idle seconds against a ceiling of 15 the poll arithmetic gives; on Insights the .ps-stagger container's four children end at opacity 1 animated by ch-float-in, Show all mounts the achievement grid and Show less unmounts it; the Memory provider card's host and port read 127.0.0.1 and 9177 through the hook; the directory picker lists C:\\\\Users\\\\Daniel with 44 entries; a session's detail page loads through useSessionDetail with no error banner; Tools renders 22 toolset chips; Automation and Scripts render with no error banner; the rail footer reads v0.1.0 and the commit. 127 files: 679 lines added, 2,466 removed; in src, 60 files, 513 added and 1,866 removed, 1,353 net out. The census moved on no count.",
+  "the_key_was_the_callers": "useApiResource took a key and an endpoint, and every caller chose its own key: useDashboard cached /api/status/subsystems under ['dashboard','subsystems'] while useQuestHost cached the same endpoint under ['status-subsystems']; the rail footer fetched /api/status/runtime raw on mount while useQuestHost cached it; a second loader fetched /api/monitor, /api/agents and /api/missions to build a static bundle beside the live queries polling the same three. The hook takes the endpoint now and derives the key, so a duplicate cannot be written. The subtlety was select: the old hook applied it inside queryFn, so the cache held the SELECTED value and two readers of one endpoint with two selects would have read each other's shape. The cache holds the envelope and select runs through react-query's own select, which structurally shares its result so a re-render does not hand a consumer a new object for the same data. Twenty-two callers were codemodded by regex; three with nested generics escaped the first pass and were caught by the typecheck, which is the codemod's own test.",
+  "knip_cannot_ask_this": "The plan said knip would be clean with tests no longer declared as entrypoints. Measured, removing the glob changes nothing: knip's Jest plugin adds every test file as an entry on its own, and the trace of llm-judge.ts with the glob gone still ends at its test. With the plugin off, knip flags 139 exports and 17 types used only by tests across 96 files, which is a different and much larger question than the one asked. So the gate is our own: an import walk from the real entrypoints over src, resolving @/ and relative imports, index files and extensions, asserting the unreachable set is empty. Its first draft required a directory between src/app/ and page.tsx and so named the root page, the layout and the dashboard's components; with the segment optional it named exactly the three modules the reconnaissance did, and after the deletion it names none. The reconnaissance's fourth, concept-attachments, is imported by scripts/docs/check.mts and stays: tooling, like the retention chain.",
+  "what_the_deletions_exposed": "Deleting the drift route left detectFullDrift and its FullDriftReport type with no caller, and knip said so on the next run; both went, with the private skill-drift helper and the three imports only it used, while detectProfileDrift and detectRootDrift stay because the profiles route and the push path call them. Deleting the dispatch route left one clause of the unattended-spend suite reading a file that no longer exists; the list lost the entry, with the reason written beside it. Deleting the loader left the helper suite's fourth section testing nothing and the dashboard suite mocking a module that was not there; both were cut to what remains.",
+  "the_tools_page_and_a_fresh_function": "The Tools page read /api/agent/profiles raw for one field, syncStatus, while already holding the profiles through useProfiles for another. The row type gained the field and the raw read went. Its reload effect then depended on a callback that closed over the hook's refetch, and thirteen suites mock that hook with a fresh function on every render, so the effect re-ran on every render and the chips never settled. react-query's own refetch is stable, but an effect that re-runs on a callback's identity is fragile from either side; the page reads the latest refetch through a ref and the effect depends on the toolsets loader alone.",
+  "the_idle_ceiling_is_arithmetic": "The plan's target for the idle poll was twelve. The board polls the monitor every ten seconds, three endpoints every fifteen, stats every twenty, spend every thirty and the session trend every sixty: eleven to thirteen in a thirty-second window, and each timer's phase against the window adds one or two. The walk read fourteen; the ceiling is fifteen, with the arithmetic in the spec. A headless probe also read zero once, because react-query pauses its intervals while the page is not focused, which is why the count belongs in a Playwright test, where the page is.",
+  "mutation": "Thirteen mutants against the committed tree (0d7ae16a), each aimed at one decision: the key derived from the endpoint, a failed response as an error, a POST read's body, a migration recorded once and a version the table refuses and a row that names the wrong file, Collapse closed and Stagger's class, the monitor's settled flag and its own message, knip's entry list, the memory card copying before it has an answer, the picker listing while closed. Eleven killed at once. One did not apply, its anchor two spaces wide of the line, re-anchored and killed. One survived, the picker with its enabled guard dropped, because no test rendered the picker closed; the oracle gained one (7642cbda) and the mutant was re-run and killed. Thirteen of thirteen. The requests gate and the reachability walk are their own oracles and were not swept.",
+  "deviation": "(1) knip.json loses the tests glob as the plan said, but that is housekeeping, not the gate; the gate is the reachability walk, because knip's Jest plugin makes the glob redundant and knip cannot ask the question (see knip_cannot_ask_this). (2) The plan's load target was ~13; the board shows seventeen distinct facts and asks for each once, so seventeen is the number and the gate holds no-duplicate and a ceiling of eighteen rather than a figure the board cannot meet without saying less. (3) The idle ceiling is fifteen by arithmetic, not the plan's twelve. (4) The refined lint rule holds a read lexically inside a useEffect; on-demand reads in click handlers (a file viewed, a skill opened, a script's content) remain raw and are not this defect.",
+  "deferred": "The 139 exports used only by tests that knip reports with its Jest plugin off, a question for the test corpus rather than this batch; the imperative on-demand reads in click handlers, which a later batch may move onto the hook with `enabled`; the chat failure toast and the toast's placement (from T-0128); the Disclosure/Chip/Slider primitives; the Composer/Research/Logs/Chat split-pane; the Artifacts preview pane; the ps-viz-axis strokes and /results/insights CLS."
+}

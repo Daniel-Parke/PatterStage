@@ -8,14 +8,10 @@
 
 "use client";
 
-import { ChevronDown, Zap } from "lucide-react";
-import GlowSurface from "@/components/ui/GlowSurface";
+import Card from "@/components/ui/Card";
+import ModelSelectDropdown from "@/components/models/ModelSelectDropdown";
 
-import {
-  AUXILIARY_TASK_TYPES,
-  TASK_TYPES,
-  type TaskType,
-} from "@/lib/hermes-providers";
+import { TASK_TYPES, type TaskType } from "@/lib/models/task-types";
 
 export interface DefaultsModelOption {
   id: string;
@@ -28,7 +24,6 @@ export interface DefaultsGridProps {
   defaults: Record<TaskType, string | null>;
   models: DefaultsModelOption[];
   onChange: (taskType: TaskType, modelId: string | null) => void | Promise<void>;
-  onSetAllAux?: (taskTypes: TaskType[], targetModelId: string) => void | Promise<void>;
   busyTaskType?: TaskType | null;
 }
 
@@ -92,7 +87,6 @@ export default function DefaultsGrid({
   defaults,
   models,
   onChange,
-  onSetAllAux,
   busyTaskType = null,
 }: DefaultsGridProps) {
 
@@ -102,82 +96,57 @@ export default function DefaultsGrid({
         const meta = SLOT_META[slot];
         const selected = defaults[slot];
         const isBusy = busyTaskType === slot;
-        const isAux = slot !== "agent";
         const modelForSlot = selected ? models.find((m) => m.id === selected) : null;
 
         return (
-          <GlowSurface
-            key={slot}
-            data-task-slot={slot}
-            accent={slot === "agent" ? "orange" : modelForSlot ? "purple" : undefined}
-            className="rounded-xl border border-white/10 bg-dark-900/50 p-4 space-y-2 min-h-[120px] relative overflow-hidden"
+          // The slot's name is on a wrapper, not the card: Card carries an id
+          // and a test id and nothing else, and `data-task-slot` is what the
+          // page suite and the e2e specs find a slot by.
+          <div key={slot} data-task-slot={slot}>
+          <Card
+            glow={slot === "agent" ? "orange" : modelForSlot ? "purple" : undefined}
+            className="relative h-full min-h-[120px] space-y-2 overflow-hidden"
           >
             {/* Left accent bar — matches the glow accent */}
             {slot === "agent" && (
-              <div className="absolute left-0 top-0 bottom-0 w-0.5 rounded-l-xl bg-neon-orange" />
+              <div className="absolute left-0 top-0 bottom-0 w-0.5 rounded-l-ps-lg bg-neon-orange" />
             )}
             {slot !== "agent" && modelForSlot && (
-              <div className="absolute left-0 top-0 bottom-0 w-0.5 rounded-l-xl bg-neon-purple" />
+              <div className="absolute left-0 top-0 bottom-0 w-0.5 rounded-l-ps-lg bg-neon-purple" />
             )}
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0 flex-1">
-                <div className="text-sm font-semibold text-white flex items-center gap-2">
+                {/* Per-slot "set all aux" shortcut removed — the section-level
+                    Bulk auxiliary updater is the single control for that. */}
+                <div className="text-body font-semibold text-ps-text-primary flex items-center gap-2">
                   {meta.label}
-                  {isAux && onSetAllAux && modelForSlot && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (!onSetAllAux || !selected) return;
-                        // Apply to all OTHER auxiliary slots — the current
-                        // slot already has this value, so we skip it to
-                        // avoid an extra (no-op) PUT + Hermes write-through.
-                        // AUXILIARY_TASK_TYPES is the canonical 11-slot list;
-                        // we exclude the current one inline.
-                        const others = AUXILIARY_TASK_TYPES.filter((t) => t !== slot);
-                        if (others.length > 0) {
-                          void onSetAllAux(others, selected);
-                        }
-                      }}
-                      disabled={isBusy}
-                      className="p-0.5 rounded text-neon-purple/40 hover:text-neon-purple hover:bg-neon-purple/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                      title={`Set all auxiliary slots to ${modelForSlot.name}`}
-                    >
-                      <Zap className="w-3 h-3" />
-                    </button>
-                  )}
                 </div>
-                <p className="text-xs text-white/30 font-mono mt-0.5 truncate">
+                {/* Two lines, not `truncate`: eight of these lost 97-256px of
+                    their own sentence to the ellipsis (T-0125). */}
+                <p className="text-micro text-ps-text-muted font-mono mt-0.5 line-clamp-2">
                   {meta.description}
                 </p>
               </div>
-              <span className="text-[10px] font-mono text-white/30 bg-white/5 px-1.5 py-0.5 rounded uppercase tracking-widest flex-shrink-0">
+              <span className="text-micro font-mono text-ps-text-muted bg-ps-surface-raised px-1.5 py-0.5 rounded-ps-sm uppercase tracking-widest flex-shrink-0">
                 {slot}
               </span>
             </div>
 
             <div className="relative">
-              <select
-                aria-label={`Default model for ${meta.label}`}
+              <ModelSelectDropdown
+                ariaLabel={`Default model for ${meta.label}`}
                 value={selected ?? ""}
                 disabled={isBusy}
-                onChange={(e) => {
-                  const value = e.target.value;
+                tone="card"
+                placeholder="— none —"
+                options={models}
+                onChange={(value) => {
                   void onChange(slot, value === "" ? null : value);
                 }}
-                className="w-full h-9 min-h-9 bg-dark-900/50 border border-white/10 rounded-lg px-3 pr-8 text-sm text-white outline-none transition-colors font-mono appearance-none cursor-pointer focus:border-neon-purple/50 disabled:opacity-50 truncate"
-              >
-                <option value="" className="bg-dark-900">
-                  — none —
-                </option>
-                {models.map((m) => (
-                  <option key={m.id} value={m.id} className="bg-dark-900">
-                    {m.name} ({m.provider}/{m.modelId})
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 pointer-events-none" />
+              />
             </div>
-          </GlowSurface>
+          </Card>
+          </div>
         );
       })}
     </div>

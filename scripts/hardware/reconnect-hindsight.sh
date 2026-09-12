@@ -6,7 +6,7 @@
 # Run this after a deploy update that may have stripped the
 # Hindsight memory configuration from ~/.hermes/config.yaml.
 # It re-wires the memory: and plugins:hindsight: sections and
-# syncs the result to the Control Hub SQLite database so
+# syncs the result to the PatterStage SQLite database so
 # subsequent pushes preserve it.
 #
 # Usage:
@@ -18,7 +18,7 @@
 set -e
 
 HERMES_HOME="${HERMES_HOME:-$HOME/.hermes}"
-CH_DATA_DIR="${CH_DATA_DIR:-$HOME/control-hub/data}"
+PS_DATA_DIR="${PS_DATA_DIR:-${CH_DATA_DIR:-${CONTROL_HUB_DATA_DIR:-$( [ ! -d "$HOME/patterstage/data" ] && [ -d "$HOME/control-hub/data" ] && echo "$HOME/control-hub/data" || echo "$HOME/patterstage/data" )}}}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
@@ -87,16 +87,16 @@ print('ok')
     fi
 fi
 
-# ── Sync to Control Hub SQLite ────────────────────────────
-CH_DB="$CH_DATA_DIR/control-hub.db"
-if [ -f "$CH_DB" ]; then
-    info "Syncing to Control Hub SQLite..."
+# ── Sync to PatterStage SQLite ────────────────────────────
+# Prefer the canonical patterstage.db; fall back to a legacy control-hub.db — mirrors getDbPath() in src/lib/paths.ts.
+PS_DB="$( [ ! -f "$PS_DATA_DIR/patterstage.db" ] && [ -f "$PS_DATA_DIR/control-hub.db" ] && echo "$PS_DATA_DIR/control-hub.db" || echo "$PS_DATA_DIR/patterstage.db" )"
+if [ -f "$PS_DB" ]; then
+    info "Syncing to PatterStage SQLite..."
     if command -v python3 &>/dev/null; then
-        python3 -c "
+        PS_DB="$PS_DB" python3 -c "
 import os, sqlite3
-ch_dir = os.environ.get('CH_DATA_DIR', os.path.expanduser('~/control-hub/data'))
 hermes_home = os.environ.get('HERMES_HOME', os.path.expanduser('~/.hermes'))
-db_path = os.path.join(ch_dir, 'control-hub.db')
+db_path = os.environ['PS_DB']
 config_path = os.path.join(hermes_home, 'config.yaml')
 if os.path.exists(db_path) and os.path.exists(config_path):
     with open(config_path) as f:
@@ -111,7 +111,7 @@ if os.path.exists(db_path) and os.path.exists(config_path):
         warn "python3 not found — SQLite sync skipped"
     fi
 else
-    info "Control Hub database not found at $CH_DB — SQLite sync skipped"
+    info "PatterStage database not found at $PS_DB — SQLite sync skipped"
     echo "  SQLite sync will happen on the next deploy update."
 fi
 

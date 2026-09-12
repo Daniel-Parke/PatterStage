@@ -1,840 +1,422 @@
 // ═══════════════════════════════════════════════════════════════
-
-// Sidebar Navigation — Config Settings with categorized groups
-
+// Sidebar Navigation — the rail, rendered ONCE
+//
+// One <aside>. On a desktop it is the rail beside the page; on a phone it is
+// the drawer that slides over the page, a dialog on the shared contract while
+// open and inert while closed. It used to be rendered twice (a hidden desktop
+// copy and a hidden mobile copy), which is why the icon-button gate once
+// counted the rail's links twice and why a tab order on a phone began with
+// thirty invisible links (T-0096, D120; T-0097).
+//
+// The sections come from the registry through sidebar-config (five, in a
+// fixed order; Home has no heading); the config tree and the deploy buttons
+// are not here any more (decision 12): Settings is one entry, System holds
+// the deploy block, and the footer is a version line with an update badge.
+// The collapsed state is the operator's preference, kept in /api/prefs.
+//
+// Two small parts of the rail live here with it (C6): the quest count that
+// hangs on the Quests row, and the phone's header bar, whose one job is to
+// open this drawer.
 // ═══════════════════════════════════════════════════════════════
 
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
-
+import { useState, useCallback } from "react";
 import Link from "next/link";
-
 import { usePathname } from "next/navigation";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { ChevronRight, ChevronLeft, Menu, Terminal } from "lucide-react";
 
 import { useSidebar } from "./SidebarContext";
-
-import {
-  ChevronRight,
-  ChevronLeft,
-  ChevronDown,
-  X,
-  Terminal,
-  Settings,
-  RefreshCw,
-  AlertTriangle,
-  Check,
-  Hammer,
-  Power,
-} from "lucide-react";
-
-import { iconColorMap } from "@/lib/theme";
-import {
-  mainSections,
-  configSettingsPinnedLinks,
-  configGroups,
-} from "./sidebar-config";
-
-import type { SidebarLink, ConfigGroup } from "./sidebar-config";
-
-import { sanitizeGitBranch } from "@/lib/git-branch";
+import { useDialogA11y } from "@/hooks/useDialogA11y";
+import { TABLET_QUERY, useIsMobile } from "@/hooks/useIsMobile";
+import { apiQueryKey } from "@/hooks/useApiResource";
+import { useStats } from "@/hooks/useStats";
+import { iconColorMap, railAccentBarMap } from "@/lib/ui/theme";
+import { safeApiCall } from "@/lib/api/api-fetch";
+import { useFeatureFlags } from "@/hooks/useFeatureFlags";
+import IconButton from "@/components/ui/IconButton";
+import { mainSections } from "./sidebar-config";
+import type { SidebarLink } from "./sidebar-config";
+import { RailFooter } from "./RailFooter";
 
 function isActive(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";
-
-  return pathname.startsWith(href);
+  return pathname === href || pathname.startsWith(href + "/");
 }
 
-// ── Branch Dropdown ─────────────────────────────────────────────
-// Inline dropdown anchored above the footer buttons, not a modal overlay.
+// ── QuestBadge ──────────────────────────────────────────────────
+// How many quests are left, in the rail. It reads the same deduped stats
+// poll every quest surface reads, renders nothing while stats are unread and
+// nothing once every quest is done (32/32 forever is a nag).
+//
+// Collapsed, it is a DOT rather than "n/N": the 64px rail's footer stacks its
+// links vertically and mono text there would widen or wrap the row; the rail
+// must fit 1280x720 without scrolling (tests/e2e/rail-no-scroll.spec.ts).
+// Decorative, deliberately: the link's own aria-label ("Quests") is the name
+// D119 pins, a second name inside it would be ignored, and a live region would
+// re-announce a count every poll. The count is said in full on the page and in a title.
+function QuestBadge({ collapsed = false }: { collapsed?: boolean }) {
+  const { stats } = useStats();
+  const quests = stats?.quests;
 
-function BranchDropdown({
-  branches,
-  defaultBranch,
-  onConfirm,
-  onCancel,
-  loading,
-}: {
-  branches: string[];
-  defaultBranch: string;
-  onConfirm: (branch: string) => void;
-  onCancel: () => void;
-  loading?: boolean;
-}) {
-  const [selected, setSelected] = useState(defaultBranch);
-  const [customBranch, setCustomBranch] = useState("");
+  // Unread, empty, or finished: say nothing at all.
+  if (!quests || quests.total <= 0 || quests.completed >= quests.total) return null;
 
-  // Close on outside click
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        onCancel();
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [onCancel]);
+  const label = `${quests.completed} of ${quests.total} quests complete`;
+
+  if (collapsed) {
+    return (
+      <span
+        data-testid="quest-badge"
+        aria-hidden="true"
+        title={label}
+        className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-neon-orange"
+      />
+    );
+  }
 
   return (
-    <div
-      ref={ref}
-      className="absolute bottom-full left-0 right-0 mb-1 rounded-lg border border-white/10 bg-dark-950 shadow-xl overflow-hidden z-50"
+    <span
+      data-testid="quest-badge"
+      aria-hidden="true"
+      title={label}
+      className="flex-shrink-0 font-mono text-micro text-neon-orange"
     >
-      {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-white/10">
-        <span className="text-xs font-mono text-white/50">Branch</span>
-        <button
-          onClick={onCancel}
-          className="p-0.5 rounded text-white/30 hover:text-white/60 transition-colors"
-        >
-          <X className="w-3.5 h-3.5" />
-        </button>
-      </div>
-
-      {/* Body */}
-      <div className="p-2">
-        <select
-          value={selected}
-          onChange={(e) => setSelected(e.target.value)}
-          className="w-full px-2 py-1.5 rounded-md bg-dark-900 border border-white/10 text-white text-xs focus:outline-none focus:border-neon-cyan/50"
-        >
-          {branches.map((b) => (
-            <option key={b} value={b}>
-              {b}
-            </option>
-          ))}
-        </select>
-        <label className="block mt-2 text-[10px] font-mono text-white/40 uppercase tracking-wide">
-          Other branch
-        </label>
-        <input
-          type="text"
-          value={customBranch}
-          onChange={(e) => setCustomBranch(e.target.value)}
-          placeholder="e.g. feature/my-branch"
-          className="w-full mt-0.5 px-2 py-1.5 rounded-md bg-dark-900 border border-white/10 text-white text-xs placeholder:text-white/25 focus:outline-none focus:border-neon-cyan/50"
-        />
-      </div>
-
-      {/* Footer */}
-      <div className="flex items-center justify-end gap-2 px-2 pb-2">
-        <button
-          onClick={onCancel}
-          disabled={loading}
-          className="px-3 py-1 rounded text-xs text-white/40 hover:text-white/70 transition-colors disabled:opacity-50"
-        >
-          Cancel
-        </button>
-        <button
-          onClick={() =>
-            onConfirm(
-              customBranch.trim()
-                ? sanitizeGitBranch(customBranch)
-                : selected,
-            )
-          }
-          disabled={loading || (!customBranch.trim() && !selected)}
-          className="px-3 py-1 rounded text-xs font-medium bg-neon-cyan text-dark-900 hover:brightness-110 transition disabled:opacity-50"
-        >
-          {loading ? "..." : "Confirm"}
-        </button>
-      </div>
-    </div>
+      {quests.completed}/{quests.total}
+    </span>
   );
 }
 
-// ── Version Check & Update ─────────────────────────────────────
+// ── MobileHeader ────────────────────────────────────────────────
+// Compact mobile chrome (3rem): the drawer's entrypoint, intentionally
+// shorter than desktop `--ps-shell-header-min-height` (5rem). Below md only:
+// from 768 the rail is on the screen as the icon column and there is nothing
+// for a hamburger to open (T-0128). Rendered by the root layout beside the
+// rail; a client component, which is why it lives here and not there.
+export function MobileHeader() {
+  const { toggleMobile } = useSidebar();
 
-interface VersionInfo {
-  localHash: string;
-  remoteHash: string;
-  updateAvailable: boolean;
-  commitMessage: string;
-  behind: number;
-  branch: string;
-  /** Remote ref used for compare (when present). */
-  comparedBranch?: string;
-  checkoutBranch?: string;
-  lastChecked: string;
-}
-
-function VersionFooter({ collapsed }: { collapsed: boolean }) {
-  const [version, setVersion] = useState<VersionInfo | null>(null);
-  const [checkState, setCheckState] = useState<
-    "idle" | "checking" | "up-to-date" | "update-available"
-  >("idle");
-  const [updating, setUpdating] = useState(false);
-  const [restarting, setRestarting] = useState(false);
-  const [rebuilding, setRebuilding] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
-  // Synchronous busy guard — ref, not state, so it updates immediately on click
-  const busyRef = useRef(false);
-
-  // Dropdown state (Check for updates only)
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [branches, setBranches] = useState<string[]>(["main", "dev"]);
-  const [selectedBranch, setSelectedBranch] = useState("main");
-  /** Branch last used for GET /api/update?branch=… — POST update uses the same branch. */
-  const [deployBranch, setDeployBranch] = useState<string | null>(null);
-
-  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const isMountedRef = useRef(true);
-
-  useEffect(() => {
-    isMountedRef.current = true;
-    return () => {
-      isMountedRef.current = false;
-      if (pollIntervalRef.current !== null) {
-        clearInterval(pollIntervalRef.current);
-        pollIntervalRef.current = null;
-      }
-    };
-  }, []);
-
-  const openCheckDropdown = async () => {
-    setDropdownOpen(true);
-    const pickBranch = (list: string[], apiDefault: unknown): string => {
-      const def =
-        typeof apiDefault === "string" ? sanitizeGitBranch(apiDefault) : "";
-      if (def && list.includes(def)) return def;
-      return list[0] ?? "dev";
-    };
-    try {
-      const res = await fetch("/api/update?branches=1");
-      const d = await res.json();
-      const list: string[] =
-        d.data?.branches?.length > 0 ? d.data.branches : ["main", "dev"];
-      setBranches(list);
-      setSelectedBranch(pickBranch(list, d.data?.default));
-    } catch {
-      const fallback = ["main", "dev"];
-      setBranches(fallback);
-      setSelectedBranch(pickBranch(fallback, undefined));
-    }
-  };
-
-  const handleDropdownConfirm = async (branch: string) => {
-    setDropdownOpen(false);
-    await doCheck(branch);
-  };
-
-  // Check version against a specific branch
-  const doCheck = async (branch: string) => {
-    setCheckState("checking");
-    setMessage(null);
-    try {
-      const res = await fetch(`/api/update?branch=${encodeURIComponent(branch)}`);
-      const d = await res.json();
-      if (d.data) {
-        setVersion(d.data);
-        setDeployBranch(branch);
-        setCheckState(d.data.updateAvailable ? "update-available" : "up-to-date");
-      } else {
-        setCheckState("idle");
-        setMessage("Check failed");
-      }
-    } catch {
-      setCheckState("idle");
-      setMessage("Check failed");
-    }
-  };
-
-  const handleUpdate = async () => {
-    if (updating || !version?.updateAvailable) return;
-    setUpdating(true);
-    setMessage("Update started — deploying in background...");
-    try {
-      const res = await fetch("/api/update", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "update",
-          ...(deployBranch ? { branch: deployBranch } : {}),
-        }),
-      });
-      if (!res.ok) {
-        let msg = "Update failed";
-        try {
-          const body = await res.json();
-          if (body?.error) msg = body.error;
-        } catch { /* ignore */ }
-        throw new Error(msg);
-      }
-      const d = await res.json();
-      if (d.error) {
-        setMessage(d.error);
-        setUpdating(false);
-        return;
-      }
-      setMessage("Update running…");
-      pollDeployStatus("update");
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Update failed";
-      setMessage(msg);
-      setUpdating(false);
-    }
-  };
-
-  const handleRestart = async () => {
-    if (busyRef.current) return;
-    busyRef.current = true;
-    setRestarting(true);
-    setMessage("Restart requested (~/.hermes/logs/ch-restart.log)…");
-    try {
-      const res = await fetch("/api/update", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "restart" }),
-      });
-      if (!res.ok) {
-        let msg = "Restart failed";
-        try {
-          const body = await res.json();
-          if (body?.error) msg = body.error;
-        } catch { /* ignore */ }
-        throw new Error(msg);
-      }
-      setMessage("Restarting server…");
-      pollDeployStatus("restart");
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Restart failed";
-      setMessage(msg);
-      setRestarting(false);
-      busyRef.current = false;
-    }
-  };
-
-  const doRebuild = async () => {
-    if (busyRef.current) return;
-    busyRef.current = true;
-    setRebuilding(true);
-    setMessage("Rebuild started…");
-    try {
-      const res = await fetch("/api/update", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "rebuild" }),
-      });
-      if (!res.ok) {
-        let msg = "Rebuild failed";
-        try {
-          const body = await res.json();
-          if (body?.error) msg = body.error;
-        } catch { /* ignore */ }
-        throw new Error(msg);
-      }
-      pollDeployStatus("rebuild");
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Rebuild failed";
-      setMessage(msg);
-      setRebuilding(false);
-      busyRef.current = false;
-    }
-  };
-
-  const clearDeployBusy = () => {
-    setUpdating(false);
-    setRestarting(false);
-    setRebuilding(false);
-    busyRef.current = false;
-  };
-
-  const pollDeployStatus = (expectedAction: "rebuild" | "restart" | "update") => {
-    if (pollIntervalRef.current !== null) {
-      clearInterval(pollIntervalRef.current);
-      pollIntervalRef.current = null;
-    }
-    let attempts = 0;
-    const maxAttempts = 450;
-    const interval = setInterval(async () => {
-      attempts++;
-      try {
-        const res = await fetch("/api/update?deploy=1", {
-          signal: AbortSignal.timeout(8000),
-        });
-        if (!res.ok) return;
-        const d = await res.json();
-        const deploy = d.data?.deploy as {
-          state?: string;
-          action?: string;
-          phase?: string;
-          message?: string;
-          logHint?: string;
-        } | undefined;
-        if (!deploy || !isMountedRef.current) return;
-
-        if (deploy.state === "running") {
-          const phaseLabel =
-            deploy.phase === "build"
-              ? "Building…"
-              : deploy.phase === "install"
-                ? "Installing dependencies…"
-                : deploy.phase === "restart"
-                  ? "Restarting server…"
-                  : deploy.phase === "git"
-                    ? "Updating code…"
-                    : deploy.message || "Working…";
-          setMessage(phaseLabel);
-          return;
-        }
-
-        if (deploy.state === "success") {
-          clearInterval(interval);
-          pollIntervalRef.current = null;
-          clearDeployBusy();
-          const label =
-            expectedAction === "rebuild"
-              ? "Rebuild complete"
-              : expectedAction === "restart"
-                ? "Restart complete"
-                : "Update complete";
-          setMessage(label);
-          setTimeout(() => {
-            if (isMountedRef.current) setMessage(null);
-          }, 4000);
-          return;
-        }
-
-        if (deploy.state === "failed") {
-          clearInterval(interval);
-          pollIntervalRef.current = null;
-          clearDeployBusy();
-          const hint = deploy.logHint ? ` — see Logs → ${deploy.logHint}` : "";
-          setMessage((deploy.message || "Deploy failed") + hint);
-        }
-      } catch {
-        if (attempts >= maxAttempts) {
-          clearInterval(interval);
-          pollIntervalRef.current = null;
-          if (!isMountedRef.current) return;
-          clearDeployBusy();
-          setMessage("Timed out — check ch-restart.log in Logs");
-        }
-      }
-    }, 2000);
-    pollIntervalRef.current = interval;
-  };
-
-  const isBusy = updating || restarting || rebuilding;
-
-  // ── Collapsed view ───────────────────────────────────────────
-  if (collapsed) {
-    return (
-      <>
-        <div className="flex flex-col items-center gap-2 relative">
-          {/* Branch dropdown for collapsed view */}
-          {dropdownOpen && (
-            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 w-44 z-50">
-              <BranchDropdown
-                branches={branches}
-                defaultBranch={selectedBranch}
-                onConfirm={handleDropdownConfirm}
-                onCancel={() => setDropdownOpen(false)}
-                loading={checkState === "checking" || rebuilding}
-              />
-            </div>
-          )}
-
-          {/* Check transforms to orange alert when update available */}
-          {checkState === "update-available" ? (
-            <button
-              onClick={handleUpdate}
-              disabled={isBusy}
-              className="p-1.5 rounded-lg bg-orange-500/10 text-neon-orange hover:bg-orange-500/20 transition-colors"
-              title={`Update available — ${version?.behind} behind`}
-            >
-              <AlertTriangle className="w-3.5 h-3.5" />
-            </button>
-          ) : (
-            <button
-              onClick={() => openCheckDropdown()}
-              disabled={checkState === "checking" || isBusy}
-              className="p-1.5 rounded-lg text-white/30 hover:text-white/60 hover:bg-white/5 transition-colors"
-              title={checkState === "checking" ? "Checking..." : "Check for Update"}
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${checkState === "checking" ? "animate-spin" : ""}`} />
-            </button>
-          )}
-
-          {/* Rebuild */}
-          <button
-            onClick={() => doRebuild()}
-            disabled={isBusy}
-            className="p-1.5 rounded-lg text-white/30 hover:text-white/60 hover:bg-white/5 transition-colors"
-            title={message || "Rebuild App"}
-          >
-            <Hammer className={`w-3.5 h-3.5 flex-shrink-0 ${rebuilding ? "animate-spin" : ""}`} />
-          </button>
-
-          {/* Restart */}
-          <button
-            onClick={handleRestart}
-            disabled={isBusy}
-            className="p-1.5 rounded-lg text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-            title={message || "Restart App"}
-          >
-            <Power className={`w-3.5 h-3.5 flex-shrink-0 ${restarting ? "animate-spin" : ""}`} />
-          </button>
-        </div>
-      </>
-    );
-  }
-
-  // ── Expanded view ────────────────────────────────────────────
-  // Row 1: Check button (full-width)
-  // Row 2: Rebuild | Restart side-by-side
-  // Dropdown appears above row 1 when open
-
-  const renderCheckButton = () => {
-    if (checkState === "idle") {
-      return (
-        <button
-          onClick={() => openCheckDropdown()}
-          disabled={isBusy}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-blue-500/10 border border-blue-500/20 text-xs font-mono text-blue-400 hover:bg-blue-500/20 transition-colors disabled:opacity-50"
-        >
-          <RefreshCw className="w-3.5 h-3.5 flex-shrink-0" />
-          Check for Updates
-        </button>
-      );
-    }
-    if (checkState === "checking") {
-      return (
-        <button disabled className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-blue-500/10 border border-blue-500/20 text-xs font-mono text-blue-400 opacity-70">
-          <RefreshCw className="w-3.5 h-3.5 flex-shrink-0 animate-spin" />
-          Checking...
-        </button>
-      );
-    }
-    if (checkState === "up-to-date") {
-      return (
-        <button disabled className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-green-500/10 border border-green-500/20 text-xs font-mono text-green-400 cursor-default">
-          <Check className="w-3.5 h-3.5 flex-shrink-0" />
-          Up to Date
-        </button>
-      );
-    }
-    return (
-      <button
-        onClick={handleUpdate}
-        disabled={isBusy}
-        className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-orange-500/10 border border-orange-500/20 text-xs font-mono text-neon-orange hover:bg-orange-500/20 transition-colors disabled:opacity-50"
-      >
-        <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
-        Update Available!
-      </button>
-    );
-  };
-
+  // Opaque, and no backdrop blur, for the reason the rail gives below: at
+  // 95% the bar was a translucent surface paying a compositing layer on every
+  // scroll to blur the 5% of the page it let through.
   return (
-    <div className="relative">
-      {/* Branch dropdown — anchored above the button row */}
-      {dropdownOpen && (
-        <div className="absolute bottom-full left-0 right-0 mb-1.5 z-50">
-          <BranchDropdown
-            branches={branches}
-            defaultBranch={selectedBranch}
-            onConfirm={handleDropdownConfirm}
-            onCancel={() => setDropdownOpen(false)}
-            loading={checkState === "checking" || rebuilding}
-          />
-        </div>
-      )}
-
-      {/* Button rows — all content lives here so the status message never pushes layout */}
-      <div className="space-y-1.5">
-        {/* Status message — visible inline when operation is in progress */}
-        {message && (
-          <div className="min-h-[1.25rem] px-1 text-[10px] font-mono text-white/50 text-center leading-tight">
-            {message}
-          </div>
-        )}
-        {/* Check — full width on its own row */}
-        {renderCheckButton()}
-
-        {/* Rebuild + Restart — side by side */}
-        <div className="flex gap-1.5">
-          <button
-            type="button"
-            title="npm run build + restart (current checkout)"
-            onClick={() => doRebuild()}
-            disabled={isBusy}
-            className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-mono transition-colors disabled:opacity-50 ${
-              rebuilding
-                ? "bg-neon-purple/20 border border-neon-purple/30 text-neon-purple/90"
-                : "bg-neon-purple/10 border border-neon-purple/20 text-neon-purple hover:bg-neon-purple/20"
-            }`}
-          >
-            <Hammer className={`w-3.5 h-3.5 flex-shrink-0 ${rebuilding ? "animate-spin" : ""}`} />
-            Rebuild
-          </button>
-
-          <button
-            type="button"
-            title="Restart next-server only (no build)"
-            onClick={handleRestart}
-            disabled={isBusy}
-            className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-mono transition-colors disabled:opacity-50 ${
-              restarting
-                ? "bg-red-500/20 border border-red-500/30 text-red-300"
-                : "bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20"
-            }`}
-          >
-            <Power className={`w-3.5 h-3.5 flex-shrink-0 ${restarting ? "animate-spin" : ""}`} />
-            Restart
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ConfigGroupSection({
-  group,
-
-  collapsed,
-
-  renderLink,
-
-  pathname,
-}: {
-  group: ConfigGroup;
-
-  collapsed: boolean;
-
-  renderLink: (link: SidebarLink) => React.ReactNode;
-
-  pathname: string;
-}) {
-  const [open, setOpen] = useState(() => {
-    // Lazy init: auto-expand if any link in this group is active
-    return (
-      group.defaultOpen ??
-      group.links.some(
-        (link) =>
-          pathname === link.href ||
-          (link.href !== "/" && pathname.startsWith(link.href)),
-      )
-    );
-  });
-
-  if (collapsed) {
-    return <>{group.links.map((link) => renderLink(link))}</>;
-  }
-
-  return (
-    <div>
-      <button
-        onClick={() => setOpen(!open)}
-        className="flex items-center gap-1 w-full text-[10px] font-mono text-white/30 uppercase tracking-widest px-3 mb-1 mt-3 first:mt-0 hover:text-white/50 transition-colors"
+    <div className="md:hidden sticky top-0 z-sticky flex items-center min-h-[var(--ps-mobile-header-min-height)] px-3 bg-ps-surface-ground border-b border-ps-edge-hairline flex-shrink-0 gap-3">
+      {/* 44px square whatever the size ladder says: a thumb target on a phone. */}
+      <IconButton
+        icon={Menu}
+        label="Open navigation"
+        size="lg"
+        onClick={toggleMobile}
+        className="min-w-[44px] min-h-[44px] text-ps-text-secondary"
+      />
+      {/* One mark, one name. This said "PT / Hermes": an abbreviation of the
+          product beside the name of its dependency, so on a phone the product
+          appeared to be called something else than it does on a desktop. */}
+      {/* Named, because the words are gone: the compact lockup is the mark
+          alone, and an icon-only link with no name is what D119 refuses. Same
+          name the rail's own home link carries. */}
+      <Link
+        href="/"
+        aria-label="PatterStage home"
+        className="flex items-center gap-2 min-w-0 hover:opacity-80 transition-opacity"
       >
-        <ChevronDown
-          className={`w-3 h-3 transition-transform ${open ? "" : "-rotate-90"}`}
-        />
-
-        {group.label}
-      </button>
-
-      {open && (
-        <div className="space-y-0.5">
-          {group.links.map((link) => renderLink(link))}
-        </div>
-      )}
+        <BrandMark size="bar" />
+      </Link>
     </div>
   );
 }
 
-export default function Sidebar() {
+/**
+ * `initialCollapsed` comes from the server (see src/app/layout.tsx). The rail
+ * used to read the preference on the client, so on every hard load it painted
+ * itself 224px wide and then snapped to 64px once the fetch answered: a visible
+ * jump on a surface the operator is looking at while the page arrives.
+ */
+export default function Sidebar({ initialCollapsed = false }: { initialCollapsed?: boolean }) {
   const pathname = usePathname();
-
-  const [collapsed, setCollapsed] = useState(false);
-
+  const [collapsed, setCollapsed] = useState(initialCollapsed);
   const { mobileOpen, setMobileOpen } = useSidebar();
-
+  const isMobile = useIsMobile();
+  const isTablet = useIsMobile(TABLET_QUERY);
+  const { data: flags } = useFeatureFlags();
   const closeMobile = useCallback(() => setMobileOpen(false), [setMobileOpen]);
+
+  // The drawer is a dialog while it is open on a phone, and only then.
+  const drawerOpen = isMobile && mobileOpen;
+  const drawerRef = useDialogA11y({ open: drawerOpen, onClose: closeMobile });
+
+  // The preference arrives with the markup now; only the WRITE is a fetch,
+  // through react-query's mutation so the prefs map every other reader holds
+  // is re-read afterwards. A failed write (read-only, offline) leaves the
+  // rail where the operator put it for this session and the server keeps its
+  // old answer; nothing is said, because the rail is already where they put it.
+  const queryClient = useQueryClient();
+  const { mutate: savePref } = useMutation({
+    mutationFn: async (next: boolean) => {
+      const res = await safeApiCall("/api/prefs", { method: "PUT", body: { key: "sidebar.collapsed", value: next } });
+      if (!res.ok) throw new Error(res.error ?? "Failed to save the preference");
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: apiQueryKey("/api/prefs") });
+    },
+  });
+  const toggleCollapsed = useCallback(() => {
+    const next = !collapsed;
+    setCollapsed(next);
+    savePref(next);
+  }, [collapsed, savePref]);
+
+  // Flags default ON: hide a link only when its flag is explicitly disabled,
+  // so the nav never flashes while flags load (or if the fetch fails).
+  const linkVisible = useCallback(
+    (link: SidebarLink) => !link.featureFlag || flags?.[link.featureFlag] !== false,
+    [flags],
+  );
+
+  // Icons only on a desktop rail the operator collapsed, and on any tablet:
+  // between md and lg there is room for the 64px column beside a page and not
+  // for labels, and until T-0128 that width got the phone's drawer instead.
+  // The drawer itself is always full.
+  const iconsOnly = !isMobile && (collapsed || isTablet);
+
+  // Home's rows other than Dashboard (Quests, Help) render in the footer.
+  const utilityLinks = (mainSections.find((s) => s.label === "Home")?.links ?? []).filter((l) => l.href !== "/");
 
   const renderLink = useCallback(
     (link: SidebarLink) => {
       const active = isActive(pathname, link.href);
-      const showSubs = active && link.subLinks && !collapsed;
+      const bar = railAccentBarMap[link.color];
 
       return (
         <div key={link.href}>
           <Link
             href={link.href}
-            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+            aria-label={link.label}
+            title={iconsOnly ? link.label : undefined}
+            aria-current={active ? "page" : undefined}
+            // `relative`, because the accent bar is anchored to the row's
+            // own left edge. Labels sit on the SECONDARY tier: an inactive row
+            // that is already the quietest thing on the rail leaves the active
+            // one nowhere to go, which is how 63 elements came to share one
+            // tone. Collapsed, the row is a 40px square rather than 39x22:
+            // under 24x24 it failed WCAG 2.5.8, and it was smaller than the
+            // same row expanded, which is backwards for the mode that exists
+            // to be reachable.
+            //
+            // The EXPANDED row was 3px, and is 2px since T-0123. Deleting the
+            // sub-link tier was supposed to pay for a taller row, but that tier
+            // only rendered under the ACTIVE link, so it never cost more than
+            // one route's worth at a time and there was nothing to spend: at
+            // py-1.5 the nav measured 673px against a 572px budget, and at py-1
+            // it measured 597.
+            //
+            // 2px because decision 9 added an Automation destination, and the
+            // rail had 7px of slack. 24px is still the row: a 20px icon and 2px
+            // either side, which is exactly the 24x24 WCAG 2.5.8 asks of a
+            // target, and the collapsed row is a 40px square either way. The
+            // 34px this returns also pays for the heading margin below, which
+            // U7 declared and never rendered.
+            className={`relative flex items-center rounded-ps-md text-body transition-colors ${
+              iconsOnly ? "h-10 w-10 justify-center" : "gap-2.5 px-3 py-[2px]"
+            } ${
               active
-                ? "bg-white/10 text-white"
-                : "text-white/50 hover:bg-white/5 hover:text-white/80"
+                ? "bg-ps-surface-raised text-ps-text-primary"
+                : "text-ps-text-secondary hover:bg-ps-surface-raised hover:text-ps-text-primary"
             }`}
             onClick={closeMobile}
           >
+            {active && (
+              <span
+                aria-hidden
+                className={`absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-ps-sm ${bar}`}
+              />
+            )}
             <link.icon
-              className={`w-4 h-4 flex-shrink-0 ${
-                active ? iconColorMap[link.color] : ""
-              }`}
+              // Quieter than its own label when the row is not the one you are
+              // on: an icon is a landmark, not a second label.
+              className={`w-4 h-4 flex-shrink-0 ${active ? iconColorMap[link.color] : "text-ps-text-muted"}`}
             />
-            {!collapsed && <span>{link.label}</span>}
+            {!iconsOnly && <span>{link.label}</span>}
           </Link>
-          {showSubs && (
-            <div className="ml-7 mt-1 space-y-0.5 border-l border-white/5 pl-3">
-              {link.subLinks!.map((sub) => (
-                <Link
-                  key={sub.href}
-                  href={sub.href}
-                  className={`block py-1 text-xs transition-colors ${
-                    pathname === sub.href
-                      ? "text-white/80"
-                      : "text-white/30 hover:text-white/60"
-                  }`}
-                  onClick={closeMobile}
-                >
-                  {sub.label}
-                </Link>
-              ))}
-            </div>
-          )}
         </div>
       );
     },
-    [pathname, collapsed, closeMobile],
-  );
-
-  const sidebarContent = (
-    <div className="flex flex-col h-full">
-      {/* Logo — min-height matches main app chrome (see --ch-shell-header-min-height) */}
-
-      <div className="px-4 min-h-[var(--ch-shell-header-min-height)] flex items-center border-b border-white/10">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg animated-border p-[1.5px]">
-            <div className="w-full h-full bg-dark-900 rounded-[5px] flex items-center justify-center">
-              <Terminal className="w-4 h-4 text-neon-cyan" />
-            </div>
-          </div>
-
-          {!collapsed && (
-            <div>
-              <div className="text-sm font-bold tracking-tight">
-                <span className="text-neon-cyan">PT</span>
-
-                <span className="text-white/40 mx-0.5">/</span>
-
-                <span className="text-white">Hermes</span>
-              </div>
-            </div>
-          )}
-        </Link>
-      </div>
-
-      {/* Main Nav */}
-
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        {/* Main + Agent sections */}
-
-        {mainSections.map((section) => (
-          <div key={section.label}>
-            {!collapsed && (
-              <div className="text-[10px] font-mono text-white/30 uppercase tracking-widest px-3 mb-2 mt-4 first:mt-0">
-                {section.label}
-              </div>
-            )}
-
-            {section.links
-              .map(renderLink)}
-          </div>
-        ))}
-
-        {/* Config Settings section */}
-
-        {!collapsed && (
-          <div className="text-[10px] font-mono text-white/30 uppercase tracking-widest px-3 mb-2 mt-4">
-            Config Settings
-          </div>
-        )}
-
-        {collapsed && <div className="my-2 border-t border-white/10" />}
-
-        {configSettingsPinnedLinks.map((link) => renderLink(link))}
-
-        {/* All Settings link */}
-
-        {renderLink({
-          icon: Settings,
-
-          label: "All Settings",
-
-          href: "/config",
-
-          color: "purple",
-        })}
-
-        {/* Grouped config sections */}
-
-        {configGroups.map((group) => (
-          <ConfigGroupSection
-            key={group.label}
-            group={group}
-            collapsed={collapsed}
-            renderLink={renderLink}
-            pathname={pathname}
-          />
-        ))}
-      </nav>
-
-      {/* Footer */}
-
-      <div className="px-3 py-3 border-t border-white/10 space-y-2 flex-shrink-0">
-        <VersionFooter collapsed={collapsed} />
-
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="hidden lg:flex items-center gap-2 w-full px-3 py-2 rounded-lg text-xs text-white/30 hover:text-white/60 hover:bg-white/5 transition-colors font-mono"
-        >
-          {collapsed ? (
-            <ChevronRight className="w-4 h-4" />
-          ) : (
-            <>
-              <ChevronLeft className="w-4 h-4" />
-
-              <span>Collapse</span>
-            </>
-          )}
-        </button>
-      </div>
-    </div>
+    [pathname, iconsOnly, closeMobile],
   );
 
   return (
     <>
-      {/* Mobile overlay */}
-
-      {mobileOpen && (
-        <div
-          className="lg:hidden fixed inset-0 bg-black/60 z-40"
-          onClick={() => setMobileOpen(false)}
+      {/* Mobile backdrop: a real control with a name, on the overlay layer,
+          above the sticky header; the drawer itself is on the modal layer. */}
+      {drawerOpen && (
+        <button
+          type="button"
+          aria-label="Close navigation"
+          onClick={closeMobile}
+          className="md:hidden fixed inset-0 bg-black/60 z-overlay cursor-default"
         />
       )}
 
-      {/* Sidebar — desktop */}
-
       <aside
-        className={`hidden lg:flex flex-col bg-dark-900/80 border-r border-white/10 backdrop-blur-xl transition-all duration-200 h-screen ${
-          collapsed ? "w-16" : "w-56"
-        }`}
-      >
-        {sidebarContent}
-      </aside>
-
-      {/* Sidebar — mobile drawer */}
-
-      <aside
-        className={`lg:hidden fixed inset-y-0 left-0 z-50 w-56 bg-dark-950 border-r border-white/10 transform transition-transform h-screen ${
+        ref={drawerRef as React.RefObject<HTMLElement | null>}
+        data-testid="app-rail"
+        role={drawerOpen ? "dialog" : undefined}
+        aria-modal={drawerOpen ? "true" : undefined}
+        aria-label={drawerOpen ? "Navigation" : undefined}
+        tabIndex={drawerOpen ? -1 : undefined}
+        inert={isMobile && !mobileOpen}
+        aria-hidden={isMobile && !mobileOpen ? true : undefined}
+        // One surface and one seam. It used to paint the ground on a phone
+        // and dark-900 at 80% on a desktop, measuring 1.02:1 and 1.10:1
+        // against the page beside it: two answers to the same question, and
+        // neither of them an answer. The panel rung is 1.47:1 and the seam is
+        // 3:1, which is what WCAG 1.4.11 asks of a boundary that identifies a
+        // region. No backdrop blur: there is nothing behind an opaque surface
+        // to blur, and the filter cost a compositing layer on every scroll.
+        // `transition-[width]`, not `transition-all`: the second animated colour
+        // as well, so the active row faded in over 200ms on every navigation
+        // instead of appearing where you clicked.
+        className={`flex flex-col h-screen border-r border-ps-edge transition-[width] duration-200 fixed inset-y-0 left-0 z-modal w-56 bg-ps-surface-panel transform ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+        } md:static md:z-auto md:translate-x-0 ${iconsOnly ? "md:w-16" : "md:w-56"}`}
       >
-        {sidebarContent}
+        {/* Logo — min-height matches main app chrome (see --ps-shell-header-min-height) */}
+        <div className="px-4 min-h-[var(--ps-shell-header-min-height)] flex items-center border-b border-ps-edge-hairline">
+          <Link href="/" aria-label="PatterStage home" className="flex items-center gap-2 min-w-0" onClick={closeMobile}>
+            <BrandMark words={!iconsOnly} />
+          </Link>
+        </div>
+
+        {/* The five sections. Home carries no heading: it is where the rail
+            starts, and its Quests and Help rows sit in the footer below as the
+            plan's utility rows. Every pixel here is budgeted: the rail must
+            fit 720px without scrolling (tests/e2e/rail-no-scroll.spec.ts). */}
+        {/* py-1, not py-2. Decision 9 added an Automation row and the nav
+            measured 590 against a 571 box: the rail had 7px of slack and a
+            row costs 26. Four of those pixels come back here and sixteen from
+            the section headings below, which is the whole of it (T-0123). The
+            headroom is still 7px until U12 takes the Rec Room from five rail
+            entries to two and hands back 78. */}
+        <nav className="flex-1 px-3 py-1 overflow-y-auto" aria-label="Main">
+          {mainSections.map((section) => (
+            <div key={section.label}>
+              {section.label !== "Home" && !iconsOnly && (
+                // A tier of its own, and room above it. A heading set at the
+                // same weight as the rows under it is not a heading.
+                // `mt-2`, with no `first:` variant, and that is a FIX rather
+                // than a tightening. It read `mt-3 first:mt-1`, and every
+                // heading is the first child of its own section div - so
+                // `first:` won every time, all four rendered at 4px, and the
+                // "space above a heading" U7 recorded as delivered never
+                // painted at all. Measured: mt=4px on all four (T-0123).
+                <div className="text-micro leading-4 font-mono text-ps-text-faint uppercase tracking-widest px-3 mb-0.5 mt-2">
+                  {section.label}
+                </div>
+              )}
+              {section.label !== "Home" && iconsOnly && <div className="my-1.5 border-t border-ps-edge-hairline" />}
+              {section.links
+                .filter(linkVisible)
+                .filter((link) => section.label !== "Home" || link.href === "/")
+                .map(renderLink)}
+            </div>
+          ))}
+        </nav>
+
+        {/* Footer: Quests and Help, then Collapse with the version or the update badge.
+            The two utility cells size to their content (flex-auto) rather than
+            splitting the row in half: Quests carries a count beside its label
+            and half a 200px row is not enough for icon, word and "12/32"
+            together, so equal halves would push the row past the rail's width. */}
+        <div className="px-3 py-2 border-t border-ps-edge-hairline space-y-1 flex-shrink-0">
+          <div className={`flex ${iconsOnly ? "flex-col items-center gap-1" : "gap-1"}`}>
+            {utilityLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                aria-label={link.label}
+                title={iconsOnly ? link.label : undefined}
+                aria-current={isActive(pathname, link.href) ? "page" : undefined}
+                onClick={closeMobile}
+                className={`flex items-center justify-center gap-1.5 rounded-ps-md text-micro font-mono transition-colors ${
+                  isActive(pathname, link.href) ? "bg-ps-surface-raised text-ps-text-primary" : "text-ps-text-muted hover:bg-ps-surface-raised hover:text-ps-text-primary"
+                } ${iconsOnly ? "p-1.5" : "flex-auto px-2 py-1"}`}
+              >
+                <link.icon className="w-3.5 h-3.5 flex-shrink-0" />
+                {!iconsOnly && <span>{link.label}</span>}
+                {/* Quests carries how many are left; Help carries nothing.
+                    The badge is null until the stats poll answers, so this
+                    adds no request and the rail never waits. */}
+                {link.href === "/quests" && <QuestBadge collapsed={iconsOnly} />}
+              </Link>
+            ))}
+          </div>
+          <div className={`flex items-center ${iconsOnly ? "flex-col gap-1" : "justify-between gap-2"}`}>
+            <button
+              type="button"
+              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+              aria-expanded={!collapsed}
+              onClick={toggleCollapsed}
+              className="hidden lg:flex items-center gap-1.5 px-2 py-1 rounded-ps-md text-micro text-ps-text-muted hover:text-ps-text-secondary hover:bg-ps-surface-raised transition-colors font-mono"
+            >
+              {collapsed ? (
+                <ChevronRight className="w-4 h-4" />
+              ) : (
+                <>
+                  <ChevronLeft className="w-4 h-4" />
+                  <span>Collapse</span>
+                </>
+              )}
+            </button>
+            <RailFooter collapsed={iconsOnly} />
+          </div>
+        </div>
       </aside>
+    </>
+  );
+}
+
+// ── The product's name, drawn once ──────────────────────────────────────
+// It used to be drawn twice and they disagreed: the rail said "PatterStage /
+// The Stage is Yours" and the mobile header "PT / Hermes", the product's
+// abbreviation beside its dependency's name (T-0121). The words are optional
+// because a collapsed rail has 64px and no room for them; the mark is not.
+
+/**
+ * `rail` is the desktop lockup at the top of the sidebar; `bar` is the compact
+ * one in the mobile header, which is 3rem tall against the rail's 5rem.
+ */
+function BrandMark({
+  size = "rail",
+  words = true,
+}: {
+  size?: "rail" | "bar";
+  words?: boolean;
+}) {
+  const box = size === "rail" ? "w-8 h-8" : "w-7 h-7";
+  return (
+    <>
+      <div className={`${box} rounded-ps-md animated-border p-[1.5px] shrink-0`}>
+        <div className="w-full h-full bg-ps-surface-panel rounded-ps-sm flex items-center justify-center">
+          <Terminal className="w-4 h-4 text-neon-cyan" />
+        </div>
+      </div>
+      {words && (
+        <div className="leading-tight min-w-0">
+          <div className="text-body font-bold tracking-tight text-ps-text-primary truncate">
+            PatterStage
+          </div>
+          {size === "rail" && (
+            <div className="text-micro text-ps-text-muted mt-0.5 truncate">
+              The Stage is{" "}
+              {/* The one call site of .text-glow-cyan in the product. Seven
+                  sibling glow classes had none and were deleted at T-0120;
+                  this one is the product's own name and stays. */}
+              <span className="font-bold text-neon-cyan text-glow-cyan">Yours</span>
+            </div>
+          )}
+        </div>
+      )}
     </>
   );
 }

@@ -16,7 +16,7 @@ import {
   parseCronSessionId,
   type CronJobEntry,
   type TitleInput,
-} from "@/lib/session-title";
+} from "@/lib/sessions/session-title";
 
 function makeInput(overrides: Partial<TitleInput> = {}): TitleInput {
   return {

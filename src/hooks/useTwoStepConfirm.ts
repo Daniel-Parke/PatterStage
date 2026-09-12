@@ -2,39 +2,11 @@
 // useTwoStepConfirm — Two-click confirmation hook
 // ═══════════════════════════════════════════════════════════════
 //
-// The Control Hub dashboard has a few destructive actions that should
-// require a second click to confirm (cancel a mission, delete all logs,
-// etc.). The pattern was duplicated verbatim across at least two pages:
-//
-//   1. Arm state on first click; show the "armed" UI variant.
-//   2. On the second click, run the destructive action; clear armed state.
-//   3. Auto-dismiss the armed state after a timeout so the user doesn't
-//      accidentally click the "Cancel" button hours later and trigger
-//      a real cancel.
-//   4. Clean up the timeout on unmount so a stale setState doesn't fire.
-//
-// Both the dashboard (`handleCancelMission`) and the logs page
-// (`handleDeleteAllLogs`) had a near-identical 15-line implementation
-// of this pattern. The dashboard version used a per-id string
-// ("which mission is armed?") while the logs version used a single
-// boolean. This hook supports both via a `key: string | null` param.
-//
-// Usage:
-//   const { armed, arm, confirm, cancel } = useTwoStepConfirm({
-//     autoDismissMs: 4000,
-//   });
-//
-//   <button onClick={() => {
-//     if (!armed(missionId)) arm(missionId);
-//     else confirm(() => doCancel(missionId));
-//   }}>{armed(missionId) ? "Confirm?" : "Cancel"}</button>
-//
-//   // The single-key variant (e.g. logs page):
-//   const { isArmed, armAndConfirm, cancel } = useTwoStepConfirm({ ... });
-//   <button onClick={() => {
-//     if (!isArmed) armAndConfirm();
-//     else cancel();
-//   }}>{isArmed ? "Confirm Clear" : "Delete All"}</button>
+// Destructive actions (cancel a mission, delete all logs) take a second
+// click to confirm. The armed state auto-dismisses after a timeout so the
+// user doesn't click a "Cancel" button hours later and trigger a real
+// cancel, and the timer is cleared on unmount so a stale setState doesn't
+// fire. The key is per-id ("which mission is armed?") or a singleton.
 
 "use client";
 
@@ -84,7 +56,6 @@ export function useTwoStepConfirm(
     }
   }, []);
 
-  // Cleanup the timer on unmount
   useEffect(() => {
     return () => clearTimer();
   }, [clearTimer]);

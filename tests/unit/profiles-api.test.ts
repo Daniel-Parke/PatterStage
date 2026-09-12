@@ -1,4 +1,5 @@
 /** @jest-environment node */
+/* eslint-disable @typescript-eslint/no-require-imports */
 
 // Mock filesystem before importing the route
 const mockExistsSync = jest.fn();
@@ -20,7 +21,7 @@ jest.mock("fs", () => ({
   renameSync: jest.fn(),
 }));
 
-jest.mock("@/lib/hermes-agent-runtime", () => ({
+jest.mock("@/modules/hermes/lib/agent-runtime", () => ({
   getActiveHermesHome: jest.fn(() => "/tmp/test-hermes"),
   getActiveHermesPaths: jest.fn(() => ({
     root: "/tmp/test-hermes",
@@ -43,42 +44,46 @@ jest.mock("@/lib/hermes-agent-runtime", () => ({
   })),
 }));
 
-jest.mock("@/lib/paths", () => ({
-  CH_DATA_DIR: "/tmp/ch-data",
-  PATHS: {
-    missions: "/tmp/ch-data/missions",
-    controlHubDb: "/tmp/ch-data/control-hub.db",
-    templates: "/tmp/ch-data/templates",
-    stories: "/tmp/ch-data/stories",
-    recroom: "/tmp/ch-data/recroom",
-    workspaces: "/tmp/ch-data/workspaces",
-    auditLog: "/tmp/ch-data/audit",
-    chScripts: "/tmp/ch-data/scripts",
-    chHardwareLogs: "/tmp/ch-data/logs",
-  },
-  getChScriptsDir: () => "/tmp/ch-data/scripts",
-  getChHardwareLogDir: () => "/tmp/ch-data/logs",
-}));
+jest.mock("@/lib/host/paths", () => require("../helpers/mocks").pathsMock());
 
-jest.mock("@/lib/api-logger", () => ({
+jest.mock("@/lib/api/api-logger", () => ({
   logApiError: jest.fn(),
+  serverErrorFromCatch: jest.fn(
+    (route: string, context: string, _error: unknown, message: string) => {
+      const { logApiError: log } = jest.requireMock("@/lib/api/api-logger") as {
+        logApiError: jest.Mock;
+      };
+      log(route, context, _error);
+      const { NextResponse } = jest.requireActual("next/server") as {
+        NextResponse: { json: (b: unknown, i?: { status: number }) => unknown };
+      };
+      return NextResponse.json({ error: message }, { status: 500 });
+    },
+  ),
 }));
 
-jest.mock("@/lib/path-security", () => ({
+jest.mock("@/lib/fs/path-security", () => ({
   resolveSafeProfileName: (p: string | null) => {
     const profile = (p || "default").trim();
     if (profile === "default" || profile === "") return { ok: true, profile: "default" };
     if (/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,127}$/.test(profile)) return { ok: true, profile };
     return { ok: false, error: "Invalid profile name" };
   },
+  requireSafeProfileName: (p: string | null) => {
+    const profile = (p || "default").trim();
+    if (profile === "default" || profile === "") return { profile: "default" };
+    if (/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,127}$/.test(profile)) return { profile };
+    const { NextResponse } = jest.requireActual("next/server") as {
+      NextResponse: { json: (b: unknown, i?: { status: number }) => unknown };
+    };
+    return NextResponse.json({ error: "Invalid profile name" }, { status: 400 });
+  },
 }));
 
-jest.mock("@/lib/api-auth", () => ({
-  requireAuth: jest.fn(() => null),
-  requireAuth: jest.fn(() => null),
+jest.mock("@/lib/api/api-auth", () => ({
 }));
 
-jest.mock("@/lib/audit-log", () => ({
+jest.mock("@/lib/api/audit-log", () => ({
   appendAuditLine: jest.fn(),
 }));
 
@@ -100,11 +105,9 @@ const store = new Map<
   }
 >();
 
-jest.mock("@/lib/db", () => ({
-  ensureDb: jest.fn(),
-}));
+jest.mock("@/lib/db", () => require("../helpers/mocks").dbMock());
 
-jest.mock("@/lib/agent-root-repository", () => ({
+jest.mock("@/lib/agents/agent-root-repository", () => ({
   getAgentRoot: jest.fn(() => ({
     id: 1,
     displayName: "Bob",
@@ -113,7 +116,7 @@ jest.mock("@/lib/agent-root-repository", () => ({
     configYaml: "skills:\n  disabled: []\n",
     soulMd: "",
     agentsMd: "",
-    hermesMd: "",
+    frameworkMd: "",
     userMd: "",
     memoryMd: "",
     disabledSkillsJson: "[]",
@@ -124,7 +127,7 @@ jest.mock("@/lib/agent-root-repository", () => ({
   })),
 }));
 
-jest.mock("@/lib/profiles-repository", () => ({
+jest.mock("@/modules/hermes/lib/profiles-repository", () => ({
   listProfiles: jest.fn(() =>
     [...store.values()].map((r) => ({
       slug: r.slug,
@@ -181,15 +184,23 @@ jest.mock("@/lib/profiles-repository", () => ({
   defaultConfigYaml: jest.fn((p: string) => `agent:\n  personality: ${p}\nskills:\n  enabled: []\n`),
 }));
 
-jest.mock("@/lib/hermes-profile-sync", () => ({
+jest.mock("@/modules/hermes/lib/profile-push", () => ({
   pushProfileToHermes: jest.fn(() => ({ success: true, slug: "", backupPath: null, error: null })),
+}));
+
+jest.mock("@/modules/hermes/lib/profile-drift", () => ({
   detectProfileDrift: jest.fn(() => ({ slug: "", drifted: false, fields: [], syncError: null })),
   detectRootDrift: jest.fn(() => ({ drifted: false, fields: [], syncError: null })),
+}));
+
+jest.mock("@/modules/hermes/lib/profile-counts", () => ({
   countProfileSkills: jest.fn(() => 0),
+  // The list route counts the whole population with one catalogue read.
+  createProfileSkillsCounter: jest.fn(() => () => 0),
   countProfileToolsets: jest.fn(() => 0),
 }));
 
-jest.mock("@/lib/hermes-profile-paths", () => ({
+jest.mock("@/modules/hermes/lib/profile-paths", () => ({
   buildProfileHermesPathBundle: jest.fn((slug: string) => ({
     soul: `/tmp/test-hermes/profiles/${slug}/SOUL.md`,
     agents: `/tmp/test-hermes/profiles/${slug}/AGENTS.md`,
@@ -201,6 +212,7 @@ jest.mock("@/lib/hermes-profile-paths", () => ({
 }));
 
 import { NextRequest } from "next/server";
+import { mockRequest } from "../helpers/api-test-helpers";
 
 function makeRequest(url: string, method: string = "GET", body?: unknown) {
   return new NextRequest(url, {
@@ -226,7 +238,7 @@ describe("GET /api/agent/profiles", () => {
     mockReaddirSync.mockReturnValue([]);
 
     const { GET } = await import("@/app/api/agent/profiles/route");
-    const res = await GET();
+    const res = await GET(mockRequest("http://127.0.0.1/api/test"));
     const data = await res.json();
 
     expect(res.status).toBe(200);
@@ -254,7 +266,7 @@ describe("GET /api/agent/profiles", () => {
     });
 
     const { GET } = await import("@/app/api/agent/profiles/route");
-    const res = await GET();
+    const res = await GET(mockRequest("http://127.0.0.1/api/test"));
     const data = await res.json();
 
     expect(res.status).toBe(200);
@@ -296,7 +308,7 @@ describe("GET /api/agent/profiles", () => {
     });
 
     const { GET } = await import("@/app/api/agent/profiles/route");
-    const res = await GET();
+    const res = await GET(mockRequest("http://127.0.0.1/api/test"));
     const data = await res.json();
 
     const qa = data.data.profiles.find((p: { id: string }) => p.id === "qa");
@@ -323,7 +335,7 @@ describe("GET /api/agent/profiles", () => {
     });
 
     const { GET } = await import("@/app/api/agent/profiles/route");
-    const res = await GET();
+    const res = await GET(mockRequest("http://127.0.0.1/api/test"));
     const data = await res.json();
 
     const swe = data.data.profiles.find((p: { id: string }) => p.id === "swe");
@@ -417,5 +429,137 @@ describe("POST /api/agent/profiles", () => {
     const data = await res.json();
     expect(data.data.slug).toBe("cloned-agent");
     expect(store.get("cloned-agent")?.soulMd).toContain("Source Agent");
+  });
+});
+
+// T-0060/T-0061 acceptance oracle — the create path must judge the NAME, not the
+// slug it has already laundered out of the name.
+//
+// THE DEFECT. route.ts slugifies at :146 and validates at :148-149. Because
+// PROFILE_SLUG_PATTERN is a strict SUBSET of PROFILE_PATTERN, every value
+// slugifyDisplayName can return satisfies the validator by construction,
+// including its literal "profile" fallback. Those two lines can never return
+// 400. The sanitiser has already destroyed the evidence the validator exists to
+// inspect, so "../evil" arrives as a legitimate-looking profile called "evil".
+//
+// AND ONE NAME IS DESTRUCTIVE. "Default" slugifies to "default", which is absent
+// from agent_profiles (the root agent lives in agent_root), so the 409 never
+// fires. resolveProfileHermesHome("default") then returns the ROOT Hermes home
+// rather than profiles/default, and the push rewrites config.yaml, SOUL.md,
+// AGENTS.md, USER.md and MEMORY.md with boilerplate. HTTP 200. Reachable from
+// "Default", "DEFAULT", "de fault" and "Default!".
+describe("POST /api/agent/profiles refuses a name that was never a name", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    store.clear();
+    mockExistsSync.mockReturnValue(false);
+    mockReadFileSync.mockReturnValue("");
+  });
+
+  const hostile: Array<[string, string]> = [
+    ["..", "traversal"],
+    ["../evil", "traversal"],
+    ["a/../b", "a path separator"],
+    [".hidden", "a leading dot"],
+    ["CON", "a Windows reserved device name"],
+  ];
+
+  it.each(hostile)("refuses %s (%s) with a 400 and creates nothing", async (name) => {
+    const { POST } = await import("@/app/api/agent/profiles/route");
+    const { pushProfileToHermes } = jest.requireMock("@/modules/hermes/lib/profile-push") as {
+      pushProfileToHermes: jest.Mock;
+    };
+
+    const res = await POST(makeRequest("http://localhost/api/agent/profiles", "POST", { name }));
+
+    expect(res.status).toBe(400);
+    expect(store.size).toBe(0);
+    expect(pushProfileToHermes).not.toHaveBeenCalled();
+  });
+
+  it("refuses a name with nothing left to slugify, rather than calling it 'profile'", async () => {
+    // A rocket emoji has length 2, so it clears the min-length check, then
+    // slugifies to "" and hits the literal "profile" fallback. Two operators
+    // naming their agents with different emoji would collide on one slug and be
+    // told a profile they never named already exists.
+    const { POST } = await import("@/app/api/agent/profiles/route");
+
+    const res = await POST(
+      makeRequest("http://localhost/api/agent/profiles", "POST", { name: "\u{1F680}" }),
+    );
+
+    expect(res.status).toBe(400);
+    expect(store.size).toBe(0);
+  });
+
+  it("keeps emoji that is decoration rather than the whole name", async () => {
+    // GREEN CONTROL. The rule rejects a name that yields no slug, NOT a name
+    // that happens to contain an emoji. Without this the fix could over-reach
+    // into "reject anything non-ascii" and the test above would still pass.
+    const { POST } = await import("@/app/api/agent/profiles/route");
+
+    const res = await POST(
+      makeRequest("http://localhost/api/agent/profiles", "POST", { name: "Rocket \u{1F680}" }),
+    );
+
+    expect(res.status).toBe(200);
+    expect(store.has("rocket")).toBe(true);
+  });
+
+  it("refuses a name that resolves to the root agent, and pushes nothing", async () => {
+    // The destructive one. Today this answers 200 and overwrites the root
+    // agent's identity files.
+    const { POST } = await import("@/app/api/agent/profiles/route");
+    const { pushProfileToHermes } = jest.requireMock("@/modules/hermes/lib/profile-push") as {
+      pushProfileToHermes: jest.Mock;
+    };
+
+    const res = await POST(
+      makeRequest("http://localhost/api/agent/profiles", "POST", { name: "Default" }),
+    );
+
+    expect(res.status).toBe(409);
+    expect(pushProfileToHermes).not.toHaveBeenCalled();
+    expect(store.size).toBe(0);
+  });
+
+  // NOT "de fault": it slugifies to "de-fault" and is a perfectly good name.
+  // An earlier draft of this list included it on the strength of an analysis
+  // rather than a measurement, and it is the only case here that does not
+  // actually reach the root agent.
+  it.each(["default", "DEFAULT", "Default!", " default ", "DeFaUlT"])(
+    "refuses %s too, because the slug is what decides",
+    async (name) => {
+      const { POST } = await import("@/app/api/agent/profiles/route");
+      const res = await POST(makeRequest("http://localhost/api/agent/profiles", "POST", { name }));
+      expect(res.status).toBe(409);
+    },
+  );
+
+  it("still creates an ordinary profile", async () => {
+    // GREEN CONTROL. Stops the fix degenerating into "refuse everything".
+    const { POST } = await import("@/app/api/agent/profiles/route");
+
+    const res = await POST(
+      makeRequest("http://localhost/api/agent/profiles", "POST", { name: "QA Engineer" }),
+    );
+
+    expect(res.status).toBe(200);
+    expect((await res.json()).data.slug).toBe("qa-engineer");
+  });
+});
+
+describe("the slug validator on the create path is unreachable, and that is the bug", () => {
+  it("no hostile name survives slugifyDisplayName as an invalid slug", async () => {
+    // GREEN ON ARRIVAL, and it is the proof that route.ts:148-149 is dead code
+    // rather than a working guard. Every value the sanitiser can produce already
+    // satisfies the validator, so the validator can never fire. Keeping the
+    // check is right (it is a fence at a filesystem boundary); believing it
+    // guards the create path is not.
+    const { slugifyDisplayName, isValidProfileSlug } = await import("@/lib/agents/profile-slug");
+
+    for (const name of ["..", "../evil", "a/../b", ".hidden", "\u{1F680}", "!!!", "///"]) {
+      expect(isValidProfileSlug(slugifyDisplayName(name))).toBe(true);
+    }
   });
 });

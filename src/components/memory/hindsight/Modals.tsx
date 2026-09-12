@@ -4,6 +4,7 @@
 
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
+import { HINDSIGHT_TEXT_INPUT_CLASS, HINDSIGHT_TEXTAREA_CLASS } from "./utils";
 
 // ── Add Memory Modal ───────────────────────────────────────────
 
@@ -26,22 +27,24 @@ export function AddMemoryModal({
     <Modal open={open} onClose={onClose} title="Store New Memory" size="md">
       <div className="space-y-4">
         <div>
-          <label className="block text-sm text-white/50 mb-1">Memory Content</label>
+          <label htmlFor="memory-content" className="block text-body text-ps-text-muted mb-1">Memory content</label>
           <textarea
+            id="memory-content"
             value={content}
             onChange={(e) => onContentChange(e.target.value)}
             placeholder="What should the agent remember?"
-            className="w-full h-32 bg-dark-800 border border-white/10 rounded-lg p-3 text-sm text-white/80 resize-none focus:border-pink-500/50 focus:outline-none"
+            className={`w-full h-32 ${HINDSIGHT_TEXTAREA_CLASS}`}
           />
         </div>
         <div>
-          <label className="block text-sm text-white/50 mb-1">Tags (comma-separated)</label>
+          <label htmlFor="memory-tags" className="block text-body text-ps-text-muted mb-1">Tags (comma-separated)</label>
           <input
+            id="memory-tags"
             type="text"
             value={tags}
             onChange={(e) => onTagsChange(e.target.value)}
             placeholder="e.g. user_pref, project, tech"
-            className="w-full bg-dark-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80 focus:border-pink-500/50 focus:outline-none"
+            className={HINDSIGHT_TEXT_INPUT_CLASS}
           />
         </div>
         <div className="flex justify-end gap-2">
@@ -81,43 +84,47 @@ export function DirectiveModal({
     <Modal open={open} onClose={onClose} title={isEdit ? "Edit Directive" : "Create Directive"} size="md">
       <div className="space-y-4">
         <div>
-          <label className="block text-sm text-white/50 mb-1">Directive Name</label>
+          <label htmlFor="directive-name" className="block text-body text-ps-text-muted mb-1">Directive name</label>
           <input
+            id="directive-name"
             type="text"
             value={name}
             onChange={(e) => onNameChange(e.target.value)}
             placeholder="e.g. Always cite sources"
-            className="w-full bg-dark-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80 focus:border-pink-500/50 focus:outline-none"
+            className={HINDSIGHT_TEXT_INPUT_CLASS}
           />
         </div>
         <div>
-          <label className="block text-sm text-white/50 mb-1">Directive Content</label>
+          <label htmlFor="directive-content" className="block text-body text-ps-text-muted mb-1">Directive content</label>
           <textarea
+            id="directive-content"
             value={content}
             onChange={(e) => onContentChange(e.target.value)}
             placeholder="The rule to inject into agent prompts..."
-            className="w-full h-28 bg-dark-800 border border-white/10 rounded-lg p-3 text-sm text-white/80 resize-none focus:border-pink-500/50 focus:outline-none"
+            className={`w-full h-28 ${HINDSIGHT_TEXTAREA_CLASS}`}
           />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm text-white/50 mb-1">Priority</label>
+            <label htmlFor="directive-priority" className="block text-body text-ps-text-muted mb-1">Priority</label>
             <input
+              id="directive-priority"
               type="number"
               value={priority}
               onChange={(e) => onPriorityChange(e.target.value)}
               placeholder="0"
-              className="w-full bg-dark-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80 focus:border-pink-500/50 focus:outline-none"
+              className={HINDSIGHT_TEXT_INPUT_CLASS}
             />
           </div>
           <div>
-            <label className="block text-sm text-white/50 mb-1">Tags (comma-separated)</label>
+            <label htmlFor="directive-tags" className="block text-body text-ps-text-muted mb-1">Tags (comma-separated)</label>
             <input
+              id="directive-tags"
               type="text"
               value={tags}
               onChange={(e) => onTagsChange(e.target.value)}
               placeholder="e.g. safety, behavior"
-              className="w-full bg-dark-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80 focus:border-pink-500/50 focus:outline-none"
+              className={HINDSIGHT_TEXT_INPUT_CLASS}
             />
           </div>
         </div>
@@ -159,37 +166,40 @@ export function MentalModelModal({
     <Modal open={open} onClose={onClose} title={isEdit ? "Edit Mental Model" : "Create Mental Model"} size="md">
       <div className="space-y-4">
         <div>
-          <label className="block text-sm text-white/50 mb-1">Model Name</label>
+          <label htmlFor="mental-model-name" className="block text-body text-ps-text-muted mb-1">Model name</label>
           <input
+            id="mental-model-name"
             type="text"
             value={name}
             onChange={(e) => onNameChange(e.target.value)}
             placeholder="e.g. User Communication Style"
-            className="w-full bg-dark-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80 focus:border-pink-500/50 focus:outline-none"
+            className={HINDSIGHT_TEXT_INPUT_CLASS}
           />
         </div>
         <div>
-          <label className="block text-sm text-white/50 mb-1">Source Query</label>
+          <label htmlFor="mental-model-query" className="block text-body text-ps-text-muted mb-1">Source query</label>
           <textarea
+            id="mental-model-query"
             value={query}
             onChange={(e) => onQueryChange(e.target.value)}
             placeholder="e.g. What are Daniel's communication preferences and working style?"
-            className="w-full h-28 bg-dark-800 border border-white/10 rounded-lg p-3 text-sm text-white/80 resize-none focus:border-pink-500/50 focus:outline-none"
+            className={`w-full h-28 ${HINDSIGHT_TEXTAREA_CLASS}`}
           />
-          <p className="text-xs text-white/30 mt-1">
+          <p className="text-body text-ps-text-muted mt-1">
             {isEdit
               ? "Changing the query won't re-generate content. Use Refresh to re-run reflect."
               : "Hindsight will run reflect with this query to generate the model content."}
           </p>
         </div>
         <div>
-          <label className="block text-sm text-white/50 mb-1">Tags (comma-separated)</label>
+          <label htmlFor="mental-model-tags" className="block text-body text-ps-text-muted mb-1">Tags (comma-separated)</label>
           <input
+            id="mental-model-tags"
             type="text"
             value={tags}
             onChange={(e) => onTagsChange(e.target.value)}
             placeholder="e.g. user, preferences"
-            className="w-full bg-dark-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80 focus:border-pink-500/50 focus:outline-none"
+            className={HINDSIGHT_TEXT_INPUT_CLASS}
           />
         </div>
         <div className="flex justify-end gap-2">

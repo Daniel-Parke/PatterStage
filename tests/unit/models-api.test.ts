@@ -1,55 +1,44 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
 /** @jest-environment node */
+/* eslint-disable @typescript-eslint/no-require-imports */
 
-jest.mock("next/server", () => ({
-  NextRequest: class NextRequest {
-    url: string;
-    method: string;
-    headers: Headers;
-    nextUrl: URL;
-    bodyUsed: boolean = false;
-    private _body: string;
-    constructor(url: string, init?: RequestInit) {
-      this.url = url;
-      this.method = init?.method ?? "GET";
-      this.headers = new Headers(init?.headers as HeadersInit);
-      this._body = typeof init?.body === "string" ? init.body : JSON.stringify(init?.body ?? {});
-      this.nextUrl = new URL(url);
-    }
-    async json() { return JSON.parse(this._body); }
-  },
-  NextResponse: class NextResponse {
-    status: number;
-    body: unknown;
-    constructor(status: number, body: unknown) {
-      this.status = status;
-      this.body = body;
-    }
-    async json() { return this.body; }
-    static json(data: unknown, init?: ResponseInit) {
-      return new NextResponse(init?.status ?? 200, data);
-    }
-  },
+import type { NextRequest } from "next/server";
+jest.mock("next/server", () => require("../helpers/mocks").nextServerMock());
+
+jest.mock("@/lib/api/api-logger", () => ({ logApiError: jest.fn() }));
+// GET /api/models/defaults resolves the product's one "do I have a model?"
+// verdict, which needs the agent's config file. Mocked so the answer comes
+// from the test rather than from whatever config.yaml this machine happens to
+// have.
+const configOnDisk = { value: {} as Record<string, unknown> };
+jest.mock("@/lib/config/config-cache", () => ({
+  readCachedConfigResult: () => ({ config: configOnDisk.value, error: null }),
+}));
+jest.mock("@/lib/api/audit-log", () => ({ appendAuditLine: jest.fn() }));
+
+jest.mock("@/lib/api/api-auth", () => ({
 }));
 
-jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
-jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
+jest.mock("@/lib/api/parse-json-body", () => {
+  // Re-expose the real parseAndValidateJsonBody so routes that switched
+  // from parseJsonBody + zodErrorResponse to the combined helper still
+  // exercise the schema. parseJsonBody stays mocked (legacy test shape).
+  const actual = jest.requireActual("@/lib/api/parse-json-body");
+  return {
+    parseJsonBody: jest.fn(async (req: { json: () => Promise<unknown> }) => req.json()),
+    parseAndValidateJsonBody: actual.parseAndValidateJsonBody,
+  };
+});
 
-jest.mock("@/lib/api-auth", () => ({
-  requireAuth: jest.fn(() => null),
-}));
-
-jest.mock("@/lib/parse-json-body", () => ({
-  parseJsonBody: jest.fn(async (req: { json: () => Promise<unknown> }) => req.json()),
-}));
-
-jest.mock("@/lib/hermes-config-sync", () => ({
+jest.mock("@/modules/hermes/lib/config-sync", () => ({
   syncDefaultsToHermesConfig: jest.fn(() => ({ backupPath: null })),
+  // The three models routes go through finalize now, so the yaml write and the
+  // agent_root refresh happen together (T-0100, D9).
+  finalizeRootConfigOnDisk: jest.fn(() => ({ appliedModelDefaults: false, backupPath: null })),
   syncCredentialToHermesEnv: jest.fn(() => ({ backupPath: null })),
   removeCredentialFromHermesEnv: jest.fn(() => ({ backupPath: null })),
 }));
 
-jest.mock("@/lib/models-repository", () => {
+jest.mock("@/lib/models/models-repository", () => {
   const listModels = jest.fn();
   const getModel = jest.fn();
   const createModel = jest.fn();
@@ -57,18 +46,19 @@ jest.mock("@/lib/models-repository", () => {
   const deleteModel = jest.fn();
   const getModelDefaults = jest.fn();
   const setDefaultModel = jest.fn();
+  const getDefaultModel = jest.fn();
   return {
     listModels, getModel, createModel, updateModel, deleteModel,
-    getModelDefaults, setDefaultModel,
+    getModelDefaults, setDefaultModel, getDefaultModel,
     __listModels: listModels, __getModel: getModel, __createModel: createModel,
     __updateModel: updateModel, __deleteModel: deleteModel,
     __getModelDefaults: getModelDefaults, __setDefaultModel: setDefaultModel,
+    __getDefaultModel: getDefaultModel,
   };
 });
 
-
 // Mock the sync-manager for any push/pull imports
-jest.mock("@/lib/sync-manager", () => ({
+jest.mock("@/modules/hermes/lib/sync-manager", () => ({
   pushModelToHermes: jest.fn(() => ({ success: true, backupPath: null, details: [] })),
   pushCredential: jest.fn(() => ({ success: true, backupPath: null, details: [] })),
   pushCredentialToHermesEnv: jest.fn(() => ({ success: true, backupPath: null, details: [] })),
@@ -77,8 +67,11 @@ jest.mock("@/lib/sync-manager", () => ({
 }));
 
 // Mock hermes-config-sync for sync functions used in routes
-jest.mock("@/lib/hermes-config-sync", () => ({
+jest.mock("@/modules/hermes/lib/config-sync", () => ({
   syncDefaultsToHermesConfig: jest.fn(() => ({ backupPath: null })),
+  // The three models routes go through finalize now, so the yaml write and the
+  // agent_root refresh happen together (T-0100, D9).
+  finalizeRootConfigOnDisk: jest.fn(() => ({ appliedModelDefaults: false, backupPath: null })),
   syncCredentialToHermesEnv: jest.fn(() => ({ backupPath: null })),
   removeCredentialFromHermesEnv: jest.fn(() => ({ backupPath: null })),
   syncSingleCredentialToHermesEnv: jest.fn(() => ({ backupPath: null })),
@@ -86,14 +79,11 @@ jest.mock("@/lib/hermes-config-sync", () => ({
   syncFallbacksToHermesConfig: jest.fn(() => ({ backupPath: null })),
 }));
 
-const repo = require("@/lib/models-repository") as Record<string, jest.Mock>;
-const auth = require("@/lib/api-auth") as Record<string, jest.Mock>;
-const audit = require("@/lib/audit-log") as { appendAuditLine: jest.Mock };
+const repo = require("@/lib/models/models-repository") as Record<string, jest.Mock>;
+const audit = require("@/lib/api/audit-log") as { appendAuditLine: jest.Mock };
 
 beforeEach(() => {
   jest.clearAllMocks();
-  auth.requireAuth.mockReturnValue(null);
-  auth.requireAuth.mockReturnValue(null);
 });
 
 const SAMPLE_MODEL = {
@@ -123,7 +113,7 @@ const SAMPLE_MODEL = {
 };
 
 function makeRequest(url: string, method?: string, body?: unknown) {
-  return new (jest.requireMock("next/server").NextRequest as new (url: string, init?: RequestInit) => unknown)(
+  return new (jest.requireMock("next/server").NextRequest as new (url: string, init?: RequestInit) => NextRequest)(
     url,
     {
       method: method ?? "GET",
@@ -191,27 +181,13 @@ describe("/api/models", () => {
     expect(res.status).toBe(400);
   });
 
-  it("POST is gated by readonly mode", async () => {
-    auth.requireAuth.mockReturnValue({ status: 503, json: async () => ({}) });
-    const res = await postModels({
-      name: "x",
-      provider: "anthropic",
-      modelId: "x",
-    });
-    expect(res.status).toBe(503);
-    expect(repo.__createModel).not.toHaveBeenCalled();
-  });
+  // Read-only refusal is no longer asserted here, because it is no longer
+  // enforced here. T-0048 deleted the per-route guard: src/proxy.ts refuses
+  // every unsafe method under PS_READ_ONLY before a handler runs, so a test that
+  // calls this handler directly bypasses the thing it means to check. The
+  // guarantee is asserted per route, in both directions, in
+  // tests/unit/read-only-actually-reads.test.ts.
 
-  it("POST is gated by api-key auth", async () => {
-    auth.requireAuth.mockReturnValue({ status: 401, json: async () => ({}) });
-    const res = await postModels({
-      name: "x",
-      provider: "anthropic",
-      modelId: "x",
-    });
-    expect(res.status).toBe(401);
-    expect(repo.__createModel).not.toHaveBeenCalled();
-  });
 });
 
 describe("/api/models/[id]", () => {
@@ -264,6 +240,9 @@ describe("/api/models/[id]", () => {
   });
 
   it("DELETE returns 200 and audits", async () => {
+    // DELETE reads the defaults BEFORE the delete cascades them away, so the
+    // yaml writer can be told which sections to remove (T-0100, D9).
+    repo.__getModelDefaults.mockReturnValue({ agent: null });
     repo.__deleteModel.mockReturnValue(true);
     const res = await callRoute("DELETE", SAMPLE_MODEL.id);
     expect(res.status).toBe(200);
@@ -273,6 +252,7 @@ describe("/api/models/[id]", () => {
   });
 
   it("DELETE 404 when model missing", async () => {
+    repo.__getModelDefaults.mockReturnValue({ agent: null });
     repo.__deleteModel.mockReturnValue(false);
     const res = await callRoute("DELETE", "no-such");
     expect(res.status).toBe(404);
@@ -296,11 +276,48 @@ describe("/api/models/defaults", () => {
     );
   }
 
-  it("GET returns the defaults object", async () => {
+  // `agentModelLabel` used to be the second field here: a resolved name with
+  // no verdict attached, which left chat, the dashboard and the Models page to
+  // each invent their own verdict from it and the config file (and reach three
+  // different ones). It is now `modelReadiness`, resolved once, and the same
+  // resolved name is inside it.
+  it("GET returns the defaults object + the one readiness verdict", async () => {
+    configOnDisk.value = { model: { default: "MiniMax-M3", provider: "minimax" } };
     repo.__getModelDefaults.mockReturnValue({ agent: "m_1", hindsight: null });
+    repo.__getDefaultModel.mockReturnValue({ id: "m_1", name: "MiniMax-M3", modelId: "MiniMax-M3" });
     const res = await getDefaults();
     expect(res.status).toBe(200);
-    expect((res.body.data as { defaults: Record<string, unknown> }).defaults.agent).toBe("m_1");
+    const body = res.body.data as {
+      defaults: Record<string, unknown>;
+      modelReadiness: { state: string; ready: boolean; modelName: string; label: string };
+    };
+    expect(body.defaults.agent).toBe("m_1"); // raw uuid retained for the Models UI
+    expect(body.modelReadiness.ready).toBe(true);
+    expect(body.modelReadiness.modelName).toBe("MiniMax-M3"); // friendly name, not a uuid
+    expect(body.modelReadiness.label).toBe("MiniMax-M3 · minimax");
+  });
+
+  it("GET says the agent has a model when only the config file names one", async () => {
+    // The live install this was found on. An empty registry slot is not an
+    // absent model: the gateway reads the config file, not the registry.
+    configOnDisk.value = { model: { default: "MiniMax-M3", provider: "minimax" } };
+    repo.__getModelDefaults.mockReturnValue({ agent: null });
+    repo.__getDefaultModel.mockReturnValue(null);
+    const body = (await getDefaults()).body.data as { modelReadiness: { ready: boolean; state: string } };
+    expect(body.modelReadiness.ready).toBe(true);
+    expect(body.modelReadiness.state).toBe("ready");
+  });
+
+  it("GET says a slot that never reached the config file is not ready", async () => {
+    configOnDisk.value = {};
+    repo.__getModelDefaults.mockReturnValue({ agent: "m_1" });
+    repo.__getDefaultModel.mockReturnValue({ id: "m_1", name: "MiniMax-M3", modelId: "MiniMax-M3" });
+    const body = (await getDefaults()).body.data as {
+      modelReadiness: { ready: boolean; state: string; detail: string };
+    };
+    expect(body.modelReadiness.ready).toBe(false);
+    expect(body.modelReadiness.state).toBe("not-sent");
+    expect(body.modelReadiness.detail).toMatch(/has not reached the agent yet/);
   });
 
   it("PUT sets a default and audits", async () => {

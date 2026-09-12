@@ -8,6 +8,8 @@
 import { useEffect } from "react";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 
+import Button from "@/components/ui/Button";
+
 export default function Error({
   error,
   reset,
@@ -17,27 +19,23 @@ export default function Error({
 }) {
   useEffect(() => {
     // Log the error for debugging but don't display raw messages
-    console.error("Control Hub error boundary caught:", error);
+    console.error("PatterStage error boundary caught:", error);
   }, [error]);
 
   return (
-    <div className="min-h-screen bg-dark-950 grid-bg flex items-center justify-center">
+    <div className="min-h-screen bg-ps-surface-ground grid-bg flex items-center justify-center">
       <div className="max-w-md text-center px-6 py-12">
-        <AlertTriangle className="w-12 h-12 text-neon-orange/60 mx-auto mb-4" />
-        <h1 className="text-xl font-bold text-white mb-2">
+        <AlertTriangle className="w-12 h-12 text-neon-orange/90 mx-auto mb-4" />
+        <h1 className="text-title font-bold text-ps-text-primary mb-2">
           Something went wrong
         </h1>
-        <p className="text-sm text-white/50 mb-6">
+        <p className="text-body text-ps-text-muted mb-6">
           The application encountered an unexpected error. This is usually
           temporary — try refreshing the page.
         </p>
-        <button
-          onClick={reset}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-neon-cyan/15 text-neon-cyan border border-neon-cyan/30 hover:bg-neon-cyan/25 transition-colors font-mono text-sm"
-        >
-          <RefreshCw className="w-4 h-4" />
+        <Button variant="primary" color="cyan" icon={RefreshCw} onClick={reset}>
           Try Again
-        </button>
+        </Button>
       </div>
     </div>
   );

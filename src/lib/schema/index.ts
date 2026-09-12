@@ -1,16 +1,3 @@
-export {
-  MISSION_SCHEMA_VERSION,
-  missionStatusSchema,
-  dispatchModeSchema,
-  missionV1Schema,
-  parseMissionV1,
-  type MissionV1,
-} from "./mission-v1";
-
-export {
-  TEMPLATE_PACK_SCHEMA_VERSION,
-  templatePackEntrySchema,
-  templatePackManifestSchema,
-  parseTemplatePackManifestV1,
-  type TemplatePackManifestV1,
-} from "./template-pack-v1";
+// Only parseTemplatePackManifestV1 is consumed via this barrel (templates route);
+// the mission-v1 / template-pack schemas are used directly from their modules.
+export { parseTemplatePackManifestV1 } from "./template-pack-v1";
