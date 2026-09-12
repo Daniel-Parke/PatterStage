@@ -1,0 +1,59 @@
+{
+  "id": "T-0147",
+  "intent": "K1: make dev CI green, and make each of its three failures visible from this machine. Six documentation links resolved only on a case-insensitive filesystem and stopped Ubuntu at lint step 2, so lint steps 3 to 12 had not run on Linux since 2026-09-05. extract.ts's lazily imported app modules used relative specifiers, which cannot resolve from the data: URL tsx compiles that file into, so docs:check died on CI and passed here. The runtime smoke drove POST /api/missions/[id]/dispatch, which T-0129 deleted as an orphan with zero callers; the smoke was the caller the walk did not count.",
+  "declared": {
+    "capabilities": [
+      "edit-docs",
+      "edit-tooling",
+      "edit-tests"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {
+      "factor": "size-threshold",
+      "tier_floor": "R1",
+      "source": "derived:diff-size",
+      "evidence": "fourteen anchored edits across eight files plus a 100-line oracle, over the express limit"
+    },
+    {
+      "factor": "ci-stateful-infra",
+      "tier_floor": "R1",
+      "source": "operator ruling Q-009, 2026-09-12",
+      "evidence": "no file under .github/workflows is touched. The CI failures are fixed in the code the workflows run: docs, a script and a test harness. The R2 ci-stateful-infra floor applies to the workflow definitions, which this batch leaves alone."
+    }
+  ],
+  "status": "done",
+  "owner_session": "t0147-k1-ci-green-2026-09-12",
+  "claims": [
+    "docs/reference/api.md",
+    "docs/running/cross-platform.md",
+    "docs/running/env-reference.md",
+    "docs/running/migration.md",
+    "scripts/docs/extract.ts",
+    "tests/integration/runtime/full-stack-smoke.mjs",
+    "tests/unit/k1-ci-can-go-green.test.ts",
+    "tests/fixtures/mutants/T-0147.json",
+    "scripts/tooling/line-census.baseline.json",
+    "org/tasks/T-0147.json"
+  ],
+  "programme": "K1 of the refactor and clean-up programme, executing the operator's ruling on Q-009: dev is made green first, and every later batch waits for its pushed commit's CI.",
+  "timestamps": {
+    "opened": "2026-09-12T11:30:00Z",
+    "updated": "2026-09-12T12:10:00Z",
+    "closed": "2026-09-12T12:10:00Z"
+  },
+  "invariants": [
+    "I1 A LINUX-ONLY DEFECT IS VISIBLE HERE. Each of the three failures is held by a check that fails on Windows, on Node 24, without Docker. A green local gate that cannot see what the runner sees is what cost six days.",
+    "I2 THE LAZY SPLIT SURVIVES THE FIX. extract.ts still imports no app module at module scope, which its header and tests/unit/b15-generated-blocks.test.ts require, so rendering a markdown table still never boots better-sqlite3. Only the specifier changed, from relative to absolute.",
+    "I3 NO DOCUMENTED BEHAVIOUR MOVES. Six link targets are corrected to the spelling the files already have; the visible link text, which still names the retired uppercase filename, is docs-14's subject and is left alone.",
+    "I4 THE SMOKE PROVES WHAT IT PROVED. It still asserts a run is created, that the backend assigned a run_id, that the run reconciles to completion with output and usage, and that a cancel is accepted. It reaches them through the doors that exist: promote, then the mission's own row."
+  ],
+  "commits": "e6d8ac1a the K1 oracle, red at 3 of 3; 71f1ed7f the three fixes; the chore commit that carries this record and the derived views.",
+  "verification": "Gate by exit code on the finished tree, stamp unmoved: lint 0 (56.7s), tsc 0 (3.8s), jest 0 (52.7s: 6927 tests, 686 suites), knip 0 (5.3s), canary 0 (1.0s), build 0 (28.6s), e2e 0 (165.0s: 272 passed), census 0 (50.0s), census:lines 0 (2.4s). Beside the gate: npx tsx scripts/docs/check.mts 0 (75 pages, 21 routes), check-doc-links 0, and b15-generated-blocks 0 (13 tests), which is the suite that holds extract.ts to lazy imports at module scope. The census rise is the oracle, 100 test lines, held with that reason.",
+  "mutation": "Three mutants against the committed tree at 71f1ed7f, all killed, each putting back one of the three defects: a link returned to the wrong case, a lazy import returned to a relative specifier, and the smoke pointed back at the deleted route. Committed as tests/fixtures/mutants/T-0147.json.",
+  "deviation": "Two of the three fixes cannot be proved on this machine, and the record should not pretend otherwise. The tsx data-URL failure needs Node 20 and the CI runner; the smoke needs Docker and mock-hermes. What this machine proves is that the oracle now SEES all three, that docs:check and the b15 lazy-import contract still pass after the change, and that the promote path the smoke now uses exists with the fields it reads (POST /api/missions action promote returns 200 with the mission; GET /api/missions?id= returns run beside mission; GET /api/runs/[id] carries runId). The pushed run is the proof, and it is read before the next batch starts."
+}
