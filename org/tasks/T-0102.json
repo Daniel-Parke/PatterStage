@@ -27,7 +27,7 @@
     "src/components/agents/",
     "src/modules/hermes/lib/agent-file-store.ts",
     "src/modules/hermes/lib/profiles-repository.ts",
-    "src/lib/agents/agent-root-repository.ts",
+    "src/lib/agent-root-repository.ts",
     "docs/",
     "tests/"
   ],

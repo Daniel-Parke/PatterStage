@@ -99,7 +99,7 @@ where it did not.
   read-only refusal is decided in the same place, by HTTP method. The
   entry claimed that of AUTHORISATION, "never inside a route handler",
   and that absolute is false as written:
-  `requireAuthenticatedHostWrites()` in `src/lib/api/api-auth.ts` returns a
+  `requireAuthenticatedHostWrites()` in `src/lib/api-auth.ts` returns a
   403 from inside five handlers, across
   `src/app/api/cron/hardware/route.ts` and the scripts-by-name route
   beside it. The qualification that matters to the pack is what those

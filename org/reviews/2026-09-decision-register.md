@@ -763,6 +763,7 @@ gh was authenticated as the repo owner, so CI results and protection settings we
 - **Removes:** c8:94-97's live 'missed really missed' check and :111-125's live baseline read, replaced by comparisons against frozen C8 numbers.
 - **Sceptic:** Re-read the whole c8 suite and the baseline, and ran line-census in check and report modes (read-only: it writes only at :286; exit 0; live equals baseline). Added the :88-92 met-target hold the draft left out, where routesWithTryCatch has zero headroom. Corrected c8's jest cost to 4.3 s, and recorded the removal in 'removes'.
 - **Ruling:** Re-anchor to C8, as recommended — Daniel Parke (operator), 2026-09-12.
+  - **Corrected 2026-09-12, T-0149.** "Re-anchor to C8" does not survive the numbers: C8 left testLines at 121,114, which is stricter than the 121,762 C0 found, so anchoring there blocks harder rather than less. The operator was asked again when it blocked and ruled that the committed census baseline governs growth. The amended case asserts that account, not a live count, and the other eleven ratchets are untouched.
 
 #### tests-02a · No gate holds the line-census baseline, while seven suites run the census against looser numbers
 

@@ -33,6 +33,8 @@ itself. Do not build on a proposed ADR without saying that is what you are doing
 | [ADR-0007](../../org/decisions/ADR-0007-adr-home-is-docs-adr.md) | docs/adr/ is the single ADR home; org/decisions/ holds a pointer | superseded |
 | [ADR-0008](../../org/decisions/ADR-0008-adopt-the-v2-eos.md) | Adopt the v2 EOS by recompile at ORG scale; ADRs move to org/decisions/ | accepted |
 | [ADR-0009](../../org/decisions/ADR-0009-retention-for-the-readings-tables.md) | Retention windows for analytics_events and chat_messages, with an opt-in prune that refuses to delete anything the progression record has not captured | accepted |
+| [ADR-0010](../../org/decisions/ADR-0010-governance-corpus-lives-under-org.md) | The governance corpus lives under org/; docs/ holds product documentation only | accepted |
+| [ADR-0011](../../org/decisions/ADR-0011-t-0144-unsanctioned-org-edits.md) | T-0144 edited the protected set without an ADR: the four path lines are ratified, the closed records restored | accepted |
 
 ## Relationship to the EOS
 

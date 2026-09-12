@@ -14,8 +14,8 @@
   "status": "done",
   "owner_session": "t0064-say-what-you-know-2026-08-30",
   "claims": [
-    "src/lib/config/config-cache.ts",
-    "src/lib/api/api-response.ts",
+    "src/lib/config-cache.ts",
+    "src/lib/api-response.ts",
     "src/app/api/config/route.ts",
     "src/components/config/",
     "src/app/config/",

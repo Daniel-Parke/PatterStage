@@ -2,7 +2,7 @@
   "measuredAt": "2026-09-12",
   "counts": {
     "srcLines": 100885,
-    "testLines": 121568,
+    "testLines": 121978,
     "srcRepeatedWindowLines": 1000,
     "testRepeatedWindowLines": 4343,
     "routesWithTryCatch": 13,
@@ -179,6 +179,11 @@
       "measuredAt": "2026-09-12",
       "rise": "testLines rose from 121426 to 121568",
       "reason": "K2 (T-0148): the discipline oracle, 14 tests; plus the hit-target and pipe checks the CI-green batch added in 9df98afc and a68597ae"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "testLines rose from 121568 to 121978",
+      "reason": "K3 (T-0149): the K3 oracle's 309 lines, authored by an ORACLE session, and the 100 lines of the c8 testLines amendment the operator ruled on 2026-09-12"
     }
   ]
 }

@@ -26,7 +26,7 @@
   "scope_beyond_the_report": "The report asked what happens when the SSE drops client-side. The answer turned out to have two shapes, not one. The fast-mode wedge is the one it saw. The other is a turn whose RUN has since been pruned: the reconciler looks the run up, finds nothing, and moves on forever. Same permanent wedge, different route, and it is covered here.",
   "rollback": "Revert 1ac31b49. The oracle at 1b943f07 then goes red again. No schema change involved.",
   "claims": [
-    "src/lib/chat/chat-repository.ts",
+    "src/lib/chat-repository.ts",
     "src/lib/orchestration/chat-dispatch.ts",
     "src/hooks/useChatSend.ts",
     "src/instrumentation.ts",

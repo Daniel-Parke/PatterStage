@@ -26,7 +26,7 @@
   "claims": [
     "src/components/layout/AppPageShell.tsx",
     "src/components/layout/PageHeader.tsx",
-    "src/lib/ui/theme.ts",
+    "src/lib/theme.ts",
     "src/app/",
     "tests/e2e/lib/census-analysis.ts",
     "tests/e2e/lib/census-collect.ts",

@@ -419,7 +419,7 @@ Landed early because it is mechanical and every later batch edits tests.
 - The stanza that actually pays: `@/lib/db`'s crypto-and-transaction block, 10
   lines pasted identically into 37 files. Then the dominant shapes of
   `lucide-react` (26 of 54), `@/components/layout/AppPageShell` (13 of 16),
-  `next/link` (10 of 18), `@/lib/api/api-auth` (16 of 52), `@/lib/runtime` (8 of 17)
+  `next/link` (10 of 18), `@/lib/api-auth` (16 of 52), `@/lib/runtime` (8 of 17)
   and the rest. Every non-dominant shape keeps its own factory, because it is
   testing something different.
 - `tests/helpers/render-with-query.tsx` (22 lines, zero users) deleted.

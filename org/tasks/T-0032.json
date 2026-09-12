@@ -16,7 +16,7 @@
   "claims": [
     "src/app/operations/skills/",
     "src/components/skills/",
-    "src/lib/skills/skills-page-helpers.ts",
+    "src/lib/skills-page-helpers.ts",
     "tests/"
   ],
   "invariants": [
@@ -37,7 +37,7 @@
   },
   "rollback": {
     "plan": "git revert the single commit. The change is client-side render structure only: no schema, no migration, no API route, no config and no data touched, so a revert restores the previous page exactly and needs no follow-up step.",
-    "blast_radius": "src/app/operations/skills/page.tsx, src/components/skills/*, src/lib/skills/skills-page-helpers.ts. No other surface imports them: SimpleMarkdown (used by the skill detail route) is the only file in src/components/skills/ with an outside consumer and it is untouched.",
+    "blast_radius": "src/app/operations/skills/page.tsx, src/components/skills/*, src/lib/skills-page-helpers.ts. No other surface imports them: SimpleMarkdown (used by the skill detail route) is the only file in src/components/skills/ with an outside consumer and it is untouched.",
     "signal": "npm run build plus the frozen oracle. A regression shows up as a red oracle, not as a judgement call."
   },
   "measurements": {
@@ -99,7 +99,7 @@
     "DEFECT FOUND AND FIXED, not in the ruled scope but inside acceptance item 4 (keep the toggles working). The Inactive grid passed a NEGATED toggle fallback to its cards: `onToggleSkill(skill, !skill.enabled)`. For an inactive skill (enabled === false, no pending toggle) the page then resolved 'currently enabled' to TRUE and sent `{ enabled: false }`, so clicking a control labelled 'Enable skill' asked the API to disable a skill that was already disabled, and toasted 'disabled'. A skill could not be re-enabled from the Inactive section at all. Traced in the old code at d606cbe1 (SkillsSections.tsx:221 plus page.tsx:204-209 and :150) and reproduced live. Cards now read their own effective state, so there is no per-section negation left to get backwards, and INV-4 pins both directions. The restructure forced the fix rather than merely permitting it: a flat search-results list mixes active and inactive skills, so there is no section for a fallback to come from.",
     "HONEST LIMIT on the paging path. No category in the real catalogue exceeds 24 skills (the largest holds 9), so the pager does not appear in production today. It is exercised by the oracle against a 60-skill category, which is where the bound is proven. The window is what stops a growing category rebuilding the wall, not something the current data exercises.",
     "HONEST LIMIT on what remains. The 1,436 nodes are dominated by 113 category rows at roughly 7 nodes each; zero skill cards render on load. Node count therefore now scales with CATEGORY count rather than skill count, which is a 5x smaller constant but not a flat line. Rendering every category is the shape the operator asked for ('a scannable list of categories with counts'), so it was left alone rather than quietly paginated past.",
-    "DISCOVERED, NOT FIXED, and worth its own record: the catalogue's categorisation is badly fragmented. 178 rows carry 96 distinct raw categories, 71 of them singletons, and 35 skills carry no category at all and are given a derived one. That is what produces 113 rows for two sections. Grouping cannot be useful at 1.6 skills per category, and fixing it means deriveCategory in src/lib/skills/skills-repository.ts plus the catalogue data, which is outside this task's claims. Not filed as a task ID here because three agents were writing to org/tasks/ concurrently and picking an unassigned ID would have risked a collision; it is recorded here for the router to file.",
+    "DISCOVERED, NOT FIXED, and worth its own record: the catalogue's categorisation is badly fragmented. 178 rows carry 96 distinct raw categories, 71 of them singletons, and 35 skills carry no category at all and are given a derived one. That is what produces 113 rows for two sections. Grouping cannot be useful at 1.6 skills per category, and fixing it means deriveCategory in src/lib/skills-repository.ts plus the catalogue data, which is outside this task's claims. Not filed as a task ID here because three agents were writing to org/tasks/ concurrently and picking an unassigned ID would have risked a collision; it is recorded here for the router to file.",
     "DEVIATION on the frozen oracle, evidenced. One assertion failed on first run against the finished implementation: the 'matches every skill outside the rendered window' case expected 10 rows including wide-skill-059, and the fixture generator emitted wide-skill-000..058, so that row did not exist. The FIXTURE was corrected (numbering from 1, keeping 59 wide + 1 needle = 60 and the catalogue at 178); every frozen expectation, including the 10 and the wide-skill-059, was left exactly as authored. The gate was not moved to meet the code."
   ]
 }

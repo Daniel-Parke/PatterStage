@@ -22,7 +22,7 @@
   "decision_five_minutes": "Five minutes is a compromise, not a measurement. Long enough that reaching it means something is genuinely stuck rather than merely large; short enough that a wedged request does not hold a spinner forever, which is the failure the whole mechanism exists to prevent. Recorded as a judgement so a future reader can overturn it on evidence rather than guessing at intent.",
   "rollback": "Revert 7f667d54.",
   "claims": [
-    "src/lib/api/api-fetch.ts",
+    "src/lib/api-fetch.ts",
     "src/lib/operation-sync-action.ts",
     "src/app/operations/agents/page.tsx",
     "src/app/operations/skills/page.tsx",

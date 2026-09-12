@@ -25,7 +25,7 @@
     "src/components/layout/",
     "src/lib/modules/",
     "src/app/layout.tsx",
-    "src/lib/ui/theme.ts",
+    "src/lib/theme.ts",
     "tests/e2e/rail-no-scroll.spec.ts",
     "tests/unit/"
   ],

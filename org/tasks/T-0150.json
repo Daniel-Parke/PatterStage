@@ -1,0 +1,40 @@
+{
+  "id": "T-0150",
+  "intent": "The e2e suite assumes the developer's own Hermes install. tests/e2e/phone.spec.ts:257 waits for the sessions strip on /results/sessions, and the strip renders only when there is something to count. Sessions arrive by syncing HERMES_HOME, which exists on the operator's machine and on no runner, so the spec passes here and fails in e2e-full, the job that gates the release PR. Make the sessions the suite needs part of the isolated data dir, so the run is hermetic.",
+  "declared": {
+    "capabilities": [
+      "edit-tests"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {
+      "factor": "size-threshold",
+      "tier_floor": "R1",
+      "source": "derived:diff-size",
+      "evidence": "test infrastructure only: the isolated data dir's preparation, and the one spec that depends on it"
+    }
+  ],
+  "status": "proposed",
+  "owner_session": "unassigned",
+  "claims": [
+    "tests/e2e/prepare-data-dir.mjs",
+    "tests/e2e/global-setup.ts",
+    "tests/e2e/phone.spec.ts"
+  ],
+  "programme": "Found by K1 (T-0147) while making CI green, and raised rather than folded in: it is the last thing between the tree and a green acceptance-gate, which the release waits on (Q-011).",
+  "timestamps": {
+    "opened": "2026-09-12T15:10:00Z",
+    "updated": "2026-09-12T15:10:00Z",
+    "closed": null
+  },
+  "invariants": [
+    "I1 THE SUITE OWNS ITS DATA. Every row a spec waits for is put there by the suite's own preparation, so the run does not depend on what the machine has installed.",
+    "I2 NO CHECK IS WEAKENED TO PASS. The strip assertion keeps asserting the strip: one row, under 60px, no ring. Skipping the spec when there are no sessions would make the phone layout untested on every runner, which is where it is least often looked at.",
+    "I3 NOTHING ELSE SEES THE NEW ROWS BY ACCIDENT. Specs that assert an empty sessions list, or count rows, are read first and named in the record."
+  ],
+  "notes": "Evidence, 2026-09-12: e2e-full fails only on this one spec after the hit-target fix (runs 34685554599 then 34686184473, where the three hit-target failures are gone and this one remains). tests/e2e/global-setup.ts checks the seeded profile catalogue and nothing else; tests/e2e/prepare-data-dir.mjs wipes the dir before boot; nothing writes a session. The strip's testid is src/components/viz/StatStrip.tsx:94, and the spec's own comment says 'the e2e data has sessions', which is true only on a machine with Hermes."
+}

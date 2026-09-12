@@ -30,7 +30,7 @@
     "src/lib/db/sql-migrations.ts",
     "src/lib/db/index.ts",
     "src/lib/db-schema.ts",
-    "src/lib/models/fallbacks-repository.ts",
+    "src/lib/fallbacks-repository.ts",
     "tests/helpers/baseline-db.ts",
     "tests/unit/a-custom-fallback-keeps-its-name.test.ts",
     "tests/unit/b13-schedule-kind-migration.test.ts",

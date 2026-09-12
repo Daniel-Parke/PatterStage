@@ -32,7 +32,7 @@
   "owner_session": "unassigned",
   "claims": [
     "src/lib/scripts/",
-    "src/lib/scripts/scripts-manager.ts",
+    "src/lib/scripts-manager.ts",
     "src/lib/scheduler/",
     "src/lib/db/migrations/041_schedules_kind.sql",
     "src/lib/db/",

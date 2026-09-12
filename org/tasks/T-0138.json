@@ -23,7 +23,7 @@
   "status": "done",
   "owner_session": "t0138-c3-one-way-to-write-2026-09-10",
   "claims": [
-    "src/lib/api/api-write.ts",
+    "src/lib/api-write.ts",
     "src/hooks/useModelActions.ts",
     "src/hooks/useModelFallbackChain.ts",
     "src/hooks/useModelFallbackConfig.ts",
@@ -56,7 +56,7 @@
     "closed": "2026-09-10T13:30:00Z"
   },
   "invariants": [
-    "I1 ONE WAY TO WRITE. runWrite in src/lib/api/api-write.ts marks busy, calls, says what happened in the server's words, reloads and clears busy; a hook that owns query keys writes through react-query's useMutation and invalidates them; design-lint's no-raw-write-outside-the-helper refuses a fetch call carrying a method anywhere else and the baseline holds the nineteen files that still do.",
+    "I1 ONE WAY TO WRITE. runWrite in src/lib/api-write.ts marks busy, calls, says what happened in the server's words, reloads and clears busy; a hook that owns query keys writes through react-query's useMutation and invalidates them; design-lint's no-raw-write-outside-the-helper refuses a fetch call carrying a method anywhere else and the baseline holds the nineteen files that still do.",
     "I2 THE WORDS ARE THE SERVER'S. A throw is said through messageFromError, so the route's reason reaches the operator and the fallback is for a throw with no words; a 2xx whose envelope says success:false is said as the failure it is, and the reload still runs (T-0095, D20).",
     "I3 THE NAMED WRITERS SAY NOTHING THEMSELVES. useModelActions, useMissionDispatch, useMissionTemplateActions, useModelFallbackChain, useModelFallbackConfig's sync, useMissionCategories, the dashboard, the three agent pages and the three hindsight hooks write through runWrite or its mission shorthand and carry no try/catch/toastError of their own; the census's writeHooksWithoutMutation reads 0.",
     "I4 A SCREEN READS THROUGH THE HOOK. The Story Weaver pages list themes, characters and stories through useApiResource with a body and re-read after a write; the census's read measure walks the AST for a fetch reachable from a useEffect callback, so a loader called from an effect is counted and a write in a click handler is not, and the eleven it still finds are held by name.",

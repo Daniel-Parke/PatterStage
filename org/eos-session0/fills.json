@@ -28,7 +28,7 @@
   "NARRATIVE": "A single operator sits at a dark console and watches work they did not do themselves. The surface should feel like an instrument rather than a dashboard: dense, legible at arm's length, and honest about what is happening right now versus what merely finished. What stays concealed is the machinery, the framework, the ports, the seams; what escapes anyway is liveness, because a run in flight must look different from a run that ended. The physics the brand draws from is a field: brightness is not decoration but a readout of energy in the system, so an idle console is dim and a working one is not. That is what makes the light budget a mechanism rather than a mood.",
 
   "TOKEN_HOME": "src/app/globals.css (@theme, Tailwind v4)",
-  "TOKEN_MIRROR": "src/lib/ui/theme.ts",
+  "TOKEN_MIRROR": "src/lib/theme.ts",
   "STYLEGUIDE_ROUTE": "set at first build; owed by WG-DEL-003, which rules pixel baselines against a styleguide surface that does not yet exist",
   "SURFACE_LADDER": "set at first build. Currently 32 appearance-named primitives (dark-950 and siblings) with no semantic layer, which TOKENS.md forbids by name; the ladder is ruled when the vendored @pattertech/ui lands",
   "ACCENTS": "set at first build. Ruled by WG-WEB-009 (B): one registered module-to-accent map of four entries. Today five accents are applied decoratively and the map does not exist",

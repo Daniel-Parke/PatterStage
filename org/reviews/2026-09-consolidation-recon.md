@@ -44,7 +44,7 @@ pasted. So the programme is a structural one, and its honest ceiling is lower
 than a copy-paste count would suggest.
 
 **Literal duplication in `tests` is four times larger.** 6,028 lines sit in
-repeated six-line windows. The top windows are three stanzas: the `@/lib/host/paths`
+repeated six-line windows. The top windows are three stanzas: the `@/lib/paths`
 mock (twelve files carry the same eleven lines), a hand-rolled `Request`
 stub (eleven files), and the `@/lib/db` better-sqlite3 stanza (ten files).
 The shared factories U1 built (six of them) are imported by 69 suites; the

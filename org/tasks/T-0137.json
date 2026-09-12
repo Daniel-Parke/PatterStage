@@ -26,7 +26,7 @@
     "src/lib/missions/",
     "src/types/console.ts",
     "src/lib/models/model-types.ts",
-    "src/lib/models/models-repository.ts",
+    "src/lib/models-repository.ts",
     "src/components/models/types.ts",
     "src/components/models/ModelEditor.tsx",
     "src/hooks/useModels.ts",

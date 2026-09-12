@@ -1,0 +1,78 @@
+{
+  "id": "T-0149",
+  "intent": "K3: settle T-0144's unsanctioned org edits the way the operator ruled on 2026-09-12 (Q-010, register entry org-01a). ADR-0011 ratifies the four protected path lines the C7 codemod rewrote, because reverting them would take the auth-surface signal off the two files that carry it and re-edit two immutable ADRs to reinsert paths that no longer exist. The 47 closed records it also rewrote are restored to their pre-cdf95b10 text, because ADR-0010 section 3 says records are historical. A codemod is confined to its claims from here.",
+  "declared": {
+    "capabilities": [
+      "edit-docs",
+      "edit-tests"
+    ],
+    "side_effects": []
+  },
+  "mode": "high-assurance",
+  "tier_proposed": "R3",
+  "tier_ruled": "R3",
+  "reasons": [
+    {
+      "factor": "protected-set-contact",
+      "tier_floor": "R3",
+      "source": "paths:protected",
+      "evidence": "org/decisions/ADR-0011 is a new file in the protected set (org/policy.json:56). The operator's approval is on record as the Q-010 ruling of 2026-09-12, the oracle is authored by a session that is not the implementer, and the record carries a rollback plan."
+    },
+    {
+      "factor": "size-threshold",
+      "tier_floor": "R1",
+      "source": "derived:diff-size",
+      "evidence": "47 restored files at 90 line pairs, plus the ADR"
+    }
+  ],
+  "status": "active",
+  "owner_session": "t0149-k3-the-ratification-2026-09-12",
+  "claims": [
+    "org/decisions/ADR-0011-t-0144-unsanctioned-org-edits.md",
+    "org/tasks/",
+    "org/eos-session0/",
+    "org/EOS_FEEDBACK.md",
+    "org/plans/2026-09-ui-overhaul.md",
+    "org/reviews/",
+    "docs/adr/README.md",
+    "tests/unit/k3-a-closed-record-keeps-its-spelling.test.ts",
+    "org/tasks/T-0149.json",
+    "tests/unit/c8-the-programme-is-closed.test.ts (the ORACLE lane, not this session)"
+  ],
+  "programme": "K3 of the refactor and clean-up programme, executing the operator's ruling on Q-010 (governance as written).",
+  "timestamps": {
+    "opened": "2026-09-12T15:00:00Z",
+    "updated": "2026-09-12T15:30:00Z",
+    "closed": null
+  },
+  "invariants": [
+    "I1 THE PROTECTED LINES ARE RATIFIED, NOT RE-EDITED. org/policy.json, ADR-0009 and ADR-0010 keep the paths the codemod wrote; ADR-0011 is the sanction and says so plainly, including that it is dated after the fact.",
+    "I2 A CLOSED RECORD SAYS WHAT WAS TRUE WHEN IT WAS WRITTEN. Every record closed before 2026-09-10 names no path C7 created. The oracle reads that property from the move map rather than from a list of files, so it keeps holding for every later move.",
+    "I3 THE RESTORE REVERSES THE CODEMOD AND NOTHING ELSE. It reverse-applies exactly cdf95b10's hunks, so anything a later batch legitimately changed in those files stays. Net zero lines.",
+    "I4 EIGHT FILES ARE KEPT, EACH NAMED WITH ITS REASON. The three protected files, the two inside T-0144's own claims, the one live record (T-0055), and the two living documents.",
+    "I5 THE ADR INDEX IS COMPLETE. docs/adr/README.md gains the missing ADR-0010 row beside the new ADR-0011 row (org-14)."
+  ],
+  "rollback": "One revert. The batch is a new ADR file plus a text-only restore that git can reverse: `git revert <feat sha>` puts the 47 files back to their post-codemod text and removes ADR-0011. No schema, no runtime code, no test but the new oracle, and no derived view beyond TASKS.md, which is re-rendered either way. The census does not count org/.",
+  "commits": "pending",
+  "verification": "pending",
+  "mutation": "pending",
+  "deviation": "pending",
+  "oracle_provenance": {
+    "method": "clean-context authorship: an ORACLE session that had not seen the implementation and was told not to look for it",
+    "session": "t0149-oracle-2026-09-12",
+    "files": [
+      {
+        "path": "tests/unit/k3-a-closed-record-keeps-its-spelling.test.ts",
+        "sha256": "23a94321bcee6f2e335a56c1000f36ff5f8830fe74f3824bfae401f4c62fb389"
+      },
+      {
+        "path": "tests/unit/c8-the-programme-is-closed.test.ts",
+        "sha256": "8754b87618f1baf0dba0d3c74943d1f1b69695b687b92e6ea748c9eacd762fe0",
+        "note": "the third amendment, authored by the same ORACLE lane on 2026-09-12"
+      }
+    ],
+    "frozen": "2026-09-12, committed red at 4 of 8 in 661e4e3e before any implementation existed",
+    "not_gated": "The four closed plans and reviews. The ORACLE session found no property in the tree that separates a closed plan from a living one without a filename list: status front matter is absent from two of them and present on the consolidation plan, which must be KEPT. It named the gap rather than writing a rule that would fail a keep. The cheap honest fix, if the operator wants them covered, is a closed date in plan and review front matter.",
+    "amendment": "c8 blocked this batch on its twelve C0 ratchet cases: testLines read 121878 against C0 121762, and every oracle this programme writes raises it. Put to the operator on its own and ruled the same day: the committed census baseline governs growth, and c8 stops blocking on a live count for that one measure. Re-anchoring to C8 would have been STRICTER (121114), which the option wording missed and the ORACLE session said so rather than implementing it; the amended case instead asserts the account, that the growth log chains unbroken from C8 to the number the baseline holds and every rise carries a reason. The other eleven cases are untouched and still live against C0."
+  }
+}

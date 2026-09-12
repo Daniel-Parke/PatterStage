@@ -25,7 +25,7 @@
     "src/app/api/agents/progression/route.ts",
     "src/components/composer/profile-options.ts",
     "src/app/orchestration/composer/page.tsx",
-    "src/lib/system/system-repository.ts",
+    "src/lib/system-repository.ts",
     "tests/"
   ],
   "invariants": [

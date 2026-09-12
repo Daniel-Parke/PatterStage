@@ -14,10 +14,10 @@
   "status": "done",
   "owner_session": "t0040-chat-failure-truth-2026-08-26",
   "claims": [
-    "src/lib/chat/chat-utils.ts",
+    "src/lib/chat-utils.ts",
     "src/hooks/useAgentRunStream.ts",
     "src/hooks/useRunProgress.ts",
-    "src/lib/api/api-fetch.ts",
+    "src/lib/api-fetch.ts",
     "src/app/api/runs/",
     "src/app/api/chat/",
     "tests/"

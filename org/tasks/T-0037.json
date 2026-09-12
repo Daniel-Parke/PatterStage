@@ -14,7 +14,7 @@
   "status": "done",
   "owner_session": "t0037-grouping-2026-08-26",
   "claims": [
-    "src/lib/skills/skills-grouping.ts",
+    "src/lib/skills-grouping.ts",
     "tests/"
   ],
   "timestamps": {
@@ -27,20 +27,20 @@
     "INV-2 One bucket carries one state key. Two spellings of one label produce a single categoryStateKey, so the collapse and paging state T-0032 hung off the key cannot split with the bucket.",
     "INV-3 The merged bucket's label does not depend on arrival order. Whichever spelling the catalogue returns first, the header reads the same.",
     "INV-4 Nothing that renders differently is merged. A separator-free spelling keeps its own bucket: the key normalises as far as the display does and no further.",
-    "INV-5 Both consumers inherit the key from the one helper and neither re-implements it: src/app/api/skills/route.ts:97 and src/lib/skills/skills-page-helpers.ts:63-69."
+    "INV-5 Both consumers inherit the key from the one helper and neither re-implements it: src/app/api/skills/route.ts:97 and src/lib/skills-page-helpers.ts:63-69."
   ],
   "oracle": {
     "authored": "before implementation, in the owning session, per EXECUTOR R2",
     "files": [
       "tests/unit/skills-category-normalization.test.ts"
     ],
-    "frozen_evidence": "Run against the unmodified helper at 3afabcc8: 5 failed, 14 passed of 19. The five red are the four T-0037 cases plus the corrected 'Fine-Tuning' expectation. Re-run in both directions after the fix landed: reverting src/lib/skills/skills-grouping.ts to HEAD reproduced exactly the same five failures, and restoring it returned the file to green, so the guard is known to fail against the old behaviour rather than merely passing against the new one.",
+    "frozen_evidence": "Run against the unmodified helper at 3afabcc8: 5 failed, 14 passed of 19. The five red are the four T-0037 cases plus the corrected 'Fine-Tuning' expectation. Re-run in both directions after the fix landed: reverting src/lib/skills-grouping.ts to HEAD reproduced exactly the same five failures, and restoring it returned the file to green, so the guard is known to fail against the old behaviour rather than merely passing against the new one.",
     "final": "19 passed in the oracle file, 42 passed with tests/unit/skills-page-helpers.test.ts alongside it. Full suite 354 of 356 suites green; the two red suites are T-0038's frozen oracle, written in another session and awaiting its own implementation, and neither references skills.",
     "deviation": "One assertion in the oracle was wrong as authored, and it was corrected before the implementation was believed rather than after: it claimed all four 'Control Hub' spellings render one label, but titleCaseCategory raises the first letter of each word and leaves the rest, so 'CONTROL  HUB' renders 'CONTROL HUB'. The case fold was never the missing part; the separators were. The corrected assertion is stricter, not looser, and it still failed against the old helper."
   },
   "rollback": {
     "plan": "git revert the single commit. The change is one pure function plus its tests: no schema, no migration, no route contract, no config and no persisted state, so a revert restores the previous behaviour exactly and needs no follow-up step. Category collapse and paging state is useState in src/app/operations/skills/page.tsx and is never persisted, so no stored key goes stale in either direction.",
-    "blast_radius": "src/lib/skills/skills-grouping.ts, and through it the two callers named in INV-5. The API response's `categories` map now keys on 'control hub' where it keyed on 'control-hub'; the only reader of those keys is Object.keys(...).length in the same handler, and the page groups `skills` itself rather than reading the map, so no client reads the key strings.",
+    "blast_radius": "src/lib/skills-grouping.ts, and through it the two callers named in INV-5. The API response's `categories` map now keys on 'control hub' where it keyed on 'control-hub'; the only reader of those keys is Object.keys(...).length in the same handler, and the page groups `skills` itself rather than reading the map, so no client reads the key strings.",
     "signal": "The oracle plus npm run build. A regression here shows up as a red oracle, because INV-1 is an equality between the key and the label rather than a judgement call."
   },
   "notes": [

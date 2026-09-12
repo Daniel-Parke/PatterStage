@@ -22,8 +22,8 @@
   "owner_session": "session-b10",
   "claims": [
     "src/lib/missions/",
-    "src/lib/ui/status-labels.ts",
-    "src/lib/schedule/schedules-repository.ts",
+    "src/lib/status-labels.ts",
+    "src/lib/schedules-repository.ts",
     "src/app/api/missions/",
     "src/app/work/missions/",
     "src/app/results/sessions/page.tsx",

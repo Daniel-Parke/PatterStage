@@ -15,7 +15,7 @@
   "owner_session": "t0038-config-unknown-section-2026-08-26",
   "claims": [
     "src/app/config/",
-    "src/lib/config/config-schema.ts",
+    "src/lib/config-schema.ts",
     "tests/"
   ],
   "invariants": [
@@ -39,7 +39,7 @@
   },
   "rollback": {
     "plan": "git revert the single commit. Client-side render plus one pure module function: no schema, no migration, no API route, no config file and no data touched, so a revert restores the previous 404 branch exactly and needs no follow-up step.",
-    "blast_radius": "src/app/config/[section]/page.tsx and the two new exports in src/lib/config/config-schema.ts. CONFIG_SECTIONS, getSectionDef and fileKeyForFilePath keep their signatures; getSectionDef's only behaviour change is that inherited Object.prototype keys stop counting as sections, which previously returned a Function where a SectionDef was expected and crashed the render.",
+    "blast_radius": "src/app/config/[section]/page.tsx and the two new exports in src/lib/config-schema.ts. CONFIG_SECTIONS, getSectionDef and fileKeyForFilePath keep their signatures; getSectionDef's only behaviour change is that inherited Object.prototype keys stop counting as sections, which previously returned a Function where a SectionDef was expected and crashed the render.",
     "signal": "npm run build plus the frozen oracle. A regression shows as a red oracle, not as a judgement call."
   },
   "notes": [
