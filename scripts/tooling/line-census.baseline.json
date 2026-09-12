@@ -2,7 +2,7 @@
   "measuredAt": "2026-09-12",
   "counts": {
     "srcLines": 100881,
-    "testLines": 121259,
+    "testLines": 121398,
     "srcRepeatedWindowLines": 1000,
     "testRepeatedWindowLines": 4343,
     "routesWithTryCatch": 13,
@@ -154,6 +154,11 @@
       "measuredAt": "2026-09-12",
       "rise": "testLines rose from 121204 to 121259",
       "reason": "K0 (T-0146): the register oracle, 4 tests, and the c8 amendment its own growth forced (POLICY-closed-oracles, ruled 2026-09-12)"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "testLines rose from 121259 to 121398",
+      "reason": "K1 (T-0147): the oracle that holds the three CI failures, each checkable on Windows"
     }
   ]
 }

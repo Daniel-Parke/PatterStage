@@ -210,7 +210,7 @@ taken through SQLite's own backup API, so they are consistent copies of a
 running database; the first two are file copies taken with the app stopped.
 Settings > System lists every one of them and prints the restore command.
 
-Hermes/Hindsight memory backups are separate (`scripts/hardware/ps-backup.sh`). General host backups should include `PS_DATA_DIR` and `HERMES_HOME`. See [DEPLOY.md](DEPLOY.md).
+Hermes/Hindsight memory backups are separate (`scripts/hardware/ps-backup.sh`). General host backups should include `PS_DATA_DIR` and `HERMES_HOME`. See [DEPLOY.md](deploy.md).
 
 ## Data directory & paths
 

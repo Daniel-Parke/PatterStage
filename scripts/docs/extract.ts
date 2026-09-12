@@ -25,13 +25,26 @@
 
 import { readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join, relative, resolve, sep } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import process from "node:process";
 
 import { GENERATED_BLOCK_IDS, findGeneratedBlocks, replaceGeneratedBlock } from "./lib.mjs";
 
 const ROOT = fileURLToPath(new URL("../..", import.meta.url));
 const DOCS = join(ROOT, "docs");
+
+/**
+ * An absolute file URL for a lazily imported app module.
+ *
+ * A bare relative specifier cannot be resolved from inside a dynamic import
+ * when tsx has compiled this file into a data: URL, which is what CI's Node
+ * does: the base is not hierarchical and docs:check dies. An absolute URL
+ * needs no base. The imports stay lazy, which is the property the header and
+ * b15 protect.
+ */
+function appModule(...parts: string[]): string {
+  return pathToFileURL(join(ROOT, ...parts)).href;
+}
 
 /** Repo-root-relative and forward-slashed, so a printed path reads the same on every host. */
 function rel(absolute: string): string {
@@ -72,7 +85,9 @@ function table(headers: readonly string[], rows: readonly (readonly unknown[])[]
 // ── the nine ──────────────────────────────────────────────────
 
 async function achievementsBlock(): Promise<string> {
-  const derive = await import("../../src/lib/stats/derive");
+  const derive: typeof import("../../src/lib/stats/derive") = await import(
+    appModule("src", "lib", "stats", "derive.ts"),
+  );
   return table(
     ["Achievement", "Tier", "Points", "Unlocked by"],
     derive.ACHIEVEMENT_DEFS.map((def) => [
@@ -90,7 +105,9 @@ async function achievementsBlock(): Promise<string> {
  * ones are deliberately outside that list, and a hand-written table forgot it.
  */
 async function eventTypesBlock(): Promise<string> {
-  const types = await import("../../src/lib/analytics/event-types");
+  const types: typeof import("../../src/lib/analytics/event-types") = await import(
+    appModule("src", "lib", "analytics", "event-types.ts"),
+  );
   const completionist = new Set<string>(types.COMPLETIONIST_EVENT_TYPES);
   return table(
     ["Event type", "Counts toward Completionist"],
@@ -109,7 +126,9 @@ function lintStepsBlock(): string {
 }
 
 async function configSectionsBlock(): Promise<string> {
-  const sections = await import("../../src/lib/config/config-sections");
+  const sections: typeof import("../../src/lib/config/config-sections") = await import(
+    appModule("src", "lib", "config", "config-sections.ts"),
+  );
   return table(
     ["Group", "Sections", "What it covers"],
     sections.SETTINGS_GROUPS.map((group) => [
@@ -227,9 +246,8 @@ function schemaHeadBlock(): string {
  * check against their own history and `{kind:"event",target:2}` is not.
  */
 async function questsBlock(): Promise<string> {
-  const { QUEST_CHAPTERS, QUEST_DEFS, CONCEPT_LABELS, HOST_REQUIREMENT_COPY } = await import(
-    "../../src/lib/quests/quest-defs.ts"
-  );
+  const { QUEST_CHAPTERS, QUEST_DEFS, CONCEPT_LABELS, HOST_REQUIREMENT_COPY }: typeof import("../../src/lib/quests/quest-defs") =
+    await import(appModule("src", "lib", "quests", "quest-defs.ts"));
 
   const proofWords = (proof: { kind: string; event?: string; fact?: string; target: number }): string => {
     if (proof.kind === "event") {

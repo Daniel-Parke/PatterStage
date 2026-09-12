@@ -12,7 +12,7 @@ compiled_from: normalised
 
 Quick lookup for PatterStage and Hermes paths. Set values in `.env.local` (created by `scripts/bootstrap/setup.sh`) or export them before `npm run start`.
 
-> **Env naming:** canonical variables use the **`PS_`** prefix. The legacy **`CH_`** names (and `CONTROL_HUB_*`) are still read as fallbacks, so an existing `.env.local` keeps working. See [MIGRATION.md → Path & environment rename](MIGRATION.md#path--environment-rename-control-hub--patterstage).
+> **Env naming:** canonical variables use the **`PS_`** prefix. The legacy **`CH_`** names (and `CONTROL_HUB_*`) are still read as fallbacks, so an existing `.env.local` keeps working. See [MIGRATION.md → Path & environment rename](migration.md#path--environment-rename-control-hub--patterstage).
 
 ## Naming
 
@@ -110,8 +110,8 @@ After setup or `ps-deploy update`, `scripts/tooling/discover-agents.mjs` writes 
 
 ## Related docs
 
-- [DEPLOY.md](DEPLOY.md): `ps-deploy`, Docker, TLS
-- [MIGRATION.md](MIGRATION.md): the path and environment rename, data directory moves, how migrations work
+- [DEPLOY.md](deploy.md): `ps-deploy`, Docker, TLS
+- [MIGRATION.md](migration.md): the path and environment rename, data directory moves, how migrations work
 - [HERMES_CONFIG_INTEGRATION.md](env-reference.md): Hermes + PatterStage path checklist
 
 ---

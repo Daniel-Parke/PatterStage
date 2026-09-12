@@ -91,7 +91,7 @@ token-less restart can reach. `ps-deploy.sh` is a thin `exec node …` wrapper.
 
 The `PS_SOCAT_RELAY` LAN relay no longer exists. Its launcher went with the bash
 deploy implementation; nothing in the repo starts `socat` now, so the
-`PS_SOCAT_*` variables are inert. See [DEPLOY.md](DEPLOY.md).
+`PS_SOCAT_*` variables are inert. See [DEPLOY.md](deploy.md).
 
 > `src/lib/host/platform.ts` still carries thin Windows fallbacks for its primitives,
 > so the dev server (`npm run dev`) incidentally runs on a native-Windows box,

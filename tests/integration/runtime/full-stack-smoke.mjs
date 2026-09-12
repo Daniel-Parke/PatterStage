@@ -93,10 +93,22 @@ async function main() {
 
   // ── 3. Dispatch via the runtime (HTTP run) ────────────────
   console.log("3. Dispatch mission as a run");
-  const dispatch = await req("POST", `${CH}/api/missions/${missionId}/dispatch`);
-  const runId = dispatch.data?.data?.runId;
-  const backendRunId = dispatch.data?.data?.backendRunId;
-  check(dispatch.status === 200 && Boolean(runId), `dispatch returned runId (${runId ?? "none"})`);
+  // POST /api/missions/[id]/dispatch was deleted at T-0129; promote is the
+  // door a saved draft goes through now, and it answers with the mission,
+  // so the run it started is read from the mission row and the run record.
+  const promoted = await req("POST", `${CH}/api/missions`, {
+    action: "promote",
+    id: missionId,
+    dispatchMode: "now",
+    name: "Runtime smoke mission",
+    instruction: "Say hello from the mock agent.",
+  });
+  check(promoted.status === 200, `promote accepted (status=${promoted.status})`);
+  const withRun = await req("GET", `${CH}/api/missions?id=${missionId}`);
+  const runId = withRun.data?.data?.run?.id;
+  check(Boolean(runId), `dispatch produced a run (${runId ?? "none"})`);
+  const runRow = await req("GET", `${CH}/api/runs/${runId}`);
+  const backendRunId = runRow.data?.data?.run?.runId;
   check(Boolean(backendRunId) && String(backendRunId).startsWith("run_"), "backend run_id assigned by mock Hermes");
 
   // ── 4. Reconcile until terminal ───────────────────────────
@@ -145,9 +157,16 @@ async function main() {
   });
   const cancelMissionId = cancelMission.data?.data?.mission?.id;
   if (cancelMissionId) {
-    await req("POST", `${CH}/api/missions/${cancelMissionId}/dispatch`);
+    await req("POST", `${CH}/api/missions`, {
+      action: "promote",
+      id: cancelMissionId,
+      dispatchMode: "now",
+      name: "cancel target",
+      instruction: "long task",
+    });
     const cancel = await req("POST", `${CH}/api/missions/${cancelMissionId}/cancel`);
-    check(cancel.status === 200 && cancel.data?.data?.cancelled === true, "mission cancel accepted");
+    // T-0095 made both cancel doors answer { mission, cancel }.
+    check(cancel.status === 200 && cancel.data?.data?.cancel?.accepted === true, "mission cancel accepted");
   }
 
   // ── 7. Legacy god-route now-dispatch routes through the runtime ──
