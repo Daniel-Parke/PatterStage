@@ -90,7 +90,8 @@
       "tests": [
         "tests/unit/k5-the-ruled-security-fixes.test.ts"
       ],
-      "why": "the sentence sat directly above three checks that contradicted it, and a batch touching this file is the one chance to notice; a comment nobody can fail is a comment that drifts"
+      "why": "the sentence sat directly above three checks that contradicted it, and a batch touching this file is the one chance to notice; a comment nobody can fail is a comment that drifts. force: the anchor IS a comment, which is the whole subject of this one — the sweep refuses a comment-only mutant by default, and here that default is the thing being overridden on purpose",
+      "force": true
     },
     {
       "id": "m10-the-signature-gap-stops-being-documented",
@@ -105,22 +106,22 @@
     {
       "id": "m11-the-buttons-warning-disappears",
       "file": "docs/running/env-reference.md",
-      "anchor": "**Setting it also turns off the in-app deploy buttons**",
-      "replacement": "Setting it changes nothing in the app",
+      "anchor": "Update, Rebuild and Restart send no signature and answer 401 `Missing signature headers`.",
+      "replacement": "The buttons keep working.",
       "tests": [
         "tests/unit/k5-the-ruled-security-fixes.test.ts"
       ],
-      "why": "an operator who sets the secret and then finds Update, Rebuild and Restart answering 401 has been misled by their own reference page"
+      "why": "the first aim of this mutant took only the lead-in phrase and the FACT survived in the rest of the sentence, so the oracle was right to let it live: it matches on 401 beside two of the three button names. This one removes the fact. An operator who sets the secret and then finds Update, Rebuild and Restart answering 401 has been misled by their own reference page"
     },
     {
       "id": "m12-security-md-stops-mentioning-framing",
       "file": "docs/SECURITY.md",
-      "anchor": "- **Framing is refused everywhere.**",
-      "replacement": "- Framing:",
+      "anchor": "carries `X-Frame-Options: DENY` and `Content-Security-Policy: frame-ancestors 'none'`, so no other page can put PatterStage in a frame",
+      "replacement": "is protected, so no other page can misuse PatterStage",
       "tests": [
         "tests/unit/k5-the-ruled-security-fixes.test.ts"
       ],
-      "why": "the access-model section is where an operator checks what the product promises; a guarantee the code makes and the document does not is a guarantee nobody relies on"
+      "why": "same correction as m11: the first aim left both header names in the sentence and the oracle was right not to fire. This one takes them out. The access-model section is where an operator checks what the product promises, and a guarantee the code makes and the document does not is a guarantee nobody relies on"
     }
   ]
 }
