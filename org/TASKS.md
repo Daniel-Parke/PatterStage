@@ -160,3 +160,4 @@ The records under org/tasks/ are canonical.
 | T-0145 | standard | R2 | done | t0145-c8-closing-2026-09-11 |
 | T-0146 | standard | R1 | done | t0146-k0-the-register-2026-09-12 |
 | T-0147 | standard | R1 | done | t0147-k1-ci-green-2026-09-12 |
+| T-0148 | standard | R1 | active | t0147-k2-the-discipline-2026-09-12 |

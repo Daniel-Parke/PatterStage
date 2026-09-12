@@ -12,6 +12,39 @@ work stands, what was learned landing it, what is still open, and the exact
 steps a batch goes through. Everything it names is on disk; nothing lives in
 a chat.
 
+## The K programme (from 2026-09-12)
+
+The consolidation programme is closed. What runs now is the refactor and
+clean-up programme, K0 to K19, from task T-0146, after the codebase review of
+2026-09-11.
+
+**Read these three first.**
+
+1. `org/reviews/2026-09-decision-register.md`. Every decision the review left to
+   the operator, re-verified read-only at `ce4ac1fd`, with each option's
+   consequence, a recommendation and the ruling. Ruled on 2026-09-12: the
+   operator adopted option (A) for all eight questions and, with them, every
+   item's recommended option, saying "correct any of them and I will unwind that
+   one".
+2. `org/reviews/2026-09-codebase-review.md`, the review index, and its evidence
+   companion.
+3. `org/QUESTIONS.md`, Q-009 to Q-016, folded with their answers.
+
+**Two rulings bind every batch.** A closed programme's oracle changes only by a
+dated amendment its implementer does not author, for the one rule or key the
+ruled item fixes (Q-015). Public contract means routes, npm scripts, env vars,
+config keys and documented exports, not any exported TypeScript symbol (Q-010).
+
+**What the verification found that the review had not.** `dev` CI had failed on
+every push since 2026-09-05: 61 runs, 55 failed, 6 cancelled, last green
+`d84b7528`. About fifty records from T-0095 to T-0145 landed on red CI while
+this page said green, because no step of the landing discipline read CI. The
+line below that said "dev is pushed and green" was true of the local gate and
+false of CI, and that is the whole lesson.
+
+**So the procedure gained a last step:** after the push, the pushed commit's CI
+is read and must be green before the next batch starts.
+
 ## Read in this order
 
 1. `CLAUDE.md` (the never-rules), then `org/START.md` (boot by mode).
@@ -26,7 +59,8 @@ a chat.
 
 ## Where the programme stands
 
-`dev` is pushed and green. Every batch below has a task record, an oracle
+`dev` is pushed, and green again since 2026-09-12 (see the K programme
+above). Every batch below has a task record, an oracle
 committed red first, a gate by exit code, a mutation sweep against the
 committed tree, and a chore commit carrying the record and the derived views.
 
@@ -79,23 +113,42 @@ plan header says so.
    visit `/?ps_token=u14walk` first, drive it with a Playwright script, stop
    the port. `npm run build` first if src changed.
 4. The gate, by exit code, on the finished tree, with nothing edited while
-   it runs (it stamps the tree before and after): kill ports
-   3000/3477/3577/3939/8642, `rm -rf .next/dev`, then in order
-   `npm run lint`, `npx tsc --noEmit`, `npx jest`, `npm run lint:knip`,
-   `npm run canary:check`, `npm run build`, `npm run test:e2e`,
-   `npm run census`, `npm run census:lines`. Read exit codes, never grep for
-   "error". A Playwright spec that fails only under the gate's load is
-   re-run alone into `e2e2.log` and both are written into the record.
+   it runs: `npm run gate`. The runner frees the ports, clears `.next/dev`,
+   stamps the tree before and after, runs the nine steps in order to their
+   own logs, stops at the first red one and writes `.gate/summary.json`.
+   The step list lives in `scripts/tooling/gate.mjs`, and
+   `npm run gate -- --list` prints it, so no document restates it and none
+   can drift from it. A Playwright spec that fails only under the gate's
+   load is re-run with `npm run gate -- --rerun-alone <spec>`, and both
+   results go on the record.
 5. `git add -A` and the feat commit, with the gate's numbers in the message.
-6. The mutation sweep against the COMMITTED tree (`sweep.py mutants.json`,
-   anchors exact, mutants built with json.dump). A survivor gets the test
-   it asks for as its own commit, then the mutant is re-run and killed.
+6. The mutation sweep against the COMMITTED tree:
+   `npm run sweep -- tests/fixtures/mutants/T-01xx.json`. The mutants are
+   committed beside the tests as data, so anyone can re-run the sweep. It
+   refuses a dirty tree, and it reports NOT-APPLIED for an anchor it could
+   not place exactly once and INEFFECTIVE for a no-op or comment-only edit,
+   neither of which is a kill. A survivor gets the test it asks for as its
+   own commit, then the sweep is re-run.
 7. The record: `org/tasks/T-01xx.json` (intent, tier and reasons, claims,
    invariants, commits, verification with the numbers, mutation, deviation),
-   then `taskops.render_views(...)` from PatterTech_EOS,
-   `node scripts/tooling/check-derived-views.mjs`,
+   then the views, from this repository's root with the EOS checkout on the
+   path:
+
+   ```
+   PYTHONPATH=../PatterTech_EOS python -c "from tools.eos import taskops; print(taskops.render_views('.'))"
+   ```
+
+   then `node scripts/tooling/check-derived-views.mjs`,
    `node scripts/docs/build-site.mjs --manifest-only`, the chore commit,
-   `git push origin dev`.
+   `git push origin dev`. The record names the EOS commit its views were
+   rendered with.
+
+8. **Read the pushed commit's CI, and do not start the next batch until it
+   is green.** `gh run list --branch dev --limit 1`, then
+   `gh run view <id> --log-failed` on anything red. This step exists because
+   its absence cost six days: `dev` failed on all 61 pushes from 2026-09-05
+   while about fifty records reported a green local gate, and two of the
+   three causes could not be seen from Windows at all.
 8. The line census: `--update-baseline` after a fall; a rise only with
    `--allow-growth "<reason>"`, and the reason is what the file keeps. The
    design-lint baseline works the same way. The output canary is

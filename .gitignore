@@ -90,6 +90,11 @@ test-harness/.work/
 # Playwright isolated E2E data dir
 tmp/
 
+# `npm run gate` writes one log per step here. It has to be ignored: the
+# runner stamps `git status --porcelain` before and after, so its own logs
+# appearing in that status would report the tree as moved underneath itself.
+.gate/
+
 # Agent/editor session config. .claude/launch.json was committed by accident in
 # 32bb881 (a `git add -A` sweep); it is a local dev-server preview config, not
 # project state. Kept on disk, out of the repo.

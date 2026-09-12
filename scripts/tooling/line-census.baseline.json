@@ -1,8 +1,8 @@
 {
   "measuredAt": "2026-09-12",
   "counts": {
-    "srcLines": 100881,
-    "testLines": 121426,
+    "srcLines": 100885,
+    "testLines": 121568,
     "srcRepeatedWindowLines": 1000,
     "testRepeatedWindowLines": 4343,
     "routesWithTryCatch": 13,
@@ -169,6 +169,16 @@
       "measuredAt": "2026-09-12",
       "rise": "testLines rose from 121402 to 121426",
       "reason": "the pipe regression check in k1-ci-can-go-green: 18 lines for the truncation only macOS saw"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "srcLines rose from 100881 to 100885",
+      "reason": "K2 (T-0148): the discipline oracle, 14 tests; plus the hit-target and pipe checks the CI-green batch added in 9df98afc and a68597ae"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "testLines rose from 121426 to 121568",
+      "reason": "K2 (T-0148): the discipline oracle, 14 tests; plus the hit-target and pipe checks the CI-green batch added in 9df98afc and a68597ae"
     }
   ]
 }

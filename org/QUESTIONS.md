@@ -64,6 +64,18 @@ execution waits on the answer.
     test at sign-off is what answers this, and it is the only test of the
     seed that matters.
 
+- Q-017 (process): should a closed plan's arithmetic be held row by row rather
+  than section-wide? Context: `org/reviews/2026-09-decision-register.md`
+  (c8-plan-check-scope). Owner: operator.
+  - found on 2026-09-12 by the ORACLE session amending c8 under Q-015, while
+    proving the amended check still bites: restating `oneImporterComponents`
+    from "missed by 8" to "met" in the plan's closing table left the suite
+    green, because the number 103 also appears in the prose below it.
+  - recommended: row-scoped. It is a strengthening, and it is a second
+    amendment to a closed oracle, which is why it is asked rather than taken.
+  - what waits on it: nothing. The check is sound against a number dropped from
+    the section, which is the common failure.
+
 ## Folded
 
 - Q-009 (process): is CI the binding gate from now on? Folded 2026-09-12. Answer, from the

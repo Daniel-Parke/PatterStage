@@ -3014,6 +3014,28 @@ No theme owned these; each was verified against the tree the same way.
 - **Recommended:** Move first — Three entries already depend on it, and editing a note that is due to be replaced wastes the work.
 - **Ruling:** Move first, as recommended — Daniel Parke (operator), 2026-09-12.
 
+## Found while executing, and not yet ruled
+
+These the batches found themselves, after the register was ruled. Each carries
+its own question, and none is acted on until it has an answer.
+
+### Q-017 · Should a closed plan's arithmetic be held row by row?
+
+Found on 2026-09-12 by the ORACLE session amending c8 under Q-015, while proving the amended check still bites.
+
+**Ruling:** _pending_
+
+#### c8-plan-check-scope · The plan check reads the whole closing section, so a miss restated as met can pass
+
+- **Re-verified:** confirmed · **tier floor:** R1 · theme A
+- **Batch:** governance-discipline-gates · **after:** POLICY-closed-oracles
+- **Now:** `tests/unit/c8-the-programme-is-closed.test.ts` searches the plan's whole `## What the programme did` section for each missed measure's number, not that measure's own table row. Rewriting the `oneImporterComponents` row from `130 | 103 | 95 | missed by 8` to `130 | 95 | 95 | met (C6)` left the suite GREEN, because the prose two sections below still says "the 103 that remain are larger pieces". Four of the five missed numbers occur exactly once in that section; 103 occurs twice.
+- **Question:** Should the closed plan's arithmetic be held row by row, so a measure restated as met in the table cannot pass on a number that survives elsewhere in the prose?
+- **Options:**
+  - **Row-scoped match** — the check finds the table row whose first cell is the measure's key and reads the numbers in that row. A strengthening: everything it caught before, it still catches. It is a second amendment to a closed programme's oracle, so under POLICY-closed-oracles it needs this ruling and a non-implementer author. About +8 test lines, R1.
+  - **Leave it** — the check keeps its section-wide scope. It still catches a number dropped from the section entirely, which is the common failure, but not a row rewritten while the number survives in prose. 0 lines.
+- **Recommended:** Row-scoped match — the check exists to stop a miss being flattered into a met, and that is exactly the case it lets through.
+- **Ruling:** _pending_
 ## Decisions the executor takes, and the reason
 
 These are the free band (`org/policy.json:130`): naming, decomposition, test structure, patterns already in the tree, file placement. They are recorded here so the record is complete, and they follow their parent question's ruling.

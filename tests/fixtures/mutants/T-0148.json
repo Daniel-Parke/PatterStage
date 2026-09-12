@@ -1,0 +1,30 @@
+{
+  "task": "T-0148",
+  "why": "K2 puts the gate and the sweep in the repository. Each mutant breaks one thing they promise, and the oracle must go red.",
+  "mutants": [
+    {
+      "id": "m1-a-moved-tree-still-reads-green",
+      "file": "scripts/tooling/gate.mjs",
+      "anchor": "return { red, ok: red.length === 0 && !treeMoved };",
+      "replacement": "return { red, ok: red.length === 0 };",
+      "tests": ["tests/unit/k2-the-discipline-is-in-the-repo.test.ts"],
+      "why": "a gate whose tree moved underneath it measured nothing, and must not report green"
+    },
+    {
+      "id": "m2-an-ambiguous-anchor-passes-as-applied",
+      "file": "scripts/tooling/mutation-sweep.mjs",
+      "anchor": "  const hits = occurrences(source, mutant.anchor);\n  if (hits !== 1) {",
+      "replacement": "  const hits = occurrences(source, mutant.anchor);\n  if (hits === 0) {",
+      "tests": ["tests/unit/k2-the-discipline-is-in-the-repo.test.ts"],
+      "why": "an anchor found twice edits only the first, so the mutant proved nothing and cannot count as applied"
+    },
+    {
+      "id": "m3-a-comment-only-anchor-passes-as-code",
+      "file": "scripts/tooling/mutation-sweep.mjs",
+      "anchor": "  if (!mutant.force && anchorIsCommentOnly(source, mutant.anchor)) {",
+      "replacement": "  if (mutant.force && anchorIsCommentOnly(source, mutant.anchor)) {",
+      "tests": ["tests/unit/k2-the-discipline-is-in-the-repo.test.ts"],
+      "why": "editing a comment changes no behaviour, so a surviving test says nothing about the oracle"
+    }
+  ]
+}
