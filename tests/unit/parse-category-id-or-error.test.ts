@@ -29,9 +29,6 @@ jest.mock("@/lib/api/api-logger", () => ({
   ),
 }));
 jest.mock("@/lib/api/api-auth", () => ({
-  // requireNotReadOnly is the honest name of what these routes call now;
-  // requireAuth stays mocked for the modules that have not been renamed yet.
-  requireNotReadOnly: jest.fn(() => null),
   isReadOnly: jest.fn(() => false),
 }));
 jest.mock("@/lib/api/audit-log", () => ({ appendAuditLine: jest.fn() }));

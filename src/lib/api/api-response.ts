@@ -46,7 +46,9 @@ export function payloadTooLarge(error: string): NextResponse {
 }
 
 /** 503 for ad-hoc cases (missing migration, sync layer offline). Read-only mode
- *  goes through `requireNotReadOnly` in `@/lib/api/api-auth`, whose message carries the env-var hint. */
+ *  answers from `src/proxy.ts` before a handler runs; the three host-side routes
+ *  that also check for themselves pass `readOnlyMessage()`, which carries the
+ *  env-var hint. */
 export function serviceUnavailable(error: string): NextResponse {
   return NextResponse.json({ error }, { status: 503 });
 }

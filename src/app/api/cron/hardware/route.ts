@@ -22,8 +22,15 @@ import { handleUpdateHardwareCron } from "@/lib/hardware-cron-handlers/update";
  *   PS_SCRIPTS_DIR (default: PS_DATA_DIR/scripts)
  *
  * Authentication is enforced once in src/proxy.ts, and so is read-only mode,
- * which refuses unsafe methods before any handler runs. No route in this
- * directory carries either check (T-0048).
+ * which refuses unsafe methods before any handler runs.
+ *
+ * The three handlers below nonetheless carry an isReadOnly() check of their
+ * own, beside requireAuthenticatedHostWrites, and both doublings are
+ * deliberate. A crontab line this route writes is executed later by cron, so
+ * this is one of the three host-side surfaces proxy.ts:58-63 names: a harness
+ * that calls a handler directly, without the proxy, must still be refused.
+ * app-06 (ruled 2026-09-12) deleted the eleven route-level read-only checks
+ * that were NOT host-side and kept these.
  */
 
 export async function GET(_request: NextRequest) {

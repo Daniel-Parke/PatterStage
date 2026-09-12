@@ -5,7 +5,6 @@
 
 import type { NextRequest } from "next/server";
 
-import { requireNotReadOnly } from "@/lib/api/api-auth";
 import { badRequest, ok } from "@/lib/api/api-response";
 import { readOperatorPrefs, validateOperatorPref, writeOperatorPref } from "@/lib/system/operator-prefs-repository";
 import { route } from "@/lib/api/api-route";
@@ -15,10 +14,6 @@ export const GET = route("GET /api/prefs", "reading preferences", "Failed to rea
 });
 
 export const PUT = route("PUT /api/prefs", "writing a preference", "Failed to save the preference", async (request: NextRequest) => {
-  // The proxy refuses every write under read-only first; this names the thing.
-  const refused = requireNotReadOnly("preferences");
-  if (refused) return refused;
-
   const body = (await request.json().catch(() => null)) as { key?: unknown; value?: unknown } | null;
   if (!body || typeof body.key !== "string") {
     return badRequest("Body must be { key, value } with a key from the allow-list.");

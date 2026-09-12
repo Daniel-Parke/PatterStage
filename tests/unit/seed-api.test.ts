@@ -1,9 +1,12 @@
 /** @jest-environment node */
 
-jest.mock("@/lib/api/api-auth", () => ({
-  // T-0100: POST /api/seed refuses under read-only before it touches anything.
-  requireNotReadOnly: () => null,
-}));
+// The api-auth double that was here replaced the whole module so the route's
+// requireNotReadOnly("restore") would answer null. app-06 (T-0153) deleted that
+// guard, and /api/seed now imports nothing from api-auth, so a factory here
+// would be dead weight — which is what tests/unit/read-only-is-testable.test.ts
+// and docs/contributing/testing.md both call the vestigial pattern.
+// The refusal itself is driven through proxy() in
+// tests/unit/k5-the-ruled-security-fixes.test.ts.
 
 jest.mock("@/lib/api/api-logger", () => ({
   logApiError: jest.fn(),

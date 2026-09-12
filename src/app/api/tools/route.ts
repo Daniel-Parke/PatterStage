@@ -5,7 +5,6 @@ import type { NextRequest } from "next/server";
 // Runtime tool access is configured per profile via platform_toolsets
 // (Agent → Tools). This route does not control Hermes runtime.
 
-import { requireNotReadOnly } from "@/lib/api/api-auth";
 import { methodNotAllowed, ok } from "@/lib/api/api-response";
 import {
   HERMES_CONFIGURABLE_TOOLSETS,
@@ -31,9 +30,6 @@ export async function GET() {
 }
 
 export async function POST(_request: NextRequest) {
-  const ro = requireNotReadOnly("tool mutations are disabled");
-  if (ro) return ro;
-
   return methodNotAllowed(
     "Tool registry mutations are disabled. Configure Hermes runtime toolsets on Agent → Tools (profile-scoped platform_toolsets).", ["GET"]);
 }

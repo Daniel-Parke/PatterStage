@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { requireNotReadOnly } from "@/lib/api/api-auth";
 import { badRequest, methodNotAllowed, notFound, ok } from "@/lib/api/api-response";
 
 // Round 6, finding 15: GET/POST here answered Next's empty framework 405.
@@ -27,9 +26,6 @@ import { recordEvent } from "@/lib/analytics/record-event";
 import { route } from "@/lib/api/api-route";
 
 export const PUT = route("PUT /api/skills/[name]/toggle", (p) => `toggle ${p.name}`, "Failed to toggle skill", async (request: NextRequest, { params }: { params: Promise<{ name: string }> }) => {
-  const ro = requireNotReadOnly("skill toggles are disabled");
-  if (ro) return ro;
-
   const { name } = await params;
 
   const bodyResult = await parseJsonBody(request);

@@ -51,6 +51,41 @@ const nextConfig: NextConfig = {
   // unaffected: allowedDevOrigins applies to `next dev` only.
   allowedDevOrigins: ["localhost", "127.0.0.1", "[::1]", "*.local", ...extraOrigins],
 
+  // PatterStage refuses to be shown inside a frame (critic-04, ruled
+  // 2026-09-12). Every response with a body carries both headers: pages, API
+  // answers, the proxy's own 401 and 503, and 404s, all measured against a
+  // running server. The redirects() entries below answer a bodiless 307 and do
+  // not, which costs nothing — there is no document there to frame, and the
+  // page each one lands on refuses.
+  //
+  // The reason it mattered is that SameSite=Lax is decided by SITE, not by
+  // port. A page served on another port of the same host or IP is same-site,
+  // so a frame there receives the ps_session cookie, and src/proxy.ts's
+  // same-origin check accepts the Sec-Fetch-Site value a click inside a
+  // same-origin frame produces. That is enough to trick clicks on the deploy,
+  // script and credential controls — which is to say, on shell access.
+  //
+  // DENY rather than SAMEORIGIN, because nothing here embeds PatterStage in
+  // anything: the only iframe mentions in the tree are a comment on the help
+  // page saying it is NOT an iframe, and an entry in a focusable-element
+  // selector list. Both headers are sent, because X-Frame-Options is what old
+  // browsers read and frame-ancestors is what the standard says.
+  //
+  // This is a frame-ancestors policy and nothing else. A script-src CSP needs
+  // Next's nonce support and a build, and is deliberately a separate piece of
+  // work rather than something smuggled in beside a one-line header.
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "Content-Security-Policy", value: "frame-ancestors 'none'" },
+        ],
+      },
+    ];
+  },
+
   // Every page path moved in the final-release regroup (T-0097, decision 8):
   // WORK, RESULTS and AGENT replace orchestration, laboratory, operations, the
   // config tree and the four top-level pages. Each old path answers a 307 to

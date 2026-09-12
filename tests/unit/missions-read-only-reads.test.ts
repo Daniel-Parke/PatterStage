@@ -100,21 +100,17 @@ describe("PS_READ_ONLY=true", () => {
     expect(res.status).toBe(200);
   });
 
-  it("still refuses POST /api/missions, which is a write", async () => {
-    const route = require("@/app/api/missions/route") as {
-      POST: (req: unknown) => Promise<Res>;
-    };
-    const res = await route.POST({ json: async () => ({ action: "promote" }) });
-    expect(res.status).toBe(503);
-  });
-
-  it("still refuses POST /api/missions/[id]/cancel", async () => {
-    const route = require("@/app/api/missions/[id]/cancel/route") as {
-      POST: (req: unknown, ctx: { params: Promise<{ id: string }> }) => Promise<Res>;
-    };
-    const res = await route.POST({}, { params: Promise.resolve({ id: "m1" }) });
-    expect(res.status).toBe(503);
-  });
+  // Two cases were here: "still refuses POST /api/missions, which is a write"
+  // and "still refuses POST /api/missions/[id]/cancel". Both called the handler
+  // directly and pinned the 503 that the route's own requireNotReadOnly
+  // produced, which app-06 (ruled 2026-09-12) deleted. Neither mission route is
+  // host-side, so src/proxy.ts is the only boundary and it refuses the METHOD
+  // before either handler runs.
+  //
+  // They moved rather than went: k5-the-ruled-security-fixes.test.ts drives
+  // both through proxy() under the mode and requires the 503 and the remedy
+  // sentence. This file keeps what it is actually about — that the READS still
+  // answer under the mode, which is the defect it was written for.
 });
 
 describe("with writes allowed", () => {

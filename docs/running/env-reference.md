@@ -67,7 +67,7 @@ Enforced in `src/proxy.ts` for every request. See [SECURITY.md](../SECURITY.md) 
 |----------|---------|
 | `PS_ENABLE_DEPLOY_API` | Gates `POST /api/update`: Update, Rebuild and Restart on Settings › System (they left the sidebar in the final-release regroup; the rail keeps a version line and an "Update available" badge). Setup writes `true` on a fresh install and never overwrites a value already there, so the buttons work out of the box and stay off if you turned them off. Set `0`/`false`/`no` to close the route; the page says so before the click. Unset (an install that predates setup writing it), the gate is open whenever `NODE_ENV !== "production"` and closed in production. |
 | `PS_UPDATE_GIT_BRANCH` | Branch for `ps-deploy update` (default `dev`) |
-| `PS_REQUEST_SIGNING_SECRET` | Optional HMAC on `POST /api/update`, the only route that checks it. When set, the request must carry `x-ps-ts` and `x-ps-signature` inside a 5 minute window. |
+| `PS_REQUEST_SIGNING_SECRET` | Optional HMAC on `POST /api/update`, the only route that checks it. When set, the request must carry `x-ps-ts` and `x-ps-signature` inside a 5 minute window. **The signature does not cover the request body**, and there is no nonce, so a captured signed request can be replayed with another action or branch inside that window. **Setting it also turns off the in-app deploy buttons**: Update, Rebuild and Restart send no signature and answer 401 `Missing signature headers`. Set it only if you drive the route from your own signed client. |
 
 ## Runtime / gateway
 

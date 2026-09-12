@@ -232,7 +232,7 @@ a test that sets `PS_READ_ONLY` actually gets read-only behaviour.
 checked the read-only flag; authentication and read-only now live once in
 [`src/proxy.ts`](../../src/proxy.ts), enforced by HTTP method. Mocking it grants a route
 test nothing. Worse, a factory without `requireActual` replaces the whole module, so
-the name the handler really imports (`requireNotReadOnly`, `isReadOnly`,
+the name the handler really imports (`isReadOnly`,
 `requireAuthenticatedHostWrites`) comes back undefined and the handler throws.
 
 `tests/unit/read-only-is-testable.test.ts` fails the build on a factory that names an

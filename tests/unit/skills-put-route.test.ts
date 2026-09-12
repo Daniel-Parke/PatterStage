@@ -26,7 +26,6 @@ jest.mock("@/lib/api/audit-log", () => ({
 const mockRequireAuth = jest.fn((..._a: unknown[]): NextResponse | null => null);
 
 jest.mock("@/lib/api/api-auth", () => ({
-  requireNotReadOnly: jest.fn(() => null),
   isReadOnly: jest.fn(() => false),
 }));
 

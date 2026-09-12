@@ -13,7 +13,6 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { recordEvent } from "@/lib/analytics/record-event";
-import { requireNotReadOnly } from "@/lib/api/api-auth";
 import { serverErrorFromCatch } from "@/lib/api/api-logger";
 import { created, ok } from "@/lib/api/api-response";
 import { appendAuditLine } from "@/lib/api/audit-log";
@@ -35,12 +34,6 @@ export const GET = route("GET /api/backup", "listing the database backups", "Fai
 });
 
 export async function POST(): Promise<Response> {
-  // Read-only mode. NOT authentication: src/proxy.ts authenticates every
-  // request and already refuses unsafe methods under PS_READ_ONLY. This is the
-  // belt, spelled with the resource's name so the refusal says what it refused.
-  const readOnly = requireNotReadOnly("database backups");
-  if (readOnly) return readOnly;
-
   try {
     const backup = await snapshotDatabase("manual");
     appendAuditLine({ action: "backup.create", resource: backup.name, ok: true });

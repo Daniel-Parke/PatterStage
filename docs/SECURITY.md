@@ -61,6 +61,7 @@ PatterStage is a single-operator control plane, so authentication is one shared 
 - Cookie-authenticated writes must be **same-origin** (`Sec-Fetch-Site` / `Origin`), so a page you visit in another tab cannot drive your control plane.
 - `PS_READ_ONLY=1` rejects unsafe **methods**. Reads keep working.
 - `/api/health` is the only unauthenticated route. It returns `{"ok":true}` and nothing about your system; the deploy runner and container health checks use it.
+- **Framing is refused everywhere.** Every response that has a body (pages, API answers, the sign-in refusal, 404s) carries `X-Frame-Options: DENY` and `Content-Security-Policy: frame-ancestors 'none'`, so no other page can put PatterStage in a frame. (The 307s from the old pre-1.0 URLs do not carry them, which costs nothing: a redirect has no body to frame, and the page it lands on refuses.) This matters because `SameSite=Lax` is decided by site, not by port: a page served on another port of the same host would otherwise be same-site, receive your session cookie inside the frame, and be able to trick clicks on the deploy, script and credential controls. If you want PatterStage on a dashboard, link to it rather than embed it.
 
 > **Treat the token as root on the host.** It grants mission dispatch and agent access, and the agent's toolset includes terminal access.
 

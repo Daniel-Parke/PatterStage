@@ -11,7 +11,6 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextRequest } from "next/server";
-import { requireNotReadOnly } from "@/lib/api/api-auth";
 import { handleCancelMission } from "@/lib/missions/mission-handlers/cancel";
 import { route } from "@/lib/api/api-route";
 
@@ -20,14 +19,6 @@ interface Ctx {
 }
 
 export const POST = route("POST /api/missions/[id]/cancel", (p) => `id=${p.id}`, "Failed to cancel mission", async (_request: NextRequest, ctx: Ctx) => {
-  // Read-only mode. NOT authentication: src/proxy.ts authenticates every
-  // request before a handler runs, and design-lint forbids a per-route auth
-  // check. The proxy also refuses unsafe METHODS under PS_READ_ONLY, so this
-  // is defence in depth on a write, spelled with the name that says what it
-  // does (T-0034).
-  const readOnly = requireNotReadOnly("mission runs cannot be cancelled");
-  if (readOnly) return readOnly;
-
   const { id } = await ctx.params;
   return handleCancelMission({ id });
 });

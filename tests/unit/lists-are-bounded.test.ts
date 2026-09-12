@@ -85,7 +85,7 @@ describe("the routes plumb the bound through", () => {
     jest.doMock("@/lib/missions/mission-repository", () => ({ listMissions, getMission: jest.fn(), MISSION_LIST_BOUNDS: { defaultLimit: 200, maxLimit: 500 } }));
     jest.doMock("@/lib/runs/runs-repository", () => ({ listLatestRunsForMissions: () => new Map(), getLatestRunForMission: jest.fn() }));
     jest.doMock("@/lib/sync", () => ({ ensureSyncLayer: jest.fn() }));
-    jest.doMock("@/lib/api/api-auth", () => ({ requireNotReadOnly: () => null }));
+    jest.doMock("@/lib/api/api-auth", () => ({ isReadOnly: () => false }));
     const { GET } = require("@/app/api/missions/route") as typeof import("@/app/api/missions/route");
 
     const res = await GET(req("/api/missions?limit=5&offset=10"));
@@ -100,7 +100,7 @@ describe("the routes plumb the bound through", () => {
     jest.doMock("@/lib/missions/mission-repository", () => ({ listMissions, getMission: jest.fn(), MISSION_LIST_BOUNDS: { defaultLimit: 200, maxLimit: 500 } }));
     jest.doMock("@/lib/runs/runs-repository", () => ({ listLatestRunsForMissions: () => new Map(), getLatestRunForMission: jest.fn() }));
     jest.doMock("@/lib/sync", () => ({ ensureSyncLayer: jest.fn() }));
-    jest.doMock("@/lib/api/api-auth", () => ({ requireNotReadOnly: () => null }));
+    jest.doMock("@/lib/api/api-auth", () => ({ isReadOnly: () => false }));
     const { GET } = require("@/app/api/missions/route") as typeof import("@/app/api/missions/route");
 
     const res = await GET(req("/api/missions?limit=abc&offset=-3"));

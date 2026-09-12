@@ -14,7 +14,6 @@ import { getLatestRunForMission, listLatestRunsForMissions } from "@/lib/runs/ru
 import { buildMissionRunView } from "@/lib/orchestration/run-deadline";
 import { getScheduleForMission, listSchedulesForMissions } from "@/lib/schedule/schedules-repository";
 import { toMissionScheduleView } from "@/lib/missions/mission-schedule-view";
-import { requireNotReadOnly } from "@/lib/api/api-auth";
 import { serverErrorFromCatch } from "@/lib/api/api-logger";
 import { parseJsonBody } from "@/lib/api/parse-json-body";
 import { badRequest, ok } from "@/lib/api/api-response";
@@ -86,13 +85,6 @@ export async function GET(request: NextRequest) {
 // ── POST ──────────────────────────────────────────────────────
 
 export const POST = route("POST /api/missions", "processing request", "Internal server error", async (request: NextRequest) => {
-  // One read-only guard, not two. This handler carried requireAuth() AND an
-  // isReadOnly() block, which are the same check: requireAuth IS
-  // requireNotReadOnly under an older name. The duplication is what the name
-  // was costing (T-0034).
-  const readOnly = requireNotReadOnly("missions cannot be created or changed");
-  if (readOnly) return readOnly;
-
   ensureSyncLayer();
 
   // parseJsonBody sits outside the main try/catch so malformed JSON returns

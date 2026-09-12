@@ -1,10 +1,10 @@
 {
   "measuredAt": "2026-09-12",
   "counts": {
-    "srcLines": 101050,
-    "testLines": 122396,
+    "srcLines": 100983,
+    "testLines": 123081,
     "srcRepeatedWindowLines": 1000,
-    "testRepeatedWindowLines": 4343,
+    "testRepeatedWindowLines": 4334,
     "routesWithTryCatch": 13,
     "handRolledReadHooks": 0,
     "writeHooksWithoutMutation": 0,
@@ -214,6 +214,11 @@
       "measuredAt": "2026-09-12",
       "rise": "testLines rose from 122386 to 122396",
       "reason": "T-0151: the two holes the mutation sweep found in the K4 oracle — a restrictToOwner count loose enough to survive deleting one, and a .dockerignore substring test that a commented-out rule still satisfies"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "testLines rose from 122396 to 123081",
+      "reason": "K5/T-0153, the ruled security items: the K5 oracle, 65 cases and 771 lines, which drives every route losing a route-level read-only check through proxy() and calls the six host-side handlers directly. Net of the eleven cases app-06's ruling deletes with the function they tested, each replaced in the oracle and each removal site carrying a pointer to where the assertion went"
     }
   ]
 }

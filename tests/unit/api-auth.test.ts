@@ -2,11 +2,7 @@
 import { createHmac } from "crypto";
 import { NextRequest } from "next/server";
 
-import {
-  getCorrelationId,
-  requireNotReadOnly,
-  requireSignedRequest,
-} from "@/lib/api/api-auth";
+import { getCorrelationId, requireSignedRequest } from "@/lib/api/api-auth";
 
 describe("api-auth", () => {
   afterEach(() => {
@@ -102,53 +98,15 @@ describe("api-auth", () => {
   });
 });
 
-describe("requireNotReadOnly", () => {
-  const ORIGINAL_READ_ONLY = process.env.CH_READ_ONLY;
-  afterEach(() => {
-    if (ORIGINAL_READ_ONLY === undefined) delete process.env.CH_READ_ONLY;
-    else process.env.CH_READ_ONLY = ORIGINAL_READ_ONLY;
-  });
-
-  it("returns null when not read-only (no context)", () => {
-    delete process.env.CH_READ_ONLY;
-    expect(requireNotReadOnly()).toBeNull();
-  });
-
-  it("returns null when not read-only (with context)", () => {
-    delete process.env.CH_READ_ONLY;
-    expect(requireNotReadOnly("skill writes are disabled")).toBeNull();
-  });
-
-  // The remedy in these three used to read "set PS_READ_ONLY=true to allow
-  // writes", which is the OPPOSITE of the fix: setting it is what causes the
-  // refusal. It survived because the proxy short-circuits first, so the wording
-  // was nearly unreachable. Corrected in place with the reason, not deleted:
-  // the thing being asserted (one 503, with a remedy the operator can act on)
-  // is still the thing being asserted. T-0048.
-  it("returns 503 with the canonical message when read-only and no context", async () => {
-    process.env.CH_READ_ONLY = "true";
-    const res = requireNotReadOnly();
-    expect(res).not.toBeNull();
-    expect(res?.status).toBe(503);
-    const body = await res?.json();
-    expect(body.error).toBe("PatterStage is in read-only mode (unset PS_READ_ONLY to allow writes).");
-  });
-
-  it("names the resource when a context is given, and still gives the remedy", async () => {
-    process.env.CH_READ_ONLY = "true";
-    const res = requireNotReadOnly("skill toggles are disabled");
-    expect(res?.status).toBe(503);
-    const body = await res?.json();
-    expect(body.error).toBe(
-      "PatterStage is in read-only mode: skill toggles are disabled (unset PS_READ_ONLY to allow writes).",
-    );
-  });
-
-  it("treats empty string as no context (canonical default)", async () => {
-    process.env.CH_READ_ONLY = "true";
-    const res = requireNotReadOnly("");
-    expect(res?.status).toBe(503);
-    const body = await res?.json();
-    expect(body.error).toBe("PatterStage is in read-only mode (unset PS_READ_ONLY to allow writes).");
-  });
-});
+// `requireNotReadOnly` was tested here, in five cases: null when writes are
+// allowed, a 503 with the resource named when they are not, and the remedy
+// sentence in both spellings. app-06 (ruled 2026-09-12) deleted the function.
+//
+// Eleven of its seventeen callers could not fire over HTTP — src/proxy.ts
+// refuses every unsafe method under read-only before a handler runs — while
+// sixty-nine other write handlers never called it at all. The six that stayed
+// are the host-side routes, and they call `isReadOnly()` and
+// `readOnlyMessage()` directly, which is what these cases were really about.
+// `k5-the-ruled-security-fixes.test.ts` calls all six of those handlers
+// directly under the mode and requires each resource-named sentence, and drives
+// every route that lost its check through proxy() for the same sentence.

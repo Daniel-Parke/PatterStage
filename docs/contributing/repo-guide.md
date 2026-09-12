@@ -145,8 +145,12 @@ Next.js static files go in `public/` at the repo root; the Dockerfile runs
   the dashboard under `PS_READ_ONLY` -- and it was deleted in T-0048.
   `scripts/tooling/check-read-only-guards.mjs` fails the build if a read-only guard
   reappears in a GET, HEAD or OPTIONS handler. The guards that DO belong in a
-  handler are the narrow ones: `requireNotReadOnly` for a non-route caller,
-  `requireDeployApiEnabled`, `requireAuthenticatedHostWrites`, `requireSignedRequest`.
+  handler are the narrow ones: `requireDeployApiEnabled`,
+  `requireAuthenticatedHostWrites`, `requireSignedRequest`, and, on the three
+  routes whose writes run on the host, `isReadOnly()` written out beside
+  `requireAuthenticatedHostWrites`. `requireNotReadOnly` was here until app-06
+  (T-0153) deleted it: eleven of its seventeen callers could not fire, because
+  the proxy had already refused the method.
 - **Whitelist body fields in PUT handlers** (no mass assignment) and validate any
   path built from input. `resolveScriptPath()` in `src/lib/scripts/scripts-manager.ts` is
   the reference implementation.

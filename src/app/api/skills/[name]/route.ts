@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireNotReadOnly } from "@/lib/api/api-auth";
 import { badRequest, notFound, ok, serverError } from "@/lib/api/api-response";
 import { parseJsonBody } from "@/lib/api/parse-json-body";
 import { appendAuditLine } from "@/lib/api/audit-log";
@@ -29,9 +28,6 @@ export const GET = route("GET /api/skills/[name]", (p) => `reading skill ${p.nam
 });
 
 export const PUT = route("PUT /api/skills/[name]", (p) => `writing skill ${p.name}`, "Failed to write skill", async (request: NextRequest, { params }: { params: Promise<{ name: string }> }) => {
-  const ro = requireNotReadOnly("skill writes are disabled");
-  if (ro) return ro;
-
   const { name } = await params;
 
   const bodyResult = await parseJsonBody(request);

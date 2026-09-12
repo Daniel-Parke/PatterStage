@@ -30,9 +30,7 @@ import {
   closeOrphanedActiveSessions,
   previewOrphanSweep,
 } from "@/lib/sessions/session-orphan-sweep";
-import { isReadOnly } from "@/lib/api/api-auth";
-import { serviceUnavailable, methodNotAllowed } from "@/lib/api/api-response";
-import { readOnlyMessage } from "@/lib/api/read-only";
+import { methodNotAllowed } from "@/lib/api/api-response";
 import { appendAuditLine } from "@/lib/api/audit-log";
 import { logApiError } from "@/lib/api/api-logger";
 
@@ -44,12 +42,6 @@ export async function POST(request: NextRequest) {
     // empty body is fine — defaults to dryRun=false
   }
   const dryRun = body.dryRun !== false; // default to dry-run for safety
-
-  if (dryRun === false && isReadOnly()) {
-    return serviceUnavailable(
-      readOnlyMessage("the orphan-session backfill cannot write")
-    );
-  }
 
   try {
     const database = getDb();

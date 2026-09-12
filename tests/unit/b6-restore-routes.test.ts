@@ -22,9 +22,9 @@
 //     the page and the toast both say.
 //
 // The reds here are the implementation's to-do list. The doubles are the
-// same ones tests/unit/seed-api.test.ts uses, plus the two the contract adds
-// (api-auth.requireNotReadOnly, catalog-seed.readShippedPackCounts) and the
-// backup helper.
+// same ones tests/unit/seed-api.test.ts uses, plus the one the contract adds
+// (catalog-seed.readShippedPackCounts) and the backup helper. The api-auth
+// double went with requireNotReadOnly itself (app-06, T-0153).
 //
 // THE BACKUP HELPER DOES NOT EXIST YET. `jest.mock("@/lib/db/backup")` would
 // throw at registration today, because moduleNameMapper insists a mapped name
@@ -43,11 +43,6 @@ import { tmpdir } from "os";
 import { join } from "path";
 
 // ── doubles ──────────────────────────────────────────────────
-
-const mockRequireNotReadOnly = jest.fn((..._a: unknown[]): unknown => null);
-jest.mock("@/lib/api/api-auth", () => ({
-  requireNotReadOnly: (...a: unknown[]) => mockRequireNotReadOnly(...a),
-}));
 
 const mockAppendAuditLine = jest.fn();
 jest.mock("@/lib/api/audit-log", () => ({
@@ -211,7 +206,6 @@ let consoleError: jest.SpyInstance;
 
 beforeEach(() => {
   jest.clearAllMocks();
-  mockRequireNotReadOnly.mockReturnValue(null);
   mockSnapshotDatabase.mockImplementation(() => Promise.resolve({ ...SNAPSHOT }));
   rmSync(mockHermesHome, { recursive: true, force: true });
   mkdirSync(mockHermesHome, { recursive: true });
@@ -343,24 +337,14 @@ describe("GET /api/seed", () => {
 // ───────────────────────────────────────────────────────────────
 
 describe("POST /api/seed", () => {
-  it("refuses under read-only, naming 'restore', before touching anything", async () => {
-    const { NextResponse } = await import("next/server");
-    mockRequireNotReadOnly.mockReturnValue(
-      NextResponse.json(
-        { error: "PatterStage is in read-only mode: restore (unset PS_READ_ONLY to allow writes)." },
-        { status: 503 },
-      ),
-    );
-    const { res, json } = await postSeed({ target: "all", mode: "replace" });
-    expect(res.status).toBe(503);
-    expect(json.error).toMatch(/read-only/);
-    expect(json.error).toMatch(/restore/);
-    expect(mockRequireNotReadOnly).toHaveBeenCalledWith("restore");
-    expect(mockSnapshotDatabase).not.toHaveBeenCalled();
-    expect(mockImportHermesState).not.toHaveBeenCalled();
-    expect(mockRunCatalogSeed).not.toHaveBeenCalled();
-    expect(mockAppendAuditLine).not.toHaveBeenCalled();
-  });
+  // "refuses under read-only, naming 'restore', before touching anything" was
+  // here. Like the cancel case in b4, it mocked requireNotReadOnly to RETURN a
+  // 503 rather than setting the mode, so what it proved was that the handler
+  // returned early — the wording it asserted came from the mock, not from the
+  // product. app-06 (ruled 2026-09-12) deleted that guard; /api/seed is not
+  // host-side, so src/proxy.ts refuses the method first and is the only
+  // boundary. k5-the-ruled-security-fixes.test.ts drives POST /api/seed
+  // through proxy() under a real PS_READ_ONLY and requires the 503.
 
   it("a replace snapshots the database ('pre-restore') BEFORE the Hermes import and the seed", async () => {
     // A Hermes home with a config.yaml, so the import step runs and the order

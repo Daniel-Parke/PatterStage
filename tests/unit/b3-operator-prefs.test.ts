@@ -107,10 +107,10 @@ describe("GET and PUT /api/prefs", () => {
     expect(readOperatorPrefs()).toEqual({});
   });
 
-  it("PUT is refused under PS_READ_ONLY with the read-only sentence", async () => {
-    process.env.PS_READ_ONLY = "1";
-    const res = await PUT(mockRequest("http://localhost/api/prefs", "PUT", { key: "sidebar.collapsed", value: true }));
-    expect(res.status).toBe(503);
-    expect(readOperatorPrefs()).toEqual({});
-  });
+  // "PUT is refused under PS_READ_ONLY with the read-only sentence" was here.
+  // It called PUT() directly, and app-06 (ruled 2026-09-12) deleted the route's
+  // own requireNotReadOnly("preferences"): /api/prefs is not host-side, so
+  // src/proxy.ts refuses the method before the handler and is the only
+  // boundary. k5-the-ruled-security-fixes.test.ts drives PUT /api/prefs through
+  // proxy() under the mode and requires the 503 and its remedy sentence.
 });

@@ -48,7 +48,6 @@ jest.mock("@/lib/api/api-logger", () => ({
 }));
 
 jest.mock("@/lib/api/api-auth", () => ({
-  requireNotReadOnly: jest.fn(() => null),
   isReadOnly: jest.fn(() => false),
 }));
 

@@ -16,7 +16,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sessionsRateLimitResponse } from "@/lib/sessions/sessions-api-guard";
 import { isReadOnly } from "@/lib/api/api-auth";
-import { badRequest, created, notFound, ok, serviceUnavailable } from "@/lib/api/api-response";
+import { badRequest, created, notFound, ok } from "@/lib/api/api-response";
 import { parseJsonBody } from "@/lib/api/parse-json-body";
 import {
   listSessions,
@@ -91,10 +91,6 @@ export const GET = route("GET /api/sessions", "listing sessions", "Failed to loa
 });
 
 export const POST = route("POST /api/sessions", "session action", "Failed to process session action", async (request: NextRequest) => {
-  if (isReadOnly()) {
-    return serviceUnavailable("PatterStage is in read-only mode");
-  }
-
   const bodyResult = await parseJsonBody(request);
   if (bodyResult instanceof NextResponse) return bodyResult;
   const body = bodyResult as {

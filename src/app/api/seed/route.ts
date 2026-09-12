@@ -9,7 +9,6 @@ import { existsSync } from "fs";
 
 import { NextRequest, NextResponse } from "next/server";
 
-import { requireNotReadOnly } from "@/lib/api/api-auth";
 import { ok, serverError } from "@/lib/api/api-response";
 import { appendAuditLine } from "@/lib/api/audit-log";
 import { snapshotDatabase } from "@/lib/db/backup";
@@ -34,9 +33,6 @@ export const POST = route("POST /api/seed", "seed", "Failed to run seed", async 
   // folds the legacy `id` alias back to `templateId` via .transform() —
   // previously the route did `body.target as SeedTarget["target"]` with
   // no validation, so a foreign value would silently reach runCatalogSeed.
-  const refusal = requireNotReadOnly("restore");
-  if (refusal) return refusal;
-
   const parsed = await parseAndValidateJsonBody(request, seedPostSchema);
   if (parsed instanceof NextResponse) return parsed;
   const { target = "all", mode = "merge", slug, templateId } = parsed;

@@ -187,19 +187,17 @@ describe("GET /api/backup", () => {
 // ═══════════════════════════════════════════════════════════════
 
 describe("POST /api/backup", () => {
-  it("under PS_READ_ONLY refuses with a 503 that names the resource, and touches nothing", async () => {
-    process.env.PS_READ_ONLY = "1";
-
-    const res = await POST();
-
-    expect(res.status).toBe(503);
-    expect((await bodyOf(res)).error).toBe(
-      "PatterStage is in read-only mode: database backups (unset PS_READ_ONLY to allow writes).",
-    );
-    expect(mockSnapshotDatabase).not.toHaveBeenCalled();
-    expect(appendAuditLine).not.toHaveBeenCalled();
-    expect(recordEvent).not.toHaveBeenCalled();
-  });
+  // The read-only refusal used to be tested here, by calling POST() directly
+  // under PS_READ_ONLY and pinning the sentence the route's own
+  // requireNotReadOnly("database backups") produced. app-06 (ruled 2026-09-12)
+  // deleted that check. /api/backup is not one of the three host-side routes,
+  // so src/proxy.ts is the only boundary, and it answers 503 on the METHOD
+  // before this handler is reached at all.
+  //
+  // The assertion moved rather than went: k5-the-ruled-security-fixes.test.ts
+  // drives POST /api/backup through proxy() under the mode and requires the
+  // 503 and its remedy sentence. Testing it here would now mean testing that a
+  // handler with no guard in it has no guard in it.
 
   it("takes a 'manual' snapshot and answers 201 { backup }", async () => {
     const res = await POST();
@@ -269,7 +267,7 @@ describe("the route file, as the gates read it", () => {
     expect(src.some((l) => /^export (?:async function POST\(|const POST = route\()/.test(l))).toBe(true);
   });
 
-  it("carries no read-only guard inside GET, and the guard inside POST", () => {
+  it("carries no read-only guard inside GET, and none inside POST either", () => {
     // Mirrors check-read-only-guards.mjs: attribute each guard call to the
     // enclosing handler, skipping comment lines.
     const byMethod: Record<string, number> = {};
@@ -283,7 +281,13 @@ describe("the route file, as the gates read it", () => {
         byMethod[current] = (byMethod[current] ?? 0) + 1;
       }
     }
+    // GET was always 0: check-read-only-guards.mjs fails the build on a guard
+    // in a read handler, because the proxy has already allowed the method.
+    // POST was 1 until app-06, and is 0 now for the mirror-image reason — the
+    // proxy has already REFUSED the method, so a second check here could only
+    // fire for a caller that skipped the proxy, and /api/backup is not one of
+    // the three host-side routes where that caller is guarded against.
     expect(byMethod.GET ?? 0).toBe(0);
-    expect(byMethod.POST ?? 0).toBeGreaterThan(0);
+    expect(byMethod.POST ?? 0).toBe(0);
   });
 });

@@ -2,10 +2,9 @@ import { createHmac, randomUUID, timingSafeEqual } from "crypto";
 
 import { NextRequest, NextResponse } from "next/server";
 
-import { serviceUnavailable } from "@/lib/api/api-response";
 import { getAuthMode } from "@/lib/api/auth-token";
 import { readEnv } from "@/lib/host/paths";
-import { isReadOnly, readOnlyMessage } from "@/lib/api/read-only";
+import { isReadOnly } from "@/lib/api/read-only";
 
 /**
  * Whether POST /api/update may spawn the deploy script.
@@ -62,28 +61,17 @@ export function requireSignedRequest(request: NextRequest): NextResponse | null 
   return null;
 }
 
-/**
- * Guard for a WRITE endpoint that needs its own resource-specific wording.
- *
- * ⚠️ Almost nothing should call this. `src/proxy.ts` refuses every unsafe method
- * under read-only before a handler runs, so a route-level call is redundant. It
- * survives only for the handful of endpoints that are not simply "a write":
- * a GET that performs a side effect, or a route whose refusal is more useful
- * with a resource named in it.
- *
- * NEVER call it from a GET, HEAD or OPTIONS handler. That is the defect T-0048
- * removed: `requireAuth()` was a thin alias for this function, 34 read handlers
- * called it, and `PS_READ_ONLY` therefore 503'd the dashboard it exists to
- * enable. `scripts/tooling/check-read-only-guards.mjs` fails the build on it.
- *
- * The message is `readOnlyMessage()` so the operator sees one sentence whichever
- * layer refused. The wording here used to say "set PS_READ_ONLY=true to allow
- * writes", which is the opposite of the fix.
- */
-export function requireNotReadOnly(context?: string): NextResponse | null {
-  if (!isReadOnly()) return null;
-  return serviceUnavailable(readOnlyMessage(context));
-}
+// `requireNotReadOnly(context)` lived here until app-06 (ruled 2026-09-12).
+// Its own comment had said for two batches that almost nothing should call it:
+// src/proxy.ts refuses every unsafe method under read-only before a handler
+// runs, so eleven of its seventeen callers could not fire over HTTP, while
+// sixty-nine other write handlers never called it. One boundary is now both
+// what the tree says and what it keeps. The six that stayed write `isReadOnly()`
+// out at the route — cron/hardware and the two scripts routes, whose writes run
+// ON THE HOST, where proxy.ts:58-63 wants a guard that holds without the proxy.
+// That is six of the seventeen, not all of HOST_SIDE_EFFECT_PREFIXES: /api/update
+// is the third prefix and never carried a read-only check of its own. The
+// ruling named six and this is those six.
 
 export function requireDeployApiEnabled(): NextResponse | null {
   if (isDeployApiEnabled()) return null;

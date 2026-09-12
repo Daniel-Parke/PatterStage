@@ -19,7 +19,7 @@
  * Every handler runs for real; only its writers and the ledger are doubles.
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 
 jest.mock("@/lib/analytics/record-event", () => ({ recordEvent: jest.fn() }));
 
@@ -95,9 +95,7 @@ jest.mock("@/lib/api/audit-log", () => ({ appendAuditLine: jest.fn() }));
 jest.mock("@/lib/orchestration", () => ({
   stopBackendRunForMission: jest.fn(() => Promise.resolve()),
 }));
-const mockRequireNotReadOnly = jest.fn();
 jest.mock("@/lib/api/api-auth", () => ({
-  requireNotReadOnly: (...a: unknown[]) => mockRequireNotReadOnly(...a),
   isReadOnly: () => false,
 }));
 
@@ -154,7 +152,6 @@ beforeEach(() => {
   mockUpdateMission.mockReset();
   mockFetch.mockReset();
   globalThis.fetch = mockFetch as unknown as typeof fetch;
-  mockRequireNotReadOnly.mockReturnValue(null);
   mockExistsSync.mockReturnValue(true);
 });
 afterAll(() => {
@@ -570,19 +567,13 @@ describe("handleCancelMission records mission.cancelled", () => {
     expect(emitted).not.toHaveBeenCalled();
   });
 
-  it("read-only mode refuses the REST cancel → 503 before any lookup, and nothing is recorded", async () => {
-    mockRequireNotReadOnly.mockReturnValue(
-      NextResponse.json({ error: "PatterStage is in read-only mode" }, { status: 503 }),
-    );
-
-    const res = await postCancelMission(
-      new NextRequest("http://localhost/api/missions/m1/cancel", { method: "POST" }),
-      { params: Promise.resolve({ id: "m1" }) },
-    );
-
-    expect(res.status).toBe(503);
-    expect(mockGetMission).not.toHaveBeenCalled();
-    expect(mockUpdateMission).not.toHaveBeenCalled();
-    expect(emitted).not.toHaveBeenCalled();
-  });
+  // "read-only mode refuses the REST cancel → 503 before any lookup" was here.
+  // It did not set the mode: it mocked requireNotReadOnly to RETURN a 503 and
+  // then checked the handler forwarded it, so it tested the forwarding and not
+  // the refusal. app-06 (ruled 2026-09-12) deleted that guard from the cancel
+  // route, and the refusal it stood in for is now driven through proxy() in
+  // k5-the-ruled-security-fixes.test.ts, where the mode is really set.
+  //
+  // The register did not name this suite, because mocking the guard's RETURN
+  // makes it invisible to a grep for PS_READ_ONLY. The K5 oracle found it.
 });

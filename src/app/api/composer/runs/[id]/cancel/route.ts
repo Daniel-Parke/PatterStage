@@ -10,7 +10,6 @@
 
 import { NextRequest } from "next/server";
 
-import { requireNotReadOnly } from "@/lib/api/api-auth";
 import { ok, badRequest, notFound, serviceUnavailable } from "@/lib/api/api-response";
 import { appendAuditLine } from "@/lib/api/audit-log";
 import { isFeatureEnabled } from "@/lib/feature-flags";
@@ -50,12 +49,6 @@ export const POST = route("POST /api/composer/runs/[id]/cancel", (p) => `id=${p.
   if (!isFeatureEnabled("composer")) {
     return serviceUnavailable("Composer is not enabled. Set PS_COMPOSER=1 to enable workflows.");
   }
-
-  // Read-only mode. NOT authentication: src/proxy.ts authenticates every
-  // request before a handler runs. Defence in depth on a write, mirroring
-  // POST /api/missions/[id]/cancel (T-0034).
-  const readOnly = requireNotReadOnly("composer runs cannot be cancelled");
-  if (readOnly) return readOnly;
 
   const { id } = await ctx.params;
   ensureDb();
