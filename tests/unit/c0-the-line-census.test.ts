@@ -24,6 +24,26 @@ const ROOT = join(__dirname, "..", "..");
 const read = (rel: string) => readFileSync(join(ROOT, rel), "utf8");
 const SCRIPT = join(ROOT, "scripts", "tooling", "line-census.mjs");
 
+/**
+ * The measures the census declares, each of which the baseline must hold.
+ *
+ * Amended 2026-09-12 (T-0154, K6), under operator ruling Q-015 (2026-09-12),
+ * which permits a closed-programme oracle to change for the one key its ruled
+ * item fixes, dated, and by a session that does not implement the fix. This
+ * amendment adds ONE key and touches nothing else in this file.
+ *
+ * What changed and why: `scriptsLines`, for tooling-22. line-census.mjs:50-51
+ * walked src and tests alone, so scripts/ — the tooling that gates every batch,
+ * the mock servers' neighbours and the harness — was unmeasured by the ratchet
+ * that referees the programme. A census that cannot see the code its own gates
+ * are written in sets the next plan's targets against numbers that are not
+ * true. The measure is a new key in line-census.mjs and a new number in
+ * line-census.baseline.json; this list is where the two are held together, and
+ * c8's key set changes with it (see c8-the-programme-is-closed.test.ts).
+ *
+ * Red until tooling-22 lands: the baseline holds no scriptsLines yet, which is
+ * exactly what this case is for.
+ */
 const MEASURES = [
   "srcLines",
   "testLines",
@@ -37,6 +57,7 @@ const MEASURES = [
   "libRootFiles",
   "commentEssays",
   "suitesMockingDbInline",
+  "scriptsLines",
 ];
 
 function census(args: string[]): { code: number; out: string } {

@@ -22,7 +22,7 @@ import { execFileSync } from "node:child_process";
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 
-import { scanTree } from "../../scripts/tooling/design-lint.mjs";
+import { scanTree, splitBaseline } from "../../scripts/tooling/design-lint.mjs";
 
 const ROOT = join(__dirname, "..", "..");
 
@@ -54,11 +54,52 @@ const SRC = walk(join(ROOT, "src"));
 describe("C6 · the page layer", () => {
   const { counts } = scanTree() as { counts: Record<string, number> };
 
+  /**
+   * Amended 2026-09-12 (T-0154, K6), under operator ruling Q-015 (2026-09-12):
+   * a closed-programme oracle may change for the one rule its ruled item fixes,
+   * dated and attributed, authored by a session that does not implement the
+   * fix. The case keeps its name, as the ruling requires. One rule changes;
+   * the other five below read zero exactly as before, and no violation is
+   * blessed away.
+   *
+   * The rule, and why. components-01, ruled "fix now, baseline with a reason"
+   * (Daniel Parke, operator, 2026-09-12): design-lint.mjs:436 matched
+   * `<(?:button|input|select|textarea)(?=[\s/>])`, so an opening tag that ENDS
+   * ITS LINE — the ordinary shape when a control's attributes are on the lines
+   * below it — was invisible. The rule reported zero for this whole programme
+   * while the tree held 104 raw controls in 43 files. The lookahead gains `|$`,
+   * and the 104 go into design-lint.baseline.json under --allow-growth with the
+   * reason recorded beside them.
+   *
+   * So for THAT rule, zero on the tree was never a fact; it was a measurement
+   * error, and asserting it would mean either keeping the rule blind or
+   * refusing the fix. What this case now requires of it is the ratchet the
+   * baseline exists for: no file above the count the baseline holds for it, so
+   * a new raw control is refused the moment it is written, and the burn-down
+   * through the component and app batches can only take the number down. The
+   * baseline's own honesty — that every held key was admitted by a dated growth
+   * entry that names the rule — is held in tests/unit/k6-the-gates-see.test.ts,
+   * which also proves the shipped pattern could not see the shape at all.
+   */
+  const BASELINED_BY_RULING = new Set(["no-raw-control-outside-ui"]);
+
   it.each(RULES_C6)("%s reads zero on the tree", (rule) => {
-    const hits = Object.entries(counts)
-      .filter(([key]) => key.startsWith(`${rule}::`))
-      .map(([key, n]) => `${key.slice(rule.length + 2)}: ${n}`);
-    expect(hits).toEqual([]);
+    const found = Object.entries(counts).filter(([key]) => key.startsWith(`${rule}::`));
+
+    if (BASELINED_BY_RULING.has(rule)) {
+      const { counts: baseline } = splitBaseline(
+        JSON.parse(
+          readFileSync(join(ROOT, "scripts", "tooling", "design-lint.baseline.json"), "utf8"),
+        ) as unknown,
+      );
+      const above = found
+        .filter(([key, n]) => n > (baseline[key] ?? 0))
+        .map(([key, n]) => `${key.slice(rule.length + 2)}: ${n} found, ${baseline[key] ?? 0} allowed`);
+      expect(above).toEqual([]);
+      return;
+    }
+
+    expect(found.map(([key, n]) => `${key.slice(rule.length + 2)}: ${n}`)).toEqual([]);
   });
 
   it("the pragmas that excuse the six rules are few enough to read", () => {

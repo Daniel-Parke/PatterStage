@@ -8,7 +8,7 @@
       "claims": [
         "tests/unit/k6-the-gates-see.test.ts",
         "tests/unit/c0-the-line-census.test.ts",
-        "tests/unit/c6-the-page-layer-is-consistent.test.ts",
+        "tests/unit/c6-the-page-layer.test.ts",
         "tests/unit/c8-the-programme-is-closed.test.ts"
       ],
       "expires": "2026-09-13T23:00:00Z",

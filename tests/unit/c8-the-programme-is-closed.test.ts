@@ -34,13 +34,43 @@ const AT_C0 = {
   suitesMockingDbInline: 100,
 } as const;
 
-/** The plan's target for each, as written at C0 and never moved. */
+/**
+ * The plan's target for each, as written at C0 and never moved.
+ *
+ * One exception, and it is not a move. Amended 2026-09-12 (T-0154, K6), under
+ * operator ruling Q-015 (2026-09-12), by a session that does not implement the
+ * fix: `routesWithTryCatch` reads 18 rather than 13. See the key below.
+ */
 const TARGET: Record<keyof typeof AT_C0, number> = {
   srcLines: 98000,
   testLines: 116000,
   srcRepeatedWindowLines: 600,
   testRepeatedWindowLines: 2500,
-  routesWithTryCatch: 13,
+  /**
+   * 13 until 2026-09-12; 18 from app-04a, ruled "widen the same measure"
+   * (Daniel Parke, operator, 2026-09-12).
+   *
+   * The target the plan set was "at most 13 route bodies keep a try of their
+   * own" (org/plans/2026-09-consolidation.md:71). The census counted a route
+   * only when its catch called serverErrorFromCatch (line-census.mjs:96-100),
+   * so eleven hand-rolled catches that log and answer 500, in six files, were
+   * never counted: admin/sessions/backfill-status, memory/hindsight,
+   * mission-categories, models/fallbacks (already counted through the helper),
+   * sync and update. The same thirteen files plus five more is 18.
+   *
+   * Not one line of route code changed to make that number 18, which is why
+   * this is a restatement of the same target in the widened measure's units and
+   * not a goalpost moved: I2 of T-0154. The 13 stands as the historical reading
+   * in AT_C8 below, where it belongs, because 13 is genuinely what C8 read.
+   *
+   * Nothing is loosened by it. A fourteenth route body that keeps its own try
+   * is still refused — by this check at 18, by the census baseline, which holds
+   * the rise from 13 to 18 with a written reason, and by
+   * tests/unit/k6-the-gates-see.test.ts, which requires the census's own file
+   * list to equal what an independent brace-matched probe finds, so the raised
+   * number cannot absorb a new one.
+   */
+  routesWithTryCatch: 18,
   handRolledReadHooks: 0,
   writeHooksWithoutMutation: 0,
   repeatedTypeShapeFiles: 3,
@@ -165,8 +195,38 @@ describe("C8 · the programme is closed", () => {
   const now = census();
   const keys = Object.keys(AT_C0) as (keyof typeof AT_C0)[];
 
+  /**
+   * Amended 2026-09-12 (T-0154, K6), under operator ruling Q-015 (2026-09-12),
+   * by a session that does not implement the fix. The case keeps its name, as
+   * the ruling requires.
+   *
+   * What changed and why: the check was `Object.keys(now)` equals AT_C0's keys
+   * exactly, which said two things at once — no measure the programme set was
+   * dropped, and no measure was ever added. The first is this closed record's
+   * business. The second is not: tooling-22 adds `scriptsLines`, because
+   * line-census.mjs walked src and tests alone and left scripts/ — the tooling
+   * that gates every batch — unmeasured by the ratchet. A closed programme's
+   * oracle is not the place a later measure has to ask permission from.
+   *
+   * So the check is now two facts instead of one, and neither is weaker than
+   * what it replaced: not one of the twelve may go missing, and any key beyond
+   * them has to be on the dated list below. A measure dropped still fails here;
+   * a measure added without a word still fails here. What no longer fails is a
+   * measure added on the record.
+   *
+   * That the new key EXISTS is not asserted here — it is not this record's
+   * claim. c0-the-line-census.test.ts requires the baseline to hold every
+   * declared measure, and tests/unit/k6-the-gates-see.test.ts requires the
+   * census to report scriptsLines and to count scripts/ exactly.
+   */
+  const ADDED_AFTER_THE_PROGRAMME = ["scriptsLines"];
+
   it("every measure the programme set is still measured", () => {
-    expect(Object.keys(now).sort()).toEqual(keys.slice().sort());
+    const dropped = keys.filter((k) => !(k in now));
+    expect(dropped).toEqual([]);
+    const named = new Set<string>([...(keys as readonly string[]), ...ADDED_AFTER_THE_PROGRAMME]);
+    const unannounced = Object.keys(now).filter((k) => !named.has(k));
+    expect(unannounced).toEqual([]);
   });
 
   /** The eleven the ratchet still reads live. testLines is the twelfth; see below. */

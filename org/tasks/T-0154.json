@@ -1,6 +1,6 @@
 {
   "id": "T-0154",
-  "intent": "K6: make the gates see. Five checks report a number that is not the number, and every batch of this programme is refereed by them. components-01: the raw-control design-lint rule matches `<button` only when a character follows the tag name, so an opening tag that ENDS ITS LINE is invisible; the rule reports a handful and the tree holds over a hundred. app-04a: the try/catch census counts a route only when its catch calls serverErrorFromCatch, so eleven hand-rolled log-and-500 catches in six files are not counted and routesWithTryCatch reads 13 instead of 18. docs-02 and tooling-19: check-doc-links walks docs/ alone, so 40 tracked markdown files outside it are unchecked, and C7's move broke three of their links. tooling-22: the line census walks src and tests alone, so scripts/, the mock servers and the harness are unmeasured by the ratchet that referees every batch. tests-13: three exported test helpers have no caller, and the gate that would say so does not read tests/.",
+  "intent": "K6: make the gates see. Five checks report a number that is not the number, and every batch of this programme is refereed by them. components-01: the raw-control design-lint rule matches `<button` only when a character follows the tag name, so an opening tag that ENDS ITS LINE is invisible; the rule reports a handful and the tree holds over a hundred. app-04a: the try/catch census counts a route only when its catch calls serverErrorFromCatch, so eleven hand-rolled log-and-500 catches in six files are not counted and routesWithTryCatch reads 13 instead of 18. docs-02 and tooling-19: check-doc-links walks docs/ alone, so the 16 tracked markdown files outside it are unchecked, and C7's move broke three of their links. tooling-22: the line census walks src and tests alone, so scripts/, the mock servers and the harness are unmeasured by the ratchet that referees every batch. tests-13: three exported test helpers have no caller, and the gate that would say so does not read tests/.",
   "declared": {
     "capabilities": [
       "edit-tooling",
@@ -40,7 +40,7 @@
     "tests/helpers/api-test-helpers.ts",
     "tests/unit/read-only-is-testable.test.ts",
     "tests/unit/c0-the-line-census.test.ts",
-    "tests/unit/c6-the-page-layer-is-consistent.test.ts",
+    "tests/unit/c6-the-page-layer.test.ts",
     "tests/unit/c8-the-programme-is-closed.test.ts",
     "tests/unit/k6-the-gates-see.test.ts",
     "tests/fixtures/mutants/T-0154.json",
