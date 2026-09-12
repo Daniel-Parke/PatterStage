@@ -1,0 +1,70 @@
+{
+  "id": "T-0154",
+  "intent": "K6: make the gates see. Five checks report a number that is not the number, and every batch of this programme is refereed by them. components-01: the raw-control design-lint rule matches `<button` only when a character follows the tag name, so an opening tag that ENDS ITS LINE is invisible; the rule reports a handful and the tree holds over a hundred. app-04a: the try/catch census counts a route only when its catch calls serverErrorFromCatch, so eleven hand-rolled log-and-500 catches in six files are not counted and routesWithTryCatch reads 13 instead of 18. docs-02 and tooling-19: check-doc-links walks docs/ alone, so 40 tracked markdown files outside it are unchecked, and C7's move broke three of their links. tooling-22: the line census walks src and tests alone, so scripts/, the mock servers and the harness are unmeasured by the ratchet that referees every batch. tests-13: three exported test helpers have no caller, and the gate that would say so does not read tests/.",
+  "declared": {
+    "capabilities": [
+      "edit-tooling",
+      "edit-tests",
+      "edit-docs",
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "high-assurance",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [
+    {
+      "factor": "closed-oracle-amendment",
+      "tier_floor": "R2",
+      "source": "operator ruling Q-015 (2026-09-12), org/policy.json:107-111",
+      "evidence": "three closed-programme oracles are amended: c6 for the raw-control rule's zero check (components-01), c8 for routesWithTryCatch's target (app-04a), and c0 plus c8 for the census key set (tooling-22). Each amendment is for the one rule or key its ruled item fixes, and each is authored by a session that does not implement the fix."
+    },
+    {
+      "factor": "size-threshold",
+      "tier_floor": "R1",
+      "source": "derived:diff-size",
+      "evidence": "five gates, three oracle amendments and two baselines, across tooling, tests and docs"
+    }
+  ],
+  "status": "in-progress",
+  "owner_session": "t0154-k6-the-gates-see-2026-09-12",
+  "claims": [
+    "scripts/tooling/design-lint.mjs",
+    "scripts/tooling/design-lint.baseline.json",
+    "scripts/tooling/line-census.mjs",
+    "scripts/tooling/line-census.baseline.json",
+    "scripts/tooling/check-doc-links.mjs",
+    "TRADEMARK.md",
+    "branding/guidelines/COLORS.md",
+    "tests/helpers/api-test-helpers.ts",
+    "tests/unit/read-only-is-testable.test.ts",
+    "tests/unit/c0-the-line-census.test.ts",
+    "tests/unit/c6-the-page-layer-is-consistent.test.ts",
+    "tests/unit/c8-the-programme-is-closed.test.ts",
+    "tests/unit/k6-the-gates-see.test.ts",
+    "tests/fixtures/mutants/T-0154.json",
+    "docs/contributing/testing.md",
+    "org/tasks/T-0154.json"
+  ],
+  "programme": "K6 of the refactor and clean-up programme, and the last of Phase 0. The plan filed this as K4 before the security set took that label. It is Phase 0 rather than Phase 3 because the recon and the plan that follow are both measured by these gates: a census that cannot see scripts/, or a lint rule that cannot see a raw control, would set the next plan's targets against numbers that are not true.",
+  "timestamps": {
+    "opened": "2026-09-12T22:00:00Z",
+    "updated": "2026-09-12T22:00:00Z",
+    "closed": null
+  },
+  "invariants": [
+    "I1 EACH GATE IS PROVED BLIND BEFORE IT IS FIXED. For every one of the five, the oracle plants the violation the gate cannot see and requires the SHIPPED gate to stay green on it, then requires the fixed gate to go red. A fix with no proof of the blindness is a fix nobody can tell was needed.",
+    "I2 A NUMBER RISES BECAUSE THE GATE SEES MORE, NEVER BECAUSE THE TREE GOT WORSE. routesWithTryCatch 13 to 18 and the raw-control count are the same code counted properly. Each rise is held in a baseline with a written reason, and the reason says which gate changed.",
+    "I3 NO GATE IS LOOSENED. Every amendment narrows to the one rule or key its ruled item fixes, per Q-015. c6's other checks, c8's other measures and c0's other assertions are untouched, and no existing violation is blessed away.",
+    "I4 A DEFERRED GATE IS NAMED, NOT DROPPED. tooling-16, hooks-04, hooks-05 and critic-06 are blind gates this batch does NOT fix, each because the register gives it an unmet dependency. Each is listed in the notes with the batch it waits for.",
+    "I5 THE CLOSED ORACLES ARE AMENDED BY A SESSION THAT DOES NOT IMPLEMENT. Q-015, ruled 2026-09-12. Dated, attributed, and the reason in the same commit."
+  ],
+  "rollback": "Each gate is a separate file and a separate baseline, so a revert can take one and leave the rest. The two that would need care are the ones with a closed-oracle amendment: reverting components-01 means reverting c6's amended assertion and the design-lint baseline together, and reverting app-04a or tooling-22 means reverting c8 (and c0 for tooling-22) with the census baseline. Nothing here changes product behaviour, migrates data or touches a route, so a revert restores the previous reported numbers and nothing else.",
+  "notes": "DEFERRED, with the dependency the register gives each one. tooling-16 (widen knip to tests/, test-harness/ and the root configs) carries `after: cross-cutting-22, tooling-02, POLICY-dependabot`, and its own fix line puts the harness orphans with tooling-02; widening knip before those land would turn the gate red on orphans this batch may not delete. hooks-04 (the raw-write rule blind to `fetch(` with a method) is to land after app-03's load move, and its fix includes converting sixteen writes to runWrite. hooks-05 (the census following an effect only through same-file functions) says in the register to hold its hits by name until hooks-01, hooks-09 and the chat read move land. critic-06 (the form-control name gate not knowing the house primitives) is to land with components-03, so the gate is green at merge. None of the four is dropped; each belongs to the batch that unblocks it, and the closing census reads them against this record.",
+  "commits": "",
+  "verification": "",
+  "review": "",
+  "mutation": "",
+  "deviation": ""
+}

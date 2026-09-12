@@ -3,34 +3,37 @@
   "assigned": "2026-09-12",
   "lanes": [
     {
-      "lane": "T-0153-oracle",
+      "lane": "T-0154-oracle",
       "owner": "ORACLE session, not the implementer (org/roles/ORACLE.md)",
       "claims": [
-        "tests/unit/k5-the-ruled-security-fixes.test.ts"
+        "tests/unit/k6-the-gates-see.test.ts",
+        "tests/unit/c0-the-line-census.test.ts",
+        "tests/unit/c6-the-page-layer-is-consistent.test.ts",
+        "tests/unit/c8-the-programme-is-closed.test.ts"
       ],
-      "expires": "2026-09-13T21:00:00Z",
-      "why": "T-0153 is R2 on the auth-surface factor and on policy.json:132, because app-06 deletes eleven refusals. Its acceptance oracle is written from the register's rulings, before the implementation exists, by a session that will not write it. Written before dispatch this time, which T-0151's record says was not done."
+      "expires": "2026-09-13T23:00:00Z",
+      "why": "T-0154 amends three closed-programme oracles, which operator ruling Q-015 (2026-09-12) says may change only by a dated amendment authored by a session other than the implementer, for the one rule or key the ruled item fixes. The same lane writes the batch's own acceptance oracle, because the two must agree about what each gate now sees. Committed before dispatch."
     },
     {
-      "lane": "T-0153-implementer",
+      "lane": "T-0154-implementer",
       "owner": "the batch's own session",
       "claims": [
-        "next.config.ts",
-        "scripts/tooling/output-canary.golden.json",
-        "src/lib/api/api-auth.ts",
-        "src/app/api/",
-        "docs/SECURITY.md",
-        "docs/reference/api.md",
-        "docs/running/env-reference.md",
-        "docs/contributing/repo-guide.md",
-        "docs/contributing/testing.md",
-        "tests/fixtures/mutants/T-0153.json",
+        "scripts/tooling/design-lint.mjs",
+        "scripts/tooling/design-lint.baseline.json",
+        "scripts/tooling/line-census.mjs",
         "scripts/tooling/line-census.baseline.json",
-        "org/tasks/T-0153.json"
+        "scripts/tooling/check-doc-links.mjs",
+        "TRADEMARK.md",
+        "branding/guidelines/COLORS.md",
+        "tests/helpers/api-test-helpers.ts",
+        "tests/unit/read-only-is-testable.test.ts",
+        "tests/fixtures/mutants/T-0154.json",
+        "docs/contributing/testing.md",
+        "org/tasks/T-0154.json"
       ],
-      "expires": "2026-09-13T21:00:00Z",
-      "why": "critic-04's framing headers, app-06's eleven deletions and the six that stay, and critic-05a's documented gap. Also the twenty-two suites that name requireNotReadOnly, whose pins move rather than go. Disjoint from the oracle lane."
+      "expires": "2026-09-13T23:00:00Z",
+      "why": "The five gate fixes and the two baselines that hold what they now see. Disjoint from the oracle lane: the implementer touches no test file the oracle lane claims."
     }
   ],
-  "note": "Two lanes, which is the cap at org/policy.json:125. An integrator writes and commits this file before any dispatch; lanes receive claims and never acquire or mutate them. The REVIEWER that high-assurance requires reads the diff and writes nothing, so it holds no lane."
+  "note": "Two lanes, which is the cap at org/policy.json:125. An integrator writes and commits this file before any dispatch; lanes receive claims and never acquire or mutate them. T-0153's record says its implementer amended its own frozen oracle and the reviewer caught it; here the closed-oracle amendments are the ORACLE lane's from the start, which is what that ruling asks for. The REVIEWER that high-assurance requires reads the diff and writes nothing, so it holds no lane."
 }
