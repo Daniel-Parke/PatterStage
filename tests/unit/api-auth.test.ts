@@ -11,6 +11,7 @@ import {
 describe("api-auth", () => {
   afterEach(() => {
     delete process.env.CH_REQUEST_SIGNING_SECRET;
+    delete process.env.PS_REQUEST_SIGNING_SECRET;
   });
 
   // `requireAuth` used to be tested here. It was a thin alias for
@@ -40,6 +41,57 @@ describe("api-auth", () => {
       headers: { "x-ch-ts": ts, "x-ch-signature": "bad-signature" },
     });
     expect(requireSignedRequest(request)?.status).toBe(401);
+  });
+
+  // The PS_ name and the x-ps-* headers are the ones the documentation gives,
+  // and until now nothing tested them: every signing case above spells the
+  // secret CH_REQUEST_SIGNING_SECRET and the headers x-ch-*. That mattered
+  // because the CH_ spellings are the ones scheduled for removal, so the whole
+  // signing surface would have gone untested the moment they went (critic-05c).
+
+  const signed = (secret: string, ts: string, path = "/api/update") => {
+    const payload = `POST:${path}:${ts}`;
+    return createHmac("sha256", secret).update(payload).digest("hex");
+  };
+
+  const psRequest = (ts: string, signature: string) =>
+    new NextRequest("http://localhost/api/update", {
+      method: "POST",
+      headers: { "x-ps-ts": ts, "x-ps-signature": signature },
+    });
+
+  it("accepts a request signed with PS_REQUEST_SIGNING_SECRET and x-ps-* headers", () => {
+    process.env.PS_REQUEST_SIGNING_SECRET = "ps-secret";
+    const ts = Date.now().toString();
+    expect(requireSignedRequest(psRequest(ts, signed("ps-secret", ts)))).toBeNull();
+  });
+
+  it("rejects an x-ps-* request whose signature was tampered with", () => {
+    process.env.PS_REQUEST_SIGNING_SECRET = "ps-secret";
+    const ts = Date.now().toString();
+    expect(requireSignedRequest(psRequest(ts, "bad-signature"))?.status).toBe(401);
+  });
+
+  it("rejects an x-ps-* request signed with the wrong secret", () => {
+    process.env.PS_REQUEST_SIGNING_SECRET = "ps-secret";
+    const ts = Date.now().toString();
+    expect(requireSignedRequest(psRequest(ts, signed("not-the-secret", ts)))?.status).toBe(401);
+  });
+
+  it("rejects an x-ps-* request whose timestamp is outside the five-minute window", () => {
+    process.env.PS_REQUEST_SIGNING_SECRET = "ps-secret";
+    const ts = (Date.now() - 6 * 60 * 1000).toString();
+    expect(requireSignedRequest(psRequest(ts, signed("ps-secret", ts)))?.status).toBe(401);
+  });
+
+  it("prefers PS_REQUEST_SIGNING_SECRET when both names are set", () => {
+    // Both names are live through v1.0.0. A signature made with the PS_ secret
+    // has to verify, or an install that set both would refuse its own caller.
+    process.env.PS_REQUEST_SIGNING_SECRET = "ps-secret";
+    process.env.CH_REQUEST_SIGNING_SECRET = "ch-secret";
+    const ts = Date.now().toString();
+    expect(requireSignedRequest(psRequest(ts, signed("ps-secret", ts)))).toBeNull();
+    expect(requireSignedRequest(psRequest(ts, signed("ch-secret", ts)))?.status).toBe(401);
   });
 
   it("uses x-correlation-id before x-request-id", () => {

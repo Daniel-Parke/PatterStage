@@ -19,22 +19,41 @@
  *              token and the governance corpus, and still includes docs/, which
  *              prebuild reads.
  *
- * Two things are deliberately not asserted here, rather than asserted weakly.
- * File modes (critic-03b) are Unix-only: chmod is a no-op on this machine, so
- * the mode cases live in their own describe and skip on win32. And the
+ *   critic-03b The deploy logs, the data directory, the database and the copy a
+ *              baseline rebuild leaves behind are readable by their owner
+ *              alone. Every one of them already exists on an upgraded install,
+ *              so the fix is a chmod and not a mode argument.
+ *
+ * The mode cases come in two halves. What chmod DOES is Unix-only — it is a
+ * no-op on this machine — so that half skips on win32 and the assertion would
+ * otherwise be a lie. That each call site ASKS for it is the same text on every
+ * host, so that half runs everywhere.
+ *
+ * One thing is deliberately not asserted here, rather than asserted weakly. The
  * limiter's prune, which stops an attacker-controlled map growing without
  * bound, has no observable surface without a test-only export; it is proved by
  * reading the code, and the record says so.
  */
 
-import { existsSync, readFileSync } from "node:fs";
-import { homedir } from "node:os";
+import {
+  chmodSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
+import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { checkUrlSafe, checkUrlShape, isPrivateIpv6 } from "@/lib/search/url-guard";
 import { resolveAllowedWorkspacePath } from "@/lib/fs/path-security";
+import { OWNER_ONLY_DIR, OWNER_ONLY_FILE, restrictToOwner } from "@/lib/fs/fs-helpers";
 
 const ROOT = join(__dirname, "..", "..");
+const readRepoFile = (...parts: string[]) => readFileSync(join(ROOT, ...parts), "utf-8");
 
 describe("K4 · the URL guard sees what the parser produces", () => {
   // Each is a private address the guard let through, in the spelling `new URL()`
@@ -137,5 +156,89 @@ onUnix("K4 · what the deploy runner writes is readable by its owner alone", () 
     const opens = [...source.matchAll(/openSync\([^)]*\)/g)].map((m) => m[0]);
     expect(opens.length).toBeGreaterThan(0);
     for (const open of opens) expect(open).toContain("0o600");
+  });
+});
+
+onUnix("K4 · restrictToOwner narrows what is already on disk", () => {
+  // A mode argument applies only when the file is created. Every path here
+  // already exists on an upgraded install, so the fix has to be a chmod.
+  let dir = "";
+  beforeEach(() => {
+    dir = mkdtempSync(join(tmpdir(), "k4-modes-"));
+  });
+  afterEach(() => {
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  const modeOf = (path: string) => statSync(path).mode & 0o777;
+
+  it("narrows a world-readable file to 0600", () => {
+    const file = join(dir, "ps-runtime.log");
+    writeFileSync(file, "boot line with a token in it\n");
+    chmodSync(file, 0o644);
+    restrictToOwner(file, OWNER_ONLY_FILE);
+    expect(modeOf(file)).toBe(0o600);
+  });
+
+  it("narrows a traversable directory to 0700", () => {
+    const sub = join(dir, "data");
+    mkdirSync(sub);
+    chmodSync(sub, 0o755);
+    restrictToOwner(sub, OWNER_ONLY_DIR);
+    expect(modeOf(sub)).toBe(0o700);
+  });
+
+  it("does not throw on a path that is not there", () => {
+    // Boot calls this before some of these files exist. A throw here would be
+    // a startup failure over a permission tidy-up.
+    expect(() => restrictToOwner(join(dir, "absent"), OWNER_ONLY_FILE)).not.toThrow();
+  });
+});
+
+describe("K4 · every writer of operator data names the mode", () => {
+  // Cross-platform, because the call sites are the same text on every host.
+  // Only their effect is Unix-only, which is what the describe above proves.
+
+  it("opens both deploy logs with 0600 and narrows the file that is already there", () => {
+    const deploy = readRepoFile("scripts", "tooling", "ps-deploy.mjs");
+    expect([...deploy.matchAll(/openSync\(/g)]).toHaveLength(2);
+    expect([...deploy.matchAll(/restrictToOwner\(/g)].length).toBeGreaterThanOrEqual(3);
+    // The runtime log is truncated on every start, and truncation keeps the
+    // old mode, so the mode option alone would not fix an existing install.
+    expect(deploy).toMatch(/writeFileSync\(RUNTIME_LOG\(\), "", \{ mode: OWNER_ONLY_FILE \}\)/);
+  });
+
+  it("gives the detached child a log it opened with 0600", () => {
+    const platform = readRepoFile("scripts", "tooling", "_platform.mjs");
+    expect(platform).toMatch(/openSync\(logFile, "a", OWNER_ONLY_FILE\)/);
+    expect(platform).toContain("restrictToOwner(logFile, OWNER_ONLY_FILE)");
+  });
+
+  it("narrows the data directory and the database at every open", () => {
+    const db = readRepoFile("src", "lib", "db", "index.ts");
+    expect(db).toContain("restrictToOwner(dataDir, OWNER_ONLY_DIR)");
+    // :94 first open and :198 the reopen after a baseline rebuild.
+    expect([...db.matchAll(/restrictToOwner\(DB_PATH, OWNER_ONLY_FILE\)/g)]).toHaveLength(2);
+  });
+
+  it("narrows the directory the token file is minted into", () => {
+    // The token file was already 0600. Its directory was not, and a readable
+    // directory is enough to see the name of everything in it.
+    const token = readRepoFile("src", "lib", "api", "auth-token.ts");
+    expect(token).toContain("OWNER_ONLY_DIR");
+    expect(token).not.toContain("chmodSync(path, 0o600)");
+  });
+
+  it("narrows the copy a baseline rebuild leaves beside the database", () => {
+    const upgrade = readRepoFile("src", "lib", "db", "upgrade.ts");
+    expect(upgrade).toContain("restrictToOwner(backupPath, OWNER_ONLY_FILE)");
+  });
+
+  it("has one chmod helper, not one per caller", () => {
+    // Two answers to "how tight should this be" would drift. Callers that had
+    // their own inline chmod now go through fs-helpers.
+    const helpers = readRepoFile("src", "lib", "fs", "fs-helpers.ts");
+    expect(helpers).toContain("export function restrictToOwner");
+    expect(helpers).toContain("process.platform === \"win32\"");
   });
 });
