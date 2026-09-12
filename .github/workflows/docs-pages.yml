@@ -15,7 +15,7 @@ jobs:
       - run: npm ci
       - run: npm run docs:check
       - run: npm run docs:build -- --base /PatterStage/
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with: { path: site }
       - id: deploy
         uses: actions/deploy-pages@v4
