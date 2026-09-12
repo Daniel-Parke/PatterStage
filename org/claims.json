@@ -3,32 +3,37 @@
   "assigned": "2026-09-12",
   "lanes": [
     {
-      "lane": "T-0149-oracle",
-      "owner": "ORACLE session, not the implementer (org/roles/ORACLE.md; R3 requires the hand-off)",
+      "lane": "T-0151-oracle",
+      "owner": "ORACLE session, not the implementer (org/roles/ORACLE.md)",
       "claims": [
-        "tests/unit/k3-a-closed-record-keeps-its-spelling.test.ts",
-        "tests/unit/c8-the-programme-is-closed.test.ts"
+        "tests/unit/k4-the-security-fixes.test.ts",
+        "tests/unit/api-auth.test.ts"
       ],
-      "expires": "2026-09-13T15:00:00Z",
-      "why": "T-0149 touches the protected set by adding ADR-0011, so it runs high-assurance and its acceptance oracle is authored before the implementation exists, by a session that will not write it. It also carries the third amendment to c8, ruled by the operator on 2026-09-12: the testLines ratchet case is re-anchored because a new programme oracle necessarily raises it, and the committed census baseline governs growth from here with its written reasons."
+      "expires": "2026-09-13T18:00:00Z",
+      "why": "T-0151 is R2 on the auth-surface factor, so it runs high-assurance and its acceptance oracle is written before the implementation. The lane also carries critic-05c, which is a test row rather than a fix: the signing cases spelled the secret CH_REQUEST_SIGNING_SECRET and the headers x-ch-*, so nothing tested the PS_ names the documentation gives."
     },
     {
-      "lane": "T-0149-implementer",
+      "lane": "T-0151-implementer",
       "owner": "the batch's own session",
       "claims": [
-        "org/decisions/ADR-0011-t-0144-unsanctioned-org-edits.md",
-        "org/tasks/",
-        "org/eos-session0/",
-        "org/EOS_FEEDBACK.md",
-        "org/plans/2026-09-ui-overhaul.md",
-        "org/reviews/2026-09-consolidation-recon.md",
-        "org/reviews/2026-09-ui-recon.md",
-        "org/reviews/2026-09-real-hermes-round.md",
-        "docs/adr/README.md"
+        "src/lib/search/url-guard.ts",
+        "src/lib/fs/path-security.ts",
+        "src/lib/fs/fs-helpers.ts",
+        "src/lib/sessions/sessions-api-guard.ts",
+        "src/lib/api/auth-throttle.ts",
+        "src/lib/api/auth-token.ts",
+        "src/lib/db/index.ts",
+        "src/lib/db/upgrade.ts",
+        "scripts/tooling/_platform.mjs",
+        "scripts/tooling/ps-deploy.mjs",
+        ".dockerignore",
+        "scripts/tooling/line-census.baseline.json",
+        "tests/fixtures/mutants/T-0151.json",
+        "org/tasks/T-0151.json"
       ],
-      "expires": "2026-09-13T15:00:00Z",
-      "why": "The ratifying ADR, the restore of the closed records, and the ADR index rows. Disjoint from the oracle lane."
+      "expires": "2026-09-13T18:00:00Z",
+      "why": "The six fixes that need no operator ruling: critic-01, critic-14, critic-02s, critic-03b, tooling-05, and the census re-cut that holds their lines. Disjoint from the oracle lane."
     }
   ],
-  "note": "Two lanes, which is the cap at org/policy.json:125. An integrator writes and commits this file before any dispatch; lanes receive claims and never acquire or mutate them."
+  "note": "Two lanes, which is the cap at org/policy.json:125. An integrator writes and commits this file before any dispatch; lanes receive claims and never acquire or mutate them. The REVIEWER that T-0151's high-assurance mode requires reads the diff and writes nothing, so it holds no lane."
 }
