@@ -30,9 +30,11 @@ interface FailureRecord {
 const records = new Map<string, FailureRecord>();
 
 /**
- * Who is failing. The same derivation the sessions limiter uses: two answers
- * to "which client" would be two security boundaries. Loopback collapses to
- * "local", the case the bounded penalty exists to make survivable.
+ * Who is failing. One derivation, which the sessions limiter imports rather
+ * than copies: two answers to "which client" would be two security boundaries.
+ *
+ * Next fills x-forwarded-for from the socket when the caller sent none, so a
+ * loopback caller keys on 127.0.0.1 or ::1; "local" means neither header came.
  */
 export function authClientKey(headers: {
   get(name: string): string | null;

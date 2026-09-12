@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { logApiError } from "@/lib/api/api-logger";
+import { authClientKey } from "@/lib/api/auth-throttle";
 
 /** Default max session transcript size (bytes) before GET returns 413. Override with MAX_SESSION_FILE_BYTES. */
 const DEFAULT_MAX_SESSION_BYTES = 64 * 1024 * 1024;
@@ -40,23 +41,47 @@ function maxRatePerWindow(): number {
   return Number.isFinite(n) && n > 0 ? n : DEFAULT_RATE_MAX;
 }
 
-function getSessionsApiClientKey(request: NextRequest): string {
-  const forwarded = request.headers.get("x-forwarded-for");
-  if (forwarded) {
-    const first = forwarded.split(",")[0]?.trim();
-    if (first) return first;
+/**
+ * Forgets every caller whose window has passed.
+ *
+ * The map is keyed by a header the caller sends, so without this a caller that
+ * changes the header on every request grows it without bound. The auth throttle
+ * prunes for the same reason, on its own longer clock; here the sliding window
+ * IS the lifetime, so nothing older than one window is worth keeping.
+ */
+function pruneWindows(now: number): void {
+  for (const [key, hits] of windowHits) {
+    if (hits.length === 0 || now - hits[hits.length - 1] >= RATE_WINDOW_MS) {
+      windowHits.delete(key);
+    }
   }
-  const realIp = request.headers.get("x-real-ip")?.trim();
-  if (realIp) return realIp;
-  return "local";
+}
+
+/**
+ * How many callers are remembered. Exported for one assertion, the same reason
+ * the auth throttle exports its own count: the key comes from a header the
+ * caller controls, and that the map SHRINKS shows up in no response, so without
+ * this the prune above could be deleted and nothing would notice.
+ *
+ * What it bounds, precisely. A caller sending a new header value on every
+ * request never re-hits a key, so each entry survives its full window: the map
+ * holds one window's distinct headers, not one per request forever. That is a
+ * bound and it is not a small one.
+ */
+export function sessionsRateWindowCount(): number {
+  return windowHits.size;
 }
 
 /**
  * Records this request and returns true if the client should be throttled.
  */
 function sessionsApiRateLimitExceeded(request: NextRequest): boolean {
-  const key = getSessionsApiClientKey(request);
+  // One derivation, shared with the auth throttle: two answers to "which client
+  // is this" would be two security boundaries, and only one of them would be
+  // reviewed when the answer changed.
+  const key = authClientKey(request.headers);
   const now = Date.now();
+  pruneWindows(now);
   const max = maxRatePerWindow();
   const existing = windowHits.get(key) || [];
   const arr = existing.filter((t) => now - t < RATE_WINDOW_MS);
@@ -81,7 +106,7 @@ export function sessionsRateLimitResponse(
   }
   logApiError(
     routeLabel,
-    "rate limit exceeded for " + getSessionsApiClientKey(request),
+    "rate limit exceeded for " + authClientKey(request.headers),
     new Error("TooManyRequests")
   );
   return NextResponse.json(

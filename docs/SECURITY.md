@@ -55,7 +55,7 @@ Every request is checked in **one place**, `src/proxy.ts`, before any route hand
 
 PatterStage is a single-operator control plane, so authentication is one shared secret rather than an account system:
 
-- A random token is minted on first boot into **`PS_DATA_DIR/auth-token`** (mode `0600`) and the full sign-in URL is printed to the server log at every start.
+- A random token is minted on first boot into **`PS_DATA_DIR/auth-token`** (mode `0600`) and the full sign-in URL is printed to the server log at every start. On Unix, boot also narrows `PS_DATA_DIR` itself to `0700` and the database to `0600`, so another local account cannot read them; on Windows this is a no-op and the directory's ACL governs.
 - **Browser:** open `http://127.0.0.1:<PORT>/?ps_token=<token>` once. The proxy exchanges it for an httpOnly `ps_session` cookie and redirects to strip the token from the URL and history.
 - **Scripts / curl:** send `Authorization: Bearer <token>`.
 - Cookie-authenticated writes must be **same-origin** (`Sec-Fetch-Site` / `Origin`), so a page you visit in another tab cannot drive your control plane.

@@ -5,9 +5,28 @@
 
 import { spawn, execFileSync } from "child_process";
 import { connect } from "net";
-import { openSync } from "fs";
+import { chmodSync, openSync } from "fs";
 
 export const isWindows = process.platform === "win32";
+
+// Mirrors OWNER_ONLY_FILE/restrictToOwner in src/lib/fs/fs-helpers.ts. There is
+// no OWNER_ONLY_DIR here: the only directory the runner makes is ~/.hermes/logs,
+// which belongs to Hermes rather than to PatterStage, so this narrows the log
+// FILES it writes and leaves someone else's directory alone.
+/** Owner read/write. The mode for anything holding an operator's data. */
+export const OWNER_ONLY_FILE = 0o600;
+
+/** Narrow an existing path to its owner. A mode argument only applies on
+ *  creation, and these files outlive the install that made them. No-op on
+ *  Windows, and silent on a path that is not there. */
+export function restrictToOwner(path, mode) {
+  if (isWindows) return;
+  try {
+    chmodSync(path, mode);
+  } catch {
+    /* best effort */
+  }
+}
 
 /** Spawn fully detached so it outlives this process. `logFile` (if given) is
  *  opened in append mode and used for the child's stdout+stderr (a file fd —
@@ -16,7 +35,10 @@ export function detachedSpawn(cmd, args, { cwd, env, logFile } = {}) {
   try {
     let stdio = "ignore";
     if (logFile) {
-      const fd = openSync(logFile, "a");
+      // The server's stdout goes here, and the boot line carries the access
+      // token. Mode on create, chmod for the log the last start left behind.
+      const fd = openSync(logFile, "a", OWNER_ONLY_FILE);
+      restrictToOwner(logFile, OWNER_ONLY_FILE);
       stdio = ["ignore", fd, fd];
     }
     const child = spawn(cmd, args, {

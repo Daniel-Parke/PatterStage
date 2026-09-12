@@ -25,14 +25,14 @@
 
 import Database, { type Database as _DatabaseType } from "better-sqlite3";
 import { join } from "path";
-import { existsSync, readFileSync } from "fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "fs";
 import { PS_DATA_DIR, getDbPath } from "../host/paths";
 import { getSchemaVersion, setSchemaVersion } from "../db-schema";
 import {
   countMissionCategories,
   missionCategoriesTableExists,
 } from "../missions/mission-category-schema-repository";
-import { ensureDir } from "../fs/fs-helpers";
+import { OWNER_ONLY_DIR, OWNER_ONLY_FILE, ensureDir, restrictToOwner } from "../fs/fs-helpers";
 import { needsBaselineRebuild, rebuildToBaseline } from "./upgrade";
 import { applyProfilesToolsParityUpgrade } from "./apply-profiles-tools-upgrade";
 import { applyMissionRepeatMigration } from "./apply-mission-repeat-migration";
@@ -80,6 +80,10 @@ import { applyComposerNodeCancelledMigration } from "./apply-composer-node-cance
 
 const dataDir = PS_DATA_DIR;
 ensureDir(dataDir);
+// The directory holds the database and the access token. setup.sh and
+// ensureAuthToken both create it, so narrowing it here covers a dir either of
+// them made at the default umask, without a second boot step (critic-03b).
+restrictToOwner(dataDir, OWNER_ONLY_DIR);
 
 const DB_PATH = getDbPath(dataDir);
 
@@ -87,11 +91,54 @@ const DB_PATH = getDbPath(dataDir);
 
 let _db: Database.Database | null = null;
 
+/**
+ * Narrow the database copies an older install left lying in the data directory.
+ *
+ * Narrowing the live database only helps the live database. Every migration
+ * path here leaves a WHOLE database beside it — `.pre-baseline-<ts>` from a
+ * baseline rebuild, `.pre-migrate-<ts>.bak` from the deploy runner, and the S1
+ * hotfix's own — and on an install made before this batch each was written at
+ * the default umask, which on a shared Linux box is world-readable. A `-wal` or
+ * `-shm` left by an unclean shutdown is the same case: SQLite reuses the mode
+ * of a file it finds and only creates one at the database's mode.
+ *
+ * So the mode arguments elsewhere cover what is written from now on, and this
+ * covers what is already there. It runs once, at the first open, and swallows
+ * everything: a copy owned by another account is the operator's to fix, not a
+ * reason to fail a boot.
+ */
+function restrictExistingDatabaseFiles(dir: string): void {
+  if (process.platform === "win32") return;
+  let names: string[];
+  try {
+    names = readdirSync(dir);
+  } catch {
+    return;
+  }
+  for (const name of names) {
+    // Every spelling of "a database or one of its sidecars": name.db, name.db-wal,
+    // name.db.pre-baseline-<ts>, name.db.pre-migrate-<ts>.bak. Nothing else in
+    // the directory matches, and a directory that did would be skipped below.
+    if (!/\.db($|[.-])/.test(name)) continue;
+    const path = join(dir, name);
+    try {
+      if (!statSync(path).isFile()) continue;
+    } catch {
+      continue;
+    }
+    restrictToOwner(path, OWNER_ONLY_FILE);
+  }
+}
+
 /** Open (or reuse) the SQLite database connection. Runs migrations on first open. */
 export function getDb(): Database.Database {
   if (_db) return _db;
 
   _db = new Database(DB_PATH);
+  // SQLite creates -wal and -shm with the database's own mode, so narrowing the
+  // database before WAL is enabled narrows all three.
+  restrictToOwner(DB_PATH, OWNER_ONLY_FILE);
+  restrictExistingDatabaseFiles(dataDir);
   _db.pragma("journal_mode = WAL");
   _db.pragma("foreign_keys = ON");
   _db.pragma("busy_timeout = 5000");
@@ -196,6 +243,7 @@ export function runMigrations(database: Database.Database): void {
     _db = null;
     _bootstrapped = false;
     const reopened = new Database(DB_PATH);
+    restrictToOwner(DB_PATH, OWNER_ONLY_FILE);
     reopened.pragma("journal_mode = WAL");
     reopened.pragma("foreign_keys = ON");
     reopened.pragma("busy_timeout = 5000");

@@ -2,7 +2,7 @@
 // Path safety — prevent traversal from user-controlled segments
 // ═══════════════════════════════════════════════════════════════
 
-import { relative, resolve } from "path";
+import { isAbsolute, relative, resolve, sep } from "path";
 import { homedir } from "os";
 import { NextResponse } from "next/server";
 
@@ -20,7 +20,12 @@ function isPathUnderRoot(absolutePath: string, root: string): boolean {
   const C = resolve(absolutePath);
   if (C === R) return true;
   const rel = relative(R, C);
-  return rel !== "" && !rel.startsWith("..") && !rel.includes("..");
+  // A path, not a substring. `!rel.includes("..")` refused real directories:
+  // a..b, ..foo, notes..old. What matters is whether the FIRST segment climbs
+  // out, which is what a leading ".." or a ".." followed by the separator says,
+  // and whether relative() gave up and returned an absolute path, which it does
+  // when the two paths share no root (another drive on Windows).
+  return rel !== "" && rel !== ".." && !rel.startsWith(".." + sep) && !isAbsolute(rel);
 }
 
 /**

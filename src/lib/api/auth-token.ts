@@ -16,7 +16,9 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { randomBytes, timingSafeEqual } from "crypto";
-import { chmodSync, mkdirSync, readFileSync, statSync, writeFileSync } from "fs";
+import { mkdirSync, readFileSync, statSync, writeFileSync } from "fs";
+
+import { OWNER_ONLY_DIR, OWNER_ONLY_FILE, restrictToOwner } from "@/lib/fs/fs-helpers";
 
 import { PS_DATA_DIR, readEnv } from "@/lib/host/paths";
 
@@ -92,16 +94,13 @@ export function ensureAuthToken(): string {
 
   const token = randomBytes(32).toString("base64url");
   const path = getAuthTokenPath();
-  mkdirSync(path.slice(0, Math.max(path.lastIndexOf("/"), path.lastIndexOf("\\"))), {
-    recursive: true,
-  });
-  writeFileSync(path, token + "\n", { encoding: "utf-8", mode: 0o600 });
-  try {
-    // No-op on Windows; the important case is a shared Linux box.
-    chmodSync(path, 0o600);
-  } catch {
-    /* best effort */
-  }
+  const dir = path.slice(0, Math.max(path.lastIndexOf("/"), path.lastIndexOf("\\")));
+  mkdirSync(dir, { recursive: true });
+  // The file was already 0600, but a readable directory shows every name in it,
+  // and this one is created at the default umask (critic-03b).
+  restrictToOwner(dir, OWNER_ONLY_DIR);
+  writeFileSync(path, token + "\n", { encoding: "utf-8", mode: OWNER_ONLY_FILE });
+  restrictToOwner(path, OWNER_ONLY_FILE);
   cached = null;
   return token;
 }

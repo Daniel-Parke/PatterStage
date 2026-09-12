@@ -2,8 +2,34 @@
 // (atomic write + rollback) belongs in `modules/hermes/lib/hermes-config-write.ts`
 // and `modules/hermes/lib/profile-sync-shared.ts`.
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
+import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import { createHash } from "crypto";
+
+/** Owner read/write. The mode for anything holding an operator's data. */
+export const OWNER_ONLY_FILE = 0o600;
+/** Owner read/write/traverse. A readable directory leaks every name in it. */
+export const OWNER_ONLY_DIR = 0o700;
+
+/**
+ * Narrow an existing path to its owner.
+ *
+ * A `mode` passed to open() or writeFileSync() applies only when the file is
+ * created, and truncating a file keeps the mode it already had. Every path this
+ * is called on — the data directory, the database, the deploy logs, the token —
+ * already exists on an upgraded install, so the fix has to be a chmod.
+ *
+ * No-op on Windows, where chmod cannot express this and a thrown error would be
+ * a startup failure over a permission tidy-up. Missing paths are ignored for the
+ * same reason: boot calls this before some of them exist.
+ */
+export function restrictToOwner(path: string, mode: number): void {
+  if (process.platform === "win32") return;
+  try {
+    chmodSync(path, mode);
+  } catch {
+    /* best effort */
+  }
+}
 
 /** Create `dir` recursively if it does not exist. */
 export function ensureDir(dir: string): void {

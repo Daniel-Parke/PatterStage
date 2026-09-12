@@ -48,9 +48,16 @@ import {
 import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 
+import { NextRequest } from "next/server";
+
 import { checkUrlSafe, checkUrlShape, isPrivateIpv6 } from "@/lib/search/url-guard";
 import { resolveAllowedWorkspacePath } from "@/lib/fs/path-security";
 import { OWNER_ONLY_DIR, OWNER_ONLY_FILE, restrictToOwner } from "@/lib/fs/fs-helpers";
+import { authClientKey } from "@/lib/api/auth-throttle";
+import {
+  sessionsRateLimitResponse,
+  sessionsRateWindowCount,
+} from "@/lib/sessions/sessions-api-guard";
 
 const ROOT = join(__dirname, "..", "..");
 const readRepoFile = (...parts: string[]) => readFileSync(join(ROOT, ...parts), "utf-8");
@@ -63,6 +70,14 @@ describe("K4 · the URL guard sees what the parser produces", () => {
     ["http://[::ffff:169.254.169.254]/", "IPv4-mapped cloud metadata"],
     ["http://[::127.0.0.1]/", "IPv4-compatible loopback"],
     ["http://[64:ff9b::a9fe:a9fe]/", "NAT64 carrying 169.254.169.254"],
+    // The compressed spellings, which are the common ones, and the reason the
+    // guard expands an address instead of matching a regex per prefix. A zero
+    // second hextet disappears, and 2002:a9fe::1 is 6to4 for 169.254.0.0.
+    ["http://[2002:a9fe::1]/", "6to4 carrying the cloud metadata range"],
+    ["http://[2002:7f00::1]/", "6to4 carrying 127.0.0.0"],
+    ["http://[2002:c0a8::1]/", "6to4 carrying 192.168.0.0"],
+    ["http://[2002:a00::1]/", "6to4 carrying 10.0.0.0"],
+    ["http://[64:ff9b::]/", "NAT64 carrying 0.0.0.0"],
   ];
 
   it.each(refused)("refuses %s", async (url) => {
@@ -79,6 +94,20 @@ describe("K4 · the URL guard sees what the parser produces", () => {
   it("still allows a public address, so the guard has not simply closed", () => {
     expect(checkUrlShape("https://example.com/docs").ok).toBe(true);
     expect(checkUrlShape("http://[2606:4700:4700::1111]/").ok).toBe(true);
+  });
+
+  // The carrier prefixes are the half that can over-block: each one also
+  // carries public addresses, and refusing those would break research rather
+  // than protect it. Every case here is the same prefix as a refusal above,
+  // decoding to a routable v4.
+  it.each([
+    ["http://[64:ff9b::808:808]/", "NAT64 carrying 8.8.8.8"],
+    ["http://[2002:0102:0304::1]/", "6to4 carrying 1.2.3.4"],
+    ["http://[2001:db8::1]/", "an ordinary v6 address with no v4 in it"],
+    ["http://[2001:db8::7f00:1]/", "last 32 bits spell 127.0.0.1, but no carrier prefix"],
+    ["http://[2001:db8::127.0.0.1]/", "the same, written with a dotted tail"],
+  ])("allows %s", (url) => {
+    expect(checkUrlShape(url).ok).toBe(true);
   });
 });
 
@@ -102,23 +131,76 @@ describe("K4 · the workspace guard reads a path, not a substring", () => {
     expect(verdict(home)).toBe(true);
     expect(verdict(join(home, "projects", "thing"))).toBe(true);
   });
+
+  it("refuses a sibling whose name merely starts with a root's name", () => {
+    // relative("/home/dan", "/home/danielle") is "../danielle". A prefix test
+    // on the string would have admitted it.
+    expect(verdict(home + "-elsewhere")).toBe(false);
+  });
+});
+
+const onWindows = process.platform === "win32" ? describe : describe.skip;
+onWindows("K4 · the workspace guard refuses another drive", () => {
+  it("refuses a path on a drive no root is on", () => {
+    // This is what the isAbsolute clause closes, and it was open before the
+    // fix: relative() gives up and returns an absolute path when the two share
+    // no root, and "C:\\other" contains no "..", so the old test admitted it.
+    // Windows-only, because a drive letter is not a path anywhere else — off
+    // win32 the guard refuses it earlier, by shape.
+    const other = homedir()[0].toUpperCase() === "Z" ? "Y" : "Z";
+    expect(resolveAllowedWorkspacePath(`${other}:\\somewhere`).ok).toBe(false);
+  });
 });
 
 describe("K4 · the two client-key derivations are one function", () => {
   it("keys the sessions limiter through the auth throttle's own derivation", () => {
     // Two answers to "which client is this" are two security boundaries. The
     // sessions limiter had its own copy, with no prune beside it.
+    //
+    // Asserting that the OLD function name is gone is not enough: inline the
+    // same derivation at the call site under any other name and the file still
+    // mentions authClientKey, because the import does. What actually holds is
+    // that this file reads no client header of its own.
     const source = readFileSync(join(ROOT, "src", "lib", "sessions", "sessions-api-guard.ts"), "utf-8");
-    expect(source).toContain("authClientKey");
+    expect(source).toContain("authClientKey(request.headers)");
     expect(source).not.toContain("function getSessionsApiClientKey");
+    expect(source).not.toMatch(/headers\.get\(\s*["'`]x-(forwarded-for|real-ip)["'`]/);
   });
 
   it("says something true about loopback where it derives the key", () => {
-    // auth-throttle's comment claimed loopback collapses to "local". It does
-    // not: Next fills x-forwarded-for from the socket, so a loopback caller is
-    // keyed on 127.0.0.1 or ::1, which is why a spoofed header can name it.
-    const source = readFileSync(join(ROOT, "src", "lib", "api", "auth-throttle.ts"), "utf-8");
-    expect(source).not.toContain("Loopback collapses to");
+    // The comment claimed loopback collapses to "local". Asserting the wrong
+    // sentence is absent would pass on an empty comment, so this asserts the
+    // behaviour the sentence was wrong about instead: a caller whose address
+    // Next put in the header is keyed on that address, and "local" is what a
+    // request carrying neither header gets.
+    const headers = (map: Record<string, string>) => ({ get: (n: string) => map[n] ?? null });
+    expect(authClientKey(headers({ "x-forwarded-for": "127.0.0.1" }))).toContain("127.0.0.1");
+    expect(authClientKey(headers({ "x-forwarded-for": "::1" }))).toContain("::1");
+    expect(authClientKey(headers({}))).toBe("local");
+  });
+
+  it("forgets a caller once its window has passed", () => {
+    // The map is keyed by a header the caller sends, so without the prune a
+    // caller varying it grows the map for as long as the process lives. That
+    // the map shrinks shows up in no response, which is why the count is
+    // exported: this is the only place it can be seen.
+    const before = sessionsRateWindowCount();
+    const hit = (who: string) =>
+      sessionsRateLimitResponse(
+        new NextRequest("http://localhost/api/sessions", { headers: { "x-forwarded-for": who } })
+      );
+    for (let i = 0; i < 5; i++) expect(hit(`10.0.0.${i}`)).toBeNull();
+    expect(sessionsRateWindowCount()).toBe(before + 5);
+
+    // One window later, every one of them is forgotten on the next request.
+    const realNow = Date.now;
+    try {
+      Date.now = () => realNow() + 61_000;
+      expect(hit("10.0.0.99")).toBeNull();
+    } finally {
+      Date.now = realNow;
+    }
+    expect(sessionsRateWindowCount()).toBe(1);
   });
 });
 
@@ -147,17 +229,6 @@ describe("K4 · the Docker build context leaves the operator's data out", () => 
 });
 
 const onUnix = process.platform === "win32" ? describe.skip : describe;
-onUnix("K4 · what the deploy runner writes is readable by its owner alone", () => {
-  it("opens the runtime logs with mode 0600", () => {
-    // Skipped on Windows, where chmod is a no-op and the mode would be a lie.
-    // The runner writes into PS_DATA_DIR, which other local accounts can read
-    // at the default mode, and the boot line puts the access token in there.
-    const source = readFileSync(join(ROOT, "scripts", "tooling", "ps-deploy.mjs"), "utf-8");
-    const opens = [...source.matchAll(/openSync\([^)]*\)/g)].map((m) => m[0]);
-    expect(opens.length).toBeGreaterThan(0);
-    for (const open of opens) expect(open).toContain("0o600");
-  });
-});
 
 onUnix("K4 · restrictToOwner narrows what is already on disk", () => {
   // A mode argument applies only when the file is created. Every path here
@@ -199,6 +270,31 @@ describe("K4 · every writer of operator data names the mode", () => {
   // Cross-platform, because the call sites are the same text on every host.
   // Only their effect is Unix-only, which is what the describe above proves.
 
+  it("opens the runtime logs with mode 0600", () => {
+    // This case arrived in the first oracle commit, inside a describe that
+    // skipped on win32, and it is moved and rewritten here in the batch that
+    // made it pass. Both changes are corrections, and both are worth naming.
+    //
+    // It matched /openSync\([^)]*\)/, and `[^)]*` stops at the FIRST `)` — the
+    // inner one in `logFile(base)` — so it read `openSync(logFile(base)` and
+    // could never see a third argument, whatever it was. It would have failed
+    // on Linux CI for a reason that had nothing to do with the fix. Reading a
+    // line at a time asserts more than the old form could, not less.
+    //
+    // And it never needed to skip. Source text is the same on every host, so
+    // skipping it put a Linux-only failure where this machine could not see
+    // it, which is the thing that cost six days in K1. What is genuinely
+    // Unix-only is what chmod DOES, and that is the describe above.
+    const opens = readRepoFile("scripts", "tooling", "ps-deploy.mjs")
+      .split(/\r?\n/)
+      .filter((line) => line.includes("openSync("));
+    expect(opens.length).toBeGreaterThan(0);
+    for (const open of opens) expect(open).toContain("OWNER_ONLY_FILE");
+    expect(readRepoFile("scripts", "tooling", "_platform.mjs")).toContain(
+      "export const OWNER_ONLY_FILE = 0o600;"
+    );
+  });
+
   it("opens both deploy logs with 0600 and narrows the file that is already there", () => {
     const deploy = readRepoFile("scripts", "tooling", "ps-deploy.mjs");
     expect([...deploy.matchAll(/openSync\(/g)]).toHaveLength(2);
@@ -224,9 +320,24 @@ describe("K4 · every writer of operator data names the mode", () => {
   it("narrows the directory the token file is minted into", () => {
     // The token file was already 0600. Its directory was not, and a readable
     // directory is enough to see the name of everything in it.
+    //
+    // The second assertion is about there being ONE way to do this, not about
+    // a particular old line: this file had its own inline chmod, and a file
+    // that still imports chmodSync has kept a second answer to the question.
     const token = readRepoFile("src", "lib", "api", "auth-token.ts");
-    expect(token).toContain("OWNER_ONLY_DIR");
-    expect(token).not.toContain("chmodSync(path, 0o600)");
+    expect(token).toContain("restrictToOwner(dir, OWNER_ONLY_DIR)");
+    expect(token).not.toContain("chmodSync");
+  });
+
+  it("narrows the whole databases an older install left lying about", () => {
+    // Narrowing the live database only helps the live database. A baseline
+    // rebuild and the deploy runner each leave a complete copy beside it, and
+    // on an install made before this batch those are world-readable.
+    const db = readRepoFile("src", "lib", "db", "index.ts");
+    expect(db).toContain("restrictExistingDatabaseFiles(dataDir)");
+    const deploy = readRepoFile("scripts", "tooling", "ps-deploy.mjs");
+    expect(deploy).toContain("restrictToOwner(bak, OWNER_ONLY_FILE)");
+    expect(deploy).toContain("restrictToOwner(bak + s, OWNER_ONLY_FILE)");
   });
 
   it("narrows the copy a baseline rebuild leaves beside the database", () => {

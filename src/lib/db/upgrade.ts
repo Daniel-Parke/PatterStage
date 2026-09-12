@@ -13,7 +13,7 @@ import {
 } from "fs";
 import { dirname, join } from "path";
 import { PATHS } from "../host/paths";
-import { ensureDir } from "../fs/fs-helpers";
+import { OWNER_ONLY_FILE, ensureDir, restrictToOwner } from "../fs/fs-helpers";
 
 /** Squashed baseline schema, including profile/root/skills source-of-truth tables. */
 export const BASELINE_SCHEMA_VERSION = 3;
@@ -300,6 +300,9 @@ export function rebuildToBaseline(
   const backupPath = `${dbPath}.pre-baseline-${Date.now()}`;
   if (existsSync(dbPath)) {
     copyFileSync(dbPath, backupPath);
+    // copyFileSync carries the source's mode, which is libuv behaviour rather
+    // than a promise this repo makes. The copy is a whole database; say it.
+    restrictToOwner(backupPath, OWNER_ONLY_FILE);
     unlinkSync(dbPath);
     for (const suffix of ["-wal", "-shm"]) {
       const p = dbPath + suffix;
