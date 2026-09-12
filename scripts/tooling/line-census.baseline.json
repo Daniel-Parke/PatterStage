@@ -2,7 +2,7 @@
   "measuredAt": "2026-09-12",
   "counts": {
     "srcLines": 100881,
-    "testLines": 121398,
+    "testLines": 121402,
     "srcRepeatedWindowLines": 1000,
     "testRepeatedWindowLines": 4343,
     "routesWithTryCatch": 13,
@@ -159,6 +159,11 @@
       "measuredAt": "2026-09-12",
       "rise": "testLines rose from 121259 to 121398",
       "reason": "K1 (T-0147): the oracle that holds the three CI failures, each checkable on Windows"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "testLines rose from 121398 to 121402",
+      "reason": "the navigator install in b6-cleared-defaults-stay-cleared: four lines that let a node suite build the whole DOM it needs, not just part of it"
     }
   ]
 }

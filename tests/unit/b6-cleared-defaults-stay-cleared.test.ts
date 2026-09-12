@@ -621,10 +621,14 @@ describe("useModelActions.handleSetDefault toasts data.error", () => {
     };
     const dom = new JSDOM("<!doctype html><html><body></body></html>", { url: "http://localhost/" });
     const g = globalThis as unknown as Record<string, unknown>;
-    const names = ["window", "document"] as const;
+    const names = ["window", "document", "navigator"] as const;
     const saved = names.map((n) => [n, Object.getOwnPropertyDescriptor(globalThis, n)] as const);
     Object.defineProperty(globalThis, "window", { value: dom.window, configurable: true, writable: true });
     Object.defineProperty(globalThis, "document", { value: dom.window.document, configurable: true, writable: true });
+    // react-dom reads navigator at module load. Node 21 and later put one on
+    // globalThis, so this block passed here while failing on CI, which runs
+    // Node 20: a suite that installs its own DOM has to install all of it.
+    Object.defineProperty(globalThis, "navigator", { value: dom.window.navigator, configurable: true, writable: true });
     const hadActFlag = "IS_REACT_ACT_ENVIRONMENT" in g;
     g.IS_REACT_ACT_ENVIRONMENT = true;
 
