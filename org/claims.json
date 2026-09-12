@@ -5,9 +5,12 @@
     {
       "lane": "T-0149-oracle",
       "owner": "ORACLE session, not the implementer (org/roles/ORACLE.md; R3 requires the hand-off)",
-      "claims": ["tests/unit/k3-a-closed-record-keeps-its-spelling.test.ts"],
+      "claims": [
+        "tests/unit/k3-a-closed-record-keeps-its-spelling.test.ts",
+        "tests/unit/c8-the-programme-is-closed.test.ts"
+      ],
       "expires": "2026-09-13T15:00:00Z",
-      "why": "T-0149 touches the protected set by adding ADR-0011, so it runs high-assurance and its acceptance oracle is authored before the implementation exists, by a session that will not write it."
+      "why": "T-0149 touches the protected set by adding ADR-0011, so it runs high-assurance and its acceptance oracle is authored before the implementation exists, by a session that will not write it. It also carries the third amendment to c8, ruled by the operator on 2026-09-12: the testLines ratchet case is re-anchored because a new programme oracle necessarily raises it, and the committed census baseline governs growth from here with its written reasons."
     },
     {
       "lane": "T-0149-implementer",
