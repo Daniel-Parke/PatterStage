@@ -3,12 +3,29 @@
   "assigned": "2026-09-12",
   "lanes": [
     {
-      "lane": "T-0146-oracle-amendment",
-      "owner": "ORACLE session, not the implementer (CONSTITUTION.md:40-41, org/roles/ORACLE.md)",
-      "claims": ["tests/unit/c8-the-programme-is-closed.test.ts"],
-      "expires": "2026-09-13T09:00:00Z",
-      "why": "POLICY-closed-oracles, ruled by the operator on 2026-09-12: a closed programme's oracle is re-anchored by a dated amendment that the implementer does not author. K0's own oracle raised testLines, which is what turned c8 red."
+      "lane": "T-0149-oracle",
+      "owner": "ORACLE session, not the implementer (org/roles/ORACLE.md; R3 requires the hand-off)",
+      "claims": ["tests/unit/k3-a-closed-record-keeps-its-spelling.test.ts"],
+      "expires": "2026-09-13T15:00:00Z",
+      "why": "T-0149 touches the protected set by adding ADR-0011, so it runs high-assurance and its acceptance oracle is authored before the implementation exists, by a session that will not write it."
+    },
+    {
+      "lane": "T-0149-implementer",
+      "owner": "the batch's own session",
+      "claims": [
+        "org/decisions/ADR-0011-t-0144-unsanctioned-org-edits.md",
+        "org/tasks/",
+        "org/eos-session0/",
+        "org/EOS_FEEDBACK.md",
+        "org/plans/2026-09-ui-overhaul.md",
+        "org/reviews/2026-09-consolidation-recon.md",
+        "org/reviews/2026-09-ui-recon.md",
+        "org/reviews/2026-09-real-hermes-round.md",
+        "docs/adr/README.md"
+      ],
+      "expires": "2026-09-13T15:00:00Z",
+      "why": "The ratifying ADR, the restore of the closed records, and the ADR index rows. Disjoint from the oracle lane."
     }
   ],
-  "note": "Seeded empty at the ADR-0008 cutover and first used here. An integrator writes and commits this file before any dispatch; lanes receive claims and never acquire or mutate them. org/policy.json caps max_lanes at 2."
+  "note": "Two lanes, which is the cap at org/policy.json:125. An integrator writes and commits this file before any dispatch; lanes receive claims and never acquire or mutate them."
 }
