@@ -32,7 +32,7 @@ The codemod's walk was not confined to the code it was moving. In commit
   chat-repository path; and `org/decisions/ADR-0010.md:102`, a theme path.
 - **Closed records, 47 files.** 39 done task records, three Session-0
   artefacts, one dated `EOS_FEEDBACK.md` entry, and four closed plans and
-  reviews. 68 line pairs in the records, mostly in their `claims` arrays.
+  reviews. 90 line pairs across them, mostly in the records' `claims` arrays.
 - Two files inside T-0144's own claims (`org/HANDOVER.md` and the consolidation
   plan), which are not at issue.
 
@@ -74,12 +74,25 @@ restored to their `cdf95b10~1` text, by a script that reverses only the path
 rewrites, 90 line pairs, net zero. `T-0055` is not restored: it is proposed
 rather than done, so it is live.
 
+Two more are kept, which makes eight: `org/LOCKBOOK.md` (two lines) and
+`org/plans/2026-09-final-release.md` (five). Both are living documents that
+describe the tree as it is now, so the paths they name should be the paths
+that exist.
+
 ### 3. A codemod is confined to its claims
 
 Every codemod from here runs against an explicit allowlist of directories, and
 `git diff --stat -- org/` is read before the commit. The oracle for T-0144
 already excluded `org/`; only the scratch codemod did not, which is why the
 control is the codemod's own walk list rather than a new gate.
+
+## Corrected before it left the machine
+
+An independent REVIEWER session read this record on the day it was written and
+found three things wrong with it: it said no test read the restored files, when
+this batch's own oracle reads 43 of them; it named six of the eight kept files;
+and it borrowed a line-pair count from a different list. All three are corrected
+above, in the same batch, before the record was pushed. The ruling is unchanged.
 
 ## Alternatives considered
 
@@ -100,8 +113,12 @@ control is the codemod's own walk list rather than a new gate.
   is the sanction, dated after the fact, and says so plainly.
 - Two accepted ADRs keep a rewritten path string. The alternative was to edit
   them again.
-- The restore touches 47 files that no test reads, so it is proved by the diff
-  against `cdf95b10~1` rather than by a suite.
+- 43 of the 47 restored files are gated by this batch's own oracle, which goes
+  red if any of them is rewritten again. The four closed plans and reviews are
+  not, and neither are the two living documents kept above: nothing in the tree
+  separates a closed plan from a living one without a filename list, and a rule
+  that fails a file we mean to keep is worse than no rule. Those six rest on the
+  diff against `cdf95b10~1`.
 - The estate sees a venture that ratified a breach rather than reverting it; the
   reasoning is here so a reader can disagree with it.
 

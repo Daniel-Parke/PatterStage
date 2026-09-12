@@ -763,7 +763,7 @@ gh was authenticated as the repo owner, so CI results and protection settings we
 - **Removes:** c8:94-97's live 'missed really missed' check and :111-125's live baseline read, replaced by comparisons against frozen C8 numbers.
 - **Sceptic:** Re-read the whole c8 suite and the baseline, and ran line-census in check and report modes (read-only: it writes only at :286; exit 0; live equals baseline). Added the :88-92 met-target hold the draft left out, where routesWithTryCatch has zero headroom. Corrected c8's jest cost to 4.3 s, and recorded the removal in 'removes'.
 - **Ruling:** Re-anchor to C8, as recommended — Daniel Parke (operator), 2026-09-12.
-  - **Corrected 2026-09-12, T-0149.** "Re-anchor to C8" does not survive the numbers: C8 left testLines at 121,114, which is stricter than the 121,762 C0 found, so anchoring there blocks harder rather than less. The operator was asked again when it blocked and ruled that the committed census baseline governs growth. The amended case asserts that account, not a live count, and the other eleven ratchets are untouched.
+  - Superseded in part by **Q-018** below, ruled the same day, when the wording turned out not to survive the numbers.
 
 #### tests-02a · No gate holds the line-census baseline, while seven suites run the census against looser numbers
 
@@ -3037,6 +3037,24 @@ Found on 2026-09-12 by the ORACLE session amending c8 under Q-015, while proving
   - **Leave it** — the check keeps its section-wide scope. It still catches a number dropped from the section entirely, which is the common failure, but not a row rewritten while the number survives in prose. 0 lines.
 - **Recommended:** Row-scoped match — the check exists to stop a miss being flattered into a met, and that is exactly the case it lets through.
 - **Ruling:** _pending_
+### Q-018 · The testLines ratchet, when it blocked
+
+Asked on 2026-09-12, when K3's gate went red on it, and answered the same day.
+
+**Ruling:** the committed census baseline governs growth, and c8 stops blocking on a live count for testLines — Daniel Parke (operator), 2026-09-12.
+
+#### c8-testlines-ratchet · Twelve measures held against C0, and new oracles necessarily raise one of them
+
+- **Re-verified:** confirmed · **tier floor:** R1 · theme A
+- **Batch:** governance-discipline-gates · **after:** POLICY-closed-oracles
+- **Now:** c8 asserted that each of twelve measures is at or below what C0 found. Eleven are comfortably inside. testLines read 121,878 against C0's 121,762 once this programme had written five oracles, and every oracle a later batch writes takes it further. Q-015's option said "re-anchor c8 to its closing numbers", which does not survive the numbers: C8 left testLines at 121,114, stricter than C0's 121,762, so anchoring there blocks harder. The ORACLE session said so rather than implementing it.
+- **Question:** How should the ratchet on testLines be held, given that the work which makes later batches safe is the work that raises it?
+- **Options:**
+  - **The census baseline governs, c8 asserts the account** — the amended case requires the growth log to chain unbroken from what C8 left to the number the committed baseline holds, with a reason on every rise. The live refusal stays in `npm run census:lines`, which exits 1 on an unrecorded rise. The other eleven cases are untouched and still live against C0. R1.
+  - **Hold the C0 line** — every oracle is funded by removing test lines elsewhere, so each batch carries its own weight and consolidation work lands inside unrelated batches. R1.
+  - **Retire the ratchet cases** — the census becomes the only ratchet, and the record of the closed programme's gains goes. R1.
+- **Recommended:** The census baseline governs, c8 asserts the account.
+- **Ruling:** The census baseline governs growth; c8's testLines case asserts the account, not a live count — Daniel Parke (operator), 2026-09-12. Amended by an ORACLE session in a634d89e, dated in the file, with the other eleven cases untouched.
 ## Decisions the executor takes, and the reason
 
 These are the free band (`org/policy.json:130`): naming, decomposition, test structure, patterns already in the tree, file placement. They are recorded here so the record is complete, and they follow their parent question's ruling.

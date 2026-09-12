@@ -76,6 +76,19 @@ execution waits on the answer.
   - what waits on it: nothing. The check is sound against a number dropped from
     the section, which is the common failure.
 
+- Q-018 (process): how should c8's testLines ratchet be held, when the oracles
+  that make later batches safe are the work that raises it? Context:
+  `org/reviews/2026-09-decision-register.md` (Q-018). Owner: operator. Folded
+  2026-09-12. Answer, from the operator: the committed census baseline governs
+  growth, and c8's testLines case asserts the account rather than a live count.
+  - why it was asked twice: Q-015's wording said "re-anchor c8 to its closing
+    numbers", and C8's 121,114 is stricter than the 121,762 C0 found, so that
+    would have blocked harder. The ORACLE session said so rather than
+    implementing it, and the question came back with the numbers attached.
+  - what it does not change: the other eleven ratchet cases, which are still
+    live against C0, and `npm run census:lines`, which still exits 1 on a rise
+    that carries no reason.
+
 ## Folded
 
 - Q-009 (process): is CI the binding gate from now on? Folded 2026-09-12. Answer, from the
