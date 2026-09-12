@@ -1,0 +1,49 @@
+{
+  "id": "T-0155",
+  "intent": "K7, Phase 1: the recon the plan waits on. The 2026-09-11 codebase review was read-only by rule, and it says so eleven times: its evidence file carries eleven separate 'Not examined' lists. Some of what it could not do is measurement that needs a command run (npm audit and outdated, licences against NOTICE, a gitleaks history scan, bundle size per route, whether a script-src CSP can work with Next's inline scripts, playwright --list, fresh coverage, knip widened, the Docker image's contents, whether next build needs a database, the repository's own branch-protection settings). The rest is reading it did not reach: SQLite dead data at column rather than table level, the eleven large pages, the 93 unclassified source-text suites, rec-room's client reads, the LOCKBOOK rulings against the code, a cycle check by a real tool rather than a regex. Phase 2's plan sets its targets from these numbers, and the operator approves that plan, so a number that is a guess here becomes a target nobody can hit or a target already met.",
+  "declared": {
+    "capabilities": [
+      "read-only",
+      "run-measurements"
+    ],
+    "side_effects": [
+      "next build and the jest/playwright runs write their usual gitignored output (.next, coverage, test-results); nothing else is written outside org/reviews/"
+    ]
+  },
+  "mode": "exploration",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {
+      "factor": "read-only-investigation",
+      "tier_floor": "R1",
+      "source": "org/policy.json, mode:exploration",
+      "evidence": "the batch produces one document under org/reviews/ and changes no product code, no gate and no configuration. Its risk is not to the tree but to the plan that reads it: a wrong number here is a target the operator approves."
+    }
+  ],
+  "status": "in-progress",
+  "owner_session": "t0155-k7-recon-2026-09-12",
+  "claims": [
+    "org/reviews/2026-09-refactor-recon.md",
+    "org/tasks/T-0155.json"
+  ],
+  "programme": "K7 of the refactor and clean-up programme, and the whole of Phase 1. Phase 0 closed at T-0154 with every job green on a0983620. Phase 2 (the plan) reads this document and the committed census baselines; the operator approves that plan before any Phase 3 batch starts.",
+  "timestamps": {
+    "opened": "2026-09-12T18:00:00Z",
+    "updated": "2026-09-12T18:00:00Z",
+    "closed": null
+  },
+  "invariants": [
+    "I1 EVERY CLAIM CARRIES A COMMAND OR A file:line. A recon whose numbers cannot be re-derived is a recon that has to be redone. Where a number is an estimate, it says so and says what it rests on.",
+    "I2 A SCEPTIC DEFAULTS TO REFUTED. Each dimension is checked by a session that did not gather it and that is told to refute; a finding that cannot be independently reproduced does not enter the document as a fact.",
+    "I3 THE GATES ARE THE ONES K6 FIXED. Every measurement is taken with the gates as they now stand, and the document says so: the old review's numbers for routesWithTryCatch, raw controls, the link gate's scope and scripts/ were taken through instruments that could not see, and this recon supersedes them wherever a number moved.",
+    "I4 NOTHING IS INSTALLED OR CHANGED TO GET A NUMBER. gitleaks is not installed without the operator's say-so, no config is widened to make knip report more, and no gate is loosened to let a measurement through. Where a measurement needs something the batch may not do, the document records what is needed and why it was not taken.",
+    "I5 THE DOCUMENT SUPERSEDES, IT DOES NOT REPLACE. It says which of the review's numbers moved and by how much, so the register's rulings can be re-read against the truth rather than quietly re-based."
+  ],
+  "rollback": "The batch adds one document under org/reviews/ and touches nothing else, so a revert is deleting a file. The measurements write only the gitignored build, coverage and test-results output the gate already writes.",
+  "commits": "",
+  "verification": "",
+  "review": "",
+  "mutation": "",
+  "deviation": ""
+}

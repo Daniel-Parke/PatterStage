@@ -167,3 +167,4 @@ The records under org/tasks/ are canonical.
 | T-0152 | standard | R1 | proposed | unassigned |
 | T-0153 | high-assurance | R2 | done | t0153-k5-ruled-security-2026-09-12 |
 | T-0154 | high-assurance | R2 | done | t0154-k6-the-gates-see-2026-09-12 |
+| T-0155 | exploration | R1 | in-progress | t0155-k7-recon-2026-09-12 |
