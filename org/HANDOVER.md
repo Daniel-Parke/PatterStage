@@ -59,7 +59,7 @@ is read and must be green before the next batch starts.
 
 ## Where the programme stands
 
-`dev` is pushed, and every job is green on `a8ff28bc` (2026-09-12; see the K
+`dev` is pushed, and every job was green on `7457c579` (2026-09-12; see the K
 programme above). Every batch below has a task record, an oracle committed red
 first, a gate by exit code, a mutation sweep against the committed tree, and a
 chore commit carrying the record and the derived views.
@@ -90,6 +90,7 @@ plan header says so.
 | K2/K3 the discipline | T-0148, T-0149 | ADR-0011 ratifies T-0144's protected-set edits and restores 47 closed records; `npm run gate` (nine steps, by exit code, tree-stamped) and `npm run sweep` (mutants as committed data, four outcomes) | yes |
 | K4 the security set | T-0151 | the six review findings that needed no operator ruling: the URL guard's IPv6 expansion, the workspace guard's path test, one client-key derivation with an observable prune, file modes at every writer of operator data plus the copies already on disk, the x-ps-\* signing cases, and the Docker build context | yes |
 | K5 the ruled security items | T-0153 | critic-04 forbids framing on every response with a body; app-06 leaves read-only to the proxy and keeps the six host-side guards; critic-05a documents the signature's body gap | yes |
+| K6 the gates see | T-0154 | the raw-control rule 0 to 104; routesWithTryCatch 13 to 18; the link gate 75 documents to 91 with three stale links repointed; scriptsLines, a new measure over the tooling; three uncalled test helpers gone. Four more blind gates deferred, each named with what it waits on | yes |
 | (raised) e2e sessions seeding | T-0150 | proposed: `e2e-full` needs sessions only a Hermes-equipped machine has | no |
 | (raised) the census reads twice | T-0152 | proposed: `routesWithSplitBlocks` read 1, then 2, then 1 on one unchanged tree | no |
 
@@ -131,10 +132,24 @@ The repo already had the rule and it was not being followed:
 that form. This is the same lesson as "patch scripts go through the Write tool,
 never a bash heredoc", one layer down.
 
-**Next is K6,** the last of Phase 0: the blind gates (T-0154). Five checks
-report a number that is not the number, and the recon and plan that follow are
-measured by them. Four more blind gates are deferred with the dependency each
-one waits on, named in T-0154's notes rather than dropped.
+**Phase 0 is done.** K0 to K6: the rulings, CI green, the discipline in the
+repo, the security set, and the gates that can see. What follows is Phase 1, the
+full recon (`org/reviews/2026-09-refactor-recon.md`), then Phase 2's plan, which
+**the operator approves before any Phase 3 batch starts**.
+
+Read the recon's brief in the plan before starting it, and note why the gates
+came first: the recon and the plan are measured by them, so a census that could
+not see `scripts/` would have set the next plan's targets against numbers that
+were not true.
+
+**One ruling is worth asking for.** T-0154's notes record it: `hooks-04`,
+`hooks-05` and `critic-06` are blind gates deferred here not because of the
+dependency this record first gave, but because none of the three has a ruled
+entry in the register at all, and Q-015 permits amending a closed oracle only
+for the one rule a RULED item fixes. `hooks-04` is the one to put to the
+operator: register `:3144` says its fix may land "with a baseline and a c6
+amendment (the same ruling as components-01)", and K6 already amends c6 and
+already opens a design-lint baseline.
 
 ## The census, now against the plan's targets
 
