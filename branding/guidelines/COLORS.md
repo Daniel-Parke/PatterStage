@@ -13,7 +13,7 @@ Reference: [Cherenkov radiation palette #1022135](https://www.color-hex.com/colo
 
 **These colours are reserved.** Third-party forks and products must not use this scale as their product identity. See [../../TRADEMARK.md](../../TRADEMARK.md).
 
-> Canonical implementation: [`docs/design-tokens.md`](../../docs/design-tokens.md), [`src/lib/theme.ts`](../../src/lib/theme.ts), and the `@theme` tokens in [`src/app/globals.css`](../../src/app/globals.css). This file is the brand-protection summary; the design-tokens doc is the source of truth for engineering.
+> Canonical implementation: [`docs/contributing/design-tokens.md`](../../docs/contributing/design-tokens.md), [`src/lib/ui/theme.ts`](../../src/lib/ui/theme.ts), and the `@theme` tokens in [`src/app/globals.css`](../../src/app/globals.css). This file is the brand-protection summary; the design-tokens doc is the source of truth for engineering.
 
 ## Official Cherenkov scale
 

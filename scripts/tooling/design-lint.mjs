@@ -433,7 +433,14 @@ export const RULES = [
       f.endsWith(".tsx") &&
       !f.startsWith("src/components/ui/") &&
       !f.startsWith("src/kit/"),
-    pattern: /<(?:button|input|select|textarea)(?=[\s/>])/,
+    // `|$` because a tag can end its line. The lookahead exists to keep
+    // `<buttonBar>` and `<inputGroup>` out, and the four characters it allowed
+    // were a space, a slash and a bracket, so `<button` written at the end of
+    // its line matched nothing. The rule reported zero while the tree held 104
+    // in 43 files (components-01, ruled 2026-09-12). The lookahead is widened
+    // rather than dropped: dropping it would find the hundred and four AND
+    // every `<buttonBar` with them.
+    pattern: /<(?:button|input|select|textarea)(?=[\s/>]|$)/,
   },
   {
     id: "one-container-per-page",

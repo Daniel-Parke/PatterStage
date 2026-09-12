@@ -96,9 +96,33 @@ describe("read-only mode is observable by the suite that guards it", () => {
     expect(code).not.toMatch(/isReadOnly:\s*\(\)\s*=>\s*false/);
   });
 
-  it("the shared helper keeps the real read-only implementation", () => {
-    const src = readFileSync(HELPERS, "utf-8");
-    expect(src).toMatch(/requireActual\(["']@\/lib\/api\/api-auth["']\)/);
+  it("no shared helper replaces @/lib/api/api-auth", () => {
+    // This was called "the shared helper keeps the real read-only
+    // implementation" and asserted the helper spread the real module:
+    // `...jest.requireActual("@/lib/api/api-auth")`. That line lived in
+    // setupRouteMocks, which tests-13 (T-0154) deleted because nothing called
+    // it and jest does not hoist a mock declared inside a function anyway.
+    //
+    // The fact the case is for is that no SHARED helper decides read-only for a
+    // route test, and not mocking the module at all keeps that better than
+    // spreading the real one: the old form passed a faithful spread AND relied
+    // on the case above to catch the unfaithful one. This form fails both. The
+    // name is changed with the assertion, because a green case whose title
+    // states the opposite of what it checks is worse than no case, and this
+    // batch is the one about a gate saying a true thing.
+    //
+    // Comment-aware, like the case above and for the same reason: the helper's
+    // prose has to be able to name the anti-pattern in order to warn against
+    // it, and a check that tripped on its own explanation would force the
+    // explanation out.
+    const code = readFileSync(HELPERS, "utf-8")
+      .split(/\r?\n/)
+      .filter((l) => {
+        const t = l.trim();
+        return !t.startsWith("//") && !t.startsWith("*") && !t.startsWith("/*");
+      })
+      .join("\n");
+    expect(code).not.toMatch(/jest\.(mock|doMock|setMock)\(\s*[`"']@\/lib\/api\/api-auth[`"']/);
   });
 
   it("no test mocks a name `@/lib/api/api-auth` does not export", () => {

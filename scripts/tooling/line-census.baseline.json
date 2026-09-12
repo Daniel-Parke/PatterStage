@@ -2,10 +2,11 @@
   "measuredAt": "2026-09-12",
   "counts": {
     "srcLines": 100983,
-    "testLines": 123081,
+    "testLines": 123864,
+    "scriptsLines": 12961,
     "srcRepeatedWindowLines": 1000,
-    "testRepeatedWindowLines": 4334,
-    "routesWithTryCatch": 13,
+    "testRepeatedWindowLines": 4345,
+    "routesWithTryCatch": 18,
     "handRolledReadHooks": 0,
     "writeHooksWithoutMutation": 0,
     "repeatedTypeShapeFiles": 2,
@@ -219,6 +220,36 @@
       "measuredAt": "2026-09-12",
       "rise": "testLines rose from 122396 to 123081",
       "reason": "K5/T-0153, the ruled security items: the K5 oracle, 65 cases and 771 lines, which drives every route losing a route-level read-only check through proxy() and calls the six host-side handlers directly. Net of the eleven cases app-06's ruling deletes with the function they tested, each replaced in the oracle and each removal site carrying a pointer to where the assertion went"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "testLines rose from 123081 to 123849",
+      "reason": "K6/T-0154, the gates see. routesWithTryCatch rises because the measure was widened, not because the tree grew a catch: it counted the serverErrorFromCatch helper by name, and eleven catches in six files logged and answered 500 by hand (app-04a, ruled 2026-09-12). Every one of the eighteen was already there. testLines and testRepeatedWindowLines are the K6 oracle, which proves each of the five gates BLIND before it is fixed, so it carries the shipped predicate beside the fixed one. scriptsLines is a new key: the census walked src and tests alone, so the tooling that referees every batch was measured by nothing (tooling-22)"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "testRepeatedWindowLines rose from 4334 to 4345",
+      "reason": "K6/T-0154, the gates see. routesWithTryCatch rises because the measure was widened, not because the tree grew a catch: it counted the serverErrorFromCatch helper by name, and eleven catches in six files logged and answered 500 by hand (app-04a, ruled 2026-09-12). Every one of the eighteen was already there. testLines and testRepeatedWindowLines are the K6 oracle, which proves each of the five gates BLIND before it is fixed, so it carries the shipped predicate beside the fixed one. scriptsLines is a new key: the census walked src and tests alone, so the tooling that referees every batch was measured by nothing (tooling-22)"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "routesWithTryCatch rose from 13 to 18",
+      "reason": "K6/T-0154, the gates see. routesWithTryCatch rises because the measure was widened, not because the tree grew a catch: it counted the serverErrorFromCatch helper by name, and eleven catches in six files logged and answered 500 by hand (app-04a, ruled 2026-09-12). Every one of the eighteen was already there. testLines and testRepeatedWindowLines are the K6 oracle, which proves each of the five gates BLIND before it is fixed, so it carries the shipped predicate beside the fixed one. scriptsLines is a new key: the census walked src and tests alone, so the tooling that referees every batch was measured by nothing (tooling-22)"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "scriptsLines rose from 8975 to 8978",
+      "reason": "K6/T-0154: three lines in check-doc-links.mjs, rewording the SCOPE comment so it no longer writes the pre-C7 theme path that c7's own gate refuses. The first scripts measure of the batch is necessarily cut before the last edit to a script, because the census now measures the tooling it is part of"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "testLines rose from 123849 to 123864",
+      "reason": "K6/T-0154, the independent review's fixes. scriptsLines rises because the measure was widened again, not because scripts/ grew: it counted only the four extensions the APP is written in, and the review found 3,501 lines of .sh, .mts, .cjs and .py under scripts/ that a measure named for that tree was silently leaving out - the same defect class the batch exists to fix. testLines is the two test files the review corrected: a case whose name said the opposite of what it asserted, and a header claiming in the present tense that the shared helper mocks api-auth"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "scriptsLines rose from 8978 to 12961",
+      "reason": "K6/T-0154, the independent review's fixes. scriptsLines rises because the measure was widened again, not because scripts/ grew: it counted only the four extensions the APP is written in, and the review found 3,501 lines of .sh, .mts, .cjs and .py under scripts/ that a measure named for that tree was silently leaving out - the same defect class the batch exists to fix. testLines is the two test files the review corrected: a case whose name said the opposite of what it asserted, and a header claiming in the present tense that the shared helper mocks api-auth"
     }
   ]
 }

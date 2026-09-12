@@ -37,19 +37,51 @@ const report = args.includes("--report");
 const update = args.includes("--update-baseline");
 const allowGrowth = flag("--allow-growth");
 
-function walk(dir, out = []) {
+/** What src and tests are written in. */
+const APP_CODE = /\.(ts|tsx|css|mjs)$/;
+
+/**
+ * What the tooling is written in, which is more than the app is.
+ *
+ * scripts/ holds 32 shell scripts, five .mts, a .cjs and two Python files
+ * beside its .mjs, and a measure that counted only the app's four extensions
+ * would report a number for a tree while leaving a third of it out. That is the
+ * shape of defect this whole batch is about, so the scripts measure gets the
+ * wider set rather than a footnote. src and tests keep APP_CODE: tests/ has its
+ * own .sh, .py and .cjs, and pulling them in would move testLines, which is a
+ * different measure with a different history.
+ *
+ * Still uncounted, deliberately: scripts/git-hooks/pre-push and a Dockerfile,
+ * which have no extension, and .json/.yml/.sql data.
+ */
+const TOOLING_CODE = /\.(ts|tsx|mts|cts|css|mjs|cjs|sh|ps1|py)$/;
+
+function walk(dir, out = [], match = APP_CODE) {
   if (!existsSync(dir)) return out;
   for (const name of readdirSync(dir)) {
     const p = join(dir, name);
-    if (statSync(p).isDirectory()) walk(p, out);
-    else if (/\.(ts|tsx|css|mjs)$/.test(name)) out.push(p.replace(/\\/g, "/"));
+    if (statSync(p).isDirectory()) walk(p, out, match);
+    else if (match.test(name)) out.push(p.replace(/\\/g, "/"));
   }
   return out;
 }
 const rel = (f) => f.slice(ROOT.length + 1);
 const src = walk(join(ROOT, "src"));
 const tests = walk(join(ROOT, "tests"));
-const text = new Map([...src, ...tests].map((f) => [f, readFileSync(f, "utf8")]));
+// The tooling measures itself.
+//
+// The census walked src and tests alone, so scripts/ was the one tree in the
+// repository that referees every batch and was measured by none of them
+// (tooling-22). It is counted but not otherwise analysed: the duplication,
+// route and hook measures are all about product code, and running them over a
+// script directory would report numbers nobody has a target for.
+//
+// NOT the mock servers or test-harness/. Those are three more unmeasured trees
+// and about a thousand more lines; adding them would make this a measure of
+// something other than its own name, and they are named as a follow-on in
+// T-0154's notes rather than smuggled in here.
+const scripts = walk(join(ROOT, "scripts"), [], TOOLING_CODE);
+const text = new Map([...src, ...tests, ...scripts].map((f) => [f, readFileSync(f, "utf8")]));
 const lines = (f) => text.get(f).split("\n");
 const count = (files) => files.reduce((n, f) => n + lines(f).length, 0);
 /** The file without its comments, for matching a shape by its code. */
@@ -93,10 +125,81 @@ function repeatedWindows(files, W = 6) {
   return { covered, byFile: byFile.sort((a, b) => b[1] - a[1]).slice(0, 20), top };
 }
 
+// A route body that keeps its own catch AND answers 500 from it, however it
+// spells that answer. A catch that logs and answers 400, or that swallows, is
+// not counted: 34 routes keep a catch and 18 of them are in this shape.
+//
+// This counted `serverErrorFromCatch(` alone, which is one route's way of
+// writing "log it and answer 500" and not the only one: eleven catches in six
+// files did it by hand, with logApiError and a 500 of their own, and the census
+// read 13 where the tree held 18 (app-04a, ruled 2026-09-12 — "widen the same
+// measure"). A measure named for route bodies that keep a try must not be
+// counting a helper's name.
+
+/**
+ * The catch bodies of a file, brace-matched rather than regexed.
+ *
+ * A regex over the whole file cannot ask "does THIS catch both log and answer
+ * 500": a lazy `[\s\S]*?` happily pairs the log call in one catch with the
+ * status in the next, three handlers away. Counting a route wrongly is how this
+ * measure lost its meaning in the first place. `code()` has stripped comments.
+ *
+ * Two limits, neither of which moves today's count. A nested catch is folded
+ * into its parent, so an inner catch that logs and an outer that answers 500
+ * would be read as one hit that neither of them earns; and the opener regex can
+ * fire inside a string literal. An AST walk is the honest instrument here, and
+ * the census is deliberately dependency-light; the K6 oracle's differential
+ * shares this algorithm and so cannot catch either, which is why they are
+ * written down rather than left to be discovered.
+ */
+function catchBodies(source) {
+  const bodies = [];
+  const opener = /\bcatch\s*(?:\([^)]*\)\s*)?\{/g;
+  let m;
+  while ((m = opener.exec(source)) !== null) {
+    const start = m.index + m[0].length;
+    let depth = 1;
+    let i = start;
+    while (i < source.length && depth > 0) {
+      const c = source[i];
+      if (c === "{") depth += 1;
+      else if (c === "}") depth -= 1;
+      i += 1;
+    }
+    bodies.push(source.slice(start, i - 1));
+    opener.lastIndex = i;
+  }
+  return bodies;
+}
+
+// "Logs, and answers 500." Both halves, so a catch that swallows the error and
+// a catch that answers something else are not counted. The answer is spelled
+// three ways in this tree: the shared helper, api-response's serverError(), and
+// a NextResponse with a status that can be 500 — including
+// memory/hindsight's `status: isHindsightConnectionError(error) ? 503 : 500`,
+// which app-04b has already ruled stays hand-rolled, so it is the last catch
+// this measure should be blind to.
+const LOGS = /\blogApiError\s*\(/;
+// `[^;\n]` and not `[^;]`: without the newline the class runs past the end of
+// the statement, and `return json(x, { status: 400 })` followed three lines
+// later by `const RETRY_MS = 500` reads as a 500. Semicolon style is not a
+// thing to depend on. Two narrower gaps stay, and are cheaper to write down
+// than to close: `code()` strips comment-only lines but not a trailing `//`,
+// and a literal "status: 500" inside a string would match. Both would have to
+// be written on purpose inside a catch that also logs.
+const ANSWERS_500 = /\bserverError\s*\(|\bstatus:[^;\n]*\b500\b/;
+
 function routesWithTryCatch() {
   const routes = src.filter((f) => /\/src\/app\/api\/.*\/route\.ts$/.test(f));
-  const hits = routes.filter((f) => /serverErrorFromCatch\(/.test(code(f)));
-  return { count: hits.length, sites: hits.reduce((n, f) => n + (code(f).match(/serverErrorFromCatch\(/g) ?? []).length, 0), files: hits.map(rel) };
+  const helper = (f) => (code(f).match(/serverErrorFromCatch\(/g) ?? []).length;
+  const handRolled = (f) =>
+    catchBodies(code(f)).filter((b) => LOGS.test(b) && ANSWERS_500.test(b)).length;
+  const hits = routes.filter((f) => helper(f) > 0 || handRolled(f) > 0);
+  return {
+    count: hits.length,
+    sites: hits.reduce((n, f) => n + helper(f) + handRolled(f), 0),
+    files: hits.map(rel),
+  };
 }
 
 // A read the screen rolled itself: a fetch (safeApiCall, safeApiCallData or
@@ -243,6 +346,7 @@ const dbMocks = inlineDbMocks();
 const counts = {
   srcLines: count(src),
   testLines: count(tests),
+  scriptsLines: count(scripts),
   srcRepeatedWindowLines: srcDup.covered,
   testRepeatedWindowLines: testDup.covered,
   routesWithTryCatch: routes.count,

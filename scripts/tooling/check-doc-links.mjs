@@ -1,6 +1,7 @@
 // scripts/tooling/check-doc-links.mjs
 //
-// Every relative link in docs/ must point at a file that exists.
+// Every relative link in a tracked markdown file must point at a file that
+// exists.
 //
 // The 2026-07 review found docs naming a component that had been deleted and CSS
 // variables that never existed, and agents followed them. A stale link is worse
@@ -12,22 +13,58 @@
 //
 // Checks relative markdown links and reference-style targets. Skips absolute
 // URLs, anchors, and mailto. A link with a #fragment is checked up to the '#'.
+//
+// SCOPE. It walked docs/ alone, so the 16 tracked markdown files outside it
+// were unchecked, and when C7 moved the theme module into a domain it broke
+// three of their links with nothing to say so (docs-02, tooling-19; ruled
+// 2026-09-12). The old path is deliberately not written here: c7's own gate
+// refuses a source file that names a lib path that moved, and it is right to.
+// It now
+// asks git for every tracked .md file and drops two directories:
+//
+//   org/        an append-only governance corpus with its own checkers, whose
+//               historical records deliberately name paths that have since
+//               moved. Checking it would fail the build over history.
+//   data/seed/  shipped content, copied to an install's data directory, where
+//               a link resolves against the install and not against this repo.
+//
+// Asking git rather than walking the filesystem also keeps generated and
+// untracked output (site/, public/help/, node_modules) out without a list of
+// exclusions to maintain. Two consequences of that, both deliberate and neither
+// free:
+//
+//   - a markdown file that is not yet `git add`ed is not checked, so a broken
+//     link in a brand-new document passes until it is staged. The filesystem
+//     walk this replaced would have caught it, and would also have walked
+//     generated output and reported links nobody wrote;
+//   - the gate now needs a git checkout. `npm run lint` runs under
+//     actions/checkout in CI and in a developer's clone, and no Dockerfile
+//     runs it, so this costs nothing today; without git it throws rather than
+//     reporting, which is loud enough to diagnose.
 
-import { readFileSync, readdirSync, statSync, existsSync } from "fs";
+import { execFileSync } from "child_process";
+import { readFileSync, existsSync } from "fs";
 import { join, dirname, resolve, relative, sep } from "path";
 import { fileURLToPath } from "url";
 
 const ROOT = fileURLToPath(new URL("../..", import.meta.url));
-const DOCS = join(ROOT, "docs");
 const rel = (p) => relative(ROOT, p).split(sep).join("/");
 
-function walk(dir, out = []) {
-  for (const entry of readdirSync(dir)) {
-    const full = join(dir, entry);
-    if (statSync(full).isDirectory()) walk(full, out);
-    else if (entry.endsWith(".md")) out.push(full);
-  }
-  return out;
+/** Directories whose markdown is deliberately not checked; see SCOPE above. */
+const OUT_OF_SCOPE = [/^org\//, /^data\/seed\//];
+
+/** Every tracked .md file in scope, as an absolute path. */
+function trackedMarkdown() {
+  const listed = execFileSync("git", ["ls-files", "-z", "*.md"], {
+    cwd: ROOT,
+    encoding: "utf-8",
+    maxBuffer: 32 * 1024 * 1024,
+  });
+  return listed
+    .split("\0")
+    .filter(Boolean)
+    .filter((p) => !OUT_OF_SCOPE.some((skip) => skip.test(p)))
+    .map((p) => join(ROOT, p));
 }
 
 // [text](target) and [text]: target
@@ -36,7 +73,9 @@ const REFERENCE = /^\s*\[[^\]]+\]:\s*(\S+)/gm;
 
 const broken = [];
 
-for (const file of walk(DOCS)) {
+const files = trackedMarkdown();
+
+for (const file of files) {
   const src = readFileSync(file, "utf-8");
   const lines = src.split(/\r?\n/);
 
@@ -73,4 +112,4 @@ if (broken.length > 0) {
   process.exit(1);
 }
 
-console.log("doc-links: every relative link in docs/ resolves");
+console.log(`doc-links: every relative link resolves, in ${files.length} tracked documents`);

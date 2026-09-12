@@ -15,9 +15,11 @@
  * — the dashboard's core reads. The mode blanks the UI it exists to enable.
  *
  * WHY IT SURVIVED 33 ROUTES, which is what the structural tests below exist to
- * stop: `tests/helpers/api-test-helpers.ts` mocks `@/lib/api/api-auth` wholesale
- * with `isReadOnly: () => false`, and roughly fifteen files repeat that inline.
- * Read-only mode does not exist in the unit suite. A test that asserts a route
+ * stop: `tests/helpers/api-test-helpers.ts` USED TO MOCK `@/lib/api/api-auth`
+ * wholesale with `isReadOnly: () => false`, and roughly fifteen files repeated
+ * that inline. Read-only mode did not exist in the unit suite. (The helper
+ * mocks api-auth no longer at all — tests-13, T-0154 — and
+ * `read-only-is-testable.test.ts` holds it to that.) A test that asserts a route
  * answers under read-only cannot be written against a mock that has already
  * decided the answer, so these assertions read the real module and the real
  * environment variable.

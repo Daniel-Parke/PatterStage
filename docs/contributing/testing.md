@@ -211,9 +211,9 @@ replaced stanzas by hand, and names the few that keep their own with the reason.
 
 ## Auth in route tests
 
-Route tests use the shared helper in `tests/helpers/api-test-helpers.ts`, which
-mocks **`@/lib/api/api-auth`** by spreading the REAL module and stubbing only the
-signing check:
+No shared helper mocks **`@/lib/api/api-auth`** for you. A route test that needs
+the signing check out of the way writes it itself, spreading the REAL module and
+stubbing only that:
 
 ```ts
 jest.mock("@/lib/api/api-auth", () => ({
@@ -222,7 +222,14 @@ jest.mock("@/lib/api/api-auth", () => ({
 }));
 ```
 
-Do NOT replace the whole module. It used to, including `isReadOnly: () => false`,
+`tests/helpers/api-test-helpers.ts` used to carry that stanza inside
+`setupRouteMocks()`, which nothing called and which could not have worked from a
+test body in any case, because jest does not hoist a `jest.mock` declared inside
+a function. It was deleted with two other uncalled exports (tests-13, T-0154),
+and `tests/unit/read-only-is-testable.test.ts` now holds the stronger fact: a
+helper every suite imports may not replace api-auth at all.
+
+Do NOT replace the whole module. A helper used to, including `isReadOnly: () => false`,
 and that is how a read-only defect reached 34 route handlers with the suite green
 throughout: every route test ran with the mode hard-wired off, so no test could
 observe the bug even in principle (T-0048, T-0049). Spreading the real module means

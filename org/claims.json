@@ -27,12 +27,13 @@
         "branding/guidelines/COLORS.md",
         "tests/helpers/api-test-helpers.ts",
         "tests/unit/read-only-is-testable.test.ts",
+        "tests/unit/read-only-actually-reads.test.ts",
         "tests/fixtures/mutants/T-0154.json",
         "docs/contributing/testing.md",
         "org/tasks/T-0154.json"
       ],
       "expires": "2026-09-13T23:00:00Z",
-      "why": "The five gate fixes and the two baselines that hold what they now see. Disjoint from the oracle lane: the implementer touches no test file the oracle lane claims."
+      "why": "The five gate fixes and the two baselines that hold what they now see. Disjoint from the oracle lane: the implementer touches no test file the oracle lane claims. read-only-actually-reads.test.ts was added mid-batch: its header states in the present tense that the shared helper mocks api-auth wholesale, which tests-13 makes false. The independent review found it outside both lanes, which is a gap in this file rather than in the work."
     }
   ],
   "note": "Two lanes, which is the cap at org/policy.json:125. An integrator writes and commits this file before any dispatch; lanes receive claims and never acquire or mutate them. T-0153's record says its implementer amended its own frozen oracle and the reviewer caught it; here the closed-oracle amendments are the ORACLE lane's from the start, which is what that ruling asks for. The REVIEWER that high-assurance requires reads the diff and writes nothing, so it holds no lane."
