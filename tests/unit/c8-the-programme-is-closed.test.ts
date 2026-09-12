@@ -110,6 +110,57 @@ function census(): Record<string, number> {
   return (JSON.parse(out) as { counts: Record<string, number> }).counts;
 }
 
+type GrowthEntry = { measuredAt?: string; rise?: string; reason?: string };
+type HeldBaseline = { counts: Record<string, number>; allowed?: GrowthEntry[] };
+
+/** The census baseline as committed: the number the ratchet holds, and its growth log. */
+function heldBaseline(): HeldBaseline {
+  return JSON.parse(
+    readFileSync(join(ROOT, "scripts", "tooling", "line-census.baseline.json"), "utf8"),
+  ) as HeldBaseline;
+}
+
+/**
+ * Walk one measure from `from` up to `to` through the growth log, a recorded
+ * rise at a time, and report what the log cannot account for.
+ *
+ * A fall needs no reason — down is the direction the programme wanted — so a
+ * `to` at or below `from` lands straight away. A rise is accounted for only by
+ * an entry that starts where the last one ended and carries a reason, which is
+ * the shape `line-census.mjs --allow-growth "<reason>"` writes.
+ */
+function accountForGrowth(
+  log: GrowthEntry[],
+  measure: string,
+  from: number,
+  to: number,
+): { landedAt: number; unexplained: string[] } {
+  const unexplained: string[] = [];
+  if (to <= from) return { landedAt: to, unexplained };
+
+  const shape = new RegExp(`^${measure} rose from (\\d+) to (\\d+)$`);
+  const rises = log
+    .map((entry) => ({ entry, m: shape.exec(entry.rise ?? "") }))
+    .filter((r) => r.m !== null)
+    .map((r) => ({
+      from: Number((r.m as RegExpExecArray)[1]),
+      to: Number((r.m as RegExpExecArray)[2]),
+      reason: (r.entry.reason ?? "").trim(),
+    }));
+
+  let at = from;
+  while (at < to) {
+    const step = rises.find((r) => r.from === at);
+    if (!step) {
+      unexplained.push(`${measure} is held at ${to} and the growth log records no rise starting at ${at}`);
+      break;
+    }
+    if (!step.reason) unexplained.push(`${measure} rose from ${step.from} to ${step.to} with no reason recorded`);
+    at = step.to;
+  }
+  return { landedAt: at, unexplained };
+}
+
 describe("C8 · the programme is closed", () => {
   const now = census();
   const keys = Object.keys(AT_C0) as (keyof typeof AT_C0)[];
@@ -118,8 +169,57 @@ describe("C8 · the programme is closed", () => {
     expect(Object.keys(now).sort()).toEqual(keys.slice().sort());
   });
 
-  it.each(keys)("%s did not go backwards from where C0 found it", (key) => {
+  /** The eleven the ratchet still reads live. testLines is the twelfth; see below. */
+  const readLive = keys.filter((k) => k !== "testLines");
+
+  it.each(readLive)("%s did not go backwards from where C0 found it", (key) => {
     expect(now[key]).toBeLessThanOrEqual(AT_C0[key]);
+  });
+
+  /**
+   * Amended 2026-09-12 (T-0149), under POLICY-closed-oracles (ruled by the
+   * operator, 2026-09-12; the decision register's Q-015). The case keeps its
+   * name, as the ruling requires, and stops reading a live count.
+   *
+   * Why this measure and none of the other eleven. Those eleven count a thing
+   * the programme was taking out — try/catch route bodies, hand-rolled reads,
+   * lib-root files, comment essays — and nothing a later batch legitimately
+   * does puts one back, so they still read live against AT_C0 above and are all
+   * comfortably inside it. testLines is not like them: every oracle this
+   * repository writes is test lines, so a batch doing exactly what the process
+   * demands — a new suite before the implementation, an amendment to this one —
+   * raises it by construction. Read live it had already gone red at 121878
+   * against C0's 121762, and each oracle after it would make it redder: a gate
+   * punishing the discipline it exists to protect. Re-anchoring it to what C8
+   * left is not the fix either, and would not even be a loosening — C8 read
+   * 121114, which is stricter than C0's number, so the case would stay red.
+   *
+   * What governs testLines from here is the committed census baseline,
+   * scripts/tooling/line-census.baseline.json, which already refuses an
+   * unexplained rise: `node scripts/tooling/line-census.mjs` exits 1 when the
+   * tree is above the held number, and a batch holds a rise only by passing
+   * --allow-growth "<reason>", which writes the reason into the file beside the
+   * number. That refusal is itself held by C0's own oracle, in
+   * tests/unit/c0-the-line-census.test.ts ("refuses growth and accepts a fall"
+   * and "a re-cut holds a rise only with a reason"). A line budget for tests
+   * belongs to the programme that owns it, as a target with a burn-down, not to
+   * this closed record.
+   *
+   * So what is left for this case is the account, and the account still bites:
+   * every rise above what C8 left has to be in the growth log, each with a
+   * reason, in an unbroken chain that ends exactly on the number the baseline
+   * holds. Growth cannot happen silently — a number edited upward by hand, a
+   * chain with a gap in it, or a rise held with a blank reason all fail here —
+   * and the closed programme's own account of its lines is still recorded.
+   */
+  it("testLines did not go backwards from where C0 found it", () => {
+    const held = heldBaseline();
+    const end = held.counts.testLines;
+    expect(Number.isInteger(end)).toBe(true);
+
+    const { landedAt, unexplained } = accountForGrowth(held.allowed ?? [], "testLines", AT_C8.testLines, end);
+    expect(unexplained).toEqual([]);
+    expect(landedAt).toBe(end);
   });
 
   it("the measures that met their target, met it", () => {
