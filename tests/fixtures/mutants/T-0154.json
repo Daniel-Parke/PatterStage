@@ -8,7 +8,7 @@
       "anchor": "    pattern: /<(?:button|input|select|textarea)(?=[\\s/>]|$)/,",
       "replacement": "    pattern: /<(?:button|input|select|textarea)(?=[\\s/>])/,",
       "tests": ["tests/unit/k6-the-gates-see.test.ts"],
-      "why": "the exact state the batch found: the rule reports zero and the tree holds 104. Nothing else in the suite notices, because the product is unchanged and the gate is green when it sees nothing"
+      "why": "the exact state the batch found: the rule reports zero and the tree holds 104. Nothing else in the suite notices, because the product is unchanged and a gate is green when it sees nothing"
     },
     {
       "id": "m2-the-lookahead-is-dropped-instead-of-widened",
@@ -29,7 +29,7 @@
     {
       "id": "m4-the-500-is-recognised-only-when-it-is-written-plainly",
       "file": "scripts/tooling/line-census.mjs",
-      "anchor": "const ANSWERS_500 = /\\bserverError\\s*\\(|\\bstatus:[^;]*\\b500\\b/;",
+      "anchor": "const ANSWERS_500 = /\\bserverError\\s*\\(|\\bstatus:[^;\\n]*\\b500\\b/;",
       "replacement": "const ANSWERS_500 = /\\bstatus:\\s*500\\b/;",
       "tests": ["tests/unit/k6-the-gates-see.test.ts"],
       "why": "two of the six hand-rollers disappear: mission-categories answers through api-response's serverError(), and memory/hindsight writes `status: isHindsightConnectionError(error) ? 503 : 500`. The second is the catch app-04b has already ruled stays hand-rolled forever, so it is the last one this measure should be blind to"
@@ -69,18 +69,34 @@
     {
       "id": "m9-the-census-stops-reading-scripts-at-all",
       "file": "scripts/tooling/line-census.mjs",
-      "anchor": "const scripts = walk(join(ROOT, \"scripts\"));",
+      "anchor": "const scripts = walk(join(ROOT, \"scripts\"), [], TOOLING_CODE);",
       "replacement": "const scripts = [];",
       "tests": ["tests/unit/k6-the-gates-see.test.ts"],
       "why": "the other half: the key survives and reads zero, which is the shape a measure takes when it is quietly switched off rather than removed, and the one a reader is least likely to question"
     },
     {
-      "id": "m10-a-helper-nothing-called-comes-back",
+      "id": "m10-the-scripts-measure-goes-back-to-the-app-extensions",
+      "file": "scripts/tooling/line-census.mjs",
+      "anchor": "const scripts = walk(join(ROOT, \"scripts\"), [], TOOLING_CODE);",
+      "replacement": "const scripts = walk(join(ROOT, \"scripts\"));",
+      "tests": ["tests/unit/k6-the-gates-see.test.ts"],
+      "why": "the first cut of this measure did exactly that, and the independent review caught it: counting only .ts/.tsx/.css/.mjs leaves 3,501 lines of shell, .mts, .cjs and Python out of a measure named for the tree they live in. A number that is 30 per cent short is the defect this batch exists to fix, wearing the batch's own clothes"
+    },
+    {
+      "id": "m11-a-helper-nothing-called-comes-back",
       "file": "tests/helpers/api-test-helpers.ts",
       "anchor": "// Three more were exported here and nothing called any of them (tests-13):",
       "replacement": "export function setupFsMocks() {\n  return { existsSync: jest.fn(), readFileSync: jest.fn() };\n}\n\n// Three more were exported here and nothing called any of them (tests-13):",
       "tests": ["tests/unit/k6-the-gates-see.test.ts"],
       "why": "knip cannot say so — its project globs stop at src and scripts, and widening them is tooling-16, which this batch defers. Until then the only thing standing between tests/helpers and another uncalled export is this case"
+    },
+    {
+      "id": "m12-a-shared-helper-mocks-api-auth-again",
+      "file": "tests/helpers/api-test-helpers.ts",
+      "anchor": "import { NextRequest } from \"next/server\";",
+      "replacement": "import { NextRequest } from \"next/server\";\n\njest.mock(\"@/lib/api/api-auth\", () => ({\n  ...jest.requireActual(\"@/lib/api/api-auth\"),\n  requireSignedRequest: jest.fn(() => null),\n}));",
+      "tests": ["tests/unit/read-only-is-testable.test.ts"],
+      "why": "the review's point about the restated case: it must fail on a FAITHFUL spread too, not only on the hard-wired isReadOnly the old form caught. A shared helper that decides anything about api-auth for every route test is how a read-only defect reached 34 handlers with the suite green"
     }
   ]
 }
