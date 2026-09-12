@@ -256,7 +256,12 @@ const counts = {
 };
 
 if (report) {
-  console.log(JSON.stringify({ counts, srcDup, testDup, routes, reads, writes, shapes, oneImporter: one, libRoot: root, essays, dbMocks }, null, 1));
+  // writeFileSync to fd 1, not console.log: the report is about 15 KB and the
+  // process.exit below would cut it at the pipe buffer, which is 8 KB on macOS
+  // and 64 KB on Linux. That is why three census suites failed on the macOS
+  // runner with "Unterminated string in JSON at position 8192" and nowhere
+  // else. A synchronous write to the descriptor is flushed before the exit.
+  writeFileSync(1, JSON.stringify({ counts, srcDup, testDup, routes, reads, writes, shapes, oneImporter: one, libRoot: root, essays, dbMocks }, null, 1) + String.fromCharCode(10));
   process.exit(0);
 }
 

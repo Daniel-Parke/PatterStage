@@ -2,7 +2,7 @@
   "measuredAt": "2026-09-12",
   "counts": {
     "srcLines": 100881,
-    "testLines": 121402,
+    "testLines": 121426,
     "srcRepeatedWindowLines": 1000,
     "testRepeatedWindowLines": 4343,
     "routesWithTryCatch": 13,
@@ -164,6 +164,11 @@
       "measuredAt": "2026-09-12",
       "rise": "testLines rose from 121398 to 121402",
       "reason": "the navigator install in b6-cleared-defaults-stay-cleared: four lines that let a node suite build the whole DOM it needs, not just part of it"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "testLines rose from 121402 to 121426",
+      "reason": "the pipe regression check in k1-ci-can-go-green: 18 lines for the truncation only macOS saw"
     }
   ]
 }

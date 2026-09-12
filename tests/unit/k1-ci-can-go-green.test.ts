@@ -21,8 +21,13 @@
  *   3. A runtime smoke that drives a route nobody deleted it with. T-0129
  *      removed POST /api/missions/[id]/dispatch as an orphan with "zero
  *      callers"; this smoke was the caller the walk did not count.
+ *   4. The census report, truncated at the pipe buffer. Found by the same CI run
+ *      once the first three were fixed and macOS finally reached its jest step:
+ *      three census suites failed at "position 8192" there and nowhere else.
+ *      This one cannot go red on Windows, and says so where it sits.
  */
 
+import { execFileSync } from "node:child_process";
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { dirname, join, resolve, sep } from "node:path";
 
@@ -115,5 +120,24 @@ describe("K1 · the runtime smokes drive routes this tree has", () => {
     }
 
     expect([...new Set(missing)]).toEqual([]);
+  });
+});
+
+describe("K1 · the census report survives the pipe it is read through", () => {
+  it("arrives whole, though it is larger than the smallest pipe buffer", () => {
+    // Three census suites failed on the macOS runner with "Unterminated string
+    // in JSON at position 8192" and nowhere else: the report is about 15 KB,
+    // console.log buffers, and process.exit() cut it at the pipe buffer, which
+    // is 8 KB on macOS and 64 KB on Linux.
+    //
+    // This check cannot go red on Windows, where the write is synchronous
+    // whatever the code does. It is here because the runner is where it bites,
+    // and because the next person to add a --report is owed the reason.
+    const out = execFileSync(process.execPath, [join(ROOT, "scripts", "tooling", "line-census.mjs"), "--report"], {
+      encoding: "utf8",
+      maxBuffer: 64 * 1024 * 1024,
+    });
+    expect(out.length).toBeGreaterThan(8192);
+    expect(() => JSON.parse(out)).not.toThrow();
   });
 });
