@@ -3,37 +3,34 @@
   "assigned": "2026-09-12",
   "lanes": [
     {
-      "lane": "T-0151-oracle",
+      "lane": "T-0153-oracle",
       "owner": "ORACLE session, not the implementer (org/roles/ORACLE.md)",
       "claims": [
-        "tests/unit/k4-the-security-fixes.test.ts",
-        "tests/unit/api-auth.test.ts"
+        "tests/unit/k5-the-ruled-security-fixes.test.ts"
       ],
-      "expires": "2026-09-13T18:00:00Z",
-      "why": "T-0151 is R2 on the auth-surface factor, so it runs high-assurance and its acceptance oracle is written before the implementation. The lane also carries critic-05c, which is a test row rather than a fix: the signing cases spelled the secret CH_REQUEST_SIGNING_SECRET and the headers x-ch-*, so nothing tested the PS_ names the documentation gives."
+      "expires": "2026-09-13T21:00:00Z",
+      "why": "T-0153 is R2 on the auth-surface factor and on policy.json:132, because app-06 deletes eleven refusals. Its acceptance oracle is written from the register's rulings, before the implementation exists, by a session that will not write it. Written before dispatch this time, which T-0151's record says was not done."
     },
     {
-      "lane": "T-0151-implementer",
+      "lane": "T-0153-implementer",
       "owner": "the batch's own session",
       "claims": [
-        "src/lib/search/url-guard.ts",
-        "src/lib/fs/path-security.ts",
-        "src/lib/fs/fs-helpers.ts",
-        "src/lib/sessions/sessions-api-guard.ts",
-        "src/lib/api/auth-throttle.ts",
-        "src/lib/api/auth-token.ts",
-        "src/lib/db/index.ts",
-        "src/lib/db/upgrade.ts",
-        "scripts/tooling/_platform.mjs",
-        "scripts/tooling/ps-deploy.mjs",
-        ".dockerignore",
+        "next.config.ts",
+        "scripts/tooling/output-canary.golden.json",
+        "src/lib/api/api-auth.ts",
+        "src/app/api/",
+        "docs/SECURITY.md",
+        "docs/reference/api.md",
+        "docs/running/env-reference.md",
+        "docs/contributing/repo-guide.md",
+        "docs/contributing/testing.md",
+        "tests/fixtures/mutants/T-0153.json",
         "scripts/tooling/line-census.baseline.json",
-        "tests/fixtures/mutants/T-0151.json",
-        "org/tasks/T-0151.json"
+        "org/tasks/T-0153.json"
       ],
-      "expires": "2026-09-13T18:00:00Z",
-      "why": "The six fixes that need no operator ruling: critic-01, critic-14, critic-02s, critic-03b, tooling-05, and the census re-cut that holds their lines. Disjoint from the oracle lane."
+      "expires": "2026-09-13T21:00:00Z",
+      "why": "critic-04's framing headers, app-06's eleven deletions and the six that stay, and critic-05a's documented gap. Also the twenty-two suites that name requireNotReadOnly, whose pins move rather than go. Disjoint from the oracle lane."
     }
   ],
-  "note": "Two lanes, which is the cap at org/policy.json:125. An integrator writes and commits this file before any dispatch; lanes receive claims and never acquire or mutate them. The REVIEWER that T-0151's high-assurance mode requires reads the diff and writes nothing, so it holds no lane."
+  "note": "Two lanes, which is the cap at org/policy.json:125. An integrator writes and commits this file before any dispatch; lanes receive claims and never acquire or mutate them. The REVIEWER that high-assurance requires reads the diff and writes nothing, so it holds no lane."
 }

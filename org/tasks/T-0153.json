@@ -1,0 +1,84 @@
+{
+  "id": "T-0153",
+  "intent": "K5: the three security findings the operator ruled on. critic-04 — no response forbids framing, so a page served on another port of the same host counts as same-site, receives the Lax session cookie inside a frame, and can trick clicks on the deploy, script and credential controls; nothing in src, docs, scripts or public embeds PatterStage in a frame, so DENY removes nothing that is used. app-06 — read-only mode is enforced in one place, src/proxy.ts, by HTTP method before any handler runs, and 17 route-level checks sit behind it: 11 of them cannot fire over HTTP at all, while 69 other write handlers have none, so the tree states a rule it does not keep. critic-05a — the optional deploy signature covers METHOD:path:ts and not the body, so a captured signed request can be replayed with another action or branch; the operator ruled the format stays and the gap is documented, because a replayer already holds the token and the token alone can save and run a host script.",
+  "declared": {
+    "capabilities": [
+      "edit-source",
+      "edit-docs",
+      "edit-tests",
+      "edit-tooling"
+    ],
+    "side_effects": []
+  },
+  "mode": "high-assurance",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [
+    {
+      "factor": "auth-surface",
+      "tier_floor": "R2",
+      "source": "paths:sensitive",
+      "evidence": "app-06 deletes an exported guard from src/lib/api/api-auth.ts and eleven of its call sites; critic-04 adds response headers on every path. Both are authorisation surfaces."
+    },
+    {
+      "factor": "weakening-a-check",
+      "tier_floor": "R2",
+      "source": "org/policy.json:132, operator ruling app-06 (2026-09-12)",
+      "evidence": "eleven refusals are deleted. They cannot fire over HTTP — the proxy answers 503 on the method first — but a direct handler call loses them, and policy.json:132 escalates the removal of a check whatever the reason. The ruling names which ones go and which six stay."
+    },
+    {
+      "factor": "high-assurance-for-r2",
+      "tier_floor": "R2",
+      "source": "org/roles/EXECUTOR.md:41, org/policy.json:100-105, operator ruling Q-014 (2026-09-12)",
+      "evidence": "invariants, a rollback plan, an oracle authored by a session that will not implement it, and an independent REVIEWER verdict on the record"
+    }
+  ],
+  "status": "in-progress",
+  "owner_session": "t0153-k5-ruled-security-2026-09-12",
+  "claims": [
+    "next.config.ts",
+    "scripts/tooling/output-canary.golden.json",
+    "src/lib/api/api-auth.ts",
+    "src/app/api/backup/route.ts",
+    "src/app/api/composer/runs/[id]/cancel/route.ts",
+    "src/app/api/missions/route.ts",
+    "src/app/api/missions/[id]/cancel/route.ts",
+    "src/app/api/prefs/route.ts",
+    "src/app/api/seed/route.ts",
+    "src/app/api/skills/[name]/route.ts",
+    "src/app/api/skills/[name]/toggle/route.ts",
+    "src/app/api/tools/route.ts",
+    "src/app/api/admin/sessions/backfill-status/route.ts",
+    "src/app/api/sessions/route.ts",
+    "src/app/api/cron/hardware/route.ts",
+    "docs/SECURITY.md",
+    "docs/reference/api.md",
+    "docs/running/env-reference.md",
+    "docs/contributing/repo-guide.md",
+    "docs/contributing/testing.md",
+    "tests/unit/k5-the-ruled-security-fixes.test.ts",
+    "tests/fixtures/mutants/T-0153.json",
+    "scripts/tooling/line-census.baseline.json",
+    "org/tasks/T-0153.json"
+  ],
+  "programme": "K5 of the refactor and clean-up programme, and the last of the security set. K4 (T-0151) landed the six findings that needed no ruling; these three needed one and have it, each dated and attributed in org/reviews/2026-09-decision-register.md.",
+  "timestamps": {
+    "opened": "2026-09-12T19:10:00Z",
+    "updated": "2026-09-12T19:10:00Z",
+    "closed": null
+  },
+  "invariants": [
+    "I1 OVER HTTP, READ-ONLY REFUSES EXACTLY WHAT IT REFUSED. The proxy answers 503 on every unsafe method before a handler runs, and that is untouched. Every route whose route-level check is deleted keeps a test proving the refusal still arrives — moved to a proxy() assertion, not deleted.",
+    "I2 THE SIX HOST-SIDE CHECKS STAY. cron/hardware and the two scripts routes keep their guards, beside their requireAuthenticatedHostWrites calls, because proxy.ts:58-63 and docs/reference/api.md:259 state that a harness bypassing the proxy must still be refused there. Deleting them would contradict a documented promise.",
+    "I3 THE THREE DOCUMENTED GET SKIPS STAY. toolsets:27, sessions:58 and stats:29 skip a bookkeeping write under the mode and still answer; api.md:255 names them and check-read-only-guards.mjs accepts exactly those three.",
+    "I4 NOTHING EMBEDS PATTERSTAGE. Before the framing headers land, re-run the search for iframe, frameElement, window.top and window.parent across src, docs, scripts, public, README and ops. DENY is only safe because the answer is nothing; if the search finds an embedder, the batch stops and the operator is asked again.",
+    "I5 NO ENV VAR, ROUTE OR CONFIG KEY IS REMOVED. next.config.ts:27-29 stays: cross-cutting-22 was ruled 'all fixes except next.config.ts'. The canary is re-blessed for the headers() entry alone, with the reason in the commit.",
+    "I6 THE SIGNATURE FORMAT DOES NOT CHANGE. critic-05a is documentation. METHOD:path:ts, the five-minute window and both header spellings are exactly as they were; only what the documents say about them changes."
+  ],
+  "rollback": "Three independent parts, revertable one at a time. critic-04 is one headers() entry plus a golden hash: reverting both restores the previous responses, and nothing else reads the entry. critic-05a is prose. app-06 is the one with a cost: reverting it restores eleven deleted call sites and an exported function, so a revert must take the feat commit whole rather than a file at a time, and the test commit that moved the pins with it. If only app-06 must go back, `git revert` of its commit is clean because no other batch part touches src/app/api. Nothing here migrates data, writes to disk or changes a schema, so there is no state to undo.",
+  "commits": "",
+  "verification": "",
+  "review": "",
+  "mutation": "",
+  "deviation": ""
+}
