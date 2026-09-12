@@ -7,7 +7,9 @@
       "file": "scripts/tooling/design-lint.mjs",
       "anchor": "    pattern: /<(?:button|input|select|textarea)(?=[\\s/>]|$)/,",
       "replacement": "    pattern: /<(?:button|input|select|textarea)(?=[\\s/>])/,",
-      "tests": ["tests/unit/k6-the-gates-see.test.ts"],
+      "tests": [
+        "tests/unit/k6-the-gates-see.test.ts"
+      ],
       "why": "the exact state the batch found: the rule reports zero and the tree holds 104. Nothing else in the suite notices, because the product is unchanged and a gate is green when it sees nothing"
     },
     {
@@ -15,7 +17,9 @@
       "file": "scripts/tooling/design-lint.mjs",
       "anchor": "    pattern: /<(?:button|input|select|textarea)(?=[\\s/>]|$)/,",
       "replacement": "    pattern: /<(?:button|input|select|textarea)/,",
-      "tests": ["tests/unit/k6-the-gates-see.test.ts"],
+      "tests": [
+        "tests/unit/k6-the-gates-see.test.ts"
+      ],
       "why": "the lazy fix, and the one a hurried session reaches for: it does find the tag at end of line, and it also calls <buttonBar> and <inputGroup> raw controls. A gate that over-reports is worse than one that under-reports, because a batch measured by it burns down things that were never wrong"
     },
     {
@@ -23,7 +27,9 @@
       "file": "scripts/tooling/line-census.mjs",
       "anchor": "  const hits = routes.filter((f) => helper(f) > 0 || handRolled(f) > 0);",
       "replacement": "  const hits = routes.filter((f) => helper(f) > 0);",
-      "tests": ["tests/unit/k6-the-gates-see.test.ts"],
+      "tests": [
+        "tests/unit/k6-the-gates-see.test.ts"
+      ],
       "why": "back to 13, with eleven catches in six files invisible. The measure is named for route bodies that keep a try; counting a helper's name is how it stopped meaning that"
     },
     {
@@ -31,7 +37,9 @@
       "file": "scripts/tooling/line-census.mjs",
       "anchor": "const ANSWERS_500 = /\\bserverError\\s*\\(|\\bstatus:[^;\\n]*\\b500\\b/;",
       "replacement": "const ANSWERS_500 = /\\bstatus:\\s*500\\b/;",
-      "tests": ["tests/unit/k6-the-gates-see.test.ts"],
+      "tests": [
+        "tests/unit/k6-the-gates-see.test.ts"
+      ],
       "why": "two of the six hand-rollers disappear: mission-categories answers through api-response's serverError(), and memory/hindsight writes `status: isHindsightConnectionError(error) ? 503 : 500`. The second is the catch app-04b has already ruled stays hand-rolled forever, so it is the last one this measure should be blind to"
     },
     {
@@ -39,7 +47,9 @@
       "file": "scripts/tooling/line-census.mjs",
       "anchor": "    bodies.push(source.slice(start, i - 1));",
       "replacement": "    bodies.push(source.slice(start));",
-      "tests": ["tests/unit/k6-the-gates-see.test.ts"],
+      "tests": [
+        "tests/unit/k6-the-gates-see.test.ts"
+      ],
       "why": "each catch body becomes the whole rest of the file, so a route whose catch merely logs is counted because some LATER catch answers 500. That is exactly the pairing the brace matcher exists to prevent, and it makes the number bigger, which is the direction nobody checks"
     },
     {
@@ -47,7 +57,9 @@
       "file": "scripts/tooling/check-doc-links.mjs",
       "anchor": "const OUT_OF_SCOPE = [/^org\\//, /^data\\/seed\\//];",
       "replacement": "const OUT_OF_SCOPE = [/^org\\//, /^data\\/seed\\//, /^(?!docs\\/)/];",
-      "tests": ["tests/unit/k6-the-gates-see.test.ts"],
+      "tests": [
+        "tests/unit/k6-the-gates-see.test.ts"
+      ],
       "why": "the sixteen documents outside docs/ go unchecked again, which is the state in which a move broke three of their links and nothing said so"
     },
     {
@@ -55,7 +67,9 @@
       "file": "TRADEMARK.md",
       "anchor": "[`src/lib/ui/theme.ts`](src/lib/ui/theme.ts)",
       "replacement": "[`src/lib/theme.ts`](src/lib/theme.ts)",
-      "tests": ["tests/unit/k6-the-gates-see.test.ts"],
+      "tests": [
+        "tests/unit/k6-the-gates-see.test.ts"
+      ],
       "why": "the widened gate is only worth having if it fails on the thing it was widened to find. A stale link in a legal document reads as verified, which is worse than no link"
     },
     {
@@ -63,7 +77,9 @@
       "file": "scripts/tooling/line-census.mjs",
       "anchor": "  scriptsLines: count(scripts),",
       "replacement": "  /* the measure tooling-22 added */",
-      "tests": ["tests/unit/k6-the-gates-see.test.ts"],
+      "tests": [
+        "tests/unit/k6-the-gates-see.test.ts"
+      ],
       "why": "scripts/ goes back to being the one tree that referees every batch and is measured by none of them; c0's own claim is that every declared measure is baselined, and this is the half that declares it"
     },
     {
@@ -71,7 +87,9 @@
       "file": "scripts/tooling/line-census.mjs",
       "anchor": "const scripts = walk(join(ROOT, \"scripts\"), [], TOOLING_CODE);",
       "replacement": "const scripts = [];",
-      "tests": ["tests/unit/k6-the-gates-see.test.ts"],
+      "tests": [
+        "tests/unit/k6-the-gates-see.test.ts"
+      ],
       "why": "the other half: the key survives and reads zero, which is the shape a measure takes when it is quietly switched off rather than removed, and the one a reader is least likely to question"
     },
     {
@@ -79,7 +97,9 @@
       "file": "scripts/tooling/line-census.mjs",
       "anchor": "const scripts = walk(join(ROOT, \"scripts\"), [], TOOLING_CODE);",
       "replacement": "const scripts = walk(join(ROOT, \"scripts\"));",
-      "tests": ["tests/unit/k6-the-gates-see.test.ts"],
+      "tests": [
+        "tests/unit/k6-the-gates-see.test.ts"
+      ],
       "why": "the first cut of this measure did exactly that, and the independent review caught it: counting only .ts/.tsx/.css/.mjs leaves 3,501 lines of shell, .mts, .cjs and Python out of a measure named for the tree they live in. A number that is 30 per cent short is the defect this batch exists to fix, wearing the batch's own clothes"
     },
     {
@@ -87,15 +107,20 @@
       "file": "tests/helpers/api-test-helpers.ts",
       "anchor": "// Three more were exported here and nothing called any of them (tests-13):",
       "replacement": "export function setupFsMocks() {\n  return { existsSync: jest.fn(), readFileSync: jest.fn() };\n}\n\n// Three more were exported here and nothing called any of them (tests-13):",
-      "tests": ["tests/unit/k6-the-gates-see.test.ts"],
-      "why": "knip cannot say so — its project globs stop at src and scripts, and widening them is tooling-16, which this batch defers. Until then the only thing standing between tests/helpers and another uncalled export is this case"
+      "tests": [
+        "tests/unit/k6-the-gates-see.test.ts"
+      ],
+      "why": "knip cannot say so — its project globs stop at src and scripts, and widening them is tooling-16, which this batch defers. Until then the only thing standing between tests/helpers and another uncalled export is this case. force: the anchor is a comment and the replacement prepends real code above it, which is the one shape the sweep's comment-only refusal is wrong about",
+      "force": true
     },
     {
       "id": "m12-a-shared-helper-mocks-api-auth-again",
       "file": "tests/helpers/api-test-helpers.ts",
       "anchor": "import { NextRequest } from \"next/server\";",
       "replacement": "import { NextRequest } from \"next/server\";\n\njest.mock(\"@/lib/api/api-auth\", () => ({\n  ...jest.requireActual(\"@/lib/api/api-auth\"),\n  requireSignedRequest: jest.fn(() => null),\n}));",
-      "tests": ["tests/unit/read-only-is-testable.test.ts"],
+      "tests": [
+        "tests/unit/read-only-is-testable.test.ts"
+      ],
       "why": "the review's point about the restated case: it must fail on a FAITHFUL spread too, not only on the hard-wired isReadOnly the old form caught. A shared helper that decides anything about api-auth for every route test is how a read-only defect reached 34 handlers with the suite green"
     }
   ]

@@ -93,7 +93,7 @@ plan header says so.
 | (raised) e2e sessions seeding | T-0150 | proposed: `e2e-full` needs sessions only a Hermes-equipped machine has | no |
 | (raised) the census reads twice | T-0152 | proposed: `routesWithSplitBlocks` read 1, then 2, then 1 on one unchanged tree | no |
 
-**Two lines the next session should not have to learn the hard way.**
+**Three lines the next session should not have to learn the hard way.**
 
 *Run the sweep, and read a survivor properly.* K4's sweep found two holes that
 the gate, an independent review and a careful reading had all passed over: a
@@ -107,6 +107,29 @@ guarding the premise its ruling rested on, and the independent reviewer caught
 it. The fix was to change the product prose so the oracle had nothing to amend
 for. Q-015 sends an amendment to a session that is not you, and
 `org/policy.json:107-111` makes it a stop condition.
+
+*Never hand npm an argument with a newline in it.* npm re-spawns through
+`cmd.exe /d /s /c`, which truncates any argument at its first newline. That is
+`npx` and `npm run -- <arg>` alike, and it takes positionals as well as `-e`.
+Measured here, three ways:
+
+    node -e '<print argv>' $'X\nY'                 ->  ["X\nY"]   intact
+    npx tsx -e '<print argv>' $'X\nY'              ->  ["X"]      TRUNCATED
+    ./node_modules/.bin/tsx -e '<print argv>' $'X\nY'  ->  ["X\nY"]   intact
+
+So node is innocent, tsx is innocent, and the Windows argv boundary is innocent:
+a live process on this machine carries a 1,291-character `--eval` with thirty
+newlines in it. It is npm's shell hop, and it fails SILENTLY at exit 0. On
+2026-09-12 a session lost three hours to the blocking variant — the script was
+cut to nothing, so node fell into a stdin REPL and waited forever — but the
+quiet variant is worse: when the first line happens to be a complete statement
+you get a partial run, exit 0, and an answer you will believe.
+
+The repo already had the rule and it was not being followed:
+`scripts/tooling/ps-deploy.mjs:205` says `node --import tsx <script.ts> [args]
+→ argv-safe, no npm/npx/shell`. Ad-hoc probes go in a temp `.mjs`, or through
+that form. This is the same lesson as "patch scripts go through the Write tool,
+never a bash heredoc", one layer down.
 
 **Next is K6,** the last of Phase 0: the blind gates (T-0154). Five checks
 report a number that is not the number, and the recon and plan that follow are

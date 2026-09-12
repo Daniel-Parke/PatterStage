@@ -52,6 +52,65 @@
  * Numbers measured on 2026-09-12, on this tree, by the probes named beside them
  * on org/tasks/T-0154.json — not taken from the decision register, which was
  * cut before K0–K5 moved the tree.
+ *
+ * ── Amendment · 2026-09-12 · four cases, by a session that implements nothing ─
+ *
+ * The mutation sweep over tests/fixtures/mutants/T-0154.json left two mutants
+ * alive against the committed tree. Neither is a bad mutant; both are holes
+ * here. Q-015 says the implementing session may not amend its own oracle, so
+ * these four cases are written by a separate ORACLE session (org/roles/ORACLE.md
+ * "Amending a frozen oracle is always someone else's job"), and the implementer
+ * did not write them for that reason and no other.
+ *
+ *   m5   the catch body stops being brace-matched, so every catch runs to the
+ *        end of the file and a route whose catch merely logs is counted because
+ *        a LATER catch answers 500. The differential below it,
+ *        routesKeepingTheirOwnCatch(), re-implements the census's own brace
+ *        matcher, so it moves in lockstep with the thing it cross-checks and
+ *        cannot see this; and `sites`, the number the mispairing actually moves
+ *        on this tree (25 to 26), was asserted nowhere. Closed by
+ *        `routesByAst()`, which delimits a catch with TypeScript's parser and
+ *        shares no line of code with the census, and by a fixture route that
+ *        splits the log from the 500 across two handlers, so the mispairing is
+ *        caught on any tree rather than only on this one.
+ *
+ *   m10  the scripts walker reverts to the app's four extensions, leaving out
+ *        32 shell scripts, five .mts, a .cjs and two Python files — the review's
+ *        finding 5, which the first cut of this measure shipped. The fixture
+ *        case above holds only .mjs, so it does not move; the live case only
+ *        forbids the measure from RISING, so a measure that falls 3,501 lines
+ *        passes. Closed by two cases that derive from the tree instead of
+ *        pinning a number the burn-down is meant to drive down.
+ *
+ * Nothing here asserts the 104 raw controls or scriptsLines' total, for the
+ * reason the paragraph above gives. What these four pin is the SHAPE of the
+ * coverage: which extensions the measure can see, and that the route measure
+ * agrees with an instrument that does not share its algorithm.
+ *
+ * ── Amendment · 2026-09-12 · three future false reds, and one missing probe ──
+ *
+ * A second pass over this file by the same ORACLE session, on the same
+ * authority. Three cases were passing for the wrong reason rather than failing:
+ *
+ *   the link scope   compared the blind set with OUTSIDE_DOCS by toEqual, so
+ *                    the next tracked .md anyone added would have failed it.
+ *                    Now the property, with the "under docs/" half decided by
+ *                    resolving the path rather than by the shipped prefix.
+ *   the census rise  asserted `.toBe(18)` on the baseline, pinning a number the
+ *                    burn-down is meant to move. The permanent fact is the
+ *                    growth entry, which stays; the number is replaced by the
+ *                    ratchet's own claim, which the old form never checked.
+ *   the raw control  had no instrument of its own on the live tree, which is
+ *                    the same gap m5 exploited on the route census. Now a JSX
+ *                    walk over src/**\/*.tsx outside ui/ and kit/, compared on
+ *                    the file set.
+ *
+ * Three others were looked at and deliberately left as they are. The nine
+ * MOCK_REQUEST_CALLERS are a real signal even when a rename makes them noisy;
+ * covers() is honest about being a blindness proof for a deferred gate rather
+ * than a test of knip; and codeFiles()' scope stops where T-0154's notes already
+ * record the mock servers and test-harness/ as a follow-on. Naming them here is
+ * cheaper than re-deciding them next time.
  */
 
 import { execFileSync } from "node:child_process";
@@ -67,7 +126,12 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join, relative, resolve } from "node:path";
+
+// 2026-09-12 amendment. The census imports this too, and that is the point: the
+// dependency is already here, so an AST walk costs nothing and shares nothing
+// with the regex-and-brace-depth measure it is here to cross-check.
+import ts from "typescript";
 
 import {
   MIN_REASON_LENGTH,
@@ -126,6 +190,97 @@ const LINT_FIXTURE = "src/components/k6-raw-control-fixture.tsx";
 const rulePicksUp = (line: string): boolean =>
   violationsIn(LINT_FIXTURE, [line]).has(`${RAW_CONTROL}::${LINT_FIXTURE}`);
 
+// ── 2026-09-12 amendment · an instrument design-lint does not share ─────────
+//
+// Everything above this line tests the rule against lines this file wrote. On
+// the live tree the only assertions were "it finds something" and "nothing sits
+// above the baseline", which is structurally the gap m5 exploited on the route
+// census: a rule widened to catch the end-of-line tag while quietly narrowing
+// somewhere else — a directory dropped from the walk, an exemption grown into a
+// hole — passes every case here, and the debt is held in a baseline rather than
+// asserted, so nothing else would notice either.
+//
+// So: the same measure, taken by walking JSX elements with TypeScript's parser.
+// It shares no line with design-lint's per-line regex. The FILE SET is what is
+// compared, not the count: the 104 is the burn-down's to move and must not be
+// pinned, and a per-line disagreement between two instruments (a `<button`
+// inside a template literal, say) is a difference of instrument rather than a
+// defect. As of this date the two agree exactly anyway — 43 files, 104 sites,
+// and site-for-site within every one of the 43.
+
+const RAW_CONTROL_TAGS = new Set<string>(CONTROL_TAGS);
+
+/** design-lint.mjs:431-435 on 2026-09-12 — the rule's declared SCOPE, which is not its algorithm. */
+const RAW_CONTROL_SCOPE = (repoRelative: string) =>
+  repoRelative.startsWith("src/") &&
+  repoRelative.endsWith(".tsx") &&
+  !repoRelative.startsWith("src/components/ui/") &&
+  !repoRelative.startsWith("src/kit/");
+
+/**
+ * design-lint.mjs:130 — the escape hatch, honoured here for the same reason.
+ *
+ * Four files carry one against this rule (a chapter dot, a list row, a range
+ * slider and a chat box the hook needs a ref on). An exemption a human wrote
+ * and justified is part of the rule; skipping it is not the differential going
+ * easy on the thing it checks, and refusing to honour it would make this case
+ * red on four files that are behaving exactly as ruled.
+ */
+const DESIGN_LINT_PRAGMA = /design-lint-disable-next-line\s+([\w-]+)\s+--\s+\S/;
+
+/** Every .tsx in the rule's scope, repo-relative, found without design-lint. */
+function tsxFilesInRawControlScope(): string[] {
+  const found: string[] = [];
+  const walk = (dir: string) => {
+    for (const name of readdirSync(dir)) {
+      if (name === "node_modules" || name === ".next") continue;
+      const p = join(dir, name);
+      if (statSync(p).isDirectory()) walk(p);
+      else if (name.endsWith(".tsx")) found.push(p);
+    }
+  };
+  walk(join(ROOT, "src"));
+  return found
+    .map((p) => relative(ROOT, p).split("\\").join("/"))
+    .filter(RAW_CONTROL_SCOPE)
+    .sort();
+}
+
+/** The files that hold a raw control, as the parser sees a JSX element. */
+function rawControlFilesByJsx(): string[] {
+  const hits: string[] = [];
+  for (const rel of tsxFilesInRawControlScope()) {
+    const source = read(rel);
+    const sf = ts.createSourceFile(rel, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+    const lines = source.split(/\r?\n/);
+    let raw = 0;
+    const visit = (node: ts.Node): void => {
+      if (
+        (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) &&
+        ts.isIdentifier(node.tagName) &&
+        RAW_CONTROL_TAGS.has(node.tagName.text)
+      ) {
+        const at = sf.getLineAndCharacterOfPosition(node.getStart(sf)).line;
+        const pragma = DESIGN_LINT_PRAGMA.exec(at > 0 ? lines[at - 1] : "");
+        if (!pragma || pragma[1] !== RAW_CONTROL) raw += 1;
+      }
+      ts.forEachChild(node, visit);
+    };
+    visit(sf);
+    if (raw > 0) hits.push(rel);
+  }
+  return hits.sort();
+}
+
+/** The same files, as design-lint reports them. */
+function rawControlFilesByLint(): string[] {
+  const { counts } = scanTree();
+  return Object.keys(counts)
+    .filter((key) => key.startsWith(`${RAW_CONTROL}::`))
+    .map((key) => key.slice(RAW_CONTROL.length + 2))
+    .sort();
+}
+
 describe("K6 · components-01 · the raw-control rule sees a tag that ends its line", () => {
   it.each(CONTROL_TAGS)(
     "the shipped pattern saw <%s only when a character followed the tag name",
@@ -147,6 +302,18 @@ describe("K6 · components-01 · the raw-control rule sees a tag that ends its l
     // flag every element whose name starts with a control's.
     expect(rulePicksUp(longerName(tag))).toBe(false);
     expect(rulePicksUp(`        <${tag}Bar`)).toBe(false);
+  });
+
+  // 2026-09-12 amendment. The live-tree cases below hold the debt in a baseline
+  // and assert only that the rule finds something, so a rule that widened here
+  // and narrowed elsewhere would pass them all. This is the cross-check they
+  // were missing, on the file set rather than the count.
+  it("the files it reports are the files a JSX walk finds, and that walk shares none of its regex", () => {
+    const byJsx = rawControlFilesByJsx();
+    // Refuses the vacuous reading: two instruments that both find nothing agree
+    // about nothing, and a rule reporting zero is the defect this batch fixed.
+    expect(byJsx).not.toEqual([]);
+    expect(rawControlFilesByLint()).toEqual(byJsx);
   });
 
   /**
@@ -253,6 +420,39 @@ const HAND_ROLLED_ROUTE = [
 
 const NO_CATCH_ROUTE = ["export async function GET() {", "  return await read();", "}"];
 
+/**
+ * 2026-09-12 amendment (m5). A route that keeps two catches and neither shape.
+ *
+ * GET's catch logs and answers 400. POST's catch answers 500 and logs nothing.
+ * Neither is "logs, and answers 500", so the ruled measure must not count this
+ * file at all — but a catch body that runs past its own closing brace pairs
+ * GET's log with POST's 500 three lines later and counts it. The existing
+ * fixture gives every route one catch, so it cannot express this; and on the
+ * live tree the mispairing moves `sites` without moving the file list, which is
+ * why the differential that only compares file lists let it through.
+ */
+const SPLIT_CATCH_ROUTE = [
+  'import { NextResponse } from "next/server";',
+  'import { logApiError } from "@/lib/api/api-logger";',
+  "",
+  "export async function GET() {",
+  "  try {",
+  "    return await read();",
+  "  } catch (error) {",
+  '    logApiError("GET /api/split", "read", error);',
+  '    return NextResponse.json({ error: "Bad request" }, { status: 400 });',
+  "  }",
+  "}",
+  "",
+  "export async function POST() {",
+  "  try {",
+  "    return await write();",
+  "  } catch {",
+  '    return NextResponse.json({ error: "Failed" }, { status: 500 });',
+  "  }",
+  "}",
+];
+
 const SCRIPTS_FIXTURE = ["#!/usr/bin/env node", "// a tooling script", "export const one = 1;"];
 const TEST_FIXTURE = ['it("a", () => {});'];
 
@@ -330,6 +530,112 @@ function routesKeepingTheirOwnCatch(): string[] {
     .sort();
 }
 
+// ── 2026-09-12 amendment (m5) · a second instrument, sharing no algorithm ────
+//
+// routesKeepingTheirOwnCatch() above walks catch bodies by counting braces,
+// which is what line-census.mjs does, so the two agree whenever they are wrong
+// in the same way. The independent review said so in terms before the sweep
+// proved it: "The oracle's 'independent' differential re-implements the same
+// brace-matching algorithm, so it shares the failure mode and cannot cross-check
+// it." What follows delimits a catch with TypeScript's parser instead. The
+// implementer could not add it: Q-015 forbids amending one's own oracle.
+
+/** Every `route.ts` under src/app/api, repo-relative, found without the census. */
+function apiRouteFiles(): string[] {
+  const found: string[] = [];
+  const walk = (dir: string) => {
+    for (const name of readdirSync(dir)) {
+      const p = join(dir, name);
+      if (statSync(p).isDirectory()) walk(p);
+      else if (name === "route.ts") found.push(p);
+    }
+  };
+  walk(join(ROOT, "src", "app", "api"));
+  // relative(), not a slice on "/src/": CI checks this repository out at
+  // /home/runner/work/PatterStage/PatterStage and the path separator differs.
+  return found.map((p) => relative(ROOT, p).split("\\").join("/")).sort();
+}
+
+/**
+ * The ruled predicate, over a catch body the parser delimited.
+ *
+ * The two regexes are line-census.mjs's own and are meant to be: the measure the
+ * operator ruled on 2026-09-12 is "the shared helper, or a catch that logs and
+ * answers 500", and an oracle that invented a different predicate would be
+ * testing a different measure. What is independent here is the thing m5 breaks
+ * — WHERE a catch body starts and stops, and what counts as a call to the
+ * helper — and on that this shares nothing with the census: no regex for the
+ * opener, no brace counting, no `lastIndex`.
+ *
+ * A catch nested inside another is folded into its parent, which is the census's
+ * documented behaviour (line-census.mjs:145-153) and not an accident of either
+ * instrument; the api routes hold four such catches, so the fold is a real
+ * decision and not a hypothetical. The census reaches it by setting `lastIndex`
+ * past the outer body, this by not descending into a CatchClause. The two agree
+ * on the fold and on nothing else about where a body lies, which is what makes
+ * the comparison worth making.
+ */
+const CATCH_LOGS = /\blogApiError\s*\(/;
+const CATCH_ANSWERS_500 = /\bserverError\s*\(|\bstatus:[^;\n]*\b500\b/;
+
+function routesByAst(): { files: string[]; sites: number } {
+  const files: string[] = [];
+  let sites = 0;
+
+  for (const rel of apiRouteFiles()) {
+    const source = read(rel);
+    const sf = ts.createSourceFile(rel, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+
+    const outermostCatches: ts.CatchClause[] = [];
+    const findCatches = (node: ts.Node): void => {
+      if (ts.isCatchClause(node)) {
+        outermostCatches.push(node);
+        return;
+      }
+      ts.forEachChild(node, findCatches);
+    };
+    findCatches(sf);
+
+    // A call to the shared helper, as the parser sees it: a name in a comment or
+    // inside a string is not a call, which the census's `serverErrorFromCatch\(`
+    // count cannot tell.
+    let helper = 0;
+    const findHelperCalls = (node: ts.Node): void => {
+      if (
+        ts.isCallExpression(node) &&
+        ts.isIdentifier(node.expression) &&
+        node.expression.text === "serverErrorFromCatch"
+      ) {
+        helper += 1;
+      }
+      ts.forEachChild(node, findHelperCalls);
+    };
+    findHelperCalls(sf);
+
+    const handRolled = outermostCatches.filter((clause) => {
+      const body = withoutComments(source.slice(clause.block.getStart(sf), clause.block.getEnd()));
+      return CATCH_LOGS.test(body) && CATCH_ANSWERS_500.test(body);
+    }).length;
+
+    if (helper + handRolled > 0) {
+      files.push(rel);
+      sites += helper + handRolled;
+    }
+  }
+  return { files: files.sort(), sites };
+}
+
+/** A tree with one route counted through the helper and one that must not be counted. */
+function splitCatchFixture(): string {
+  const root = scratchDir("k6-splitcatch-");
+  for (const dir of ["src/app/api/helper", "src/app/api/split"]) {
+    mkdirSync(join(root, dir), { recursive: true });
+  }
+  writeFileSync(join(root, "src/app/api/helper/route.ts"), HELPER_ROUTE.join("\n"));
+  writeFileSync(join(root, "src/app/api/split/route.ts"), SPLIT_CATCH_ROUTE.join("\n"));
+  return root;
+}
+
 /**
  * The six route files that hand-roll a log-and-500 catch, by name.
  *
@@ -388,6 +694,38 @@ describe("K6 · app-04a · the route census counts a catch that logs and answers
     expect(census(null).routes.files.slice().sort()).toEqual(routesKeepingTheirOwnCatch());
   });
 
+  // 2026-09-12 amendment (m5). The case above compares file lists with a
+  // differential that counts braces the way the census does, so a catch body
+  // that overruns its closing brace moves both of them or neither. On this tree
+  // it moves neither list and moves `sites` alone, from 25 to 26, and `sites`
+  // was asserted nowhere. Both halves are closed here.
+  it("the routes and the sites it reports agree with a parser that shares none of its brace matching", () => {
+    const report = census(null);
+    const ast = routesByAst();
+
+    // Refuses the vacuous reading, as the raw-control case does: two
+    // instruments that both find nothing agree about nothing.
+    expect(ast.files).not.toEqual([]);
+    expect(report.routes.files.slice().sort()).toEqual(ast.files);
+    // The number the mispairing actually moves. A catch that runs to the end of
+    // the file counts a second site in models/fallbacks, whose helper catch sits
+    // above a hand-rolled one, without adding a file to the list.
+    expect(report.routes.sites).toBe(ast.sites);
+    expect(report.routes.count).toBe(ast.files.length);
+  });
+
+  // 2026-09-12 amendment (m5), the half that does not depend on this tree. The
+  // case above would go quiet the day the last two-catch route file is
+  // refactored; this one plants the shape instead of hoping for it.
+  it("a catch that only logs is not paired with a later catch that only answers 500", () => {
+    const report = census(splitCatchFixture());
+    // The helper route is there so a census that counted nothing would fail
+    // this case rather than pass it.
+    expect(report.routes.files.slice().sort()).toEqual(["src/app/api/helper/route.ts"]);
+    expect(report.routes.sites).toBe(1);
+    expect(report.counts.routesWithTryCatch).toBe(1);
+  });
+
   it("the six files that hand-roll one are named in the report, hindsight included", () => {
     const counted = new Set(census(null).routes.files);
     expect(HAND_ROLLED_ROUTE_FILES.filter((f) => !counted.has(f))).toEqual([]);
@@ -395,7 +733,21 @@ describe("K6 · app-04a · the route census counts a catch that logs and answers
 
   it("the rise the widening causes is held in the census baseline, with its reason", () => {
     const baseline = censusBaseline();
-    expect(baseline.counts.routesWithTryCatch).toBe(18);
+
+    // 2026-09-12 amendment. This asserted `.toBe(18)`, which pins a number the
+    // burn-down is meant to move and contradicts this file's own header: app-04b
+    // moving a hand-rolled catch onto the shared helper keeps it counted, but a
+    // route that stops keeping a catch at all lowers the measure, and the first
+    // honest re-cut downward would have failed the case. The permanent fact is
+    // the growth entry below, which records the ruled widening from 13 to 18 for
+    // good. What is held here in its place is the ratchet's own claim — the
+    // measure is in the baseline, and the tree is not above what the baseline
+    // holds — which is the same shape as the scriptsLines case and, unlike
+    // `.toBe(18)`, actually fails when the tree exceeds the number on file.
+    const heldInBaseline = baseline.counts.routesWithTryCatch;
+    expect(typeof heldInBaseline).toBe("number");
+    expect(census(null).counts.routesWithTryCatch).toBeLessThanOrEqual(heldInBaseline);
+
     // The exact sentence `--allow-growth` writes, so this is the fact the
     // ratchet recorded and not a phrase somebody typed near it.
     const held = (baseline.allowed ?? []).filter(
@@ -409,6 +761,66 @@ describe("K6 · app-04a · the route census counts a catch that logs and answers
     }
   });
 });
+
+// ── 2026-09-12 amendment (m10) · what the tooling is written in, from the tree ─
+//
+// The first cut of this measure counted the app's four extensions and silently
+// left out 32 shell scripts, five .mts, a .cjs and two Python files under
+// scripts/ — a number 30 per cent short, in a measure named for the tree those
+// files live in, in the batch whose whole thesis is that a gate must report a
+// true number. The independent review caught it; the sweep then showed nothing
+// here would have. The implementer could not add these two: Q-015.
+//
+// Neither case names an extension or a total. Both derive the answer from the
+// tree, so a tooling directory that stops using Python stops being asked about
+// it, and a burn-down that deletes 2,000 lines of shell does not turn red.
+
+/** line-census.mjs:41 exactly as it stood on 2026-09-12 — what src and tests are written in. */
+const SHIPPED_APP_CODE = /\.(ts|tsx|css|mjs)$/;
+
+/**
+ * Every filename extension the tooling under scripts/ is actually written in.
+ *
+ * Two pieces of evidence, both from the file itself and neither a list anybody
+ * maintains: a `#!` line means the operating system runs the file, and a
+ * top-level import, export or require means a module system loads it. The
+ * .json, .yml and .sql beside them carry neither and are data, which is the
+ * distinction the measure has to make. Tracked files only, so a stray
+ * __pycache__ or a build artefact cannot add an extension nobody wrote.
+ *
+ * scripts/git-hooks/pre-push and a Dockerfile have no extension at all and are
+ * named on T-0154's record as deliberately uncounted; a basename with no dot is
+ * skipped here rather than argued with.
+ */
+const A_PROGRAM = /^[ \t]*(?:import\s|export\s|module\.exports\b|require\s*\()/m;
+
+function trackedScriptFiles(): string[] {
+  return execFileSync("git", ["ls-files", "scripts"], { cwd: ROOT, encoding: "utf8" })
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .filter((rel) => existsSync(join(ROOT, rel)));
+}
+
+const extensionOf = (repoRelative: string): string | null => {
+  const base = repoRelative.slice(repoRelative.lastIndexOf("/") + 1);
+  const dot = base.lastIndexOf(".");
+  return dot > 0 ? base.slice(dot).toLowerCase() : null;
+};
+
+function toolingExtensions(): string[] {
+  const found = new Set<string>();
+  for (const rel of trackedScriptFiles()) {
+    const ext = extensionOf(rel);
+    if (!ext) continue;
+    const source = read(rel);
+    if (source.startsWith("#!") || A_PROGRAM.test(source)) found.add(ext);
+  }
+  return [...found].sort();
+}
+
+/** Three lines, no trailing newline, so a probe file's line count is exactly three. */
+const EXTENSION_PROBE = ["one", "two", "three"];
 
 describe("K6 · tooling-22 · the line census measures scripts/", () => {
   it("the two roots as shipped could not reach a file under scripts/", () => {
@@ -443,6 +855,50 @@ describe("K6 · tooling-22 · the line census measures scripts/", () => {
     expect(typeof held).toBe("number");
     expect(live).toBeLessThanOrEqual(held);
   });
+
+  // 2026-09-12 amendment (m10). The fixture case above holds .mjs and nothing
+  // else, so a walker narrowed back to the app's four extensions does not move
+  // it; the case above this one only forbids the measure from RISING, so a
+  // walker that loses 3,501 lines passes it too. One probe file per extension
+  // the tooling is actually written in, on a fixture tree, so the failure names
+  // the extension the measure went blind to.
+  it("the scripts measure counts every extension the tooling under scripts/ is written in", () => {
+    const extensions = toolingExtensions();
+    expect(extensions).not.toEqual([]);
+    // Not vacuous, and the whole point of the measure having a wider set than
+    // src and tests: the tooling is written in more languages than the product.
+    // If this ever fails, the tooling really did narrow to the app's four and
+    // the case below is the one to read, not this one to delete.
+    expect(extensions.filter((ext) => !SHIPPED_APP_CODE.test(`probe${ext}`))).not.toEqual([]);
+
+    const blind = extensions.filter((ext) => {
+      const root = scratchDir("k6-scripts-ext-");
+      mkdirSync(join(root, "scripts"), { recursive: true });
+      writeFileSync(join(root, "scripts", `probe${ext}`), EXTENSION_PROBE.join("\n"));
+      return census(root).counts.scriptsLines !== EXTENSION_PROBE.length;
+    });
+    expect(blind).toEqual([]);
+  });
+
+  // 2026-09-12 amendment (m10), on the tree rather than a fixture: a measure can
+  // know every extension and still miss a subdirectory. Both sides of this move
+  // with the tree, so it pins no total and a comment pass over scripts/tooling
+  // drives them down together. The inequality runs one way because the census
+  // walks the working tree and this counts what git tracks, so an untracked
+  // build artefact under scripts/ may sit in the measure and not in the sum.
+  it("the measure accounts for every tracked scripts/ file written in one of those extensions", () => {
+    const extensions = new Set(toolingExtensions());
+    const counted = trackedScriptFiles().filter((rel) => {
+      const ext = extensionOf(rel);
+      return ext !== null && extensions.has(ext);
+    });
+    expect(counted).not.toEqual([]);
+
+    // The census's own arithmetic: a file's line count is its text split on
+    // newlines, so a file with no trailing newline is not a line short.
+    const lines = counted.reduce((n, rel) => n + read(rel).split("\n").length, 0);
+    expect(census(null).counts.scriptsLines).toBeGreaterThanOrEqual(lines);
+  });
 });
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -459,6 +915,13 @@ const REQUIRED_LINK_SCOPE = (repoRelative: string) =>
 /**
  * The sixteen tracked markdown files in the widened scope that the shipped gate
  * never opened. Measured 2026-09-12 with `git ls-files "*.md"`.
+ *
+ * 2026-09-12 amendment: a dated record, no longer the assertion. This list was
+ * compared with the live tree by toEqual, so the next tracked .md anyone added
+ * outside docs/, org/ and data/seed/ turned the case red for a change that is
+ * not a defect — the one pinned-to-today's-file-list in this file, and the very
+ * thing the amendment above was warned against writing. The case now holds the
+ * property and keeps the list tethered rather than pinned.
  */
 const OUTSIDE_DOCS = [
   ".github/ISSUE_TEMPLATE/bug_report.md",
@@ -565,11 +1028,35 @@ function runLinkGate(root: string): { code: number; out: string } {
 }
 
 describe("K6 · docs-02 and tooling-19 · the link gate walks every tracked document", () => {
+  // 2026-09-12 amendment. The case name keeps the number that was measured on
+  // the day; the assertions no longer pin it, because a count of the blind set
+  // is a fact about 2026-09-12 and the property is a fact about the gate.
   it("the docs-only scope as shipped could not open the sixteen files outside it", () => {
-    const inScope = trackedMarkdown().filter(REQUIRED_LINK_SCOPE);
-    expect(inScope.filter((f) => !SHIPPED_LINK_SCOPE(f))).toEqual(OUTSIDE_DOCS);
-    // And it did open the ones inside docs/, so the scope was the whole defect.
-    expect(inScope.some(SHIPPED_LINK_SCOPE)).toBe(true);
+    const tracked = trackedMarkdown();
+    const inScope = tracked.filter(REQUIRED_LINK_SCOPE);
+    const blind = inScope.filter((f) => !SHIPPED_LINK_SCOPE(f));
+    const seen = inScope.filter(SHIPPED_LINK_SCOPE);
+
+    // Nothing below is vacuous: the tree holds documents on both sides of the
+    // shipped scope, and the ruled exclusion excludes something real. Without
+    // the third line a scope that let org/ through would satisfy the property.
+    expect(blind).not.toEqual([]);
+    expect(seen).not.toEqual([]);
+    expect(tracked.filter((f) => !REQUIRED_LINK_SCOPE(f))).not.toEqual([]);
+
+    // The property, with a small differential inside it: "under docs/" is
+    // decided by resolving the path, not by the shipped literal, so a directory
+    // merely BEGINNING with docs would show the two disagreeing rather than
+    // being waved through by the prefix test that created the defect.
+    const underDocs = (f: string) => !relative(join(ROOT, "docs"), join(ROOT, f)).startsWith("..");
+    expect(blind.filter(underDocs)).toEqual([]);
+    expect(seen.filter((f) => !underDocs(f))).toEqual([]);
+
+    // The sixteen stay as the dated record, tethered to the tree rather than
+    // pinned to it: an addition cannot fail this, a deletion cannot, and only
+    // all sixteen disappearing at once would — at which point the record really
+    // has become fiction and should be read again.
+    expect(blind.filter((f) => OUTSIDE_DOCS.includes(f))).not.toEqual([]);
   });
 
   it("on a fixture repository it reports a broken link outside docs/, and leaves org/ and data/seed/ alone", () => {

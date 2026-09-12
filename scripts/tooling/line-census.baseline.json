@@ -2,7 +2,7 @@
   "measuredAt": "2026-09-12",
   "counts": {
     "srcLines": 100983,
-    "testLines": 123864,
+    "testLines": 124351,
     "scriptsLines": 12961,
     "srcRepeatedWindowLines": 1000,
     "testRepeatedWindowLines": 4345,
@@ -250,6 +250,11 @@
       "measuredAt": "2026-09-12",
       "rise": "scriptsLines rose from 8978 to 12961",
       "reason": "K6/T-0154, the independent review's fixes. scriptsLines rises because the measure was widened again, not because scripts/ grew: it counted only the four extensions the APP is written in, and the review found 3,501 lines of .sh, .mts, .cjs and .py under scripts/ that a measure named for that tree was silently leaving out - the same defect class the batch exists to fix. testLines is the two test files the review corrected: a case whose name said the opposite of what it asserted, and a header claiming in the present tense that the shared helper mocks api-auth"
+    },
+    {
+      "measuredAt": "2026-09-12",
+      "rise": "testLines rose from 123864 to 124351",
+      "reason": "K6/T-0154: the ORACLE session's amendment closing the two mutation-sweep survivors and three rot risks it found in its own work. An AST probe that shares none of the census's brace matching (m5 moved routes.sites 25 to 26 without moving the file list, which is why the first differential, sharing the algorithm AND comparing only file lists, saw nothing); a scripts-extension property derived from the tree rather than a list (m10); a JSX walk that cross-checks the raw-control rule's file set; and two pins replaced by properties so a later burn-down does not turn them red"
     }
   ]
 }
