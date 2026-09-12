@@ -2,10 +2,10 @@
 summary: What the consolidation programme did and left behind, how a batch was landed, what is open, and what waits next
 type: venture
 tags: [handover, consolidation]
-updated: 2026-09-11
+updated: 2026-09-12
 ---
 
-# Handover · PatterStage, 2026-09-11
+# Handover · PatterStage, 2026-09-12
 
 This page is the one to read before touching the tree. It says where the
 work stands, what was learned landing it, what is still open, and the exact
@@ -59,10 +59,10 @@ is read and must be green before the next batch starts.
 
 ## Where the programme stands
 
-`dev` is pushed, and green again since 2026-09-12 (see the K programme
-above). Every batch below has a task record, an oracle
-committed red first, a gate by exit code, a mutation sweep against the
-committed tree, and a chore commit carrying the record and the derived views.
+`dev` is pushed, and every job is green on `a8ff28bc` (2026-09-12; see the K
+programme above). Every batch below has a task record, an oracle committed red
+first, a gate by exit code, a mutation sweep against the committed tree, and a
+chore commit carrying the record and the derived views.
 
 | Batch | Record | What it did | Landed |
 | --- | --- | --- | --- |
@@ -80,6 +80,27 @@ committed tree, and a chore commit carrying the record and the derived views.
 
 The plan's remaining ids moved by two for the fixes taken in between; the
 plan header says so.
+
+### The K batches, so far
+
+| Batch | Record | What it did | Landed |
+| --- | --- | --- | --- |
+| K0 the rulings | T-0146 | the decision register rendered from the verification journal, 121 entries with a ruling each; Q-009 to Q-016 folded | yes |
+| K1 CI green | T-0147 | six case-broken doc links, extract.ts's lazy imports as file URLs, the smoke's deleted route; plus a suite missing `navigator` and a census report cut at the macOS pipe buffer. First green CI since 2026-09-05, 63 pushes earlier | yes |
+| K2/K3 the discipline | T-0148, T-0149 | ADR-0011 ratifies T-0144's protected-set edits and restores 47 closed records; `npm run gate` (nine steps, by exit code, tree-stamped) and `npm run sweep` (mutants as committed data, four outcomes) | yes |
+| K4 the security set | T-0151 | the six review findings that needed no operator ruling: the URL guard's IPv6 expansion, the workspace guard's path test, one client-key derivation with an observable prune, file modes at every writer of operator data plus the copies already on disk, the x-ps-\* signing cases, and the Docker build context | yes |
+| (raised) e2e sessions seeding | T-0150 | proposed: `e2e-full` needs sessions only a Hermes-equipped machine has | no |
+| (raised) the census reads twice | T-0152 | proposed: `routesWithSplitBlocks` read 1, then 2, then 1 on one unchanged tree | no |
+
+**K4 is worth one line of its own.** Its mutation sweep found two holes the
+gate, an independent review and a careful reading had all passed over: a
+`restrictToOwner` count loose enough to survive deleting one of them, and a
+`.dockerignore` test that a commented-out rule still satisfied. Run the sweep.
+
+**Next is K5,** the ruled security items: critic-04 (forbid framing everywhere)
+with cross-cutting-22's `next.config.ts` deletion under one `canary:bless`,
+app-06 (proxy only, host-side routes keep theirs), and critic-05a's documented
+gap. The register carries each ruling.
 
 ## The census, now against the plan's targets
 
