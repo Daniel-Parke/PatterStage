@@ -170,3 +170,4 @@ The records under org/tasks/ are canonical.
 | T-0155 | exploration | R1 | in-progress | t0155-k7-recon-2026-09-12 |
 | T-0156 | standard | R1 | proposed | unassigned |
 | T-0157 | high-assurance | R2 | proposed | unassigned |
+| T-0158 | high-assurance | R2 | proposed | unassigned |
