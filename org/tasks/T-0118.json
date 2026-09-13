@@ -1,0 +1,58 @@
+{
+  "id": "T-0118",
+  "intent": "U4 of the UI overhaul programme: every region gets an edge, and the rail stops hiding. This is the batch behind the operator's headline complaint, and the complaint is a SURFACE problem rather than a text one: the rail's own labels already measure 6.18:1, so brightening them cannot fix 'the sidebar is quite hard to see' and would only make the type problem worse. The rail sat at 1.06:1 against the page beside it, every card fill sat within 1.03:1 of the page behind it, and every boundary in the product was one 1px rule at 1.25:1 against the 3:1 WCAG 1.4.11 asks of a component boundary. U2 derived the ladder and nothing consumed it; this is the consuming.",
+  "declared": {
+    "capabilities": [
+      "edit-source",
+      "edit-tooling",
+      "edit-tests",
+      "edit-docs"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {
+      "factor": "size-threshold",
+      "tier_floor": "R1",
+      "source": "derived:diff-size",
+      "evidence": "162 component files repainted by codemod, plus the rail, the linter and two docs; no protected path, no schema, no route, no behaviour"
+    }
+  ],
+  "status": "done",
+  "owner_session": "t0118-u4-surfaces-and-edges-2026-09-07",
+  "claims": [
+    "src/",
+    "scripts/tooling/design-lint.mjs",
+    "scripts/tooling/design-lint.baseline.json",
+    "scripts/tooling/design-census.baseline.json",
+    "tests/e2e/design-invariants.spec.ts",
+    "tests/unit/",
+    "docs/contributing/design-tokens.md"
+  ],
+  "programme": "U4, depends on U3. Every conversion batch from U9 onward paints on these surfaces, so the ladder is consumed before any screen is rebuilt.",
+  "timestamps": {
+    "opened": "2026-09-07T15:00:00Z",
+    "updated": "2026-09-07T21:30:00Z",
+    "closed": "2026-09-07T21:30:00Z"
+  },
+  "invariants": [
+    "I1 A PANEL DOES NOT KEEP ITS ALPHA. The ladder was solved for #1e3042 at 1.466:1 above the ground; the same colour at 50% lands back at about 1.2:1, which is exactly where the product already was. Nine alphas of dark-900 collapse to one opaque rung, and the backdrop-blurs behind them go with them: an opaque fill has nothing behind it to blur and the filter costs a compositing layer per scroll. A scrim keeps its alpha, because translucency is what a scrim IS.",
+    "I2 WHICH RUNG A BOUNDARY WEARS IS DECIDED BY MEASUREMENT. A control wears `edge` (3:1), a card outline wears `hairline` (1.63:1), selected and armed wear `emphasis`. A regex cannot tell a control from a card, so the census names every control border that misses its floor and the fix is driven from the descriptors it returns. 169 sites were lifted that way.",
+    "I3 A HAIRLINE IS PANEL-RELATIVE. It is 1.63:1 above the panel and 1.11:1 above `raised`, so a seam inside a dialog, a menu or the chat sidebar uses `edge`. Found by the gate, not by reasoning.",
+    "I4 THE RAIL IS ONE SURFACE WITH ONE SEAM. It painted the ground on a phone and dark-900 at 80% on a desktop, measuring 1.02:1 and 1.10:1, and its seam was two stacked 1px rules: one on the <aside>, one on the wrapper in layout.tsx.",
+    "I5 WHAT IS NOT DONE IS SAID OUT LOUD. The 346 accent-tinted borders across 71 spellings and the white status dots are colour that MEANS something; they are S5 and they are U6. The live gate measures achromatic boundaries and says so in its header rather than hiding the split in a filter, and the census counts every accent border and may only fall."
+  ],
+  "commits": "e15cf8f6 the oracle, red at 14 of 17 units and 23 of 23 routes; d8110300 the codemod, the rail, the control lift and the two gate fixes; the sweep's three survivors closed; and this record.",
+  "verification": "Gate by exit code on the swept tree: lint 0, tsc 0, jest 0 (6347 tests, 622 suites), knip 0, canary 0, build 0, Playwright 163 passed and 26 skipped, census 0. Playwright is up 23 from the batch before: one design-invariants test per documented route. Walked on the isolated instance at 1440 and screenshots recaptured.",
+  "the_measurement": "Census over 23 routes at 1440. railVsPageContrast 1.06 -> 1.47 and railDividerContrast 1.26 -> 4.40, which is the operator's complaint answered in the only terms it can be checked in. controlBordersBelowThree 320 -> 156, decorativeBordersBelowThree 618 -> 572, distinctCardChromes 108 -> 88, distinctButtonChromes 89 -> 85, distinctBorderColours 36 -> 34. design-lint 3065 -> 2561, with no-raw-border-alpha 498 -> 21 and no-raw-colour-in-css 28 -> 0. The 21 and the 156 are the same thing counted twice: accent-tinted colour that means armed, selected or failed, which is U6's. distinctBorderColours barely moves for the same reason, since 32 of the 34 are accents.",
+  "the_codemod": "913 substitutions across 162 files, from a table rather than a rule, because the number in a spelling does not say what the thing IS. bg-dark-800 is an input in thirty places and a panel's header bar in six; bg-white/20 is a status dot everywhere and a surface nowhere. Where a family splits, the split was decided by reading what the line paints and the exceptions are listed by hand in the script. Two mechanical passes then a measured one: surfaces and edges by table, control boundaries by census descriptor, and a short tail of class constants a tag-scoped pass cannot reach.",
+  "two_gates_were_lying": "Both made the product look better than it was, and both were found by a number moving the wrong way rather than by reading code. (1) design-lint recognises a custom-property declaration by `^\\s*--[a-z-]+:`, which matches no token whose NAME carries a digit: --color-cherenkov-100, --color-dark-950, all of them. So the rule that polices raw colour in CSS was reporting its own file's token block, and the ladder's derivation table inside a block comment, as 15 of its 28 violations. The runner skips a comment by its leading marker, which is the house style in .ts and .tsx and is not CSS at all, where a block comment's interior lines carry none; it tracks block-comment state now, asserted on both sides because a mask that is too greedy blinds every code-only rule at once and looks exactly like a clean codebase. (2) The new live gate decided whether a boundary was 'grey' by channel spread, and the house greys are deliberately cool -- the rules travel a less saturated ray -- so #474f59's 18-point spread put it outside the test. The gate skipped the forty control borders wearing the hairline at 2.3:1, which is precisely what it exists to catch. By saturation now.",
+  "mutation": "12 mutants against the committed tree, two rounds. Round one: 9 killed, 3 survived, and none for a small reason. Two were substring traps asked of a whole file: `toContain(\"bg-ps-surface-panel\")` is answered by the rail's own logo mark, so the rail could go back to the page's ground with the assertion still green; and `border-ps-edge-hairline` contains `border-ps-edge`, so the shell's seam could drop to a card outline's weight the same way. Both read the <aside>'s own opening tag now, and match a whole class rather than a prefix -- and finding that tag is its own lesson, because the file opens with a comment saying 'One <aside>' and the tag carries `React.RefObject<HTMLElement | null>`, so neither the first `<aside` nor the first `>` after it is the right answer. The third was covered by nothing a sweep can run: baseInputStyles decides what every text input in the product looks like and only the live gate looked at it. Round two: 12 of 12.",
+  "deviation": "(1) The plan said no-inline-card-chrome turns hard here. It cannot: the rule is about corner, edge and fill being spelled on one element, which is a shape rather than a spelling, and the shape is what the Surface primitive removes in U8. It stands at 344, baselined and falling. (2) The plan targeted distinctBorderColours <= 6. It reaches 34, because 32 of the 34 are accent-tinted and this batch is deliberately achromatic; the number is U6's to take down. (3) design-lint's own bug meant no-raw-colour-in-css never had 28 real violations to clear -- it had 13, and 9 of the 28 were the ladder's own documentation. Fixing the rule was the larger part of clearing it.",
+  "found_by_walking": "The 1.11:1 seams. A hairline is measured against the panel and comes out invisible on `raised`, which is a fact about the ladder that no amount of reading the derivation would have surfaced -- the gate reported a boundary at 1.11:1 and the arithmetic explained it afterwards.",
+  "harness_amendments": "tests/e2e/design-invariants.spec.ts is new: thresholds rather than counts, one test per documented route so the workers share the walk, and in the ordinary suite rather than opt-in, because a count drifts when twenty spec files share a server and a threshold does not. design-lint gains blockCommentLines and a repaired declaration test. lockbook-tokens.test.ts gains the edge ladder's mirror check, which knip asked for and which is right either way: a map nothing checks is a second source of truth waiting to drift. Three assertions that pinned the flat ladder were amended at the line with the reason, including two of U2's own, which were correct when written -- U2 declared the ladder and deliberately repainted nothing.",
+  "deferred": "The type scale is declared and unused until U5. Accent and status colour, the 71 border spellings and the white dots, are U6. The rail's hierarchy, its collapsed hit targets and the sub-link tier are U7. Inline card chrome, the raw controls and the primitive set are U8."
+}

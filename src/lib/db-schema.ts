@@ -1,11 +1,38 @@
 // ═══════════════════════════════════════════════════════════════
 // db-schema.ts — SQLite schema version helpers
-// These are extracted to a separate module so they can be imported
-// by migration files without being intercepted by the global
-// @/lib/db mock in Jest tests.
+//
+// AT THE LIB ROOT ON PURPOSE (C7, T-0144), and not under src/lib/db/ where
+// its subject would put it: these are extracted to a separate module so they
+// can be imported by migration files without being intercepted by the global
+// @/lib/db mock in Jest tests. Inside that folder the mock would reach them
+// and the schema constant below would read as undefined in the very tests
+// that check it.
 // ═══════════════════════════════════════════════════════════════
 
 const SCHEMA_VERSION_KEY = "schema_version";
+
+/**
+ * The terminal `schema_version` of the hand-wired migration ladder in
+ * `runMigrations()`: the version a fully migrated database ends on.
+ *
+ * WHY IT LIVES HERE and not in the `@/lib/db` entry module. `tests/jest.setup.ts`
+ * mocks `@/lib/db` with a fixed factory, so a constant exported from there reads
+ * as `undefined` inside the migration tests. Hardcoding the number into that mock
+ * instead would recreate the exact drift this constant exists to kill. This module
+ * is never mocked, so the number survives into the tests that check it.
+ *
+ * WHY IT IS DECLARED rather than re-exported from the last applier. That applier
+ * imports this module for `getSchemaVersion` / `setSchemaVersion`, so importing it
+ * back would be a cycle. The duplication is made safe by
+ * `tests/unit/run-migrations-upgrade.integration.test.ts`, which asserts this
+ * equals the last applier's gate, that the
+ * last applier's gate is exactly one above the one before it, and that it equals
+ * the highest-numbered file in `src/lib/db/migrations/`.
+ *
+ * Raising the head means bumping this in the same commit as the applier that
+ * raises it. `docs/running/migration.md` carries the full going-forward rule.
+ */
+export const MIGRATION_HEAD_SCHEMA_VERSION = 42;
 
 export function getSchemaVersion(database: { prepare: (sql: string) => { get: (key: string) => { value: string } | undefined } }): number {
   try {

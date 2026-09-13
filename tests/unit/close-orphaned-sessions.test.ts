@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
 /**
  * @jest-environment node
  *
@@ -12,14 +11,15 @@
  *
  * Both functions take a `Database` as their first argument, so we
  * can drive them with a real in-memory SQLite DB seeded with the
- * baseline schema. No mocking of `db()` required.
+ * baseline schema. No mocking of `getDb()` required.
  *
  * Plus: `closeSessionForMission()` — the bridge that `MissionSync`
  * uses to close a session row in lockstep with a mission status
- * transition. This function uses the global `db()` singleton, so
+ * transition. This function uses the global `getDb()` singleton, so
  * the bridge tests mock `@/lib/db` to redirect calls to the
  * in-memory DB.
  */
+/* eslint-disable @typescript-eslint/no-require-imports */
 import Database from "better-sqlite3";
 import { readFileSync } from "fs";
 import { join } from "path";
@@ -27,8 +27,8 @@ import { join } from "path";
 import {
   closeOrphanedActiveSessions,
   previewOrphanSweep,
-  closeSessionForMission,
-} from "@/lib/session-repository";
+} from "@/lib/sessions/session-orphan-sweep";
+import { closeSessionForMission } from "@/lib/sessions/session-repository";
 
 const repoRoot = join(__dirname, "..", "..");
 const migrationsDir = join(repoRoot, "src", "lib", "db", "migrations");
@@ -288,6 +288,59 @@ describe("closeOrphanedActiveSessions — age-fallback path", () => {
   });
 });
 
+// ── Resurrection guard (active↔closed churn fix) ──────────────────
+//
+// The Hermes-session upsert in syncHermesSessionsToDb must NOT reset a
+// locally-closed session back to 'active' when Hermes still reports
+// end_reason: null (excluded.status = 'active'). Without the guard the
+// orphan sweep re-closes the same rows every 15s tick forever. This block
+// pins the exact ON CONFLICT status CASE used by the upsert.
+describe("Hermes-session upsert — resurrection guard", () => {
+  let tdb: TestDatabase;
+  beforeEach(() => { tdb = makeTestDatabase(); });
+  afterEach(() => { tdb.close(); });
+
+  // Mirror of the upsert's status clause in src/lib/session-sync.ts. Keep in
+  // lockstep with that statement.
+  function upsertHermesStatus(id: string, incomingStatus: string): void {
+    tdb.db.prepare(/* sql */ `
+      INSERT INTO sessions (id, agent_type, source, size, started_at, status)
+      VALUES (?, 'hermes', 'cli', 0, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        status = CASE
+                   WHEN excluded.status = 'active'
+                        AND sessions.status IN ('completed', 'failed', 'cancelled')
+                     THEN sessions.status
+                   ELSE excluded.status
+                 END
+    `).run(id, isoMinutesAgo(10), incomingStatus);
+  }
+  const statusOf = (id: string) =>
+    (tdb.db.prepare("SELECT status FROM sessions WHERE id = ?").get(id) as { status: string }).status;
+
+  it("does NOT resurrect a locally-closed session to 'active'", () => {
+    seedSession(tdb.db, { id: "s1", source: "cli", status: "completed", startedMinutesAgo: 10 });
+    upsertHermesStatus("s1", "active"); // Hermes still reports end_reason: null
+    expect(statusOf("s1")).toBe("completed");
+
+    seedSession(tdb.db, { id: "s2", source: "cli", status: "failed", startedMinutesAgo: 10 });
+    upsertHermesStatus("s2", "active");
+    expect(statusOf("s2")).toBe("failed");
+  });
+
+  it("still lets a real terminal end_reason close an active session", () => {
+    seedSession(tdb.db, { id: "s1", source: "cli", status: "active", startedMinutesAgo: 10 });
+    upsertHermesStatus("s1", "completed"); // end_reason: stop → excluded.status='completed'
+    expect(statusOf("s1")).toBe("completed");
+  });
+
+  it("leaves a genuinely-active session active", () => {
+    seedSession(tdb.db, { id: "s1", source: "cli", status: "active", startedMinutesAgo: 1 });
+    upsertHermesStatus("s1", "active");
+    expect(statusOf("s1")).toBe("active");
+  });
+});
+
 describe("previewOrphanSweep", () => {
   let tdb: TestDatabase;
   beforeEach(() => { tdb = makeTestDatabase(); });
@@ -316,7 +369,7 @@ describe("previewOrphanSweep", () => {
 
 // ── closeSessionForMission tests ──────────────────────────────────
 //
-// This function uses the global `db()` singleton, so the bridge
+// This function uses the global `getDb()` singleton, so the bridge
 // tests mock `@/lib/db` to redirect the singleton to the in-memory
 // DB. Each test owns its own mock + DB so the bridge tests can run
 // in parallel safely.
@@ -325,11 +378,11 @@ describe("closeSessionForMission — the MissionSync bridge", () => {
 
   beforeEach(() => {
     tdb = makeTestDatabase();
-    // Replace the global db() singleton for the duration of this test
+    // Replace the global getDb() singleton for the duration of this test
     jest.resetModules();
     jest.doMock("@/lib/db", () => {
       const actual = jest.requireActual("@/lib/db");
-      return { ...actual, db: () => tdb.db };
+      return { ...actual, getDb: () => tdb.db };
     });
   });
 
@@ -341,7 +394,7 @@ describe("closeSessionForMission — the MissionSync bridge", () => {
 
   it("closes the active session for a mission with status='completed'", () => {
     // Re-import after mock is set
-    const { closeSessionForMission: close } = require("@/lib/session-repository") as {
+    const { closeSessionForMission: close } = require("@/lib/sessions/session-repository") as {
       closeSessionForMission: typeof closeSessionForMission;
     };
     seedMission(tdb.db, { id: "m1", status: "dispatched" });
@@ -363,7 +416,7 @@ describe("closeSessionForMission — the MissionSync bridge", () => {
   });
 
   it("closes with status='failed' and preserves error message", () => {
-    const { closeSessionForMission: close } = require("@/lib/session-repository") as {
+    const { closeSessionForMission: close } = require("@/lib/sessions/session-repository") as {
       closeSessionForMission: typeof closeSessionForMission;
     };
     seedMission(tdb.db, { id: "m1", status: "dispatched" });
@@ -384,7 +437,7 @@ describe("closeSessionForMission — the MissionSync bridge", () => {
   });
 
   it("returns null and is a no-op when no active session exists", () => {
-    const { closeSessionForMission: close } = require("@/lib/session-repository") as {
+    const { closeSessionForMission: close } = require("@/lib/sessions/session-repository") as {
       closeSessionForMission: typeof closeSessionForMission;
     };
     seedMission(tdb.db, { id: "m1", status: "successful" });
@@ -401,7 +454,7 @@ describe("closeSessionForMission — the MissionSync bridge", () => {
   });
 
   it("picks the most recently started active session for recurring missions", () => {
-    const { closeSessionForMission: close } = require("@/lib/session-repository") as {
+    const { closeSessionForMission: close } = require("@/lib/sessions/session-repository") as {
       closeSessionForMission: typeof closeSessionForMission;
     };
     seedMission(tdb.db, { id: "m1", status: "dispatched" });

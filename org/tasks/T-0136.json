@@ -1,0 +1,51 @@
+{
+  "id": "T-0136",
+  "intent": "C1 of the consolidation programme: one route body. 120 of the 169 API handlers ended in the same statement, a try whose catch was one line returning serverErrorFromCatch with the route's name, what it was doing, the error and the sentence. route(name, doing, failed, handler) says it once; the handlers converted by an AST codemod keep their statements, lose the try, and export through the wrapper by their method names. A dynamic segment's log keeps its id, because each of the three strings may be a function of the route's resolved params.",
+  "declared": {
+    "capabilities": [
+      "edit-source",
+      "edit-tests",
+      "edit-docs"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {
+      "factor": "size-threshold",
+      "tier_floor": "R1",
+      "source": "derived:diff-size",
+      "evidence": "one wrapper added, 112 handlers in 76 route files rewritten by codemod with no change to any response, one gate script taught the new spelling, the census baseline re-cut, the plan's C1 row measured; no route added or removed (the canary's httpSurface is unchanged), no schema, no protected path; one oracle suite"
+    }
+  ],
+  "status": "done",
+  "owner_session": "t0136-c1-one-route-body-2026-09-10",
+  "claims": [
+    "src/lib/api-route.ts",
+    "src/app/api/",
+    "scripts/tooling/check-read-only-guards.mjs",
+    "scripts/tooling/line-census.mjs",
+    "scripts/tooling/line-census.baseline.json",
+    "org/plans/2026-09-consolidation.md",
+    "tests/unit/c1-one-route-body.test.ts",
+    "tests/unit/c0-the-line-census.test.ts"
+  ],
+  "programme": "C1 of org/plans/2026-09-consolidation.md; C2 (one type each) follows.",
+  "timestamps": {
+    "opened": "2026-09-10T05:10:00Z",
+    "updated": "2026-09-10T07:00:00Z",
+    "closed": "2026-09-10T07:00:00Z"
+  },
+  "invariants": [
+    "I1 ONE BODY. A handler that logs and answers 500 on a throw does it through route(); the try/catch shape with three literal strings exists in no route file.",
+    "I2 THE LOG KEEPS ITS WORDS. A name, a context or a sentence that reads the route's params is a function of them, resolved on the failure path; one that reads anything else keeps its own catch.",
+    "I3 THE SURFACE IS THE SAME. Every route exports the same methods (the canary's httpSurface), and the read-only guard gate counts every handler in both spellings.",
+    "I4 THE CENSUS HOLDS A RISE ONLY WITH A REASON. --update-baseline refuses to hold a rise without --allow-growth, and writes the reason beside the number."
+  ],
+  "commits": "bf235caa the C1 oracle, red at 5 of 5 and a suite without its subject; 8ee1e653 the wrapper, the codemod's result, the guard gate's second spelling, the census's reasoned re-cut; the chore commit that carries this record and the derived views.",
+  "verification": "Gate by exit code on the finished tree: lint 0, tsc 0, jest 0 (6872 tests, 677 suites), knip 0, canary 0, build 0, Playwright 0 (272 passed, 24 skipped, two projects), census 0, census:lines 0. The line census before and after: src 107123 to 106405 lines; routes with the try/catch body 82 to 13; repeated six-line windows in src 1416 to 1358; tests 121762 to 121926 (the oracle suite, held with its reason); files at the lib root 71 to 72 (api-route.ts, held with its reason until C7). 112 handlers in 76 route files export through the wrapper; the read-only guard gate counts them all in their new spelling. The canary's httpSurface read the same methods on every route: the wrapper changes the spelling of an export, not the surface.",
+  "mutation": "Four mutants against the committed tree (8ee1e653): the wrapper swallowing the error, logging under the wrong name, not awaiting the handler so a rejection escapes, and the guard gate losing the wrapped spelling. Four of four killed on the first pass.",
+  "deviation": "The plan's C1 said 'the two strings per site become the one name' and a target of 0 for routesWithTryCatch. The wrapper keeps three strings, because the log's context and the client's sentence are different sentences and the api-logger's contract (one call, one log line, one response) keeps both; and 13 route files keep their own catch, because their log names something the wrapper cannot see (a path resolved from the request, an action parsed from the body, an id from the query) or their catch does more than log. The plan's row is corrected to the measured 13 with that reason. The codemod's first pass put the wrapper's import inside a multi-line import's braces in seven files and hoisted request-derived names out of scope in thirty; both were found by tsc and eslint before any commit, the files restored from git and the codemod corrected to place the import by the AST and to convert only what the wrapper can name."
+}

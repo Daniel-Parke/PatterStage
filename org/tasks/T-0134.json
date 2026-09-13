@@ -1,0 +1,52 @@
+{
+  "id": "T-0134",
+  "intent": "U20, the review's P4 batch, each a line: the rail's version line truncated the commit at 224px; Research's Search, Depth and Breadth row left Breadth alone on a third row at 390; the Story Weaver title field alone was set in the reader's serif; the dashboard's Launch a Mission strip capped at twelve pills and was cut at the fold. The other two lines were the terminal's dots, which went with U19's toolbar move, and the Models drift banner's per-line Pull, which is T-0100's decision and stays.",
+  "declared": {
+    "capabilities": [
+      "edit-source",
+      "edit-tests",
+      "edit-docs"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {
+      "factor": "size-threshold",
+      "tier_floor": "R1",
+      "source": "derived:diff-size",
+      "evidence": "one footer line, one form row wrapper, one class removed, one constant exported and read in one place; no route, no schema, no protected path; one oracle suite new, one suite amended at the changed line, one guide and the CHANGELOG"
+    }
+  ],
+  "status": "done",
+  "owner_session": "t0134-u20-p4-2026-09-10",
+  "claims": [
+    "src/components/layout/RailFooter.tsx",
+    "src/app/work/research/page.tsx",
+    "src/app/recroom/story-weaver/create/page.tsx",
+    "src/lib/dashboard/dashboard-top-templates.ts",
+    "src/components/dashboard/DispatchStrip.tsx",
+    "tests/unit/u20-polish.test.tsx",
+    "tests/unit/dashboard-helpers-session-174.test.ts",
+    "docs/guides/dashboard.md",
+    "CHANGELOG.md"
+  ],
+  "programme": "U20, the review's P4 batch and the last of the review's follow-through; follows U19 (T-0133). The codebase consolidation programme follows.",
+  "timestamps": {
+    "opened": "2026-09-10T02:20:00Z",
+    "updated": "2026-09-10T03:20:00Z",
+    "closed": "2026-09-10T03:20:00Z"
+  },
+  "invariants": [
+    "I1 THE RAIL SAYS THE VERSION. The footer's line is `v<version>` alone; the commit is the line's tooltip and Settings › System's row.",
+    "I2 TWO NUMBERS PAIR ON A PHONE. Research's Search field takes the row below lg (col-span-2 lg:col-span-1), so Depth and Breadth share the next.",
+    "I3 A FIELD IS THE HOUSE REGISTER. No form field carries the reader's serif.",
+    "I4 THE STRIP IS ONE ROW. DASHBOARD_STRIP_CAP is six, exported once and read by topNTemplates' default and DispatchStrip's more-count."
+  ],
+  "commits": "b86f35c3 the U20 oracle, red at 4 of 4; 3a6f1057 the implementation; the chore commit that carries this record and the derived views.",
+  "verification": "Gate by exit code on the finished tree: lint 0, tsc 0, jest 0 (6860 tests, 675 suites), knip 0, canary 0, build 0, Playwright 0 (272 passed, 24 skipped, two projects), census 0; design-lint 350 baselined violations. The walk on the isolated instance, four routes at 1440x900 and 390x844 with a screenshot of each: the rail's version line reads \"v0.1.0\" and is not clipped; Research's Depth and Breadth labels sit at the same top at 390 (485px and 485px); the Story Weaver title field renders in inter; the dashboard strip shows 6 pills and \"+6 more\", its bottom at 929px on a 900px viewport. Screenshots regenerated.",
+  "mutation": "Six mutants against the committed tree (3a6f1057), each aimed at one decision: the commit back beside the version, the tooltip without it, Search sharing the row, the serif back, the cap back to twelve, and the strip's more-count reading its own number. Six of six killed on the first pass.",
+  "deviation": "The review listed six lines; four are here. The terminal's dots were removed in U19 (T-0133) with the toolbar move. The per-line Pull on the Models drift banner is not changed: T-0100 gave each drift line its own direction because one Sync Now ran a full re-import whichever way the drift pointed, and a single banner action would bring that back."
+}

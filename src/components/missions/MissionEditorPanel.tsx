@@ -11,13 +11,23 @@ import {
   Zap,
 } from "lucide-react";
 import { ChevronRight } from "lucide-react";
+import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
-import { timeAgo, titleCase } from "@/lib/utils";
-import type { MissionDetail, MissionRow } from "@/hooks/useMissionsPage";
+import Card from "@/components/ui/Card";
+import ConfirmButton from "@/components/ui/ConfirmButton";
+import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
+import RunProgress from "@/components/schedule/RunProgress";
+import ConceptHint from "@/components/help/ConceptHint";
+import { useApiResource } from "@/hooks/useApiResource";
+import { timeAgo, timeUntil } from "@/lib/utils";
+import { describeScheduleFiring } from "@/lib/missions/mission-schedule-view";
+import type { MissionDetail, MissionRow } from "@/hooks/missions-page-types";
 import {
   isMissionDraft,
   isMissionQueuedForRun,
-} from "@/lib/mission-board";
+} from "@/lib/missions/mission-board";
+import { describeMissionRunState } from "@/lib/missions/mission-run-state";
+import { RUN_TONE_TEXT } from "@/components/missions/mission-page-constants";
 
 export interface MissionEditorPanelProps {
   detail: MissionDetail | null;
@@ -31,6 +41,43 @@ export interface MissionEditorPanelProps {
   isCancelling?: boolean;
   onDelete: (id: string) => void;
   onDuplicate?: (m: MissionRow) => void;
+}
+
+/** The run id, or null while dispatch has not created one. */
+interface RunLookup {
+  runId: string | null;
+}
+
+/**
+ * The run streaming under a dispatched mission. This panel is its one caller,
+ * so it lives here (C6).
+ */
+function MissionLiveProgress({ missionId }: { missionId: string }) {
+  // Polls every two seconds until the run exists, then stops: the interval is
+  // a function of what was read (T-0129), which is what the raw useQuery did
+  // with its own state before every read went through the one hook.
+  const { data, error } = useApiResource<RunLookup>(`/api/missions/${missionId}/run`, {
+    select: (p) => ({ runId: (p as { run?: { id?: string } | null } | null)?.run?.id ?? null }),
+    errorMessage: "Could not read the mission's run",
+    refetchInterval: (value) => (value?.runId ? false : 2000),
+  });
+
+  if (error) {
+    return <LoadErrorBanner compact error={`Live run unavailable: ${error}`} />;
+  }
+
+  if (!data?.runId) return null;
+
+  return (
+    <div>
+      {/* Where the word "run" is actually met on this screen: one dispatch of
+          this mission, streaming underneath. */}
+      <div className="text-micro font-mono text-ps-text-muted uppercase mb-1">
+        Live <ConceptHint id="run">run</ConceptHint>
+      </div>
+      <RunProgress runId={data.runId} />
+    </div>
+  );
 }
 
 export default function MissionEditorPanel({
@@ -54,76 +101,86 @@ export default function MissionEditorPanel({
       // ignore
     }
   };
+
+  // The two destructive actions are ConfirmButtons: each instance owns its
+  // own armed state, so a stale arm on one row cannot fire on another, and
+  // neither is ever disabled BY being armed. That second half is the blocker
+  // this panel shipped: Cancel armed on the first click and disabled itself
+  // on the same predicate, so the confirming click could never land and a
+  // running mission could not be cancelled from the board (T-0096, D66).
+
+  // The run behind this mission. `detail.run` is the authoritative copy
+  // (fetched with the mission itself); the row's own copy is the fallback for
+  // the poll window before the detail request lands.
+  const run = detail?.run ?? mission.run ?? null;
+  /* eslint-disable-next-line react-hooks/purity -- a live duration reads the wall clock; the missions page repolls every 15s, which is what advances it */
+  const runState = describeMissionRunState({ ...(detail?.mission ?? mission), run }, Date.now());
+
   return (
-    <div className="border-t border-white/10 px-3 py-3 bg-dark-800/30">
+    <div className="border-t border-ps-edge-hairline px-3 py-3 bg-ps-surface-raised">
       {detailLoading ? (
         <div className="flex items-center justify-center py-4">
           <Loader2 className="w-4 h-4 text-neon-cyan animate-spin" />
         </div>
       ) : detail ? (
         <div className="space-y-3">
-          <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[10px] font-mono">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-micro font-mono">
             <div className="flex justify-between">
-              <span className="text-white/30">Agent</span>
-              <span className="text-white/70 truncate ml-2 text-right">
+              <span className="text-ps-text-muted">Agent</span>
+              <span className="text-ps-text-secondary truncate ml-2 text-right">
                 {detail.mission.profileName || detail.mission.profileId || "—"}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-white/30">Model</span>
-              <span className="text-white/70 truncate ml-2 text-right">
+              <span className="text-ps-text-muted">Model</span>
+              <span className="text-ps-text-secondary truncate ml-2 text-right">
                 {detail.mission.modelId || detail.mission.model || "—"}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-white/30">Provider</span>
-              <span className="text-white/70 truncate ml-2 text-right">
+              <span className="text-ps-text-muted">Provider</span>
+              <span className="text-ps-text-secondary truncate ml-2 text-right">
                 {detail.mission.provider || "—"}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-white/30">Scope</span>
-              <span className="text-white/70 ml-2 text-right">
+              <span className="text-ps-text-muted">Scope</span>
+              <span className="text-ps-text-secondary ml-2 text-right">
                 {detail.mission.missionTimeMinutes ? `${detail.mission.missionTimeMinutes}m` : "—"}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-white/30">Timeout</span>
-              <span className="text-white/70 ml-2 text-right">
+              <span className="text-ps-text-muted">Timeout</span>
+              <span className="text-ps-text-secondary ml-2 text-right">
                 {detail.mission.timeoutMinutes ? `${detail.mission.timeoutMinutes}m` : "—"}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-white/30">Elapsed</span>
-              <span className="text-white/70 ml-2 text-right">
-                {(() => {
-                  const created = new Date(detail.mission.createdAt).getTime();
-                  /* eslint-disable-next-line react-hooks/purity -- elapsed uses wall clock; list polls every 5s */
-                  const now = Date.now();
-                  const elapsed = Math.floor((now - created) / 1000);
-                  if (elapsed < 60) return `${elapsed}s`;
-                  if (elapsed < 3600) return `${Math.floor(elapsed / 60)}m ${elapsed % 60}s`;
-                  const h = Math.floor(elapsed / 3600);
-                  const m = Math.floor((elapsed % 3600) / 60);
-                  return `${h}h ${m}m`;
-                })()}
+              <span className="text-ps-text-muted">{runState.label}</span>
+              <span className={`ml-2 text-right ${RUN_TONE_TEXT[runState.tone]}`}>
+                {runState.duration}
               </span>
             </div>
             {categoryLabel && (
               <div className="flex justify-between">
-                <span className="text-white/30">Category</span>
-                <span className="text-white/70 ml-2 text-right">{categoryLabel}</span>
+                <span className="text-ps-text-muted">Category</span>
+                <span className="text-ps-text-secondary ml-2 text-right">{categoryLabel}</span>
               </div>
             )}
+            {/* Cadence, not Schedule: the card below is headed Schedule, and
+                two things by that name in one panel is what neither a reader
+                nor a test can tell apart (T-0104). */}
             <div className="flex justify-between">
-              <span className="text-white/30">Schedule</span>
-              <span className="text-white/70 truncate ml-2 text-right">
-                {detail.mission.schedule || "One-shot"}
+              <span className="text-ps-text-muted">Cadence</span>
+              <span className="text-ps-text-secondary truncate ml-2 text-right">
+                {detail.schedule
+                  ? detail.schedule.scheduleDisplay || detail.schedule.schedule
+                  : "One-shot"}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-white/30">Skills</span>
-              <span className="text-white/70 truncate ml-2 text-right">
+              <span className="text-ps-text-muted">Skills</span>
+              <span className="text-ps-text-secondary truncate ml-2 text-right">
                 {(detail.mission.skills?.length ?? 0) > 0
                   ? `${detail.mission.skills!.length} attached`
                   : "—"}
@@ -139,11 +196,11 @@ export default function MissionEditorPanel({
               }
               className="w-full flex items-center justify-between mb-1 hover:opacity-80 transition-opacity"
             >
-              <div className="text-[10px] font-mono text-white/30 uppercase flex items-center gap-1.5">
+              <div className="text-micro font-mono text-ps-text-muted uppercase flex items-center gap-1.5">
                 <Edit3 className="w-3 h-3" />
                 Full Template Details
               </div>
-              <div className="flex items-center gap-1 text-[10px] font-mono text-white/30">
+              <div className="flex items-center gap-1 text-micro font-mono text-ps-text-muted">
                 <span>
                   {promptCollapsed
                     ? "show"
@@ -157,30 +214,25 @@ export default function MissionEditorPanel({
             <div
               className={`overflow-hidden transition-all duration-200 ${promptCollapsed ? "max-h-20" : "max-h-none"}`}
             >
-              <div className="text-[10px] text-white/50 font-mono whitespace-pre-wrap bg-dark-900/50 rounded-lg p-2 border border-white/5">
+              <Card padding="none" className="p-2 text-micro text-ps-text-muted font-mono whitespace-pre-wrap">
                 {detail.mission.prompt}
-              </div>
+              </Card>
             </div>
           </div>
 
           {(detail.mission.goals?.length ?? 0) > 0 && (
             <div>
-              <div className="text-[10px] font-mono text-white/30 uppercase mb-1">
+              <div className="text-micro font-mono text-ps-text-muted uppercase mb-1">
                 Goals
               </div>
               <div className="flex flex-wrap gap-1">
                 {(detail.mission.goals ?? [])
                   .slice(0, 3)
                   .map((goal, i) => (
-                    <span
-                      key={i}
-                      className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-white/5 text-white/40 border border-white/5"
-                    >
-                      {goal}
-                    </span>
+                    <Badge key={i}>{goal}</Badge>
                   ))}
                 {(detail.mission.goals?.length ?? 0) > 3 && (
-                  <span className="text-[9px] font-mono text-white/25">
+                  <span className="text-micro font-mono text-ps-text-faint">
                     +
                     {(detail.mission.goals?.length ?? 0) - 3}
                     {" "}
@@ -191,84 +243,95 @@ export default function MissionEditorPanel({
             </div>
           )}
 
-          {detail.cronJob && (
-            <div className="rounded-lg border border-neon-orange/20 bg-dark-900/50 p-2">
+          {detail.schedule && (
+            <Card padding="none" className="p-2">
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-1">
                   <Zap className="w-3 h-3 text-neon-orange" />
-                  <span className="text-[10px] font-mono text-white/60">
-                    Cron Job
-                  </span>
+                  <span className="text-micro font-mono text-ps-text-secondary">Schedule</span>
                 </div>
+                {/* The old "view" link pointed at the Hermes cron surface, which
+                    is not where this schedule lives. It lives on this page. */}
                 <Link
-                  href={
-                    detail.cronJob.id
-                      ? `/orchestration/cron?highlight=${encodeURIComponent(detail.cronJob.id)}`
-                      : "/orchestration/cron"
-                  }
+                  href="#scheduled-missions"
                   onClick={(e) => e.stopPropagation()}
-                  className="text-[9px] font-mono text-neon-orange hover:underline flex items-center gap-0.5"
+                  className="text-micro font-mono text-neon-orange hover:underline flex items-center gap-0.5"
                 >
-                  view
+                  Edit schedule
                   {" "}
                   <ExternalLink className="w-2.5 h-2.5" />
                 </Link>
               </div>
-              <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-[9px] font-mono">
+              <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-micro font-mono">
                 <div className="flex justify-between">
-                  <span className="text-white/20">
-                    State
-                  </span>
-                  <span
-                    className={
-                      detail.cronJob.enabled
-                        ? "text-neon-green"
-                        : "text-white/40"
-                    }
-                  >
-                    {detail.cronJob.enabled
-                      ? titleCase(
-                          detail.cronJob.state,
-                        )
-                      : "Disabled"}
+                  <span className="text-ps-text-faint">Next</span>
+                  <span className="text-ps-text-muted">
+                    {detail.schedule.nextRunAt ? timeUntil(detail.schedule.nextRunAt) : "None"}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-white/20">
-                    Last
-                  </span>
-                  <span className="text-white/50">
-                    {detail.cronJob.lastRun
-                      ? timeAgo(
-                          detail.cronJob.lastRun,
-                        )
-                      : "Never"}
+                  <span className="text-ps-text-faint">Last</span>
+                  <span className="text-ps-text-muted">
+                    {detail.schedule.lastRunAt ? timeAgo(detail.schedule.lastRunAt) : "Never"}
                   </span>
                 </div>
               </div>
+              {detail.schedule.lastStatus && (
+                <p className="mt-1 text-micro font-mono text-ps-text-muted">
+                  Last result: {detail.schedule.lastStatus}
+                </p>
+              )}
+              {/* Scheduled and going to happen are not the same thing. */}
+              {describeScheduleFiring(detail.schedule) && (
+                <p className="mt-1 text-body text-status-warn">
+                  {describeScheduleFiring(detail.schedule)}
+                </p>
+              )}
+            </Card>
+          )}
+
+          {/* The timing note is the "is it stuck" answer: how long is left
+              before the reconciler stops waiting, or that it is already past
+              that point. Rendered only while there is something to say. */}
+          {runState.note && (
+            <div
+              className={`rounded-ps-md border px-2 py-1.5 text-micro font-mono ${
+                runState.tone === "overdue"
+                  ? "border-neon-orange/30 bg-neon-orange/5 text-neon-orange"
+                  : "border-ps-edge-hairline bg-ps-surface-panel text-ps-text-muted"
+              }`}
+            >
+              {runState.note}
             </div>
           )}
 
-          {detail.mission.results && (
+          {mission.status === "dispatched" && (
+            <MissionLiveProgress missionId={mission.id} />
+          )}
+
+          {detail.mission.result && (
             <div>
-              <div className="text-[10px] font-mono text-white/30 uppercase mb-1">
-                Results
+              <div className="text-micro font-mono text-ps-text-muted uppercase mb-1">
+                Result
               </div>
-              <div className="text-[10px] text-white/50 font-mono whitespace-pre-wrap bg-dark-900/50 rounded-lg p-2 border border-white/5 max-h-16 overflow-y-auto">
-                {detail.mission.results}
-              </div>
+              <Card padding="none" className="p-2 text-micro text-ps-text-secondary font-mono whitespace-pre-wrap max-h-40 overflow-y-auto">
+                {detail.mission.result}
+              </Card>
             </div>
           )}
 
-          {detail.mission.error && (
-            <div className="rounded-lg bg-red-500/5 border border-red-500/10 p-2">
-              <div className="text-[10px] font-mono text-red-400 uppercase mb-0.5">
-                Error
+          {/* The backend's own failure text. It has always been stored on the
+              run row and never shown: the panel read `mission.error`, a field
+              no route sets, so a failed mission explained nothing. */}
+          {run?.error && (
+            <Card padding="none" className="p-2">
+              <div className="text-micro font-mono text-status-fail uppercase mb-0.5">
+                Run error
               </div>
-              <div className="text-[10px] font-mono text-red-400/60">
-                {detail.mission.error}
+              <div className="text-micro font-mono text-ps-text-secondary whitespace-pre-wrap break-words">
+                {run.error}
               </div>
-            </div>
+            </Card>
           )}
 
           <div className="flex flex-wrap gap-1.5 pt-1">
@@ -283,6 +346,18 @@ export default function MissionEditorPanel({
               >
                 Duplicate
               </Button>
+            )}
+            {/* Everything this mission produced. The mirror of
+                mission-deep-link.ts, which is how a session row opens its
+                parent mission (T-0104, D69). */}
+            {mission.sessionId && (
+              <Link
+                href={`/results/sessions?missionId=${encodeURIComponent(mission.id)}`}
+                onClick={(e) => e.stopPropagation()}
+                className="inline-flex items-center gap-1 rounded-ps-md border border-ps-edge-hairline px-2.5 py-1.5 text-micro font-mono text-ps-text-secondary hover:border-ps-edge-emphasis hover:text-ps-text-primary transition-colors"
+              >
+                View sessions
+              </Link>
             )}
             {isMissionDraft(mission) ? (
               <Button
@@ -305,12 +380,12 @@ export default function MissionEditorPanel({
               </Button>
             )}
             {(mission.status === "dispatched" || isMissionQueuedForRun(mission)) && (
-              <Button
+              <ConfirmButton
                 variant="danger"
                 size="sm"
                 loading={isCancelling}
-                disabled={isCancelling}
-                onClick={() => onCancel(mission.id)}
+                onConfirm={() => onCancel(mission.id)}
+                confirmLabel="Confirm?"
               >
                 {!isCancelling ? <StopCircle className="w-3 h-3" /> : null}
                 {isCancelling
@@ -318,21 +393,26 @@ export default function MissionEditorPanel({
                   : mission.status === "dispatched"
                     ? "Cancel"
                     : "Remove from queue"}
-              </Button>
+              </ConfirmButton>
             )}
-            <Button
+            <ConfirmButton
               variant="ghost"
               size="sm"
-              onClick={() =>
-                onDelete(mission.id)
+              aria-label="Delete mission"
+              onConfirm={() => onDelete(mission.id)}
+              armedClassName="ring-1 ring-neon-red/60 bg-neon-red/10 text-neon-red"
+              confirmLabel={
+                <>
+                  <Trash2 className="w-3 h-3" /> Confirm?
+                </>
               }
             >
               <Trash2 className="w-3 h-3" />
-            </Button>
+            </ConfirmButton>
           </div>
         </div>
       ) : (
-        <div className="text-[10px] text-white/30 text-center py-3">
+        <div className="text-body text-ps-text-muted text-center py-3">
           Failed to load details
         </div>
       )}

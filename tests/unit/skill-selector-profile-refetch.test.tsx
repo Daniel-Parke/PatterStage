@@ -1,9 +1,11 @@
 /** @jest-environment jsdom */
 
-import { render, waitFor } from "@testing-library/react";
-import SkillSelector from "@/components/ui/SkillSelector";
+import { waitFor } from "@testing-library/react";
+import { renderWithQuery } from "../helpers/render-with-query";
+// The Selector became a Picker in missions/ (U11, T-0125): one caller, one shape.
+import SkillsPicker from "@/components/missions/SkillsPicker";
 
-describe("SkillSelector profile refetch", () => {
+describe("SkillsPicker profile refetch", () => {
   beforeEach(() => {
     global.fetch = jest.fn((url: string | Request) => {
       const u = typeof url === "string" ? url : url.toString();
@@ -38,8 +40,8 @@ describe("SkillSelector profile refetch", () => {
   });
 
   it("refetches when profileId changes without opening dropdown", async () => {
-    const { rerender } = render(
-      <SkillSelector value={[]} onChange={() => {}} profileId="alpha" max={10} />,
+    const { rerender } = renderWithQuery(
+      <SkillsPicker value={[]} onChange={() => {}} profileId="alpha" max={10} />,
     );
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
@@ -48,7 +50,7 @@ describe("SkillSelector profile refetch", () => {
       );
     });
 
-    rerender(<SkillSelector value={[]} onChange={() => {}} profileId="beta" max={10} />);
+    rerender(<SkillsPicker value={[]} onChange={() => {}} profileId="beta" max={10} />);
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining("profile=beta"),

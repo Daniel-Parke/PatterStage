@@ -1,0 +1,8 @@
+-- 026_composer_group_link.sql — nest a Composer run inside a group node (v26)
+--
+-- A "group" node runs a referenced sub-workflow as a nested ComposerRun.
+-- composer_runs.parent_node_run_id links that child run back to the group
+-- node-run that spawned it, so the engine can settle the group stage when the
+-- child run finishes (and so the cycle guard can walk the ancestor chain). The
+-- column is added via the guarded ALTER in apply-composer-group-link-migration.ts
+-- (this file is a no-op marker).

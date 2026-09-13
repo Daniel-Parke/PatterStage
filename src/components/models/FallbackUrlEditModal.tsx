@@ -1,6 +1,9 @@
 "use client";
 
-import type { FallbackChainEntry } from "@/types/hermes";
+import Button from "@/components/ui/Button";
+import Dialog from "@/components/ui/Dialog";
+import { Field, Input } from "@/components/ui/field";
+import type { FallbackChainEntry } from "@/types/console";
 
 interface FallbackUrlEditModalProps {
   entry: FallbackChainEntry | null;
@@ -11,6 +14,14 @@ interface FallbackUrlEditModalProps {
   onSave: () => void | Promise<void>;
 }
 
+/**
+ * The override base URL for one fallback entry.
+ *
+ * Was a hand-rolled overlay: its own backdrop, panel, header and footer,
+ * and two raw buttons. It is a Dialog now (T-0125), which is where the
+ * contract it already kept - Escape, the Tab trap, focus returned (T-0096,
+ * D116) - has always lived.
+ */
 export default function FallbackUrlEditModal({
   entry,
   url,
@@ -19,60 +30,34 @@ export default function FallbackUrlEditModal({
   onClose,
   onSave,
 }: FallbackUrlEditModalProps) {
-  if (!entry) return null;
-
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
-      onClick={onClose}
-      role="presentation"
-    >
-      <div
-        className="w-full max-w-md bg-dark-900 border border-white/10 rounded-xl overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="fallback-url-edit-title"
-      >
-        <div className="px-4 py-3 border-b border-white/10">
-          <h3 id="fallback-url-edit-title" className="text-sm font-semibold text-white">
-            Edit override Base URL: {entry.modelName}
-          </h3>
-        </div>
-        <div className="p-4">
-          <label className="block text-[10px] font-mono text-white/40 uppercase mb-1.5">
-            Override Base URL
-          </label>
-          <input
-            type="text"
-            value={url}
-            onChange={(e) => onUrlChange(e.target.value)}
-            placeholder="https://api.openai.com/v1"
-            className="w-full bg-dark-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white font-mono outline-none focus:border-neon-purple/50 transition-colors"
-            autoFocus
-          />
-          <p className="text-[10px] text-white/30 font-mono mt-1.5">
-            Leave empty to use the model&apos;s default base URL
-          </p>
-        </div>
-        <div className="flex items-center justify-end gap-2 px-4 py-3 border-t border-white/10">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-3 py-1.5 text-xs font-mono text-white/50 hover:text-white rounded-lg hover:bg-white/5 transition-colors"
-          >
+    <Dialog
+      open={entry !== null}
+      onClose={onClose}
+      title={entry ? `Edit override base URL: ${entry.modelName}` : "Edit override base URL"}
+      size="sm"
+      footer={
+        <>
+          <Button variant="ghost" size="sm" onClick={onClose}>
             Cancel
-          </button>
-          <button
-            type="button"
-            onClick={() => void onSave()}
-            disabled={saving}
-            className="px-3 py-1.5 text-xs font-mono bg-neon-purple/20 text-neon-purple rounded-lg hover:bg-neon-purple/30 transition-colors disabled:opacity-50"
-          >
-            {saving ? "Saving..." : "Save"}
-          </button>
-        </div>
-      </div>
-    </div>
+          </Button>
+          <Button variant="primary" color="purple" size="sm" loading={saving} onClick={() => void onSave()}>
+            Save
+          </Button>
+        </>
+      }
+    >
+      <Field label="Override base URL" hint="Leave empty to use the model's default base URL" htmlFor="fallback-url-edit-input">
+        <Input
+          id="fallback-url-edit-input"
+          type="text"
+          value={url}
+          onChange={(e) => onUrlChange(e.target.value)}
+          placeholder="https://api.openai.com/v1"
+          className="font-mono"
+          autoFocus
+        />
+      </Field>
+    </Dialog>
   );
 }

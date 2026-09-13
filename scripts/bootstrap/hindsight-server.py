@@ -30,18 +30,28 @@ def main():
                     api_key = line.split("=", 1)[1].strip().strip('"').strip("'")
                     break
 
+    # Connection details are env-overridable so the same script works against a
+    # local Postgres, a Dockerized DB, or a custom LLM endpoint/model.
+    db_url = os.environ.get(
+        "HINDSIGHT_DB_URL",
+        "postgresql://hindsight_user:hindsight_local@localhost:5432/hindsight_db",
+    )
+    llm_base_url = os.environ.get("HINDSIGHT_LLM_BASE_URL", "http://localhost:8642/v1")
+    llm_model = os.environ.get("HINDSIGHT_LLM_MODEL", "xiaomi/mimo-v2-pro")
+    port = int(os.environ.get("HINDSIGHT_PORT", "9177"))
+
     print("Starting Hindsight server...")
-    print(f"  DB: PostgreSQL @ localhost:5432/hindsight_db")
-    print(f"  LLM: Nous (xiaomi/mimo-v2-pro) via gateway API")
+    print(f"  DB: {db_url}")
+    print(f"  LLM: {llm_model} via {llm_base_url}")
 
     server = start_server(
-        db_url="postgresql://hindsight_user:hindsight_local@localhost:5432/hindsight_db",
-        llm_provider="openai",
+        db_url=db_url,
+        llm_provider=os.environ.get("HINDSIGHT_LLM_PROVIDER", "openai"),
         llm_api_key=api_key,
-        llm_model="xiaomi/mimo-v2-pro",
-        llm_base_url="http://localhost:8642/v1",
+        llm_model=llm_model,
+        llm_base_url=llm_base_url,
         host="127.0.0.1",
-        port=9177,
+        port=port,
         log_level="info",
         timeout=120,
     )

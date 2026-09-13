@@ -1,5 +1,5 @@
 // Unit tests for the parseOptionalJsonBody helper
-// (src/lib/parse-optional-json-body.ts).
+// (src/lib/api/parse-optional-json-body.ts).
 //
 // parseOptionalJsonBody is the SIBLING of parseJsonBody. It returns
 // `Record<string, unknown>` on success, OR `{}` when the body is missing,
@@ -12,7 +12,7 @@
 // 400 on parse failure; parseOptionalJsonBody silently coerces to `{}`.
 // Do NOT use parseOptionalJsonBody for routes that REQUIRE a body.
 
-import { parseOptionalJsonBody } from "@/lib/parse-optional-json-body";
+import { parseOptionalJsonBody } from "@/lib/api/parse-optional-json-body";
 
 // Minimal NextRequest-like object — only `.json()` is invoked by the
 // helper, and we never need any NextResponse behaviour (the helper

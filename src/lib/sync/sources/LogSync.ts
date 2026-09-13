@@ -18,10 +18,12 @@ import { createReadStream, statSync } from "fs";
 import { access, constants } from "fs/promises";
 import { join } from "path";
 import { createInterface } from "readline";
-import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
-import { db, now } from "@/lib/db";
-import { logApiError } from "@/lib/api-logger";
+import { getAgentWorkspace } from "@/lib/runtime/workspace";
+import { now } from "@/lib/db";
+import { insertErrorLogEntries, pruneErrorLogEntries } from "@/lib/sync/sync-repository";
+import { logApiError } from "@/lib/api/api-logger";
 import type { SyncSource, SyncResult } from "@/lib/sync/types";
+import { syncFailure, syncSuccess } from "@/lib/sync/types";
 
 /** Extract timestamp from a log line. Returns empty string if no match. */
 function extractTimestamp(line: string): string {
@@ -31,11 +33,25 @@ function extractTimestamp(line: string): string {
   return match ? match[1] : "";
 }
 
-/** Determine severity from a log line. */
-function detectSeverity(line: string): string {
-  if (/\bCRITICAL\b/i.test(line)) return "critical";
-  if (/\bERROR\b/i.test(line)) return "error";
-  if (/\bWARN(?:ING)?\b/i.test(line)) return "warning";
+/** Determine severity from a log line.
+ *
+ * The log LEVEL is a prefix field, so whichever level keyword appears FIRST in
+ * the line wins — a "WARNING … (payment error)" line is a WARNING, not an
+ * ERROR (the body text mentioning "error" must not upgrade it). The old version
+ * tested ERROR before WARNING regardless of position, flooding the Errors panel
+ * with red chips for transient provider WARNINGs. */
+export function detectSeverity(line: string): string {
+  const firstIndex = (re: RegExp): number => {
+    const m = re.exec(line);
+    return m ? m.index : Infinity;
+  };
+  const crit = firstIndex(/\bCRITICAL\b/i);
+  const err = firstIndex(/\bERROR\b/i);
+  const warn = firstIndex(/\bWARN(?:ING)?\b/i);
+  const earliest = Math.min(crit, err, warn);
+  if (earliest === Infinity) return "error"; // collected via "failed" with no explicit level
+  if (earliest === crit) return "critical";
+  if (earliest === warn) return "warning";
   return "error";
 }
 
@@ -95,7 +111,7 @@ export class LogSync implements SyncSource {
   async sync(): Promise<SyncResult> {
     const start = performance.now();
     try {
-      const H = getActiveHermesPaths();
+      const H = getAgentWorkspace();
       const logDir = H.logs;
 
       // Read from both gateway.log and errors.log in parallel — each
@@ -121,12 +137,7 @@ export class LogSync implements SyncSource {
       const allEntries = [...gatewayEntries, ...agentEntries];
 
       if (allEntries.length === 0) {
-        return {
-          sourceName: this.name,
-          success: true,
-          syncedCount: 0,
-          durationMs: Math.round(performance.now() - start),
-        };
+        return syncSuccess(this.name, 0, start);
       }
 
       // Deduplicate: use (source + timestamp + first 80 chars of message) as dedup key
@@ -139,43 +150,15 @@ export class LogSync implements SyncSource {
       });
 
       const ingestedAt = now();
-      const database = db();
-      const insert = database.prepare(
-        `INSERT INTO error_log_entries (source, message, timestamp, severity, ingested_at)
-         VALUES (?, ?, ?, ?, ?)`
-      );
-
-      const tx = database.transaction(() => {
-        for (const entry of uniqueEntries) {
-          insert.run(entry.source, entry.message, entry.timestamp, entry.severity, ingestedAt);
-        }
-      });
-      tx();
+      insertErrorLogEntries(uniqueEntries, ingestedAt);
 
       // Prune old entries — keep only the most recent 500
-      database
-        .prepare(
-          `DELETE FROM error_log_entries WHERE id NOT IN (
-            SELECT id FROM error_log_entries ORDER BY timestamp DESC LIMIT 500
-          )`
-        )
-        .run();
+      pruneErrorLogEntries();
 
-      return {
-        sourceName: this.name,
-        success: true,
-        syncedCount: uniqueEntries.length,
-        durationMs: Math.round(performance.now() - start),
-      };
+      return syncSuccess(this.name, uniqueEntries.length, start);
     } catch (err) {
       logApiError("LogSync", "syncing error logs", err);
-      return {
-        sourceName: this.name,
-        success: false,
-        syncedCount: 0,
-        error: String(err),
-        durationMs: Math.round(performance.now() - start),
-      };
+      return syncFailure(this.name, err, start);
     }
   }
 }

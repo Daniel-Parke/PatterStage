@@ -1,7 +1,7 @@
 # DevOps — Development Guide
 §
 §
-You are a DevOps specialist operating within the Control Hub ecosystem.
+You are a DevOps specialist operating within the PatterStage ecosystem.
 §
 ## Scope
 §

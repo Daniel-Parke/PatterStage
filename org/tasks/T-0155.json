@@ -1,0 +1,49 @@
+{
+  "id": "T-0155",
+  "intent": "K7, Phase 1: the recon the plan waits on. The 2026-09-11 codebase review was read-only by rule, and it says so eleven times: its evidence file carries eleven separate 'Not examined' lists. Some of what it could not do is measurement that needs a command run (npm audit and outdated, licences against NOTICE, a gitleaks history scan, bundle size per route, whether a script-src CSP can work with Next's inline scripts, playwright --list, fresh coverage, knip widened, the Docker image's contents, whether next build needs a database, the repository's own branch-protection settings). The rest is reading it did not reach: SQLite dead data at column rather than table level, the eleven large pages, the 93 unclassified source-text suites, rec-room's client reads, the LOCKBOOK rulings against the code, a cycle check by a real tool rather than a regex. Phase 2's plan sets its targets from these numbers, and the operator approves that plan, so a number that is a guess here becomes a target nobody can hit or a target already met.",
+  "declared": {
+    "capabilities": [
+      "read-only",
+      "run-measurements"
+    ],
+    "side_effects": [
+      "next build and the jest/playwright runs write their usual gitignored output (.next, coverage, test-results); nothing else is written outside org/reviews/"
+    ]
+  },
+  "mode": "exploration",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {
+      "factor": "read-only-investigation",
+      "tier_floor": "R1",
+      "source": "org/policy.json, mode:exploration",
+      "evidence": "the batch produces one document under org/reviews/ and changes no product code, no gate and no configuration. Its risk is not to the tree but to the plan that reads it: a wrong number here is a target the operator approves."
+    }
+  ],
+  "status": "done",
+  "owner_session": "t0155-k7-recon-2026-09-12",
+  "claims": [
+    "org/reviews/2026-09-refactor-recon.md",
+    "org/tasks/T-0155.json"
+  ],
+  "programme": "K7 of the refactor and clean-up programme, and the whole of Phase 1. Phase 0 closed at T-0154 with every job green on a0983620. Phase 2 (the plan) reads this document and the committed census baselines; the operator approves that plan before any Phase 3 batch starts.",
+  "timestamps": {
+    "opened": "2026-09-12T18:00:00Z",
+    "updated": "2026-09-13T11:30:00Z",
+    "closed": "2026-09-13T11:30:00Z"
+  },
+  "invariants": [
+    "I1 EVERY CLAIM CARRIES A COMMAND OR A file:line. A recon whose numbers cannot be re-derived is a recon that has to be redone. Where a number is an estimate, it says so and says what it rests on.",
+    "I2 A SCEPTIC DEFAULTS TO REFUTED. Each dimension is checked by a session that did not gather it and that is told to refute; a finding that cannot be independently reproduced does not enter the document as a fact.",
+    "I3 THE GATES ARE THE ONES K6 FIXED. Every measurement is taken with the gates as they now stand, and the document says so: the old review's numbers for routesWithTryCatch, raw controls, the link gate's scope and scripts/ were taken through instruments that could not see, and this recon supersedes them wherever a number moved.",
+    "I4 NOTHING IS INSTALLED OR CHANGED TO GET A NUMBER. gitleaks is not installed without the operator's say-so, no config is widened to make knip report more, and no gate is loosened to let a measurement through. Where a measurement needs something the batch may not do, the document records what is needed and why it was not taken.",
+    "I5 THE DOCUMENT SUPERSEDES, IT DOES NOT REPLACE. It says which of the review's numbers moved and by how much, so the register's rulings can be re-read against the truth rather than quietly re-based."
+  ],
+  "rollback": "The batch adds one document under org/reviews/ and touches nothing else, so a revert is deleting a file. The measurements write only the gitignored build, coverage and test-results output the gate already writes.",
+  "commits": "60882f0c the record opens; ef495096 T-0156 and T-0157 raised out of band; 8496ee9f T-0158; the commit that carries org/reviews/2026-09-refactor-recon.md and this record.",
+  "verification": "Two read-only workflows, 293 agents. Eleven dimensions, then seven more over what the first left open; a sceptic per finding told to default to refuted; a completeness critic per pass whose only job was to adjudicate the review's eleven 'Not examined' lists item by item. 232 findings survived a sceptic across the two passes; 41 were refuted.\n\nTHE HONEST COMPLETION FIGURE. The eleven lists hold 107 discrete items — a number neither the review nor this record's own intent ever stated. Across both passes: 33 closed, 34 partial, 31 open, 9 not worth closing. Ten of the 31 block Phase 2 and twenty-one do not, and the recon names which. The first pass's critic reported 49/27/24/7 and that count cannot be checked, because until the document existed there was no artefact — the output lived in a workflow result in a temp directory. That is the clearest argument the batch produced for why the document is the deliverable and not the findings.\n\nMEASURED BY HAND, not taken from an agent, because each drives an action: npm audit's 15 vulnerabilities and next pinned at 16.2.9; the repository's four disabled security toggles on a public repo; /help answering 200 at the index and 500 on every guide, with the RSC error in the server log naming ChevronLeft; NextRequest.nextUrl.protocol reporting http: under both x-forwarded-proto and Forwarded; main's protection carrying zero required checks with enforce_admins false; and the nine-step gate, clean tree, nothing else running, all green with durations, which is the per-step baseline Phase 2 writes its Verify lines against and which did not exist before this batch.",
+  "review": "The completeness critics ARE the review for an exploration batch, and the second one is worth reading in full. Its verdict was that Phase 1 is not finished, and its reason was not the unread code: 'the combined output contradicts itself on the numbers Phase 2 would plan against, and in every case the wrong number is the one in the dimension's own summary — the sentence that reaches the document.' It verified six against the tree: the zod import count, an ADR line count, a suite population compared against a different population, the K-block spend stated six ways, a consolidation row reported as missed that was met, and a gate baseline reported green whose only artefact on disk recorded a red build.\n\nThat last one was re-run by hand and both were true at different moments: the red build was two agents building concurrently, despite the workflow being written to give each heavy command a single owner and to separate the passes with a barrier. The table in the document was taken afterwards, alone, and is the one to plan against.\n\nThe critic also caught a trap that would have reached the plan intact: one dimension recommends populating main's required-check set including acceptance-gate, and another establishes that acceptance-gate is failing today. Requiring it with enforce_admins on makes main unmergeable including for the operator. Both recommendations were in the output and whichever reached the document would have decided it.",
+  "mutation": "None, and not applicable: the batch adds one document under org/reviews/ and changes no code, no gate and no configuration, so there is nothing a mutant could break. The sceptic-per-finding pass is this batch's equivalent, and it did the same job — 41 of 273 findings were refuted by a session that tried to reproduce them and could not.",
+  "deviation": "Four.\n\nTHE DIMENSION LIST WAS BUILT FROM THE WRONG SOURCE, and it is the batch's central error. The eleven dimensions were derived from this record's own intent — seventeen named targets — rather than from the review's eleven lists. So three of the review's dimensions had no counterpart at all: cross-cutting, org and lib-domains. Eleven of the still-open items live in those three and they are not the cheap ones. A second pass was run to cover them, which is why this batch is two workflows and not one.\n\nTHE RECON REPEATED THE DEFECT IT CRITICISED. It faulted the review for measurement scripts that lived only in a scratchpad, then produced several of its own figures the same way. Where a number in the document cannot be re-derived from a committed command it is marked as such.\n\nTHIS RECORD CARRIED AN INVALID STATUS while it was auditing the corpus. `in-progress` with a hyphen is the only one of its spelling in 158 records; the corpus uses done, proposed, active, discarded, in_progress, blocked and in-review. Corrected on close. The corpus's own inconsistency between `active` (2) and `in_progress` (1) is left alone, because normalising it would edit closed records, which needs an ADR — it belongs to the org hygiene batch.\n\nTHREE RECORDS WERE RAISED OUT OF BAND rather than folded into the recon: T-0156 (the Help 500s), T-0157 (the critical CVE and the disabled repository security settings) and T-0158 (the session cookie). A recon is supposed to produce a document, not records; these three were raised anyway because two of them are live defects on a branch that installs track, and burying them in a Phase 1 deliverable the operator reads after Phase 2 would have been the wrong call."
+}

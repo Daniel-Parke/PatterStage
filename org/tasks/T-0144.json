@@ -1,0 +1,51 @@
+{
+  "id": "T-0144",
+  "intent": "C7 of the consolidation programme: the lib root. Seventy-one files sat directly under src/lib beside thirty domain directories, so `@/lib/thing` told a reader nothing about which part of the product `thing` belonged to. Sixty-five move into their domains by codemod with every import rewritten; the ones that stay each say in their own header why they belong to no domain.",
+  "declared": {
+    "capabilities": [
+      "edit-source",
+      "edit-tests"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [
+    {
+      "factor": "size-threshold",
+      "tier_floor": "R2",
+      "source": "derived:diff-size",
+      "evidence": "a pure move touching 784 files by import rewrite; no behaviour changes, held by the whole suite unchanged, tsc, knip and the canary's path-insensitive module graph"
+    }
+  ],
+  "status": "done",
+  "owner_session": "t0144-c7-the-lib-root-2026-09-11",
+  "claims": [
+    "src/lib/",
+    "scripts/tooling/lib-moves.json",
+    "tests/unit/c7-the-lib-root.test.ts",
+    "tests/",
+    "scripts/",
+    "docs/contributing/repo-guide.md",
+    "scripts/tooling/line-census.baseline.json",
+    "org/plans/2026-09-consolidation.md",
+    "org/HANDOVER.md"
+  ],
+  "programme": "C7 of org/plans/2026-09-consolidation.md; C8 (closing, T-0145) follows.",
+  "timestamps": {
+    "opened": "2026-09-11T10:00:00Z",
+    "updated": "2026-09-11T14:00:00Z",
+    "closed": "2026-09-11T14:00:00Z"
+  },
+  "invariants": [
+    "I1 THE ROOT IS ONLY WHAT HAS NO DOMAIN. Six files remain under src/lib, against the plan's line of twelve, and each states in its own header why it is not in a domain.",
+    "I2 A MOVE IS NOT A REWRITE. No file's contents changed but its import lines and the six headers; the whole suite passes unchanged, tsc resolves every import, knip finds nothing unresolved, and the canary's module graph is path-insensitive so the move is neutral to it.",
+    "I3 EVERY SPELLING IS REWRITTEN. No source, test, script or doc names a moved file by any of the five spellings a path takes: the alias, the written path, join() segments, a relative import from outside src/lib, and the alias escaped inside a regex literal. The oracle reads all five.",
+    "I4 db-schema STAYS OUTSIDE src/lib/db/. Its own header records the reason: the global @/lib/db mock would otherwise intercept it inside the migration tests, and the schema constant it exports would read as undefined there."
+  ],
+  "commits": "63bbc937 the C7 oracle, red at 6 of 9; cdf95b10 the move; a05ceaa1 the sharpened header check the sweep asked for; the chore commit that carries this record and the derived views.",
+  "verification": "Gate by exit code on the finished tree: lint 0, tsc 0, jest 0 (6902 tests, 683 suites), knip 0, canary 0, build 0, Playwright 0 (272 passed, 24 skipped, 0 failed, two projects), census 0, census:lines 0. libRootFiles 71 to 6, against the plan's line of 12: 65 files into 15 domains (agents, api, chat, config, deploy, host, logs, models, runs, schedule, scripts, skills, system, templates, ui), six left. src 100872 to 100894 and tests 121422 to 121546, both recorded in the baseline with their reason (the six headers, and the oracle). The whole diff: 784 files changed, 1997 insertions(+), 1936 deletions(-).",
+  "mutation": "Three mutants against the committed tree. The first run killed two and left a survivor worth having: cutting the marker off a root file's header still passed, because the words the check looked for survived in ordinary prose underneath. The check was sharpened to want the marker AND the reason, committed on its own (a05ceaa1), and the re-run killed all three: a root file that stops saying why it is at the root, a suite that reads a moved file by join() segments, and a suite that matches one by an escaped regex path.",
+  "deviation": "The move is one codemod (scratchpad c7/codemod.py) over a table the oracle also reads, scripts/tooling/lib-moves.json, so the test and the tool cannot disagree about what moved. Four more passes followed, each written after something broke rather than predicted: the join() segments a suite passes to readFileSync, the relative imports scripts/ and tests/e2e/ use because the alias does not reach them, the alias escaped inside a regex literal, and one path alternation that no script can rewrite and that had already made a not.toMatch pass vacuously. Two files at the repo root, next.config.ts and playwright.config.ts, were outside every scan directory and were fixed by hand. The plan asked for eight new domains; fifteen were used, because putting a repository beside its subject is what the plan's own rule asks for and several subjects had no folder yet."
+}

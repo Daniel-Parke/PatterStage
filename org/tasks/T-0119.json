@@ -1,0 +1,58 @@
+{
+  "id": "T-0119",
+  "intent": "U5 of the UI overhaul programme: five type steps, and a register that says what a word IS. @theme declared no --text-* at all until U2, so the product used Tailwind's default scale as if it had two steps: text-xs 921 times and text-sm 247, against 35 uses of everything larger combined. Rendered, 2,226 of 3,173 text nodes were 12px and 1,897 of those were JetBrains Mono. A console in which seven words in ten are a 12px machine label has no hierarchy left to spend, and the first thing that suffers is the prose.",
+  "declared": {
+    "capabilities": [
+      "edit-source",
+      "edit-tooling",
+      "edit-tests",
+      "edit-docs"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {
+      "factor": "size-threshold",
+      "tier_floor": "R1",
+      "source": "derived:diff-size",
+      "evidence": "202 component files re-typed by codemod, one new theme constant, the census tooling and one doc; no protected path, no schema, no route, no behaviour"
+    }
+  ],
+  "status": "done",
+  "owner_session": "t0119-u5-the-type-scale-2026-09-07",
+  "claims": [
+    "src/",
+    "tests/e2e/design-census.spec.ts",
+    "tests/e2e/lib/census-analysis.ts",
+    "scripts/tooling/design-lint.baseline.json",
+    "scripts/tooling/design-census.baseline.json",
+    "tests/unit/",
+    "docs/contributing/design-tokens.md"
+  ],
+  "programme": "U5, depends on U4. Every screen conversion from U9 onward sets type, so the scale is consumed before any of them.",
+  "timestamps": {
+    "opened": "2026-09-07T22:00:00Z",
+    "updated": "2026-09-08T02:00:00Z",
+    "closed": "2026-09-08T02:00:00Z"
+  },
+  "invariants": [
+    "I1 THE REGISTER IS THE DECISION, NOT THE SIZE. Mono keeps machine words - values, IDs, paths, timestamps, status words, counts, commands - and they stay at micro, 12px, because a fixed-width column of values is what makes a console readable. Inter takes prose, and prose starts at body. The two questions are one question: a value is mono and micro; a sentence is Inter and at least body.",
+    "I2 THE SPLIT IS DECIDED BY THE LINE, NOT BY THE NUMBER. `text-xs` is 921 sites and the spelling says nothing about what the thing is; 630 of them carry font-mono, uppercase or tabular-nums beside it and 291 carry none of the three. The oracle refuses a rename in disguise: a `text-micro` with no machine marker is prose still at 12px.",
+    "I3 EVERY STEP HAS CALL SITES. Five steps with a step nobody can spell is four steps and a name the next grep deletes, so each of the five is asserted to be reachable.",
+    "I4 A SECTION HEADING IS ONE TREATMENT, AND IT OWNS ONLY TYPOGRAPHY. Where the heading sits and what sits beside it stays with the call site: the first attempt replaced the whole className and stacked an icon above its own words.",
+    "I5 THE BASELINE HAS A PAWL IN BOTH DIRECTIONS. A number that rises is recorded with a written reason, in the file, beside the numbers."
+  ],
+  "commits": "56618efb the oracle, red at 10 of 12; 0475d789 the codemod, the section heading and the census pawl; the pawl's unit oracle; and this record.",
+  "verification": "Gate by exit code on the swept tree: lint 0, tsc 0, jest 0 (6366 tests, 624 suites), knip 0, canary 0, build 0, Playwright 163 passed and 26 skipped, census 0. Walked on the isolated instance and screenshots recaptured.",
+  "the_measurement": "twelvePxShare 0.70 -> 0.56. design-lint 2561 -> 1216, with type-scale-only 1186 -> 0 and no-raw-text-alpha 159 -> 0; both are hard now. 1,384 substitutions across 202 files: 630 text-xs to micro, 290 to body, 246 text-sm to body, 135 bare text-white to the primary tier, 23 white-alpha icon tints to the declared idle-glyph token, 23 placeholders to the muted tier, and 32 headings onto one constant.",
+  "the_target_was_not_met": "The plan asked for 12px at or below 45% and five distinct rendered sizes. It reads 56% and seven. The remaining 12px is the 630 genuine machine words, which are supposed to be 12px; what is left to move is the mono share, and that is a REGISTER change rather than a size one - a status word set in Inter at 14px would count against neither number. The two sizes over five are 13px, from one editor's own font-size prop, and 18px, from an svg-embedded label the type scale cannot reach; both are viz internals and are U10's, which is the batch that rewrites the chart chrome. Recorded rather than claimed: this batch moved the number 14 points and did not finish.",
+  "mutation": "8 mutants against the committed tree, two rounds. Round one: 5 killed, 1 survived, 2 not applied. The two not applied were the sweep doing its job: their anchor's first occurrence was inside ModelsSectionHeader's own doc comment, which illustrates the chrome it renders, so the mutant would have edited prose and counted as killed for the wrong reason. The survivor was a stale target - the pawl's decision had moved out of the Playwright spec and into census-analysis by then, which is where a sweep can reach it at all. Round two: 8 of 8.",
+  "deviation": "(1) The plan said 157 text-white/N and placeholder-white/N sites; there are 47. The reconnaissance's 157 counted other alpha families with them. (2) The plan said the 17 prose blocks at 1.33 leading move onto `lead`; they did, by construction rather than by edit, because a step carries its own line height and body is 14/21. (3) A blanket h2 unification was not done. A dialog's title and an empty state's heading are not section headings, and giving all thirty the micro-caps treatment would have made the product worse to satisfy a count; 32 h2 and h3 elements that were already reaching for micro-caps adopt the constant, and the rest keep `title`.",
+  "found_by_the_tooling_failing": "Three regex faults in one batch, all the same shape: a pattern that matched more than the thing it named. `[^\"]*` matches a newline, so the heading codemod ran from a doc comment's illustrative className down to a closing quote several lines later and rewrote the comment, `//` and all. `^import [^\\n]*\\n` matches the OPENING line of a multi-line import, so inserting after it landed inside the brace list and broke the file. And the first heading pass replaced the whole className, taking `flex items-center gap-2` with the typography. Each was caught by tsc or by a test rather than by review, which is the argument for running both after every pass rather than at the end.",
+  "harness_amendments": "census:update grew a pawl. It used to overwrite the baseline with whatever it had just measured: no comparison, no reason, and the `allowed` field the baseline's own type declares had never once been written, so the check path refused a regression and the update path accepted every one. It now refuses a rewrite that grows unless CENSUS_ALLOW_GROWTH gives a reason of more than a word, records that reason in the file beside the numbers, and stops throwing the note away - the note had been deleted twice in two batches by a template. The decision is a pure function in census-analysis rather than in the spec, because the spec is Playwright and a mutation sweep cannot run it. Two test-file `sites()` helpers gained the block-comment mask design-lint got in U4, for the identical reason: globals.css documents both the ladder and the tiers inside comments whose interior lines carry no marker.",
+  "the_growth_recorded": "Four numbers rose and are in the baseline's `allowed` with the reason. decorativeBordersBelowThree +37 is the 32 section headings gaining the hairline rule that makes a heading read as one: the hairline is 1.63:1 by construction and clears the 1.55 floor the live gate holds, while this metric's floor is 3:1, which the ladder deliberately does not meet for a card outline. The metric therefore punishes doing the right thing and should be re-cut in U16. distinctButtonHeights +7, and the two chrome counts with it because a chrome key carries its height, is button labels rising from 12px to 14px in a product that has no button height scale at all: every height is whatever its label makes it. The Button primitive's three fixed heights are U8's.",
+  "deferred": "Accent and status colour, radius, z and shadow are U6. The mono share, which is the other half of the 12px number, needs the status words to stop being mono, and that is the status ladder in U6. The 13px and 18px sizes are inside viz components and are U10. Button heights are U8."
+}

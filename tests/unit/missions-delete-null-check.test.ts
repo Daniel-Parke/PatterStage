@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
 /** @jest-environment node */
+/* eslint-disable @typescript-eslint/no-require-imports */
 
 /**
  * Tests for POST /api/missions delete action.
@@ -8,76 +8,27 @@
  * This test suite documents current behavior.
  */
 
-jest.mock("next/server", () => {
-  // NextResponse as a real class so `bodyResult instanceof NextResponse`
-  // (used by parseJsonBody's callsite) works. See session-37 findings.
-  const responses: Array<{ data: unknown; init?: ResponseInit }> = [];
-  class NextResponse {
-    ok: boolean;
-    status: number;
-    statusText: string;
-    headers: Headers;
-    private _data: unknown;
-    constructor(data: unknown = null, init?: ResponseInit) {
-      this._data = data;
-      this.status = init?.status ?? 200;
-      this.ok = this.status >= 200 && this.status < 300;
-      this.statusText = this.status === 404 ? "Not Found" : "OK";
-      this.headers = new Headers(init?.headers as HeadersInit);
-    }
-    json() { return Promise.resolve(this._data); }
-    static json(data: unknown, init?: ResponseInit) {
-      responses.push({ data, init });
-      return new NextResponse(data, init);
-    }
-  }
-  return {
-    NextRequest: class NextRequest {
-      url: string;
-      method: string;
-      headers: Headers;
-      bodyUsed: boolean = false;
-      private _body: string;
-      constructor(url: string, init?: RequestInit) {
-        this.url = url;
-        this.method = init?.method ?? "GET";
-        this.headers = new Headers(init?.headers as HeadersInit);
-        this._body = typeof init?.body === "string" ? init.body : JSON.stringify(init?.body ?? {});
-      }
-      async json() { return JSON.parse(this._body); }
-    },
-    NextResponse,
-    __responses: responses,
-  };
-});
+import type { NextRequest } from "next/server";
+jest.mock("next/server", () => require("../helpers/mocks").nextServerMock());
 
-jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
+jest.mock("@/lib/api/api-logger", () => ({ logApiError: jest.fn() }));
 
-jest.mock("@/lib/api-auth", () => ({
-  requireAuth: jest.fn(() => null),
-  requireAuth: jest.fn(() => null),
-  isChReadOnly: jest.fn(() => false),
+jest.mock("@/lib/api/api-auth", () => ({
+  isReadOnly: jest.fn(() => false),
 }));
-jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
+jest.mock("@/lib/api/audit-log", () => ({ appendAuditLine: jest.fn() }));
 
-jest.mock("@/lib/backends", () => ({
-  agentBackend: {
-    dispatchMission: jest.fn(),
-    pauseMission: jest.fn(),
-    resumeMission: jest.fn(),
-    cancelMission: jest.fn(),
-    getMissionStatus: jest.fn(),
-  },
+jest.mock("@/lib/orchestration", () => ({
+  cancelMissionRun: jest.fn(() => Promise.resolve({ ok: true })),
+  dispatchMissionRun: jest.fn(() => Promise.resolve({ ok: true })),
 }));
 
-jest.mock("@/lib/mission-cron-sync", () => ({
-  enrichMissionCron: jest.fn((m: unknown) => m),
-  syncMissionToCronJob: jest.fn(),
-  pauseMissionCron: jest.fn(),
-  deleteMissionCron: jest.fn(),
+jest.mock("@/lib/schedule/schedules-repository", () => ({
+  createSchedule: jest.fn(),
+  deleteSchedulesForMission: jest.fn(),
 }));
 
-jest.mock("@/lib/mission-repository", () => {
+jest.mock("@/lib/missions/mission-repository", () => {
   const getMission = jest.fn();
   const deleteMission = jest.fn();
 
@@ -93,7 +44,7 @@ jest.mock("@/lib/mission-repository", () => {
   };
 });
 
-const repo = require("@/lib/mission-repository") as Record<string, jest.Mock>;
+const repo = require("@/lib/missions/mission-repository") as Record<string, jest.Mock>;
 const mockDeleteMission = repo.__deleteMission;
 const mockGetMission = repo.__getMission;
 
@@ -113,7 +64,7 @@ async function postRoute(body: Record<string, unknown>) {
     headers: new Headers({ "content-type": "application/json" }),
     body: JSON.stringify(body),
     json: async () => body,
-  } as unknown as Request;
+  } as unknown as NextRequest;
   return route.POST(req) as unknown as { status: number; json(): Promise<Record<string, unknown>> };
 }
 

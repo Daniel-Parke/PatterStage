@@ -1,0 +1,447 @@
+// ═══════════════════════════════════════════════════════════════
+// Chat Page — server-persisted agent chat.
+//
+// Conversations are backed by the server (mapped to Hermes sessions). In
+// "Agent" mode a turn is a real run (tools + memory) streamed from the
+// run-event SSE; in "Fast" mode it's a raw model reply. The stateful core
+// lives in useChatPage; this file is the render shell.
+//
+// The three pieces of chrome this screen alone draws live here (C6,
+// T-0143): the mode toggle in the header, the approval prompt above the
+// composer, and the typing indicator in the transcript. Each was a file of
+// its own with one importer, which is a seam with nothing on the other side.
+// ═══════════════════════════════════════════════════════════════
+
+"use client";
+
+import { useEffect } from "react";
+import { MessageCircle, Send, Plus, X, Download, Square, Check, ShieldQuestion, Bot, Zap } from "lucide-react";
+import AppPageShell from "@/components/layout/AppPageShell";
+import PageHeader from "@/components/layout/PageHeader";
+import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
+import IconButton from "@/components/ui/IconButton";
+import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
+import SplitPane from "@/components/ui/SplitPane";
+import { inputFieldClasses } from "@/lib/ui/theme";
+import { timeAgo } from "@/lib/utils";
+import GatewayBanner from "@/components/chat/GatewayBanner";
+import MessageAvatar from "@/components/chat/MessageAvatar";
+import MessageBubble from "@/components/chat/MessageBubble";
+import { ChatModelSelector } from "@/components/chat/ChatModelSelector";
+import ConceptHint from "@/components/help/ConceptHint";
+import { useChatPage } from "@/hooks/useChatPage";
+import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
+import type { ChatMode } from "@/types/chat";
+
+// ── The mode toggle ────────────────────────────────────────────
+//   Agent → a real run (tools + memory, streamed run events).
+//   Fast  → a raw model completion (no tools), straight from the gateway.
+//
+// Two Buttons, not a SegmentedControl: the toggle is disabled while a turn
+// streams, and the radiogroup primitive carries no disabled state.
+
+const MODES: { value: ChatMode; label: string; Icon: typeof Bot; title: string }[] = [
+  { value: "agent", label: "Agent", Icon: Bot, title: "Tools + memory, via a real agent run" },
+  { value: "fast", label: "Fast", Icon: Zap, title: "Raw model reply, no tools" },
+];
+
+function ChatModeToggle({
+  mode,
+  onChange,
+  disabled,
+}: {
+  mode: ChatMode;
+  onChange: (mode: ChatMode) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <div className="flex items-center gap-1">
+      {MODES.map((m) => {
+        const active = m.value === mode;
+        return (
+          <Button
+            key={m.value}
+            variant={active ? "primary" : "ghost"}
+            color="cyan"
+            size="sm"
+            icon={m.Icon}
+            aria-pressed={active}
+            onClick={() => onChange(m.value)}
+            disabled={disabled}
+            title={m.title}
+          >
+            {m.label}
+          </Button>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── The approval prompt ────────────────────────────────────────
+// HITL gate for a tool the agent wants to run. Shown above the composer when
+// a run emits an approval-required event; Approve/Deny forwards to
+// runtime.resolveApproval via the chat API.
+
+function ApprovalPrompt({
+  toolName,
+  onApprove,
+  onDeny,
+}: {
+  toolName: string;
+  onApprove: () => void;
+  onDeny: () => void;
+}) {
+  return (
+    <Card variant="raised" glow="yellow" padding="none" className="mb-3 flex flex-wrap items-center gap-3 px-4 py-2.5">
+      <ShieldQuestion className="h-4 w-4 text-neon-yellow shrink-0" />
+      <span className="text-body text-ps-text-secondary">
+        The agent wants to run <span className="font-mono text-neon-yellow">{toolName}</span>. Allow it?
+      </span>
+      <div className="ml-auto flex items-center gap-2">
+        <Button variant="secondary" size="sm" onClick={onDeny}>
+          Deny
+        </Button>
+        <Button variant="primary" color="green" size="sm" onClick={onApprove}>
+          Approve
+        </Button>
+      </div>
+    </Card>
+  );
+}
+
+// ── The typing indicator ───────────────────────────────────────
+// The avatar is the same chip MessageBubble draws (MessageAvatar), so the two
+// cannot drift. The three-dot bounce is an in-flight indicator rendered
+// outside the messages map, not a message.
+
+function TypingIndicator() {
+  return (
+    <div className="flex gap-3 justify-start">
+      <MessageAvatar role="assistant" />
+      <Card variant="raised" padding="none" className="max-w-[70%] px-4 py-3">
+        <div className="flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 bg-ps-text-faint rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+          <span className="w-1.5 h-1.5 bg-ps-text-faint rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+          <span className="w-1.5 h-1.5 bg-ps-text-faint rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+export default function ChatPage() {
+  const {
+    toastElement,
+    model,
+    handleModelChange,
+    registryModelIds,
+    modelLabels,
+    modelsLoading,
+    modelsError,
+    mode,
+    handleModeChange,
+    conversations,
+    activeConversation,
+    activeId,
+    hasActiveConversation,
+    handleSelectConversation,
+    handleNewChat,
+    handleDeleteConversation,
+    handleDownloadConversation,
+    conversationsError,
+    reloadConversations,
+    conversationError,
+    reloadActiveConversation,
+    gatewayUrl,
+    gatewayOnline,
+    modelDetail,
+    bannerStates,
+    messages,
+    isStreaming,
+    pendingApproval,
+    handleApproval,
+    messagesEndRef,
+    inputRef,
+    input,
+    setInput,
+    handleKeyDown,
+    handleSend,
+    handleRetry,
+    handleStop,
+  } = useChatPage();
+
+  // Two-step confirm for the per-conversation delete (destructive — AGENTS.md
+  // requires a confirmation). First click arms; second click within 3s deletes.
+  const deleteConfirm = useTwoStepConfirm({ autoDismissMs: 3000 });
+
+  // The toast stack rests above the composer on this screen, not over it: a
+  // toast at the foot of the viewport covered the box the operator was typing
+  // in (the review of 2026-09-08, T-0132). Toast reads the variable; it is
+  // set only while this screen is mounted.
+  useEffect(() => {
+    document.documentElement.style.setProperty("--ps-toast-lift", "5rem");
+    return () => {
+      document.documentElement.style.removeProperty("--ps-toast-lift");
+    };
+  }, []);
+
+  const gatewayOffline = gatewayOnline === false;
+  const lastMessage = messages[messages.length - 1];
+  const showTyping =
+    isStreaming && lastMessage?.role === "assistant" && !lastMessage.content && !lastMessage.reasoning;
+
+  return (
+    <AppPageShell density="pane"
+      className="flex flex-col h-full min-h-0"
+      header={
+        <PageHeader
+          icon={MessageCircle}
+          title="Chat"
+          subtitle="Talk to your Hermes agent — tools, memory, live runs"
+          color="cyan"
+          actions={
+            <div className="flex items-center gap-2">
+              <ChatModeToggle mode={mode} onChange={handleModeChange} disabled={isStreaming} />
+              {mode === "fast" && (
+                <ChatModelSelector
+                  model={model}
+                  onChange={handleModelChange}
+                  registryModelIds={registryModelIds}
+                  modelLabels={modelLabels}
+                  modelsLoading={modelsLoading}
+                  modelsError={modelsError}
+                />
+              )}
+              <Button variant="secondary" color="cyan" size="sm" icon={Plus} onClick={() => void handleNewChat()}>
+                New Chat
+              </Button>
+            </div>
+          }
+        />
+      }
+    >
+      {/* The list of conversations is the aside; the transcript and the
+          composer are the pane. From lg they are two columns; on a phone the
+          list is behind a "Conversations (n)" button and closes when one is
+          chosen, and the transcript has the width it did not have when the
+          240px column stayed (the review of 2026-09-08, T-0131). */}
+      <SplitPane
+        fill
+        asideLabel={`Conversations (${conversations.length})`}
+        asideWidth="lg:w-60"
+        asideClassName="border-r border-ps-edge-hairline bg-ps-surface-raised"
+        closeOnChange={activeId}
+        aside={
+          <>
+            {/* The column's own heading, from lg; below lg the sheet's title
+                is the same words. */}
+            <div className="hidden px-3 py-2 border-b border-ps-edge lg:flex items-center justify-between">
+              <span className="text-micro font-mono text-ps-text-muted uppercase tracking-wider">
+                Conversations ({conversations.length})
+              </span>
+            </div>
+            <div className="flex-1 overflow-y-auto min-h-0">
+              {conversations.map((c) => (
+                // The row is a CONTAINER, and the three controls inside it are
+                // siblings. It used to be a <button> wrapping all three, with
+                // the "as CSV" one nested three deep — invalid HTML, which the
+                // browser recovers from by hoisting the inner controls out of
+                // the outer button. The rendered tree then stops matching the
+                // source: click targets, focus order and accessible names all
+                // move somewhere the markup does not show, and a keyboard or
+                // screen-reader user cannot reach them at all (T-0071).
+                <div
+                  key={c.id}
+                  className={`w-full px-3 py-2 border-b border-ps-edge transition-colors hover:bg-ps-surface-raised group relative ${
+                    c.id === activeId ? "bg-ps-surface-raised border-l-2 border-l-neon-cyan" : ""
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-1">
+                    <button
+                      type="button"
+                      onClick={() => handleSelectConversation(c.id)}
+                      className="min-w-0 flex-1 text-left"
+                      title={c.title}
+                      aria-current={c.id === activeId ? "true" : undefined}
+                    >
+                      <div className="text-body text-ps-text-secondary truncate font-medium">{c.title}</div>
+                      <div className="text-micro text-ps-text-muted mt-0.5 font-mono">{timeAgo(c.updatedAt)}</div>
+                    </button>
+                    <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity shrink-0">
+                      <div className="relative group/download">
+                        <button
+                          onClick={(e) => void handleDownloadConversation(c, "json", e)}
+                          className="w-7 h-7 flex items-center justify-center rounded-ps-sm hover:bg-neon-cyan/20 hover:text-neon-cyan text-ps-text-muted"
+                          title="Download as JSON"
+                        >
+                          <Download className="w-4 h-4" />
+                        </button>
+                        {/* focus-within as well as hover: gated on hover alone,
+                            the CSV option was unreachable by keyboard and by
+                            touch — you could Tab to the JSON button and the
+                            second format never appeared (D52). A dropdown's
+                            rung, because that is what it is. */}
+                        <div className="absolute right-0 top-full mt-0.5 hidden group-hover/download:block group-focus-within/download:block z-dropdown">
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            className="whitespace-nowrap shadow-lg"
+                            onClick={(e) => void handleDownloadConversation(c, "csv", e)}
+                          >
+                            as CSV
+                          </Button>
+                        </div>
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          if (!deleteConfirm.isArmedFor(c.id)) deleteConfirm.arm(c.id);
+                          else void deleteConfirm.confirm(() => handleDeleteConversation(c.id));
+                        }}
+                        className={`w-7 h-7 flex items-center justify-center rounded-ps-sm text-ps-text-muted ${
+                          deleteConfirm.isArmedFor(c.id)
+                            ? "bg-neon-red/20 text-neon-red"
+                            : "hover:bg-neon-red/20 hover:text-neon-red"
+                        }`}
+                        title={deleteConfirm.isArmedFor(c.id) ? "Click again to confirm delete" : "Delete conversation"}
+                      >
+                        {deleteConfirm.isArmedFor(c.id) ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {/* The read contract (T-0096): a failed list read is this, with
+                  a Retry, and never "No conversations yet" under it. */}
+              {conversationsError && (
+                <div className="p-2">
+                  <LoadErrorBanner
+                    compact
+                    error={conversationsError}
+                    onRetry={() => void reloadConversations()}
+                    className="mb-0"
+                  />
+                </div>
+              )}
+              {conversations.length === 0 && !conversationsError && (
+                <div className="p-3 text-body text-ps-text-faint italic">No conversations yet</div>
+              )}
+            </div>
+          </>
+        }
+      >
+            <div className="flex-1 overflow-y-auto scroll-smooth px-4 py-4 space-y-4 lg:px-6">
+              {bannerStates.map((state) => (
+                <GatewayBanner
+                  key={state}
+                  status={state}
+                  gatewayUrl={gatewayUrl}
+                  modelDetail={modelDetail}
+                />
+              ))}
+              {/* The read contract again, one level in: a transcript that would
+                  not load is this, with a Retry, and never the "start a
+                  conversation" empty state — which reads as "this conversation
+                  has no turns" and is a different, false claim (D49). */}
+              {conversationError ? (
+                <LoadErrorBanner
+                  error={conversationError}
+                  onRetry={() => void reloadActiveConversation()}
+                />
+              ) : messages.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-center py-24">
+                  <Card variant="raised" padding="none" className="w-16 h-16 flex items-center justify-center mb-4">
+                    <MessageCircle className="w-8 h-8 text-ps-text-muted" />
+                  </Card>
+                  {/* h2, not h3. PageHeader renders the page's only h1, and this
+                      empty-state title is the next level down — a jump to h3
+                      tells a screen-reader user there is a section they missed
+                      (P0-3, found by a keyboard/heading-order pass). The size is
+                      a class, not the tag. */}
+                  <h2 className="text-title font-semibold text-ps-text-secondary mb-1">
+                    {hasActiveConversation ? activeConversation?.title || "New Chat" : "Chat with your agent"}
+                  </h2>
+                  <p className="text-body text-ps-text-muted mb-2 max-w-md">
+                    {mode === "agent" ? (
+                      <>
+                        <ConceptHint id="agent">Agent</ConceptHint> mode: the assistant can use tools
+                        and remembers this conversation.
+                      </>
+                    ) : (
+                      "Fast mode: a quick raw-model reply with no tools."
+                    )}
+                  </p>
+                  {/* The two words this screen is built on, where a first-time
+                      operator meets them: the box they are about to type in,
+                      and the thing that answers. */}
+                  <p className="text-body text-ps-text-faint max-w-md">
+                    Your message is the <ConceptHint id="prompt">prompt</ConceptHint>.
+                  </p>
+                </div>
+              ) : (
+                messages.map((msg) => (
+                  <MessageBubble key={msg.id} msg={msg} onRetry={() => void handleRetry(msg.id)} />
+                ))
+              )}
+
+              {showTyping && <TypingIndicator />}
+
+              <div ref={messagesEndRef} />
+            </div>
+
+            {/* Composer */}
+            <div className="border-t border-ps-edge-hairline px-4 py-4 lg:px-6">
+              {pendingApproval && (
+                <ApprovalPrompt
+                  toolName={pendingApproval.toolName}
+                  onApprove={() => void handleApproval(true)}
+                  onDeny={() => void handleApproval(false)}
+                />
+              )}
+              <div className="flex items-end gap-2">
+                {/* design-lint-disable-next-line no-raw-control-outside-ui -- the hook focuses this box through inputRef after a send and a new chat, and the field kit's Textarea forwards no ref; the day it does, this is a Textarea */}
+                <textarea aria-label="Message"
+                  ref={inputRef}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  // Disabled with the reason where the words would go, rather
+                  // than accepting a message and toasting that it cannot be
+                  // sent (T-0132). The banner above says the same in full.
+                  disabled={gatewayOnline === false}
+                  placeholder={
+                    gatewayOffline
+                      ? "The gateway is offline. Start it with: hermes gateway start"
+                      : isStreaming
+                        ? "Streaming… press Stop to interrupt"
+                        : "Type a message… (Enter to send, Shift+Enter for newline)"
+                  }
+                  rows={1}
+                  // The kit's own chrome, from the one place it is spelled.
+                  className={`${inputFieldClasses("cyan")} flex-1 resize-none`}
+                  style={{ minHeight: "42px", maxHeight: "120px" }}
+                  onInput={(e) => {
+                    const ta = e.target as HTMLTextAreaElement;
+                    ta.style.height = "auto";
+                    ta.style.height = Math.min(ta.scrollHeight, 120) + "px";
+                  }}
+                />
+                <IconButton
+                  icon={isStreaming ? Square : Send}
+                  label={isStreaming ? "Stop" : "Send"}
+                  variant="primary"
+                  color={isStreaming ? "red" : "cyan"}
+                  size="lg"
+                  onClick={isStreaming ? () => void handleStop() : () => void handleSend()}
+                  disabled={(!input.trim() && !isStreaming) || gatewayOffline}
+                />
+              </div>
+            </div>
+      </SplitPane>
+      {toastElement}
+    </AppPageShell>
+  );
+}

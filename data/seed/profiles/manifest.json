@@ -42,6 +42,13 @@
       "description": "Triage, customer impact, and clear operator guidance",
       "personality": "friendly",
       "seedKey": "ch.prof.support"
+    },
+    {
+      "slug": "baseline",
+      "displayName": "Baseline",
+      "description": "Clean reference agent (no skills/tools/memory) for fair benchmarking",
+      "personality": "technical",
+      "seedKey": "ch.prof.baseline"
     }
   ]
 }

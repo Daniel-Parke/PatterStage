@@ -1,0 +1,47 @@
+{
+  "id": "T-0060",
+  "intent": "Two write paths destroyed the file they had just failed to read. PUT /api/config merged into the {} that readCachedConfig returns on a YAML parse error and wrote the result over the operator's config.yaml, answering 200. The paused-hardware-cron sidecar did the same with an empty Set, silently un-pausing every job the operator had paused. Reported as S1 by the 2026-08-30 QA pass for the config half; the cron half was found here by sweeping for the class.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0060-write-paths-2026-08-30",
+  "claims": [
+    "src/app/api/config/route.ts",
+    "src/lib/hardware-cron-handlers/",
+    "tests/"
+  ],
+  "invariants": [
+    "I1 A write refuses when the file it must merge into did not parse. Asserted behaviourally against the route, and empirically against a real server: HTTP 409 and a byte-identical file, md5 unchanged.",
+    "I2 The refusal names the fault with line and column, and the backup path. An operator who cannot find the backup has lost the data in every sense that matters.",
+    "I3 The refusal carries the FIRST LINE of the js-yaml message only. The rest quotes the offending lines of config.yaml, and this route masks api_key on the way out for exactly that reason.",
+    "I4 The READ paths keep degrading. GET /api/config still returns {} and the cron list still lists jobs. A read that refuses to read strands the operator on the one page that would let them repair the file.",
+    "I5 Absent is not corrupt. A missing sidecar means nothing was ever paused and must keep working.",
+    "I6 A refusal touches nothing first. delete.ts's read is hoisted above writeCrontab, or refusing would leave the crontab rewritten and then answer 409."
+  ],
+  "oracle_provenance": "Two files committed alone at 4bceb462 ahead of the implementation at cde379f8. Measured against dev@ac398c5a: config-put-refuses-unparseable-yaml 8 red / 2 green, hardware-cron-disabled-state-corrupt 5 red / 2 green. The greens are load-bearing controls, not filler: the backup-ordering pin, and the two that stop the fix being implemented as 'throw from the reader'.",
+  "verification": "Six mutations against the committed implementation, tree confirmed clean after each. Restoring the degrading read turns 8 red; removing the refusal's return turns 7 red; leaking the whole yaml message turns 1 red; degrading a corrupt sidecar turns 1 red; un-hoisting delete.ts's read turns 1 red; treating ENOENT as corruption turns 1 red. Also proved end to end against a real server on a TEMP Hermes home: PUT into a malformed config answered 409, the file was byte-identical afterwards (73 bytes, md5 ca2ba4ca unchanged), model.default survived, and the backup held the original. Gate: lint 0, tsc 0, 3234 tests / 384 suites, knip 0, canary 0, build 0.",
+  "mutation_finding": "One mutation appeared to SURVIVE and had in fact never been applied: the bash-inside-python quoting mangled the pattern it was meant to match, so it silently changed nothing and the test looked inadequate. This is the same failure as the guards this round is about, one level up: a mutation that matches nothing is a mutation that proves nothing. Mutation scripts now assert the pattern was found before writing. Re-applied correctly, it turns the anti-leak test red.",
+  "severity_corrected": "The report called this S1 and unrecoverable, on the grounds that 'a timestamped backup of the DESTROYED content lands in paths.backups'. That is wrong in the operator's favour: backupFile at route.ts:113 copies the file twenty lines before the write, so the backup holds the ORIGINAL. Verified by md5 against a real run. Recoverable-but-silent, not unrecoverable.",
+  "why_it_survived_a_round": "T-0054 concluded 'the write path refuses to clobber the file, SO THIS IS A REPORTING GAP RATHER THAN A DATA-LOSS RISK'. That sentence is the whole reason this shipped. A real defence exists in config-sync.ts:69-80 and T-0054 observed it working, then generalised it to 'the write path', singular. PUT /api/config was never tested against a malformed file. I then carried the claim into the QA brief as a do-not-file, where it told the next tester not to look. They looked anyway.",
+  "no_abstraction": "Two instances share no type and no recovery: one parses YAML and must hand back a backup path, the other parses JSON and has no backup. api-response.ts's own header sets the Rule of Three and the repo has applied it before. What is shared is the shape and the vocabulary, not a helper.",
+  "rollback": "Revert cde379f8. The oracles at 4bceb462 then go red again.",
+  "deferred": [
+    "The defence in config-sync.ts:69-80 now has its first tests, and only ONE of the three is refusal-sensitive: mutating the refusal into a degrade turns the byte-identical test red and leaves the other two green, because the happy path returns { backupPath } too. Recorded rather than papered over.",
+    "Every failed PUT now mints another .bak and nothing prunes <root>/backups/. Bounded by operator retries rather than by a timer, and it predates this defect, but it is real.",
+    "ConfigSync.ts, which sets the config.yaml_error stat the dashboard alert renders, still has no test at all. The operator's only ambient signal that the file is broken is itself uncovered.",
+    "finalizeRootConfigOnDisk copies a malformed config.yaml into agent_root.config_yaml even after syncDefaultsToHermesConfig has refused to write it."
+  ],
+  "timestamps": {
+    "opened": "2026-08-30T14:00:00Z",
+    "updated": "2026-08-30T16:00:00Z",
+    "closed": "2026-08-30T16:00:00Z"
+  }
+}

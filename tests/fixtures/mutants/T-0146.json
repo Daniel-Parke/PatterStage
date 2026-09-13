@@ -1,0 +1,38 @@
+{
+  "task": "T-0146",
+  "why": "K0 promises four things about the register. Each mutant breaks one of them and the oracle must go red.",
+  "mutants": [
+    {
+      "id": "m1-a-finding-loses-its-entry",
+      "file": "org/reviews/2026-09-decision-register.md",
+      "anchor": "#### critic-02 · ",
+      "replacement": "#### critic-XX · ",
+      "tests": ["tests/unit/k0-the-register-is-complete.test.ts"],
+      "why": "an OP finding with no disposition must be caught, or the register can silently drop one"
+    },
+    {
+      "id": "m2-an-entry-loses-its-ruling",
+      "file": "org/reviews/2026-09-decision-register.md",
+      "anchor": "- **Ruling:** Split: ADR ratifies protected, restore history, as recommended",
+      "replacement": "- **Not ruled yet:** Split: ADR ratifies protected, restore history, as recommended",
+      "tests": ["tests/unit/k0-the-register-is-complete.test.ts"],
+      "why": "an entry with no ruling line must be caught, or an unruled item reads as settled"
+    },
+    {
+      "id": "m3-a-question-leaves-the-queue",
+      "file": "org/QUESTIONS.md",
+      "anchor": "- Q-016 (product): how far does product structure converge?",
+      "replacement": "- Q-916 (product): how far does product structure converge?",
+      "tests": ["tests/unit/k0-the-register-is-complete.test.ts"],
+      "why": "a register question the repository's own queue does not carry must be caught"
+    },
+    {
+      "id": "m4-a-folded-question-loses-its-answer",
+      "file": "org/QUESTIONS.md",
+      "anchor": "may a closed oracle be amended? Folded 2026-09-12. Answer, from the",
+      "replacement": "may a closed oracle be amended? Folded 2026-09-12. Decided by the",
+      "tests": ["tests/unit/k0-the-register-is-complete.test.ts"],
+      "why": "a folded question with no answer under it must be caught, or the queue records a decision nobody can read"
+    }
+  ]
+}

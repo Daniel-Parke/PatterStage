@@ -1,23 +1,70 @@
-// Story Weaver — Create Story V3 (creative workshop: themes, characters, story details)
+// Story Weaver — Create
+//
+// The setup form for a story, and since decision 6 (T-0126) the home of the
+// two libraries it draws on. Characters and Themes were pages of their own:
+// lists this page already read (to load a theme, to import a character) and
+// already wrote (Save to Library, Save as theme), each with an editor the form
+// could not reach without leaving. They are panels here now, with anchors the
+// old addresses redirect to, and each row's editor is a dialog. Importing a
+// character went from "From Library, then pick in a modal" to one click on
+// the row.
+//
+// Everything still posts to /api/stories with an `action` field. The library
+// reads are the read contract's: a failed list is an error with Retry inside
+// its panel, never an empty shelf.
 "use client";
-import { useState, useCallback, useEffect, Suspense } from "react";
+
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Sparkles, Plus, X, Save, FolderOpen, Users, Trash2 } from "lucide-react";
+import { FolderOpen, Plus, Save, Sparkles, X } from "lucide-react";
+
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
-import { STORY_TEMPLATES } from "@/types/recroom";
-import type { StoryCharacter, CharacterSheet, StoryTheme } from "@/types/recroom";
-import GenerateOverlay from "@/components/story-weaver/GenerateOverlay";
-import { WORD_COUNT_OPTIONS } from "@/components/story-weaver/ReaderSettings";
+import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
+import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
+import PageLoading from "@/components/ui/PageLoading";
+import SegmentedControl from "@/components/ui/SegmentedControl";
+import { InlineSelect } from "@/components/ui/Select";
+import { Field, Input, Textarea } from "@/components/ui/field";
+import { useToast } from "@/components/ui/Toast";
+import { useApiResource } from "@/hooks/useApiResource";
+import { useModelDefaults, useModels } from "@/hooks/useModels";
+import { messageFromError } from "@/lib/api/api-fetch";
+import { runWrite } from "@/lib/api/api-write";
+import { sectionHeadingClasses } from "@/lib/ui/theme";
+import CharacterCard from "@/modules/rec-room/components/CharacterCard";
+import CharacterEditorDialog, { type SheetValues } from "@/modules/rec-room/components/CharacterEditorDialog";
+import CharacterLibraryPanel from "@/modules/rec-room/components/CharacterLibraryPanel";
+import GenerateOverlay from "@/modules/rec-room/components/GenerateOverlay";
+import { WORD_COUNT_OPTIONS } from "@/modules/rec-room/components/ReaderSettings";
+import Tags from "@/modules/rec-room/components/Tags";
+import ThemeEditorDialog, {
+  THEME_ERAS,
+  THEME_GENRES,
+  THEME_MOODS,
+  type ThemeValues,
+} from "@/modules/rec-room/components/ThemeEditorDialog";
+import ThemeLibraryPanel from "@/modules/rec-room/components/ThemeLibraryPanel";
+import { STORY_TEMPLATES } from "@/modules/rec-room/types";
+import type { CharacterSheet, StoryCharacter, StoryTheme } from "@/modules/rec-room/types";
 
-const DEFAULT_GENRES = ["Sci-Fi", "Mystery", "Fantasy", "Romance", "Crime", "Horror", "Adventure", "Historical"];
-const DEFAULT_ERAS = ["Ancient", "Medieval", "Modern", "Near Future", "Far Future", "Timeless"];
-const DEFAULT_MOODS = ["Tense", "Wonder", "Humorous", "Dark", "Hopeful", "Melancholy", "Suspenseful", "Whimsical"];
 const DEFAULT_SETTINGS = ["Space Station", "Medieval Castle", "Modern City", "Underwater", "Forest", "Desert", "Island", "Train"];
 const DRAFT_KEY = "story-weaver-draft";
-const ROLES = ["protagonist", "ally", "antagonist", "supporting", "mystery"];
+const HOME = "/recroom/story-weaver";
 
 const EMPTY_CHARACTER: StoryCharacter = { name: "", role: "supporting", description: "" };
+
+/** The label above a control the Field kit does not wrap (the native selects). */
+const LABEL = "block text-micro font-medium uppercase tracking-wider text-ps-text-muted";
+
+/** Auto-title an untitled story from its premise (first ~6 words) instead of the
+ *  generic "Untitled Story", so the library doesn't fill with indistinguishable rows. */
+function deriveTitleFromPremise(premise: string): string {
+  const words = premise.trim().split(/\s+/).slice(0, 6).join(" ").replace(/[.,;:!?]+$/, "");
+  if (!words) return "Untitled Story";
+  return words.length > 60 ? `${words.slice(0, 60)}…` : words;
+}
 
 interface Draft {
   title: string;
@@ -29,142 +76,24 @@ interface Draft {
   pov: string;
   length: string;
   wordCountRange: string;
+  /** The registry row id of the model that writes the story; "" = agent default. */
+  modelId: string;
   characters: StoryCharacter[];
   savedAt: string;
 }
 
-function Tags({ label, options, selected, onToggle, onAdd }: {
-  label: string; options: string[]; selected: string[];
-  onToggle: (t: string) => void; onAdd: (t: string) => void;
-}) {
-  const [adding, setAdding] = useState(false);
-  const [val, setVal] = useState("");
-  return (
-    <div>
-      <label className="text-[10px] font-mono text-white/30 uppercase tracking-wider block mb-1.5">{label}</label>
-      <div className="flex flex-wrap gap-1.5">
-        {options.map((t) => (
-          <button key={t} onClick={() => onToggle(t)}
-            className={`px-2.5 py-1 rounded-md text-[10px] font-mono border transition-all ${
-              selected.includes(t) ? "border-green-500/40 bg-green-500/15 text-green-400" : "border-white/8 text-white/30 hover:text-white/50"
-            }`}>{t}</button>
-        ))}
-        {adding ? (
-          <div className="flex items-center gap-1">
-            <input value={val} onChange={(e) => setVal(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter" && val.trim()) { onAdd(val.trim()); setVal(""); setAdding(false); } if (e.key === "Escape") setAdding(false); }}
-              className="w-24 bg-dark-800/50 border border-green-500/30 rounded px-2 py-1 text-[10px] font-mono text-white outline-none" autoFocus placeholder="Custom..." />
-            <button onClick={() => { if (val.trim()) { onAdd(val.trim()); setVal(""); setAdding(false); } }} className="p-0.5 text-green-400"><Plus className="w-3 h-3" /></button>
-            <button onClick={() => setAdding(false)} className="p-0.5 text-white/30"><X className="w-3 h-3" /></button>
-          </div>
-        ) : (
-          <button onClick={() => setAdding(true)} className="px-2 py-1 rounded-md text-[10px] font-mono border border-dashed border-white/10 text-white/20 hover:text-white/40">+ Add</button>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function CharacterCard({ char, index, onUpdate, onRemove, onSave, saved, expanded, onToggle }: {
-  char: StoryCharacter;
-  index: number;
-  onUpdate: (idx: number, field: keyof StoryCharacter, value: string) => void;
-  onRemove: (idx: number) => void;
-  onSave: (char: StoryCharacter) => void;
-  saved: boolean;
-  expanded: boolean;
-  onToggle: (idx: number) => void;
-}) {
-  const canSave = char.name.trim() && char.description.trim();
-  return (
-    <div className="rounded-lg border border-white/5 bg-dark-800/30 overflow-hidden">
-      {/* Collapsed header — entire row is tappable to expand */}
-      <div className="flex items-center gap-3 p-3 cursor-pointer hover:bg-white/[0.03] min-h-[48px]"
-        onClick={() => onToggle(index)}>
-        <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-mono ${
-          expanded ? "bg-neon-purple/20 text-neon-purple" : "bg-white/5 text-white/30"
-        }`}>
-          {expanded ? "−" : "+"}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="text-sm font-semibold text-white/90 truncate">{char.name || "New Character"}</div>
-          {!expanded && char.description && (
-            <div className="text-[10px] text-white/30 truncate">{char.description}</div>
-          )}
-        </div>
-        <span className="flex-shrink-0 px-2 py-0.5 rounded text-[9px] font-mono border border-white/8 text-white/40">{char.role}</span>
-      </div>
-
-      {/* Expanded content */}
-      {expanded && (
-        <div className="px-3 pb-3 space-y-3 border-t border-white/5 pt-3">
-          {/* Name + Role row */}
-          <div className="flex gap-2">
-            <div className="flex-1">
-              <label className="text-[10px] font-mono text-white/25 uppercase block mb-1">Name</label>
-              <input value={char.name} onChange={(e) => onUpdate(index, "name", e.target.value)}
-                placeholder="Character name..."
-                className="w-full bg-dark-700/30 border border-white/5 rounded-lg px-3 py-2.5 text-sm text-white placeholder-white/15 outline-none font-semibold" />
-            </div>
-            <div className="w-32">
-              <label className="text-[10px] font-mono text-white/25 uppercase block mb-1">Role</label>
-              <select value={char.role} onChange={(e) => onUpdate(index, "role", e.target.value)}
-                className="w-full bg-dark-700/30 border border-white/5 rounded-lg px-3 py-2.5 text-sm text-white outline-none font-mono">
-                {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
-              </select>
-            </div>
-          </div>
-
-          {/* Description */}
-          <div>
-            <label className="text-[10px] font-mono text-white/25 uppercase block mb-1">Description</label>
-            <textarea value={char.description} onChange={(e) => onUpdate(index, "description", e.target.value)}
-              rows={2} placeholder="A brief summary of who they are..."
-              className="w-full bg-dark-700/30 border border-white/5 rounded-lg px-3 py-2.5 text-sm text-white/70 placeholder-white/15 outline-none font-mono resize-y min-h-[60px] leading-relaxed" />
-          </div>
-
-          {/* Detail fields */}
-          {[
-            { field: "personality" as const, label: "Personality Traits", ph: "e.g., Pragmatic, Protective, Stubborn — how they think and react" },
-            { field: "appearance" as const, label: "Appearance", ph: "Physical description — build, features, distinguishing marks" },
-            { field: "backstory" as const, label: "Backstory", ph: "Their history, motivations, what drives them..." },
-            { field: "speechPatterns" as const, label: "Speech Patterns", ph: "How they talk — formal, slang, accent, verbal tics" },
-            { field: "relationships" as const, label: "Relationships", ph: "Connections to other characters — allies, enemies, bonds" },
-          ].map(({ field, label, ph }) => (
-            <div key={field}>
-              <label className="text-[10px] font-mono text-white/25 uppercase block mb-1">{label}</label>
-              <textarea value={char[field] || ""} onChange={(e) => onUpdate(index, field, e.target.value)}
-                rows={2} placeholder={ph}
-                className="w-full bg-dark-700/30 border border-white/5 rounded-lg px-3 py-2.5 text-sm text-white/70 placeholder-white/15 outline-none font-mono resize-y min-h-[60px] leading-relaxed" />
-            </div>
-          ))}
-
-          {/* Action buttons */}
-          <div className="flex items-center gap-2 pt-2 border-t border-white/5">
-            <button onClick={() => onSave(char)} disabled={!canSave}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-mono border transition-all min-h-[40px] ${
-                saved ? "border-green-500/30 bg-green-500/10 text-green-400" :
-                canSave ? "border-green-500/20 text-green-400/60 hover:bg-green-500/10 hover:text-green-400" :
-                "border-white/5 text-white/20 opacity-50"
-              }`}>
-              <Save className="w-3.5 h-3.5" />
-              {saved ? "Saved!" : "Save to Library"}
-            </button>
-            <div className="flex-1" />
-            <button onClick={() => onRemove(index)}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-mono border border-red-500/10 text-red-400/40 hover:bg-red-500/10 hover:text-red-400 transition-all min-h-[40px]">
-              <X className="w-3.5 h-3.5" /> Remove
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
+type ThemeEditorState = { open: false } | { open: true; theme: StoryTheme | null; initial?: Partial<ThemeValues> };
+type SheetEditorState = { open: false } | { open: true; sheet: CharacterSheet | null };
 
 export default function CreateStoryPageWrapper() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-dark-950 flex items-center justify-center"><Sparkles className="w-8 h-8 text-neon-purple animate-spin" /></div>}>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-ps-surface-ground p-6">
+          <PageLoading label="Loading the story form" />
+        </div>
+      }
+    >
       <CreateStoryPage />
     </Suspense>
   );
@@ -178,6 +107,9 @@ function CreateStoryPage() {
   const [genDone, setGenDone] = useState(false);
   const [genStoryId, setGenStoryId] = useState<string | null>(null);
   const [genError, setGenError] = useState<string | null>(null);
+  // A failed write on this page (a delete, a save) is never swallowed: every
+  // one goes through runWrite, which says the server's reason (C6, T-0143).
+  const { showToast, toastElement } = useToast();
 
   const [title, setTitle] = useState("");
   const [titleManuallyEdited, setTitleManuallyEdited] = useState(false);
@@ -189,28 +121,48 @@ function CreateStoryPage() {
   const [pov, setPov] = useState<string>(STORY_TEMPLATES[0].pov);
   const [length, setLength] = useState<string>(STORY_TEMPLATES[0].length);
   const [wordCountRange, setWordCountRange] = useState("standard");
+  // Story Weaver used to write with whatever the gateway happened to default to,
+  // which is also why its spend had no model dimension (T-0108, D87).
+  const [modelId, setModelId] = useState("");
+  const [touchedModel, setTouchedModel] = useState(false);
   const [characters, setCharacters] = useState<StoryCharacter[]>([...STORY_TEMPLATES[0].characters]);
   const [selectedTheme, setSelectedTheme] = useState("cosmic-voyager");
   const [expandedChars, setExpandedChars] = useState<Record<number, boolean>>({});
   const [savedChars, setSavedChars] = useState<Record<number, boolean>>({});
-  const [genreOpts, setGenreOpts] = useState([...DEFAULT_GENRES]);
-  const [eraOpts, setEraOpts] = useState([...DEFAULT_ERAS]);
-  const [moodOpts, setMoodOpts] = useState([...DEFAULT_MOODS]);
+  const [genreOpts, setGenreOpts] = useState([...THEME_GENRES]);
+  const [eraOpts, setEraOpts] = useState([...THEME_ERAS]);
+  const [moodOpts, setMoodOpts] = useState([...THEME_MOODS]);
   const [settingOpts, setSettingOpts] = useState([...DEFAULT_SETTINGS]);
-
-  // Saved data
-  const [savedCharacters, setSavedCharacters] = useState<CharacterSheet[]>([]);
-  const [savedThemes, setSavedThemes] = useState<StoryTheme[]>([]);
-  const [showCharPicker, setShowCharPicker] = useState(false);
   const [hasDraft, setHasDraft] = useState(false);
 
-  // Save as theme
-  const [showSaveTheme, setShowSaveTheme] = useState(false);
-  const [newThemeName, setNewThemeName] = useState("");
+  // The two libraries, each its own read so one failing does not take the
+  // other's list away.
+  const themesRead = useApiResource<StoryTheme[]>("/api/stories", {
+    body: { action: "themes", subAction: "list" },
+    select: (d) => (d as { themes?: StoryTheme[] } | null)?.themes ?? [],
+    errorMessage: "Failed to load themes",
+  });
+  const charactersRead = useApiResource<CharacterSheet[]>("/api/stories", {
+    body: { action: "characters", subAction: "list" },
+    select: (d) => (d as { characters?: CharacterSheet[] } | null)?.characters ?? [],
+    errorMessage: "Failed to load characters",
+  });
+  const savedThemes = themesRead.data ?? [];
+  const savedCharacters = charactersRead.data ?? [];
+  const [themeEditor, setThemeEditor] = useState<ThemeEditorState>({ open: false });
+  const [sheetEditor, setSheetEditor] = useState<SheetEditorState>({ open: false });
+
+  const { data: models } = useModels();
+  const { data: modelDefaults } = useModelDefaults();
+
+  // Preselect the agent's own default the first time it arrives, and never
+  // again: an operator who chose a model keeps it.
+  useEffect(() => {
+    if (touchedModel) return;
+    if (modelDefaults?.agent) setModelId(modelDefaults.agent);
+  }, [modelDefaults, touchedModel]);
 
   // Theme: sets only premise + tags (NOT characters, NOT params).
-  // Defined at component level (not inside useEffect) so useCallback can
-  // be stable and satisfy React Compiler immutability requirements.
   const applyTheme = useCallback((theme: StoryTheme) => {
     setPremise(theme.premise);
     if (theme.genre?.length) setGenres([...theme.genre]);
@@ -218,57 +170,62 @@ function CreateStoryPage() {
     if (theme.setting) setSetting(theme.setting);
     if (theme.mood?.length) setMoods([...theme.mood]);
     setSelectedTheme(theme.id);
-  }, [setPremise, setGenres, setEra, setSetting, setMoods, setSelectedTheme]);
+  }, []);
 
-  // Restore selected theme from URL search params on page load
+  // A theme named in the URL is applied on arrival. The Themes page's "Use"
+  // used to send people here this way; a bookmark still can.
+  const appliedUrlTheme = useRef<string | null>(null);
   useEffect(() => {
     const themeId = searchParams.get("theme");
-    if (themeId) {
-      setSelectedTheme(themeId);
-      fetch("/api/stories", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "themes", subAction: "list" }),
-      }).then(r => r.json()).then(d => {
-        const theme = d.data?.themes?.find((t: StoryTheme) => t.id === themeId);
-        if (theme) applyTheme(theme);
-      }).catch(() => {});
-    }
-  }, [searchParams, applyTheme]);
+    if (!themeId || appliedUrlTheme.current === themeId) return;
+    setSelectedTheme(themeId);
+    const theme = themesRead.data?.find((t) => t.id === themeId);
+    if (!theme) return;
+    appliedUrlTheme.current = themeId;
+    applyTheme(theme);
+  }, [searchParams, themesRead.data, applyTheme]);
 
-  // Load saved data on mount
   useEffect(() => {
     setHasDraft(!!localStorage.getItem(DRAFT_KEY));
-    fetch("/api/stories", {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "characters", subAction: "list" }),
-    }).then(r => r.json()).then(d => {
-      if (d.data?.characters) setSavedCharacters(d.data.characters);
-    }).catch(() => {});
-    fetch("/api/stories", {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "themes", subAction: "list" }),
-    }).then(r => r.json()).then(d => {
-      if (d.data?.themes) setSavedThemes(d.data.themes);
-    }).catch(() => {});
   }, []);
+
+  // The two retired pages redirect to #themes and #characters. The browser's
+  // own jump to a fragment happens before this client page has rendered its
+  // sections, so it lands on nothing; once both libraries are on the page the
+  // anchor is honoured by hand (the same fix Settings needed in T-0125).
+  useEffect(() => {
+    if (!themesRead.settled || !charactersRead.settled) return;
+    const id = window.location.hash.replace(/^#/, "");
+    if (id !== "themes" && id !== "characters") return;
+    document.getElementById(id)?.scrollIntoView({ block: "start" });
+  }, [themesRead.settled, charactersRead.settled]);
 
   // Auto-save draft
   useEffect(() => {
     if (generating) return;
-    const draft: Draft = { title, premise, genres, era, moods, setting, pov, length, wordCountRange, characters, savedAt: new Date().toISOString() };
+    const draft: Draft = { title, premise, genres, era, moods, setting, pov, length, wordCountRange, modelId, characters, savedAt: new Date().toISOString() };
     localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
-  }, [title, premise, genres, era, moods, setting, pov, length, wordCountRange, characters, generating]);
+  }, [title, premise, genres, era, moods, setting, pov, length, wordCountRange, modelId, characters, generating]);
 
   const loadDraft = () => {
     const raw = localStorage.getItem(DRAFT_KEY);
     if (!raw) return;
     try {
       const d: Draft = JSON.parse(raw);
-      setTitle(d.title); setTitleManuallyEdited(!!d.title);
-      setPremise(d.premise); setGenres(d.genres);
-      setEra(d.era); setMoods(d.moods);
-      setSetting(d.setting); setPov(d.pov);
-      setLength(d.length); setWordCountRange(d.wordCountRange || "standard");
+      setTitle(d.title);
+      setTitleManuallyEdited(!!d.title);
+      setPremise(d.premise);
+      setGenres(d.genres);
+      setEra(d.era);
+      setMoods(d.moods);
+      setSetting(d.setting);
+      setPov(d.pov);
+      setLength(d.length);
+      setWordCountRange(d.wordCountRange || "standard");
+      if (d.modelId) {
+        setModelId(d.modelId);
+        setTouchedModel(true);
+      }
       setCharacters(d.characters);
       setSelectedTheme("");
       setHasDraft(false);
@@ -280,16 +237,24 @@ function CreateStoryPage() {
     setSelectedTheme(id);
     const t = STORY_TEMPLATES.find((tmpl) => tmpl.id === id);
     if (!t) return;
-    setPremise(t.premise); setGenres([...t.genre]); setEra(t.era); setMoods([...t.moods]);
-    setSetting(t.setting); setPov(t.pov); setLength(t.length);
-    setCharacters(t.characters.map(c => ({ ...c })));
+    setPremise(t.premise);
+    setGenres([...t.genre]);
+    setEra(t.era);
+    setMoods([...t.moods]);
+    setSetting(t.setting);
+    setPov(t.pov);
+    setLength(t.length);
+    setCharacters(t.characters.map((c) => ({ ...c })));
     setWordCountRange("standard");
     setExpandedChars({});
     if (!titleManuallyEdited) setTitle(t.name);
   };
 
-  const importCharacter = (cs: CharacterSheet) => {
-    if (characters.some(c => c.name === cs.name)) return;
+  const inCast = (cs: CharacterSheet) => characters.some((c) => c.name === cs.name);
+
+  /** One click on a library row. A sheet is a template, not a link: its text is copied. */
+  const addFromLibrary = (cs: CharacterSheet) => {
+    if (inCast(cs)) return;
     const newChar: StoryCharacter & Record<string, unknown> = {
       name: cs.name,
       role: (cs.role as StoryCharacter["role"]) || "supporting",
@@ -300,106 +265,197 @@ function CreateStoryPage() {
       speechPatterns: cs.speechPatterns || "",
       relationships: cs.relationships || "",
     };
-    setCharacters(prev => [...prev, newChar as StoryCharacter]);
-    setShowCharPicker(false);
+    setCharacters((prev) => [...prev, newChar as StoryCharacter]);
   };
 
   const updateCharacter = (idx: number, field: string, value: string) => {
-    setCharacters(prev => prev.map((c, i) => {
-      if (i !== idx) return c;
-      return { ...(c as unknown as Record<string, unknown>), [field]: value } as unknown as StoryCharacter;
-    }));
+    setCharacters((prev) =>
+      prev.map((c, i) => {
+        if (i !== idx) return c;
+        return { ...(c as unknown as Record<string, unknown>), [field]: value } as unknown as StoryCharacter;
+      }),
+    );
   };
 
   const removeCharacter = (idx: number) => {
-    setCharacters(prev => prev.filter((_, i) => i !== idx));
-    setExpandedChars(prev => { const next = { ...prev }; delete next[idx]; return next; });
+    setCharacters((prev) => prev.filter((_, i) => i !== idx));
+    setExpandedChars((prev) => {
+      const next = { ...prev };
+      delete next[idx];
+      return next;
+    });
   };
 
+  // Save to Library on a cast card. Always a NEW sheet: this card is a copy.
   const saveCharacter = async (char: StoryCharacter) => {
     if (!char.name.trim() || !char.description.trim()) return;
-    try {
-      const res = await fetch("/api/stories", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "characters", subAction: "create",
-          name: char.name, role: char.role, description: char.description,
-          personality: char.personality ? [char.personality] : [],
-          appearance: char.appearance || "",
-          backstory: char.backstory || "",
-          speechPatterns: char.speechPatterns || "",
-          relationships: char.relationships || "",
-          tags: [],
-        }),
-      });
-      const d = await res.json();
-      if (d.data?.id) {
-        // Mark as saved for feedback
-        setSavedChars(prev => ({ ...prev, [characters.indexOf(char)]: true }));
-        setTimeout(() => setSavedChars(prev => { const n = { ...prev }; delete n[characters.indexOf(char)]; return n; }), 2000);
-        // Refresh saved characters list
-        const listRes = await fetch("/api/stories", {
-          method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "characters", subAction: "list" }),
-        });
-        const listD = await listRes.json();
-        if (listD.data?.characters) setSavedCharacters(listD.data.characters);
-      }
-    } catch {}
+    // The gate used to read `d.data.id`; the handler answers `{data:{character}}`,
+    // so the save always worked and nothing on screen ever said so (T-0108, D94).
+    await runWrite({
+      showToast,
+      url: "/api/stories",
+      body: {
+        action: "characters",
+        subAction: "create",
+        name: char.name,
+        role: char.role,
+        description: char.description,
+        personality: char.personality ? [char.personality] : [],
+        appearance: char.appearance || "",
+        backstory: char.backstory || "",
+        speechPatterns: char.speechPatterns || "",
+        relationships: char.relationships || "",
+        tags: [],
+      },
+      successMessage: `${char.name} saved to the library`,
+      errorMessage: "Could not save that character",
+      onSuccess: async () => {
+        const idx = characters.indexOf(char);
+        setSavedChars((prev) => ({ ...prev, [idx]: true }));
+        setTimeout(
+          () =>
+            setSavedChars((prev) => {
+              const n = { ...prev };
+              delete n[idx];
+              return n;
+            }),
+          2000,
+        );
+        await charactersRead.refetch();
+      },
+    });
   };
 
   const toggleCharExpand = (idx: number) => {
-    setExpandedChars(prev => ({ ...prev, [idx]: !prev[idx] }));
+    setExpandedChars((prev) => ({ ...prev, [idx]: !prev[idx] }));
   };
 
-  const saveAsTheme = async () => {
-    if (!newThemeName.trim() || !premise.trim()) return;
-    try {
-      const res = await fetch("/api/stories", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "themes", subAction: "create",
-          name: newThemeName.trim(), premise, genre: genres, era, setting, mood: moods,
-          notes: `Characters: ${characters.map(c => c.name).filter(Boolean).join(", ")}`,
-        }),
-      });
-      const d = await res.json();
-      if (d.data?.id) {
-        const listRes = await fetch("/api/stories", {
-          method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "themes", subAction: "list" }),
-        });
-        const listD = await listRes.json();
-        if (listD.data?.themes) setSavedThemes(listD.data.themes);
-      }
-      setShowSaveTheme(false);
-      setNewThemeName("");
-    } catch {}
+  // ── the theme library ──────────────────────────────────────────
+
+  /** Save as theme: the editor, opened on what the form holds now. */
+  const saveFormAsTheme = () =>
+    setThemeEditor({
+      open: true,
+      theme: null,
+      initial: {
+        premise,
+        genre: genres,
+        era,
+        setting,
+        mood: moods,
+        notes: `Characters: ${characters.map((c) => c.name).filter(Boolean).join(", ")}`,
+      },
+    });
+
+  /**
+   * A library save, from either editor. The dialog shows the reason inline and
+   * stays open on a failure, so the write answers the reason as well as
+   * saying it: a 200 without the row the handler promises (`{data:{theme}}`,
+   * `{data:{character}}`, D94) is a failure too, or the save would close a
+   * dialog over nothing saved.
+   */
+  const saveToLibrary = async (
+    body: Record<string, unknown>,
+    fallback: string,
+    saved: string,
+    onSaved: () => Promise<void>,
+  ): Promise<string | null> => {
+    let problem: string | null = null;
+    await runWrite<{ data?: unknown }>({
+      showToast,
+      url: "/api/stories",
+      body,
+      successMessage: (res) => (res?.data ? saved : { message: fallback, type: "error" }),
+      errorMessage: fallback,
+      onError: (err) => {
+        problem = messageFromError(err, fallback);
+      },
+      onSuccess: async (res) => {
+        if (!res?.data) {
+          problem = fallback;
+          return;
+        }
+        await onSaved();
+      },
+    });
+    return problem;
+  };
+
+  const saveTheme = (values: ThemeValues, id?: string): Promise<string | null> => {
+    const body: Record<string, unknown> = { action: "themes", subAction: id ? "update" : "create", ...values };
+    if (id) body.themeId = id;
+    return saveToLibrary(body, "Could not save that theme", id ? "Theme updated" : "Theme saved", async () => {
+      await themesRead.refetch();
+      setThemeEditor({ open: false });
+    });
   };
 
   const deleteTheme = async (id: string) => {
-    try {
-      await fetch("/api/stories", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "themes", subAction: "delete", promptId: id }),
-      });
-      setSavedThemes(prev => prev.filter(t => t.id !== id));
-      if (selectedTheme === id) setSelectedTheme("");
-    } catch {}
+    // The field is `themeId`; this posted `promptId`, the handler 400d, and the
+    // catch swallowed it while the row was filtered off the screen anyway, so a
+    // theme that was still in the database looked deleted (T-0108, D89). The
+    // re-read runs on success only.
+    await runWrite({
+      showToast,
+      url: "/api/stories",
+      body: { action: "themes", subAction: "delete", themeId: id },
+      successMessage: "Theme deleted",
+      errorMessage: "Could not delete that theme",
+      onSuccess: () => {
+        void themesRead.refetch();
+        if (selectedTheme === id) setSelectedTheme("");
+      },
+    });
   };
 
+  // ── the character library ──────────────────────────────────────
+
+  const saveSheet = (values: SheetValues, id?: string): Promise<string | null> => {
+    const body: Record<string, unknown> = { action: "characters", subAction: id ? "update" : "create", ...values };
+    if (id) body.charId = id;
+    return saveToLibrary(body, "Could not save that character", id ? "Character updated" : "Character saved", async () => {
+      await charactersRead.refetch();
+      setSheetEditor({ open: false });
+    });
+  };
+
+  const deleteSheet = async (id: string) => {
+    await runWrite({
+      showToast,
+      url: "/api/stories",
+      body: { action: "characters", subAction: "delete", charId: id },
+      successMessage: "Character deleted",
+      errorMessage: "Could not delete that character",
+      onSuccess: () => {
+        void charactersRead.refetch();
+      },
+    });
+  };
+
+  // ── the form ───────────────────────────────────────────────────
+
   const clearAllInputs = () => {
-    setSelectedTheme(""); setTitle(""); setTitleManuallyEdited(false);
-    setPremise(""); setGenres([]); setEra(""); setMoods([]); setSetting("");
-    setCharacters([]); setPov("first"); setLength("medium");
-    setWordCountRange("standard"); setExpandedChars({});
+    setSelectedTheme("");
+    setTitle("");
+    setTitleManuallyEdited(false);
+    setPremise("");
+    setGenres([]);
+    setEra("");
+    setMoods([]);
+    setSetting("");
+    setCharacters([]);
+    setPov("first");
+    setLength("medium");
+    setWordCountRange("standard");
+    setExpandedChars({});
   };
 
   const toggle = (list: string[], set: (v: string[]) => void, tag: string) =>
     set(list.includes(tag) ? list.filter((t) => t !== tag) : [...list, tag]);
 
-  const addOpt = (opts: string[], set: (v: string[]) => void, tag: string) =>
-    { if (!opts.includes(tag)) set([...opts, tag]); };
+  const addOpt = (opts: string[], set: (v: string[]) => void, tag: string) => {
+    if (!opts.includes(tag)) set([...opts, tag]);
+  };
 
   const handleCreate = useCallback(async () => {
     if (!premise.trim()) return;
@@ -408,213 +464,167 @@ function CreateStoryPage() {
     setGenStoryId(null);
     setGenError(null);
 
+    const finalTitle = title.trim() || deriveTitleFromPremise(premise);
     try {
       const res = await fetch("/api/stories", {
-        method: "POST", headers: { "Content-Type": "application/json" },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "create",
-          title: title || "Untitled Story",
-          config: { title: title || "Untitled Story", premise, genre: genres.join(", "), era, setting, mood: moods, pov, length, characters, wordCountRange },
+          title: finalTitle,
+          config: { title: finalTitle, premise, genre: genres.join(", "), era, setting, mood: moods, pov, length, characters, wordCountRange, modelId: modelId || undefined },
         }),
       });
-      const d = await res.json();
-      if (d.error) throw new Error(d.error);
+      const d = await res.json().catch(() => null);
+      // Surface EVERY failure mode so "Begin Writing" can never silently do
+      // nothing: an HTTP error, an error payload, or a success shape missing
+      // the new story id all now raise a visible error instead of navigating
+      // to /story-weaver/undefined.
+      if (!res.ok || !d || d.error) {
+        throw new Error((d && d.error) || `Story creation failed (HTTP ${res.status})`);
+      }
+      const newId = d.data?.id;
+      if (!newId) throw new Error("Story was created but no id was returned");
 
       localStorage.removeItem(DRAFT_KEY);
       setHasDraft(false);
-      setGenStoryId(d.data.id);
+      setGenStoryId(newId);
       setGenDone(true);
     } catch (err) {
       setGenerating(false);
       setGenError(err instanceof Error ? err.message : "Unknown error");
     }
-  }, [title, premise, genres, era, setting, moods, pov, length, characters, wordCountRange]);
+  }, [title, premise, genres, era, setting, moods, pov, length, characters, wordCountRange, modelId]);
 
   const handleGenComplete = useCallback(() => {
-    if (genStoryId) router.push("/recroom/story-weaver/" + genStoryId);
+    if (genStoryId) router.push(`${HOME}/${genStoryId}`);
   }, [genStoryId, router]);
 
   return (
-    <AppPageShell variant="scanlines">
+    <AppPageShell
+      density="prose"
+      variant="scanlines"
+      header={
+        <PageHeader
+          icon={Sparkles}
+          color="purple"
+          backHref={HOME}
+          backLabel="STORY WEAVER"
+          actions={
+            hasDraft ? (
+              <Button variant="ghost" size="sm" color="orange" icon={FolderOpen} onClick={loadDraft}>
+                Load draft
+              </Button>
+            ) : undefined
+          }
+        />
+      }
+    >
       <GenerateOverlay title={title || "Your Story"} visible={generating} done={genDone} onComplete={handleGenComplete} />
 
-      {/* Error banner */}
-      {genError && (
-        <div className="sticky top-0 z-50 bg-red-500/10 border-b border-red-500/20 px-4 py-3 flex items-center gap-3">
-          <div className="flex-1">
-            <p className="text-xs text-red-300 font-semibold">Story generation failed</p>
-            <p className="text-xs text-red-300/60">{genError}</p>
-            <p className="text-xs text-red-300/40 mt-1">Your configuration has been saved. You can retry without re-entering everything.</p>
-          </div>
-          <button onClick={() => setGenError(null)} className="text-red-400/50 hover:text-red-400"><X className="w-4 h-4" /></button>
-        </div>
+      {themeEditor.open && (
+        <ThemeEditorDialog
+          theme={themeEditor.theme}
+          initial={themeEditor.initial}
+          onClose={() => setThemeEditor({ open: false })}
+          onSave={saveTheme}
+        />
+      )}
+      {sheetEditor.open && (
+        <CharacterEditorDialog character={sheetEditor.sheet} onClose={() => setSheetEditor({ open: false })} onSave={saveSheet} />
       )}
 
-      {/* Character Picker Modal */}
-      {showCharPicker && (
-        <div className="fixed inset-0 z-[60] bg-dark-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-dark-900 border border-neon-purple/20 rounded-xl w-full max-w-lg p-6 space-y-4 max-h-[80vh] overflow-y-auto">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-white">Import Character</h3>
-              <button onClick={() => setShowCharPicker(false)} className="text-white/30 hover:text-white/60"><X className="w-4 h-4" /></button>
-            </div>
-            {savedCharacters.length === 0 ? (
-              <p className="text-xs text-white/30">No saved characters. Create some in the Characters page first.</p>
-            ) : (
-              <div className="space-y-2">
-                {savedCharacters.map(cs => (
-                  <button key={cs.id} onClick={() => importCharacter(cs)}
-                    disabled={characters.some(c => c.name === cs.name)}
-                    className="w-full text-left p-3 rounded-lg border border-white/5 hover:border-neon-purple/20 bg-white/[0.02] hover:bg-neon-purple/5 transition-all disabled:opacity-30">
-                    <div className="text-xs font-semibold text-white/80">{cs.name}</div>
-                    <div className="text-[10px] text-white/30 font-mono">{cs.role} — {cs.description?.slice(0, 80)}</div>
-                    {cs.personality?.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {cs.personality.slice(0, 3).map(p => <span key={p} className="px-1.5 py-0.5 rounded text-[8px] font-mono border border-white/5 bg-white/[0.02] text-white/25">{p}</span>)}
-                      </div>
-                    )}
-                  </button>
-                ))}
-              </div>
-            )}
+      <div className="space-y-6">
+        {genError && (
+          <LoadErrorBanner
+            error={`Story generation failed: ${genError}. Your configuration has been saved, so you can retry without re-entering everything.`}
+          />
+        )}
+        {/* ═══ Quick start ═══ */}
+        <Card as="section" padding="lg" className="space-y-3">
+          <div className="flex items-start justify-between gap-3">
+            <h2 className={`${sectionHeadingClasses} flex-1`}>Quick start</h2>
+            <Button variant="ghost" size="sm" icon={X} onClick={clearAllInputs}>
+              Clear all inputs
+            </Button>
           </div>
-        </div>
-      )}
-
-      {/* Save as Theme Modal */}
-      {showSaveTheme && (
-        <div className="fixed inset-0 z-[60] bg-dark-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-dark-900 border border-green-500/20 rounded-xl w-full max-w-md p-6 space-y-4">
-            <h3 className="text-sm font-semibold text-white">Save as Theme</h3>
-            <p className="text-xs text-white/40">Save your current story concept as a reusable theme.</p>
-            <input value={newThemeName} onChange={(e) => setNewThemeName(e.target.value)}
-              placeholder="Theme name..." autoFocus
-              className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-4 py-3 text-sm text-white placeholder-white/20 outline-none font-mono" />
-            <div className="flex gap-2 justify-end">
-              <button onClick={() => setShowSaveTheme(false)} className="px-4 py-2 text-xs text-white/40 hover:text-white/60 rounded-lg border border-white/10">Cancel</button>
-              <button onClick={saveAsTheme} disabled={!newThemeName.trim() || !premise.trim()}
-                className="px-4 py-2 text-xs text-green-400 rounded-lg border border-green-500/30 bg-green-500/10 hover:bg-green-500/20 disabled:opacity-30 flex items-center gap-2">
-                <Save className="w-3 h-3" /> Save Theme
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <PageHeader
-        icon={Sparkles}
-        title="Create Story"
-        color="purple"
-        backHref="/recroom/story-weaver"
-        backLabel="STORY WEAVER"
-        actions={
-          hasDraft ? (
-            <button
-              type="button"
-              onClick={loadDraft}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-orange-500/20 text-[10px] font-mono text-orange-400 hover:bg-orange-500/10"
-            >
-              <FolderOpen className="w-3 h-3" /> Load Draft
-            </button>
-          ) : undefined
-        }
-      />
-
-      <div className="max-w-4xl mx-auto px-6 py-8 space-y-6 flex-1 w-full">
-
-        {/* ═══ SECTION A: Templates + Clear ═══ */}
-        <div className="rounded-xl border border-neon-purple/15 bg-dark-900/50 p-5">
-          <div className="flex items-center justify-between mb-3">
-            <label className="text-xs font-mono text-white/40 uppercase tracking-widest">Quick Start — Templates</label>
-            <button onClick={clearAllInputs}
-              className="flex items-center gap-1 text-[10px] font-mono text-red-400 hover:text-red-300">
-              <X className="w-3 h-3" /> Clear all inputs
-            </button>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          <div className="flex flex-wrap gap-2">
             {STORY_TEMPLATES.map((t) => (
-              <button key={t.id} onClick={() => applyTemplate(t.id)}
-                className={`text-left p-3 rounded-lg border transition-all ${
-                  selectedTheme === t.id ? "border-neon-purple/40 bg-neon-purple/10" : "border-white/5 bg-white/[0.02] hover:border-white/15"
-                }`}>
-                <div className="text-xs font-semibold text-white/80 mb-0.5">{t.name}</div>
-                <div className="text-[9px] font-mono text-white/30">{t.genre.join(", ")}</div>
-              </button>
+              <Button
+                key={t.id}
+                variant={selectedTheme === t.id ? "primary" : "secondary"}
+                color="purple"
+                aria-pressed={selectedTheme === t.id}
+                title={t.genre.join(", ")}
+                onClick={() => applyTemplate(t.id)}
+              >
+                {t.name}
+              </Button>
             ))}
           </div>
-        </div>
+        </Card>
 
-        {/* ═══ SECTION B: Title ═══ */}
-        <div className="rounded-xl border border-neon-purple/20 bg-dark-900/50 p-5">
-          <label className="text-xs font-mono text-white/40 uppercase tracking-widest block mb-2">Story Title</label>
-          <input value={title} onChange={(e) => { setTitle(e.target.value); setTitleManuallyEdited(true); }} placeholder="Give your story a name..."
-            className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-4 py-3 text-lg text-white placeholder-white/20 outline-none focus:border-neon-purple/30 font-serif font-semibold" />
-        </div>
+        {/* ═══ Title ═══ */}
+        <Card as="section" padding="lg">
+          <Field label="Story title" hint="Leave it empty and the first few words of the premise become the name.">
+            <Input
+              value={title}
+              onChange={(e) => {
+                setTitle(e.target.value);
+                setTitleManuallyEdited(true);
+              }}
+              placeholder="Give your story a name..."
+              // The house register, not the reader's serif: a field is
+              // operated, not read, and the serif on this one field alone
+              // read as a different product (the review of 2026-09-08, P4).
+              className="text-lead font-semibold"
+            />
+          </Field>
+        </Card>
 
-        {/* ═══ SECTION C: Theme (Premise + Tags + Saved Themes) ═══ */}
-        <div className="rounded-xl border border-white/8 bg-dark-900/50 p-5 mt-2">
-          <div className="flex items-center justify-between mb-3">
-            <label className="text-xs font-mono text-white/40 uppercase tracking-widest">Theme</label>
-            <button onClick={() => setShowSaveTheme(true)} disabled={!premise.trim()}
-              className="flex items-center gap-1 text-[10px] font-mono text-green-400 hover:text-green-300 disabled:opacity-30">
-              <Save className="w-3 h-3" /> Save as Theme
-            </button>
+        {/* ═══ Theme: premise + tags ═══ */}
+        <Card as="section" padding="lg" className="space-y-4">
+          <div className="flex items-start justify-between gap-3">
+            <h2 className={`${sectionHeadingClasses} flex-1`}>Theme</h2>
+            <Button variant="ghost" size="sm" color="green" icon={Save} onClick={saveFormAsTheme} disabled={!premise.trim()}>
+              Save as theme
+            </Button>
           </div>
-          <label className="text-[10px] font-mono text-white/25 uppercase tracking-wider block mb-2">What&apos;s your story about?</label>
-          <textarea value={premise} onChange={(e) => setPremise(e.target.value)} rows={4}
-            className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-4 py-3 text-sm text-white placeholder-white/20 outline-none focus:border-green-500/30 font-mono resize-none leading-relaxed mb-4" placeholder="Describe your story concept..." />
+          <Field label="Premise" hint="What the story is about. This is the field the plan is built from.">
+            <Textarea value={premise} onChange={(e) => setPremise(e.target.value)} rows={4} placeholder="Describe your story concept..." />
+          </Field>
           <div className="space-y-3">
             <Tags label="Genre" options={genreOpts} selected={genres} onToggle={(t) => toggle(genres, setGenres, t)} onAdd={(t) => addOpt(genreOpts, setGenreOpts, t)} />
             <Tags label="Era" options={eraOpts} selected={[era]} onToggle={(t) => setEra(t === era ? "" : t)} onAdd={(t) => addOpt(eraOpts, setEraOpts, t)} />
             <Tags label="Mood" options={moodOpts} selected={moods} onToggle={(t) => toggle(moods, setMoods, t)} onAdd={(t) => addOpt(moodOpts, setMoodOpts, t)} />
             <Tags label="Setting" options={settingOpts} selected={[setting]} onToggle={(t) => setSetting(t === setting ? "" : t)} onAdd={(t) => addOpt(settingOpts, setSettingOpts, t)} />
           </div>
-          {/* Saved themes — prominent at top of Theme section */}
-          {savedThemes.length > 0 && (
-            <div className="mb-4 pb-4 border-b border-white/5">
-              <label className="text-[10px] font-mono text-white/25 uppercase tracking-wider block mb-2">Saved Themes — click to load</label>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                {savedThemes.map((t) => (
-                  <div key={t.id} className={`relative group p-3 rounded-lg border transition-all cursor-pointer ${
-                    selectedTheme === t.id ? "border-white/15 bg-white/[0.04]" : "border-white/8 bg-white/[0.02] hover:border-white/15 hover:bg-white/[0.04]"
-                  }`} onClick={() => applyTheme(t)}>
-                    <div className="text-xs font-semibold text-white/70 mb-0.5">{t.name}</div>
-                    <div className="text-[9px] font-mono text-white/20 truncate">{t.genre?.join(", ") || "Custom"} — {t.era || "Any era"}</div>
-                    <button onClick={(e) => { e.stopPropagation(); deleteTheme(t.id); }}
-                      className="absolute top-1.5 right-1.5 p-1.5 text-white/20 hover:text-red-400 transition-opacity">
-                      <Trash2 className="w-3 h-3" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
+        </Card>
 
-        {/* ═══ SECTION D: Characters ═══ */}
-        <div className="rounded-xl border border-white/8 bg-dark-900/50 p-5">
-          <div className="flex items-center justify-between mb-3">
-            <label className="text-xs font-mono text-white/40 uppercase tracking-widest flex items-center gap-2">
-              <Users className="w-3.5 h-3.5" /> Characters ({characters.length})
-            </label>
-            <div className="flex items-center gap-2">
-              {savedCharacters.length > 0 && (
-                <button onClick={() => setShowCharPicker(true)}
-                  className="flex items-center gap-1 text-[10px] font-mono text-neon-purple hover:text-purple-300">
-                  <Users className="w-3 h-3" /> From Library
-                </button>
-              )}
-              <button onClick={() => setCharacters(prev => [...prev, { ...EMPTY_CHARACTER }])}
-                className="flex items-center gap-1 text-[10px] font-mono text-neon-purple hover:text-purple-300">
-                <Plus className="w-3 h-3" /> Add Character
-              </button>
-            </div>
+        <ThemeLibraryPanel
+          themes={savedThemes}
+          loading={!themesRead.settled}
+          error={themesRead.error}
+          selectedId={selectedTheme}
+          onRetry={() => void themesRead.refetch()}
+          onUse={applyTheme}
+          onEdit={(theme) => setThemeEditor({ open: true, theme })}
+          onDelete={deleteTheme}
+          onNew={() => setThemeEditor({ open: true, theme: null })}
+        />
+
+        {/* ═══ The cast ═══ */}
+        <Card as="section" data-testid="story-cast" padding="lg" className="space-y-3">
+          <div className="flex items-start justify-between gap-3">
+            <h2 className={`${sectionHeadingClasses} flex-1`}>Characters ({characters.length})</h2>
+            <Button size="sm" color="purple" icon={Plus} onClick={() => setCharacters((prev) => [...prev, { ...EMPTY_CHARACTER }])}>
+              Add character
+            </Button>
           </div>
           {characters.length === 0 ? (
-            <div className="text-center py-8">
-              <Users className="w-8 h-8 text-white/10 mx-auto mb-2" />
-              <p className="text-xs text-white/25">No characters yet. Add one or import from your library.</p>
-            </div>
+            <p className="py-4 text-center text-body text-ps-text-faint">
+              No characters yet. Add one here, or add one from the library below.
+            </p>
           ) : (
             <div className="space-y-2">
               {characters.map((char, i) => (
@@ -632,50 +642,103 @@ function CreateStoryPage() {
               ))}
             </div>
           )}
-        </div>
+        </Card>
 
-        {/* ═══ SECTION E: Story Parameters ═══ */}
-        <div className="rounded-xl border border-white/8 bg-dark-900/50 p-5 space-y-4">
-          <label className="text-xs font-mono text-white/40 uppercase tracking-widest block">Story Parameters</label>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-[10px] font-mono text-white/30 uppercase tracking-wider block mb-2">Point of View</label>
-              <select value={pov} onChange={(e) => setPov(e.target.value)}
-                className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none font-mono">
-                <option value="first">First Person</option>
-                <option value="third-limited">Third Person Limited</option>
-                <option value="third-omniscient">Third Person Omniscient</option>
-              </select>
+        <CharacterLibraryPanel
+          characters={savedCharacters}
+          loading={!charactersRead.settled}
+          error={charactersRead.error}
+          inCast={inCast}
+          onRetry={() => void charactersRead.refetch()}
+          onAdd={addFromLibrary}
+          onEdit={(sheet) => setSheetEditor({ open: true, sheet })}
+          onDelete={deleteSheet}
+          onNew={() => setSheetEditor({ open: true, sheet: null })}
+        />
+
+        {/* ═══ Story parameters ═══ */}
+        <Card as="section" padding="lg" className="space-y-4">
+          <h2 className={sectionHeadingClasses}>Story parameters</h2>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1">
+              <span className={LABEL}>Point of view</span>
+              <InlineSelect
+                ariaLabel="Point of view"
+                accentColor="purple"
+                value={pov}
+                onChange={setPov}
+                options={[
+                  { value: "first", label: "First Person" },
+                  { value: "third-limited", label: "Third Person Limited" },
+                  { value: "third-omniscient", label: "Third Person Omniscient" },
+                ]}
+              />
             </div>
-            <div>
-              <label className="text-[10px] font-mono text-white/30 uppercase tracking-wider block mb-2">Length</label>
-              <select value={length} onChange={(e) => setLength(e.target.value)}
-                className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none font-mono">
-                <option value="short">Short (3-4 chapters)</option>
-                <option value="medium">Medium (5-7 chapters)</option>
-                <option value="long">Long (8-12 chapters)</option>
-              </select>
+            <div className="space-y-1">
+              <span className={LABEL}>Length</span>
+              <InlineSelect
+                ariaLabel="Length"
+                accentColor="purple"
+                value={length}
+                onChange={setLength}
+                options={[
+                  { value: "short", label: "Short (3-4 chapters)" },
+                  { value: "medium", label: "Medium (5-7 chapters)" },
+                  { value: "long", label: "Long (8-12 chapters)" },
+                ]}
+              />
             </div>
           </div>
-          <div>
-            <label className="text-[10px] font-mono text-white/30 uppercase tracking-wider block mb-2">Chapter Length (words per chapter)</label>
-            <div className="flex flex-wrap gap-2">
-              {WORD_COUNT_OPTIONS.map((opt) => (
-                <button key={opt.id} onClick={() => setWordCountRange(opt.id)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-mono border transition-all ${
-                    wordCountRange === opt.id ? "border-neon-purple/40 bg-neon-purple/15 text-neon-purple" : "border-white/8 text-white/30 hover:text-white/50"
-                  }`}>{opt.label}</button>
-              ))}
-            </div>
+          <div className="space-y-1">
+            <span className={LABEL}>Writing model</span>
+            <InlineSelect
+              ariaLabel="Writing model"
+              accentColor="purple"
+              value={modelId}
+              onChange={(v) => {
+                setTouchedModel(true);
+                setModelId(v);
+              }}
+              options={[
+                { value: "", label: "Agent default model" },
+                ...(models ?? []).map((m) => ({ value: m.id, label: `${m.name} · ${m.provider}` })),
+              ]}
+            />
           </div>
-        </div>
+          <div className="space-y-1">
+            <span className={LABEL}>Chapter length (words per chapter)</span>
+            <SegmentedControl
+              label="Chapter length"
+              options={WORD_COUNT_OPTIONS.map((o) => ({ value: o.id, label: o.label }))}
+              value={wordCountRange}
+              onChange={setWordCountRange}
+              className="flex-wrap"
+            />
+          </div>
+        </Card>
 
-        {/* Create Button */}
-        <button onClick={handleCreate} disabled={!premise.trim() || generating}
-          className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl border border-neon-purple/30 bg-neon-purple/10 text-base font-mono text-neon-purple hover:bg-neon-purple/20 transition-all disabled:opacity-30 shadow-[0_0_20px_rgb(var(--ch-rgb-neon-purple)_/_0.1)]">
-          <Sparkles className="w-5 h-5" /> Begin Writing
-        </button>
+        {/* What this button spends, said before it is pressed.
+            Story Weaver used to disclose nothing at all, so the first a person
+            heard of the cost was their provider bill. One quiet line, no modal
+            and nothing to dismiss: the point is not to frighten anyone off, it
+            is that the bill is not a surprise. */}
+        <p data-testid="story-spend-before" className="text-body leading-relaxed text-ps-text-faint">
+          Writing a story calls a paid model, so it costs money. What it has spent so far is shown while you read it, and in Insights alongside everything else.
+        </p>
+
+        <Button
+          variant="primary"
+          color="purple"
+          size="lg"
+          icon={Sparkles}
+          className="w-full"
+          onClick={handleCreate}
+          disabled={!premise.trim() || generating}
+        >
+          Begin Writing
+        </Button>
       </div>
+      {toastElement}
     </AppPageShell>
   );
 }

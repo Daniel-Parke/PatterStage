@@ -1,0 +1,34 @@
+{
+  "id": "T-0078",
+  "intent": "Two integration harnesses were reported as product failures by a fresh QA pass. Neither was -- but behind one of them was a real product defect: reconcile treated a backend 404 as a death certificate on first sight, so a Hermes restart killed every in-flight run within seconds.",
+  "declared": {
+    "capabilities": [
+      "edit-tests"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0078-harnesses-2026-08-31",
+  "claims": [
+    "tests/integration/runtime/composer-smoke.mjs",
+    "tests/integration/runtime/restart-recovery.mjs"
+  ],
+  "composer_smoke_root_cause": "No Authorization header anywhere in the file. /api/health is the ONLY public path in src/proxy.ts, so the health probe passes and every request after it 401s -- producing exactly the two reported failures, in order, with those strings, against a healthy server whose workflows were correctly seeded. Reproduced verbatim before the fix and 11/11 green after it. The commit that fixed every CI harness for this boundary (47b59b01) skipped this one because its own header says it is manual-only; it was the last pre-auth harness in the tree.",
+  "qa_hypotheses_refuted": "The pass offered two explanations and both are wrong. The seed is unconditional at boot and NOT gated by PS_COMPOSER (the flag gates the route, and a flag-off server returns 503 which the harness skips cleanly). The assertion was always correct. Demonstrated rather than argued: the same binary fails without a token and passes with one.",
+  "restart_recovery_root_cause": "The harness inherits process.env and the default gateway is 8642 -- the mock's own port. With nothing listening, ECONNREFUSED takes the deadline-gated branch and the control holds; with ANY gateway answering, GET /v1/runs/backend-abc returns 404, reconcile treats that as authoritative, and the control dies on the first tick while its sibling assertion loses the boot sweep's mission result to a second writer. Exactly the reported 2/17. Pinning HERMES_GATEWAY_URL to a dead port makes the branch the control's own comment describes the only reachable one.",
+  "the_control_now_names_the_writer": "Asserting status === 'started' was too weak for the reason the file's own header gives: two writers can agree on a status and disagree about the explanation. It now asserts the row was not WRITTEN -- error still NULL, updated_at still the seeded instant. Proved by removing the pin, which reproduces the reported failures and adds a third reading `error \"backend no longer has this run (404)\", updated_at ... vs seeded ...`. That is the reviewer's mystery turned into a diagnosis.",
+  "verification": "18/18 green with a 404-answering gateway on the default port. Then the decisive one: with the product fix built, restart-recovery passes 18/18 even WITHOUT the gateway pin -- the reviewer's exact machine shape, which failed 2/17 for them and 3/18 against the narrowed control. The pin is now belt and braces rather than the fix. composer-smoke reproduced red without a token and 11/11 green with one. Gate: lint 0, tsc 0, 3490 tests / 401 suites, build 0.",
+  "timestamps": {
+    "opened": "2026-08-31T13:00:00Z",
+    "updated": "2026-08-31T17:00:00Z",
+    "closed": "2026-08-31T17:00:00Z"
+  },
+  "the_product_defect_behind_the_harness": "reconcile treated a 404 as authoritative and terminal on the FIRST observation, in both the mission and the Composer branch, with no grace and no confirming poll. Hermes keeps its run registry in memory, so a restart -- an upgrade, a crash, an operator bouncing the service -- answers 404 for every live run, and PatterStage failed every in-flight mission and every in-flight Composer stage on the next tick. The scheduler runs a cycle immediately on boot and every 15s after, so the window was seconds. A 404 must now PERSIST for two minutes (~8 ticks); the verdict and its wording are unchanged, and a successful poll clears the window because a gateway restarting mid-poll can 404 once and answer normally moments later.",
+  "why_a_window_and_not_a_counter": "POST /api/runs/reconcile is public and the smokes poll it in one-second loops, so 'N consecutive 404s' measures how often somebody asked rather than how long the run has been missing. The oracle hammers reconcile twelve times inside the window and requires the run to survive. In memory rather than a column: losing the map on restart costs one fresh window -- a new process making a new observation -- and the deadline cap is the backstop either way, so no migration and the head stays at 37.",
+  "also_closed_here": "The mission-side finalize race. reconcile snapshots the active set and then awaits the gateway per row, so a cancellation landing inside that await was overwritten by a verdict computed before it happened -- putting a stopped run back to completed and re-opening the mission behind it. T-0076 closed the Composer side; this predates both. A vanished row is now explicitly not ours to finalize either: deleting a mission cascades to its runs, and writing mission state for a run that no longer exists would be inventing history.",
+  "mutation_finding_product_half": "Nine mutations, seven caught, two survivors. A vanished row had NO defined behaviour -- every test supplied one, and the answer it happened to have existed only because a sibling test's mock omitted the reader entirely. And the ECONNREFUSED control could not see its own mutation: it used a run already past its deadline, so routing connection failures into the 404 grace changed nothing because both paths failed it. A YOUNG run separates them. 9/9 after."
+}

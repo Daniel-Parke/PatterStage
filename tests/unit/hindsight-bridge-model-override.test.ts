@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
 /** @jest-environment node */
+/* eslint-disable @typescript-eslint/no-require-imports */
 
 /**
  * PR 7 — Hindsight bridge model override
@@ -8,6 +8,7 @@
  * that the route makes correct HTTP requests to the Hindsight server.
  */
 
+import type { NextRequest } from "next/server";
 const fetchCalls: Array<{ url: string; method: string; body?: string }> = [];
 
 const mockFetch = jest.fn(
@@ -21,7 +22,7 @@ const mockFetch = jest.fn(
   }
 );
 
-global.fetch = mockFetch;
+global.fetch = mockFetch as unknown as typeof fetch;
 
 jest.mock("next/server", () => ({
   NextRequest: class NextRequest {
@@ -58,7 +59,7 @@ jest.mock("next/server", () => ({
   },
 }));
 
-jest.mock("@/lib/api-logger", () => ({
+jest.mock("@/lib/api/api-logger", () => ({
   logApiError: jest.fn(),
 }));
 
@@ -111,7 +112,7 @@ describe("Hindsight memory direct HTTP", () => {
     const { POST } = await import("@/app/api/memory/hindsight/route");
     const mockReq = {
       json: () => Promise.resolve({ action: "retain", content: "Test memory", tags: ["test"] }),
-    } as unknown as Request;
+    } as unknown as NextRequest;
     await POST(mockReq);
 
     expect(fetchCalls.length).toBeGreaterThanOrEqual(1);

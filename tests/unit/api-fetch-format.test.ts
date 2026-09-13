@@ -6,7 +6,7 @@
  * - appends cronPushError when present
  */
 
-import { apiFetch } from "@/lib/api-fetch";
+import { apiFetch } from "@/lib/api/api-fetch";
 
 describe("apiFetch error formatting", () => {
   const originalFetch = globalThis.fetch;

@@ -1,0 +1,87 @@
+{
+  "note": "Measured by tests/e2e/design-census.spec.ts against the running product. Sprawl counts may fall and never rise; contrast readings may rise and never fall. Rewrite with UPDATE_CENSUS=1 npm run census, and say why in the commit.\n\nT-0117 corrected how contentLeft is read, so the three geometry numbers are not comparable to the ones U0 committed. contentLeft was the COMMONEST left among painted blocks inside <main>, which is a vote: /results/logs paints hundreds of log lines inside its terminal pane and elected the pane's inner left; /work/missions elected an <h2> that outnumbered the cards it sits in, by exactly those cards' padding. It is now the LEFTMOST outermost painted block that is not the page's own ground. Re-measured on the tree U0 baselined, that reads worstHeadingOffset 237 across 23 of 23 routes, not 289 across 21 - the old instrument understated both the size and the reach of the defect. distinctHeadingLefts (7 there, 1 here) was added in the same batch because it states cause 2 without a heuristic at all: how many different x the product's h1 sits at. distinctButtonHeights fell by one for the same kind of reason - a control that is inline in a sentence has a line box, not a height, which the hit-target measure already knew and this one did not.\n\nT-0118 is the surface batch, and these readings are its result rather than an instrument change. The rail moved from 1.06:1 against the page to 1.47:1 and its seam from 1.26:1 to 4.40:1, which is the operator's headline complaint answered in the only terms it can be checked in. controlBordersBelowThree halved, 320 to 156, and every one of the 156 that remain is accent-tinted: colour that means armed, selected or failed, which is the status ladder's and is U6. decorativeBordersBelowThree does not go to zero by design - the hairline rung is 1.63:1 on purpose, because a card whose fill already sits 1.47:1 off the page does not also need a 3:1 stroke - so read it as a count of boundaries nobody can see rather than of boundaries below a target.\n\nT-0122 is the primitive batch, and it deliberately moves these numbers hardly at all: U8 BUILDS the set and U9-U13 adopt it, so the only screens that change are the ones already going through `Button`. distinctButtonHeights 28 -> 27 and distinctButtonChromes 85 -> 83 is what declaring three heights on the shared button buys while 321 raw <button> elements outside ui/ still size themselves - Button is 104 of the product's ~425 buttons, so a quarter of them now come in three heights and the rest still come in whatever padding gives them. The conversion batches are where this falls, and if it does not fall there the primitive set did not work.\n\nT-0123 adds routesWithSplitBlocks and worstBlockLeftSpread, which state cause 2 from the inside. Gate 6 asserts h1.left === contentLeft, and contentLeft is the LEFTMOST content block, so a page whose blocks disagree with EACH OTHER passes it: /work/missions had its insights strip on the column and its board 24px inside, because MissionsList opened with a px-6 of its own inside a shell that already owned the measure, and the gate compared the heading to the strip and was satisfied.\n\nROWS, not blocks, and the first cut of this got that wrong. Comparing every content block to the leftmost reported 15 of 23 routes split by up to 789px, and almost all of it was grid - the second and third cards of a three-column layout are content blocks at +395 and +789 and are exactly where they belong. Grouped into rows by vertical overlap first, the real reading is 2 routes and 538px. Both are /agent/*, and they are U11's: a subtitle beside something on /agent/memory and /agent/models, and on models an action button whose row starts 538px in. That last one may be a right-aligned action rather than a misalignment, and the batch that rebuilds that screen is the one that can tell - which is why this is a count that ratchets rather than a gate that fails.",
+  "viewport": {
+    "width": 1440,
+    "height": 900
+  },
+  "counts": {
+    "routes": 21,
+    "distinctFontSizes": 7,
+    "twelvePxShare": 0.5,
+    "monoShare": 0.68,
+    "textBelowFloor": 0,
+    "distinctBorderColours": 24,
+    "distinctCardChromes": 54,
+    "distinctButtonHeights": 20,
+    "distinctButtonChromes": 45,
+    "distinctRadii": 5,
+    "distinctBoxShadows": 8,
+    "distinctZLayers": 1,
+    "controlBordersBelowThree": 82,
+    "decorativeBordersBelowThree": 714,
+    "hitTargetsBelowTwentyFour": 0,
+    "routesWithMisalignedHeading": 0,
+    "worstHeadingOffset": 0,
+    "distinctContentWidths": 1,
+    "distinctHeadingLefts": 1,
+    "routesWithSplitBlocks": 1,
+    "worstBlockLeftSpread": 538,
+    "routesOverflowingX": 0,
+    "railVsPageContrast": 1.47,
+    "railDividerContrast": 4.4
+  },
+  "allowed": [
+    {
+      "when": "2026-09-07",
+      "reason": "T-0119. All four follow from one intended change and all four are U8's to take back. (1) decorativeBordersBelowThree +37: the 32 section headings gained the hairline rule that makes a heading read as one. The hairline is 1.63:1 BY CONSTRUCTION and clears the 1.55 floor the live gate holds; this metric's floor is 3:1, which the ladder deliberately does not meet for a card outline, so the number punishes doing the right thing and should be re-cut in U16. (2) distinctButtonHeights +7, and the two chrome counts with it, because a chrome key carries its height: button labels rose from 12px to 14px, which is the register decision, and this product has no button height scale at all - every height is whatever its label makes it. The Button primitive's three fixed heights are U8.",
+      "rose": [
+        "distinctCardChromes rose from 88 to 90",
+        "distinctButtonHeights rose from 22 to 29",
+        "distinctButtonChromes rose from 85 to 86",
+        "decorativeBordersBelowThree rose from 572 to 609"
+      ]
+    },
+    {
+      "when": "2026-09-07",
+      "reason": "T-0121. Both rises are arithmetic on a smaller denominator or a correct design choice, and neither makes the product more 12px or more mono. (1) twelvePxShare +0.02: the rail's brand tagline moved from text-body to text-micro, which is two text nodes across 23 routes, exactly the +46 measured. A tagline set at the same size as the product name above it is the absence of hierarchy this programme removes; 12px is the right size for it. (2) monoShare +0.01: deleting the sub-link tier removed 22 INTER labels, so the mono count is unchanged and only the denominator moved. Nothing became more mono.",
+      "rose": [
+        "twelvePxShare rose from 0.56 to 0.58",
+        "monoShare rose from 0.63 to 0.64"
+      ]
+    },
+    {
+      "when": "2026-09-07",
+      "reason": "T-0123: the census walks 24 routes rather than 23. /work/automation is a new destination (decision 9), so it contributes its own skip link, help link and concept hint to the absolute counts, and its own borders. The one reading that is not the extra route is distinctButtonHeights: the rail's expanded row went 26px to 24px to pay for the Automation entry, and the rail's rows are not Button-based, so 24 joined the set while 26 stayed. Every one of these is a count over more product, not more sprawl per screen.",
+      "rose": [
+        "distinctButtonHeights rose from 27 to 28",
+        "controlBordersBelowThree rose from 153 to 154",
+        "decorativeBordersBelowThree rose from 598 to 601",
+        "hitTargetsBelowTwentyFour rose from 84 to 86"
+      ]
+    },
+    {
+      "when": "2026-09-07",
+      "reason": "T-0124: distinctBorderColours 34 -> 35 and decorativeBordersBelowThree 601 -> 602, and both are the same fact. DistributionHistogram moved out of SVG because it was the one chart carrying text inside a preserveAspectRatio=none stretch, squashing every glyph to 57% of its width. Its bars were strokes and are borders now, so the census can SEE them: chart chrome that was always painted has entered a count that could not previously reach it. The colour is the viz layer's categorical accent, which S5 exempts from the status ladder by design, and the axis moved onto the hairline rung in the same change after the live contrast gate caught it at 1.27:1.",
+      "rose": [
+        "distinctBorderColours rose from 34 to 35",
+        "decorativeBordersBelowThree rose from 601 to 602"
+      ]
+    },
+    {
+      "when": "2026-09-07",
+      "reason": "U11 (T-0125): content that was behind a click, or on a route the census never visited, is on a censused page now. Skills opens with its rows on screen: 78 mono skill ids, 78 mono status words and 77 hairline row rules that were behind twenty collapsed categories. The 27 settings section editors, never routes the census walked, are sections of /agent/settings: 27 hairline cards, 27 header rules and the mono chips, pills and Clear buttons every field carried on its own page. The mono is the register decision 10 assigns to ids, status words and commands; the borders are the hairline rung, 1.63:1 by design, below the 3:1 this count measures against.",
+      "rose": [
+        "monoShare rose from 0.63 to 0.68",
+        "decorativeBordersBelowThree rose from 602 to 728"
+      ]
+    },
+    {
+      "when": "2026-09-10",
+      "reason": "C6 (T-0143): both rises are the primitives being adopted, not a screen getting worse. monoShare 0.67 to 0.68 because the shared Button and Badge are mono by decision 10 (a button label is a machine word) and 23 raw controls plus dozens of hand-drawn pills became them; the programme's 45% target is a type-register goal that the conversion batches move toward by replacing 12px mono elsewhere, not by unmaking this. decorativeBordersBelowThree 691 to 714 because Card's hairline rung is 1.63:1 on purpose, as this file's own note says: a card whose fill already sits 1.47:1 off the page does not also need a 3:1 stroke, so every inline chrome that became a Card adds one counted hairline. controlBordersBelowThree, the measure that is a target, did not rise.",
+      "rose": [
+        "monoShare rose from 0.67 to 0.68",
+        "decorativeBordersBelowThree rose from 691 to 714"
+      ]
+    }
+  ]
+}

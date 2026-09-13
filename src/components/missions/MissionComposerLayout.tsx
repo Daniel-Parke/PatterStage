@@ -5,30 +5,9 @@ import { ChevronRight } from "lucide-react";
 
 export function ComposerFieldLabel({ children }: { children: ReactNode }) {
   return (
-    <label className="text-xs text-white/40 font-mono block mb-1.5">
+    <label className="text-micro text-ps-text-muted font-mono block mb-1.5">
       {children}
     </label>
-  );
-}
-
-export function ComposerSectionHeading({
-  title,
-  description,
-}: {
-  title: string;
-  description?: string;
-}) {
-  return (
-    <div className="pt-6 first:pt-0 border-t border-white/10 first:border-t-0">
-      <h3 className="text-xs font-mono text-white/50 uppercase tracking-widest">
-        {title}
-      </h3>
-      {description && (
-        <p className="text-xs text-white/30 font-mono mt-1 leading-relaxed">
-          {description}
-        </p>
-      )}
-    </div>
   );
 }
 
@@ -72,39 +51,39 @@ export function ComposerAccordion({
 
   return (
     <section
-      className={`pt-6 border-t border-white/10 overflow-visible border-l-2 pl-3 -ml-0.5 ${!open ? borderAccent : "border-l-white/10"}`}
+      className={`pt-6 border-t border-ps-edge-hairline overflow-visible border-l-2 pl-3 -ml-0.5 ${!open ? borderAccent : "border-l-ps-edge-hairline"}`}
     >
       <div className="flex items-start justify-between gap-3">
         <button
           type="button"
           onClick={toggle}
-          className="flex-1 flex items-start justify-between gap-3 py-3 text-left hover:bg-white/[0.02] rounded-lg -mx-1 px-1 transition-colors min-w-0"
+          className="flex-1 flex items-start justify-between gap-3 py-3 text-left hover:bg-ps-surface-raised rounded-ps-md -mx-1 px-1 transition-colors min-w-0"
           aria-expanded={open}
         >
           <span className="min-w-0 flex items-start gap-2">
             {step != null && (
-              <span className="shrink-0 w-5 h-5 rounded-full border border-white/20 text-[10px] font-mono text-white/50 flex items-center justify-center mt-0.5">
+              <span className="shrink-0 w-5 h-5 rounded-full border border-ps-edge-emphasis text-micro font-mono text-ps-text-muted flex items-center justify-center mt-0.5">
                 {step}
               </span>
             )}
             <span className="min-w-0">
-              <span className="block text-xs font-mono text-white/50 uppercase tracking-widest">
+              <span className="block text-micro font-mono text-ps-text-muted uppercase tracking-widest">
                 {title}
               </span>
               {description && (
-                <span className="block text-xs text-white/30 font-mono mt-1 leading-relaxed">
+                <span className="block text-micro text-ps-text-muted font-mono mt-1 leading-relaxed">
                   {description}
                 </span>
               )}
               {!open && hintWhenCollapsed && (
-                <span className="block text-[10px] text-neon-cyan/50 font-mono mt-1.5">
+                <span className="block text-micro text-neon-cyan/80 font-mono mt-1.5">
                   {hintWhenCollapsed}
                 </span>
               )}
             </span>
           </span>
           <ChevronRight
-            className={`w-4 h-4 text-white/40 shrink-0 mt-0.5 transition-transform ${open ? "rotate-90" : ""}`}
+            className={`w-4 h-4 text-ps-text-muted shrink-0 mt-0.5 transition-transform ${open ? "rotate-90" : ""}`}
           />
         </button>
         {actions && (

@@ -91,6 +91,32 @@ describe("useStoredBool", () => {
     window.localStorage.setItem = originalSetItem;
   });
 
+  it("migrates a value from the legacy key once, then removes it", async () => {
+    window.localStorage.setItem("ch.legacy-key", "true");
+    const { result } = renderHook(() =>
+      useStoredBool("ps.new-key", false, "ch.legacy-key"),
+    );
+    await waitFor(() => {
+      expect(result.current[0]).toBe(true);
+    });
+    // Value copied to the new key; the legacy key is cleaned up.
+    expect(window.localStorage.getItem("ps.new-key")).toBe("true");
+    expect(window.localStorage.getItem("ch.legacy-key")).toBeNull();
+  });
+
+  it("prefers the new key over the legacy key when both exist", async () => {
+    window.localStorage.setItem("ps.new-key", "false");
+    window.localStorage.setItem("ch.legacy-key", "true");
+    const { result } = renderHook(() =>
+      useStoredBool("ps.new-key", true, "ch.legacy-key"),
+    );
+    await waitFor(() => {
+      expect(result.current[0]).toBe(false);
+    });
+    // Legacy key is left untouched (the new key already won).
+    expect(window.localStorage.getItem("ch.legacy-key")).toBe("true");
+  });
+
   it("ignores stored values that are not 'true' or 'false'", async () => {
     // The hook only acts on the literal strings "true"/"false". Any
     // other stored value is ignored and the default wins.

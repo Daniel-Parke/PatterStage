@@ -5,8 +5,8 @@
 // and SOURCE_META (used by session list page).
 // Previously both were duplicated inline across multiple components.
 
-import { Bot, Calendar, Cpu, Globe, Wrench, User, Zap } from "lucide-react";
-import type { SessionSource } from "@/lib/session-repository";
+import { Bot, Calendar, Cpu, Globe, HelpCircle, MessageSquare, Split, Terminal, Wrench, User, Zap } from "lucide-react";
+import type { KnownSessionSource } from "@/lib/sessions/session-repository";
 
 // ── Role Metadata (session transcript viewer) ───────────────
 
@@ -47,20 +47,23 @@ export const ROLE_META: Record<
   },
   system: {
     icon: <Cpu className="w-3.5 h-3.5" />,
-    color: "text-white/50",
-    bg: "border-white/10 bg-white/5",
-    bgSolid: "bg-white/5",
-    text: "text-white/40",
+    color: "text-ps-text-muted",
+    bg: "border-ps-edge-hairline bg-ps-surface-raised",
+    bgSolid: "bg-ps-surface-raised",
+    text: "text-ps-text-muted",
     label: "SYSTEM",
   },
 };
 
 // ── Source Metadata (session list badges) ───────────────────
 
-export const SOURCE_META: Record<
-  SessionSource,
-  { label: string; colorClass: string; icon: React.ReactNode }
-> = {
+export interface SourceMeta {
+  label: string;
+  colorClass: string;
+  icon: React.ReactNode;
+}
+
+const SOURCE_META: Record<KnownSessionSource, SourceMeta> = {
   cli: {
     label: "CLI",
     colorClass: "bg-neon-orange/10 text-neon-orange",
@@ -81,7 +84,40 @@ export const SOURCE_META: Record<
     colorClass: "bg-neon-purple/10 text-neon-purple",
     icon: <Globe className="w-3 h-3" />,
   },
+  chat: {
+    label: "Chat",
+    colorClass: "bg-neon-cyan/10 text-neon-cyan",
+    icon: <MessageSquare className="w-3 h-3" />,
+  },
+  subagent: {
+    label: "Subagent",
+    colorClass: "bg-neon-pink/10 text-neon-pink",
+    icon: <Split className="w-3 h-3" />,
+  },
+  tui: {
+    label: "TUI",
+    colorClass: "bg-ps-surface-raised text-ps-text-secondary",
+    icon: <Terminal className="w-3 h-3" />,
+  },
 };
+
+/**
+ * The badge for a source, which never invents one.
+ *
+ * The column is free text, and the old `SOURCE_META[source] ?? SOURCE_META.cli`
+ * fallback badged every unrecognised value "CLI": a subagent session read as a
+ * CLI session and could not be filtered for at all (T-0105, D29). An unknown
+ * source prints itself.
+ */
+export function sourceMeta(source: string): SourceMeta {
+  const known = (SOURCE_META as Record<string, SourceMeta | undefined>)[source];
+  if (known) return known;
+  return {
+    label: source,
+    colorClass: "bg-ps-surface-raised text-ps-text-muted",
+    icon: <HelpCircle className="w-3 h-3" />,
+  };
+}
 
 // ── Session title helper ────────────────────────────────────
 //

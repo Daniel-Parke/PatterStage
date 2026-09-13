@@ -1,0 +1,49 @@
+{
+  "id": "T-0077",
+  "intent": "Switching the memory provider changed the database row and nothing else: the page still reported hindsight with the same facts. Reported as High by the 2026-08-30 fresh-agent QA pass, with a root cause that turned out to be wrong.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0077-memory-switch-2026-08-31",
+  "claims": [
+    "src/lib/memory/memory-providers/registry.ts",
+    "src/lib/memory/memory-providers/repository.ts",
+    "src/lib/memory/memory-providers/unavailable-provider.ts",
+    "src/app/api/memory/route.ts",
+    "src/components/memory/MemoryProviderSettings.tsx",
+    "tests/"
+  ],
+  "invariants": [
+    "I1 The provider the database says is active is the one the product talks to, and the one it names.",
+    "I2 A type with no client is NAMED, not anonymised. holographic stays holographic -- what is missing is a client, not a selection -- and it refuses to serve rather than pretending.",
+    "I3 An active row that is DISABLED reports none. It must never be replaced by another provider's hardcoded endpoint.",
+    "I4 makeActive implies enabled, on both the update and the insert path.",
+    "I5 A fresh install still auto-connects (the operator's ruling), but says out loud that it guessed, and names the endpoint it guessed, until a human presses Save.",
+    "I6 An unreachable provider is named along with the address it was tried at. 'none' for every failure collapses two different problems into one unhelpful word."
+  ],
+  "the_qa_diagnosis_was_wrong": "The report attributed the symptom to GET /api/memory re-parsing the agent's config.yaml. That read is deliberate and documented: docs/MEMORY.md says the file is consulted for exactly one thing -- recognising a holographic install -- and 'does not decide where Hindsight is reached', while migration 022's header says PatterStage owns which provider is active and how to reach it. The endpoint already read the DB. Recording the correction matters because the wrong fix (deleting the config.yaml read) would have removed working holographic detection and left all three real defects.",
+  "three_root_causes": [
+    "RC-1 registry.ts switched on the type and its `default:` built a HindsightMemoryProvider, so EVERY type was Hindsight and flipping the row was structurally unobservable.",
+    "RC-2 GET /api/memory hardcoded provider:'hindsight' in the success body, so even a corrected registry would have answered the wrong name on the wire.",
+    "RC-3 the sharpest: getActiveMemoryConfig ignored an active-but-DISABLED row and substituted a hardcoded hindsight@127.0.0.1:9177, while updateMemoryProvider's insert path wrote `enabled = patch.enabled ? 1 : 0` -- so a PUT that set makeActive and omitted enabled CREATED exactly that row, answered 200, and left every reader silently talking to 9177."
+  ],
+  "how_a_qa_instance_read_the_operators_real_memory": "Buried in the pass's deviation notes rather than filed as a finding. The seeded default is hindsight@127.0.0.1:9177 and 9177 is exactly where a real Hindsight listens, so a second install on one machine connects to the first operator's memory and renders their facts as its own. The operator ruled the zero-config connect stays and gets LABELLED. No migration was needed: 022 seeds created_at and updated_at from the same instant and every write stamps updated_at, so 'they differ' already means 'a human confirmed this'.",
+  "why_it_survived": "GET /api/memory has no in-app consumer at all -- the page reads /api/memory/config and /api/memory/hindsight -- so the lie was on an API surface nobody rendered. And no test asserted that makeActive changes what getActiveMemoryProvider returns; that assertion is now the first in the oracle, and any one of the three root causes breaks it.",
+  "oracle_provenance": "Committed alone at 61f8051d ahead of the implementation at b08f3d3e: eleven assertions, eight red and three green controls. The controls are load-bearing -- a fresh install must STILL auto-connect (the ruling), an operator disabling a provider without activating it must still disable it, and `enabled` must not become permanently true.",
+  "mutation_finding": "Ten mutations, seven caught, three gaps. THE BANNER ASSERTION WAS A SOURCE GREP: replacing its JSX condition with `{false && (` left the phrase in the file -- inside the comment explaining the banner -- so the check passed while the banner was unreachable. It is now a render test. The no-row-at-all fallback was never exercised, because the auto-connect control used the seeded row. And one mutation proved nothing (its pattern did not match) and was rewritten rather than counted. 10/10 after.",
+  "found_while_proving_it": "The unreachable path still hardcoded a flat 'none'. The oracle forbade a hardcoded 'hindsight' and would have allowed exactly the literal that replaced it -- which is the argument for proving a batch end to end rather than trusting a green suite.",
+  "verification": "Proved live on an isolated instance: PUT {type:'holographic', makeActive:true} OMITTING enabled now produces enabled=true/isActive=true (it produced the silently-ignored row before), /api/memory/config resolves active as holographic, and /api/memory answers provider 'holographic' with \"The 'holographic' memory provider is selected but not reachable at 127.0.0.1:9177. Check it on the Memory page.\" Reset to a fresh-install row, the Memory page renders exactly one status banner: \"Using the built-in default -- not yet confirmed. PatterStage guessed 127.0.0.1:9177. If another memory service is already running there, this will show its memories rather than yours.\" Gate: lint 0, tsc 0, 3475 tests / 400 suites, knip 0, canary OK, build 0.",
+  "timestamps": {
+    "opened": "2026-08-31T15:10:00Z",
+    "updated": "2026-08-31T16:20:00Z",
+    "closed": "2026-08-31T16:20:00Z"
+  }
+}

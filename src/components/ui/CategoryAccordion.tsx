@@ -14,12 +14,12 @@ interface CategoryAccordionProps {
 }
 
 const dotColorMap: Record<string, string> = {
-  pink: "bg-pink-400",
-  cyan: "bg-cyan-400",
-  purple: "bg-purple-400",
-  green: "bg-green-400",
-  orange: "bg-orange-400",
-  blue: "bg-blue-400",
+  pink: "bg-neon-pink",
+  cyan: "bg-neon-cyan",
+  purple: "bg-neon-purple",
+  green: "bg-neon-green",
+  orange: "bg-neon-orange",
+  blue: "bg-cherenkov-300",
 };
 
 export default function CategoryAccordion({
@@ -40,12 +40,12 @@ export default function CategoryAccordion({
       {/* Header */}
       <button
         onClick={() => expandable && setOpen(!open)}
-        className={`w-full flex items-center justify-between px-1 py-1.5 ${expandable ? "hover:bg-white/[0.02] cursor-pointer" : "cursor-default"} transition-colors`}
+        className={`w-full flex items-center justify-between px-1 py-1.5 ${expandable ? "hover:bg-ps-surface-raised cursor-pointer" : "cursor-default"} transition-colors`}
       >
         <div className="flex items-center gap-2">
           <div className={`w-1.5 h-1.5 rounded-full ${dotColor}`} />
-          <span className="text-[11px] font-medium text-white/50 uppercase tracking-wider">{name}</span>
-          <span className="text-[10px] font-mono text-white/20">
+          <span className="text-micro font-medium text-ps-text-muted uppercase tracking-wider">{name}</span>
+          <span className="text-micro font-mono text-ps-text-faint">
             {count}
           </span>
         </div>
@@ -53,9 +53,9 @@ export default function CategoryAccordion({
           {headerRight}
           {expandable && (
             isExpanded ? (
-              <ChevronDown className="w-3 h-3 text-white/20" />
+              <ChevronDown className="w-3 h-3 text-ps-viz-glyph-idle" />
             ) : (
-              <ChevronRight className="w-3 h-3 text-white/20" />
+              <ChevronRight className="w-3 h-3 text-ps-viz-glyph-idle" />
             )
           )}
         </div>

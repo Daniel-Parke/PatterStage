@@ -1,18 +1,30 @@
 #!/usr/bin/env python3
 """
-Control Hub — release-confidence install/update harness (Docker, local-only).
+PatterStage — release-confidence install/update harness (Docker, local-only).
 
 Runs isolated scenarios against your **current working tree copy**: ``scripts/bootstrap/setup.sh``,
-``scripts/bootstrap/install.sh`` (bootstrap + ``--in-repo``), ``scripts/application/ch-deploy.sh update``,
+``scripts/bootstrap/install.sh`` (bootstrap + ``--in-repo``), ``scripts/application/ps-deploy.sh update``,
 optional upstream Hermes installer, with runtime-generated user data under ``CH_DATA_DIR`` and Hermes profile
 markers. Ephemeral ``git`` state lives **inside the container** only.
 
-**Manual verification (required before releases):** run
-``python tests/integration/test_full_install_update_process.py --profile release`` with Docker
-up, read full logs + final summary, fix failures until exit 0. Not intended for CI.
+**This runs in CI.** The ``install-harness`` job in ``.github/workflows/ci.yml``
+runs ``--profile smoke --skip-http`` on every push and pull request. WG-OPS-002
+ruled the native host install the one supported deployment model, and death #1 in
+the venture brief is a stranger's first install failing, so the install path is a
+gate rather than a pre-release ritual (WO-0011).
+
+It was previously marked "not intended for CI". That was true while
+``setup.sh``'s ``npm run build`` fetched fonts from the network, which would have
+made this job a network flake wearing a gate's clothing. WO-0002 vendored the
+fonts, so the build is deterministic and the disclaimer no longer holds.
+
+**Manual verification (still worth doing before releases):** run
+``python tests/integration/test_full_install_update_process.py --profile release``
+with Docker up, read full logs + final summary, fix failures until exit 0. CI runs
+the smoke profile; ``release`` covers the fuller matrix that CI does not.
 
 Non-interactive paths use env flags documented in ``scripts/bootstrap/install.sh`` and
-``scripts/lib/ch-deploy-impl.sh``. Optional ``--with-interactive`` appends TTY-driven scenarios
+``scripts/tooling/ps-deploy.mjs``. Optional ``--with-interactive`` appends TTY-driven scenarios
 that run ``expect`` **inside** the Linux test image (see ``docker/TestHarness.dockerfile``),
 so the host stays Windows-friendly (no host-side ``pty``).
 
@@ -39,7 +51,7 @@ import time
 from pathlib import Path
 from typing import Callable
 
-IMAGE_TAG = "ch-control-hub-fulltest:latest"
+IMAGE_TAG = "patterstage-fulltest:latest"
 DOCKERFILE_REL = Path("docker/TestHarness.dockerfile")
 
 DEFAULT_HERMES_INSTALL_URL = (
@@ -86,6 +98,8 @@ def _release_scenarios(*, include_hermes_upstream: bool) -> list[str]:
     s = _smoke_scenarios(include_hermes_upstream=False)
     s.extend(
         [
+            "restart",
+            "rebuild",
             "install_bootstrap",
             "install_in_repo",
             "update_preserves_user_data",
@@ -105,6 +119,47 @@ def _interactive_scenarios_tail() -> list[str]:
         "install_in_repo_interactive_profiles_yes",
         "install_bootstrap_interactive",
     ]
+
+
+def _describe_manifest_change(before: str, after: str) -> str:
+    """Say which files went, arrived or changed, rather than only that one did.
+
+    Each manifest line is `<sha256>  <path>` from sha256sum, so the path is the
+    identity and the hash is the content. Splitting on that makes the three
+    interesting cases separable, and they are not equally alarming: a file that
+    VANISHED is possible data loss, while one that merely changed may be a file
+    the update is supposed to rewrite and nobody remembered to exclude.
+    """
+
+    def index(manifest: str) -> dict[str, str]:
+        out: dict[str, str] = {}
+        for line in manifest.splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            parts = line.split(None, 1)
+            if len(parts) == 2:
+                out[parts[1].strip()] = parts[0].strip()
+        return out
+
+    a, b = index(before), index(after)
+    gone = sorted(set(a) - set(b))
+    new = sorted(set(b) - set(a))
+    changed = sorted(k for k in set(a) & set(b) if a[k] != b[k])
+
+    lines = []
+    if gone:
+        lines.append("  REMOVED (this is the data-loss case):")
+        lines.extend(f"    - {p}" for p in gone)
+    if new:
+        lines.append("  ADDED:")
+        lines.extend(f"    + {p}" for p in new)
+    if changed:
+        lines.append("  CONTENTS CHANGED:")
+        lines.extend(f"    ~ {p}" for p in changed)
+    if not lines:
+        lines.append("  (the listings differ only in whitespace or ordering)")
+    return "\n".join(lines)
 
 
 class Harness:
@@ -201,6 +256,11 @@ class Harness:
             dirs_exist_ok=True,
             ignore=_ignore,
         )
+        # Never leak the developer's local env into the Linux container — the
+        # container writes its own .env.local during setup. Otherwise a host
+        # Windows PS_DATA_DIR / HERMES_HOME pollutes the run (paths like
+        # `C:\Users\...` become literal dir names inside the container).
+        (dest / ".env.local").unlink(missing_ok=True)
         self._normalize_shell_lf(dest)
 
     def _normalize_shell_lf(self, workspace: Path) -> None:
@@ -246,6 +306,41 @@ class Harness:
         subprocess.run(
             ["docker", "cp", str(workspace) + "/.", f"{container}:/workspace"],
             check=True,
+        )
+        self.normalize_workspace_ownership(container)
+
+    def normalize_workspace_ownership(self, container: str) -> None:
+        """Make ``/workspace`` owned by the user the container's commands run as.
+
+        ``docker cp`` (without ``-a``) preserves the *source* uid/gid whenever the
+        source filesystem carries POSIX ownership. On a Linux host that is the
+        invoking user — uid 1001 on a GitHub runner — while everything inside the
+        container runs as root, so the copied tree lands owned by a stranger. Git
+        refuses such a repository ("detected dubious ownership"), and commands that
+        set up gently, like ``git config``, degrade that into the far less obvious
+        ``fatal: not in a git directory`` — which reads as "there is no .git here"
+        and sent WO-0019 hunting a missing directory that was present all along.
+
+        A Windows host has no POSIX ownership to preserve, so the same copy lands
+        root-owned and every git scenario passes. That asymmetry, not the checkout
+        depth, is why ``update`` passed locally and failed on CI.
+
+        A real install is owned by the user who runs it; mixed ownership is an
+        artefact of the copy, so normalising it here restores fidelity rather than
+        silencing a check. The line it prints is the diagnostic WO-0019 asked for:
+        it records, every run, whether ``.git`` survived the copy and what git
+        makes of the result.
+        """
+        self.docker_exec(
+            container,
+            "set -e\n"
+            "before=$(stat -c '%u:%g' /workspace/.git 2>/dev/null || echo absent)\n"
+            'chown -R "$(id -u):$(id -g)" /workspace\n'
+            "after=$(stat -c '%u:%g' /workspace/.git 2>/dev/null || echo absent)\n"
+            "tree=$(git -C /workspace rev-parse --is-inside-work-tree 2>&1 | tail -n1)\n"
+            'echo "[harness] /workspace .git owner ${before} -> ${after}'
+            ' (container user $(id -u):$(id -g)); git repo: ${tree}"\n',
+            workdir="/",
         )
 
     def docker_exec(
@@ -317,7 +412,7 @@ class Harness:
     def seed_fresh(self, container: str) -> None:
         self.docker_exec(
             container,
-            "rm -rf /root/.hermes /root/control-hub/data /tmp/chdata /tmp/ch-hub-bare.git "
+            "rm -rf /root/.hermes /root/control-hub/data /root/patterstage/data /tmp/chdata /tmp/ch-hub-bare.git "
             "/tmp/ch-install-harness 2>/dev/null || true\n"
             "mkdir -p /root\n",
         )
@@ -376,6 +471,11 @@ class Harness:
             "cd /workspace\n"
             "npm ci\n"
             "HERMES_HOME=/tmp/ch-prebuild-no-push npm run prebuild\n"
+            # prebuild emits patterstage.db on a clean tree, but falls back to an
+            # existing control-hub.db (the repo may ship one) — copy whichever it
+            # produced, seeded under the LEGACY name so the scenario simulates a
+            # pre-rename install that the update migrates.
+            f"cp -f data/patterstage.db '{dr}/control-hub.db' 2>/dev/null || "
             f"cp -f data/control-hub.db '{dr}/control-hub.db'\n",
         )
 
@@ -391,11 +491,17 @@ class Harness:
     def manifest_data_dir(self, container: str, root: str) -> str:
         """Sorted sha256 listing for stable comparison (excludes logs).
 
-        ``hermes-detection.json`` is regenerated by ``ch-deploy update`` / ``scripts/tooling/discover-agents.mjs``
+        ``hermes-detection.json`` is regenerated by ``ps-deploy update`` / ``scripts/tooling/discover-agents.mjs``
         with new timestamps every run — exclude it so deploy/update harness snapshots stay stable.
 
         ``control-hub.db`` and ``seed-state.json`` are updated by ``seed-catalog --merge`` on update;
         user-owned JSON/markers are asserted separately via ``assert_sentinel_ch_files``.
+
+        ``auth-token`` is minted by the app on first boot since authentication began
+        failing closed, so under ``--skip-http`` it first appears during the update
+        rather than during setup. It is excluded here and asserted properly by
+        ``assert_auth_token_intact``: what matters about that file is that it exists
+        and is not rotated, neither of which a byte-equal listing was checking.
         """
         r = root.replace("'", "'\"'\"'")
         return self.docker_exec_capture(
@@ -404,9 +510,41 @@ class Harness:
             f"cd '{r}' && find . -type f ! -path './logs/*' "
             f"! -path './hermes-detection.json' "
             f"! -path './control-hub.db' "
+            f"! -path './patterstage.db' "
+            f"! -path './patterstage.db-wal' ! -path './patterstage.db-shm' "
+            f"! -path './control-hub.db-wal' ! -path './control-hub.db-shm' "
+            f"! -name '*.pre-migrate-*' ! -name '*.pre-baseline-*' "
+            f"! -path './auth-token' "
             f"! -path './seed-state.json' | LC_ALL=C sort | xargs -r sha256sum\n",
             workdir="/",
         )
+
+    def assert_auth_token_intact(self, container: str, root: str, before: str | None) -> None:
+        """The token must exist after an update, and must not have been rotated.
+
+        Both halves are the operator's problem rather than a tidiness question.
+        A missing token locks them out of their own install; a rotated one
+        silently breaks the ``?ps_token`` link the installer printed at them and
+        that they have very likely bookmarked.
+
+        ``before`` is the token's contents prior to the update, or None when the
+        install had not minted one yet -- which is the ordinary case under
+        ``--skip-http``, where no server ran during setup.
+        """
+        r = root.replace("'", "'\"'\"'")
+        after = self.docker_exec_capture(
+            container,
+            f"test -s '{r}/auth-token' && cat '{r}/auth-token'\n",
+            workdir="/",
+        ).strip()
+        if not after:
+            raise AssertionError(
+                "auth-token is missing or empty after the update; the operator is locked out",
+            )
+        if before and before != after:
+            raise AssertionError(
+                "auth-token was rotated by the update; every bookmarked ?ps_token link is now dead",
+            )
 
     def sha256_file(self, container: str, path: str) -> str:
         p = path.replace("'", "'\"'\"'")
@@ -569,7 +707,23 @@ test -s /root/.hermes/profiles/qa/AGENTS.md
         self.docker_exec(
             container,
             f"set -e\n"
-            f'test -s "{data_root}/control-hub.db"\n',
+            f'test -s "{data_root}/patterstage.db" || test -s "{data_root}/control-hub.db"\n',
+            workdir="/",
+        )
+
+    def assert_rename_migrated(self, container: str, data_root: str) -> None:
+        """After `ps-deploy update`, the legacy control-hub.db is renamed to
+        patterstage.db in place and .env.local CH_* keys become PS_*."""
+        dr = data_root.replace("'", "'\"'\"'")
+        self.docker_exec(
+            container,
+            "set -e\n"
+            f"test -s '{dr}/patterstage.db'\n"
+            f"test ! -f '{dr}/control-hub.db'\n"
+            "grep -q '^PS_RENAMED=1' /workspace/.env.local\n"
+            "grep -q '^PS_DATA_DIR=' /workspace/.env.local\n"
+            "if grep -q '^CH_DATA_DIR=' /workspace/.env.local; then "
+            "echo 'CH_DATA_DIR not rewritten to PS_DATA_DIR' >&2; exit 1; fi\n",
             workdir="/",
         )
 
@@ -779,7 +933,7 @@ git push origin dev
         self.append_env_local(container, "\nCH_UPDATE_GIT_BRANCH=dev\n")
         self.docker_exec(
             container,
-            "cd /workspace && bash scripts/application/ch-deploy.sh update",
+            "cd /workspace && bash scripts/application/ps-deploy.sh update",
             env={
                 "CI": "1",
                 "CH_INSTALL_NONINTERACTIVE": "1",
@@ -878,6 +1032,68 @@ test -f scripts/.harness-marker
         finally:
             self._rm_container(c)
 
+    def run_deploy_lifecycle(self, container: str, action: str) -> None:
+        """Run `ps-deploy.sh <restart|rebuild>` and assert the server came back.
+
+        ps-deploy.mjs spawns a detached next-server then blocks on its own
+        readiness probe (GET /api/health), exiting 0 only when the fresh server
+        answers — so a 0 exit already proves the lifecycle. We additionally
+        confirm the status file reports success for this action and the recorded
+        server PID is alive + answering, then stop the detached server. HERMES_HOME
+        is pinned to a clean container path so the status/PID files are isolated.
+        """
+        script = f"""
+set -e
+cd /workspace
+export HERMES_HOME=/root/.hermes
+mkdir -p "$HERMES_HOME/logs"
+PORT=$(grep -E '^PORT=' /workspace/.env.local | tail -n1 | sed 's/^PORT=//' | tr -d '\\r')
+export PORT="${{PORT:-42069}}"
+bash scripts/application/ps-deploy.sh {action}
+STATUS="$HERMES_HOME/logs/ps-deploy.status"
+test -f "$STATUS" || {{ echo "no ps-deploy.status after {action}" >&2; exit 1; }}
+grep -q 'state=success' "$STATUS" || {{ echo "deploy {action} not success:" >&2; cat "$STATUS" >&2; exit 1; }}
+grep -q 'action={action}' "$STATUS" || {{ echo "status action mismatch:" >&2; cat "$STATUS" >&2; exit 1; }}
+PIDFILE="$HERMES_HOME/logs/ps-server.pid"
+test -f "$PIDFILE" || {{ echo "no ps-server.pid after {action}" >&2; exit 1; }}
+SPID=$(cat "$PIDFILE")
+kill -0 "$SPID" 2>/dev/null || {{ echo "spawned server pid $SPID not alive" >&2; exit 1; }}
+curl -sf -o /dev/null "http://127.0.0.1:${{PORT}}/api/health" || {{ echo "server not answering /api/health" >&2; exit 1; }}
+kill "$SPID" 2>/dev/null || true
+echo "[harness] {action} lifecycle OK (pid $SPID on port $PORT)"
+"""
+        self.docker_exec(
+            container,
+            script,
+            env={"CI": "1", "CH_INSTALL_NONINTERACTIVE": "1", "HERMES_HOME": "/root/.hermes"},
+        )
+
+    def scenario_restart(self) -> None:
+        """setup → `ps-deploy restart` spawns a server that answers /api/health."""
+        ws = self.temp_workspace()
+        c = self.start_container("restart")
+        try:
+            self.docker_cp_workspace(c, ws)
+            self.seed_fresh(c)
+            self.run_setup(c)
+            self.assert_paths(c)
+            self.run_deploy_lifecycle(c, "restart")
+        finally:
+            self._rm_container(c)
+
+    def scenario_rebuild(self) -> None:
+        """setup → `ps-deploy rebuild` rebuilds + restarts; server answers."""
+        ws = self.temp_workspace()
+        c = self.start_container("rebuild")
+        try:
+            self.docker_cp_workspace(c, ws)
+            self.seed_fresh(c)
+            self.run_setup(c)
+            self.assert_paths(c)
+            self.run_deploy_lifecycle(c, "rebuild")
+        finally:
+            self._rm_container(c)
+
     def scenario_install_bootstrap(self) -> None:
         ws = self.temp_workspace()
         c = self.start_container("install-bootstrap")
@@ -904,7 +1120,7 @@ test -f scripts/.harness-marker
             self._rm_container(c)
 
     def scenario_update_preserves_user_data(self) -> None:
-        """``ch-deploy update`` runs seed-catalog but must not wipe user CH_DATA_DIR or custom Hermes profiles."""
+        """``ps-deploy update`` runs seed-catalog but must not wipe user CH_DATA_DIR or custom Hermes profiles."""
         ws = self.temp_workspace()
         c = self.start_container("update-preserves")
         data_root = "/root/chdata-pre"
@@ -919,6 +1135,13 @@ test -f scripts/.harness-marker
 
             manifest_before = self.manifest_data_dir(c, data_root)
             schema_before = self.sqlite_schema_version(c, f"{data_root}/control-hub.db")
+            # Read rather than hashed, so the assertion after the update can say
+            # whether it was ROTATED and not merely whether it differs.
+            token_before = self.docker_exec_capture(
+                c,
+                f"cat '{data_root}/auth-token' 2>/dev/null || true\n",
+                workdir="/",
+            ).strip()
 
             self.configure_file_origin_and_push_dev(c)
             self.bump_upstream_dev(c)
@@ -926,14 +1149,19 @@ test -f scripts/.harness-marker
             self.assert_updated_to_origin_dev(c)
 
             manifest_after = self.manifest_data_dir(c, data_root)
-            schema_after = self.sqlite_schema_version(c, f"{data_root}/control-hub.db")
+            # The update auto-migrates control-hub.db -> patterstage.db in place
+            # and rewrites .env.local CH_* -> PS_* (idempotent, marker recorded).
+            self.assert_rename_migrated(c, data_root)
+            schema_after = self.sqlite_schema_version(c, f"{data_root}/patterstage.db")
 
             if manifest_before != manifest_after:
                 raise AssertionError(
-                    "CH_DATA_DIR manifest changed after update; possible data loss",
+                    "data dir manifest changed after update; possible data loss\n"
+                    + _describe_manifest_change(manifest_before, manifest_after),
                 )
             if schema_after < schema_before:
                 raise AssertionError("schema_version regressed")
+            self.assert_auth_token_intact(c, data_root, token_before or None)
             self.assert_hermes_qa_marker(c)
             self.assert_custom_profile_unchanged(c)
             self.assert_sentinel_ch_files(c, data_root)
@@ -941,7 +1169,7 @@ test -f scripts/.harness-marker
             self._rm_container(c)
 
     def scenario_update_runs_seed_catalog(self) -> None:
-        """``ch-deploy update`` merges catalog into SQLite and pushes seed profiles to Hermes."""
+        """``ps-deploy update`` merges catalog into SQLite and pushes seed profiles to Hermes."""
         ws = self.temp_workspace()
         c = self.start_container("update-seed-catalog")
         data_root = "/root/chdata-pre"
@@ -964,8 +1192,8 @@ test -f scripts/.harness-marker
             manifest_after = self.manifest_data_dir(c, data_root)
             if manifest_before != manifest_after:
                 raise AssertionError("CH_DATA_DIR user files changed after update")
-            self.assert_agent_profiles_seeded(c, f"{data_root}/control-hub.db")
-            self.assert_seed_qa_disk_matches_db(c, f"{data_root}/control-hub.db")
+            self.assert_agent_profiles_seeded(c, f"{data_root}/patterstage.db")
+            self.assert_seed_qa_disk_matches_db(c, f"{data_root}/patterstage.db")
         finally:
             self._rm_container(c)
 
@@ -1140,6 +1368,8 @@ exit [lindex $result 3]
             "dashboard": self.scenario_dashboard,
             "both": self.scenario_both,
             "update": self.scenario_update,
+            "restart": self.scenario_restart,
+            "rebuild": self.scenario_rebuild,
             "install_bootstrap": self.scenario_install_bootstrap,
             "install_in_repo": self.scenario_install_in_repo,
             "update_preserves_user_data": self.scenario_update_preserves_user_data,
@@ -1201,7 +1431,7 @@ exit [lindex $result 3]
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
     p = argparse.ArgumentParser(
-        description="Local Docker harness: bootstrap install/setup + ch-deploy update release confidence",
+        description="Local Docker harness: bootstrap install/setup + ps-deploy update release confidence",
     )
     p.add_argument(
         "--repo-root",
@@ -1279,6 +1509,8 @@ def _valid_scenario_ids() -> frozenset[str]:
             "dashboard",
             "both",
             "update",
+            "restart",
+            "rebuild",
             "install_bootstrap",
             "install_in_repo",
             "update_preserves_user_data",

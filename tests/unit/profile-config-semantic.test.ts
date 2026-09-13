@@ -1,6 +1,6 @@
 /** @jest-environment node */
 
-import { configYamlSemanticallyMatches } from "@/lib/profile-config-builder";
+import { configYamlSemanticallyMatches } from "@/modules/hermes/lib/profile-config-builder";
 
 describe("configYamlSemanticallyMatches", () => {
   it("matches when only yaml formatting or toolset order differs", () => {

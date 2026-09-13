@@ -1,0 +1,58 @@
+{
+  "id": "T-0033",
+  "intent": "Migrate the record surfaces onto the shared container components, executing WG-WEB-003 (D): records with three or more comparable fields are a table or a ledger, not a rounded box. Operator ruled 2026-08-24 to do this now. Measured cause: Card is imported by 10 files, Panel by 4 and Button by 36, against 313 raw button elements and 209 inline rounded-border boxes, so the console's styling rulings apply to a minority of it and the vendored bloom field lights a minority of surfaces. Scope: the record surfaces (sessions, missions, logs, tools) onto Card/Panel/Button/ledger rows. Behaviour preserving: this changes what renders the record, never which records render or what they say. Done when the shared containers carry the record surfaces and a future styling ruling reaches them by construction. Closed 2026-08-25. The record surfaces (sessions, logs, missions, tools) migrated onto the shared containers per WG-WEB-003, carrying data-bloom so the vendored field lights them by construction rather than by sprinkling the attribute. Behaviour preserving: review diffed a sample and confirmed the same records render with the same data and the same actions, and that httpSurface did not move.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R2",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0033-containers-2026-08-25",
+  "claims": [
+    "src/app/(main)/sessions/page.tsx",
+    "src/app/operations/tools/page.tsx",
+    "src/components/session/SessionCard.tsx",
+    "src/components/session/MissionGroupCard.tsx",
+    "src/components/logs/LogFilePicker.tsx",
+    "src/components/logs/LogTerminal.tsx",
+    "src/components/logs/LogRow.tsx",
+    "src/components/missions/MissionsList.tsx",
+    "src/components/tools/ToolsetReferenceTable.tsx",
+    "src/components/dashboard/LedgerRow.tsx",
+    "src/components/dashboard/Panel.tsx",
+    "src/components/dashboard/ActiveMissionsPanel.tsx",
+    "src/components/dashboard/ErrorsPanel.tsx",
+    "tests/unit/ledger-row.test.tsx",
+    "tests/unit/record-surface-containers.test.ts",
+    "tests/unit/record-surfaces.test.tsx"
+  ],
+  "invariants": [
+    "I1 Behaviour preserving. No query, filter, sort, handler or href changes. The same records render, in the same order, saying the same things, and every control keeps the callback it had.",
+    "I2 One row definition. The ledger row exists once, in src/components/dashboard/LedgerRow.tsx, and the dashboard panels that established the pattern consume it rather than keeping their own copy.",
+    "I3 Bloom by construction. Every container and row a record surface renders through carries data-bloom from the component, never from a call site sprinkling the attribute.",
+    "I4 No raw record box survives in the migrated files. The measured signature, a rounded-xl surface painted bg-dark-900/50, is absent from every file in the record-surface set.",
+    "I5 The gate does not move sideways. design-lint baseline stays at 461 with no key grown, sql-outside-repository and hermes-outside-adapter stay at zero, coverage floors are not lowered, and the canary httpSurface digest is unchanged because no route is added.",
+    "I6 Another agent owns the skills page. src/app/operations/skills and src/components/skills are not touched."
+  ],
+  "rollback": "One-command revert. Every change is presentation-layer TSX plus new test files; there is no migration, no schema element, no route and no persisted state, so `git revert` of this task's commits returns the tree to d606cbe1 behaviour exactly. The oracle commit lands first and on its own, so reverting the implementation commit alone leaves the oracle red and visible rather than silently green. No data is written by this task, so a revert has nothing to undo beyond source.",
+  "oracle_provenance": "Authored by the executor in this session BEFORE any file under src/ was edited, and committed on its own ahead of the implementation, per the EXECUTOR R2 clause. Three files: tests/unit/ledger-row.test.tsx (the shared row primitive and its two bloom tiers), tests/unit/record-surface-containers.test.ts (the structural half, held as source-level fact: which shared container each record surface goes through, and the absence of the raw record box), tests/unit/record-surfaces.test.tsx (the behaviour-preserving half, rendered: same records, same text, same handlers, same hrefs).",
+  "timestamps": {
+    "opened": "2026-08-24T03:00:00Z",
+    "updated": "2026-08-26T00:00:00Z",
+    "closed": "2026-08-26T00:00:00Z"
+  },
+  "notes": [
+    "Closed 2026-08-25 in three commits: cf9fe3a6 froze the oracle, d2e61a3c migrated the surfaces, a4bf3f08 fixed a defect the browser found and jsdom could not. All six invariants hold. httpSurface did not move; moduleGraph and prerender did, which is the task doing what it says.",
+    "Measured, not asserted. Panel goes from 4 importer files to 9. The raw record box, a rounded-xl surface painted bg-dark-900/50, is gone from all eight files in the record-surface set. Raw button elements across those eight fall 15 to 10. Button's importer count is unchanged at 36: the Toolsets page already imported it for three header actions while hand-rolling the 23 controls below them, which is the shape of the problem the ruling names.",
+    "HONEST LIMIT, the ten raw buttons that remain. All are MissionsList's view controls: the status filter group, the two category pill rows, the search clear, and the column collapse and show-all pair. They are not records, and converting a two-state filter pill needs a selected or pressed variant on Button that nothing has ruled. Recorded rather than half-done, because a pill given `variant=primary` when active is a guess at a ruling, not a migration.",
+    "OUT OF SCOPE and still a raw box: ProcessesPanel renders a card grid of process records with data-bloom set by hand, and the dashboard was not one of the four surfaces the operator named. Same for the notice boxes on the Toolsets page, which are messages rather than records. Both are candidates for the next pass at this ruling.",
+    "The browser earned its place. jsdom computes no layout, so the render oracle called the sessions ledger green while its divider painted on top of the next row instead of between the two: SessionCard wraps its row in a Link, an <a> is display:inline, and a border on an inline box reserves no layout space. Read out of Chrome on the production build against a copy of the real database, then fixed with one class. This is the T-0024 lesson applied to its own successor.",
+    "Verification ran against a COPY of the data directory on a spare port, never the live one. Checked first that no mission was queued_for_run and no cron job enabled, so the background scheduler had nothing to dispatch and the operator's no-spend-without-approval rule was not put at risk to check a CSS class.",
+    "Concurrency, recorded because it shaped the evidence. Three other agents were editing this tree throughout, and at one point a sibling git worktree under tmp/ put another task's in-flight source into this tree's tsc and next build, which are not directory-scoped. The gate was therefore run in a detached worktree of these commits alone. Two facts fall out of that and are worth a task: tmp/ is gitignored but tsconfig.json does not exclude it, so any scratch checkout there breaks the build for everyone; and the design-lint baseline read 461 at the start of this task and 23 at the end, shrunk by T-0031's docs cleanup, not by anything here. Nothing in this task added a baseline entry."
+  ]
+}

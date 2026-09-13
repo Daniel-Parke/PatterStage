@@ -12,35 +12,21 @@ jest.mock("fs", () => ({
   unlinkSync: jest.fn(),
 }));
 
-jest.mock("@/lib/hermes-agent-runtime", () => ({
+jest.mock("@/modules/hermes/lib/agent-runtime", () => ({
   getAgentLlmEndpoints: jest.fn(() => ({
     apiUrl: "http://127.0.0.1:9/v1/chat/completions",
     gatewayBase: "http://127.0.0.1:9",
   })),
 }));
 
-jest.mock("@/lib/paths", () => ({
-  CH_DATA_DIR: "/tmp/ch-data",
-  PATHS: {
-    stories: "/tmp/ch-data/stories",
-    missions: "/tmp/ch-data/missions",
-    controlHubDb: "/tmp/ch-data/control-hub.db",
-    templates: "/tmp/ch-data/templates",
-    recroom: "/tmp/ch-data/recroom",
-    workspaces: "/tmp/ch-data/workspaces",
-    auditLog: "/tmp/ch-data/audit",
-    chScripts: "/tmp/ch-data/scripts",
-    chHardwareLogs: "/tmp/ch-data/logs",
-  },
-  getChScriptsDir: () => "/tmp/ch-data/scripts",
-  getChHardwareLogDir: () => "/tmp/ch-data/logs",
-}));
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories are hoisted above imports
+jest.mock("@/lib/host/paths", () => require("../helpers/mocks").pathsMock());
 
-jest.mock("@/lib/api-logger", () => ({
+jest.mock("@/lib/api/api-logger", () => ({
   logApiError: jest.fn(),
 }));
 
-jest.mock("@/lib/story-weaver/prompts", () => ({
+jest.mock("@/modules/rec-room/lib/prompts", () => ({
   getStoryPrompt: jest.fn(() => "system prompt"),
 }));
 
@@ -58,20 +44,12 @@ describe("/api/stories auth checks", () => {
     jest.clearAllMocks();
   });
 
-  it("POST returns 503 when CH_READ_ONLY=true", async () => {
-    process.env.CH_READ_ONLY = "true";
-
-    const { POST } = await import("@/app/api/stories/route");
-    const request = new NextRequest("http://localhost/api/stories", {
-      method: "POST",
-      body: JSON.stringify({ action: "list" }),
-    });
-    const res = await POST(request);
-
-    expect(res.status).toBe(503);
-    const data = await res.json();
-    expect(data.error).toContain("read-only");
-  });
+  // Read-only refusal is no longer asserted here, because it is no longer
+  // enforced here. T-0048 deleted the per-route guard: `src/proxy.ts` refuses
+  // every unsafe method under PS_READ_ONLY before a handler runs, so a test that
+  // calls this handler directly bypasses the thing it means to check. The
+  // guarantee is asserted per route, in both directions, in
+  // tests/unit/read-only-actually-reads.test.ts.
 
   it("POST proceeds when not read-only", async () => {
     delete process.env.CH_READ_ONLY;

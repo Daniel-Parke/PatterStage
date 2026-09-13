@@ -1,0 +1,37 @@
+{
+  "id": "T-0084",
+  "intent": "The findings from the 2026-08-30 fresh-agent QA pass that are RECORDS rather than fixes: one by-design behaviour the operator ruled to keep, two of the report's own hypotheses that turned out to be wrong, and one comment that named a function which no longer exists.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R0",
+  "tier_ruled": "R0",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0084-records-2026-08-31",
+  "claims": [
+    "src/app/api/tools/route.ts",
+    "org/tasks/"
+  ],
+  "finding_9_fs_list_defaults_to_home": "CONFIRMED, and KEPT BY DESIGN (operator ruling 4). POST /api/fs/list with no `path` lists the user's home directory. The containment evidence is what makes that safe rather than merely tolerated: every path is resolved and checked against an allow-root before any read, so the default is a starting POINT for a picker and not an escape from containment.\n\nThe QA report proposed requiring `path` and called it zero-UI-impact. That is REFUTED by DirectoryPickerModal.tsx:62-65, which opens by issuing exactly the bare, path-less request the change would reject -- so the 'zero-impact' fix breaks the directory picker on first open. A real version is two-part: teach the client its own start root, then require the parameter. Not worth the churn for a default that is already contained, which is what the ruling says.",
+  "finding_10_both_hypotheses_refuted": "The report offered two explanations for test:smoke-composer failing out of the box: that the composer seed is gated behind PS_COMPOSER, and that an assertion is wrong. Neither is true. The seed runs unconditionally at boot, and the assertions are correct.\n\nThe harness sends NO BEARER TOKEN. The S1 auth hardening moved its health probe to the one public path and every subsequent request 401s -- which produces exactly the two reported failures, in that order, with those strings. Commit 47b59b01 fixed every CI harness for this boundary and skipped this one because it is manual-only. Fixed in T-0078 by porting the three-line bearer pattern from full-stack-smoke.mjs. Recorded because a refuted hypothesis is worth as much as a confirmed one: the next reader should not re-investigate the seed.",
+  "finding_2_root_cause_was_misattributed": "Recorded in full in T-0077 and cross-referenced here. The report blamed GET /api/memory re-parsing config.yaml. That read is deliberate and documented -- docs/MEMORY.md says the file is consulted for exactly one thing, recognising a holographic install, and 'does not decide where Hindsight is reached'. Acting on the diagnosis as written would have deleted working holographic detection and left all three real defects in place.",
+  "finding_13_precise_cause": "Recorded in full in T-0083. The limiter was never missing: sessions-api-guard.ts has enforced 120/min since the sessions API was written, attached to /api/sessions/[id] and not to the list route the tester hit. 'No rate limiting' and 'the rate limiter is on the wrong route' lead to different work.",
+  "the_stale_comment": "api/tools/route.ts cited `api/agent/personality`'s GET handler as the shape it matched. That handler does not exist and has not for some time; the route is PUT-only, and T-0083 gave it a GET that answers 405. A comment naming a sibling that is not there sends the next reader hunting for a precedent instead of reading the code in front of them -- the same cost as ConfigSync's false skills count in T-0081, which is why both were worth a line.",
+  "phase_0_findings_that_are_records": [
+    "Zero console errors across all 23 static pages, measured with a deliberately-failing canary first so 'no errors' meant the instrument worked rather than that nothing was listening.",
+    "No horizontal overflow at 375px on Missions, Models or Composer.",
+    "The memory down-state message is as good as the report said, and an EMPTY chat correctly blocks the send and explains why rather than storing a transport error.",
+    "P0-1 (the /logs 404 rendered as an empty state) was fixed in T-0079; P0-4 and P0-5 (the banner's wrong port and its unreachable copy) in T-0080. P0-2 and P0-3 -- eight unlabelled form controls and a heading-order jump -- remain open and are the subject of the form-label gate."
+  ],
+  "verification": "No behavioural change beyond one corrected comment. Gate: lint 0, tsc 0, full suite green, knip 0, canary OK, build 0.",
+  "timestamps": {
+    "opened": "2026-09-01T02:15:00Z",
+    "updated": "2026-09-01T02:30:00Z",
+    "closed": "2026-09-01T02:30:00Z"
+  }
+}

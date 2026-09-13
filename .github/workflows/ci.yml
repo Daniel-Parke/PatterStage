@@ -1,5 +1,23 @@
 name: CI
 
+# QUARANTINED RETRIES (WG-DEL-004, ruled C).
+#
+# The rule forbids a retry on a blocking gate, and offers one alternative: file
+# each remaining retry as a quarantined flake with a reason. These are that filing.
+#
+# The checkout and npm-ci retries below are NOT masking a defect in this code. They
+# absorb failures in GitHub Actions infrastructure and the npm registry, neither of
+# which this repository can fix, and a retry there does not turn a red gate green:
+# it turns a run that never started into one that did. Removing them would make CI
+# less reliable with no gain in signal.
+#
+# What WAS removed: the Google Fonts warmup and the whole-build retry. Those were
+# masking a real build-time network dependency, and the fonts are now vendored
+# under src/app/fonts/ so the dependency is gone rather than retried.
+#
+# Review by 2027-01. If a checkout retry ever fires on something that is not a
+# transport error, it stops being quarantined and becomes a defect.
+
 # Required for actions/checkout on pull_request merge refs (avoids intermittent auth failures).
 permissions:
   contents: read
@@ -60,6 +78,21 @@ jobs:
         run: npm run prebuild
       - name: ESLint
         run: npm run lint
+      # `npm run lint` already runs docs:check, which reads the front matter and
+      # the registry. This runs the GENERATOR, which is the half a checker cannot
+      # speak for: a build that throws on a page docs:check was happy with would
+      # otherwise be discovered by docs-pages.yml, after the merge to main, with
+      # the published site as the error message.
+      - name: Docs site builds
+        run: npm run docs:build
+      # The output canary (WO-0008). Blocking, and cheap: it reads files and
+      # runs the seed-pack validator, no build required. It fails when the URL
+      # surface, next.config's redirects, the seed pack or a generated artefact
+      # changed without the golden being re-blessed in the same commit.
+      - name: Output canary (contract surfaces)
+        run: npm run canary:check
+      - name: Knip (no new dead files / dependency drift)
+        run: npm run lint:knip
       - uses: ./.github/actions/forbid-hermes-paths-in-api
       - name: TypeScript (tsc --noEmit)
         run: npx tsc --noEmit -p tsconfig.json
@@ -67,6 +100,20 @@ jobs:
         run: npm run test:coverage
       - name: Next.js production build
         run: npm run build
+      # The rendered surface, which only exists once the build has run: the
+      # normalised HTML of all 27 prerendered routes plus the build's own route
+      # list and redirects. It is NOT held against a committed golden, because
+      # it moves whenever any page's markup moves and a golden nobody can read
+      # is a golden everybody re-blesses blind. It is recorded so a move can be
+      # compared against the run before it.
+      - name: Output canary (rendered surfaces, recorded)
+        run: npm run canary -- --out output-canary-report.json
+      - name: Upload output canary report
+        uses: actions/upload-artifact@v4
+        with:
+          name: output-canary-report
+          path: output-canary-report.json
+          if-no-files-found: warn
       - name: Upload coverage HTML
         uses: actions/upload-artifact@v4
         with:
@@ -106,7 +153,41 @@ jobs:
       - name: Unit tests with coverage
         run: npm run test:coverage
       - name: Next.js production build
+        # No retry, and no font warmup before it (WG-DEL-004, ruled C:
+        # determinism first). Both existed because Turbopack fetched six font
+        # families from fonts.googleapis.com at build time and treated a failure
+        # as fatal, which made the macOS runner flaky. The fonts are now vendored
+        # under src/app/fonts/, so this build touches no network and a failure
+        # here is a real failure.
         run: npm run build
+
+  # Operational smoke: the OS-seam primitives (detached spawn
+  # survival, port probing, process kill) + a bundled hardware .mjs, on Linux +
+  # macOS. No app build / no Hermes, so it's fast and isolates platform behaviour.
+  boot-smoke:
+    name: boot-smoke (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        id: checkout1
+        continue-on-error: true
+        with:
+          token: ${{ github.token }}
+      - name: Checkout repository (retry)
+        if: steps.checkout1.outcome != 'success'
+        uses: actions/checkout@v5
+        with:
+          token: ${{ github.token }}
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "20"
+      - name: Cross-platform operational smoke
+        run: node tests/scripts/boot-smoke.mjs
 
   e2e-smoke:
     runs-on: ubuntu-latest
@@ -150,6 +231,135 @@ jobs:
           PORT: "3000"
           PLAYWRIGHT_SMOKE: "1"
 
+  # The whole Playwright suite, which is e2e-smoke minus one environment
+  # variable (WG-DEL-002, ruled B: the full end-to-end acceptance suite blocks
+  # main). PLAYWRIGHT_SMOKE=1 narrows testMatch to smoke.spec.ts, so e2e-smoke
+  # runs 5 of the suite's 98 tests and the other 93 ran on no branch in CI at
+  # all: not on pull requests, not on dev, not on main. That is what this ends.
+  #
+  # Pull requests targeting main only, plus manual dispatch. The suite boots a
+  # production server and drives the whole suite, main is the branch
+  # the ruling is about, and pushes and dev pull requests keep the fast smoke.
+  # `github.base_ref` is the PR's target branch and is empty on other events, so
+  # the condition cannot fire outside a pull request.
+  e2e-full:
+    name: e2e-full (PLAYWRIGHT_SMOKE unset)
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.base_ref == 'main')
+    runs-on: ubuntu-latest
+    # The suite itself is about 50 seconds locally; almost all of this budget is
+    # npm ci, the Chromium download and the production build. Generous rather
+    # than tight, because a blocking gate that times out reports a defect that
+    # is not there.
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        id: checkout1
+        continue-on-error: true
+        with:
+          token: ${{ github.token }}
+      - name: Checkout repository (retry)
+        if: steps.checkout1.outcome != 'success'
+        uses: actions/checkout@v5
+        with:
+          token: ${{ github.token }}
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Install dependencies (with cache reset retry)
+        run: |
+          npm ci || (npm cache clean --force && npm ci)
+      - name: Cache Playwright browsers
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
+      - name: Install Playwright Chromium
+        run: npx playwright install chromium
+      - name: Run database migrations
+        run: npm run prebuild
+      - name: Next.js production build
+        run: npm run build
+      # No PLAYWRIGHT_SMOKE. That is the entire difference from e2e-smoke, and
+      # keeping the command identical is deliberate: the two jobs cannot drift
+      # apart into different suites.
+      - name: E2E full suite
+        run: npm run test:e2e
+        env:
+          CI: true
+          PORT: "3000"
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-full
+          path: |
+            playwright-report
+            test-results
+          if-no-files-found: ignore
+
+  # A fresh install is a gate (WG-OPS-002 ruled A, the native host install; death
+  # #1 in the venture brief). This harness installs PatterStage from scratch into
+  # throwaway containers and then runs the update path, which is the one journey
+  # every single user takes and the one nothing else in CI covered.
+  #
+  # It could only be wired in once WO-0002 vendored the fonts: setup.sh runs
+  # `npm run build`, and that build used to fetch from fonts.googleapis.com, so
+  # this job would have been a network flake wearing a gate's clothing.
+  #
+  # It is the install journey of the acceptance set (WG-DEL-002, ruled B), and
+  # acceptance-gate below fails when it fails. The "not yet required" caveat this
+  # comment used to carry has been paid off: the first green run on real CI
+  # hardware was read (run 30226331826, four scenarios), and the five-scenario
+  # run went green on 6a84bdc4 once WO-0019 found the ownership cause. It keeps
+  # running on every push and pull request as well, not only on the main-blocking
+  # set, because a fresh install breaking is death #1 and the sooner a branch
+  # hears about it the cheaper the fix.
+  # Verified locally against Docker 29.4.1 before landing; see the WO-0011 row.
+  install-harness:
+    runs-on: ubuntu-latest
+    # Generous: the harness builds an image and installs Node + the full
+    # dependency tree inside each throwaway container. Well under this locally,
+    # but a cold GitHub runner has no layer cache at all.
+    timeout-minutes: 45
+    steps:
+      # fetch-depth: 0, unlike every other job in this file. The update scenario
+      # copies the workspace into a container, runs `git clone --bare .` against
+      # it and pushes to that clone, so `ps-deploy.sh update` runs against a real
+      # origin. A real user's clone carries its history, so the copy should too.
+      #
+      # It is NOT what unblocked the update scenario. A shallow checkout was the
+      # first hypothesis for `fatal: not in a git directory` and the run failed
+      # identically with fetch-depth: 0, which falsified it. The cause was file
+      # ownership; see normalize_workspace_ownership() in the harness (WO-0019).
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        id: checkout1
+        continue-on-error: true
+        with:
+          token: ${{ github.token }}
+          fetch-depth: 0
+      - name: Checkout repository (retry)
+        if: steps.checkout1.outcome != 'success'
+        uses: actions/checkout@v5
+        with:
+          token: ${{ github.token }}
+          fetch-depth: 0
+      # No node/npm setup step: everything happens inside the containers, which
+      # is the point. The runner supplies Docker and a stdlib-only Python 3.
+      #
+      # All five smoke scenarios run. `update` was excluded while WO-0019 was
+      # open: it failed on Linux only because `docker cp` preserves the runner's
+      # uid, leaving the copied /workspace owned by a user the container's root
+      # git calls dubious. The harness now normalises that ownership after the
+      # copy and prints what it found, so a repeat says so in the log.
+      - name: Fresh install + update, in throwaway containers
+        run: python3 tests/integration/test_full_install_update_process.py --profile smoke --skip-http --scenarios fresh,hermes,dashboard,both,update
+
   docker-image:
     runs-on: ubuntu-latest
     steps:
@@ -165,9 +375,68 @@ jobs:
         with:
           token: ${{ github.token }}
       - name: Build production Docker image
-        run: docker build -f Dockerfile -t control-hub:ci .
+        run: docker build -f Dockerfile -t patterstage:ci .
       - name: Dashboard deploy API — restart smoke (Docker)
         run: bash tests/scripts/docker-deploy-api-smoke.sh
         env:
-          CH_DOCKER_TEST_IMAGE: control-hub:ci
-          CH_DOCKER_TEST_PORT: "42090"
+          PS_DOCKER_TEST_IMAGE: patterstage:ci
+          PS_DOCKER_TEST_PORT: "42090"
+
+  # Validates the runtime adapter against the REAL Hermes Agent (official image)
+  # pointed at a deterministic mock LLM. Heavy (~5GB image pull + agent runtime),
+  # so it stays off pull requests into dev; per-PR coverage there comes from the
+  # fast mock-hermes smoke + the unit contract tests in build-test-*.
+  #
+  # It now also runs on pull requests targeting main, which is the open choice
+  # T-0002 handed to the operator when it recorded how a push-only job hid a red
+  # gate: proving the assembled stack only after the merge inverts "the trunk
+  # takes assembled proof", and the breakage stayed invisible in PR views for
+  # four weeks because of it. Push and dispatch are unchanged, so nothing that
+  # used to run stopped running.
+  real-hermes-integration:
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.base_ref == 'main')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          token: ${{ github.token }}
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "20"
+      - name: Real-Hermes integration (contract + full-stack smoke)
+        run: npm run test:e2e-hermes
+
+  # The main-blocking acceptance set, expressed as one check.
+  #
+  # WG-DEL-002 (B) puts three things in front of main: the full end-to-end
+  # suite, the install journey, and the real-Hermes proof. A workflow file can
+  # only decide which jobs RUN; branch protection decides which ones BLOCK a
+  # merge, and T-0004 recorded that split when it found its own acceptance could
+  # not reach done from inside the repository. This job is the seam between the
+  # two. It fails unless all three succeeded, so the operator makes one check
+  # required on main and the membership of the set stays here in the file, where
+  # it can be reviewed and where adding a fourth member is a diff.
+  #
+  # Still operator-only, still outstanding, and named so nobody assumes it:
+  # adding `acceptance-gate` to the required checks in branch protection on main
+  # (T-0004's remaining half; branch protection currently has zero required
+  # checks). Until that, this job reports and blocks nothing.
+  #
+  # always(), because a `needs` job that failed would otherwise skip this one
+  # and a skipped check reports as neutral rather than red.
+  acceptance-gate:
+    name: acceptance-gate (full suite + install journey + real Hermes)
+    if: always() && (github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.base_ref == 'main'))
+    needs: [e2e-full, install-harness, real-hermes-integration]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Every acceptance job must have succeeded
+        run: |
+          echo "full E2E suite   ${{ needs.e2e-full.result }}"
+          echo "install journey  ${{ needs.install-harness.result }}"
+          echo "real Hermes      ${{ needs.real-hermes-integration.result }}"
+          test "${{ needs.e2e-full.result }}" = success
+          test "${{ needs.install-harness.result }}" = success
+          test "${{ needs.real-hermes-integration.result }}" = success

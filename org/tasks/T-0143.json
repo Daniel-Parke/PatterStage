@@ -1,0 +1,52 @@
+{
+  "id": "T-0143",
+  "intent": "C6 of the consolidation programme: the page layer. The overhaul built the primitives and the token ladder and left the adoption as a baselined debt: 221 inline card chromes, 74 raw palette colours, 20 arbitrary z values, 23 raw controls outside ui/, 12 raw border alphas, 19 page-level writes outside runWrite, eleven effect reads held on the census by name since C3, and twenty-five components under sixty lines with one importer each. The six rules to zero, every read onto useApiResource, the folds folded, the two pages that still swapped their body for a spinner on a reload fixed the way Models was (T-0139).",
+  "declared": {
+    "capabilities": [
+      "edit-source",
+      "edit-tests"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [
+    {
+      "factor": "size-threshold",
+      "tier_floor": "R2",
+      "source": "derived:diff-size",
+      "evidence": "over a hundred files under src across every screen; behaviour held by the existing suites, two new behaviour tests, the oracle, the design and line censuses, and a walk of every route at two widths"
+    }
+  ],
+  "status": "done",
+  "owner_session": "t0143-c6-the-page-layer-2026-09-11",
+  "claims": [
+    "src/",
+    "tests/unit/c6-the-page-layer.test.ts",
+    "tests/unit/",
+    "scripts/tooling/design-lint.baseline.json",
+    "scripts/tooling/design-census.baseline.json",
+    "scripts/tooling/line-census.baseline.json",
+    "docs/",
+    "org/plans/2026-09-consolidation.md"
+  ],
+  "programme": "C6 of org/plans/2026-09-consolidation.md; C7 (the lib root, T-0144) follows.",
+  "timestamps": {
+    "opened": "2026-09-11T04:00:00Z",
+    "updated": "2026-09-11T09:00:00Z",
+    "closed": "2026-09-11T09:00:00Z"
+  },
+  "invariants": [
+    "I1 THE SIX RULES READ ZERO. no-inline-card-chrome, palette-must-be-house, z-scale-only, no-raw-control-outside-ui, no-raw-border-alpha and no-raw-write-outside-the-helper have no violation on the tree, and at most twelve pragmas between them, each with its reason on the line.",
+    "I2 A SCREEN READS THROUGH useApiResource. No apiFetch, safeApiCall or safeApiCallData is reachable from a useEffect callback anywhere under src; the census's read measure is zero and names nothing.",
+    "I3 A RELOAD KEEPS THE BODY. The Skills and Restore pages show the spinner before the first answer only; a reload with content on screen keeps it there, proved the way T-0139 proved it for Models.",
+    "I4 A FOLD LOSES NOTHING. Every folded component's behaviour and tests live in its importer; no assertion was deleted; knip is clean.",
+    "I5 A BASELINE RISES ONLY WITH ITS REASON. design-lint went 369 to 0 and every line-census and design-census measure fell, except three recorded with the reason in the file: mono share and decorative borders below 3:1, both the primitives being adopted (a shared Button is mono by decision 10; Card's hairline rung is 1.63:1 on purpose), and the lines the gate-8 fix and its test added.",
+    "I6 A GATE IS OBEYED, NOT BLESSED. Gate 8 found two targets under 24x24 that this batch introduced, the skip link and the rail's update chip; both were fixed and the gate re-run green over all 21 routes, and the oracle now holds the skip link's focus-only sizing to the button's scale."
+  ],
+  "commits": "c0168ebc the C6 oracle, red at 7 of 8; 8c61d674 the page layer; 5ab3f6b0 the line census re-cut after gate 8's fix; the chore commit that carries this record and the derived views.",
+  "verification": "Gate by exit code on the finished tree: lint 0, tsc 0, jest 0 (6893 tests, 682 suites), knip 0, canary 0, build 0, Playwright 0 (272 passed, 24 skipped, 0 failed, two projects). census 0, census:lines 0. Design-lint debt 369 to 0 across every rule; the six C6 rules read zero. The line census: src 100962 to 100872; handRolledReadHooks 11 to 0; oneImporterComponents 130 to 103. The design census: distinctCardChromes 63 to 54, distinctButtonChromes 56 to 45, distinctButtonHeights 21 to 20, distinctBorderColours 28 to 24, controlBordersBelowThree 102 to 82, decorativeBordersBelowThree 691 to 714. Every documented route walked at 1440 and 390 on the isolated instance: 42 readings, every h1 present, no horizontal overflow inside main or on the document, no console error but the memory provider's own 503 with nothing listening on its port. Gate 8 was run on its own and passes over all 21 routes. The diff under src: 142 files changed, 3814 insertions(+), 3880 deletions(-).",
+  "mutation": "Three mutants against the committed tree, all killed by the oracle: a raw button back on the error page, an arbitrary z-[55] back on the drawer backdrop, and an effect read back inside useVersionFooter.",
+  "deviation": "Eight agents over disjoint file groups, each working from a written brief on disk (scratchpad c6/agent-brief.md) and proving per-file identity by running its related suites before and after; then a coordinator pass. What the agents handed back and the coordinator did: InlineSelect now carries id and title, which retired the ModelPicker pragma; QueryProvider folded into FeedbackProvider, because a server layout cannot hold a client and its only importer was the layout; BrandMark folded into the rail, its one importer once the mobile header moved there; the census's one-importer predicate was corrected to count an index file by its directory; two stale comments were fixed. Five suites had pasted the same safeApiCall-over-apiFetch shim and eight their own query wrapper; both are helpers now (safeApiCallOver, apiFetchOver, queryWrapper, withQuery). The first full jest run turned ten suites red and each was amended at the line with its reason: four mounted a page or hook that reads through react-query, two read the composer page's source for an envelope check that runWrite now makes, one counted an eslint directive that went with the effect it excused, and two gate floors moved because the primitives absorbed the raw population they counted (icon-only 40 to 20, controls 40 to 15). Deviation from the plan: the one-importer target of 95 was not met at 103, because every component under sixty lines is folded and the rest are larger; recorded for C7 and C8."
+}

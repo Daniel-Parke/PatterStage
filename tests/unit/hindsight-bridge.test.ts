@@ -1,5 +1,5 @@
 /**
- * Unit tests for src/lib/hindsight-bridge.ts — pure response-shaping
+ * Unit tests for src/lib/memory/hindsight-bridge.ts — pure response-shaping
  * helpers extracted from the /api/memory/hindsight route.
  */
 
@@ -8,7 +8,7 @@ import {
   mapDirectiveItem,
   mapMentalModelItem,
   normalizeTags,
-} from "@/lib/hindsight-bridge";
+} from "@/lib/memory/hindsight-bridge";
 
 describe("normalizeTags", () => {
   it("returns [] for non-array input", () => {
@@ -62,7 +62,7 @@ describe("mapMemoryItem", () => {
       created_at: "2026-05-01",
       tags: ["hermes"],
       entities: "Hermes",
-      score: 3,
+      proofCount: 3,
     });
   });
 
@@ -81,7 +81,7 @@ describe("mapMemoryItem", () => {
       created_at: "",
       tags: [],
       entities: "",
-      score: 0,
+      proofCount: 0,
     });
   });
 

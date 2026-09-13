@@ -1,0 +1,26 @@
+{
+  "id": "T-0018",
+  "intent": "Phase 7, fifth and last in the chain: put the coverage floors under a ratchet, so lowering a floor fails CI instead of passing it. Warrant WG-DEL-001 (B, floors per surface, ratchet only up). Source row WO-0013. Acceptance: (1) the !src/app/** exclusion deleted from collectCoverageFrom and a src/app/api band added; (2) every floor reset to the measured number rounded down, engine above service above UI; (3) floors moved into a shrink-only baseline checked by the same mechanism as design-lint. Done when lowering a floor fails CI instead of passing it. Tier proposal R2, anticipated factor ci-stateful-infra from derived signal ci-config, evidence the ratchet is a gate mechanism and the floors are read where CI runs the suite; public-contract may also activate, because the coverage configuration names src/app/api. This task and T-0025 build the same kind of guard, a baseline that cannot grow, and should share one mechanism rather than two. Closed 2026-08-23 in 31d40fa9. !src/app/** is gone from collectCoverageFrom and src/app/api is a real band over 94 measured files. All twelve floors are exactly floor(measured) from a freshly generated summary, because the checked-in one was stale from 2026-07-25 and held zero src/app files. Review attacked the ratchet four ways and all four are closed: lowering a floor fails; --update-baseline REFUSES to write a lowered floor; deleting a band fails; and unwiring coverage-floors.cjs from jest.config.js fails. It also probed the hole I would expect (re-narrowing collectCoverageFrom to empty a band silently) and jest itself refuses with 'Coverage data for src/app/api/ was not found'.",
+  "declared": {
+    "capabilities": [
+      "filesystem"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R0",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "phase7-coverage-ratchet-2026-08-23",
+  "claims": [
+    "jest.config.js",
+    "scripts/tooling/",
+    ".github/workflows/"
+  ],
+  "timestamps": {
+    "opened": "2026-07-25T00:00:00Z",
+    "updated": "2026-08-23T03:00:00Z",
+    "closed": "2026-08-23T03:00:00Z"
+  }
+}

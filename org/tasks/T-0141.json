@@ -1,0 +1,47 @@
+{
+  "id": "T-0141",
+  "intent": "C4 of the consolidation programme: the test harnesses. The census counted 6,044 lines of tests/unit inside a six-line window that appears in another suite and a hundred suites mocking @/lib/db by hand. The stanzas the recon named are one factory each in tests/helpers, opt-in per file the way U1 left it: the db double in its stub and in-memory forms, the paths block, the next/server request and response, the page suites' fetch map, the matchMedia surface, the story suites' fixtures and parked fetch, and the fixtures the biggest suites each built. The oracle is identity: the factories behave as the stanzas did, no suite spells a stanza, and the it() count and coverage floors are unchanged.",
+  "declared": {
+    "capabilities": [
+      "edit-tests",
+      "edit-tooling"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {
+      "factor": "size-threshold",
+      "tier_floor": "R1",
+      "source": "derived:diff-size",
+      "evidence": "tests and test helpers only, plus one census predicate; no src, no route, no schema, no protected path; every converted suite run before and after with the same test names and count; the whole gate"
+    }
+  ],
+  "status": "done",
+  "owner_session": "t0141-c4-the-test-harnesses-2026-09-10",
+  "claims": [
+    "tests/helpers/",
+    "tests/unit/",
+    "scripts/tooling/line-census.mjs",
+    "scripts/tooling/line-census.baseline.json",
+    "docs/contributing/testing.md"
+  ],
+  "programme": "C4 of org/plans/2026-09-consolidation.md; C5 (comments that narrate, T-0142) follows.",
+  "timestamps": {
+    "opened": "2026-09-10T17:30:00Z",
+    "updated": "2026-09-10T21:00:00Z",
+    "closed": "2026-09-10T21:00:00Z"
+  },
+  "invariants": [
+    "I1 ONE FACTORY PER STANZA, OPT-IN. tests/helpers holds dbMock, dbSingletonMock(current, { uuid, now }), matchMediaMock, nextServerMock (request and response), pathsMock(over), profilePickerMock, agentRuntimeFakeRootMock, the fetch map, the story harness and the three fixtures; a suite adopts one by calling it, and a suite that mocks differently keeps its own mock.",
+    "I2 IDENTITY. A converted suite keeps every test name, every assertion and its it() count; the corpus's it() total moved only by the oracle's own; the coverage floors did not move.",
+    "I3 THE CORPUS CARRIES NO STANZA. The oracle names the fourteen shapes and refuses a suite that spells one; a new suite reaches for the factory.",
+    "I4 A FACTORY IS A FACTORY. The census's suitesMockingDbInline counts a suite on dbSingletonMock as on a factory, which C0's predicate had not."
+  ],
+  "commits": "137462c9 the C4 oracle, red as a suite without its subjects; 0d54acb1 the factories; ded941f7 the adoption across the corpus; e7768dfd and the commit after it, the fetch map's longest-prefix rule the sweep asked for and its call count; the chore commit that carries this record and the derived views.",
+  "verification": "Gate by exit code on the finished tree: lint 0, tsc 0, jest 0 (6874 tests, 678 suites), knip 0, canary 0, build 0, Playwright 1 (271 passed, 24 skipped, 1 failed, two projects), census 0, census:lines 0. The one that failed in the full run, the help deep-link spec's ? shortcut on Missions, waited past its two-second navigation window under the gate's load and passed 1 of the same alone, exit 0; the batch touched no source. The line census before and after: tests 121516 to 120549 lines; lines inside a repeated six-line window in tests 6044 to 4637; suites mocking the db inline 101 to 14; src 105422 to 105422. The identity oracle: the corpus ran 6851 tests in 677 suites before the adoption (T-0140's committed tree, its last test included) and 6851 in those same 677 suites after it, the oracle's own 23 beside them; every converted suite was run before and after by the agent that converted it, with the test names captured through jest's JSON reporter and diffed byte for byte; the coverage floors held (three bands at baseline). The adoption touched 130 files under tests for 395 lines in and 2,031 out. The oracle: every factory behaves the way the stanza it replaces behaved (eight behaviour tests), the corpus carries none of the fourteen stanzas, and the census reads the fall.",
+  "mutation": "Seven mutants against the committed tree, six killed on the first pass: the db stub's uuid ignoring the suite's own; the in-memory double ignoring the suite's now; the response's ok no longer following the status; the paths override losing to the defaults; the story's next chapter marked on the same object; the census counting a suite on dbSingletonMock as inline again. One survived: the fetch map sorting prefixes shortest first, which every URL in the oracle answered the same because each was an exact key or matched one prefix only. The oracle gained a URL two keys prefix (e7768dfd) and the mutant re-run against it is killed, 7 of 7.",
+  "deviation": "The plan's row named the db stanza, the paths stanza, the request stub, a story harness and the biggest suites' fixtures; the survey found fifteen shapes in all and every one is a factory now, plus a fetch map and matchMedia the row did not name. The adoption was done by six agents in parallel over disjoint file groups (32, 16, 12, 37, 18 and 21 suites), each running every suite before and after and diffing the test names through jest's JSON reporter; eleven suites keep their own mocks because theirs are not the stanza (three next/server doubles that record their calls into __responses, four ProfilePicker doubles rendered as a div, two lucide doubles that render the icon's name as text, one next/link without the rest spread, one composer lucide double rendering S and Sv), and the oracle lists the three recorders by name with the reason and would refuse a listed keep that no longer spelled its stanza. Two things for the operator to weigh, not done here: every one-line factory adoption pays an eslint-disable line for the hoisting-safe require inside jest.mock, twenty-seven files' worth in this batch, which a tests-scoped override of @typescript-eslint/no-require-imports would free; and storyReaderNavigationMock cannot take a suite's module-level const push (SWC hoists the import above it), so the four story suites pass jest.fn() and a suite that asserts on push reaches it through jest.requireMock. The identity count: 6851 before, 6851 after outside the oracle's 23 (T-0140's last test, added after its gate, is the one above that gate's 6850)."
+}

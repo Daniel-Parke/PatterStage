@@ -1,0 +1,55 @@
+{
+  "id": "T-0158",
+  "intent": "On the deployment the documentation recommends for TLS, the session cookie that carries the operator's root-equivalent token is set WITHOUT the Secure flag, for a year, and there is no way to revoke it short of rotating the token for every client at once. src/proxy.ts:285-291 sets `ps_session` to `expected` — the raw token, not a derived session id — with `maxAge: 60*60*24*365` and `secure: request.nextUrl.protocol === \"https:\"`. NextRequest.nextUrl.protocol does not follow `x-forwarded-proto` or `Forwarded`: measured, it reports `http:` in both proxied cases, so `secure` evaluates false. docs/running/deploy.md:152 says 'Use a reverse proxy with automatic certificates (Let's Encrypt)', which is exactly the shape that terminates TLS upstream and forwards plain http. `git grep -nE 'cookies\\.delete|maxAge: 0|signout|logout' -- src` returns nothing, so there is no sign-out: revoking one browser means deleting the token file, which invalidates every Bearer client with it. docs/SECURITY.md:66 calls that token 'root on the host'.",
+  "declared": {
+    "capabilities": [
+      "edit-source",
+      "edit-docs",
+      "edit-tests"
+    ],
+    "side_effects": []
+  },
+  "mode": "high-assurance",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [
+    {
+      "factor": "auth-surface",
+      "tier_floor": "R2",
+      "source": "paths:sensitive",
+      "evidence": "src/proxy.ts is the whole authentication boundary, and this is the cookie that carries the credential"
+    },
+    {
+      "factor": "recorded-deviation-from-a-standard",
+      "tier_floor": "R3",
+      "source": "org/policy.json:131, RUL-SEC-003",
+      "evidence": "RUL-SEC-003 sets ASVS level 2 on the session-auth path. A session cookie that is the credential verbatim, non-expiring in practice and non-revocable, is a deviation whichever way it is resolved, so if the operator chooses to keep any part of it the exclusion is an ADR and the floor is R3."
+    }
+  ],
+  "status": "proposed",
+  "owner_session": "unassigned",
+  "claims": [
+    "src/proxy.ts",
+    "src/lib/api/auth-token.ts",
+    "docs/SECURITY.md",
+    "docs/running/deploy.md"
+  ],
+  "programme": "Found by K7's recon (T-0155), in the one item on the review's security list that it had read and explicitly not assessed: 'Session-cookie design: the cookie value is the raw token with a one-year maxAge (src/proxy.ts:285-291). Read, but not assessed as a finding.' Assessed now. Raised proposed because the fix has options the operator must choose between, and one of them is a new public contract.",
+  "timestamps": {
+    "opened": "2026-09-13T09:00:00Z",
+    "updated": "2026-09-13T09:00:00Z",
+    "closed": null
+  },
+  "invariants": [
+    "I1 THE FLAG IS DECIDED BY WHAT THE BROWSER SEES, NOT BY WHAT NEXT SEES. Any fix reads the forwarded protocol, or takes the answer from configuration, or sets Secure unconditionally and documents the loopback consequence. Reading nextUrl.protocol is the defect.",
+    "I2 LOOPBACK MUST KEEP WORKING. The default install is http://127.0.0.1:<port> and a Secure cookie is not sent over plain http to a non-localhost origin. Browsers treat http://localhost as a secure context, but a LAN address under `npm run start:network` is not. A fix that silently breaks the LAN case has traded one defect for another.",
+    "I3 TRUSTING A HEADER IS ITSELF A DECISION. x-forwarded-proto is caller-controlled unless something strips it. critic-02 already carries the same question for x-forwarded-for and the operator ruled to keep per-caller keys and record the gap. Whatever is chosen here should be consistent with that ruling, not quietly different.",
+    "I4 THE DOCUMENT AND THE CODE AGREE AT THE END. docs/SECURITY.md describes the access model and does not currently mention cookie lifetime, revocation, or the Secure flag. Whatever the code does, that page says it."
+  ],
+  "notes": "MEASURED 2026-09-13, re-runnable. A probe over NextRequest gives: plain http -> `http:`; `x-forwarded-proto: https` -> `http:`; `Forwarded: proto=https` -> `http:`; direct https -> `https:`. So the flag is correct only when Next itself terminates TLS, which the documentation does not recommend.\n\nTHREE THINGS THE OPERATOR CHOOSES BETWEEN, none of them mine to pick. (a) Fix the flag only: read the forwarded protocol, or add a PS_TRUST_PROXY-style key, or set Secure whenever the host is not loopback. Smallest change, leaves the cookie as the raw token. (b) Fix the flag and shorten the life: the one-year maxAge is what turns a leaked cookie into a permanent one. (c) Make the cookie a real session: a random session id stored server-side, so revoking one browser does not rotate the credential for every Bearer client. That is the ASVS-level-2 answer and it is also the largest, and a new stored artefact is a new public contract under policy.json:131, so it needs an ADR.\n\nNOT A FINDING, checked: httpOnly is set, sameSite is lax, and the same-origin check at src/proxy.ts:215-226 covers cookie-authenticated writes, so this is not CSRF-exploitable. The exposure is a cookie that travels in clear on the documented deployment and cannot be revoked.",
+  "commits": "",
+  "verification": "",
+  "review": "",
+  "mutation": "",
+  "deviation": ""
+}

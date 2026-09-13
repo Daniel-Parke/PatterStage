@@ -1,0 +1,58 @@
+{
+  "id": "T-0106",
+  "intent": "B12 of the final-release programme: Composer. DELETE answers 409 with the run count unless discardRunHistory=1 and the UI confirms naming the workflow and the count (D1, blocker); description round-trips (D2); runs-list and detail errors rendered (D3); success and failure in different tones (D6); unsaved Build-tab work guarded (D7); gate notes shown and fed into the retried stage's context (D8); two starter workflows seeded, Research then summarise and Draft and review, with Software Delivery kept third; Duplicate; the workflow name on run rows; waiting on a question distinguished from at a gate; the composer.* events of B4 emitted.",
+  "declared": {
+    "capabilities": [
+      "edit-code",
+      "database"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {
+      "factor": "size-threshold",
+      "tier_floor": "R1",
+      "source": "derived:diff-size",
+      "evidence": "the composer routes, canvas and seed"
+    }
+  ],
+  "status": "done",
+  "owner_session": "session-b12",
+  "claims": [
+    "src/lib/composer/",
+    "src/app/api/composer/",
+    "src/app/work/composer/",
+    "src/components/composer/",
+    "src/hooks/useComposer.ts",
+    "docs/",
+    "tests/"
+  ],
+  "programme": "B12, depends on B2 (T-0096) and B4 (T-0098). Route and canvas tests; a new composer Playwright spec against mock-hermes.",
+  "timestamps": {
+    "opened": "2026-09-05T10:30:00Z",
+    "updated": "2026-09-06T04:00:00Z",
+    "closed": "2026-09-06T04:00:00Z"
+  },
+  "invariants": [
+    "I1 Deleting a workflow that has runs is refused with 409, naming the workflow and the count, and deletes nothing. Only ?discardRunHistory=1 goes ahead. A workflow with no runs is unaffected: two clicks and one request.",
+    "I2 A description round-trips. The canvas carries one, absent means leave the stored one alone and empty means clear it, and every write COALESCEs rather than overwriting.",
+    "I3 A message has a tone: an error is pink, announces itself as an alert, and carries data-tone=\"error\"; success is green.",
+    "I4 An unsaved board is not thrown away. Both tabs stay mounted, so a look at Run keeps the board; a workflow switch with unsaved work asks first and does not move the Select until it is answered; and a blank canvas has a baseline of its own, so a fresh board is not born dirty and is not silently discarded either.",
+    "I5 A failed run-detail read is a banner with a Retry, not a spinner that never stops.",
+    "I6 A gate decision is shown on the stage it was taken at, with its note or the words No note, and it travels with the resume, so the stage sent back to try again is told why. A decision with no note clears a previous one.",
+    "I7 The reserved context markers never reach a stage prompt as though they were outputs of prior stages.",
+    "I8 Three workflows are seeded, by key, so a second boot writes nothing. The two starters each show a gate doing something, and neither reviewer is terminal, because a terminal node completes the run before any edge is read.",
+    "I9 Duplicate validates the board first and sends no key, so it can neither make an invalid workflow silently nor overwrite the thing it copied.",
+    "I10 A run row says which workflow it is a run of, in the ratified word, and a waiting run says whether it wants an answer or a decision."
+  ],
+  "commits": "a1a707bd the oracle alone (8 files, 99 cases, measured red: 63 failing, 36 green controls); 697fe70e the implementation (the DELETE guard and its inline question, the description round trip, the message tone, the two mounted panes and the switch guard, the run-detail banner, the run-row vocabulary and waiting reason, the approvals on the payload and on the stage sheet, the gate note in the prompt, the two starters, Duplicate, a new Playwright spec and the docs); then three sharper oracles the sweep asked for.",
+  "verification": "Gate b12 on the implementation tree by exit code: lint 0 (agent-files, doc-links, derived views, read-only guards, icon-button names, form-control names, design-lint 0 baselined, contrast, coverage floors, eslint, typecheck:tests), tsc 0, jest 0 (536 suites, 5149 tests), knip 0, canary unchanged and re-checked, build 0, Playwright 132 passed 9 skipped, including tests/e2e/composer-build-and-run.spec.ts. Recorded for the successor: npm run test:e2e does NOT build, so the build must be run immediately before it or the specs walk a stale bundle.",
+  "mutation": "49 mutants against the committed tree, 45 killed on the first pass and 49 after three sharper oracles. The three gaps: composerWaitingReason was only ever asked through a page that renders runs already waiting, so a version answering 'at a gate' for a finished run walked through everything; Duplicate had no case pinning that it validates the board first; and the blank canvas had no dirty case of its own, so a baseline never taken on a NEW board survived, and every fresh board would have read as clean. One mutant in the first pass was a no-op of my own making (a statement after a return) and was replaced with a real one, deleting before the question is asked, which the oracle kills.",
+  "proof": "Isolated instance (production build of the implementation tree, e2e-b1 data dir, mock-hermes 8747, PS_COMPOSER=1), four scenes, 24 checks, all PASS. (1) All three workflows are seeded and the starters carry their descriptions. (2) A workflow with one finished run refuses its DELETE with 409 naming 'Walk B12 doomed' and the count, deletes nothing, and goes only when ?discardRunHistory=1 is sent. (3) On the Build tab a description is typed, survives a look at the Run tab with the rest of the board, is what the API answers after Create, and is still there after a second Save; switching workflows with an unsaved name asks first and leaves the board where it was. (4) A run of the research starter reaches its human gate; a rejection with a note is recorded, comes back on the run payload, and is in the run's context for the stage being sent back; the board prints no raw enum.",
+  "deviation": "(1) The canvas takes its dirty baseline from the state being APPLIED rather than from React state: reading nodes in an effect reads the previous board, because setNodes has not committed, and every fresh canvas was born dirty. (2) The two panes are `hidden` divs rather than a ternary, which is what keeps the editor mounted; the run pane's fragment is unchanged inside it. (3) No analytics event is emitted for a delete: composer.workflow_deleted is not in the taxonomy and B4 closed it, so inventing an id here would be a catalogue change wearing a Composer change's clothes. (4) The walk's delete scene cancels its run first. An ACTIVE run blocks the edit for a different and correct reason, and what the scene is about is the finished history a delete would take with it.",
+  "harness_amendments": "None to existing suites: composer-builder, composer-canvas-graph and composer-repository all stayed green, which is what the contract predicted for a repository that keeps its signature, a converter whose third argument is optional, and a COALESCE that only changes the absent case. The new Playwright spec reads the workflows list through its real envelope (`data.workflows`, not `data`) and polls for the seeded starters, because they are written by the background scheduler's boot seed, which races a request made the instant the server answers.",
+  "deferred": "Server-side run pagination and node versioning stay deferred by the plan. The Build tab still has no undo, and a workflow's runs are still the only thing that makes a structural edit destructive, so an edit that adds a stage is as guarded as one that removes it. The gate note is fed to the next stage through the run's context, which means a second gate decision replaces the first note rather than accumulating them; a decision log per stage is what the Gate decisions section shows instead."
+}

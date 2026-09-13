@@ -1,0 +1,40 @@
+{
+  "id": "T-0152",
+  "intent": "The design census reads differently on the same tree. During T-0151's gate it failed with 'routesWithSplitBlocks rose from 1 to 2', the extra route /work/chat and the offending block a div.mb-4.flex.w-full sitting 264px in — a right-aligned chat row. Two further runs of the same step, on the same commit, passed. A gate step that fails once in three on an unchanged tree either sends a batch chasing a defect it did not cause, or teaches the next session to re-run until green, which is how a real regression gets waved through. Find what makes /work/chat's geometry differ between runs and make the measure read the same twice.",
+  "declared": {
+    "capabilities": [
+      "edit-tests"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {
+      "factor": "size-threshold",
+      "tier_floor": "R1",
+      "source": "derived:diff-size",
+      "evidence": "the census harness and whatever it is that leaves state on /work/chat between runs; no product behaviour is expected to change"
+    }
+  ],
+  "status": "proposed",
+  "owner_session": "unassigned",
+  "claims": [
+    "tests/e2e/design-census.spec.ts",
+    "tests/e2e/lib/census-analysis.ts",
+    "tests/e2e/prepare-data-dir.mjs"
+  ],
+  "programme": "Found by K4 (T-0151) while gating the security fixes, and raised rather than folded in: it is not a security finding and it is not in the register, but it is a blind spot in the gate the whole programme runs on.",
+  "timestamps": {
+    "opened": "2026-09-12T18:40:00Z",
+    "updated": "2026-09-12T18:40:00Z",
+    "closed": null
+  },
+  "invariants": [
+    "I1 THE MEASURE STILL MEASURES. routesWithSplitBlocks states cause 2 of the U-programme's alignment work from the inside (T-0123); the fix makes it deterministic, it does not remove it or widen its tolerance to hide the reading.",
+    "I2 IF THE SPLIT IS REAL, IT IS FIXED, NOT SILENCED. A right-aligned chat row may be a genuine split the other runs simply did not render. Decide which before touching the harness, and if it is real the baseline rises with the reason rather than the measure changing.",
+    "I3 NO OTHER MEASURE MOVES. The census reports twenty-four numbers; a harness change that shifts any of the other twenty-three is a different batch."
+  ],
+  "notes": "Evidence, 2026-09-12, all on the same tree: gate run 3 census exit 1 with the message above; a standalone `npm run census` immediately after, exit 0; gate run 4 census exit 0 (49.5s). The split rows are computed by splitBlocks in tests/e2e/lib/census-analysis.ts:284-315, grouped by vertical overlap, tolerance 8px. The baseline's own note (scripts/tooling/design-census.baseline.json, the T-0123 paragraph) says the single expected split is on /agent/models and is an action button 538px in; /work/chat is not in that account. First thing to check is whether the chat route renders a message at all on a freshly prepared data dir, and if so where the row's left comes from."
+}

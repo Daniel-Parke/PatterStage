@@ -1,0 +1,56 @@
+{
+  "id": "T-0157",
+  "intent": "`npm audit` reports 15 vulnerabilities against the installed tree: 1 critical, 8 high, 4 moderate, 2 low. The critical is `next`, pinned at 16.2.9 in package.json:69 and inside the affected range 9.3.4-canary.0 - 16.3.2. The fix is next@16.3.5, and npm reports isSemVerMajor:false, so it is not a major bump. That one bump also clears `postcss` and `sharp`, both high, because both reach the tree through next. Nothing alerted, and the reason is measured rather than guessed: `gh api repos/Daniel-Parke/PatterStage` reports dependabot_security_updates disabled, Dependabot alerts disabled (403 on the alerts endpoint), and all four secret-scanning toggles disabled, on a repository whose visibility is public. install.sh:45 tracks `dev`, so this reaches real installs now.",
+  "declared": {
+    "capabilities": [
+      "edit-dependencies",
+      "edit-tooling"
+    ],
+    "side_effects": [
+      "package-lock.json regenerates; the output canary's appConfig may move if next's config handling changes"
+    ]
+  },
+  "mode": "high-assurance",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [
+    {
+      "factor": "auth-surface",
+      "tier_floor": "R2",
+      "source": "paths:sensitive",
+      "evidence": "the advisories include middleware/proxy bypass in App Router (GHSA-6gpp-xcg3-4w24) and SSRF in Server Actions on custom servers (GHSA-89xv-2m56-2m9x). src/proxy.ts IS this application's entire authentication and read-only boundary, so a framework middleware bypass is an auth-surface change whichever way the bump goes."
+    },
+    {
+      "factor": "dependency-major-surface",
+      "tier_floor": "R2",
+      "source": "derived:framework-bump",
+      "evidence": "next is the framework. Not semver-major, but it moves the router, the build and the RSC boundary at once, and the repo's own output canary hashes appConfig."
+    }
+  ],
+  "status": "proposed",
+  "owner_session": "unassigned",
+  "claims": [
+    "package.json",
+    "package-lock.json",
+    "scripts/tooling/output-canary.golden.json"
+  ],
+  "programme": "Found by K7's recon (T-0155). It is NOT scheduled where the register puts it, and that is the operator's call to make: Q10 rules the dependency batch to land after Node 24 (tooling-04), and rules that `eslint-config-next lands with a next bump`. A CVSS-9 unauthenticated RCE against a branch that installs track is a different category from dependency hygiene, so this record is raised out of band rather than folded into that batch, and it stays `proposed` until the operator rules on the ordering.",
+  "timestamps": {
+    "opened": "2026-09-12T19:45:00Z",
+    "updated": "2026-09-12T19:45:00Z",
+    "closed": null
+  },
+  "invariants": [
+    "I1 THE PROXY STILL REFUSES EVERYTHING IT REFUSED. One of the advisories is a middleware bypass, and src/proxy.ts is the only authentication and read-only boundary this application has. K5's oracle drives every route through proxy() under PS_READ_ONLY; it must stay green, and an anonymous write must still answer 401 before the mode is disclosed.",
+    "I2 THE FRAMING HEADERS STILL ARRIVE. critic-04 landed a headers() entry in next.config.ts and the measurement that mattered was that it reaches responses the PROXY builds, not only those Next renders. Re-measure that on a running server after the bump, not by reading the config.",
+    "I3 NO OTHER DEPENDENCY MOVES IN THIS BATCH. The other twelve advisories have their own fixes and belong to the ruled dependency batch. Bumping them here would make a security fix indistinguishable from hygiene, and would put the framework bump's blast radius inside a diff nobody can read.",
+    "I4 THE CANARY IS RE-BLESSED ONLY IF IT MOVES, AND THE REASON SAYS WHY. httpSurface must NOT move: if a route, method or URL changes, the bump has changed the product's public contract and that is a stop.",
+    "I5 WINDOWS DEVELOPMENT KEEPS WORKING. The operator develops on native Windows with Git Bash, and one of the two criticals is specifically a Windows-hosted-server RCE. The gate runs here before it runs anywhere."
+  ],
+  "notes": "MEASURED 2026-09-12, all re-runnable. `npm audit --json` totals {low:2, moderate:4, high:8, critical:1}. next installed 16.2.9 (node -p \"require('./node_modules/next/package.json').version\"), pinned at package.json:69, fixAvailable {name:next, version:16.3.5, isSemVerMajor:false}. The next entry's `via` array carries eleven advisories. postcss (high, arbitrary file read via sourceMappingURL) and sharp (high, libvips and libheif CVEs) both list next as their fix, so they travel with it. The nine independent ones — brace-expansion, browserslist, js-yaml, nanoid, smol-toml, ws and the rest — all report fixAvailable:true on their own and belong to the ruled dependency batch, not here.\n\nTHREE THINGS FOR THE OPERATOR, none of which a session may do. (1) Dependabot alerts and security updates are disabled, which is why a CVSS-9 advisory against a pinned framework produced no alert and no PR; enabling them is a repository setting. (2) Secret scanning and push protection are disabled on a PUBLIC repository. (3) The recon's deps dimension reports that the gitleaks workflow has fired twice with 'leaks found: 1' and that the SARIF for both runs has expired, so what was found is no longer readable — that wants looking at before the settings change, not after.",
+  "commits": "",
+  "verification": "",
+  "review": "",
+  "mutation": "",
+  "deviation": ""
+}

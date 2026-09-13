@@ -1,7 +1,6 @@
 // Regression: Cron POST must reject names that produce empty IDs
 // Bug: name "----" produced empty ID after sanitization
 
-
 describe("Cron job ID sanitization", () => {
   it("rejects names with only special characters (empty ID)", () => {
     // Simulate the ID generation logic from cron POST handler

@@ -1,0 +1,52 @@
+# ═══════════════════════════════════════════════════════════════
+# Hindsight memory — cross-platform Docker stack (Linux · macOS · Windows).
+#
+# Brings up Postgres + pgvector AND the Hindsight API server in containers, so
+# you do NOT need a host Postgres, Python, or the Hermes agent venv. This is the
+# portable alternative to the native (apt + systemd) path in setup-hindsight.sh.
+#
+#   docker compose -f scripts/bootstrap/docker-compose.hindsight.yml up -d --build
+#   curl http://localhost:9177/health
+#
+# Then set `memory: { provider: hindsight }` in ~/.hermes/config.yaml (the
+# `setup-hindsight.sh --docker` flow does this for you). The server reaches the
+# Hermes gateway on the host via host.docker.internal:8642 for embeddings; set
+# HINDSIGHT_LLM_BASE_URL / HINDSIGHT_LLM_API_KEY / HINDSIGHT_LLM_MODEL to override.
+# ═══════════════════════════════════════════════════════════════
+name: patterstage-hindsight
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: hindsight_user
+      POSTGRES_PASSWORD: hindsight_local
+      POSTGRES_DB: hindsight_db
+    volumes:
+      - hindsight-pgdata:/var/lib/postgresql/data
+      - ./hindsight-db-init.sql:/docker-entrypoint-initdb.d/10-vector.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hindsight_user -d hindsight_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  hindsight:
+    build: ./hindsight-docker
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "9177:9177"
+    environment:
+      HINDSIGHT_DB_URL: postgresql://hindsight_user:hindsight_local@db:5432/hindsight_db
+      HINDSIGHT_LLM_BASE_URL: ${HINDSIGHT_LLM_BASE_URL:-http://host.docker.internal:8642/v1}
+      HINDSIGHT_LLM_MODEL: ${HINDSIGHT_LLM_MODEL:-xiaomi/mimo-v2-pro}
+      HINDSIGHT_LLM_API_KEY: ${HINDSIGHT_LLM_API_KEY:-}
+    # Lets the container reach a gateway running on the host (Linux needs this
+    # mapping explicitly; Docker Desktop on macOS/Windows provides it natively).
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  hindsight-pgdata:

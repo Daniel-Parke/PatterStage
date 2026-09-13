@@ -9,7 +9,8 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, type ReactNode } from "react";
+import type { ModelRow } from "@/lib/models/model-types";
 import {
   Plus,
   Edit3,
@@ -18,40 +19,50 @@ import {
   Check,
 } from "lucide-react";
 
+import { Panel } from "@/components/dashboard/Panel";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
-import { HERMES_PROVIDERS, type HermesProvider } from "@/lib/hermes-providers";
+import type { ToastType } from "@/components/ui/Toast";
 import CredentialPicker, {
   type CredentialOption,
 } from "@/components/models/CredentialPicker";
-import { inputFieldClasses } from "@/lib/theme";
-import { apiFetch } from "@/lib/api-fetch";
+import { Input, Select } from "@/components/ui/field";
+import { apiFetch } from "@/lib/api/api-fetch";
+import { runWrite } from "@/lib/api/api-write";
 
 /**
  * Minimal model shape for the editor form — a subset of ApiModel
  * that omits defaults, createdAt, updatedAt (not editable in the form).
  */
-export interface ModelEditorRecord {
-  id: string;
-  name: string;
-  provider: string;
-  modelId: string;
-  baseUrl: string | null;
-  contextLength: number | null;
-  credentialsId: string | null;
-}
+export type ModelEditorRecord = ModelRow;
 
 interface ModelEditorProps {
   /** When null, the modal is in create mode. */
   model: ModelEditorRecord | null;
   credentials: CredentialOption[];
+  /**
+   * Provider ids for the dropdown, supplied by the page.
+   *
+   * Injected rather than imported: the models registry is core (llm.ts and the
+   * mission body read it), but the LIST of providers is the agent framework's --
+   * its own comment says it must stay in lock-step with the agent CLI's
+   * `--provider` choices. The page is app/ and may consult the module; this
+   * component may not.
+   */
+  providers: readonly string[];
+  /**
+   * The subset of `providers` that works without an API key, supplied by the
+   * page for the same ADR-0005 reason as `providers` itself. Empty by default,
+   * which is the behaviour every caller had before D15.
+   */
+  keylessProviders?: readonly string[];
   onClose: () => void;
   onSaved: () => void;
 }
 
 interface FormState {
   name: string;
-  provider: HermesProvider;
+  provider: string;
   modelId: string;
   baseUrl: string;
   contextLength: string;
@@ -63,7 +74,7 @@ interface FormState {
 function initialFormState(model: ModelEditorRecord | null): FormState {
   return {
     name: model?.name ?? "",
-    provider: ((model?.provider as HermesProvider) ?? "anthropic"),
+    provider: model?.provider ?? "anthropic",
     modelId: model?.modelId ?? "",
     baseUrl: model?.baseUrl ?? "",
     contextLength:
@@ -74,9 +85,68 @@ function initialFormState(model: ModelEditorRecord | null): FormState {
   };
 }
 
+/**
+ * Validate the model-editor form before submission. Returns the user-facing
+ * error for the first failing field, or `null`. Pure: the `credentialLabel`
+ * auto-fill is a state side-effect and stays in the caller.
+ */
+function validateModelForm(
+  form: FormState,
+  isEdit: boolean,
+  usingExisting: boolean,
+  keyless = false,
+): string | null {
+  if (!form.name.trim()) return "Name is required";
+  if (!form.modelId.trim()) return "Model ID is required";
+  // A local Ollama has no key to demand. Requiring one made the operator
+  // invent a string, which then got written into the agent's env file as
+  // though it meant something (T-0100, D15).
+  if (!isEdit && !usingExisting && !keyless && !form.apiKey.trim()) {
+    return "API key is required when creating a new credential";
+  }
+  return null;
+}
+
+function parseOptionalStringField(
+  raw: string,
+  parse: (trimmed: string) => string | number,
+): string | number | null {
+  const trimmed = raw.trim();
+  return trimmed === "" ? null : parse(trimmed);
+}
+
+/**
+ * The labelled field shell this form repeats seven times: a label, the
+ * control, and an optional caption under it. The label takes a node so a
+ * call site can carry an inline "(optional)" marker; the control is passed
+ * through as-is and owns its own chrome. It was a file of its own
+ * (FieldRow.tsx) with one importer, which is this one (C6).
+ */
+function FieldRow({
+  label,
+  children,
+  description,
+}: {
+  label: ReactNode;
+  children: ReactNode;
+  description?: string;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <label className="text-body font-medium text-ps-text-secondary">{label}</label>
+      {children}
+      {description && (
+        <p className="text-micro text-ps-text-muted font-mono">{description}</p>
+      )}
+    </div>
+  );
+}
+
 export default function ModelEditor({
   model,
   credentials,
+  providers,
+  keylessProviders = [],
   onClose,
   onSaved,
 }: ModelEditorProps) {
@@ -94,73 +164,87 @@ export default function ModelEditor({
   );
 
   const usingExisting = form.credentialsId !== null;
+  // Read off the injected list rather than imported: this component is core
+  // and the provider vocabulary belongs to the agent framework (ADR-0005).
+  const keyless = keylessProviders.includes(form.provider);
+
+  // runWrite's words, said where this modal says things. A failure goes under
+  // the title, as the alert the fields sit beneath. The success is not said
+  // here: the page announces "Model saved" once the registry has reloaded
+  // (useModelActions.handleSaved), and by then this modal has unmounted, so a
+  // toast from here would say it twice.
+  const sayInline = (message: string, type?: ToastType) => {
+    if (type === "error") setError(message);
+  };
 
   const handleSubmit = async () => {
-    if (!form.name.trim()) return setError("Name is required");
-    if (!form.modelId.trim()) return setError("Model ID is required");
-    if (!isEdit && !usingExisting && !form.apiKey.trim()) {
-      return setError("API key is required when creating a new credential");
+    const validationError = validateModelForm(form, isEdit, usingExisting, keyless);
+    if (validationError) {
+      setError(validationError);
+      return;
     }
     if (!usingExisting && !form.credentialLabel.trim() && !isEdit) {
       // Auto-generate a sensible default label
       update("credentialLabel", `${form.provider} key`);
     }
 
-    setSaving(true);
     setError(null);
 
-    try {
-      let credentialsId = form.credentialsId;
+    // One write as far as the operator is concerned, in two calls: the
+    // credential first when a key was pasted, then the model that points at
+    // it. A throw from either lands in the alert above the fields.
+    await runWrite({
+      showToast: sayInline,
+      setBusy: setSaving,
+      request: async () => {
+        let credentialsId = form.credentialsId;
 
-      if (!usingExisting && form.apiKey.trim().length > 0) {
-        const label =
-          form.credentialLabel.trim() || `${form.provider} key`;
-        const result = await apiFetch<{ data?: { credential?: { id: string } } }>("/api/credentials", {
-          method: "POST",
-          body: JSON.stringify({
-            label,
-            provider: form.provider,
-            apiKey: form.apiKey.trim(),
-          }),
-        });
-        const newId = result.data?.credential?.id;
-        if (!newId) throw new Error("Credential creation returned no id");
-        credentialsId = newId;
-      }
+        if (!usingExisting && form.apiKey.trim().length > 0) {
+          const label =
+            form.credentialLabel.trim() || `${form.provider} key`;
+          const result = await apiFetch<{ data?: { credential?: { id: string } } }>("/api/credentials", {
+            method: "POST",
+            body: JSON.stringify({
+              label,
+              provider: form.provider,
+              apiKey: form.apiKey.trim(),
+            }),
+          });
+          const newId = result.data?.credential?.id;
+          if (!newId) throw new Error("Credential creation returned no id");
+          credentialsId = newId;
+        }
 
-      const baseUrl = form.baseUrl.trim() === "" ? null : form.baseUrl.trim();
-      const contextLength =
-        form.contextLength.trim() === ""
-          ? null
-          : Number(form.contextLength);
+        const baseUrl = parseOptionalStringField(form.baseUrl, (t) => t) as string | null;
+        const contextLength = parseOptionalStringField(
+          form.contextLength,
+          Number,
+        ) as number | null;
 
-      if (
-        contextLength !== null &&
-        (!Number.isFinite(contextLength) || contextLength <= 0)
-      ) {
-        throw new Error("Context length must be a positive number");
-      }
+        if (
+          contextLength !== null &&
+          (!Number.isFinite(contextLength) || contextLength <= 0)
+        ) {
+          throw new Error("Context length must be a positive number");
+        }
 
-      const body: Record<string, unknown> = {
-        name: form.name.trim(),
-        provider: form.provider,
-        modelId: form.modelId.trim(),
-        baseUrl,
-        contextLength,
-        credentialsId,
-      };
+        const body: Record<string, unknown> = {
+          name: form.name.trim(),
+          provider: form.provider,
+          modelId: form.modelId.trim(),
+          baseUrl,
+          contextLength,
+          credentialsId,
+        };
 
-      if (isEdit && model) {
-        await apiFetch(`/api/models/${encodeURIComponent(model.id)}`, { method: "PUT", body: JSON.stringify(body) });
-      } else {
-        await apiFetch("/api/models", { method: "POST", body: JSON.stringify(body) });
-      }
-
-      onSaved();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Save failed");
-      setSaving(false);
-    }
+        return isEdit && model
+          ? apiFetch(`/api/models/${encodeURIComponent(model.id)}`, { method: "PUT", body: JSON.stringify(body) })
+          : apiFetch("/api/models", { method: "POST", body: JSON.stringify(body) });
+      },
+      successMessage: "Model saved",
+      errorMessage: "Save failed",
+      onSuccess: onSaved,
+    });
   };
 
   return (
@@ -190,88 +274,84 @@ export default function ModelEditor({
     >
       <div className="space-y-4">
         {error && (
-          <div
+          <Panel
             role="alert"
-            className="flex items-center gap-2 text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2"
+            accent="red"
+            tint="red"
+            className="flex items-center gap-2 px-3 py-2 text-body text-semantic-danger"
           >
             <AlertCircle className="w-4 h-4 flex-shrink-0" />
             <span>{error}</span>
-          </div>
+          </Panel>
         )}
 
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-white/70">Name</label>
-          <input
+        <FieldRow
+          label="Name"
+          description="Display name only — does not need to match the model identifier"
+        >
+          <Input
             type="text"
             value={form.name}
             onChange={(e) => update("name", e.target.value)}
             placeholder="e.g. Claude Sonnet 4 (production)"
-            className={inputFieldClasses("purple")}
           />
-          <p className="text-xs text-white/30 font-mono">
-            Display name only — does not need to match the model identifier
-          </p>
-        </div>
+        </FieldRow>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-white/70">Provider</label>
-            <select
+          <FieldRow label="Provider">
+            <Select
+              ariaLabel="Provider"
               value={form.provider}
-              onChange={(e) => {
-                update("provider", e.target.value as HermesProvider);
+              onChange={(v) => {
+                update("provider", v);
                 update("credentialsId", null);
               }}
-              className={`${inputFieldClasses("purple")} appearance-none cursor-pointer`}
-            >
-              {HERMES_PROVIDERS.map((p) => (
-                <option key={p} value={p} className="bg-dark-900">
-                  {p}
-                </option>
-              ))}
-            </select>
-          </div>
+              options={providers.map((p) => ({ value: p, label: p }))}
+            />
+          </FieldRow>
 
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-white/70">Model ID</label>
-            <input
+          <FieldRow label="Model ID">
+            <Input
               type="text"
               value={form.modelId}
               onChange={(e) => update("modelId", e.target.value)}
               placeholder="anthropic/claude-sonnet-4"
-              className={inputFieldClasses("purple")}
             />
-          </div>
+          </FieldRow>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-white/70">
-              Base URL
-              <span className="ml-2 text-xs text-white/30 font-mono">(optional)</span>
-            </label>
-            <input
+          <FieldRow
+            label={
+              <>
+                Base URL
+                <span className="ml-2 text-micro text-ps-text-muted font-mono">(optional)</span>
+              </>
+            }
+          >
+            <Input
               type="text"
               value={form.baseUrl}
               onChange={(e) => update("baseUrl", e.target.value)}
               placeholder="https://api.anthropic.com/v1"
-              className={inputFieldClasses("purple")}
             />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-white/70">
-              Context Length
-              <span className="ml-2 text-xs text-white/30 font-mono">(optional)</span>
-            </label>
-            <input
+          </FieldRow>
+          <FieldRow
+            label={
+              <>
+                Context Length
+                <span className="ml-2 text-micro text-ps-text-muted font-mono">(optional)</span>
+              </>
+            }
+          >
+            <Input
               type="number"
               value={form.contextLength}
               onChange={(e) => update("contextLength", e.target.value)}
               placeholder="200000"
               min={1000}
-              className={inputFieldClasses("purple")}
             />
-          </div>
+          </FieldRow>
         </div>
 
         <CredentialPicker
@@ -279,41 +359,47 @@ export default function ModelEditor({
           selected={form.credentialsId}
           onChange={(id) => update("credentialsId", id)}
           providerFilter={form.provider}
+          keyless={keyless}
         />
 
         {!usingExisting && (
-          <div className="space-y-3 rounded-lg border border-neon-purple/15 bg-neon-purple/5 p-3">
-            <p className="text-xs font-mono text-neon-purple/70 uppercase tracking-widest">
-              New credential
+          <Panel accent="purple" tint="purple" className="space-y-3 p-3">
+            <p className="text-micro font-mono text-neon-purple uppercase tracking-widest">
+              {keyless ? "Credential (optional)" : "New credential"}
             </p>
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium text-white/70">
-                Credential Label
-              </label>
-              <input
+            {keyless && (
+              <p className="text-body text-ps-text-muted">
+                {`${form.provider} needs no API key. Leave this blank, or paste one if your endpoint requires it.`}
+              </p>
+            )}
+            <FieldRow label="Credential Label">
+              <Input
                 type="text"
                 value={form.credentialLabel}
                 onChange={(e) => update("credentialLabel", e.target.value)}
                 placeholder={`${form.provider} key`}
-                className={inputFieldClasses("purple")}
               />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium text-white/70">API Key</label>
-              <input
+            </FieldRow>
+            <FieldRow
+              label="API Key"
+              // design-lint-disable-next-line hermes-outside-adapter -- a credential warning. It tells the operator, before they paste a key, exactly which file on disk that key will end up in readable form in. That disclosure is the field's reason for existing.
+              description="Stored plain text in the registry and synced to ~/.hermes/.env so Hermes can read it."
+            >
+              <Input
                 type="password"
                 autoComplete="off"
                 value={form.apiKey}
                 onChange={(e) => update("apiKey", e.target.value)}
-                placeholder={isEdit ? "Leave blank to keep existing" : "sk-..."}
-                className={inputFieldClasses("purple")}
+                placeholder={
+                  keyless
+                    ? "Leave blank, none needed"
+                    : isEdit
+                      ? "Leave blank to keep existing"
+                      : "sk-..."
+                }
               />
-              <p className="text-xs text-white/30 font-mono">
-                Stored plain text in the registry and synced to ~/.hermes/.env so
-                Hermes can read it.
-              </p>
-            </div>
-          </div>
+            </FieldRow>
+          </Panel>
         )}
       </div>
     </Modal>

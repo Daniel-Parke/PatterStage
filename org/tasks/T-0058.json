@@ -1,0 +1,43 @@
+{
+  "id": "T-0058",
+  "intent": "Composer stage runs never recorded the tokens they burned, so the spend console's Composer row read $0.00 and read as a measurement. Found on 2026-08-30 while verifying a QA brief, not by a test and not by the QA pass. This is the T-0030 defect in the second of the three spend sources, and it lands on the number the operator's optional hard stop is compared against.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0058-composer-spend-2026-08-30",
+  "how_it_was_found": "Auditing my own QA appendix before writing the round-3 brief. Entry A2 #3 told the tester 'Composer stages are priced at a conservative default rate, never zero. Unknown must not read as free' -- asserting a safety property the code did not have. The audit's words: 'this is the single most dangerous entry in the appendix because it asserts a safety property the code does not have'. Worth recording HOW: the false claim originated in a comment I wrote during T-0030, in spend-summary.ts, describing the sources T-0030 did not fix. I then read my own comment as evidence when writing the brief. A comment claiming a source is priced is not evidence that anything writes its tokens.",
+  "mechanism": "One branch. reconcileOne writes usage at run-reconcile.ts:192-198, but a composer run is diverted at :165 into reconcileComposerRun, whose finalizeComposerStage took status/output/error and no usage -- although the gateway result it is handed carries one. The rows therefore arrived with usage_json NULL, and spend-repository.ts:75 selects WHERE r.usage_json IS NOT NULL, so every composer run was excluded from the priced total. Not priced conservatively: excluded.",
+  "invariants": [
+    "I1 A finished Composer stage's tokens reach the run. Asserted behaviourally by driving the real reconciler with a fake gateway and reading what it writes, not by scanning source.",
+    "I2 A stage that never reached the gateway records null usage, not a zero. Priced-at-zero and not-priced are different claims and only the second is honest.",
+    "I3 The read layer keeps requiring usage_json. The fix must be upstream; counting untokened rows would restore the $0.00 by a different route.",
+    "I4 A composer run is classified as composer, not agent."
+  ],
+  "oracle_provenance": "Authored before any production file was opened and committed alone at 12d55817, ahead of the implementation at e6d86a10. Measured against dev@ba92aa19: 2 red (Expected 1200 tokens, Received undefined), 2 green. The greens are load-bearing: they pin the READ layer so a later change cannot 'fix' this by counting rows with nothing to price.",
+  "verification": "Five mutations against the committed implementation, tree confirmed clean after each. Dropping the forwarded usage turns 1 red; forwarding but not writing it turns 2 red; the spend read dropping its usage_json requirement turns 1 red; composer rows misclassified as agent turns 1 red. Gate: lint 0, tsc 0, 3213 tests / 382 suites.",
+  "mutation_finding": "A fifth mutation SURVIVED the first oracle and is the reason this record exists in this shape. Replacing finalizeComposerStage's `= null` default with a zero-token object turned nothing red, because both reconciler tests drove the gateway path where usage is passed explicitly and the default never applies. The default governs the three callers that finalize WITHOUT a gateway answer -- never submitted, past deadline, backend gone -- which are exactly the stages with nothing to report. A zero there would be worse than the original bug: an unsubmitted stage would enter the priced total as a measured $0.00. Fifth test added at 7c9879b1; the mutation now turns it red.",
+  "false_comment_corrected": "spend-summary.ts said of composer: 'Tokens in usage_json, no model dimension, so it is priced at model-cost's conservative DEFAULT_RATE.' The pricing claim is true in itself -- model-cost.ts:41 returns DEFAULT_RATE when there is no model id, which a composer run never has -- but it described a path no row could reach. Corrected in place, naming the date and the reason, rather than quietly deleted, because the next reader should be able to see that this file has been wrong about a source twice.",
+  "rollback": "Revert e6d86a10. The oracle at 12d55817 then goes red again.",
+  "claims": [
+    "src/lib/orchestration/run-reconcile.ts",
+    "src/lib/spend/spend-summary.ts",
+    "tests/"
+  ],
+  "deferred": [
+    "The THIRD source is now the only unmeasured one, and it is measured: T-0030 fixed research at migration 034. But research runs that predate 034 keep NULL token columns and are reported through `unmeasured`. Composer has no equivalent: every composer run before this fix is silently absent rather than counted as unknown. Giving composer the same `unmeasured` treatment research already has would make the historical gap visible instead of invisible, and is a read-model change rather than a write fix.",
+    "Nothing checks that a spend source actually writes what a comment says it writes. Both T-0030 and T-0058 were found by reading, months apart, in the same file. A test that enumerates the sources spend-summary claims and asserts each one has a writer would have caught this one at T-0030."
+  ],
+  "timestamps": {
+    "opened": "2026-08-30T09:00:00Z",
+    "updated": "2026-08-30T10:00:00Z",
+    "closed": "2026-08-30T10:00:00Z"
+  }
+}

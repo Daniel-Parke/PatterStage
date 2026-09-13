@@ -1,0 +1,72 @@
+# Real-Hermes integration stack: PatterStage + the REAL Hermes Agent + a mock LLM.
+# Validates the runtime adapter against the actual Hermes API Server (v0.16) with
+# zero API keys/cost. Swap the mock LLM for a real local model by setting
+# HERMES_LLM_BASE_URL (config.yaml reads it) and pointing it at e.g. Ollama.
+#
+#   docker compose -f docker-compose.real-hermes.yml -p hermes-realtest up --build
+#   npm run test:e2e-hermes   # contract + smoke against this stack
+name: hermes-realtest
+
+services:
+  # Deterministic OpenAI-compatible model so Hermes runs complete without keys.
+  mock-llm:
+    build:
+      context: .
+      dockerfile: mock-llm/Dockerfile
+
+  # One-shot: seed the Hermes volume (config.yaml + .env) before the agent boots.
+  hermes-seed:
+    build:
+      context: .
+      dockerfile: test-harness/hermes-seed.Dockerfile
+    volumes:
+      - hermes_data:/opt/data
+
+  # The REAL Hermes Agent (official image, pinned by digest).
+  hermes:
+    image: nousresearch/hermes-agent@sha256:47d80115ce62603fa0cab8af2b8d1816c5e800fbae851f7e66608435cfbb76f7
+    command: gateway run
+    environment:
+      HERMES_HOME: /opt/data
+    volumes:
+      - hermes_data:/opt/data
+    ports:
+      - "${HERMES_PORT:-8642}:8642"
+    depends_on:
+      hermes-seed:
+        condition: service_completed_successfully
+      mock-llm:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - "python3 -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8642/health',timeout=3).status==200 else 1)\""
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 30s
+
+  patterstage:
+    build: .
+    environment:
+      PORT: "42069"
+      PS_DATA_DIR: /data/ch
+      HERMES_HOME: /data/hermes
+      HERMES_GATEWAY_URL: http://hermes:8642
+      API_SERVER_KEY: hermes-real-itest-key
+      # Fixed operator token (wins over the volume-minted auth-token file) so
+      # the itest harness can authenticate; must match real-hermes-itest.sh.
+      PS_AUTH_TOKEN: hermes-real-itest-token
+    ports:
+      - "${PORT:-42069}:42069"
+    depends_on:
+      hermes:
+        condition: service_healthy
+    volumes:
+      - ch_data:/data/ch
+      - ch_hermes:/data/hermes
+
+volumes:
+  hermes_data:
+  ch_data:
+  ch_hermes:

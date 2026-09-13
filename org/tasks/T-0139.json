@@ -1,0 +1,48 @@
+{
+  "id": "T-0139",
+  "intent": "The Models page keeps what is on screen across a reload. Every write on the page reloads the registry, and the page answered the reload by swapping its whole body for the spinner: the Fallback Chain disclosure an operator had opened closed again, the Add Custom form went with it, and the lists blinked out for the length of the fetch. Found by C3's driven walk (T-0138). The registry hook says when its first read has settled, and the page shows the spinner before that and never after.",
+  "declared": {
+    "capabilities": [
+      "edit-source",
+      "edit-tests"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {
+      "factor": "size-threshold",
+      "tier_floor": "R1",
+      "source": "derived:diff-size",
+      "evidence": "one flag added to a hook and threaded through one composing hook, one predicate changed on one page; no route, no schema, no protected path; one oracle suite new, none amended"
+    }
+  ],
+  "status": "done",
+  "owner_session": "t0139-the-models-page-keeps-its-body-2026-09-10",
+  "claims": [
+    "tests/e2e/composer-build-and-run.spec.ts",
+    "scripts/tooling/line-census.baseline.json",
+    "src/hooks/useModelsRegistry.ts",
+    "src/hooks/useModelsPage.ts",
+    "src/app/agent/models/page.tsx",
+    "org/plans/2026-09-consolidation.md",
+    "tests/unit/the-models-page-keeps-its-body.test.tsx"
+  ],
+  "programme": "Taken between C3 and C4 of org/plans/2026-09-consolidation.md; the plan's remaining ids moved by two, for this and for T-0140 (C4 is T-0141).",
+  "timestamps": {
+    "opened": "2026-09-10T14:10:00Z",
+    "updated": "2026-09-10T15:00:00Z",
+    "closed": "2026-09-10T15:00:00Z"
+  },
+  "invariants": [
+    "I1 THE SPINNER IS FOR THE FIRST READ. useModelsRegistry's `settled` is true once the first read has answered, whatever it said; the Models page shows LoadingSpinner before that and keeps its sections mounted through every reload after it.",
+    "I2 A RELOAD KEEPS THE OPERATOR'S PLACE. A disclosure opened, a form begun and a list on screen survive a write's reload; the same DOM nodes are on the page before, during and after it.",
+    "I3 THE HEADER STILL SPEAKS FIRST. On the first read the header already says Models and its subtitle says what it can, under the spinner (T-0128); nothing here changes that."
+  ],
+  "commits": "55b140f4 the oracle, red at 1 of 2; dfae47b9 the flag and the predicate; the chore commit that carries this record and the derived views.",
+  "verification": "Gate by exit code on the finished tree: lint 0, tsc 0, jest 0 (6844 tests, 676 suites), knip 0, canary 0, build 0, Playwright 1 (271 passed, 24 skipped, 1 failed, two projects), census 0, census:lines 1. The oracle holds the reload's reads mid-flight and reads the same disclosure node still mounted and still open, the credentials heading still mounted, and no spinner; then the reload lands and the same again; the first read still shows the spinner under a header that already says Models. Isolated instance walk (T-0139): Fallback Chain aria-expanded before the add true, after the toast true, the same disclosure node true; the new row on screen false; spinner shown after the toast false.",
+  "mutation": "Three mutants against the committed tree, three killed: the page swapping its body on every reload again; settled never set, so the spinner never leaves; settled starting true, so the first read shows no spinner.",
+  "deviation": "The task chip offered two fixes: lift the disclosure's open state to the page, or stop unmounting the sections during a refetch. The second is the fix, because the disclosure was one symptom of the swap; the Add Custom form and the lists' blink were the others, and lifting one component's state would have cured one of three. The plan's remaining ids moved by two, for this and the fallback fix that follows, so both records keep the org's sequential numbering; the plan header says so. Two more things the walk found: the composer e2e spec's read after a save reset on its socket (apiRequestContext.get: ECONNRESET) for the second full run in a row and passed alone each time, so the spec's read retries once on that reset, amended with the reason; and a custom fallback entry loses the name, provider and model id the operator typed, because model_fallbacks has no columns for them and the list reads them from the models JOIN, which a custom entry has no row in: the POST echoes the input and every read after says Custom / custom / empty. That is a data defect in a shipped feature and takes its own record, T-0140, next; the same body-swap-on-reload as this fix is on agent/settings/restore and agent/skills, for C6."
+}

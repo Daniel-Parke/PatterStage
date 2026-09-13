@@ -1,0 +1,25 @@
+{
+  "id": "T-0014",
+  "intent": "Phase 7, first: name the 21 boundary crossings instead of counting them. Warrant WG-ARCH-001 (B). hermes-outside-adapter is baselined at 21 crossings across 13 files; a shrink-only counter stops the 22nd but does not make the 21 a contract, and the option's own words are that the layering fails the build when crossed. Source row WO-0004. Acceptance: (1) every one of the 21 either carries an inline pragma with a written reason or is closed behind the AgentRuntime port; (2) the hermes-outside-adapter baseline entries are gone; (3) option C recorded in the ruling record as a dated target conditional on T-0009's canary, whose condition is met because the canary lands in Phase 2. Coordination note from the plan, 2026-08-22: the 13 crossing files are better moved alongside this task's closure than shuffled twice, so this task and T-0010 coordinate. Done when no file's Hermes knowledge is licensed by a number. Tier proposal R1, anticipated factor size-threshold from derived signal diff-size, evidence 21 sites across 13 files.",
+  "declared": {
+    "capabilities": [
+      "filesystem"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R0",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "phase7-hermes-crossings-2026-08-22",
+  "claims": [
+    "src/",
+    "scripts/tooling/design-lint.baseline.json"
+  ],
+  "timestamps": {
+    "opened": "2026-07-25T00:00:00Z",
+    "updated": "2026-08-23T02:00:00Z",
+    "closed": "2026-08-23T02:00:00Z"
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "id": "T-0115",
+  "intent": "U1 of the UI overhaul programme: the jest.mock stanzas that are identical byte for byte, behind one factory each. Re-scoped by the operator before it started, because the plan's 20,000-to-28,000-line promise did not survive measurement: the reconnaissance's '37% of the corpus is copy-pasted preamble' is 37% of lines sitting before the first describe, and those lines are mostly comments and each test's own fixtures. What is genuinely duplicated is at most 4,284 lines in the whole corpus. So: seven shapes, one helper, and an oracle whose contract is identity.",
+  "declared": {
+    "capabilities": [
+      "edit-tests"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {
+      "factor": "size-threshold",
+      "tier_floor": "R1",
+      "source": "derived:diff-size",
+      "evidence": "121 test files touched; nothing under src/ changes; no protected or sensitive path"
+    }
+  ],
+  "status": "done",
+  "owner_session": "t0115-u1-mock-factories-2026-09-07",
+  "claims": [
+    "tests/unit/",
+    "tests/helpers/",
+    "org/plans/2026-09-ui-overhaul.md"
+  ],
+  "programme": "U1, depends on U0. The programme was re-scoped here from eighteen batches to seventeen: the merge-by-subject batch is dropped, the old U17 becomes U16, and the records now run T-0114 to T-0130.",
+  "timestamps": {
+    "opened": "2026-09-07T00:10:00Z",
+    "updated": "2026-09-07T02:00:00Z",
+    "closed": "2026-09-07T02:00:00Z"
+  },
+  "invariants": [
+    "I1 IDENTITY. Every test that existed still exists and still passes, and every measured file covers exactly what it covered. Measured: 6,167 tests before and 6,182 after, the difference being this batch's own 15 cases, and all 806 files in the coverage summary unchanged in statements, branches, functions and lines.",
+    "I2 A mock stays OPT-IN. Nothing moves into jest.setup.ts or moduleNameMapper, where it would apply to all 614 files including the ones that deliberately exercise the real module.",
+    "I3 Byte-for-byte or not at all. A stanza that differs by one character is a different test and is left alone. Seven shapes qualified; the other 188 targets did not.",
+    "I4 A file gets the jest environment it asks for. Forty-seven asked for node and got jsdom."
+  ],
+  "commits": "550f2a57 the oracle alone, red because the helper did not exist and 38 files still carried the stanza; e44ef369 the seven factories, the 121-file codemod and the forty-seven environment corrections; the plan re-scope; and the sharper-oracle commit the sweep asked for, plus the record commit that follows.",
+  "verification": "Gate by exit code: lint 0, tsc 0, jest 0 (6184 tests, 618 suites), knip 0, canary 0, build 0, Playwright 140 passed and 26 skipped, census 0. The identity half was measured separately, by running coverage on the migrated tree and again on the same tree with the batch stashed: 20898/27488 statements, 11509/17338 branches, 3443/4962 functions and 19143/24531 lines on both, and per-file comparison over all 806 measured files found no movement at all.",
+  "measurement_that_re_scoped_the_batch": "The plan promised 20,000 to 28,000 lines. Measured across all 614 files, the 39,435 preamble lines are jest.mock 7,402 + imports 1,905 + comments 14,873 + per-file fixtures 15,255. The comments are 14.5% of the whole corpus and are on the keep list. The mocks are not interchangeable: 195 distinct targets, and the busiest have many shapes each, @/lib/db 42 across 99 calls, @/lib/api-fetch 31 across 48, @/lib/api-logger 28 across 109. Counting duplication directly rather than inferring it, repeated code blocks across three or more files come to at most 4,284 lines at a six-line window and 6,957 at a three-line one, and the generous figure counts `afterEach(() => {` in 56 files. The operator re-scoped on those numbers.",
+  "result": "991 lines deleted and 261 inserted across 121 test files; the new helper costs 162 and dbSingletonMock about 30, so tests/ is about 568 lines lighter, and 730 lines of duplication are gone from the test files themselves. Seven shapes: the db singleton (39 sites, 10 lines each), lucide-react (27), AppPageShell (14), next/link (10), next/server (5), @/lib/paths (5) and the Hermes agent-runtime (4). The long tail was left alone: two or three sites of a four-line shape is not worth a name.",
+  "mutation": "Three rounds against the committed tree, 13 mutants. Round one: 11 killed, 1 survived, 1 not run. The survivor was real and worth having: inTransaction written as (fn) => fn() passes all 618 suites, because nothing anywhere exercised a body that THROWS, so atomicity was unasserted across the thirty-nine suites that drive real repository code through this factory. Four cases against a real in-memory database now cover it, and the one that matters asserts that a body which writes twice and then throws leaves nothing behind. The mutant that did not run was the sweep's fault rather than the tree's: its INEFFECTIVE heuristic skips an anchor whose first occurrence is a comment, and a @jest-environment docblock is a comment that jest reads, so the sweep gained a force flag for anchors that are comments and still execute. Round two: the environment mutant killed; the transaction one survived again because the mutant's own suite list named the three repository tests and not the new oracle, which is the mutant definition's fault and not the oracle's. Round three, against the right suite: killed. 13 of 13.",
+  "found_by_migrating": "Three things the reconnaissance had wrong or had not seen. (1) tests/helpers/render-with-query.tsx was listed as having zero users and was deleted on that basis; it has ten, and it is restored. (2) The eslint pragma this batch adds beside a `require` was reported UNUSED in 22 files, because @typescript-eslint/no-require-imports does not flag a bare `require()` in expression position, and because those files already carried the pragma WITH a written reason, which an exact-string check does not match. One file genuinely needed a guard and has one. (3) The environment defect below.",
+  "found_by_probing": "Forty-seven test files declare `@jest-environment node` and run in jsdom. jest reads the pragma from the FIRST block comment and jest-docblock treats /* and /** alike, so a pragma comment written above the docblock hides it. Measured with a probe rather than reasoned about: the same file reported `typeof window === \"object\"` with the comment first and `undefined` with the docblock first. Nothing was failing, which is the point: a file that says one thing and does another passes until someone writes the test that depends on the difference. All 47 are corrected, all 618 suites still pass, and the oracle now refuses a pragma jest cannot see.",
+  "deviation": "(1) The batch is [M] rather than the plan's [L], and its saving is about 568 net lines rather than 12,000 to 18,000. Both follow from the re-scope, which is recorded as decision 11 in the plan. (2) The environment fix is not in the plan at all. It was found while migrating, it lives in the same three lines of every file this batch was already editing, and leaving 47 files lying about their runtime once it was measured was not defensible. It is recorded here rather than deferred.",
+  "harness_amendments": "tests/helpers/mocks.tsx is new. tests/helpers/baseline-db.ts gains dbSingletonMock beside the schema helper the same files already import. Nothing else in the harness moves: jest.config.js, jest.setup.ts and moduleNameMapper are untouched, deliberately.",
+  "deferred": "The remaining dominant shapes are worth about 900 more lines between them and were left: agent-runtime aside, they are two to five sites of a two-to-four-line stanza, and the risk of rewriting a stanza that is nearly-but-not-quite shared is worse than the lines are worth. The 188 targets with no dominant shape are not duplication at all and should not be touched."
+}

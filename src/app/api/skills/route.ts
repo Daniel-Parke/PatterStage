@@ -1,102 +1,96 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { logApiError } from "@/lib/api-logger";
-import { requireAuth } from "@/lib/api-auth";
+
+import { notFound, ok } from "@/lib/api/api-response";
 import { ensureDb } from "@/lib/db";
-import { safeStat } from "@/lib/fs-stats";
-import { resolveEffectiveDisabledSkills } from "@/lib/effective-disabled-skills";
-import { getProfile } from "@/lib/profiles-repository";
-import { listSkills, deriveCategory } from "@/lib/skills-repository";
-import { skillsRootForProfile } from "@/lib/skills-config";
-import { resolveSafeProfileName } from "@/lib/path-security";
-import { scanDiskSkillsCatalog } from "@/lib/hermes-profile-sync";
-import { groupByCategory } from "@/lib/skills-grouping";
-import type { Skill } from "@/types/hermes";
+import { safeStat } from "@/lib/fs/fs-stats";
+import { resolveEffectiveDisabledSkills } from "@/modules/hermes/lib/effective-disabled-skills";
+import { getProfile } from "@/modules/hermes/lib/profiles-repository";
+import { listSkillCatalog, deriveCategory } from "@/lib/skills/skills-repository";
+import { skillFilePath, skillsRootForProfile } from "@/modules/hermes/lib/skills-config";
+import { requireSafeProfileName } from "@/lib/fs/path-security";
+import { scanDiskSkillsCatalog } from "@/modules/hermes/lib/profile-discovery";
+import { groupByCategory } from "@/lib/skills/skills-grouping";
+import type { Skill } from "@/types/console";
+import { route } from "@/lib/api/api-route";
 
-export async function GET(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
+export const GET = route("GET /api/skills", "listing skills", "Failed to list skills", async (request: NextRequest) => {
   const profileParam = request.nextUrl.searchParams.get("profile") || "default";
   const refreshFromDisk = request.nextUrl.searchParams.get("refresh") === "1";
-  const prof = resolveSafeProfileName(profileParam);
-  if (!prof.ok) {
-    return NextResponse.json({ error: prof.error }, { status: 400 });
-  }
+  const prof = requireSafeProfileName(profileParam);
+  if (prof instanceof NextResponse) return prof;
   const profile = prof.profile;
+  ensureDb();
 
-  try {
-    ensureDb();
-
-    if (profile !== "default") {
-      const p = getProfile(profile);
-      if (!p) {
-        return NextResponse.json({ error: "Profile not found" }, { status: 404 });
-      }
+  if (profile !== "default") {
+    const p = getProfile(profile);
+    if (!p) {
+      return notFound("Profile not found");
     }
+  }
 
-    const disabled = resolveEffectiveDisabledSkills(profile, { refreshFromDisk });
-    const skillsDir = skillsRootForProfile();
+  const disabled = resolveEffectiveDisabledSkills(profile, { refreshFromDisk });
+  const skillsDir = skillsRootForProfile();
 
-    const dbSkills = listSkills();
-    const dbKeys = new Set(dbSkills.map((s) => s.skillKey));
-    const skills: Skill[] = dbSkills.map((row) => {
-      const path = skillsDir + "/" + row.skillKey + "/SKILL.md";
-      // safeStat returns null if the disk file is missing; fall back
-      // to DB row metadata in that case.
-      const st = safeStat(path);
-      return {
-        name: row.skillKey,
-        category: deriveCategory(row),
-        path,
-        description: row.description,
-        enabled: !disabled.has(row.skillKey),
-        size: st?.size ?? row.content.length,
-        lastModified: st?.mtime ?? row.updatedAt,
-      };
-    });
+  // Catalog metadata only: this handler needs each body's LENGTH, never the
+  // body, and `listSkills()` would ship every SKILL.md through SQLite and
+  // into JS strings to be discarded a line later.
+  const dbSkills = listSkillCatalog();
+  const dbKeys = new Set(dbSkills.map((s) => s.skillKey));
+  const skills: Skill[] = dbSkills.map((row) => {
+    const path = skillFilePath(skillsDir, row.skillKey);
+    // safeStat returns null if the disk file is missing; fall back
+    // to DB row metadata in that case.
+    const st = safeStat(path);
+    return {
+      name: row.skillKey,
+      category: deriveCategory(row),
+      path,
+      description: row.description,
+      enabled: !disabled.has(row.skillKey),
+      size: st?.size ?? row.contentLength,
+      lastModified: st?.mtime ?? row.updatedAt,
+    };
+  });
 
-    // Merge disk-only skills (not yet in DB) using the shared catalog scanner
-    for (const { skillKey, path } of scanDiskSkillsCatalog()) {
-      if (dbKeys.has(skillKey)) continue;
-      const st = safeStat(path);
-      if (!st) {
-        // disk-only skill file may have been removed since scan; skip silently
-        continue;
-      }
-      skills.push({
-        name: skillKey,
-        category: deriveCategory({ category: "", skillKey }),
-        path,
-        description: "",
-        enabled: !disabled.has(skillKey),
-        size: st.size,
-        lastModified: st.mtime,
-      });
+  // Merge disk-only skills (not yet in DB) using the shared catalog scanner
+  for (const { skillKey, path } of scanDiskSkillsCatalog()) {
+    if (dbKeys.has(skillKey)) continue;
+    const st = safeStat(path);
+    if (!st) {
+      // disk-only skill file may have been removed since scan; skip silently
+      continue;
     }
-
-    // Group skills by category (case-insensitive). The helper handles
-    // mismatched frontmatter case ("Creative" vs "creative") so the
-    // audit-found case-collision duplicates collapse into a single
-    // bucket. The page does the same with groupByCategory().
-    const categoryGroups = groupByCategory(skills, "uncategorized");
-    const categories: Record<string, Skill[]> = {};
-    for (const [key, items] of categoryGroups) {
-      categories[key] = items;
-    }
-
-    return NextResponse.json({
-      data: {
-        skills,
-        categories,
-        total: skills.length,
-        categoryCount: Object.keys(categories).length,
-        profile,
-      },
+    skills.push({
+      name: skillKey,
+      category: deriveCategory({ category: "", skillKey }),
+      path,
+      description: "",
+      enabled: !disabled.has(skillKey),
+      size: st.size,
+      lastModified: st.mtime,
     });
   }
-  catch (error) {
-    logApiError("GET /api/skills", "listing skills", error);
-    return NextResponse.json({ error: "Failed to list skills" }, { status: 500 });
-  }
-}
+
+  // Group skills by category (case-insensitive). The helper handles
+  // mismatched frontmatter case ("Creative" vs "creative") so the
+  // audit-found case-collision duplicates collapse into a single
+  // bucket. The page does the same with groupByCategory().
+  //
+  // `categories` carries SIZES, not the skill objects. Serving the buckets
+  // re-serialised every Skill that `skills` already carries: 69,574 of this
+  // response's 137,534 bytes, in the largest body the app serves. The only
+  // consumer reads Object.keys() and groups `skills` itself.
+  const categoryGroups = groupByCategory(skills, "uncategorized");
+  const categories = Object.fromEntries(
+    [...categoryGroups].map(([name, items]) => [name, items.length]),
+  ) as Record<string, number>;
+
+  return ok({
+    skills,
+    categories,
+    total: skills.length,
+    categoryCount: Object.keys(categories).length,
+    profile,
+  });
+});

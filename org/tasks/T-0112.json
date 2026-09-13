@@ -1,0 +1,57 @@
+{
+  "id": "T-0112",
+  "intent": "B18 of the final-release programme: documentation content, README and screenshots. One guide per registry route (What you see, Typical use, Notes, internals behind a disclosure), replacing 23 placeholders and re-pitching the guides carried over from the old developer documentation. README as the front door. CHANGELOG from the task records in user language. Reference pages for the event ledger and the achievements, and an honest page about what the product does not do. One screenshot per guide, captured from the real product. A tour that links the guides rather than repeating them.",
+  "declared": {
+    "capabilities": ["edit-docs", "edit-code"],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {
+      "factor": "size-threshold",
+      "tier_floor": "R1",
+      "source": "derived:diff-size",
+      "evidence": "every guide rewritten; docs/ is a reversible path"
+    }
+  ],
+  "status": "done",
+  "owner_session": "unassigned",
+  "claims": [
+    "docs/",
+    "README.md",
+    "CHANGELOG.md",
+    "scripts/docs/lib.mjs",
+    "tests/e2e/screenshots.spec.ts",
+    "tests/e2e/seed-demo.mjs",
+    "docs/images/",
+    "tests/"
+  ],
+  "programme": "B18, depends on B15, B16 and B17. docs:check, check-doc-links and design-lint green; npm run screenshots produces every PNG; the site opens from file://; the operator's novice read of Start Here through chapter 1.",
+  "timestamps": {
+    "opened": "2026-09-05T10:30:00Z",
+    "updated": "2026-09-06T01:30:00Z",
+    "closed": "2026-09-06T01:30:00Z"
+  },
+  "invariants": [
+    "I1 ONE source, no second copy of any prose. The site, the in-app Help and the repository all render the same markdown. Anything that would have duplicated a guide links to it instead.",
+    "I2 Every guide takes the same shape: what you see, typical use, notes. A reader who has learned where to look on one page has learned it for all twenty-three, and the gate refuses a guide missing any of the three.",
+    "I3 Internals live behind a disclosure. No schema table, repository filename, migration number, environment variable or API route appears outside a <details> block in any guide, and that is measured rather than trusted.",
+    "I4 Every sentence is true of the code. Each guide was written against the screen's own source and then read by a second agent instructed to refute it, citing the file that disproves each claim.",
+    "I5 A placeholder is refused by name. B15's guides carried real front matter, which made them invisible to every other rule, so the sentences they used to describe themselves are now refused literally rather than by word count: a short guide for a simple screen is a good guide.",
+    "I6 The screenshot list is DERIVED from the guides. Each guide names the screen it documents, so the set photographed is the set documented and the two cannot drift.",
+    "I7 A screenshot never publishes the machine that took it. The auth token, the data directory and the reviewer's home directory are blanked before the shutter, and the clock and viewport are pinned so a re-capture is a reviewable diff rather than a whole-file change.",
+    "I8 A screenshot run never spends money. Missions are saved rather than dispatched and the Rec Room is seeded through its character and theme library, because creating a story can generate its first chapter.",
+    "I9 No retired URL appears in the corpus, and a relative link to a sibling guide is not mistaken for one.",
+    "I10 No governance id reaches a reader. ADR numbers, task ids and work-group ids are the maintainer's addresses; a user cannot open one."
+  ],
+  "commits": "327709a3 the oracle alone, measured red: 17 stubs refused and 6 more for the shape; cc97d83b the retired-path fix, the subject/message repair and the capture harness; 133f8c3d the corpus itself, 23 guides plus the README, the CHANGELOG and the new reference pages; f40ffbc9 the screenshots, the tour and the three repeated openings; and the record commit that follows, carrying the oracle the sweep asked for.",
+  "verification": "Gate by exit code on the finished tree: lint 0 (docs:check 77 pages / 23 routes, doc-links, derived views, design-lint), tsc 0, jest 0 (5772 tests, 575 suites), knip 0, canary 0, build 0, Playwright 133 passed and 25 skipped. The skipped count rose from 9 because the capture spec is opt-in and now has 23 cases rather than 7. Two facts were checked mechanically rather than by reading: all 42 event types and all 40 achievements appear in their reference pages, none missing and none invented; and no guide names an API route, an environment variable or a migration outside a disclosure.",
+  "mutation": "Two rounds against the committed tree. The batch's own CODE is two gate rules, a regex repair and a capture harness -- 38,000 words of prose cannot be mutation-tested, but the rules that decide whether prose is finished can. Round one: 11 mutants, 3 killed. Six survivors were one gap, and an embarrassing one: both new refusals had been measured red against the real docs tree and never exercised from a fixture, so a mutant that made the stub check always pass, and four that hollowed out the section check, all lived. Measuring a rule red proves it FIRES, not that it fires for the right reason. Two more reported NOT-APPLIED because the anchors were regexes whose backslashes did not survive being a JavaScript string, which reads like a surviving mutant and is not one. Round two, after tests/unit/b18-a-guide-is-finished.test.ts and anchors built from character codes: 11 mutants, 11 killed.",
+  "proof": "The built site opened from file:// in a browser: the rail carries the six tiers with the tour in Start here, and a guide page renders its prose, its screenshot and its navigation. That is also how the last defect was found. Twenty-three screenshots were captured from the running product and checked to be real screens rather than blank frames.",
+  "found_by_the_render": "Three guides opened by repeating their own subtitle, which both the site and the in-app Help render immediately above the body, so the page said the same sentence twice in a row. Invisible in the source, obvious in the browser -- the same class as B16's tripled heading, and found the same way. The other twenty open on something the subtitle does not carry.",
+  "deviation": "(1) The plan asked for a tour of one page per screen under start-here/tour, each with a screenshot, what you see and what to do there. That is precisely what the guides now are, so writing it would have meant a second copy of all twenty-three -- against decision 3, which is the rule this whole batch is built on. The tour is therefore one page: every screen in rail order, a picture, one line, and a link to the guide that already says the rest. (2) The six guides that already had prose were the harder half of the work, not the easier. They were not stubs: they were complete and accurate documentation written for a maintainer, opening on a schema table and naming repository files in the second paragraph. No word count would have found them, which is why the shape rule exists alongside the stub rule. (3) Four screenshots from the old harness were deleted rather than re-captured: they photograph routes the regroup retired.",
+  "harness_amendments": "Three. The retired-path matcher now skips a path beginning ./ or ../: five guides are named for a route B3 retired (logs, sessions, memory, insights, models), so the moment the guides linked to one another a correct relative link read as a retired URL. The counterweight is pinned in the same commit -- a retired path used as a real link target is still refused. b15-docs-check-refusals.test.ts's makePage now gives a guide fixture the three house headings, because after B18 a guide without them is not a complete corpus and the file's green control would otherwise be red for a reason none of its cases are about. And the new oracle carries the same eslint exemption the B15 oracle beside it carries, for the same reason: the docs library is loaded by a computed path so a static import cannot fail the typecheck while the module is unwritten.",
+  "deferred": "The novice read is the operator's, and it is the one part of this batch that cannot be done for them: the plan says anything they had to ask about is a defect. copy-lint stays in --report mode; it becomes a gate once the screens themselves have been swept, which is not this batch. The docs site is built and opens from disk, but nothing is published until the release batch pushes to main and the operator sets the Pages source."
+}

@@ -6,7 +6,7 @@ import {
   buildMissionPrompt,
   buildMissionPromptHuman,
   parseMissionPrompt,
-} from "@/lib/build-mission-prompt";
+} from "@/lib/missions/build-mission-prompt";
 
 const baseOpts = {
   instruction: "Refactor the authentication module to use JWT.",

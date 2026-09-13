@@ -10,30 +10,21 @@ import { NextRequest } from "next/server";
 
 // Mock everything the touched routes import so we can isolate the
 // parseJsonBody behaviour without standing up a full DB / sync layer.
-jest.mock("@/lib/api-logger", () => ({
+jest.mock("@/lib/api/api-logger", () => ({
   logApiError: jest.fn(),
 }));
 
-jest.mock("@/lib/api-auth", () => ({
-  requireAuth: jest.fn(() => null),
-  isChReadOnly: jest.fn(() => false),
+jest.mock("@/lib/api/api-auth", () => ({
+  isReadOnly: jest.fn(() => false),
 }));
 
 jest.mock("@/lib/sync", () => ({
   ensureSyncLayer: jest.fn(),
 }));
 
-jest.mock("@/lib/mission-repository", () => ({
+jest.mock("@/lib/missions/mission-repository", () => ({
   listMissions: jest.fn(() => []),
   getMission: jest.fn(),
-}));
-
-jest.mock("@/lib/cron-repository", () => ({
-  importHermesJobs: jest.fn(() => ({ imported: [], errors: [] })),
-}));
-
-jest.mock("@/lib/mission-cron-sync", () => ({
-  enrichMissionCron: jest.fn((m: unknown) => m),
 }));
 
 function makeInvalidJsonRequest(url: string) {

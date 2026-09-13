@@ -1,19 +1,31 @@
 // ═══════════════════════════════════════════════════════════════
-// ModelSyncButtons — push/pull icon buttons for model rows
-// Shows real diffs from the diff API endpoint with red X exclusion
+// ModelSyncButtons — Pull from Hermes / Push to Hermes, per model row
+// Shows the diff route's real comparison, and offers the X only where
+// the endpoint behind the button honours it (T-0100, D12)
 // ═══════════════════════════════════════════════════════════════
 
 "use client";
 
 import { useState, useCallback } from "react";
-import { ArrowDownToLine, ArrowUpToLine, X, Loader2 } from "lucide-react";
-import type { SyncActionResult } from "@/lib/sync-manager";
+import { ArrowDownToLine, ArrowUpToLine, X } from "lucide-react";
+
+import Button from "@/components/ui/Button";
+import Dialog from "@/components/ui/Dialog";
+import IconButton from "@/components/ui/IconButton";
+import type { SyncActionResult } from "@/lib/models/sync-result";
+import { pluralise } from "@/lib/utils";
+import { apiFetch } from "@/lib/api/api-fetch";
 
 interface DiffEntry {
   id: string;
   label: string;
   detail: string;
 }
+
+/** What POST /api/models/[id]/diff answers with. */
+type DiffEnvelope = {
+  data?: { diffs?: DiffEntry[]; inSync?: boolean; note?: string | null };
+};
 
 interface ModelSyncButtonsProps {
   modelId: string;
@@ -27,26 +39,49 @@ interface ModelSyncButtonsProps {
 interface SyncModalProps {
   direction: "push" | "pull";
   diffs: DiffEntry[];
+  /** True when the two sides already agree, so there is nothing to confirm. */
+  inSync: boolean;
+  /** The route's sentence for a state with no rows: in sync, no matching section, or a config.yaml that did not parse. */
+  note: string | null;
   onConfirm: (excludedIds: Set<string>) => void;
   onCancel: () => void;
   confirming: boolean;
 }
 
+/**
+ * Which rows the operator may exclude.
+ *
+ * A pull applies field by field, so every field is excludable. A push writes
+ * the whole `config.model` section in one call, so excluding one field of it
+ * did nothing at all: the modal counted down to "Confirm 3/4", the confirm
+ * was refused by its own gate, and the dialog closed having synced nothing
+ * (D12). The credential is a separate file and a separate flag, so it stays
+ * excludable in both directions.
+ */
+function isExcludable(direction: "push" | "pull", id: string): boolean {
+  return direction === "pull" || id === "model-env";
+}
+
+/**
+ * The confirmation, as a Dialog (T-0125). It was its own backdrop, panel,
+ * header and footer; what it keeps is its heading id, which the wording
+ * suite pins, and every word.
+ */
 function SyncModal({
   direction,
   diffs,
+  inSync,
+  note,
   onConfirm,
   onCancel,
   confirming,
 }: SyncModalProps) {
-  const title = direction === "push"
-    ? "Export to Hermes"
-    : "Import from Hermes";
+  const title = direction === "push" ? "Push to Hermes" : "Pull from Hermes";
   const [removed, setRemoved] = useState<Set<string>>(new Set());
 
   const subtitle = direction === "push"
-    ? "Write these settings into your Hermes config as the primary agent model"
-    : "Read these settings from your Hermes config into the selected model";
+    ? "Write these settings into config.yaml as the primary agent model"
+    : "Read these settings from config.yaml into this model";
 
   const visibleChanges = diffs.filter((d) => !removed.has(d.id));
 
@@ -58,105 +93,81 @@ function SyncModal({
     });
   };
 
-  const handleConfirm = () => {
-    onConfirm(removed);
-  };
-
   const visibleCount = visibleChanges.length;
   const totalCount = diffs.length;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="w-full max-w-md mx-4 bg-dark-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
-          <div className="flex items-center gap-2">
-            {direction === "push" ? (
-              <ArrowUpToLine className="w-4 h-4 text-neon-purple" />
-            ) : (
-              <ArrowDownToLine className="w-4 h-4 text-neon-cyan" />
-            )}
-            <span className="text-sm font-semibold text-white">{title}</span>
-          </div>
-          <button
-            type="button"
-            onClick={onCancel}
-            className="p-1 rounded text-white/30 hover:text-white hover:bg-white/5 transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-        <p className="px-4 py-2 text-[10px] font-mono text-white/40">{subtitle}</p>
-
-        {/* Diffs list */}
-        <div className="px-4 py-3 max-h-72 overflow-y-auto">
-          {visibleChanges.length === 0 ? (
-            <p className="text-xs text-white/40 font-mono text-center py-4">
-              All changes removed — nothing will be synced
-            </p>
-          ) : (
-            <div className="space-y-1.5">
-              {/* Summary */}
-              {visibleCount < totalCount && (
-                <div className="text-[10px] font-mono text-neon-orange/60 mb-2">
-                  {totalCount - visibleCount} of {totalCount} changes excluded
-                </div>
-              )}
-              {visibleChanges.map((diff) => (
-                <div
-                  key={diff.id}
-                  className="flex items-start justify-between gap-2 px-3 py-2.5 bg-white/5 rounded-lg"
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="text-xs font-semibold text-white/70">
-                      {diff.label}
-                    </div>
-                    <div className="text-[10px] text-white/40 font-mono truncate mt-0.5">
-                      {diff.detail}
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => handleRemove(diff.id)}
-                    className="flex-shrink-0 p-1 rounded text-red-400/40 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                    title="Exclude this change"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="flex items-center justify-end gap-2 px-4 py-3 border-t border-white/5 bg-dark-950/50">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="px-3 py-1.5 text-xs font-mono text-white/50 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
-          >
+    <Dialog
+      open
+      onClose={onCancel}
+      title={title}
+      titleId="model-sync-title"
+      subtitle={subtitle}
+      icon={direction === "push" ? ArrowUpToLine : ArrowDownToLine}
+      iconColor={direction === "push" ? "text-neon-purple" : "text-neon-cyan"}
+      size="sm"
+      closeLabel="Close sync panel"
+      footer={
+        <>
+          <Button variant="ghost" size="sm" onClick={onCancel}>
             Cancel
-          </button>
-          <button
-            type="button"
-            onClick={() => void handleConfirm()}
-            disabled={confirming || visibleChanges.length === 0}
-            className={`px-3 py-1.5 text-xs font-mono rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-              direction === "push"
-                ? "bg-neon-purple/20 text-neon-purple hover:bg-neon-purple/30"
-                : "bg-neon-cyan/20 text-neon-cyan hover:bg-neon-cyan/30"
-            }`}
+          </Button>
+          <Button
+            variant="primary"
+            color={direction === "push" ? "purple" : "cyan"}
+            size="sm"
+            onClick={() => onConfirm(removed)}
+            // `inSync` is the route's answer, and a push whose only row is the
+            // credential is still in sync: the fields would be rewritten with
+            // the values already on disk. The credential then has to be written
+            // from the Credentials panel instead, which is where a key belongs.
+            disabled={confirming || visibleChanges.length === 0 || inSync}
           >
             {confirming
               ? "Syncing…"
-              : visibleChanges.length === diffs.length
-                ? `Confirm (${diffs.length} change${diffs.length !== 1 ? "s" : ""})`
-                : `Confirm ${visibleChanges.length}/${diffs.length}`}
-          </button>
-        </div>
+              : diffs.length === 0
+                ? "Confirm"
+                : visibleChanges.length === diffs.length
+                  ? `Confirm (${diffs.length} change${pluralise(diffs.length)})`
+                  : `Confirm ${visibleChanges.length}/${diffs.length}`}
+          </Button>
+        </>
+      }
+    >
+      {/* Diffs list. With no rows at all the route's own sentence stands in
+          their place: in sync, no matching section, or an unparseable file. */}
+      <div className="max-h-72 overflow-y-auto">
+        {diffs.length === 0 ? (
+          <p className="py-4 text-center font-mono text-micro text-ps-text-muted">{note ?? "Nothing to sync."}</p>
+        ) : visibleChanges.length === 0 ? (
+          <p className="py-4 text-center font-mono text-micro text-ps-text-muted">
+            All changes removed — nothing will be synced
+          </p>
+        ) : (
+          <div className="space-y-1.5">
+            {visibleCount < totalCount && (
+              <div className="mb-2 font-mono text-micro text-neon-orange/90">
+                {totalCount - visibleCount} of {totalCount} changes excluded
+              </div>
+            )}
+            {visibleChanges.map((diff) => (
+              <div
+                key={diff.id}
+                className="flex items-start justify-between gap-2 rounded-ps-md bg-ps-surface-panel px-3 py-2.5"
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="text-body font-semibold text-ps-text-secondary">{diff.label}</div>
+                  <div className="mt-0.5 truncate font-mono text-micro text-ps-text-muted">{diff.detail}</div>
+                </div>
+                {isExcludable(direction, diff.id) && (
+                  <IconButton size="sm" icon={X} label="Exclude this change" onClick={() => handleRemove(diff.id)} />
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
-    </div>
+    </Dialog>
   );
 }
 
@@ -171,27 +182,35 @@ export default function ModelSyncButtons({
   const [modalState, setModalState] = useState<{
     direction: "push" | "pull";
     diffs: DiffEntry[];
+    inSync: boolean;
+    note: string | null;
     confirming: boolean;
   } | null>(null);
-  const [loadingDiff, setLoadingDiff] = useState(false);
+  const [loadingDiff, setLoadingDiff] = useState<"push" | "pull" | null>(null);
 
   const fetchDiffs = useCallback(async (direction: "push" | "pull") => {
-    setLoadingDiff(true);
+    setLoadingDiff(direction);
     try {
-      const res = await fetch(`/api/models/${encodeURIComponent(modelId)}/diff`, {
+      // design-lint-disable-next-line no-raw-write-outside-the-helper -- a POST that reads: the diff route compares this row with config.yaml and writes nothing. Its answer opens the dialog and its failure opens the same dialog with the fallback rows below, so there is nothing to say in a toast and nothing to reload.
+      const json = await apiFetch<DiffEnvelope>(`/api/models/${encodeURIComponent(modelId)}/diff`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ direction }),
       });
-      if (!res.ok) throw new Error("Failed to compute diffs");
-      const json = await res.json();
-      const diffs = (json as { data?: { diffs?: DiffEntry[] } })?.data?.diffs ?? [];
-      setModalState({ direction, diffs, confirming: false });
+      const diffs = json.data?.diffs ?? [];
+      setModalState({
+        direction,
+        diffs,
+        inSync: json.data?.inSync ?? false,
+        note: json.data?.note ?? null,
+        confirming: false,
+      });
     } catch {
-      // Fallback to generic messages if diff API fails
+      // The diff route is unreachable, so nothing can be compared. The dialog
+      // still opens and still syncs — it just says what the call will do
+      // rather than what would change.
       const fallbackLabel = direction === "push"
-        ? "Write model settings to Hermes config.yaml"
-        : "Read model settings from Hermes config.yaml";
+        ? "Push model settings to config.yaml"
+        : "Pull model settings from config.yaml";
       setModalState({
         direction,
         diffs: [
@@ -201,23 +220,17 @@ export default function ModelSyncButtons({
             detail: `${provider}/${modelIdString}`,
           },
           ...(direction === "push"
-            ? [{ id: "model-env", label: "Credential", detail: `Write API key for ${provider} to .env` }]
+            ? [{ id: "model-env", label: "Credential", detail: `Write the API key for ${provider} to the env file` }]
             : []),
         ],
+        inSync: false,
+        note: null,
         confirming: false,
       });
     } finally {
-      setLoadingDiff(false);
+      setLoadingDiff(null);
     }
   }, [modelId, provider, modelIdString]);
-
-  const handlePush = useCallback(async () => {
-    void fetchDiffs("push");
-  }, [fetchDiffs]);
-
-  const handlePull = useCallback(async () => {
-    void fetchDiffs("pull");
-  }, [fetchDiffs]);
 
   const handleConfirm = useCallback(async (excluded: Set<string>) => {
     if (!modalState) return;
@@ -225,11 +238,10 @@ export default function ModelSyncButtons({
 
     try {
       if (modalState.direction === "push") {
-        const pushModel = !excluded.has("modelId") && !excluded.has("provider") && !excluded.has("baseUrl");
-        const pushCred = !excluded.has("model-env") && pushModel;
-        if (pushModel) {
-          await onPush(modelId, { pushCredential: pushCred });
-        }
+        // No gate on the field ids: the push writes the whole section, so the
+        // only thing an exclusion can mean here is "not the credential". The
+        // old gate turned an excluded field into a confirm that did nothing.
+        await onPush(modelId, { pushCredential: !excluded.has("model-env") });
       } else {
         await onPull(modelId, { excluded });
       }
@@ -239,44 +251,38 @@ export default function ModelSyncButtons({
     }
   }, [modalState, modelId, onPush, onPull]);
 
+  const closeSyncModal = useCallback(() => setModalState(null), []);
+
   return (
     <>
-      <div className="flex items-center gap-1">
-        <button
-          type="button"
-          onClick={() => void handlePull()}
-          disabled={disabled || loadingDiff}
-          title="Import: read matching model settings from Hermes config into the database"
-          className="p-1.5 rounded-lg text-white/30 hover:text-neon-cyan hover:bg-neon-cyan/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {loadingDiff && modalState?.direction === "pull" ? (
-            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-          ) : (
-            <ArrowDownToLine className="w-3.5 h-3.5" />
-          )}
-        </button>
-        <button
-          type="button"
-          onClick={() => void handlePush()}
-          disabled={disabled || loadingDiff}
-          title="Export: write this model's settings into Hermes config.yaml"
-          className="p-1.5 rounded-lg text-white/30 hover:text-neon-purple hover:bg-neon-purple/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {loadingDiff && modalState?.direction === "push" ? (
-            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-          ) : (
-            <ArrowUpToLine className="w-3.5 h-3.5" />
-          )}
-        </button>
-      </div>
+      <IconButton
+        size="sm"
+        icon={ArrowDownToLine}
+        color="cyan"
+        label="Pull from Hermes"
+        loading={loadingDiff === "pull"}
+        disabled={disabled || loadingDiff !== null}
+        onClick={() => void fetchDiffs("pull")}
+      />
+      <IconButton
+        size="sm"
+        icon={ArrowUpToLine}
+        color="purple"
+        label="Push to Hermes"
+        loading={loadingDiff === "push"}
+        disabled={disabled || loadingDiff !== null}
+        onClick={() => void fetchDiffs("push")}
+      />
 
       {modalState && (
         <SyncModal
           direction={modalState.direction}
           diffs={modalState.diffs}
+          inSync={modalState.inSync}
+          note={modalState.note}
           confirming={modalState.confirming}
           onConfirm={(excluded) => void handleConfirm(excluded)}
-          onCancel={() => setModalState(null)}
+          onCancel={closeSyncModal}
         />
       )}
     </>

@@ -1,0 +1,40 @@
+{
+  "id": "T-0005",
+  "intent": "Execute ADR-0008: adopt the current v2 PatterTech EOS by the recompile route at ORG scale, sequenced after Phase 0 and Phase 0b and before all remaining programme work, which then executes as v2 task records. Warrant: ADR-0008, accepted by the operator 2026-08-22, and rulings R-A to R-D in org/plans/2026-08-consolidation.md section 12. Acceptance, from the ADR's eight decisions: (1) pin repair, the dead pin cc18755 recorded as translated to c6f94df, reachable from the pushed archive/v1-final tag, wherever the old id appears, and the new pin set to the EOS's pushed head at adoption time, 727bee44 on its dev branch at drafting and to be re-checked at cutover; (2) recompile at ORG, the v2 kernel templates replacing AGENTS.md, CLAUDE.md, org/CONSTITUTION.md with Part I product doctrine carried over verbatim, org/START.md, org/TESTING.md, org/TEMPLATES.md, org/QUESTIONS.md, org/PLAYBOOKS.md, org/GRAPH_BUILD.md, org/policy.json with guard validated false so guarded action classes are manual only, org/cadence.json, org/claims.json and the EXECUTOR, ORACLE and REVIEWER charters, with org/OPERATING_MODEL.md, org/QUEUE.md, org/CADENCE.md, the hand-kept org/STATE.md, the PLAN, WORK and VERIFY charters and the session-log convention deleted with no successor; (3) rulings migration, the lock-book's 31 header rulings into docs/RULINGS.json with a selection log, the five undefined compile-defect notes restored from the Session 0 walk records, WG-OPS-003 re-keyed to WG-DEVOPS-005, the 22 retired-id rulings carried as provenance with an explicit triage note each so their contracts stay enforced, WG-DRAFT-001 retired in favour of citing DOC-IDENT-001, and the lock-book header gaining policy_profile, packs_adopted, rulings_record, scale ORG and the new pin; (4) queue conversion, every open row becoming an org/tasks/T-####.json record with intent, declared side effects and preserved acceptance, closed rows staying in git history; (5) ADR home, all ADRs moved to org/decisions/ under ADR-####-slug naming with docs/adr/README.md remaining as a public pointer; (6) registration, a registry/PROJECTS.md row in the EOS, the estate/repos.json run-engine line corrected per accepted ADR-0002, and docs/EOS_FEEDBACK.md re-cut to the v2 template with privacy-reviewed summaries, FB-001, FB-003 and FB-005 recorded as independently resolved, FB-002 re-aimed as a worked-ruling offer against the identity-access pack and FB-004 kept, all landing directly on the EOS's dev branch per operator ruling R-D; (7) gate, python -m tools.eos check --seed at zero errors, the operator re-signing the human rubric headed by the cold-start test because a migrated seed is a new seed, and PatterStage's own gates, lint, doc links, design-lint baselines, tests and build, staying green through the cutover; (8) preserved verbatim, every ADR, the ruling content with its argued and inherited marks, the substance of docs/EOS_FEEDBACK.md, the venture brief and all product and design material, with ADR-0006 surviving unchanged, which also means the v2 charters must not silently reintroduce branch-from-main. Dispositions this settles: Q-004, Q-006 and Q-007 dissolve with the files they concern, Q-005's three sanctioned lock-book corrections ride the rulings migration, and Q-008 is promoted to T-0025. Done when the seed check is green at zero errors, the operator has re-signed the rubric, and no v1 org machinery remains. Tier proposal R3, anticipated factor protected-set-contact from derived signal paths:protected, evidence org/CONSTITUTION.md, the role charters and org/policy.json are rewritten wholesale; the declared facts add boundary-contact, because registration writes to a second repository and pushes to origin. Claims here cover this repository only; the EOS-side writes are cross-repo and no path claim can express them. Closed 2026-08-22: the recompile landed as 2f93e6b2 and merged to dev as 37355e46, after two independent review rounds rejected and were remediated. EOS-side registration landed on the EOS's own dev as 02bd328. Outstanding and operator-only: re-sign the human rubric in docs/COMPILE_REPORT.md, including the four WG-SEC drafts.",
+  "declared": {
+    "capabilities": [
+      "network",
+      "filesystem-outside-repo"
+    ],
+    "side_effects": [
+      "sends-external"
+    ]
+  },
+  "mode": "high-assurance",
+  "tier_proposed": "R3",
+  "tier_ruled": "R1",
+  "reasons": [
+    {
+      "factor": "boundary-contact",
+      "tier_floor": "R1",
+      "source": "declared",
+      "evidence": "declared side effect: sends-external"
+    }
+  ],
+  "status": "done",
+  "owner_session": "eos-v2-cutover-2026-08-22",
+  "claims": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "org/",
+    "docs/adr/",
+    "docs/RULINGS.json",
+    "docs/LOCKBOOK.md",
+    "docs/EOS_FEEDBACK.md"
+  ],
+  "timestamps": {
+    "opened": "2026-08-22T00:00:00Z",
+    "updated": "2026-08-22T22:45:00Z",
+    "closed": "2026-08-22T17:30:00Z"
+  }
+}

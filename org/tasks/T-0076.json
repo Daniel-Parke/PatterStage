@@ -1,0 +1,48 @@
+{
+  "id": "T-0076",
+  "intent": "A Composer run could not be stopped: no endpoint, no control, and no exit from a paused run except approving or rejecting its gate -- while the workflow-delete guard told operators to cancel runs first. Missions, chat and research all had a working cancel; Composer was the gap.",
+  "declared": {
+    "capabilities": [
+      "edit-source",
+      "migrate-schema"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0076-composer-cancel-2026-08-31",
+  "claims": [
+    "src/lib/db/migrations/037_composer_node_cancelled.sql",
+    "src/lib/db/apply-composer-node-cancelled-migration.ts",
+    "src/lib/db-schema.ts",
+    "src/lib/composer/cancel.ts",
+    "src/lib/composer/engine.ts",
+    "src/lib/composer/schema.ts",
+    "src/app/api/composer/runs/[id]/cancel/route.ts",
+    "src/app/orchestration/composer/page.tsx",
+    "src/components/composer/",
+    "tests/"
+  ],
+  "invariants": [
+    "I1 `cancelled` is WRITTEN, not merely permitted. It sat in the union, the CHECK and the terminal set for the life of the table while nothing produced it -- the exact fate T-0069 warned `rejected` must not share.",
+    "I2 The in-flight STAGE gets its own status. `failed` would repeat the defect 035 removed; `skipped` would be false and would revive a second dead status with the wrong meaning.",
+    "I3 The agent runs row is written cancelled, which removes it from listActiveRuns -- the reconciler stops polling and cannot overwrite the decision.",
+    "I4 A run that had already FINISHED keeps its real ending. A cancellation arriving afterwards did not cause it.",
+    "I5 The local record is written first and synchronously; the backend stop is best-effort and un-awaited. A gateway that cannot be reached is one of the likeliest reasons to be cancelling.",
+    "I6 A group stage cancels the sub-workflow it started, or that child keeps running and keeps spending against a parent that has ended.",
+    "I7 A second cancel is a no-op, not an error. The operator's intent is already satisfied."
+  ],
+  "the_blocker_nobody_named": "NodeRunStatus had no `cancelled`, so the in-flight stage could not be marked at all. That is why this needed migration 037 rather than being a pure-code change. One table, not two: composer_runs has admitted `cancelled` since 021, and nothing holds a foreign key INTO composer_node_runs, so the rebuild has no inbound references to preserve -- strictly simpler than 035's.",
+  "the_race_that_needed_defence_in_depth": "reconcile snapshots listActiveRuns and then awaits the gateway per row, so a cancellation landing during that await would return holding a stale verdict -- overwriting the stage's status and merging dead output into a finished run's context. finalizeComposerNodeRun now refuses to write into a terminal run. The runs-row seam already covers the common case; this covers the in-flight await and any future writer that leaves the row started.",
+  "oracle_provenance": "Committed alone at 58508362 ahead of the implementation at c9a77a92. Whole-file RED: the suite could not even load, because neither the 037 applier nor the cancel route existed -- the same shape T-0069's oracle had. Two bugs in the oracle itself were found and fixed while turning it green (attachBackendRun takes a fields object, composer_nodes' column is `key` not `node_key`); both were test bugs, not implementation bugs.",
+  "mutation_finding": "Fourteen mutations, twelve caught, two survivors and both were real gaps. Nothing exercised the `status === 'started'` guard, so widening it to any run at all passed -- a stage that completed a second before the cancel would have been relabelled, misreporting what the agent did. And deleting the catch around stopRun changed nothing observable, because Promise.allSettled already stops a rejection breaking the cancellation: the catch earns its place only by making the failure VISIBLE, so the assertion moved to the log. 14/14 after.",
+  "verification": "Proved end to end on a live isolated server: schema climbed to 37 on a real boot and the node CHECK admits cancelled; a run cancelled mid-flight answered 200 and left the run `cancelled` with 'Cancelled by user', the stage `cancelled`, the agent runs row `cancelled`, and the mock gateway recorded the stop request; a second cancel answered 200 unchanged. In the browser: the two-step control armed to 'Confirm cancel?', the header flipped to CANCELLED, and 'Cancelled by user' rendered in text-neon-orange rather than the failure pink, with the cancelled stage bordered orange on the canvas and zero console errors. Gate: lint 0, tsc 0, 3457 tests / 398 suites, knip 0, canary blessed (exactly two surfaces, each verified line by line), build 0.",
+  "timestamps": {
+    "opened": "2026-08-31T13:40:00Z",
+    "updated": "2026-08-31T15:10:00Z",
+    "closed": "2026-08-31T15:10:00Z"
+  }
+}

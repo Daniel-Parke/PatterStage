@@ -1,0 +1,10 @@
+-- Marker migration for the schedule canonicalisation fix.
+--
+-- The actual data-rewriting work (converting JSON-stringified
+-- ParsedSchedule values in `cron_jobs.schedule` back to raw 5-field
+-- cron expressions) happens in TypeScript at startup, in
+-- `applyCronScheduleCanonicalisation()`. This file just exists so the
+-- migration index increments and the schema_version is bumped.
+--
+-- See src/lib/db/apply-cron-schedule-canonicalisation.ts for the
+-- implementation and the rationale.

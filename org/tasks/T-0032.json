@@ -1,0 +1,105 @@
+{
+  "id": "T-0032",
+  "intent": "Restructure the skills page, the heaviest surface in the app. Measured 2026-08-24: 178 skills rendered unpaginated, 5,446 DOM nodes, 625 buttons, 35,218 characters of body text, 7x the next heaviest page. Operator ruled 2026-08-24: restructure it properly rather than take the cheap win. Collapse categories by default, virtualise or paginate the list, and keep search working across ALL skills rather than only the rendered ones, which is the trap in every list virtualisation. Done when the page is comparable in weight to its siblings and a skill can still be found in one action. Closed 2026-08-25. A category is now a row with a count until someone opens it, an open category renders one 24-row window with a pager, and one catalogue-wide search box replaces the two per-section boxes: search runs over the whole catalogue and REPLACES the view with a flat paginated match list, so it reaches skills sitting inside collapsed categories and beyond any rendered window. Measured on the same 180-skill catalogue, same production build, median of three loads: 5,450 to 1,436 DOM nodes (-73.6%), 625 to 137 buttons (-78.1%), 35,218 to 2,644 characters (-92.5%), time to networkidle 1,434ms to 1,441ms (unchanged, it was never the bottleneck). The page now sits level with /sessions at 1,433 nodes rather than 3.8x above it. Zero skill cards render on load, verified in the browser and not only under jsdom. Closed 2026-08-25. The skills page restructured: categories collapsed by default, rows virtualised, and search still runs over the WHOLE catalogue rather than the rendered window, which is the trap the brief named and review specifically tested by finding a skill inside a collapsed category.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R2",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0032-skills-2026-08-25",
+  "claims": [
+    "src/app/operations/skills/",
+    "src/components/skills/",
+    "src/lib/skills-page-helpers.ts",
+    "tests/"
+  ],
+  "invariants": [
+    "INV-1 Search runs over the FULL catalogue. A query matching a skill inside a collapsed category, or beyond the rendered page window, still surfaces that skill. Filtering only the rendered window makes the search box lie, and that is the failure mode this restructure is most likely to introduce.",
+    "INV-2 Categories are collapsed by default. With no search active the page renders category rows with counts and zero skill rows.",
+    "INV-3 Rendered skill rows are bounded by one page window, whatever the catalogue size, so DOM node count stops scaling with the catalogue. Search results are bounded by the same window.",
+    "INV-4 Every existing action keeps working: enable/disable toggle, View, Edit, and the push/pull to Hermes on the empty-catalogue import path.",
+    "INV-5 Nothing is lost. Category counts sum to the catalogue size, and paging through a category visits every skill in it exactly once."
+  ],
+  "oracle": {
+    "authored": "before implementation, in the owning session, per EXECUTOR R2",
+    "files": [
+      "tests/unit/skills-catalogue-restructure.test.tsx",
+      "tests/unit/skills-page-helpers.test.ts"
+    ],
+    "frozen_evidence": "Run against the unmodified page at d606cbe1: 32 failed, 7 passed. The 7 that passed are the pre-existing helper tests the file already carried.",
+    "final": "39 passed, 39 total. Full suite 345 suites / 2,815 tests green."
+  },
+  "rollback": {
+    "plan": "git revert the single commit. The change is client-side render structure only: no schema, no migration, no API route, no config and no data touched, so a revert restores the previous page exactly and needs no follow-up step.",
+    "blast_radius": "src/app/operations/skills/page.tsx, src/components/skills/*, src/lib/skills-page-helpers.ts. No other surface imports them: SimpleMarkdown (used by the skill detail route) is the only file in src/components/skills/ with an outside consumer and it is untouched.",
+    "signal": "npm run build plus the frozen oracle. A regression shows up as a red oracle, not as a judgement call."
+  },
+  "measurements": {
+    "method": "Production build, 180-skill catalogue, isolated data dir and isolated .next so a concurrent agent's build could not contaminate the reading. Chromium at 1440x900, three loads per route, median reported, waitUntil networkidle.",
+    "before": {
+      "commit": "d606cbe1",
+      "skills_page": {
+        "nodes": 5450,
+        "buttons": 625,
+        "text_chars": 35218,
+        "networkidle_ms": 1434
+      },
+      "siblings": {
+        "operations/tools": {
+          "nodes": 741,
+          "buttons": 48,
+          "text_chars": 2302,
+          "networkidle_ms": 1525
+        },
+        "sessions": {
+          "nodes": 1433,
+          "buttons": 44,
+          "text_chars": 2750,
+          "networkidle_ms": 914
+        },
+        "operations/personalities": {
+          "nodes": 806,
+          "buttons": 53,
+          "text_chars": 1720,
+          "networkidle_ms": 877
+        }
+      }
+    },
+    "after": {
+      "skills_page": {
+        "nodes": 1436,
+        "buttons": 137,
+        "text_chars": 2644,
+        "networkidle_ms": 1441
+      },
+      "composition_on_load": {
+        "category_rows": 113,
+        "skill_cards": 0
+      },
+      "search_git": {
+        "nodes": 908,
+        "buttons": 58,
+        "skill_cards": 12,
+        "summary": "12 matches across all 180 skills"
+      }
+    }
+  },
+  "timestamps": {
+    "opened": "2026-08-24T03:00:00Z",
+    "updated": "2026-08-26T00:00:00Z",
+    "closed": "2026-08-26T00:00:00Z"
+  },
+  "notes": [
+    "DEFECT FOUND AND FIXED, not in the ruled scope but inside acceptance item 4 (keep the toggles working). The Inactive grid passed a NEGATED toggle fallback to its cards: `onToggleSkill(skill, !skill.enabled)`. For an inactive skill (enabled === false, no pending toggle) the page then resolved 'currently enabled' to TRUE and sent `{ enabled: false }`, so clicking a control labelled 'Enable skill' asked the API to disable a skill that was already disabled, and toasted 'disabled'. A skill could not be re-enabled from the Inactive section at all. Traced in the old code at d606cbe1 (SkillsSections.tsx:221 plus page.tsx:204-209 and :150) and reproduced live. Cards now read their own effective state, so there is no per-section negation left to get backwards, and INV-4 pins both directions. The restructure forced the fix rather than merely permitting it: a flat search-results list mixes active and inactive skills, so there is no section for a fallback to come from.",
+    "HONEST LIMIT on the paging path. No category in the real catalogue exceeds 24 skills (the largest holds 9), so the pager does not appear in production today. It is exercised by the oracle against a 60-skill category, which is where the bound is proven. The window is what stops a growing category rebuilding the wall, not something the current data exercises.",
+    "HONEST LIMIT on what remains. The 1,436 nodes are dominated by 113 category rows at roughly 7 nodes each; zero skill cards render on load. Node count therefore now scales with CATEGORY count rather than skill count, which is a 5x smaller constant but not a flat line. Rendering every category is the shape the operator asked for ('a scannable list of categories with counts'), so it was left alone rather than quietly paginated past.",
+    "DISCOVERED, NOT FIXED, and worth its own record: the catalogue's categorisation is badly fragmented. 178 rows carry 96 distinct raw categories, 71 of them singletons, and 35 skills carry no category at all and are given a derived one. That is what produces 113 rows for two sections. Grouping cannot be useful at 1.6 skills per category, and fixing it means deriveCategory in src/lib/skills-repository.ts plus the catalogue data, which is outside this task's claims. Not filed as a task ID here because three agents were writing to org/tasks/ concurrently and picking an unassigned ID would have risked a collision; it is recorded here for the router to file.",
+    "DEVIATION on the frozen oracle, evidenced. One assertion failed on first run against the finished implementation: the 'matches every skill outside the rendered window' case expected 10 rows including wide-skill-059, and the fixture generator emitted wide-skill-000..058, so that row did not exist. The FIXTURE was corrected (numbering from 1, keeping 59 wide + 1 needle = 60 and the catalogue at 178); every frozen expectation, including the 10 and the wide-skill-059, was left exactly as authored. The gate was not moved to meet the code."
+  ]
+}

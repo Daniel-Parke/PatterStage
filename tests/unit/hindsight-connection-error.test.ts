@@ -1,6 +1,7 @@
 /**
  * hindsight-connection-error — unit tests for the connection-error
- * heuristic extracted from /api/memory/hindsight/route.ts.
+ * heuristic extracted from /api/memory/hindsight/route.ts and now living
+ * in src/lib/memory/hindsight-request.ts with the transport it describes.
  *
  * The heuristic is a substring match on `error.message` (the upstream
  * Hindsight bridge already formats errors with the status + body in
@@ -18,7 +19,7 @@
  *    doesn't tighten the match.
  */
 
-import { isHindsightConnectionError } from "@/app/api/memory/hindsight/route";
+import { isHindsightConnectionError } from "@/lib/memory/hindsight-request";
 
 describe("isHindsightConnectionError", () => {
   it("returns true when the message includes 'connect'", () => {

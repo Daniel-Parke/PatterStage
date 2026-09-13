@@ -1,0 +1,72 @@
+{
+  "id": "T-0101",
+  "intent": "B7 of the final-release programme: Memory and Logs. Test connection reads the real envelope (D58, blocker); Save keeps the loaded row's type and label (D65); one provider switch with the DB row as the truth and config.yaml memory.provider written on Save, the settings field read-only and pointing at Memory, the two stacked first-visit warnings collapsed into one Set up memory card (D64); Enter runs Recall, three distinguishable empty states, proof counts not relevance percentages (D60 to D63); log auto-scroll and Latest lines reattached, Delete All disabled on an empty page, confirm on directive and mental-model delete, per-file copy and download (D59).",
+  "declared": {
+    "capabilities": [
+      "edit-code"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {
+      "factor": "size-threshold",
+      "tier_floor": "R1",
+      "source": "derived:diff-size",
+      "evidence": "two pages and the provider switch"
+    }
+  ],
+  "status": "done",
+  "owner_session": "t0101-memory-and-logs-2026-09-05",
+  "claims": [
+    "src/components/memory/",
+    "src/components/logs/",
+    "src/components/config/",
+    "src/components/ui/Input.tsx",
+    "src/components/models/PerRowDeleteButton.tsx",
+    "src/app/agent/memory/",
+    "src/app/results/logs/",
+    "src/app/agent/settings/",
+    "src/app/api/memory/",
+    "src/app/api/logs/",
+    "src/app/api/config/",
+    "src/lib/memory/",
+    "src/lib/config-schema.ts",
+    "src/lib/status/",
+    "src/lib/sync/sources/MemorySync.ts",
+    "src/modules/hermes/lib/",
+    "src/hooks/",
+    "docs/",
+    "tests/"
+  ],
+  "programme": "B7, depends on B6 (T-0100). Component tests with the real double envelope; browser walk against mock-hindsight with Test connection green and Save round-tripping.",
+  "timestamps": {
+    "opened": "2026-09-05T10:30:00Z",
+    "updated": "2026-09-05T15:00:00Z",
+    "closed": "2026-09-05T15:00:00Z"
+  },
+  "claims_note": "Widened from the proposal before any edit (EXECUTOR: touch only claimed paths): the provider switch reaches the config schema and its field renderer, the PUT writes config.yaml through a new module helper, the search box gains an Enter handler in the shared Input, the row delete reuses the models' two-step button, and the docs describe all of it.",
+  "invariants": [
+    "I1 There is one memory provider switch. The database says which provider is active; getMemoryProviderType answers from the same resolver the live provider comes from, and no code path reads config.yaml to decide it.",
+    "I2 The agent's file is written to agree. A PUT that activates a provider sets memory.provider in config.yaml; a file that will not parse is reported on the save, never overwritten, and never turns a successful row write into a 500.",
+    "I3 A setting has one control. The Settings > Memory Provider field renders read-only with a link to the surface that owns it, and PUT /api/config refuses it.",
+    "I4 A probe believes the answer it is sent. Test connection reads health through both envelope levels, so a healthy store is never reported as a failure.",
+    "I5 Save edits the provider it loaded. The type and label come from the row on screen and activation is asked for only when that row was not already active; both buttons wait for the read rather than acting on a fallback.",
+    "I6 One fact, one voice. When nothing is answering the page says so once, on the card carrying the host and port that fix it; the built-in-default warning is reserved for a store that did answer at an address nobody confirmed.",
+    "I7 An empty list says which kind of empty it is: not connected, nothing matched this search, everything is older than the age filter, or the store is new. The stale banner appears only when it is hiding something.",
+    "I8 The number beside a fact is its proof count, called proofCount from the bridge to the render. No similarity score is produced anywhere, so none is displayed.",
+    "I9 Enter runs the search the label promises, once, and not while one is already running.",
+    "I10 The log pane is the element that scrolls: the ref and the scroll handler are on it, and it is bounded at every width, so auto-scroll can turn off and the Latest lines pill can appear.",
+    "I11 A destructive row action is two clicks, in the memory tabs as everywhere else, and Delete All is disabled when there is nothing to delete.",
+    "I12 The file on screen can leave the screen: Copy takes what is shown, filter included, and Download saves the whole file under its own name."
+  ],
+  "commits": "55201772 the claims widened before any edit; 6305edd7 the oracle alone (5 files, 56 tests, measured red: 44 failing, 12 green controls); 3eb7e697 the implementation (the provider resolver, the config.yaml writer and its route, the managed field and its renderer, the card, the page's lifted health, the four empty states, the proofCount rename, Enter, the two-click row delete, the log scroll ref, Delete All, Copy and Download, and the docs); e8e3e9db six sharper oracles the sweep asked for; 08444075 and af8f06b6 the two proof-walk findings, the second commit restoring the source halves the sweep script had reverted.",
+  "verification": "Gate b7 on the implementation tree by exit code: lint 0 (agent-files, doc-links, derived views, read-only guards, icon-button names, form-control names, design-lint 0 baselined, contrast, coverage floors, eslint, typecheck:tests), tsc 0, jest 0 (508 suites, 4793 tests), knip 0, canary 0 with nothing to bless (no route, migration, seed or app-config surface moved), build 0, Playwright 128 passed 8 skipped.",
+  "mutation": "43 mutants against the committed tree, 36 killed on the first pass and 43 after six sharper oracles (e8e3e9db). One survivor was a mapping error in the sweep rather than a gap: the mutant that stops the browser reporting an unreachable store is killed by the page test in another file, and the entry now names it. The six real gaps: an empty providers table answering hindsight, which is the zero-config connect the operator ruled for and which every other case seeded past; the other keys inside `memory:` surviving a provider write, where every fixture had a section holding nothing but `provider`; a managed field rendering read-only, declared in the schema and refused by the PUT but never asked of the page; Save and Test waiting for the read, invisible because every case waited for the button to go live; the browser handing the query down, which only the tab's own hand-passed props had covered; and the in-flight half of the Enter guard, since runRecall checks the blank query itself.",
+  "proof": "Isolated instance (production build of af8f06b6, e2e-b1 data dir, mock-hermes 8747, mock-hindsight 9277), four scenes, 27 checks, all PASS. (1) With the provider pointed at the live mock through the product's own PUT, the answer carried configYaml.written true and the instance's config.yaml gained memory.provider; the card read 'Memory provider' with no banner, Test connection reported 'Connected (healthy)', Enter issued one recall, and the list showed 'Proof count: 5' with the word Relevance nowhere on the page. (2) Pointed at a dead port, the page showed one heading 'Set up memory', the health sentence exactly once, no built-in-default warning, the host and port fields on that same card, and 'Memory is not connected' in the list rather than 'No memories yet'. (3) Settings > Memory renders Provider as a read-only value with 'Set this on the Memory page' linking to /agent/memory, no select and no Clear, while Memory Enabled is still a live switch. (4) On Logs, with a 400-line agent.log in the instance's Hermes home, Delete All is live, Copy put 200 lines on the clipboard and the button said Copied, and scrolling the pane revealed the Latest lines pill, which scrolled it back to the top.",
+  "deviation": "(1) The health is lifted to the page rather than fetched twice: HindsightBrowser reports it upward through onHealthChange and takes a reloadToken back, so the card can be the one voice and still reconnect the list. HealthBanner keeps its job and its tests, it is simply rendered by the card now. (2) downloadFile is imported from @/lib/chat-utils rather than moved to a neutral module: the artifacts page already imports it from there, and moving it would touch three files and two tests for no behavioural gain. (3) Two proof-walk findings were fixed in the batch rather than deferred: the log pane was bounded only below `lg`, so on a wide screen the page scrolled and the pane never did even with the ref on the right element; and hoisting the stale banner above the empty branch put 'Hiding 0 memories' on an empty store. (4) The first attempt to commit those two carried only their oracles: the mutation sweep restores every file it mutates with `git checkout --`, and it had been run on a tree that still held them uncommitted. The full suite went red on the next run and af8f06b6 restored them. Run the sweep on a clean tree, which is what 'against the committed tree' always meant.",
+  "harness_amendments": "memory-tab-render and hindsight-browser-render pinned the D63 defect: both asserted 'Relevance: NN%' for a fractional value the bridge has never produced. They now assert the proof count, and their fixtures use proofCount. hindsight-bridge and hindsight-route follow the same rename. hindsight-unreachable-banner renders the Memory page instead of the browser, because the sentence moved to the card, and it now asserts the sentence appears exactly once. record-surfaces passes scrollRef rather than containerRef. b6-config-field-unset-and-range gained the managed-field render cases from the sweep.",
+  "deferred": "The memory browser still fetches over three separate hooks, so a Refresh reloads one tab at a time; unifying them is not in this batch. The provider card offers no way to CHOOSE a different provider type, only to edit the active one's endpoint: the type is switched by whatever seeds or migrates the row, and a picker would need a story for what happens to the facts in the store being left behind. Holographic remains a type the registry refuses to instantiate, which is deliberate (T-0077) and unchanged here."
+}

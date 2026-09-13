@@ -1,5 +1,10 @@
 // ═══════════════════════════════════════════════════════════════
 // Shared Utility Functions
+//
+// AT THE LIB ROOT ON PURPOSE (C7, T-0144). Four tiny helpers with no
+// subject of their own: every layer uses them, from a route handler to a
+// chart label, and filing them under one domain would say they belong to
+// it. A helper here has to be that: no domain, no dependencies.
 // ═══════════════════════════════════════════════════════════════
 
 /**
@@ -91,17 +96,6 @@ export function formatElapsed(startedAt: string, now: number = Date.now()): stri
 }
 
 /**
- * Safely format a Unix timestamp as a relative time string.
- * Returns "never" for null, undefined, NaN, or negative values.
- * Use this instead of `timeAgo(new Date(unixTs * 1000).toISOString())`
- * to avoid RangeError when the timestamp is invalid.
- */
-export function safeTimeAgo(unixTs: number | null | undefined): string {
-  if (unixTs == null || typeof unixTs !== "number" || isNaN(unixTs) || unixTs <= 0) return "never";
-  return timeAgo(new Date(unixTs * 1000).toISOString());
-}
-
-/**
  * Format bytes as human-readable size string
  */
 export function formatBytes(bytes: number): string {
@@ -124,17 +118,13 @@ export function truncate(str: string, maxLen: number): string {
 }
 
 /**
- * Debounce a function call
+ * English noun pluralisation: appends `"s"` when `count !== 1`.
+ *
+ * Intentionally minimal (no irregulars, no `y → ies`): a "child/children"
+ * call site should get its own helper rather than overloading this one.
  */
-export function debounce<T extends (...args: unknown[]) => void>(
-  fn: T,
-  delay: number
-): (...args: Parameters<T>) => void {
-  let timer: ReturnType<typeof setTimeout>;
-  return (...args: Parameters<T>) => {
-    clearTimeout(timer);
-    timer = setTimeout(() => fn(...args), delay);
-  };
+export function pluralise(count: number): "" | "s" {
+  return count !== 1 ? "s" : "";
 }
 
 // ── Session Message Summary ────────────────────────────────────
@@ -153,19 +143,14 @@ export function messageSummary(content: string | undefined): string {
   return trimmed + (firstNonEmpty.length > 120 || hasMoreContent ? "..." : "");
 }
 
-// Re-exports from schedule module
-export { parseSchedule } from "@/lib/schedule/parse-schedule";
-export type { ParsedSchedule } from "@/lib/schedule/types";
-export { describeSchedule, parseCronExpression } from "@/lib/schedule/types";
-
 // ── Model Defaults ───────────────────────────────────────────
 
-import { TASK_TYPES, type TaskType } from "@/lib/hermes-providers";
+import { TASK_TYPES, type TaskType } from "@/lib/models/task-types";
 
 /**
  * Empty task-defaults map — initialises all 12 slots to null.
  * Client-safe (no DB dependency), shared between server and UI.
- * Uses TASK_TYPES from hermes-providers as the single source of truth.
+ * Uses TASK_TYPES from `@/lib/models/task-types` as the single source of truth.
  */
 export function emptyModelDefaults(): Record<TaskType, string | null> {
   return TASK_TYPES.reduce<Record<TaskType, string | null>>(

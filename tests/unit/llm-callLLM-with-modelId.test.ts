@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
 /** @jest-environment node */
+/* eslint-disable @typescript-eslint/no-require-imports */
 
 /**
  * PR 7 — callLLM resolves an `opts.modelId` against the registry:
@@ -8,14 +8,14 @@
  *   - gateway fallback when modelId is unknown
  */
 
-jest.mock("@/lib/hermes-agent-runtime", () => ({
+jest.mock("@/modules/hermes/lib/agent-runtime", () => ({
   getAgentLlmEndpoints: jest.fn(() => ({
     apiUrl: "http://gateway/v1/chat/completions",
     gatewayBase: "http://gateway",
   })),
 }));
 
-jest.mock("@/lib/models-repository", () => {
+jest.mock("@/lib/models/models-repository", () => {
   const getModelWithKey = jest.fn();
   return { getModelWithKey, __getModelWithKey: getModelWithKey };
 });
@@ -26,7 +26,7 @@ const originalFetch = global.fetch;
 beforeEach(() => {
   fetchMock.mockReset();
   global.fetch = fetchMock as unknown as typeof fetch;
-  const repo = require("@/lib/models-repository") as { __getModelWithKey: jest.Mock };
+  const repo = require("@/lib/models/models-repository") as { __getModelWithKey: jest.Mock };
   repo.__getModelWithKey.mockReset();
 });
 
@@ -45,7 +45,7 @@ function jsonOk(body: unknown) {
 
 describe("callLLM with modelId", () => {
   it("calls the provider directly when registry row has baseUrl + apiKey", async () => {
-    const repo = require("@/lib/models-repository") as { __getModelWithKey: jest.Mock };
+    const repo = require("@/lib/models/models-repository") as { __getModelWithKey: jest.Mock };
     repo.__getModelWithKey.mockReturnValue({
       id: "m1",
       name: "OpenAI GPT-5",
@@ -68,7 +68,7 @@ describe("callLLM with modelId", () => {
       })
     );
 
-    const { callLLM } = require("@/lib/llm") as typeof import("@/lib/llm");
+    const { callLLM } = require("@/lib/models/llm") as typeof import("@/lib/models/llm");
     const result = await callLLM([{ role: "user", content: "ping" }], { modelId: "m1" });
 
     expect(result.content).toBe("hi from openai");
@@ -84,7 +84,7 @@ describe("callLLM with modelId", () => {
   });
 
   it("falls through to the gateway when registry row has no baseUrl", async () => {
-    const repo = require("@/lib/models-repository") as { __getModelWithKey: jest.Mock };
+    const repo = require("@/lib/models/models-repository") as { __getModelWithKey: jest.Mock };
     repo.__getModelWithKey.mockReturnValue({
       id: "m2",
       name: "Sonnet via gateway",
@@ -108,7 +108,7 @@ describe("callLLM with modelId", () => {
       })
     );
 
-    const { callLLM } = require("@/lib/llm") as typeof import("@/lib/llm");
+    const { callLLM } = require("@/lib/models/llm") as typeof import("@/lib/models/llm");
     const result = await callLLM([{ role: "user", content: "ping" }], { modelId: "m2" });
 
     expect(result.content).toBe("from gateway");
@@ -122,7 +122,7 @@ describe("callLLM with modelId", () => {
   });
 
   it("uses opts.model when modelId is unknown / unresolved", async () => {
-    const repo = require("@/lib/models-repository") as { __getModelWithKey: jest.Mock };
+    const repo = require("@/lib/models/models-repository") as { __getModelWithKey: jest.Mock };
     repo.__getModelWithKey.mockReturnValue(null);
 
     fetchMock.mockResolvedValueOnce(jsonOk({}));
@@ -133,7 +133,7 @@ describe("callLLM with modelId", () => {
       })
     );
 
-    const { callLLM } = require("@/lib/llm") as typeof import("@/lib/llm");
+    const { callLLM } = require("@/lib/models/llm") as typeof import("@/lib/models/llm");
     const result = await callLLM([{ role: "user", content: "ping" }], {
       modelId: "missing",
       model: "hermes",

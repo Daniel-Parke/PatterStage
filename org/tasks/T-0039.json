@@ -1,0 +1,41 @@
+{
+  "id": "T-0039",
+  "intent": "Close the stdout-capture bug class in the shell scripts. ps_resolve_port_interactive writes its entire UI to stdout inside $( ), so the banner is captured as the PORT value and .env.local becomes multi-line prose. The corruption is STICKY: ps_env_set de-dups with grep -v '^KEY=', which cannot remove the orphan lines it wrote. QA hit this on a clean bootstrap and it blocked all downstream testing; their fix (prompts to stderr, printf the value) is correct but is unpushed and not in this tree, so reproduce it here. Then close the class: add the missing ps_validate_port_number guard after the interactive branch (the non-interactive branch already validates); harden ps_env_set and setup.mjs's setEnvLocal against multi-line values; fix resolve_python, which calls exit 1 inside a function only ever run in $( ) so the failure exits the subshell and the script continues with an empty interpreter path; and document that ps_info/ps_ok/ps_step/ps_dim all write to stdout while only ps_warn/ps_err use stderr, which is the standing landmine. Interactive setup has NO test: the shell harness only runs bash -n and its file list does not even include ps-port.sh. Source: the operator's live Hermes QA pass on dev@43d16c30, 2026-08-26. Root cause traced by three read-only investigations and re-verified independently; NOT a regression from the consolidation work, which only put a QA pass in front of pages nobody had text-scraped before. Closed 2026-08-26. All six parts landed. The part worth reading is that the echo fix and the validation guard are independently sufficient and were proved so separately: with the HEAD ps-port.sh and only the hardened writer in place, a clean bootstrap now writes NO PORT rather than a corrupt one, so the install fails loudly at the writer instead of silently at first boot. resolve_python turned out to be masked at HEAD by set -e at the top level of ps-backup.sh, which is why nobody saw it; the defect is real for any caller that is not under set -e, and the test calls the function outside a subshell where the old exit takes the caller's shell with it.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0039-stdout-capture-2026-08-26",
+  "invariants": [
+    "I1 No check is weakened. The design-lint baseline stays at 0 in 0 files across all eleven rules, no coverage floor moves, and not one existing assertion in tests/scripts/run-shell-custom-tests.sh is removed or relaxed. The harness only grows: 19 checks before, 30 after. Verified in the gate output: 'design-lint: no new violations (0 baselined, 0 allowed)' and 'coverage floors: no floor lowered'.",
+    "I2 A value that is not a port can never be written to .env.local as PORT. Two independent layers, and each was shown sufficient on its own: ps_resolve_port_interactive now prints only the port to stdout, and ps_setup_port_and_dev_origins validates whatever comes back with ps_validate_port_number before writing. The guard is the half that survives a future contributor, because it does not depend on anyone remembering the convention.",
+    "I3 .env.local is only ever left in a shape its own readers can parse. ps_env_set and setEnvVar both refuse a multi-line value and a non-identifier key, and both rewrite the file to blank, comment and KEY=VALUE lines only, so a file already corrupted by the old writer is repaired by the next write instead of carrying its orphan lines for ever. .env.example and the operator's live .env.local were both checked against that rule first: zero non-conforming lines in each.",
+    "I4 The operator's real .env.local is never a test fixture. Every check in the new harness section works inside its own mktemp directory, and the Node writer takes the target file as an argument precisely so it can be exercised without setup.mjs's REPO_ROOT-bound constant. Confirmed untouched: git reports no change to it and its 9 lines still parse.",
+    "I5 A function whose stdout is its return value reports failure by status, never by exit. resolve_python returns 1 and its caller checks it. The old exit 1 was only ever reached inside $( ), where it kills the subshell and hands the caller an empty interpreter path in any context not under set -e."
+  ],
+  "oracle_provenance": "Authored by the executor in this session BEFORE any production file was edited, per the EXECUTOR R2 clause. The whole block was added to tests/scripts/run-shell-custom-tests.sh and run against the unfixed tree first: 41 checks run, 12 failed, with failures in every one of the eight new groups. That run is the freeze point. Three of the fixes were then proved individually rather than only as a set, because a suite that fails as a lump does not tell you which change is load-bearing: the HEAD ps-port.sh against the hardened writer (no PORT written at all), the HEAD setEnvLocal body against the same fixture the harness uses (accepted the multi-line value and preserved the orphans), and resolve_python at HEAD called outside a subshell (the test shell died where the current one prints its sentinel). One weakness to declare: the env-local.mjs group needs node on PATH and fails loudly if it is absent, which is a hard dependency the shell-custom-scripts CI job does not install explicitly. It relies on ubuntu-latest shipping node. A silent skip was the alternative and it is the worse one.",
+  "rollback": "One-command revert of this task's single commit. No schema element, no migration, no route, no dependency, no persisted state. Three notes for whoever does it. scripts/bootstrap/env-local.mjs is a new file, so the revert removes it and restores setup.mjs's inline readEnvLocal/setEnvLocal, which is the pre-change behaviour including the sticky-orphan defect; the two revert together or setup.mjs will not import. Reverting also restores the writer that accepts multi-line values, so any .env.local repaired since is fine but a fresh interactive bootstrap goes back to corrupting itself. The harness reverts with them: the eight new checks are written against the fixed contract and will fail on the old code, which is the point of them.",
+  "claims": [
+    "scripts/lib/",
+    "scripts/bootstrap/",
+    "tests/scripts/"
+  ],
+  "claims_extended": [
+    "scripts/hardware/ps-backup.sh, for part 4. The task names it as scripts/lib/ps-backup.sh, which does not exist; the file has always lived under scripts/hardware/, so the claim list is one path short of the work it describes rather than the work being out of scope."
+  ],
+  "deferred": [
+    "docs/TESTING.md line 150 still says the shell harness 'covers dotenv, profile sync gates, and bash -n on key scripts', which is now short by the whole PORT and dotenv-writer section. docs/ is outside this task's claims and is a file other lanes touch, so it is left for whoever owns the docs pass rather than edited here.",
+    "ps_noninteractive_install tests CI == 1 while ps_assume_yes accepts 1|true|TRUE. GitHub Actions sets CI=true, so an install running in Actions takes the INTERACTIVE branch. Not touched here: it is a separate defect with its own blast radius, and the new tests unset CI explicitly so they do not depend on which way it resolves."
+  ],
+  "timestamps": {
+    "opened": "2026-08-26T09:00:00Z",
+    "updated": "2026-08-26T19:20:00Z"
+  }
+}

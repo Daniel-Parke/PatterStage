@@ -1,0 +1,134 @@
+{
+  "task": "T-0151",
+  "why": "Each mutant puts back one of the security defects the review found. A green oracle says the fixes are in; these say the oracle would have noticed had they not been. The Unix half of critic-03b — what chmod actually DOES — cannot be swept on this machine, because those cases skip on win32; it is proved by the Linux and macOS CI jobs and the record says so.",
+  "mutants": [
+    {
+      "id": "m1-the-guard-stops-reading-a-mapped-address",
+      "file": "src/lib/search/url-guard.ts",
+      "anchor": "  if (zeros(0, 5) && (h[5] === 0xffff || h[5] === 0)) return octets(h[6], h[7]);",
+      "replacement": "  if (zeros(0, 5) && (h[5] === 0xffff || h[5] === 0)) return null;",
+      "tests": ["tests/unit/k4-the-security-fixes.test.ts"],
+      "why": "the guard falls back to knowing only the dotted spelling, which is the defect: new URL() reports [::ffff:127.0.0.1] as [::ffff:7f00:1], so loopback and cloud metadata become fetchable from a research run"
+    },
+    {
+      "id": "m2-the-guard-stops-reading-a-6to4-address",
+      "file": "src/lib/search/url-guard.ts",
+      "anchor": "  if (h[0] === 0x2002) return octets(h[1], h[2]);",
+      "replacement": "  if (h[0] === 0x2002) return null;",
+      "tests": ["tests/unit/k4-the-security-fixes.test.ts"],
+      "why": "the review found this branch reading the wrong position on a compressed address; the refuse cases for 2002:a9fe::1 and its three siblings are what hold it"
+    },
+    {
+      "id": "m3-the-workspace-guard-goes-back-to-a-substring",
+      "file": "src/lib/fs/path-security.ts",
+      "anchor": "  return rel !== \"\" && rel !== \"..\" && !rel.startsWith(\"..\" + sep) && !isAbsolute(rel);",
+      "replacement": "  return rel !== \"\" && !rel.includes(\"..\");",
+      "tests": ["tests/unit/k4-the-security-fixes.test.ts"],
+      "why": "the old test refused a..b, ..foo and notes..old, which are legal directory names, and admitted a path on another drive, which is an escape; both halves are now held"
+    },
+    {
+      "id": "m4-the-sessions-limiter-reads-its-own-header-again",
+      "file": "src/lib/sessions/sessions-api-guard.ts",
+      "anchor": "  const key = authClientKey(request.headers);",
+      "replacement": "  const key = request.headers.get(\"x-forwarded-for\") || \"local\";",
+      "tests": ["tests/unit/k4-the-security-fixes.test.ts"],
+      "why": "the defect inlined rather than named, which is how it would really come back: the file still imports authClientKey, so an oracle asserting only that the old FUNCTION NAME is gone stays green while the two boundaries diverge"
+    },
+    {
+      "id": "m5-the-sessions-limiter-stops-forgetting",
+      "file": "src/lib/sessions/sessions-api-guard.ts",
+      "anchor": "  pruneWindows(now);",
+      "replacement": "  /* pruneWindows(now); */",
+      "tests": ["tests/unit/k4-the-security-fixes.test.ts"],
+      "why": "the map is keyed by a header the caller sends; that it shrinks shows up in no response, which is why the count is exported at all"
+    },
+    {
+      "id": "m6-a-deploy-log-stops-being-narrowed",
+      "file": "scripts/tooling/ps-deploy.mjs",
+      "anchor": "    restrictToOwner(logFile(base), OWNER_ONLY_FILE);",
+      "replacement": "    /* the chmod the fix added */",
+      "tests": ["tests/unit/k4-the-security-fixes.test.ts"],
+      "why": "the mode argument beside it applies only when the file is created, so dropping the chmod leaves every existing install's log world-readable and nothing else would say so"
+    },
+    {
+      "id": "m7-the-data-directory-stops-being-narrowed",
+      "file": "src/lib/db/index.ts",
+      "anchor": "restrictToOwner(dataDir, OWNER_ONLY_DIR);",
+      "replacement": "/* the chmod the fix added */",
+      "tests": ["tests/unit/k4-the-security-fixes.test.ts"],
+      "why": "the directory holds the database and the access token, and a readable directory shows every name in it"
+    },
+    {
+      "id": "m8-the-database-stops-being-narrowed-at-first-open",
+      "file": "src/lib/db/index.ts",
+      "anchor": "  restrictToOwner(DB_PATH, OWNER_ONLY_FILE);\n  restrictExistingDatabaseFiles(dataDir);",
+      "replacement": "  restrictExistingDatabaseFiles(dataDir);",
+      "tests": ["tests/unit/k4-the-security-fixes.test.ts"],
+      "why": "SQLite gives -wal and -shm the database's own mode, so this one call is what narrows all three; the reopen after a baseline rebuild is the second and the oracle counts both"
+    },
+    {
+      "id": "m9-the-old-copies-stay-world-readable",
+      "file": "src/lib/db/index.ts",
+      "anchor": "  restrictExistingDatabaseFiles(dataDir);",
+      "replacement": "  /* the sweep the review asked for */",
+      "tests": ["tests/unit/k4-the-security-fixes.test.ts"],
+      "why": "the review's blocking finding: narrowing the live database does nothing for the eight whole copies a baseline rebuild and the deploy runner had already left beside it"
+    },
+    {
+      "id": "m10-the-deploy-runners-own-backup-stops-being-narrowed",
+      "file": "scripts/tooling/ps-deploy.mjs",
+      "anchor": "    restrictToOwner(bak, OWNER_ONLY_FILE);",
+      "replacement": "    /* the chmod the review asked for */",
+      "tests": ["tests/unit/k4-the-security-fixes.test.ts"],
+      "why": "backupDb copies a whole database on every deploy, before the app has booted and narrowed the source it copies its mode from"
+    },
+    {
+      "id": "m11-the-rebuild-copy-stops-being-narrowed",
+      "file": "src/lib/db/upgrade.ts",
+      "anchor": "    restrictToOwner(backupPath, OWNER_ONLY_FILE);",
+      "replacement": "    /* the chmod the fix added */",
+      "tests": ["tests/unit/k4-the-security-fixes.test.ts"],
+      "why": "the copy is a whole database left beside the live one; that copyFileSync carries the source's mode is libuv behaviour, not a promise this repo makes"
+    },
+    {
+      "id": "m12-the-detached-child-gets-an-unnarrowed-log",
+      "file": "scripts/tooling/_platform.mjs",
+      "anchor": "      const fd = openSync(logFile, \"a\", OWNER_ONLY_FILE);",
+      "replacement": "      const fd = openSync(logFile, \"a\");",
+      "tests": ["tests/unit/k4-the-security-fixes.test.ts"],
+      "why": "this is the fd the server's stdout goes to, and the boot line carries the access token"
+    },
+    {
+      "id": "m13-the-token-directory-stops-being-narrowed",
+      "file": "src/lib/api/auth-token.ts",
+      "anchor": "  restrictToOwner(dir, OWNER_ONLY_DIR);",
+      "replacement": "  /* the chmod the fix added */",
+      "tests": ["tests/unit/k4-the-security-fixes.test.ts"],
+      "why": "the token FILE was always 0600; the directory it is minted into was not, and it is the directory that lists what is in it"
+    },
+    {
+      "id": "m14-the-image-carries-the-operators-database-again",
+      "file": ".dockerignore",
+      "anchor": "/data/*",
+      "replacement": "# /data/*",
+      "tests": ["tests/unit/k4-the-security-fixes.test.ts"],
+      "why": "Dockerfile:16 is COPY . ., so without the exclusion the builder stage takes the local database, its WAL and the auth-token file"
+    },
+    {
+      "id": "m15-signing-stops-reading-the-ps-secret",
+      "file": "src/lib/api/api-auth.ts",
+      "anchor": "readEnv(\"PS_REQUEST_SIGNING_SECRET\", \"CH_REQUEST_SIGNING_SECRET\")",
+      "replacement": "readEnv(\"CH_REQUEST_SIGNING_SECRET\")",
+      "tests": ["tests/unit/api-auth.test.ts"],
+      "why": "critic-05c exists because every signing case used the CH_ name; with only those cases this mutant is invisible, and the PS_ name is the one the documentation gives"
+    },
+    {
+      "id": "m16-signing-stops-reading-the-ps-headers",
+      "file": "src/lib/api/api-auth.ts",
+      "anchor": "request.headers.get(\"x-ps-ts\") || request.headers.get(\"x-ch-ts\")",
+      "replacement": "request.headers.get(\"x-ch-ts\")",
+      "tests": ["tests/unit/api-auth.test.ts"],
+      "why": "same hole on the header half: x-ps-ts and x-ps-signature are documented and were untested"
+    }
+  ]
+}

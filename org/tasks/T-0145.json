@@ -1,0 +1,52 @@
+{
+  "id": "T-0145",
+  "intent": "C8 of the consolidation programme: closing. The clearest duplication left is taken first (the hindsight tab hooks, the two Rec Room library panels, the hand-rolled next/server double, and the database preamble sixty-one suites repeated), and then the census is read against the target the plan set for each measure at C0. What met its target and what missed is written into the plan with the numbers, and the plan is marked done.",
+  "declared": {
+    "capabilities": [
+      "edit-source",
+      "edit-tests",
+      "edit-docs"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [
+    {
+      "factor": "size-threshold",
+      "tier_floor": "R2",
+      "source": "derived:diff-size",
+      "evidence": "eighty-six files, mostly test fixtures adopting a shared helper, each proved by its own suite's test-name set before and after; the closing itself is documentation held by an oracle"
+    }
+  ],
+  "status": "done",
+  "owner_session": "t0145-c8-closing-2026-09-11",
+  "claims": [
+    "src/components/memory/",
+    "src/modules/rec-room/components/",
+    "tests/helpers/",
+    "tests/unit/",
+    "tests/unit/c8-the-programme-is-closed.test.ts",
+    "scripts/tooling/line-census.baseline.json",
+    "org/plans/2026-09-consolidation.md",
+    "org/HANDOVER.md"
+  ],
+  "programme": "C8 of org/plans/2026-09-consolidation.md, the last batch. The plan is marked done; the release actions remain the operator's.",
+  "timestamps": {
+    "opened": "2026-09-11T15:00:00Z",
+    "updated": "2026-09-11T19:00:00Z",
+    "closed": "2026-09-11T19:00:00Z"
+  },
+  "invariants": [
+    "I1 A TARGET IS NOT RESTATED TO MATCH THE RESULT. The twelve targets are the ones the plan wrote at C0; the oracle carries them and fails if a measure that missed is recorded as met.",
+    "I2 A MISS IS WRITTEN DOWN. Every measure that missed appears in the plan's closing section with the number the committed baseline holds, and the oracle fails if the plan is silent about one.",
+    "I3 NO MEASURE WENT BACKWARDS. Every one of the twelve is at or below where C0 found it.",
+    "I4 THE LAST DUPLICATION CHANGED NOTHING. Each of the eighty-six files was proved by its own suite's test-name set before and after; sixteen database fixtures keep their own stanza because each differs in what it admits, and the record says which.",
+    "I5 THE PLAN IS CLOSED. Its front matter reads done, and the programme's arithmetic is a test rather than a paragraph."
+  ],
+  "commits": "50fc0163 the C8 oracle, red at 2 of 17; 76dcaf24 the last duplication and the closing; da960fc8 the two the closing gate found; the chore commit that carries this record and the derived views.",
+  "verification": "Gate by exit code on the finished tree: lint 0, tsc 0, jest 0 (6920 tests, 684 suites), knip 0, canary 0, build 0, Playwright 0 (272 passed, 24 skipped, 0 failed, two projects), census 0, census:lines 0. The programme's twelve measures, C0 to close, each against the target the plan set and never moved: srcLines 107123 to 100881 against 98000 (missed by 2881); testLines 121762 to 121114 against 116000 (missed by 5114); srcRepeatedWindowLines 1416 to 1000 against 600 (missed by 400); testRepeatedWindowLines 6028 to 4343 against 2500 (missed by 1843); routesWithTryCatch 82 to 13 against 13; handRolledReadHooks 5 to 0 against 0; writeHooksWithoutMutation 4 to 0 against 0; repeatedTypeShapeFiles 23 to 2 against 3; oneImporterComponents 130 to 103 against 95 (missed by 8); libRootFiles 71 to 6 against 12; commentEssays 107 to 9 against 60; suitesMockingDbInline 100 to 14 against 20. 7 met, 5 missed, and the plan's closing section names every miss with its number. Beside them, design-lint's whole baseline is 0, from 369 at C6's start and 350 at the programme's. The diff for this batch: 86 files changed, 970 insertions(+), 1459 deletions(-).",
+  "mutation": "Three mutants against the committed tree, all killed, each one of the closing's own failure modes: a target softened to match what was achieved, a miss dropped from the list the plan must carry, and the plan left open rather than marked done.",
+  "deviation": "Five agents took the last duplication before the closing was written, over disjoint files, each proving per-suite identity by test-name set. What they reported and what the coordinator did with it: the census counts a repeated window only across two or more FILES, so the hindsight browser's 65 lines were not three tab bodies inside it but each hook's return list matched against the shell's destructuring of it, the same interface written twice and counted from both ends; holding the hooks as objects removed all of it. The Rec Room panels cost 39 new lines to remove 48 duplicated ones, which is the measurement behind the plan's account of why the line targets were optimistic: a window shared by exactly two consumers cannot pay for its own interface. Sixteen database fixtures keep their own stanza, each because it differs in what it admits (foreign keys off, an on-disk file, a schema deliberately older than the baseline), and adopting a helper there would change what the harness allows. C3's list of the files that write gained the new hindsight factory, and C4's oracle lost three exemptions whose reason the batch made stale, which is strictly stronger. The closing gate found two of its own and both were fixed rather than blessed: C0's oracle pinned the plan at approved, which C8 exists to change, and knip found a type exported with no reader."
+}

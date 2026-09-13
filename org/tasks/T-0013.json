@@ -1,0 +1,27 @@
+{
+  "id": "T-0013",
+  "intent": "Phase 6: make the migration documentation match the code and stop the two drifting apart again. Warrant: the lock-book's enforced contract that migration history is a record, not a description; the defect is doc and test drift, v13 and v11 claimed against v30 real. Source row WO-0027. Acceptance: (1) docs/MIGRATION.md:57, :79 and :104 corrected to the v30 head; (2) a head constant minted in src/lib/db-schema.ts, chosen because that file is unmocked by tests/jest.setup.ts lines 116 to 133, is already imported by the upgrade test and is exempt by name in design-lint, and asserted equal to the last applier's gate, NEUTRAL_COLUMN_NAMES_SCHEMA_VERSION, which T-0007 reserves, with the three hardcoded 30s at tests/unit/run-migrations-upgrade.integration.test.ts:128, :169 and :192 tied to it, strengthened and never weakened; (3) the going-forward rule written into docs/MIGRATION.md, that a schema change is a new numbered .sql plus a version-gated applier exec'ing it, appended to the hand-wired order in the db entry file, with the 4 readFileSync appliers and 3 pure-TS appliers recorded as the historical exceptions, the ladder quirks documented, no v6, no v10, 007 and 008 inert markers, and shipped migrations immutable; (4) operator ruling D6 recorded here, that session-sync's guarded lazy self-heal is deliberate and sanctioned, so the design-lint comment and the file agree. Done when MIGRATION.md matches the code and the doc and test cannot drift apart again. Merge gate: the upgrade-path test. Tier proposal R1, anticipated factor size-threshold from derived signal diff-size. Worth stating because a reader expects a migration task to route higher: this task adds no numbered .sql and changes no schema, so the migration-path detector behind schema-change should stay quiet, and if the diff does reach a migrations path the gate will rule R2 and the ceremony rises with it. Closed 2026-08-23. docs/MIGRATION.md's three stale head claims corrected to v30; the head constant minted in src/lib/db-schema.ts rather than db.ts, because tests/jest.setup.ts mocks @/lib/db and a constant imported from there would read undefined in the upgrade test, and hardcoding it in the mock would recreate the drift the constant exists to kill; the upgrade test's three hardcoded 30s tied to it with the assertion count unchanged. The going-forward rule is written down, naming the FOUR readFileSync appliers and THREE pure-TS appliers as the historical exceptions they are, plus the ladder quirks (no v6, no v10, 007 and 008 inert markers). Operator ruling D6 recorded so the lint comment and the file agree. NOTE ON IDENTITY: the launcher named T-0016 for this work, which is wrong. T-0016 is Phase 7's per-Body progression snapshot (WO-0010), an unrelated task that remains open. The delivered work is this record, T-0013 (Phase 6, WO-0027), which claims exactly the files touched. Independent review caught the mislabel; the executor flagged it and correctly edited neither record.",
+  "declared": {
+    "capabilities": [
+      "filesystem",
+      "database"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R0",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "phase6-migration-truth-2026-08-22",
+  "claims": [
+    "docs/MIGRATION.md",
+    "src/lib/db-schema.ts",
+    "tests/unit/run-migrations-upgrade.integration.test.ts"
+  ],
+  "timestamps": {
+    "opened": "2026-08-22T00:00:00Z",
+    "updated": "2026-08-23T01:00:00Z",
+    "closed": "2026-08-23T01:00:00Z"
+  }
+}

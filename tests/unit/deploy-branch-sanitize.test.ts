@@ -1,4 +1,4 @@
-import { MAX_DEPLOY_GIT_BRANCH_LEN, sanitizeGitBranch } from "@/lib/git-branch";
+import { MAX_DEPLOY_GIT_BRANCH_LEN, sanitizeGitBranch } from "@/lib/git/git-branch";
 
 describe("sanitizeGitBranch (shared with POST /api/update + Sidebar)", () => {
   it("strips unsafe characters", () => {

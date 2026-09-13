@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from "fs";
 import { join } from "path";
 
 const SCHEMA_VERSION_KEY = "schema_version";
-export const MISSION_REPEAT_FIX_SCHEMA_VERSION = 4;
+const MISSION_REPEAT_FIX_SCHEMA_VERSION = 4;
 
 function getSchemaVersion(database: Database.Database): number {
   try {

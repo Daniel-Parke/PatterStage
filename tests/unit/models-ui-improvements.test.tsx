@@ -7,24 +7,12 @@
 // ═══════════════════════════════════════════════════════════════
 
 import "@testing-library/jest-dom";
-import { render, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
+import { renderWithQuery } from "../helpers/render-with-query";
+import { fetchMap, type FetchAnswer } from "../helpers/fetch-map";
 
-import ModelsPage from "@/app/config/models/page";
-import { TASK_TYPES } from "@/lib/hermes-providers";
-
-interface FetchResponseInit {
-  body: unknown;
-  status?: number;
-}
-
-function jsonResponse({ body, status = 200 }: FetchResponseInit) {
-  return {
-    ok: status >= 200 && status < 300,
-    status,
-    json: async () => body,
-    text: async () => JSON.stringify(body),
-  };
-}
+import ModelsPage from "@/app/agent/models/page";
+import { TASK_TYPES } from "@/lib/models/task-types";
 
 const originalFetch = global.fetch;
 
@@ -32,34 +20,23 @@ afterEach(() => {
   global.fetch = originalFetch;
 });
 
-function setFetch(map: Record<string, FetchResponseInit>) {
-  global.fetch = jest.fn(async (input: RequestInfo | URL) => {
-    const url = typeof input === "string" ? input : input.toString();
-    const matched = map[url];
-    if (matched) return jsonResponse(matched) as unknown as Response;
-    const sortedKeys = Object.keys(map).sort((a, b) => b.length - a.length);
-    for (const k of sortedKeys) {
-      if (url.startsWith(k)) return jsonResponse(map[k] as FetchResponseInit) as unknown as Response;
-    }
-    if (url.includes("/api/models/sync/drift")) {
-      return jsonResponse({ data: null }) as unknown as Response;
-    }
-    if (url.includes("/api/models/fallbacks")) {
-      return jsonResponse({ data: { chain: [], config: null } }) as unknown as Response;
-    }
-    if (url.includes("/api/models/import")) {
-      return jsonResponse({ data: { modelsImported: 0 } }) as unknown as Response;
-    }
-    throw new Error(`Unmatched fetch: ${url}`);
-  }) as typeof global.fetch;
+function setFetch(map: Record<string, FetchAnswer>) {
+  fetchMap(map, {
+    fallback: (url) => {
+      if (url.includes("/api/models/sync/drift")) return { body: { data: null } };
+      if (url.includes("/api/models/fallbacks")) return { body: { data: { chain: [], config: null } } };
+      if (url.includes("/api/models/import")) return { body: { data: { modelsImported: 0 } } };
+      return undefined;
+    },
+  });
 }
 
 function defaultFallbacks() {
   return {
-    "/api/models/sync/drift": { data: null },
-    "/api/models/fallbacks": { data: { chain: [], config: { restorePrimaryOnFallback: true, fallbackNotification: false, apiMaxRetries: 2 } } },
-    "/api/models/fallbacks/config": { data: { config: { restorePrimaryOnFallback: true, fallbackNotification: false, apiMaxRetries: 2 } } },
-  } as Record<string, FetchResponseInit>;
+    "/api/models/sync/drift": { body: { data: null } },
+    "/api/models/fallbacks": { body: { data: { chain: [], config: { restorePrimaryOnFallback: true, fallbackNotification: false, apiMaxRetries: 2 } } } },
+    "/api/models/fallbacks/config": { body: { data: { config: { restorePrimaryOnFallback: true, fallbackNotification: false, apiMaxRetries: 2 } } } },
+  } as Record<string, FetchAnswer>;
 }
 
 function defaultModelsFetch(models: unknown[] = []) {
@@ -83,7 +60,7 @@ function defaultModelsFetch(models: unknown[] = []) {
 describe("ModelsPage UI improvements", () => {
   it("renders section titles with icons: Models, Agent Default, Task Defaults", async () => {
     setFetch(defaultModelsFetch());
-    const { container: _c1 } = render(<ModelsPage />);
+    const { container: _c1 } = renderWithQuery(<ModelsPage />);
 
     await waitFor(() =>
       expect(screen.getByText(/No models yet/i)).toBeInTheDocument()
@@ -100,7 +77,7 @@ describe("ModelsPage UI improvements", () => {
 
   it("does not render verbose 'Universal Agent Default (Framework-scoped)' title", async () => {
     setFetch(defaultModelsFetch());
-    render(<ModelsPage />);
+    renderWithQuery(<ModelsPage />);
 
     await waitFor(() =>
       expect(screen.queryByText(/Universal Agent Default/i)).not.toBeInTheDocument()
@@ -109,7 +86,7 @@ describe("ModelsPage UI improvements", () => {
 
   it("does not render 'Framework' label next to dropdown", async () => {
     setFetch(defaultModelsFetch());
-    render(<ModelsPage />);
+    renderWithQuery(<ModelsPage />);
 
     await waitFor(() =>
       expect(screen.queryByText(/^Framework$/i)).not.toBeInTheDocument()
@@ -139,12 +116,25 @@ describe("ModelsPage UI improvements", () => {
               acc[t] = t === "agent" ? minimax.id : null;
               return acc;
             }, {}),
+            // Amended in the real-agent round. The slot alone used to draw
+            // Active, so a model chosen here and never sent to the agent was
+            // stamped Active on a machine the agent had never run it on. The
+            // endpoint answers the one readiness verdict now, and Active
+            // follows that. This fixture is the install where the model really
+            // did reach the agent, which is the case the test is about.
+            modelReadiness: {
+              state: "ready",
+              ready: true,
+              label: "MiniMax/MiniMax-M2.1 · minimax",
+              modelName: "MiniMax/MiniMax-M2.1",
+              detail: "",
+            },
           },
         },
       },
     });
 
-    const { container: _c2 } = render(<ModelsPage />);
+    const { container: _c2 } = renderWithQuery(<ModelsPage />);
 
     await waitFor(() =>
       expect(screen.getByText("Active")).toBeInTheDocument()
@@ -157,7 +147,7 @@ describe("ModelsPage UI improvements", () => {
 
   it("does not render verbose 'Default Models' title", async () => {
     setFetch(defaultModelsFetch());
-    render(<ModelsPage />);
+    renderWithQuery(<ModelsPage />);
 
     await waitFor(() =>
       expect(screen.queryByText("Default Models")).not.toBeInTheDocument()
@@ -166,7 +156,7 @@ describe("ModelsPage UI improvements", () => {
 
   it("section headers do not contain long bracketed descriptions", async () => {
     setFetch(defaultModelsFetch());
-    render(<ModelsPage />);
+    renderWithQuery(<ModelsPage />);
 
     await waitFor(() =>
       expect(screen.queryByText(/\(Framework-scoped\)/i)).not.toBeInTheDocument()
