@@ -4,9 +4,9 @@ import { createReadStream } from 'node:fs';
 import { access, lstat, mkdtemp, mkdir, readlink, readdir, realpath, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { basename, isAbsolute, join, relative, resolve } from 'node:path';
-import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
+import Database from 'better-sqlite3';
 
 const checkoutRoot = resolve(fileURLToPath(new URL('../..', import.meta.url)));
 const checkoutData = join(checkoutRoot, 'data');
@@ -188,7 +188,7 @@ async function runCase(caseName, populated) {
   try {
     if (populated) {
       const dbPath = join(fixture.psData, 'patterstage.db');
-      db = new DatabaseSync(dbPath);
+      db = new Database(dbPath);
       db.exec('PRAGMA journal_mode = WAL');
       db.exec('PRAGMA wal_autocheckpoint = 0');
       db.exec('CREATE TABLE oracle_sentinel (id INTEGER PRIMARY KEY, value TEXT NOT NULL)');

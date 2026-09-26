@@ -25,7 +25,7 @@ const pkg = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf-8")) as {
 };
 
 describe("K2 · the gate is one list, in code", () => {
-  it("runs the nine steps the landing procedure names, in order", () => {
+  it("runs the ten steps the landing procedure names, in order", () => {
     expect(STEPS.map((s: { name: string }) => s.name)).toEqual([
       "lint",
       "tsc",
@@ -33,6 +33,7 @@ describe("K2 · the gate is one list, in code", () => {
       "knip",
       "canary",
       "build",
+      "build-purity",
       "e2e",
       "census",
       "census-lines",
