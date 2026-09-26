@@ -93,7 +93,7 @@ describe("T-0160 gate evidence", () => {
     const full = gateContract.parseGateArgs([]);
     const partial = gateContract.parseGateArgs(["--only", "lint"]);
     const rerun = gateContract.parseGateArgs(["--rerun-alone", "tests/e2e/phone.spec.ts"]);
-    expect(full.planned).toHaveLength(9);
+    expect(full.planned).toHaveLength(10);
     expect(full.evidenceFile).toBe("summary.json");
     expect(partial.kind).toBe("partial");
     expect(partial.evidenceFile).not.toBe(full.evidenceFile);
