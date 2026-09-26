@@ -16,7 +16,7 @@
   "claims": [
     "org/tasks/T-0160.json", "scripts/tooling/gate.mjs", "scripts/tooling/mutation-sweep.mjs",
     "tests/unit/t0160-runner-contracts.test.ts", "tests/fixtures/mutants/T-0160.json",
-    "playwright.config.ts", "scripts/tooling/line-census.baseline.json",
+    "playwright.config.ts", "tests/e2e/prepare-data-dir.mjs", "scripts/tooling/line-census.baseline.json",
     "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md"
   ],
   "timestamps": {"opened": "2026-09-26T19:25:00Z", "updated": "2026-09-26T19:25:00Z", "closed": null},
@@ -27,7 +27,13 @@
     "Every mutation restores the exact pre-run bytes and modes in finally, even when execution fails; restoration and the final control are checked."
   ],
   "rollback": "Revert both runners, their oracle and manifest as one batch. The previous committed full-gate record remains untouched by partial evidence.",
-  "notes": "The EOS declaration-only router returned R1 for the declared sends-external effect, with no discrepancies. The operator proposed R2; this record voluntarily uses high-assurance R2 controls because runners certify all later batches. The actual diff is re-ruled upward at the gate. Existing T-0148 tests and four-outcome reporting remain binding.",
+  "oracle_provenance": {
+    "files": ["tests/unit/t0160-runner-contracts.test.ts"],
+    "hashes": {"tests/unit/t0160-runner-contracts.test.ts": "6508078ea9ee3eee36c8ecfa9121290fa1419d6b3d95fa472f6e24b898b0b49f"},
+    "author_session": "2026-09-26-refactor-foundations",
+    "independence_method": "clean-context"
+  },
+  "notes": "The EOS declaration-only router returned R1 for the declared sends-external effect, with no discrepancies. The operator proposed R2; this record voluntarily uses high-assurance R2 controls because runners certify all later batches. The actual diff is re-ruled upward at the gate. Existing T-0148 tests and four-outcome reporting remain binding. Hosted PR 36265744171 passed e2e-full but failed one macOS Jest fixture test: its tmpdir lexical /var path can resolve to a physical /private/var path. The fixture guard now compares lexical target to lexical root and real parent to real root; no weaker acceptance or wider wipe target. This adjacent prerequisite repair is claimed here because the hosted gate cannot be green otherwise.",
   "verification": "",
   "mutation": "",
   "deviation": ""

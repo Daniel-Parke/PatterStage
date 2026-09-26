@@ -1,0 +1,38 @@
+{
+  "task": "T-0160",
+  "why": "The runners must refuse empty evidence, observe file bytes and restore every mutation.",
+  "mutants": [
+    {
+      "id": "m1-untracked-content-is-not-hashed",
+      "file": "scripts/tooling/gate.mjs",
+      "anchor": "else if (stat.isFile()) field(readFileSync(join(root, entry.path)));",
+      "replacement": "else if (stat.isFile()) field('content omitted');",
+      "tests": ["tests/unit/t0160-runner-contracts.test.ts"],
+      "why": "An unchanged untracked path with changed bytes must move the gate stamp."
+    },
+    {
+      "id": "m2-empty-gate-selection-is-accepted",
+      "file": "scripts/tooling/gate.mjs",
+      "anchor": "if (planned.length === 0) throw new Error(\"gate selection is empty\");",
+      "replacement": "if (planned.length < 0) throw new Error(\"gate selection is empty\");",
+      "tests": ["tests/unit/t0160-runner-contracts.test.ts"],
+      "why": "A contradictory --from and --only selection must fail before running nothing."
+    },
+    {
+      "id": "m3-missing-jest-report-is-ignored",
+      "file": "scripts/tooling/mutation-sweep.mjs",
+      "anchor": "if (run?.launchError || !report || !Number.isInteger(report.numTotalTests)",
+      "replacement": "if (run?.launchError || false || !Number.isInteger(report.numTotalTests)",
+      "tests": ["tests/unit/t0160-runner-contracts.test.ts"],
+      "why": "A failed launch without a Jest report is infrastructure, not a mutant kill."
+    },
+    {
+      "id": "m4-mutated-bytes-are-not-restored",
+      "file": "scripts/tooling/mutation-sweep.mjs",
+      "anchor": "    writeFileSync(file, original);\n    chmodSync(file, mode);",
+      "replacement": "    writeFileSync(file, Buffer.from('corrupt'));\n    chmodSync(file, mode);",
+      "tests": ["tests/unit/t0160-runner-contracts.test.ts"],
+      "why": "The sweep must restore the exact bytes before its final control."
+    }
+  ]
+}

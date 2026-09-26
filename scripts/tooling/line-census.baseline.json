@@ -2,8 +2,8 @@
   "measuredAt": "2026-09-26",
   "counts": {
     "srcLines": 100983,
-    "testLines": 124609,
-    "scriptsLines": 13162,
+    "testLines": 124750,
+    "scriptsLines": 13263,
     "srcRepeatedWindowLines": 1000,
     "testRepeatedWindowLines": 4345,
     "routesWithTryCatch": 18,
@@ -280,6 +280,16 @@
       "measuredAt": "2026-09-26",
       "rise": "testLines rose from 124564 to 124609",
       "reason": "T-0152: three browser layout oracles and one rendered-notice regression oracle for the real 24px no-agent split"
+    },
+    {
+      "measuredAt": "2026-09-26",
+      "rise": "testLines rose from 124609 to 124750",
+      "reason": "T-0160: behavioural runner-integrity oracle and content-sensitive gate/sweep evidence; the macOS isolated tmpdir canonicalisation corrects a hosted T-0150 prerequisite failure"
+    },
+    {
+      "measuredAt": "2026-09-26",
+      "rise": "scriptsLines rose from 13162 to 13263",
+      "reason": "T-0160: behavioural runner-integrity oracle and content-sensitive gate/sweep evidence; the macOS isolated tmpdir canonicalisation corrects a hosted T-0150 prerequisite failure"
     }
   ]
 }

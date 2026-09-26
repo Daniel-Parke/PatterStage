@@ -20,13 +20,11 @@
 // This runner does NOT read CI. The gate runs before the commit exists; the
 // pushed commit's CI is the step after it, in the landing procedure.
 
-import { execSync, spawnSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { closeSync, mkdirSync, openSync, writeFileSync } from "node:fs";
+import { closeSync, lstatSync, mkdirSync, openSync, readFileSync, readlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-
-import { killByPort } from "./_platform.mjs";
 
 const ROOT = fileURLToPath(new URL("../..", import.meta.url));
 
@@ -46,8 +44,6 @@ export const STEPS = [
   { name: "census-lines", command: "npm run census:lines", why: "the line census, shrink-only" },
 ];
 
-const PORTS = [3000, 3477, 3577, 3939, 8642];
-
 /**
  * The gate's verdict, kept separate from running it so it can be tested: red if
  * any step failed, and red too if the tree moved underneath, because a result
@@ -58,76 +54,118 @@ export function verdict(results, treeMoved) {
   return { red, ok: red.length === 0 && !treeMoved };
 }
 
-const args = process.argv.slice(2);
-const flag = (name) => {
-  const i = args.indexOf(name);
-  return i === -1 ? null : args[i + 1] ?? null;
-};
-
-function stamp() {
-  const run = (cmd) => execSync(cmd, { cwd: ROOT, maxBuffer: 512 * 1024 * 1024 }).toString();
-  return createHash("sha256")
-    .update(run("git rev-parse HEAD") + run("git status --porcelain") + run("git diff") + run("git diff --cached"))
-    .digest("hex");
+function git(root, args) {
+  return execFileSync("git", args, { cwd: root, maxBuffer: 512 * 1024 * 1024 });
 }
 
-function freePorts() {
-  for (const port of PORTS) {
+/** Stamp the actual files, including content hidden behind an unchanged untracked status line. */
+export function stampTree(root = ROOT) {
+  const tracked = git(root, ["ls-files", "-z", "--stage"]).toString("utf8").split("\0").filter(Boolean);
+  const untracked = git(root, ["ls-files", "-z", "--others", "--exclude-standard"]).toString("utf8").split("\0").filter(Boolean);
+  const entries = [];
+  for (const row of tracked) {
+    const match = /^(\d+) ([0-9a-f]+) (\d)\t([\s\S]+)$/.exec(row);
+    if (!match || match[3] !== "0") throw new Error(`gate: unresolved Git index entry: ${row}`);
+    entries.push({ path: match[4], indexMode: match[1], indexObject: match[2] });
+  }
+  for (const path of untracked) entries.push({ path, indexMode: "untracked" });
+  entries.sort((a, b) => Buffer.compare(Buffer.from(a.path), Buffer.from(b.path)));
+
+  const hash = createHash("sha256");
+  const field = (value) => {
+    const bytes = Buffer.isBuffer(value) ? value : Buffer.from(String(value));
+    hash.update(String(bytes.length));
+    hash.update(":");
+    hash.update(bytes);
+  };
+  field(git(root, ["rev-parse", "HEAD"]));
+  for (const entry of entries) {
+    field(entry.path);
+    field(entry.indexMode);
+    field(entry.indexObject ?? "untracked");
+    let stat;
     try {
-      killByPort(port);
-    } catch {
-      // A port nothing holds is the normal case, and killByPort says so its own way.
+      stat = lstatSync(join(root, entry.path));
+    } catch (error) {
+      if (error.code !== "ENOENT") throw error;
+      field("missing");
+      continue;
+    }
+    field(stat.isSymbolicLink() ? "link" : stat.isFile() ? "file" : "other");
+    field(stat.mode & 0o777);
+    if (stat.isSymbolicLink()) field(readlinkSync(join(root, entry.path)));
+    else if (stat.isFile()) field(readFileSync(join(root, entry.path)));
+  }
+  return hash.digest("hex");
+}
+
+export function parseGateArgs(args) {
+  const values = new Map();
+  const valid = new Set(["--only", "--from", "--log", "--rerun-alone", "--list"]);
+  for (let i = 0; i < args.length; i += 1) {
+    const key = args[i];
+    if (!valid.has(key) || values.has(key)) throw new Error(`unknown or repeated gate option: ${key}`);
+    if (key === "--list") values.set(key, true);
+    else {
+      const value = args[++i];
+      if (!value || value.startsWith("--")) throw new Error(`missing value for ${key}`);
+      values.set(key, value);
     }
   }
-  try {
-    execSync("node -e \"require('node:fs').rmSync('.next/dev',{recursive:true,force:true})\"", { cwd: ROOT });
-  } catch {
-    // .next/dev is a cache; its absence is the desired state either way.
+  if (values.has("--list")) {
+    if (values.size !== 1) throw new Error("--list cannot be combined with a run selector");
+    return { kind: "list", planned: [], evidenceFile: "" };
   }
+  if (values.has("--rerun-alone")) {
+    if (values.has("--only") || values.has("--from")) throw new Error("--rerun-alone cannot be combined with step selectors");
+    const spec = values.get("--rerun-alone");
+    if (!/^tests\/e2e\/[\w./-]+\.spec\.ts$/.test(spec) || spec.includes("..")) throw new Error("--rerun-alone requires a tests/e2e/*.spec.ts path");
+    return { kind: "rerun", planned: [{ name: "rerun-alone", spec }], evidenceFile: "summary.rerun.json", logBase: values.get("--log") };
+  }
+  const all = STEPS.map((step) => step.name);
+  let only = null;
+  if (values.has("--only")) {
+    only = values.get("--only").split(",").map((s) => s.trim());
+    if (only.some((name) => !name || !all.includes(name))) throw new Error("--only contains an unknown or empty step");
+  }
+  const from = values.get("--from");
+  if (from && !all.includes(from)) throw new Error(`unknown --from step: ${from}`);
+  const planned = STEPS.filter((step) => (!from || all.indexOf(step.name) >= all.indexOf(from)) && (!only || only.includes(step.name)));
+  if (planned.length === 0) throw new Error("gate selection is empty");
+  const kind = values.has("--only") || values.has("--from") ? "partial" : "full";
+  return { kind, planned, evidenceFile: kind === "full" ? "summary.json" : "summary.partial.json", logBase: values.get("--log") };
 }
 
 function runStep(step, logDir) {
   const log = join(logDir, `${step.name}.log`);
   const fd = openSync(log, "w");
   const started = Date.now();
-  const result = spawnSync(step.command, { cwd: ROOT, shell: true, stdio: ["ignore", fd, fd] });
+  const result = step.spec
+    ? spawnSync(process.execPath, [join(ROOT, "node_modules", "@playwright", "test", "cli.js"), "test", step.spec], { cwd: ROOT, stdio: ["ignore", fd, fd], env: { ...process.env, PORT: "3000", PS_GATE_OWN_SERVER: "1" } })
+    : spawnSync(step.command, { cwd: ROOT, shell: true, stdio: ["ignore", fd, fd], env: step.name === "e2e" ? { ...process.env, PS_GATE_OWN_SERVER: "1" } : process.env });
   closeSync(fd);
-  return { step: step.name, code: result.status ?? 1, seconds: Math.round((Date.now() - started) / 100) / 10, log };
+  return { step: step.name, code: result.status ?? 1, seconds: Math.round((Date.now() - started) / 100) / 10, log, ...(result.error ? { launchError: result.error.message } : {}) };
 }
 
 function main() {
-  if (args.includes("--list")) {
+  let plan;
+  try {
+    plan = parseGateArgs(process.argv.slice(2));
+  } catch (error) {
+    console.error(`gate: ${error.message}`);
+    return 2;
+  }
+  if (plan.kind === "list") {
     for (const [i, s] of STEPS.entries()) console.log(`${i + 1}. ${s.command}  — ${s.why}`);
     return 0;
   }
-
-  const logDir = flag("--log") ?? join(ROOT, ".gate");
+  const base = plan.logBase ?? join(ROOT, ".gate");
+  const logDir = plan.kind === "full" ? base : join(base, plan.kind);
   mkdirSync(logDir, { recursive: true });
-
-  const alone = flag("--rerun-alone");
-  if (alone) {
-    // A spec that fails only under the full run's load is re-run on its own, and
-    // both results go on the record. This is the second half of that.
-    const command = `npx cross-env PORT=3000 playwright test ${alone}`;
-    const result = runStep({ name: "rerun-alone", command }, logDir);
-    console.log(`gate: ${alone} alone exit ${result.code} in ${result.seconds}s -> ${result.log}`);
-    return result.code;
-  }
-
-  const only = flag("--only")?.split(",").map((s) => s.trim());
-  const from = flag("--from");
-  let started = !from;
-  const planned = STEPS.filter((s) => {
-    if (from && s.name === from) started = true;
-    if (!started) return false;
-    return !only || only.includes(s.name);
-  });
-
-  const before = stamp();
-  freePorts();
+  const before = stampTree();
 
   const results = [];
-  for (const step of planned) {
+  for (const step of plan.planned) {
     const result = runStep(step, logDir);
     results.push(result);
     console.log(`gate: ${result.step} exit ${result.code} in ${result.seconds}s -> ${result.log}`);
@@ -137,12 +175,13 @@ function main() {
     }
   }
 
-  const moved = stamp() !== before;
+  const after = stampTree();
+  const moved = after !== before;
   const { red, ok } = verdict(results, moved);
 
   writeFileSync(
-    join(logDir, "summary.json"),
-    JSON.stringify({ steps: results, red, treeMoved: moved, planned: planned.map((s) => s.name) }, null, 2),
+    join(logDir, plan.evidenceFile),
+    JSON.stringify({ kind: plan.kind, steps: results, red, treeMoved: moved, treeBefore: before, treeAfter: after, planned: plan.planned.map((s) => s.name), complete: plan.kind === "full" && results.length === STEPS.length && ok }, null, 2),
   );
 
   if (moved) console.log("gate: the tree moved while the gate ran, so this result describes no finished tree. Run it again on a still tree.");

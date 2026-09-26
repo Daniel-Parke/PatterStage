@@ -57,15 +57,18 @@ if (!dataDir) {
 // deleting so a caller cannot point the test harness at operator data.
 const normalise = (path) => process.platform === "win32" ? path.toLowerCase() : path;
 const within = (path, base) => normalise(path).startsWith(normalise(base) + sep);
-const allowedRoots = [join(root, "tmp"), tmpdir()].map((path) => resolve(path));
-if (!allowedRoots.some((allowed) => within(dataDir, allowed))) {
+const allowedRoots = [join(root, "tmp"), tmpdir()].map((path) => {
+  const lexical = resolve(path);
+  return { lexical, physical: existsSync(lexical) ? realpathSync(lexical) : lexical };
+});
+if (!allowedRoots.some(({ lexical }) => within(dataDir, lexical))) {
   console.error("[e2e prepare-data-dir] refusing a path outside an isolated temporary directory");
   process.exit(1);
 }
 mkdirSync(dirname(dataDir), { recursive: true });
 const parent = realpathSync(dirname(dataDir));
-if (!allowedRoots.some((allowed) => within(dataDir, allowed) &&
-    (normalise(parent) === normalise(allowed) || within(parent, allowed))) ||
+if (!allowedRoots.some(({ lexical, physical }) => within(dataDir, lexical) &&
+    (normalise(parent) === normalise(physical) || within(parent, physical))) ||
     (existsSync(dataDir) && lstatSync(dataDir).isSymbolicLink())) {
   console.error("[e2e prepare-data-dir] refusing a path outside an isolated temporary directory");
   process.exit(1);

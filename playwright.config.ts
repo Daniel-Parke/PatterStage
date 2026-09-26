@@ -78,7 +78,7 @@ export default defineConfig({
       `node tests/e2e/prepare-data-dir.mjs "${e2eDataDir}" && ` +
       `npm run start -- -p ${port} -H 0.0.0.0`,
     url: baseURL,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: !process.env.CI && !process.env.PS_GATE_OWN_SERVER,
     timeout: 120_000,
     // Isolated, fresh DB per run (prepare-data-dir.mjs wipes it before boot),
     // independent of the developer's working DB and free of legacy schema drift.

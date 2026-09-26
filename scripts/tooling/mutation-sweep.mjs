@@ -23,9 +23,10 @@
 // underneath it, and the mutant reported killed for the wrong reason. Commit the
 // oracle first, then sweep the committed tree.
 
-import { execFileSync, execSync, spawnSync } from "node:child_process";
-import { readFileSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { execFileSync, spawnSync } from "node:child_process";
+import { chmodSync, lstatSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = fileURLToPath(new URL("../..", import.meta.url));
@@ -74,74 +75,135 @@ export function classifyMutant(source, mutant) {
   return null;
 }
 
-function treeIsDirty() {
-  return execSync("git status --porcelain", { cwd: ROOT, maxBuffer: 64 * 1024 * 1024 }).toString().trim() !== "";
+function treeIsDirty(root) {
+  return execFileSync("git", ["status", "--porcelain", "--untracked-files=all"], { cwd: root, maxBuffer: 64 * 1024 * 1024 }).toString().trim() !== "";
 }
 
-function runTests(tests) {
-  const result = spawnSync(`npx jest ${tests.join(" ")} --silent`, { cwd: ROOT, shell: true, stdio: "pipe" });
-  return result.status ?? 1;
+function localPath(root, path) {
+  if (typeof path !== "string" || !path || isAbsolute(path)) throw new Error("mutation-sweep: path must be relative to the repository");
+  const full = resolve(root, path);
+  const back = relative(root, full);
+  if (!back || back === ".." || back.startsWith(`..${sep}`)) throw new Error("mutation-sweep: path escapes the repository");
+  return full;
+}
+
+export function selectMutants(manifest, onlyId = null) {
+  if (!manifest || !Array.isArray(manifest.mutants)) throw new Error("mutation-sweep: manifest has no mutants array");
+  const ids = new Set();
+  for (const mutant of manifest.mutants) {
+    if (!mutant || typeof mutant.id !== "string" || !mutant.id || ids.has(mutant.id) || typeof mutant.file !== "string" || typeof mutant.anchor !== "string" || !mutant.anchor || typeof mutant.replacement !== "string" || !Array.isArray(mutant.tests) || mutant.tests.length === 0 || mutant.tests.some((test) => typeof test !== "string" || !test)) {
+      throw new Error("mutation-sweep: invalid mutant entry");
+    }
+    ids.add(mutant.id);
+  }
+  const selected = manifest.mutants.filter((mutant) => onlyId == null || mutant.id === onlyId);
+  if (selected.length === 0) throw new Error("mutation-sweep: selected no mutants");
+  return selected;
+}
+
+/** Only an executed, failing Jest assertion can count as a kill. */
+export function assessJestRun(run, expected) {
+  const report = run?.report;
+  if (run?.launchError || !report || !Number.isInteger(report.numTotalTests) || report.numTotalTests < 1 || !Array.isArray(report.testResults)) return "infrastructure";
+  const names = new Set(expected.map((name) => name.replaceAll("\\", "/").toLowerCase()));
+  const found = report.testResults.filter((suite) => names.has(String(suite.name).replaceAll("\\", "/").toLowerCase()));
+  if (found.length !== names.size || found.some((suite) => !Array.isArray(suite.assertionResults) || suite.assertionResults.length === 0 || suite.testExecError)) return "infrastructure";
+  const assertions = found.flatMap((suite) => suite.assertionResults);
+  const failed = assertions.filter((test) => test.status === "failed" && Array.isArray(test.failureMessages) && test.failureMessages.length > 0);
+  if (run.status === 0 && report.numFailedTests === 0 && assertions.every((test) => test.status === "passed")) return "passed";
+  if (run.status !== 0 && failed.length > 0 && report.numFailedTests > 0) return "assertion-failed";
+  return "infrastructure";
+}
+
+function runTestsAtRoot(root, tests) {
+  const temp = mkdtempSync(join(tmpdir(), "patterstage-sweep-"));
+  const output = join(temp, "jest.json");
+  try {
+    const result = spawnSync(process.execPath, [join(root, "node_modules", "jest", "bin", "jest.js"), ...tests, "--runInBand", "--json", "--outputFile", output, "--silent"], { cwd: root, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+    let report;
+    try { report = JSON.parse(readFileSync(output, "utf8")); } catch { /* launch and configuration errors need no fake report */ }
+    return { status: result.status, report, launchError: result.error?.message };
+  } finally {
+    rmSync(temp, { recursive: true, force: true });
+  }
+}
+
+function runControl(root, tests, runner) {
+  try {
+    return assessJestRun(runner(tests), tests.map((test) => localPath(root, test)));
+  } catch {
+    return "infrastructure";
+  }
+}
+
+function runMutant(root, mutant, runner) {
+  const file = localPath(root, mutant.file);
+  const original = readFileSync(file);
+  const mode = lstatSync(file).mode & 0o777;
+  let result;
+  let restored = false;
+  try {
+    writeFileSync(file, original.toString("utf8").replace(mutant.anchor, mutant.replacement));
+    result = runner(mutant.tests);
+  } catch (error) {
+    result = { status: null, launchError: error.message };
+  } finally {
+    writeFileSync(file, original);
+    chmodSync(file, mode);
+    restored = readFileSync(file).equals(original) && (lstatSync(file).mode & 0o777) === mode;
+  }
+  if (!restored) return { outcome: "ERROR", note: "file restoration failed" };
+  const assessment = assessJestRun(result, mutant.tests.map((test) => localPath(root, test)));
+  return { outcome: assessment === "assertion-failed" ? "KILLED" : assessment === "passed" ? "SURVIVED" : "ERROR", note: assessment };
+}
+
+export function sweepAtRoot(root, manifestPath, onlyId = null, runner = (tests) => runTestsAtRoot(root, tests)) {
+  try {
+    if (treeIsDirty(root)) throw new Error("tree is dirty; commit before the sweep");
+    const manifest = JSON.parse(readFileSync(localPath(root, manifestPath), "utf8"));
+    const mutants = selectMutants(manifest, onlyId);
+    for (const mutant of mutants) {
+      localPath(root, mutant.file);
+      for (const test of mutant.tests) localPath(root, test);
+    }
+    const controls = [...new Set(mutants.flatMap((mutant) => mutant.tests))];
+    if (runControl(root, controls, runner) !== "passed") throw new Error("unmodified control did not pass");
+    const at = execFileSync("git", ["rev-parse", "--short", "HEAD"], { cwd: root, encoding: "utf8" }).trim();
+    console.log(`mutation-sweep: ${manifest.task}, ${mutants.length} mutant(s), against ${at}`);
+    const rows = [];
+    let finalControl;
+    try {
+      for (const mutant of mutants) {
+        const source = readFileSync(localPath(root, mutant.file), "utf8");
+        const early = classifyMutant(source, mutant);
+        rows.push({ id: mutant.id, why: mutant.why, ...(early ?? runMutant(root, mutant, runner)) });
+      }
+    } finally {
+      finalControl = runControl(root, controls, runner);
+    }
+    for (const row of rows) console.log(`  ${row.outcome.padEnd(11)} ${row.id}  (${row.note})  ${row.why ?? ""}`);
+    if (treeIsDirty(root)) throw new Error("tree changed after restoration");
+    if (finalControl !== "passed") throw new Error("restored control did not pass");
+    const bad = rows.filter((row) => row.outcome !== "KILLED");
+    console.log(`mutation-sweep: ${rows.length - bad.length} killed, ${bad.length} not (${bad.map((row) => `${row.id} ${row.outcome}`).join("; ") || "none"})`);
+    return bad.some((row) => row.outcome === "ERROR") ? 2 : bad.length ? 1 : 0;
+  } catch (error) {
+    console.error(`mutation-sweep: ${error.message}`);
+    return 2;
+  }
 }
 
 export function sweep(manifestPath, onlyId) {
-  const manifest = JSON.parse(readFileSync(join(ROOT, manifestPath), "utf-8"));
-  const mutants = manifest.mutants.filter((m) => !onlyId || m.id === onlyId);
-
-  if (treeIsDirty()) {
-    console.error("mutation-sweep: the tree is dirty. Commit or stash first; this restores files with `git checkout --` and would take uncommitted work with it.");
-    return 2;
-  }
-
-  const at = execSync("git rev-parse --short HEAD", { cwd: ROOT }).toString().trim();
-  console.log(`mutation-sweep: ${manifest.task}, ${mutants.length} mutant(s), against ${at}`);
-
-  const rows = [];
-  for (const mutant of mutants) {
-    const source = readFileSync(join(ROOT, mutant.file), "utf-8");
-    const early = classifyMutant(source, mutant);
-    if (early) {
-      rows.push({ id: mutant.id, ...early, why: mutant.why });
-      continue;
-    }
-
-    writeFileSync(join(ROOT, mutant.file), source.replace(mutant.anchor, mutant.replacement), "utf-8");
-    let code;
-    try {
-      code = runTests(mutant.tests);
-    } finally {
-      execFileSync("git", ["checkout", "--", mutant.file], { cwd: ROOT });
-    }
-    rows.push({
-      id: mutant.id,
-      outcome: code === 0 ? "SURVIVED" : "KILLED",
-      note: `${mutant.tests.join(" ")} exited ${code}`,
-      why: mutant.why,
-    });
-  }
-
-  for (const row of rows) console.log(`  ${row.outcome.padEnd(11)} ${row.id}  (${row.note})  ${row.why ?? ""}`);
-
-  if (treeIsDirty()) {
-    console.error("mutation-sweep: the tree is dirty AFTER the sweep, so a restore failed. Read `git status` before committing anything.");
-    return 2;
-  }
-
-  const bad = rows.filter((r) => r.outcome !== "KILLED");
-  console.log(`mutation-sweep: ${rows.length - bad.length} killed, ${bad.length} not (${bad.map((b) => `${b.id} ${b.outcome}`).join("; ") || "none"})`);
-  return bad.length > 0 ? 1 : 0;
+  return sweepAtRoot(ROOT, manifestPath, onlyId);
 }
 
 const invokedDirectly = process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1];
 if (invokedDirectly) {
   const args = process.argv.slice(2);
-  const manifestPath = args.find((a) => !a.startsWith("--"));
-  const onlyAt = args.indexOf("--only");
-  const onlyId = onlyAt === -1 ? null : args[onlyAt + 1];
-
-  if (!manifestPath) {
-    console.error("mutation-sweep: name a mutants file, e.g. tests/fixtures/mutants/T-0147.json");
+  if (args.length === 1 && !args[0].startsWith("--")) process.exitCode = sweep(args[0], null);
+  else if (args.length === 3 && args[1] === "--only" && args[2]) process.exitCode = sweep(args[0], args[2]);
+  else {
+    console.error("mutation-sweep: name a mutants file, optionally followed by --only <id>");
     process.exitCode = 2;
-  } else {
-    process.exitCode = sweep(manifestPath, onlyId);
   }
 }
