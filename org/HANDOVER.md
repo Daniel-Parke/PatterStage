@@ -111,7 +111,11 @@ reload suite: after its mock GET gate opened, the button still said
 on Windows, two of two. T-0166 records the follow-up. An independent author
 kept the same two test names and thirteen assertions, tracked the held GET
 promises and opened the gate inside async React `act`. The focused amended
-suite passes, but its full gate, sweep and hosted macOS result are pending.
+suite passes. T-0166's isolated full gate passed all nine steps on an
+unchanged tree, with 701 Jest suites and 275 Playwright passes. Its committed
+mutation sweep at e4db8cb2 killed the final enabled-button mutant. The local
+record is closed; hosted macOS and the other push/PR jobs still need to pass
+before T-0157 begins.
 
 This page is the one to read before touching the tree. It says where the
 work stands, what was learned landing it, what is still open, and the exact
