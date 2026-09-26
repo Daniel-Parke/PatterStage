@@ -50,7 +50,18 @@ function jestReport(file: string, failed: boolean) {
   return {
     numTotalTests: 1,
     numFailedTests: failed ? 1 : 0,
-    testResults: [{ name: file, status: failed ? "failed" : "passed", assertionResults: [{ fullName: "the value", status: failed ? "failed" : "passed", failureMessages: failed ? ["expect(received).toBe(expected)"] : [] }] }],
+    testResults: [{ name: file, status: failed ? "failed" : "passed", assertionResults: [{
+      fullName: "the value",
+      status: failed ? "failed" : "passed",
+      failureMessages: failed ? ["expect(received).toBe(expected)"] : [],
+      failureDetails: failed ? [{ matcherResult: {
+        actual: 1,
+        expected: 2,
+        message: "expect(received).toBe(expected)\n\nExpected: 2\nReceived: 1",
+        name: "toBe",
+        pass: false,
+      } }] : [],
+    }] }],
   };
 }
 
