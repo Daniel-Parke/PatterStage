@@ -140,6 +140,15 @@ compliant red-first independence. The sweep at e6a77b6b killed both mutants
 with passing controls and restoration. Independent R2 follow-up found no
 local blocker to closure. Hosted push and PR jobs remain to be checked.
 
+All four hosted workflows for the T-0157 closure push at 8d336c4d later
+completed successfully: push and PR CI, and push and PR Gitleaks. T-0161 is
+now active at R2. A direct `npx next build`, with an empty isolated
+`PS_DATA_DIR` and no npm prebuild, still created a schema-version-42 SQLite
+database and its WAL sidecars. The package prebuild independently opens and
+seeds repository data. Both paths need correction. The update paths also
+continue after a backup failure, so the backup-before-migration invariant
+needs a failure case, not just a happy-path ordering check.
+
 This page is the one to read before touching the tree. It says where the
 work stands, what was learned landing it, what is still open, and the exact
 steps a batch goes through. Everything it names is on disk; nothing lives in
