@@ -3024,7 +3024,7 @@ its own question, and none is acted on until it has an answer.
 
 Found on 2026-09-12 by the ORACLE session amending c8 under Q-015, while proving the amended check still bites.
 
-**Ruling:** _pending_
+**Ruling:** Row-scoped check selected by the operator on 2026-09-26 (Q-023); independent, dated oracle amendment required.
 
 #### c8-plan-check-scope · The plan check reads the whole closing section, so a miss restated as met can pass
 
@@ -3036,7 +3036,7 @@ Found on 2026-09-12 by the ORACLE session amending c8 under Q-015, while proving
   - **Row-scoped match** — the check finds the table row whose first cell is the measure's key and reads the numbers in that row. A strengthening: everything it caught before, it still catches. It is a second amendment to a closed programme's oracle, so under POLICY-closed-oracles it needs this ruling and a non-implementer author. About +8 test lines, R1.
   - **Leave it** — the check keeps its section-wide scope. It still catches a number dropped from the section entirely, which is the common failure, but not a row rewritten while the number survives in prose. 0 lines.
 - **Recommended:** Row-scoped match — the check exists to stop a miss being flattered into a met, and that is exactly the case it lets through.
-- **Ruling:** _pending_
+- **Ruling:** Row-scoped match selected by the operator on 2026-09-26 (Q-023); independent, dated oracle amendment required.
 ### Q-018 · The testLines ratchet, when it blocked
 
 Asked on 2026-09-12, when K3's gate went red on it, and answered the same day.
@@ -3210,3 +3210,17 @@ Nothing was written.
 
 5. ADR load. Recommended rulings still need about five R3 ADR cycles: ADR-0011 for org-01a, the ASVS exclusions, POLICY-aliases, docs-05a and lib-domains-03. Under POLICY-lanes and CONSTITUTION.md:40-41, each needs an ORACLE session separate from the implementer. Rule POLICY-public-contract-scope and POLICY-closed-oracles before sizing any batch.
 
+## Dated correction, 2026-09-26
+
+The operator's ten subsequent rulings are recorded in
+`org/reviews/2026-09-refactor-addendum.md` and folded as Q-019–Q-028 in
+`org/QUESTIONS.md`. They supersede contrary details here only where named:
+
+- **components-02:** Q-025 confirms Q-016's folded answer. Select and Picker
+  remain separate; the detailed “Picker at size lg” recommendation and its
+  resulting removal/line estimate are no longer authorised.
+- **Q-017:** Q-023 selects the row-scoped C8 check. It is settled but not yet
+  implemented; its closed-oracle amendment needs a different author.
+- **T-0157 and T-0158:** the refreshed audit count and corrected Next proxy
+  evidence in the addendum replace the time-bound measurements in their
+  proposed records. Those records must be updated before implementation.

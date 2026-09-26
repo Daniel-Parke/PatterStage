@@ -1,9 +1,9 @@
 {
-  "measuredAt": "2026-09-12",
+  "measuredAt": "2026-09-26",
   "counts": {
     "srcLines": 100983,
-    "testLines": 124351,
-    "scriptsLines": 12961,
+    "testLines": 124454,
+    "scriptsLines": 13162,
     "srcRepeatedWindowLines": 1000,
     "testRepeatedWindowLines": 4345,
     "routesWithTryCatch": 18,
@@ -255,6 +255,21 @@
       "measuredAt": "2026-09-12",
       "rise": "testLines rose from 123864 to 124351",
       "reason": "K6/T-0154: the ORACLE session's amendment closing the two mutation-sweep survivors and three rot risks it found in its own work. An AST probe that shares none of the census's brace matching (m5 moved routes.sites 25 to 26 without moving the file list, which is why the first differential, sharing the algorithm AND comparing only file lists, saw nothing); a scripts-extension property derived from the tree rather than a list (m10); a JSX walk that cross-checks the raw-control rule's file set; and two pins replaced by properties so a later burn-down does not turn them red"
+    },
+    {
+      "measuredAt": "2026-09-26",
+      "rise": "testLines rose from 124351 to 124454",
+      "reason": "T-0159: 103 evidence-oracle test lines and 194 in-repo evidence-ledger checker lines make the review auditable"
+    },
+    {
+      "measuredAt": "2026-09-26",
+      "rise": "scriptsLines rose from 12961 to 13155",
+      "reason": "T-0159: 103 evidence-oracle test lines and 194 in-repo evidence-ledger checker lines make the review auditable"
+    },
+    {
+      "measuredAt": "2026-09-26",
+      "rise": "scriptsLines rose from 13155 to 13162",
+      "reason": "T-0159: the ledger reconciliation checker adds explicit pending-ruling and contradictory-Select-Picker detection"
     }
   ]
 }

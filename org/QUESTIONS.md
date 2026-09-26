@@ -64,32 +64,54 @@ execution waits on the answer.
     test at sign-off is what answers this, and it is the only test of the
     seed that matters.
 
-- Q-017 (process): should a closed plan's arithmetic be held row by row rather
-  than section-wide? Context: `org/reviews/2026-09-decision-register.md`
-  (c8-plan-check-scope). Owner: operator.
-  - found on 2026-09-12 by the ORACLE session amending c8 under Q-015, while
-    proving the amended check still bites: restating `oneImporterComponents`
-    from "missed by 8" to "met" in the plan's closing table left the suite
-    green, because the number 103 also appears in the prose below it.
-  - recommended: row-scoped. It is a strengthening, and it is a second
-    amendment to a closed oracle, which is why it is asked rather than taken.
-  - what waits on it: nothing. The check is sound against a number dropped from
-    the section, which is the common failure.
+## Folded
 
-- Q-018 (process): how should c8's testLines ratchet be held, when the oracles
-  that make later batches safe are the work that raises it? Context:
-  `org/reviews/2026-09-decision-register.md` (Q-018). Owner: operator. Folded
+- Q-017 (process): should a closed plan's arithmetic be held row by row rather
+  than section-wide? Folded 2026-09-26. Answer, from the operator: strengthen
+  c8's plan check row by row. Q-023 records the same choice in the new decision
+  addendum. A different author makes the dated, narrow oracle amendment.
+
+- Q-018 (process): how should c8's testLines ratchet be held? Folded
   2026-09-12. Answer, from the operator: the committed census baseline governs
   growth, and c8's testLines case asserts the account rather than a live count.
-  - why it was asked twice: Q-015's wording said "re-anchor c8 to its closing
-    numbers", and C8's 121,114 is stricter than the 121,762 C0 found, so that
-    would have blocked harder. The ORACLE session said so rather than
-    implementing it, and the question came back with the numbers attached.
-  - what it does not change: the other eleven ratchet cases, which are still
-    live against C0, and `npm run census:lines`, which still exits 1 on a rise
-    that carries no reason.
+  The other eleven ratchet cases remain live against C0.
 
-## Folded
+- Q-019 (security): upgrade Next and its matching ESLint configuration to
+  16.3.6 before the general dependency batch. Folded 2026-09-26. Answer, from the
+  operator: upgrade together in T-0157.
+- Q-020 (security): replace raw-token browser cookies with revocable opaque
+  sessions while preserving Bearer clients. Folded 2026-09-26. Answer, from the
+  operator: T-0158 needs an
+  accepted ADR before its new schema and public contract land.
+- Q-021 (process): extend Q-015's independent, dated closed-oracle amendment
+  rule to hooks-04, hooks-05 and critic-06. Folded 2026-09-26. Answer, from the
+  operator: T-0162 applies the independent amendment procedure.
+- Q-022 (security): retain loopback HTTP, use HTTPS for LAN browser access by
+  default, and require explicit opt-in for insecure LAN HTTP. Folded
+  2026-09-26. Answer, from the operator: T-0158 records this transport policy.
+- Q-023 (process): strengthen Q-017's C8 check row by row. Folded
+  2026-09-26. Answer, from the operator: a different author amends that oracle
+  for this ruled item.
+- Q-024 (security): prepare the four repository security controls for operator
+  activation: Dependabot alerts and security updates, secret scanning and push
+  protection. Folded 2026-09-26. Answer, from the operator: prepare instructions;
+  activation remains the operator's action.
+- Q-025 (product): Select and Picker remain separate primitives; add explicit
+  contextual names to the ten unnamed Select uses. Folded 2026-09-26. This
+  supersedes the contrary components-02 detail under Q-016. Answer, from the
+  operator: retain both primitives and name the ten unnamed Select uses.
+- Q-026 (security): require browser sign-in after every server restart.
+  Folded 2026-09-26. Answer, from the operator: T-0158 invalidates prior
+  browser sessions on restart.
+- Q-027 (product): retain elapsed mission run deadlines and correct the prompt,
+  interface and guides. Folded 2026-09-26. Answer, from the operator: retain
+  elapsed deadlines and reconciliation grace; correct the wording.
+- Q-028 (security): allow exact authentication lifecycle writes under
+  `PS_READ_ONLY`, while refusing every application write. Folded 2026-09-26;
+  Answer, from the operator: T-0158 records the route/method contract in its ADR.
+
+For Q-019 to Q-028, the options, consequences, corrections and authority chain
+are recorded in `org/reviews/2026-09-refactor-addendum.md`.
 
 - Q-009 (process): is CI the binding gate from now on? Folded 2026-09-12. Answer, from the
   operator: yes. `dev` is made green first (six case-broken doc links, the `tsx` data-URL resolution in `scripts/docs/extract.ts`, and the runtime smoke's two stale contracts), then every batch waits for its pushed commit's CI before the next starts. `npm run gate` runs the chain by exit code, the line census becomes a CI step, `main` requires acceptance-gate and build-test-ubuntu with `enforce_admins` on and required reviews at 0, and the pre-push hook is installed once.

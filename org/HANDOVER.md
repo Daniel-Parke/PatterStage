@@ -2,10 +2,29 @@
 summary: What the consolidation programme did and left behind, how a batch was landed, what is open, and what waits next
 type: venture
 tags: [handover, consolidation]
-updated: 2026-09-12
+updated: 2026-09-26
 ---
 
-# Handover · PatterStage, 2026-09-12
+# Handover · PatterStage, 2026-09-26
+
+## Dated status, 2026-09-26
+
+The preliminary review and K0–K7 are committed, but the full recon is not
+complete. T-0159 adds a source-linked ledger for 265 findings, 163 split
+operator dispositions and 107 historical coverage bullets. The latter are
+compound source bullets, not 107 proven investigations. Their current status
+remains pending decomposition. The ten new operator choices are Q-019–Q-028 in
+`org/QUESTIONS.md` and the dated review addendum. Q-025 preserves Select and
+Picker as separate controls; Q-023 requires an independently authored C8
+oracle amendment. No structural batch is approved by this status note.
+
+The current prerequisite order is T-0160, T-0150, T-0157, T-0161, T-0156,
+T-0152, T-0162, T-0163, T-0158, T-0164 and T-0165. The full Phase 2 plan
+follows reproducible recon and requires separate operator approval. Hosted PR
+acceptance still fails the phone sessions fixture at the reviewed commit; a
+green push that skipped it is not acceptance. PR #157 remains open, and Q-011
+still requires a release before structural cleanup. Use an isolated data
+directory for builds until T-0161 removes build-time database writes.
 
 This page is the one to read before touching the tree. It says where the
 work stands, what was learned landing it, what is still open, and the exact

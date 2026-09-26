@@ -26,7 +26,9 @@
     "org/QUESTIONS.md",
     "org/HANDOVER.md",
     "scripts/tooling/review-ledger.mjs",
+    "scripts/tooling/line-census.baseline.json",
     "tests/unit/k8-evidence-ledger.test.ts",
+    "tests/fixtures/mutants/T-0159.json",
     "org/TASKS.md",
     "org/STATE.md"
   ],
