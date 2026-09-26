@@ -19,7 +19,7 @@
       "evidence": "a browser oracle and the shared no-agent notice's layout are now in scope; no authentication, schema or public contract is changed"
     }
   ],
-  "status": "active",
+  "status": "done",
   "owner_session": "2026-09-26-refactor-foundations",
   "claims": [
     "tests/e2e/design-census.spec.ts",
@@ -37,8 +37,8 @@
   "programme": "Found by K4 (T-0151) while gating the security fixes, and raised rather than folded in: it is not a security finding and it is not in the register, but it is a blind spot in the gate the whole programme runs on.",
   "timestamps": {
     "opened": "2026-09-12T18:40:00Z",
-    "updated": "2026-09-26T19:02:08Z",
-    "closed": null
+    "updated": "2026-09-26T19:19:52Z",
+    "closed": "2026-09-26T19:19:52Z"
   },
   "invariants": [
     "I1 THE MEASURE STILL MEASURES. routesWithSplitBlocks states cause 2 of the U-programme's alignment work from the inside (T-0123); the fix makes it deterministic, it does not remove it or widen its tolerance to hide the reading.",
@@ -47,7 +47,7 @@
   ],
   "notes": "Evidence, 2026-09-12, all on the same tree: gate run 3 census exit 1 with routesWithSplitBlocks 1 to 2 on /work/chat; two later runs passed. The current tolerance is 1px, not the stale 8px in the proposed record. On 2026-09-26, T-0150's isolated no-agent fixture made the full gate and a standalone census both read 4: the existing /agent/models case plus /agent/profiles, /results/sessions and /work/missions. All three new routes measured AgentSetupNotice's first card at x=272 while the page column starts at x=248; the component adds mx-6. T-0150 owns prepare-data-dir.mjs, so this record releases that claim and takes the shared component plus a controlled browser-state oracle. The original intermittent /work/chat observation remains to be investigated after the real 24px split is fixed.",
   "rollback": "Revert the shared notice alignment and its browser oracle together; retain the census measure and tolerance.",
-  "verification": "",
-  "mutation": "",
-  "deviation": ""
+  "verification": "Red browser oracle 8b98046b: 3 of 3 controlled no-agent routes failed at 24px. The same three browser assertions passed after removing the shared notice margin. A separate Jest rendered-DOM oracle protects the margin in the mutation sweep. The isolated design census passed three consecutive identical-revision runs with routesWithSplitBlocks=1 and worst spread=538px; the latter two full counts were exactly equal. Neither measure nor tolerance nor design baseline changed. Integrated unchanged-tree gate on the isolated validation clone passed all nine steps, including 694 Jest suites and 275 Playwright passes. A separate 1440x900 and 390x844 visual walk of /results/sessions passed heading, console, overflow and responsive-strip checks; screenshot SHA256: 76EC6664CA6CC2ABF07BFC6622A51883C1843507C30E82D7EC58E24275B36396 and BCCC0CE243A15D2177015D18DCF110BB825EB8DA7DD998FA73920E2179FE52AC. Feature commit 18bc7e78. Hosted acceptance remains pending after push.",
+  "mutation": "Committed-tree sweep at 18bc7e78: m1-the-notice-is-inset-again KILLED by tests/unit/agent-setup-notice.test.tsx. The current sweep reports Jest exit 1; T-0160 will strengthen its structured kill evidence and control checks.",
+  "deviation": "T-0150's hermetic fixture exposed three real no-agent splits and required a shared component fix before the gate could pass, so the task scope grew and both repairs landed in one feature commit. The existing record's 8px tolerance claim was stale; actual tolerance is 1px. The original intermittent /work/chat split was not reproduced in three controlled census runs; this evidence does not prove that historical intermittent state cannot recur. No design measure, tolerance or baseline was loosened."
 }

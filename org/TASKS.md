@@ -162,9 +162,9 @@ The records under org/tasks/ are canonical.
 | T-0147 | standard | R1 | done | t0147-k1-ci-green-2026-09-12 |
 | T-0148 | standard | R1 | done | t0147-k2-the-discipline-2026-09-12 |
 | T-0149 | high-assurance | R3 | done | t0149-k3-the-ratification-2026-09-12 |
-| T-0150 | standard | R1 | active | 2026-09-26-refactor-foundations |
+| T-0150 | standard | R1 | done | 2026-09-26-refactor-foundations |
 | T-0151 | high-assurance | R2 | done | t0151-k4-security-2026-09-12 |
-| T-0152 | standard | R1 | active | 2026-09-26-refactor-foundations |
+| T-0152 | standard | R1 | done | 2026-09-26-refactor-foundations |
 | T-0153 | high-assurance | R2 | done | t0153-k5-ruled-security-2026-09-12 |
 | T-0154 | high-assurance | R2 | done | t0154-k6-the-gates-see-2026-09-12 |
 | T-0155 | exploration | R1 | done | t0155-k7-recon-2026-09-12 |
