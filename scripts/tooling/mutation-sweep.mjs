@@ -121,7 +121,7 @@ export function assessJestRun(run, expected) {
     const invocation = /^expect\([^\n]*\)\.(not\.)?([A-Za-z]\w*)\(/.exec(message.split("\n", 1)[0]);
     if (!invocation || matcher.pass !== Boolean(invocation[1]) || (matcher.name != null && matcher.name !== invocation[2])) return false;
     const prefix = `Error: ${message}`;
-    const frame = new RegExp(`\\bat Object\\.${invocation[2]}\\b`);
+    const frame = new RegExp(`(?:^|\\n)\\s+at (?:Object\\.)?${invocation[2]} \\(`);
     return test.failureMessages.some((message) => typeof message === "string" && clean(message).startsWith(prefix) && frame.test(clean(message).slice(prefix.length)));
   }));
   if (run.status === 0 && report.numFailedTests === 0 && assertions.every((test) => test.status === "passed")) return "passed";

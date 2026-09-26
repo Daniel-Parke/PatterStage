@@ -92,8 +92,14 @@ remains open. A controlled Jest JSON probe found two real matcher shapes the
 classifier excluded: a failed negated assertion reports pass:true, and a
 failed toThrow assertion may omit the matcher name. The temporary probe was
 removed. Independent amendment a5b53cb3 was red at two of four; all six
-focused T-0160 suites now pass at 20 tests. Repeat the full gate, committed
-tree sweep and hosted CI before closing T-0160.
+focused T-0160 suites passed at 20 tests. The second committed sweep killed
+two mutants but still reported two as ERROR. An unmutated nested-callback
+Jest probe showed their likely cause: a real matcher stack can start `at toBe`
+instead of `at Object.toBe`. The independent 7d25a7e6 oracle was red at two
+of three. The classifier now accepts either form while retaining structured
+matcher, invocation and message correlation; seven focused suites pass at 23
+tests. Repeat the full gate, committed-tree sweep and hosted CI before closing
+T-0160.
 
 This page is the one to read before touching the tree. It says where the
 work stands, what was learned landing it, what is still open, and the exact
