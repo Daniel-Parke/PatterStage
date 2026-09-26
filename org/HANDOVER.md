@@ -98,8 +98,11 @@ Jest probe showed their likely cause: a real matcher stack can start `at toBe`
 instead of `at Object.toBe`. The independent 7d25a7e6 oracle was red at two
 of three. The classifier now accepts either form while retaining structured
 matcher, invocation and message correlation; seven focused suites pass at 23
-tests. Repeat the full gate, committed-tree sweep and hosted CI before closing
-T-0160.
+tests. The final isolated complete gate passed all nine steps on an unchanged
+tree: 701 Jest suites, 275 Playwright passes. The committed-tree T-0160 sweep
+at 4750b7ce killed all four mutants with passing controls and verified
+restoration. T-0160's local record is complete; hosted CI must still be read
+after the closure push before the next batch starts.
 
 This page is the one to read before touching the tree. It says where the
 work stands, what was learned landing it, what is still open, and the exact

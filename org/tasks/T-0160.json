@@ -11,7 +11,7 @@
   "reasons": [
     {"factor": "boundary-contact", "tier_floor": "R1", "source": "declared", "evidence": "declared side effect: sends-external"}
   ],
-  "status": "active",
+  "status": "done",
   "owner_session": "2026-09-26-refactor-foundations",
   "claims": [
     "org/tasks/T-0160.json", "scripts/tooling/gate.mjs", "scripts/tooling/mutation-sweep.mjs",
@@ -19,7 +19,7 @@
     "playwright.config.ts", "tests/e2e/prepare-data-dir.mjs", "tests/unit/t0160-independent-amendment.test.ts", "tests/unit/t0160-kill-attribution-amendment.test.ts", "tests/unit/t0160-structured-kill-amendment.test.ts", "tests/unit/t0160-forged-matcher-amendment.test.ts", "tests/unit/t0160-negated-and-throw-amendment.test.ts", "tests/unit/t0160-nested-stack-amendment.test.ts", "scripts/tooling/line-census.baseline.json",
     "tests/e2e/agent-setup-alignment.spec.ts", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md"
   ],
-  "timestamps": {"opened": "2026-09-26T19:25:00Z", "updated": "2026-09-26T21:16:20Z", "closed": null},
+  "timestamps": {"opened": "2026-09-26T19:25:00Z", "updated": "2026-09-26T21:22:42Z", "closed": "2026-09-26T21:22:42Z"},
   "invariants": [
     "A full success record only describes all nine steps on one unchanged tree; partial and rerun evidence cannot replace it.",
     "Unknown, absent and empty selectors fail before logs, caches or processes are touched; the gate never terminates a process it did not create.",
@@ -107,7 +107,7 @@
     }]
   },
   "notes": "The EOS declaration-only router returned R1 for the declared sends-external effect, with no discrepancies. The operator proposed R2; this record voluntarily uses high-assurance R2 controls because runners certify all later batches. The actual diff is re-ruled upward at the gate. Existing T-0148 tests and four-outcome reporting remain binding. Hosted PR 36265744171 passed e2e-full but failed one macOS Jest fixture test: its tmpdir lexical /var path can resolve to a physical /private/var path. The fixture guard now compares lexical target to lexical root and real parent to real root; no weaker acceptance or wider wipe target. This adjacent prerequisite repair is claimed here because the hosted gate cannot be green otherwise.",
-  "verification": "",
-  "mutation": "",
-  "deviation": ""
+  "verification": "Independent red-first oracles b2d090da, e9d10d05, e3834858, 1feea88f, 5dddc234, a5b53cb3 and 7d25a7e6, plus independent fixture-only amendments and T-0152 browser-readiness amendment a10cc774. Seven focused T-0160 suites passed all 23 cases. Partial gate evidence left the full summary hash unchanged; nonexistent rerun specs fail before side effects. The final isolated complete gate at candidate 4750b7ce ran all nine steps at exit 0: 701 Jest suites, 7112 passed and 3 skipped tests; 275 Playwright passed and 24 skipped; treeBefore and treeAfter both dce4eb9b0489e01dc320b9fa79e8374d48ed56f66859bcc2aaf15645dd8053e1. Test count rose only by seven independent amendment cases from the prior 7105 passes. No visual product behaviour changed. Hosted macOS and PR acceptance must still be observed after push.",
+  "mutation": "Committed-tree sweep at 4750b7ce exited 0 with four of four KILLED, each by structured assertion-failed evidence, with passing pre- and post-controls and exact restoration. Earlier sweeps at d671496b and 6d76c3d1 honestly reported infrastructure ERROR for real Jest matcher shapes; neither was counted as a kill.",
+  "deviation": "The adjacent T-0150 fixture guard was narrowly repaired for macOS /var to /private/var canonicalisation after hosted Jest failure, while refusing a symlinked checkout tmp root. A load-sensitive T-0152 closed browser oracle received an independently authored readiness amendment; its three test names and one-pixel geometry contract remain. Two full browser failures under load and their focused reruns are retained in the validation checkout. No check was skipped, weakened or baselined away. The generated views and hosted jobs are the landing steps after this record update."
 }
