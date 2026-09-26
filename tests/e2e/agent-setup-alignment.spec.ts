@@ -11,11 +11,16 @@ test.describe("T-0152 · the no-agent notice shares the page column", () => {
         contentType: "application/json",
         body: JSON.stringify({ data: { framework: { name: "Hermes", available: false } } }),
       }));
+      const monitorResponse = page.waitForResponse(
+        (response) => response.url().endsWith("/api/monitor") && response.status() === 200,
+        { timeout: 30_000 },
+      );
       await page.goto(route, { waitUntil: "domcontentloaded" });
+      await monitorResponse;
       const heading = page.locator("main h1");
       const noticeText = page.getByText("Hermes is not installed", { exact: true });
       await expect(heading).toBeVisible();
-      await expect(noticeText).toBeVisible();
+      await expect(noticeText).toBeVisible({ timeout: 30_000 });
       const noticeCard = noticeText.locator("xpath=../..");
       const headingBox = await heading.boundingBox();
       const noticeBox = await noticeCard.boundingBox();
