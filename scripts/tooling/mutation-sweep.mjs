@@ -115,10 +115,13 @@ export function assessJestRun(run, expected) {
   const assertions = found.flatMap((suite) => suite.assertionResults);
   const failed = assertions.filter((test) => test.status === "failed" && Array.isArray(test.failureDetails) && Array.isArray(test.failureMessages) && test.failureDetails.some((detail) => {
     const matcher = detail?.matcherResult;
-    if (matcher?.pass !== false || !/^[A-Za-z]\w*$/.test(matcher.name ?? "") || typeof matcher.message !== "string" || !matcher.message) return false;
+    if (typeof matcher?.message !== "string" || !matcher.message || typeof matcher.pass !== "boolean") return false;
     const clean = (value) => value.replace(/\x1b\[[0-9;]*m/g, "");
-    const prefix = `Error: ${clean(matcher.message)}`;
-    const frame = new RegExp(`\\bat Object\\.${matcher.name}\\b`);
+    const message = clean(matcher.message);
+    const invocation = /^expect\([^\n]*\)\.(not\.)?([A-Za-z]\w*)\(/.exec(message.split("\n", 1)[0]);
+    if (!invocation || matcher.pass !== Boolean(invocation[1]) || (matcher.name != null && matcher.name !== invocation[2])) return false;
+    const prefix = `Error: ${message}`;
+    const frame = new RegExp(`\\bat Object\\.${invocation[2]}\\b`);
     return test.failureMessages.some((message) => typeof message === "string" && clean(message).startsWith(prefix) && frame.test(clean(message).slice(prefix.length)));
   }));
   if (run.status === 0 && report.numFailedTests === 0 && assertions.every((test) => test.status === "passed")) return "passed";

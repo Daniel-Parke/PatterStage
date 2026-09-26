@@ -2,10 +2,10 @@
   "measuredAt": "2026-09-26",
   "counts": {
     "srcLines": 100983,
-    "testLines": 125049,
-    "scriptsLines": 13275,
+    "testLines": 125120,
+    "scriptsLines": 13278,
     "srcRepeatedWindowLines": 1000,
-    "testRepeatedWindowLines": 4380,
+    "testRepeatedWindowLines": 4404,
     "routesWithTryCatch": 18,
     "handRolledReadHooks": 0,
     "writeHooksWithoutMutation": 0,
@@ -340,6 +340,21 @@
       "measuredAt": "2026-09-26",
       "rise": "testLines rose from 125044 to 125049",
       "reason": "T-0160: independent T-0152 browser-oracle readiness amendment after full-gate load evidence; the three cases and one-pixel geometry contract remain"
+    },
+    {
+      "measuredAt": "2026-09-26",
+      "rise": "testLines rose from 125049 to 125120",
+      "reason": "T-0160: independent red-first Jest assertion attribution amendment for negated and toThrow matcher shapes"
+    },
+    {
+      "measuredAt": "2026-09-26",
+      "rise": "scriptsLines rose from 13275 to 13278",
+      "reason": "T-0160: independent red-first Jest assertion attribution amendment for negated and toThrow matcher shapes"
+    },
+    {
+      "measuredAt": "2026-09-26",
+      "rise": "testRepeatedWindowLines rose from 4380 to 4404",
+      "reason": "T-0160: independent red-first Jest assertion attribution amendment for negated and toThrow matcher shapes"
     }
   ]
 }

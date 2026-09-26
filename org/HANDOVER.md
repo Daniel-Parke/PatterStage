@@ -85,7 +85,15 @@ visibility timeout, and another route had not requested monitor by that
 timeout. An independent author amended T-0152's browser oracle in a10cc774
 to await the mocked monitor response and then the same notice and one-pixel
 alignment assertion. The focused isolated run passed all three cases. The
-full gate, sweep and hosted CI must be repeated before T-0160 closes.
+full gate passed again on the isolated clone: 699 Jest suites, 275 browser
+passes, all nine steps exit zero, and its tree hash did not move. The first
+committed-tree sweep at d671496b gave one KILLED and three ERROR, so T-0160
+remains open. A controlled Jest JSON probe found two real matcher shapes the
+classifier excluded: a failed negated assertion reports pass:true, and a
+failed toThrow assertion may omit the matcher name. The temporary probe was
+removed. Independent amendment a5b53cb3 was red at two of four; all six
+focused T-0160 suites now pass at 20 tests. Repeat the full gate, committed
+tree sweep and hosted CI before closing T-0160.
 
 This page is the one to read before touching the tree. It says where the
 work stands, what was learned landing it, what is still open, and the exact

@@ -16,10 +16,10 @@
   "claims": [
     "org/tasks/T-0160.json", "scripts/tooling/gate.mjs", "scripts/tooling/mutation-sweep.mjs",
     "tests/unit/t0160-runner-contracts.test.ts", "tests/fixtures/mutants/T-0160.json",
-    "playwright.config.ts", "tests/e2e/prepare-data-dir.mjs", "tests/unit/t0160-independent-amendment.test.ts", "tests/unit/t0160-kill-attribution-amendment.test.ts", "tests/unit/t0160-structured-kill-amendment.test.ts", "tests/unit/t0160-forged-matcher-amendment.test.ts", "scripts/tooling/line-census.baseline.json",
+    "playwright.config.ts", "tests/e2e/prepare-data-dir.mjs", "tests/unit/t0160-independent-amendment.test.ts", "tests/unit/t0160-kill-attribution-amendment.test.ts", "tests/unit/t0160-structured-kill-amendment.test.ts", "tests/unit/t0160-forged-matcher-amendment.test.ts", "tests/unit/t0160-negated-and-throw-amendment.test.ts", "scripts/tooling/line-census.baseline.json",
     "tests/e2e/agent-setup-alignment.spec.ts", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md"
   ],
-  "timestamps": {"opened": "2026-09-26T19:25:00Z", "updated": "2026-09-26T20:45:44Z", "closed": null},
+  "timestamps": {"opened": "2026-09-26T19:25:00Z", "updated": "2026-09-26T20:58:47Z", "closed": null},
   "invariants": [
     "A full success record only describes all nine steps on one unchanged tree; partial and rerun evidence cannot replace it.",
     "Unknown, absent and empty selectors fail before logs, caches or processes are touched; the gate never terminates a process it did not create.",
@@ -28,8 +28,8 @@
   ],
   "rollback": "Revert both runners, their oracle and manifest as one batch. The previous committed full-gate record remains untouched by partial evidence.",
   "oracle_provenance": {
-    "files": ["tests/unit/t0160-runner-contracts.test.ts", "tests/unit/t0160-independent-amendment.test.ts", "tests/unit/t0160-kill-attribution-amendment.test.ts", "tests/unit/t0160-structured-kill-amendment.test.ts", "tests/unit/t0160-forged-matcher-amendment.test.ts"],
-    "hashes": {"tests/unit/t0160-runner-contracts.test.ts": "72586a58e711d43e98b5e89622ca41a679151769569885a643643a1fd62c051b", "tests/unit/t0160-independent-amendment.test.ts": "566e11e1246dd1fc78f4170323cc67e5531b0577232b8c06f75d602a7f3cc109", "tests/unit/t0160-kill-attribution-amendment.test.ts": "286c1000d3bf311b2b8162c6c8c5be2fd320577499fbcd0bc5668ee6cf7c19c1", "tests/unit/t0160-structured-kill-amendment.test.ts": "8a404e626158fb02b7f7fdc4c53be2046db39c229daf5f0fe3ff0751ed698fa9", "tests/unit/t0160-forged-matcher-amendment.test.ts": "c0144dc8fc6580ea78a375b447eaa734333784c5a6015dbaece39fb8faacc9a8"},
+    "files": ["tests/unit/t0160-runner-contracts.test.ts", "tests/unit/t0160-independent-amendment.test.ts", "tests/unit/t0160-kill-attribution-amendment.test.ts", "tests/unit/t0160-structured-kill-amendment.test.ts", "tests/unit/t0160-forged-matcher-amendment.test.ts", "tests/unit/t0160-negated-and-throw-amendment.test.ts"],
+    "hashes": {"tests/unit/t0160-runner-contracts.test.ts": "72586a58e711d43e98b5e89622ca41a679151769569885a643643a1fd62c051b", "tests/unit/t0160-independent-amendment.test.ts": "566e11e1246dd1fc78f4170323cc67e5531b0577232b8c06f75d602a7f3cc109", "tests/unit/t0160-kill-attribution-amendment.test.ts": "286c1000d3bf311b2b8162c6c8c5be2fd320577499fbcd0bc5668ee6cf7c19c1", "tests/unit/t0160-structured-kill-amendment.test.ts": "8a404e626158fb02b7f7fdc4c53be2046db39c229daf5f0fe3ff0751ed698fa9", "tests/unit/t0160-forged-matcher-amendment.test.ts": "c0144dc8fc6580ea78a375b447eaa734333784c5a6015dbaece39fb8faacc9a8", "tests/unit/t0160-negated-and-throw-amendment.test.ts": "6d019aafee123336c9612db570ac4e308872bf687d091dd7cc6dbf2cb5088e4e"},
     "author_session": "2026-09-26-refactor-foundations",
     "independence_method": "clean-context",
     "amendments": [{
@@ -80,6 +80,14 @@
       "author_session": "01a0df72-13e2-7cd0-8ace-25e6ee5f9388",
       "authorised_by": "Q-023 independent closed-oracle amendment, 2026-09-26",
       "date": "2026-09-26T20:45:44Z"
+    }, {
+      "reason": "Committed-tree sweep d671496b reported one KILLED and three ERROR. A controlled Jest JSON probe showed that failed negated assertions carry pass:true and toThrow can omit matcherResult.name.",
+      "change": "Separate oracle a5b53cb3, authored in an independent session, was red at two of four. The classifier now derives the matcher invocation from the structured message and correlates it with pass, optional name, failure text and matcher stack. All six T-0160 suites pass at 20 tests.",
+      "old_hash": "no file; new separate oracle",
+      "new_hash": "6d019aafee123336c9612db570ac4e308872bf687d091dd7cc6dbf2cb5088e4e",
+      "author_session": "01a0df7e-781c-7d73-9de1-3a122a5db36b",
+      "authorised_by": "R2 independent REVIEWER amendment after committed-tree sweep, 2026-09-26",
+      "date": "2026-09-26T20:58:47Z"
     }, {
       "reason": "Matcher message and stack correlation require real-shaped fake reports in three frozen suites.",
       "change": "Independent fixture-only amendment 4af356d3 retains every test name and assertion; original runner fixture 5e0814 to 72586a, kill fixture 623168 to 286c10, structured fixture 81ae04 to 8a404e.",
