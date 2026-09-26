@@ -3,16 +3,14 @@
   "assigned": "2026-09-26",
   "lanes": [
     {
-      "lane_id": "T-0161-safety-oracle",
+      "lane_id": "T-0161-gate-oracle",
       "task_id": "T-0161",
-      "session_id": "T-0161-safety-oracle",
+      "session_id": "T-0161-gate-oracle",
       "path_claims": [
-        "tests/unit/t0161-hermes-import.test.ts",
-        "tests/unit/t0161-backup-order.test.ts",
-        "tests/unit/b15-docs-pipeline-is-wired.test.ts"
+        "tests/unit/k2-the-discipline-is-in-the-repo.test.ts"
       ],
       "expires": "2026-09-27T23:00:00Z",
-      "liveness": "second independent ORACLE for explicit import, backup refusal and Q-015 closed-test amendment"
+      "liveness": "independent ORACLE author amends the closed K2 gate-step contract after T-0161 adds build purity"
     },
     {
       "lane_id": "T-0161-implementer",
@@ -20,7 +18,7 @@
       "session_id": "2026-09-26-refactor-foundations",
       "path_claims": [
         "org/claims.json", "org/tasks/T-0161.json", "org/briefs/T-0161-oracle.md",
-        "org/briefs/T-0161-safety-oracle.md",
+        "org/briefs/T-0161-safety-oracle.md", "org/briefs/T-0161-gate-oracle.md",
         "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", "package.json",
         "scripts/tooling/prebuild-db.mjs", "scripts/tooling/hermes-registry-import.mjs",
         "scripts/tooling/gate.mjs", "scripts/tooling/ps-deploy.mjs", "scripts/bootstrap/setup.sh",
@@ -35,5 +33,5 @@
       "liveness": "coordinator owns implementation, integration and record closure"
     }
   ],
-  "note": "Two active T-0161 writing lanes, the cap in org/policy.json. The first build-purity oracle was frozen in 089cc00d and its lane released before this safety-oracle assignment. The current oracle test paths are disjoint from the implementer's claims; read-only review holds no lane. T-0154's expired claims remain in Git history."
+  "note": "Two active T-0161 writing lanes, the cap in org/policy.json. Build-purity and safety oracles were frozen before implementation; their lanes have been released. The independent K2 amendment lane is disjoint from implementation. T-0154's expired claims remain in Git history."
 }
