@@ -38,7 +38,7 @@
 import { existsSync, lstatSync, mkdirSync, realpathSync, rmSync } from "fs";
 import { spawnSync } from "child_process";
 import { tmpdir } from "os";
-import { dirname, join, resolve, sep } from "path";
+import { dirname, join, relative, resolve, sep } from "path";
 import { fileURLToPath } from "url";
 import Database from "better-sqlite3";
 
@@ -57,21 +57,31 @@ if (!dataDir) {
 // deleting so a caller cannot point the test harness at operator data.
 const normalise = (path) => process.platform === "win32" ? path.toLowerCase() : path;
 const within = (path, base) => normalise(path).startsWith(normalise(base) + sep);
-const allowedRoots = [join(root, "tmp"), tmpdir()].map((path) => {
-  const lexical = resolve(path);
-  return { lexical, physical: existsSync(lexical) ? realpathSync(lexical) : lexical };
-});
-if (!allowedRoots.some(({ lexical }) => within(dataDir, lexical))) {
+const checkoutTmp = resolve(join(root, "tmp"));
+const osTmp = resolve(tmpdir());
+const underCheckout = within(dataDir, checkoutTmp);
+const allowedRoot = underCheckout ? checkoutTmp : within(dataDir, osTmp) ? osTmp : null;
+const refuse = () => {
   console.error("[e2e prepare-data-dir] refusing a path outside an isolated temporary directory");
   process.exit(1);
+};
+if (!allowedRoot) refuse();
+
+// A checkout tmp junction must not turn a permitted-looking path into an
+// arbitrary deletion target. macOS may itself expose the OS temp root through
+// /var -> /private/var, so that one root is canonicalised after selection.
+if (underCheckout && existsSync(checkoutTmp) && lstatSync(checkoutTmp).isSymbolicLink()) refuse();
+let cursor = allowedRoot;
+for (const part of relative(allowedRoot, dirname(dataDir)).split(sep).filter(Boolean)) {
+  cursor = join(cursor, part);
+  if (existsSync(cursor) && lstatSync(cursor).isSymbolicLink()) refuse();
 }
 mkdirSync(dirname(dataDir), { recursive: true });
 const parent = realpathSync(dirname(dataDir));
-if (!allowedRoots.some(({ lexical, physical }) => within(dataDir, lexical) &&
-    (normalise(parent) === normalise(physical) || within(parent, physical))) ||
+const physicalRoot = realpathSync(allowedRoot);
+if (!(normalise(parent) === normalise(physicalRoot) || within(parent, physicalRoot)) ||
     (existsSync(dataDir) && lstatSync(dataDir).isSymbolicLink())) {
-  console.error("[e2e prepare-data-dir] refusing a path outside an isolated temporary directory");
-  process.exit(1);
+  refuse();
 }
 
 // Not best-effort. A wipe that silently fails hands the run a database

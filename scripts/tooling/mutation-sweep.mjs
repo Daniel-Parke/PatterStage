@@ -24,7 +24,7 @@
 // oracle first, then sweep the committed tree.
 
 import { execFileSync, spawnSync } from "node:child_process";
-import { chmodSync, lstatSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, lstatSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -84,6 +84,10 @@ function localPath(root, path) {
   const full = resolve(root, path);
   const back = relative(root, full);
   if (!back || back === ".." || back.startsWith(`..${sep}`)) throw new Error("mutation-sweep: path escapes the repository");
+  const physicalRoot = realpathSync(root);
+  const physicalExpected = resolve(physicalRoot, path);
+  const normalise = (value) => process.platform === "win32" ? value.toLowerCase() : value;
+  if (lstatSync(full).isSymbolicLink() || normalise(realpathSync(full)) !== normalise(physicalExpected)) throw new Error("mutation-sweep: symlinked path is not a safe mutation target");
   return full;
 }
 
@@ -109,9 +113,16 @@ export function assessJestRun(run, expected) {
   const found = report.testResults.filter((suite) => names.has(String(suite.name).replaceAll("\\", "/").toLowerCase()));
   if (found.length !== names.size || found.some((suite) => !Array.isArray(suite.assertionResults) || suite.assertionResults.length === 0 || suite.testExecError)) return "infrastructure";
   const assertions = found.flatMap((suite) => suite.assertionResults);
-  const failed = assertions.filter((test) => test.status === "failed" && Array.isArray(test.failureMessages) && test.failureMessages.length > 0);
+  const failed = assertions.filter((test) => test.status === "failed" && Array.isArray(test.failureDetails) && Array.isArray(test.failureMessages) && test.failureDetails.some((detail) => {
+    const matcher = detail?.matcherResult;
+    if (matcher?.pass !== false || !/^[A-Za-z]\w*$/.test(matcher.name ?? "") || typeof matcher.message !== "string" || !matcher.message) return false;
+    const clean = (value) => value.replace(/\x1b\[[0-9;]*m/g, "");
+    const prefix = `Error: ${clean(matcher.message)}`;
+    const frame = new RegExp(`\\bat Object\\.${matcher.name}\\b`);
+    return test.failureMessages.some((message) => typeof message === "string" && clean(message).startsWith(prefix) && frame.test(clean(message).slice(prefix.length)));
+  }));
   if (run.status === 0 && report.numFailedTests === 0 && assertions.every((test) => test.status === "passed")) return "passed";
-  if (run.status !== 0 && failed.length > 0 && report.numFailedTests > 0) return "assertion-failed";
+  if (Number.isInteger(run.status) && run.status > 0 && failed.length > 0 && report.numFailedTests > 0) return "assertion-failed";
   return "infrastructure";
 }
 
@@ -119,10 +130,10 @@ function runTestsAtRoot(root, tests) {
   const temp = mkdtempSync(join(tmpdir(), "patterstage-sweep-"));
   const output = join(temp, "jest.json");
   try {
-    const result = spawnSync(process.execPath, [join(root, "node_modules", "jest", "bin", "jest.js"), ...tests, "--runInBand", "--json", "--outputFile", output, "--silent"], { cwd: root, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+    const result = spawnSync(process.execPath, [join(root, "node_modules", "jest", "bin", "jest.js"), "--runTestsByPath", ...tests, "--runInBand", "--json", "--outputFile", output, "--silent"], { cwd: root, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
     let report;
     try { report = JSON.parse(readFileSync(output, "utf8")); } catch { /* launch and configuration errors need no fake report */ }
-    return { status: result.status, report, launchError: result.error?.message };
+    return { status: result.status, report, ...(result.error ? { launchError: result.error.message } : {}) };
   } finally {
     rmSync(temp, { recursive: true, force: true });
   }

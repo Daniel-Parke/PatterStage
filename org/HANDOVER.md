@@ -20,9 +20,10 @@ oracle amendment. No structural batch is approved by this status note.
 
 The proposed prerequisite order was T-0160, T-0150, T-0157, T-0161, T-0156,
 T-0152, T-0162, T-0163, T-0158, T-0164 and T-0165. The full Phase 2 plan
-follows reproducible recon and requires separate operator approval. Hosted PR
-acceptance still fails the phone sessions fixture at the reviewed commit; a
-green push that skipped it is not acceptance. PR #157 remains open, and Q-011
+follows reproducible recon and requires separate operator approval. The phone
+sessions path now passes hosted full E2E and acceptance on PR run 36265744171.
+That run still failed macOS Jest in the fixture oracle, so CI is not green.
+PR #157 remains open, and Q-011
 still requires a release before structural cleanup. Use an isolated data
 directory for builds until T-0161 removes build-time database writes.
 
@@ -35,6 +36,13 @@ Hermes home. The phone strip assertion is unchanged. The focused phone,
 session-list and detail run passed 46 tests with one unrelated skills-detail
 skip; hosted acceptance must still be read after T-0150 is pushed.
 
+The T-0150/T-0152 push at 03f93d1a was read on every hosted job. Full E2E,
+acceptance, Linux build/test, install, Docker, shell and both boot-smoke jobs
+passed. The sole PR failure was macOS Jest: the fixture preparation rejected a
+temporary directory whose lexical `/var` parent resolves through macOS's
+`/private/var` link. T-0160 includes the narrow real-path correction; hosted
+macOS confirmation is pending its push.
+
 The T-0150 candidate exposed a separate real design-census failure: the
 no-agent notice's `mx-6` put its card 24 px inside the shared page column on
 Profiles, Sessions and Missions. T-0152's three browser oracles failed at
@@ -44,6 +52,40 @@ census runs read one split, and the last two agreed on every reported measure.
 The earlier intermittent Chat split was not reproduced with an isolated
 Hermes home and fresh e2e data, so the harness's measure and tolerance remain
 unchanged.
+
+T-0160's first runner oracle was committed red at five of seven tests, then the
+isolated validation clone passed all nine gate steps at 40bfab86 with 695 Jest
+suites, 275 Playwright passes and `treeMoved=false`. A partial census-only run
+left the full summary hash unchanged. The committed-tree sweep killed all four
+runner mutants with passing controls before and after. Independent review then
+found four counterexamples: a symlinked checkout tmp root could permit an
+external wipe, a symlinked sweep target could permit an external write, a
+thrown `TypeError` could count as a kill, and a missing rerun spec could pass
+selection. The reviewer authored a separate amendment, red at four of four in
+e9d10d05. All four focused tests passed after guard repairs, but follow-up
+review found a runtime `TypeError` could still masquerade as a kill by quoting
+`expect(` later in its message. A second independent amendment, e3834858, was
+red at one of two and passed with a first-line classifier. A further review
+found that even a thrown Error can begin with `expect(`. A controlled Jest JSON
+run showed that real matcher failures carry `failureDetails.matcherResult`,
+while the impersonating thrown Error has an empty failure detail. A third
+independent amendment, 1feea88f, was red at one of ten. The classifier now
+requires the structured failed matcher result. The reviewer then showed that
+a plain Error can carry forged matcher metadata. A fourth independent oracle,
+5dddc234, was red at one of two; an independent fixture-only amendment,
+4af356d3, made three earlier fake reports match real Jest JSON without
+changing test names or assertions. Kill attribution now correlates the
+matcher result with the failure message and matcher stack frame. Five focused
+T-0160 suites pass. The latest full gate failed after 183 browser passes when
+the web server stopped answering; alignment, settings and navigation specs
+all passed when rerun alone, and both full and standalone results are retained.
+The next full run exposed two notice timeouts under load. Its Playwright traces
+showed that one mocked monitor response left about 146 ms before the old
+visibility timeout, and another route had not requested monitor by that
+timeout. An independent author amended T-0152's browser oracle in a10cc774
+to await the mocked monitor response and then the same notice and one-pixel
+alignment assertion. The focused isolated run passed all three cases. The
+full gate, sweep and hosted CI must be repeated before T-0160 closes.
 
 This page is the one to read before touching the tree. It says where the
 work stands, what was learned landing it, what is still open, and the exact

@@ -21,8 +21,8 @@
     {
       "id": "m3-missing-jest-report-is-ignored",
       "file": "scripts/tooling/mutation-sweep.mjs",
-      "anchor": "if (run?.launchError || !report || !Number.isInteger(report.numTotalTests)",
-      "replacement": "if (run?.launchError || false || !Number.isInteger(report.numTotalTests)",
+      "anchor": "if (run?.launchError || !report || !Number.isInteger(report.numTotalTests) || report.numTotalTests < 1 || !Array.isArray(report.testResults)) return \"infrastructure\";",
+      "replacement": "if (run?.launchError || !report || !Number.isInteger(report.numTotalTests) || report.numTotalTests < 1 || !Array.isArray(report.testResults)) return \"passed\";",
       "tests": ["tests/unit/t0160-runner-contracts.test.ts"],
       "why": "A failed launch without a Jest report is infrastructure, not a mutant kill."
     },

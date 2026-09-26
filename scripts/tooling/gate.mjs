@@ -22,7 +22,7 @@
 
 import { execFileSync, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { closeSync, lstatSync, mkdirSync, openSync, readFileSync, readlinkSync, writeFileSync } from "node:fs";
+import { closeSync, existsSync, lstatSync, mkdirSync, openSync, readFileSync, readlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -120,6 +120,7 @@ export function parseGateArgs(args) {
     if (values.has("--only") || values.has("--from")) throw new Error("--rerun-alone cannot be combined with step selectors");
     const spec = values.get("--rerun-alone");
     if (!/^tests\/e2e\/[\w./-]+\.spec\.ts$/.test(spec) || spec.includes("..")) throw new Error("--rerun-alone requires a tests/e2e/*.spec.ts path");
+    if (!existsSync(join(ROOT, spec)) || !lstatSync(join(ROOT, spec)).isFile()) throw new Error(`--rerun-alone spec does not exist: ${spec}`);
     return { kind: "rerun", planned: [{ name: "rerun-alone", spec }], evidenceFile: "summary.rerun.json", logBase: values.get("--log") };
   }
   const all = STEPS.map((step) => step.name);

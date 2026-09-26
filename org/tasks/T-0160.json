@@ -16,10 +16,10 @@
   "claims": [
     "org/tasks/T-0160.json", "scripts/tooling/gate.mjs", "scripts/tooling/mutation-sweep.mjs",
     "tests/unit/t0160-runner-contracts.test.ts", "tests/fixtures/mutants/T-0160.json",
-    "playwright.config.ts", "tests/e2e/prepare-data-dir.mjs", "scripts/tooling/line-census.baseline.json",
-    "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md"
+    "playwright.config.ts", "tests/e2e/prepare-data-dir.mjs", "tests/unit/t0160-independent-amendment.test.ts", "tests/unit/t0160-kill-attribution-amendment.test.ts", "tests/unit/t0160-structured-kill-amendment.test.ts", "tests/unit/t0160-forged-matcher-amendment.test.ts", "scripts/tooling/line-census.baseline.json",
+    "tests/e2e/agent-setup-alignment.spec.ts", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md"
   ],
-  "timestamps": {"opened": "2026-09-26T19:25:00Z", "updated": "2026-09-26T19:25:00Z", "closed": null},
+  "timestamps": {"opened": "2026-09-26T19:25:00Z", "updated": "2026-09-26T20:45:44Z", "closed": null},
   "invariants": [
     "A full success record only describes all nine steps on one unchanged tree; partial and rerun evidence cannot replace it.",
     "Unknown, absent and empty selectors fail before logs, caches or processes are touched; the gate never terminates a process it did not create.",
@@ -28,10 +28,67 @@
   ],
   "rollback": "Revert both runners, their oracle and manifest as one batch. The previous committed full-gate record remains untouched by partial evidence.",
   "oracle_provenance": {
-    "files": ["tests/unit/t0160-runner-contracts.test.ts"],
-    "hashes": {"tests/unit/t0160-runner-contracts.test.ts": "6508078ea9ee3eee36c8ecfa9121290fa1419d6b3d95fa472f6e24b898b0b49f"},
+    "files": ["tests/unit/t0160-runner-contracts.test.ts", "tests/unit/t0160-independent-amendment.test.ts", "tests/unit/t0160-kill-attribution-amendment.test.ts", "tests/unit/t0160-structured-kill-amendment.test.ts", "tests/unit/t0160-forged-matcher-amendment.test.ts"],
+    "hashes": {"tests/unit/t0160-runner-contracts.test.ts": "72586a58e711d43e98b5e89622ca41a679151769569885a643643a1fd62c051b", "tests/unit/t0160-independent-amendment.test.ts": "566e11e1246dd1fc78f4170323cc67e5531b0577232b8c06f75d602a7f3cc109", "tests/unit/t0160-kill-attribution-amendment.test.ts": "286c1000d3bf311b2b8162c6c8c5be2fd320577499fbcd0bc5668ee6cf7c19c1", "tests/unit/t0160-structured-kill-amendment.test.ts": "8a404e626158fb02b7f7fdc4c53be2046db39c229daf5f0fe3ff0751ed698fa9", "tests/unit/t0160-forged-matcher-amendment.test.ts": "c0144dc8fc6580ea78a375b447eaa734333784c5a6015dbaece39fb8faacc9a8"},
     "author_session": "2026-09-26-refactor-foundations",
-    "independence_method": "clean-context"
+    "independence_method": "clean-context",
+    "amendments": [{
+      "reason": "Independent R2 review found four counterexamples absent from the first frozen oracle.",
+      "change": "Added a separate four-case behavioural oracle; the original test file and its hash remain unchanged. Red at four of four in e9d10d05.",
+      "old_hash": "6508078ea9ee3eee36c8ecfa9121290fa1419d6b3d95fa472f6e24b898b0b49f",
+      "new_hash": "566e11e1246dd1fc78f4170323cc67e5531b0577232b8c06f75d602a7f3cc109",
+      "author_session": "01a0df3b-6df7-7a42-a5d6-0bdaadb35f6e",
+      "authorised_by": "R2 independent REVIEWER verdict, 2026-09-26",
+      "date": "2026-09-26T19:53:33Z"
+    }, {
+      "reason": "The reviewer found that a runtime TypeError quoting matcher syntax still counted as a kill.",
+      "change": "A second independent author added a separate two-case classifier oracle, red at one of two in e3834858; the earlier oracle files and hashes remain unchanged.",
+      "old_hash": "566e11e1246dd1fc78f4170323cc67e5531b0577232b8c06f75d602a7f3cc109",
+      "new_hash": "5314175ff44841480aac12b761bac2625dd6a0f53da622092ca35ee66229abdd",
+      "author_session": "01a0df4e-a28b-7990-b8c8-b87dda7ac100",
+      "authorised_by": "R2 independent REVIEWER follow-up verdict, 2026-09-26",
+      "date": "2026-09-26T20:06:11Z"
+    }, {
+      "reason": "Real Jest JSON distinguishes matcher failures by failureDetails.matcherResult; text matching could be impersonated by a thrown Error.",
+      "change": "An independent author added realistic failureDetails to two prior fake reports and a new one-case structured-result oracle, red at one of ten in 1feea88f; test names and prior assertions were preserved.",
+      "old_hash": "6508078ea9ee3eee36c8ecfa9121290fa1419d6b3d95fa472f6e24b898b0b49f",
+      "new_hash": "5e08144ff3c4c3986c089d070256f4832cecf1f82a46acf963099f51f5a9162f",
+      "author_session": "01a0df59-56fa-7443-aeff-d7ff55899ebd",
+      "authorised_by": "R2 independent REVIEWER follow-up verdict and observed Jest JSON, 2026-09-26",
+      "date": "2026-09-26T20:17:46Z"
+    }, {
+      "reason": "The second amendment's matcher control needed the same realistic structured Jest report.",
+      "change": "Added failureDetails.matcherResult to the existing genuine-matcher fake report without changing its assertion.",
+      "old_hash": "5314175ff44841480aac12b761bac2625dd6a0f53da622092ca35ee66229abdd",
+      "new_hash": "6231688dc051e88126cb86a5610e23bf5b9212c5e8c291f51e5acb75f371f434",
+      "author_session": "01a0df59-56fa-7443-aeff-d7ff55899ebd",
+      "authorised_by": "R2 independent REVIEWER follow-up verdict and observed Jest JSON, 2026-09-26",
+      "date": "2026-09-26T20:17:46Z"
+    }, {
+      "reason": "A plain Error carrying a forged matcherResult still counted as an assertion kill in real Jest JSON.",
+      "change": "A fourth independent oracle in 5dddc234 distinguishes forged metadata from a genuine matcher; red at one of two.",
+      "old_hash": "81ae0466d2d3b6e4f1c345a021486cf7fa2666444e3074996e0c5fca93ac9861",
+      "new_hash": "c0144dc8fc6580ea78a375b447eaa734333784c5a6015dbaece39fb8faacc9a8",
+      "author_session": "01a0df4e-a28b-7990-b8c8-b87dda7ac100",
+      "authorised_by": "R2 independent REVIEWER follow-up verdict, 2026-09-26",
+      "date": "2026-09-26T20:32:17Z"
+    }, {
+      "reason": "Under full-gate load, two existing T-0152 browser cases timed out before the mocked monitor response and React render; the geometry assertion itself was unchanged.",
+      "change": "An independent author added a bounded wait for the mocked 200 monitor response before the notice visibility wait in a10cc774. The same three test names, no-agent text and one-pixel geometry assertion remain. The focused isolated browser run passed all three cases.",
+      "old_hash": "see a10cc774 parent for the committed original",
+      "new_hash": "68ec17faac3d95c6fa6cc79163cadd1a126ebe5f3f36a157bcbf55f1c0f5e10d",
+      "author_session": "01a0df72-13e2-7cd0-8ace-25e6ee5f9388",
+      "authorised_by": "Q-023 independent closed-oracle amendment, 2026-09-26",
+      "date": "2026-09-26T20:45:44Z"
+    }, {
+      "reason": "Matcher message and stack correlation require real-shaped fake reports in three frozen suites.",
+      "change": "Independent fixture-only amendment 4af356d3 retains every test name and assertion; original runner fixture 5e0814 to 72586a, kill fixture 623168 to 286c10, structured fixture 81ae04 to 8a404e.",
+      "old_hash": "5e08144ff3c4c3986c089d070256f4832cecf1f82a46acf963099f51f5a9162f",
+      "new_hash": "72586a58e711d43e98b5e89622ca41a679151769569885a643643a1fd62c051b",
+      "author_session": "01a0df3b-6df7-7a42-a5d6-0bdaadb35f6e",
+      "authorised_by": "R2 independent REVIEWER verdict and controlled real Jest JSON, 2026-09-26",
+      "date": "2026-09-26T20:32:17Z"
+    }]
   },
   "notes": "The EOS declaration-only router returned R1 for the declared sends-external effect, with no discrepancies. The operator proposed R2; this record voluntarily uses high-assurance R2 controls because runners certify all later batches. The actual diff is re-ruled upward at the gate. Existing T-0148 tests and four-outcome reporting remain binding. Hosted PR 36265744171 passed e2e-full but failed one macOS Jest fixture test: its tmpdir lexical /var path can resolve to a physical /private/var path. The fixture guard now compares lexical target to lexical root and real parent to real root; no weaker acceptance or wider wipe target. This adjacent prerequisite repair is claimed here because the hosted gate cannot be green otherwise.",
   "verification": "",
