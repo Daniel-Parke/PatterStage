@@ -3,7 +3,8 @@
   "intent": "The design census reads differently on the same tree. During T-0151's gate it failed with 'routesWithSplitBlocks rose from 1 to 2', the extra route /work/chat and the offending block a div.mb-4.flex.w-full sitting 264px in — a right-aligned chat row. Two further runs of the same step, on the same commit, passed. A gate step that fails once in three on an unchanged tree either sends a batch chasing a defect it did not cause, or teaches the next session to re-run until green, which is how a real regression gets waved through. Find what makes /work/chat's geometry differ between runs and make the measure read the same twice.",
   "declared": {
     "capabilities": [
-      "edit-tests"
+      "edit-tests",
+      "edit-source"
     ],
     "side_effects": []
   },
@@ -15,20 +16,27 @@
       "factor": "size-threshold",
       "tier_floor": "R1",
       "source": "derived:diff-size",
-      "evidence": "the census harness and whatever it is that leaves state on /work/chat between runs; no product behaviour is expected to change"
+      "evidence": "a browser oracle and the shared no-agent notice's layout are now in scope; no authentication, schema or public contract is changed"
     }
   ],
-  "status": "proposed",
-  "owner_session": "unassigned",
+  "status": "active",
+  "owner_session": "2026-09-26-refactor-foundations",
   "claims": [
     "tests/e2e/design-census.spec.ts",
     "tests/e2e/lib/census-analysis.ts",
-    "tests/e2e/prepare-data-dir.mjs"
+    "tests/e2e/agent-setup-alignment.spec.ts",
+    "src/components/agents/AgentSetupNotice.tsx",
+    "tests/fixtures/mutants/T-0152.json",
+    "scripts/tooling/line-census.baseline.json",
+    "org/HANDOVER.md",
+    "org/tasks/T-0152.json",
+    "org/TASKS.md",
+    "org/STATE.md"
   ],
   "programme": "Found by K4 (T-0151) while gating the security fixes, and raised rather than folded in: it is not a security finding and it is not in the register, but it is a blind spot in the gate the whole programme runs on.",
   "timestamps": {
     "opened": "2026-09-12T18:40:00Z",
-    "updated": "2026-09-12T18:40:00Z",
+    "updated": "2026-09-26T19:02:08Z",
     "closed": null
   },
   "invariants": [
@@ -36,5 +44,9 @@
     "I2 IF THE SPLIT IS REAL, IT IS FIXED, NOT SILENCED. A right-aligned chat row may be a genuine split the other runs simply did not render. Decide which before touching the harness, and if it is real the baseline rises with the reason rather than the measure changing.",
     "I3 NO OTHER MEASURE MOVES. The census reports twenty-four numbers; a harness change that shifts any of the other twenty-three is a different batch."
   ],
-  "notes": "Evidence, 2026-09-12, all on the same tree: gate run 3 census exit 1 with the message above; a standalone `npm run census` immediately after, exit 0; gate run 4 census exit 0 (49.5s). The split rows are computed by splitBlocks in tests/e2e/lib/census-analysis.ts:284-315, grouped by vertical overlap, tolerance 8px. The baseline's own note (scripts/tooling/design-census.baseline.json, the T-0123 paragraph) says the single expected split is on /agent/models and is an action button 538px in; /work/chat is not in that account. First thing to check is whether the chat route renders a message at all on a freshly prepared data dir, and if so where the row's left comes from."
+  "notes": "Evidence, 2026-09-12, all on the same tree: gate run 3 census exit 1 with routesWithSplitBlocks 1 to 2 on /work/chat; two later runs passed. The current tolerance is 1px, not the stale 8px in the proposed record. On 2026-09-26, T-0150's isolated no-agent fixture made the full gate and a standalone census both read 4: the existing /agent/models case plus /agent/profiles, /results/sessions and /work/missions. All three new routes measured AgentSetupNotice's first card at x=272 while the page column starts at x=248; the component adds mx-6. T-0150 owns prepare-data-dir.mjs, so this record releases that claim and takes the shared component plus a controlled browser-state oracle. The original intermittent /work/chat observation remains to be investigated after the real 24px split is fixed.",
+  "rollback": "Revert the shared notice alignment and its browser oracle together; retain the census measure and tolerance.",
+  "verification": "",
+  "mutation": "",
+  "deviation": ""
 }
