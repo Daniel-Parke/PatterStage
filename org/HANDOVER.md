@@ -136,7 +136,9 @@ sound but required a rollback plan and separately authored acceptance oracle
 before close. The rollback plan is recorded. The independent black-box oracle
 passed four of four focused and in the complete gate. The original version
 oracle's authorship deviation remains recorded, rather than represented as
-compliant red-first independence. Committed-tree sweep and hosted jobs remain.
+compliant red-first independence. The sweep at e6a77b6b killed both mutants
+with passing controls and restoration. Independent R2 follow-up found no
+local blocker to closure. Hosted push and PR jobs remain to be checked.
 
 This page is the one to read before touching the tree. It says where the
 work stands, what was learned landing it, what is still open, and the exact

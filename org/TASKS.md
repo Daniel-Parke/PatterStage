@@ -169,7 +169,7 @@ The records under org/tasks/ are canonical.
 | T-0154 | high-assurance | R2 | done | t0154-k6-the-gates-see-2026-09-12 |
 | T-0155 | exploration | R1 | done | t0155-k7-recon-2026-09-12 |
 | T-0156 | standard | R1 | proposed | unassigned |
-| T-0157 | high-assurance | R2 | active | 2026-09-26-refactor-foundations |
+| T-0157 | high-assurance | R2 | done | 2026-09-26-refactor-foundations |
 | T-0158 | high-assurance | R2 | proposed | unassigned |
 | T-0159 | standard | R1 | done | 2026-09-26-refactor-foundations |
 | T-0160 | high-assurance | R1 | done | 2026-09-26-refactor-foundations |
