@@ -35,6 +35,7 @@
     "package-lock.json",
     "scripts/tooling/output-canary.golden.json",
     "tests/unit/t0157-framework-version.test.ts",
+    "tests/e2e/t0157-framework-auth-boundary.spec.ts",
     "tests/fixtures/mutants/T-0157.json",
     "scripts/tooling/line-census.baseline.json",
     "org/tasks/T-0157.json",
@@ -45,7 +46,7 @@
   "programme": "Found by K7's recon (T-0155). Q-019, answered 2026-09-26, rules the 16.3.6 Next and eslint-config-next update ahead of the general Node and dependency batch. This is a security prerequisite, not the later dependency cleanup.",
   "timestamps": {
     "opened": "2026-09-12T19:45:00Z",
-    "updated": "2026-09-26T22:07:00Z",
+    "updated": "2026-09-26T22:21:02Z",
     "closed": null
   },
   "invariants": [
@@ -55,6 +56,7 @@
     "I4 THE CANARY IS RE-BLESSED ONLY IF IT MOVES, AND THE REASON SAYS WHY. httpSurface must NOT move: if a route, method or URL changes, the bump has changed the product's public contract and that is a stop.",
     "I5 WINDOWS DEVELOPMENT KEEPS WORKING. The operator develops on native Windows with Git Bash, and one of the two criticals is specifically a Windows-hosted-server RCE. The gate runs here before it runs anywhere."
   ],
+  "rollback": "Revert 1f9944cc as one package-and-lockfile unit, run npm ci in the isolated checkout and repeat the complete gate and hosted CI. This would reinstall vulnerable Next 16.2.9, so hold any release and restrict any running old build to loopback until a fixed candidate is restored. Do not silently publish or deploy a rollback that restores the critical advisory.",
   "notes": "MEASURED 2026-09-26: Before the update, npm audit --json totals {low:2, moderate:4, high:8, critical:1}; next was pinned and installed at 16.2.9, severity critical, affected range 9.3.4-canary.0 - 16.3.2, fixAvailable {name:next, version:16.3.6, isSemVerMajor:false}. npm and upstream Next publish 16.3.6 for next and eslint-config-next. The original 2026-09-12 record named 16.3.5, superseded by Q-019. After installing the pair, audit totals {low:2, moderate:4, high:6, critical:0}; sharp clears, but root postcss 8.5.15 remains high. The 45 changed lockfile package versions are Next, eslint-config-next and their transitive dependency graph, including sharp, fastq and nanoid; no third root dependency moved. The output canary's appConfig, generatedArtefacts, httpSurface and seedPack all match the existing golden. Operator-only settings remain to be addressed separately: Dependabot alerts and security updates, secret scanning and push protection. The expired historical gitleaks findings remain a reconnaissance obligation.",
   "oracle_provenance": {
     "file": "tests/unit/t0157-framework-version.test.ts",
@@ -64,9 +66,18 @@
     "author_session": "2026-09-26-refactor-foundations",
     "independence_method": "red oracle committed before package.json or lockfile changes"
   },
+  "independent_acceptance_oracle": {
+    "file": "tests/e2e/t0157-framework-auth-boundary.spec.ts",
+    "sha256": "3a5ecbd701b5b1a35c722e6cf5d360aeeb709cdf0c2f13d83e7e6d50ec5f450a",
+    "author_session": "01a0dfce-8997-71e0-a759-13c78410cb93",
+    "author_commit": "886c8c0e60085a6a9d4984352f06436d5696ebaf",
+    "integration_commit": "5833506a",
+    "independence_method": "Separate ORACLE author in a disjoint checkout added four black-box Playwright cases without editing implementation; copied byte-identically and validated against the isolated production server. This is retrospective acceptance coverage, not a red-first claim.",
+    "focused_result": "Four of four Chromium cases passed at port 3078 on isolated data: anonymous status 401, anonymous write 401, forged middleware header still 401, public health 200; all responses asserted X-Frame-Options DENY and CSP frame-ancestors 'none'."
+  },
   "commits": "",
-  "verification": "",
-  "review": "",
-  "mutation": "",
-  "deviation": ""
+  "verification": "Candidate 1f9944cc: isolated npm ci installed next and eslint-config-next 16.3.6. After independent acceptance oracle 5833506a, the complete isolated Windows gate passed all nine steps at exit 0: 702 Jest suites, 7116 passed and 3 skipped tests; 279 Playwright passed and 24 skipped; complete=true, treeMoved=false, treeBefore=treeAfter=b5c98adff0f2f8017ebff8cd90e952edf7c94f3494981edda3c0b3a1f45ebeff. The 65-case K5 ruled-security suite and four-case version oracle passed focused. The separate four-case black-box browser oracle passed focused and in the full gate. Output canary unchanged across appConfig, generatedArtefacts, httpSurface and seedPack. A temporary production Next server on isolated data at 127.0.0.1:3077 returned health 200, anonymous status 401, anonymous write 401, authenticated read-only write 503; all four carried X-Frame-Options DENY and CSP frame-ancestors 'none'. The owned server was stopped and port 3077 no longer listened. Audit went from 15 {critical:1,high:8,moderate:4,low:2} to 12 {critical:0,high:6,moderate:4,low:2}. Hosted push/PR jobs remain pending after closure push.",
+  "review": "Independent read-only R2 reviewer 01a0dfca-6e92-7581-bfe3-f7280d59daa9 verified all 45 changed lockfile package versions are reachable from the two upgraded roots and identified no protected edit. It required a rollback plan and a separately authored acceptance oracle before close. Both corrections are being added; reviewer did not rerun gate or authenticate runtime claims independently.",
+  "mutation": "Committed-tree sweep at 1f9944cc exited 0: both manifest-version mutants KILLED by structured assertion failures with passing pre/post controls and exact restoration.",
+  "deviation": "The first red version oracle was authored by the implementing session before the dependency edit, consistent with the R2 EXECUTOR charter but contrary to the constitution's stricter separation of gate authorship. This is disclosed rather than erased. A separate ORACLE session added a retrospective black-box acceptance suite after the implementation. It passed four of four in the isolated production server; it cannot be presented as red-first evidence."
 }

@@ -123,8 +123,20 @@ Its four-case framework-pair oracle was committed red in 2794ae27, then
 `next` and `eslint-config-next` were installed together at 16.3.6. The local
 audit fell from 15 advisories including one critical to 12 with no critical;
 root PostCSS remains high and belongs to the later dependency batch. The
-output canary has not moved. The full isolated gate and hosted CI for T-0157
-are still pending.
+output canary has not moved. The local gate result is recorded below; hosted
+CI remains pending this batch's closure push.
+
+T-0157's isolated full gate later passed all nine steps under 16.3.6: 702
+Jest suites, 279 browser passes, and no tree movement. A temporary isolated
+production server returned 200 for health, 401 for anonymous protected reads
+and writes, and 503 for an authenticated write under PS_READ_ONLY; each
+response carried DENY and frame-ancestors 'none'. Both committed version
+mutants were killed. An independent R2 reviewer found the lockfile scope
+sound but required a rollback plan and separately authored acceptance oracle
+before close. The rollback plan is recorded. The independent black-box oracle
+passed four of four focused and in the complete gate. The original version
+oracle's authorship deviation remains recorded, rather than represented as
+compliant red-first independence. Committed-tree sweep and hosted jobs remain.
 
 This page is the one to read before touching the tree. It says where the
 work stands, what was learned landing it, what is still open, and the exact
