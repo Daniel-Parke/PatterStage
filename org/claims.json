@@ -1,6 +1,33 @@
 {
   "version": 1,
   "assigned": "2026-09-26",
-  "lanes": [],
-  "note": "T-0154's two claims expired on 2026-09-13 and that task is closed. No parallel writer is active. Historical claims remain in Git history and T-0154's record."
+  "lanes": [
+    {
+      "lane_id": "T-0161-oracle",
+      "task": "T-0161",
+      "session_id": "T-0161-oracle",
+      "path_claims": ["tests/integration/t0161-build-purity.mjs"],
+      "expires": "2026-09-27T23:00:00Z",
+      "liveness": "independent ORACLE writing one integration acceptance script in a forked checkout"
+    },
+    {
+      "lane_id": "T-0161-implementer",
+      "task": "T-0161",
+      "session_id": "2026-09-26-refactor-foundations",
+      "path_claims": [
+        "org/claims.json", "org/tasks/T-0161.json", "org/briefs/T-0161-oracle.md",
+        "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", "package.json",
+        "scripts/tooling/prebuild-db.mjs", "scripts/tooling/hermes-registry-import.mjs",
+        "scripts/tooling/gate.mjs", "scripts/tooling/ps-deploy.mjs", "scripts/bootstrap/setup.sh",
+        "src/app/layout.tsx", "src/instrumentation.ts", "next.config.ts",
+        "tests/integration/test_full_install_update_process.py",
+        "tests/fixtures/mutants/T-0161.json", "scripts/tooling/line-census.baseline.json",
+        "docs/contributing/testing.md", "docs/running/env-reference.md",
+        "docs/running/deploy.md", "docs/running/migration.md", "docs/CONTRIBUTING.md"
+      ],
+      "expires": "2026-09-27T23:00:00Z",
+      "liveness": "coordinator owns implementation, integration and record closure"
+    }
+  ],
+  "note": "Two active T-0161 writing lanes, the cap in org/policy.json. The oracle's test path is disjoint from the implementer's claims; read-only review holds no lane. T-0154's expired claims remain in Git history."
 }

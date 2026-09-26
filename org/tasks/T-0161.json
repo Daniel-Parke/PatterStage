@@ -1,0 +1,80 @@
+{
+  "id": "T-0161",
+  "intent": "Make production builds leave both empty and populated SQLite data directories unchanged. Move any required Hermes model and credential import to an explicit post-backup seed path, and keep fresh-install and update fixtures representative of that order.",
+  "declared": {
+    "capabilities": [
+      "edit-source",
+      "edit-tooling",
+      "edit-tests",
+      "edit-docs"
+    ],
+    "side_effects": [
+      "migrates-schema",
+      "sends-external"
+    ]
+  },
+  "mode": "high-assurance",
+  "tier_proposed": "R2",
+  "status": "active",
+  "owner_session": "2026-09-26-refactor-foundations",
+  "claims": [
+    "org/tasks/T-0161.json",
+    "org/claims.json",
+    "org/briefs/T-0161-oracle.md",
+    "org/HANDOVER.md",
+    "org/TASKS.md",
+    "org/STATE.md",
+    "package.json",
+    "scripts/tooling/prebuild-db.mjs",
+    "scripts/tooling/hermes-registry-import.mjs",
+    "scripts/tooling/gate.mjs",
+    "scripts/tooling/ps-deploy.mjs",
+    "scripts/bootstrap/setup.sh",
+    "src/app/layout.tsx",
+    "src/instrumentation.ts",
+    "next.config.ts",
+    "tests/integration/test_full_install_update_process.py",
+    "tests/integration/t0161-build-purity.mjs",
+    "tests/fixtures/mutants/T-0161.json",
+    "scripts/tooling/line-census.baseline.json",
+    "docs/contributing/testing.md",
+    "docs/running/env-reference.md",
+    "docs/running/deploy.md",
+    "docs/running/migration.md",
+    "docs/CONTRIBUTING.md"
+  ],
+  "programme": "Prerequisite T-0161 under the operator's tooling-13 ruling and the 2026-09-26 plan. It follows the T-0157 framework security update. No structural cleanup is authorised by this batch.",
+  "timestamps": {
+    "opened": "2026-09-26T22:50:35Z",
+    "updated": "2026-09-26T22:50:35Z",
+    "closed": null
+  },
+  "invariants": [
+    "A production build leaves a fresh isolated data directory empty and does not change bytes or modes of an existing SQLite database or its sidecars.",
+    "Runtime first boot still creates and migrates a database; build-only suppression cannot persist into next start, dev or request workers.",
+    "Hermes models and credentials previously imported during prebuild remain available through an explicit import step after a backup, and failures cannot report success silently.",
+    "Setup and in-app update back up before migration or import, retain Windows development and preserve test identities. The install harness uses an explicit seed fixture rather than a prebuild side effect."
+  ],
+  "rollback": "Revert the build lifecycle, import step and install fixture together, restore the prior manifest and repeat the complete gate in an isolated checkout. A rollback restores pre-backup database writes; block setup/update on a live data directory until the ordering hazard is fixed again.",
+  "notes": "Observed 2026-09-26 in isolated validation checkout after T-0157: npx next build with a fresh PS_DATA_DIR and no npm prebuild exited 0 but created patterstage.db, -wal and -shm; the database reached schema_version 42. package.json prebuild separately calls prebuild-db.mjs, which opens repository data, may unlink an old DB and seeds. The build risk therefore has two causes. Hosted T-0157 push/PR CI and both Gitleaks workflows all completed success at 8d336c4d before implementation. EOS taskops.route_record ruled R2 from declared migrates-schema; taskops.create_task cannot validate this venture because kernel/schemas/task-record.schema.json is absent here and the sibling EOS schema rejects PatterStage's established custom task fields. Record creation uses the routed result and the existing venture record shape; the task-writing gap remains an open foundations defect, not a passing schema check.",
+  "commits": "",
+  "verification": "",
+  "review": "",
+  "mutation": "",
+  "deviation": "",
+  "tier_ruled": "R2",
+  "reasons": [
+    {
+      "factor": "schema-change",
+      "tier_floor": "R2",
+      "source": "declared",
+      "evidence": "declared side effect: migrates-schema"
+    },
+    {
+      "factor": "boundary-contact",
+      "tier_floor": "R1",
+      "source": "declared",
+      "evidence": "declared side effect: sends-external"
+    }
+  ]
+}
