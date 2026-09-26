@@ -117,6 +117,15 @@ mutation sweep at e4db8cb2 killed the final enabled-button mutant. The local
 record is closed; hosted macOS and the other push/PR jobs still need to pass
 before T-0157 begins.
 
+Hosted push and PR CI for 11d11212 subsequently passed every job, including
+push macOS coverage and PR acceptance. T-0157 is now active under Q-019.
+Its four-case framework-pair oracle was committed red in 2794ae27, then
+`next` and `eslint-config-next` were installed together at 16.3.6. The local
+audit fell from 15 advisories including one critical to 12 with no critical;
+root PostCSS remains high and belongs to the later dependency batch. The
+output canary has not moved. The full isolated gate and hosted CI for T-0157
+are still pending.
+
 This page is the one to read before touching the tree. It says where the
 work stands, what was learned landing it, what is still open, and the exact
 steps a batch goes through. Everything it names is on disk; nothing lives in

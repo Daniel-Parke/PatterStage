@@ -2,7 +2,7 @@
   "measuredAt": "2026-09-26",
   "counts": {
     "srcLines": 100983,
-    "testLines": 125189,
+    "testLines": 125217,
     "scriptsLines": 13278,
     "srcRepeatedWindowLines": 1000,
     "testRepeatedWindowLines": 4406,
@@ -370,6 +370,11 @@
       "measuredAt": "2026-09-26",
       "rise": "testLines rose from 125177 to 125189",
       "reason": "T-0166: independent synchronisation amendment retains two Models-page test names and all thirteen assertions"
+    },
+    {
+      "measuredAt": "2026-09-26",
+      "rise": "testLines rose from 125189 to 125217",
+      "reason": "T-0157: four-case red-first framework version oracle for ruled Next and ESLint pair"
     }
   ]
 }
