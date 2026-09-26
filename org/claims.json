@@ -7,10 +7,11 @@
       "task_id": "T-0161",
       "session_id": "T-0161-gate-oracle",
       "path_claims": [
-        "tests/unit/k2-the-discipline-is-in-the-repo.test.ts"
+        "tests/unit/k2-the-discipline-is-in-the-repo.test.ts",
+        "tests/integration/t0161-build-purity.mjs"
       ],
       "expires": "2026-09-27T23:00:00Z",
-      "liveness": "independent ORACLE author amends the closed K2 gate-step contract after T-0161 adds build purity"
+      "liveness": "independent ORACLE author amends the closed K2 contract and makes the frozen build-purity fixture run on supported Node 20"
     },
     {
       "lane_id": "T-0161-implementer",
