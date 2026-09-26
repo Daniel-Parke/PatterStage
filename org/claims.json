@@ -4,7 +4,7 @@
   "lanes": [
     {
       "lane_id": "T-0161-oracle",
-      "task": "T-0161",
+      "task_id": "T-0161",
       "session_id": "T-0161-oracle",
       "path_claims": ["tests/integration/t0161-build-purity.mjs"],
       "expires": "2026-09-27T23:00:00Z",
@@ -12,7 +12,7 @@
     },
     {
       "lane_id": "T-0161-implementer",
-      "task": "T-0161",
+      "task_id": "T-0161",
       "session_id": "2026-09-26-refactor-foundations",
       "path_claims": [
         "org/claims.json", "org/tasks/T-0161.json", "org/briefs/T-0161-oracle.md",
