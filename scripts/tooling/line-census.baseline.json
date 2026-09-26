@@ -2,7 +2,7 @@
   "measuredAt": "2026-09-26",
   "counts": {
     "srcLines": 100983,
-    "testLines": 125217,
+    "testLines": 125294,
     "scriptsLines": 13278,
     "srcRepeatedWindowLines": 1000,
     "testRepeatedWindowLines": 4406,
@@ -375,6 +375,11 @@
       "measuredAt": "2026-09-26",
       "rise": "testLines rose from 125189 to 125217",
       "reason": "T-0157: four-case red-first framework version oracle for ruled Next and ESLint pair"
+    },
+    {
+      "measuredAt": "2026-09-26",
+      "rise": "testLines rose from 125217 to 125294",
+      "reason": "T-0157: independently authored four-case black-box framework auth and framing oracle"
     }
   ]
 }
