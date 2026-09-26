@@ -104,6 +104,15 @@ at 4750b7ce killed all four mutants with passing controls and verified
 restoration. T-0160's local record is complete; hosted CI must still be read
 after the closure push before the next batch starts.
 
+Hosted PR CI on fa423657 subsequently passed every job, including macOS and
+full E2E. The push CI failed one macOS Jest case in the older Models-page
+reload suite: after its mock GET gate opened, the button still said
+“Re-importing…” at the final wait boundary. The unchanged suite passed alone
+on Windows, two of two. T-0166 records the follow-up. An independent author
+kept the same two test names and thirteen assertions, tracked the held GET
+promises and opened the gate inside async React `act`. The focused amended
+suite passes, but its full gate, sweep and hosted macOS result are pending.
+
 This page is the one to read before touching the tree. It says where the
 work stands, what was learned landing it, what is still open, and the exact
 steps a batch goes through. Everything it names is on disk; nothing lives in

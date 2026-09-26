@@ -16,7 +16,7 @@
  */
 
 import "@testing-library/jest-dom";
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { renderWithQuery } from "../helpers/render-with-query";
 import { jsonResponse, type FetchAnswer } from "../helpers/fetch-map";
 
@@ -64,25 +64,33 @@ function installFetch(map: Record<string, FetchAnswer>) {
   let held = false;
   let release: () => void = () => undefined;
   let gate = Promise.resolve();
+  let heldGets: Promise<Response>[] = [];
   const hold = () => {
     held = true;
+    heldGets = [];
     gate = new Promise<void>((resolve) => {
       release = resolve;
     });
   };
-  const open = () => {
+  const open = async () => {
     held = false;
     release();
+    await Promise.all(heldGets);
   };
-  global.fetch = jest.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
-    const url = typeof input === "string" ? input : input.toString();
-    const path = url.replace(/^https?:\/\/[^/]+/, "").split("?")[0];
-    if (held && (init?.method ?? "GET") === "GET") await gate;
-    const key = Object.keys(map)
-      .sort((a, b) => b.length - a.length)
-      .find((k) => path === k || path.startsWith(`${k}/`));
-    if (!key) throw new Error(`Unmatched fetch: ${url}`);
-    return jsonResponse(map[key].body, map[key].status);
+  global.fetch = jest.fn((input: RequestInfo | URL, init?: RequestInit) => {
+    const isHeldGet = held && (init?.method ?? "GET") === "GET";
+    const response = (async () => {
+      const url = typeof input === "string" ? input : input.toString();
+      const path = url.replace(/^https?:\/\/[^/]+/, "").split("?")[0];
+      if (isHeldGet) await gate;
+      const key = Object.keys(map)
+        .sort((a, b) => b.length - a.length)
+        .find((k) => path === k || path.startsWith(`${k}/`));
+      if (!key) throw new Error(`Unmatched fetch: ${url}`);
+      return jsonResponse(map[key].body, map[key].status);
+    })();
+    if (isHeldGet) heldGets.push(response);
+    return response;
   }) as typeof global.fetch;
   return { hold, open };
 }
@@ -112,7 +120,9 @@ describe("a reload keeps the registry on screen", () => {
     expect(disclosure).toHaveAttribute("aria-expanded", "true");
 
     // And after the reload lands, the same again.
-    net.open();
+    await act(async () => {
+      await net.open();
+    });
     await waitFor(() => expect(screen.getByRole("button", { name: /Re-import from config/ })).toBeEnabled());
     expect(document.contains(disclosure)).toBe(true);
     expect(disclosure).toHaveAttribute("aria-expanded", "true");
@@ -124,7 +134,9 @@ describe("a reload keeps the registry on screen", () => {
     renderWithQuery(<ModelsPage />);
     expect(screen.getByRole("heading", { name: /^Models$/ })).toBeInTheDocument();
     expect(screen.getByText(/Loading models/)).toBeInTheDocument();
-    net.open();
+    await act(async () => {
+      await net.open();
+    });
     await screen.findByRole("button", { name: /Fallback Chain/ });
     expect(screen.queryByText(/Loading models/)).toBeNull();
   });

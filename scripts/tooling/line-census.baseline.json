@@ -2,10 +2,10 @@
   "measuredAt": "2026-09-26",
   "counts": {
     "srcLines": 100983,
-    "testLines": 125177,
+    "testLines": 125189,
     "scriptsLines": 13278,
     "srcRepeatedWindowLines": 1000,
-    "testRepeatedWindowLines": 4416,
+    "testRepeatedWindowLines": 4406,
     "routesWithTryCatch": 18,
     "handRolledReadHooks": 0,
     "writeHooksWithoutMutation": 0,
@@ -365,6 +365,11 @@
       "measuredAt": "2026-09-26",
       "rise": "testRepeatedWindowLines rose from 4404 to 4416",
       "reason": "T-0160: independent red-first nested Jest matcher stack amendment, preserving seven runner suites"
+    },
+    {
+      "measuredAt": "2026-09-26",
+      "rise": "testLines rose from 125177 to 125189",
+      "reason": "T-0166: independent synchronisation amendment retains two Models-page test names and all thirteen assertions"
     }
   ]
 }
