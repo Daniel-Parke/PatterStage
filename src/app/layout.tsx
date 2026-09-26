@@ -1,4 +1,3 @@
-import { readOperatorPrefs } from "@/lib/system/operator-prefs-repository";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import localFont from "next/font/local";
@@ -64,20 +63,25 @@ export async function generateMetadata(): Promise<Metadata> {
  * A read that throws leaves the rail expanded, which is the state a first-boot
  * install has anyway.
  */
-function readRailCollapsed(): boolean {
+async function readRailCollapsed(): Promise<boolean> {
+  // Static error-page rendering runs without an operator request. Next sets
+  // NEXT_PHASE in its build worker before that render; do not even import the
+  // SQLite repository there, because its module initialisation touches data/.
+  if (process.env.NEXT_PHASE === "phase-production-build") return false;
   try {
+    const { readOperatorPrefs } = await import("@/lib/system/operator-prefs-repository");
     return readOperatorPrefs()["sidebar.collapsed"] === true;
   } catch {
     return false;
   }
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const railCollapsed = readRailCollapsed();
+  const railCollapsed = await readRailCollapsed();
   return (
     <html
       lang="en"

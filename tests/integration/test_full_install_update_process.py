@@ -246,9 +246,17 @@ class Harness:
 
     def copy_workspace(self, dest: Path) -> None:
         dest.mkdir(parents=True, exist_ok=True)
+        has_alternates = (self.repo_root / ".git" / "objects" / "info" / "alternates").is_file()
+        if has_alternates:
+            # A Windows local clone can borrow objects through an absolute host
+            # path. That path cannot be resolved inside the Linux container.
+            subprocess.run(
+                ["git", "clone", "--no-local", "--no-hardlinks", "--no-checkout", "--quiet", str(self.repo_root), str(dest)],
+                check=True,
+            )
 
         def _ignore(_path: str, names: list[str]) -> list[str]:
-            return [n for n in names if n in COPY_IGNORE_DIR_NAMES]
+            return [n for n in names if n in COPY_IGNORE_DIR_NAMES or (has_alternates and n == ".git")]
 
         shutil.copytree(
             self.repo_root,
@@ -457,7 +465,7 @@ class Harness:
         )
 
     def seed_ch_data_rich(self, container: str, data_root: str) -> None:
-        """Runtime CH_DATA_DIR with sentinel JSON + SQLite from prebuild."""
+        """Runtime CH_DATA_DIR with sentinel JSON + explicitly seeded SQLite."""
         dr = data_root.replace("'", "'\"'\"'")
         self.docker_exec(
             container,
@@ -470,11 +478,11 @@ class Harness:
             f"printf '%s\\n' '{MARKER_USER_CH}' > '{dr}/USER_OWNED_MARKER.txt'\n"
             "cd /workspace\n"
             "npm ci\n"
-            "HERMES_HOME=/tmp/ch-prebuild-no-push npm run prebuild\n"
-            # prebuild emits patterstage.db on a clean tree, but falls back to an
-            # existing control-hub.db (the repo may ship one) — copy whichever it
-            # produced, seeded under the LEGACY name so the scenario simulates a
-            # pre-rename install that the update migrates.
+            "PS_DATA_DIR=/workspace/data HERMES_HOME=/tmp/ch-prebuild-no-push npm run db:migrate\n"
+            "PS_DATA_DIR=/workspace/data HERMES_HOME=/tmp/ch-prebuild-no-push npm run db:seed\n"
+            # The explicit migration and seed path emits patterstage.db on a
+            # clean tree; copy it under the legacy name to simulate a pre-rename
+            # install that the update must back up and migrate.
             f"cp -f data/patterstage.db '{dr}/control-hub.db' 2>/dev/null || "
             f"cp -f data/control-hub.db '{dr}/control-hub.db'\n",
         )

@@ -1,6 +1,6 @@
 // scripts/tooling/gate.mjs — the whole gate, by exit code, in one command.
 //
-//   npm run gate                     the nine steps, in order, stopping at the first red
+//   npm run gate                     the ten steps, in order, stopping at the first red
 //   npm run gate -- --only lint,tsc  a subset, by step name
 //   npm run gate -- --from build     skip ahead, for a re-run after a fix
 //   npm run gate -- --rerun-alone e2e/composer.spec.ts   one spec, on its own
@@ -39,6 +39,7 @@ export const STEPS = [
   { name: "knip", command: "npm run lint:knip", why: "files, exports and dependencies nothing reaches" },
   { name: "canary", command: "npm run canary:check", why: "the output surfaces that must not move unnoticed" },
   { name: "build", command: "npm run build", why: "the production build" },
+  { name: "build-purity", command: "npm run test:build-purity", why: "build leaves isolated and checkout data unchanged" },
   { name: "e2e", command: "npm run test:e2e", why: "Playwright, both projects" },
   { name: "census", command: "npm run census", why: "the design census against its baseline" },
   { name: "census-lines", command: "npm run census:lines", why: "the line census, shrink-only" },

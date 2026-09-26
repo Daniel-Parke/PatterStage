@@ -50,7 +50,7 @@ Three floor bands apply, engine above service above UI: `src/lib/` carries the h
 - [`tests/unit/db-baseline.test.ts`](../../tests/unit/db-baseline.test.ts): in-memory schema smoke.
 - [`tests/unit/db-upgrade.integration.test.ts`](../../tests/unit/db-upgrade.integration.test.ts): on-disk legacy DB → `rebuildToBaseline` preserves credentials, models, cron, sessions.
 
-**Dual DB paths:** `npm run prebuild` writes `{repo}/data/patterstage.db`; runtime uses `{PS_DATA_DIR}/patterstage.db` (default `~/patterstage/data/patterstage.db`). Prebuild rebuilds the repo DB from `001_baseline.sql` when `schema_version` is **below** the baseline (**v3**), then applies the migrations on top; a DB already at or above the baseline is upgraded in place, not rebuilt.
+**SQLite fixture:** Set `PS_DATA_DIR` to an isolated directory, then run `npm run db:migrate` and `npm run db:seed` explicitly. `npm run build` does not create or change a database. `npm run test:build-purity` checks empty and populated fixtures, including SQLite sidecars and the checkout's `data/` directory.
 
 ### Bootstrap test gate
 
@@ -62,7 +62,9 @@ Playwright starts the app with **`npm run start`** (production server), not `nex
 
 ```bash
 # Recommended on a fresh clone or after schema changes (SQLite migrations):
-npm run prebuild
+export PS_DATA_DIR=/path/to/isolated/data
+npm run db:migrate
+npm run db:seed
 npm run build
 npm run test:e2e
 ```
@@ -159,7 +161,7 @@ The runners exit non-zero on any failed assertion. **Neither runner is wired int
 
 ## Continuous integration
 
-Primary pipeline: [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml). The `build-test-ubuntu` job runs, in order: install, `prebuild`, the step **labelled ESLint**, the **output canary** (`npm run canary:check`), **knip** (`npm run lint:knip`), the Hermes-path grep gate, `tsc --noEmit`, Jest coverage, the production build, then a second recorded canary run over the rendered surfaces. Alongside it: `shell-custom-scripts`, `build-test-macos` (build + test), `boot-smoke` (Ubuntu and macOS), `e2e-smoke` (Playwright with `PLAYWRIGHT_SMOKE=1`), `install-harness`, and a **`docker-image`** job that runs **`docker build -f Dockerfile .`** then **`tests/scripts/docker-deploy-api-smoke.sh`** (GET version check + POST restart + HTTP still up) so the production image and dashboard deploy path do not silently rot. Separate named steps mean the first failing one is obvious in the Actions UI. Actions use **`actions/checkout@v5`** and **`actions/setup-node@v5`** (action runtime on Node 24 per upstream; app build still uses `node-version: "20"` in the workflow).
+Primary pipeline: [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml). The `build-test-ubuntu` job runs, in order: install, explicit migration in an isolated CI data directory, the step **labelled ESLint**, the **output canary** (`npm run canary:check`), **knip** (`npm run lint:knip`), the Hermes-path grep gate, `tsc --noEmit`, Jest coverage, the production build, the build-purity check, then a second recorded canary run over the rendered surfaces. Alongside it: `shell-custom-scripts`, `build-test-macos` (build + test + build purity), `boot-smoke` (Ubuntu and macOS), `e2e-smoke` (Playwright with `PLAYWRIGHT_SMOKE=1`), `install-harness`, and a **`docker-image`** job that runs **`docker build -f Dockerfile .`** then **`tests/scripts/docker-deploy-api-smoke.sh`** (GET version check + POST restart + HTTP still up) so the production image and dashboard deploy path do not silently rot. Separate named steps mean the first failing one is obvious in the Actions UI. Actions use **`actions/checkout@v5`** and **`actions/setup-node@v5`** (action runtime on Node 24 per upstream; app build still uses `node-version: "20"` in the workflow).
 
 **The step named "ESLint" is not eslint.** It runs `npm run lint`, which chains twelve gates: `check-agent-files`, `check-doc-links`, the docs check (`scripts/docs/check.mts`), `check-derived-views`, `check-read-only-guards`, `check-icon-button-names`, `check-form-control-names`, `design-lint`, `contrast-check`, `coverage-floor-check`, then `eslint . --max-warnings 0`, then `typecheck:tests`. A broken relative link in `docs/`, a colour literal, a coverage floor or a type error in a test file all fail that step. `canary:check` and `lint:knip` are **not** in that chain and are separate blocking steps, so a green local `npm run lint` is not by itself a green CI.
 

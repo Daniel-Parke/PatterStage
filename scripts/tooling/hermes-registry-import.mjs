@@ -2,7 +2,7 @@
 // Idempotent import of Hermes config.yaml + .env into SQLite models/credentials.
 
 import { createHash, randomUUID } from "crypto";
-import { readFileSync, existsSync } from "fs";
+import { readFileSync, existsSync, statSync } from "fs";
 import { join } from "path";
 import { homedir } from "os";
 import { fileURLToPath } from "url";
@@ -173,13 +173,8 @@ export function importHermesRegistry(database, options = {}) {
   }
 
   let modelsUpserted = 0;
-  // This runs at PREBUILD, against a database that has only the v001 baseline
-  // and is pinned at schema_version 3: the TypeScript ladder has not run, so
-  // models.origin does not exist yet and naming it would throw "no such
-  // column", be swallowed, and ship a database with no models at all. When the
-  // columns are absent the script writes today's set and migration 039's
-  // backfill classifies these rows (they carry import_key) on the app's first
-  // open (T-0100).
+  // Explicit import normally follows migration. Older databases can lack
+  // models.origin; migration 039 classifies imported rows by import_key.
   const hasOrigin = columnExists(database, "models", "origin");
   const upsertAll = database.transaction(() => {
     for (const [, m] of modelsToUpsert) {
@@ -257,6 +252,7 @@ export function importHermesRegistry(database, options = {}) {
     const prov = envToProvider.get(envVar);
     if (!prov || !usedProviders.has(prov) || !apiKey) continue;
     const existing = database.prepare("SELECT id, api_key FROM credentials WHERE provider = ?").get(prov);
+    const credentialId = existing?.id ?? randomUUID();
     const ts = new Date().toISOString();
     if (existing) {
       if (existing.api_key !== apiKey) {
@@ -270,8 +266,13 @@ export function importHermesRegistry(database, options = {}) {
           "INSERT INTO credentials (id,label,provider,api_key,key_hint,created_at,updated_at)" +
             " VALUES (?,?,?,?,?,?,?)"
         )
-        .run(randomUUID(), `${prov} key`, prov, apiKey, keyHint(apiKey), ts, ts);
+        .run(credentialId, `${prov} key`, prov, apiKey, keyHint(apiKey), ts, ts);
     }
+    // An import owns only rows with import_key. Keep an operator-selected
+    // credential on any model that already has one.
+    database.prepare(
+      "UPDATE models SET credentials_id = ? WHERE provider = ? AND import_key IS NOT NULL AND credentials_id IS NULL"
+    ).run(credentialId, prov);
     credsUpserted++;
   }
 
@@ -289,10 +290,13 @@ if (isMain) {
   const { join: joinPath, dirname } = await import("path");
   const { fileURLToPath: toPath } = await import("url");
   const scriptDir = dirname(toPath(import.meta.url));
-  const dataDir = joinPath(scriptDir, "..", "..", "data");
+  const dataDir = process.env.PS_DATA_DIR || process.env.CH_DATA_DIR ||
+    process.env.CONTROL_HUB_DATA_DIR || joinPath(scriptDir, "..", "..", "data");
   const nextDb = joinPath(dataDir, "patterstage.db");
   const legacyDb = joinPath(dataDir, "control-hub.db");
-  const defaultDb = !existsSync(nextDb) && existsSync(legacyDb) ? legacyDb : nextDb;
+  const defaultDb = existsSync(nextDb) && existsSync(legacyDb)
+    ? (statSync(legacyDb).size > statSync(nextDb).size ? legacyDb : nextDb)
+    : (!existsSync(nextDb) && existsSync(legacyDb) ? legacyDb : nextDb);
   const dbPath = process.argv[2] ?? defaultDb;
 
   if (!existsSync(dbPath)) {
@@ -301,12 +305,14 @@ if (isMain) {
   }
 
   const db = new Database(dbPath);
-  db.pragma("journal_mode = WAL");
   try {
+    db.pragma("journal_mode = WAL");
     importHermesRegistry(db);
-  } catch (err) {
-    console.warn(`⚠  Hermes model import skipped: ${err}`);
-    process.exit(0);
+  } catch {
+    // YAML parser errors can include source lines. Never echo those lines or
+    // provider keys from Hermes config into deployment logs.
+    console.error("Hermes model import failed; config or database could not be read.");
+    process.exitCode = 1;
   } finally {
     db.close();
   }

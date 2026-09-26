@@ -33,14 +33,14 @@ Quick lookup for PatterStage and Hermes paths. Set values in `.env.local` (creat
 | `PS_DB_BACKUP_DIR` | `{PS_DATA_DIR}/backups/db` | Where database snapshots are written and listed from (Settings > System, and the snapshot taken before a restore or a purge) |
 | `PORT` | `42069` (or first free in 42069, 42100 at setup) | Next.js listen port |
 
-## Dual SQLite databases
+## SQLite data and production builds
 
 | Location | When written | Notes |
 |----------|--------------|-------|
-| `{repo}/data/patterstage.db` | `npm run prebuild` (before `next build`) | Dev/CI convenience. Deleted and rebuilt from the baseline **only** when `schema_version < 3`; migrations then carry it up to head (`MIGRATION_HEAD_SCHEMA_VERSION` in `src/lib/db-schema.ts`). A repo DB already at or above the baseline survives a build untouched. |
-| `{PS_DATA_DIR}/patterstage.db` | Runtime API + `npm run db:migrate` | **Production source of truth** on the host |
+| `{repo}/data/patterstage.db` | Only when explicitly selected as `PS_DATA_DIR` | A development database; `npm run build` and its `prebuild` hook do not create or migrate it. |
+| `{PS_DATA_DIR}/patterstage.db` | Runtime API + `npm run db:migrate` | **Production source of truth** on the host. Set `PS_DATA_DIR` before migration and seed. |
 
-`ps-deploy update` runs `npm run build` (prebuild on repo DB) then `db:migrate` on `PS_DATA_DIR`. Use the same `PS_DATA_DIR` as the running server when troubleshooting.
+`ps-deploy update` builds without touching SQLite, backs up an existing `PS_DATA_DIR` database, then migrates and imports Hermes models. Use the same `PS_DATA_DIR` as the running server when troubleshooting.
 
 ## Install and setup
 

@@ -1,0 +1,38 @@
+{
+  "task": "T-0161",
+  "why": "The explicit database lifecycle and new gate step must remain visible to their independent oracles.",
+  "mutants": [
+    {
+      "id": "m1-prebuild-opens-database",
+      "file": "package.json",
+      "anchor": "\"prebuild\": \"node scripts/docs/build-site.mjs --help-only\"",
+      "replacement": "\"prebuild\": \"node scripts/tooling/prebuild-db.mjs && node scripts/docs/build-site.mjs --help-only\"",
+      "tests": ["tests/unit/b15-docs-pipeline-is-wired.test.ts"],
+      "why": "The closed pipeline oracle must reject restoring a database-writing prebuild hook."
+    },
+    {
+      "id": "m2-hermes-prefers-legacy-data",
+      "file": "scripts/tooling/hermes-registry-import.mjs",
+      "anchor": "const dataDir = process.env.PS_DATA_DIR || process.env.CH_DATA_DIR ||",
+      "replacement": "const dataDir = process.env.CH_DATA_DIR || process.env.PS_DATA_DIR ||",
+      "tests": ["tests/unit/t0161-hermes-import.test.ts"],
+      "why": "The explicit importer must target PS_DATA_DIR when the legacy alias also exists."
+    },
+    {
+      "id": "m3-backup-failure-continues",
+      "file": "scripts/lib/ps-migrate.sh",
+      "anchor": "ps_err \"Database backup failed; refusing schema migration.\"\n      return 1",
+      "replacement": "ps_err \"Database backup failed; refusing schema migration.\"\n      return 0",
+      "tests": ["tests/unit/t0161-backup-order.test.ts"],
+      "why": "A failed backup must stop the update before any migration command."
+    },
+    {
+      "id": "m4-gate-omits-build-purity",
+      "file": "scripts/tooling/gate.mjs",
+      "anchor": "{ name: \"build-purity\", command: \"npm run test:build-purity\", why: \"build leaves isolated and checkout data unchanged\" }",
+      "replacement": "{ name: \"build\", command: \"npm run test:build-purity\", why: \"build leaves isolated and checkout data unchanged\" }",
+      "tests": ["tests/unit/k2-the-discipline-is-in-the-repo.test.ts"],
+      "why": "The complete gate must expose the build-purity step in the prescribed order."
+    }
+  ]
+}

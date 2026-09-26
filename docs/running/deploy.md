@@ -37,7 +37,7 @@ Override the host port in Docker Compose with **`PORT`** (see `docker-compose.ym
 | `scripts/bootstrap/` | **`install.sh`** (clone or `--in-repo`), **`setup.sh`** and its Node twin **`setup.mjs`**, **`stop.sh`**, **`backup-hermes-config.sh`**, **`setup-hindsight.sh`**, Python helper for Hindsight |
 | `scripts/application/` | **`ps-deploy.sh`**, the Unix CLI entry (`update`, `restart`, `rebuild`; optional `--branch`). It is one `exec node …` line: the deploy implementation is **`scripts/tooling/ps-deploy.mjs`**, which the dashboard spawns directly. |
 | `scripts/lib/` | Shared bash modules (`ps-deploy-status.sh`, `ps-migrate.sh`, `ps-rename-migrate.sh`, Hermes profile templates, dotenv, port helpers). The deploy implementation used to live here as `ps-deploy-impl.sh`; it was ported to Node and that file is gone. |
-| `scripts/tooling/` | **`ps-deploy.mjs`** (the deploy runner), **`prebuild-db.mjs`**, **`discover-agents.mjs`**, **`generate-json-schema.ts`** (also run via `npm run prebuild`, `npm run discover-hermes`, `npm run generate:schema-json`) |
+| `scripts/tooling/` | **`ps-deploy.mjs`** (the deploy runner), **`discover-agents.mjs`**, **`generate-json-schema.ts`** (run via `npm run discover-hermes` and `npm run generate:schema-json`) |
 | `scripts/hardware/` | Bundled host scripts. **Every** `.sh` and `.mjs` here is copied into **`PS_DATA_DIR/scripts`** when a file of that name is missing, during **`scripts/bootstrap/setup.sh`**. Behaviour: **[SYSTEM-CRON.md](host-scheduling.md)**. |
 | `data/seed/` | Professional catalog (profiles, template packs); seeded via `npm run db:seed` / `ps-deploy update` (see [CATALOG_AND_PROFILES.md](../reference/catalog-and-profiles.md)) |
 | `scripts/git-hooks/` | Optional Git hooks (see [CONTRIBUTING.md](../CONTRIBUTING.md)) |
@@ -136,10 +136,10 @@ Mount `PS_DATA_DIR` (and optionally `PS_SCRIPTS_DIR` / `PS_HARDWARE_LOG_DIR` if 
 
 ## Database migrate + professional catalog seed
 
-After **`npm run build`**, **`setup.sh`**, and **`ps-deploy update` / `rebuild`**:
+`npm run build` does not write SQLite. On a fresh manual install, set `PS_DATA_DIR` and run these commands explicitly. `setup.sh` and `ps-deploy update` / `rebuild` back up an existing database before migration or import.
 
 1. **`npm run db:migrate`**: SQLite migrations on `PS_DATA_DIR/patterstage.db`
-2. **`npm run db:seed`**: upsert categories, catalog templates, and `agent_profiles`, then push profiles to **`HERMES_HOME/profiles/<slug>/`**
+2. **`npm run db:seed`**: import Hermes models and credentials when configured, upsert categories, catalog templates, and `agent_profiles`, then push profiles to **`HERMES_HOME/profiles/<slug>/`**
 
 PatterStage SQLite is the **source of truth** for professional profiles; Hermes disk is the **runtime target** for missions/cron. Restore defaults at **Agent → Settings → Restore** (`/agent/settings/restore`), which snapshots the database before any overwrite.
 

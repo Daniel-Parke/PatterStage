@@ -1,9 +1,9 @@
 {
   "measuredAt": "2026-09-26",
   "counts": {
-    "srcLines": 100983,
-    "testLines": 125294,
-    "scriptsLines": 13278,
+    "srcLines": 100987,
+    "testLines": 125795,
+    "scriptsLines": 13314,
     "srcRepeatedWindowLines": 1000,
     "testRepeatedWindowLines": 4406,
     "routesWithTryCatch": 18,
@@ -380,6 +380,21 @@
       "measuredAt": "2026-09-26",
       "rise": "testLines rose from 125217 to 125294",
       "reason": "T-0157: independently authored four-case black-box framework auth and framing oracle"
+    },
+    {
+      "measuredAt": "2026-09-26",
+      "rise": "srcLines rose from 100983 to 100987",
+      "reason": "T-0161: independent build-purity, Hermes import, backup and CI oracles; explicit migration wiring"
+    },
+    {
+      "measuredAt": "2026-09-26",
+      "rise": "testLines rose from 125294 to 125795",
+      "reason": "T-0161: independent build-purity, Hermes import, backup and CI oracles; explicit migration wiring"
+    },
+    {
+      "measuredAt": "2026-09-26",
+      "rise": "scriptsLines rose from 13278 to 13314",
+      "reason": "T-0161: independent build-purity, Hermes import, backup and CI oracles; explicit migration wiring"
     }
   ]
 }

@@ -77,7 +77,7 @@ page from the navigation matrix; deriving them removed the class of bug. Do not 
 - First-time setup: `bash scripts/bootstrap/setup.sh` (writes `.env.local`, picks a free **PORT** in **42069, 42100**, sets LAN dev origins).
 - `npm run dev` / `npm run start` read `PORT` from the environment; the UI uses same-origin `/api/...` so it does not hardcode a port.
 - **Playwright:** the 3000 pin is in the npm script, not in CI. `npm run test:e2e` is `cross-env PORT=3000 playwright test`, so it forces 3000 locally and in CI alike, over any `PORT` you exported. `.env.local`'s `PORT` never reaches the E2E suite: nothing in that chain loads it, and `playwright.config.ts` additionally passes `-p` to the server it starts so the `next start` child cannot pick up a different one either. To use another port, run `npx playwright test` directly with `PORT` set.
-- Fresh DB before E2E: `npm run prebuild`. Full detail: **[TESTING.md](contributing/testing.md)** (Jest layout, smoke flag, and why `tests/e2e/app-routes.ts` needs no syncing).
+- Fresh isolated DB before E2E: set `PS_DATA_DIR`, then run `npm run db:migrate` and `npm run db:seed`. Full detail: **[TESTING.md](contributing/testing.md)** (Jest layout, smoke flag, and why `tests/e2e/app-routes.ts` needs no syncing).
 
 ## Git hooks and CI
 

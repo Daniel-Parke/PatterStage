@@ -243,10 +243,18 @@ source "$SCRIPT_DIR/../lib/ps-log.sh"
 # shellcheck source=../lib/ps-migrate.sh
 source "$SCRIPT_DIR/../lib/ps-migrate.sh"
 if ! ps_migrate_run "$REPO_ROOT" "$PS_DATA_ROOT"; then
-  echo "⚠  Database migration reported issues (a backup was retained) — see output above"
+  echo "Database backup or migration failed — setup stopped before import and seed."
+  exit 1
 fi
 
 if [ -f "$HERMES_HOME/config.yaml" ]; then
+  echo "Importing Hermes models and credentials after database backup…"
+  if PS_DATA_DIR="$PS_DATA_ROOT" HERMES_HOME="$HERMES_HOME" node "$REPO_ROOT/scripts/tooling/hermes-registry-import.mjs"; then
+    echo "✓ Hermes model registry imported"
+  else
+    echo "Hermes model registry import failed — setup stopped before catalog seed."
+    exit 1
+  fi
   echo "Importing existing Hermes state into PatterStage SQLite…"
   if PS_DATA_DIR="$PS_DATA_ROOT" HERMES_HOME="$HERMES_HOME" npx tsx "$REPO_ROOT/scripts/tooling/import-hermes-state.ts"; then
     echo "✓ Hermes state imported (root, profiles, skills)"

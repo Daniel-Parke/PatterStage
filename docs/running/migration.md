@@ -46,7 +46,7 @@ The internal operational identifiers were renamed to PatterStage. **Existing ins
 - **`.env.local`** is loaded under both prefixes: a legacy `CH_DATA_DIR=` line is bridged to `PS_DATA_DIR` automatically.
 - **Old `ch-*.sh` paths** remain as thin shims that forward to the `ps-*.sh` scripts, so existing host-cron entries keep firing.
 
-**What the first `ps-deploy.sh update` does automatically** (idempotent; DB backed up first by the normal migration step):
+**What the first `ps-deploy.sh update` does automatically** (idempotent; DB backed up before the rename or migration):
 
 1. Renames `control-hub.db` → `patterstage.db` (plus `-wal` / `-shm`) in place.
 2. Rewrites `.env.local` `CH_*` keys → `PS_*` and records a `PS_RENAMED=1` marker.
@@ -68,7 +68,7 @@ It moves the repo + data dir, fixes `.env.local` paths, renames the DB, and prin
 - **The head is a constant, not a number typed into prose.** It is `MIGRATION_HEAD_SCHEMA_VERSION` in `src/lib/db-schema.ts`, and `tests/unit/run-migrations-upgrade.integration.test.ts` asserts the chain actually reaches it, that it equals the last applier's own gate, that the last gate sits exactly one above the gate it displaced, and that it equals the highest-numbered file in `src/lib/db/migrations/`. This section claimed 13, and two others claimed 11, for a long stretch while the code climbed well past both, and a later pass left 33 in two further places after the chain had already reached 34. That is what the constant and those assertions exist to prevent, and it is why the head is no longer written out anywhere on this page.
 - **A fresh database converges over several passes.** `runMigrations()` applies the baseline and returns; the incremental appliers only run on later passes. `getDb()` loops until the version stops moving, so one boot still reaches the head.
 - **Idempotent.** Re-running migrations is always safe: appliers gate on the stored version and no-op when already applied.
-- **Backed up first.** Every migration through `setup.sh`, `ps-deploy.sh update|rebuild`, or `ps-migrate.sh` snapshots `patterstage.db` → **`patterstage.db.pre-migrate-<timestamp>.bak`** under `PS_DATA_DIR` before touching anything.
+- **Backed up first.** Every migration through `setup.sh`, `ps-deploy.sh update|rebuild`, or `ps-migrate.sh` snapshots the existing `patterstage.db` (or legacy `control-hub.db`) and its sidecars under `PS_DATA_DIR` before touching anything. A failed backup stops migration. `npm run db:migrate` is a direct command and does not take this backup for you.
 
 ## Adding a schema change: the going-forward rule
 

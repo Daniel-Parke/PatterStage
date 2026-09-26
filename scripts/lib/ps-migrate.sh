@@ -30,8 +30,8 @@ ps_backup_db() {
   ts="$(date +%Y%m%dT%H%M%S 2>/dev/null || date +%s)"
   bak="${db}.pre-migrate-$ts.bak"
   cp "$db" "$bak" || return 1
-  [ -f "$db-wal" ] && cp "$db-wal" "$bak-wal" 2>/dev/null || true
-  [ -f "$db-shm" ] && cp "$db-shm" "$bak-shm" 2>/dev/null || true
+  if [ -f "$db-wal" ]; then cp "$db-wal" "$bak-wal" || return 1; fi
+  if [ -f "$db-shm" ]; then cp "$db-shm" "$bak-shm" || return 1; fi
   printf '%s' "$bak"
 }
 
@@ -52,8 +52,11 @@ ps_migrate_run() {
   before_baseline="${before_baseline:-0}"
 
   if [ -f "$db" ]; then
-    bak="$(ps_backup_db "$data_dir" || true)"
-    if [ -n "$bak" ]; then ps_ok "Backed up database → $bak"; else ps_warn "DB backup failed (continuing)"; fi
+    if ! bak="$(ps_backup_db "$data_dir")"; then
+      ps_err "Database backup failed; refusing schema migration."
+      return 1
+    fi
+    ps_ok "Backed up database → $bak"
   else
     ps_info "No existing database to back up (fresh install)."
   fi

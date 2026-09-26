@@ -74,8 +74,11 @@ jobs:
       - name: Install dependencies (with cache reset retry)
         run: |
           npm ci || (npm cache clean --force && npm ci)
-      - name: Run database migrations
-        run: npm run prebuild
+      - name: Migrate isolated CI database
+        run: npm run db:migrate
+        env:
+          PS_DATA_DIR: ${{ runner.temp }}/patterstage-ci-data
+          HERMES_HOME: ${{ runner.temp }}/patterstage-ci-hermes
       - name: ESLint
         run: npm run lint
       # `npm run lint` already runs docs:check, which reads the front matter and
@@ -100,6 +103,8 @@ jobs:
         run: npm run test:coverage
       - name: Next.js production build
         run: npm run build
+      - name: Build leaves databases unchanged
+        run: npm run test:build-purity
       # The rendered surface, which only exists once the build has run: the
       # normalised HTML of all 27 prerendered routes plus the build's own route
       # list and redirects. It is NOT held against a committed golden, because
@@ -143,8 +148,11 @@ jobs:
       - name: Install dependencies (with cache reset retry)
         run: |
           npm ci || (npm cache clean --force && npm ci)
-      - name: Run database migrations
-        run: npm run prebuild
+      - name: Migrate isolated CI database
+        run: npm run db:migrate
+        env:
+          PS_DATA_DIR: ${{ runner.temp }}/patterstage-ci-data
+          HERMES_HOME: ${{ runner.temp }}/patterstage-ci-hermes
       - name: ESLint
         run: npm run lint
       - uses: ./.github/actions/forbid-hermes-paths-in-api
@@ -160,6 +168,8 @@ jobs:
         # under src/app/fonts/, so this build touches no network and a failure
         # here is a real failure.
         run: npm run build
+      - name: Build leaves databases unchanged
+        run: npm run test:build-purity
 
   # Operational smoke: the OS-seam primitives (detached spawn
   # survival, port probing, process kill) + a bundled hardware .mjs, on Linux +
@@ -220,8 +230,11 @@ jobs:
             playwright-${{ runner.os }}-
       - name: Install Playwright Chromium
         run: npx playwright install chromium
-      - name: Run database migrations
-        run: npm run prebuild
+      - name: Migrate isolated CI database
+        run: npm run db:migrate
+        env:
+          PS_DATA_DIR: ${{ runner.temp }}/patterstage-ci-data
+          HERMES_HOME: ${{ runner.temp }}/patterstage-ci-hermes
       - name: Next.js production build
         run: npm run build
       - name: E2E smoke
@@ -280,8 +293,11 @@ jobs:
             playwright-${{ runner.os }}-
       - name: Install Playwright Chromium
         run: npx playwright install chromium
-      - name: Run database migrations
-        run: npm run prebuild
+      - name: Migrate isolated CI database
+        run: npm run db:migrate
+        env:
+          PS_DATA_DIR: ${{ runner.temp }}/patterstage-ci-data
+          HERMES_HOME: ${{ runner.temp }}/patterstage-ci-hermes
       - name: Next.js production build
         run: npm run build
       # No PLAYWRIGHT_SMOKE. That is the entire difference from e2e-smoke, and

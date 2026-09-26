@@ -203,8 +203,8 @@ function run(cmd, args, base, opts = {}) {
   }
 }
 // node --import tsx <script.ts> [args]  → argv-safe, no npm/npx/shell
-function runTsx(scriptRel, args, base) {
-  return run(process.execPath, ["--import", "tsx", join(SCRIPTS_ROOT, scriptRel), ...args], base);
+function runTsx(scriptRel, args, base, opts = {}) {
+  return run(process.execPath, ["--import", "tsx", join(SCRIPTS_ROOT, scriptRel), ...args], base, opts);
 }
 
 // ── rename migration (port of ps-rename-migrate.sh) ─────────────
@@ -268,12 +268,12 @@ function backupDb(dataDir) {
 }
 
 function migrateDb(dataDir) {
-  backupDb(dataDir);
   const env = { PS_DATA_DIR: dataDir };
   const okSchema = run(npmBin(), ["run", "db:migrate"], "ps-build.log", { env });
+  if (!okSchema) return false;
   // legacy data migration (cron_jobs → schedules); non-fatal
   run(process.execPath, [join(SCRIPTS_TOOLING, "migrate-to-runtime.mjs"), "--apply"], "ps-build.log", { env });
-  return okSchema;
+  return true;
 }
 
 // ── port resolution ─────────────────────────────────────────────
@@ -426,22 +426,40 @@ async function runBuildAndMigrate(action, base, branch) {
       if (!gitOk(["checkout", branch, "--quiet"])) fail(action, "git", `Branch '${branch}' not found locally`, 1, "ps-restart.log");
     }
   }
-  npmInstallIfNeeded(base);
+  if (!npmInstallIfNeeded(base)) fail(action, "install", `Dependency install failed — see ${base}`, 1, base);
   statusWrite("running", action, "build", "Building production bundle…", "", base);
   log(base, "Building production bundle…");
   if (!run(npmBin(), ["run", "build"], base)) fail(action, "build", `Build failed — see ${base}`, 1, base);
   log(base, "Build successful");
 
   const dataDir = resolveDataDir();
+  // The build is database-free. Snapshot the existing file before the legacy
+  // rename or any schema/import step; a failed backup stops the update.
+  if (existsSync(resolveDbPath(dataDir)) && !backupDb(dataDir)) {
+    fail(action, "backup", `Database backup failed — see ${base}`, 1, base);
+  }
   log(base, "Applying PatterStage rename migration (DB + .env.local)…");
   renameMigrate(dataDir, APP_DIR);
-  log(base, "Backing up + migrating database…");
-  migrateDb(dataDir);
+  log(base, "Migrating database after backup…");
+  if (!migrateDb(dataDir)) fail(action, "migrate", `Database migration failed — see ${base}`, 1, base);
 
   const hh = hermesHome();
-  if (existsSync(join(hh, "config.yaml"))) runTsx("tooling/import-hermes-state.ts", [], base);
-  runTsx("tooling/seed-catalog.ts", ["--merge"], base);
-  runTsx("tooling/ensure-hermes-model-sync.ts", [], base);
+  const seedEnv = { PS_DATA_DIR: dataDir, HERMES_HOME: hh };
+  if (existsSync(join(hh, "config.yaml"))) {
+    if (!run(process.execPath, [join(SCRIPTS_TOOLING, "hermes-registry-import.mjs")], base, { env: seedEnv })) {
+      fail(action, "import", `Hermes model import failed — see ${base}`, 1, base);
+    }
+    if (!runTsx("tooling/import-hermes-state.ts", [], base, { env: seedEnv })) {
+      fail(action, "import", `Hermes state import failed — see ${base}`, 1, base);
+    }
+  }
+  if (!runTsx("tooling/seed-catalog.ts", ["--merge"], base, { env: seedEnv })) {
+    fail(action, "seed", `Catalog seed failed — see ${base}`, 1, base);
+  }
+  if (existsSync(join(hh, "config.yaml")) &&
+      !runTsx("tooling/ensure-hermes-model-sync.ts", [], base, { env: seedEnv })) {
+    fail(action, "sync", `Hermes model sync failed — see ${base}`, 1, base);
+  }
   mkdirSync(join(dataDir, "scripts"), { recursive: true });
   mkdirSync(join(dataDir, "logs"), { recursive: true });
   run(process.execPath, [join(SCRIPTS_TOOLING, "discover-agents.mjs")], base, { env: { PS_DATA_DIR: dataDir } });
