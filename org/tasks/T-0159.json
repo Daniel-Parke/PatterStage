@@ -16,7 +16,7 @@
       "evidence": "declared side effect: sends-external; this batch pushes only dev"
     }
   ],
-  "status": "active",
+  "status": "done",
   "owner_session": "2026-09-26-refactor-foundations",
   "claims": [
     "org/tasks/T-0159.json",
@@ -34,7 +34,8 @@
   ],
   "timestamps": {
     "opened": "2026-09-26T17:52:30Z",
-    "updated": "2026-09-26T17:52:30Z"
+    "updated": "2026-09-26T18:32:23Z",
+    "closed": "2026-09-26T18:32:23Z"
   },
   "invariants": [
     "All 257 surviving and eight refuted preliminary findings retain their original identity and source reference.",
@@ -43,7 +44,7 @@
     "Historical task records, protected files, derived views and append-only ledgers are not hand-edited."
   ],
   "rollback": "Revert this batch's new ledger, addendum, checker and narrow decision addenda together; the historical review and protected set remain untouched.",
-  "verification": "",
-  "mutation": "",
-  "deviation": ""
+  "verification": "Red-first oracle committed at f3d81ccb (4/4 failed without the ledger and addendum). Focused K0/K6/T-0159 suite passed 42/42. Final candidate hashes matched the isolated validation clone. Its full nine-step gate exited 0 with treeMoved=false: lint, tsc, Jest (692/692 suites; 7087 passed, 3 skipped), Knip, canary, build, Playwright (272 passed, 24 skipped), design census (1 passed) and line census. Derived views match 159 task records and 75 manifest pages. The ledger checker accounts for 265 findings, 163 split OP dispositions and 107 source coverage bullets. The two script/test census rises are held with explicit T-0159 reasons; original reduction targets are unchanged.",
+  "mutation": "At implementation commit 2e47792d, both T-0159 mutants were KILLED by the named four-test oracle: deleting a preliminary finding identity and reversing the Select/Picker ruling. The unmodified oracle passed before the sweep. The sweep restored the files and git status was clean afterwards. T-0160 will strengthen the generic runner's kill attribution and restoration controls.",
+  "deviation": "The first complete Jest run exposed two integration failures: the new test and script lines exceeded the prior shrink-only census baseline, and the new folded questions lacked the answer marker required by K0. Both were corrected before the final gate. The first isolated-clone build failed because a node_modules junction pointed outside Turbopack's project root; a local npm ci in that clone fixed the validation environment. The full gate was rerun on the finished candidate. The ledger deliberately leaves current findings unverified and compound coverage bullets pending decomposition for T-0164; it does not claim Phase 1 complete."
 }
