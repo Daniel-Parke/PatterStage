@@ -23,7 +23,7 @@
         "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", "package.json",
         "scripts/tooling/prebuild-db.mjs", "scripts/tooling/hermes-registry-import.mjs",
         "scripts/tooling/gate.mjs", "scripts/tooling/ps-deploy.mjs", "scripts/bootstrap/setup.sh",
-        "scripts/lib/ps-migrate.sh",
+        "scripts/lib/ps-migrate.sh", ".github/workflows/ci.yml",
         "src/app/layout.tsx", "src/instrumentation.ts", "next.config.ts",
         "tests/integration/test_full_install_update_process.py",
         "tests/fixtures/mutants/T-0161.json", "scripts/tooling/line-census.baseline.json",

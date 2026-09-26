@@ -33,6 +33,7 @@
     "scripts/tooling/ps-deploy.mjs",
     "scripts/bootstrap/setup.sh",
     "scripts/lib/ps-migrate.sh",
+    ".github/workflows/ci.yml",
     "src/app/layout.tsx",
     "src/instrumentation.ts",
     "next.config.ts",
