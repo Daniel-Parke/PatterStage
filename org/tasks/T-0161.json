@@ -43,6 +43,7 @@
     "tests/unit/t0161-backup-order.test.ts",
     "tests/unit/b15-docs-pipeline-is-wired.test.ts",
     "tests/unit/k2-the-discipline-is-in-the-repo.test.ts",
+    "tests/unit/t0160-runner-contracts.test.ts",
     "tests/fixtures/mutants/T-0161.json",
     "scripts/tooling/line-census.baseline.json",
     "docs/contributing/testing.md",
