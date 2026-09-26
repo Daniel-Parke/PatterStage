@@ -83,7 +83,7 @@ describe("B15 · npm scripts", () => {
     // public/help/ is what B16 renders; it must exist before `next build` runs,
     // and it must never be committed.
     const { scripts } = pkg();
-    expect(scripts.prebuild).toContain("scripts/tooling/prebuild-db.mjs");
+    expect(scripts.prebuild).not.toMatch(/\b(?:prebuild-db|migrate-db|db:migrate|db:seed|hermes-registry-import|import-hermes-state|seed-catalog)\b/);
     expect(scripts.prebuild).toContain("scripts/docs/build-site.mjs");
   });
 
