@@ -1,0 +1,34 @@
+{
+  "id": "T-0160",
+  "intent": "Make the gate and mutation sweep reliable evidence producers: content-sensitive tree stamps, strict non-empty selections, distinct partial records, attributable mutation kills, passing controls and verified restoration.",
+  "declared": {
+    "capabilities": ["edit-tooling", "edit-tests", "git-push"],
+    "side_effects": ["sends-external"]
+  },
+  "mode": "high-assurance",
+  "tier_proposed": "R2",
+  "tier_ruled": "R1",
+  "reasons": [
+    {"factor": "boundary-contact", "tier_floor": "R1", "source": "declared", "evidence": "declared side effect: sends-external"}
+  ],
+  "status": "active",
+  "owner_session": "2026-09-26-refactor-foundations",
+  "claims": [
+    "org/tasks/T-0160.json", "scripts/tooling/gate.mjs", "scripts/tooling/mutation-sweep.mjs",
+    "tests/unit/t0160-runner-contracts.test.ts", "tests/fixtures/mutants/T-0160.json",
+    "playwright.config.ts", "scripts/tooling/line-census.baseline.json",
+    "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md"
+  ],
+  "timestamps": {"opened": "2026-09-26T19:25:00Z", "updated": "2026-09-26T19:25:00Z", "closed": null},
+  "invariants": [
+    "A full success record only describes all nine steps on one unchanged tree; partial and rerun evidence cannot replace it.",
+    "Unknown, absent and empty selectors fail before logs, caches or processes are touched; the gate never terminates a process it did not create.",
+    "A mutation kill requires a passing unmodified control, the intended tests to have run and an assertion failure attributable to the applied mutant.",
+    "Every mutation restores the exact pre-run bytes and modes in finally, even when execution fails; restoration and the final control are checked."
+  ],
+  "rollback": "Revert both runners, their oracle and manifest as one batch. The previous committed full-gate record remains untouched by partial evidence.",
+  "notes": "The EOS declaration-only router returned R1 for the declared sends-external effect, with no discrepancies. The operator proposed R2; this record voluntarily uses high-assurance R2 controls because runners certify all later batches. The actual diff is re-ruled upward at the gate. Existing T-0148 tests and four-outcome reporting remain binding.",
+  "verification": "",
+  "mutation": "",
+  "deviation": ""
+}
