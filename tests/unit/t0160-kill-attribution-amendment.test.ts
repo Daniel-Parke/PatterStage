@@ -32,7 +32,7 @@ describe("T-0160 mutation kill attribution amendment", () => {
   });
 
   it("still attributes a genuine Jest matcher failure to the assertion", () => {
-    const message = "Error: expect(received).toBe(expected)\n\nExpected: 1\nReceived: 2";
+    const message = "Error: expect(received).toBe(expected)\n\nExpected: 1\nReceived: 2\n    at Object.toBe (oracle.test.ts:1:1)";
     const run = failedJestRun(message, [{ matcherResult: {
       actual: 2,
       expected: 1,

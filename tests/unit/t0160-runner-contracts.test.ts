@@ -53,7 +53,7 @@ function jestReport(file: string, failed: boolean) {
     testResults: [{ name: file, status: failed ? "failed" : "passed", assertionResults: [{
       fullName: "the value",
       status: failed ? "failed" : "passed",
-      failureMessages: failed ? ["expect(received).toBe(expected)"] : [],
+      failureMessages: failed ? ["Error: expect(received).toBe(expected)\n\nExpected: 2\nReceived: 1\n    at Object.toBe (oracle.test.ts:1:1)"] : [],
       failureDetails: failed ? [{ matcherResult: {
         actual: 1,
         expected: 2,

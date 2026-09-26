@@ -28,7 +28,7 @@ describe("T-0160 structured mutation kill amendment", () => {
   it("requires a failed matcher result when error text begins with expect syntax", () => {
     // Given a real Jest matcher failure, the mutant has an attributable assertion kill.
     const matcherMessage = "expect(received).toBe(expected)\n\nExpected: 2\nReceived: 1";
-    const matcherRun = failedJestRun(matcherMessage, [{ matcherResult: {
+    const matcherRun = failedJestRun(`Error: ${matcherMessage}\n    at Object.toBe (oracle.test.ts:1:1)`, [{ matcherResult: {
       actual: 1,
       expected: 2,
       message: matcherMessage,
