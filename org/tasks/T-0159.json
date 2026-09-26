@@ -1,0 +1,47 @@
+{
+  "id": "T-0159",
+  "intent": "Record the operator's new rulings and make the preliminary review traceable. Link every original finding and coverage bullet to evidence, current status, and an accountable follow-up without treating the earlier recon's unsupported totals as complete.",
+  "declared": {
+    "capabilities": ["edit-org", "edit-tests", "edit-tooling", "git-push"],
+    "side_effects": ["sends-external"]
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {
+      "factor": "boundary-contact",
+      "tier_floor": "R1",
+      "source": "declared",
+      "evidence": "declared side effect: sends-external; this batch pushes only dev"
+    }
+  ],
+  "status": "active",
+  "owner_session": "2026-09-26-refactor-foundations",
+  "claims": [
+    "org/tasks/T-0159.json",
+    "org/reviews/2026-09-decision-register.md",
+    "org/reviews/2026-09-refactor-addendum.md",
+    "org/reviews/2026-09-evidence-ledger.jsonl",
+    "org/QUESTIONS.md",
+    "org/HANDOVER.md",
+    "scripts/tooling/review-ledger.mjs",
+    "tests/unit/k8-evidence-ledger.test.ts",
+    "org/TASKS.md",
+    "org/STATE.md"
+  ],
+  "timestamps": {
+    "opened": "2026-09-26T17:52:30Z",
+    "updated": "2026-09-26T17:52:30Z"
+  },
+  "invariants": [
+    "All 257 surviving and eight refuted preliminary findings retain their original identity and source reference.",
+    "All 107 original coverage bullets receive a stable reference and an explicit evidence status; compound bullets do not count as atomic investigations.",
+    "Every new operator ruling is recorded exactly as selected, and contradictions with older detail are named rather than silently erased.",
+    "Historical task records, protected files, derived views and append-only ledgers are not hand-edited."
+  ],
+  "rollback": "Revert this batch's new ledger, addendum, checker and narrow decision addenda together; the historical review and protected set remain untouched.",
+  "verification": "",
+  "mutation": "",
+  "deviation": ""
+}
