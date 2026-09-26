@@ -35,13 +35,39 @@
 // seeded.
 // ═══════════════════════════════════════════════════════════════
 
-import { rmSync } from "fs";
+import { existsSync, lstatSync, mkdirSync, realpathSync, rmSync } from "fs";
+import { spawnSync } from "child_process";
+import { tmpdir } from "os";
+import { dirname, join, resolve, sep } from "path";
+import { fileURLToPath } from "url";
+import Database from "better-sqlite3";
 
 // Passed by playwright.config.ts so the path has exactly one definition.
-const dataDir = process.argv[2];
+const root = resolve(fileURLToPath(new URL("../..", import.meta.url)));
+const dataDir = process.argv[2] ? resolve(process.argv[2]) : null;
+const fixtureId = "e2e-session-fixture";
 
 if (!dataDir) {
   console.error("[e2e prepare-data-dir] no data dir argument; refusing to guess");
+  process.exit(1);
+}
+
+// The only permitted wipe targets are this checkout's tmp/ and the OS temp
+// directory used by the fixture oracle. Resolve an existing junction before
+// deleting so a caller cannot point the test harness at operator data.
+const normalise = (path) => process.platform === "win32" ? path.toLowerCase() : path;
+const within = (path, base) => normalise(path).startsWith(normalise(base) + sep);
+const allowedRoots = [join(root, "tmp"), tmpdir()].map((path) => resolve(path));
+if (!allowedRoots.some((allowed) => within(dataDir, allowed))) {
+  console.error("[e2e prepare-data-dir] refusing a path outside an isolated temporary directory");
+  process.exit(1);
+}
+mkdirSync(dirname(dataDir), { recursive: true });
+const parent = realpathSync(dirname(dataDir));
+if (!allowedRoots.some((allowed) => within(dataDir, allowed) &&
+    (normalise(parent) === normalise(allowed) || within(parent, allowed))) ||
+    (existsSync(dataDir) && lstatSync(dataDir).isSymbolicLink())) {
+  console.error("[e2e prepare-data-dir] refusing a path outside an isolated temporary directory");
   process.exit(1);
 }
 
@@ -61,4 +87,29 @@ try {
   process.exit(1);
 }
 
-console.log(`[e2e prepare-data-dir] wiped ${dataDir}; server will boot onto a fresh, seeded DB`);
+mkdirSync(dataDir, { recursive: true });
+const migration = spawnSync(
+  process.execPath,
+  ["--import", "tsx", join(root, "scripts", "tooling", "migrate-db.ts")],
+  {
+    cwd: root,
+    env: { ...process.env, PS_DATA_DIR: dataDir, CH_DATA_DIR: dataDir },
+    encoding: "utf8",
+    timeout: 60_000,
+  },
+);
+if (migration.status !== 0) {
+  console.error(`[e2e prepare-data-dir] isolated schema migration failed (exit ${migration.status ?? "launch failure"})`);
+  process.exit(1);
+}
+
+const database = new Database(join(dataDir, "patterstage.db"));
+try {
+  database.prepare(`
+    INSERT INTO sessions (id, agent_type, source, title, started_at, ended_at, status)
+    VALUES (?, 'hermes', 'cli', 'E2E fixture session', ?, ?, 'completed')
+  `).run(fixtureId, "2026-01-01T00:00:00.000Z", "2026-01-01T00:01:00.000Z");
+} finally {
+  database.close();
+}
+console.log(`[e2e prepare-data-dir] fresh isolated database with session fixture ${fixtureId}`);

@@ -4,7 +4,6 @@ import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve, sep } from "node:path";
-import Database from "better-sqlite3";
 
 const root = join(__dirname, "..", "..");
 const fixtureId = "e2e-session-fixture";
@@ -28,13 +27,15 @@ describe("T-0150 · the e2e sessions fixture is hermetic", () => {
         expect(result.status).toBe(0);
         expect(existsSync(join(dataDir, "stale-marker"))).toBe(false);
         expect(existsSync(databasePath)).toBe(true);
-        const database = new Database(databasePath, { readonly: true });
-        try {
-          const rows = database.prepare("SELECT id, source, status FROM sessions ORDER BY id").all();
-          expect(rows).toEqual([{ id: fixtureId, source: "cli", status: "completed" }]);
-        } finally {
-          database.close();
-        }
+        // Jest maps better-sqlite3 to a mock. Query through a child process so
+        // the assertion reads the real SQLite file the preparation created.
+        const query = spawnSync(process.execPath, [
+          "-e",
+          "const Database=require('better-sqlite3'); const db=new Database(process.argv[1],{readonly:true}); console.log(JSON.stringify(db.prepare('SELECT id, source, status FROM sessions ORDER BY id').all())); db.close();",
+          databasePath,
+        ], { cwd: root, encoding: "utf8" });
+        expect(query.status).toBe(0);
+        expect(JSON.parse(query.stdout)).toEqual([{ id: fixtureId, source: "cli", status: "completed" }]);
         if (run === 0) writeFileSync(join(dataDir, "stale-marker"), "second run");
       }
     } finally {

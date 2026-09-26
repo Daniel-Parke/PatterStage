@@ -1,0 +1,14 @@
+{
+  "task": "T-0152",
+  "why": "The no-agent state must not add a 24px page-column split that the census can sometimes see and sometimes miss.",
+  "mutants": [
+    {
+      "id": "m1-the-notice-is-inset-again",
+      "file": "src/components/agents/AgentSetupNotice.tsx",
+      "anchor": "className=\"mt-4 flex items-start gap-3\"",
+      "replacement": "className=\"mx-6 mt-4 flex items-start gap-3\"",
+      "tests": ["tests/unit/agent-setup-notice.test.tsx"],
+      "why": "Reinstating the original horizontal margin must make all three controlled browser states fail."
+    }
+  ]
+}

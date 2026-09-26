@@ -18,13 +18,32 @@ remains pending decomposition. The ten new operator choices are Q-019–Q-028 in
 Picker as separate controls; Q-023 requires an independently authored C8
 oracle amendment. No structural batch is approved by this status note.
 
-The current prerequisite order is T-0160, T-0150, T-0157, T-0161, T-0156,
+The proposed prerequisite order was T-0160, T-0150, T-0157, T-0161, T-0156,
 T-0152, T-0162, T-0163, T-0158, T-0164 and T-0165. The full Phase 2 plan
 follows reproducible recon and requires separate operator approval. Hosted PR
 acceptance still fails the phone sessions fixture at the reviewed commit; a
 green push that skipped it is not acceptance. PR #157 remains open, and Q-011
 still requires a release before structural cleanup. Use an isolated data
 directory for builds until T-0161 removes build-time database writes.
+
+T-0150 moved ahead of T-0160 because the T-0159 push left hosted acceptance
+red. The T-0159 PR run reproduced that phone failure on 2026-09-26 (run
+`36262946981`: 270 passed, 25 skipped, one failed). T-0150 now prepares one
+completed fixture session in Playwright's disposable database before server
+boot, checks it from global setup, and points the web server at an isolated
+Hermes home. The phone strip assertion is unchanged. The focused phone,
+session-list and detail run passed 46 tests with one unrelated skills-detail
+skip; hosted acceptance must still be read after T-0150 is pushed.
+
+The T-0150 candidate exposed a separate real design-census failure: the
+no-agent notice's `mx-6` put its card 24 px inside the shared page column on
+Profiles, Sessions and Missions. T-0152's three browser oracles failed at
+24 px before the fix and passed after removing that margin. The original
+`routesWithSplitBlocks` baseline stayed at one. Three dedicated post-fix
+census runs read one split, and the last two agreed on every reported measure.
+The earlier intermittent Chat split was not reproduced with an isolated
+Hermes home and fresh e2e data, so the harness's measure and tolerance remain
+unchanged.
 
 This page is the one to read before touching the tree. It says where the
 work stands, what was learned landing it, what is still open, and the exact

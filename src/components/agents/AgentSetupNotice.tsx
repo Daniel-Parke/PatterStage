@@ -43,7 +43,7 @@ export default function AgentSetupNotice({ what }: { what: string }) {
   if (!data || data.available) return null;
 
   return (
-    <Card padding="sm" className="mx-6 mt-4 flex items-start gap-3">
+    <Card padding="sm" className="mt-4 flex items-start gap-3">
       <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-neon-orange" />
       <div className="min-w-0 text-body">
         <p className="font-semibold text-neon-orange">{data.name} is not installed</p>

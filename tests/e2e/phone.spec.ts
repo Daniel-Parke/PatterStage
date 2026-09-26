@@ -258,8 +258,8 @@ test.describe("the phone's shortcuts (U19)", () => {
     await page.goto("/results/sessions", { waitUntil: "domcontentloaded" });
     await page.getByRole("heading").first().waitFor(READY);
     const row = page.getByTestId("strip-phone-row");
-    // The strip renders only once there is something to count; the e2e data
-    // has sessions.
+    // The strip renders only once there is something to count. Preparation
+    // seeds a completed session into the isolated e2e database.
     await expect(row).toBeVisible(READY);
     const box = await row.boundingBox();
     expect(box, "the row has no box").not.toBeNull();

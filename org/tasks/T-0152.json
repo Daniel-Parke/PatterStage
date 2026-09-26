@@ -25,6 +25,7 @@
     "tests/e2e/design-census.spec.ts",
     "tests/e2e/lib/census-analysis.ts",
     "tests/e2e/agent-setup-alignment.spec.ts",
+    "tests/unit/agent-setup-notice.test.tsx",
     "src/components/agents/AgentSetupNotice.tsx",
     "tests/fixtures/mutants/T-0152.json",
     "scripts/tooling/line-census.baseline.json",

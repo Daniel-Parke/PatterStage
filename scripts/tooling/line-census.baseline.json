@@ -2,7 +2,7 @@
   "measuredAt": "2026-09-26",
   "counts": {
     "srcLines": 100983,
-    "testLines": 124454,
+    "testLines": 124609,
     "scriptsLines": 13162,
     "srcRepeatedWindowLines": 1000,
     "testRepeatedWindowLines": 4345,
@@ -270,6 +270,16 @@
       "measuredAt": "2026-09-26",
       "rise": "scriptsLines rose from 13155 to 13162",
       "reason": "T-0159: the ledger reconciliation checker adds explicit pending-ruling and contradictory-Select-Picker detection"
+    },
+    {
+      "measuredAt": "2026-09-26",
+      "rise": "testLines rose from 124454 to 124564",
+      "reason": "T-0150: one hermetic session-fixture oracle and isolated e2e preparation, setup and assertion comments"
+    },
+    {
+      "measuredAt": "2026-09-26",
+      "rise": "testLines rose from 124564 to 124609",
+      "reason": "T-0152: three browser layout oracles and one rendered-notice regression oracle for the real 24px no-agent split"
     }
   ]
 }

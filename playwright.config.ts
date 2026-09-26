@@ -90,6 +90,11 @@ export default defineConfig({
     // PS_DATA_DIR in .env.local ran the whole suite against their working
     // database while believing it was isolated. That is why the CI-only failure
     // in tools-personalities.spec.ts could not be reproduced locally.
-    env: { PS_DATA_DIR: e2eDataDir, CH_DATA_DIR: e2eDataDir, PS_AUTH_TOKEN: authToken },
+    env: {
+      PS_DATA_DIR: e2eDataDir,
+      CH_DATA_DIR: e2eDataDir,
+      HERMES_HOME: join(e2eDataDir, "hermes-home"),
+      PS_AUTH_TOKEN: authToken,
+    },
   },
 });

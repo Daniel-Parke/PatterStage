@@ -51,4 +51,15 @@ export default async function globalSetup(): Promise<void> {
         "the data dir was created, emptied or replaced after the server started.",
     );
   }
+
+  const fixtureUrl = `http://127.0.0.1:${port}/api/sessions?id=e2e-session-fixture`;
+  const fixtureResponse = await fetch(fixtureUrl, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  const fixture = fixtureResponse.ok
+    ? (await fixtureResponse.json()) as { data?: { session?: { id?: string; status?: string } } }
+    : null;
+  if (fixture?.data?.session?.id !== "e2e-session-fixture" || fixture.data.session.status !== "completed") {
+    throw new Error("[e2e global-setup] the isolated database has no completed sessions fixture");
+  }
 }
