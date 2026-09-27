@@ -6,7 +6,7 @@ updates:
     target-branch: dev
     schedule:
       interval: weekly
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 0
     ignore:
       # ESLint 10 breaks eslint-config-next / eslint-plugin-react (getFilename API change).
       - dependency-name: "eslint"
@@ -26,3 +26,4 @@ updates:
     target-branch: dev
     schedule:
       interval: weekly
+    open-pull-requests-limit: 0
