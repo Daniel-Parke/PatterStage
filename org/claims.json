@@ -1,9 +1,6 @@
 {
   "version": 1,
   "assigned": "2026-09-27",
-  "lanes": [
-    {"lane_id": "T-0175-independent-oracle", "task_id": "T-0175", "session_id": "01a0e347-fb53-7670-83f3-a598454717e2", "path_claims": ["tests/unit/t0175-dependency-proposals.test.ts"], "expires": "2026-09-30T23:00:00Z", "liveness": "freeze the three dependency proposal constraints before package edits"},
-    {"lane_id": "T-0175-coordinator", "task_id": "T-0175", "session_id": "2026-09-27-refactor-foundations", "path_claims": ["org/tasks/T-0175.json", "org/claims.json", "org/briefs/T-0175-oracle.md", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", "package.json", "package-lock.json", "tests/fixtures/mutants/T-0175.json", "scripts/tooling/line-census.baseline.json"], "expires": "2026-09-30T23:00:00Z", "liveness": "integrate three dependency proposals, gate, sweep, observe CI and retire their archived source PRs"}
-  ],
-  "note": "T-0175 uses two disjoint writing lanes; the independent ORACLE session owns only its new test file."
+  "lanes": [],
+  "note": "T-0175 closed after an independent oracle lane and a disjoint coordinator lane."
 }

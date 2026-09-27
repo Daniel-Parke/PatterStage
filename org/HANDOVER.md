@@ -9,6 +9,23 @@ updated: 2026-09-27
 
 ## Dated status, 2026-09-27
 
+T-0175 carried PRs #224, #226 and #229 onto `dev@c6d0e198` through one
+current lockfile: React Query/query-core 5.102.8, tsx 4.23.13, and
+dagre/graphlib 3.1.1/4.0.5. The independent seven-name oracle was red 3/7
+before the update and green 7/7 after it. An isolated `npm ci`, 29 focused
+tests and the unchanged-tree ten-step gate passed; the gate ran 731 Jest
+suites (7244 passes, four skips) and 283 Playwright tests (24 skips). The
+Composer graph walk at 1440x900 and 390x844 found all four seeded nodes,
+one h1, no overflow or console errors; screenshot hashes are in the task
+record. All three committed-tree mutants were killed. `npm audit --json`
+still exits 1 with twelve advisories (two low, four moderate, six high),
+the severity totals recorded after T-0157. The implementation push's four
+hosted workflows and every required job passed. Each PR was then closed
+unmerged at its unchanged head. GitHub removed its remote source branch on
+closure; local `refs/archive/t0175/` retains all three exact heads. PR #157
+and six unaddressed Dependabot PRs remain open. The task-closure push still
+needs its hosted jobs observed before another implementation batch begins.
+
 T-0174 carries the paired Pages v5 updates from PRs #235 and #236 onto
 `dev@c87e5989`. The operator ruled that manual dispatch may deploy only from
 `main`; the job now enforces this. Upload v5 excludes hidden files by default,
@@ -19,11 +36,13 @@ The isolated Docs build made 75 pages and 559 search rows; GNU tar with the
 v5 options retained `.nojekyll`, `index.html` and image assets. The full
 ten-step gate passed on the byte-matched unchanged candidate, with 283 browser
 passes and 24 skips; all five committed-tree mutants were killed and the tree
-was restored clean. The closure push and its hosted jobs are pending. Pages
+was restored clean. All four T-0174 closure-push workflows and every required
+job passed. Pages
 deployment itself waits for the workflow to reach `main` through the
 operator's release process; the `github-pages` environment branch setting
-must then be checked. PRs #235 and #236 remain open until hosted validation
-and exact-head archiving allow their clean retirement.
+must then be checked. Dependabot automatically closed PRs #235 and #236
+unmerged and removed their source branches when the updates appeared on dev.
+Their exact former heads are retained under local `refs/archive/t0174/`.
 
 T-0173 is the operator-approved narrow exception to the dev-only push rule.
 GitHub's default-branch `main@7b9d6d68` changed only `.github/dependabot.yml`:
