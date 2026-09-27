@@ -13,11 +13,11 @@
     {
       "lane_id": "T-0163-independent-oracle",
       "task_id": "T-0163",
-      "session_id": "01a0e030-5d94-7da3-8dcf-e8f4814c10c7",
-      "path_claims": ["tests/unit/t0163-bootstrap-credentials.test.ts", "tests/unit/t0163-hermes-env-permissions.test.ts"],
+      "session_id": "01a0e1fd-fece-7642-8b9d-ec3e48d04e25",
+      "path_claims": ["tests/unit/t0163-bootstrap-credentials.test.ts"],
       "expires": "2026-09-29T23:00:00Z",
-      "liveness": "successor separate ORACLE author validates and freezes the preserved black-box acceptance files before implementation; owns no source files"
+      "liveness": "new separate ORACLE author makes only the dated shell fail-closed fixture amendment; owns no source files"
     }
   ],
-  "note": "Two disjoint T-0163 lanes are claimed, at the max_lanes: 2 cap. The first ORACLE author was closed while still running without a commit after an unresponsive fixture attempt; its two untracked files are preserved for the independent successor. No implementation source changed."
+  "note": "Two disjoint T-0163 lanes are claimed, at the max_lanes: 2 cap. The original thirteen-test oracle was frozen before source implementation. The new independent author owns only its shell fixture amendment after a native Linux control exposed an infrastructure misclassification."
 }
