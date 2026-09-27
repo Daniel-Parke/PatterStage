@@ -33,8 +33,8 @@ describe("T-0177 Knip proposal", () => {
       "js-yaml": "^4.2.0",
       "lucide-react": "^1.41.0",
       next: "16.3.6",
-      react: "19.2.7",
-      "react-dom": "19.2.7",
+      react: "19.2.8",
+      "react-dom": "19.2.8",
       zod: "^4.3.6",
     });
     expect(Object.fromEntries(Object.entries(manifest.devDependencies).filter(([name]) => name !== "knip"))).toEqual({
@@ -45,7 +45,7 @@ describe("T-0177 Knip proposal", () => {
       "@types/better-sqlite3": "^7.6.13",
       "@types/jest": "^30.0.0",
       "@types/node": "^20.19.43",
-      "@types/react": "^19.2.17",
+      "@types/react": "^19.2.18",
       "@types/react-dom": "^19",
       "cross-env": "^7.0.3",
       eslint: "^9",
@@ -64,13 +64,13 @@ describe("T-0177 Knip proposal", () => {
   it("preserves the paired Next and React pins", () => {
     expect(manifest.dependencies.next).toBe("16.3.6");
     expect(manifest.devDependencies["eslint-config-next"]).toBe("16.3.6");
-    expect(manifest.dependencies.react).toBe("19.2.7");
-    expect(manifest.dependencies["react-dom"]).toBe("19.2.7");
+    expect(manifest.dependencies.react).toBe("19.2.8");
+    expect(manifest.dependencies["react-dom"]).toBe("19.2.8");
     for (const [name, version] of Object.entries({
       next: "16.3.6",
       "eslint-config-next": "16.3.6",
-      react: "19.2.7",
-      "react-dom": "19.2.7",
+      react: "19.2.8",
+      "react-dom": "19.2.8",
     })) {
       expect(lockfile.packages[`node_modules/${name}`]?.version).toBe(version);
     }

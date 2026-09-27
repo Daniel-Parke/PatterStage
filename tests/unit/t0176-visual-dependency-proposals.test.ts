@@ -46,10 +46,10 @@ describe("T-0176 visual dependency proposals", () => {
   });
 
   it("preserves the React and React DOM 19.2.7 pins", () => {
-    expect(manifest.dependencies.react).toBe("19.2.7");
-    expect(manifest.dependencies["react-dom"]).toBe("19.2.7");
-    expect(lockfile.packages["node_modules/react"]?.version).toBe("19.2.7");
-    expect(lockfile.packages["node_modules/react-dom"]?.version).toBe("19.2.7");
+    expect(manifest.dependencies.react).toBe("19.2.8");
+    expect(manifest.dependencies["react-dom"]).toBe("19.2.8");
+    expect(lockfile.packages["node_modules/react"]?.version).toBe("19.2.8");
+    expect(lockfile.packages["node_modules/react-dom"]?.version).toBe("19.2.8");
   });
 
   it("preserves every other direct production dependency range", () => {
@@ -60,8 +60,8 @@ describe("T-0176 visual dependency proposals", () => {
       "better-sqlite3": "^12.11.1",
       "js-yaml": "^4.2.0",
       next: "16.3.6",
-      react: "19.2.7",
-      "react-dom": "19.2.7",
+      react: "19.2.8",
+      "react-dom": "19.2.8",
       zod: "^4.3.6",
     });
   });
@@ -74,7 +74,7 @@ describe("T-0176 visual dependency proposals", () => {
       "@types/better-sqlite3": "^7.6.13",
       "@types/jest": "^30.0.0",
       "@types/node": "^20.19.43",
-      "@types/react": "^19.2.17",
+      "@types/react": "^19.2.18",
       "@types/react-dom": "^19",
       "cross-env": "^7.0.3",
       eslint: "^9",
