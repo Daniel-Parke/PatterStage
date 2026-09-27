@@ -2,7 +2,7 @@
   "measuredAt": "2026-09-27",
   "counts": {
     "srcLines": 101155,
-    "testLines": 129926,
+    "testLines": 129983,
     "scriptsLines": 13626,
     "srcRepeatedWindowLines": 1000,
     "testRepeatedWindowLines": 4689,
@@ -700,6 +700,11 @@
       "measuredAt": "2026-09-27",
       "rise": "testLines rose from 129914 to 129926",
       "reason": "T-0170 independent oracle amendment: twelve test lines add explicit PS_READ_ONLY coverage for both new liveness paths while preserving four original test names and assertions."
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 129926 to 129983",
+      "reason": "T-0173 adds 57 lines of independent temporary Dependabot pause oracle tests; source and repeated-window measures are unchanged."
     }
   ]
 }
