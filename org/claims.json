@@ -13,7 +13,7 @@
     {
       "lane_id": "T-0167-independent-oracle",
       "task_id": "T-0167",
-      "session_id": "pending-independent-author",
+      "session_id": "01a0e23c-6e4e-75c2-8251-77d742e5988e",
       "path_claims": ["tests/unit/t0163-bootstrap-credentials.test.ts", "tests/unit/t0163-hermes-env-permissions.test.ts", "tests/unit/t0163-review-regressions.test.ts"],
       "expires": "2026-09-29T23:00:00Z",
       "liveness": "independent author makes only the dated POSIX platform amendment to closed tests"
