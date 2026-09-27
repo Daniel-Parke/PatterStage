@@ -1,0 +1,30 @@
+{
+  "id": "T-0168",
+  "intent": "Repair the closed T-0163 Node bootstrap credential oracle for symlinked temporary directories on macOS and Linux. Preserve its first-write and before-read mode assertions and all six named tests.",
+  "declared": {"capabilities": ["edit-tests", "edit-docs", "git-push"], "side_effects": ["sends-external"]},
+  "mode": "high-assurance",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [
+    {"factor": "operator-plan-conservative-tier", "tier_floor": "R2", "source": "Q-015 and hosted macOS failure", "evidence": "A closed security oracle needs a separate author and an explicit path-alias regression."}
+  ],
+  "status": "active",
+  "owner_session": "2026-09-27-refactor-foundations",
+  "claims": ["org/tasks/T-0168.json", "org/claims.json", "org/briefs/T-0168-independent-amendment.md", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", "tests/unit/t0163-bootstrap-credentials.test.ts", "tests/fixtures/mutants/T-0168.json"],
+  "programme": "Hosted repair of T-0167's macOS path-alias fixture. The separate Settings anchor PR E2E failure also needs resolution before the next prerequisite batch.",
+  "timestamps": {"opened": "2026-09-27T10:06:16Z", "updated": "2026-09-27T10:06:16Z", "closed": null},
+  "invariants": [
+    "The six bootstrap credential test names and every first-write, before-read, fail-closed and secrecy assertion remain.",
+    "The instrumented Node fixture accepts a symlinked TMPDIR without silently losing event coverage; a path outside the disposable fixture remains excluded.",
+    "A separate author makes the Q-015 closed-oracle amendment; no production source or protected file changes.",
+    "All hosted push and PR jobs, including macOS and PR acceptance, are observed before the next prerequisite batch."
+  ],
+  "notes": "Hosted push macOS CI 36310868105 at dev@baebb0ee failed two T-0163 bootstrap tests: created and read event counts were zero at literal fixture paths. A native-Linux clean-clone reproduction with TMPDIR symlinked to a real temporary directory produced the same two failures, with four other tests passing. The existing local full gate had passed without that symlink. PR full E2E at the same commit failed one unrelated Settings env anchor visibility assertion, which also needs investigation. T-0167 is closed history and is not rewritten.",
+  "rollback": "Revert only the independently authored fixture path-normalisation if its tests or mutation proof fail; retain both hosted and symlinked-TMPDIR red evidence.",
+  "oracle_provenance": {},
+  "commits": "",
+  "verification": "",
+  "review": "",
+  "mutation": "",
+  "deviation": ""
+}
