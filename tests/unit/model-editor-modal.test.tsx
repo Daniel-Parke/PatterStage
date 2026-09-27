@@ -149,8 +149,8 @@ describe("ModelEditor", () => {
       target: { value: "anthropic/claude-sonnet-4" },
     });
 
-    // Pick the existing credential row (Field Kit Select: open, then click the option)
-    fireEvent.click(screen.getByLabelText(/Credential/i));
+    // Amended 2026-09-27 (T-0162): open the Credential picker, then choose its row.
+    fireEvent.click(screen.getByRole("button", { name: "Credential" }));
     fireEvent.click(screen.getByText(ANTHROPIC_KEY.label));
 
     fireEvent.click(screen.getByRole("button", { name: /Create Model/i }));

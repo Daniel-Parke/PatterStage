@@ -266,9 +266,8 @@ describe("ModelEditor, told which providers are keyless", () => {
       screen.getByText("No key is needed for this provider. Pick a credential only if your endpoint requires one."),
     ).toBeInTheDocument();
 
-    // The picker keeps its one accessible name: model-editor-modal's
-    // getByLabelText(/Credential/i) must still resolve to exactly one control.
-    const picker = screen.getByLabelText(/Credential/i);
+    // Amended 2026-09-27 (T-0162): distinguish the picker from Credential Label.
+    const picker = screen.getByRole("button", { name: "Credential" });
     fireEvent.click(picker);
     expect(within(screen.getByRole("listbox")).getByRole("option", { name: "No credential (none needed)" })).toBeInTheDocument();
   });
@@ -354,7 +353,7 @@ describe("GREEN CONTROL: ModelEditor without keylessProviders behaves as today",
     );
 
     fillNameAndModelId("Claude (existing creds)", "anthropic/claude-sonnet-4");
-    fireEvent.click(screen.getByLabelText(/Credential/i));
+    fireEvent.click(screen.getByRole("button", { name: "Credential" }));
     fireEvent.click(screen.getByText(ANTHROPIC_KEY.label));
     fireEvent.click(screen.getByRole("button", { name: /Create Model/i }));
 
