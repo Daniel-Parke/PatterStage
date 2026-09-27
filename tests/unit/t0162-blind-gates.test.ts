@@ -79,7 +79,7 @@ describe("T-0162 · the remaining gates see their subjects", () => {
     expect(bare.controls).toBe(2);
     expect(bare.unnamed).toHaveLength(2);
 
-    const named = classifyControls('const Form = () => <><Select ariaLabel="Model" /><NumberInput aria-label="Limit" /></>;', "form.tsx");
+    const named = classifyControls('const Form = () => <><Select ariaLabel="Model" /><NumberInput label="Limit" /></>;', "form.tsx");
     expect(named.controls).toBe(2);
     expect(named.unnamed).toHaveLength(0);
   });
