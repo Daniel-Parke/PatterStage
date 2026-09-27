@@ -10,14 +10,14 @@
 
 import { spawnSync } from "child_process";
 import {
-  existsSync, mkdirSync, readFileSync, copyFileSync, readdirSync, appendFileSync, statSync, chmodSync,
+  existsSync, mkdirSync, readFileSync, copyFileSync, readdirSync, appendFileSync, statSync,
 } from "fs";
 import { homedir, networkInterfaces } from "os";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 import { randomBytes } from "crypto";
 
-import { isWindows, portInUse } from "../tooling/_platform.mjs";
+import { copyOwnerOnly, isWindows, portInUse } from "../tooling/_platform.mjs";
 import { readEnvFile, setEnvVar, setEnvVarIfAbsent } from "./env-local.mjs";
 
 const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
@@ -70,18 +70,20 @@ function activeDbPath(dataRoot) {
 }
 
 function backupExistingDb(dataRoot) {
-  const db = activeDbPath(dataRoot);
-  if (!existsSync(db)) return null;
+  const selected = activeDbPath(dataRoot);
+  const candidates = [join(dataRoot, "patterstage.db"), join(dataRoot, "control-hub.db")].filter(existsSync);
+  if (candidates.length === 0) return null;
   const stamp = new Date().toISOString().replace(/[-:T]/g, "").slice(0, 15);
-  const backup = `${db}.pre-migrate-${stamp}.bak`;
-  copyFileSync(db, backup);
-  if (!isWindows) chmodSync(backup, 0o600);
-  for (const suffix of ["-wal", "-shm"]) {
-    if (!existsSync(db + suffix)) continue;
-    copyFileSync(db + suffix, backup + suffix);
-    if (!isWindows) chmodSync(backup + suffix, 0o600);
+  let selectedBackup = null;
+  for (const db of candidates) {
+    const backup = `${db}.pre-migrate-${stamp}.bak`;
+    copyOwnerOnly(db, backup);
+    for (const suffix of ["-wal", "-shm"]) {
+      if (existsSync(db + suffix)) copyOwnerOnly(db + suffix, backup + suffix);
+    }
+    if (db === selected) selectedBackup = backup;
   }
-  return backup;
+  return selectedBackup;
 }
 
 function required(ok, step) {
@@ -176,7 +178,7 @@ async function main() {
   log("Building production bundle…");
   required(run(npmBin(), ["run", "build"]), "Production build");
   const backup = backupExistingDb(dataRoot);
-  if (backup) log(`✓ Database backup retained: ${backup}`);
+  if (backup) log(`✓ Existing database candidates backed up before migration (active: ${backup})`);
   log("Applying database migrations…");
   required(tsx("scripts/tooling/migrate-db.ts", [], { PS_DATA_DIR: dataRoot }), "Schema migration");
   required(run(process.execPath, [join(REPO_ROOT, "scripts/tooling/migrate-to-runtime.mjs"), "--apply", "--db", activeDbPath(dataRoot)], { PS_DATA_DIR: dataRoot }), "Legacy data migration");

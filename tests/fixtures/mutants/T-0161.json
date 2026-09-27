@@ -73,6 +73,30 @@
       "replacement": "run(process.execPath, [join(SCRIPTS_TOOLING, \"migrate-to-runtime.mjs\"), \"--apply\", \"--db\", resolveDbPath(dataDir)], base, { env });\n  return true;",
       "tests": ["tests/unit/t0161-required-step-failures.test.ts"],
       "why": "In-app rebuild must stop if required legacy migration fails."
+    },
+    {
+      "id": "m10-shell-skips-second-database",
+      "file": "scripts/lib/ps-migrate.sh",
+      "anchor": "for db in \"$data_dir/patterstage.db\" \"$data_dir/control-hub.db\"; do",
+      "replacement": "for db in \"$selected\"; do",
+      "tests": ["tests/unit/t0161-backup-selection.test.ts", "tests/unit/t0161-required-step-failures.test.ts"],
+      "why": "Both existing database candidates need a backup before selection can change."
+    },
+    {
+      "id": "m11-node-setup-skips-second-database",
+      "file": "scripts/bootstrap/setup.mjs",
+      "anchor": "const candidates = [join(dataRoot, \"patterstage.db\"), join(dataRoot, \"control-hub.db\")].filter(existsSync);",
+      "replacement": "const candidates = [selected].filter(existsSync);",
+      "tests": ["tests/unit/t0161-node-setup-safety.test.ts"],
+      "why": "Node setup must back up both candidate databases before migration."
+    },
+    {
+      "id": "m12-deploy-skips-second-database",
+      "file": "scripts/tooling/ps-deploy.mjs",
+      "anchor": "const candidates = [join(dataDir, \"patterstage.db\"), join(dataDir, \"control-hub.db\")].filter(existsSync);",
+      "replacement": "const candidates = [selected].filter(existsSync);",
+      "tests": ["tests/unit/t0161-backup-creation.test.ts"],
+      "why": "Dashboard update and rebuild must back up both database candidates."
     }
   ]
 }

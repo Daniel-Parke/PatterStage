@@ -2,7 +2,7 @@
 // (atomic write + rollback) belongs in `modules/hermes/lib/hermes-config-write.ts`
 // and `modules/hermes/lib/profile-sync-shared.ts`.
 
-import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
+import { chmodSync, closeSync, existsSync, fstatSync, mkdirSync, openSync, readFileSync, readSync, rmSync, writeFileSync, writeSync } from "fs";
 import { createHash } from "crypto";
 
 /** Owner read/write. The mode for anything holding an operator's data. */
@@ -28,6 +28,31 @@ export function restrictToOwner(path: string, mode: number): void {
     chmodSync(path, mode);
   } catch {
     /* best effort */
+  }
+}
+
+/** Copy a sensitive file with owner-only mode from the first byte. */
+export function copyOwnerOnly(source: string, destination: string): void {
+  const input = openSync(source, "r");
+  let output: number | undefined;
+  let complete = false;
+  try {
+    output = openSync(destination, "wx", OWNER_ONLY_FILE);
+    const block = Buffer.allocUnsafe(64 * 1024);
+    for (let count = readSync(input, block, 0, block.length, null); count > 0; count = readSync(input, block, 0, block.length, null)) {
+      for (let offset = 0; offset < count;) {
+        const written = writeSync(output, block, offset, count - offset);
+        if (written === 0) throw new Error("Database backup write made no progress");
+        offset += written;
+      }
+    }
+    if (process.platform !== "win32" && (fstatSync(output).mode & 0o777) !== OWNER_ONLY_FILE) {
+      throw new Error("Database backup was not created owner-only");
+    }
+    complete = true;
+  } finally {
+    try { if (output !== undefined) closeSync(output); } finally { closeSync(input); }
+    if (!complete && output !== undefined) rmSync(destination, { force: true });
   }
 }
 

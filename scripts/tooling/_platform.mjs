@@ -5,7 +5,7 @@
 
 import { spawn, execFileSync } from "child_process";
 import { connect } from "net";
-import { chmodSync, openSync } from "fs";
+import { chmodSync, closeSync, fstatSync, openSync, readSync, rmSync, writeSync } from "fs";
 
 export const isWindows = process.platform === "win32";
 
@@ -25,6 +25,31 @@ export function restrictToOwner(path, mode) {
     chmodSync(path, mode);
   } catch {
     /* best effort */
+  }
+}
+
+/** Copy sensitive data without ever creating a readable destination. */
+export function copyOwnerOnly(source, destination) {
+  const input = openSync(source, "r");
+  let output;
+  let complete = false;
+  try {
+    output = openSync(destination, "wx", OWNER_ONLY_FILE);
+    const block = Buffer.allocUnsafe(64 * 1024);
+    for (let count = readSync(input, block, 0, block.length, null); count > 0; count = readSync(input, block, 0, block.length, null)) {
+      for (let offset = 0; offset < count;) {
+        const written = writeSync(output, block, offset, count - offset);
+        if (written === 0) throw new Error("Database backup write made no progress");
+        offset += written;
+      }
+    }
+    if (!isWindows && (fstatSync(output).mode & 0o777) !== OWNER_ONLY_FILE) {
+      throw new Error("Database backup was not created owner-only");
+    }
+    complete = true;
+  } finally {
+    try { if (output !== undefined) closeSync(output); } finally { closeSync(input); }
+    if (!complete && output !== undefined) rmSync(destination, { force: true });
   }
 }
 

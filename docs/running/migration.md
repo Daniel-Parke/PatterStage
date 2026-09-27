@@ -177,13 +177,13 @@ bash scripts/maintenance/ps-migrate.sh --yes  # unattended (used by the dashboar
 npm run db:migrate                            # schema only (the applier chain), no backup/legacy step
 ```
 
-`ps-migrate.sh` (and the setup and deploy paths that call it) do three things in order: **backup → schema migration → legacy-data migration** (`scripts/tooling/migrate-to-runtime.mjs --apply`, which converts recurring Hermes cron jobs into PatterStage `schedules` and fails any mission left "dispatched" by the old bash backend). A failed legacy-data migration stops the operation before later imports or seeds.
+`ps-migrate.sh` (and the setup and deploy paths that call it) do three things in order: **backup → schema migration → legacy-data migration** (`scripts/tooling/migrate-to-runtime.mjs --apply`, which converts recurring Hermes cron jobs into PatterStage `schedules` and fails any mission left "dispatched" by the old bash backend). The backup step copies both database names and their sidecars when both exist, so a later size-based selection cannot reach unbacked data. A failed backup or legacy-data migration stops the operation before later imports or seeds.
 
 ## Upgrading from `main` (the runtime cutover)
 
 Moving from a pre-runtime `main` install (file/`jobs.json`-era) to the current runtime/scheduler build is **additive and non-destructive**:
 
-1. **Backup:** `patterstage.db.pre-migrate-*.bak` is written.
+1. **Backup:** `patterstage.db.pre-migrate-*.bak` is written. If the legacy `control-hub.db` also exists, it receives its own `control-hub.db.pre-migrate-*.bak` backup before migration.
 2. **Schema upgrade:** the appliers add the `runs` and `schedules` tables, mission/run columns, and the catch-up repairs; they **drop only the never-shipped-to-`main` `game_*` tables** (the dialed-back gamification). Your `missions`, `models`, `credentials`, `sessions`, `cron_jobs`, and `stories` are preserved.
 3. **Legacy data migration:** recurring missions that were backed by a Hermes cron job become PatterStage `schedules` (mission-linked), firing on the next scheduler tick. The old `cron_jobs` rows are left in place (orphaned/backup only); the legacy agent-cron **Cron page + `jobs.json` bridge have been removed**. Scheduling lives in Missions.
 

@@ -12,7 +12,7 @@
 import { spawnSync } from "child_process";
 import {
   existsSync, mkdirSync, readFileSync, writeFileSync, renameSync,
-  copyFileSync, rmSync, openSync, closeSync, statSync,
+  rmSync, openSync, closeSync, statSync,
 } from "fs";
 import { homedir, tmpdir } from "os";
 import { join, dirname } from "path";
@@ -20,7 +20,7 @@ import { fileURLToPath } from "url";
 
 import {
   isWindows, detachedSpawn, isPidAlive, killByPort, killPid, portInUse,
-  OWNER_ONLY_FILE, restrictToOwner,
+  OWNER_ONLY_FILE, copyOwnerOnly, restrictToOwner,
 } from "./_platform.mjs";
 import { loadEnvLocal, readEnvLocalValue } from "./_env-local.mjs";
 
@@ -245,29 +245,25 @@ export function renameMigrate(dataDir, repo) {
 }
 
 export function backupDb(dataDir) {
-  const db = resolveDbPath(dataDir);
-  if (!existsSync(db)) return null;
+  const selected = resolveDbPath(dataDir);
+  const candidates = [join(dataDir, "patterstage.db"), join(dataDir, "control-hub.db")].filter(existsSync);
+  if (candidates.length === 0) return null;
   const ts = new Date().toISOString().replace(/[-:T]/g, "").slice(0, 15);
-  const bak = `${db}.pre-migrate-${ts}.bak`;
+  let selectedBackup = null;
   try {
-    copyFileSync(db, bak);
-    // A whole database, and on a pre-fix install the source it copies its mode
-    // from is still 0644. This runs before the app has booted and narrowed
-    // anything, so it says the mode itself rather than inheriting one.
-    restrictToOwner(bak, OWNER_ONLY_FILE);
-    if (!isWindows && (statSync(bak).mode & 0o777) !== OWNER_ONLY_FILE) {
-      throw new Error("Database backup is not owner-only");
-    }
-    for (const s of ["-wal", "-shm"]) {
-      if (existsSync(db + s)) {
-        copyFileSync(db + s, bak + s);
-        restrictToOwner(bak + s, OWNER_ONLY_FILE);
-        if (!isWindows && (statSync(bak + s).mode & 0o777) !== OWNER_ONLY_FILE) {
-          throw new Error("Database sidecar backup is not owner-only");
+    for (const db of candidates) {
+      const bak = `${db}.pre-migrate-${ts}.bak`;
+      copyOwnerOnly(db, bak);
+      restrictToOwner(bak, OWNER_ONLY_FILE);
+      for (const s of ["-wal", "-shm"]) {
+        if (existsSync(db + s)) {
+          copyOwnerOnly(db + s, bak + s);
+          restrictToOwner(bak + s, OWNER_ONLY_FILE);
         }
       }
+      if (db === selected) selectedBackup = bak;
     }
-    return bak;
+    return selectedBackup;
   } catch {
     return null;
   }

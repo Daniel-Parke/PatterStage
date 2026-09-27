@@ -32,17 +32,21 @@ ps_resolve_db() {
 # ps_backup_db <data_dir> → prints the backup path on stdout (empty if no DB).
 ps_backup_db() {
   local data_dir="$1"
-  local db; db="$(ps_resolve_db "$data_dir")"
-  [ -f "$db" ] || return 0
-  local ts bak
+  local selected; selected="$(ps_resolve_db "$data_dir")"
+  [ -f "$selected" ] || return 0
+  local ts bak db selected_backup=""
   ts="$(date +%Y%m%dT%H%M%S 2>/dev/null || date +%s)"
-  bak="${db}.pre-migrate-$ts.bak"
   umask 077
-  cp "$db" "$bak" || return 1
-  chmod 600 "$bak" || return 1
-  if [ -f "$db-wal" ]; then cp "$db-wal" "$bak-wal" && chmod 600 "$bak-wal" || return 1; fi
-  if [ -f "$db-shm" ]; then cp "$db-shm" "$bak-shm" && chmod 600 "$bak-shm" || return 1; fi
-  printf '%s' "$bak"
+  for db in "$data_dir/patterstage.db" "$data_dir/control-hub.db"; do
+    [ -f "$db" ] || continue
+    bak="${db}.pre-migrate-$ts-$$.bak"
+    [ ! -e "$bak" ] || return 1
+    cp "$db" "$bak" && chmod 600 "$bak" || return 1
+    if [ -f "$db-wal" ]; then cp "$db-wal" "$bak-wal" && chmod 600 "$bak-wal" || return 1; fi
+    if [ -f "$db-shm" ]; then cp "$db-shm" "$bak-shm" && chmod 600 "$bak-shm" || return 1; fi
+    [ "$db" = "$selected" ] && selected_backup="$bak"
+  done
+  printf '%s' "$selected_backup"
 }
 
 # ps_migrate_run <repo_root> <data_dir>

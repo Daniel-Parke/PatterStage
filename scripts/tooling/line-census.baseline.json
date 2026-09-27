@@ -1,9 +1,9 @@
 {
   "measuredAt": "2026-09-27",
   "counts": {
-    "srcLines": 100987,
-    "testLines": 126310,
-    "scriptsLines": 13369,
+    "srcLines": 101009,
+    "testLines": 126584,
+    "scriptsLines": 13396,
     "srcRepeatedWindowLines": 1000,
     "testRepeatedWindowLines": 4422,
     "routesWithTryCatch": 18,
@@ -415,6 +415,21 @@
       "measuredAt": "2026-09-27",
       "rise": "scriptsLines rose from 13363 to 13369",
       "reason": "T-0161: verify owner-only backup modes after the shared best-effort chmod helper, and fail closed before migration"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "srcLines rose from 100987 to 101009",
+      "reason": "T-0161 second independent oracle: back up both database candidates and create private Node copies before any write; 5 new behaviour cases and Linux mode coverage"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 126310 to 126584",
+      "reason": "T-0161 second independent oracle: back up both database candidates and create private Node copies before any write; 5 new behaviour cases and Linux mode coverage"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "scriptsLines rose from 13369 to 13396",
+      "reason": "T-0161 second independent oracle: back up both database candidates and create private Node copies before any write; 5 new behaviour cases and Linux mode coverage"
     }
   ]
 }
