@@ -3,7 +3,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { Field } from "../../src/components/ui/field/Field";
 import { Select } from "../../src/components/ui/field/Select";
-import { NumberInput } from "../../src/components/ui/Input";
+import { NumberInput, TextInput } from "../../src/components/ui/Input";
 import AutoTextarea from "../../src/components/ui/AutoTextarea";
 
 function associatedId(html: string, control: "button" | "input" | "textarea"): string {
@@ -22,6 +22,11 @@ describe("T-0162 · house controls keep visible labels associated", () => {
 
   it("NumberInput associates its own label with the spinbutton", () => {
     const html = renderToStaticMarkup(<NumberInput label="Limit" value={2} onChange={() => undefined} />);
+    expect(associatedId(html, "input")).toBeTruthy();
+  });
+
+  it("TextInput associates its own label with the textbox", () => {
+    const html = renderToStaticMarkup(<TextInput label="Name" value="" onChange={() => undefined} />);
     expect(associatedId(html, "input")).toBeTruthy();
   });
 
