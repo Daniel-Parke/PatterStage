@@ -40,7 +40,7 @@
   "programme": "Prerequisite T-0163 after the T-0162 blind-gate repair, before T-0158 browser sessions. No release-gated removal or public CLI change is claimed.",
   "timestamps": {
     "opened": "2026-09-27T07:35:00Z",
-    "updated": "2026-09-27T07:35:00Z",
+    "updated": "2026-09-27T08:01:43Z",
     "closed": null
   },
   "invariants": [
@@ -50,9 +50,21 @@
     "Windows and Git Bash setup remain functional; POSIX mode assertions run on Linux rather than pretending Windows mode bits enforce secrecy.",
     "Independent executable acceptance is frozen before source changes; amendments require a different author."
   ],
+  "oracle": {
+    "author_session": "01a0e030-5d94-7da3-8dcf-e8f4814c10c7",
+    "commit": "1dd40c41fe6674129ebb8957bf6594284a0f3a2c",
+    "independence": "Separate ORACLE author completed and froze the two files before implementation source changed. The first author had created the draft fixture files but was closed before validation; the successor reviewed, narrowed the fixture environment and committed them.",
+    "files": ["tests/unit/t0163-bootstrap-credentials.test.ts", "tests/unit/t0163-hermes-env-permissions.test.ts"],
+    "lf_sha256": {
+      "tests/unit/t0163-bootstrap-credentials.test.ts": "494647f39d5d4bb37769d5b2e0690eda79840cbdbe2f11394c823265d1f26c64",
+      "tests/unit/t0163-hermes-env-permissions.test.ts": "b3fab07d78f06174a9d0e51f774547ee30e0235431b18d894335441c27dc9a22"
+    },
+    "test_names": "13 frozen names (six bootstrap, seven runtime including replace/remove parameter cases).",
+    "red": "Offline Linux container ran the two named setup test bodies against unchanged source: both failed, expected 0600 (384), received 0666 (438). The coordinator's separate Linux bootstrap probe exited 1 and printed both new dotenv files at mode 666. Windows focused Jest passed 13/13 because POSIX mode assertions do not apply there. Full Linux Jest at this point was unverified because mounted Windows dependencies lack Linux SWC and @unrs bindings."
+  },
   "notes": "At T-0162 close, scripts/bootstrap/setup.sh touches Hermes .env under the caller's umask; setup.mjs appends with default mode; env-local.mjs writes PatterStage .env.local with default mode; hermes-config-write.ts stages .env with default mode; shared backupFile writes plaintext with default mode. This task includes those paths because a secure bootstrap alone would be undone by the next runtime credential write. T-0162 push and PR CI, including hosted acceptance, completed success at 575b0d66. The declaration-only EOS router returned R0 with no discrepancies; the operator's security R2 floor remains binding, and the actual diff is reruled upward at the gate. The first independent oracle author created two untracked test files but did not return or commit after a long fixture run; the lane was closed while running at 07:51 UTC, without touching implementation, and the same files are preserved for an independent successor to validate and freeze.",
   "rollback": "Revert the permission change and its oracle as a unit only if a replacement security fix is ready; otherwise rollback reopens world-readable credential files. Test both setup paths and runtime writes under a permissive Linux umask and repeat the full gate.",
-  "commits": "",
+  "commits": "3fcb6803 opened T-0163 with disjoint claims and independent brief; 281a74dd transferred the preserved oracle files after the first author stalled; 1dd40c41 froze thirteen independently authored named tests before source implementation.",
   "verification": "",
   "review": "",
   "mutation": "",
