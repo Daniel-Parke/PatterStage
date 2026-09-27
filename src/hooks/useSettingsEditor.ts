@@ -155,6 +155,12 @@ export function useSettingsEditor() {
     [hermesRead.settled, hermesRead.error, hermesRead.refetch, envRead.settled, envRead.error, envRead.refetch],
   );
 
+  // A hash jump needs the height of the preceding file editors to be final.
+  // Their reads settle before the editable copy is seeded in an effect.
+  const fileLayoutReady = hermesRead.settled && envRead.settled && toolsetsRead.settled &&
+    (hermesRead.data === null || files.hermes.original === hermesRead.data) &&
+    (envRead.data === null || files.env.original === envRead.data);
+
   const setSectionStatus = useCallback((id: string, next: SaveStatus) => {
     setStatus((s) => ({ ...s, [id]: next }));
     if (timers.current[id]) clearTimeout(timers.current[id]);
@@ -302,8 +308,9 @@ export function useSettingsEditor() {
       refetch: config.refetch,
       configError: config.configError,
       subject: config.subject,
+      fileLayoutReady,
       editorFor,
     }),
-    [config.configError, config.data, config.error, config.isLoading, config.refetch, config.subject, editorFor],
+    [config.configError, config.data, config.error, config.isLoading, config.refetch, config.subject, fileLayoutReady, editorFor],
   );
 }

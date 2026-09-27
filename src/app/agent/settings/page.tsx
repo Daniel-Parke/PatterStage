@@ -149,10 +149,11 @@ export default function SettingsPage() {
     return () => io.disconnect();
   }, [loaded, visibleIds.join(",")]); // eslint-disable-line react-hooks/exhaustive-deps -- the joined ids are the dependency; the array is rebuilt every render
 
-  // A bookmarked section arrives as a hash, and the browser's own jump fires
-  // before the sections exist. Once they do, land on it.
+  // A bookmarked section arrives as a hash before the sections exist. Land on
+  // it after the file reads have settled, so an editor above it cannot expand
+  // after the jump and push the target out of view.
   useEffect(() => {
-    if (!loaded) return;
+    if (!loaded || !editor.fileLayoutReady) return;
     const jump = () => {
       const id = window.location.hash.slice(1);
       if (!id || !CONFIG_SECTIONS[id]) return;
@@ -163,7 +164,7 @@ export default function SettingsPage() {
     jump();
     window.addEventListener("hashchange", jump);
     return () => window.removeEventListener("hashchange", jump);
-  }, [loaded]);
+  }, [loaded, editor.fileLayoutReady]);
 
   return (
     <AppPageShell
