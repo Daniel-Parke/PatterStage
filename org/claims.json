@@ -9,10 +9,11 @@
       "path_claims": [
         "tests/unit/t0161-backup-selection.test.ts",
         "tests/unit/t0161-node-setup-safety.test.ts",
-        "tests/unit/t0161-required-step-failures.test.ts"
+        "tests/unit/t0161-required-step-failures.test.ts",
+        "tests/unit/t0161-backup-creation.test.ts"
       ],
       "expires": "2026-09-27T23:00:00Z",
-      "liveness": "independent ORACLE author tests reviewer-found backup selection, permissions and setup failure paths"
+      "liveness": "independent ORACLE author tests both-database coverage and owner-only creation before implementation"
     },
     {
       "lane_id": "T-0161-implementer",
@@ -21,7 +22,7 @@
       "path_claims": [
         "org/claims.json", "org/tasks/T-0161.json", "org/briefs/T-0161-oracle.md",
         "org/briefs/T-0161-safety-oracle.md", "org/briefs/T-0161-gate-oracle.md",
-        "org/briefs/T-0161-review-oracle.md",
+        "org/briefs/T-0161-review-oracle.md", "org/briefs/T-0161-second-review-oracle.md",
         "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", "package.json",
         "scripts/tooling/prebuild-db.mjs", "scripts/tooling/hermes-registry-import.mjs",
         "scripts/tooling/gate.mjs", "scripts/tooling/ps-deploy.mjs", "scripts/tooling/migrate-to-runtime.mjs", "scripts/bootstrap/setup.sh",

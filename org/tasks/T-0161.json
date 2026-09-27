@@ -24,6 +24,7 @@
     "org/briefs/T-0161-safety-oracle.md",
     "org/briefs/T-0161-gate-oracle.md",
     "org/briefs/T-0161-review-oracle.md",
+    "org/briefs/T-0161-second-review-oracle.md",
     "org/HANDOVER.md",
     "org/TASKS.md",
     "org/STATE.md",
@@ -50,6 +51,7 @@
     "tests/unit/t0161-backup-selection.test.ts",
     "tests/unit/t0161-node-setup-safety.test.ts",
     "tests/unit/t0161-required-step-failures.test.ts",
+    "tests/unit/t0161-backup-creation.test.ts",
     "tests/fixtures/mutants/T-0161.json",
     "scripts/tooling/line-census.baseline.json",
     "docs/contributing/testing.md",
@@ -72,7 +74,7 @@
   ],
   "rollback": "Revert the build lifecycle, import step and install fixture together, restore the prior manifest and repeat the complete gate in an isolated checkout. A rollback restores pre-backup database writes; block setup/update on a live data directory until the ordering hazard is fixed again.",
   "notes": "Observed 2026-09-26 in isolated validation checkout after T-0157: npx next build with a fresh PS_DATA_DIR and no npm prebuild exited 0 but created patterstage.db, -wal and -shm; the database reached schema_version 42. package.json prebuild separately calls prebuild-db.mjs, which opens repository data, may unlink an old DB and seeds. The build risk therefore has two causes. Both scripts/lib/ps-migrate.sh and scripts/tooling/ps-deploy.mjs continue after backup failure, so a failure path is in this batch's claim. Hosted T-0157 push/PR CI and both Gitleaks workflows all completed success at 8d336c4d before implementation. EOS taskops.route_record ruled R2 from declared migrates-schema; taskops.create_task cannot validate this venture because kernel/schemas/task-record.schema.json is absent here and the sibling EOS schema rejects PatterStage's established custom task fields. Record creation uses the routed result and the existing venture record shape; the task-writing gap remains an open foundations defect, not a passing schema check.",
-  "commits": "",
+  "commits": "089cc00d red-first build-purity oracle; 296f5d10 initial implementation; 14b7472b independent reviewer-found safety oracles, red 13/14 against that implementation; 52cb797a corrected implementation and justified line-census baseline; closure commit follows.",
   "oracle_provenance": {
     "file": "tests/integration/t0161-build-purity.mjs",
     "sha256_lf": "965393c64aa1cb528af1fb6f933f6b434d2a198e3bd3cf898dff356414b7112e",
@@ -82,10 +84,17 @@
     "red_result": "Two of two standalone Node cases failed on successful isolated production builds: empty PS_DATA_DIR gained three SQLite entries; populated SQLite changed two existing entries. The coordinator reproduced the same two PURITY failures in the separate validation checkout before implementation.",
     "independence_method": "A separate ORACLE session owned only this test in a forked checkout and did not inspect or edit implementation. The test file was copied and committed before implementation."
   },
-  "verification": "",
+  "follow_up_oracle_provenance": {
+    "author_session": "01a0e030-5d94-7da3-8dcf-e8f4814c10c7",
+    "author_commit": "f9ea21eeb430bbdbb8458405bdbafb58e7654a08",
+    "integration_commit": "14b7472b",
+    "files": ["tests/unit/t0161-backup-selection.test.ts", "tests/unit/t0161-node-setup-safety.test.ts", "tests/unit/t0161-required-step-failures.test.ts"],
+    "red_result": "13 failed and one passed against the committed initial implementation; focused corrected run passed 17/17 across five T-0161 safety suites. The independent author wrote tests only in a separate checkout."
+  },
+  "verification": "The corrected candidate passed the complete isolated Windows gate at exit 0 on 2026-09-27: lint, tsc, Jest, Knip, canary, build, build-purity, e2e, design census and line census all exit 0. Jest: 707/707 suites, 7133 passed, 3 skipped; Playwright: 279 passed, 24 skipped. The full-gate stamp remained 152befb24c40bc242645e879e6c3b7a04f6bd280fecfe8e313ed28621bb83924 before and after, treeMoved=false. The isolated Linux Docker update harness passed update_preserves_user_data and update_runs_seed_catalog, 2/2. A separate disposable node:20-bookworm-slim run with umask 000 verified the larger legacy database and all backup sidecars had mode 0600. The first corrected gate attempt found the closed K4 source assertion against deploy backup mode; the shared helper call was restored with a strict postcondition. The next full gate found six new script lines over the baseline; --allow-growth recorded their fail-closed reason. Both red attempts and the final green run are retained as evidence. A restricted-sandbox Node os.userInfo ENOMEM blocked one lint and two focused attempts before project assertions; the same checks passed with the normal Windows fixture access.",
   "review": "",
-  "mutation": "",
-  "deviation": "",
+  "mutation": "Clean committed-tree sweep at 52cb797a exited 0: all nine T-0161 mutants KILLED by structured Jest assertion failures, including the independent backup-selection and required-step oracles. The sweep passed its unmodified and restored controls and left the Git tree clean.",
+  "deviation": "The first implementation at 296f5d10 passed its initial gate and sweep but independent review found real Node setup, backup-selection, permission and failure-propagation gaps. Independent follow-up tests were committed red before correcting them. The later full-gate K4 and census failures were fixed and rerun; no rule was weakened. One earlier K2 test title changed from nine to ten steps by an independent author to reflect the added build-purity step; other pre-existing test identities were preserved.",
   "tier_ruled": "R2",
   "reasons": [
     {
