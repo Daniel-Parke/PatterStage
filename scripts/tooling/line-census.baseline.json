@@ -1,11 +1,11 @@
 {
   "measuredAt": "2026-09-27",
   "counts": {
-    "srcLines": 101009,
-    "testLines": 126584,
-    "scriptsLines": 13396,
+    "srcLines": 101064,
+    "testLines": 128327,
+    "scriptsLines": 13447,
     "srcRepeatedWindowLines": 1000,
-    "testRepeatedWindowLines": 4422,
+    "testRepeatedWindowLines": 4683,
     "routesWithTryCatch": 18,
     "handRolledReadHooks": 0,
     "writeHooksWithoutMutation": 0,
@@ -430,6 +430,151 @@
       "measuredAt": "2026-09-27",
       "rise": "scriptsLines rose from 13369 to 13396",
       "reason": "T-0161 second independent oracle: back up both database candidates and create private Node copies before any write; 5 new behaviour cases and Linux mode coverage"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 126584 to 126698",
+      "reason": "T-0161 hosted CI repair: independent symlink CLI oracle adds 114 test lines and 24 repeated test-window lines; canonical entry detection adds six script lines while deferred database permission narrowing removes four source lines"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "scriptsLines rose from 13396 to 13402",
+      "reason": "T-0161 hosted CI repair: independent symlink CLI oracle adds 114 test lines and 24 repeated test-window lines; canonical entry detection adds six script lines while deferred database permission narrowing removes four source lines"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testRepeatedWindowLines rose from 4422 to 4446",
+      "reason": "T-0161 hosted CI repair: independent symlink CLI oracle adds 114 test lines and 24 repeated test-window lines; canonical entry detection adds six script lines while deferred database permission narrowing removes four source lines"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 126698 to 126815",
+      "reason": "T-0161 independent Hermes alias oracle adds 117 test lines; canonical entry detection adds seven script lines so explicit imports cannot report success after an aliased no-op"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "scriptsLines rose from 13402 to 13409",
+      "reason": "T-0161 independent Hermes alias oracle adds 117 test lines; canonical entry detection adds seven script lines so explicit imports cannot report success after an aliased no-op"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "srcLines rose from 101005 to 101010",
+      "reason": "T-0161 two independent explicit-seed failure oracles and mutation fixtures raise measured test lines 241 and repeated test windows 67; strict catalog opt-in and Hermes failure exit add five source and five script lines while preserving boot best-effort behavior"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 126815 to 127056",
+      "reason": "T-0161 two independent explicit-seed failure oracles and mutation fixtures raise measured test lines 241 and repeated test windows 67; strict catalog opt-in and Hermes failure exit add five source and five script lines while preserving boot best-effort behavior"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "scriptsLines rose from 13409 to 13414",
+      "reason": "T-0161 two independent explicit-seed failure oracles and mutation fixtures raise measured test lines 241 and repeated test windows 67; strict catalog opt-in and Hermes failure exit add five source and five script lines while preserving boot best-effort behavior"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testRepeatedWindowLines rose from 4446 to 4513",
+      "reason": "T-0161 two independent explicit-seed failure oracles and mutation fixtures raise measured test lines 241 and repeated test windows 67; strict catalog opt-in and Hermes failure exit add five source and five script lines while preserving boot best-effort behavior"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "srcLines rose from 101010 to 101023",
+      "reason": "T-0161 independent tools-manifest and model-sync refusal oracles plus mutants raise testLines 249 and repeated test windows 86; strict explicit catalog seeding raises source lines 13 and safe model-sync refusal raises script lines 5"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 127056 to 127305",
+      "reason": "T-0161 independent tools-manifest and model-sync refusal oracles plus mutants raise testLines 249 and repeated test windows 86; strict explicit catalog seeding raises source lines 13 and safe model-sync refusal raises script lines 5"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "scriptsLines rose from 13414 to 13419",
+      "reason": "T-0161 independent tools-manifest and model-sync refusal oracles plus mutants raise testLines 249 and repeated test windows 86; strict explicit catalog seeding raises source lines 13 and safe model-sync refusal raises script lines 5"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testRepeatedWindowLines rose from 4513 to 4599",
+      "reason": "T-0161 independent tools-manifest and model-sync refusal oracles plus mutants raise testLines 249 and repeated test windows 86; strict explicit catalog seeding raises source lines 13 and safe model-sync refusal raises script lines 5"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "srcLines rose from 101023 to 101029",
+      "reason": "T-0161 four independent fail-closed assertions and mutant cases raise measured test lines 345 and repeated test windows 55; strict discovery and partial-retry reporting add six source lines, configured registry protection adds seven script lines"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 127305 to 127650",
+      "reason": "T-0161 four independent fail-closed assertions and mutant cases raise measured test lines 345 and repeated test windows 55; strict discovery and partial-retry reporting add six source lines, configured registry protection adds seven script lines"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "scriptsLines rose from 13419 to 13426",
+      "reason": "T-0161 four independent fail-closed assertions and mutant cases raise measured test lines 345 and repeated test windows 55; strict discovery and partial-retry reporting add six source lines, configured registry protection adds seven script lines"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testRepeatedWindowLines rose from 4599 to 4654",
+      "reason": "T-0161 four independent fail-closed assertions and mutant cases raise measured test lines 345 and repeated test windows 55; strict discovery and partial-retry reporting add six source lines, configured registry protection adds seven script lines"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "srcLines rose from 101029 to 101033",
+      "reason": "T-0161 independent shell selected-root and missing-profiles oracles plus mutants raise measured test lines 203 and repeated test windows 35; strict profiles propagation adds four source lines while the shell change replaces one command line"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 127650 to 127853",
+      "reason": "T-0161 independent shell selected-root and missing-profiles oracles plus mutants raise measured test lines 203 and repeated test windows 35; strict profiles propagation adds four source lines while the shell change replaces one command line"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testRepeatedWindowLines rose from 4654 to 4689",
+      "reason": "T-0161 independent shell selected-root and missing-profiles oracles plus mutants raise measured test lines 203 and repeated test windows 35; strict profiles propagation adds four source lines while the shell change replaces one command line"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "srcLines rose from 101033 to 101042",
+      "reason": "T-0161: transactional import of only missing Hermes profiles adds 9 source and 2 script lines; independent SOUL-only, SQLite-refusal and malformed-config rollback oracles add 187 test lines"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 127853 to 128040",
+      "reason": "T-0161: transactional import of only missing Hermes profiles adds 9 source and 2 script lines; independent SOUL-only, SQLite-refusal and malformed-config rollback oracles add 187 test lines"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "scriptsLines rose from 13426 to 13428",
+      "reason": "T-0161: transactional import of only missing Hermes profiles adds 9 source and 2 script lines; independent SOUL-only, SQLite-refusal and malformed-config rollback oracles add 187 test lines"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "srcLines rose from 101042 to 101055",
+      "reason": "T-0161: fail-closed handling for partial Hermes rows and disappearing configured config adds 13 source and 14 script lines; independent profile, shell, CLI and deploy race oracles add 203 test lines"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 128040 to 128243",
+      "reason": "T-0161: fail-closed handling for partial Hermes rows and disappearing configured config adds 13 source and 14 script lines; independent profile, shell, CLI and deploy race oracles add 203 test lines"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "scriptsLines rose from 13428 to 13442",
+      "reason": "T-0161: fail-closed handling for partial Hermes rows and disappearing configured config adds 13 source and 14 script lines; independent profile, shell, CLI and deploy race oracles add 203 test lines"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "srcLines rose from 101055 to 101064",
+      "reason": "T-0161: protect edited root fields despite blank SOUL and remember configured Hermes before deploy build; 9 source and 5 script lines plus 84 independent test lines"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 128243 to 128327",
+      "reason": "T-0161: protect edited root fields despite blank SOUL and remember configured Hermes before deploy build; 9 source and 5 script lines plus 84 independent test lines"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "scriptsLines rose from 13442 to 13447",
+      "reason": "T-0161: protect edited root fields despite blank SOUL and remember configured Hermes before deploy build; 9 source and 5 script lines plus 84 independent test lines"
     }
   ]
 }

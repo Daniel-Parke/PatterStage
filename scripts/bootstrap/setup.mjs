@@ -183,12 +183,12 @@ async function main() {
   required(tsx("scripts/tooling/migrate-db.ts", [], { PS_DATA_DIR: dataRoot }), "Schema migration");
   required(run(process.execPath, [join(REPO_ROOT, "scripts/tooling/migrate-to-runtime.mjs"), "--apply", "--db", activeDbPath(dataRoot)], { PS_DATA_DIR: dataRoot }), "Legacy data migration");
   if (hermesConfigured) {
-    required(run(process.execPath, [join(REPO_ROOT, "scripts/tooling/hermes-registry-import.mjs")], { PS_DATA_DIR: dataRoot, HERMES_HOME }), "Hermes model registry import");
-    required(tsx("scripts/tooling/import-hermes-state.ts", [], { PS_DATA_DIR: dataRoot, HERMES_HOME }), "Hermes state import");
+    required(run(process.execPath, [join(REPO_ROOT, "scripts/tooling/hermes-registry-import.mjs"), "--require-config"], { PS_DATA_DIR: dataRoot, HERMES_HOME }), "Hermes model registry import");
+    required(tsx("scripts/tooling/import-hermes-state.ts", ["--import-missing-profiles"], { PS_DATA_DIR: dataRoot, HERMES_HOME }), "Hermes state import");
   }
   log("Seeding professional catalog…");
   required(tsx("scripts/tooling/seed-catalog.ts", ["--merge"], { PS_DATA_DIR: dataRoot, HERMES_HOME }), "Catalog seed");
-  if (hermesConfigured) required(tsx("scripts/tooling/ensure-hermes-model-sync.ts", [], { PS_DATA_DIR: dataRoot, HERMES_HOME }), "Hermes model sync");
+  if (hermesConfigured) required(tsx("scripts/tooling/ensure-hermes-model-sync.ts", ["--require-config"], { PS_DATA_DIR: dataRoot, HERMES_HOME }), "Hermes model sync");
   run(process.execPath, [join(REPO_ROOT, "scripts/tooling/discover-agents.mjs")], { PS_DATA_DIR: dataRoot });
 
   log("\n╔══════════════════════════════════════════╗");

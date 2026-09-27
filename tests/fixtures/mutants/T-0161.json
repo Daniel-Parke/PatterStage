@@ -97,6 +97,182 @@
       "replacement": "const candidates = [selected].filter(existsSync);",
       "tests": ["tests/unit/t0161-backup-creation.test.ts"],
       "why": "Dashboard update and rebuild must back up both database candidates."
+    },
+    {
+      "id": "m13-deploy-alias-silently-skips-cli",
+      "file": "scripts/tooling/ps-deploy.mjs",
+      "anchor": "realpathSync(fileURLToPath(import.meta.url)) === realpathSync(process.argv[1])",
+      "replacement": "fileURLToPath(import.meta.url) === process.argv[1]",
+      "tests": ["tests/unit/t0161-direct-invocation.test.ts"],
+      "why": "A path alias to the same CLI file must still execute the requested command."
+    },
+    {
+      "id": "m14-hermes-alias-silently-skips-import",
+      "file": "scripts/tooling/hermes-registry-import.mjs",
+      "anchor": "realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))",
+      "replacement": "process.argv[1] === fileURLToPath(import.meta.url)",
+      "tests": ["tests/unit/t0161-hermes-import-alias.test.ts"],
+      "why": "An aliased explicit import must still reject an absent database instead of exiting 0."
+    },
+    {
+      "id": "m15-hermes-state-failure-exits-zero",
+      "file": "scripts/tooling/import-hermes-state.ts",
+      "anchor": "process.exitCode = 1;",
+      "replacement": "process.exitCode = 0;",
+      "tests": ["tests/unit/t0161-hermes-state-cli-failures.test.ts"],
+      "why": "A failed root, skill or profile import must stop the explicit seed chain."
+    },
+    {
+      "id": "m16-catalog-module-failure-exits-zero",
+      "file": "scripts/tooling/seed-catalog.ts",
+      "anchor": "strictSeedFailures: true",
+      "replacement": "strictSeedFailures: false",
+      "tests": ["tests/unit/t0161-catalog-cli-failures.test.ts", "tests/unit/t0161-seed-input-integrity.test.ts"],
+      "why": "The explicit catalog command must reject an agent-module seed failure."
+    },
+    {
+      "id": "m17-catalog-malformed-tools-exits-zero",
+      "file": "src/lib/seed/catalog-seed.ts",
+      "anchor": "if (strict) throw new Error(\"Bundled tools catalog could not be seeded\");",
+      "replacement": "if (false) throw new Error(\"Bundled tools catalog could not be seeded\");",
+      "tests": ["tests/unit/t0161-seed-input-integrity.test.ts"],
+      "why": "Malformed bundled tools input must fail the explicit seed."
+    },
+    {
+      "id": "m18-catalog-missing-tools-exits-zero",
+      "file": "src/lib/seed/catalog-seed.ts",
+      "anchor": "if (strict) throw new Error(\"Bundled tools manifest is missing\");",
+      "replacement": "if (false) throw new Error(\"Bundled tools manifest is missing\");",
+      "tests": ["tests/unit/t0161-seed-input-integrity.test.ts"],
+      "why": "Missing bundled tools input must fail the explicit seed."
+    },
+    {
+      "id": "m19-model-sync-refusal-exits-zero",
+      "file": "scripts/tooling/ensure-hermes-model-sync.ts",
+      "anchor": "process.exitCode = 1;",
+      "replacement": "process.exitCode = 0;",
+      "tests": ["tests/unit/t0161-model-sync-cli-failures.test.ts"],
+      "why": "A rejected model-config sync must stop setup or deploy."
+    },
+    {
+      "id": "m20-required-registry-config-skips",
+      "file": "scripts/tooling/hermes-registry-import.mjs",
+      "anchor": "if (requireConfig && result.skipped) {",
+      "replacement": "if (false && result.skipped) {",
+      "tests": ["tests/unit/t0161-registry-required-config.test.ts"],
+      "why": "A configured setup must not accept a no-op model import."
+    },
+    {
+      "id": "m21-partial-profile-retry-succeeds",
+      "file": "src/modules/hermes/lib/state-import.ts",
+      "anchor": "if (strict && discoverLocalProfiles(true).some((profile) => !profile.inDatabase)) {",
+      "replacement": "if (false && discoverLocalProfiles(true).some((profile) => !profile.inDatabase)) {",
+      "tests": ["tests/unit/t0161-state-import-completeness.test.ts"],
+      "why": "A partial import must report the need for explicit pull without overwriting existing rows."
+    },
+    {
+      "id": "m22-profile-discovery-error-is-skipped",
+      "file": "src/modules/hermes/lib/profile-discovery.ts",
+      "anchor": "if (strict) throw new Error(\"Hermes profile discovery failed\");",
+      "replacement": "if (false) throw new Error(\"Hermes profile discovery failed\");",
+      "tests": ["tests/unit/t0161-discovery-errors.test.ts"],
+      "why": "An EACCES while discovering a required profile must fail the explicit import."
+    },
+    {
+      "id": "m23-skill-discovery-error-is-skipped",
+      "file": "src/modules/hermes/lib/profile-discovery.ts",
+      "anchor": "if (strict) throw new Error(\"Hermes skill discovery failed\");",
+      "replacement": "if (false) throw new Error(\"Hermes skill discovery failed\");",
+      "tests": ["tests/unit/t0161-discovery-errors.test.ts"],
+      "why": "An EACCES while discovering a required skill must fail the explicit import."
+    },
+    {
+      "id": "m24-missing-profiles-manifest-exits-zero",
+      "file": "src/modules/hermes/lib/seed-agent-catalog.ts",
+      "anchor": "if (strict) throw new Error(\"Bundled profiles manifest is missing\");",
+      "replacement": "if (false) throw new Error(\"Bundled profiles manifest is missing\");",
+      "tests": ["tests/unit/t0161-profiles-manifest-required.test.ts"],
+      "why": "The explicit catalog seed must fail when shipped profiles input is absent."
+    },
+    {
+      "id": "m25-shell-seeds-different-data-directory",
+      "file": "scripts/bootstrap/setup.sh",
+      "anchor": "if PS_DATA_DIR=\"$PS_DATA_ROOT\" HERMES_HOME=\"$HERMES_HOME\" npx tsx \"$REPO_ROOT/scripts/tooling/seed-catalog.ts\" --merge; then",
+      "replacement": "if npx tsx \"$REPO_ROOT/scripts/tooling/seed-catalog.ts\" --merge; then",
+      "tests": ["tests/unit/t0161-shell-seed-selected-dir.test.ts"],
+      "why": "Shell setup must seed the same selected data directory it backed up and migrated."
+    },
+    {
+      "id": "m26-targeted-profile-import-disabled",
+      "file": "scripts/tooling/import-hermes-state.ts",
+      "anchor": "{ force: pull, strict: true, importMissingProfiles }",
+      "replacement": "{ force: pull, strict: true, importMissingProfiles: false }",
+      "tests": ["tests/unit/t0161-state-import-completeness.test.ts"],
+      "why": "Setup and update must import new disk profiles without pulling existing root, skill or profile rows."
+    },
+    {
+      "id": "m27-partial-state-refreshes-existing-rows",
+      "file": "src/modules/hermes/lib/state-import.ts",
+      "anchor": "if (hasExistingRows) {",
+      "replacement": "if (false) {",
+      "tests": ["tests/unit/t0161-state-import-completeness.test.ts"],
+      "why": "A targeted import must fail closed rather than pull existing profile or skill rows from a partial database."
+    },
+    {
+      "id": "m28-targeted-import-ignores-missing-config",
+      "file": "src/modules/hermes/lib/state-import.ts",
+      "anchor": "if (options?.importMissingProfiles) {\n      throw new Error(\"Hermes config is missing; targeted import cannot complete\");",
+      "replacement": "if (false) {\n      throw new Error(\"Hermes config is missing; targeted import cannot complete\");",
+      "tests": ["tests/unit/t0161-state-import-completeness.test.ts"],
+      "why": "A configured targeted import must not report success when its config disappears."
+    },
+    {
+      "id": "m29-shell-import-skips-disappeared-config",
+      "file": "scripts/bootstrap/setup.sh",
+      "anchor": "if [ ! -f \"$HERMES_HOME/config.yaml\" ]; then\n    echo \"Hermes config disappeared after setup detected it",
+      "replacement": "if false; then\n    echo \"Hermes config disappeared after setup detected it",
+      "tests": ["tests/unit/t0161-shell-seed-selected-dir.test.ts"],
+      "why": "Configured shell setup must stop if config is gone after migration."
+    },
+    {
+      "id": "m30-shell-sync-skips-disappeared-config",
+      "file": "scripts/bootstrap/setup.sh",
+      "anchor": "if [ ! -f \"$HERMES_HOME/config.yaml\" ]; then\n    echo \"Hermes config disappeared before model sync",
+      "replacement": "if false; then\n    echo \"Hermes config disappeared before model sync",
+      "tests": ["tests/unit/t0161-shell-seed-selected-dir.test.ts"],
+      "why": "Configured shell setup must stop if config vanishes after catalog seed."
+    },
+    {
+      "id": "m31-model-sync-required-config-skips",
+      "file": "scripts/tooling/ensure-hermes-model-sync.ts",
+      "anchor": "if (process.argv.includes(\"--require-config\")) {",
+      "replacement": "if (false) {",
+      "tests": ["tests/unit/t0161-model-sync-cli-failures.test.ts"],
+      "why": "The required model-sync command must reject an absent Hermes config."
+    },
+    {
+      "id": "m32-deploy-skips-config-loss-before-sync",
+      "file": "scripts/tooling/ps-deploy.mjs",
+      "anchor": "if (hermesConfigured && (!existsSync(join(hh, \"config.yaml\")) ||",
+      "replacement": "if (false && (!existsSync(join(hh, \"config.yaml\")) ||",
+      "tests": ["tests/unit/t0161-required-step-failures.test.ts"],
+      "why": "A configured deploy must fail before restart if Hermes config vanishes before model sync."
+    },
+    {
+      "id": "m33-blank-soul-root-config-overwritten",
+      "file": "src/modules/hermes/lib/state-import.ts",
+      "anchor": "rootHasStoredContent() || (countSkills() ?? 0) > 0",
+      "replacement": "false || (countSkills() ?? 0) > 0",
+      "tests": ["tests/unit/t0161-state-import-completeness.test.ts"],
+      "why": "A targeted import must protect an edited root config even when SOUL.md is blank."
+    },
+    {
+      "id": "m34-deploy-forgets-prebuild-config",
+      "file": "scripts/tooling/ps-deploy.mjs",
+      "anchor": "if (hermesConfiguredAtStart && !existsSync(join(hh, \"config.yaml\"))) {",
+      "replacement": "if (false && !existsSync(join(hh, \"config.yaml\"))) {",
+      "tests": ["tests/unit/t0161-required-step-failures.test.ts"],
+      "why": "A deploy must remember configured Hermes before the build can remove its config."
     }
   ]
 }

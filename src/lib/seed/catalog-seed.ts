@@ -44,6 +44,8 @@ export interface SeedTarget {
   /** When true, merge mode may overwrite existing config sections.
    *  Defaults to false — existing user config is preserved. */
   confirmOverride?: boolean;
+  /** Explicit setup/deploy seeding must fail on missing input or a failed module. */
+  strictSeedFailures?: boolean;
 }
 
 export interface SeedResult {
@@ -114,8 +116,11 @@ interface SkillManifest {
  * has a fair-test default set the user can toggle on/off in benchmarks. Merge
  * mode preserves any existing skill of the same key (user edits win).
  */
-function seedSkills(mode: SeedMode): number {
-  if (!existsSync(SKILLS_MANIFEST)) return 0;
+function seedSkills(mode: SeedMode, strict: boolean): number {
+  if (!existsSync(SKILLS_MANIFEST)) {
+    if (strict) throw new Error("Bundled skills manifest is missing");
+    return 0;
+  }
   const manifest = JSON.parse(readFileSync(SKILLS_MANIFEST, "utf-8")) as SkillManifest;
   let count = 0;
   for (const entry of manifest.skills) {
@@ -138,6 +143,7 @@ function seedSkills(mode: SeedMode): number {
       try {
         m.publishSkill?.(entry.skillKey);
       } catch {
+        if (strict) throw new Error(`Bundled skill ${entry.skillKey} could not be published`);
         /* an absent or broken agent must not fail the seed */
       }
     }
@@ -155,8 +161,11 @@ interface ToolManifestEntry {
 }
 
 /** Seed the canonical default TOOL bundles (source='bundled'); merge preserves edits. */
-function seedTools(mode: SeedMode): number {
-  if (!existsSync(TOOLS_MANIFEST)) return 0;
+function seedTools(mode: SeedMode, strict: boolean): number {
+  if (!existsSync(TOOLS_MANIFEST)) {
+    if (strict) throw new Error("Bundled tools manifest is missing");
+    return 0;
+  }
   try {
     const manifest = JSON.parse(readFileSync(TOOLS_MANIFEST, "utf-8")) as { version: string; tools: ToolManifestEntry[] };
     let count = 0;
@@ -176,6 +185,7 @@ function seedTools(mode: SeedMode): number {
     }
     return count;
   } catch {
+    if (strict) throw new Error("Bundled tools catalog could not be seeded");
     // tool_catalog may not exist yet (pre-v16 / minimal schema) — skip gracefully.
     return 0;
   }
@@ -188,8 +198,11 @@ interface MemoryManifestEntry {
 }
 
 /** Seed the canonical default MEMORY facts (source='bundled'); idempotent by seed_key. */
-function seedMemories(mode: SeedMode): number {
-  if (!existsSync(MEMORIES_MANIFEST)) return 0;
+function seedMemories(mode: SeedMode, strict: boolean): number {
+  if (!existsSync(MEMORIES_MANIFEST)) {
+    if (strict) throw new Error("Bundled memories manifest is missing");
+    return 0;
+  }
   void mode; // accepted for signature parity; upsert is idempotent by seed_key
   try {
     const manifest = JSON.parse(readFileSync(MEMORIES_MANIFEST, "utf-8")) as { version: string; facts: MemoryManifestEntry[] };
@@ -205,13 +218,15 @@ function seedMemories(mode: SeedMode): number {
     }
     return count;
   } catch {
+    if (strict) throw new Error("Bundled memories catalog could not be seeded");
     // seed_memory_facts may not exist yet (pre-v16 / minimal schema) — skip.
     return 0;
   }
 }
 
-function seedTemplates(mode: SeedMode, idFilter?: string): number {
+function seedTemplates(mode: SeedMode, idFilter?: string, strict = false): number {
   if (!existsSync(TEMPLATE_PACK)) {
+    if (strict) throw new Error("Bundled template pack is missing");
     console.warn(`catalog-seed: missing ${TEMPLATE_PACK}`);
     return 0;
   }
@@ -286,16 +301,16 @@ export function runCatalogSeed(options: SeedTarget): SeedResult {
     categories = seedCategories(mode);
   }
   if (options.target === "all" || options.target === "skills") {
-    skills = seedSkills(mode);
+    skills = seedSkills(mode, Boolean(options.strictSeedFailures));
   }
   if (options.target === "all" || options.target === "tools") {
-    tools = seedTools(mode);
+    tools = seedTools(mode, Boolean(options.strictSeedFailures));
   }
   if (options.target === "all" || options.target === "memories") {
-    memories = seedMemories(mode);
+    memories = seedMemories(mode, Boolean(options.strictSeedFailures));
   }
   if (options.target === "all" || options.target === "templates") {
-    templates = seedTemplates(mode, options.templateId);
+    templates = seedTemplates(mode, options.templateId, Boolean(options.strictSeedFailures));
   }
 
   // The agent-shaped half: agent_profiles, agent_root, and the write-through to
@@ -316,8 +331,12 @@ export function runCatalogSeed(options: SeedTarget): SeedResult {
         slug: options.slug,
         mode,
         confirmOverride: options.confirmOverride,
+        strictSeedFailures: options.strictSeedFailures,
       });
     } catch (err) {
+      if (options.strictSeedFailures) {
+        throw new Error(`Agent catalog seed failed in module ${m.id}`);
+      }
       // One module failing must not lose the catalogs core already seeded, nor
       // take down boot: ensureCatalogSeededOnce runs this on every start. Logged
       // rather than swallowed, because unlike a missing agent this IS a fault.

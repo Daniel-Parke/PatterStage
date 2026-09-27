@@ -12,7 +12,7 @@
 import { spawnSync } from "child_process";
 import {
   existsSync, mkdirSync, readFileSync, writeFileSync, renameSync,
-  rmSync, openSync, closeSync, statSync,
+  rmSync, openSync, closeSync, realpathSync, statSync,
 } from "fs";
 import { homedir, tmpdir } from "os";
 import { join, dirname } from "path";
@@ -418,7 +418,7 @@ async function cmdRestart() {
   process.exit(0);
 }
 
-async function runBuildAndMigrate(action, base, branch) {
+async function runBuildAndMigrate(action, base, branch, hermesConfiguredAtStart) {
   if (branch) {
     const cur = spawnSync("git", ["rev-parse", "--abbrev-ref", "HEAD"], { cwd: APP_DIR, encoding: "utf-8" }).stdout?.trim();
     if (cur && cur !== branch) {
@@ -445,19 +445,23 @@ async function runBuildAndMigrate(action, base, branch) {
 
   const hh = hermesHome();
   const seedEnv = { PS_DATA_DIR: dataDir, HERMES_HOME: hh };
-  if (existsSync(join(hh, "config.yaml"))) {
-    if (!run(process.execPath, [join(SCRIPTS_TOOLING, "hermes-registry-import.mjs")], base, { env: seedEnv })) {
+  if (hermesConfiguredAtStart && !existsSync(join(hh, "config.yaml"))) {
+    fail(action, "import", `Hermes config disappeared before import — see ${base}`, 1, base);
+  }
+  const hermesConfigured = existsSync(join(hh, "config.yaml"));
+  if (hermesConfigured) {
+    if (!run(process.execPath, [join(SCRIPTS_TOOLING, "hermes-registry-import.mjs"), "--require-config"], base, { env: seedEnv })) {
       fail(action, "import", `Hermes model import failed — see ${base}`, 1, base);
     }
-    if (!runTsx("tooling/import-hermes-state.ts", [], base, { env: seedEnv })) {
+    if (!runTsx("tooling/import-hermes-state.ts", ["--import-missing-profiles"], base, { env: seedEnv })) {
       fail(action, "import", `Hermes state import failed — see ${base}`, 1, base);
     }
   }
   if (!runTsx("tooling/seed-catalog.ts", ["--merge"], base, { env: seedEnv })) {
     fail(action, "seed", `Catalog seed failed — see ${base}`, 1, base);
   }
-  if (existsSync(join(hh, "config.yaml")) &&
-      !runTsx("tooling/ensure-hermes-model-sync.ts", [], base, { env: seedEnv })) {
+  if (hermesConfigured && (!existsSync(join(hh, "config.yaml")) ||
+      !runTsx("tooling/ensure-hermes-model-sync.ts", ["--require-config"], base, { env: seedEnv }))) {
     fail(action, "sync", `Hermes model sync failed — see ${base}`, 1, base);
   }
   mkdirSync(join(dataDir, "scripts"), { recursive: true });
@@ -467,9 +471,10 @@ async function runBuildAndMigrate(action, base, branch) {
 
 async function cmdRebuild(branch) {
   if (!acquireLock()) fail("rebuild", "lock", "Deploy already in progress", 1, "ps-restart.log");
+  const hermesConfiguredAtStart = existsSync(join(hermesHome(), "config.yaml"));
   statusWrite("running", "rebuild", "build", "Rebuild started…", "", "ps-build.log");
   if (!resolveTooling()) fail("rebuild", "build", "npm not found — cannot build", 1, "ps-build.log");
-  await runBuildAndMigrate("rebuild", "ps-build.log", branch);
+  await runBuildAndMigrate("rebuild", "ps-build.log", branch, hermesConfiguredAtStart);
   statusWrite("running", "rebuild", "restart", "Restarting server…", "", "ps-restart.log");
   if (!(await restartBody())) fail("rebuild", "restart", "Restart failed after build — see ps-restart.log", 1, "ps-restart.log");
   statusWrite("success", "rebuild", "done", "Rebuild complete", "0", "ps-restart.log");
@@ -478,6 +483,7 @@ async function cmdRebuild(branch) {
 
 async function cmdUpdate(branch, restartOnly) {
   if (!acquireLock()) fail("update", "lock", "Deploy already in progress", 1, "ps-update.log");
+  const hermesConfiguredAtStart = existsSync(join(hermesHome(), "config.yaml"));
   statusWrite("running", "update", "git", "Update started…", "", "ps-update.log");
   if (!resolveTooling()) fail("update", "git", "npm not found — cannot update", 1, "ps-update.log");
   if (!gitOk(["rev-parse", "--is-inside-work-tree"])) fail("update", "git", `${APP_DIR} is not a git repository`, 1, "ps-update.log");
@@ -493,7 +499,7 @@ async function cmdUpdate(branch, restartOnly) {
       fail("update", "git", `git checkout ${branch} failed`, 1, "ps-update.log");
     if (!gitOk(["reset", "--hard", `origin/${branch}`, "--quiet"])) fail("update", "git", "git reset failed", 1, "ps-update.log");
     log("ps-update.log", "Code updated.");
-    await runBuildAndMigrate("update", "ps-update.log", null);
+    await runBuildAndMigrate("update", "ps-update.log", null, hermesConfiguredAtStart);
   }
 
   statusWrite("running", "update", "restart", "Restarting server…", "", "ps-restart.log");
@@ -530,8 +536,14 @@ export async function main(argv) {
 }
 
 // Run only when invoked as the entry point (not when imported by a test).
-const invokedDirectly =
-  process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1];
+let invokedDirectly = false;
+if (process.argv[1]) {
+  try {
+    invokedDirectly = realpathSync(fileURLToPath(import.meta.url)) === realpathSync(process.argv[1]);
+  } catch {
+    // An import with a synthetic argv[1] must not start the CLI.
+  }
+}
 if (invokedDirectly) {
   main(process.argv.slice(2)).catch((e) => {
     try {

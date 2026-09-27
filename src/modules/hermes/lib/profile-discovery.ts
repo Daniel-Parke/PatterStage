@@ -37,7 +37,7 @@ export interface DiscoveredProfile {
   inDatabase: boolean;
 }
 
-export function discoverLocalProfiles(): DiscoveredProfile[] {
+export function discoverLocalProfiles(strict = false): DiscoveredProfile[] {
   const defaultRoot = getHermesDefaultRoot();
   const profilesDir = defaultRoot + "/profiles";
   const inDb = new Set(listProfiles().map((p) => p.slug));
@@ -50,6 +50,7 @@ export function discoverLocalProfiles(): DiscoveredProfile[] {
       if (!statSync(path).isDirectory()) continue;
     }
     catch {
+      if (strict) throw new Error("Hermes profile discovery failed");
       continue;
     }
     const slug = name.toLowerCase();
@@ -89,7 +90,7 @@ export function removeProfileFromDisk(slug: string): void {
 }
 
 /** Walk global skills catalog on disk for discovery/import. */
-export function scanDiskSkillsCatalog(): { skillKey: string; path: string }[] {
+export function scanDiskSkillsCatalog(strict = false): { skillKey: string; path: string }[] {
   const skillsRoot = globalSkillsRoot();
   const results: { skillKey: string; path: string }[] = [];
   if (!existsSync(skillsRoot)) return results;
@@ -110,6 +111,7 @@ export function scanDiskSkillsCatalog(): { skillKey: string; path: string }[] {
         }
       }
       catch {
+        if (strict) throw new Error("Hermes skill discovery failed");
         // skip
       }
     }
@@ -118,9 +120,9 @@ export function scanDiskSkillsCatalog(): { skillKey: string; path: string }[] {
   return results;
 }
 
-export function importAllSkillsFromDisk(): SyncResult[] {
+export function importAllSkillsFromDisk(strict = false): SyncResult[] {
   const results: SyncResult[] = [];
-  for (const { skillKey, path } of scanDiskSkillsCatalog()) {
+  for (const { skillKey, path } of scanDiskSkillsCatalog(strict)) {
     try {
       const content = readFileSync(path, "utf-8");
       const meta = parseSkillFrontmatter(content);

@@ -44,11 +44,12 @@ async function main(): Promise<void> {
   const confirmOverride = args.includes("--confirm-override");
 
   const { runCatalogSeed } = await import("../../src/lib/seed/catalog-seed");
-  const result = runCatalogSeed({ target: "all", mode, confirmOverride });
+  const result = runCatalogSeed({ target: "all", mode, confirmOverride, strictSeedFailures: true });
   console.log(JSON.stringify(result, null, 2));
 }
 
 main().catch((err: unknown) => {
-  console.error(err);
-  process.exit(1);
+  void err;
+  console.error("Catalog seed failed; required input or a seed operation could not be completed.");
+  process.exitCode = 1;
 });

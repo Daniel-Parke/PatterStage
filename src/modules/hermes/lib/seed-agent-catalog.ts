@@ -41,6 +41,8 @@ export interface AgentSeedOptions {
   mode: SeedMode;
   /** Merge mode may overwrite existing config sections only when true. */
   confirmOverride?: boolean;
+  /** Explicit seed commands must fail when shipped profiles input is absent. */
+  strictSeedFailures?: boolean;
 }
 
 export interface AgentSeedResult {
@@ -159,8 +161,9 @@ function seedRoot(mode: SeedMode, confirmOverride = false): number {
   return 1;
 }
 
-function seedProfiles(mode: SeedMode, slugFilter?: string): number {
+function seedProfiles(mode: SeedMode, slugFilter?: string, strict = false): number {
   if (!existsSync(PROFILES_MANIFEST)) {
+    if (strict) throw new Error("Bundled profiles manifest is missing");
     console.warn(
       `catalog-seed: missing ${PROFILES_MANIFEST} — run: node scripts/tooling/generate-seed-pack.mjs`,
     );
@@ -228,7 +231,7 @@ export function seedAgentCatalog(options: AgentSeedOptions): AgentSeedResult {
   const wantsProfiles = options.target === "all" || options.target === "profiles";
 
   const root = wantsRoot ? seedRoot(mode, options.confirmOverride) : 0;
-  const profiles = wantsProfiles ? seedProfiles(mode, slug) : 0;
+  const profiles = wantsProfiles ? seedProfiles(mode, slug, Boolean(options.strictSeedFailures)) : 0;
 
   let pushed = 0;
   if (root > 0 && mode === "replace") {

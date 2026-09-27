@@ -2,7 +2,7 @@
 // Idempotent import of Hermes config.yaml + .env into SQLite models/credentials.
 
 import { createHash, randomUUID } from "crypto";
-import { readFileSync, existsSync, statSync } from "fs";
+import { readFileSync, existsSync, realpathSync, statSync } from "fs";
 import { join } from "path";
 import { homedir } from "os";
 import { fileURLToPath } from "url";
@@ -283,7 +283,14 @@ export function importHermesRegistry(database, options = {}) {
   return { modelsUpserted, credsUpserted, skipped: false };
 }
 
-const isMain = process.argv[1] === fileURLToPath(import.meta.url);
+let isMain = false;
+if (process.argv[1]) {
+  try {
+    isMain = realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url));
+  } catch {
+    // Imports with a synthetic or absent CLI path must not open the database.
+  }
+}
 
 if (isMain) {
   const Database = (await import("better-sqlite3")).default;
@@ -297,7 +304,9 @@ if (isMain) {
   const defaultDb = existsSync(nextDb) && existsSync(legacyDb)
     ? (statSync(legacyDb).size > statSync(nextDb).size ? legacyDb : nextDb)
     : (!existsSync(nextDb) && existsSync(legacyDb) ? legacyDb : nextDb);
-  const dbPath = process.argv[2] ?? defaultDb;
+  const args = process.argv.slice(2);
+  const requireConfig = args.includes("--require-config");
+  const dbPath = args.find((arg) => arg !== "--require-config") ?? defaultDb;
 
   if (!existsSync(dbPath)) {
     console.error(`Database not found: ${dbPath}`);
@@ -307,7 +316,11 @@ if (isMain) {
   const db = new Database(dbPath);
   try {
     db.pragma("journal_mode = WAL");
-    importHermesRegistry(db);
+    const result = importHermesRegistry(db);
+    if (requireConfig && result.skipped) {
+      console.error("Hermes model import failed; required config.yaml is missing.");
+      process.exitCode = 1;
+    }
   } catch {
     // YAML parser errors can include source lines. Never echo those lines or
     // provider keys from Hermes config into deployment logs.

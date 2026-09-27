@@ -247,16 +247,20 @@ if ! ps_migrate_run "$REPO_ROOT" "$PS_DATA_ROOT"; then
   exit 1
 fi
 
-if [ -f "$HERMES_HOME/config.yaml" ]; then
+if [ "$HERMES_CONFIGURED" = true ]; then
+  if [ ! -f "$HERMES_HOME/config.yaml" ]; then
+    echo "Hermes config disappeared after setup detected it — setup stopped before import and seed."
+    exit 1
+  fi
   echo "Importing Hermes models and credentials after database backup…"
-  if PS_DATA_DIR="$PS_DATA_ROOT" HERMES_HOME="$HERMES_HOME" node "$REPO_ROOT/scripts/tooling/hermes-registry-import.mjs"; then
+  if PS_DATA_DIR="$PS_DATA_ROOT" HERMES_HOME="$HERMES_HOME" node "$REPO_ROOT/scripts/tooling/hermes-registry-import.mjs" --require-config; then
     echo "✓ Hermes model registry imported"
   else
     echo "Hermes model registry import failed — setup stopped before catalog seed."
     exit 1
   fi
   echo "Importing existing Hermes state into PatterStage SQLite…"
-  if PS_DATA_DIR="$PS_DATA_ROOT" HERMES_HOME="$HERMES_HOME" npx tsx "$REPO_ROOT/scripts/tooling/import-hermes-state.ts"; then
+  if PS_DATA_DIR="$PS_DATA_ROOT" HERMES_HOME="$HERMES_HOME" npx tsx "$REPO_ROOT/scripts/tooling/import-hermes-state.ts" --import-missing-profiles; then
     echo "✓ Hermes state imported (root, profiles, skills)"
   else
     echo "Hermes state import failed — setup stopped."
@@ -283,7 +287,7 @@ fi
 
 if [ "$RUN_CATALOG_SEED" = true ]; then
   echo "Seeding professional catalog (merge)…"
-  if npx tsx "$REPO_ROOT/scripts/tooling/seed-catalog.ts" --merge; then
+  if PS_DATA_DIR="$PS_DATA_ROOT" HERMES_HOME="$HERMES_HOME" npx tsx "$REPO_ROOT/scripts/tooling/seed-catalog.ts" --merge; then
     echo "✓ Catalog seeded (profiles + templates in PatterStage; pushed to HERMES_HOME when ready)"
   else
     echo "Catalog seed failed — setup stopped."
@@ -291,9 +295,13 @@ if [ "$RUN_CATALOG_SEED" = true ]; then
   fi
 fi
 
-if [ -f "$HERMES_HOME/config.yaml" ]; then
+if [ "$HERMES_CONFIGURED" = true ]; then
+  if [ ! -f "$HERMES_HOME/config.yaml" ]; then
+    echo "Hermes config disappeared before model sync — setup stopped."
+    exit 1
+  fi
   echo "Syncing model defaults to Hermes config.yaml…"
-  if PS_DATA_DIR="$PS_DATA_ROOT" HERMES_HOME="$HERMES_HOME" npx tsx "$REPO_ROOT/scripts/tooling/ensure-hermes-model-sync.ts"; then
+  if PS_DATA_DIR="$PS_DATA_ROOT" HERMES_HOME="$HERMES_HOME" npx tsx "$REPO_ROOT/scripts/tooling/ensure-hermes-model-sync.ts" --require-config; then
     echo "✓ Model defaults applied to config.yaml (when agent default is set in registry)"
   else
     echo "Hermes model sync failed — setup stopped."

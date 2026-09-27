@@ -46,6 +46,11 @@ async function main(): Promise<void> {
   const configPath = hermesHome + "/config.yaml";
 
   if (!existsSync(configPath)) {
+    if (process.argv.includes("--require-config")) {
+      console.error("Hermes model sync failed; required config.yaml is missing.");
+      process.exitCode = 1;
+      return;
+    }
     console.log(JSON.stringify({ skipped: true, reason: "no config.yaml" }));
     return;
   }
@@ -62,6 +67,10 @@ async function main(): Promise<void> {
   }
 
   const result = finalizeRootConfigOnDisk();
+  if (result.error) {
+    console.error("Hermes model sync failed; config defaults were not applied.");
+    process.exitCode = 1;
+  }
   console.log(
     JSON.stringify({
       skipped: false,

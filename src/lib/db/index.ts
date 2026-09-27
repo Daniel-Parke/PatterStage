@@ -76,15 +76,7 @@ import { applyNeutralColumnNames } from "./apply-neutral-column-names";
 import { applyComposerRejectedMigration } from "./apply-composer-rejected-migration";
 import { applyComposerNodeCancelledMigration } from "./apply-composer-node-cancelled-migration";
 
-// ── Ensure data directory exists ───────────────────────────────
-
 const dataDir = PS_DATA_DIR;
-ensureDir(dataDir);
-// The directory holds the database and the access token. setup.sh and
-// ensureAuthToken both create it, so narrowing it here covers a dir either of
-// them made at the default umask, without a second boot step (critic-03b).
-restrictToOwner(dataDir, OWNER_ONLY_DIR);
-
 const DB_PATH = getDbPath(dataDir);
 
 // ── Connection factory ─────────────────────────────────────────
@@ -134,6 +126,10 @@ function restrictExistingDatabaseFiles(dir: string): void {
 export function getDb(): Database.Database {
   if (_db) return _db;
 
+  // Importing this module during a production build must not mutate the data
+  // directory. Narrow it when the first real connection is opened instead.
+  ensureDir(dataDir);
+  restrictToOwner(dataDir, OWNER_ONLY_DIR);
   _db = new Database(DB_PATH);
   // SQLite creates -wal and -shm with the database's own mode, so narrowing the
   // database before WAL is enabled narrows all three.
