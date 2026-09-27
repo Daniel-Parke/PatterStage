@@ -9,20 +9,18 @@ updated: 2026-09-27
 
 ## Dated status, 2026-09-27
 
-T-0161 is locally complete. Production builds leave isolated SQLite data
-untouched, and setup/update now back up both existing database names and their
-sidecars before migration or Hermes import. Node backups are owner-only from
-creation; shell backups use `umask 077`. Independent review accepted the second
-correction at `1db20a9f`. The final isolated ten-step gate passed with 708 Jest
-suites, 279 Playwright passes and an unchanged tree stamp. Node 20 Linux mode
-tests passed 7/7; the two Docker update scenarios passed; committed sweeps
-killed 12/12 Windows and 1/1 Linux mutants. T-0161's record names the prior
-red runs, the census growth and the bounded `closeSync` cleanup limitation.
-The closure push `050ad61d` exposed two hosted failures, so T-0161 is reopened:
-macOS Jest did not execute the deploy fixture through a temp-path alias, and
-Ubuntu build-purity saw the data-directory root mode change during build.
-PR full E2E acceptance and both Gitleaks runs passed. The failures must be fixed
-and the whole gate and hosted jobs repeated before the next batch. PR #157 remains
+T-0161 has a new locally green candidate. Production builds leave isolated
+SQLite data untouched. Setup/update back up both database names and sidecars
+before migration or Hermes import, and the explicit seed fails closed on
+missing or partial input. Node backups are owner-only from creation; shell
+backups use `umask 077`. Independent review accepted the final root and deploy
+corrections. The complete ten-step isolated gate passed with 719 Jest suites,
+279 Playwright passes and an unchanged tree stamp. The two Linux Docker update
+scenarios passed. A committed-tree sweep killed 34/34 Windows mutants; an
+earlier Linux sweep killed its creation-mode mutant 1/1. The record documents
+red-first amendments, census growth and the bounded `closeSync` limitation.
+The earlier push `050ad61d` exposed macOS Jest and Ubuntu build-purity failures.
+Both have local corrections, but current hosted acceptance is pending. PR #157 remains
 open; Q-011 still requires an operator release before structural cleanup.
 Next is T-0156 Help boundary repair, then T-0162 and T-0163. The full
 reconnaissance and Phase 2 plan are still outstanding and need separate plan
