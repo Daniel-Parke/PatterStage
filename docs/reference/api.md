@@ -20,9 +20,10 @@ All JSON API routes return the envelope:
 
 Some error responses also include `details` (Zod validation). Handlers must call `logApiError(route, context, error)` from `@/lib/api/api-logger` in catch blocks.
 
-Five routes deliberately sit outside the envelope, and a client integrator should special-case them:
+Seven routes deliberately sit outside the envelope, and a client integrator should special-case them:
 
-- `/api/health` returns a bare `{ ok: true }` (no `data` wrapper) because it is the one unauthenticated route and must stay trivially parseable by a container probe.
+- `/api/health` and `/api/healthz` return a bare `{ ok: true }` (no `data` wrapper) for unauthenticated JSON liveness probes.
+- `/healthz` returns plain-text `ok` (200, `text/plain`, `no-store`) for unauthenticated load-balancer and uptime probes.
 - The three SSE routes (`/api/runs/[id]/events`, `/api/composer/runs/[id]/events`, `/api/laboratory/research/[id]/events`) return a `text/event-stream` body, and their pre-stream errors are plain text, not JSON.
 - `/api/laboratory/research/[id]/export` returns raw HTML with a `Content-Disposition` header.
 
@@ -101,7 +102,9 @@ Every `route.ts` under `src/app/api` has a row, here or in the Chat / Composer /
 | `/api/status/runtime` | `GET` | How this install is configured, as data: auth mode, whether the deploy API and read-only are on, the composer flag, data directory, database path, Hermes home, port, schema version, app version, commit, gateway address, Node and platform. No secrets: it says whether the token mode is on, never what the token is. Backs Settings > System and its "Copy for a bug report". |
 | `/api/backup` | `GET`, `POST` | `GET` lists the database backups newest first (`{ dbPath, dir, backups: [{ name, path, bytes, takenAt, kind }], restoreCommand }`): the snapshots under `PS_DATA_DIR/backups/db` (or `PS_DB_BACKUP_DIR`) plus the `pre-migrate` and `pre-baseline` files beside the database. It creates nothing, and read-only can still read it. `POST` takes one with better-sqlite3's online backup, which is consistent under WAL, and answers **201** `{ backup }`; read-only refuses it. The same snapshot runs before a replace-mode Restore and before a test-data purge. Restoring is a shell step the operator runs with the server stopped; `restoreCommand` is that command, and nothing here executes it. Backs the Backups card on Settings > System. |
 | `/api/prefs` | `GET`, `PUT` | The console's own settings for this operator (`{ prefs }`): the rail collapsed, the dispatch strip open, quests completed or skipped, the guide hidden, the last help page. `PUT` `{ key, value }` against a Zod allow-list of six keys; an unknown key or a wrong shape is **400**, and read-only refuses it. |
-| `/api/health` | `GET` | The one **unauthenticated** route (the `PUBLIC_PATHS` allow-list in `src/proxy.ts`). Returns a bare `{ ok: true }` and deliberately reports nothing about the system, so a container probe never needs the access token. Anything describing real state belongs on `/api/status`. |
+| `/api/health` | `GET` | Unauthenticated JSON liveness probe in `PUBLIC_PATHS`. Returns a bare `{ ok: true }` and reports no system state. |
+| `/api/healthz` | `GET` | Unauthenticated JSON alias of `/api/health`. Unsafe methods stay behind authentication. |
+| `/healthz` | `GET` | Unauthenticated plain-text `ok` (200, `text/plain`, `no-store`) for load balancers and uptime monitors; reports no system state. |
 | `/api/feature-flags` | `GET` | Current feature-flag state (`{ flags }`), so client components can hide disabled surfaces without a rebuild. Flags default ON; today the only flag is `composer`. |
 | `/api/stories` | `POST` | Story Weaver: all operations via `action` (see [RPC-style routes](#rpc-style-routes)). |
 | `/api/sync` | `GET`, `POST` | Background sync control and status. |

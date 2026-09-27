@@ -1,11 +1,11 @@
 {
   "measuredAt": "2026-09-27",
   "counts": {
-    "srcLines": 101137,
-    "testLines": 129852,
+    "srcLines": 101155,
+    "testLines": 129926,
     "scriptsLines": 13626,
     "srcRepeatedWindowLines": 1000,
-    "testRepeatedWindowLines": 4683,
+    "testRepeatedWindowLines": 4689,
     "routesWithTryCatch": 18,
     "handRolledReadHooks": 5,
     "writeHooksWithoutMutation": 0,
@@ -680,6 +680,26 @@
       "measuredAt": "2026-09-27",
       "rise": "testLines rose from 129850 to 129852",
       "reason": "T-0169: two test lines preserve and restore the DOM scrollIntoView descriptor after the behavioural mutation oracle"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "srcLines rose from 101137 to 101155",
+      "reason": "T-0170: PR 234 adds two liveness routes (18 source lines) and a four-test behaviour oracle (62 test lines); six cross-file test windows come from its request fixture and assertions, retained to prove public GET and protected unsafe methods."
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 129852 to 129914",
+      "reason": "T-0170: PR 234 adds two liveness routes (18 source lines) and a four-test behaviour oracle (62 test lines); six cross-file test windows come from its request fixture and assertions, retained to prove public GET and protected unsafe methods."
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testRepeatedWindowLines rose from 4683 to 4689",
+      "reason": "T-0170: PR 234 adds two liveness routes (18 source lines) and a four-test behaviour oracle (62 test lines); six cross-file test windows come from its request fixture and assertions, retained to prove public GET and protected unsafe methods."
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 129914 to 129926",
+      "reason": "T-0170 independent oracle amendment: twelve test lines add explicit PS_READ_ONLY coverage for both new liveness paths while preserving four original test names and assertions."
     }
   ]
 }

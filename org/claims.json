@@ -9,15 +9,7 @@
       "path_claims": ["org/tasks/T-0170.json", "org/claims.json", "org/briefs/T-0170-read-only-amendment.md", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", "src/proxy.ts", "src/app/healthz/route.ts", "src/app/api/healthz/route.ts", "src/app/api/health/route.ts", "tests/fixtures/mutants/T-0170.json", "docs/reference/api.md", "docs/contributing/testing.md", "docs/SECURITY.md", "docs/adr/README.md", "scripts/tooling/output-canary.golden.json", "scripts/tooling/line-census.baseline.json"],
       "expires": "2026-09-29T23:00:00Z",
       "liveness": "carry PR #234 liveness contract to dev, integrate independent read-only oracle, gate, sweep and observe hosted jobs"
-    },
-    {
-      "lane_id": "T-0170-independent-oracle",
-      "task_id": "T-0170",
-      "session_id": "01a0e1fd-fece-7642-8b9d-ec3e48d04e25",
-      "path_claims": ["tests/unit/t0170-healthz-liveness.test.ts"],
-      "expires": "2026-09-29T23:00:00Z",
-      "liveness": "amend only the T-0170 liveness oracle with explicit read-only behaviour and identity proof"
     }
   ],
-  "note": "Two disjoint T-0170 lanes after independent review found missing read-only assertions. ADR-0013 is accepted; T-0158 source remains untouched."
+  "note": "The independent T-0170 oracle lane finished at 7d3ed509 and was released; the coordinator alone completes the final gate and sweep."
 }

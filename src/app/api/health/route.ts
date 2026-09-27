@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // /api/health — unauthenticated liveness probe.
 //
-// The ONE public endpoint (see the PUBLIC_PATHS allow-list in src/proxy.ts).
+// One of the public liveness endpoints (see PUBLIC_PATHS in src/proxy.ts).
 // It exists so the deploy runner and container health checks can tell "the
 // server is up" without holding the access token, and it therefore reports
 // nothing about the system: no counts, no paths, no config state. Anything

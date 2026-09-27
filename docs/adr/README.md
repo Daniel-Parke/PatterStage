@@ -35,6 +35,8 @@ itself. Do not build on a proposed ADR without saying that is what you are doing
 | [ADR-0009](../../org/decisions/ADR-0009-retention-for-the-readings-tables.md) | Retention windows for analytics_events and chat_messages, with an opt-in prune that refuses to delete anything the progression record has not captured | accepted |
 | [ADR-0010](../../org/decisions/ADR-0010-governance-corpus-lives-under-org.md) | The governance corpus lives under org/; docs/ holds product documentation only | accepted |
 | [ADR-0011](../../org/decisions/ADR-0011-t-0144-unsanctioned-org-edits.md) | T-0144 edited the protected set without an ADR: the four path lines are ratified, the closed records restored | accepted |
+| [ADR-0012](../../org/decisions/ADR-0012-browser-sessions.md) | Replace raw-token browser cookies with revocable opaque sessions and a declared transport boundary | accepted |
+| [ADR-0013](../../org/decisions/ADR-0013-session-boundary-clarifications.md) | Complete the session transport, rotation, read-only and onboarding boundary | accepted |
 
 ## Relationship to the EOS
 
