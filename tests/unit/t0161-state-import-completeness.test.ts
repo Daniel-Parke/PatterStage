@@ -311,4 +311,62 @@ describe("T-0161 explicit Hermes state import completeness", () => {
       removeFixture(root);
     }
   });
+
+  it("preserves an existing SQLite profile when targeted import sees incomplete root state", () => {
+    const root = mkdtempSync(join(tmpdir(), PREFIX));
+    try {
+      const { dbPath, env, preload } = preparePartialProfileFixture(root);
+      const db = new DatabaseCtor(dbPath);
+      try {
+        db.prepare("UPDATE agent_root SET soul_md = '' WHERE id = 1").run();
+        db.prepare("UPDATE agent_profiles SET soul_md = ? WHERE slug = 'existing-profile'")
+          .run("SQLite-only profile edit must survive targeted import.\n");
+        const before = existingRows(db);
+        const editedProfile = db.prepare("SELECT soul_md FROM agent_profiles WHERE slug = 'existing-profile'").get() as { soul_md: string };
+        const incompleteRoot = db.prepare("SELECT soul_md FROM agent_root WHERE id = 1").get() as { soul_md: string };
+        if (incompleteRoot.soul_md !== "" || !editedProfile.soul_md.startsWith("SQLite-only") || before.skills.length !== 1) {
+          throw new Error("INFRASTRUCTURE: incomplete-root and divergent-profile fixture was not established");
+        }
+        const targeted = run("scripts/tooling/import-hermes-state.ts", ["--import-missing-profiles"], preload, env);
+        requireCompleted(targeted, "targeted import with incomplete root");
+        const after = existingRows(db);
+        const rootAfter = db.prepare("SELECT soul_md FROM agent_root WHERE id = 1").get() as { soul_md: string };
+        const addedProfile = db.prepare("SELECT COUNT(*) AS n FROM agent_profiles WHERE slug = 'new-profile'").get() as { n: number };
+        expect({
+          existingProfile: after.profile,
+          existingSkills: after.skills,
+          successWasComplete: targeted.status !== 0 || (rootAfter.soul_md.trim().length > 0 && addedProfile.n === 1),
+        }).toEqual({ existingProfile: before.profile, existingSkills: before.skills, successWasComplete: true });
+      } finally {
+        db.close();
+      }
+    } finally {
+      removeFixture(root);
+    }
+  });
+
+  it("fails targeted state import if configured Hermes config disappears", () => {
+    const root = mkdtempSync(join(tmpdir(), PREFIX));
+    try {
+      const { dbPath, env, preload } = preparePartialProfileFixture(root);
+      const config = join(root, "hermes", "config.yaml");
+      if (!existsSync(config)) throw new Error("INFRASTRUCTURE: configured Hermes fixture is missing config before removal");
+      rmSync(config);
+      if (existsSync(config)) throw new Error("INFRASTRUCTURE: Hermes config removal did not take effect");
+      const db = new DatabaseCtor(dbPath);
+      try {
+        const before = existingRows(db);
+        const targeted = run("scripts/tooling/import-hermes-state.ts", ["--import-missing-profiles"], preload, env);
+        requireCompleted(targeted, "targeted import after Hermes config removal");
+        const after = existingRows(db);
+        const missingProfileCount = (db.prepare("SELECT COUNT(*) AS n FROM agent_profiles WHERE slug = 'new-profile'").get() as { n: number }).n;
+        expect({ exitedNonZero: targeted.status !== 0, preservedRows: after, missingProfileCount })
+          .toEqual({ exitedNonZero: true, preservedRows: before, missingProfileCount: 0 });
+      } finally {
+        db.close();
+      }
+    } finally {
+      removeFixture(root);
+    }
+  });
 });
