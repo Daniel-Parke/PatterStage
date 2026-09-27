@@ -122,7 +122,8 @@ function HelpPrevNext({ prev, next }: { prev: HelpPageMeta | null; next: HelpPag
   return (
     <nav aria-label="Help pages" className="flex flex-wrap items-center gap-3">
       {prev && (
-        <LinkButton href={`/help/${prev.slug}`} rel="prev" aria-label={`Previous: ${prev.title}`} icon={ChevronLeft}>
+        <LinkButton href={`/help/${prev.slug}`} rel="prev" aria-label={`Previous: ${prev.title}`}>
+          <ChevronLeft className="h-4 w-4 shrink-0" aria-hidden="true" />
           <span className="truncate">{prev.title}</span>
         </LinkButton>
       )}

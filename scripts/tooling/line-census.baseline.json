@@ -1,8 +1,8 @@
 {
   "measuredAt": "2026-09-27",
   "counts": {
-    "srcLines": 101064,
-    "testLines": 128382,
+    "srcLines": 101065,
+    "testLines": 128473,
     "scriptsLines": 13447,
     "srcRepeatedWindowLines": 1000,
     "testRepeatedWindowLines": 4683,
@@ -585,6 +585,16 @@
       "measuredAt": "2026-09-27",
       "rise": "testLines rose from 128380 to 128382",
       "reason": "Two test lines make the T-0161 SQLite and dynamic-import oracles portable on hosted Linux and macOS without changing their assertions or test identities."
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "srcLines rose from 101064 to 101065",
+      "reason": "T-0156 adds manifest-wide Help route coverage and a red-first client-boundary regression oracle; one source line renders the icon inside the server/client boundary"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 128382 to 128473",
+      "reason": "T-0156 adds manifest-wide Help route coverage and a red-first client-boundary regression oracle; one source line renders the icon inside the server/client boundary"
     }
   ]
 }
