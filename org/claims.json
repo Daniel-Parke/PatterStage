@@ -1,6 +1,9 @@
 {
   "version": 1,
   "assigned": "2026-09-27",
-  "lanes": [],
-  "note": "T-0177 closed after its independent oracle, independent census amendment, full gate, mutation sweep and all hosted implementation jobs passed. No writing lane remains."
+  "lanes": [
+    {"lane_id": "T-0178-independent-oracle", "task_id": "T-0178", "session_id": "01a0e3b6-96b8-7ec1-a7ec-7891ffd8319c", "path_claims": ["tests/unit/t0178-playwright-proposal.test.ts", "tests/unit/t0175-dependency-proposals.test.ts", "tests/unit/t0176-visual-dependency-proposals.test.ts", "tests/unit/t0177-knip-proposal.test.ts"], "expires": "2026-10-01T23:00:00Z", "liveness": "freeze Playwright oracle red and independently amend the three prior strict ranges"},
+    {"lane_id": "T-0178-coordinator", "task_id": "T-0178", "session_id": "2026-09-27-refactor-foundations", "path_claims": ["org/tasks/T-0178.json", "org/claims.json", "org/briefs/T-0178-oracle.md", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", "package.json", "package-lock.json", "scripts/tooling/line-census.baseline.json", "tests/fixtures/mutants/T-0178.json"], "expires": "2026-10-01T23:00:00Z", "liveness": "integrate Playwright proposal, walk, gate, sweep, archive and retire addressed PR"}
+  ],
+  "note": "T-0178 has two disjoint writing lanes. The independent oracle lane owns four test files; the coordinator owns the manifest, lockfile, records and screenshot evidence."
 }

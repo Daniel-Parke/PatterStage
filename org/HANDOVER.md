@@ -28,8 +28,13 @@ four implementation-push workflows and every required job passed. PR #227
 closed unmerged at its unchanged head; GitHub removed the remote source
 branch and local `refs/archive/t0177/` retains the exact commit. PR #157,
 #228 and #233 remain open. `npm audit --json` still exits 1 with ten
-advisories (two low, three moderate, five high). The T-0177 task-closure
-push's hosted checks still need observation before another batch opens.
+advisories (two low, three moderate, five high). T-0177 closure
+`dev@3190223b` passed PR CI and both Gitleaks workflows. Push CI attempt
+1 was cancelled at the 30-minute real-Hermes limit: Docker `RUN npm ci`
+stopped producing output before any contract assertion. A targeted rerun of
+that job on the unchanged commit passed and made every push job green on
+attempt 2. Both attempts are retained; the install stall's root cause is
+unresolved. T-0178 opens only after that final outcome.
 
 T-0176 carried PRs #225, #230 and #232 onto `dev@ebba3ba4` with one
 regenerated lockfile: xyflow 12.11.6/system 0.0.82, Tailwind PostCSS and

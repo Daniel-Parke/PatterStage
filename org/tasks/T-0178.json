@@ -1,0 +1,31 @@
+{
+  "id": "T-0178",
+  "intent": "Carry PR #228's Playwright 1.62.1 proposal onto current dev, verify browser and screenshot behaviour on both viewport widths, and retire the addressed PR only after full local and hosted acceptance.",
+  "declared": {"capabilities": ["edit-config", "edit-tests", "git", "github-api", "git-push"], "side_effects": ["touches-dependencies", "sends-external", "irreversible-action"]},
+  "mode": "high-assurance",
+  "tier_proposed": "R3",
+  "tier_ruled": "R3",
+  "reasons": [
+    {"factor": "irreversible-action", "tier_floor": "R3", "source": "declared", "evidence": "declared side effect: irreversible-action"},
+    {"factor": "boundary-contact", "tier_floor": "R1", "source": "declared", "evidence": "declared side effect: sends-external"}
+  ],
+  "status": "open",
+  "owner_session": "2026-09-27-refactor-foundations",
+  "timestamps": {"opened": "2026-09-27T17:59:37Z", "updated": "2026-09-27T17:59:37Z"},
+  "claims": ["org/tasks/T-0178.json", "org/claims.json", "org/briefs/T-0178-oracle.md", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", "package.json", "package-lock.json", "scripts/tooling/line-census.baseline.json", "tests/unit/t0178-playwright-proposal.test.ts", "tests/unit/t0175-dependency-proposals.test.ts", "tests/unit/t0176-visual-dependency-proposals.test.ts", "tests/unit/t0177-knip-proposal.test.ts", "tests/fixtures/mutants/T-0178.json"],
+  "programme": "T-0177 implementation dev@aa20a398 passed all four hosted workflows and every required job; PR #227 closed unmerged at its archived exact head. T-0177 closure dev@3190223b passed both Gitleaks and PR CI, including full E2E, install, real Hermes and acceptance-gate. Push CI 36336568965 attempt 1 was cancelled when real-Hermes reached its 30-minute limit during Docker RUN npm ci: the last npm output was at 17:22:09 UTC, before any contract assertion; its cause is not established. A targeted real-Hermes rerun on the unchanged commit, attempt 2, passed; the push workflow then concluded success with every required job. Both attempts remain visible. PR #228 remains open against dev at 96d917150ca142c4e222678cd9da09fa15a83b56, changing only package.json and package-lock.json on its old branch. Its proposal is @playwright/test ^1.62.1 with @playwright/test, playwright and playwright-core all resolved to 1.62.1. PR #233's paired React update and PR #157 remain outside this batch.",
+  "invariants": [
+    "Freeze an independent red-first oracle for the exact Playwright proposal before package changes. Amend only the old Playwright expected range in the three prior dependency suites through a different author, preserving all prior test names and assertions.",
+    "Change only the @playwright/test direct range; regenerate the lockfile on current dev and account for every transitive delta against PR #228. Keep the Next and React pairs pinned.",
+    "Install the matching Playwright browser in an isolated checkout. Run the full suite with zero retries and inspect screenshot or browser output changes at 1440x900 and 390x844, including console errors, missing h1 and horizontal overflow.",
+    "Run isolated npm ci, npm audit, the entire ten-step unchanged-tree gate and a committed-tree mutation sweep. Do not weaken snapshots, design thresholds or coverage floors.",
+    "Keep PR #228 open until its proposal is represented on dev and all hosted push and PR jobs pass. Archive its exact head in a local non-branch ref before closure; delete a remaining remote source branch only under an exact-SHA lease.",
+    "At most two disjoint writing lanes. Only dev is pushed; PR #157, main, #233 and unclassified dirty worktrees remain intact."
+  ],
+  "rollback": "Restore the old Playwright range and regenerate the lockfile in a new dev commit; retain the oracle, screenshot evidence and archived PR head.",
+  "verify_line": "The frozen oracle and independent old-oracle amendments, exact lockfile attribution, isolated browser install, full unchanged-tree gate, responsive visual evidence, committed-tree sweep, hosted jobs and exact-head PR archive/ref checks must pass; npm audit is run and remaining advisories reported separately.",
+  "oracle_provenance": "",
+  "verification": "",
+  "mutation": "",
+  "deviation": ""
+}
