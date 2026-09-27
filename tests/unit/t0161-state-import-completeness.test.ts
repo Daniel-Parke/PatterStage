@@ -246,7 +246,7 @@ describe("T-0161 explicit Hermes state import completeness", () => {
         try {
           db.prepare("INSERT INTO agent_profiles (slug) VALUES ('new-profile')").run();
         } catch (error) {
-          triggerWasLive = error instanceof Error && error.message.includes("oracle profile refusal");
+          triggerWasLive = String(error).includes("oracle profile refusal");
         } finally {
           db.exec("ROLLBACK TO oracle_refusal_probe");
           db.exec("RELEASE oracle_refusal_probe");
@@ -288,7 +288,9 @@ describe("T-0161 explicit Hermes state import completeness", () => {
 
         const moduleUrl = pathToFileURL(join(ROOT, "src", "modules", "hermes", "lib", "profile-discovery.ts")).href;
         const probe = spawnSync(process.execPath, ["--require", preload, "--import", "tsx", "--eval", `
-          import(${JSON.stringify(moduleUrl)}).then(({ importDiscoveredProfile }) => {
+          import(${JSON.stringify(moduleUrl)}).then((module) => {
+            const importDiscoveredProfile = module.importDiscoveredProfile ?? module.default?.importDiscoveredProfile;
+            if (typeof importDiscoveredProfile !== 'function') throw new Error('profile import export unavailable');
             const result = importDiscoveredProfile('new-profile');
             process.stdout.write('ORACLE_RESULT=' + JSON.stringify({ success: result.success }) + '\\n');
           }).catch(() => { process.exitCode = 1; });
