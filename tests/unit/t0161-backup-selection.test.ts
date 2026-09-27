@@ -29,6 +29,8 @@ function exerciseBackup(): { root: string; dataDir: string; stdout: string } {
   const dataDir = join(root, "data");
   mkdirSync(dataDir);
   writeFileSync(join(dataDir, "patterstage.db"), Buffer.alloc(64, 0x11));
+  writeFileSync(join(dataDir, "patterstage.db-wal"), Buffer.from("canonical WAL sentinel"));
+  writeFileSync(join(dataDir, "patterstage.db-shm"), Buffer.from("canonical SHM sentinel"));
   writeFileSync(join(dataDir, "control-hub.db"), Buffer.alloc(4096, 0x22));
   writeFileSync(join(dataDir, "control-hub.db-wal"), Buffer.from("legacy WAL sentinel"));
   writeFileSync(join(dataDir, "control-hub.db-shm"), Buffer.from("legacy SHM sentinel"));
@@ -68,15 +70,19 @@ describe("T-0161 shell backup follows runtime database selection", () => {
     try {
       const names = readdirSync(fixture.dataDir);
       const backup = names.find((name) => /^control-hub\.db\.pre-migrate-.*\.bak$/.test(name));
+      const canonicalBackup = names.find((name) => /^patterstage\.db\.pre-migrate-.*\.bak$/.test(name));
       expect({
         selectedLegacy: fixture.stdout.endsWith(backup ?? "<missing>"),
         legacyBackupCount: names.filter((name) => /^control-hub\.db\.pre-migrate-.*\.bak$/.test(name)).length,
         canonicalBackupCount: names.filter((name) => /^patterstage\.db\.pre-migrate-.*\.bak$/.test(name)).length,
-      }).toEqual({ selectedLegacy: true, legacyBackupCount: 1, canonicalBackupCount: 0 });
-      if (!backup) return;
+      }).toEqual({ selectedLegacy: true, legacyBackupCount: 1, canonicalBackupCount: 1 });
+      if (!backup || !canonicalBackup) return;
       expect(readFileSync(join(fixture.dataDir, backup))).toEqual(Buffer.alloc(4096, 0x22));
       expect(readFileSync(join(fixture.dataDir, `${backup}-wal`))).toEqual(Buffer.from("legacy WAL sentinel"));
       expect(readFileSync(join(fixture.dataDir, `${backup}-shm`))).toEqual(Buffer.from("legacy SHM sentinel"));
+      expect(readFileSync(join(fixture.dataDir, canonicalBackup))).toEqual(Buffer.alloc(64, 0x11));
+      expect(readFileSync(join(fixture.dataDir, `${canonicalBackup}-wal`))).toEqual(Buffer.from("canonical WAL sentinel"));
+      expect(readFileSync(join(fixture.dataDir, `${canonicalBackup}-shm`))).toEqual(Buffer.from("canonical SHM sentinel"));
     } finally {
       dispose(fixture.root);
     }
@@ -86,11 +92,12 @@ describe("T-0161 shell backup follows runtime database selection", () => {
     const fixture = exerciseBackup();
     try {
       if (process.platform === "win32") return; // NTFS ACLs are not POSIX mode bits.
-      const backup = readdirSync(fixture.dataDir).find((name) => /^control-hub\.db\.pre-migrate-.*\.bak$/.test(name));
-      expect(backup).toBeDefined();
-      if (!backup) return;
-      for (const suffix of ["", "-wal", "-shm"]) {
-        expect(statSync(join(fixture.dataDir, `${backup}${suffix}`)).mode & 0o777).toBe(0o600);
+      const backups = readdirSync(fixture.dataDir).filter((name) => /^(?:control-hub|patterstage)\.db\.pre-migrate-.*\.bak$/.test(name));
+      expect(backups).toHaveLength(2);
+      for (const backup of backups) {
+        for (const suffix of ["", "-wal", "-shm"]) {
+          expect(statSync(join(fixture.dataDir, `${backup}${suffix}`)).mode & 0o777).toBe(0o600);
+        }
       }
     } finally {
       dispose(fixture.root);

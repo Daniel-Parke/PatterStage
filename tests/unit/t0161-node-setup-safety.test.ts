@@ -8,6 +8,7 @@ import { basename, dirname, join } from "node:path";
 const ROOT = join(__dirname, "..", "..");
 const PREFIX = "t0161-node-setup-";
 const EXISTING_DB = Buffer.from("existing database sentinel, before setup");
+const LEGACY_DB = Buffer.from("larger legacy database sentinel, before setup".repeat(12));
 
 type Event = { step: string; backupAtMigration: boolean };
 type Fixture = { root: string; dataDir: string; result: ReturnType<typeof spawnSync>; events: Event[] };
@@ -29,10 +30,15 @@ const SPAWN_PRELOAD = String.raw`
       : call.includes('discover-agents.mjs') ? 'discover'
       : call.includes('run build') ? 'build'
       : call.includes('install') ? 'install' : 'other';
-    const backups = fs.readdirSync(process.env.ORACLE_DATA_DIR)
-      .filter(name => /^patterstage[.]db[.]pre-migrate-.*[.]bak$/.test(name));
-    const backupAtMigration = backups.some(name => fs.readFileSync(path.join(process.env.ORACLE_DATA_DIR, name))
-      .equals(Buffer.from('existing database sentinel, before setup')));
+    const names = fs.readdirSync(process.env.ORACLE_DATA_DIR);
+    const backupAtMigration = ['patterstage.db', 'control-hub.db'].every(base => {
+      const backups = names.filter(name => name.startsWith(base + '.pre-migrate-') && name.endsWith('.bak'));
+      if (backups.length !== 1) return false;
+      return ['', '-wal', '-shm'].every(suffix =>
+        fs.existsSync(path.join(process.env.ORACLE_DATA_DIR, backups[0] + suffix)) &&
+        fs.readFileSync(path.join(process.env.ORACLE_DATA_DIR, backups[0] + suffix))
+          .equals(fs.readFileSync(path.join(process.env.ORACLE_DATA_DIR, base + suffix))));
+    });
     fs.appendFileSync(process.env.ORACLE_EVENTS, JSON.stringify({step, backupAtMigration}) + '\n');
     return { status: step === process.env.ORACLE_FAIL_STEP ? 17 : 0, stdout: '', stderr: '' };
   };
@@ -58,6 +64,11 @@ function setupFixture(failStep = ""): Fixture {
   mkdirSync(dataDir);
   mkdirSync(hermesHome);
   writeFileSync(join(dataDir, "patterstage.db"), EXISTING_DB);
+  writeFileSync(join(dataDir, "patterstage.db-wal"), "canonical WAL sentinel");
+  writeFileSync(join(dataDir, "patterstage.db-shm"), "canonical SHM sentinel");
+  writeFileSync(join(dataDir, "control-hub.db"), LEGACY_DB);
+  writeFileSync(join(dataDir, "control-hub.db-wal"), "legacy WAL sentinel");
+  writeFileSync(join(dataDir, "control-hub.db-shm"), "legacy SHM sentinel");
   writeFileSync(join(hermesHome, "config.yaml"), "model: fixture-only\n");
   for (const [source, destination] of [
     ["scripts/bootstrap/setup.mjs", "scripts/bootstrap/setup.mjs"],
@@ -106,6 +117,7 @@ describe("T-0161 cross-platform Node setup protects existing data", () => {
         stateAfterRegistry: stateIndex > registryIndex,
         catalogAfterState: catalogIndex > stateIndex,
         originalUnchanged: readFileSync(join(fixture.dataDir, "patterstage.db")).equals(EXISTING_DB),
+        legacyUnchanged: readFileSync(join(fixture.dataDir, "control-hub.db")).equals(LEGACY_DB),
       }).toEqual({
         setupSucceeded: true,
         backedUpBeforeMigration: true,
@@ -113,8 +125,9 @@ describe("T-0161 cross-platform Node setup protects existing data", () => {
         stateAfterRegistry: true,
         catalogAfterState: true,
         originalUnchanged: true,
+        legacyUnchanged: true,
       });
-      expect(readdirSync(fixture.dataDir).filter((name) => /^patterstage[.]db[.]pre-migrate-.*[.]bak$/.test(name))).toHaveLength(1);
+      expect(readdirSync(fixture.dataDir).filter((name) => /^(?:patterstage|control-hub)[.]db[.]pre-migrate-.*[.]bak$/.test(name))).toHaveLength(2);
     } finally {
       dispose(fixture.root);
     }

@@ -1,7 +1,7 @@
 /** @jest-environment node */
 
 import { spawnSync } from "node:child_process";
-import { copyFileSync, existsSync, mkdtempSync, mkdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdtempSync, mkdirSync, readFileSync, readdirSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, join } from "node:path";
 
@@ -68,6 +68,11 @@ function runShellSetup(failStep: string): { root: string; result: ReturnType<typ
   mkdirSync(hermesHome);
   mkdirSync(fakeBin);
   writeFileSync(join(dataDir, "patterstage.db"), "existing database sentinel");
+  writeFileSync(join(dataDir, "patterstage.db-wal"), "canonical WAL sentinel");
+  writeFileSync(join(dataDir, "patterstage.db-shm"), "canonical SHM sentinel");
+  writeFileSync(join(dataDir, "control-hub.db"), "larger legacy database sentinel".repeat(12));
+  writeFileSync(join(dataDir, "control-hub.db-wal"), "legacy WAL sentinel");
+  writeFileSync(join(dataDir, "control-hub.db-shm"), "legacy SHM sentinel");
   writeFileSync(join(hermesHome, "config.yaml"), "model: fixture-only\n");
   writeFileSync(join(hermesHome, ".env"), "API_SERVER_KEY=fictional-fixture-only-key\nAPI_SERVER_ENABLED=true\n");
   for (const source of [
@@ -182,6 +187,24 @@ function runDeployLegacyFailure(): { root: string; result: ReturnType<typeof spa
 }
 
 describe("T-0161 required post-backup steps cannot report success on failure", () => {
+  it("shell setup backs up both existing database candidates and sidecars before schema migration", () => {
+    const fixture = runShellSetup("schema");
+    try {
+      expect(fixture.events).toContain("schema");
+      const dataDir = join(fixture.root, "data");
+      const names = readdirSync(dataDir);
+      for (const base of ["patterstage.db", "control-hub.db"]) {
+        const backups = names.filter((name) => name.startsWith(`${base}.pre-migrate-`) && name.endsWith(".bak"));
+        expect(backups).toHaveLength(1);
+        for (const suffix of ["", "-wal", "-shm"]) {
+          expect(readFileSync(join(dataDir, `${backups[0]}${suffix}`))).toEqual(readFileSync(join(dataDir, `${base}${suffix}`)));
+        }
+      }
+    } finally {
+      dispose(fixture.root);
+    }
+  });
+
   it.each([
     ["legacy", "legacy-data migration"],
     ["hermes-state", "Hermes state import"],
