@@ -1,0 +1,57 @@
+{
+  "id": "T-0162",
+  "intent": "Make the remaining client read/write, house-control naming and Knip gates inspect their declared populations. Prove each correction with planted violations, then fix surfaced defects or hold an explicit, reasoned ratchet. Preserve release-gated removals and independent authorship of closed-oracle amendments.",
+  "declared": {
+    "capabilities": ["edit-tooling", "edit-tests", "edit-source", "edit-config", "edit-docs"],
+    "side_effects": []
+  },
+  "mode": "high-assurance",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [
+    {
+      "factor": "operator-plan-conservative-tier",
+      "tier_floor": "R2",
+      "source": "2026-09-27 prerequisite plan",
+      "evidence": "The gate repairs certify subsequent batches; the operator assigned R2, independent amendments and representative planted-violation proof."
+    }
+  ],
+  "status": "active",
+  "owner_session": "2026-09-27-refactor-foundations",
+  "claims": [
+    "org/tasks/T-0162.json",
+    "org/claims.json",
+    "org/briefs/T-0162-oracle.md",
+    "org/HANDOVER.md",
+    "org/TASKS.md",
+    "org/STATE.md",
+    "scripts/tooling/design-lint.mjs",
+    "scripts/tooling/design-lint.baseline.json",
+    "scripts/tooling/line-census.mjs",
+    "scripts/tooling/line-census.baseline.json",
+    "scripts/tooling/check-form-control-names.mjs",
+    "knip.json",
+    "tests/unit/t0162-blind-gates.test.ts",
+    "tests/fixtures/mutants/T-0162.json"
+  ],
+  "programme": "Prerequisite gate repair after T-0156, before trusting full Phase 1 reconnaissance or setting structural targets. components-01's raw-control end-of-line correction already landed in K6 and is not repeated. Q-011 still bars structural cleanup before an operator release.",
+  "timestamps": {
+    "opened": "2026-09-27T06:38:26Z",
+    "updated": "2026-09-27T06:38:26Z",
+    "closed": null
+  },
+  "invariants": [
+    "A zero finding is credible only if a planted representative violation turns the actual gate red and the measured population is non-empty.",
+    "No failing rule, coverage floor or named test is weakened, skipped or deleted. A surfacing violation is fixed or entered as a specific justified baseline with a ratchet.",
+    "Closed C6/C8 oracle amendments for hooks-04, hooks-05 and critic-06 are dated, row-scoped, separately authored and keep test identities, under Q-015 and Q-021.",
+    "Select and Picker remain distinct; contextual names are supplied where missing under Q-025.",
+    "Release-dependent dead-code and harness removals are held until Q-011's operator release."
+  ],
+  "notes": "At 68d428d7, design-lint reports 104 already baselined raw controls in 43 files, while its raw-write rule and the hand-read census report zero. The preliminary sceptic found 16 writes plus two POST reads, and four cross-file hand-read effects; those are hypotheses to re-verify against this revision. check-form-control-names matches lowercase DOM tags only. knip.json scans src, scripts and mock servers but excludes tests and the harness. The declaration-only EOS router returned R0 with no discrepancies; this record retains the operator's conservative R2 because these detectors certify later batches. Re-rule the actual diff upward if needed. Current T-0156 hosted checks are in progress; any failure is repaired before T-0162 lands.",
+  "rollback": "Revert the batch as a unit and restore the prior baseline only if a replacement gate is ready. A rollback otherwise restores blind spots; rerun the full gate and planted violations before accepting it.",
+  "commits": "",
+  "verification": "",
+  "review": "",
+  "mutation": "",
+  "deviation": ""
+}

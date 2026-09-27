@@ -1,6 +1,15 @@
 {
   "version": 1,
   "assigned": "2026-09-27",
-  "lanes": [],
-  "note": "T-0156 claims were released after a full unchanged-tree gate and a 2/2 committed-tree mutation sweep. No writing lane is active."
+  "lanes": [
+    {
+      "lane_id": "T-0162-implementer",
+      "task_id": "T-0162",
+      "session_id": "2026-09-27-refactor-foundations",
+      "path_claims": ["org/tasks/T-0162.json", "org/claims.json", "org/briefs/T-0162-oracle.md", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", "scripts/tooling/design-lint.mjs", "scripts/tooling/design-lint.baseline.json", "scripts/tooling/line-census.mjs", "scripts/tooling/line-census.baseline.json", "scripts/tooling/check-form-control-names.mjs", "knip.json", "tests/unit/t0162-blind-gates.test.ts", "tests/fixtures/mutants/T-0162.json"],
+      "expires": "2026-09-29T23:00:00Z",
+      "liveness": "coordinator writes red-first detector oracle, repairs detectors, verifies planted violations and the complete gate; separately authored closed-oracle amendments receive disjoint claims"
+    }
+  ],
+  "note": "One T-0162 implementer lane is active within max_lanes: 2. Any independent closed-oracle author receives a second disjoint claim before writing."
 }
