@@ -69,7 +69,7 @@
     {
       "id": "m9-public-backup-directory",
       "file": "src/lib/fs/fs-helpers.ts",
-      "anchor": "if (base === \".env\") ensureOwnerOnlyDir(backupsDir);",
+      "anchor": "if (base === \".env\") ensureOwnerOnlyDir(backupsDir);\n  else ensureDir(backupsDir);",
       "replacement": "ensureDir(backupsDir);",
       "tests": ["tests/unit/t0163-review-regressions.test.ts"],
       "why": "A private backup file still needs an owner-only parent to prevent another user replacing or deleting it."
