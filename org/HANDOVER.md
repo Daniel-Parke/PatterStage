@@ -9,6 +9,24 @@ updated: 2026-09-27
 
 ## Dated status, 2026-09-27
 
+T-0156 repaired the Help Server Component boundary at `5d2c7eb8`. Its red-first
+browser oracle failed on 74 non-index guides before the fix and now walks all
+75 committed manifest guides, checks the previous icon, and retains a 404 for
+an unlisted guide. A separate boundary oracle failed 1/1 against the original
+function-valued icon prop. The isolated ten-step gate passed with an unchanged
+tree stamp: 720 Jest suites, 7171 passing tests and 3 skips; 282 Playwright
+passes and 24 skips. The 1440x900 and 390x844 visual walk found one h1, the
+icon, no console error and no horizontal overflow. The committed-tree sweep
+killed both mutants by assertion failure. T-0156 is closed locally; observe
+the hosted jobs after its closure push before treating hosted acceptance as
+confirmed. Next prerequisite: T-0162's remaining blind gates.
+
+T-0161 closure push `2a072836` initially failed only the push CI
+`real-hermes-integration` job when Docker's `npm ci` hit an EEXIST cache error
+before app tests. The individual job rerun passed, and the same-commit PR CI
+completed all jobs, including full E2E and acceptance, successfully. Both
+Gitleaks runs passed. The original failed attempt remains part of the record.
+
 T-0161 is done at hosted candidate `9ff2e257`. Production builds leave isolated
 SQLite data untouched. Setup/update back up both database names and sidecars
 before migration or Hermes import, and the explicit seed fails closed on

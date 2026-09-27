@@ -1,15 +1,6 @@
 {
   "version": 1,
   "assigned": "2026-09-27",
-  "lanes": [
-    {
-      "lane_id": "T-0156-implementer",
-      "task_id": "T-0156",
-      "session_id": "2026-09-27-refactor-foundations",
-      "path_claims": ["org/claims.json", "org/tasks/T-0156.json", "org/briefs/T-0156-oracle.md", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", "src/app/help/[[...slug]]/page.tsx", "tests/e2e/app-routes.ts", "tests/e2e/help.spec.ts", "tests/unit/t0156-help-client-boundary.test.tsx", "tests/fixtures/mutants/T-0156.json", "scripts/tooling/line-census.baseline.json"],
-      "expires": "2026-09-28T23:00:00Z",
-      "liveness": "coordinator writes and freezes the Help oracle before implementation, then verifies the manifest, visual route, full gate, sweep and hosted jobs"
-    }
-  ],
-  "note": "One T-0156 writing lane is active, within the max_lanes: 2 policy cap. T-0161 claims were released after hosted acceptance."
+  "lanes": [],
+  "note": "T-0156 claims were released after a full unchanged-tree gate and a 2/2 committed-tree mutation sweep. No writing lane is active."
 }

@@ -19,7 +19,7 @@
       "evidence": "The 2026-09-27 prerequisite plan assigns R1 to the Help repair and manifest-driven browser coverage; retain that higher tier even though the declaration-only router sees R0 before a diff exists."
     }
   ],
-  "status": "active",
+  "status": "done",
   "owner_session": "2026-09-27-refactor-foundations",
   "claims": [
     "src/app/help/[[...slug]]/page.tsx",
@@ -38,8 +38,8 @@
   "programme": "Found by K7's recon (T-0155) and raised rather than folded in. It is a product defect, not a refactor finding, and it is the recon's own best argument for itself: the review's docs list left 'public/help/ output shape and the in-app Help resolver were not examined' open, and a live 500 on 74 of 75 guide URLs was sitting behind that line.",
   "timestamps": {
     "opened": "2026-09-12T19:30:00Z",
-    "updated": "2026-09-27T06:10:57Z",
-    "closed": null
+    "updated": "2026-09-27T06:35:24Z",
+    "closed": "2026-09-27T06:35:24Z"
   },
   "invariants": [
     "I1 THE FIX IS THE BOUNDARY, NOT THE SYMPTOM. A lucide icon is a function component; passing it from a Server Component to a Client Component cannot work. Pass a name the client maps, or move the boundary. Do not make the page a Client Component to silence it without saying why.",
@@ -49,9 +49,9 @@
   ],
   "notes": "Evidence, 2026-09-12, isolated instance on port 3333, authenticated through the token exchange. The three log lines are identical, digest 1261740971, and name ChevronLeft. The index page at /help works because it does not pass the icon. Two of the six slugs probed answered 404 rather than 500 (/help/getting-started, /help/concepts/missions), so the manifest's slug shape needs reading before the oracle is written: the count of affected URLs is 'every guide the resolver resolves', which the recon put at 74 of 75, and that number should be re-derived from docs/manifest.json rather than taken. On 2026-09-27 the committed docs manifest has six sections and 75 pages. The declaration-only EOS router returns R0 because it reads no diff; the existing R1 task tier is retained as the operator-plan's conservative ruling for the 75-guide product failure and browser coverage. The actual diff must be checked for any higher floor before the gate.",
   "rollback": "Revert the Help boundary change and its oracle together only if a replacement fix is ready; otherwise the rollback restores 500 responses for manifest guides. Rebuild the isolated app and rerun manifest-driven e2e and the full gate.",
-  "commits": "",
-  "verification": "",
-  "review": "",
-  "mutation": "",
-  "deviation": ""
+  "commits": "fd349e08 opened record; be279a56 committed red browser oracle (2/3 failed); f427fbcd expanded claims; d58812f0 committed boundary oracle separately (1/1 failed against original source); 5d2c7eb8 committed repair, mutant manifest and reasoned census growth.",
+  "verification": "On clean isolated checkout PatterStage-gate-8d98 at 5d2c7eb8, npm run gate passed all ten steps by exit code; treeBefore=treeAfter=bfb93591a0b1c0f46cda5bb87328a22f4061c51bf83777d83093a65d86b19589. Jest: 720 suites passed, 7171 tests passed, 3 skipped. Playwright: 282 passed, 24 skipped; all 75 committed Help guides returned 200 and an unlisted guide returned 404. The focused client-boundary test passed 1/1. Visual route at 1440x900 and 390x844: HTTP 200, one h1, previous icon visible, no console or page errors, no horizontal overflow. Screenshot SHA256 desktop 78CA172D8C7E001751BE0CAA9AC58B77D9FADDC7CA041F3499D467294677D2D6; mobile EDAE626A9409584DCD27187E73D8D3CE354826B6E06B15421B40350E5D36E80E. Hosted push and PR jobs remain to be observed after closure push.",
+  "review": "A rendered ChevronLeft child is serialisable across the Server Component to Client Component boundary; HelpPage remains a Server Component. The manifest-driven e2e suite reaches all guides rather than one route sample. The independent boundary oracle fails against the original function-valued icon prop. No test identities were removed or renamed. One source line and 91 test lines were added with a written census reason; no other census measure rose.",
+  "mutation": "Committed-tree sweep at 5d2c7eb8: 2/2 KILLED by assertion failure (function-valued client prop; missing rendered previous icon). Passing unmodified controls and restoration verified; isolated checkout was clean after the sweep.",
+  "deviation": "No tier or protected-set deviation. The existing app-routes inventory was not edited because the new manifest-driven e2e suite covers every Help route. The gate's first sandboxed launch failed EPERM while opening its isolated lint log; no step ran. The authorised rerun passed all ten steps."
 }
