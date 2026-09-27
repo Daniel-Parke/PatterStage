@@ -2,8 +2,8 @@
   "measuredAt": "2026-09-27",
   "counts": {
     "srcLines": 101155,
-    "testLines": 129983,
-    "scriptsLines": 13626,
+    "testLines": 130166,
+    "scriptsLines": 13694,
     "srcRepeatedWindowLines": 1000,
     "testRepeatedWindowLines": 4689,
     "routesWithTryCatch": 18,
@@ -705,6 +705,16 @@
       "measuredAt": "2026-09-27",
       "rise": "testLines rose from 129926 to 129983",
       "reason": "T-0173 adds 57 lines of independent temporary Dependabot pause oracle tests; source and repeated-window measures are unchanged."
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 129983 to 130166",
+      "reason": "T-0174 adds 183 independent Pages publication oracle lines and 68 guard-script lines to reject unsafe uploads; source and duplication measures are unchanged."
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "scriptsLines rose from 13626 to 13694",
+      "reason": "T-0174 adds 183 independent Pages publication oracle lines and 68 guard-script lines to reject unsafe uploads; source and duplication measures are unchanged."
     }
   ]
 }

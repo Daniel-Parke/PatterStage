@@ -7,6 +7,7 @@ concurrency: { group: pages, cancel-in-progress: false }
 jobs:
   build-deploy:
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
     environment: { name: github-pages, url: "${{ steps.deploy.outputs.page_url }}" }
     steps:
       - uses: actions/checkout@v5
@@ -15,7 +16,8 @@ jobs:
       - run: npm ci
       - run: npm run docs:check
       - run: npm run docs:build -- --base /PatterStage/
-      - uses: actions/upload-pages-artifact@v3
-        with: { path: site }
+      - run: node scripts/docs/check-publish-artifact.mjs site
+      - uses: actions/upload-pages-artifact@v5
+        with: { path: site, include-hidden-files: true }
       - id: deploy
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

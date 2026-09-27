@@ -183,7 +183,14 @@ A workflow file can only decide which jobs run. Which ones *block* a merge is a 
 
 [`tests/scripts/run-shell-custom-tests.sh`](../../tests/scripts/run-shell-custom-tests.sh) covers dotenv, profile sync gates, and **`bash -n`** on key scripts. For **`ps-deploy.sh`** restart/stop loops on a real host, run manual checks on staging (see [DEPLOY.md](../running/deploy.md)).
 
-Other workflows: **gitleaks** (secret scan).
+Other workflows: **gitleaks** (secret scan), and the Docs Pages workflow.
+The Docs job runs only for the `main` ref, including manual dispatch. Its
+pre-upload check is `node scripts/docs/check-publish-artifact.mjs site`: it
+requires a nonempty root `index.html` and an empty `.nojekyll`, and refuses
+other hidden paths and symbolic links before upload-pages-artifact v5 includes
+hidden files. This preserves `.nojekyll` without exposing an unexpected hidden
+asset. Pages deployment remains a release check; the operator must restrict
+the `github-pages` environment to `main` before enabling Pages.
 
 ## Shared test doubles
 

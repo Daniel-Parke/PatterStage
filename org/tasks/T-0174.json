@@ -22,8 +22,8 @@
     "A distinct author freezes the acceptance oracle before implementation. Full unchanged-tree gate, reasoned census growth and committed-tree mutation sweep precede closure."
   ],
   "rollback": "Revert the workflow action and guard changes as one unit. The prior v3 uploader includes .nojekyll by default; no release has yet deployed the new workflow. Leave historical oracle and task evidence intact.",
-  "oracle_provenance": "Pending independent ORACLE author before implementation.",
-  "verification": "Pending.",
+  "oracle_provenance": "Hubble (session 01a0e226-def3-7593-bb70-c4715c3d5198) authored tests/unit/t0174-pages-publication.test.ts only before implementation. Commit b00b5797 froze fourteen test names, red 13/14 and zero skipped on Windows. Four workflow assertions failed on the v3/v4/no-guard file; nine guard CLI cases failed because the CLI was absent, a prerequisite rather than behavioural proof. The same fourteen names passed after implementation, including a real Windows directory junction recognised by lstat as a symbolic link.",
+  "verification": "Focused independent oracle green 14/14 and existing site inventory passes. Q-029 and Q-030 were appended to org/QUESTIONS.md before implementation. Line census holds exactly +183 testLines and +68 scriptsLines with a written reason; the other eleven measures are unchanged. Full unchanged-tree gate, local artifact check and hosted jobs pending.",
   "mutation": "Pending.",
   "deviation": "None."
 }
