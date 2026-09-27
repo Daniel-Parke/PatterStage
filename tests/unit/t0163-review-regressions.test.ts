@@ -11,7 +11,7 @@ const REPO = join(__dirname, "..", "..");
 const PREFIX = "t0163-review-regressions-";
 const OLD = "# retained\nOPENROUTER_API_KEY=fixture-old\nKEEP=yes\n";
 const NEW_KEY = "fixture-new-private-key";
-const LINUX = process.platform === "linux";
+const POSIX = process.platform === "linux" || process.platform === "darwin";
 
 jest.mock("@/modules/hermes/lib/agent-runtime", () => require("../helpers/mocks").agentRuntimeFakeRootMock());
 
@@ -73,7 +73,7 @@ function nodeSetup(existing: boolean): SetupResult {
     fs.mkdirSync(home);
     fs.writeFileSync(join(home, "config.yaml"), "model: fixture-only\n");
     fs.chmodSync(home, 0o777);
-    if (LINUX) expect(mode(home)).toBe(0o777);
+    if (POSIX) expect(mode(home)).toBe(0o777);
     if (existing) {
       fs.writeFileSync(join(home, ".env"), OLD);
     }
@@ -138,7 +138,7 @@ function shellSetup(existing: boolean): SetupResult {
     fs.mkdirSync(home);
     fs.writeFileSync(join(home, "config.yaml"), "model: fixture-only\n");
     fs.chmodSync(home, 0o777);
-    if (LINUX) expect(mode(home)).toBe(0o777);
+    if (POSIX) expect(mode(home)).toBe(0o777);
     if (existing) {
       fs.writeFileSync(join(home, ".env"), OLD);
     }
@@ -198,7 +198,7 @@ describe("T-0163 review: setup secures the Hermes directory", () => {
       expect(fixture.run.status).toBe(0);
       expect(fs.existsSync(join(fixture.home, ".env"))).toBe(true);
       expect(fs.existsSync(fixture.local)).toBe(true);
-      if (LINUX) {
+      if (POSIX) {
         expect(mode(fixture.home)).toBe(0o700);
         const credentialIo = fixture.events.filter((event) => event.path === join(fixture.home, ".env"));
         expect(credentialIo.length).toBeGreaterThan(0);
@@ -215,7 +215,7 @@ describe("T-0163 review: setup secures the Hermes directory", () => {
       expect(fixture.run.status).toBe(0);
       expect(fs.existsSync(join(fixture.home, ".env"))).toBe(true);
       expect(fs.existsSync(fixture.local)).toBe(true);
-      if (LINUX) expect(mode(fixture.home)).toBe(0o700);
+      if (POSIX) expect(mode(fixture.home)).toBe(0o700);
     } finally {
       dispose(fixture.root);
     }
@@ -290,7 +290,7 @@ describe("T-0163 review: runtime directories", () => {
       fs.chmodSync(join(runtimeRoot, "backups"), 0o777);
     }
     fs.chmodSync(runtimeRoot, 0o777);
-    if (LINUX) {
+    if (POSIX) {
       expect(mode(runtimeRoot)).toBe(0o777);
       if (existingBackups) expect(mode(join(runtimeRoot, "backups"))).toBe(0o777);
     }
@@ -300,7 +300,7 @@ describe("T-0163 review: runtime directories", () => {
     expect(fs.readFileSync(runtimeEnv(), "utf8")).toBe(OLD.replace("fixture-old", NEW_KEY));
     expect(result.backupPath).not.toBeNull();
     expect(fs.readFileSync(result.backupPath!, "utf8")).toBe(OLD);
-    if (LINUX) {
+    if (POSIX) {
       expect(mode(runtimeRoot)).toBe(0o700);
       expect(mode(join(runtimeRoot, "backups"))).toBe(0o700);
       const credentialEvents = events.filter((event) => event.path === runtimeEnv());
@@ -316,7 +316,7 @@ describe("T-0163 review: runtime directories", () => {
 describe("T-0163 review: existing staging names", () => {
   it.each(["public file", "symlink"] as const)("never writes a key through a %s at the selected staging path", (kind) => {
     fs.writeFileSync(runtimeEnv(), OLD);
-    if (!LINUX) {
+    if (!POSIX) {
       const { syncCredentialToHermesEnv } = require("@/modules/hermes/lib/hermes-env-sync") as typeof import("@/modules/hermes/lib/hermes-env-sync");
       syncCredentialToHermesEnv({ provider: "openrouter", apiKey: NEW_KEY });
       expect(fs.readFileSync(runtimeEnv(), "utf8")).toContain(NEW_KEY);
@@ -393,7 +393,7 @@ describe("T-0163 review: backup name collisions", () => {
     expect(second).not.toBe(first);
     expect(fs.readFileSync(first!, "utf8")).toBe(OLD);
     expect(fs.readFileSync(second!, "utf8")).toBe(OLD.replace("fixture-old", "fixture-second"));
-    if (LINUX) {
+    if (POSIX) {
       expect(mode(backups)).toBe(0o700);
       expect(mode(first!)).toBe(0o600);
       expect(mode(second!)).toBe(0o600);

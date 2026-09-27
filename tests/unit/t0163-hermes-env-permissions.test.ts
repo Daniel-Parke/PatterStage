@@ -9,7 +9,7 @@ const fs = require("node:fs") as typeof import("node:fs");
 const PREFIX = "t0163-hermes-permissions-";
 const ORIGINAL = "# keep this comment\nOPENROUTER_API_KEY=fixture-old\nFOO=keep\n";
 const NEW_KEY = "fixture-new-private-key";
-const IS_LINUX = process.platform === "linux";
+const IS_POSIX = process.platform === "linux" || process.platform === "darwin";
 
 jest.mock("@/modules/hermes/lib/agent-runtime", () => require("../helpers/mocks").agentRuntimeFakeRootMock());
 
@@ -30,13 +30,13 @@ function disposable(path: string): boolean {
 }
 
 function privateMode(path: string): void {
-  if (IS_LINUX) expect(mode(path)).toBe(0o600);
+  if (IS_POSIX) expect(mode(path)).toBe(0o600);
   else expect(fs.existsSync(path)).toBe(true);
 }
 
 function originalWorldReadableEnv(): void {
   fs.writeFileSync(envPath(), ORIGINAL);
-  if (IS_LINUX) {
+  if (IS_POSIX) {
     fs.chmodSync(envPath(), 0o666);
     expect(mode(envPath())).toBe(0o666);
   }
@@ -118,7 +118,7 @@ describe("T-0163 Hermes credential dotenv permissions", () => {
     }
     expect(fs.readFileSync(envPath(), "utf8")).toContain(`ANTHROPIC_API_KEY=${NEW_KEY}`);
     privateMode(envPath());
-    if (IS_LINUX) {
+    if (IS_POSIX) {
       expect(observed.creations.length).toBeGreaterThan(0);
       expect(observed.creations.map((event) => event.mode)).toEqual(observed.creations.map(() => 0o600));
     }
@@ -135,7 +135,7 @@ describe("T-0163 Hermes credential dotenv permissions", () => {
     }
     expect(fs.readFileSync(envPath(), "utf8")).toBe(ORIGINAL.replace("fixture-old", NEW_KEY));
     privateMode(envPath());
-    if (IS_LINUX) {
+    if (IS_POSIX) {
       expect(observed.reads.filter((event) => event.path === envPath()).length).toBeGreaterThan(0);
       expect(observed.reads.filter((event) => event.path === envPath()).map((event) => event.mode))
         .toEqual(observed.reads.filter((event) => event.path === envPath()).map(() => 0o600));
@@ -156,7 +156,7 @@ describe("T-0163 Hermes credential dotenv permissions", () => {
     expect(backupPath).not.toBeNull();
     expect(fs.readFileSync(backupPath!, "utf8")).toBe(ORIGINAL);
     privateMode(backupPath!);
-    if (IS_LINUX) {
+    if (IS_POSIX) {
       const backups = observed.creations.filter((event) => event.path === backupPath);
       expect(backups.length).toBeGreaterThan(0);
       expect(backups.map((event) => event.mode)).toEqual(backups.map(() => 0o600));
@@ -178,7 +178,7 @@ describe("T-0163 Hermes credential dotenv permissions", () => {
     expect(fs.readFileSync(backupPath!, "utf8")).toBe(ORIGINAL);
     privateMode(envPath());
     privateMode(backupPath!);
-    if (IS_LINUX) {
+    if (IS_POSIX) {
       expect(observed.reads.filter((event) => event.path === envPath()).map((event) => event.mode))
         .toEqual(observed.reads.filter((event) => event.path === envPath()).map(() => 0o600));
       expect(observed.creations.map((event) => event.mode)).toEqual(observed.creations.map(() => 0o600));
@@ -187,7 +187,7 @@ describe("T-0163 Hermes credential dotenv permissions", () => {
 
   it.each(["replace", "remove"] as const)("fails closed when a public .env cannot be secured before %s", (action) => {
     originalWorldReadableEnv();
-    if (!IS_LINUX) {
+    if (!IS_POSIX) {
       const runtime = require("@/modules/hermes/lib/hermes-env-sync") as typeof import("@/modules/hermes/lib/hermes-env-sync");
       if (action === "replace") runtime.syncCredentialToHermesEnv({ provider: "openrouter", apiKey: NEW_KEY });
       else runtime.removeCredentialFromHermesEnv("openrouter");
@@ -228,7 +228,7 @@ describe("T-0163 Hermes credential dotenv permissions", () => {
     expect(backupPath).not.toBeNull();
     expect(fs.readFileSync(backupPath!, "utf8")).toBe(ORIGINAL);
     privateMode(backupPath!);
-    if (IS_LINUX) {
+    if (IS_POSIX) {
       expect(observed.creations.filter((event) => event.path === backupPath).map((event) => event.mode))
         .toEqual([0o600]);
     }

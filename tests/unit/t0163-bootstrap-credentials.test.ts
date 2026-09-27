@@ -13,7 +13,7 @@ const PREFIX = "t0163-bootstrap-credentials-";
 const KEY = "fixture-only-T0163-private-key";
 const HERMES_OLD = `# Hermes comment\nAPI_SERVER_KEY=${KEY}\nKEEP_HERMES=yes\n`;
 const LOCAL_OLD = "# PatterStage comment\nPS_ENABLE_DEPLOY_API=false\nKEEP_LOCAL=yes\n";
-const IS_LINUX = process.platform === "linux";
+const IS_POSIX = process.platform === "linux" || process.platform === "darwin";
 
 type Event = { action: "create" | "read" | "child"; path?: string; mode?: number; command?: string };
 type Fixture = { root: string; repo: string; hermes: string; local: string; events: Event[]; run: ReturnType<typeof spawnSync> };
@@ -28,12 +28,12 @@ function dispose(root: string): void {
 
 function checkMode(path: string): void {
   expect(existsSync(path)).toBe(true);
-  if (IS_LINUX) expect(statSync(path).mode & 0o777).toBe(0o600);
+  if (IS_POSIX) expect(statSync(path).mode & 0o777).toBe(0o600);
 }
 
 function existing(path: string, text: string): void {
   writeFileSync(path, text);
-  if (IS_LINUX) {
+  if (IS_POSIX) {
     chmodSync(path, 0o666);
     expect(statSync(path).mode & 0o777).toBe(0o666);
   }
@@ -205,7 +205,7 @@ function shellSetup(present: boolean, denyChmod = false): Fixture {
       writeFileSync(target, content);
       chmodSync(target, 0o755);
     }
-    if (denyChmod && IS_LINUX) {
+    if (denyChmod && IS_POSIX) {
       const target = join(bin, "chmod");
       writeFileSync(target, "#!/usr/bin/env bash\ncase \"$*\" in *'.env'*) printf 'denied\\n' > \"$ORACLE_CHMOD_DENIED\"; exit 13;; esac\nexec /usr/bin/chmod \"$@\"\n");
       chmodSync(target, 0o755);
@@ -234,7 +234,7 @@ function shellSetup(present: boolean, denyChmod = false): Fixture {
     const run = spawnSync(bashExecutable(), ["-c", "umask 000; bash \"$1\"", "oracle", shellPath(join(f.repo, "scripts", "bootstrap", "setup.sh"))], {
       cwd: f.repo, env, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], timeout: 30_000, windowsHide: true,
     });
-    const earlyRefusal = denyChmod && IS_LINUX && existsSync(denialFile);
+    const earlyRefusal = denyChmod && IS_POSIX && existsSync(denialFile);
     if (run.error || run.signal || (!existsSync(eventFile) && !earlyRefusal)) {
       const diagnostic = (run.stderr ?? "").replaceAll(KEY, "<redacted>").replaceAll(f.root, "<fixture>").slice(-800);
       throw new Error(`INFRASTRUCTURE: shell setup did not reach stubbed commands (${run.error?.message ?? run.signal ?? run.status}): ${diagnostic}`);
@@ -260,7 +260,7 @@ describe("T-0163 credential files at both public setup entries", () => {
       expect(f.run.status).toBe(0);
       checkMode(join(f.hermes, ".env"));
       checkMode(f.local);
-      if (IS_LINUX) {
+      if (IS_POSIX) {
         for (const path of [join(f.hermes, ".env"), f.local]) {
           const created = f.events.filter((event) => event.action === "create" && event.path === path);
           expect(created.length).toBeGreaterThan(0);
@@ -278,7 +278,7 @@ describe("T-0163 credential files at both public setup entries", () => {
       checkMode(f.local);
       expect(readFileSync(join(f.hermes, ".env"), "utf8")).toContain(HERMES_OLD);
       expect(readFileSync(f.local, "utf8")).toContain(LOCAL_OLD);
-      if (IS_LINUX) {
+      if (IS_POSIX) {
         for (const path of [join(f.hermes, ".env"), f.local]) {
           const reads = f.events.filter((event) => event.action === "read" && event.path === path);
           expect(reads.length).toBeGreaterThan(0);
@@ -291,7 +291,7 @@ describe("T-0163 credential files at both public setup entries", () => {
   it("Node setup fails without printing credentials when an existing file cannot be secured", () => {
     const f = nodeSetup(true, true);
     inspectFixture(f, () => {
-      if (IS_LINUX) {
+      if (IS_POSIX) {
         expect(f.run.status).not.toBe(0);
         expect(f.run.stdout).not.toContain("Setup Complete!");
         expect(`${f.run.stdout}\n${f.run.stderr}`).not.toContain(KEY);
@@ -325,7 +325,7 @@ describe("T-0163 credential files at both public setup entries", () => {
   it("POSIX setup fails closed and never prints a key if a public file cannot be secured", () => {
     const f = shellSetup(true, true);
     inspectFixture(f, () => {
-      if (IS_LINUX) {
+      if (IS_POSIX) {
         expect(f.run.status).not.toBe(0);
         expect(f.run.stdout).not.toContain("Setup Complete!");
         expect(`${f.run.stdout}\n${f.run.stderr}`).not.toContain(KEY);
