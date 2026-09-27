@@ -34,6 +34,19 @@ by T-0170; #231's older eslint-config-next version is superseded. Unique
 dependency proposals stay open until gated on current dev. The audit is an
 evidence-only review, with no application or gate change.
 
+T-0172 used the operator's explicit branch-cleanup ruling to close the two
+fully addressed PRs, #234 and #231. Their exact former heads are held under
+local `refs/archive/t0172/` non-branch refs. #234's remote head was deleted
+with an explicit SHA lease after its PR closed unmerged. #231's Dependabot
+head disappeared when its PR closed; no second deletion was issued. Final
+remote checks found both heads absent, while `dev@460b3bac` and
+`main@9b786b76` remained fixed. Twelve PRs remained open: #157 and eleven
+Dependabot proposals. #231 had six optional bundled WASM lockfile records
+absent from dev; the same dependencies were already declared under its
+unchanged Tailwind parent, and its stated ESLint update was superseded by the
+paired 16.3.6 update. The surviving unique version proposals must be gated
+on current dev before their source PRs and branches can retire.
+
 ADR-0012 and its independently prompted correction ADR-0013 were accepted by
 the operator and filed before T-0158 implementation. The correction records
 private-proxy network isolation, token rotation, read-only navigation renewal,

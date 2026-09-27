@@ -9,21 +9,21 @@
     {"factor": "irreversible-action", "tier_floor": "R3", "source": "declared", "evidence": "Remote branch refs will be deleted after verified local archive refs preserve their exact commits."},
     {"factor": "boundary-contact", "tier_floor": "R1", "source": "declared", "evidence": "Closing PRs and deleting remote refs changes GitHub state."}
   ],
-  "status": "active",
+  "status": "done",
   "owner_session": "2026-09-27-refactor-foundations",
   "claims": ["org/tasks/T-0172.json", "org/claims.json", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md"],
   "programme": "T-0171's committed ledger at dev@460b3bac identifies both exact heads and why neither contains a current missing fix. The operator explicitly authorised closing addressed PRs and deleting branches with no ongoing work, with relevant changes retained on dev. This supersedes the earlier push-only-dev restriction only for proved branch deletion; no push to main, merge or release is authorised. All four hosted workflows for 460b3bac completed successfully before this task opened.",
-  "timestamps": {"opened": "2026-09-27T12:57:06Z", "updated": "2026-09-27T12:57:06Z", "closed": null},
+  "timestamps": {"opened": "2026-09-27T12:57:06Z", "updated": "2026-09-27T13:03:30Z", "closed": "2026-09-27T13:03:30Z"},
   "invariants": [
     "PR #234 remains at 5435cbe8ab6eab31f810c9fc5d37e33db28238b6 and PR #231 at 2c2a47c3aa2fa705ab7f8895dc376640d84f7c17 until the preflight completes.",
     "The PR #234 liveness and documentation contract is on dev via T-0170; the PR #231 eslint-config-next 16.3.4 proposal is superseded by the paired Next and eslint-config-next 16.3.6 on dev.",
-    "Each source commit is held by a verified refs/archive/pr-#### local ref before its remote head is deleted; remote deletion uses the expected exact SHA as a lease.",
+    "Each source commit is held by a verified refs/archive/t0172/pr-###-<head> local ref before its remote head disappears. Any deletion issued by this task uses the expected exact SHA as a lease; if PR closure itself removes a branch, verify that result without issuing another deletion.",
     "dev, main and PR #157 stay unchanged by the external actions; no other PR, ref or worktree is touched."
   ],
   "rollback": "A closed PR can be reopened. If a branch must be restored, push its verified refs/archive/pr-#### commit to its original exact name only after a new ruling; never restore by guessing a tip. Do not force-delete a changed remote head.",
   "oracle_provenance": "Independent read-only PR #234 seven-path comparison by Pauli before T-0171, and an independent fail-closed preflight checklist requested before this action. This administrative operation changes no product or gate code, so a red-first executable oracle and mutation sweep do not apply.",
-  "verification": "",
-  "review": "",
+  "verification": "Both PRs were OPEN at their recorded heads and targeted dev before action. refs/archive/t0172/pr-234-5435cbe8 and refs/archive/t0172/pr-231-2c2a47c3 were each created against an all-zero old ref, resolved to the exact full SHA and held a commit object before closure. #234 closed unmerged; its head remained at 5435cbe8 and a dry-run then real push deletion with an explicit full-SHA lease succeeded. #231 closed unmerged; its remote head disappeared during gh pr close, so no git deletion was issued. Final gh pr list has 12 open PRs: #157 and eleven Dependabot PRs, including #233. Both target source heads are absent from git ls-remote, both archive refs still resolve, origin/dev remains 460b3bac and origin/main remains 9b786b76. No other PR or worktree was changed.",
+  "review": "Pauli's separate-session preflight checked #234's seven-file behavioural equivalence and found six optional, bundled Tailwind/WASM nested lockfile records in #231 absent from current dev. Those records are incidental to #231's stated eslint-config-next 16.3.4 update: the same six dependencies and ranges were already in the unchanged Tailwind parent; current dev has the superseding paired Next/eslint-config-next 16.3.6 and passed Ubuntu, macOS and install CI. No byte-identical lockfile claim was made. The exact PR and remote heads were checked immediately before each action, and both archived commits remain recoverable.",
   "mutation": "Not applicable to an administrative PR/ref disposition; no executable change.",
-  "deviation": ""
+  "deviation": "The repository setting delete_branch_on_merge is false, but closing Dependabot PR #231 coincided with its source branch disappearing. The actor or mechanism was not independently established. The task stopped that deletion path, verified the remote absence and retained the local archive ref; it did not claim a lease-guarded deletion of #231. PR #234's explicit deletion did use a full-SHA lease."
 }
