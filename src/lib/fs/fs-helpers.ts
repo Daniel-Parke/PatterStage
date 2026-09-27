@@ -2,7 +2,7 @@
 // (atomic write + rollback) belongs in `modules/hermes/lib/hermes-config-write.ts`
 // and `modules/hermes/lib/profile-sync-shared.ts`.
 
-import { chmodSync, closeSync, existsSync, fstatSync, mkdirSync, openSync, readFileSync, readSync, rmSync, writeFileSync, writeSync } from "fs";
+import { chmodSync, closeSync, existsSync, fstatSync, mkdirSync, openSync, readFileSync, readSync, rmSync, writeSync } from "fs";
 import { createHash } from "crypto";
 
 /** Owner read/write. The mode for anything holding an operator's data. */
@@ -76,7 +76,7 @@ export function backupFile(originalPath: string, backupsDir: string): string | n
   ensureDir(backupsDir);
   const base = originalPath.split(/[/\\]/).pop() ?? "file";
   const target = `${backupsDir}/${base}.${backupTimestamp()}.bak`;
-  writeFileSync(target, readFileSync(originalPath, "utf-8"), { encoding: "utf-8" });
+  copyOwnerOnly(originalPath, target);
   return target;
 }
 

@@ -16,10 +16,21 @@
 // Multi-line quoted values are not supported and never were: readEnvFile below
 // and ps_load_patterstage_env_local both parse strictly line by line.
 
-import { existsSync, readFileSync, writeFileSync } from "fs";
+import { chmodSync, closeSync, existsSync, openSync, readFileSync, statSync, writeFileSync } from "fs";
 
 const KEY_RE = /^[A-Za-z_][A-Za-z0-9_]*$/;
 const ASSIGN_RE = /^[A-Za-z_][A-Za-z0-9_]*=/;
+
+/** Create owner-only, or narrow an existing dotenv before any credential read. */
+export function ensurePrivateEnvFile(file) {
+  const fd = openSync(file, "a", 0o600);
+  closeSync(fd);
+  if (process.platform === "win32") return;
+  chmodSync(file, 0o600);
+  if ((statSync(file).mode & 0o777) !== 0o600) {
+    throw new Error(`Could not secure credential file: ${file}`);
+  }
+}
 
 /** True when `line` is something a dotenv parser can make sense of. */
 export function isDotenvLine(line) {
@@ -55,12 +66,13 @@ export function setEnvVar(file, key, val) {
         `(first line: ${value.split(/[\r\n]/)[0]})`,
     );
   }
+  ensurePrivateEnvFile(file);
   const existing = existsSync(file) ? readFileSync(file, "utf-8").split("\n") : [];
   const kept = existing.filter(
     (l) => l.trim() !== "" && isDotenvLine(l) && !l.replace(/\r$/, "").startsWith(`${key}=`),
   );
   kept.push(`${key}=${value}`);
-  writeFileSync(file, kept.join("\n") + "\n");
+  writeFileSync(file, kept.join("\n") + "\n", { mode: 0o600 });
 }
 
 /**
@@ -70,6 +82,7 @@ export function setEnvVar(file, key, val) {
  * (decision 17, T-0095).
  */
 export function setEnvVarIfAbsent(file, key, val) {
+  ensurePrivateEnvFile(file);
   if (Object.prototype.hasOwnProperty.call(readEnvFile(file), String(key))) return false;
   setEnvVar(file, key, val);
   return true;

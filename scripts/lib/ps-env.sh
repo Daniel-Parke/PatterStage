@@ -23,7 +23,8 @@
 # dropped. Nothing reads one: both ps_load_patterstage_env_local and
 # readEnvFile() in scripts/bootstrap/env-local.mjs parse strictly line by line,
 # so such a value never worked in the first place.
-ps_env_set() {
+ps_env_set() (
+  umask 077
   local file="$1"
   local key="$2"
   local val="$3"
@@ -45,8 +46,10 @@ ps_env_set() {
   dir="$(dirname "$file")"
   mkdir -p "$dir"
   touch "$file"
+  chmod 600 "$file" || return 1
   local tmp
-  tmp="$(mktemp)"
+  tmp="$(mktemp "${file}.tmp.XXXXXX")"
+  trap 'rm -f "$tmp"' EXIT
   local line stripped
   {
     while IFS= read -r line || [ -n "$line" ]; do
@@ -65,7 +68,7 @@ ps_env_set() {
     printf '%s\n' "${key}=${val}"
   } >"$tmp"
   mv "$tmp" "$file"
-}
+)
 
 # Set KEY=value only when the file has no KEY= line yet.
 #
@@ -76,6 +79,7 @@ ps_env_set_if_absent() {
   local file="$1"
   local key="$2"
   local val="$3"
+  if [ -f "$file" ]; then chmod 600 "$file" || return 1; fi
   if [ -f "$file" ] && grep -q "^${key}=" "$file" 2>/dev/null; then
     return 0
   fi

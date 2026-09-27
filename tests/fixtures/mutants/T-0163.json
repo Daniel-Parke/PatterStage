@@ -1,0 +1,38 @@
+{
+  "task": "T-0163",
+  "why": "The independent Linux oracle must detect a public first creation, an unsecured existing Hermes dotenv, and a public plaintext backup.",
+  "mutants": [
+    {
+      "id": "m1-public-bootstrap-creation",
+      "file": "scripts/bootstrap/env-local.mjs",
+      "anchor": "const fd = openSync(file, \"a\", 0o600);",
+      "replacement": "const fd = openSync(file, \"a\", 0o666);",
+      "tests": ["tests/unit/t0163-bootstrap-credentials.test.ts"],
+      "why": "The Node setup fixture records the mode at the first creation, before the later chmod."
+    },
+    {
+      "id": "m2-public-existing-hermes-env",
+      "file": "src/modules/hermes/lib/hermes-env-sync.ts",
+      "anchor": "secureExistingEnv(envPath);",
+      "replacement": "void envPath;",
+      "tests": ["tests/unit/t0163-hermes-env-permissions.test.ts"],
+      "why": "A public existing Hermes dotenv must be narrowed before backup or read."
+    },
+    {
+      "id": "m3-public-plaintext-backup",
+      "file": "src/lib/fs/fs-helpers.ts",
+      "anchor": "copyOwnerOnly(originalPath, target);",
+      "replacement": "copyOwnerOnly(originalPath, target); chmodSync(target, 0o666);",
+      "tests": ["tests/unit/t0163-hermes-env-permissions.test.ts"],
+      "why": "The plaintext backup must have owner-only mode from its first byte."
+    },
+    {
+      "id": "m4-public-runtime-stage",
+      "file": "src/modules/hermes/lib/hermes-env-sync.ts",
+      "anchor": "atomicWriteFile(envPath, serializeEnvFile(prior, next, original), { mode: OWNER_ONLY_FILE });",
+      "replacement": "atomicWriteFile(envPath, serializeEnvFile(prior, next, original), { mode: 0o666 });",
+      "tests": ["tests/unit/t0163-hermes-env-permissions.test.ts"],
+      "why": "The staged replacement must be private before its rename onto .env."
+    }
+  ]
+}

@@ -18,7 +18,7 @@ import { fileURLToPath } from "url";
 import { randomBytes } from "crypto";
 
 import { copyOwnerOnly, isWindows, portInUse } from "../tooling/_platform.mjs";
-import { readEnvFile, setEnvVar, setEnvVarIfAbsent } from "./env-local.mjs";
+import { ensurePrivateEnvFile, readEnvFile, setEnvVar, setEnvVarIfAbsent } from "./env-local.mjs";
 
 const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const args = process.argv.slice(2);
@@ -118,6 +118,7 @@ async function main() {
   }
   log(`✓ Node.js ${process.version}`);
 
+  ensurePrivateEnvFile(ENV_FILE);
   const port = await pickPort();
   setEnvLocal("PORT", String(port));
   setEnvLocal("PS_ALLOWED_DEV_ORIGINS", lanOrigins(port));
@@ -134,6 +135,7 @@ async function main() {
     // Wire a shared Hermes API Server bearer key.
     const hermesEnv = join(HERMES_HOME, ".env");
     mkdirSync(HERMES_HOME, { recursive: true });
+    ensurePrivateEnvFile(hermesEnv);
     let key = "";
     if (existsSync(hermesEnv)) {
       const m = readFileSync(hermesEnv, "utf-8").match(/^API_SERVER_KEY=(.+)$/m);

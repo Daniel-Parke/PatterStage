@@ -30,10 +30,10 @@ import { buildHermesPathBundle } from "./paths";
 import { getHermesDefaultRoot } from "./profile-paths";
 
 /** Stage to a sibling tmpfile, then rename (atomic on POSIX, same volume). Caller ensures the dir exists. */
-export function atomicWriteFile(targetPath: string, content: string): void {
+export function atomicWriteFile(targetPath: string, content: string, options: { mode?: number } = {}): void {
   const tmpPath = `${targetPath}.tmp-${process.pid}-${Date.now()}`;
   try {
-    writeFileSync(tmpPath, content, { encoding: "utf-8" });
+    writeFileSync(tmpPath, content, { encoding: "utf-8", ...options });
     renameSync(tmpPath, targetPath);
   } catch (err) {
     if (existsSync(tmpPath)) {

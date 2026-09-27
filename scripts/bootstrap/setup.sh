@@ -119,7 +119,8 @@ if [ "$HERMES_CONFIGURED" = true ]; then
     # key between Hermes (server side) and PatterStage (client side).
     HERMES_ENV="$HERMES_HOME/.env"
     mkdir -p "$HERMES_HOME"
-    touch "$HERMES_ENV"
+    (umask 077; : >> "$HERMES_ENV")
+    chmod 600 "$HERMES_ENV"
 
     API_KEY=$(grep -E '^API_SERVER_KEY=' "$HERMES_ENV" 2>/dev/null | tail -1 | cut -d= -f2-)
     if [ -z "$API_KEY" ]; then

@@ -1,9 +1,9 @@
 {
   "measuredAt": "2026-09-27",
   "counts": {
-    "srcLines": 101096,
-    "testLines": 128741,
-    "scriptsLines": 13595,
+    "srcLines": 101106,
+    "testLines": 129311,
+    "scriptsLines": 13615,
     "srcRepeatedWindowLines": 1000,
     "testRepeatedWindowLines": 4683,
     "routesWithTryCatch": 18,
@@ -620,6 +620,21 @@
       "measuredAt": "2026-09-27",
       "rise": "testLines rose from 128640 to 128743",
       "reason": "T-0162 independent Q-021 C6/C8/form-control amendments add 103 test lines while retaining every prior test name; the coordinator adds fixture assertions for on-demand reads and complete Knip globs"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "srcLines rose from 101096 to 101106",
+      "reason": "T-0163: independently frozen credential-permission oracle and fail-closed owner-only bootstrap and runtime writers"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 128741 to 129311",
+      "reason": "T-0163: independently frozen credential-permission oracle and fail-closed owner-only bootstrap and runtime writers"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "scriptsLines rose from 13595 to 13615",
+      "reason": "T-0163: independently frozen credential-permission oracle and fail-closed owner-only bootstrap and runtime writers"
     }
   ]
 }

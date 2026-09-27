@@ -17,13 +17,21 @@
 // file content.
 // ═══════════════════════════════════════════════════════════════
 
-import { existsSync, readFileSync } from "fs";
+import { chmodSync, existsSync, readFileSync, statSync } from "fs";
 
-import { ensureDir } from "@/lib/fs/fs-helpers";
+import { ensureDir, OWNER_ONLY_FILE } from "@/lib/fs/fs-helpers";
 import { parseEnvFile, ENV_LINE_RE } from "@/lib/config/env-file";
 import { getActiveHermesPaths } from "./agent-runtime";
 import { envVarForProvider, isHermesProvider, type HermesProvider } from "./providers";
 import { atomicWriteFile, backupFile } from "./hermes-config-write";
+
+function secureExistingEnv(path: string): void {
+  if (!existsSync(path) || process.platform === "win32") return;
+  chmodSync(path, OWNER_ONLY_FILE);
+  if ((statSync(path).mode & 0o777) !== OWNER_ONLY_FILE) {
+    throw new Error(`Could not secure credential file: ${path}`);
+  }
+}
 
 function serializeEnvFile(
   prior: Map<string, string>,
@@ -90,6 +98,7 @@ export function syncCredentialToHermesEnv(input: SyncCredentialInput): { backupP
   }
 
   ensureDir(paths.root);
+  secureExistingEnv(envPath);
   const backupPath = backupFile(envPath, paths.backups);
 
   const original = existsSync(envPath) ? readFileSync(envPath, "utf-8") : "";
@@ -97,7 +106,7 @@ export function syncCredentialToHermesEnv(input: SyncCredentialInput): { backupP
   const next = new Map(prior);
   next.set(envVar, input.apiKey);
 
-  atomicWriteFile(envPath, serializeEnvFile(prior, next, original));
+  atomicWriteFile(envPath, serializeEnvFile(prior, next, original), { mode: OWNER_ONLY_FILE });
 
   return { backupPath };
 }
@@ -119,6 +128,7 @@ export function removeCredentialFromHermesEnv(provider: HermesProvider): { backu
   }
   const paths = getActiveHermesPaths();
   if (!existsSync(paths.env)) return { backupPath: null };
+  secureExistingEnv(paths.env);
   const backupPath = backupFile(paths.env, paths.backups);
 
   const original = readFileSync(paths.env, "utf-8");
@@ -129,6 +139,6 @@ export function removeCredentialFromHermesEnv(provider: HermesProvider): { backu
   if (!envVar) return { backupPath };
   next.delete(envVar);
 
-  atomicWriteFile(paths.env, serializeEnvFile(prior, next, original));
+  atomicWriteFile(paths.env, serializeEnvFile(prior, next, original), { mode: OWNER_ONLY_FILE });
   return { backupPath };
 }
