@@ -1,15 +1,6 @@
 {
   "version": 1,
   "assigned": "2026-09-27",
-  "lanes": [
-    {
-      "lane_id": "T-0170-coordinator",
-      "task_id": "T-0170",
-      "session_id": "2026-09-27-refactor-foundations",
-      "path_claims": ["org/tasks/T-0170.json", "org/claims.json", "org/briefs/T-0170-read-only-amendment.md", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", "src/proxy.ts", "src/app/healthz/route.ts", "src/app/api/healthz/route.ts", "src/app/api/health/route.ts", "tests/fixtures/mutants/T-0170.json", "docs/reference/api.md", "docs/contributing/testing.md", "docs/SECURITY.md", "docs/adr/README.md", "scripts/tooling/output-canary.golden.json", "scripts/tooling/line-census.baseline.json"],
-      "expires": "2026-09-29T23:00:00Z",
-      "liveness": "carry PR #234 liveness contract to dev, integrate independent read-only oracle, gate, sweep and observe hosted jobs"
-    }
-  ],
-  "note": "The independent T-0170 oracle lane finished at 7d3ed509 and was released; the coordinator alone completes the final gate and sweep."
+  "lanes": [],
+  "note": "T-0170 lanes released after red-first oracle, independent amendment, full byte-matched gate, direct HTTP smoke and two killed committed-tree mutants."
 }

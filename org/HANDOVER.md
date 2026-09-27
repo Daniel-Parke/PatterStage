@@ -9,6 +9,29 @@ updated: 2026-09-27
 
 ## Dated status, 2026-09-27
 
+T-0170 carries PR #234's public liveness contract onto current `dev` without
+merging its conflicting old branch: `GET /healthz` answers plain `ok` with
+`no-store`, `/api/healthz` answers `{ok:true}`, and unsafe methods retain auth
+and read-only checks. Its oracle was red 3/4 before source work; an independent
+author preserved those four names and added a read-only case. The final
+byte-matched isolated ten-step gate passed with an unchanged tree stamp, 728
+Jest suites (7219 passed, 4 skipped) and 283 Playwright passes (24 skipped).
+A disposable-data HTTP probe confirmed the response and refusal codes; two
+committed-tree mutants were killed. PR #234 remains open for an operator
+disposition after its seven-file contract is compared with the landed change.
+T-0170's closure push and hosted jobs are pending.
+
+ADR-0012 and its independently prompted correction ADR-0013 were accepted by
+the operator and filed before T-0158 implementation. The correction records
+private-proxy network isolation, token rotation, read-only navigation renewal,
+the narrow POST sign-in bypass and token-free onboarding. T-0158 remains next
+for the security prerequisite. The operator has put branch and PR consolidation
+first. A read-only inventory found 14 open PRs and 16 registered worktrees;
+dirty checkouts and detached heads include unique commits, with two oracle
+patches not yet content-equivalent to `dev`. No ref, PR or worktree has been
+removed. The detailed preservation ledger and dispositions need a separate
+batch before any pruning.
+
 T-0169 repaired the Settings `#env` anchor race traced in T-0167's hosted PR
 full E2E. A delayed Hermes read expanded the preceding editor after the
 initial hash jump and could push the heading out of view. The new browser
@@ -20,9 +43,9 @@ gate passed with an unchanged tree stamp, 727 Jest suites (7214 passed,
 4 skipped) and 283 Playwright passes (24 skipped). A separate-data visual
 walk at 1440x900 and 390x844 found the heading in view, one h1, no console
 errors and no horizontal overflow; screenshots and hashes are in T-0169's
-record. All four T-0168 hosted workflows completed success, including macOS,
-PR full E2E, install and acceptance. T-0169's closure push and hosted jobs
-remain. T-0158's session ADR follows after they complete.
+record. All four T-0168 and all four T-0169 hosted workflows completed
+success, including macOS, PR full E2E, install and acceptance. The session
+ADRs are now accepted; implementation waits behind the branch/PR audit.
 
 T-0168 repaired the remaining T-0163 bootstrap-oracle path alias. T-0167's
 hosted push and PR macOS jobs failed two literal-path event assertions, while
