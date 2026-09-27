@@ -26,3 +26,15 @@ test-name sets and count, commit only the two owned test files, and demonstrate
 a red exit on the unmodified source. A local Docker Linux run is available if
 Windows cannot express the permission failure. Report any fixture limitation
 honestly; no skip or reduced coverage may turn a red requirement green.
+
+## 2026-09-27 fixture amendment after implementation
+
+The original thirteen names are frozen at commit `1dd40c41`. Native Linux
+control fails the `POSIX setup fails closed` test because its fixture insists
+that a stubbed later command has run. The intentional chmod refusal exits
+before that command and before the fixture's event file exists. Amend only
+`tests/unit/t0163-bootstrap-credentials.test.ts` so this exact early refusal
+is observable, while launch errors, timeouts and unexpected success still fail.
+Preserve all thirteen test names, every mode and secrecy assertion, and the
+ordinary setup controls. The coordinator will record a dated amendment with
+your commit and before/after test-name identity. Do not edit implementation.
