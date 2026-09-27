@@ -40,8 +40,8 @@ function childEnv(root: string, dataDir: string, hermesHome: string): NodeJS.Pro
   return env;
 }
 
-function run(script: string, preload: string, env: NodeJS.ProcessEnv, tsx = true) {
-  return spawnSync(process.execPath, ["--require", preload, ...(tsx ? ["--import", "tsx"] : []), script], {
+function run(script: string, preload: string, env: NodeJS.ProcessEnv, tsx = true, args: string[] = []) {
+  return spawnSync(process.execPath, ["--require", preload, ...(tsx ? ["--import", "tsx"] : []), script, ...args], {
     cwd: ROOT,
     env,
     encoding: "utf8",
@@ -107,6 +107,43 @@ describe("T-0161 explicit Hermes model sync reports finaliser refusal", () => {
         contentLeaked: (refused.stdout + refused.stderr).includes(PRIVATE_MARKER),
         configChanged: readFileSync(config, "utf8") !== malformed,
       }).toEqual({ exitedNonZero: true, safeFailure: true, contentLeaked: false, configChanged: false });
+    } finally {
+      const actual = realpathSync(root);
+      if (dirname(actual) !== realpathSync(tmpdir()) || !basename(actual).startsWith(PREFIX)) {
+        throw new Error("INFRASTRUCTURE: refusing to remove a fixture outside the temporary directory");
+      }
+      rmSync(actual, { recursive: true, force: true });
+    }
+  });
+
+  it("exits non-zero when required Hermes config is missing", () => {
+    const root = mkdtempSync(join(tmpdir(), PREFIX));
+    try {
+      const dataDir = join(root, "data");
+      const hermesHome = join(root, "hermes");
+      const config = join(hermesHome, "config.yaml");
+      const preload = join(root, "block-local-env.cjs");
+      mkdirSync(dataDir);
+      mkdirSync(hermesHome);
+      writeFileSync(preload, BLOCK_LOCAL_ENV);
+      const env = childEnv(root, dataDir, hermesHome);
+      const migration = run("scripts/tooling/migrate-db.ts", preload, env);
+      requireLaunch(migration, "disposable migration");
+      if (migration.status !== 0 || !existsSync(join(dataDir, "patterstage.db"))) {
+        throw new Error(`INFRASTRUCTURE: disposable migration failed (${migration.status})`);
+      }
+      writeFileSync(config, "model:\n  provider: anthropic\n");
+      const configured = run("scripts/tooling/ensure-hermes-model-sync.ts", preload, env, true, ["--require-config"]);
+      requireLaunch(configured, "configured required-model-sync control");
+      if (configured.status !== 0 || !/"reason"\s*:\s*"no model_defaults\.agent"/.test(configured.stdout)) {
+        throw new Error(`INFRASTRUCTURE: configured control did not reach the model-sync CLI (${configured.status})`);
+      }
+      rmSync(config);
+      if (existsSync(config)) throw new Error("INFRASTRUCTURE: disposable Hermes config was not removed");
+      const missing = run("scripts/tooling/ensure-hermes-model-sync.ts", preload, env, true, ["--require-config"]);
+      requireLaunch(missing, "missing required Hermes config");
+      expect({ exitedNonZero: missing.status !== 0, configRecreated: existsSync(config) })
+        .toEqual({ exitedNonZero: true, configRecreated: false });
     } finally {
       const actual = realpathSync(root);
       if (dirname(actual) !== realpathSync(tmpdir()) || !basename(actual).startsWith(PREFIX)) {

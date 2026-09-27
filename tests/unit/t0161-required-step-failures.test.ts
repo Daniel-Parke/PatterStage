@@ -123,6 +123,7 @@ function runShellSetup(failStep: string): { root: string; result: ReturnType<typ
 const DEPLOY_PRELOAD = String.raw`
   const cp = require('node:child_process');
   const fs = require('node:fs');
+  const mode = process.env.ORACLE_DEPLOY_MODE || 'legacy-failure';
   let failedLegacy = false;
   cp.spawnSync = (command, args = []) => {
     const call = [command, ...args].join(' ');
@@ -131,11 +132,21 @@ const DEPLOY_PRELOAD = String.raw`
       : call.includes('hermes-registry-import.mjs') ? 'registry'
       : call.includes('import-hermes-state.ts') ? 'hermes-state'
       : call.includes('seed-catalog.ts') ? 'catalog'
+      : call.includes('ensure-hermes-model-sync.ts') ? 'model-sync'
       : call.includes('run build') ? 'build' : 'other';
     fs.appendFileSync(process.env.ORACLE_EVENTS, step + '\n');
-    if (failedLegacy) throw new Error('required migration failed; later child command reached');
-    if (step === 'legacy') {
+    if (mode === 'legacy-failure' && failedLegacy) throw new Error('required migration failed; later child command reached');
+    if (mode === 'legacy-failure' && step === 'legacy') {
       failedLegacy = true;
+      return { status: 17, stdout: '', stderr: '' };
+    }
+    if (mode === 'config-loss' && step === 'catalog') {
+      if (fs.existsSync(process.env.ORACLE_CONFIG)) fs.appendFileSync(process.env.ORACLE_EVENTS, 'config:present-at-catalog\n');
+      fs.rmSync(process.env.ORACLE_CONFIG, { force: true });
+      fs.appendFileSync(process.env.ORACLE_EVENTS, 'config:removed-after-catalog\n');
+    }
+    if (mode === 'config-loss' && step === 'model-sync' &&
+        !fs.existsSync(process.env.ORACLE_CONFIG) && call.includes('--require-config')) {
       return { status: 17, stdout: '', stderr: '' };
     }
     return { status: 0, stdout: '', stderr: '' };
@@ -143,7 +154,7 @@ const DEPLOY_PRELOAD = String.raw`
   require('node:module').syncBuiltinESMExports();
 `;
 
-function runDeployLegacyFailure(): { root: string; result: ReturnType<typeof spawnSync>; events: string[]; status: string } {
+function runDeployFixture(mode: "legacy-failure" | "config-present" | "config-loss"): { root: string; result: ReturnType<typeof spawnSync>; events: string[]; status: string } {
   const root = mkdtempSync(join(tmpdir(), PREFIX));
   const dataDir = join(root, "data");
   const hermesHome = join(root, "hermes");
@@ -172,6 +183,8 @@ function runDeployLegacyFailure(): { root: string; result: ReturnType<typeof spa
       PS_DEPLOY_STATUS_FILE: statusFile,
       TMPDIR: root,
       ORACLE_EVENTS: eventsFile,
+      ORACLE_CONFIG: join(hermesHome, "config.yaml"),
+      ORACLE_DEPLOY_MODE: mode,
     },
     encoding: "utf8",
     timeout: 30_000,
@@ -226,7 +239,7 @@ describe("T-0161 required post-backup steps cannot report success on failure", (
   });
 
   it("deploy rebuild records failed migration and launches no later required work after legacy-data failure", () => {
-    const fixture = runDeployLegacyFailure();
+    const fixture = runDeployFixture("legacy-failure");
     try {
       expect(fixture.events).toContain("legacy");
       expect({
@@ -235,6 +248,34 @@ describe("T-0161 required post-backup steps cannot report success on failure", (
         phaseIsMigration: /^phase=migrate$/m.test(fixture.status),
         laterCommands: fixture.events.slice(fixture.events.indexOf("legacy") + 1),
       }).toEqual({ failed: true, statusFailed: true, phaseIsMigration: true, laterCommands: [] });
+    } finally {
+      dispose(fixture.root);
+    }
+  });
+
+  it("deploy rebuild fails if configured Hermes config disappears after catalog before model sync", () => {
+    const control = runDeployFixture("config-present");
+    try {
+      if (!control.events.includes("catalog") || !control.events.includes("model-sync") ||
+          !/^phase=restart$/m.test(control.status)) {
+        throw new Error(`INFRASTRUCTURE: configured deploy control stopped at ${control.events.join(",")} (exit ${control.result.status}; ${control.status.match(/^phase=.*$/m)?.[0] ?? "no phase"})`);
+      }
+    } finally {
+      dispose(control.root);
+    }
+    const fixture = runDeployFixture("config-loss");
+    try {
+      for (const step of ["registry", "hermes-state", "catalog", "config:present-at-catalog", "config:removed-after-catalog"]) {
+        if (!fixture.events.includes(step)) {
+          throw new Error(`INFRASTRUCTURE: configured deploy did not reach ${step} before config loss`);
+        }
+      }
+      expect({
+        failed: fixture.result.status !== 0,
+        statusFailed: /^state=failed$/m.test(fixture.status),
+        reportedComplete: /^state=complete$/m.test(fixture.status),
+        stoppedBeforeRestart: !/^phase=restart$/m.test(fixture.status),
+      }).toEqual({ failed: true, statusFailed: true, reportedComplete: false, stoppedBeforeRestart: true });
     } finally {
       dispose(fixture.root);
     }

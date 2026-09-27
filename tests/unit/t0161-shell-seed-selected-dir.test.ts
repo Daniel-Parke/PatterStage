@@ -25,7 +25,7 @@ function shellPath(nativePath: string): string {
   return result.stdout.trim();
 }
 
-function shellFixture(root: string, selected: "explicit" | "legacy", dropHermesConfigDuringMigration = false) {
+function shellFixture(root: string, selected: "explicit" | "legacy", configLoss: false | true | "after-catalog" = false) {
   const repo = join(root, "repo");
   const bootstrap = join(repo, "scripts", "bootstrap");
   const lib = join(repo, "scripts", "lib");
@@ -38,7 +38,7 @@ function shellFixture(root: string, selected: "explicit" | "legacy", dropHermesC
   mkdirSync(bin, { recursive: true });
   mkdirSync(home, { recursive: true });
   mkdirSync(selectedDir, { recursive: true });
-  if (dropHermesConfigDuringMigration) {
+  if (configLoss) {
     mkdirSync(join(home, ".hermes"), { recursive: true });
     writeFileSync(join(home, ".hermes", "config.yaml"), "model:\n  default: anthropic/disposable-model\n");
   }
@@ -67,7 +67,14 @@ function shellFixture(root: string, selected: "explicit" | "legacy", dropHermesC
   writeFileSync(join(bin, "npx"), [
     "#!/bin/sh",
     "case \"$*\" in",
-    "  *seed-catalog.ts*) printf 'catalog:%s\\n' \"${PS_DATA_DIR:-<unset>}\" >> \"$ORACLE_EVENTS\" ;;",
+    "  *seed-catalog.ts*)",
+    "    printf 'catalog:%s\\n' \"${PS_DATA_DIR:-<unset>}\" >> \"$ORACLE_EVENTS\"",
+    "    if [ \"${ORACLE_DROP_HERMES_CONFIG:-}\" = after-catalog ]; then",
+    "      [ -f \"$HERMES_HOME/config.yaml\" ] && printf 'config:present-at-catalog\\n' >> \"$ORACLE_EVENTS\"",
+    "      rm -f \"$HERMES_HOME/config.yaml\"",
+    "      printf 'config:removed-after-catalog\\n' >> \"$ORACLE_EVENTS\"",
+    "    fi ;;",
+    "  *ensure-hermes-model-sync.ts*) printf 'model-sync\\n' >> \"$ORACLE_EVENTS\" ;;",
     "esac",
   ].join("\n") + "\n");
   for (const name of ["node", "npm", "npx"]) chmodSync(join(bin, name), 0o755);
@@ -82,28 +89,34 @@ function shellFixture(root: string, selected: "explicit" | "legacy", dropHermesC
   env.ORACLE_EVENTS = shellPath(events);
   env.PS_INSTALL_NONINTERACTIVE = "1";
   env.CI = "false";
-  if (dropHermesConfigDuringMigration) env.ORACLE_DROP_HERMES_CONFIG = "1";
+  if (configLoss) env.ORACLE_DROP_HERMES_CONFIG = configLoss === true ? "1" : "after-catalog";
   if (selected === "explicit") env.PS_DATA_DIR = shellPath(selectedDir);
 
   const run = spawnSync(bashExecutable(), [shellPath(join(bootstrap, "setup.sh"))], {
     cwd: repo, env, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], timeout: 30_000, windowsHide: true,
   });
-  if (run.error || run.signal || run.status === null || (!dropHermesConfigDuringMigration && run.status !== 0)) {
+  if (run.error || run.signal || run.status === null || (!configLoss && run.status !== 0)) {
     throw new Error(`INFRASTRUCTURE: disposable setup did not complete (${run.error?.message ?? run.signal ?? run.status}); ${run.stderr.slice(-800)}`);
   }
   if (!existsSync(events)) throw new Error("INFRASTRUCTURE: setup emitted no migration or seed events");
   const lines = readFileSync(events, "utf8").trim().split("\n");
-  if (!dropHermesConfigDuringMigration &&
+  if (!configLoss &&
       (lines.length !== 2 || !lines[0].startsWith("schema:") || !lines[1].startsWith("catalog:"))) {
     throw new Error(`INFRASTRUCTURE: setup did not reach both steps (${lines.join(", ")})`);
   }
-  if (dropHermesConfigDuringMigration &&
+  if (configLoss === true &&
       (!existsSync(join(home, ".hermes", ".env")) || !lines[0].startsWith("schema:") ||
        !lines.includes("config:present-at-migration") || !lines.includes("config:removed") ||
        existsSync(join(home, ".hermes", "config.yaml")))) {
     throw new Error("INFRASTRUCTURE: configured setup did not reach the config-removing migration fixture");
   }
-  return { lines, selectedDir: shellPath(selectedDir), status: run.status };
+  if (configLoss === "after-catalog" &&
+      (!existsSync(join(home, ".hermes", ".env")) || !lines[0].startsWith("schema:") ||
+       !lines.some((line) => line.startsWith("catalog:")) || !lines.includes("config:present-at-catalog") ||
+       !lines.includes("config:removed-after-catalog") || existsSync(join(home, ".hermes", "config.yaml")))) {
+    throw new Error("INFRASTRUCTURE: configured setup did not reach the config-removing catalog fixture");
+  }
+  return { lines, selectedDir: shellPath(selectedDir), status: run.status, reportedComplete: run.stdout.includes("Setup Complete!") };
 }
 
 describe("T-0161 shell setup seeds the selected database directory", () => {
@@ -127,6 +140,24 @@ describe("T-0161 shell setup seeds the selected database directory", () => {
       const { lines, status } = shellFixture(root, "explicit", true);
       expect({ exitedNonZero: status !== 0, catalogStarted: lines.some((line) => line.startsWith("catalog:")) })
         .toEqual({ exitedNonZero: true, catalogStarted: false });
+    } finally {
+      const actual = realpathSync(root);
+      if (dirname(actual) !== realpathSync(tmpdir()) || !basename(actual).startsWith(PREFIX)) {
+        throw new Error("INFRASTRUCTURE: refusing to remove a fixture outside the temporary directory");
+      }
+      rmSync(actual, { recursive: true, force: true });
+    }
+  });
+
+  it("stops configured setup if Hermes config disappears after catalog seed", () => {
+    const root = mkdtempSync(join(tmpdir(), PREFIX));
+    try {
+      const { lines, status, reportedComplete } = shellFixture(root, "explicit", "after-catalog");
+      expect({
+        exitedNonZero: status !== 0,
+        reportedComplete,
+        catalogFinishedBeforeLoss: lines.indexOf("config:removed-after-catalog") > lines.findIndex((line) => line.startsWith("catalog:")),
+      }).toEqual({ exitedNonZero: true, reportedComplete: false, catalogFinishedBeforeLoss: true });
     } finally {
       const actual = realpathSync(root);
       if (dirname(actual) !== realpathSync(tmpdir()) || !basename(actual).startsWith(PREFIX)) {
