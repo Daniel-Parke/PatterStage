@@ -4,7 +4,7 @@
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { basename, dirname, join } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 
 const ROOT = join(__dirname, "..", "..");
 const PREFIX = "t0161-discovery-error-";
@@ -103,7 +103,7 @@ describe("T-0161 explicit Hermes discovery errors", () => {
         if (count() !== 0) throw new Error(`INFRASTRUCTURE: ${kind} row could not be reset for the faulted import`);
 
         const faulted = run("scripts/tooling/import-hermes-state.ts", ["--pull"], preload, {
-          ...env, ORACLE_FAULT_PATH: realpathSync(target), ORACLE_EVENTS: events,
+          ...env, ORACLE_FAULT_PATH: resolve(target), ORACLE_EVENTS: events,
         });
         if (faulted.error || faulted.signal || faulted.status === null) {
           throw new Error(`INFRASTRUCTURE: faulted ${kind} import did not complete (${faulted.error?.message ?? faulted.signal ?? faulted.status})`);
