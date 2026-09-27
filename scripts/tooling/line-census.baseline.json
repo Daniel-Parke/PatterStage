@@ -2,7 +2,7 @@
   "measuredAt": "2026-09-27",
   "counts": {
     "srcLines": 101064,
-    "testLines": 128323,
+    "testLines": 128380,
     "scriptsLines": 13447,
     "srcRepeatedWindowLines": 1000,
     "testRepeatedWindowLines": 4683,
@@ -575,6 +575,11 @@
       "measuredAt": "2026-09-27",
       "rise": "scriptsLines rose from 13442 to 13447",
       "reason": "T-0161: protect edited root fields despite blank SOUL and remember configured Hermes before deploy build; 9 source and 5 script lines plus 84 independent test lines"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 128323 to 128380",
+      "reason": "T-0161: independent closed C8 oracle amendment adds seven fall-and-growth-accounting cases and corrects the historical ledger walk, net 57 test lines; Q-015 identity preserved"
     }
   ]
 }
