@@ -1,23 +1,6 @@
 {
   "version": 1,
   "assigned": "2026-09-27",
-  "lanes": [
-    {
-      "lane_id": "T-0168-coordinator",
-      "task_id": "T-0168",
-      "session_id": "2026-09-27-refactor-foundations",
-      "path_claims": ["org/tasks/T-0168.json", "org/claims.json", "org/briefs/T-0168-independent-amendment.md", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", "tests/fixtures/mutants/T-0168.json"],
-      "expires": "2026-09-29T23:00:00Z",
-      "liveness": "coordinator documents the hosted red result and verifies the symlinked-TMPDIR amendment"
-    },
-    {
-      "lane_id": "T-0168-independent-oracle",
-      "task_id": "T-0168",
-      "session_id": "01a0e212-5616-7eb1-b58e-ad9206ab4e83",
-      "path_claims": ["tests/unit/t0163-bootstrap-credentials.test.ts"],
-      "expires": "2026-09-29T23:00:00Z",
-      "liveness": "independent author repairs only the closed test fixture path identity"
-    }
-  ],
-  "note": "Two disjoint T-0168 writing lanes stay within max_lanes: 2; the macOS and symlinked-TMPDIR red results are the oracle."
+  "lanes": [],
+  "note": "T-0168 lanes released after the independent path amendment, full isolated gate and native-Linux symlinked-TMPDIR mutation sweep."
 }

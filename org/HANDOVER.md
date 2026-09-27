@@ -9,6 +9,22 @@ updated: 2026-09-27
 
 ## Dated status, 2026-09-27
 
+T-0168 repaired the remaining T-0163 bootstrap-oracle path alias. T-0167's
+hosted push and PR macOS jobs failed two literal-path event assertions, while
+PR full E2E failed one Settings `#env` heading-in-viewport assertion; both
+Gitleaks runs and all other substantive push/PR jobs passed. Acceptance was
+red downstream of PR full E2E and macOS. The independent T-0168 author kept
+all six original credential test names and added a symlinked-TMPDIR test,
+which reproduced the macOS failure on Linux before the fixture change. A
+native-Linux symlinked-TMPDIR run then passed 23/23 credential tests; its
+credential mutant was killed by assertion. The first isolated gate failed
+only the line census, which measured 51 added test lines. Baseline commit
+`2881c601` records the exact rise and reason; the repeated ten-step gate
+passed with an unchanged tree stamp, 726 Jest suites (7213 passed, 4 skipped)
+and 282 Playwright passes (24 skipped). Hosted checks for T-0168 remain to be
+observed. The separate Settings anchor layout race needs a red-first product
+repair before T-0158.
+
 T-0167 corrected the independently authored T-0163 credential oracle for
 macOS. T-0163's push CI `36309526484` and PR CI `36309529732` failed only
 macOS Jest; all other jobs, including PR acceptance, full E2E and both
