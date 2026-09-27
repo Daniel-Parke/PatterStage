@@ -11,23 +11,33 @@
   "reasons": [
     {"factor": "operator-plan-conservative-tier", "tier_floor": "R2", "source": "2026-09-27 prerequisite plan and Q-015", "evidence": "A closed security oracle needs an independently authored dated amendment and the hosted macOS failure is binding."}
   ],
-  "status": "active",
+  "status": "done",
   "owner_session": "2026-09-27-refactor-foundations",
   "claims": ["org/tasks/T-0167.json", "org/claims.json", "org/briefs/T-0167-independent-amendment.md", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", "scripts/tooling/line-census.baseline.json", "tests/fixtures/mutants/T-0167.json", "tests/unit/t0163-bootstrap-credentials.test.ts", "tests/unit/t0163-hermes-env-permissions.test.ts", "tests/unit/t0163-review-regressions.test.ts"],
   "programme": "Hosted repair immediately after T-0163; no T-0158 work starts until this correction is green on every hosted job.",
-  "timestamps": {"opened": "2026-09-27T09:38:43Z", "updated": "2026-09-27T09:38:43Z", "closed": null},
+  "timestamps": {"opened": "2026-09-27T09:38:43Z", "updated": "2026-09-27T09:53:29Z", "closed": "2026-09-27T09:53:29Z"},
   "invariants": [
     "The 22 existing T-0163 test names and all credential secrecy, mode, collision and fail-closed assertions remain.",
     "macOS and Linux both enforce POSIX mode and chmod-denial assertions; Windows remains functional without pretending its mode bits enforce secrecy.",
     "A session other than the implementer authors the closed-oracle amendment under Q-015; no production code or protected file changes.",
     "The hosted red run, an isolated complete gate, mutation evidence and every hosted push/PR job are recorded by exit code."
   ],
-  "notes": "Push CI 36309526484 at dev@28e7be19 failed only build-test-macos Unit tests with coverage: tests/unit/t0163-bootstrap-credentials.test.ts line 299 expected setup exit 0 but received 1. The injected chmod denial correctly made setup fail closed on macOS; the oracle's IS_LINUX predicate mistakenly treated macOS as Windows. Ubuntu and every other push job passed. PR CI 36309529732 was still running when this record opened. The T-0163 task record is closed history and is not rewritten.",
+  "notes": "Push CI 36309526484 and PR CI 36309529732 at dev@28e7be19 failed only build-test-macos Unit tests with coverage: tests/unit/t0163-bootstrap-credentials.test.ts line 299 expected setup exit 0 but received 1. The injected chmod denial correctly made setup fail closed on macOS; the oracle's IS_LINUX predicate mistakenly treated macOS as Windows. All other push and PR jobs, including hosted PR acceptance and full E2E, passed. Both Gitleaks runs passed. The T-0163 task record is closed history and is not rewritten.",
   "rollback": "Revert only the independent test amendment if macOS evidence disproves the POSIX expectation; retain the hosted red run and security checks. Do not revert T-0163 source to make the old oracle green.",
-  "oracle_provenance": {},
-  "commits": "",
-  "verification": "",
-  "review": "",
-  "mutation": "",
-  "deviation": ""
+  "oracle_provenance": {
+    "files": [
+      {"path": "tests/unit/t0163-bootstrap-credentials.test.ts", "old_lf_sha256": "bc9cc049040355b8c2198a8b3f13e5777fed554a4b2aa88e11ecb1f4660f02a3", "new_lf_sha256": "75c7c4f6b1d924560d0eeeaca25186699e1a92413965112ee1985848f3c8d9e0"},
+      {"path": "tests/unit/t0163-hermes-env-permissions.test.ts", "old_lf_sha256": "b3fab07d78f06174a9d0e51f774547ee30e0235431b18d894335441c27dc9a22", "new_lf_sha256": "a46b9eb5f35bfbc97fae62185215de1cf365ac463e47a9e51bc91e1d2cc6b5a0"},
+      {"path": "tests/unit/t0163-review-regressions.test.ts", "old_lf_sha256": "5d188789e3d0d98c131d917c01ee667014849260c635ac330973fa2c3c86a90b", "new_lf_sha256": "5abcb56574d9642e63258e5faf0fa4ea2ac552632283d5599195a94c68e09007"}
+    ],
+    "author_session": "01a0e23c-6e4e-75c2-8251-77d742e5988e",
+    "author_commit": "776607d21ccc33d0fe49f17b6de3a8211c7be4d6",
+    "authorised_by": "Q-015 independently authored closed-oracle amendment following hosted macOS red, 2026-09-27",
+    "identity": "The same 22 unique expanded test names before and after; POSIX assertions now run on Darwin as well as Linux."
+  },
+  "commits": "b1255d04 opened the record and brief; aed48b20 assigned the independent lane; a32e2c0f added the sweep manifest; 776607d2 is the independently authored test amendment.",
+  "verification": "Windows focused oracle 22/22, typecheck and focused ESLint passed. Native Linux Docker clean-clone focused oracle passed 22/22. The complete isolated ten-step gate at 776607d2 exited 0 on all steps with treeBefore=treeAfter=514e640e5a65c0f8aa811897e1007366494c2afd8397ff9ae4c203af26550ef3: 726 Jest suites, 7213 passed and 3 skipped; 282 Playwright passed and 24 skipped. No visual implementation changed. Hosted macOS and all other push/PR jobs remain to be observed after this record's push.",
+  "review": "Coordinator inspected the complete three-file amendment: only the Linux platform predicate was extended to Darwin, with the same assertions and Windows branches. No production file or protected set changed.",
+  "mutation": "Committed-tree native Linux sweep at 776607d2 exited 0: m1-public-bootstrap-creation KILLED by structured assertion-failed evidence; unmodified controls passed before and after and restoration was exact.",
+  "deviation": "The existing closed T-0163 test was red in hosted macOS CI and served as the red-first oracle for this test-only correction. Q-015 requires and received a separate author; no new test-name set was introduced. The Docker image needed a fresh Linux npm ci before focused tests because the mounted Windows dependency tree lacks Linux native packages."
 }

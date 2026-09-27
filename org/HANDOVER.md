@@ -9,6 +9,18 @@ updated: 2026-09-27
 
 ## Dated status, 2026-09-27
 
+T-0167 corrected the independently authored T-0163 credential oracle for
+macOS. T-0163's push CI `36309526484` and PR CI `36309529732` failed only
+macOS Jest; all other jobs, including PR acceptance, full E2E and both
+Gitleaks runs, passed. The product correctly failed closed under injected
+chmod denial; the test had treated Darwin as Windows. Commit `776607d2`
+extends POSIX assertions to Darwin and retains all 22 test names. Windows and
+native Linux focused runs each passed 22/22. The Linux committed-tree mutant
+was killed by assertion. The isolated ten-step gate passed with an unchanged
+tree stamp, 726 Jest suites (7213 passed, 3 skipped) and 282 Playwright
+passes (24 skipped). Hosted checks for the T-0167 closure push remain to be
+observed. The browser-session ADR in T-0158 is next after hosted green.
+
 T-0163 closed locally at candidate `b2d95e31`. Independent red-first oracles
 proved fresh and existing credential files, Hermes home and backups private
 under Linux umask 000, plus a planted staging file or symlink and two backups
@@ -20,10 +32,9 @@ assertion. The final isolated ten-step gate passed with an unchanged tree stamp:
 An earlier final-candidate gate lost its owned web server after 223 Playwright
 passes; the first affected spec passed alone and the next unchanged full gate
 passed. T-0163 records both runs, the earlier config-mock failure and its fix.
-Hosted push and PR jobs remain to be observed after the closure push. Next is
-T-0158's accepted browser-session ADR, then T-0164 reconnaissance and T-0165
-Phase 2 plan. PR #157 remains open; Q-011 still bars structural cleanup before
-an operator release.
+Hosted push and PR jobs failed only the later-corrected macOS oracle as noted
+above. T-0164 reconnaissance and T-0165 Phase 2 plan remain open. PR #157
+remains open; Q-011 still bars structural cleanup before an operator release.
 
 T-0162 repaired the remaining blind read, write, form-name and Knip gates at
 `745337fa`. It finds five hand-read files, four raw-write files, 158 controls
