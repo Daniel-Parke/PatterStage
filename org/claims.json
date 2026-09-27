@@ -13,7 +13,7 @@
     {
       "lane_id": "T-0163-independent-oracle",
       "task_id": "T-0163",
-      "session_id": "pending-review-oracle-author",
+      "session_id": "01a0e212-5616-7eb1-b58e-ad9206ab4e83",
       "path_claims": ["tests/unit/t0163-review-regressions.test.ts"],
       "expires": "2026-09-29T23:00:00Z",
       "liveness": "new independent author adds review regressions red-first before the coordinator repairs source"
