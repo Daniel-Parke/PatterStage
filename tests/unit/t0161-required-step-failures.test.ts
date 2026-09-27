@@ -145,7 +145,12 @@ const DEPLOY_PRELOAD = String.raw`
       fs.rmSync(process.env.ORACLE_CONFIG, { force: true });
       fs.appendFileSync(process.env.ORACLE_EVENTS, 'config:removed-after-catalog\n');
     }
-    if (mode === 'config-loss' && step === 'model-sync' &&
+    if (mode === 'build-config-loss' && step === 'build' && fs.existsSync(process.env.ORACLE_CONFIG)) {
+      fs.appendFileSync(process.env.ORACLE_EVENTS, 'config:present-at-build\n');
+      fs.rmSync(process.env.ORACLE_CONFIG, { force: true });
+      fs.appendFileSync(process.env.ORACLE_EVENTS, 'config:removed-during-build\n');
+    }
+    if ((mode === 'config-loss' || mode === 'build-config-loss') && step === 'model-sync' &&
         !fs.existsSync(process.env.ORACLE_CONFIG) && call.includes('--require-config')) {
       return { status: 17, stdout: '', stderr: '' };
     }
@@ -154,7 +159,7 @@ const DEPLOY_PRELOAD = String.raw`
   require('node:module').syncBuiltinESMExports();
 `;
 
-function runDeployFixture(mode: "legacy-failure" | "config-present" | "config-loss"): { root: string; result: ReturnType<typeof spawnSync>; events: string[]; status: string } {
+function runDeployFixture(mode: "legacy-failure" | "config-present" | "config-loss" | "build-config-loss"): { root: string; result: ReturnType<typeof spawnSync>; events: string[]; status: string } {
   const root = mkdtempSync(join(tmpdir(), PREFIX));
   const dataDir = join(root, "data");
   const hermesHome = join(root, "hermes");
@@ -269,6 +274,37 @@ describe("T-0161 required post-backup steps cannot report success on failure", (
         if (!fixture.events.includes(step)) {
           throw new Error(`INFRASTRUCTURE: configured deploy did not reach ${step} before config loss`);
         }
+      }
+      expect({
+        failed: fixture.result.status !== 0,
+        statusFailed: /^state=failed$/m.test(fixture.status),
+        reportedComplete: /^state=complete$/m.test(fixture.status),
+        stoppedBeforeRestart: !/^phase=restart$/m.test(fixture.status),
+      }).toEqual({ failed: true, statusFailed: true, reportedComplete: false, stoppedBeforeRestart: true });
+    } finally {
+      dispose(fixture.root);
+    }
+  });
+
+  it("deploy rebuild stops before restart if configured Hermes config disappears during build", () => {
+    const control = runDeployFixture("config-present");
+    try {
+      if (!control.events.includes("build") || !control.events.includes("model-sync") ||
+          !/^phase=restart$/m.test(control.status)) {
+        throw new Error("INFRASTRUCTURE: configured deploy control did not reach model sync and restart");
+      }
+    } finally {
+      dispose(control.root);
+    }
+    const fixture = runDeployFixture("build-config-loss");
+    try {
+      const removedAt = fixture.events.indexOf("config:removed-during-build");
+      const migrationAt = fixture.events.indexOf("schema");
+      const importAt = fixture.events.indexOf("registry");
+      if (!fixture.events.includes("build") || !fixture.events.includes("config:present-at-build") ||
+          removedAt < 0 || (migrationAt >= 0 && removedAt >= migrationAt) ||
+          (importAt >= 0 && removedAt >= importAt) || existsSync(join(fixture.root, "hermes", "config.yaml"))) {
+        throw new Error("INFRASTRUCTURE: configured deploy did not remove config during build before migration and import");
       }
       expect({
         failed: fixture.result.status !== 0,

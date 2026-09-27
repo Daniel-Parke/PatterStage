@@ -369,4 +369,52 @@ describe("T-0161 explicit Hermes state import completeness", () => {
       removeFixture(root);
     }
   });
+
+  it("preserves SQLite-only root config when soul is blank and no skills or profiles exist", () => {
+    const root = mkdtempSync(join(tmpdir(), PREFIX));
+    try {
+      const dataDir = join(root, "data");
+      const hermesHome = join(root, "hermes");
+      const preload = join(root, "block-local-env.cjs");
+      const sqliteConfig = "model:\n  default: anthropic/sqlite-only-model\n";
+      mkdirSync(dataDir);
+      mkdirSync(hermesHome);
+      writeFileSync(preload, BLOCK_LOCAL_ENV);
+      writeFileSync(join(hermesHome, "config.yaml"), "model:\n  default: anthropic/disk-only-model\n");
+      writeFileSync(join(hermesHome, "SOUL.md"), "Disposable disk root soul.\n");
+      const env = environment(root, dataDir, hermesHome);
+      requireSuccess(run("scripts/tooling/migrate-db.ts", [], preload, env), "disposable migration");
+      const initial = run("scripts/tooling/import-hermes-state.ts", ["--pull"], preload, env);
+      requireSuccess(initial, "disk-root control import");
+      const db = new DatabaseCtor(join(dataDir, "patterstage.db"));
+      try {
+        const diskRoot = db.prepare("SELECT config_yaml, soul_md FROM agent_root WHERE id = 1").get() as
+          { config_yaml: string; soul_md: string } | undefined;
+        if (!diskRoot || !diskRoot.config_yaml.includes("disk-only-model") || !diskRoot.soul_md.includes("Disposable disk")) {
+          throw new Error("INFRASTRUCTURE: initial control did not pull the disposable disk root");
+        }
+        const update = db.prepare("UPDATE agent_root SET config_yaml = ?, soul_md = '' WHERE id = 1").run(sqliteConfig);
+        const before = db.prepare("SELECT config_yaml, soul_md FROM agent_root WHERE id = 1").get() as
+          { config_yaml: string; soul_md: string };
+        const counts = db.prepare("SELECT (SELECT COUNT(*) FROM skills) AS skills, (SELECT COUNT(*) FROM agent_profiles) AS profiles")
+          .get() as { skills: number; profiles: number };
+        if (update.changes !== 1 || before.config_yaml !== sqliteConfig || before.soul_md !== "" ||
+            counts.skills !== 0 || counts.profiles !== 0) {
+          throw new Error("INFRASTRUCTURE: SQLite-only partial root fixture was not established");
+        }
+        const targeted = run("scripts/tooling/import-hermes-state.ts", ["--import-missing-profiles"], preload, env);
+        requireCompleted(targeted, "targeted import with SQLite-only root config");
+        const after = db.prepare("SELECT config_yaml, soul_md FROM agent_root WHERE id = 1").get() as
+          { config_yaml: string; soul_md: string };
+        const afterCounts = db.prepare("SELECT (SELECT COUNT(*) FROM skills) AS skills, (SELECT COUNT(*) FROM agent_profiles) AS profiles")
+          .get() as { skills: number; profiles: number };
+        expect({ exitedNonZero: targeted.status !== 0, root: after, counts: afterCounts })
+          .toEqual({ exitedNonZero: true, root: before, counts });
+      } finally {
+        db.close();
+      }
+    } finally {
+      removeFixture(root);
+    }
+  });
 });
