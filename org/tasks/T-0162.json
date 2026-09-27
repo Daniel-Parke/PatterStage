@@ -30,8 +30,12 @@
     "scripts/tooling/line-census.mjs",
     "scripts/tooling/line-census.baseline.json",
     "scripts/tooling/check-form-control-names.mjs",
+    "src/components/ui/field/Select.tsx",
+    "src/components/ui/Input.tsx",
+    "src/components/ui/AutoTextarea.tsx",
     "knip.json",
     "tests/unit/t0162-blind-gates.test.ts",
+    "tests/unit/t0162-house-control-names.test.tsx",
     "tests/fixtures/mutants/T-0162.json"
   ],
   "programme": "Prerequisite gate repair after T-0156, before trusting full Phase 1 reconnaissance or setting structural targets. components-01's raw-control end-of-line correction already landed in K6 and is not repeated. Q-011 still bars structural cleanup before an operator release.",
