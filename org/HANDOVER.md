@@ -18,7 +18,11 @@ suites, 279 Playwright passes and an unchanged tree stamp. Node 20 Linux mode
 tests passed 7/7; the two Docker update scenarios passed; committed sweeps
 killed 12/12 Windows and 1/1 Linux mutants. T-0161's record names the prior
 red runs, the census growth and the bounded `closeSync` cleanup limitation.
-Hosted push and PR jobs must be checked after the closure push. PR #157 remains
+The closure push `050ad61d` exposed two hosted failures, so T-0161 is reopened:
+macOS Jest did not execute the deploy fixture through a temp-path alias, and
+Ubuntu build-purity saw the data-directory root mode change during build.
+PR full E2E acceptance and both Gitleaks runs passed. The failures must be fixed
+and the whole gate and hosted jobs repeated before the next batch. PR #157 remains
 open; Q-011 still requires an operator release before structural cleanup.
 Next is T-0156 Help boundary repair, then T-0162 and T-0163. The full
 reconnaissance and Phase 2 plan are still outstanding and need separate plan

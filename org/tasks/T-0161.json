@@ -15,7 +15,7 @@
   },
   "mode": "high-assurance",
   "tier_proposed": "R2",
-  "status": "done",
+  "status": "active",
   "owner_session": "2026-09-26-refactor-foundations",
   "claims": [
     "org/tasks/T-0161.json",
@@ -25,6 +25,7 @@
     "org/briefs/T-0161-gate-oracle.md",
     "org/briefs/T-0161-review-oracle.md",
     "org/briefs/T-0161-second-review-oracle.md",
+    "org/briefs/T-0161-hosted-ci-oracle.md",
     "org/HANDOVER.md",
     "org/TASKS.md",
     "org/STATE.md",
@@ -42,6 +43,7 @@
     "src/app/layout.tsx",
     "src/instrumentation.ts",
     "src/lib/db/upgrade.ts",
+    "src/lib/db/index.ts",
     "src/lib/fs/fs-helpers.ts",
     "next.config.ts",
     "tests/integration/test_full_install_update_process.py",
@@ -55,6 +57,7 @@
     "tests/unit/t0161-node-setup-safety.test.ts",
     "tests/unit/t0161-required-step-failures.test.ts",
     "tests/unit/t0161-backup-creation.test.ts",
+    "tests/unit/t0161-direct-invocation.test.ts",
     "tests/fixtures/mutants/T-0161.json",
     "tests/fixtures/mutants/T-0161-linux.json",
     "scripts/tooling/line-census.baseline.json",
@@ -67,8 +70,8 @@
   "programme": "Prerequisite T-0161 under the operator's tooling-13 ruling and the 2026-09-26 plan. It follows the T-0157 framework security update. No structural cleanup is authorised by this batch.",
   "timestamps": {
     "opened": "2026-09-26T22:50:35Z",
-    "updated": "2026-09-27T01:34:30Z",
-    "closed": "2026-09-27T01:34:30Z"
+    "updated": "2026-09-27T01:45:15Z",
+    "closed": null
   },
   "invariants": [
     "A production build leaves a fresh isolated data directory empty and does not change bytes or modes of an existing SQLite database or its sidecars.",
@@ -104,6 +107,7 @@
   },
   "verification": "Final candidate 1db20a9f passed the complete ten-step isolated Windows gate on 2026-09-27: lint, tsc, Jest, Knip, canary, build, build-purity, e2e, design census and line census exited 0. Jest: 708/708 suites, 7138 passed, 3 skipped; Playwright: 279 passed, 24 skipped. Gate stamp b6eccd9b9893b555ec4b8ba69fab794bd11835b599a43432b41c8e102dc7a9be matched before/after, treeMoved=false. The isolated Linux Docker update harness passed update_preserves_user_data and update_runs_seed_catalog, 2/2. Disposable Node 20 Linux Jest passed both backup-selection and creation-time mode suites, 7/7; backup files and sidecars were 0600 from open. Focused Windows T-0161 plus K4 suites passed 61 assertions with 3 pre-existing K4 skips. The first corrected gate exposed K4's backup helper assertion; the next exposed six script lines over baseline; both were fixed, then the gate passed. The first Linux creation run stopped before its baseline assertion on Node 20 worker process.umask(); an independent amendment fixed only that fixture and the 7/7 rerun passed. Restricted-sandbox Node os.userInfo ENOMEM also blocked one lint and two focused starts; the same checks passed with normal fixture access. Census growth is recorded with explicit reasons: final srcLines 101009, testLines 126584, scriptsLines 13396.",
   "review": "Independent read-only reviewer 01a0e029-2602-7842-9b60-6d00ca054fa1 found two material defects after the first correction, prompting the second independent red oracle. On final review at 1db20a9f it accepted both findings as closed: both existing database candidates and sidecars are backed up before migration; Node backup files are 0600 from open time, including baseline rebuild; shell uses umask 077. The reviewer inspected the full-gate summary and tests, and did not rerun the gate. It found no remaining blocker. A closeSync failure can leave an incomplete owner-only backup because cleanup is skipped, but the exception stops the update before migration. This bounded cleanup case remains a follow-up candidate, not a claim of lost backup safety.",
+  "hosted_ci": "Reopened after push 050ad61d. Push build-test-macos failed its Jest T-0161 deploy fixture; PR build-test-macos failed the same. PR build-test-ubuntu failed both build-purity cases: PS_DATA_DIR root mode changed with no entries added, removed or changed. The PR full E2E acceptance path passed. Exact run IDs: push CI 36286051217, PR CI 36286054938. The existing record's local gate and sweep evidence remains valid for the earlier candidate, not hosted acceptance. Fix both defects and repeat the gate and hosted jobs before closure.",
   "mutation": "Clean committed-tree sweep at 1db20a9f exited 0: all 12 Windows T-0161 mutants KILLED by structured Jest assertion failures, with passing unmodified/restored controls. A separate clean Node 20 Linux sweep at the same commit killed the owner-only creation mutant 1/1. Both sweeps restored the tree. The earlier nine-mutant sweep at 52cb797a also passed before the second review.",
   "deviation": "The first implementation at 296f5d10 passed its initial gate and sweep but independent review found real setup, selection, permission and failure-propagation gaps. A second review of 52cb797a found re-selection could write an unbacked database and copyFileSync could expose a 0644 backup before chmod. Independent tests were committed red before each correction. No gate was weakened. An implementer edit to scripts/tooling/_platform.mjs was started immediately before its claim commit 06f95b96; the claim was recorded and committed before any other helper or caller edits. This order slip is disclosed. One earlier K2 test title changed from nine to ten steps by an independent author; the other 14 pre-existing second-oracle names remained unchanged.",
   "tier_ruled": "R2",

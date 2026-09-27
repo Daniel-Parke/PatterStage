@@ -1,6 +1,23 @@
 {
   "version": 1,
   "assigned": "2026-09-27",
-  "lanes": [],
-  "note": "T-0161 implementer and independent oracle lanes closed after accepted R2 review. The next batch must claim its paths before writing. Earlier claim assignments remain in Git history."
+  "lanes": [
+    {
+      "lane_id": "T-0161-hosted-oracle",
+      "task_id": "T-0161",
+      "session_id": "T-0161-hosted-oracle",
+      "path_claims": ["tests/unit/t0161-required-step-failures.test.ts", "tests/unit/t0161-direct-invocation.test.ts"],
+      "expires": "2026-09-28T23:00:00Z",
+      "liveness": "independent test author reproduces macOS direct-invocation alias failure"
+    },
+    {
+      "lane_id": "T-0161-implementer",
+      "task_id": "T-0161",
+      "session_id": "2026-09-26-refactor-foundations",
+      "path_claims": ["org/claims.json", "org/tasks/T-0161.json", "org/briefs/T-0161-hosted-ci-oracle.md", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", "scripts/tooling/ps-deploy.mjs", "src/lib/db/index.ts", "scripts/tooling/line-census.baseline.json", "tests/fixtures/mutants/T-0161.json"],
+      "expires": "2026-09-28T23:00:00Z",
+      "liveness": "coordinator fixes hosted T-0161 CI and repeats full gate and sweeps"
+    }
+  ],
+  "note": "Hosted CI reopened T-0161 after the initial closure push. Two disjoint writing lanes remain within the policy cap."
 }
