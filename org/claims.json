@@ -1,9 +1,6 @@
 {
   "version": 1,
   "assigned": "2026-09-27",
-  "lanes": [
-    {"lane_id": "T-0173-independent-oracle", "task_id": "T-0173", "session_id": "01a0e1fd-fece-7642-8b9d-ec3e48d04e25", "path_claims": ["tests/unit/t0173-dependabot-pause.test.ts"], "expires": "2026-09-29T23:00:00Z", "liveness": "author a red-first oracle for the temporary version-PR pause and preserve test-name identity"},
-    {"lane_id": "T-0173-coordinator", "task_id": "T-0173", "session_id": "2026-09-27-refactor-foundations", "path_claims": [".github/dependabot.yml", "org/tasks/T-0173.json", "org/claims.json", "org/briefs/T-0173-oracle.md", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", "tests/fixtures/mutants/T-0173.json", "scripts/tooling/line-census.baseline.json"], "expires": "2026-09-29T23:00:00Z", "liveness": "apply the exact main exception, mirror dev, gate, sweep, close and observe hosted jobs"}
-  ],
-  "note": "T-0173 main configuration exception was explicitly accepted by the operator; the separate ORACLE session owns only its test file."
+  "lanes": [],
+  "note": "T-0173's separate oracle and coordinator lanes are closed after exact dev commit 3fa0c2f3 passed the full gate and two-mutant sweep."
 }

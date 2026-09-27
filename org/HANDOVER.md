@@ -9,6 +9,22 @@ updated: 2026-09-27
 
 ## Dated status, 2026-09-27
 
+T-0173 is the operator-approved narrow exception to the dev-only push rule.
+GitHub's default-branch `main@7b9d6d68` changed only `.github/dependabot.yml`:
+the npm version-PR limit moved from 10 to 0 and the GitHub Actions limit was
+added as 0. The same Git blob is on `dev` at `3fa0c2f3`. Its independently
+authored oracle was red 2/4 before implementation. The final isolated ten-step
+gate passed on an unchanged tree (729 Jest suites, 7223 passes and four skips;
+283 Playwright passes and 24 skips), and both committed-tree mutants were
+killed. The 57 added oracle lines are held by a written line-census reason.
+GitHub's first `main` Docker job failed in the old Next Google-font build; its
+single-job rerun passed, with both attempts retained. The closure push's hosted
+jobs still need observation before another batch starts. Dependabot alerts and
+security updates are currently **disabled in repository settings**; the
+version-PR limit does not enable them. The eleven existing Dependabot PRs are
+still open, awaiting migration or individual disposition on `dev`. The pause
+must be lifted as part of the operator's later release decision.
+
 T-0170 carries PR #234's public liveness contract onto current `dev` without
 merging its conflicting old branch: `GET /healthz` answers plain `ok` with
 `no-store`, `/api/healthz` answers `{ok:true}`, and unsafe methods retain auth
