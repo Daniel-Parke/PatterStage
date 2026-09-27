@@ -32,6 +32,7 @@
     "scripts/tooling/hermes-registry-import.mjs",
     "scripts/tooling/gate.mjs",
     "scripts/tooling/ps-deploy.mjs",
+    "scripts/tooling/migrate-to-runtime.mjs",
     "scripts/bootstrap/setup.sh",
     "scripts/bootstrap/setup.mjs",
     "scripts/lib/ps-migrate.sh",
