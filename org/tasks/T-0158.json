@@ -58,11 +58,7 @@
     "docs/contributing/repo-guide.md",
     "tests/unit/t0158-session-store.test.ts",
     "tests/unit/t0158-session-proxy.test.ts",
-    "tests/unit/t0158-auth-routes.test.ts",
-    "tests/unit/t0158-stream-revocation.test.ts",
     "tests/e2e/t0158-browser-sessions.spec.ts",
-    "tests/integration/t0158-production-generation.test.ts",
-    "tests/unit/t0158-production-generation.test.ts",
     "tests/unit/proxy-auth.test.ts",
     "tests/unit/failed-auth-costs-something.test.ts",
     "tests/unit/read-only-actually-reads.test.ts",
@@ -84,7 +80,7 @@
   "programme": "Accepted ADR-0012 and ADR-0013 settle the browser-session design and its private-proxy, token-rotation, read-only and onboarding corrections. The former T-0158 universal X-Forwarded-Proto conclusion is refuted by normal Next request handling; the synthetic NextRequest probe did not model the server path. Raw-token cookies, one-year lifetime, no individual revocation and token-bearing boot logs remain live findings. T-0179 dependency cleanup closed with every hosted implementation and closure job green at dev@b2be4a64. Remote branches are dev and main, with PR #157 alone open; local worktrees with unique or ignored state remain preserved. This is the security prerequisite before the unfinished T-0164 reconnaissance and T-0165 Phase 2 plan.",
   "timestamps": {
     "opened": "2026-09-13T09:00:00Z",
-    "updated": "2026-09-27T19:37:41Z",
+    "updated": "2026-09-27T20:53:00Z",
     "closed": null
   },
   "invariants": [
@@ -99,8 +95,9 @@
   "notes": "The original 2026-09-13 synthetic NextRequest protocol probe was not representative of normal Next handling. ADR-0012 refutes its universal X-Forwarded-Proto claim. This task uses PS_PUBLIC_ORIGIN and the proxy-isolation modes in accepted ADR-0012/0013; no security decision is based on client-supplied forwarding or Host headers alone. Static inspection of the Next 16.3.6 production bundle found a shared Turbopack runtime and module cache, but did not prove one boot generation across live proxy, route and stream requests. That production proof is the first implementation gate. Existing proxy-auth and read-only tests include raw-cookie and source-text assumptions; amend their expectations through a different author without losing test identities.",
   "rollback": "Restore the old auth code only through a forward-compatible migration and new dev commit; never drop an auth_sessions table with live rows. Keep Bearer access and a documented recovery route if session storage is unavailable.",
   "verify_line": "Independent red-first oracles, live production-bundle generation proof, real-SQLite expiry/revocation and failure tests, exact transport and read-only boundary tests, protected-stream invalidation, 1440x900 and 390x844 lifecycle walks, full unchanged-tree gate, committed-tree sweep, preserved test identities and every hosted job must pass.",
+  "oracle_provenance": "Independent ORACLE session 01a0e465-667b-7f23-a534-80bf287fbf06 authored the three new suites before auth source changes, using direct proxy checks plus a built Next process, real SQLite, controlled clock and local quiet-stream gateway as independent methods. Old-code Jest exit 1: five executed, four intended failures, one pass, zero skips. Escalated built-app Playwright exit 1: 31 executed, 28 intended failures, three passes, zero skips; the stream fixtures first proved quiet Bearer streams, then failed at the missing public sign-in. No infrastructure or setup failure was counted as an oracle result. ESLint and test TypeScript exited 0. Frozen SHA-256: tests/unit/t0158-session-store.test.ts A755546E19872480DAB72531E88DD196418CF43E6D6BC0BC392C08B0D4427670; tests/unit/t0158-session-proxy.test.ts 1275D3BB600E4637A14BB9737C25128C7159B6CAAF22A4C5C853A6BFA4692954; tests/e2e/t0158-browser-sessions.spec.ts B8AAC3F706141A765142FA7A4FD86D5ABC1EEB6435764E6D890552D63C4AA837. Amendments require a different author and the accepted Q-015 procedure.",
   "commits": "",
-  "verification": "Preimplementation production-bundle probe at dev@4f322ea2: an isolated Next 16.3.6 build with a temporary globalThis generation diagnostic passed two separate node next start boots and three health/stream samples per boot. Instrumentation, proxy, health route, separate streaming route and stream callback reported one PID and one generation within each boot; generation changed on restart. Probe JSON SHA-256 EF20EC2D77E4281FD0C7E54FA05E1D5918DC0BD0F7CEE517389C7BB14615CEFE in the dedicated validation clone .gate/t0158-generation-proof.json. PS_AUTH_MODE=none and isolated PS_DATA_DIR/CH_DATA_DIR avoided credential logging and operator data. Owned server processes stopped. Initial harness attempts failed on PowerShell stream-byte and header-array decoding; corrected harness passed. This establishes the single-process bundle-sharing prerequisite only, not session implementation or multi-process support. An independent committed production regression test is still required.",
+  "verification": "Preimplementation production-bundle probe at dev@4f322ea2: an isolated Next 16.3.6 build with a temporary globalThis generation diagnostic passed two separate node next start boots and three health/stream samples per boot. Instrumentation, proxy, health route, separate streaming route and stream callback reported one PID and one generation within each boot; generation changed on restart. Probe JSON SHA-256 EF20EC2D77E4281FD0C7E54FA05E1D5918DC0BD0F7CEE517389C7BB14615CEFE in the dedicated validation clone .gate/t0158-generation-proof.json. PS_AUTH_MODE=none and isolated PS_DATA_DIR/CH_DATA_DIR avoided credential logging and operator data. Owned server processes stopped. Initial harness attempts failed on PowerShell stream-byte and header-array decoding; corrected harness passed. This establishes the single-process bundle-sharing prerequisite only, not session implementation or multi-process support. The ten affected existing Jest suites passed 186/186 before implementation; sorted suite-path plus full-name identity SHA-256 219b42d2f155b1a7b93d7de2b166c4010c9b4a2dca8ff88c7f79c22890878355. An independent committed production regression test is still required.",
   "review": "",
   "mutation": "",
   "deviation": ""
