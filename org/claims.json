@@ -3,16 +3,16 @@
   "assigned": "2026-09-26",
   "lanes": [
     {
-      "lane_id": "T-0161-gate-oracle",
+      "lane_id": "T-0161-review-oracle",
       "task_id": "T-0161",
-      "session_id": "T-0161-gate-oracle",
+      "session_id": "T-0161-review-oracle",
       "path_claims": [
-        "tests/unit/k2-the-discipline-is-in-the-repo.test.ts",
-        "tests/integration/t0161-build-purity.mjs",
-        "tests/unit/t0160-runner-contracts.test.ts"
+        "tests/unit/t0161-backup-selection.test.ts",
+        "tests/unit/t0161-node-setup-safety.test.ts",
+        "tests/unit/t0161-required-step-failures.test.ts"
       ],
       "expires": "2026-09-27T23:00:00Z",
-      "liveness": "independent ORACLE author amends the closed K2 and T-0160 step-count contracts and makes the build-purity fixture run on Node 20"
+      "liveness": "independent ORACLE author tests reviewer-found backup selection, permissions and setup failure paths"
     },
     {
       "lane_id": "T-0161-implementer",
@@ -21,10 +21,11 @@
       "path_claims": [
         "org/claims.json", "org/tasks/T-0161.json", "org/briefs/T-0161-oracle.md",
         "org/briefs/T-0161-safety-oracle.md", "org/briefs/T-0161-gate-oracle.md",
+        "org/briefs/T-0161-review-oracle.md",
         "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", "package.json",
         "scripts/tooling/prebuild-db.mjs", "scripts/tooling/hermes-registry-import.mjs",
         "scripts/tooling/gate.mjs", "scripts/tooling/ps-deploy.mjs", "scripts/bootstrap/setup.sh",
-        "scripts/lib/ps-migrate.sh", ".github/workflows/ci.yml",
+        "scripts/lib/ps-migrate.sh", "scripts/bootstrap/setup.mjs", ".github/workflows/ci.yml",
         "src/app/layout.tsx", "src/instrumentation.ts", "next.config.ts",
         "tests/integration/test_full_install_update_process.py",
         "tests/fixtures/mutants/T-0161.json", "scripts/tooling/line-census.baseline.json",
@@ -35,5 +36,5 @@
       "liveness": "coordinator owns implementation, integration and record closure"
     }
   ],
-  "note": "Two active T-0161 writing lanes, the cap in org/policy.json. Build-purity and safety oracles were frozen before implementation; their lanes have been released. The independent K2 amendment lane is disjoint from implementation. T-0154's expired claims remain in Git history."
+  "note": "Two active T-0161 writing lanes, the cap in org/policy.json. Earlier oracle lanes finished and were released. The reviewer-found failure-path ORACLE lane is disjoint from implementation. T-0154's expired claims remain in Git history."
 }
