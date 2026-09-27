@@ -67,10 +67,10 @@ describe("T-0175 nonvisual dependency proposals", () => {
   it("preserves every other direct dependency range", () => {
     expect(exceptProposals(manifest.dependencies, ["@tanstack/react-query", "@dagrejs/dagre"])).toEqual({
       "@types/js-yaml": "^4.0.9",
-      "@xyflow/react": "^12.11.0",
+      "@xyflow/react": "^12.11.6",
       "better-sqlite3": "^12.11.1",
       "js-yaml": "^4.2.0",
-      "lucide-react": "^1.20.0",
+      "lucide-react": "^1.41.0",
       next: "16.3.6",
       react: "19.2.7",
       "react-dom": "19.2.7",
@@ -78,7 +78,7 @@ describe("T-0175 nonvisual dependency proposals", () => {
     });
     expect(exceptProposals(manifest.devDependencies, ["tsx"])).toEqual({
       "@playwright/test": "^1.61.0",
-      "@tailwindcss/postcss": "^4.3.1",
+      "@tailwindcss/postcss": "^4.3.3",
       "@testing-library/jest-dom": "^6.9.1",
       "@testing-library/react": "^16.3.2",
       "@types/better-sqlite3": "^7.6.13",
