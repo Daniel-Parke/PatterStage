@@ -191,6 +191,52 @@ function accountForGrowth(
   return { landedAt: at, unexplained };
 }
 
+describe("C8 growth-log accounting", () => {
+  it("accounts for a fall between logged rises", () => {
+    const result = accountForGrowth([
+      { rise: "testLines rose from 100 to 120", reason: "First oracle" },
+      { rise: "testLines rose from 115 to 130", reason: "Second oracle after a fall" },
+    ], "testLines", 100, 130);
+    expect(result).toEqual({ landedAt: 130, unexplained: [] });
+  });
+
+  it("accounts for a final fall after the last logged rise", () => {
+    const result = accountForGrowth([
+      { rise: "testLines rose from 100 to 120", reason: "Oracle added" },
+    ], "testLines", 100, 115);
+    expect(result).toEqual({ landedAt: 115, unexplained: [] });
+  });
+
+  it("rejects a rise starting above the accounted level", () => {
+    const result = accountForGrowth([
+      { rise: "testLines rose from 100 to 120", reason: "First oracle" },
+      { rise: "testLines rose from 125 to 140", reason: "Unexplained gap" },
+    ], "testLines", 100, 140);
+    expect(result.unexplained).not.toEqual([]);
+  });
+
+  it("rejects a rise with a blank reason", () => {
+    const result = accountForGrowth([
+      { rise: "testLines rose from 100 to 120", reason: "   " },
+    ], "testLines", 100, 120);
+    expect(result.unexplained).not.toEqual([]);
+  });
+
+  it("rejects a malformed non-growing rise even when the held total is unchanged", () => {
+    const result = accountForGrowth([
+      { rise: "testLines rose from 100 to 100", reason: "Invalid rise" },
+    ], "testLines", 100, 100);
+    expect(result.unexplained).not.toEqual([]);
+  });
+
+  it("rejects an unexplained final increase", () => {
+    const result = accountForGrowth([
+      { rise: "testLines rose from 100 to 120", reason: "First oracle" },
+    ], "testLines", 100, 125);
+    expect(result.unexplained).not.toEqual([]);
+  });
+});
+
 describe("C8 · the programme is closed", () => {
   const now = census();
   const keys = Object.keys(AT_C0) as (keyof typeof AT_C0)[];
