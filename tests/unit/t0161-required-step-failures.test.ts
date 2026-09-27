@@ -150,10 +150,6 @@ const DEPLOY_PRELOAD = String.raw`
       fs.rmSync(process.env.ORACLE_CONFIG, { force: true });
       fs.appendFileSync(process.env.ORACLE_EVENTS, 'config:removed-during-build\n');
     }
-    if ((mode === 'config-loss' || mode === 'build-config-loss') && step === 'model-sync' &&
-        !fs.existsSync(process.env.ORACLE_CONFIG) && call.includes('--require-config')) {
-      return { status: 17, stdout: '', stderr: '' };
-    }
     return { status: 0, stdout: '', stderr: '' };
   };
   require('node:module').syncBuiltinESMExports();
