@@ -1,0 +1,14 @@
+{
+  "task": "T-0167",
+  "why": "The preserved credential oracle must still reject a public first creation on POSIX after the independent macOS fixture amendment.",
+  "mutants": [
+    {
+      "id": "m1-public-bootstrap-creation",
+      "file": "scripts/bootstrap/env-local.mjs",
+      "anchor": "const fd = openSync(file, \"a\", 0o600);",
+      "replacement": "const fd = openSync(file, \"a\", 0o666);",
+      "tests": ["tests/unit/t0163-bootstrap-credentials.test.ts"],
+      "why": "The POSIX fixture must detect a public mode at the first credential-file creation."
+    }
+  ]
+}
