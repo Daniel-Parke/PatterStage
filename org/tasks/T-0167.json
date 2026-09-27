@@ -1,0 +1,33 @@
+{
+  "id": "T-0167",
+  "intent": "Correct T-0163's closed credential-permission oracle on hosted macOS: POSIX chmod denial must fail closed, while Windows remains functional. Extend its existing mode and collision assertions to macOS where POSIX modes apply, preserving all named tests and their security assertions.",
+  "declared": {
+    "capabilities": ["edit-tests", "edit-docs", "git-push"],
+    "side_effects": ["sends-external"]
+  },
+  "mode": "high-assurance",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [
+    {"factor": "operator-plan-conservative-tier", "tier_floor": "R2", "source": "2026-09-27 prerequisite plan and Q-015", "evidence": "A closed security oracle needs an independently authored dated amendment and the hosted macOS failure is binding."}
+  ],
+  "status": "active",
+  "owner_session": "2026-09-27-refactor-foundations",
+  "claims": ["org/tasks/T-0167.json", "org/claims.json", "org/briefs/T-0167-independent-amendment.md", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", "scripts/tooling/line-census.baseline.json", "tests/fixtures/mutants/T-0167.json", "tests/unit/t0163-bootstrap-credentials.test.ts", "tests/unit/t0163-hermes-env-permissions.test.ts", "tests/unit/t0163-review-regressions.test.ts"],
+  "programme": "Hosted repair immediately after T-0163; no T-0158 work starts until this correction is green on every hosted job.",
+  "timestamps": {"opened": "2026-09-27T09:38:43Z", "updated": "2026-09-27T09:38:43Z", "closed": null},
+  "invariants": [
+    "The 22 existing T-0163 test names and all credential secrecy, mode, collision and fail-closed assertions remain.",
+    "macOS and Linux both enforce POSIX mode and chmod-denial assertions; Windows remains functional without pretending its mode bits enforce secrecy.",
+    "A session other than the implementer authors the closed-oracle amendment under Q-015; no production code or protected file changes.",
+    "The hosted red run, an isolated complete gate, mutation evidence and every hosted push/PR job are recorded by exit code."
+  ],
+  "notes": "Push CI 36309526484 at dev@28e7be19 failed only build-test-macos Unit tests with coverage: tests/unit/t0163-bootstrap-credentials.test.ts line 299 expected setup exit 0 but received 1. The injected chmod denial correctly made setup fail closed on macOS; the oracle's IS_LINUX predicate mistakenly treated macOS as Windows. Ubuntu and every other push job passed. PR CI 36309529732 was still running when this record opened. The T-0163 task record is closed history and is not rewritten.",
+  "rollback": "Revert only the independent test amendment if macOS evidence disproves the POSIX expectation; retain the hosted red run and security checks. Do not revert T-0163 source to make the old oracle green.",
+  "oracle_provenance": {},
+  "commits": "",
+  "verification": "",
+  "review": "",
+  "mutation": "",
+  "deviation": ""
+}

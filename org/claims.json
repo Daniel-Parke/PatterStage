@@ -1,6 +1,23 @@
 {
   "version": 1,
   "assigned": "2026-09-27",
-  "lanes": [],
-  "note": "T-0163 closed locally after independent red-first acceptance, security review, a ten-step isolated gate and nine native-Linux mutation kills. No active writing lane is claimed."
+  "lanes": [
+    {
+      "lane_id": "T-0167-coordinator",
+      "task_id": "T-0167",
+      "session_id": "2026-09-27-refactor-foundations",
+      "path_claims": ["org/tasks/T-0167.json", "org/claims.json", "org/briefs/T-0167-independent-amendment.md", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", "scripts/tooling/line-census.baseline.json", "tests/fixtures/mutants/T-0167.json"],
+      "expires": "2026-09-29T23:00:00Z",
+      "liveness": "coordinator holds T-0163 source unchanged and verifies the independently authored macOS oracle correction"
+    },
+    {
+      "lane_id": "T-0167-independent-oracle",
+      "task_id": "T-0167",
+      "session_id": "pending-independent-author",
+      "path_claims": ["tests/unit/t0163-bootstrap-credentials.test.ts", "tests/unit/t0163-hermes-env-permissions.test.ts", "tests/unit/t0163-review-regressions.test.ts"],
+      "expires": "2026-09-29T23:00:00Z",
+      "liveness": "independent author makes only the dated POSIX platform amendment to closed tests"
+    }
+  ],
+  "note": "Two disjoint T-0167 writing lanes are claimed within max_lanes: 2. The hosted macOS red test is the oracle; production source stays unchanged."
 }
