@@ -13,7 +13,7 @@
     {
       "lane_id": "T-0168-independent-oracle",
       "task_id": "T-0168",
-      "session_id": "pending-independent-author",
+      "session_id": "01a0e212-5616-7eb1-b58e-ad9206ab4e83",
       "path_claims": ["tests/unit/t0163-bootstrap-credentials.test.ts"],
       "expires": "2026-09-29T23:00:00Z",
       "liveness": "independent author repairs only the closed test fixture path identity"
