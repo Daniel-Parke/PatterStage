@@ -3,7 +3,7 @@
 import { spawnSync } from "node:child_process";
 import {
   appendFileSync, chmodSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync,
-  realpathSync, rmSync, statSync, writeFileSync,
+  realpathSync, rmSync, statSync, symlinkSync, writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, join } from "node:path";
@@ -44,7 +44,7 @@ const NODE_PRELOAD = String.raw`
   const cp = require('node:child_process');
   const path = require('node:path');
   const events = [];
-  const root = process.env.ORACLE_ROOT;
+  const root = fs.realpathSync(process.env.ORACLE_ROOT);
   const eventFile = process.env.ORACLE_EVENTS;
   const realWrite = fs.writeFileSync;
   const realAppend = fs.appendFileSync;
@@ -52,11 +52,27 @@ const NODE_PRELOAD = String.raw`
   const realCopy = fs.copyFileSync;
   const realRead = fs.readFileSync;
   const realChmod = fs.chmodSync;
-  const sensitive = p => typeof p === 'string' && p.startsWith(root + path.sep) &&
-    (path.basename(p).startsWith('.env') || p.includes(path.sep + 'backups' + path.sep));
+  const canonical = p => {
+    if (typeof p !== 'string') return null;
+    const absolute = path.resolve(p);
+    try { return fs.realpathSync(absolute); }
+    catch (error) {
+      if (error.code !== 'ENOENT') return null;
+      try { return path.join(fs.realpathSync(path.dirname(absolute)), path.basename(absolute)); }
+      catch { return null; }
+    }
+  };
+  const sensitive = p => {
+    const resolved = canonical(p);
+    if (!resolved) return null;
+    const inside = path.relative(root, resolved);
+    if (!inside || inside === '..' || inside.startsWith('..' + path.sep) || path.isAbsolute(inside)) return null;
+    return path.basename(resolved).startsWith('.env') || inside.split(path.sep).includes('backups') ? resolved : null;
+  };
   const record = (p, absent) => {
-    if (absent && sensitive(p) && fs.existsSync(p))
-      events.push({action:'create', path:p, mode:fs.statSync(p).mode & 0o777});
+    const resolved = sensitive(p);
+    if (absent && resolved && fs.existsSync(p))
+      events.push({action:'create', path:resolved, mode:fs.statSync(p).mode & 0o777});
   };
   process.umask(0);
   fs.writeFileSync = (...args) => {
@@ -74,8 +90,9 @@ const NODE_PRELOAD = String.raw`
   fs.openSync = (...args) => {
     const absent = typeof args[0] === 'string' && !fs.existsSync(args[0]);
     const fd = realOpen(...args);
-    if (absent && sensitive(args[0]))
-      events.push({action:'create', path:args[0], mode:fs.fstatSync(fd).mode & 0o777});
+    const resolved = sensitive(args[0]);
+    if (absent && resolved)
+      events.push({action:'create', path:resolved, mode:fs.fstatSync(fd).mode & 0o777});
     return fd;
   };
   fs.copyFileSync = (...args) => {
@@ -85,8 +102,9 @@ const NODE_PRELOAD = String.raw`
     return value;
   };
   fs.readFileSync = (...args) => {
-    if (sensitive(args[0]) && fs.existsSync(args[0]))
-      events.push({action:'read', path:args[0], mode:fs.statSync(args[0]).mode & 0o777});
+    const resolved = sensitive(args[0]);
+    if (resolved && fs.existsSync(args[0]))
+      events.push({action:'read', path:resolved, mode:fs.statSync(args[0]).mode & 0o777});
     return realRead(...args);
   };
   fs.chmodSync = (...args) => {
@@ -94,6 +112,10 @@ const NODE_PRELOAD = String.raw`
       throw Object.assign(new Error('permission denied'), {code:'EACCES'});
     return realChmod(...args);
   };
+  if (process.env.ORACLE_OUTSIDE) {
+    fs.writeFileSync(process.env.ORACLE_OUTSIDE, 'fixture-only-outside');
+    fs.readFileSync(process.env.ORACLE_OUTSIDE);
+  }
   cp.spawnSync = (command, args = []) => {
     events.push({action:'child', command:[command, ...args].join(' ')});
     return {status:0, stdout:'', stderr:''};
@@ -102,8 +124,8 @@ const NODE_PRELOAD = String.raw`
   require('node:module').syncBuiltinESMExports();
 `;
 
-function setupRoot(): { root: string; repo: string; hermes: string; data: string; local: string } {
-  const root = mkdtempSync(join(tmpdir(), PREFIX));
+function setupRoot(tempBase = tmpdir()): { root: string; repo: string; hermes: string; data: string; local: string } {
+  const root = mkdtempSync(join(tempBase, PREFIX));
   const repo = join(root, "repo");
   const hermes = join(root, "hermes");
   const data = join(root, "data");
@@ -114,8 +136,8 @@ function setupRoot(): { root: string; repo: string; hermes: string; data: string
   return { root, repo, hermes, data, local: join(repo, ".env.local") };
 }
 
-function nodeSetup(present: boolean, denyChmod = false): Fixture {
-  const f = setupRoot();
+function nodeSetup(present: boolean, denyChmod = false, tempBase?: string): Fixture {
+  const f = setupRoot(tempBase);
   const eventFile = join(f.root, "node-events.json");
   const preload = join(f.root, "node-preload.cjs");
   try {
@@ -143,6 +165,10 @@ function nodeSetup(present: boolean, denyChmod = false): Fixture {
       ORACLE_ROOT: f.root, ORACLE_EVENTS: eventFile,
       ORACLE_DENY_CHMOD: denyChmod ? "1" : "0",
     });
+    if (tempBase) {
+      env.TMPDIR = tempBase;
+      env.ORACLE_OUTSIDE = join(dirname(tempBase), ".env");
+    }
     const run = spawnSync(process.execPath, ["--require", preload, join(f.repo, "scripts", "bootstrap", "setup.mjs")], {
       cwd: f.repo,
       env,
@@ -254,6 +280,31 @@ function inspectFixture(f: Fixture, assertion: () => void): void {
 }
 
 describe("T-0163 credential files at both public setup entries", () => {
+  const symlinkTest = IS_POSIX ? it : it.skip;
+  symlinkTest("Node setup records first writes and prior reads under a symlinked TMPDIR", () => {
+    const aliasRoot = mkdtempSync(join(tmpdir(), `${PREFIX}alias-`));
+    const linkedTmp = join(aliasRoot, "linked-tmp");
+    try {
+      symlinkSync(tmpdir(), linkedTmp, "dir");
+      for (const present of [false, true]) {
+        const f = nodeSetup(present, false, linkedTmp);
+        inspectFixture(f, () => {
+          expect(f.run.status).toBe(0);
+          for (const path of [join(f.hermes, ".env"), f.local]) {
+            checkMode(path);
+            const action = present ? "read" : "create";
+            const events = f.events.filter((event) => event.action === action && event.path === realpathSync(path));
+            expect(events.length).toBeGreaterThan(0);
+            expect(events.map((event) => event.mode)).toEqual(events.map(() => 0o600));
+          }
+          expect(f.events.some((event) => event.path === realpathSync(join(aliasRoot, ".env")))).toBe(false);
+        });
+      }
+    } finally {
+      dispose(aliasRoot);
+    }
+  });
+
   it("Node setup creates both credential dotenv files private from their first write", () => {
     const f = nodeSetup(false);
     inspectFixture(f, () => {
@@ -262,7 +313,7 @@ describe("T-0163 credential files at both public setup entries", () => {
       checkMode(f.local);
       if (IS_POSIX) {
         for (const path of [join(f.hermes, ".env"), f.local]) {
-          const created = f.events.filter((event) => event.action === "create" && event.path === path);
+          const created = f.events.filter((event) => event.action === "create" && event.path === realpathSync(path));
           expect(created.length).toBeGreaterThan(0);
           expect(created.map((event) => event.mode)).toEqual(created.map(() => 0o600));
         }
@@ -280,7 +331,7 @@ describe("T-0163 credential files at both public setup entries", () => {
       expect(readFileSync(f.local, "utf8")).toContain(LOCAL_OLD);
       if (IS_POSIX) {
         for (const path of [join(f.hermes, ".env"), f.local]) {
-          const reads = f.events.filter((event) => event.action === "read" && event.path === path);
+          const reads = f.events.filter((event) => event.action === "read" && event.path === realpathSync(path));
           expect(reads.length).toBeGreaterThan(0);
           expect(reads.map((event) => event.mode)).toEqual(reads.map(() => 0o600));
         }
