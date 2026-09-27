@@ -3,17 +3,17 @@ import { NextRequest } from "next/server";
 
 const TOKEN = "test-token-abcdefghijklmnop";
 
-function request(path: string, method = "GET"): NextRequest {
+function request(path: string, method = "GET", headers: Record<string, string> = {}): NextRequest {
   return new NextRequest(`http://localhost:4242${path}`, {
     method,
-    headers: { host: "localhost:4242" },
+    headers: { host: "localhost:4242", ...headers },
   });
 }
 
-async function proxyRequest(path: string, method = "GET") {
+async function proxyRequest(path: string, method = "GET", headers: Record<string, string> = {}) {
   jest.resetModules();
   const { proxy } = await import("@/proxy");
-  return proxy(request(path, method));
+  return proxy(request(path, method, headers));
 }
 
 describe("T-0170 public liveness routes", () => {
@@ -41,6 +41,18 @@ describe("T-0170 public liveness routes", () => {
       expect((await proxyRequest(path, "DELETE")).status).toBe(401);
     }
     expect((await proxyRequest("/api/status")).status).toBe(401);
+  });
+
+  it("keeps both liveness GETs public and refuses authenticated unsafe methods in read-only mode", async () => {
+    process.env.PS_READ_ONLY = "1";
+    for (const path of ["/healthz", "/api/healthz"]) {
+      expect((await proxyRequest(path)).status).toBe(200);
+      for (const method of ["POST", "DELETE"]) {
+        const response = await proxyRequest(path, method, { authorization: `Bearer ${TOKEN}` });
+        expect(response.status).toBe(503);
+        expect((await response.json()).error).toMatch(/read-only/i);
+      }
+    }
   });
 
   it("returns only plain-text ok with no-store at the bare path", async () => {
