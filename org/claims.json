@@ -1,6 +1,9 @@
 {
   "version": 1,
   "assigned": "2026-09-27",
-  "lanes": [],
-  "note": "T-0178 closed after its independent red-first oracle, complete isolated gate, responsive walk, committed-tree mutation sweep and all hosted implementation jobs passed. No writing lane remains."
+  "lanes": [
+    {"lane_id": "T-0179-independent-oracle", "task_id": "T-0179", "session_id": "01a0e433-490c-7162-8130-fcb95287991b", "path_claims": ["tests/unit/t0179-react-proposal.test.ts", "tests/unit/t0175-dependency-proposals.test.ts", "tests/unit/t0176-visual-dependency-proposals.test.ts", "tests/unit/t0177-knip-proposal.test.ts"], "expires": "2026-10-01T23:00:00Z", "liveness": "freeze paired React oracle red and independently amend three prior strict ranges"},
+    {"lane_id": "T-0179-coordinator", "task_id": "T-0179", "session_id": "2026-09-27-refactor-foundations", "path_claims": ["org/tasks/T-0179.json", "org/claims.json", "org/briefs/T-0179-oracle.md", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", "package.json", "package-lock.json", "scripts/tooling/line-census.baseline.json", "tests/fixtures/mutants/T-0179.json"], "expires": "2026-10-01T23:00:00Z", "liveness": "open paired React proposal, integrate only after independent red-first oracle, gate, sweep and hosted acceptance"}
+  ],
+  "note": "T-0179 has two disjoint writing lanes. The independent oracle author owns only four test files; the coordinator owns the package files, records and validation evidence."
 }

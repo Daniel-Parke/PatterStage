@@ -20,13 +20,14 @@ gate passed: 734 Jest suites (7263 passes, four skips) and 283 Playwright
 passes (24 skips). The Composer walk at 1440x900 and 390x844 had one h1,
 no horizontal overflow or browser console errors; screenshot hashes are in
 the task record. Three committed-tree mutants were killed and restoration
-left a clean clone. All four implementation workflows and every required
-hosted job passed. PR #228 closed unmerged at its archived exact head, and
+left a clean clone. All four implementation and all four closure workflows,
+including every required hosted job, passed; closure is `dev@ad9dd795`.
+PR #228 closed unmerged at its archived exact head, and
 GitHub removed its remote source branch. `npm audit --json` still exits 1
 with ten advisories (two low, three moderate, five high). PR #233 is the
 remaining dependency proposal; it needs a paired React/React DOM update
-before closure. PR #157 remains the sole route to `main`. The T-0178 task
-closure push still needs its own hosted-workflow observation.
+before closure. PR #157 remains the sole route to `main`. T-0179 opens for
+the paired React and React DOM proposal only after those closure verdicts.
 
 T-0177 carried PR #227's Knip 6.34.0 proposal onto `dev@aa20a398`
 without merging its stale branch. The independent six-name oracle was red

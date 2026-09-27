@@ -1,0 +1,31 @@
+{
+  "id": "T-0179",
+  "intent": "Carry the still-relevant PR #233 React and @types/react proposal onto current dev with React DOM pinned to the same runtime version, verify browser and install behaviour, and retire the addressed PR only after full local and hosted acceptance.",
+  "declared": {"capabilities": ["edit-config", "edit-tests", "git", "github-api", "git-push"], "side_effects": ["touches-dependencies", "sends-external", "irreversible-action"]},
+  "mode": "high-assurance",
+  "tier_proposed": "R3",
+  "tier_ruled": "R3",
+  "reasons": [
+    {"factor": "irreversible-action", "tier_floor": "R3", "source": "declared", "evidence": "declared side effect: irreversible-action"},
+    {"factor": "boundary-contact", "tier_floor": "R1", "source": "declared", "evidence": "declared side effect: sends-external"}
+  ],
+  "status": "open",
+  "owner_session": "2026-09-27-refactor-foundations",
+  "timestamps": {"opened": "2026-09-27T18:45:31Z", "updated": "2026-09-27T18:45:31Z"},
+  "claims": ["org/tasks/T-0179.json", "org/claims.json", "org/briefs/T-0179-oracle.md", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", "package.json", "package-lock.json", "scripts/tooling/line-census.baseline.json", "tests/unit/t0179-react-proposal.test.ts", "tests/unit/t0175-dependency-proposals.test.ts", "tests/unit/t0176-visual-dependency-proposals.test.ts", "tests/unit/t0177-knip-proposal.test.ts", "tests/fixtures/mutants/T-0179.json"],
+  "programme": "T-0178 closed at dev@ad9dd795 after its red-first Playwright oracle, full unchanged-tree gate, committed-tree mutation sweep, exact-head PR #228 closure and all four implementation and closure workflows green. Only PR #233 remains open against dev alongside promotion PR #157. PR #233 at 5e03124f785471d7ad6919437ebd1fc0a02048db proposes react 19.2.8 and @types/react ^19.2.18 but leaves react-dom 19.2.7. A read-only comparison found that pairing React DOM at 19.2.8 is needed for a coherent runtime pin; keep @types/react-dom ^19 and Next/eslint-config-next 16.3.6 unless validation establishes a further necessary change. Q-011 still requires an operator release before structural cleanup.",
+  "invariants": [
+    "Freeze an independent red-first oracle for react 19.2.8, react-dom 19.2.8 and @types/react ^19.2.18 before package changes. Amend only stale React expectations in T-0175/T-0176/T-0177 through a different author while preserving all prior test names and assertions.",
+    "Regenerate the lockfile on current dev. Attribute every package-record delta; do not replay older optional Tailwind WASM records or move Next, eslint-config-next or @types/react-dom without evidence.",
+    "Install and build in an isolated checkout with its own data directory. Run the complete zero-retry, unchanged-tree ten-step gate and inspect browser journeys and screenshots at 1440x900 and 390x844 for hydration errors, missing h1 and horizontal overflow.",
+    "Run npm audit and report remaining advisories separately. Run the committed-tree mutation sweep and verify clean restoration.",
+    "Archive PR #233's exact source head in a local non-branch ref before closure. Keep the PR open until its proposal is represented on dev and all hosted push and PR jobs pass. Delete a remaining remote source branch only under an exact-SHA lease.",
+    "At most two disjoint writing lanes. Push only dev; preserve PR #157, main, release authority and all unclassified worktrees."
+  ],
+  "rollback": "Restore the old React/React DOM pins and @types/react range through a new dev commit with a regenerated lockfile; retain the oracle, visual evidence and archived PR source head.",
+  "verify_line": "The independent red-first oracle and old-suite identity amendments, exact lockfile attribution, isolated npm ci and browser install, full unchanged-tree gate, responsive walk, committed-tree sweep, hosted job verdicts and PR archive/ref checks must pass; audit advisories are attributed separately.",
+  "oracle_provenance": "",
+  "verification": "",
+  "mutation": "",
+  "deviation": ""
+}
