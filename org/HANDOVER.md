@@ -9,6 +9,29 @@ updated: 2026-09-27
 
 ## Dated status, 2026-09-27
 
+T-0179 carried PR #233's React 19.2.8 and `@types/react` 19.2.18 proposal
+onto `dev@1f8b2aa1` with React DOM also pinned at 19.2.8. Its independent
+oracle was red at eight expected assertions out of 24 tests before the
+update, then green 29/29 with the prior dependency suites. The three old
+suites retained all 21 test names and assertions through an independent
+amendment. Only the React, React DOM and React types package records moved
+in the current-dev lockfile. The first full gate correctly rejected an
+ignored visual helper left in the reused isolated clone because ESLint found
+five forbidden imports. Removing only that owned temporary helper and
+rerunning the entire unchanged-tree gate gave ten green steps: 735 Jest
+suites (7266 passes, four skips) and 283 Playwright passes (24 skips). The
+isolated Composer walk at 1440x900 and 390x844 found no missing h1, overflow
+or browser console errors; both screenshots are byte-identical to T-0178.
+Four committed-tree mutants were killed and restoration left a clean clone.
+All four implementation workflows and every required hosted job passed.
+PR #233 closed unmerged at its archived exact head, and GitHub removed the
+remote source branch. PR #157 is now the only open PR, with `dev` as its
+source and `main` as its target. `npm audit --json` still exits 1 with ten
+advisories (two low, three moderate, five high). T-0179's task-closure push
+still needs its own hosted-workflow observation. T-0158 session security and
+T-0164/T-0165 reconnaissance and planning remain open; the original
+T-0158 evidence must be reconciled with accepted ADR-0013 before code work.
+
 T-0178 carried PR #228's Playwright 1.62.1 proposal onto `dev@e7081b1a`
 without merging its stale branch. Its independent oracle was red at eight
 expected Playwright version assertions out of 26 tests before implementation,

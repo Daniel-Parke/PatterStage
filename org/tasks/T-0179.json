@@ -9,9 +9,9 @@
     {"factor": "irreversible-action", "tier_floor": "R3", "source": "declared", "evidence": "declared side effect: irreversible-action"},
     {"factor": "boundary-contact", "tier_floor": "R1", "source": "declared", "evidence": "declared side effect: sends-external"}
   ],
-  "status": "open",
+  "status": "done",
   "owner_session": "2026-09-27-refactor-foundations",
-  "timestamps": {"opened": "2026-09-27T18:45:31Z", "updated": "2026-09-27T18:45:31Z"},
+  "timestamps": {"opened": "2026-09-27T18:45:31Z", "updated": "2026-09-27T19:22:00Z"},
   "claims": ["org/tasks/T-0179.json", "org/claims.json", "org/briefs/T-0179-oracle.md", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", "package.json", "package-lock.json", "scripts/tooling/line-census.baseline.json", "tests/unit/t0179-react-proposal.test.ts", "tests/unit/t0175-dependency-proposals.test.ts", "tests/unit/t0176-visual-dependency-proposals.test.ts", "tests/unit/t0177-knip-proposal.test.ts", "tests/fixtures/mutants/T-0179.json"],
   "programme": "T-0178 closed at dev@ad9dd795 after its red-first Playwright oracle, full unchanged-tree gate, committed-tree mutation sweep, exact-head PR #228 closure and all four implementation and closure workflows green. Only PR #233 remains open against dev alongside promotion PR #157. PR #233 at 5e03124f785471d7ad6919437ebd1fc0a02048db proposes react 19.2.8 and @types/react ^19.2.18 but leaves react-dom 19.2.7. A read-only comparison found that pairing React DOM at 19.2.8 is needed for a coherent runtime pin; keep @types/react-dom ^19 and Next/eslint-config-next 16.3.6 unless validation establishes a further necessary change. Q-011 still requires an operator release before structural cleanup.",
   "invariants": [
@@ -24,8 +24,8 @@
   ],
   "rollback": "Restore the old React/React DOM pins and @types/react range through a new dev commit with a regenerated lockfile; retain the oracle, visual evidence and archived PR source head.",
   "verify_line": "The independent red-first oracle and old-suite identity amendments, exact lockfile attribution, isolated npm ci and browser install, full unchanged-tree gate, responsive walk, committed-tree sweep, hosted job verdicts and PR archive/ref checks must pass; audit advisories are attributed separately.",
-  "oracle_provenance": "",
-  "verification": "",
-  "mutation": "",
-  "deviation": ""
+  "oracle_provenance": "Independent ORACLE author committed 53d605c3 before package edits. Focused old-version Jest ran 24 tests: eight expected failures, 16 passes, zero skips. The amended T-0175/T-0176/T-0177 suites retained their 7/8/6 test-name sets and all non-React assertions. New suite SHA-256 146828D7D9C038EF50B9D86F36F2E7993E7ACD7FC6FD69D107C4D996EF30633E.",
+  "verification": "Implementation 1f8b2aa1 pins react and react-dom together at 19.2.8 and moves @types/react to ^19.2.18; only those three package records changed in the current-dev lockfile, including react-dom's peer requirement. Focused dependency suites 29/29; app and test TypeScript exit 0; isolated npm ci installed 776 packages and matching Chromium install exited 0. The final complete isolated ten-step gate exited 0, red=[], treeMoved=false, and treeBefore=treeAfter=ad03df7e02dc9b5a241032acb774bce4876da2845c6077acd15bcea77b24e9e6. Jest: 735 suites, 7266 passes, four skips; Playwright: 283 passes, 24 skips. The isolated Composer walk at 1440x900 and 390x844 returned HTTP 200, one h1, no horizontal overflow or browser console errors. Its screenshots were byte-identical to T-0178: SHA-256 99059409ad9f15338081400f4750102cffd5209a2969a47cb8e2afd8b5b86d3e and f87b69d67b8b32a1b7dda6cd6701e4ce6a8fef23c8fe3376aa163a79e56ad8e9. All four implementation workflows and every required job passed on 1f8b2aa1: PR CI 36343291425, push CI 36343288038, PR Gitleaks 36343291417 and push Gitleaks 36343288017. PR #233 closed unmerged at exact archived head 5e03124f785471d7ad6919437ebd1fc0a02048db; GitHub removed its remote source branch. PR #157 is the sole open PR. The line census rose only 78 oracle lines with a written reason; repeated test windows stayed 4789. npm audit --json exited 1 with ten residual advisories: two low, three moderate, five high.",
+  "mutation": "Committed-tree sweep on 1f8b2aa1: manifest React pin, locked React DOM resolution, React types range and locked React DOM peer mutants all KILLED by assertion-failed. Unmodified controls passed before and after, and the isolated clone was clean after restoration.",
+  "deviation": "The first full gate stopped at lint because an ignored T-0178 visual helper in the reused validation clone contained five forbidden require() imports. The helper was removed only from that clone; its primary ignored copy and screenshots remain. The complete gate was rerun on the unchanged candidate and passed. No gate rule, coverage floor, snapshot or design threshold was weakened. Residual audit advisories remain for later attributed dependency work."
 }
