@@ -1,0 +1,31 @@
+{
+  "id": "T-0177",
+  "intent": "Carry PR #227's Knip 6.34.0 version proposal onto current dev without merging its stale branch. Preserve the exact gate identity set or account for each changed finding, then retire the addressed PR only after full local and hosted acceptance.",
+  "declared": {"capabilities": ["edit-config", "edit-tests", "git", "github-api", "git-push"], "side_effects": ["touches-dependencies", "sends-external", "irreversible-action"]},
+  "mode": "high-assurance",
+  "tier_proposed": "R3",
+  "tier_ruled": "R3",
+  "reasons": [
+    {"factor": "irreversible-action", "tier_floor": "R3", "source": "declared", "evidence": "declared side effect: irreversible-action"},
+    {"factor": "boundary-contact", "tier_floor": "R1", "source": "declared", "evidence": "declared side effect: sends-external"}
+  ],
+  "status": "open",
+  "owner_session": "2026-09-27-refactor-foundations",
+  "timestamps": {"opened": "2026-09-27T16:18:12Z", "updated": "2026-09-27T16:18:12Z"},
+  "claims": ["org/tasks/T-0177.json", "org/claims.json", "org/briefs/T-0177-oracle.md", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", "package.json", "package-lock.json", "scripts/tooling/knip-baseline.json", "scripts/tooling/line-census.baseline.json", "tests/unit/t0177-knip-proposal.test.ts", "tests/unit/t0175-dependency-proposals.test.ts", "tests/unit/t0176-visual-dependency-proposals.test.ts", "tests/fixtures/mutants/T-0177.json"],
+  "programme": "T-0176 closure push dev@37b4277e passed push CI 36331969500, PR CI 36331970957 and both Gitleaks workflows 36331969626 and 36331970965, with every required job green. PR #227 remains open against dev at 8ecfe3d76266bcf4abb79b817e9684682f8e8200; it changes only package.json and package-lock.json on its old branch, proposing knip ^6.34.0 resolved 6.34.0. The old branch conflicts with current dev and is not merged. The existing exact-identity Knip ratchet holds 17 reasoned findings. The independent review recommends a separate batch because Knip's scanner or JSON report may move. PR #228 Playwright and #233 paired React are outside this batch.",
+  "invariants": [
+    "Freeze an independent oracle red against the existing Knip range before changing the manifest. Preserve the seven T-0175 and eight T-0176 test names and their strict direct-range assertions through an independently authored amendment.",
+    "Change only the Knip direct range. Regenerate package-lock.json on current dev; attribute every transitive delta against PR #227 and the current baseline.",
+    "Run Knip's complete JSON scan and compare every issue identity with the committed reasoned baseline. Resolve real new findings; reduce stale entries. Any remaining baseline change names the finding and its reason. Do not silence or weaken the ratchet.",
+    "Run isolated npm ci, focused tests, npm audit, the full ten-step unchanged-tree gate and committed-tree mutation sweep. Record all nonzero audit advisories separately.",
+    "Keep PR #227 open until its proposal is represented on dev and all hosted push and PR jobs pass. Preserve its exact head in a local non-branch archive ref before closure; delete a remaining remote source branch only under an exact-SHA lease.",
+    "At most two disjoint writing lanes. Only dev is pushed. Keep PR #157, main, #228, #233 and unclassified dirty worktrees intact."
+  ],
+  "rollback": "Restore the prior Knip range and regenerate the lockfile in a new dev commit. Retain the independent oracle, exact-head archive and issue-identity evidence.",
+  "verify_line": "The frozen oracle and independent old-oracle amendments, exact Knip issue comparison, lockfile attribution, isolated install, full unchanged-tree gate, committed-tree sweep, hosted jobs and exact-head PR archive/ref checks must pass; npm audit is run and unresolved advisories reported separately.",
+  "oracle_provenance": "",
+  "verification": "",
+  "mutation": "",
+  "deviation": ""
+}
