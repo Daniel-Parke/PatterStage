@@ -5,6 +5,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, join } from "node:path";
+import { pathToFileURL } from "node:url";
 
 const ROOT = join(__dirname, "..", "..");
 const PREFIX = "t0161-state-completeness-";
@@ -263,6 +264,45 @@ describe("T-0161 explicit Hermes state import completeness", () => {
           throw new Error("INFRASTRUCTURE: forced import did not reject the disposable SQLite refusal");
         }
         expect({ exitedNonZero: refused.status !== 0, preservedRows: after, missingProfileCount: absent.n })
+          .toEqual({ exitedNonZero: true, preservedRows: before, missingProfileCount: 0 });
+      } finally {
+        db.close();
+      }
+    } finally {
+      removeFixture(root);
+    }
+  });
+
+  it("rolls back a newly upserted profile when its malformed config makes pull return failure", () => {
+    const root = mkdtempSync(join(tmpdir(), PREFIX));
+    try {
+      const { dbPath, env, preload } = preparePartialProfileFixture(root);
+      writeFileSync(join(root, "hermes", "profiles", "new-profile", "config.yaml"), "model: [unterminated\n");
+      const db = new DatabaseCtor(dbPath);
+      try {
+        const before = existingRows(db);
+        const targeted = run("scripts/tooling/import-hermes-state.ts", ["--import-missing-profiles"], preload, env);
+        requireCompleted(targeted, "malformed-profile targeted import");
+        const after = existingRows(db);
+        const afterTargetedCount = (db.prepare("SELECT COUNT(*) AS n FROM agent_profiles WHERE slug = 'new-profile'").get() as { n: number }).n;
+
+        const moduleUrl = pathToFileURL(join(ROOT, "src", "modules", "hermes", "lib", "profile-discovery.ts")).href;
+        const probe = spawnSync(process.execPath, ["--require", preload, "--import", "tsx", "--eval", `
+          import(${JSON.stringify(moduleUrl)}).then(({ importDiscoveredProfile }) => {
+            const result = importDiscoveredProfile('new-profile');
+            process.stdout.write('ORACLE_RESULT=' + JSON.stringify({ success: result.success }) + '\\n');
+          }).catch(() => { process.exitCode = 1; });
+        `], {
+          cwd: ROOT, env, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"],
+          timeout: 60_000, windowsHide: true,
+        });
+        requireCompleted(probe, "malformed-profile direct import control");
+        const probeResult = probe.stdout.match(/ORACLE_RESULT=(\{[^\r\n]+\})/);
+        const afterProbeCount = (db.prepare("SELECT COUNT(*) AS n FROM agent_profiles WHERE slug = 'new-profile'").get() as { n: number }).n;
+        if (probe.status !== 0 || !probeResult || JSON.parse(probeResult[1]).success !== false || afterProbeCount !== 1) {
+          throw new Error("INFRASTRUCTURE: malformed config did not cause a returned failure after the disposable profile upsert");
+        }
+        expect({ exitedNonZero: targeted.status !== 0, preservedRows: after, missingProfileCount: afterTargetedCount })
           .toEqual({ exitedNonZero: true, preservedRows: before, missingProfileCount: 0 });
       } finally {
         db.close();
