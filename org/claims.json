@@ -3,21 +3,21 @@
   "assigned": "2026-09-27",
   "lanes": [
     {
-      "lane_id": "T-0161-fail-closed-oracle",
+      "lane_id": "T-0161-setup-seed-oracle",
       "task_id": "T-0161",
-      "session_id": "01a0e029-2602-7842-9b60-6d00ca054fa1",
-      "path_claims": ["tests/unit/t0161-registry-required-config.test.ts", "tests/unit/t0161-state-import-completeness.test.ts", "tests/unit/t0161-discovery-errors.test.ts"],
+      "session_id": "01a0e030-5d94-7da3-8dcf-e8f4814c10c7",
+      "path_claims": ["tests/unit/t0161-shell-seed-selected-dir.test.ts", "tests/unit/t0161-profiles-manifest-required.test.ts"],
       "expires": "2026-09-28T23:00:00Z",
-      "liveness": "independent reviewer authors final fail-closed seed-chain oracles in a separate checkout"
+      "liveness": "independent test author proves selected shell data directory and required profiles manifest"
     },
     {
       "lane_id": "T-0161-implementer",
       "task_id": "T-0161",
       "session_id": "2026-09-26-refactor-foundations",
-      "path_claims": ["org/claims.json", "org/tasks/T-0161.json", "org/briefs/T-0161-hosted-ci-oracle.md", "org/briefs/T-0161-hermes-alias-oracle.md", "org/briefs/T-0161-seed-step-oracles.md", "org/briefs/T-0161-seed-integrity-oracles.md", "org/briefs/T-0161-final-fail-closed-oracles.md", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", "scripts/bootstrap/setup.sh", "scripts/bootstrap/setup.mjs", "scripts/tooling/ps-deploy.mjs", "scripts/tooling/hermes-registry-import.mjs", "scripts/tooling/import-hermes-state.ts", "scripts/tooling/seed-catalog.ts", "scripts/tooling/ensure-hermes-model-sync.ts", "src/lib/seed/catalog-seed.ts", "src/lib/db/index.ts", "src/modules/hermes/lib/state-import.ts", "src/modules/hermes/lib/profile-discovery.ts", "scripts/tooling/line-census.baseline.json", "tests/fixtures/mutants/T-0161.json"],
+      "path_claims": ["org/claims.json", "org/tasks/T-0161.json", "org/briefs/T-0161-hosted-ci-oracle.md", "org/briefs/T-0161-hermes-alias-oracle.md", "org/briefs/T-0161-seed-step-oracles.md", "org/briefs/T-0161-seed-integrity-oracles.md", "org/briefs/T-0161-final-fail-closed-oracles.md", "org/briefs/T-0161-setup-seed-oracles.md", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", "scripts/bootstrap/setup.sh", "scripts/bootstrap/setup.mjs", "scripts/tooling/ps-deploy.mjs", "scripts/tooling/hermes-registry-import.mjs", "scripts/tooling/import-hermes-state.ts", "scripts/tooling/seed-catalog.ts", "scripts/tooling/ensure-hermes-model-sync.ts", "src/lib/seed/catalog-seed.ts", "src/lib/db/index.ts", "src/modules/hermes/lib/seed-agent-catalog.ts", "src/modules/hermes/lib/state-import.ts", "src/modules/hermes/lib/profile-discovery.ts", "scripts/tooling/line-census.baseline.json", "tests/fixtures/mutants/T-0161.json"],
       "expires": "2026-09-28T23:00:00Z",
       "liveness": "coordinator fixes hosted T-0161 CI and verified silent success in required seed steps, then repeats full gate and sweeps"
     }
   ],
-  "note": "Hosted CI reopened T-0161 after the initial closure push. Independent red oracles covered import aliases and seed-step false success. A final reviewer lane now owns only three new tests for configured no-op, partial retry and discovery errors. Two disjoint writing lanes remain within the policy cap."
+  "note": "Hosted CI reopened T-0161 after the initial closure push. Independent red oracles cover import aliases and seed-step false success. A separate author now owns only two tests for the selected shell data directory and required profiles manifest. Two disjoint writing lanes remain within the policy cap."
 }
