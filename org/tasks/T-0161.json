@@ -36,6 +36,8 @@
     "org/briefs/T-0161-model-sync-presence-oracle.md",
     "org/briefs/T-0161-final-root-and-deploy-oracle.md",
     "org/briefs/T-0161-sweep-attribution-oracle.md",
+    "org/briefs/T-0161-c8-shrink-oracle.md",
+    "tests/unit/c8-the-programme-is-closed.test.ts",
     "org/HANDOVER.md",
     "org/TASKS.md",
     "org/STATE.md",
