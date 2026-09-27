@@ -13,23 +13,31 @@
   "tier_ruled": "R1",
   "reasons": [
     {
-      "factor": "size-threshold",
+      "factor": "operator-plan-conservative-tier",
       "tier_floor": "R1",
-      "source": "derived:diff-size",
-      "evidence": "one prop across one boundary, plus the e2e coverage whose absence is why nobody saw it"
+      "source": "operator-plan",
+      "evidence": "The 2026-09-27 prerequisite plan assigns R1 to the Help repair and manifest-driven browser coverage; retain that higher tier even though the declaration-only router sees R0 before a diff exists."
     }
   ],
-  "status": "proposed",
-  "owner_session": "unassigned",
+  "status": "active",
+  "owner_session": "2026-09-27-refactor-foundations",
   "claims": [
     "src/app/help/[[...slug]]/page.tsx",
     "tests/e2e/app-routes.ts",
-    "tests/e2e/help.spec.ts"
+    "tests/e2e/help.spec.ts",
+    "tests/fixtures/mutants/T-0156.json",
+    "scripts/tooling/line-census.baseline.json",
+    "org/tasks/T-0156.json",
+    "org/claims.json",
+    "org/briefs/T-0156-oracle.md",
+    "org/HANDOVER.md",
+    "org/TASKS.md",
+    "org/STATE.md"
   ],
   "programme": "Found by K7's recon (T-0155) and raised rather than folded in. It is a product defect, not a refactor finding, and it is the recon's own best argument for itself: the review's docs list left 'public/help/ output shape and the in-app Help resolver were not examined' open, and a live 500 on 74 of 75 guide URLs was sitting behind that line.",
   "timestamps": {
     "opened": "2026-09-12T19:30:00Z",
-    "updated": "2026-09-12T19:30:00Z",
+    "updated": "2026-09-27T06:10:57Z",
     "closed": null
   },
   "invariants": [
@@ -38,7 +46,8 @@
     "I3 EVERY GUIDE, NOT ONE. The oracle walks the manifest rather than a sample: docs/manifest.json holds 75 pages, and the claim to hold is that each resolves.",
     "I4 THE ERRORS WERE ALREADY IN THE LOG. The same message appears in passing e2e runs from earlier the same day. A fix that leaves the server log carrying it has not finished."
   ],
-  "notes": "Evidence, 2026-09-12, isolated instance on port 3333, authenticated through the token exchange. The three log lines are identical, digest 1261740971, and name ChevronLeft. The index page at /help works because it does not pass the icon. Two of the six slugs probed answered 404 rather than 500 (/help/getting-started, /help/concepts/missions), so the manifest's slug shape needs reading before the oracle is written: the count of affected URLs is 'every guide the resolver resolves', which the recon put at 74 of 75, and that number should be re-derived from docs/manifest.json rather than taken.",
+  "notes": "Evidence, 2026-09-12, isolated instance on port 3333, authenticated through the token exchange. The three log lines are identical, digest 1261740971, and name ChevronLeft. The index page at /help works because it does not pass the icon. Two of the six slugs probed answered 404 rather than 500 (/help/getting-started, /help/concepts/missions), so the manifest's slug shape needs reading before the oracle is written: the count of affected URLs is 'every guide the resolver resolves', which the recon put at 74 of 75, and that number should be re-derived from docs/manifest.json rather than taken. On 2026-09-27 the committed docs manifest has six sections and 75 pages. The declaration-only EOS router returns R0 because it reads no diff; the existing R1 task tier is retained as the operator-plan's conservative ruling for the 75-guide product failure and browser coverage. The actual diff must be checked for any higher floor before the gate.",
+  "rollback": "Revert the Help boundary change and its oracle together only if a replacement fix is ready; otherwise the rollback restores 500 responses for manifest guides. Rebuild the isolated app and rerun manifest-driven e2e and the full gate.",
   "commits": "",
   "verification": "",
   "review": "",
