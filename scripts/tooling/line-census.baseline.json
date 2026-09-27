@@ -2,7 +2,7 @@
   "measuredAt": "2026-09-27",
   "counts": {
     "srcLines": 101106,
-    "testLines": 129311,
+    "testLines": 129316,
     "scriptsLines": 13615,
     "srcRepeatedWindowLines": 1000,
     "testRepeatedWindowLines": 4683,
@@ -635,6 +635,11 @@
       "measuredAt": "2026-09-27",
       "rise": "scriptsLines rose from 13595 to 13615",
       "reason": "T-0163: independently frozen credential-permission oracle and fail-closed owner-only bootstrap and runtime writers"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 129311 to 129316",
+      "reason": "T-0163 dated independent oracle amendment: distinguish intentional early chmod refusal from missing fixture execution, preserving 13 test names"
     }
   ]
 }
