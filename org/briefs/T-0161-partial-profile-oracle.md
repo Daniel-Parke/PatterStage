@@ -1,0 +1,5 @@
+# T-0161 partial Hermes profile import oracle
+
+Independent test author owns only `tests/unit/t0161-state-import-completeness.test.ts`. The implementer owns `src/modules/hermes/lib/state-import.ts`, `scripts/tooling/import-hermes-state.ts`, and setup/deploy callers. The Linux update harness creates an existing seeded database, then supplies Hermes profile directories. The strict CLI currently rejects a profile absent from SQLite, preventing setup.
+
+Extend the existing behavioural fixture with an explicit `--import-missing-profiles` path. First prove ordinary retry still exits nonzero and preserves root, skill and profile rows. Then prove the targeted path imports a new SOUL-only profile without changing existing root/skill rows or existing profile content. It must fail if a missing profile cannot be imported. Keep all existing test names and assertions. Commit the oracle red before implementation, record exact results, and report its commit and file identity. Do not edit implementation or other tests. No operator data or credentials enter the fixture.
