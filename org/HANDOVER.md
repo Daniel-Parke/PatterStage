@@ -9,7 +9,7 @@ updated: 2026-09-27
 
 ## Dated status, 2026-09-27
 
-T-0161 has a new locally green candidate at `7beb4ffb`. Production builds leave isolated
+T-0161 is done at hosted candidate `9ff2e257`. Production builds leave isolated
 SQLite data untouched. Setup/update back up both database names and sidecars
 before migration or Hermes import, and the explicit seed fails closed on
 missing or partial input. Node backups are owner-only from creation; shell
@@ -23,8 +23,9 @@ The earlier push `050ad61d` exposed macOS Jest and Ubuntu build-purity failures.
 The next push `ce9808cf` exposed Linux/macOS oracle fixture failures; its PR
 full E2E and acceptance jobs passed. The fixes retain all test names and the
 same behavioural assertions. The latest Linux focused reproduction passed 2/2;
-the full isolated gate and 34-mutant sweep passed. Hosted acceptance for this
-candidate is pending. PR #157 remains
+the full isolated gate and 34-mutant sweep passed. Push CI `36298705166`, PR CI
+`36298707475` and both Gitleaks runs all completed success. PR full E2E and
+acceptance passed. PR #157 remains
 open; Q-011 still requires an operator release before structural cleanup.
 Next is T-0156 Help boundary repair, then T-0162 and T-0163. The full
 reconnaissance and Phase 2 plan are still outstanding and need separate plan
