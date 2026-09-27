@@ -1,0 +1,38 @@
+{
+  "task": "T-0179",
+  "why": "The paired React runtime, types proposal and peer compatibility must remain observable after PR #233 retires.",
+  "mutants": [
+    {
+      "id": "m1-revert-react-pin",
+      "file": "package.json",
+      "anchor": "\"react\": \"19.2.8\"",
+      "replacement": "\"react\": \"19.2.7\"",
+      "tests": ["tests/unit/t0179-react-proposal.test.ts"],
+      "why": "The runtime proposal requires the new direct React pin."
+    },
+    {
+      "id": "m2-revert-react-dom-resolution",
+      "file": "package-lock.json",
+      "anchor": "\"node_modules/react-dom\": {\n      \"version\": \"19.2.8\"",
+      "replacement": "\"node_modules/react-dom\": {\n      \"version\": \"19.2.7\"",
+      "tests": ["tests/unit/t0179-react-proposal.test.ts"],
+      "why": "The installed React DOM must match the React runtime pin."
+    },
+    {
+      "id": "m3-revert-react-types-range",
+      "file": "package.json",
+      "anchor": "\"@types/react\": \"^19.2.18\"",
+      "replacement": "\"@types/react\": \"^19.2.17\"",
+      "tests": ["tests/unit/t0179-react-proposal.test.ts"],
+      "why": "The direct types proposal must be enforced independently from the lockfile."
+    },
+    {
+      "id": "m4-break-react-dom-peer",
+      "file": "package-lock.json",
+      "anchor": "\"react\": \"^19.2.8\"",
+      "replacement": "\"react\": \"^20.0.0\"",
+      "tests": ["tests/unit/t0179-react-proposal.test.ts"],
+      "why": "The locked React DOM peer must accept the installed React version."
+    }
+  ]
+}

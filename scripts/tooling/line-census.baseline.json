@@ -2,7 +2,7 @@
   "measuredAt": "2026-09-27",
   "counts": {
     "srcLines": 101155,
-    "testLines": 130502,
+    "testLines": 130580,
     "scriptsLines": 13694,
     "srcRepeatedWindowLines": 1000,
     "testRepeatedWindowLines": 4789,
@@ -745,6 +745,11 @@
       "measuredAt": "2026-09-27",
       "rise": "testLines rose from 130477 to 130502",
       "reason": "T-0178 adds 25 test lines for the independent Playwright version oracle; repeated windows stay at 4,789"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 130502 to 130580",
+      "reason": "T-0179 adds 78 test lines for the independent paired-React and peer-compatibility oracle; repeated windows remain 4,789"
     }
   ]
 }
