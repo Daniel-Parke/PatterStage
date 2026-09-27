@@ -2,7 +2,7 @@
   "measuredAt": "2026-09-27",
   "counts": {
     "srcLines": 101129,
-    "testLines": 129719,
+    "testLines": 129770,
     "scriptsLines": 13626,
     "srcRepeatedWindowLines": 1000,
     "testRepeatedWindowLines": 4683,
@@ -655,6 +655,11 @@
       "measuredAt": "2026-09-27",
       "rise": "scriptsLines rose from 13615 to 13626",
       "reason": "T-0163 independent review: nine red-first security regressions and repairs for owner-only Hermes directories, exclusive staging and collision-safe backups"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 129719 to 129770",
+      "reason": "T-0168: independent symlinked-TMPDIR credential oracle adds canonical-path instrumentation and a red-first regression while preserving six existing test identities"
     }
   ]
 }
