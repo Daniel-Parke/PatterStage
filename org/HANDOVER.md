@@ -19,7 +19,20 @@ Jest suites (7219 passed, 4 skipped) and 283 Playwright passes (24 skipped).
 A disposable-data HTTP probe confirmed the response and refusal codes; two
 committed-tree mutants were killed. PR #234 remains open for an operator
 disposition after its seven-file contract is compared with the landed change.
-T-0170's closure push and hosted jobs are pending.
+All four hosted workflows for its closure push at `cf43a4f7` passed: push and
+PR CI, plus both Gitleaks runs. PR CI included successful Ubuntu and macOS
+builds, full E2E, install harness, real Hermes and acceptance-gate.
+
+T-0171 then audited branch and PR preservation before any removal. Its review
+at `org/reviews/2026-09-branch-pr-preservation.md` lists 16 registered
+worktrees, two additional sibling validation clones, 15 remote branches and
+14 open PRs at the inspected revision. One clone holds a named T-0169 stash
+and checkpoint ref; the other has 201 expanded dirty paths. Several linked
+worktrees retain distinct files, including all 15 dirty Cursor files. No ref,
+checkout or PR was removed. PR #234's seven-file contract is carried on dev
+by T-0170; #231's older eslint-config-next version is superseded. Unique
+dependency proposals stay open until gated on current dev. The audit is an
+evidence-only review, with no application or gate change.
 
 ADR-0012 and its independently prompted correction ADR-0013 were accepted by
 the operator and filed before T-0158 implementation. The correction records
@@ -27,10 +40,11 @@ private-proxy network isolation, token rotation, read-only navigation renewal,
 the narrow POST sign-in bypass and token-free onboarding. T-0158 remains next
 for the security prerequisite. The operator has put branch and PR consolidation
 first. A read-only inventory found 14 open PRs and 16 registered worktrees;
-dirty checkouts and detached heads include unique commits, with two oracle
-patches not yet content-equivalent to `dev`. No ref, PR or worktree has been
-removed. The detailed preservation ledger and dispositions need a separate
-batch before any pruning.
+dirty checkouts and detached heads hold distinct working files. The two
+oracle commits that `git cherry` marked non-equivalent have byte-identical
+changed test blobs on `dev`; neither proves the other dirty files are safe to
+discard. The detailed preservation ledger is T-0171. No ref, PR or worktree
+has been removed.
 
 T-0169 repaired the Settings `#env` anchor race traced in T-0167's hosted PR
 full E2E. A delayed Hermes read expanded the preceding editor after the

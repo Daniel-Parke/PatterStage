@@ -1,6 +1,6 @@
 {
   "id": "T-0171",
-  "intent": "Establish a current, itemised preservation ledger for every local and remote PatterStage branch, registered worktree and open pull request before closing or removing any of them. Reconcile the old T-0003 assumptions with the current dev tree and the accepted release order.",
+  "intent": "Establish a current, itemised preservation ledger for every local and remote PatterStage branch, registered worktree, sibling validation clone and open pull request before closing or removing any of them. Reconcile the old T-0003 assumptions with the current dev tree and the accepted release order.",
   "declared": {"capabilities": ["edit-docs", "git-push"], "side_effects": ["sends-external"]},
   "mode": "standard",
   "tier_proposed": "R1",
@@ -8,19 +8,19 @@
   "reasons": [
     {"factor": "boundary-contact", "tier_floor": "R1", "source": "declared", "evidence": "The audited ledger will be committed and pushed to dev; this batch changes no remote ref or PR state."}
   ],
-  "status": "active",
+  "status": "done",
   "owner_session": "2026-09-27-refactor-foundations",
   "claims": ["org/tasks/T-0171.json", "org/claims.json", "org/reviews/2026-09-branch-pr-preservation.md", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md"],
   "programme": "The operator prioritised branch and PR consolidation before T-0158. T-0170 carried PR #234's liveness behaviour onto dev; all push and PR jobs for dev@cf43a4f7, including acceptance, completed successfully. This batch establishes the evidence and disposition boundaries. Any external closure or deletion follows as a separate ruled action.",
-  "timestamps": {"opened": "2026-09-27T12:32:39Z", "updated": "2026-09-27T12:32:39Z", "closed": null},
+  "timestamps": {"opened": "2026-09-27T12:32:39Z", "updated": "2026-09-27T12:43:00Z", "closed": "2026-09-27T12:43:00Z"},
   "invariants": [
-    "Every registered worktree, local branch, remote branch and open PR at the inspected revision has a ledger row or an explicit grouping with exact identity.",
+    "Every registered worktree, sibling validation clone, local branch, remote branch and open PR at the inspected revision has a ledger row or an explicit grouping with exact identity.",
     "Working-file differences, unreachable commits, stashes and ignored state are not declared safe to delete solely because a branch tip is an ancestor or patch-equivalent to dev.",
     "No ref, checkout, PR, release or repository setting changes in this evidence batch; protected, derived and append-only files are handled by their normal procedures."
   ],
   "rollback": "Revert the evidence report and its task closure if a checked identity is wrong; retain every ref and checkout for a fresh audit.",
-  "verification": "",
-  "review": "",
+  "verification": "The report contains 16 registered-worktree rows and 14 open-PR rows, matching git worktree list and gh pr list at the inspected cf43a4f7 revision. git ls-remote --heads origin returned 15 exact heads: main, dev and each of the 13 other PR heads. All four hosted workflows for cf43a4f7 completed successfully, with every PR job including acceptance-gate green. git diff --check and node scripts/tooling/check-doc-links.mjs passed. npm run docs:check passed outside the sandbox: 75 pages, 21 routes, every guide accounted for. Derived views are rendered and checked at closure. No code, executable gate, ref, PR or repository setting was changed.",
+  "review": "Three disjoint read-only agents checked registered worktrees, open remote PRs and PR #234's seven changed paths. A separate sceptic found two sibling validation clones omitted by git worktree list; the report now includes the dirty gate clone's T-0169 stash and checkpoint ref, and the older validation clone's 201 expanded dirty paths. Follow-up blob comparisons named 30 registered-worktree files differing from dev, four differing gate-clone files and 15 differing validation-clone files; .npmrc and hermes.env were deliberately left unverified as potentially sensitive. Ten outside-dev commits were patch-equivalent and the two other changed test blobs matched dev exactly. The clones remain unclassified for deletion and are retained.",
   "mutation": "Not applicable to an evidence-only review; no executable gate or application behaviour changes.",
-  "deviation": ""
+  "deviation": "The first sandboxed docs:check failed before project code with Node os.userInfo uv_os_get_passwd ENOMEM. The same Node user lookup succeeded outside the sandbox; the unchanged docs:check then passed. No check was weakened or skipped. This evidence-only review did not use a red-first product oracle or mutation sweep because it changes no executable behaviour; the next implementation batch retains those requirements."
 }
