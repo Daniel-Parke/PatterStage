@@ -1,41 +1,6 @@
 {
   "version": 1,
-  "assigned": "2026-09-26",
-  "lanes": [
-    {
-      "lane_id": "T-0161-review-oracle",
-      "task_id": "T-0161",
-      "session_id": "T-0161-review-oracle",
-      "path_claims": [
-        "tests/unit/t0161-backup-selection.test.ts",
-        "tests/unit/t0161-node-setup-safety.test.ts",
-        "tests/unit/t0161-required-step-failures.test.ts",
-        "tests/unit/t0161-backup-creation.test.ts"
-      ],
-      "expires": "2026-09-27T23:00:00Z",
-      "liveness": "independent ORACLE author tests both-database coverage and owner-only creation before implementation"
-    },
-    {
-      "lane_id": "T-0161-implementer",
-      "task_id": "T-0161",
-      "session_id": "2026-09-26-refactor-foundations",
-      "path_claims": [
-        "org/claims.json", "org/tasks/T-0161.json", "org/briefs/T-0161-oracle.md",
-        "org/briefs/T-0161-safety-oracle.md", "org/briefs/T-0161-gate-oracle.md",
-        "org/briefs/T-0161-review-oracle.md", "org/briefs/T-0161-second-review-oracle.md",
-        "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", "package.json",
-        "scripts/tooling/prebuild-db.mjs", "scripts/tooling/hermes-registry-import.mjs",
-        "scripts/tooling/gate.mjs", "scripts/tooling/ps-deploy.mjs", "scripts/tooling/_platform.mjs", "scripts/tooling/migrate-to-runtime.mjs", "scripts/bootstrap/setup.sh",
-        "scripts/lib/ps-migrate.sh", "scripts/bootstrap/setup.mjs", ".github/workflows/ci.yml",
-        "src/app/layout.tsx", "src/instrumentation.ts", "src/lib/db/upgrade.ts", "src/lib/fs/fs-helpers.ts", "next.config.ts",
-        "tests/integration/test_full_install_update_process.py",
-        "tests/fixtures/mutants/T-0161.json", "tests/fixtures/mutants/T-0161-linux.json", "scripts/tooling/line-census.baseline.json",
-        "docs/contributing/testing.md", "docs/running/env-reference.md",
-        "docs/running/deploy.md", "docs/running/migration.md", "docs/CONTRIBUTING.md"
-      ],
-      "expires": "2026-09-27T23:00:00Z",
-      "liveness": "coordinator owns implementation, integration and record closure"
-    }
-  ],
-  "note": "Two active T-0161 writing lanes, the cap in org/policy.json. Earlier oracle lanes finished and were released. The reviewer-found failure-path ORACLE lane is disjoint from implementation. T-0154's expired claims remain in Git history."
+  "assigned": "2026-09-27",
+  "lanes": [],
+  "note": "T-0161 implementer and independent oracle lanes closed after accepted R2 review. The next batch must claim its paths before writing. Earlier claim assignments remain in Git history."
 }

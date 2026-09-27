@@ -2,10 +2,28 @@
 summary: What the consolidation programme did and left behind, how a batch was landed, what is open, and what waits next
 type: venture
 tags: [handover, consolidation]
-updated: 2026-09-26
+updated: 2026-09-27
 ---
 
-# Handover · PatterStage, 2026-09-26
+# Handover · PatterStage, 2026-09-27
+
+## Dated status, 2026-09-27
+
+T-0161 is locally complete. Production builds leave isolated SQLite data
+untouched, and setup/update now back up both existing database names and their
+sidecars before migration or Hermes import. Node backups are owner-only from
+creation; shell backups use `umask 077`. Independent review accepted the second
+correction at `1db20a9f`. The final isolated ten-step gate passed with 708 Jest
+suites, 279 Playwright passes and an unchanged tree stamp. Node 20 Linux mode
+tests passed 7/7; the two Docker update scenarios passed; committed sweeps
+killed 12/12 Windows and 1/1 Linux mutants. T-0161's record names the prior
+red runs, the census growth and the bounded `closeSync` cleanup limitation.
+Hosted push and PR jobs must be checked after the closure push. PR #157 remains
+open; Q-011 still requires an operator release before structural cleanup.
+Next is T-0156 Help boundary repair, then T-0162 and T-0163. The full
+reconnaissance and Phase 2 plan are still outstanding and need separate plan
+approval before structural execution. EOS renderer `1d20607858a180b12e3da2f1a0ad1192dbb187f9`
+renders the derived views.
 
 ## Dated status, 2026-09-26
 
