@@ -11,9 +11,10 @@
  * Models. Twenty-five components under sixty lines have exactly one importer
  * and no life of their own.
  *
- * After this batch: the six rules read zero on the tree and the pragmas that
- * excuse a genuine exception are few enough to read in a minute; every
- * effect read is a useApiResource; the folds are folded.
+ * At C6 close, the six rules reported zero and the pragmas that excuse a
+ * genuine exception were few enough to read in a minute. T-0162 later found
+ * four raw-write sites and five hand-read files hidden by blind detectors;
+ * their dated, named ratchets appear below.
  *
  * The recon: org/reviews/2026-09-consolidation-recon.md §5; the plan's C6 row.
  */
@@ -38,6 +39,19 @@ const RULES_C6 = [
 /** A pragma may excuse a line that is genuinely not the thing the rule names; it may not be the batch. */
 const PRAGMA_CEILING = 12;
 const ONE_IMPORTER_CEILING = 105;
+const RAW_WRITE_BASELINE = {
+  "no-raw-write-outside-the-helper::src/app/recroom/story-weaver/[id]/page.tsx": 1,
+  "no-raw-write-outside-the-helper::src/app/recroom/story-weaver/create/page.tsx": 1,
+  "no-raw-write-outside-the-helper::src/hooks/useVersionFooter.ts": 1,
+  "no-raw-write-outside-the-helper::src/lib/chat/chat-utils.ts": 1,
+};
+const HAND_READ_FILES = new Set([
+  "src/app/recroom/story-weaver/[id]/page.tsx",
+  "src/components/memory/hindsight/useHindsightCrudTab.ts",
+  "src/components/memory/hindsight/useHindsightMemories.ts",
+  "src/hooks/useChatSend.ts",
+  "src/hooks/useMissionsData.ts",
+]);
 
 function walk(dir: string): string[] {
   const out: string[] = [];
@@ -59,8 +73,8 @@ describe("C6 · the page layer", () => {
    * a closed-programme oracle may change for the one rule its ruled item fixes,
    * dated and attributed, authored by a session that does not implement the
    * fix. The case keeps its name, as the ruling requires. One rule changes;
-   * the other five below read zero exactly as before, and no violation is
-   * blessed away.
+   * the other five below read zero at that amendment. T-0162 subsequently
+   * corrected the raw-write measurement; no violation is blessed away.
    *
    * The rule, and why. components-01, ruled "fix now, baseline with a reason"
    * (Daniel Parke, operator, 2026-09-12): design-lint.mjs:436 matched
@@ -81,17 +95,39 @@ describe("C6 · the page layer", () => {
    * entry that names the rule — is held in tests/unit/k6-the-gates-see.test.ts,
    * which also proves the shipped pattern could not see the shape at all.
    */
-  const BASELINED_BY_RULING = new Set(["no-raw-control-outside-ui"]);
+  /**
+   * Amended 2026-09-27 (T-0162), under Q-015/Q-021, by the independent ORACLE
+   * lane. The existing test names are unchanged. The widened write detector
+   * found four previously invisible sites. Hold their exact, reasoned baseline
+   * while the same ratchet still refuses any increase on the live tree.
+   */
+  const BASELINED_BY_RULING = new Set([
+    "no-raw-control-outside-ui",
+    "no-raw-write-outside-the-helper",
+  ]);
 
   it.each(RULES_C6)("%s reads zero on the tree", (rule) => {
     const found = Object.entries(counts).filter(([key]) => key.startsWith(`${rule}::`));
 
     if (BASELINED_BY_RULING.has(rule)) {
-      const { counts: baseline } = splitBaseline(
-        JSON.parse(
-          readFileSync(join(ROOT, "scripts", "tooling", "design-lint.baseline.json"), "utf8"),
-        ) as unknown,
-      );
+      const committed = JSON.parse(
+        readFileSync(join(ROOT, "scripts", "tooling", "design-lint.baseline.json"), "utf8"),
+      ) as { __growth__?: { when?: string; reason?: string; grew?: string[] }[] };
+      const { counts: baseline } = splitBaseline(committed);
+      if (rule === "no-raw-write-outside-the-helper") {
+        const held = Object.fromEntries(
+          Object.entries(baseline).filter(([key]) => key.startsWith(`${rule}::`)),
+        );
+        expect(held).toEqual(RAW_WRITE_BASELINE);
+        const admission = (committed.__growth__ ?? []).filter(
+          (entry) => entry.when === "2026-09-27" && entry.reason?.includes("T-0162"),
+        );
+        expect(admission).toHaveLength(1);
+        expect(admission[0].reason?.trim()).toBeTruthy();
+        expect(admission[0].grew?.slice().sort()).toEqual(
+          Object.keys(RAW_WRITE_BASELINE).map((key) => `${key}: 0 -> 1`).sort(),
+        );
+      }
       const above = found
         .filter(([key, n]) => n > (baseline[key] ?? 0))
         .map(([key, n]) => `${key.slice(rule.length + 2)}: ${n} found, ${baseline[key] ?? 0} allowed`);
@@ -132,6 +168,12 @@ describe("C6 · the page layer", () => {
     expect(link.replace(/focus:\S+/g, "")).not.toMatch(/(?:^|\s)(?:h|w|p[xytblr]?)-/);
   });
 
+  /**
+   * Amended 2026-09-27 (T-0162), under Q-015/Q-021, by the independent ORACLE
+   * lane. The test name is unchanged. The widened census finds five existing
+   * hand reads that the earlier detector missed. Only these named files may
+   * remain, and their measured count may shrink but cannot rise above five.
+   */
   it("no screen or hook reads the API from an effect of its own", () => {
     const out = execFileSync(process.execPath, [join(ROOT, "scripts", "tooling", "line-census.mjs"), "--report"], {
       encoding: "utf8",
@@ -142,8 +184,10 @@ describe("C6 · the page layer", () => {
       reads: { files: string[] };
       oneImporter: { files: [string, number][] };
     };
-    expect(report.reads.files).toEqual([]);
-    expect(report.counts.handRolledReadHooks).toBe(0);
+    expect(report.reads.files.filter((file) => !HAND_READ_FILES.has(file))).toEqual([]);
+    expect(new Set(report.reads.files).size).toBe(report.reads.files.length);
+    expect(report.counts.handRolledReadHooks).toBe(report.reads.files.length);
+    expect(report.counts.handRolledReadHooks).toBeLessThanOrEqual(HAND_READ_FILES.size);
     const small = report.oneImporter.files.filter(([, n]) => n < 60).map(([f]) => f);
     // The re-exports through an index are not folds; everything else under sixty lines is.
     expect(small.filter((f) => !/\/ui\/field\/|\/achievements\//.test(f))).toEqual([]);

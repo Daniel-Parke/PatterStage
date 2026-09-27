@@ -101,6 +101,42 @@ describe("what does NOT count as named", () => {
   });
 });
 
+// Amended 2026-09-27 (T-0162), independently under Q-015/Q-021. These
+// fixtures extend the classifier's population; every existing test name is
+// unchanged. A house primitive must not make an unnamed raw control disappear.
+describe("house controls and Field association", () => {
+  it("an unnamed Select is counted and refused", () => {
+    const result = classifyControls(`const A = () => <Select options={[]} />;`);
+    expect(result.controls).toBe(1);
+    expect(result.unnamed).toEqual([{ line: 1, tag: "Select" }]);
+  });
+
+  it("an unnamed AutoTextarea is counted and its placeholder is not a name", () => {
+    const result = classifyControls(`const A = () => <AutoTextarea placeholder="Notes" />;`);
+    expect(result.controls).toBe(1);
+    expect(result.unnamed).toEqual([{ line: 1, tag: "AutoTextarea" }]);
+    expect(result.placeholderOnly).toEqual(result.unnamed);
+  });
+
+  it("an unnamed NumberInput is counted and refused", () => {
+    const result = classifyControls(`const A = () => <NumberInput min={0} max={10} />;`);
+    expect(result.controls).toBe(1);
+    expect(result.unnamed).toEqual([{ line: 1, tag: "NumberInput" }]);
+  });
+
+  it("Field's visible label names its single direct Select child", () => {
+    const result = classifyControls(`const A = () => <Field label="Model"><Select options={[]} /></Field>;`);
+    expect(result.controls).toBe(1);
+    expect(result.unnamed).toHaveLength(0);
+  });
+
+  it("Field does not name a Select nested below its direct child", () => {
+    const result = classifyControls(`const A = () => <Field label="Model"><div><Select options={[]} /></div></Field>;`);
+    expect(result.controls).toBe(1);
+    expect(result.unnamed).toEqual([{ line: 1, tag: "Select" }]);
+  });
+});
+
 describe("the exemption pragma", () => {
   it("exempts a control when a reason is given", () => {
     const src = `const A = () => (

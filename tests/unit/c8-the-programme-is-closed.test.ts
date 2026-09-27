@@ -37,9 +37,10 @@ const AT_C0 = {
 /**
  * The plan's target for each, as written at C0 and never moved.
  *
- * One exception, and it is not a move. Amended 2026-09-12 (T-0154, K6), under
- * operator ruling Q-015 (2026-09-12), by a session that does not implement the
- * fix: `routesWithTryCatch` reads 18 rather than 13. See the key below.
+ * Measurement corrections, not target moves: the 2026-09-12 K6 amendment under
+ * Q-015 restated routesWithTryCatch in the widened measure's units. The
+ * independent 2026-09-27 T-0162 amendment under Q-015/Q-021 does the same for
+ * handRolledReadHooks. Existing test names are unchanged. See each key below.
  */
 const TARGET: Record<keyof typeof AT_C0, number> = {
   srcLines: 98000,
@@ -71,7 +72,16 @@ const TARGET: Record<keyof typeof AT_C0, number> = {
    * number cannot absorb a new one.
    */
   routesWithTryCatch: 18,
-  handRolledReadHooks: 0,
+  /**
+   * Amended 2026-09-27 (T-0162), under Q-015/Q-021, by the independent ORACLE
+   * lane. The old detector missed effects that reached reads through local or
+   * imported callbacks and bare fetch. The widened measure finds five named
+   * files, held shrink-only by C6 and the census baseline. C8's historical
+   * reading remains zero in AT_C8; changing it would rewrite the closed record.
+   * This restates the target in the widened measure's units, as K6 did for
+   * routesWithTryCatch. No existing test name changes.
+   */
+  handRolledReadHooks: 5,
   writeHooksWithoutMutation: 0,
   repeatedTypeShapeFiles: 3,
   oneImporterComponents: 95,
