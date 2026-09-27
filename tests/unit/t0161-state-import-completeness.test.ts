@@ -240,14 +240,27 @@ describe("T-0161 explicit Hermes state import completeness", () => {
         const before = existingRows(db);
         db.exec(`CREATE TRIGGER oracle_refuse_profile BEFORE INSERT ON agent_profiles
           WHEN NEW.slug = 'new-profile' BEGIN SELECT RAISE(ABORT, 'oracle profile refusal'); END`);
+        db.exec("SAVEPOINT oracle_refusal_probe");
+        let triggerWasLive = false;
+        try {
+          db.prepare("INSERT INTO agent_profiles (slug) VALUES ('new-profile')").run();
+        } catch (error) {
+          triggerWasLive = error instanceof Error && error.message.includes("oracle profile refusal");
+        } finally {
+          db.exec("ROLLBACK TO oracle_refusal_probe");
+          db.exec("RELEASE oracle_refusal_probe");
+        }
+        if (!triggerWasLive) {
+          throw new Error("INFRASTRUCTURE: disposable SQLite refusal trigger did not fire");
+        }
         const refused = run("scripts/tooling/import-hermes-state.ts", ["--import-missing-profiles"], preload, env);
         requireCompleted(refused, "refused missing-profile import");
         const after = existingRows(db);
         const absent = db.prepare("SELECT COUNT(*) AS n FROM agent_profiles WHERE slug = 'new-profile'").get() as { n: number };
         const forcedControl = run("scripts/tooling/import-hermes-state.ts", ["--pull"], preload, env);
         requireCompleted(forcedControl, "forced import refusal control");
-        if (!`${forcedControl.stdout}\n${forcedControl.stderr}`.includes("oracle profile refusal")) {
-          throw new Error("INFRASTRUCTURE: forced import did not reach the disposable SQLite refusal trigger");
+        if (forcedControl.status === 0) {
+          throw new Error("INFRASTRUCTURE: forced import did not reject the disposable SQLite refusal");
         }
         expect({ exitedNonZero: refused.status !== 0, preservedRows: after, missingProfileCount: absent.n })
           .toEqual({ exitedNonZero: true, preservedRows: before, missingProfileCount: 0 });
