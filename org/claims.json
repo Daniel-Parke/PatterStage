@@ -1,6 +1,15 @@
 {
   "version": 1,
   "assigned": "2026-09-27",
-  "lanes": [],
-  "note": "T-0171 preservation audit closed after reviewing 16 registered worktrees, two sibling clones, 15 remote heads and 14 open PRs; no ref or PR changed."
+  "lanes": [
+    {
+      "lane_id": "T-0172-coordinator",
+      "task_id": "T-0172",
+      "session_id": "2026-09-27-refactor-foundations",
+      "path_claims": ["org/tasks/T-0172.json", "org/claims.json", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md"],
+      "expires": "2026-09-29T23:00:00Z",
+      "liveness": "archive exact PR #234 and #231 heads, close only those PRs and lease-delete only their branches"
+    }
+  ],
+  "note": "One R3 coordinator lane for the operator-authorised exact-head remote cleanup."
 }
