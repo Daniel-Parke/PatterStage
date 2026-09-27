@@ -1,0 +1,30 @@
+{
+  "id": "T-0176",
+  "intent": "Carry the three remaining visual dependency proposals from PRs #225, #230 and #232 onto current dev through one regenerated lockfile, verify rendered behaviour at desktop and phone widths, and retire only these addressed PR branches after exact-head preservation and hosted acceptance.",
+  "declared": {"capabilities": ["edit-config", "edit-tests", "git", "github-api", "git-push"], "side_effects": ["touches-dependencies", "sends-external", "irreversible-action"]},
+  "mode": "high-assurance",
+  "tier_proposed": "R3",
+  "tier_ruled": "R3",
+  "reasons": [
+    {"factor": "irreversible-action", "tier_floor": "R3", "source": "declared", "evidence": "Closing addressed PRs and removing their remote source branches is externally consequential; the operator explicitly authorised cleanup after preserving important work."},
+    {"factor": "boundary-contact", "tier_floor": "R1", "source": "declared", "evidence": "The dependency update is pushed to dev and triggers hosted CI."}
+  ],
+  "status": "open",
+  "owner_session": "2026-09-27-refactor-foundations",
+  "timestamps": {"opened": "2026-09-27T15:26:31Z", "updated": "2026-09-27T15:26:31Z"},
+  "claims": ["org/tasks/T-0176.json", "org/tasks/T-0175.json", "org/claims.json", "org/briefs/T-0176-oracle.md", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", "package.json", "package-lock.json", "tests/unit/t0176-visual-dependency-proposals.test.ts", "tests/fixtures/mutants/T-0176.json", "scripts/tooling/line-census.baseline.json"],
+  "programme": "T-0175 dev@c13872c7 passed push CI and both Gitleaks workflows. Its PR CI attempt 1 failed real-Hermes before contract tests because the PatterStage container reported EADDRINUSE on 0.0.0.0:42069; downstream acceptance was red. The same commit's isolated real-Hermes rerun, attempt 2, passed, then acceptance-gate passed. Both attempts remain recorded; the intermittent Docker bind cause is unresolved and cannot be treated as a product assertion failure. PRs #225, #230 and #232 are open against dev at their preservation-ledger heads, changing only package.json and package-lock.json. Their proposals are @xyflow/react 12.11.6, @tailwindcss/postcss 4.3.3 and lucide-react 1.41.0. The remaining Knip, Playwright and React pair proposals stay open for later batches.",
+  "invariants": [
+    "Only the three named direct package ranges change; regenerate package-lock.json on current dev and account for every transitive delta against the source PRs.",
+    "Freeze an independent seven-name or stronger oracle red before package edits. Preserve existing test identities and coverage floors.",
+    "Walk controlled graph, icon and responsive layouts on an isolated production instance at 1440x900 and 390x844. Record screenshot hashes, console errors, missing h1 and horizontal overflow; distinguish a dependency-induced defect from the existing baseline.",
+    "Run an isolated npm ci, focused tests, npm audit with remaining advisories reported, the full ten-step unchanged-tree gate, and a committed-tree mutation sweep. Do not weaken any gate to accommodate dependency changes.",
+    "Keep each PR open until its exact proposal is represented on dev and all hosted jobs pass. Archive each exact head locally before closure; issue a remote deletion only under an exact-SHA lease if closure leaves that head present.",
+    "At most two disjoint writing lanes are active. Only dev is pushed; main, PR #157, unaddressed PRs and dirty worktrees remain intact."
+  ],
+  "rollback": "Restore the three former direct ranges and regenerate the lockfile in a new dev commit. Retain the oracle and archived exact PR heads so every proposal is recoverable.",
+  "verify_line": "The frozen oracle, visual walk, focused tests, full unchanged-tree gate, lockfile audit, committed-tree sweep, hosted jobs and exact-head PR archive/ref checks must pass; npm audit is run and its unresolved advisories reported separately.",
+  "verification": "Pending.",
+  "mutation": "Pending.",
+  "deviation": "None."
+}

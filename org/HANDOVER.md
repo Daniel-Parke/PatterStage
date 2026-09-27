@@ -23,8 +23,14 @@ the severity totals recorded after T-0157. The implementation push's four
 hosted workflows and every required job passed. Each PR was then closed
 unmerged at its unchanged head. GitHub removed its remote source branch on
 closure; local `refs/archive/t0175/` retains all three exact heads. PR #157
-and six unaddressed Dependabot PRs remain open. The task-closure push still
-needs its hosted jobs observed before another implementation batch begins.
+and six unaddressed Dependabot PRs remain open. The task-closure push's push
+CI and both Gitleaks runs passed. PR CI attempt 1 failed real-Hermes before
+its contract tests because the PatterStage container could not bind port
+42069 (`EADDRINUSE`), so its downstream acceptance was red. The same commit's
+targeted real-Hermes rerun passed on attempt 2, then acceptance passed, with
+all required PR jobs green. Both attempts remain in GitHub's history. The
+container bind collision is intermittent and its root cause is unresolved;
+investigate the harness if it recurs.
 
 T-0174 carries the paired Pages v5 updates from PRs #235 and #236 onto
 `dev@c87e5989`. The operator ruled that manual dispatch may deploy only from
