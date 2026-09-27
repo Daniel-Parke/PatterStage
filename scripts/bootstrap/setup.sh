@@ -118,7 +118,8 @@ if [ "$HERMES_CONFIGURED" = true ]; then
     # and authenticates with a bearer key. We enable the server and share one
     # key between Hermes (server side) and PatterStage (client side).
     HERMES_ENV="$HERMES_HOME/.env"
-    mkdir -p "$HERMES_HOME"
+    (umask 077; mkdir -p "$HERMES_HOME")
+    chmod 700 "$HERMES_HOME"
     (umask 077; : >> "$HERMES_ENV")
     chmod 600 "$HERMES_ENV"
 

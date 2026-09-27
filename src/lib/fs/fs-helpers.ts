@@ -2,7 +2,7 @@
 // (atomic write + rollback) belongs in `modules/hermes/lib/hermes-config-write.ts`
 // and `modules/hermes/lib/profile-sync-shared.ts`.
 
-import { chmodSync, closeSync, existsSync, fstatSync, mkdirSync, openSync, readFileSync, readSync, rmSync, writeFileSync, writeSync } from "fs";
+import { chmodSync, closeSync, existsSync, fstatSync, mkdirSync, openSync, readFileSync, readSync, rmSync, statSync, writeFileSync, writeSync } from "fs";
 import { createHash } from "crypto";
 
 /** Owner read/write. The mode for anything holding an operator's data. */
@@ -63,6 +63,16 @@ export function ensureDir(dir: string): void {
   }
 }
 
+/** Secure a directory that contains credential names, including upgraded installs. */
+export function ensureOwnerOnlyDir(dir: string): void {
+  mkdirSync(dir, { recursive: true, mode: OWNER_ONLY_DIR });
+  if (process.platform === "win32") return;
+  chmodSync(dir, OWNER_ONLY_DIR);
+  if ((statSync(dir).mode & 0o777) !== OWNER_ONLY_DIR) {
+    throw new Error(`Could not secure credential directory: ${dir}`);
+  }
+}
+
 /** ISO-8601 with `:` and `.` replaced by `-`, safe as a filename suffix on every
  * platform: `2026-06-03T12-34-56-789Z`. Same millisecond, same string. */
 export function backupTimestamp(): string {
@@ -73,11 +83,22 @@ export function backupTimestamp(): string {
  * Returns the backup path, or `null` when the source does not exist. */
 export function backupFile(originalPath: string, backupsDir: string): string | null {
   if (!existsSync(originalPath)) return null;
-  ensureDir(backupsDir);
   const base = originalPath.split(/[/\\]/).pop() ?? "file";
-  const target = `${backupsDir}/${base}.${backupTimestamp()}.bak`;
-  writeFileSync(target, readFileSync(originalPath, "utf-8"), { encoding: "utf-8", flag: "wx", mode: OWNER_ONLY_FILE });
-  return target;
+  if (base === ".env") ensureOwnerOnlyDir(backupsDir);
+  else ensureDir(backupsDir);
+  const stamp = backupTimestamp();
+  const content = readFileSync(originalPath, "utf-8");
+  for (let attempt = 0; attempt < 100; attempt += 1) {
+    const suffix = attempt === 0 ? "" : `~${String(attempt).padStart(4, "0")}`;
+    const target = `${backupsDir}/${base}.${stamp}${suffix}.bak`;
+    try {
+      writeFileSync(target, content, { encoding: "utf-8", flag: "wx", mode: OWNER_ONLY_FILE });
+      return target;
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
+    }
+  }
+  throw new Error(`Could not allocate a unique backup path in ${backupsDir}`);
 }
 
 /** SHA-256 hex of a UTF-8 string: the "is this the same content?" primitive the drift detectors use. */

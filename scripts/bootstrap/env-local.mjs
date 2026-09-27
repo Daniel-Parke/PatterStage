@@ -16,7 +16,7 @@
 // Multi-line quoted values are not supported and never were: readEnvFile below
 // and ps_load_patterstage_env_local both parse strictly line by line.
 
-import { chmodSync, closeSync, existsSync, openSync, readFileSync, statSync, writeFileSync } from "fs";
+import { chmodSync, closeSync, existsSync, mkdirSync, openSync, readFileSync, statSync, writeFileSync } from "fs";
 
 const KEY_RE = /^[A-Za-z_][A-Za-z0-9_]*$/;
 const ASSIGN_RE = /^[A-Za-z_][A-Za-z0-9_]*=/;
@@ -29,6 +29,16 @@ export function ensurePrivateEnvFile(file) {
   chmodSync(file, 0o600);
   if ((statSync(file).mode & 0o777) !== 0o600) {
     throw new Error(`Could not secure credential file: ${file}`);
+  }
+}
+
+/** Protect the name and integrity of the credential file as well as its bytes. */
+export function ensurePrivateEnvDirectory(dir) {
+  mkdirSync(dir, { recursive: true, mode: 0o700 });
+  if (process.platform === "win32") return;
+  chmodSync(dir, 0o700);
+  if ((statSync(dir).mode & 0o777) !== 0o700) {
+    throw new Error(`Could not secure credential directory: ${dir}`);
   }
 }
 

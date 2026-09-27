@@ -19,7 +19,7 @@
 
 import { chmodSync, existsSync, readFileSync, statSync } from "fs";
 
-import { ensureDir, OWNER_ONLY_FILE } from "@/lib/fs/fs-helpers";
+import { ensureOwnerOnlyDir, OWNER_ONLY_FILE } from "@/lib/fs/fs-helpers";
 import { parseEnvFile, ENV_LINE_RE } from "@/lib/config/env-file";
 import { getActiveHermesPaths } from "./agent-runtime";
 import { envVarForProvider, isHermesProvider, type HermesProvider } from "./providers";
@@ -97,7 +97,7 @@ export function syncCredentialToHermesEnv(input: SyncCredentialInput): { backupP
     throw new Error(`Provider "${input.provider}" uses OAuth -- no API key env var to write`);
   }
 
-  ensureDir(paths.root);
+  ensureOwnerOnlyDir(paths.root);
   secureExistingEnv(envPath);
   const backupPath = backupFile(envPath, paths.backups);
 
@@ -127,6 +127,7 @@ export function removeCredentialFromHermesEnv(provider: HermesProvider): { backu
     throw new Error(`Unknown provider: ${provider}`);
   }
   const paths = getActiveHermesPaths();
+  ensureOwnerOnlyDir(paths.root);
   if (!existsSync(paths.env)) return { backupPath: null };
   secureExistingEnv(paths.env);
   const backupPath = backupFile(paths.env, paths.backups);

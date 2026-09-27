@@ -18,6 +18,7 @@ import {
   writeFileSync,
 } from "fs";
 import { join, resolve } from "path";
+import { randomBytes } from "crypto";
 
 import * as yaml from "js-yaml";
 
@@ -31,12 +32,12 @@ import { getHermesDefaultRoot } from "./profile-paths";
 
 /** Stage to a sibling tmpfile, then rename (atomic on POSIX, same volume). Caller ensures the dir exists. */
 export function atomicWriteFile(targetPath: string, content: string, options: { mode?: number } = {}): void {
-  const tmpPath = `${targetPath}.tmp-${process.pid}-${Date.now()}`;
+  const tmpPath = `${targetPath}.tmp-${process.pid}-${Date.now()}-${randomBytes(16).toString("hex")}`;
   try {
-    writeFileSync(tmpPath, content, { encoding: "utf-8", ...options });
+    writeFileSync(tmpPath, content, { encoding: "utf-8", flag: "wx", ...options });
     renameSync(tmpPath, targetPath);
   } catch (err) {
-    if (existsSync(tmpPath)) {
+    if ((err as NodeJS.ErrnoException).code !== "EEXIST" && existsSync(tmpPath)) {
       try {
         unlinkSync(tmpPath);
       } catch {
@@ -109,7 +110,7 @@ export function targetPathFromWriteError(err: unknown): string | null {
   const quoted = err.message.match(/'([^']+)'/);
   if (!quoted) return null;
   // Only OUR suffix, anchored at the end, so a real file containing ".tmp-" survives.
-  return quoted[1].replace(/\.tmp-\d+-\d+$/, "");
+  return quoted[1].replace(/\.tmp-\d+-\d+(?:-[0-9a-f]{32})?$/, "");
 }
 
 /** A write failure in terms of the file the operator meant; errno and reason kept, only the path replaced. */

@@ -1,9 +1,9 @@
 {
   "measuredAt": "2026-09-27",
   "counts": {
-    "srcLines": 101106,
-    "testLines": 129316,
-    "scriptsLines": 13615,
+    "srcLines": 101129,
+    "testLines": 129719,
+    "scriptsLines": 13626,
     "srcRepeatedWindowLines": 1000,
     "testRepeatedWindowLines": 4683,
     "routesWithTryCatch": 18,
@@ -640,6 +640,21 @@
       "measuredAt": "2026-09-27",
       "rise": "testLines rose from 129311 to 129316",
       "reason": "T-0163 dated independent oracle amendment: distinguish intentional early chmod refusal from missing fixture execution, preserving 13 test names"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "srcLines rose from 101106 to 101129",
+      "reason": "T-0163 independent review: nine red-first security regressions and repairs for owner-only Hermes directories, exclusive staging and collision-safe backups"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 129316 to 129719",
+      "reason": "T-0163 independent review: nine red-first security regressions and repairs for owner-only Hermes directories, exclusive staging and collision-safe backups"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "scriptsLines rose from 13615 to 13626",
+      "reason": "T-0163 independent review: nine red-first security regressions and repairs for owner-only Hermes directories, exclusive staging and collision-safe backups"
     }
   ]
 }
