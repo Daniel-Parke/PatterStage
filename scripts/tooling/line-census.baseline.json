@@ -2,7 +2,7 @@
   "measuredAt": "2026-09-27",
   "counts": {
     "srcLines": 101155,
-    "testLines": 130166,
+    "testLines": 130269,
     "scriptsLines": 13694,
     "srcRepeatedWindowLines": 1000,
     "testRepeatedWindowLines": 4689,
@@ -715,6 +715,11 @@
       "measuredAt": "2026-09-27",
       "rise": "scriptsLines rose from 13626 to 13694",
       "reason": "T-0174 adds 183 independent Pages publication oracle lines and 68 guard-script lines to reject unsafe uploads; source and duplication measures are unchanged."
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 130166 to 130269",
+      "reason": "T-0175 adds 103 independently authored dependency acceptance lines for three version proposals; source, scripts and duplication measures are unchanged."
     }
   ]
 }

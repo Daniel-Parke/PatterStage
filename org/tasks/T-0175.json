@@ -23,7 +23,8 @@
   ],
   "rollback": "Revert the three direct ranges and regenerate package-lock.json on dev, retaining oracle and task evidence. Archived PR heads permit recovery if a proposal must be revisited.",
   "verify_line": "The frozen oracle, focused tests, npm audit, full unchanged-tree gate, lockfile integrity, committed-tree mutation sweep, all hosted push/PR jobs, and exact-head PR archive/ref checks must each pass before closure.",
-  "verification": "Pending.",
+  "oracle_provenance": "Franklin (session 01a0e347-fb53-7670-83f3-a598454717e2) authored only tests/unit/t0175-dependency-proposals.test.ts before package edits. Commit a1999099 froze seven test names, red 3/7 and zero skipped against the previous ranges; four root-lock and preserved-pin cases already passed. Focused typecheck and ESLint passed. SHA-256 of the oracle file was 501241F1FDA96B14DB6C54D45418EFBF26CEDAF9736756B263DA034DDC186C80. All seven names passed after the combined manifest and lockfile update without oracle amendment.",
+  "verification": "The current dev lockfile was regenerated from three exact direct versions: React Query/query-core 5.102.8, tsx 4.23.13, dagre 3.1.1 and its graphlib 4.0.5 dependency. Only the three named direct ranges changed in package.json. npm regenerated six optional nested Tailwind WASM records as a side effect; all three source PR lockfiles already contain these same six records, so no unique proposal was lost. The line census holds the independent oracle's +103 test lines with a written reason and all other twelve measures unchanged. Full isolated gate, npm audit, graph walk and hosted validation pending.",
   "mutation": "Pending.",
   "deviation": "None."
 }

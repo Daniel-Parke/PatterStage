@@ -1,0 +1,30 @@
+{
+  "task": "T-0175",
+  "why": "Each of the three independently proposed direct dependency ranges must remain detectable after migration onto dev.",
+  "mutants": [
+    {
+      "id": "m1-revert-query-range",
+      "file": "package.json",
+      "anchor": "\"@tanstack/react-query\": \"^5.102.8\"",
+      "replacement": "\"@tanstack/react-query\": \"^5.101.0\"",
+      "tests": ["tests/unit/t0175-dependency-proposals.test.ts"],
+      "why": "The React Query version proposal and root lockfile must remain coherent."
+    },
+    {
+      "id": "m2-revert-tsx-range",
+      "file": "package.json",
+      "anchor": "\"tsx\": \"^4.23.13\"",
+      "replacement": "\"tsx\": \"^4.22.4\"",
+      "tests": ["tests/unit/t0175-dependency-proposals.test.ts"],
+      "why": "The tsx version proposal and root lockfile must remain coherent."
+    },
+    {
+      "id": "m3-revert-dagre-range",
+      "file": "package.json",
+      "anchor": "\"@dagrejs/dagre\": \"^3.1.1\"",
+      "replacement": "\"@dagrejs/dagre\": \"^3.0.0\"",
+      "tests": ["tests/unit/t0175-dependency-proposals.test.ts"],
+      "why": "The graph layout dependency proposal and root lockfile must remain coherent."
+    }
+  ]
+}
