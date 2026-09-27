@@ -1,8 +1,9 @@
 /** @jest-environment node */
 
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { tmpdir } from "node:os";
 import { classifyControls } from "../../scripts/tooling/check-form-control-names.mjs";
 import { violationsIn } from "../../scripts/tooling/design-lint.mjs";
 
@@ -33,6 +34,44 @@ describe("T-0162 · the remaining gates see their subjects", () => {
     const report = JSON.parse(output) as { reads: { files: string[] } };
     expect(report.reads.files).toContain("src/hooks/useMissionsData.ts");
     expect(report.reads.files).toContain("src/hooks/useChatSend.ts");
+  });
+
+  it("the read census follows a destructured hook result and an imported reader", () => {
+    const fixture = mkdtempSync(join(tmpdir(), "t0162-read-census-"));
+    try {
+      mkdirSync(join(fixture, "src", "hooks"), { recursive: true });
+      mkdirSync(join(fixture, "src", "lib", "client"), { recursive: true });
+      writeFileSync(join(fixture, "src", "hooks", "useApi.ts"), `
+        export function useApi() {
+          const fetchItems = () => apiFetch("/api/items");
+          return { fetchItems };
+        }
+      `);
+      writeFileSync(join(fixture, "src", "lib", "client", "read.ts"), `
+        export function loadItems() { return safeApiCall("/api/items"); }
+      `);
+      writeFileSync(join(fixture, "src", "hooks", "useData.ts"), `
+        import { useEffect } from "react";
+        import { useApi } from "@/hooks/useApi";
+        export function useData() {
+          const { fetchItems } = useApi();
+          useEffect(() => { void fetchItems(); }, []);
+        }
+      `);
+      writeFileSync(join(fixture, "src", "hooks", "useImported.ts"), `
+        import { useEffect } from "react";
+        import { loadItems } from "@/lib/client/read";
+        export function useImported() { useEffect(() => { void loadItems(); }, []); }
+      `);
+      const output = execFileSync(process.execPath, [join(ROOT, "scripts", "tooling", "line-census.mjs"), "--root", fixture, "--report"], {
+        cwd: ROOT,
+        encoding: "utf8",
+      });
+      const report = JSON.parse(output) as { reads: { files: string[] } };
+      expect(report.reads.files).toEqual(expect.arrayContaining(["src/hooks/useData.ts", "src/hooks/useImported.ts"]));
+    } finally {
+      rmSync(fixture, { recursive: true, force: true });
+    }
   });
 
   it("the form-name gate detects unnamed house primitives and accepts contextual names", () => {
