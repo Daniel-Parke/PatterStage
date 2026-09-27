@@ -9,6 +9,22 @@ updated: 2026-09-27
 
 ## Dated status, 2026-09-27
 
+T-0174 carries the paired Pages v5 updates from PRs #235 and #236 onto
+`dev@c87e5989`. The operator ruled that manual dispatch may deploy only from
+`main`; the job now enforces this. Upload v5 excludes hidden files by default,
+so the workflow explicitly includes them after a fail-closed generated-site
+check rejects hidden paths except root `.nojekyll` and all symlinks or Windows
+junctions. The independently frozen oracle was red 13/14 and is green 14/14.
+The isolated Docs build made 75 pages and 559 search rows; GNU tar with the
+v5 options retained `.nojekyll`, `index.html` and image assets. The full
+ten-step gate passed on the byte-matched unchanged candidate, with 283 browser
+passes and 24 skips; all five committed-tree mutants were killed and the tree
+was restored clean. The closure push and its hosted jobs are pending. Pages
+deployment itself waits for the workflow to reach `main` through the
+operator's release process; the `github-pages` environment branch setting
+must then be checked. PRs #235 and #236 remain open until hosted validation
+and exact-head archiving allow their clean retirement.
+
 T-0173 is the operator-approved narrow exception to the dev-only push rule.
 GitHub's default-branch `main@7b9d6d68` changed only `.github/dependabot.yml`:
 the npm version-PR limit moved from 10 to 0 and the GitHub Actions limit was
@@ -18,8 +34,9 @@ gate passed on an unchanged tree (729 Jest suites, 7223 passes and four skips;
 283 Playwright passes and 24 skips), and both committed-tree mutants were
 killed. The 57 added oracle lines are held by a written line-census reason.
 GitHub's first `main` Docker job failed in the old Next Google-font build; its
-single-job rerun passed, with both attempts retained. The closure push's hosted
-jobs still need observation before another batch starts. Dependabot alerts and
+single-job rerun passed, with both attempts retained. All four T-0173 closure
+workflows and every constituent job passed on push and PR before T-0174 opened.
+Dependabot alerts and
 security updates are currently **disabled in repository settings**; the
 version-PR limit does not enable them. The eleven existing Dependabot PRs are
 still open, awaiting migration or individual disposition on `dev`. The pause

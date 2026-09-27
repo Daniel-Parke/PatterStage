@@ -1,9 +1,6 @@
 {
   "version": 1,
   "assigned": "2026-09-27",
-  "lanes": [
-    {"lane_id": "T-0174-independent-oracle", "task_id": "T-0174", "session_id": "01a0e226-def3-7593-bb70-c4715c3d5198", "path_claims": ["tests/unit/t0174-pages-publication.test.ts"], "expires": "2026-09-30T23:00:00Z", "liveness": "freeze the Pages v5, main-only and guarded artifact acceptance before implementation"},
-    {"lane_id": "T-0174-coordinator", "task_id": "T-0174", "session_id": "2026-09-27-refactor-foundations", "path_claims": ["org/tasks/T-0174.json", "org/claims.json", "org/briefs/T-0174-oracle.md", "org/QUESTIONS.md", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", ".github/workflows/docs-pages.yml", "scripts/docs/check-publish-artifact.mjs", "tests/fixtures/mutants/T-0174.json", "scripts/tooling/line-census.baseline.json", "docs/contributing/testing.md"], "expires": "2026-09-30T23:00:00Z", "liveness": "implement guarded Pages v5 pair, gate, sweep, close, push dev and observe hosted jobs"}
-  ],
-  "note": "T-0174 uses two disjoint writing lanes; the independent ORACLE session owns only its new test file."
+  "lanes": [],
+  "note": "T-0174 closed after an independent oracle lane and a disjoint coordinator lane."
 }
