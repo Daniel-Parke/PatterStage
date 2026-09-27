@@ -68,7 +68,7 @@ describe("T-0176 visual dependency proposals", () => {
 
   it("preserves every other direct development dependency range", () => {
     expect(exceptProposals(manifest.devDependencies, ["@tailwindcss/postcss"])).toEqual({
-      "@playwright/test": "^1.61.0",
+      "@playwright/test": "^1.62.1",
       "@testing-library/jest-dom": "^6.9.1",
       "@testing-library/react": "^16.3.2",
       "@types/better-sqlite3": "^7.6.13",

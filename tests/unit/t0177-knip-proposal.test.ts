@@ -38,7 +38,7 @@ describe("T-0177 Knip proposal", () => {
       zod: "^4.3.6",
     });
     expect(Object.fromEntries(Object.entries(manifest.devDependencies).filter(([name]) => name !== "knip"))).toEqual({
-      "@playwright/test": "^1.61.0",
+      "@playwright/test": "^1.62.1",
       "@tailwindcss/postcss": "^4.3.3",
       "@testing-library/jest-dom": "^6.9.1",
       "@testing-library/react": "^16.3.2",
