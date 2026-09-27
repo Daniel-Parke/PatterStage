@@ -11,22 +11,43 @@ const ROOT = join(__dirname, "..", "..");
 const PREFIX = "t0161-backup-creation-";
 type RealDb = import("better-sqlite3").Database;
 const DatabaseCtor = require(join(ROOT, "node_modules", "better-sqlite3", "lib", "index.js")) as new (path: string) => RealDb;
-type CopyEvent = { name: string; modeAtCreation: number };
+type CopyEvent = { name: string; modeAtCreation: number; modeAfterCopy?: number };
 
 const COPY_PRELOAD = String.raw`
   const fs = require('node:fs');
   const cp = require('node:child_process');
   const path = require('node:path');
   const copy = fs.copyFileSync;
+  const open = fs.openSync;
+  const recorded = new Map();
+  const isBackup = destination => /[.]pre-(?:migrate|baseline)-/.test(String(destination));
+  const observeMode = (destination, mode, operation) => {
+    if (!isBackup(destination)) return;
+    const key = path.resolve(String(destination));
+    const existing = recorded.get(key);
+    if (existing) {
+      if (operation === 'copy') existing.modeAfterCopy = mode;
+      return;
+    }
+    recorded.set(key, { name: path.basename(key), modeAtCreation: mode });
+  };
+  process.on('exit', () => {
+    if (recorded.size) fs.writeFileSync(process.env.ORACLE_COPY_EVENTS,
+      [...recorded.values()].map(value => JSON.stringify(value)).join('\n') + '\n');
+  });
   process.umask(0);
   fs.copyFileSync = (source, destination, ...options) => {
+    const creating = isBackup(destination) && !fs.existsSync(destination);
     copy(source, destination, ...options);
-    if (/[.]pre-(?:migrate|baseline)-/.test(destination)) {
-      fs.appendFileSync(process.env.ORACLE_COPY_EVENTS, JSON.stringify({
-        name: path.basename(destination),
-        modeAtCreation: fs.statSync(destination).mode & 0o777,
-      }) + '\n');
+    if (creating || recorded.has(path.resolve(String(destination)))) {
+      observeMode(destination, fs.statSync(destination).mode & 0o777, 'copy');
     }
+  };
+  fs.openSync = (destination, flags, ...options) => {
+    const creating = isBackup(destination) && !fs.existsSync(destination);
+    const fd = open(destination, flags, ...options);
+    if (creating) observeMode(destination, fs.fstatSync(fd).mode & 0o777, 'open');
+    return fd;
   };
   cp.spawnSync = () => ({status: 0, stdout: '', stderr: ''});
   require('node:module').syncBuiltinESMExports();
@@ -108,7 +129,10 @@ function runDeployBackup(bothCandidates: boolean): { fixture: ReturnType<typeof 
 function assertInitialModes(copied: CopyEvent[], expectedCount: number): void {
   expect(copied).toHaveLength(expectedCount);
   if (process.platform === "linux") {
-    expect(copied.map((event) => event.modeAtCreation)).toEqual(Array(expectedCount).fill(0o600));
+    for (const event of copied) {
+      expect(event.modeAtCreation).toBe(0o600);
+      if (event.modeAfterCopy !== undefined) expect(event.modeAfterCopy).toBe(0o600);
+    }
   }
 }
 
