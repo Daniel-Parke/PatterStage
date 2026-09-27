@@ -2,7 +2,7 @@
   "measuredAt": "2026-09-27",
   "counts": {
     "srcLines": 101064,
-    "testLines": 128380,
+    "testLines": 128382,
     "scriptsLines": 13447,
     "srcRepeatedWindowLines": 1000,
     "testRepeatedWindowLines": 4683,
@@ -580,6 +580,11 @@
       "measuredAt": "2026-09-27",
       "rise": "testLines rose from 128323 to 128380",
       "reason": "T-0161: independent closed C8 oracle amendment adds seven fall-and-growth-accounting cases and corrects the historical ledger walk, net 57 test lines; Q-015 identity preserved"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 128380 to 128382",
+      "reason": "Two test lines make the T-0161 SQLite and dynamic-import oracles portable on hosted Linux and macOS without changing their assertions or test identities."
     }
   ]
 }
