@@ -47,6 +47,73 @@ function requireSuccess(result: ReturnType<typeof run>, step: string): void {
   }
 }
 
+function requireCompleted(result: ReturnType<typeof run>, step: string): void {
+  if (result.error || result.signal || result.status === null) {
+    throw new Error(`INFRASTRUCTURE: ${step} did not complete (${result.error?.message ?? result.signal ?? result.status})`);
+  }
+}
+
+function removeFixture(root: string): void {
+  const actual = realpathSync(root);
+  if (dirname(actual) !== realpathSync(tmpdir()) || !basename(actual).startsWith(PREFIX)) {
+    throw new Error("INFRASTRUCTURE: refusing to remove a fixture outside the temporary directory");
+  }
+  rmSync(actual, { recursive: true, force: true });
+}
+
+function existingRows(db: InstanceType<typeof DatabaseCtor>) {
+  return {
+    root: db.prepare("SELECT * FROM agent_root ORDER BY id").all(),
+    skills: db.prepare("SELECT * FROM skills ORDER BY skill_key").all(),
+    profile: db.prepare("SELECT * FROM agent_profiles WHERE slug = 'existing-profile'").all(),
+  };
+}
+
+function preparePartialProfileFixture(root: string) {
+  const dataDir = join(root, "data");
+  const hermesHome = join(root, "hermes");
+  const preload = join(root, "block-local-env.cjs");
+  mkdirSync(dataDir);
+  mkdirSync(join(hermesHome, "skills", "fixture"), { recursive: true });
+  mkdirSync(join(hermesHome, "profiles", "existing-profile"), { recursive: true });
+  writeFileSync(preload, BLOCK_LOCAL_ENV);
+  writeFileSync(join(hermesHome, "config.yaml"), "model:\n  default: anthropic/disposable-model\n  provider: anthropic\n");
+  writeFileSync(join(hermesHome, "SOUL.md"), "Original disposable root.\n");
+  writeFileSync(join(hermesHome, "skills", "fixture", "SKILL.md"),
+    "---\nname: Fixture\ndescription: Disposable skill\n---\nOriginal disposable skill.\n");
+  writeFileSync(join(hermesHome, "profiles", "existing-profile", "config.yaml"),
+    "model:\n  default: anthropic/disposable-model\n  provider: anthropic\n");
+  writeFileSync(join(hermesHome, "profiles", "existing-profile", "SOUL.md"), "Original disposable profile.\n");
+  const env = environment(root, dataDir, hermesHome);
+  requireSuccess(run("scripts/tooling/migrate-db.ts", [], preload, env), "disposable migration");
+  if (!existsSync(join(dataDir, "patterstage.db"))) {
+    throw new Error("INFRASTRUCTURE: migration did not create the disposable database");
+  }
+  const initial = run("scripts/tooling/import-hermes-state.ts", ["--pull"], preload, env);
+  requireSuccess(initial, "initial root, skill and profile import control");
+  const db = new DatabaseCtor(join(dataDir, "patterstage.db"));
+  try {
+    const rows = existingRows(db);
+    if (rows.root.length !== 1 || rows.skills.length !== 1 || rows.profile.length !== 1) {
+      throw new Error("INFRASTRUCTURE: initial import did not establish root, skill and existing profile rows");
+    }
+  } finally {
+    db.close();
+  }
+  writeFileSync(join(hermesHome, "SOUL.md"), "Changed disk root must not overwrite SQLite.\n");
+  writeFileSync(join(hermesHome, "skills", "fixture", "SKILL.md"),
+    "---\nname: Fixture\ndescription: Disposable skill\n---\nChanged disk skill must not overwrite SQLite.\n");
+  writeFileSync(join(hermesHome, "profiles", "existing-profile", "SOUL.md"),
+    "Changed disk profile must not overwrite SQLite.\n");
+  const missingProfile = join(hermesHome, "profiles", "new-profile");
+  mkdirSync(missingProfile, { recursive: true });
+  writeFileSync(join(missingProfile, "SOUL.md"), "New SOUL-only disposable profile.\n");
+  if (existsSync(join(missingProfile, "config.yaml"))) {
+    throw new Error("INFRASTRUCTURE: the new disk profile is not SOUL-only");
+  }
+  return { dbPath: join(dataDir, "patterstage.db"), env, preload };
+}
+
 describe("T-0161 explicit Hermes state import completeness", () => {
   it("reports a new disk profile after partial import without overwriting existing rows", () => {
     const root = mkdtempSync(join(tmpdir(), PREFIX));
@@ -122,6 +189,73 @@ describe("T-0161 explicit Hermes state import completeness", () => {
         throw new Error("INFRASTRUCTURE: refusing to remove a fixture outside the temporary directory");
       }
       rmSync(actual, { recursive: true, force: true });
+    }
+  });
+
+  it("imports only a new SOUL-only profile when explicitly requested after a strict retry", () => {
+    const root = mkdtempSync(join(tmpdir(), PREFIX));
+    try {
+      const { dbPath, env, preload } = preparePartialProfileFixture(root);
+      const db = new DatabaseCtor(dbPath);
+      try {
+        const before = existingRows(db);
+        const ordinary = run("scripts/tooling/import-hermes-state.ts", [], preload, env);
+        requireCompleted(ordinary, "ordinary partial retry");
+        const afterOrdinary = existingRows(db);
+        const absentAfterOrdinary = db.prepare("SELECT COUNT(*) AS n FROM agent_profiles WHERE slug = 'new-profile'").get() as { n: number };
+
+        const targeted = run("scripts/tooling/import-hermes-state.ts", ["--import-missing-profiles"], preload, env);
+        requireCompleted(targeted, "targeted missing-profile import");
+        const afterTargeted = existingRows(db);
+        const imported = db.prepare("SELECT soul_md FROM agent_profiles WHERE slug = 'new-profile'").get() as { soul_md: string } | undefined;
+        expect({
+          ordinaryExitedNonZero: ordinary.status !== 0,
+          ordinaryPreservedRows: afterOrdinary,
+          absentAfterOrdinary: absentAfterOrdinary.n,
+          targetedExitedZero: targeted.status === 0,
+          targetedPreservedRows: afterTargeted,
+          importedSoul: imported?.soul_md,
+        }).toEqual({
+          ordinaryExitedNonZero: true,
+          ordinaryPreservedRows: before,
+          absentAfterOrdinary: 0,
+          targetedExitedZero: true,
+          targetedPreservedRows: before,
+          importedSoul: "New SOUL-only disposable profile.\n",
+        });
+      } finally {
+        db.close();
+      }
+    } finally {
+      removeFixture(root);
+    }
+  });
+
+  it("fails the explicit missing-profile import when SQLite refuses that profile", () => {
+    const root = mkdtempSync(join(tmpdir(), PREFIX));
+    try {
+      const { dbPath, env, preload } = preparePartialProfileFixture(root);
+      const db = new DatabaseCtor(dbPath);
+      try {
+        const before = existingRows(db);
+        db.exec(`CREATE TRIGGER oracle_refuse_profile BEFORE INSERT ON agent_profiles
+          WHEN NEW.slug = 'new-profile' BEGIN SELECT RAISE(ABORT, 'oracle profile refusal'); END`);
+        const refused = run("scripts/tooling/import-hermes-state.ts", ["--import-missing-profiles"], preload, env);
+        requireCompleted(refused, "refused missing-profile import");
+        const after = existingRows(db);
+        const absent = db.prepare("SELECT COUNT(*) AS n FROM agent_profiles WHERE slug = 'new-profile'").get() as { n: number };
+        const forcedControl = run("scripts/tooling/import-hermes-state.ts", ["--pull"], preload, env);
+        requireCompleted(forcedControl, "forced import refusal control");
+        if (!`${forcedControl.stdout}\n${forcedControl.stderr}`.includes("oracle profile refusal")) {
+          throw new Error("INFRASTRUCTURE: forced import did not reach the disposable SQLite refusal trigger");
+        }
+        expect({ exitedNonZero: refused.status !== 0, preservedRows: after, missingProfileCount: absent.n })
+          .toEqual({ exitedNonZero: true, preservedRows: before, missingProfileCount: 0 });
+      } finally {
+        db.close();
+      }
+    } finally {
+      removeFixture(root);
     }
   });
 });
