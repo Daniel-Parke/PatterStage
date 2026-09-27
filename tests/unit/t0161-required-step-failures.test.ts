@@ -159,7 +159,10 @@ function runDeployLegacyFailure(): { root: string; result: ReturnType<typeof spa
     copyFileSync(join(ROOT, source), join(root, source));
   }
   writeFileSync(preload, DEPLOY_PRELOAD);
-  const result = spawnSync(process.execPath, ["--require", preload, join(root, "scripts", "tooling", "ps-deploy.mjs"), "rebuild"], {
+  // This assertion exercises failure propagation, so invoke the copied CLI by
+  // its canonical path. The separate alias-path oracle covers entry detection.
+  const deployScript = realpathSync(join(root, "scripts", "tooling", "ps-deploy.mjs"));
+  const result = spawnSync(process.execPath, ["--require", preload, deployScript, "rebuild"], {
     cwd: root,
     env: {
       ...process.env,
