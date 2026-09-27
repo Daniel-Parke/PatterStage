@@ -1,6 +1,15 @@
 {
   "version": 1,
   "assigned": "2026-09-27",
-  "lanes": [],
-  "note": "T-0169 lane released after the red-first browser oracle, complete isolated gate, responsive walk and committed-tree mutation sweep."
+  "lanes": [
+    {
+      "lane_id": "T-0170-coordinator",
+      "task_id": "T-0170",
+      "session_id": "2026-09-27-refactor-foundations",
+      "path_claims": ["org/tasks/T-0170.json", "org/claims.json", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", "src/proxy.ts", "src/app/healthz/route.ts", "src/app/api/healthz/route.ts", "src/app/api/health/route.ts", "tests/unit/t0170-healthz-liveness.test.ts", "tests/fixtures/mutants/T-0170.json", "docs/reference/api.md", "docs/contributing/testing.md", "docs/SECURITY.md", "scripts/tooling/line-census.baseline.json"],
+      "expires": "2026-09-29T23:00:00Z",
+      "liveness": "carry the PR #234 liveness contract into current dev, gate, sweep and observe hosted jobs"
+    }
+  ],
+  "note": "One owned writer for T-0170; ADR-0013 awaits operator acceptance and T-0158 source is untouched."
 }

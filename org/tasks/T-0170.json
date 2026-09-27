@@ -1,0 +1,30 @@
+{
+  "id": "T-0170",
+  "intent": "Carry PR #234's bare /healthz liveness contract onto current dev without merging the conflicting PR or pushing a feature branch. Keep /api/healthz as its JSON alias and preserve authentication on every non-safe method.",
+  "declared": {"capabilities": ["edit-src", "edit-tests", "edit-docs", "git-push"], "side_effects": ["touches-auth", "sends-external"]},
+  "mode": "high-assurance",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [
+    {"factor": "auth-surface", "tier_floor": "R2", "source": "declared", "evidence": "declared side effect: touches-auth"},
+    {"factor": "boundary-contact", "tier_floor": "R1", "source": "declared", "evidence": "declared side effect: sends-external"}
+  ],
+  "status": "in_progress",
+  "owner_session": "2026-09-27-refactor-foundations",
+  "claims": ["org/tasks/T-0170.json", "org/claims.json", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", "src/proxy.ts", "src/app/healthz/route.ts", "src/app/api/healthz/route.ts", "src/app/api/health/route.ts", "tests/unit/t0170-healthz-liveness.test.ts", "tests/fixtures/mutants/T-0170.json", "docs/reference/api.md", "docs/contributing/testing.md", "docs/SECURITY.md", "scripts/tooling/line-census.baseline.json"],
+  "programme": "The operator asked to address the 2026-09-24 comment on PR #234. GitHub reports the PR as OPEN and CONFLICTING against dev; its two documentation paths have moved. Repo rules permit pushing only dev and reserve merges to the operator, so this batch implements the reviewed contract independently on dev. PR #234 remains the operator's decision.",
+  "timestamps": {"opened": "2026-09-27T11:40:47Z", "updated": "2026-09-27T11:40:47Z", "closed": null},
+  "invariants": [
+    "Unauthenticated GET /healthz returns exactly 200, text/plain body ok and no-store, without opening SQLite or disclosing state.",
+    "GET /api/healthz returns the existing /api/health JSON contract; unsafe methods remain behind authentication and PS_READ_ONLY.",
+    "Existing /api/health, /api/status and every other protected route retain their authentication behaviour.",
+    "The liveness oracle is committed red before implementation, followed by a complete unchanged-tree gate, committed-tree mutation sweep and observed hosted jobs."
+  ],
+  "rollback": "Revert only the two new liveness routes, their exact allow-list entries, documentation and tests; retain /api/health and all existing protected behaviour.",
+  "notes": "PR #234 comment 5813898783 describes the doc-path conflict and a contributor's rebased branch. PR view on 2026-09-27 reports mergeable=CONFLICTING; its seven changed paths are two moved docs, two routes, proxy, and two tests. No merge or PR branch push is part of this batch.",
+  "commits": "",
+  "verification": "",
+  "review": "",
+  "mutation": "",
+  "deviation": ""
+}
