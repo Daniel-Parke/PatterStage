@@ -151,13 +151,9 @@ function heldBaseline(): HeldBaseline {
 }
 
 /**
- * Walk one measure from `from` up to `to` through the growth log, a recorded
- * rise at a time, and report what the log cannot account for.
- *
- * A fall needs no reason — down is the direction the programme wanted — so a
- * `to` at or below `from` lands straight away. A rise is accounted for only by
- * an entry that starts where the last one ended and carries a reason, which is
- * the shape `line-census.mjs --allow-growth "<reason>"` writes.
+ * Audit each recorded rise after this programme's closing count. A fall between
+ * rises or after the last rise needs no entry, but a rise cannot start above the
+ * preceding accounted count and must carry a reason.
  */
 function accountForGrowth(
   log: GrowthEntry[],
@@ -166,29 +162,39 @@ function accountForGrowth(
   to: number,
 ): { landedAt: number; unexplained: string[] } {
   const unexplained: string[] = [];
-  if (to <= from) return { landedAt: to, unexplained };
-
   const shape = new RegExp(`^${measure} rose from (\\d+) to (\\d+)$`);
-  const rises = log
-    .map((entry) => ({ entry, m: shape.exec(entry.rise ?? "") }))
-    .filter((r) => r.m !== null)
-    .map((r) => ({
-      from: Number((r.m as RegExpExecArray)[1]),
-      to: Number((r.m as RegExpExecArray)[2]),
-      reason: (r.entry.reason ?? "").trim(),
-    }));
-
+  const entries = log.filter((entry) => (entry.rise ?? "").startsWith(measure));
+  // The committed log also contains pre-C8 history. Start immediately after
+  // the first valid rise that landed on the C8 count, so no later row is skipped.
+  const closingRise = entries.findIndex((entry) => {
+    const match = shape.exec(entry.rise ?? "");
+    return match !== null && Number(match[1]) < from && Number(match[2]) === from;
+  });
+  const postClosingEntries = closingRise < 0 ? entries : entries.slice(closingRise + 1);
   let at = from;
-  while (at < to) {
-    const step = rises.find((r) => r.from === at);
-    if (!step) {
-      unexplained.push(`${measure} is held at ${to} and the growth log records no rise starting at ${at}`);
-      break;
+  for (const entry of postClosingEntries) {
+    const match = shape.exec(entry.rise ?? "");
+    if (!match) {
+      unexplained.push(`${measure} has a malformed growth-log entry`);
+      continue;
     }
-    if (!step.reason) unexplained.push(`${measure} rose from ${step.from} to ${step.to} with no reason recorded`);
-    at = step.to;
+    const stepFrom = Number(match[1]);
+    const stepTo = Number(match[2]);
+    if (!Number.isSafeInteger(stepFrom) || !Number.isSafeInteger(stepTo) || stepTo <= stepFrom) {
+      unexplained.push(`${measure} has a malformed rise from ${stepFrom} to ${stepTo}`);
+      continue;
+    }
+    if (stepFrom > at) {
+      unexplained.push(`${measure} rose from ${stepFrom} above the accounted level ${at}`);
+      continue;
+    }
+    if (typeof entry.reason !== "string" || !entry.reason.trim()) {
+      unexplained.push(`${measure} rose from ${stepFrom} to ${stepTo} with no reason recorded`);
+    }
+    at = stepTo;
   }
-  return { landedAt: at, unexplained };
+  if (to > at) unexplained.push(`${measure} is held at ${to} above the accounted level ${at}`);
+  return { landedAt: to <= at ? to : at, unexplained };
 }
 
 describe("C8 growth-log accounting", () => {
@@ -205,6 +211,11 @@ describe("C8 growth-log accounting", () => {
       { rise: "testLines rose from 100 to 120", reason: "Oracle added" },
     ], "testLines", 100, 115);
     expect(result).toEqual({ landedAt: 115, unexplained: [] });
+  });
+
+  it("accounts for the 128327 to 128323 fall after the historical C8 log", () => {
+    const result = accountForGrowth(heldBaseline().allowed ?? [], "testLines", AT_C8.testLines, 128323);
+    expect(result).toEqual({ landedAt: 128323, unexplained: [] });
   });
 
   it("rejects a rise starting above the accounted level", () => {
@@ -313,10 +324,10 @@ describe("C8 · the programme is closed", () => {
    *
    * So what is left for this case is the account, and the account still bites:
    * every rise above what C8 left has to be in the growth log, each with a
-   * reason, in an unbroken chain that ends exactly on the number the baseline
-   * holds. Growth cannot happen silently — a number edited upward by hand, a
-   * chain with a gap in it, or a rise held with a blank reason all fail here —
-   * and the closed programme's own account of its lines is still recorded.
+   * reason. Falls between rises and after the final rise need no growth entry.
+   * Growth cannot happen silently — a number edited upward by hand, a rise
+   * starting above the preceding accounted level, or a blank reason all fail
+   * here — and the closed programme's own account is still recorded.
    */
   it("testLines did not go backwards from where C0 found it", () => {
     const held = heldBaseline();
