@@ -1,6 +1,15 @@
 {
   "version": 1,
   "assigned": "2026-09-27",
-  "lanes": [],
-  "note": "T-0170 lanes released after red-first oracle, independent amendment, full byte-matched gate, direct HTTP smoke and two killed committed-tree mutants."
+  "lanes": [
+    {
+      "lane_id": "T-0171-coordinator",
+      "task_id": "T-0171",
+      "session_id": "2026-09-27-refactor-foundations",
+      "path_claims": ["org/tasks/T-0171.json", "org/claims.json", "org/reviews/2026-09-branch-pr-preservation.md", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md"],
+      "expires": "2026-09-29T23:00:00Z",
+      "liveness": "itemise local and remote refs, worktrees and PRs before any consolidation action"
+    }
+  ],
+  "note": "T-0171 is an evidence-only batch; no checkout, ref, PR or repository setting change is claimed."
 }
