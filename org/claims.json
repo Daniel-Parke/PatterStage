@@ -6,7 +6,7 @@
       "lane_id": "T-0163-implementer",
       "task_id": "T-0163",
       "session_id": "2026-09-27-refactor-foundations",
-      "path_claims": ["org/tasks/T-0163.json", "org/claims.json", "org/briefs/T-0163-independent-oracle.md", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", "scripts/bootstrap/setup.sh", "scripts/bootstrap/setup.mjs", "scripts/bootstrap/env-local.mjs", "scripts/lib/ps-env.sh", "src/modules/hermes/lib/hermes-config-write.ts", "src/modules/hermes/lib/hermes-env-sync.ts", "src/lib/fs/fs-helpers.ts", "scripts/tooling/line-census.baseline.json", "tests/fixtures/mutants/T-0163.json"],
+      "path_claims": ["org/tasks/T-0163.json", "org/claims.json", "org/briefs/T-0163-independent-oracle.md", "org/briefs/T-0163-independent-review.md", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", "scripts/bootstrap/setup.sh", "scripts/bootstrap/setup.mjs", "scripts/bootstrap/env-local.mjs", "scripts/lib/ps-env.sh", "src/modules/hermes/lib/hermes-config-write.ts", "src/modules/hermes/lib/hermes-env-sync.ts", "src/lib/fs/fs-helpers.ts", "scripts/tooling/line-census.baseline.json", "tests/fixtures/mutants/T-0163.json"],
       "expires": "2026-09-29T23:00:00Z",
       "liveness": "coordinator repairs credential-file creation, existing modes and backups only after independent red-first Linux acceptance is frozen"
     },
