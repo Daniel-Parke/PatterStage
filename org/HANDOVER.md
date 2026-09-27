@@ -9,6 +9,23 @@ updated: 2026-09-27
 
 ## Dated status, 2026-09-27
 
+T-0162 repaired the remaining blind read, write, form-name and Knip gates at
+`745337fa`. It finds five hand-read files, four raw-write files, 158 controls
+with zero unnamed, and 17 exact unused Knip issues held for Q-011 release
+review. A planted unused test helper made the widened Knip gate fail; its
+removal restored green. Independent C6/C8 and form-control amendments retained
+test identity, as did the separate ModelEditor selector correction. The clean
+isolated ten-step gate passed with an unchanged tree stamp, 723 Jest suites
+(7191 passed, 3 skipped), and 282 Playwright passes (24 skipped). Seven of
+seven committed-tree mutants were killed and restoration left a clean tree.
+The ModelEditor modal, provider dropdown and validation state were captured at
+1440x900 and 390x844 on a separate-data instance. Six accessible field names
+resolved once each, with no console errors or horizontal overflow. T-0162 is
+closed locally; inspect every hosted push and PR job after its closure push.
+Next prerequisite: T-0163 credential permissions, then T-0158's accepted
+session ADR, T-0164 reconnaissance and T-0165 plan. PR #157 remains open and
+Q-011 still bars structural cleanup before an operator release.
+
 T-0156 repaired the Help Server Component boundary at `5d2c7eb8`. Its red-first
 browser oracle failed on 74 non-index guides before the fix and now walks all
 75 committed manifest guides, checks the previous icon, and retains a 404 for
@@ -17,9 +34,8 @@ function-valued icon prop. The isolated ten-step gate passed with an unchanged
 tree stamp: 720 Jest suites, 7171 passing tests and 3 skips; 282 Playwright
 passes and 24 skips. The 1440x900 and 390x844 visual walk found one h1, the
 icon, no console error and no horizontal overflow. The committed-tree sweep
-killed both mutants by assertion failure. T-0156 is closed locally; observe
-the hosted jobs after its closure push before treating hosted acceptance as
-confirmed. Next prerequisite: T-0162's remaining blind gates.
+killed both mutants by assertion failure. T-0156 push and PR CI, Gitleaks and
+hosted acceptance completed success.
 
 T-0161 closure push `2a072836` initially failed only the push CI
 `real-hermes-integration` job when Docker's `npm ci` hit an EEXIST cache error
