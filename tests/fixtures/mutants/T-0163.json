@@ -21,8 +21,8 @@
     {
       "id": "m3-public-plaintext-backup",
       "file": "src/lib/fs/fs-helpers.ts",
-      "anchor": "copyOwnerOnly(originalPath, target);",
-      "replacement": "copyOwnerOnly(originalPath, target); chmodSync(target, 0o666);",
+      "anchor": "flag: \"wx\", mode: OWNER_ONLY_FILE",
+      "replacement": "flag: \"wx\", mode: 0o666",
       "tests": ["tests/unit/t0163-hermes-env-permissions.test.ts"],
       "why": "The plaintext backup must have owner-only mode from its first byte."
     },
