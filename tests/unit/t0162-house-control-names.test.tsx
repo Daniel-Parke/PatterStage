@@ -34,4 +34,10 @@ describe("T-0162 · house controls keep visible labels associated", () => {
     const html = renderToStaticMarkup(<Field label="Prompt"><AutoTextarea value="" onChange={() => undefined} /></Field>);
     expect(associatedId(html, "textarea")).toBeTruthy();
   });
+
+  it("AutoTextarea does not override a Field label with its placeholder", () => {
+    const html = renderToStaticMarkup(<Field label="Prompt"><AutoTextarea value="" onChange={() => undefined} placeholder="Example text" /></Field>);
+    expect(html).not.toContain('aria-label="Example text"');
+    expect(associatedId(html, "textarea")).toBeTruthy();
+  });
 });
