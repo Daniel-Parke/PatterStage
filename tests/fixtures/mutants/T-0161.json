@@ -117,8 +117,8 @@
     {
       "id": "m15-hermes-state-failure-exits-zero",
       "file": "scripts/tooling/import-hermes-state.ts",
-      "anchor": "process.exitCode = 1;",
-      "replacement": "process.exitCode = 0;",
+      "anchor": "console.error(\"Hermes state import failed; root, skill or profile was not imported.\");\n    process.exitCode = 1;",
+      "replacement": "console.error(\"Hermes state import failed; root, skill or profile was not imported.\");\n    process.exitCode = 0;",
       "tests": ["tests/unit/t0161-hermes-state-cli-failures.test.ts"],
       "why": "A failed root, skill or profile import must stop the explicit seed chain."
     },
@@ -149,8 +149,8 @@
     {
       "id": "m19-model-sync-refusal-exits-zero",
       "file": "scripts/tooling/ensure-hermes-model-sync.ts",
-      "anchor": "process.exitCode = 1;",
-      "replacement": "process.exitCode = 0;",
+      "anchor": "console.error(\"Hermes model sync failed; config defaults were not applied.\");\n    process.exitCode = 1;",
+      "replacement": "console.error(\"Hermes model sync failed; config defaults were not applied.\");\n    process.exitCode = 0;",
       "tests": ["tests/unit/t0161-model-sync-cli-failures.test.ts"],
       "why": "A rejected model-config sync must stop setup or deploy."
     },
@@ -253,8 +253,8 @@
     {
       "id": "m32-deploy-skips-config-loss-before-sync",
       "file": "scripts/tooling/ps-deploy.mjs",
-      "anchor": "if (hermesConfigured && (!existsSync(join(hh, \"config.yaml\")) ||",
-      "replacement": "if (false && (!existsSync(join(hh, \"config.yaml\")) ||",
+      "anchor": "!existsSync(join(hh, \"config.yaml\")) ||",
+      "replacement": "false ||",
       "tests": ["tests/unit/t0161-required-step-failures.test.ts"],
       "why": "A configured deploy must fail before restart if Hermes config vanishes before model sync."
     },

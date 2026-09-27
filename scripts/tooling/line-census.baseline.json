@@ -2,7 +2,7 @@
   "measuredAt": "2026-09-27",
   "counts": {
     "srcLines": 101064,
-    "testLines": 128327,
+    "testLines": 128323,
     "scriptsLines": 13447,
     "srcRepeatedWindowLines": 1000,
     "testRepeatedWindowLines": 4683,
