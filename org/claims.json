@@ -6,10 +6,18 @@
       "lane_id": "T-0170-coordinator",
       "task_id": "T-0170",
       "session_id": "2026-09-27-refactor-foundations",
-      "path_claims": ["org/tasks/T-0170.json", "org/claims.json", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", "src/proxy.ts", "src/app/healthz/route.ts", "src/app/api/healthz/route.ts", "src/app/api/health/route.ts", "tests/unit/t0170-healthz-liveness.test.ts", "tests/fixtures/mutants/T-0170.json", "docs/reference/api.md", "docs/contributing/testing.md", "docs/SECURITY.md", "scripts/tooling/line-census.baseline.json"],
+      "path_claims": ["org/tasks/T-0170.json", "org/claims.json", "org/briefs/T-0170-read-only-amendment.md", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", "src/proxy.ts", "src/app/healthz/route.ts", "src/app/api/healthz/route.ts", "src/app/api/health/route.ts", "tests/fixtures/mutants/T-0170.json", "docs/reference/api.md", "docs/contributing/testing.md", "docs/SECURITY.md", "docs/adr/README.md", "scripts/tooling/output-canary.golden.json", "scripts/tooling/line-census.baseline.json"],
       "expires": "2026-09-29T23:00:00Z",
-      "liveness": "carry the PR #234 liveness contract into current dev, gate, sweep and observe hosted jobs"
+      "liveness": "carry PR #234 liveness contract to dev, integrate independent read-only oracle, gate, sweep and observe hosted jobs"
+    },
+    {
+      "lane_id": "T-0170-independent-oracle",
+      "task_id": "T-0170",
+      "session_id": "01a0e1fd-fece-7642-8b9d-ec3e48d04e25",
+      "path_claims": ["tests/unit/t0170-healthz-liveness.test.ts"],
+      "expires": "2026-09-29T23:00:00Z",
+      "liveness": "amend only the T-0170 liveness oracle with explicit read-only behaviour and identity proof"
     }
   ],
-  "note": "One owned writer for T-0170; ADR-0013 awaits operator acceptance and T-0158 source is untouched."
+  "note": "Two disjoint T-0170 lanes after independent review found missing read-only assertions. ADR-0013 is accepted; T-0158 source remains untouched."
 }

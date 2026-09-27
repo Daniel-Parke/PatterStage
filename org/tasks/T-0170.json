@@ -11,7 +11,7 @@
   ],
   "status": "in_progress",
   "owner_session": "2026-09-27-refactor-foundations",
-  "claims": ["org/tasks/T-0170.json", "org/claims.json", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", "src/proxy.ts", "src/app/healthz/route.ts", "src/app/api/healthz/route.ts", "src/app/api/health/route.ts", "tests/unit/t0170-healthz-liveness.test.ts", "tests/fixtures/mutants/T-0170.json", "docs/reference/api.md", "docs/contributing/testing.md", "docs/SECURITY.md", "scripts/tooling/line-census.baseline.json"],
+  "claims": ["org/tasks/T-0170.json", "org/claims.json", "org/briefs/T-0170-read-only-amendment.md", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", "src/proxy.ts", "src/app/healthz/route.ts", "src/app/api/healthz/route.ts", "src/app/api/health/route.ts", "tests/unit/t0170-healthz-liveness.test.ts", "tests/fixtures/mutants/T-0170.json", "docs/reference/api.md", "docs/contributing/testing.md", "docs/SECURITY.md", "docs/adr/README.md", "scripts/tooling/output-canary.golden.json", "scripts/tooling/line-census.baseline.json"],
   "programme": "The operator asked to address the 2026-09-24 comment on PR #234. GitHub reports the PR as OPEN and CONFLICTING against dev; its two documentation paths have moved. Repo rules permit pushing only dev and reserve merges to the operator, so this batch implements the reviewed contract independently on dev. PR #234 remains the operator's decision.",
   "timestamps": {"opened": "2026-09-27T11:40:47Z", "updated": "2026-09-27T11:40:47Z", "closed": null},
   "invariants": [
@@ -26,5 +26,5 @@
   "verification": "",
   "review": "",
   "mutation": "",
-  "deviation": ""
+  "deviation": "The first isolated worktree gate stopped at Jest because its path under .codex made Jest match zero suites; lint and tsc passed, but that run proves no test result. The sibling validation clone preserved its prior T-0169 changes in a named stash and reran the gate. Its Jest stage found two real integration findings: the intentional new HTTP routes changed the output-canary golden, and the newly accepted ADR-0012/0013 lacked rows in the public decision index. Both are claimed here and must be fixed before repeating the full gate."
 }
