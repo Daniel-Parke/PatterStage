@@ -210,3 +210,20 @@ are recorded in `org/reviews/2026-09-refactor-addendum.md`.
   task. It is `T-0025`, proposed: `--update-baseline` refuses to write a
   larger total, or a larger per-key count, without an explicit second flag
   carrying a written reason.
+
+- Q-029 (release operations): pause new Dependabot version-update pull
+  requests until the next release? Folded 2026-09-27. Answer, from the
+  operator: yes, set both npm and GitHub Actions version-PR limits to zero.
+  The operator expressly authorised the narrow default-branch `main`
+  configuration exception because GitHub reads `.github/dependabot.yml` from
+  the default branch; T-0173 mirrors that file on `dev`. The eleven existing
+  proposals remain individually accountable. Dependabot alerts and security
+  updates were disabled in repository settings at the ruling and are a
+  separate operator action. This pause is reversed at release.
+
+- Q-030 (publication): may a manual Docs workflow dispatch deploy a branch
+  other than `main`? Folded 2026-09-27. Answer, from the operator: no.
+  T-0174 adds a `main`-ref job guard for push and manual dispatch. This closes
+  the gap between the workflow's branch filter and its existing main-only
+  publishing test. A `github-pages` environment rule restricted to `main`
+  is a separate release-setting check for the operator before Pages is enabled.
