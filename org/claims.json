@@ -6,18 +6,18 @@
       "lane_id": "T-0161-hosted-oracle",
       "task_id": "T-0161",
       "session_id": "T-0161-hosted-oracle",
-      "path_claims": ["tests/unit/t0161-required-step-failures.test.ts", "tests/unit/t0161-direct-invocation.test.ts"],
+      "path_claims": ["tests/unit/t0161-required-step-failures.test.ts", "tests/unit/t0161-direct-invocation.test.ts", "tests/unit/t0161-hermes-import-alias.test.ts"],
       "expires": "2026-09-28T23:00:00Z",
-      "liveness": "independent test author reproduces macOS direct-invocation alias failure"
+      "liveness": "independent test author adds a red Hermes import alias oracle found by the second review"
     },
     {
       "lane_id": "T-0161-implementer",
       "task_id": "T-0161",
       "session_id": "2026-09-26-refactor-foundations",
-      "path_claims": ["org/claims.json", "org/tasks/T-0161.json", "org/briefs/T-0161-hosted-ci-oracle.md", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", "scripts/tooling/ps-deploy.mjs", "src/lib/db/index.ts", "scripts/tooling/line-census.baseline.json", "tests/fixtures/mutants/T-0161.json"],
+      "path_claims": ["org/claims.json", "org/tasks/T-0161.json", "org/briefs/T-0161-hosted-ci-oracle.md", "org/briefs/T-0161-hermes-alias-oracle.md", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", "scripts/tooling/ps-deploy.mjs", "scripts/tooling/hermes-registry-import.mjs", "src/lib/db/index.ts", "scripts/tooling/line-census.baseline.json", "tests/fixtures/mutants/T-0161.json"],
       "expires": "2026-09-28T23:00:00Z",
-      "liveness": "coordinator fixes hosted T-0161 CI and repeats full gate and sweeps"
+      "liveness": "coordinator fixes hosted T-0161 CI and silent Hermes import alias, then repeats full gate and sweeps"
     }
   ],
-  "note": "Hosted CI reopened T-0161 after the initial closure push. Two disjoint writing lanes remain within the policy cap."
+  "note": "Hosted CI reopened T-0161 after the initial closure push. Independent review found a related Hermes CLI alias no-op. Two disjoint writing lanes remain within the policy cap."
 }
