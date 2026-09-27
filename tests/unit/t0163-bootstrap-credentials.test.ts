@@ -184,6 +184,7 @@ function shellSetup(present: boolean, denyChmod = false): Fixture {
   const f = setupRoot();
   const bin = join(f.root, "bin");
   const eventFile = join(f.root, "shell-events.txt");
+  const denialFile = join(f.root, "chmod-denied.txt");
   try {
     for (const source of ["scripts/bootstrap/setup.sh", "scripts/lib/ps-env.sh", "scripts/lib/ps-dotenv-local.sh"]) {
       const target = join(f.repo, source);
@@ -206,7 +207,7 @@ function shellSetup(present: boolean, denyChmod = false): Fixture {
     }
     if (denyChmod && IS_LINUX) {
       const target = join(bin, "chmod");
-      writeFileSync(target, "#!/usr/bin/env bash\ncase \"$*\" in *'.env'*) exit 13;; esac\nexec /usr/bin/chmod \"$@\"\n");
+      writeFileSync(target, "#!/usr/bin/env bash\ncase \"$*\" in *'.env'*) printf 'denied\\n' > \"$ORACLE_CHMOD_DENIED\"; exit 13;; esac\nexec /usr/bin/chmod \"$@\"\n");
       chmodSync(target, 0o755);
     }
     if (present) {
@@ -226,17 +227,21 @@ function shellSetup(present: boolean, denyChmod = false): Fixture {
     env.APPDATA = env.HOME;
     env.LOCALAPPDATA = env.HOME;
     env.ORACLE_EVENTS = shellPath(eventFile);
+    env.ORACLE_CHMOD_DENIED = shellPath(denialFile);
     env.PS_INSTALL_NONINTERACTIVE = "1";
     env.PS_SETUP_RUN_TESTS = "0";
     env.CI = "false";
     const run = spawnSync(bashExecutable(), ["-c", "umask 000; bash \"$1\"", "oracle", shellPath(join(f.repo, "scripts", "bootstrap", "setup.sh"))], {
       cwd: f.repo, env, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], timeout: 30_000, windowsHide: true,
     });
-    if (run.error || run.signal || !existsSync(eventFile)) {
+    const earlyRefusal = denyChmod && IS_LINUX && existsSync(denialFile);
+    if (run.error || run.signal || (!existsSync(eventFile) && !earlyRefusal)) {
       const diagnostic = (run.stderr ?? "").replaceAll(KEY, "<redacted>").replaceAll(f.root, "<fixture>").slice(-800);
       throw new Error(`INFRASTRUCTURE: shell setup did not reach stubbed commands (${run.error?.message ?? run.signal ?? run.status}): ${diagnostic}`);
     }
-    const events: Event[] = readFileSync(eventFile, "utf8").trim().split("\n").map((command) => ({ action: "child", command }));
+    const events: Event[] = existsSync(eventFile)
+      ? readFileSync(eventFile, "utf8").trim().split("\n").map((command) => ({ action: "child", command }))
+      : [];
     return { root: f.root, repo: f.repo, hermes: f.hermes, local: f.local, events, run };
   } catch (error) {
     dispose(f.root);
