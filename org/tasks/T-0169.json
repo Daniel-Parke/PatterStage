@@ -8,11 +8,11 @@
   "reasons": [
     {"factor": "operator-plan-conservative-tier", "tier_floor": "R2", "source": "Hosted PR acceptance failure 36310871290", "evidence": "A visible navigation promise failed under async layout changes and needs a red-first browser oracle and responsive walk."}
   ],
-  "status": "active",
+  "status": "done",
   "owner_session": "2026-09-27-refactor-foundations",
   "claims": ["org/tasks/T-0169.json", "org/claims.json", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", "tests/e2e/settings-anchor-layout.spec.ts", "src/app/agent/settings/page.tsx", "src/hooks/useSettingsEditor.ts", "src/components/config/SettingsNav.tsx", "tests/fixtures/mutants/T-0169.json", "scripts/tooling/line-census.baseline.json"],
   "programme": "Hosted acceptance repair before T-0158. T-0168 at dev@161aa1a0 passed every hosted job; the earlier Settings race remains a distinct traced product defect.",
-  "timestamps": {"opened": "2026-09-27T10:40:05Z", "updated": "2026-09-27T10:40:05Z", "closed": null},
+  "timestamps": {"opened": "2026-09-27T10:40:05Z", "updated": "2026-09-27T11:15:35Z", "closed": "2026-09-27T11:15:35Z"},
   "invariants": [
     "The existing Settings anchor test and its heading-in-viewport assertion remain unchanged.",
     "A delayed file read cannot move the bookmarked target heading outside the viewport after content settles; manual navigation and search remain functional.",
@@ -21,10 +21,16 @@
   ],
   "notes": "Hosted PR CI 36310871290 at baebb0ee failed Settings sections by anchor > settings section env in full E2E: 281 passed, 24 skipped, 1 failed. The final trace shows HERMES.md editor above the env heading; an earlier frame shows the env heading visible while the Hermes section still has a skeleton. The delayed response expanded the preceding section after SettingsPage's initial hash jump. The exact spec passed alone locally and full E2E later passed on 161aa1a0, so this remains a timing-sensitive product defect rather than a waived failure. Read-only sceptic 01a0e253-5069-74f0-9cf7-eda09caff023 confirmed the trace and did not prove whether SettingsNav's active-link scroll adds movement.",
   "rollback": "Revert the anchor-readiness change if it delays or breaks manual Settings navigation; retain the red trace and focused delayed-read browser oracle.",
-  "oracle_provenance": {},
-  "commits": "",
-  "verification": "",
-  "review": "",
-  "mutation": "",
-  "deviation": ""
+  "oracle_provenance": {
+    "browser_oracle": "tests/e2e/settings-anchor-layout.spec.ts",
+    "red_commit": "c7e35710",
+    "amendment_commit": "73d13bc2",
+    "red_evidence": "On the original production bundle, the final delayed-Hermes oracle failed 0/1 at toBeInViewport with viewport ratio 0 after the file editor rendered. The amendment removed an invalid pre-read visibility assumption and retained the post-read viewport assertion.",
+    "unit_oracle": "tests/unit/t0169-settings-hash-jump.test.tsx; the new test observes no scroll before layout readiness and exactly one target scroll after readiness"
+  },
+  "commits": "9c98a4e0 opened the record; c7e35710 and 73d13bc2 committed the red browser oracle and its precise timing amendment; 08e92f04 committed the fixed source, behaviour-level Jest oracle, mutant and measured census growth.",
+  "verification": "The final browser oracle was red 0/1 against the original production bundle, then passed 10/10 against the narrower readiness fix with two Playwright workers. Three focused Settings unit suites passed 45/45; the new Jest readiness oracle passed 1/1. The final isolated ten-step gate exited 0 on every step with treeBefore=treeAfter=c171913c43938caf72c84bb95c53e9588eee6fc41b62ec6c396c528efdb1d60e: 727 Jest suites, 7214 passed and 4 skipped; 283 Playwright passed and 24 skipped. A responsive walk of /agent/settings#env at 1440x900 and 390x844 passed: one h1, env heading in viewport, no console error and no horizontal overflow. Screenshots in the isolated checkout .gate/t0169-settings-1440x900.png (SHA256 d7590cf0a690958be92355108fa9e8bf292fe33abe508a63aad7b8701ba1b8d6) and .gate/t0169-settings-390x844.png (SHA256 e6f73cdf5f53d1a941982b9b197443a8bfe0b00552e9db79b0a3e0e7fc1915a1). Hosted push/PR jobs remain to be observed after the closure push.",
+  "review": "The original PR trace showed the env heading in view with a Hermes skeleton and below the viewport after the editor expanded. Waiting for the config and three layout-affecting reads, including the file-state seeding effects, before the initial hash jump fixes that sequence. The speculative SettingsNav change was removed; existing hash and phone navigation remain.",
+  "mutation": "Committed-tree sweep at 08e92f04 exited 0: m1-jump-before-file-layout KILLED by a structured Jest assertion failure; unmodified controls passed before and after and source restoration was exact.",
+  "deviation": "The first complete gate covered the browser oracle but preceded the new Jest mutation oracle. A later gate stopped at two missing mock display names; the next stopped at a test-only TypeScript delete-operand error. The subsequent gate passed its first nine steps but the line census found two added test teardown lines. Each finding was fixed with no weakened check, the measured source and test growth was recorded with reasons, and the final complete gate passed. The temporary near-top browser assertion was removed because the final section cannot scroll near the header without content below it; the original viewport contract remains."
 }

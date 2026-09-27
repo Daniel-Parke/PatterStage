@@ -9,6 +9,21 @@ updated: 2026-09-27
 
 ## Dated status, 2026-09-27
 
+T-0169 repaired the Settings `#env` anchor race traced in T-0167's hosted PR
+full E2E. A delayed Hermes read expanded the preceding editor after the
+initial hash jump and could push the heading out of view. The new browser
+oracle failed 0/1 on the original production bundle and passed 10/10 with
+two workers after Settings waited for its layout-affecting reads and file
+state to settle. A new Jest behaviour oracle holds that readiness guard; its
+committed-tree mutant was killed by assertion. The final isolated ten-step
+gate passed with an unchanged tree stamp, 727 Jest suites (7214 passed,
+4 skipped) and 283 Playwright passes (24 skipped). A separate-data visual
+walk at 1440x900 and 390x844 found the heading in view, one h1, no console
+errors and no horizontal overflow; screenshots and hashes are in T-0169's
+record. All four T-0168 hosted workflows completed success, including macOS,
+PR full E2E, install and acceptance. T-0169's closure push and hosted jobs
+remain. T-0158's session ADR follows after they complete.
+
 T-0168 repaired the remaining T-0163 bootstrap-oracle path alias. T-0167's
 hosted push and PR macOS jobs failed two literal-path event assertions, while
 PR full E2E failed one Settings `#env` heading-in-viewport assertion; both
@@ -21,9 +36,9 @@ credential mutant was killed by assertion. The first isolated gate failed
 only the line census, which measured 51 added test lines. Baseline commit
 `2881c601` records the exact rise and reason; the repeated ten-step gate
 passed with an unchanged tree stamp, 726 Jest suites (7213 passed, 4 skipped)
-and 282 Playwright passes (24 skipped). Hosted checks for T-0168 remain to be
-observed. The separate Settings anchor layout race needs a red-first product
-repair before T-0158.
+and 282 Playwright passes (24 skipped). Hosted checks for T-0168 completed
+success as noted above. The separate Settings anchor layout race is repaired
+by T-0169.
 
 T-0167 corrected the independently authored T-0163 credential oracle for
 macOS. T-0163's push CI `36309526484` and PR CI `36309529732` failed only
