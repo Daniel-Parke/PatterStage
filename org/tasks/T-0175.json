@@ -1,0 +1,29 @@
+{
+  "id": "T-0175",
+  "intent": "Carry the three non-visual, currently open Dependabot version proposals from PRs #224, #226 and #229 onto current dev through one regenerated lockfile, verify them against the full product gate, and preserve their exact former heads before retiring each addressed source PR.",
+  "declared": {"capabilities": ["edit-config", "edit-tests", "git", "github-api", "git-push"], "side_effects": ["touches-dependencies", "sends-external", "irreversible-action"]},
+  "mode": "high-assurance",
+  "tier_proposed": "R3",
+  "tier_ruled": "R3",
+  "reasons": [
+    {"factor": "irreversible-action", "tier_floor": "R3", "source": "declared", "evidence": "Closing addressed PRs and deleting source branches is externally consequential; the operator explicitly authorised cleanup after preserving all important work."},
+    {"factor": "boundary-contact", "tier_floor": "R1", "source": "declared", "evidence": "The completed dependency change is pushed to dev and triggers hosted CI."}
+  ],
+  "status": "open",
+  "owner_session": "2026-09-27-refactor-foundations",
+  "timestamps": {"opened": "2026-09-27T14:30:22Z", "updated": "2026-09-27T14:30:22Z"},
+  "claims": ["org/tasks/T-0175.json", "org/claims.json", "org/briefs/T-0175-oracle.md", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", "package.json", "package-lock.json", "tests/unit/t0175-dependency-proposals.test.ts", "tests/fixtures/mutants/T-0175.json", "scripts/tooling/line-census.baseline.json"],
+  "programme": "T-0174 dev@8785a04e passed all four hosted push/PR workflows and every required job before this task opened. Dependabot automatically closed PRs #235 and #236 unmerged and removed their remote branches; their exact former heads are retained at refs/archive/t0174/. PRs #224, #226 and #229 remain open against dev, each at the head recorded in the preservation review and each changing only package.json and package-lock.json. Their proposals are React Query 5.102.8, tsx 4.23.13 and dagre 3.1.1. The other remaining proposals are separately scoped for visual libraries, test tooling and the React paired update.",
+  "invariants": [
+    "Only the three named direct package ranges change in this batch; the lockfile is regenerated on current dev, not copied from stale PR heads. Exact direct and resolved versions are evidenced.",
+    "No existing test identity or coverage floor changes. An independent oracle is red before the manifest edit, then green without amendment by the implementer.",
+    "A full gate on an unchanged isolated tree, dependency audit and committed-tree mutation sweep precede closure. Visual graph behaviour is walked if the dagre update changes a rendered layout.",
+    "Each PR remains open until its proposal is shown to be addressed and hosted dev validation passes. Its exact head is retained in a local non-branch archive ref before any closure. Remote branch deletion uses a full-SHA lease only if closure leaves that exact head present.",
+    "At most two disjoint writing lanes are active. Only dev is pushed; PR #157, main, unaddressed PRs and dirty worktrees remain intact."
+  ],
+  "rollback": "Revert the three direct ranges and regenerate package-lock.json on dev, retaining oracle and task evidence. Archived PR heads permit recovery if a proposal must be revisited.",
+  "verify_line": "The frozen oracle, focused tests, npm audit, full unchanged-tree gate, lockfile integrity, committed-tree mutation sweep, all hosted push/PR jobs, and exact-head PR archive/ref checks must each pass before closure.",
+  "verification": "Pending.",
+  "mutation": "Pending.",
+  "deviation": "None."
+}
