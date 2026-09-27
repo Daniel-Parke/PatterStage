@@ -49,6 +49,8 @@
     "tests/unit/c6-the-page-layer.test.ts",
     "tests/unit/c8-the-programme-is-closed.test.ts",
     "tests/unit/form-controls-are-named.test.ts",
+    "tests/unit/model-editor-modal.test.tsx",
+    "tests/unit/b6-keyless-providers.test.tsx",
     "tests/unit/t0162-blind-gates.test.ts",
     "tests/unit/t0162-house-control-names.test.tsx",
     "tests/fixtures/mutants/T-0162.json"

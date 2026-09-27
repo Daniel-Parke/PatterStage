@@ -14,9 +14,9 @@
       "lane_id": "T-0162-independent-oracle",
       "task_id": "T-0162",
       "session_id": "01a0e029-2602-7842-9b60-6d00ca054fa1",
-      "path_claims": ["tests/unit/c6-the-page-layer.test.ts", "tests/unit/c8-the-programme-is-closed.test.ts", "tests/unit/form-controls-are-named.test.ts"],
+      "path_claims": ["tests/unit/c6-the-page-layer.test.ts", "tests/unit/c8-the-programme-is-closed.test.ts", "tests/unit/form-controls-are-named.test.ts", "tests/unit/model-editor-modal.test.tsx", "tests/unit/b6-keyless-providers.test.tsx"],
       "expires": "2026-09-29T23:00:00Z",
-      "liveness": "independent author amends only closed gate oracles under Q-015/Q-021 and proves identity and red/green behaviour"
+      "liveness": "independent author amends closed gate oracles and disambiguates model-editor tests after contextual naming, proving identity and red/green behaviour"
     }
   ],
   "note": "Two disjoint T-0162 writing lanes are active, at the max_lanes: 2 cap. The independent oracle author does not implement detectors or product fixes."
