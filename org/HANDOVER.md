@@ -9,6 +9,25 @@ updated: 2026-09-27
 
 ## Dated status, 2026-09-27
 
+T-0178 carried PR #228's Playwright 1.62.1 proposal onto `dev@e7081b1a`
+without merging its stale branch. Its independent oracle was red at eight
+expected Playwright version assertions out of 26 tests before implementation,
+then green 26/26. The three older strict dependency suites retained all 21
+test names and assertions under an independent amendment. Only the three
+Playwright package records moved in the current-dev lockfile. Isolated
+`npm ci`, matching Chromium install, and the complete unchanged-tree ten-step
+gate passed: 734 Jest suites (7263 passes, four skips) and 283 Playwright
+passes (24 skips). The Composer walk at 1440x900 and 390x844 had one h1,
+no horizontal overflow or browser console errors; screenshot hashes are in
+the task record. Three committed-tree mutants were killed and restoration
+left a clean clone. All four implementation workflows and every required
+hosted job passed. PR #228 closed unmerged at its archived exact head, and
+GitHub removed its remote source branch. `npm audit --json` still exits 1
+with ten advisories (two low, three moderate, five high). PR #233 is the
+remaining dependency proposal; it needs a paired React/React DOM update
+before closure. PR #157 remains the sole route to `main`. The T-0178 task
+closure push still needs its own hosted-workflow observation.
+
 T-0177 carried PR #227's Knip 6.34.0 proposal onto `dev@aa20a398`
 without merging its stale branch. The independent six-name oracle was red
 5/21 against the old version, then green 21/21. Knip 6.34.0 exposed one
