@@ -40,6 +40,7 @@
     ".github/workflows/ci.yml",
     "src/app/layout.tsx",
     "src/instrumentation.ts",
+    "src/lib/db/upgrade.ts",
     "next.config.ts",
     "tests/integration/test_full_install_update_process.py",
     "tests/integration/t0161-build-purity.mjs",

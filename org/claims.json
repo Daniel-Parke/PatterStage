@@ -27,7 +27,7 @@
         "scripts/tooling/prebuild-db.mjs", "scripts/tooling/hermes-registry-import.mjs",
         "scripts/tooling/gate.mjs", "scripts/tooling/ps-deploy.mjs", "scripts/tooling/migrate-to-runtime.mjs", "scripts/bootstrap/setup.sh",
         "scripts/lib/ps-migrate.sh", "scripts/bootstrap/setup.mjs", ".github/workflows/ci.yml",
-        "src/app/layout.tsx", "src/instrumentation.ts", "next.config.ts",
+        "src/app/layout.tsx", "src/instrumentation.ts", "src/lib/db/upgrade.ts", "next.config.ts",
         "tests/integration/test_full_install_update_process.py",
         "tests/fixtures/mutants/T-0161.json", "scripts/tooling/line-census.baseline.json",
         "docs/contributing/testing.md", "docs/running/env-reference.md",
