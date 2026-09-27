@@ -35,7 +35,11 @@ const COPY_PRELOAD = String.raw`
     if (recorded.size) fs.writeFileSync(process.env.ORACLE_COPY_EVENTS,
       [...recorded.values()].map(value => JSON.stringify(value)).join('\n') + '\n');
   });
-  process.umask(0);
+  try {
+    process.umask(0);
+  } catch (error) {
+    if (error?.code !== 'ERR_WORKER_UNSUPPORTED_OPERATION') throw error;
+  }
   fs.copyFileSync = (source, destination, ...options) => {
     const creating = isBackup(destination) && !fs.existsSync(destination);
     copy(source, destination, ...options);
