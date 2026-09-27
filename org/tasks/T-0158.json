@@ -1,52 +1,90 @@
 {
   "id": "T-0158",
-  "intent": "On the deployment the documentation recommends for TLS, the session cookie that carries the operator's root-equivalent token is set WITHOUT the Secure flag, for a year, and there is no way to revoke it short of rotating the token for every client at once. src/proxy.ts:285-291 sets `ps_session` to `expected` — the raw token, not a derived session id — with `maxAge: 60*60*24*365` and `secure: request.nextUrl.protocol === \"https:\"`. NextRequest.nextUrl.protocol does not follow `x-forwarded-proto` or `Forwarded`: measured, it reports `http:` in both proxied cases, so `secure` evaluates false. docs/running/deploy.md:152 says 'Use a reverse proxy with automatic certificates (Let's Encrypt)', which is exactly the shape that terminates TLS upstream and forwards plain http. `git grep -nE 'cookies\\.delete|maxAge: 0|signout|logout' -- src` returns nothing, so there is no sign-out: revoking one browser means deleting the token file, which invalidates every Bearer client with it. docs/SECURITY.md:66 calls that token 'root on the host'.",
+  "intent": "Replace raw operator-token browser cookies with revocable opaque sessions under accepted ADR-0012 and ADR-0013, while preserving Bearer clients, intentional URL hand-off, exact read-only refusals, loopback HTTP, and supported proxy/LAN deployment modes.",
   "declared": {
     "capabilities": [
       "edit-source",
       "edit-docs",
-      "edit-tests"
+      "edit-tests",
+      "edit-config",
+      "database-migration",
+      "git",
+      "git-push"
     ],
-    "side_effects": []
+    "side_effects": ["touches-auth", "migrates-schema", "sends-external", "irreversible-action", "rollback-cost"]
   },
   "mode": "high-assurance",
-  "tier_proposed": "R2",
-  "tier_ruled": "R2",
+  "tier_proposed": "R3",
+  "tier_ruled": "R3",
   "reasons": [
-    {
-      "factor": "auth-surface",
-      "tier_floor": "R2",
-      "source": "paths:sensitive",
-      "evidence": "src/proxy.ts is the whole authentication boundary, and this is the cookie that carries the credential"
-    },
-    {
-      "factor": "recorded-deviation-from-a-standard",
-      "tier_floor": "R3",
-      "source": "org/policy.json:131, RUL-SEC-003",
-      "evidence": "RUL-SEC-003 sets ASVS level 2 on the session-auth path. A session cookie that is the credential verbatim, non-expiring in practice and non-revocable, is a deviation whichever way it is resolved, so if the operator chooses to keep any part of it the exclusion is an ADR and the floor is R3."
-    }
+    {"factor": "irreversible-action", "tier_floor": "R3", "source": "declared", "evidence": "declared side effect: irreversible-action, rollback-cost"},
+    {"factor": "auth-surface", "tier_floor": "R2", "source": "declared", "evidence": "declared side effect: touches-auth"},
+    {"factor": "schema-change", "tier_floor": "R2", "source": "declared", "evidence": "declared side effect: migrates-schema"},
+    {"factor": "boundary-contact", "tier_floor": "R1", "source": "declared", "evidence": "declared side effect: sends-external"}
   ],
-  "status": "proposed",
-  "owner_session": "unassigned",
+  "status": "open",
+  "owner_session": "2026-09-27-refactor-foundations",
   "claims": [
     "src/proxy.ts",
     "src/lib/api/auth-token.ts",
+    "src/instrumentation.ts",
+    "src/lib/auth/",
+    "src/lib/db/",
+    "src/lib/sse/event-stream.ts",
+    "src/app/api/auth/",
+    "src/app/api/runs/[id]/events/route.ts",
+    "src/app/api/orchestration/chat/route.ts",
+    "src/components/auth/",
+    "src/app/agent/settings/",
+    "scripts/tooling/ps-deploy.mjs",
+    "scripts/bootstrap/",
+    "package.json",
+    "playwright.config.ts",
     "docs/SECURITY.md",
-    "docs/running/deploy.md"
+    "docs/running/deploy.md",
+    "docs/start-here/first-hour.md",
+    "tests/unit/t0158-session-store.test.ts",
+    "tests/unit/t0158-session-proxy.test.ts",
+    "tests/unit/t0158-auth-routes.test.ts",
+    "tests/unit/t0158-stream-revocation.test.ts",
+    "tests/e2e/t0158-browser-sessions.spec.ts",
+    "tests/integration/t0158-production-generation.test.ts",
+    "tests/unit/proxy-auth.test.ts",
+    "tests/unit/failed-auth-costs-something.test.ts",
+    "tests/unit/read-only-actually-reads.test.ts",
+    "tests/unit/k5-the-ruled-security-fixes.test.ts",
+    "tests/unit/stream-error-truth-producer.test.ts",
+    "tests/unit/b1-one-cancel-and-a-stream-that-lets-go.test.ts",
+    "tests/unit/chat-failure-truth.test.ts",
+    "tests/unit/chat-proxy-fails-out-loud.test.ts",
+    "tests/e2e/t0157-framework-auth-boundary.spec.ts",
+    "tests/e2e/smoke.spec.ts",
+    "tests/fixtures/mutants/T-0158.json",
+    "scripts/tooling/line-census.baseline.json",
+    "org/tasks/T-0158.json",
+    "org/claims.json",
+    "org/HANDOVER.md",
+    "org/TASKS.md",
+    "org/STATE.md"
   ],
-  "programme": "Found by K7's recon (T-0155), in the one item on the review's security list that it had read and explicitly not assessed: 'Session-cookie design: the cookie value is the raw token with a one-year maxAge (src/proxy.ts:285-291). Read, but not assessed as a finding.' Assessed now. Raised proposed because the fix has options the operator must choose between, and one of them is a new public contract.",
+  "programme": "Accepted ADR-0012 and ADR-0013 settle the browser-session design and its private-proxy, token-rotation, read-only and onboarding corrections. The former T-0158 universal X-Forwarded-Proto conclusion is refuted by normal Next request handling; the synthetic NextRequest probe did not model the server path. Raw-token cookies, one-year lifetime, no individual revocation and token-bearing boot logs remain live findings. T-0179 dependency cleanup closed with every hosted implementation and closure job green at dev@b2be4a64. Remote branches are dev and main, with PR #157 alone open; local worktrees with unique or ignored state remain preserved. This is the security prerequisite before the unfinished T-0164 reconnaissance and T-0165 Phase 2 plan.",
   "timestamps": {
     "opened": "2026-09-13T09:00:00Z",
-    "updated": "2026-09-13T09:00:00Z",
+    "updated": "2026-09-27T19:37:41Z",
     "closed": null
   },
   "invariants": [
-    "I1 THE FLAG IS DECIDED BY WHAT THE BROWSER SEES, NOT BY WHAT NEXT SEES. Any fix reads the forwarded protocol, or takes the answer from configuration, or sets Secure unconditionally and documents the loopback consequence. Reading nextUrl.protocol is the defect.",
-    "I2 LOOPBACK MUST KEEP WORKING. The default install is http://127.0.0.1:<port> and a Secure cookie is not sent over plain http to a non-localhost origin. Browsers treat http://localhost as a secure context, but a LAN address under `npm run start:network` is not. A fix that silently breaks the LAN case has traded one defect for another.",
-    "I3 TRUSTING A HEADER IS ITSELF A DECISION. x-forwarded-proto is caller-controlled unless something strips it. critic-02 already carries the same question for x-forwarded-for and the operator ruled to keep per-caller keys and record the gap. Whatever is chosen here should be consistent with that ruling, not quietly different.",
-    "I4 THE DOCUMENT AND THE CODE AGREE AT THE END. docs/SECURITY.md describes the access model and does not currently mention cookie lifetime, revocation, or the Secure flag. Whatever the code does, that page says it."
+    "Mint 256-bit opaque browser secrets, store only hashes in separate auth_sessions SQLite storage, and keep existing Bearer precedence. Session creation, lookup or migration failure fails closed; old raw-token cookies are cleared.",
+    "Enforce 30-minute inactivity and 12-hour absolute expiry at exact boundaries. Only qualified interactive navigation or user action renews activity. Atomic renewal cannot revive an expired or revoked row; polling, prefetch and streams do not renew.",
+    "Mint one process-owned boot generation and key; production proxy, routes and streams observe the same values. Restored rows or token rotation invalidate sessions. Prove this in a built app before implementation; if it fails, stop for design review.",
+    "Pin exact Origin and cookie transport to PS_PUBLIC_ORIGIN. Retain direct loopback HTTP, require HTTPS for supported network access by default, and permit only explicit insecure LAN HTTP or isolated private proxy modes. Headers supplied by a caller cannot establish transport trust.",
+    "Preserve intentional GET token hand-off, add exact POST sign-in, DELETE self sign-out and credential-gated list/revoke routes. Clear legacy cookies, avoid browser credential storage and remove token-bearing boot logs or onboarding copy.",
+    "Under PS_READ_ONLY, allow only the ADR's exact auth lifecycle writes and qualified navigation renewal. Continue refusing application writes. Recheck session validity before every protected stream emission and on quiet ticks, aborting upstream on invalidation.",
+    "Keep Windows and Git Bash development, existing test names, the complete unchanged-tree gate, responsive browser journeys, committed-tree sweep and all hosted jobs. Protected ADRs are already accepted and remain untouched."
   ],
-  "notes": "MEASURED 2026-09-13, re-runnable. A probe over NextRequest gives: plain http -> `http:`; `x-forwarded-proto: https` -> `http:`; `Forwarded: proto=https` -> `http:`; direct https -> `https:`. So the flag is correct only when Next itself terminates TLS, which the documentation does not recommend.\n\nTHREE THINGS THE OPERATOR CHOOSES BETWEEN, none of them mine to pick. (a) Fix the flag only: read the forwarded protocol, or add a PS_TRUST_PROXY-style key, or set Secure whenever the host is not loopback. Smallest change, leaves the cookie as the raw token. (b) Fix the flag and shorten the life: the one-year maxAge is what turns a leaked cookie into a permanent one. (c) Make the cookie a real session: a random session id stored server-side, so revoking one browser does not rotate the credential for every Bearer client. That is the ASVS-level-2 answer and it is also the largest, and a new stored artefact is a new public contract under policy.json:131, so it needs an ADR.\n\nNOT A FINDING, checked: httpOnly is set, sameSite is lax, and the same-origin check at src/proxy.ts:215-226 covers cookie-authenticated writes, so this is not CSRF-exploitable. The exposure is a cookie that travels in clear on the documented deployment and cannot be revoked.",
+  "notes": "The original 2026-09-13 synthetic NextRequest protocol probe was not representative of normal Next handling. ADR-0012 refutes its universal X-Forwarded-Proto claim. This task uses PS_PUBLIC_ORIGIN and the proxy-isolation modes in accepted ADR-0012/0013; no security decision is based on client-supplied forwarding or Host headers alone. Static inspection of the Next 16.3.6 production bundle found a shared Turbopack runtime and module cache, but did not prove one boot generation across live proxy, route and stream requests. That production proof is the first implementation gate. Existing proxy-auth and read-only tests include raw-cookie and source-text assumptions; amend their expectations through a different author without losing test identities.",
+  "rollback": "Restore the old auth code only through a forward-compatible migration and new dev commit; never drop an auth_sessions table with live rows. Keep Bearer access and a documented recovery route if session storage is unavailable.",
+  "verify_line": "Independent red-first oracles, live production-bundle generation proof, real-SQLite expiry/revocation and failure tests, exact transport and read-only boundary tests, protected-stream invalidation, 1440x900 and 390x844 lifecycle walks, full unchanged-tree gate, committed-tree sweep, preserved test identities and every hosted job must pass.",
   "commits": "",
   "verification": "",
   "review": "",

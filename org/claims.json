@@ -1,6 +1,8 @@
 {
   "version": 1,
   "assigned": "2026-09-27",
-  "lanes": [],
-  "note": "T-0179 closed after its independent red-first oracle, complete isolated gate, responsive walk, committed-tree mutation sweep and all hosted implementation jobs passed. No writing lane remains."
+  "lanes": [
+    {"lane_id": "T-0158-coordinator", "task_id": "T-0158", "session_id": "2026-09-27-refactor-foundations", "path_claims": ["org/tasks/T-0158.json", "org/claims.json", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", "src/proxy.ts", "src/instrumentation.ts", "src/lib/api/auth-token.ts", "src/lib/auth/", "src/lib/db/", "src/lib/sse/event-stream.ts", "src/app/api/auth/", "src/app/api/runs/[id]/events/route.ts", "src/app/api/orchestration/chat/route.ts", "src/components/auth/", "src/app/agent/settings/", "scripts/tooling/ps-deploy.mjs", "scripts/bootstrap/", "package.json", "playwright.config.ts", "docs/SECURITY.md", "docs/running/deploy.md", "docs/start-here/first-hour.md", "scripts/tooling/line-census.baseline.json", "tests/fixtures/mutants/T-0158.json"], "expires": "2026-10-15T23:00:00Z", "liveness": "correct stale record, prove production bundle generation, then implement accepted opaque sessions after independent red-first oracle"}
+  ],
+  "note": "T-0158 is R3 under accepted ADR-0012/0013. The coordinator owns source, deployment, docs and record surfaces. A disjoint ORACLE lane will be assigned before test authoring; the production-bundle proof precedes source implementation."
 }

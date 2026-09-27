@@ -27,10 +27,13 @@ All four implementation workflows and every required hosted job passed.
 PR #233 closed unmerged at its archived exact head, and GitHub removed the
 remote source branch. PR #157 is now the only open PR, with `dev` as its
 source and `main` as its target. `npm audit --json` still exits 1 with ten
-advisories (two low, three moderate, five high). T-0179's task-closure push
-still needs its own hosted-workflow observation. T-0158 session security and
-T-0164/T-0165 reconnaissance and planning remain open; the original
-T-0158 evidence must be reconciled with accepted ADR-0013 before code work.
+advisories (two low, three moderate, five high). All four T-0179 closure
+workflows and every required job passed at `dev@b2be4a64`. T-0158 session
+security is active under accepted ADR-0012/0013; its live record now rejects
+the old universal proxy-protocol claim and requires a production-bundle
+generation proof before source implementation. T-0164/T-0165 reconnaissance
+and planning remain open. The old local worktrees with unique or ignored
+state remain preserved; remote heads are only `dev` and `main`.
 
 T-0178 carried PR #228's Playwright 1.62.1 proposal onto `dev@e7081b1a`
 without merging its stale branch. Its independent oracle was red at eight
