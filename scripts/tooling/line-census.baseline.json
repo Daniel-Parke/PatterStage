@@ -1,11 +1,11 @@
 {
-  "measuredAt": "2026-09-26",
+  "measuredAt": "2026-09-27",
   "counts": {
     "srcLines": 100987,
-    "testLines": 125795,
-    "scriptsLines": 13314,
+    "testLines": 126310,
+    "scriptsLines": 13369,
     "srcRepeatedWindowLines": 1000,
-    "testRepeatedWindowLines": 4406,
+    "testRepeatedWindowLines": 4422,
     "routesWithTryCatch": 18,
     "handRolledReadHooks": 0,
     "writeHooksWithoutMutation": 0,
@@ -395,6 +395,26 @@
       "measuredAt": "2026-09-26",
       "rise": "scriptsLines rose from 13278 to 13314",
       "reason": "T-0161: independent build-purity, Hermes import, backup and CI oracles; explicit migration wiring"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 125795 to 126310",
+      "reason": "T-0161 R2 review: 14 independent backup, setup and failure-path cases; align three bootstrap and migration runners"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "scriptsLines rose from 13314 to 13363",
+      "reason": "T-0161 R2 review: 14 independent backup, setup and failure-path cases; align three bootstrap and migration runners"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testRepeatedWindowLines rose from 4406 to 4422",
+      "reason": "T-0161 R2 review: 14 independent backup, setup and failure-path cases; align three bootstrap and migration runners"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "scriptsLines rose from 13363 to 13369",
+      "reason": "T-0161: verify owner-only backup modes after the shared best-effort chmod helper, and fail closed before migration"
     }
   ]
 }

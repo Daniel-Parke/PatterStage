@@ -33,6 +33,46 @@
       "replacement": "{ name: \"build\", command: \"npm run test:build-purity\", why: \"build leaves isolated and checkout data unchanged\" }",
       "tests": ["tests/unit/k2-the-discipline-is-in-the-repo.test.ts"],
       "why": "The complete gate must expose the build-purity step in the prescribed order."
+    },
+    {
+      "id": "m5-shell-backup-selects-smaller-database",
+      "file": "scripts/lib/ps-migrate.sh",
+      "anchor": "if [ \"$legacy_size\" -gt \"$next_size\" ]; then",
+      "replacement": "if [ \"$legacy_size\" -lt \"$next_size\" ]; then",
+      "tests": ["tests/unit/t0161-backup-selection.test.ts"],
+      "why": "The update backup must use the same populated database as runtime when both names exist."
+    },
+    {
+      "id": "m6-node-setup-skips-backup",
+      "file": "scripts/bootstrap/setup.mjs",
+      "anchor": "const backup = backupExistingDb(dataRoot);",
+      "replacement": "const backup = null;",
+      "tests": ["tests/unit/t0161-node-setup-safety.test.ts"],
+      "why": "Node setup must back up before it starts schema migration."
+    },
+    {
+      "id": "m7-node-setup-ignores-required-failure",
+      "file": "scripts/bootstrap/setup.mjs",
+      "anchor": "if (!ok) throw new Error(`${step} failed; setup stopped.`);",
+      "replacement": "if (false) throw new Error(`${step} failed; setup stopped.`);",
+      "tests": ["tests/unit/t0161-node-setup-safety.test.ts"],
+      "why": "A required migration or seed failure must stop setup."
+    },
+    {
+      "id": "m8-direct-migrator-selects-smaller-database",
+      "file": "scripts/tooling/migrate-to-runtime.mjs",
+      "anchor": "statSync(legacy).size > statSync(next).size ? legacy : next",
+      "replacement": "statSync(legacy).size < statSync(next).size ? legacy : next",
+      "tests": ["tests/unit/t0161-backup-selection.test.ts"],
+      "why": "Direct migration must act on the database selected by runtime."
+    },
+    {
+      "id": "m9-deploy-ignores-legacy-migration-failure",
+      "file": "scripts/tooling/ps-deploy.mjs",
+      "anchor": "return run(process.execPath, [join(SCRIPTS_TOOLING, \"migrate-to-runtime.mjs\"), \"--apply\", \"--db\", resolveDbPath(dataDir)], base, { env });",
+      "replacement": "run(process.execPath, [join(SCRIPTS_TOOLING, \"migrate-to-runtime.mjs\"), \"--apply\", \"--db\", resolveDbPath(dataDir)], base, { env });\n  return true;",
+      "tests": ["tests/unit/t0161-required-step-failures.test.ts"],
+      "why": "In-app rebuild must stop if required legacy migration fails."
     }
   ]
 }

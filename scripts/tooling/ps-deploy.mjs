@@ -244,7 +244,7 @@ export function renameMigrate(dataDir, repo) {
   }
 }
 
-function backupDb(dataDir) {
+export function backupDb(dataDir) {
   const db = resolveDbPath(dataDir);
   if (!existsSync(db)) return null;
   const ts = new Date().toISOString().replace(/[-:T]/g, "").slice(0, 15);
@@ -255,10 +255,16 @@ function backupDb(dataDir) {
     // from is still 0644. This runs before the app has booted and narrowed
     // anything, so it says the mode itself rather than inheriting one.
     restrictToOwner(bak, OWNER_ONLY_FILE);
+    if (!isWindows && (statSync(bak).mode & 0o777) !== OWNER_ONLY_FILE) {
+      throw new Error("Database backup is not owner-only");
+    }
     for (const s of ["-wal", "-shm"]) {
       if (existsSync(db + s)) {
         copyFileSync(db + s, bak + s);
         restrictToOwner(bak + s, OWNER_ONLY_FILE);
+        if (!isWindows && (statSync(bak + s).mode & 0o777) !== OWNER_ONLY_FILE) {
+          throw new Error("Database sidecar backup is not owner-only");
+        }
       }
     }
     return bak;
@@ -267,13 +273,11 @@ function backupDb(dataDir) {
   }
 }
 
-function migrateDb(dataDir) {
+function migrateDb(dataDir, base) {
   const env = { PS_DATA_DIR: dataDir };
-  const okSchema = run(npmBin(), ["run", "db:migrate"], "ps-build.log", { env });
+  const okSchema = run(npmBin(), ["run", "db:migrate"], base, { env });
   if (!okSchema) return false;
-  // legacy data migration (cron_jobs → schedules); non-fatal
-  run(process.execPath, [join(SCRIPTS_TOOLING, "migrate-to-runtime.mjs"), "--apply"], "ps-build.log", { env });
-  return true;
+  return run(process.execPath, [join(SCRIPTS_TOOLING, "migrate-to-runtime.mjs"), "--apply", "--db", resolveDbPath(dataDir)], base, { env });
 }
 
 // ── port resolution ─────────────────────────────────────────────
@@ -441,7 +445,7 @@ async function runBuildAndMigrate(action, base, branch) {
   log(base, "Applying PatterStage rename migration (DB + .env.local)…");
   renameMigrate(dataDir, APP_DIR);
   log(base, "Migrating database after backup…");
-  if (!migrateDb(dataDir)) fail(action, "migrate", `Database migration failed — see ${base}`, 1, base);
+  if (!migrateDb(dataDir, base)) fail(action, "migrate", `Database migration failed — see ${base}`, 1, base);
 
   const hh = hermesHome();
   const seedEnv = { PS_DATA_DIR: dataDir, HERMES_HOME: hh };

@@ -68,7 +68,7 @@ It moves the repo + data dir, fixes `.env.local` paths, renames the DB, and prin
 - **The head is a constant, not a number typed into prose.** It is `MIGRATION_HEAD_SCHEMA_VERSION` in `src/lib/db-schema.ts`, and `tests/unit/run-migrations-upgrade.integration.test.ts` asserts the chain actually reaches it, that it equals the last applier's own gate, that the last gate sits exactly one above the gate it displaced, and that it equals the highest-numbered file in `src/lib/db/migrations/`. This section claimed 13, and two others claimed 11, for a long stretch while the code climbed well past both, and a later pass left 33 in two further places after the chain had already reached 34. That is what the constant and those assertions exist to prevent, and it is why the head is no longer written out anywhere on this page.
 - **A fresh database converges over several passes.** `runMigrations()` applies the baseline and returns; the incremental appliers only run on later passes. `getDb()` loops until the version stops moving, so one boot still reaches the head.
 - **Idempotent.** Re-running migrations is always safe: appliers gate on the stored version and no-op when already applied.
-- **Backed up first.** Every migration through `setup.sh`, `ps-deploy.sh update|rebuild`, or `ps-migrate.sh` snapshots the existing `patterstage.db` (or legacy `control-hub.db`) and its sidecars under `PS_DATA_DIR` before touching anything. A failed backup stops migration. `npm run db:migrate` is a direct command and does not take this backup for you.
+- **Backed up first.** Every migration through `setup.sh`, `setup.mjs`, `ps-deploy.sh update|rebuild`, or `ps-migrate.sh` snapshots the selected existing `patterstage.db` (or legacy `control-hub.db`) and its sidecars under `PS_DATA_DIR` before touching anything. When both names exist, the larger file is selected. A failed backup or required migration stops setup or update. `npm run db:migrate` is a direct command and does not take this backup for you.
 
 ## Adding a schema change: the going-forward rule
 
@@ -177,7 +177,7 @@ bash scripts/maintenance/ps-migrate.sh --yes  # unattended (used by the dashboar
 npm run db:migrate                            # schema only (the applier chain), no backup/legacy step
 ```
 
-`ps-migrate.sh` (and the deploy paths that call it) do three things in order: **backup → schema migration → legacy-data migration** (`scripts/tooling/migrate-to-runtime.mjs --apply`, which converts recurring Hermes cron jobs into PatterStage `schedules` and fails any mission left "dispatched" by the old bash backend).
+`ps-migrate.sh` (and the setup and deploy paths that call it) do three things in order: **backup → schema migration → legacy-data migration** (`scripts/tooling/migrate-to-runtime.mjs --apply`, which converts recurring Hermes cron jobs into PatterStage `schedules` and fails any mission left "dispatched" by the old bash backend). A failed legacy-data migration stops the operation before later imports or seeds.
 
 ## Upgrading from `main` (the runtime cutover)
 

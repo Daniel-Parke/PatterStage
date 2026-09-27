@@ -136,7 +136,7 @@ Mount `PS_DATA_DIR` (and optionally `PS_SCRIPTS_DIR` / `PS_HARDWARE_LOG_DIR` if 
 
 ## Database migrate + professional catalog seed
 
-`npm run build` does not write SQLite. On a fresh manual install, set `PS_DATA_DIR` and run these commands explicitly. `setup.sh` and `ps-deploy update` / `rebuild` back up an existing database before migration or import.
+`npm run build` does not write SQLite. On a fresh manual install, set `PS_DATA_DIR` and run these commands explicitly. `setup.sh`, its cross-platform Node twin `setup.mjs`, and `ps-deploy update` / `rebuild` back up the selected existing database before migration or import. If a required migration or seed fails, setup or update stops and retains that backup.
 
 1. **`npm run db:migrate`**: SQLite migrations on `PS_DATA_DIR/patterstage.db`
 2. **`npm run db:seed`**: import Hermes models and credentials when configured, upsert categories, catalog templates, and `agent_profiles`, then push profiles to **`HERMES_HOME/profiles/<slug>/`**

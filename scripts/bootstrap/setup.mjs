@@ -10,7 +10,7 @@
 
 import { spawnSync } from "child_process";
 import {
-  existsSync, mkdirSync, readFileSync, copyFileSync, readdirSync, appendFileSync,
+  existsSync, mkdirSync, readFileSync, copyFileSync, readdirSync, appendFileSync, statSync, chmodSync,
 } from "fs";
 import { homedir, networkInterfaces } from "os";
 import { join, dirname } from "path";
@@ -58,6 +58,34 @@ function resolveDataDir() {
   const next = join(homedir(), "patterstage", "data");
   const legacy = join(homedir(), "control-hub", "data");
   return !existsSync(next) && existsSync(legacy) ? legacy : next;
+}
+
+function activeDbPath(dataRoot) {
+  const next = join(dataRoot, "patterstage.db");
+  const legacy = join(dataRoot, "control-hub.db");
+  if (existsSync(next) && existsSync(legacy)) {
+    return statSync(legacy).size > statSync(next).size ? legacy : next;
+  }
+  return !existsSync(next) && existsSync(legacy) ? legacy : next;
+}
+
+function backupExistingDb(dataRoot) {
+  const db = activeDbPath(dataRoot);
+  if (!existsSync(db)) return null;
+  const stamp = new Date().toISOString().replace(/[-:T]/g, "").slice(0, 15);
+  const backup = `${db}.pre-migrate-${stamp}.bak`;
+  copyFileSync(db, backup);
+  if (!isWindows) chmodSync(backup, 0o600);
+  for (const suffix of ["-wal", "-shm"]) {
+    if (!existsSync(db + suffix)) continue;
+    copyFileSync(db + suffix, backup + suffix);
+    if (!isWindows) chmodSync(backup + suffix, 0o600);
+  }
+  return backup;
+}
+
+function required(ok, step) {
+  if (!ok) throw new Error(`${step} failed; setup stopped.`);
 }
 
 async function pickPort() {
@@ -146,14 +174,19 @@ async function main() {
   log("\nInstalling dependencies…");
   if (!run(npmBin(), ["install"])) process.exit(1);
   log("Building production bundle…");
-  if (!run(npmBin(), ["run", "build"])) process.exit(1);
+  required(run(npmBin(), ["run", "build"]), "Production build");
+  const backup = backupExistingDb(dataRoot);
+  if (backup) log(`✓ Database backup retained: ${backup}`);
   log("Applying database migrations…");
-  tsx("scripts/tooling/migrate-db.ts", [], { PS_DATA_DIR: dataRoot });
-  run(process.execPath, [join(REPO_ROOT, "scripts/tooling/migrate-to-runtime.mjs"), "--apply"], { PS_DATA_DIR: dataRoot });
-  if (hermesConfigured) tsx("scripts/tooling/import-hermes-state.ts", [], { PS_DATA_DIR: dataRoot, HERMES_HOME });
+  required(tsx("scripts/tooling/migrate-db.ts", [], { PS_DATA_DIR: dataRoot }), "Schema migration");
+  required(run(process.execPath, [join(REPO_ROOT, "scripts/tooling/migrate-to-runtime.mjs"), "--apply", "--db", activeDbPath(dataRoot)], { PS_DATA_DIR: dataRoot }), "Legacy data migration");
+  if (hermesConfigured) {
+    required(run(process.execPath, [join(REPO_ROOT, "scripts/tooling/hermes-registry-import.mjs")], { PS_DATA_DIR: dataRoot, HERMES_HOME }), "Hermes model registry import");
+    required(tsx("scripts/tooling/import-hermes-state.ts", [], { PS_DATA_DIR: dataRoot, HERMES_HOME }), "Hermes state import");
+  }
   log("Seeding professional catalog…");
-  tsx("scripts/tooling/seed-catalog.ts", ["--merge"], { PS_DATA_DIR: dataRoot, HERMES_HOME });
-  if (hermesConfigured) tsx("scripts/tooling/ensure-hermes-model-sync.ts", [], { PS_DATA_DIR: dataRoot, HERMES_HOME });
+  required(tsx("scripts/tooling/seed-catalog.ts", ["--merge"], { PS_DATA_DIR: dataRoot, HERMES_HOME }), "Catalog seed");
+  if (hermesConfigured) required(tsx("scripts/tooling/ensure-hermes-model-sync.ts", [], { PS_DATA_DIR: dataRoot, HERMES_HOME }), "Hermes model sync");
   run(process.execPath, [join(REPO_ROOT, "scripts/tooling/discover-agents.mjs")], { PS_DATA_DIR: dataRoot });
 
   log("\n╔══════════════════════════════════════════╗");

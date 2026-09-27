@@ -9,12 +9,20 @@
 # Requires ps-log.sh to be sourced first (ps_info/ps_ok/ps_warn/ps_err/ps_step/ps_dim).
 # ═══════════════════════════════════════════════════════════════
 
-# ps_resolve_db <data_dir> → the DB path: patterstage.db, else an existing
-# legacy control-hub.db, else patterstage.db (fresh). Mirrors getDbPath() in
-# src/lib/paths.ts so the shell and the app agree on the file.
+# ps_resolve_db <data_dir> → the same larger-file choice as getDbPath() in
+# src/lib/host/paths.ts when both names exist; ties prefer patterstage.db.
 ps_resolve_db() {
   local d="$1"
-  if [ ! -f "$d/patterstage.db" ] && [ -f "$d/control-hub.db" ]; then
+  if [ -f "$d/patterstage.db" ] && [ -f "$d/control-hub.db" ]; then
+    local next_size legacy_size
+    next_size="$(wc -c < "$d/patterstage.db" | tr -d '[:space:]')"
+    legacy_size="$(wc -c < "$d/control-hub.db" | tr -d '[:space:]')"
+    if [ "$legacy_size" -gt "$next_size" ]; then
+      printf '%s' "$d/control-hub.db"
+    else
+      printf '%s' "$d/patterstage.db"
+    fi
+  elif [ -f "$d/control-hub.db" ]; then
     printf '%s' "$d/control-hub.db"
   else
     printf '%s' "$d/patterstage.db"
@@ -29,16 +37,18 @@ ps_backup_db() {
   local ts bak
   ts="$(date +%Y%m%dT%H%M%S 2>/dev/null || date +%s)"
   bak="${db}.pre-migrate-$ts.bak"
+  umask 077
   cp "$db" "$bak" || return 1
-  if [ -f "$db-wal" ]; then cp "$db-wal" "$bak-wal" || return 1; fi
-  if [ -f "$db-shm" ]; then cp "$db-shm" "$bak-shm" || return 1; fi
+  chmod 600 "$bak" || return 1
+  if [ -f "$db-wal" ]; then cp "$db-wal" "$bak-wal" && chmod 600 "$bak-wal" || return 1; fi
+  if [ -f "$db-shm" ]; then cp "$db-shm" "$bak-shm" && chmod 600 "$bak-shm" || return 1; fi
   printf '%s' "$bak"
 }
 
 # ps_migrate_run <repo_root> <data_dir>
 # Backup → full schema migration (single source of truth: runMigrations via the
 # db:migrate script) → runtime data migration (legacy cron_jobs → schedules,
-# stuck "dispatched" missions → failed). The data step is non-fatal. If the
+# stuck "dispatched" missions → failed). A failed data step stops setup. If the
 # schema step had to rebuild from baseline (incompatible DB), warns loudly that
 # anything not carried over remains in the pre-baseline backup.
 ps_migrate_run() {
@@ -69,8 +79,9 @@ ps_migrate_run() {
   fi
 
   ps_step "Migrating legacy data to the runtime model (cron jobs → schedules)…"
-  if ! PS_DATA_DIR="$data_dir" node "$repo/scripts/tooling/migrate-to-runtime.mjs" --apply; then
-    ps_warn "Runtime data migration reported issues (non-fatal — schema is migrated; backup retained)."
+  if ! PS_DATA_DIR="$data_dir" node "$repo/scripts/tooling/migrate-to-runtime.mjs" --apply --db "$db"; then
+    ps_err "Runtime data migration failed; backup retained."
+    return 1
   fi
 
   after_baseline="$(find "$data_dir" -maxdepth 1 -name "${db_base}.pre-baseline-*" 2>/dev/null | wc -l | tr -d ' ' || true)"

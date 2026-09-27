@@ -19,7 +19,7 @@
 import Database from "better-sqlite3";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { existsSync } from "node:fs";
+import { existsSync, statSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 
 const argv = process.argv.slice(2);
@@ -30,10 +30,14 @@ const dataRoot =
   process.env.CH_DATA_DIR ||
   process.env.CONTROL_HUB_DATA_DIR ||
   join(homedir(), "patterstage", "data");
-const dbInRoot = (dir) =>
-  !existsSync(join(dir, "patterstage.db")) && existsSync(join(dir, "control-hub.db"))
-    ? join(dir, "control-hub.db")
-    : join(dir, "patterstage.db");
+const dbInRoot = (dir) => {
+  const next = join(dir, "patterstage.db");
+  const legacy = join(dir, "control-hub.db");
+  if (existsSync(next) && existsSync(legacy)) {
+    return statSync(legacy).size > statSync(next).size ? legacy : next;
+  }
+  return !existsSync(next) && existsSync(legacy) ? legacy : next;
+};
 const dbPath = dbFlag !== -1 ? argv[dbFlag + 1] : dbInRoot(dataRoot);
 
 if (!dbPath || !existsSync(dbPath)) {

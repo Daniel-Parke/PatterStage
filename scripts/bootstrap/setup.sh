@@ -259,7 +259,8 @@ if [ -f "$HERMES_HOME/config.yaml" ]; then
   if PS_DATA_DIR="$PS_DATA_ROOT" HERMES_HOME="$HERMES_HOME" npx tsx "$REPO_ROOT/scripts/tooling/import-hermes-state.ts"; then
     echo "✓ Hermes state imported (root, profiles, skills)"
   else
-    echo "⚠  Hermes state import failed — run: npx tsx scripts/tooling/import-hermes-state.ts"
+    echo "Hermes state import failed — setup stopped."
+    exit 1
   fi
 else
   echo "ℹ  Hermes config not found — seeding PatterStage defaults only"
@@ -285,7 +286,8 @@ if [ "$RUN_CATALOG_SEED" = true ]; then
   if npx tsx "$REPO_ROOT/scripts/tooling/seed-catalog.ts" --merge; then
     echo "✓ Catalog seeded (profiles + templates in PatterStage; pushed to HERMES_HOME when ready)"
   else
-    echo "⚠  Catalog seed failed — run: npx tsx scripts/tooling/seed-catalog.ts --merge"
+    echo "Catalog seed failed — setup stopped."
+    exit 1
   fi
 fi
 
@@ -294,7 +296,8 @@ if [ -f "$HERMES_HOME/config.yaml" ]; then
   if PS_DATA_DIR="$PS_DATA_ROOT" HERMES_HOME="$HERMES_HOME" npx tsx "$REPO_ROOT/scripts/tooling/ensure-hermes-model-sync.ts"; then
     echo "✓ Model defaults applied to config.yaml (when agent default is set in registry)"
   else
-    echo "⚠  Model sync skipped or failed — set agent default under Config → Models"
+    echo "Hermes model sync failed — setup stopped."
+    exit 1
   fi
 fi
 
