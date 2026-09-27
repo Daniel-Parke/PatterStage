@@ -25,6 +25,7 @@
     "src/app/help/[[...slug]]/page.tsx",
     "tests/e2e/app-routes.ts",
     "tests/e2e/help.spec.ts",
+    "tests/unit/t0156-help-client-boundary.test.tsx",
     "tests/fixtures/mutants/T-0156.json",
     "scripts/tooling/line-census.baseline.json",
     "org/tasks/T-0156.json",
