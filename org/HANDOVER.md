@@ -9,6 +9,26 @@ updated: 2026-09-27
 
 ## Dated status, 2026-09-27
 
+T-0176 carried PRs #225, #230 and #232 onto `dev@ebba3ba4` with one
+regenerated lockfile: xyflow 12.11.6/system 0.0.82, Tailwind PostCSS and
+related packages 4.3.3, and lucide 1.41.0. The independent eight-name oracle
+was red 3/8 before the update and green 8/8 after it. An independent author
+amended three expected ranges in T-0175's closed oracle without changing any
+of its seven test names or assertions; the first full gate's Jest failure
+remains recorded. The corrected unchanged-tree ten-step gate passed: 732 Jest
+suites (7252 passes, four skips) and 283 Playwright passes (24 skips).
+The isolated Composer walk at 1440x900 and 390x844 found four seeded nodes,
+one h1, no overflow or console errors; screenshot hashes are in the task
+record. Three committed-tree mutants were killed. All four implementation
+hosted workflows and every required job passed, including full E2E, real
+Hermes, macOS and the install harness. The three PRs were closed unmerged at
+their unchanged heads; GitHub removed their remote source branches, and
+local `refs/archive/t0176/` retains all three exact heads. PR #157 and the
+three unaddressed Dependabot proposals #227, #228 and #233 remain open.
+`npm audit --json` still exits 1 with eleven advisories (two low, three
+moderate, six high), one fewer than T-0175. T-0176's task-closure push and its
+hosted checks remain to be observed before another batch opens.
+
 T-0175 carried PRs #224, #226 and #229 onto `dev@c6d0e198` through one
 current lockfile: React Query/query-core 5.102.8, tsx 4.23.13, and
 dagre/graphlib 3.1.1/4.0.5. The independent seven-name oracle was red 3/7

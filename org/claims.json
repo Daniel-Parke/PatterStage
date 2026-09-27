@@ -1,9 +1,6 @@
 {
   "version": 1,
   "assigned": "2026-09-27",
-  "lanes": [
-    {"lane_id": "T-0176-independent-amendment", "task_id": "T-0176", "session_id": "01a0e387-28dc-7400-a3c9-b74904c8fdee", "path_claims": ["tests/unit/t0175-dependency-proposals.test.ts"], "expires": "2026-10-01T23:00:00Z", "liveness": "update exact visual ranges in the closed T-0175 oracle with name identity"},
-    {"lane_id": "T-0176-coordinator", "task_id": "T-0176", "session_id": "2026-09-27-refactor-foundations", "path_claims": ["org/tasks/T-0176.json", "org/tasks/T-0175.json", "org/claims.json", "org/briefs/T-0176-oracle.md", "org/briefs/T-0176-t0175-amendment.md", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", "package.json", "package-lock.json", "tests/unit/t0176-visual-dependency-proposals.test.ts", "tests/fixtures/mutants/T-0176.json", "scripts/tooling/line-census.baseline.json"], "expires": "2026-10-01T23:00:00Z", "liveness": "integrate visual dependencies, walk, gate, sweep, archive and retire addressed PRs"}
-  ],
-  "note": "T-0176's new oracle is frozen. An independent author now owns only the T-0175 closed-oracle amendment; the coordinator owns disjoint implementation files."
+  "lanes": [],
+  "note": "T-0176 closed after its independent oracle amendment, full gate, mutation sweep and all hosted jobs passed. No active writing lane remains."
 }
