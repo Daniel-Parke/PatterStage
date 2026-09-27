@@ -102,7 +102,7 @@ describe("T-0176 visual dependency proposals", () => {
       "eslint-config-next": "16.3.6",
       jest: "^30.3.0",
       "jest-environment-jsdom": "^30.3.0",
-      knip: "^6.16.1",
+      knip: "^6.34.0",
       "markdown-it": "^15.0.1",
       postcss: "8.5.15",
       tailwindcss: "^4.3.1",
