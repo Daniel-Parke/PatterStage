@@ -9,6 +9,22 @@ updated: 2026-09-27
 
 ## Dated status, 2026-09-27
 
+T-0163 closed locally at candidate `b2d95e31`. Independent red-first oracles
+proved fresh and existing credential files, Hermes home and backups private
+under Linux umask 000, plus a planted staging file or symlink and two backups
+within one millisecond. The first independent review found real directory and
+staging gaps; the second found those closed with no new material defect. Native
+Linux focused Jest passed 22/22 and the committed-tree sweep killed 9/9 by
+assertion. The final isolated ten-step gate passed with an unchanged tree stamp:
+726 Jest suites (7213 passed, 3 skipped) and 282 Playwright passes (24 skipped).
+An earlier final-candidate gate lost its owned web server after 223 Playwright
+passes; the first affected spec passed alone and the next unchanged full gate
+passed. T-0163 records both runs, the earlier config-mock failure and its fix.
+Hosted push and PR jobs remain to be observed after the closure push. Next is
+T-0158's accepted browser-session ADR, then T-0164 reconnaissance and T-0165
+Phase 2 plan. PR #157 remains open; Q-011 still bars structural cleanup before
+an operator release.
+
 T-0162 repaired the remaining blind read, write, form-name and Knip gates at
 `745337fa`. It finds five hand-read files, four raw-write files, 158 controls
 with zero unnamed, and 17 exact unused Knip issues held for Q-011 release
@@ -21,10 +37,8 @@ seven committed-tree mutants were killed and restoration left a clean tree.
 The ModelEditor modal, provider dropdown and validation state were captured at
 1440x900 and 390x844 on a separate-data instance. Six accessible field names
 resolved once each, with no console errors or horizontal overflow. T-0162 is
-closed locally; inspect every hosted push and PR job after its closure push.
-Next prerequisite: T-0163 credential permissions, then T-0158's accepted
-session ADR, T-0164 reconnaissance and T-0165 plan. PR #157 remains open and
-Q-011 still bars structural cleanup before an operator release.
+closed; push and PR CI, both Gitleaks runs, hosted acceptance and full E2E all
+completed success at its closure push `575b0d66`.
 
 T-0156 repaired the Help Server Component boundary at `5d2c7eb8`. Its red-first
 browser oracle failed on 74 non-index guides before the fix and now walks all
