@@ -4,23 +4,9 @@ import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { compareKnipIssues } from "../../scripts/tooling/knip-ratchet.mjs";
+import { readDependencyOracleFiles } from "../helpers/dependency-oracle-types";
 
-type DirectRanges = Record<string, string>;
-type PackageManifest = {
-  dependencies: DirectRanges;
-  devDependencies: DirectRanges;
-};
-type Lockfile = {
-  packages: Record<string, {
-    version?: string;
-    dependencies?: DirectRanges;
-    devDependencies?: DirectRanges;
-  }>;
-};
-
-const root = join(__dirname, "..", "..");
-const manifest = JSON.parse(readFileSync(join(root, "package.json"), "utf8")) as PackageManifest;
-const lockfile = JSON.parse(readFileSync(join(root, "package-lock.json"), "utf8")) as Lockfile;
+const { root, manifest, lockfile } = readDependencyOracleFiles(__dirname);
 
 describe("T-0177 Knip proposal", () => {
   it("accepts the Knip 6.34.0 manifest range", () => {

@@ -1,26 +1,10 @@
 /** @jest-environment node */
 
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import { readDependencyOracleFiles, type DirectRanges } from "../helpers/dependency-oracle-types";
 
-type DirectRanges = Record<string, string>;
-type PackageManifest = {
-  dependencies: DirectRanges;
-  devDependencies: DirectRanges;
-};
-type Lockfile = {
-  packages: Record<string, {
-    version?: string;
-    dependencies?: DirectRanges;
-    devDependencies?: DirectRanges;
-  }>;
-};
+const { manifest, lockfile } = readDependencyOracleFiles(__dirname);
 
-const root = join(__dirname, "..", "..");
-const manifest = JSON.parse(readFileSync(join(root, "package.json"), "utf8")) as PackageManifest;
-const lockfile = JSON.parse(readFileSync(join(root, "package-lock.json"), "utf8")) as Lockfile;
-
-function expectProposal(name: string, range: string, version: string, kind: keyof PackageManifest) {
+function expectProposal(name: string, range: string, version: string, kind: "dependencies" | "devDependencies") {
   expect(manifest[kind][name]).toBe(range);
   expect(lockfile.packages[""][kind]?.[name]).toBe(range);
   expect(lockfile.packages[`node_modules/${name}`]?.version).toBe(version);
