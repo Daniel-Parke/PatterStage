@@ -1,6 +1,15 @@
 {
   "version": 1,
   "assigned": "2026-09-27",
-  "lanes": [],
-  "note": "T-0168 lanes released after the independent path amendment, full isolated gate and native-Linux symlinked-TMPDIR mutation sweep."
+  "lanes": [
+    {
+      "lane_id": "T-0169-coordinator",
+      "task_id": "T-0169",
+      "session_id": "2026-09-27-refactor-foundations",
+      "path_claims": ["org/tasks/T-0169.json", "org/claims.json", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", "tests/e2e/settings-anchor-layout.spec.ts", "src/app/agent/settings/page.tsx", "src/hooks/useSettingsEditor.ts", "src/components/config/SettingsNav.tsx", "tests/fixtures/mutants/T-0169.json", "scripts/tooling/line-census.baseline.json"],
+      "expires": "2026-09-29T23:00:00Z",
+      "liveness": "coordinator writes red-first delayed-read browser oracle, fixes the hash jump and validates hosted acceptance"
+    }
+  ],
+  "note": "One T-0169 writer is claimed; the earlier hosted PR full-E2E failure and trace are the defect evidence."
 }

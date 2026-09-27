@@ -179,3 +179,4 @@ The records under org/tasks/ are canonical.
 | T-0166 | standard | R1 | done | 2026-09-26-refactor-foundations |
 | T-0167 | high-assurance | R2 | done | 2026-09-27-refactor-foundations |
 | T-0168 | high-assurance | R2 | done | 2026-09-27-refactor-foundations |
+| T-0169 | high-assurance | R2 | active | 2026-09-27-refactor-foundations |
