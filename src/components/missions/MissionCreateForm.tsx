@@ -515,6 +515,7 @@ export default function MissionCreateForm({
       <div>
         <ComposerFieldLabel>Instruction</ComposerFieldLabel>
         <AutoTextarea
+          ariaLabel="Instruction"
           value={formState.newInstruction}
           onChange={(v) => setFormField("newInstruction", v)}
           minRows={4}
@@ -526,6 +527,7 @@ export default function MissionCreateForm({
       <div>
         <ComposerFieldLabel>Goals</ComposerFieldLabel>
         <AutoTextarea
+          ariaLabel="Goals"
           value={formState.newGoals}
           onChange={(v) => setFormField("newGoals", v)}
           minRows={2}
@@ -698,6 +700,7 @@ export default function MissionCreateForm({
         <div>
           <ComposerFieldLabel>Additional context</ComposerFieldLabel>
           <AutoTextarea
+            ariaLabel="Additional context"
             value={formState.newContext}
             onChange={(v) => setFormField("newContext", v)}
             minRows={2}
@@ -709,6 +712,7 @@ export default function MissionCreateForm({
         <div>
           <ComposerFieldLabel>Output format</ComposerFieldLabel>
           <AutoTextarea
+            ariaLabel="Output format"
             value={formState.newOutputFormat}
             onChange={(v) => setFormField("newOutputFormat", v)}
             minRows={2}
@@ -720,6 +724,7 @@ export default function MissionCreateForm({
         <div>
           <ComposerFieldLabel>Constraints</ComposerFieldLabel>
           <AutoTextarea
+            ariaLabel="Constraints"
             value={formState.newConstraints}
             onChange={(v) => setFormField("newConstraints", v)}
             minRows={2}

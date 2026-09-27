@@ -49,6 +49,7 @@ export function ChatModelSelector({
   return (
     <>
       <InlineSelect
+        ariaLabel="Chat model"
         value={model}
         onChange={onChange}
         options={mergedModels.map((m) => ({ value: m, label: displayModelName(m) }))}

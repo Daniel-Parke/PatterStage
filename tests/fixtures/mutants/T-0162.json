@@ -1,0 +1,62 @@
+{
+  "task": "T-0162",
+  "why": "Each repaired detector and the label association must fail an executed oracle when its subject becomes invisible again.",
+  "mutants": [
+    {
+      "id": "m1-bare-fetch-write-blind-again",
+      "file": "scripts/tooling/design-lint.mjs",
+      "anchor": "(?:fetch|apiFetch|safeApiCall|safeApiCallData)",
+      "replacement": "(?:apiFetch|safeApiCall|safeApiCallData)",
+      "tests": ["tests/unit/t0162-blind-gates.test.ts"],
+      "why": "A bare fetch with a method must remain visible to the raw-write rule."
+    },
+    {
+      "id": "m2-cross-file-read-blind-again",
+      "file": "scripts/tooling/line-census.mjs",
+      "anchor": "const imported = here.imports.get(name) ?? here.hookResults.get(name);",
+      "replacement": "const imported = undefined;",
+      "tests": ["tests/unit/t0162-blind-gates.test.ts"],
+      "why": "The read census must follow imported readers and destructured hook results."
+    },
+    {
+      "id": "m3-house-controls-invisible-again",
+      "file": "scripts/tooling/check-form-control-names.mjs",
+      "anchor": "if (opening && (CONTROL_TAGS.has(tag) || HOUSE_CONTROL_TAGS.has(tag))) {",
+      "replacement": "if (opening && CONTROL_TAGS.has(tag)) {",
+      "tests": ["tests/unit/t0162-blind-gates.test.ts"],
+      "why": "An unnamed Select or NumberInput must fail the naming classifier."
+    },
+    {
+      "id": "m4-knip-test-scope-lost",
+      "file": "knip.json",
+      "anchor": "\"tests/**/*.{ts,tsx,mjs,cjs}\"",
+      "replacement": "\"tests/integration/runtime/*.mjs\"",
+      "tests": ["tests/unit/t0162-blind-gates.test.ts"],
+      "why": "The Knip project must keep its full test source population."
+    },
+    {
+      "id": "m5-select-forgets-field-id",
+      "file": "src/components/ui/field/Select.tsx",
+      "anchor": "id={id}",
+      "replacement": "id={undefined}",
+      "tests": ["tests/unit/t0162-house-control-names.test.tsx"],
+      "why": "Field's generated label target must reach the Select button."
+    },
+    {
+      "id": "m6-knip-ratchet-bypassed",
+      "file": "package.json",
+      "anchor": "\"lint:knip\": \"node scripts/tooling/knip-ratchet.mjs\"",
+      "replacement": "\"lint:knip\": \"knip --no-config-hints\"",
+      "tests": ["tests/unit/t0162-knip-ratchet.test.ts"],
+      "why": "The widened Knip scan must be compared with exact committed reasons."
+    },
+    {
+      "id": "m7-placeholder-overrides-field-label",
+      "file": "src/components/ui/AutoTextarea.tsx",
+      "anchor": "aria-label={ariaLabel}",
+      "replacement": "aria-label={ariaLabel ?? placeholder ?? undefined}",
+      "tests": ["tests/unit/t0162-house-control-names.test.tsx"],
+      "why": "A placeholder must not override Field's associated visible label."
+    }
+  ]
+}

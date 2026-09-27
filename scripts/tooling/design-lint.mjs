@@ -507,7 +507,7 @@ export const RULES = [
     id: "no-raw-write-outside-the-helper",
     law: "A screen writes to the API through runWrite (src/lib/api/api-write.ts), which marks busy, calls, says what happened in the server's words, reloads and clears busy in one place; a hook that owns query keys writes through react-query's useMutation and invalidates them. A fetch call carrying a method anywhere else says those six things a fifth way, and four ways had to be folded into one (T-0138). A read, a call with no method, is the other rule's.",
     files: (f) =>
-      (f.startsWith("src/components/") || f.startsWith("src/app/") || f.startsWith("src/modules/") || f.startsWith("src/hooks/")) &&
+      (f.startsWith("src/components/") || f.startsWith("src/app/") || f.startsWith("src/modules/") || f.startsWith("src/hooks/") || f === "src/lib/chat/chat-utils.ts") &&
       !f.startsWith("src/app/api/") &&
       f !== "src/hooks/useApiResource.ts" &&
       (f.endsWith(".ts") || f.endsWith(".tsx")),
@@ -526,7 +526,7 @@ export const RULES = [
         const open = m.index + m[0].length - 1;
         sanctioned.push([open, spanEnd(open)]);
       }
-      for (const m of text.matchAll(/\b(?:apiFetch|safeApiCall|safeApiCallData)\s*(?:<[^(]*>)?\(/g)) {
+      for (const m of text.matchAll(/\b(?:fetch|apiFetch|safeApiCall|safeApiCallData)\s*(?:<[^(]*>)?\(/g)) {
         const open = m.index + m[0].length - 1;
         if (!/\bmethod\s*:/.test(text.slice(open, spanEnd(open)))) continue;
         if (sanctioned.some(([a, b]) => open > a && open < b)) continue;

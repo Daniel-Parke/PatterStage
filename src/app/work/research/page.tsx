@@ -263,6 +263,7 @@ export default function DeepResearchPage() {
               <Select value="" onChange={applyPreset} options={presetOptions} />
             </Field>
             <Input
+              aria-label="Preset name"
               value={presetName}
               onChange={(e) => setPresetName(e.target.value)}
               placeholder="Save current as…"

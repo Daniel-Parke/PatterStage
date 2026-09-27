@@ -117,7 +117,7 @@ export default function ArtifactsPage() {
             {isLoading ? "\u2003" : `${list.length} artifact${list.length === 1 ? "" : "s"}`}
           </span>
           <div className="ml-auto w-44">
-            <Select value={kind} onChange={setKind} options={KIND_FILTERS} />
+            <Select ariaLabel="Artifact kind" value={kind} onChange={setKind} options={KIND_FILTERS} />
           </div>
         </div>
       </Card>

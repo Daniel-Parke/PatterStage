@@ -46,6 +46,13 @@ const SRC = join(ROOT, "src");
 
 /** The raw DOM controls a person types into or chooses from. */
 const CONTROL_TAGS = new Set(["input", "textarea", "select"]);
+// These house controls render an input, textarea, select or listbox. Their
+// call sites need the same name check as a raw DOM control; otherwise moving an
+// unnamed input into a primitive makes the gate go green without naming it.
+const HOUSE_CONTROL_TAGS = new Set([
+  "Input", "FieldInput", "Textarea", "NativeSelect", "InlineSelect",
+  "Select", "AutoTextarea", "NumberInput", "TextInput", "Picker",
+]);
 
 /**
  * Attributes that ARE an accessible name.
@@ -162,7 +169,7 @@ export function classifyControls(sourceText, fileName = "x.tsx") {
   // Pass two: the controls. `insideLabel` carries the wrapping form of
   // labelling — <label>Name <input /></label> — which is as valid as htmlFor
   // and just as invisible to a regex.
-  const visit = (node, insideTextLabel) => {
+  const visit = (node, insideTextLabel, namedByField = false) => {
     let opening = null;
     if (ts.isJsxElement(node)) {
       opening = node.openingElement;
@@ -175,7 +182,8 @@ export function classifyControls(sourceText, fileName = "x.tsx") {
       if (node.children.some(rendersText)) nowInsideTextLabel = true;
     }
 
-    if (opening && CONTROL_TAGS.has(opening.tagName.getText())) {
+    const tag = opening?.tagName.getText();
+    if (opening && (CONTROL_TAGS.has(tag) || HOUSE_CONTROL_TAGS.has(tag))) {
       const attrs = attrMap(opening);
       const type = literalValue(attrs.get("type"));
       if (!type || !UNNAMEABLE_TYPES.has(type)) {
@@ -191,7 +199,7 @@ export function classifyControls(sourceText, fileName = "x.tsx") {
         // cannot read keeps the gate's usual optimism.
         const placeholder = literalValue(attrs.get("placeholder"));
         const namedByAttr = [...attrs.keys()].some((a) => {
-          if (!NAME_ATTRS.has(a)) return false;
+          if (!NAME_ATTRS.has(a) && !(HOUSE_CONTROL_TAGS.has(tag) && (a === "ariaLabel" || a === "label"))) return false;
           if (a === "aria-labelledby" || placeholder === null) return true;
           const value = literalValue(attrs.get(a));
           if (value === null) return true;
@@ -200,10 +208,11 @@ export function classifyControls(sourceText, fileName = "x.tsx") {
         const named =
           namedByAttr ||
           (id !== null && labelledIds.has(id)) ||
-          insideTextLabel;
+          insideTextLabel ||
+          namedByField;
 
         if (!named && !exempt(line)) {
-          const entry = { line, tag: opening.tagName.getText() };
+          const entry = { line, tag };
           out.unnamed.push(entry);
           // Reported separately because it is the commonest and most
           // confidently-wrong case: the author believed they HAD labelled it.
@@ -212,7 +221,14 @@ export function classifyControls(sourceText, fileName = "x.tsx") {
       }
     }
 
-    ts.forEachChild(node, (child) => visit(child, nowInsideTextLabel));
+    // Field mints an id and clones it into its single child. Count its label
+    // only for that direct child, not for controls buried in a nested layout.
+    let fieldChild = null;
+    if (tag === "Field" && ts.isJsxElement(node) && attrMap(opening).has("label")) {
+      const elements = node.children.filter((child) => ts.isJsxElement(child) || ts.isJsxSelfClosingElement(child));
+      if (elements.length === 1) fieldChild = elements[0];
+    }
+    ts.forEachChild(node, (child) => visit(child, nowInsideTextLabel, child === fieldChild));
   };
   visit(sf, false);
   return out;

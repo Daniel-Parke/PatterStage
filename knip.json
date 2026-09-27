@@ -6,14 +6,19 @@
     "mock-hermes/server.mjs",
     "mock-hindsight/server.mjs",
     "mock-llm/server.mjs",
-    "tests/integration/runtime/*.mjs"
+    "tests/integration/runtime/*.mjs",
+    "test-harness/baseline-fix-verify.mjs",
+    "test-harness/bench-gateway-e2e.mjs",
+    "tests/e2e/prepare-data-dir.mjs"
   ],
   "project": [
     "src/**/*.{ts,tsx}",
     "scripts/**/*.{ts,mjs}",
     "mock-hermes/**/*.mjs",
     "mock-hindsight/**/*.mjs",
-    "mock-llm/**/*.mjs"
+    "mock-llm/**/*.mjs",
+    "tests/**/*.{ts,tsx,mjs,cjs}",
+    "test-harness/**/*.{mjs,cjs}"
   ],
   "ignoreDependencies": [
     "ts-jest",

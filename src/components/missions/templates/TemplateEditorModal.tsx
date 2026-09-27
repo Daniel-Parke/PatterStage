@@ -239,6 +239,7 @@ export function TemplateEditorModal({
             Instruction Prompt
           </label>
           <AutoTextarea
+            ariaLabel="Instruction Prompt"
             value={newInstruction}
             onChange={onNewInstructionChange}
             minRows={4}
@@ -251,6 +252,7 @@ export function TemplateEditorModal({
             Context Prompt <span className="text-ps-text-faint">(optional)</span>
           </label>
           <AutoTextarea
+            ariaLabel="Context Prompt"
             value={newContext}
             onChange={onNewContextChange}
             minRows={2}
@@ -263,6 +265,7 @@ export function TemplateEditorModal({
             Goals (one per line)
           </label>
           <AutoTextarea
+            ariaLabel="Goals"
             value={newGoals}
             onChange={onNewGoalsChange}
             minRows={2}

@@ -1,13 +1,13 @@
 {
   "measuredAt": "2026-09-27",
   "counts": {
-    "srcLines": 101065,
-    "testLines": 128473,
-    "scriptsLines": 13447,
+    "srcLines": 101096,
+    "testLines": 128741,
+    "scriptsLines": 13595,
     "srcRepeatedWindowLines": 1000,
     "testRepeatedWindowLines": 4683,
     "routesWithTryCatch": 18,
-    "handRolledReadHooks": 0,
+    "handRolledReadHooks": 5,
     "writeHooksWithoutMutation": 0,
     "repeatedTypeShapeFiles": 2,
     "oneImporterComponents": 103,
@@ -595,6 +595,31 @@
       "measuredAt": "2026-09-27",
       "rise": "testLines rose from 128382 to 128473",
       "reason": "T-0156 adds manifest-wide Help route coverage and a red-first client-boundary regression oracle; one source line renders the icon inside the server/client boundary"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "srcLines rose from 101065 to 101096",
+      "reason": "T-0162 repairs cross-file effect-read measurement from zero to five named files and adds planted-violation, accessibility and exact Knip gate oracles; tooling and source grow only for those gate repairs"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 128473 to 128640",
+      "reason": "T-0162 repairs cross-file effect-read measurement from zero to five named files and adds planted-violation, accessibility and exact Knip gate oracles; tooling and source grow only for those gate repairs"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "scriptsLines rose from 13447 to 13595",
+      "reason": "T-0162 repairs cross-file effect-read measurement from zero to five named files and adds planted-violation, accessibility and exact Knip gate oracles; tooling and source grow only for those gate repairs"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "handRolledReadHooks rose from 0 to 5",
+      "reason": "T-0162 repairs cross-file effect-read measurement from zero to five named files and adds planted-violation, accessibility and exact Knip gate oracles; tooling and source grow only for those gate repairs"
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 128640 to 128743",
+      "reason": "T-0162 independent Q-021 C6/C8/form-control amendments add 103 test lines while retaining every prior test name; the coordinator adds fixture assertions for on-demand reads and complete Knip globs"
     }
   ]
 }

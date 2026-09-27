@@ -94,15 +94,18 @@ export function TextInput({
   description?: string;
   disabled?: boolean;
 }) {
+  const inputId = useId();
   // Delegates the control styling to the Field Kit Input primitive so every
   // labeled text field shares one border/hover/focus-ring treatment.
   return (
     <div className="space-y-1.5">
-      <label className="text-body font-medium text-ps-text-secondary">{label}</label>
+      <label htmlFor={inputId} className="text-body font-medium text-ps-text-secondary">{label}</label>
       {description && (
         <p className="text-body text-ps-text-muted">{description}</p>
       )}
       <FieldInput
+        id={inputId}
+        aria-label={label}
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -146,6 +149,7 @@ export function NumberInput({
     v === null || v === undefined || !Number.isFinite(v) ? "" : String(v);
   const [raw, setRaw] = useState(() => asText(value));
   const emitted = useRef<number | null>(value ?? null);
+  const inputId = useId();
   const problemId = useId();
 
   useEffect(() => {
@@ -193,11 +197,13 @@ export function NumberInput({
 
   return (
     <div className="space-y-1.5">
-      <label className="text-body font-medium text-ps-text-secondary">{label}</label>
+      <label htmlFor={inputId} className="text-body font-medium text-ps-text-secondary">{label}</label>
       {description && (
         <p className="text-body text-ps-text-muted">{description}</p>
       )}
       <FieldInput
+        id={inputId}
+        aria-label={label}
         type="number"
         value={raw}
         onChange={(e) => handleChange(e.target.value)}

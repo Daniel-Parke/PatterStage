@@ -21,7 +21,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { readdirSync, readFileSync, statSync, writeFileSync, existsSync } from "node:fs";
-import { join, dirname } from "node:path";
+import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import ts from "typescript";
@@ -202,41 +202,83 @@ function routesWithTryCatch() {
   };
 }
 
-// A read the screen rolled itself: a fetch (safeApiCall, safeApiCallData or
-// apiFetch) reachable from a useEffect callback, through the file's own
-// functions, because a loader is usually a useCallback the effect calls.
-// Walked on the AST since C3 (T-0138): the regex before it counted three
-// click handlers as reads and missed eight loaders called from effects.
-const FETCHERS = new Set(["safeApiCall", "safeApiCallData", "apiFetch"]);
-function effectReads(file) {
-  const source = text.get(file);
-  if (!/useEffect\(/.test(source)) return false;
-  const sf = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true);
+// A read reached from an effect through local callbacks, an imported reader or
+// a destructured result of an imported hook. The inter-file walk is bounded:
+// it follows at most two imported modules, so this remains a census rather
+// than a whole-program call graph. A GET-shaped call in a click handler is not
+// counted; an effect calling a bare fetch is.
+const FETCHERS = new Set(["safeApiCall", "safeApiCallData", "apiFetch", "fetch"]);
+const readModels = new Map();
+function readModule(from, specifier) {
+  const stem = specifier.startsWith("@/") ? join(ROOT, "src", specifier.slice(2))
+    : specifier.startsWith(".") ? resolve(dirname(from), specifier) : null;
+  if (!stem) return null;
+  return [stem + ".ts", stem + ".tsx", join(stem, "index.ts"), join(stem, "index.tsx")]
+    .map((p) => p.replace(/\\/g, "/")).find((p) => text.has(p)) ?? null;
+}
+function readModel(file) {
+  if (readModels.has(file)) return readModels.get(file);
+  const sf = ts.createSourceFile(file, text.get(file), ts.ScriptTarget.Latest, true);
   const fns = new Map();
+  const imports = new Map();
+  const hookResults = new Map();
   const fnOf = (init) => {
     if (!init) return null;
     if (ts.isArrowFunction(init) || ts.isFunctionExpression(init)) return init;
     const first = ts.isCallExpression(init) ? init.arguments[0] : undefined;
     return first && (ts.isArrowFunction(first) || ts.isFunctionExpression(first)) ? first : null;
   };
+  for (const stmt of sf.statements) {
+    if (!ts.isImportDeclaration(stmt) || !ts.isStringLiteral(stmt.moduleSpecifier)) continue;
+    const target = readModule(file, stmt.moduleSpecifier.text);
+    if (!target || !stmt.importClause?.namedBindings || !ts.isNamedImports(stmt.importClause.namedBindings)) continue;
+    for (const part of stmt.importClause.namedBindings.elements) {
+      imports.set(part.name.text, { file: target, name: part.propertyName?.text ?? part.name.text });
+    }
+  }
   const collect = (node) => {
     if (ts.isFunctionDeclaration(node) && node.name) fns.set(node.name.text, node);
-    if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && fnOf(node.initializer)) fns.set(node.name.text, fnOf(node.initializer));
+    if (ts.isVariableDeclaration(node)) {
+      if (ts.isIdentifier(node.name) && fnOf(node.initializer)) fns.set(node.name.text, fnOf(node.initializer));
+      if (ts.isObjectBindingPattern(node.name) && node.initializer && ts.isCallExpression(node.initializer) && ts.isIdentifier(node.initializer.expression)) {
+        const imported = imports.get(node.initializer.expression.text);
+        if (imported) for (const part of node.name.elements) {
+          if (ts.isIdentifier(part.name)) hookResults.set(part.name.text, { file: imported.file, name: part.propertyName?.getText(sf) ?? part.name.text });
+        }
+      }
+    }
     ts.forEachChild(node, collect);
   };
   collect(sf);
-  const seen = new Set();
-  const reaches = (node) => {
+  const model = { sf, fns, imports, hookResults };
+  readModels.set(file, model);
+  return model;
+}
+function effectReads(file) {
+  if (!/useEffect\(/.test(text.get(file))) return false;
+  const model = readModel(file);
+  const reaches = (node, currentFile, depth, seen) => {
     let hit = false;
-    const go = (n) => {
+    const go = (part) => {
       if (hit) return;
-      if (ts.isCallExpression(n)) {
-        const callee = n.expression;
+      if (ts.isCallExpression(part)) {
+        const callee = part.expression;
         const name = ts.isIdentifier(callee) ? callee.text : ts.isPropertyAccessExpression(callee) ? callee.name.text : null;
         if (name && FETCHERS.has(name)) { hit = true; return; }
-        if (name && fns.has(name) && !seen.has(name)) { seen.add(name); if (reaches(fns.get(name))) { hit = true; return; } }
+        if (name) {
+          const here = readModel(currentFile);
+          const imported = here.imports.get(name) ?? here.hookResults.get(name);
+          const targetFile = imported?.file ?? currentFile;
+          const targetName = imported?.name ?? name;
+          const key = `${targetFile}:${targetName}`;
+          if ((!imported || depth < 2) && !seen.has(key)) {
+            seen.add(key);
+            const target = readModel(targetFile).fns.get(targetName);
+            if (target && reaches(target, targetFile, imported ? depth + 1 : depth, seen)) { hit = true; return; }
+          }
+        }
       }
-      ts.forEachChild(n, go);
+      ts.forEachChild(part, go);
     };
     go(node);
     return hit;
@@ -244,10 +286,10 @@ function effectReads(file) {
   let found = false;
   const effects = (node) => {
     if (found) return;
-    if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === "useEffect" && node.arguments.length && reaches(node.arguments[0])) found = true;
+    if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === "useEffect" && node.arguments.length && reaches(node.arguments[0], file, 0, new Set())) found = true;
     ts.forEachChild(node, effects);
   };
-  effects(sf);
+  effects(model.sf);
   return found;
 }
 

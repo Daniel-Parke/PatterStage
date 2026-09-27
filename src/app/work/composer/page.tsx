@@ -368,7 +368,7 @@ export default function ComposerPage() {
             {/* The column's heading from lg; below lg the sheet's title is the word. */}
             <h2 className={`${sectionHeadingClasses} hidden lg:block`}>Runs</h2>
             <div className="ml-auto w-36">
-              <Select value={statusFilter} onChange={setStatusFilter} options={STATUS_FILTERS} />
+              <Select ariaLabel="Run status" value={statusFilter} onChange={setStatusFilter} options={STATUS_FILTERS} />
             </div>
           </div>
           {/* The read contract (T-0096): a failed list read is an error with

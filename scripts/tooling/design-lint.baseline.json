@@ -952,6 +952,17 @@
         "no-raw-control-outside-ui::src/components/spend/SpendPanel.tsx: 0 -> 1",
         "no-raw-control-outside-ui::src/modules/rec-room/components/CharacterCard.tsx: 0 -> 1"
       ]
+    },
+    {
+      "when": "2026-09-27",
+      "reason": "T-0162 widens the client write rule to bare fetch and the chat client module; four existing files are named debt (Story Weaver includes two POST reads, footer update and chat streaming) pending the release-gated client data batch",
+      "total": "104 -> 108",
+      "grew": [
+        "no-raw-write-outside-the-helper::src/app/recroom/story-weaver/[id]/page.tsx: 0 -> 1",
+        "no-raw-write-outside-the-helper::src/app/recroom/story-weaver/create/page.tsx: 0 -> 1",
+        "no-raw-write-outside-the-helper::src/hooks/useVersionFooter.ts: 0 -> 1",
+        "no-raw-write-outside-the-helper::src/lib/chat/chat-utils.ts: 0 -> 1"
+      ]
     }
   ],
   "no-raw-control-outside-ui::src/app/agent/skills/[...path]/page.tsx": 1,
@@ -996,5 +1007,9 @@
   "no-raw-control-outside-ui::src/components/session/MessageBubble.tsx": 2,
   "no-raw-control-outside-ui::src/components/session/SessionFilterBar.tsx": 5,
   "no-raw-control-outside-ui::src/components/spend/SpendPanel.tsx": 1,
-  "no-raw-control-outside-ui::src/modules/rec-room/components/CharacterCard.tsx": 1
+  "no-raw-control-outside-ui::src/modules/rec-room/components/CharacterCard.tsx": 1,
+  "no-raw-write-outside-the-helper::src/app/recroom/story-weaver/[id]/page.tsx": 1,
+  "no-raw-write-outside-the-helper::src/app/recroom/story-weaver/create/page.tsx": 1,
+  "no-raw-write-outside-the-helper::src/hooks/useVersionFooter.ts": 1,
+  "no-raw-write-outside-the-helper::src/lib/chat/chat-utils.ts": 1
 }

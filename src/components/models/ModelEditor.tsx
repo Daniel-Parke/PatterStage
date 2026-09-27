@@ -290,6 +290,7 @@ export default function ModelEditor({
           description="Display name only — does not need to match the model identifier"
         >
           <Input
+            aria-label="Name"
             type="text"
             value={form.name}
             onChange={(e) => update("name", e.target.value)}
@@ -312,6 +313,7 @@ export default function ModelEditor({
 
           <FieldRow label="Model ID">
             <Input
+              aria-label="Model ID"
               type="text"
               value={form.modelId}
               onChange={(e) => update("modelId", e.target.value)}
@@ -330,6 +332,7 @@ export default function ModelEditor({
             }
           >
             <Input
+              aria-label="Base URL"
               type="text"
               value={form.baseUrl}
               onChange={(e) => update("baseUrl", e.target.value)}
@@ -345,6 +348,7 @@ export default function ModelEditor({
             }
           >
             <Input
+              aria-label="Context Length"
               type="number"
               value={form.contextLength}
               onChange={(e) => update("contextLength", e.target.value)}
@@ -374,6 +378,7 @@ export default function ModelEditor({
             )}
             <FieldRow label="Credential Label">
               <Input
+                aria-label="Credential Label"
                 type="text"
                 value={form.credentialLabel}
                 onChange={(e) => update("credentialLabel", e.target.value)}
@@ -386,6 +391,7 @@ export default function ModelEditor({
               description="Stored plain text in the registry and synced to ~/.hermes/.env so Hermes can read it."
             >
               <Input
+                aria-label="API Key"
                 type="password"
                 autoComplete="off"
                 value={form.apiKey}

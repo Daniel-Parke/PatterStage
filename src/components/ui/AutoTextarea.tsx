@@ -17,6 +17,8 @@ interface AutoTextareaProps {
    * needs to know what they are writing (T-0083 / the form-control gate).
    */
   ariaLabel?: string;
+  id?: string;
+  "aria-describedby"?: string;
   minRows?: number;
   maxRows?: number;
   className?: string;
@@ -28,6 +30,8 @@ export default function AutoTextarea({
   onChange,
   placeholder = "",
   ariaLabel,
+  id,
+  "aria-describedby": ariaDescribedBy,
   minRows = 2,
   maxRows = 20,
   className = "",
@@ -61,7 +65,9 @@ export default function AutoTextarea({
   return (
     <textarea
       ref={textareaRef}
-      aria-label={ariaLabel ?? placeholder ?? undefined}
+      id={id}
+      aria-describedby={ariaDescribedBy}
+      aria-label={ariaLabel}
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}

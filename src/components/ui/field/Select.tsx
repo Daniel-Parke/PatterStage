@@ -25,6 +25,7 @@ export function Select({
   placeholder = "Select…",
   disabled = false,
   ariaLabel,
+  id,
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -32,6 +33,7 @@ export function Select({
   placeholder?: string;
   disabled?: boolean;
   ariaLabel?: string;
+  id?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
@@ -87,6 +89,7 @@ export function Select({
   return (
     <div ref={rootRef} className="relative">
       <button
+        id={id}
         type="button"
         disabled={disabled}
         aria-haspopup="listbox"

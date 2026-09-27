@@ -63,12 +63,17 @@ describe("T-0162 · the remaining gates see their subjects", () => {
         import { loadItems } from "@/lib/client/read";
         export function useImported() { useEffect(() => { void loadItems(); }, []); }
       `);
+      writeFileSync(join(fixture, "src", "hooks", "useClick.ts"), `
+        import { loadItems } from "@/lib/client/read";
+        export function useClick() { return { onClick: () => { void loadItems(); } }; }
+      `);
       const output = execFileSync(process.execPath, [join(ROOT, "scripts", "tooling", "line-census.mjs"), "--root", fixture, "--report"], {
         cwd: ROOT,
         encoding: "utf8",
       });
       const report = JSON.parse(output) as { reads: { files: string[] } };
       expect(report.reads.files).toEqual(expect.arrayContaining(["src/hooks/useData.ts", "src/hooks/useImported.ts"]));
+      expect(report.reads.files).not.toContain("src/hooks/useClick.ts");
     } finally {
       rmSync(fixture, { recursive: true, force: true });
     }
@@ -84,12 +89,13 @@ describe("T-0162 · the remaining gates see their subjects", () => {
     expect(named.unnamed).toHaveLength(0);
   });
 
-  it("Knip includes test and harness sources in its actual entry and project scope", () => {
+  it("Knip scans test and harness sources without making every test an explicit entry", () => {
     const config = JSON.parse(readFileSync(join(ROOT, "knip.json"), "utf8")) as { entry: string[]; project: string[] };
     const includes = (glob: string[], prefix: string) => glob.some((item) => item.startsWith(prefix));
-    for (const prefix of ["tests/", "test-harness/"]) {
-      expect(includes(config.entry, prefix)).toBe(true);
-      expect(includes(config.project, prefix)).toBe(true);
-    }
+    expect(config.entry.some((item) => item.startsWith("tests/**"))).toBe(false);
+    expect(includes(config.entry, "test-harness/")).toBe(true);
+    for (const prefix of ["tests/", "test-harness/"]) expect(includes(config.project, prefix)).toBe(true);
+    expect(config.project).toContain("tests/**/*.{ts,tsx,mjs,cjs}");
+    expect(config.project).toContain("test-harness/**/*.{mjs,cjs}");
   });
 });

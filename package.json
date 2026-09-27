@@ -20,7 +20,7 @@
     "lint:coverage-floors": "node scripts/tooling/coverage-floor-check.mjs",
     "lint:copy": "node scripts/tooling/copy-lint.mjs --report",
     "typecheck:tests": "tsc --noEmit -p tsconfig.tests.json",
-    "lint:knip": "knip --include files,dependencies,unlisted,unresolved,exports,types,duplicates,binaries --no-config-hints",
+    "lint:knip": "node scripts/tooling/knip-ratchet.mjs",
     "start:network": "next start -H 0.0.0.0",
     "test": "jest",
     "test:watch": "jest --watch",
