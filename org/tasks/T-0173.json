@@ -1,0 +1,28 @@
+{
+  "id": "T-0173",
+  "intent": "Pause Dependabot version-update pull requests until release while keeping security updates available. Apply only the two open-PR limits to default-branch main under the operator's narrow exception, then mirror the same configuration on dev.",
+  "declared": {"capabilities": ["edit-config", "edit-tests", "git", "github-api", "git-push"], "side_effects": ["irreversible-action", "sends-external"]},
+  "mode": "high-assurance",
+  "tier_proposed": "R3",
+  "tier_ruled": "R3",
+  "reasons": [
+    {"factor": "irreversible-action", "tier_floor": "R3", "source": "declared", "evidence": "A minimal direct commit to main is externally consequential and the user explicitly approved this exact exception."},
+    {"factor": "boundary-contact", "tier_floor": "R1", "source": "declared", "evidence": "The default-branch configuration controls GitHub's version-update service."}
+  ],
+  "status": "open",
+  "owner_session": "2026-09-27-refactor-foundations",
+  "claims": ["org/tasks/T-0173.json", "org/claims.json", "org/briefs/T-0173-oracle.md", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", ".github/dependabot.yml", "tests/unit/t0173-dependabot-pause.test.ts"],
+  "programme": "The operator chose to pause version PRs until release and then explicitly authorised a narrow exception to the dev-only push rule: change only main's .github/dependabot.yml to set both npm and GitHub Actions open-pull-requests-limit to zero. GitHub documents that Dependabot reads this file from the default branch and that zero blocks version updates without disabling security updates. All T-0172 hosted jobs completed successfully before this task opened.",
+  "invariants": [
+    "The only main-tree content change is .github/dependabot.yml, adding open-pull-requests-limit: 0 for npm and GitHub Actions; preserve each target-branch: dev and every existing ignore rule.",
+    "Security updates and alerts remain enabled in repository settings; this task does not touch those settings.",
+    "The main update uses the exact current content SHA as a compare-and-swap guard, and the resulting main file is verified byte-for-byte against the reviewed proposal.",
+    "Dev receives the same configuration so its single PR back to main remains coherent. PR #157 and all other branches are unchanged by this task.",
+    "A separately authored red-first oracle, complete unchanged-tree gate, committed-tree mutation sweep and observed hosted jobs precede closure."
+  ],
+  "rollback": "Set the two open-pull-requests-limit values back to their prior configuration on main and dev using a new reviewed commit; keep security settings untouched. The release will deliberately lift this temporary pause and amend its oracle through an independent author.",
+  "oracle_provenance": "Pending independent ORACLE author, before implementation.",
+  "verification": "Pending.",
+  "mutation": "Pending.",
+  "deviation": "None."
+}
