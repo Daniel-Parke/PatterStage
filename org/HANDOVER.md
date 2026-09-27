@@ -9,6 +9,28 @@ updated: 2026-09-27
 
 ## Dated status, 2026-09-27
 
+T-0177 carried PR #227's Knip 6.34.0 proposal onto `dev@aa20a398`
+without merging its stale branch. The independent six-name oracle was red
+5/21 against the old version, then green 21/21. Knip 6.34.0 exposed one
+pre-existing unused exported type, `LedgerRowPadding`; its exact identity
+is recorded with a Q-011 release-gated reason, so the strict ratchet holds
+18 findings. The newer transitive Zod generated a different but equivalent
+nullable representation in the mission JSON Schema. The canonical schema
+and only the corresponding generated-artefact canary digest changed together;
+the other three held canary surfaces did not move. The first full gate caught
+the 4,800 repeated-test-window cap and schema drift. An independent amendment
+shared actual oracle scaffolding, reducing repeated windows from 4,819 to
+4,789 and test lines by 19 without changing any of the 21 test names or
+assertions. The second gate caught the canary digest. The final unchanged-tree
+ten-step gate passed: 733 Jest suites (7258 passes, four skips) and 283
+Playwright passes (24 skips). Three committed-tree mutants were killed. All
+four implementation-push workflows and every required job passed. PR #227
+closed unmerged at its unchanged head; GitHub removed the remote source
+branch and local `refs/archive/t0177/` retains the exact commit. PR #157,
+#228 and #233 remain open. `npm audit --json` still exits 1 with ten
+advisories (two low, three moderate, five high). The T-0177 task-closure
+push's hosted checks still need observation before another batch opens.
+
 T-0176 carried PRs #225, #230 and #232 onto `dev@ebba3ba4` with one
 regenerated lockfile: xyflow 12.11.6/system 0.0.82, Tailwind PostCSS and
 related packages 4.3.3, and lucide 1.41.0. The independent eight-name oracle
@@ -23,11 +45,10 @@ record. Three committed-tree mutants were killed. All four implementation
 hosted workflows and every required job passed, including full E2E, real
 Hermes, macOS and the install harness. The three PRs were closed unmerged at
 their unchanged heads; GitHub removed their remote source branches, and
-local `refs/archive/t0176/` retains all three exact heads. PR #157 and the
-three unaddressed Dependabot proposals #227, #228 and #233 remain open.
-`npm audit --json` still exits 1 with eleven advisories (two low, three
-moderate, six high), one fewer than T-0175. T-0176's task-closure push and its
-hosted checks remain to be observed before another batch opens.
+local `refs/archive/t0176/` retains all three exact heads. `npm audit
+--json` still exited 1 with eleven advisories (two low, three moderate, six
+high), one fewer than T-0175. All four T-0176 task-closure workflows and
+every required job passed before T-0177 opened.
 
 T-0175 carried PRs #224, #226 and #229 onto `dev@c6d0e198` through one
 current lockfile: React Query/query-core 5.102.8, tsx 4.23.13, and
