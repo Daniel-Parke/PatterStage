@@ -2,10 +2,10 @@
   "measuredAt": "2026-09-27",
   "counts": {
     "srcLines": 101155,
-    "testLines": 130384,
+    "testLines": 130477,
     "scriptsLines": 13694,
     "srcRepeatedWindowLines": 1000,
-    "testRepeatedWindowLines": 4759,
+    "testRepeatedWindowLines": 4789,
     "routesWithTryCatch": 18,
     "handRolledReadHooks": 5,
     "writeHooksWithoutMutation": 0,
@@ -730,6 +730,16 @@
       "measuredAt": "2026-09-27",
       "rise": "testRepeatedWindowLines rose from 4689 to 4759",
       "reason": "T-0176 adds 115 independent visual-dependency oracle lines and 70 cross-file repeated test-window lines because it freezes the same package/lockfile contract for a separate version batch; a two-consumer helper would add interface cost and could obscure test identity. All source and other census measures remain unchanged."
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testLines rose from 130384 to 130477",
+      "reason": "T-0177 adds a red-first six-name Knip version and JSON-identity oracle. An independent amendment shared real type and manifest-loading code across three dependency suites, reducing the initial rise by 19 test lines and 30 repeated-window lines while preserving all 21 names and assertions. The net batch rise is +93 test lines and +30 repeated test-window lines; source and other measures are unchanged."
+    },
+    {
+      "measuredAt": "2026-09-27",
+      "rise": "testRepeatedWindowLines rose from 4759 to 4789",
+      "reason": "T-0177 adds a red-first six-name Knip version and JSON-identity oracle. An independent amendment shared real type and manifest-loading code across three dependency suites, reducing the initial rise by 19 test lines and 30 repeated-window lines while preserving all 21 names and assertions. The net batch rise is +93 test lines and +30 repeated test-window lines; source and other measures are unchanged."
     }
   ]
 }

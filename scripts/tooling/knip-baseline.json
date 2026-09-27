@@ -4,6 +4,7 @@
   "issues": [
     { "kind": "files", "file": "test-harness/poll-pair.mjs", "name": "test-harness/poll-pair.mjs", "reason": "Manual benchmark polling CLI; removal waits for the operator release and tooling removal ruling." },
     { "kind": "files", "file": "test-harness/poll-run.mjs", "name": "test-harness/poll-run.mjs", "reason": "Manual benchmark polling CLI; removal waits for the operator release and tooling removal ruling." },
+    { "kind": "types", "file": "src/components/dashboard/LedgerRow.tsx", "name": "LedgerRowPadding", "reason": "Knip 6.34.0 newly reports this pre-existing exported styling type. It has no external importer, but Q-011 defers structural API removal until after release; keep its exact identity ratcheted." },
     { "kind": "exports", "file": "tests/e2e/lib/census-analysis.ts", "name": "round2", "reason": "Unused design-census helper export; retain historical test surface until release-gated cleanup." },
     { "kind": "exports", "file": "tests/e2e/lib/census-analysis.ts", "name": "LOWER_IS_BETTER", "reason": "Unused design-census helper export; retain historical test surface until release-gated cleanup." },
     { "kind": "types", "file": "tests/e2e/lib/census-analysis.ts", "name": "BorderRecord", "reason": "Unused design-census helper type; retain historical test surface until release-gated cleanup." },
