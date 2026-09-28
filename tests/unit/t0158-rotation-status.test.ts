@@ -128,7 +128,22 @@ describe("T-0158 rotation response status", () => {
     );
 
     expect(sawSessionInsert()).toBe(true);
-    expect({ status: response.status, sessionCookie: hasSessionCookie(response) }).toEqual({ status: 401, sessionCookie: false });
+    expect(response.status).toBeGreaterThanOrEqual(300);
+    expect(response.status).toBeLessThan(400);
+    expect(hasSessionCookie(response)).toBe(false);
+    const location = response.headers.get("location");
+    expect(location).toBeTruthy();
+    expect(location).not.toContain("ps_token");
+    expect(location).not.toContain(oldToken);
+    const finalUrl = new URL(location!, publicOrigin);
+    expect(finalUrl.href).not.toContain("ps_token");
+    expect(finalUrl.href).not.toContain(oldToken);
+    const finalResponse = await proxy(new NextRequest(finalUrl, {
+      headers: { accept: "text/html", "sec-fetch-dest": "document", "sec-fetch-mode": "navigate", "sec-fetch-site": "same-origin" },
+    }));
+    expect({ status: finalResponse.status, sessionCookie: hasSessionCookie(finalResponse) }).toEqual({ status: 401, sessionCookie: false });
+    expect(finalResponse.headers.get("location") ?? "").not.toContain("ps_token");
+    expect(finalResponse.headers.get("location") ?? "").not.toContain(oldToken);
   });
 
   it("POST sign-in reports a true session-storage failure as 503 with no session cookie", async () => {

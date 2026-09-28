@@ -2,13 +2,42 @@ import { test, expect } from '@playwright/test';
 import { spawn, type ChildProcess } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
-import { createServer as createHttpServer, type Server, type ServerResponse } from 'node:http';
+import { createServer as createHttpServer, request as httpRequest, type Server, type ServerResponse } from 'node:http';
 import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import Database from 'better-sqlite3';
 
 const token = process.env.PS_E2E_AUTH_TOKEN;
+
+function navigationStatus(url: string, cookie: string): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const request = httpRequest(url, {
+      method: 'GET',
+      headers: { Cookie: cookie, 'Sec-Fetch-Mode': 'navigate', 'Sec-Fetch-Dest': 'document', 'Sec-Fetch-User': '?1' },
+    }, response => {
+      response.resume();
+      response.once('end', () => resolve(response.statusCode ?? 0));
+      response.once('error', reject);
+    });
+    request.setTimeout(10_000, () => request.destroy(new Error('Navigation response timed out')));
+    request.once('error', reject);
+    request.end();
+  });
+}
+
+function drainFrames(reader: ReadableStreamDefaultReader<Uint8Array>): { finished: Promise<boolean>; text: () => string } {
+  const decoder = new TextDecoder();
+  let buffered = '';
+  const finished = (async () => {
+    while (true) {
+      const part = await reader.read();
+      if (part.done) { buffered += decoder.decode(); return; }
+      buffered += decoder.decode(part.value, { stream: true });
+    }
+  })().then(() => true, () => false);
+  return { finished, text: () => buffered };
+}
 
 for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 }]) {
   test.describe(`T-0158 browser session at ${viewport.width}x${viewport.height}`, () => {
@@ -193,6 +222,7 @@ test.describe('T-0158 built server and real SQLite', () => {
   test('Given loopback HTTP sign-in, the opaque cookie is scoped, HttpOnly, Lax and at most 12 hours', async () => {
     const response = await fetch(`${origin}/api/auth/sign-in`, {
       method: 'POST', headers: { Origin: origin, 'Content-Type': 'application/json' }, body: JSON.stringify({ token: operatorToken }),
+      redirect: 'manual',
     });
     expect(response.status).toBeLessThan(400);
     const cookie = response.headers.get('set-cookie') ?? '';
@@ -279,8 +309,8 @@ test.describe('T-0158 built server and real SQLite', () => {
     expect(activity()).toBe(initial);
     await fetch(`${origin}/agent/settings`, { headers: { Cookie: cookie, 'Sec-Fetch-Mode': 'cors', 'Sec-Fetch-Dest': 'empty' } });
     expect(activity()).toBe(initial);
-    const navigation = await fetch(`${origin}/agent/settings`, { headers: { Cookie: cookie, 'Sec-Fetch-Mode': 'navigate', 'Sec-Fetch-Dest': 'document', 'Sec-Fetch-User': '?1' } });
-    expect(navigation.status).toBe(200);
+    const navigation = await navigationStatus(`${origin}/agent/settings`, cookie);
+    expect(navigation).toBe(200);
     expect(activity()).not.toBe(initial);
     const refused = await fetch(`${origin}/api/orchestration/chat`, {
       method: 'POST', headers: { Cookie: cookie, Origin: origin, 'Content-Type': 'application/json' }, body: '{}',
@@ -292,7 +322,7 @@ test.describe('T-0158 built server and real SQLite', () => {
     const cookie = await signIn();
     const [signedOut] = await Promise.all([
       fetch(`${origin}/api/auth/session`, { method: 'DELETE', headers: { Cookie: cookie, Origin: origin } }),
-      fetch(`${origin}/agent/settings`, { headers: { Cookie: cookie, 'Sec-Fetch-Mode': 'navigate', 'Sec-Fetch-Dest': 'document', 'Sec-Fetch-User': '?1' } }),
+      navigationStatus(`${origin}/agent/settings`, cookie),
     ]);
     expect(signedOut.status).toBeLessThan(400);
     authRefusal(await fetch(`${origin}/api/agent/profiles`, { headers: { Cookie: cookie } }));
@@ -432,8 +462,9 @@ test.describe('T-0158 built server and real SQLite', () => {
       expect(stream.headers.get('content-type') ?? '').toMatch(/text\/event-stream/i);
       const reader = stream.body?.getReader();
       expect(reader).toBeDefined();
+      const drained = drainFrames(reader!);
       let closed = false;
-      void reader!.closed.then(() => { closed = true; }, () => { closed = true; });
+      void drained.finished.then(() => { closed = true; });
       await new Promise(resolve => setTimeout(resolve, 3_000));
       expect(closed).toBe(false);
     } finally { controller.abort(); }
@@ -458,8 +489,9 @@ test.describe('T-0158 built server and real SQLite', () => {
       expect(open.headers.get('content-type') ?? '').toMatch(/text\/event-stream/i);
       const reader = open.body?.getReader();
       expect(reader).toBeDefined();
+      const drained = drainFrames(reader!);
       let closed = false;
-      void reader!.closed.then(() => { closed = true; }, () => { closed = true; });
+      void drained.finished.then(() => { closed = true; });
       await new Promise(resolve => setTimeout(resolve, 1_100));
       expect(closed).toBe(false);
       expect(activity()).toBe(beforeActivity);
@@ -479,17 +511,11 @@ test.describe('T-0158 built server and real SQLite', () => {
           .run('completed', marker, runId);
       } finally { changed.close(); }
       const stopped = await Promise.race([
-        reader!.closed.then(() => true, () => false),
+        drained.finished,
         new Promise<false>(resolve => setTimeout(() => resolve(false), 10_000)),
       ]);
       expect(stopped).toBe(true);
-      let buffered = '';
-      while (true) {
-        const part = await reader!.read();
-        if (part.done) break;
-        buffered += new TextDecoder().decode(part.value);
-      }
-      expect(buffered).not.toContain(marker);
+      expect(drained.text()).not.toContain(marker);
     } finally { quietController.abort(); }
   });
 
@@ -523,8 +549,9 @@ test.describe('T-0158 built server and real SQLite', () => {
         const upstream = upstreams.at(-1)!;
         const reader = response.body?.getReader();
         expect(reader).toBeDefined();
+        const drained = drainFrames(reader!);
         let downstreamClosed = false;
-        void reader!.closed.then(() => { downstreamClosed = true; }, () => { downstreamClosed = true; });
+        void drained.finished.then(() => { downstreamClosed = true; });
         await new Promise(resolve => setTimeout(resolve, 1_100));
         expect(downstreamClosed).toBe(false);
         const signedOut = await fetch(`${origin}/api/auth/session`, {
@@ -535,17 +562,11 @@ test.describe('T-0158 built server and real SQLite', () => {
         const marker = `t0158-chat-after-revoke-${Date.now()}`;
         if (!upstream.response.destroyed) upstream.response.write(`data: ${marker}\n\n`);
         const stopped = await Promise.race([
-          Promise.all([upstream.closed, reader!.closed]).then(() => true, () => false),
+          Promise.all([upstream.closed, drained.finished]).then(([, downstreamStopped]) => downstreamStopped, () => false),
           new Promise<false>(resolve => setTimeout(() => resolve(false), 10_000)),
         ]);
         expect(stopped).toBe(true);
-        let buffered = '';
-        while (true) {
-          const part = await reader!.read();
-          if (part.done) break;
-          buffered += new TextDecoder().decode(part.value);
-        }
-        expect(buffered).not.toContain(marker);
+        expect(drained.text()).not.toContain(marker);
       } finally { controller.abort(); }
     } finally {
       gateway.closeAllConnections();
@@ -770,10 +791,8 @@ test.describe('T-0158 exact session clocks in a built process', () => {
       const session = await cookie();
       for (let renewal = 1; renewal <= 24; renewal++) {
         setTime(epoch + renewal * 29 * 60_000);
-        const page = await fetch(`${origin}/agent/settings`, {
-          headers: { Cookie: session, 'Sec-Fetch-Mode': 'navigate', 'Sec-Fetch-Dest': 'document', 'Sec-Fetch-User': '?1' },
-        });
-        expect(page.status).toBe(200);
+        const page = await navigationStatus(`${origin}/agent/settings`, session);
+        expect(page).toBe(200);
       }
       setTime(epoch + 12 * 60 * 60_000 - 1);
       const before = await fetch(`${origin}/api/agent/profiles`, { headers: { Cookie: session } });
