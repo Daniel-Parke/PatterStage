@@ -1,0 +1,12 @@
+# T-0180: exact historical false positives reviewed in org/reviews/2026-09-gitleaks-history-control.md.
+# Fingerprints identify introducing commits; new findings in the same files remain visible.
+7d739435284f794b48718119f2ece8c936a6d0a0:tests/e2e/t0158-browser-sessions.spec.ts:generic-api-key:706
+304207a6dc766e7e163b5005bd887f348d92f8b8:org/tasks/T-0163.json:generic-api-key:59
+718363168a0869d42e297ca549b081ad73025cd9:tests/unit/b6-settings-index-sees-a-parse-error.test.tsx:generic-api-key:226
+718363168a0869d42e297ca549b081ad73025cd9:tests/unit/b6-models-origin.test.ts:generic-api-key:432
+9696dc87d982df0ba5d93fa6343ae50780cbc8d7:tests/unit/b1-config-masks-every-api-key.test.ts:generic-api-key:13
+d5d5e52a8656af8707a8820f2ef45fb6070cc2b0:tests/unit/secret-mask.test.ts:generic-api-key:58
+d5d5e52a8656af8707a8820f2ef45fb6070cc2b0:tests/unit/secret-mask.test.ts:generic-api-key:59
+d5d5e52a8656af8707a8820f2ef45fb6070cc2b0:tests/unit/secret-mask.test.ts:generic-api-key:64
+6dfa455f0edf3e3bf0be8f11d9c30f66ea9fc61e:tests/unit/credentials-repository.test.ts:generic-api-key:119
+388d2596529bca865f2c22de8494dab0b8a2db66:tests/unit/credentials-repository.test.ts:generic-api-key:129

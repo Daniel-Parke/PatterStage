@@ -9,9 +9,15 @@ updated: 2026-09-28
 
 ## Current status, 2026-09-28
 
+The operator approved the complete Phase 2 plan on 28 September 2026 and
+authorised T-0180–T-0187 prerelease work. T-0180 is in progress; Q-011 still
+holds every structural batch until the operator's rc.1 and v1.0.0 release.
+The last closed dev head is `66037154`, with all four hosted workflows green.
+The T-0180 red-first secret-scan oracle is committed at `fc2d2bd8`.
+
 T-0165 is closed locally and on hosted CI at `dev@052cedd2`. The
-[proposed Phase 2 plan](plans/2026-09-refactor-programme.md) has 22 sequential
-batches T-0180–T-0201 for **separate operator approval**. Its ownership map
+[approved Phase 2 plan](plans/2026-09-refactor-programme.md) has 22 sequential
+batches T-0180–T-0201. Its ownership map
 accounts for all 265 findings, 163 split rulings and 285 atomic proofs, with
 248 local proofs assigned and 12 external or operator proofs deferred. Eight
 new programme targets are frozen against committed pre-plan baselines; the

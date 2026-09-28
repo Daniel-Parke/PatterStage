@@ -2,14 +2,14 @@
 summary: Proposed Phase 2 refactor programme after itemised T-0164 reconnaissance
 type: venture
 tags: [plan, refactor, consolidation]
-status: proposed
+status: approved
 ---
 
 # PatterStage refactor programme, proposed 28 September 2026
 
-**Approval is pending.** This plan completes T-0165's planning prerequisite;
-it does not authorise the structural batches, PR #157's merge or a release.
-The operator must approve the complete plan separately. Q-011 also requires
+**Approved by the operator on 28 September 2026 for prerelease execution.**
+This plan completes T-0165's planning prerequisite; approval does not authorise
+PR #157's merge or a release. Q-011 still requires
 the operator's rc.1 and v1.0.0 release before structural work. T-0180 to
 T-0187 are proposed prerelease security, defect and compatibility batches. If a red-first
 oracle refutes a source-level candidate, its batch records the refutation and

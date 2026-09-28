@@ -2,7 +2,7 @@
   "measuredAt": "2026-09-28",
   "counts": {
     "srcLines": 102141,
-    "testLines": 133968,
+    "testLines": 134123,
     "scriptsLines": 13865,
     "srcRepeatedWindowLines": 1012,
     "testRepeatedWindowLines": 4786,
@@ -850,6 +850,16 @@
       "measuredAt": "2026-09-28",
       "rise": "testLines rose from 133958 to 133968",
       "reason": "T-0165 final alias-reader and lib-data-05 ownership assertions add ten plan-oracle lines so ruled work cannot be assigned to an unrelated batch"
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "testLines rose from 133968 to 134061",
+      "reason": "T-0180 adds a red-first secret-scan oracle and a disposable-history planted-secret control; no product source grows"
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "testLines rose from 134061 to 134123",
+      "reason": "T-0180 independent R2 review found workflow ordering and traversal gaps; its separate four-case red-first oracle adds 62 test lines"
     }
   ]
 }
