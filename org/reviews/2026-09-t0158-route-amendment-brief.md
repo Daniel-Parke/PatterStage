@@ -61,3 +61,17 @@ guard search must inspect the actual implementation body rather than pass on
 an empty POST match. Preserve every test name, all behaviour assertions and
 the no-guard claim. Prove old/new test-name identity, focused green, test
 TypeScript and ESLint. Do not edit source or gate scripts.
+
+## Bare Authorization token oracle
+
+The proxy accepts `Authorization: <operator token>` as well as
+`Authorization: Bearer <operator token>`. An independent R3 review of
+`dev@b8751286` found the response completion check only recognises the
+prefixed form. A separate oracle author owns
+`tests/unit/t0158-bare-header-rotation.test.ts` only. Hold a protected
+gateway-model response after a real raw-header request starts, rotate the
+operator token, then release it. Require no protected marker. A valid raw
+header and a prefixed Bearer request are controls. Use a real temporary
+credential/session environment; do not mock the response guard. Run this
+against the current source and commit its intended red failure before the
+coordinator changes source. No source or existing oracle edits.
