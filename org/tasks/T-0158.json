@@ -75,14 +75,17 @@
     "scripts/tooling/line-census.baseline.json",
     "org/tasks/T-0158.json",
     "org/claims.json",
+    "org/LOCKBOOK.md",
     "org/HANDOVER.md",
     "org/reviews/2026-09-t0158-oracle-diagnostics.md",
     "org/reviews/2026-09-t0158-session-retention-adr-proposal.md",
     "org/reviews/2026-09-t0158-retention-oracle-brief.md",
     "org/reviews/2026-09-t0158-token-race-oracle-brief.md",
+    "org/reviews/2026-09-t0158-rotation-status-oracle-brief.md",
     "org/decisions/ADR-0014-auth-session-retention.md",
     "tests/unit/t0158-session-retention.test.ts",
     "tests/unit/t0158-token-rotation-race.test.ts",
+    "tests/unit/t0158-rotation-status.test.ts",
     "org/TASKS.md",
     "org/STATE.md"
   ],
@@ -108,7 +111,8 @@
   "oracle_provenance": "Independent ORACLE session 01a0e465-667b-7f23-a534-80bf287fbf06 authored the three new suites before auth source changes, using direct proxy checks plus a built Next process, real SQLite, controlled clock and local quiet-stream gateway as independent methods. Old-code Jest exit 1: five executed, four intended failures, one pass, zero skips. Escalated built-app Playwright exit 1: 31 executed, 28 intended failures, three passes, zero skips; the stream fixtures first proved quiet Bearer streams, then failed at the missing public sign-in. No infrastructure or setup failure was counted as an oracle result. ESLint and test TypeScript exited 0. Frozen SHA-256: tests/unit/t0158-session-store.test.ts A755546E19872480DAB72531E88DD196418CF43E6D6BC0BC392C08B0D4427670; tests/unit/t0158-session-proxy.test.ts 1275D3BB600E4637A14BB9737C25128C7159B6CAAF22A4C5C853A6BFA4692954; tests/e2e/t0158-browser-sessions.spec.ts B8AAC3F706141A765142FA7A4FD86D5ABC1EEB6435764E6D890552D63C4AA837. Amendments require a different author and the accepted Q-015 procedure.",
   "oracle_addenda": [
     {"date": "2026-09-28", "file": "tests/unit/t0158-session-retention.test.ts", "author": "01a0e1fd-fece-7642-8b9d-ec3e48d04e25", "method": "real in-memory SQLite with a controlled clock and database failure triggers; six tests, five intended failures and one passing rollback control before pruning", "sha256": "B36DF86A8119B5F0F3B9D0A7272B215B64BB62E2E61FB1D6E7FA81A29DCFA364"},
-    {"date": "2026-09-28", "file": "tests/unit/t0158-token-rotation-race.test.ts", "author": "01a0e1fd-fece-7642-8b9d-ec3e48d04e25", "method": "real SQLite, real token matcher and a deterministic token-source rotation immediately after credential comparison; two intended failures before repair", "sha256": "91940B5ABC7FB64D1877EE40BB3F9B67975144FCA9C13850A9753198C9799855"}
+    {"date": "2026-09-28", "file": "tests/unit/t0158-token-rotation-race.test.ts", "author": "01a0e1fd-fece-7642-8b9d-ec3e48d04e25", "method": "real SQLite, real token matcher and a deterministic token-source rotation immediately after credential comparison; two intended failures before repair", "sha256": "91940B5ABC7FB64D1877EE40BB3F9B67975144FCA9C13850A9753198C9799855"},
+    {"date": "2026-09-28", "file": "tests/unit/t0158-rotation-status.test.ts", "author": "01a0e54b-c009-71a0-b1b7-5d131d3ae820", "method": "real SQLite and a deterministic token-source rotation at the session INSERT; four tests, two intended response failures and two passing controls before repair", "sha256": "9107096B8BF80190B7AC37FCFD09643563C80A7A2AA40471D83FA5954CE2A079"}
   ],
   "oracle_amendments": [
     {"date": "2026-09-27", "file": "tests/unit/t0161-backup-creation.test.ts", "reason": "The copied deploy script imports network-boundary.mjs unconditionally; omitting the dependency made the fixture fail before its backup assertions ran.", "change": "Add network-boundary.mjs to the copied deploy-source list only; preserve names and assertions.", "old_hash": "A68EF16D3CF82E0EBDB9CCA4D8C10FA1410E5BBED47E4E47AE327622A61E67DB", "new_hash": "75B8DA02DD19782F1CE7E3714EE3DE7E7B3272480E202ED5F529F6390167B3AD", "author": "01a0e465-667b-7f23-a534-80bf287fbf06", "authoriser": "01a0e468-e114-7dc2-8033-00d272b1bf9f"},
