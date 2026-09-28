@@ -195,3 +195,4 @@ The records under org/tasks/ are canonical.
 | T-0180 | high-assurance | R2 | done | 2026-09-28-refactor-prerelease |
 | T-0181 | high-assurance | R2 | done | 2026-09-28-refactor-prerelease |
 | T-0182 | high-assurance | R3 | done | 2026-09-28-refactor-prerelease |
+| T-0183 | high-assurance | R2 | in_progress | 2026-09-28-refactor-prerelease |

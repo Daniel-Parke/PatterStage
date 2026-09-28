@@ -207,7 +207,9 @@ export async function promoteMission(
   }
 
   if (isQueueMode) {
-    void runMissionQueueTick();
+    void runMissionQueueTick().catch((err: unknown) => {
+      logApiError("mission.promote", "detached queue tick", err);
+    });
   }
 
   return { ok: true, mission: enrichedMission(input.missionId)! };

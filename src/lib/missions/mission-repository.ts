@@ -15,6 +15,7 @@ import type { Mission, MissionStatus, MissionDraftFields } from "@/lib/missions/
 import type { ForeignMissionModelRow } from "@/lib/missions/mission-model-audit";
 import type { LocalDirEntry } from "@/types/console";
 import { normalizeLocalDirsInput } from "@/lib/fs/local-dir-entry";
+import { createRun, getRun } from "@/lib/runs/runs-repository";
 
 // ── Row shape ─────────────────────────────────────────────────
 
@@ -89,7 +90,7 @@ export { buildMissionPrompt } from "@/lib/missions/build-mission-prompt";
 // ── CRUD ─────────────────────────────────────────────────────
 
 /** Oldest mission waiting for background queue dispatch. */
-export function getNextQueuedMission(): Mission | null {
+function getNextQueuedMission(): Mission | null {
   const row = getDb()
     .prepare(
       `SELECT * FROM missions
@@ -104,7 +105,7 @@ export function getNextQueuedMission(): Mission | null {
 }
 
 /** True if any mission is currently running (dispatched). */
-export function hasDispatchedMission(): boolean {
+function hasDispatchedMission(): boolean {
   const row = getDb()
     .prepare(
       `SELECT 1 FROM missions
@@ -113,6 +114,52 @@ export function hasDispatchedMission(): boolean {
     )
     .get();
   return Boolean(row);
+}
+
+type MissionReservation =
+  | { kind: "claimed"; missionId: string; runId: string }
+  | { kind: "duplicate" | "busy" | "none" };
+
+/**
+ * Claim one mission and its run before any gateway request. Queue and cron
+ * share the single-flight decision; an attended click still bypasses that
+ * global limit, but receives the same durable run and cancellation boundary.
+ */
+export function reserveMissionRun(input:
+  | { kind: "queue" }
+  | { kind: "schedule"; missionId: string; runId: string; scheduleId: string; profileName?: string | null }
+  | { kind: "attended"; missionId: string; scheduleId?: string },
+): MissionReservation {
+  const database = getDb();
+  return database.transaction((): MissionReservation => {
+    if (input.kind === "schedule" && getRun(input.runId)) return { kind: "duplicate" };
+    if (input.kind !== "attended" && hasDispatchedMission()) return { kind: "busy" };
+
+    const mission = input.kind === "queue"
+      ? getNextQueuedMission()
+      : getMission(input.missionId);
+    if (!mission || mission.status === "dispatched") return { kind: "none" };
+
+    const runId = input.kind === "schedule" ? input.runId : uuid();
+    const eligible = input.kind === "queue"
+      ? "AND status = 'queued' AND queued_for_run = 1"
+      : "AND status != 'dispatched'";
+    const claimed = database.prepare(
+      `UPDATE missions SET status = 'dispatched', queued_for_run = 0,
+         result = NULL, updated_at = ?
+       WHERE id = ? AND deleted_at IS NULL ${eligible}`,
+    ).run(now(), mission.id);
+    if (claimed.changes !== 1) return { kind: "busy" };
+
+    const inserted = createRun({
+      id: runId,
+      missionId: mission.id,
+      scheduleId: input.kind === "schedule" ? input.scheduleId : input.kind === "attended" ? input.scheduleId ?? null : null,
+      profileName: input.kind === "schedule" ? input.profileName ?? mission.profileName ?? null : mission.profileName ?? null,
+    });
+    if (!inserted) throw new Error("Unattended mission run ID was already claimed");
+    return { kind: "claimed", missionId: mission.id, runId };
+  }).immediate();
 }
 
 export function listMissions(opts?: { categoryId?: string | null; limit?: number; offset?: number }): Mission[] {

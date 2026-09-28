@@ -8,19 +8,21 @@
 // reconciles them by polling the runtime.
 // ═══════════════════════════════════════════════════════════════
 
-import { getMission, updateMission } from "@/lib/missions/mission-repository";
+import { getMission, reserveMissionRun } from "@/lib/missions/mission-repository";
 import {
-  createRun,
-  attachBackendRun,
-  updateRun,
-  getLatestRunForMission,
+  acknowledgeMissionSubmission,
+  failMissionSubmissionIfActive,
+  getRun,
+  listCancelledBackendRunsForMission,
+  markMissionSubmissionUnconfirmedIfActive,
 } from "@/lib/runs/runs-repository";
 import { createSession, closeSessionForMission } from "@/lib/sessions/session-repository";
 import { runtime } from "@/lib/runtime";
-import { uuid, now } from "@/lib/db";
+import { now } from "@/lib/db";
 import { messageFromError } from "@/lib/api/api-fetch";
 import { logApiError } from "@/lib/api/api-logger";
 import { recordEvent } from "@/lib/analytics/record-event";
+import { UNCONFIRMED_SUBMISSION_RESULT } from "@/lib/missions/mission-claim-state";
 
 export interface DispatchResult {
   ok: boolean;
@@ -44,42 +46,54 @@ export async function dispatchMissionRun(
   const mission = getMission(missionId);
   if (!mission) return { ok: false, error: "mission not found" };
 
-  const runId = opts.runId ?? uuid();
-  // Idempotent: the scheduler may have already inserted this run row.
-  createRun({
-    id: runId,
-    missionId,
-    scheduleId: opts.scheduleId ?? null,
-    profileName: mission.profileName ?? null,
-  });
-
-  // Pre-register an active session row so the dashboard shows the live run.
-  const session = createSession({
-    source: "mission",
-    missionId,
-    profileName: mission.profileName ?? null,
-    modelId: mission.modelId ?? null,
-    provider: mission.provider ?? null,
-    title: mission.name,
-  });
+  const reservedRun = opts.runId ? getRun(opts.runId) : null;
+  const claim = opts.runId
+    ? reservedRun?.missionId === missionId &&
+      reservedRun.status === "started" && mission.status === "dispatched"
+      ? { kind: "claimed" as const, runId: opts.runId }
+      : { kind: "none" as const }
+    : reserveMissionRun({ kind: "attended", missionId, scheduleId: opts.scheduleId });
+  if (claim.kind !== "claimed") return { ok: false, error: "mission is no longer available for dispatch" };
+  const runId = claim.runId;
+  let backendRunId: string | null = null;
+  let submissionAttempted = false;
 
   try {
+    // Pre-register an active session row so the dashboard shows the live run.
+    const session = createSession({
+      source: "mission",
+      missionId,
+      profileName: mission.profileName ?? null,
+      modelId: mission.modelId ?? null,
+      provider: mission.provider ?? null,
+      title: mission.name,
+    });
+    if (getRun(runId)?.status !== "started" || getMission(missionId)?.status !== "dispatched") {
+      closeSessionForMission(missionId, {
+        status: "failed", endedAt: now(), exitCode: 143, error: "Cancelled by user",
+      });
+      return { ok: false, runId, error: "mission was cancelled before submission" };
+    }
+    submissionAttempted = true;
     const handle = await runtime.submitRun({
       input: mission.prompt,
       idempotencyKey: runId,
       profileName: mission.profileName ?? undefined,
       sessionId: session.id,
     });
+    backendRunId = handle.runId;
     const resolvedSession = handle.sessionId ?? session.id;
-    attachBackendRun(runId, {
+    const accepted = acknowledgeMissionSubmission(runId, missionId, {
       runId: handle.runId,
       sessionId: resolvedSession,
       status: handle.status,
     });
-    // Clear any prior run's result so a re-dispatched mission doesn't display
-    // stale output (e.g. an old LLM monologue) while the new run is in flight —
-    // the reconcile path writes the fresh result on completion. (QA #9/#43)
-    updateMission(missionId, { status: "dispatched", sessionId: resolvedSession, result: null });
+    if (!accepted) {
+      await runtime.stopRun(handle.runId, mission.profileName ?? undefined).catch((error: unknown) => {
+        logApiError("orchestration.dispatchMissionRun", `${missionId} late stop`, error);
+      });
+      return { ok: false, runId, error: "mission was cancelled before acknowledgement" };
+    }
     recordEvent("mission.dispatched", {
       entityType: "mission",
       entityId: missionId,
@@ -94,14 +108,25 @@ export async function dispatchMissionRun(
   } catch (err) {
     const message = messageFromError(err, "dispatch failed");
     logApiError("orchestration.dispatchMissionRun", missionId, err);
-    updateRun(runId, { status: "failed", error: message });
-    updateMission(missionId, { status: "failed", result: message });
-    closeSessionForMission(missionId, {
-      status: "failed",
-      endedAt: now(),
-      exitCode: 1,
-      error: message,
-    });
+    if (backendRunId) {
+      await runtime.stopRun(backendRunId, mission.profileName ?? undefined).catch((error: unknown) => {
+        logApiError("orchestration.dispatchMissionRun", `${missionId} failed stop`, error);
+      });
+    }
+    // A network failure or failed acknowledgement does not prove the gateway
+    // rejected the request. Keep the durable claim for operator review.
+    if (submissionAttempted) {
+      markMissionSubmissionUnconfirmedIfActive(runId, missionId, UNCONFIRMED_SUBMISSION_RESULT);
+      return { ok: false, runId, error: UNCONFIRMED_SUBMISSION_RESULT };
+    }
+    if (failMissionSubmissionIfActive(runId, missionId, message)) {
+      closeSessionForMission(missionId, {
+        status: "failed",
+        endedAt: now(),
+        exitCode: 1,
+        error: message,
+      });
+    }
     return { ok: false, runId, error: message };
   }
 }
@@ -119,12 +144,12 @@ export async function dispatchMissionRun(
  * delegates to the handler, and this file keeps only the remote half.
  */
 export async function stopBackendRunForMission(missionId: string): Promise<void> {
-  const run = getLatestRunForMission(missionId);
-  if (!run?.runId) return;
-  try {
-    await runtime.stopRun(run.runId, run.profileName ?? undefined);
-  } catch (err) {
-    logApiError("orchestration.stopBackendRunForMission", missionId, err);
-    // best-effort: the local record is the operator's answer either way
+  for (const run of listCancelledBackendRunsForMission(missionId)) {
+    try {
+      await runtime.stopRun(run.runId!, run.profileName ?? undefined);
+    } catch (err) {
+      logApiError("orchestration.stopBackendRunForMission", `${missionId} ${run.id}`, err);
+      // best-effort: the local record is the operator's answer either way
+    }
   }
 }

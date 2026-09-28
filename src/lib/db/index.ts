@@ -173,9 +173,10 @@ export function getDb(): Database.Database {
 // ── Shorthand helpers ─────────────────────────────────────────
 
 /** Wrap `fn` in a SQLite transaction. Commits on success, rolls back on throw. */
-export function inTransaction<T>(fn: () => T): T {
+export function inTransaction<T>(fn: () => T, mode: "deferred" | "immediate" = "deferred"): T {
   const database = getDb();
-  return database.transaction(fn)();
+  const transaction = database.transaction(fn);
+  return mode === "immediate" ? transaction.immediate() : transaction();
 }
 
 /** Generate a cryptographically random UUID v4 string. */

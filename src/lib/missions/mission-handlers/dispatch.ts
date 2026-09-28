@@ -211,7 +211,9 @@ export async function handleDispatchMission(
     // directly, so no `as` casts are needed on the body fields.
     dispatchOk = (await dispatchMissionNow(mission.id, { profileName, modelId, provider })).ok;
   } else if (isQueueMode) {
-    void runMissionQueueTick();
+    void runMissionQueueTick().catch((err: unknown) => {
+      logApiError("mission.dispatch", "detached queue tick", err);
+    });
   }
 
   // The result used to be discarded and the audit line hardcoded ok:true, so a

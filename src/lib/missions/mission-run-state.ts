@@ -18,6 +18,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { missionStatusLabel, type StatusLabel } from "@/lib/ui/status-labels";
+import { UNCONFIRMED_SUBMISSION_RESULT } from "@/lib/missions/mission-claim-state";
 
 /**
  * The slice of a run row the console needs, plus the deadline the
@@ -68,6 +69,7 @@ export interface MissionRunState {
 
 export interface MissionRunStateInput {
   status: string;
+  result?: string | null;
   queuedForRun?: boolean;
   createdAt: string;
   updatedAt: string;
@@ -152,6 +154,14 @@ export function describeMissionRunState(
     // dispatch flipped the status, and nothing writes to the mission again
     // while it is dispatched, so it is the same instant, one table over.
     const anchor = run?.submittedAt ?? mission.updatedAt;
+    if (mission.result === UNCONFIRMED_SUBMISSION_RESULT) {
+      return {
+        tone: "waiting",
+        label: "Waiting for you",
+        duration: since(anchor, now) ?? "—",
+        note: UNCONFIRMED_SUBMISSION_RESULT,
+      };
+    }
     const note = run ? runningNote(run, now) : null;
     const overdue =
       run?.deadlineAt != null && now >= (parseAt(run.deadlineAt) ?? Number.POSITIVE_INFINITY);

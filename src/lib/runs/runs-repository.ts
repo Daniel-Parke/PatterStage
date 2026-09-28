@@ -157,9 +157,25 @@ export function getRun(id: string): RunRecord | null {
 
 export function getLatestRunForMission(missionId: string): RunRecord | null {
   const row = getDb()
-    .prepare("SELECT * FROM runs WHERE mission_id = ? ORDER BY submitted_at DESC LIMIT 1")
+    .prepare("SELECT * FROM runs WHERE mission_id = ? ORDER BY submitted_at DESC, rowid DESC LIMIT 1")
     .get(missionId) as RunRow | undefined;
   return rowToRun(row);
+}
+
+/** All active claims for a mission, including rows left by older dispatchers. */
+export function listActiveRunsForMission(missionId: string): RunRecord[] {
+  const rows = getDb().prepare(
+    "SELECT * FROM runs WHERE mission_id = ? AND status = 'started' ORDER BY rowid DESC",
+  ).all(missionId) as RunRow[];
+  return rows.map(rowToRun).filter((run): run is RunRecord => run !== null);
+}
+
+/** Backend IDs still needing a best-effort remote stop after local cancellation. */
+export function listCancelledBackendRunsForMission(missionId: string): RunRecord[] {
+  const rows = getDb().prepare(
+    "SELECT * FROM runs WHERE mission_id = ? AND status = 'cancelled' AND run_id IS NOT NULL ORDER BY rowid DESC",
+  ).all(missionId) as RunRow[];
+  return rows.map(rowToRun).filter((run): run is RunRecord => run !== null);
 }
 
 /**
@@ -178,16 +194,16 @@ export function listLatestRunsForMissions(missionIds: string[]): Map<string, Run
     .prepare(
       `SELECT r.* FROM runs r
         WHERE r.mission_id IN (${placeholders})
-          AND r.submitted_at = (
-            SELECT MAX(r2.submitted_at) FROM runs r2 WHERE r2.mission_id = r.mission_id
+          AND r.rowid = (
+            SELECT r2.rowid FROM runs r2 WHERE r2.mission_id = r.mission_id
+            ORDER BY r2.submitted_at DESC, r2.rowid DESC LIMIT 1
           )`,
     )
     .all(...missionIds) as RunRow[];
   for (const row of rows) {
     const run = rowToRun(row);
-    // A mission with two runs sharing one submitted_at timestamp yields two
-    // rows; last write wins, which is the same arbitrary-but-stable pick
-    // getLatestRunForMission's LIMIT 1 makes.
+    // The same timestamp and rowid order as getLatestRunForMission keeps the
+    // board and detail panel on the same claim when two runs share a second.
     if (run?.missionId) byMission.set(run.missionId, run);
   }
   return byMission;
@@ -220,6 +236,72 @@ export function attachBackendRun(
     getDb().prepare(`UPDATE runs SET ${sql} WHERE id = ?`).run(...values, id);
   });
   return getRun(id);
+}
+
+function activeMissionClaim(database: ReturnType<typeof getDb>, id: string, missionId: string): boolean {
+  return Boolean(database.prepare(
+    `SELECT 1 FROM runs r JOIN missions m ON m.id = r.mission_id
+     WHERE r.id = ? AND r.mission_id = ? AND r.status = 'started'
+       AND m.status = 'dispatched'
+       AND r.id = (SELECT newest.id FROM runs newest
+                   WHERE newest.mission_id = ? ORDER BY newest.rowid DESC LIMIT 1)`,
+  ).get(id, missionId, missionId));
+}
+
+/**
+ * Commit a gateway acknowledgement only while its mission and newest run
+ * still belong to the same active claim. A cancellation committed during the
+ * network await wins instead of being rewritten as dispatched.
+ */
+export function acknowledgeMissionSubmission(
+  id: string,
+  missionId: string,
+  fields: { runId: string; sessionId: string; status: RunStatus },
+): boolean {
+  const database = getDb();
+  return database.transaction(() => {
+    if (!activeMissionClaim(database, id, missionId)) return false;
+    const ts = now();
+    database.prepare(
+      `UPDATE runs SET run_id = ?, session_id = ?, status = 'started', updated_at = ?
+       WHERE id = ? AND status = 'started'`,
+    ).run(fields.runId, fields.sessionId, ts, id);
+    database.prepare(
+      `UPDATE missions SET session_id = ?, result = NULL, updated_at = ?
+       WHERE id = ? AND status = 'dispatched'`,
+    ).run(fields.sessionId, ts, missionId);
+    return true;
+  }).immediate();
+}
+
+/** A timed-out submit remains held only while this claim is still active. */
+export function markMissionSubmissionUnconfirmedIfActive(id: string, missionId: string, message: string): boolean {
+  const database = getDb();
+  return database.transaction(() => {
+    if (!activeMissionClaim(database, id, missionId)) return false;
+    database.prepare(
+      "UPDATE missions SET result = ?, updated_at = ? WHERE id = ? AND status = 'dispatched'",
+    ).run(message, now(), missionId);
+    return true;
+  }).immediate();
+}
+
+/** A gateway rejection has no authority after cancellation or a newer run. */
+export function failMissionSubmissionIfActive(id: string, missionId: string, message: string): boolean {
+  const database = getDb();
+  return database.transaction(() => {
+    if (!activeMissionClaim(database, id, missionId)) return false;
+    const ts = now();
+    database.prepare(
+      `UPDATE runs SET status = 'failed', error = ?, completed_at = ?, updated_at = ?
+       WHERE id = ? AND status = 'started'`,
+    ).run(message, ts, ts, id);
+    database.prepare(
+      `UPDATE missions SET status = 'failed', result = ?, updated_at = ?
+       WHERE id = ? AND status = 'dispatched'`,
+    ).run(message, ts, missionId);
+    return true;
+  }).immediate();
 }
 
 /** Apply a reconciled or terminal state to a run. */

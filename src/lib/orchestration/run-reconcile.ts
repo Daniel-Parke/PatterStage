@@ -16,9 +16,10 @@ import {
   type RunRecord,
 } from "@/lib/runs/runs-repository";
 import { updateMission, getMission } from "@/lib/missions/mission-repository";
+import { UNCONFIRMED_SUBMISSION_RESULT } from "@/lib/missions/mission-claim-state";
 import { closeSessionForMission } from "@/lib/sessions/session-repository";
 import { runtime } from "@/lib/runtime";
-import { now } from "@/lib/db";
+import { inTransaction, now } from "@/lib/db";
 import { RuntimeRequestError, type RunStatus, type RunUsage } from "@/lib/runtime/types";
 import { recordEvent } from "@/lib/analytics/record-event";
 import { finalizeComposerNodeRun, advanceComposerRun } from "@/lib/composer/engine";
@@ -84,12 +85,10 @@ function finalizeMissionForRun(
 }
 
 /**
- * Finalize a run terminally AND record the analytics event. Used only by the
- * live reconcile path (a real terminal transition), NOT by reconcileRunsOnBoot
- * — boot recovery re-fails interrupted runs and must not double-count events.
+ * Record the artifact and analytics after a terminal transaction commits.
+ * Boot recovery holds uncertain claims and records no completion event.
  */
 function finalizeAndRecord(run: RunRecord, runStatus: RunStatus, resultText: string | null): void {
-  finalizeMissionForRun(run.missionId, runStatus, resultText);
   // Capture a completed mission's output as an artifact (idempotent, best-effort).
   if (runStatus === "completed" && run.missionId && resultText && resultText.trim().length > 0) {
     try {
@@ -234,6 +233,21 @@ function stillActive(runPk: string): boolean {
   return fresh.status === "started";
 }
 
+/** Serialise a reconciler verdict with cancellation on the same SQLite writer. */
+function commitMissionVerdict(
+  run: RunRecord,
+  status: RunStatus,
+  resultText: string | null,
+  fields: Parameters<typeof updateRun>[1],
+): boolean {
+  return inTransaction(() => {
+    if (!stillActive(run.id)) return false;
+    updateRun(run.id, { ...fields, status });
+    finalizeMissionForRun(run.missionId, status, resultText);
+    return true;
+  }, "immediate");
+}
+
 /** Has this run been answering 404 for longer than the grace? Records if new. */
 function notFoundPersisted(runPk: string): boolean {
   const first = firstNotFoundAt.get(runPk);
@@ -259,11 +273,14 @@ async function reconcileOne(run: RunRecord): Promise<boolean> {
   // Composer stage-runs advance a workflow graph, not a mission.
   if (run.composerNodeRunId) return reconcileComposerRun(run);
 
-  // Never got a backend id — submit failed/crashed mid-flight.
+  // No backend ID does not prove the gateway never accepted the request. The
+  // durable claim blocks replay until an operator can check the gateway.
   if (!run.runId) {
-    updateRun(run.id, { status: "failed", error: "run was never submitted to the backend" });
-    finalizeAndRecord(run, "failed", "run was never submitted to the backend");
-    return true;
+    if (!run.missionId) {
+      updateRun(run.id, { status: "failed", error: "run was never submitted to the backend" });
+      return true;
+    }
+    return false;
   }
 
   const age = ageMinutes(run);
@@ -281,7 +298,7 @@ async function reconcileOne(run: RunRecord): Promise<boolean> {
       if (declared !== null && age > declared + GRACE_MINUTES) {
         await runtime.stopRun(run.runId, run.profileName ?? undefined).catch(() => {});
         const msg = `run exceeded its ${declared}m timeout`;
-        updateRun(run.id, { status: "failed", error: msg });
+        if (!commitMissionVerdict(run, "failed", msg, { error: msg })) return false;
         finalizeAndRecord(run, "failed", msg);
         return true;
       }
@@ -290,15 +307,12 @@ async function reconcileOne(run: RunRecord): Promise<boolean> {
 
     // Someone may have cancelled this run while we were awaiting the gateway.
     // Their decision is newer than this verdict and wins.
-    if (!stillActive(run.id)) return true;
-
-    updateRun(run.id, {
-      status: result.status,
+    if (!commitMissionVerdict(run, result.status, result.output ?? result.error ?? null, {
       output: result.output ?? null,
       usage: result.usage ?? null,
       error: result.error ?? null,
       sessionId: result.sessionId ?? undefined,
-    });
+    })) return false;
     finalizeAndRecord(run, result.status, result.output ?? result.error ?? null);
     return true;
   } catch (err) {
@@ -311,7 +325,9 @@ async function reconcileOne(run: RunRecord): Promise<boolean> {
       // a way for a permanently-404ing backend to hold the single-flight gate
       // open past the run's own deadline.
       if (notFoundPersisted(run.id)) {
-        updateRun(run.id, { status: "failed", error: "backend no longer has this run (404)" });
+        if (!commitMissionVerdict(run, "failed", "backend lost the run", {
+          error: "backend no longer has this run (404)",
+        })) return false;
         finalizeAndRecord(run, "failed", "backend lost the run");
         return true;
       }
@@ -322,8 +338,7 @@ async function reconcileOne(run: RunRecord): Promise<boolean> {
     const cap = declared ?? DEFAULT_MAX_RUN_MINUTES;
     if (age > cap + GRACE_MINUTES) {
       const msg = "backend unreachable past the run deadline";
-      updateRun(run.id, { status: "failed", error: msg });
-      finalizeMissionForRun(run.missionId, "failed", msg);
+      if (!commitMissionVerdict(run, "failed", msg, { error: msg })) return false;
       return true;
     }
     // Otherwise leave active and retry next tick.
@@ -342,23 +357,19 @@ export async function reconcileActiveRuns(): Promise<number> {
 }
 
 /**
- * Boot recovery. Runs that were 'started' when PatterStage stopped are still
- * tracked by the backend (HTTP runs survive a CH restart), so we just fail the
- * ones that never got a backend id; the rest are picked up by the next
- * reconcile tick. Network-free and safe to call at server boot.
+ * Boot recovery keeps missing-ID claims unconfirmed. A submit may have reached
+ * the backend before PatterStage lost its reply, so failure or replay would
+ * assert an outcome we do not know. The operator reviews these claims.
  */
 export function reconcileRunsOnBoot(): { failed: number } {
   const active = listActiveRuns();
-  let failed = 0;
   for (const run of active) {
-    if (!run.runId) {
-      updateRun(run.id, {
-        status: "failed",
-        error: "PatterStage restarted before the run was submitted",
-      });
-      finalizeMissionForRun(run.missionId, "failed", "interrupted by a PatterStage restart");
-      failed += 1;
+    if (!run.runId && run.missionId) {
+      const mission = getMission(run.missionId);
+      if (mission?.status === "dispatched" && mission.result !== UNCONFIRMED_SUBMISSION_RESULT) {
+        updateMission(run.missionId, { result: UNCONFIRMED_SUBMISSION_RESULT });
+      }
     }
   }
-  return failed > 0 ? { failed } : { failed: 0 };
+  return { failed: 0 };
 }

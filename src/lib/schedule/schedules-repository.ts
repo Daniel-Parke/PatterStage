@@ -290,26 +290,29 @@ export function advanceSchedule(
     lastStatus: string | null;
     incrementDone?: boolean;
     enabled?: boolean;
+    /** Claim the due occurrence once; a competing tick may already advance it. */
+    expectedNextRunAt?: string | null;
   },
 ): ScheduleRecord | null {
   const ts = now();
-  const existing = getSchedule(id);
-  if (!existing) return null;
-  const { sql, values } = buildUpdate(
-    {
-      next_run_at: fields.nextRunAt,
-      last_run_at: fields.lastRunAt,
-      last_run_id: fields.lastRunId,
-      last_status: fields.lastStatus,
-      repeat_done: fields.incrementDone ? existing.repeatDone + 1 : undefined,
-      enabled: fields.enabled === undefined ? undefined : fields.enabled ? 1 : 0,
-    },
-    { now: ts },
-  );
-  inTransaction(() => {
-    getDb().prepare(`UPDATE schedules SET ${sql} WHERE id = ?`).run(...values, id);
-  });
-  return getSchedule(id);
+  const saved = inTransaction(() => {
+    const existing = getSchedule(id);
+    if (!existing || (fields.expectedNextRunAt !== undefined &&
+      existing.nextRunAt !== fields.expectedNextRunAt)) return false;
+    const { sql, values } = buildUpdate(
+      {
+        next_run_at: fields.nextRunAt,
+        last_run_at: fields.lastRunAt,
+        last_run_id: fields.lastRunId,
+        last_status: fields.lastStatus,
+        repeat_done: fields.incrementDone ? existing.repeatDone + 1 : undefined,
+        enabled: fields.enabled === undefined ? undefined : fields.enabled ? 1 : 0,
+      },
+      { now: ts },
+    );
+    return getDb().prepare(`UPDATE schedules SET ${sql} WHERE id = ?`).run(...values, id).changes === 1;
+  }, "immediate");
+  return saved ? getSchedule(id) : null;
 }
 
 export function deleteSchedule(id: string): boolean {

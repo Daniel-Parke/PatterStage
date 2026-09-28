@@ -13,6 +13,8 @@ import { getMission, updateMission } from "@/lib/missions/mission-repository";
 import { dispatchMissionRun } from "@/lib/orchestration";
 
 export interface DispatchMissionNowOverrides {
+  /** Pre-claimed unattended run ID; also the gateway idempotency key. */
+  runId?: string;
   profileName?: string;
   modelId?: string;
   provider?: string;
@@ -36,6 +38,7 @@ export async function dispatchMissionNow(
 ): Promise<DispatchMissionNowResult> {
   const mission = getMission(missionId);
   if (!mission) return { ok: false };
+  if (overrides.runId && mission.status !== "dispatched") return { ok: false };
 
   if (
     overrides.profileName !== undefined ||
@@ -49,6 +52,9 @@ export async function dispatchMissionNow(
     });
   }
 
-  const result = await dispatchMissionRun(missionId, { scheduleId: overrides.scheduleId });
+  const result = await dispatchMissionRun(missionId, {
+    runId: overrides.runId,
+    scheduleId: overrides.scheduleId,
+  });
   return { ok: result.ok, sessionId: result.sessionId };
 }

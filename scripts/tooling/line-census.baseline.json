@@ -1,11 +1,11 @@
 {
   "measuredAt": "2026-09-28",
   "counts": {
-    "srcLines": 102234,
-    "testLines": 134898,
+    "srcLines": 102420,
+    "testLines": 135739,
     "scriptsLines": 13865,
     "srcRepeatedWindowLines": 1012,
-    "testRepeatedWindowLines": 4792,
+    "testRepeatedWindowLines": 4766,
     "routesWithTryCatch": 18,
     "handRolledReadHooks": 5,
     "writeHooksWithoutMutation": 0,
@@ -890,6 +890,16 @@
       "measuredAt": "2026-09-28",
       "rise": "testRepeatedWindowLines rose from 4786 to 4792",
       "reason": "T-0182 adds six independent Jest CSP checks and sixteen desktop/phone browser cases, including the separately ruled fail-closed 500 oracle; source growth is the nonce policy and pre-hydration controls, with no removals or loosened coverage."
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "srcLines rose from 102234 to 102420",
+      "reason": "T-0183 adds frozen mission concurrency, cancellation, cron and restart oracles plus durable claim guards; all moved test names are preserved"
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "testLines rose from 134898 to 135739",
+      "reason": "T-0183 adds frozen mission concurrency, cancellation, cron and restart oracles plus durable claim guards; all moved test names are preserved"
     }
   ]
 }

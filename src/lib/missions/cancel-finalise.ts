@@ -14,8 +14,9 @@ import { appendAuditLine } from "@/lib/api/audit-log";
 import { logApiError } from "@/lib/api/api-logger";
 import { updateMission } from "@/lib/missions/mission-repository";
 import type { Mission } from "@/lib/missions/mission-types";
-import { getLatestRunForMission, updateRun } from "@/lib/runs/runs-repository";
+import { listActiveRunsForMission, updateRun } from "@/lib/runs/runs-repository";
 import { closeSessionForMission } from "@/lib/sessions/session-repository";
+import { inTransaction } from "@/lib/db";
 
 /**
  * The text every writer uses, so three tables cannot tell three stories.
@@ -32,23 +33,20 @@ const CANCELLED_BY_USER = "Cancelled by user";
  * @returns the updated mission, or null when it vanished under us.
  */
 export function finaliseCancelledMission(missionId: string, audit = true): Mission | null {
-  const mission = updateMission(missionId, {
-    status: "failed",
-    result: CANCELLED_BY_USER,
-    // No `cancelled` in the mission enum, by the operator's ruling; the run row records it.
-    queuedForRun: false,
-  });
-  if (!mission) return null;
-
-  // Only a run in flight becomes `cancelled`; one already ended keeps its real ending.
-  try {
-    const run = getLatestRunForMission(missionId);
-    if (run && run.status === "started") {
+  const mission = inTransaction(() => {
+    const updated = updateMission(missionId, {
+      status: "failed",
+      result: CANCELLED_BY_USER,
+      // No `cancelled` in the mission enum; the run row records it.
+      queuedForRun: false,
+    });
+    if (!updated) return null;
+    for (const run of listActiveRunsForMission(missionId)) {
       updateRun(run.id, { status: "cancelled", error: CANCELLED_BY_USER });
     }
-  } catch (err) {
-    logApiError("cancel.finalise", `${missionId} run row`, err);
-  }
+    return updated;
+  }, "immediate");
+  if (!mission) return null;
 
   try {
     closeSessionForMission(missionId, {

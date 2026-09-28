@@ -15,8 +15,9 @@ import {
   advanceSchedule,
   type ScheduleRecord,
 } from "@/lib/schedule/schedules-repository";
-import { createRun } from "@/lib/runs/runs-repository";
-import { hasDispatchedMission } from "@/lib/missions/mission-repository";
+import { reserveMissionRun } from "@/lib/missions/mission-repository";
+import { getRun } from "@/lib/runs/runs-repository";
+import { UNCONFIRMED_SUBMISSION_RESULT } from "@/lib/missions/mission-claim-state";
 import { computeNextRun } from "@/lib/schedule/next-run";
 import { scheduleIntervalStatus } from "@/lib/schedule/interval-bounds";
 import { dispatchMissionRun } from "@/lib/orchestration/dispatch";
@@ -39,21 +40,22 @@ function advanceToNext(
   lastRunId: string | null,
   lastStatus: string,
   fired: boolean,
-): void {
+): boolean {
   const nextDone = sched.repeatDone + (fired ? 1 : 0);
   const exhausted = sched.repeatTimes != null && nextDone >= sched.repeatTimes;
   const next = exhausted ? null : computeNextRun(sched.schedule, nowDate);
   const nextRunAt = next ? next.toISOString() : null;
 
-  advanceSchedule(sched.id, {
+  return advanceSchedule(sched.id, {
     nextRunAt,
     lastRunAt: nowDate.toISOString(),
     lastRunId,
     lastStatus,
     incrementDone: fired,
+    expectedNextRunAt: sched.nextRunAt,
     // Disable when a finite schedule is exhausted or there is no next run.
     enabled: exhausted || nextRunAt === null ? false : undefined,
-  });
+  }) !== null;
 }
 
 /** Fire (or skip) one due schedule. Returns true if a run was dispatched. */
@@ -174,47 +176,47 @@ async function fireSchedule(sched: ScheduleRecord, nowDate: Date): Promise<boole
     return false;
   }
 
-  // Single-flight: respect "one mission running at a time". Leave next_run_at
-  // in the past so the occurrence retries on a later tick.
-  if (hasDispatchedMission()) {
-    return false;
-  }
-
-  // Exactly-once claim: a deterministic id means a duplicate tick (e.g. two
-  // processes overlapping at restart) collides on the PK and the second is a
-  // no-op. Idempotency-Key = this id also protects the backend submit.
+  // The queue and cron share one database claim. Leave a busy occurrence due;
+  // a duplicate occurrence keeps its deterministic id and advances once.
   const runId = occurrenceId(sched, nowDate.toISOString());
-  const claimed = createRun({
-    id: runId,
+  const claim = reserveMissionRun({
+    kind: "schedule",
     missionId: sched.missionId,
+    runId,
     scheduleId: sched.id,
     profileName: sched.profileName,
   });
-  if (!claimed) {
-    // Another tick already claimed this occurrence — just advance.
-    advanceToNext(sched, nowDate, runId, "duplicate occurrence", false);
+  if (claim.kind === "duplicate") {
+    const existing = getRun(runId);
+    // A pending or uncertain submission has no confirmed occurrence to
+    // consume. Once acknowledged, either owner may advance it, but only once.
+    if (existing && (existing.runId || existing.status !== "started")) {
+      advanceToNext(sched, nowDate, existing.runId ?? runId, "dispatched", true);
+    }
     return false;
   }
+  if (claim.kind !== "claimed") return false;
 
   const result = await dispatchMissionRun(sched.missionId, {
     runId,
     scheduleId: sched.id,
   });
-  advanceToNext(
+  if (result.error === UNCONFIRMED_SUBMISSION_RESULT) return false;
+  const advanced = advanceToNext(
     sched,
     nowDate,
     result.backendRunId ?? runId,
     result.ok ? "dispatched" : `error: ${result.error ?? "unknown"}`,
     true,
   );
-  if (result.ok) {
+  if (result.ok && advanced) {
     recordEvent("schedule.fired", {
       entityType: "schedule",
       entityId: sched.id,
       profile: sched.profileName,
     });
   }
-  return result.ok;
+  return result.ok && advanced;
 }
 
 export interface SchedulerTickOptions {

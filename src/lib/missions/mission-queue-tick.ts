@@ -3,8 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import {
-  getNextQueuedMission,
-  hasDispatchedMission,
+  reserveMissionRun,
 } from "@/lib/missions/mission-repository";
 import { dispatchMissionNow } from "@/lib/missions/mission-dispatch";
 import { checkUnattendedSpend } from "@/lib/spend/spend-guard";
@@ -31,15 +30,9 @@ export async function runMissionQueueTick(): Promise<MissionQueueTickResult> {
   const gate = checkUnattendedSpend();
   if (!gate.allowed) return { ran: false, blocked: gate.reason ?? "spend stop" };
 
-  if (hasDispatchedMission()) {
-    return { ran: false };
-  }
+  const claim = reserveMissionRun({ kind: "queue" });
+  if (claim.kind !== "claimed") return { ran: false };
 
-  const next = getNextQueuedMission();
-  if (!next) {
-    return { ran: false };
-  }
-
-  const result = await dispatchMissionNow(next.id);
-  return { ran: true, missionId: next.id, ok: result.ok };
+  const result = await dispatchMissionNow(claim.missionId, { runId: claim.runId });
+  return { ran: true, missionId: claim.missionId, ok: result.ok };
 }
