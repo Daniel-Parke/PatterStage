@@ -1,6 +1,15 @@
 {
   "version": 1,
   "assigned": "2026-09-28",
-  "lanes": [],
-  "note": "T-0164 reconnaissance closed after an unchanged-tree ten-step gate and four killed mutants. T-0165 planning starts only after T-0164 hosted acceptance; T-0159 historical ledger remains read-only."
+  "lanes": [
+    {
+      "lane_id": "T-0165-plan-coordinator",
+      "task_id": "T-0165",
+      "session_id": "2026-09-28-refactor-plan",
+      "path_claims": ["org/tasks/T-0165.json", "org/plans/2026-09-refactor-programme.*", "org/plans/2026-09-refactor-measures.json", "org/plans/2026-09-refactor-ownership.json", "tests/unit/t0165-plan-contract.test.ts", "tests/fixtures/mutants/T-0165.json", "org/HANDOVER.md", "org/claims.json", "org/TASKS.md", "org/STATE.md", "org/tasks/T-0164.json"],
+      "expires": "2026-10-15T23:00:00Z",
+      "liveness": "red-first Phase 2 plan, fixed measures, independent sceptic, full gate, sweep and hosted acceptance"
+    }
+  ],
+  "note": "T-0164 reconnaissance and all four hosted workflows completed successfully at 1d6b23d1. T-0165 planning is active; T-0159 historical ledger remains read-only."
 }

@@ -1,0 +1,32 @@
+{
+  "id": "T-0165",
+  "intent": "Turn the completed itemised reconnaissance into a decision-complete Phase 2 refactor plan with fixed committed measurement and closing contracts, for separate operator approval before structural execution.",
+  "declared": {
+    "capabilities": ["read-source", "run-tests", "edit-tests", "edit-docs", "git", "git-push"],
+    "side_effects": ["sends-external"]
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [
+    {"factor": "boundary-contact", "tier_floor": "R1", "source": "operator prerequisite plan", "evidence": "The plan is a reviewable proposal, not structural implementation; it reads hosted acceptance and records no protected-file or live-data change."}
+  ],
+  "status": "open",
+  "owner_session": "2026-09-28-refactor-plan",
+  "claims": ["org/tasks/T-0165.json", "org/plans/2026-09-refactor-programme.*", "org/plans/2026-09-refactor-measures.json", "org/plans/2026-09-refactor-ownership.json", "tests/unit/t0165-plan-contract.test.ts", "tests/fixtures/mutants/T-0165.json", "org/HANDOVER.md", "org/claims.json", "org/TASKS.md", "org/STATE.md", "org/tasks/T-0164.json"],
+  "timestamps": {"opened": "2026-09-28T15:06:00Z", "updated": "2026-09-28T15:06:00Z", "closed": null},
+  "invariants": [
+    "The plan reads current T-0164 finding and atomic coverage ledgers and retains every 265 finding, 163 split operator disposition, 107 parent and 285 child IDs as evidence or explicitly deferred proof.",
+    "Historical five consolidation targets remain historical. New programme baselines and targets are frozen once from committed files; closing checks read those files, never a self-changing live baseline.",
+    "Each proposed batch has a unique sequential task ID, verified or qualified finding scope, accepted authority, disjoint claims, dependencies, invariants, rollback and exact Verify line.",
+    "Q-011's operator release precedes structural batches. No feature, route, URL, CLI command, env var or documented behaviour is removed without its item ruling; protected edits require an accepted ADR.",
+    "The operator approves the complete plan separately. This batch does not perform structural refactoring, merge PR #157, tag a release or change repository settings."
+  ],
+  "rollback": "Revert only the proposed plan, its new contract oracle and T-0165 record. Preserve T-0164 reconnaissance and accepted rulings.",
+  "verify_line": "The red-first plan oracle proves the committed historical and new baselines, immutable target rows, unique sequential proposed batch IDs, complete finding and coverage ownership, ruling and release dependencies, and a closing contract that names every miss. The full unchanged-tree gate, committed-tree sweep, derived views and every hosted job pass; the operator can approve or reject the concrete plan without guessing scope.",
+  "oracle_provenance": "Pending red-first oracle.",
+  "verification": "Pending.",
+  "review": "Pending independent plan sceptic.",
+  "mutation": "Pending.",
+  "deviation": "None."
+}

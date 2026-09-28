@@ -9,8 +9,8 @@ updated: 2026-09-28
 
 ## Current status, 2026-09-28
 
-T-0164's current-tree reconnaissance is closed at `babf76ac` pending this
-record's hosted closure checks. Its linked ledgers account for 265 preliminary
+T-0164's current-tree reconnaissance is closed at `1d6b23d1`. Its linked
+ledgers account for 265 preliminary
 findings, 163 split operator dispositions and all 285 atomic obligations from
 107 original coverage bullets. The defensible current dispositions are 244
 verified **source observations**, 12 refuted and nine unresolved findings;
@@ -29,6 +29,11 @@ left the worktree clean. Two earlier gates stopped honestly: first at six
 CommonJS lint errors, then at one stale bloom selector oracle. A different
 author corrected the closed oracle without changing its nine test names.
 The line census records its seven added test lines with a reason.
+Hosted push CI `36439965863`, PR CI `36439973829`, push Gitleaks
+`36439965717` and PR Gitleaks `36439973999` all completed successfully on
+the same head. The PR run included full Playwright acceptance, native builds,
+Docker, install harness and real Hermes; push CI's full Playwright job was
+skipped by its existing event condition.
 
 The controlled app walk used port **3802** for 19 component states at
 1440×900 and 390×844; a supplemental 22-route walk used port **3805**.
