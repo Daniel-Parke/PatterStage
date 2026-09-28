@@ -14,7 +14,7 @@
   ],
   "status": "in_progress",
   "owner_session": "2026-09-28-refactor-prerelease",
-  "claims": ["org/tasks/T-0181.json", "src/lib/fs/log-files.ts", "src/app/api/logs/route.ts", "src/lib/search/url-guard.ts", "tests/unit/log-files-t0181-boundary.test.ts", "tests/unit/t0181-url-guard-listener.test.ts", "tests/unit/logs-api-route.test.ts", "tests/fixtures/mutants/T-0181.json", "scripts/tooling/line-census.baseline.json", "org/HANDOVER.md", "org/claims.json", "org/TASKS.md", "org/STATE.md", "org/reviews/2026-09-t0181-boundary-evidence.md"],
+  "claims": ["org/tasks/T-0181.json", "src/lib/fs/log-files.ts", "src/app/api/logs/route.ts", "src/lib/search/url-guard.ts", "tests/unit/log-files-t0181-boundary.test.ts", "tests/unit/t0181-url-guard-listener.test.ts", "tests/unit/t0181-log-alias-amendment.test.ts", "tests/unit/logs-api-route.test.ts", "org/briefs/T-0181-log-mock-amendment.md", "org/briefs/T-0181-independent-alias-oracle.md", "tests/fixtures/mutants/T-0181.json", "scripts/tooling/line-census.baseline.json", "org/HANDOVER.md", "org/claims.json", "org/TASKS.md", "org/STATE.md", "org/reviews/2026-09-t0181-boundary-evidence.md"],
   "timestamps": {"opened": "2026-09-28T17:54:00Z", "updated": "2026-09-28T17:54:00Z"},
   "invariants": [
     "GET cannot read and named or bulk DELETE cannot truncate a sentinel outside the authorised log root through an in-root x.log symlink.",
@@ -23,5 +23,6 @@
     "A URL-guard candidate already covered by existing tests is recorded as a confirmed boundary or refuted defect, not changed for line-count appearance."
   ],
   "rollback": "Revert the log handling only with a replacement realpath or descriptor-based containment guard that passes the same isolated sentinel oracle. Retain URL proof independently if no URL source change is needed.",
-  "verify_line": "On Linux an isolated in-root x.log symlink to an outside sentinel is refused by both GET and DELETE without changing sentinel hash; regular logs still work, mapped private URL addresses are refused in a bounded listener probe, and the Windows-focused guard suite passes."
+  "verify_line": "On Linux an isolated in-root x.log symlink to an outside sentinel is refused by both GET and DELETE without changing sentinel hash; regular logs still work, mapped private URL addresses are refused in a bounded listener probe, and the Windows-focused guard suite passes.",
+  "oracle_provenance": "Red-first commit 4e40ef4c introduced six real-filesystem and listener cases. Windows Jest was red at one failure, four Linux-only skips and one pass; test TypeScript passed. A disposable node:24 Linux clone of that committed oracle failed four of six cases against unmodified source, then passed six of six after only the two working source files were copied. The same listener case passed on both sides, refuting the proposed mapped-private URL source defect. The frozen oracle files are unchanged."
 }
