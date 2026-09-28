@@ -151,13 +151,18 @@ describe("GREEN CONTROLS: everything else is unchanged", () => {
   });
 
   it("a non-streaming turn still returns the parsed JSON", async () => {
+    const credential = "t0158-chat-non-stream-control-token";
+    process.env.PS_AUTH_TOKEN = credential;
+    process.env.PS_AUTH_MODE = "token";
     mockFetch.mockResolvedValueOnce({
       ok: true,
       status: 200,
       json: async () => ({ choices: [{ message: { content: "hi back" } }] }),
     } as unknown as Response);
 
-    const body = (await (await POST(post(ONE_TURN))).json()) as {
+    const body = (await (await POST(post(ONE_TURN, {
+      Authorization: `Bearer ${credential}`,
+    }))).json()) as {
       data?: { choices?: { message: { content: string } }[] };
     };
 
