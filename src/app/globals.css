@@ -643,7 +643,9 @@
    ::after. The reduced-motion guard removes the pseudo-element outright: the
    field IS the motion, so there is nothing left to soften once it is off. */
 @media (hover: hover) and (pointer: fine) {
-  [data-bloom] {
+  /* An absolutely positioned Card is already a positioning context. Preserve
+     its overlay placement; forcing relative hides Composer's palette and inspector. */
+  [data-bloom]:not(.absolute) {
     position: relative;
   }
   [data-bloom]::after {
