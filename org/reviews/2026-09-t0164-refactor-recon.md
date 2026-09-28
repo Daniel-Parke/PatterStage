@@ -210,14 +210,17 @@ and the independent-ledger check. Other measured counts did not rise.
 The [new scope census](2026-09-t0164-scope-census.mjs) counts tooling,
 documentation and live organisation files from a Git commit and reports
 protected, historical, generated, operational, tooling-ledger and binary
-material separately. Its committed baseline must be written after all T-0164
-changes land, so its revision is immutable and cannot count itself.
+material separately. Its [committed baseline](2026-09-t0164-scope-baseline.json)
+reads evidence commit `2d6468ce`: tooling live 134 files/30,025 lines,
+documentation live 79/11,164, organisation live 62/6,225. Protected material
+is 19/2,452, history 262/29,517 and generated views 3/1,022. The scope
+definition excludes historical reviews and task records from any future live
+reduction target, and the baseline file cannot count itself.
 
 ## Open proof and exit
 
-T-0164 remains open until the sceptic corrections, gap dispositions, final
-completeness check, committed scope baseline, unchanged-tree full gate,
-committed-tree mutation sweep and every hosted job are recorded by exit code.
+T-0164 remains open until the unchanged-tree full gate, committed-tree
+mutation sweep and every hosted job are recorded by exit code.
 T-0165 can then use this recon to propose fixed structural targets and
 independently revertible batches. Approval of that complete plan is a separate
 operator action. Q-011 still places the first release before structural
