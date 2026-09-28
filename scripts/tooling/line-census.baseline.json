@@ -1,8 +1,8 @@
 {
   "measuredAt": "2026-09-28",
   "counts": {
-    "srcLines": 102141,
-    "testLines": 134123,
+    "srcLines": 102188,
+    "testLines": 134465,
     "scriptsLines": 13865,
     "srcRepeatedWindowLines": 1012,
     "testRepeatedWindowLines": 4786,
@@ -860,6 +860,21 @@
       "measuredAt": "2026-09-28",
       "rise": "testLines rose from 134061 to 134123",
       "reason": "T-0180 independent R2 review found workflow ordering and traversal gaps; its separate four-case red-first oracle adds 62 test lines"
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "srcLines rose from 102141 to 102188",
+      "reason": "T-0181 security boundary adds descriptor, symlink and hardlink protection plus independently amended filesystem oracles without removing tests"
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "testLines rose from 134123 to 134465",
+      "reason": "T-0181 security boundary adds descriptor, symlink and hardlink protection plus independently amended filesystem oracles without removing tests"
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "testRepeatedWindowLines rose from 4786 to 4802",
+      "reason": "T-0181 security boundary adds descriptor, symlink and hardlink protection plus independently amended filesystem oracles without removing tests"
     }
   ]
 }

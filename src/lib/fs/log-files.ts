@@ -2,8 +2,9 @@
  * Hermes log file basenames (no directory, no .log suffix in API `name` param).
  */
 
-import { closeSync, existsSync, openSync, readFileSync, readdirSync, readSync, statSync } from "fs";
-import { relative, resolve } from "path";
+import { closeSync, constants, existsSync, fstatSync, ftruncateSync, lstatSync, openSync, readFileSync, readdirSync, readSync, realpathSync } from "fs";
+import type { BigIntStats, Stats } from "fs";
+import { isAbsolute, relative, resolve, sep } from "path";
 
 const MAX_LOG_BASENAME_LEN = 128;
 
@@ -73,6 +74,33 @@ export interface ReadLastLinesResult {
   size: number;
 }
 
+function openRegularLog(filePath: string, flags: number): { fd: number; stats: Stats } {
+  const before = lstatSync(filePath, { bigint: true });
+  if (!before.isFile() || before.isSymbolicLink() || before.nlink !== BigInt(1)) throw new Error("Invalid log path");
+  const fd = openSync(filePath, flags | (constants.O_NOFOLLOW ?? 0));
+  try {
+    const identity = fstatSync(fd, { bigint: true });
+    const stats = fstatSync(fd);
+    if (!identity.isFile() || identity.nlink !== BigInt(1) || before.dev !== identity.dev || before.ino !== identity.ino) {
+      throw new Error("Log file changed during open");
+    }
+    return { fd, stats };
+  } catch (error) {
+    closeSync(fd);
+    throw error;
+  }
+}
+
+/** Clear through the verified descriptor, never by reopening a checked path. */
+export function clearLogFile(filePath: string): void {
+  const { fd } = openRegularLog(filePath, constants.O_WRONLY);
+  try {
+    ftruncateSync(fd, 0);
+  } finally {
+    closeSync(fd);
+  }
+}
+
 /**
  * Read the last `maxLines` lines from a file efficiently by reading
  * from the end in chunks. Avoids loading multi-MB log files entirely
@@ -81,25 +109,24 @@ export interface ReadLastLinesResult {
  * a redundant statSync call.
  */
 export function readLastLines(filePath: string, maxLines: number): ReadLastLinesResult {
-  const stats = statSync(filePath);
-  const fileSize = stats.size;
-  const mtime = stats.mtime;
-
-  // Small file: read entirely via readFileSync (also supports test mocks)
-  if (fileSize <= CHUNK_SIZE) {
-    const content = readFileSync(filePath, "utf-8");
-    const allLines = content.split("\n").filter(Boolean);
-    return {
-      allLines: allLines.length,
-      lines: allLines.slice(-maxLines).reverse(),
-      mtime,
-      size: fileSize,
-    };
-  }
-
-  // Large file: read chunks from the end
-  const fd = openSync(filePath, "r");
+  const { fd, stats } = openRegularLog(filePath, constants.O_RDONLY);
   try {
+    const fileSize = stats.size;
+    const mtime = stats.mtime;
+
+    // Small file: read entirely via readFileSync (also supports test mocks)
+    if (fileSize <= CHUNK_SIZE) {
+      const content = readFileSync(fd, "utf-8");
+      const allLines = content.split("\n").filter(Boolean);
+      return {
+        allLines: allLines.length,
+        lines: allLines.slice(-maxLines).reverse(),
+        mtime,
+        size: fileSize,
+      };
+    }
+
+    // Large file: read chunks from the end
     let collected = "";
     let bytesToRead = Math.min(CHUNK_SIZE, fileSize);
     let offset = fileSize - bytesToRead;
@@ -158,7 +185,24 @@ export function logFileUnderLogsDir(logsDir: string, logPath: string): boolean {
   const C = resolve(logPath);
   if (C === R) return false;
   const rel = relative(R, C);
-  return rel !== "" && !rel.startsWith("..") && !rel.includes("..");
+  if (!rel || rel === ".." || rel.startsWith(`..${sep}`) || isAbsolute(rel)) return false;
+  let entry: BigIntStats;
+  try {
+    entry = lstatSync(C, { bigint: true });
+  } catch (error) {
+    // A genuinely absent basename preserves GET's existing 404 contract.
+    // existsSync follows symlinks and misclassifies a dangling alias.
+    return (error as NodeJS.ErrnoException).code === "ENOENT";
+  }
+  try {
+    if (!entry.isFile() || entry.isSymbolicLink() || entry.nlink !== BigInt(1)) return false;
+    const physicalRoot = realpathSync(R);
+    const physicalFile = realpathSync(C);
+    const physicalRel = relative(physicalRoot, physicalFile);
+    return physicalRel !== "" && physicalRel !== ".." && !physicalRel.startsWith(`..${sep}`) && !isAbsolute(physicalRel);
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -222,7 +266,8 @@ export function listLogFilesInDir(logsDir: string): LogFileMeta[] {
     const base = file.slice(0, -4);
     if (sanitizeLogBasename(base) !== base) continue;
     const filePath = resolve(logsDir, file);
-    const stats = statSync(filePath);
+    const stats = lstatSync(filePath);
+    if (!stats.isFile() || stats.isSymbolicLink() || stats.nlink !== 1) continue;
     logs.push({
       name: base,
       size: stats.size,

@@ -25,11 +25,11 @@ describe("T-0181 log-file containment through a real filesystem", () => {
 
   beforeEach(() => {
     root = mkdtempSync(join(tmpdir(), PREFIX));
-    mockLogsDir = join(root, "logs");
-    mkdirSync(mockLogsDir);
     sentinel = join(root, "outside-sentinel.txt");
     writeFileSync(sentinel, "OUTSIDE_SENTINEL_MUST_NOT_LEAK\n");
     originalDigest = digest(sentinel);
+    mockLogsDir = join(root, "logs");
+    mkdirSync(mockLogsDir);
     writeFileSync(join(mockLogsDir, "agent.log"), "ordinary log line\n");
   });
 

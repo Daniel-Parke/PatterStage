@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { existsSync, writeFileSync } from "fs";
+import { existsSync } from "fs";
 import { resolve } from "path";
 
 import { getAgentWorkspace } from "@/lib/runtime/workspace";
@@ -10,6 +10,7 @@ import {
   logValidationError,
   readLastLines,
   resolveLogFilePath,
+  clearLogFile,
 } from "@/lib/fs/log-files";
 import { injectMissingTimestamps } from "@/lib/logs/log-line-format";
 
@@ -140,7 +141,7 @@ export const DELETE = route("DELETE /api/logs", "deleting log", "Failed to delet
       return badRequest(logValidationError(resolved.reason));
     }
     if (existsSync(resolved.absolutePath)) {
-      writeFileSync(resolved.absolutePath, "");
+      clearLogFile(resolved.absolutePath);
     }
     return ok({ deleted: resolved.safeName });
   }
@@ -150,7 +151,7 @@ export const DELETE = route("DELETE /api/logs", "deleting log", "Failed to delet
   for (const file of files) {
     const filePath = resolve(logsDir, `${file.name}.log`);
     if (logFileUnderLogsDir(resolvedLogsDir, filePath)) {
-      writeFileSync(filePath, "");
+      clearLogFile(filePath);
       cleared++;
     }
   }
