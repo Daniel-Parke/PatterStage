@@ -283,7 +283,8 @@ describe("GREEN CONTROLS: the boundary is otherwise unchanged", () => {
       const { authThrottleRecordCount } = await import("@/lib/api/auth-throttle");
 
       for (let i = 0; i < 50; i++) proxy(bearer(WRONG, `10.0.0.${i}`));
-      expect(authThrottleRecordCount()).toBeGreaterThan(10);
+      expect(authThrottleRecordCount()).toBeGreaterThan(0);
+      expect(authThrottleRecordCount()).toBeLessThanOrEqual(FREE_AUTH_ATTEMPTS);
 
       jest.advanceTimersByTime(20 * 60_000);
       proxy(bearer(WRONG, "10.0.1.1"));
