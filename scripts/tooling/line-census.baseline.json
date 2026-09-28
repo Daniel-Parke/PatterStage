@@ -2,8 +2,8 @@
   "measuredAt": "2026-09-28",
   "counts": {
     "srcLines": 102141,
-    "testLines": 133754,
-    "scriptsLines": 13770,
+    "testLines": 133968,
+    "scriptsLines": 13865,
     "srcRepeatedWindowLines": 1012,
     "testRepeatedWindowLines": 4786,
     "routesWithTryCatch": 18,
@@ -825,6 +825,31 @@
       "measuredAt": "2026-09-28",
       "rise": "testLines rose from 133747 to 133754",
       "reason": "T-0164: independent Q-015 bloom oracle amendment preserves nine test identities and protects absolute Composer positioning"
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "testLines rose from 133754 to 133911",
+      "reason": "T-0165: red-first plan and closing-oracle tests add 157 test lines; committed-baseline closing script adds 53 tooling lines without changing product scope"
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "scriptsLines rose from 13770 to 13823",
+      "reason": "T-0165: red-first plan and closing-oracle tests add 157 test lines; committed-baseline closing script adds 53 tooling lines without changing product scope"
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "testLines rose from 133911 to 133958",
+      "reason": "T-0165 final ruling assertions add 47 test lines and the committed-baseline disposition audit adds 42 tooling lines; both are required to prove the plan contract and do not change product scope"
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "scriptsLines rose from 13823 to 13865",
+      "reason": "T-0165 final ruling assertions add 47 test lines and the committed-baseline disposition audit adds 42 tooling lines; both are required to prove the plan contract and do not change product scope"
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "testLines rose from 133958 to 133968",
+      "reason": "T-0165 final alias-reader and lib-data-05 ownership assertions add ten plan-oracle lines so ruled work cannot be assigned to an unrelated batch"
     }
   ]
 }

@@ -74,7 +74,7 @@ describe("T-0165 Phase 2 plan contract", () => {
       approval: string;
       releaseGate: string;
       batches: Batch[];
-      closing: { measureFile: string; oracle: string; missPolicy: string };
+      closing: { measureFile: string; dispositionFile: string; oracle: string; missPolicy: string };
     }>(planPath);
     expect(plan.approval).toBe("pending-operator-approval");
     expect(plan.releaseGate).toContain("Q-011");
@@ -99,8 +99,23 @@ describe("T-0165 Phase 2 plan contract", () => {
       }
     }
     expect(plan.closing.measureFile).toBe(measuresPath);
+    expect(plan.closing.dispositionFile).toBe("org/plans/2026-09-refactor-final-dispositions.json");
     expect(plan.closing.oracle).toBe("scripts/tooling/refactor-closing-oracle.mjs");
     expect(plan.closing.missPolicy).toMatch(/every miss/i);
+    const releaseContract = plan.batches.find((batch) => batch.id === "T-0187");
+    expect(releaseContract?.claims).toContain("scripts/tooling/eos-compile.mjs");
+    expect(releaseContract?.claims).toContain("tests/unit/b15-corpus-moves-under-org.test.ts");
+    expect(releaseContract?.claims).toContain("org/EOS_FEEDBACK.md");
+    expect(releaseContract?.claims).toContain("scripts/hardware/ch-db-backup.sh");
+    expect(plan.batches.find((batch) => batch.id === "T-0199")?.claims).toContain("package.json");
+    expect(plan.batches.find((batch) => batch.id === "T-0199")?.claims).not.toContain("scripts/maintenance/**");
+    const retirement = plan.batches.find((batch) => batch.id === "T-0200");
+    expect(retirement?.claims).toContain("src/lib/host/paths.ts");
+    const aliasReaders = execFileSync("git", ["grep", "-l", "-E", "CH_|CONTROL_HUB_|AGENT_HOME|x-ch-|ch[.]sessions[.]", "--", "src", "scripts", "next.config.ts"], {
+      cwd: root, encoding: "utf8",
+    }).trim().split("\n");
+    for (const file of aliasReaders) expect(retirement?.claims).toContain(file.trim());
+    expect(retirement?.invariants.join(" ")).toMatch(/ch_data\/ch_hermes Compose volume names survive/);
   });
 
   it("assigns every finding and atomic proof exactly once without reviving refuted items", () => {
@@ -141,6 +156,19 @@ describe("T-0165 Phase 2 plan contract", () => {
     }
     expect(ownership.operatorDispositions.find((row) => row.id === "cross-cutting-04b")?.task).toBe("T-0200");
     expect(ownership.operatorDispositions.find((row) => row.id === "docs-05a")?.outcome).toBe("deferred");
+    expect(ownership.operatorDispositions.find((row) => row.id === "tooling-11b")?.task).toBe("T-0196");
+    expect(ownership.operatorDispositions.find((row) => row.id === "tooling-11b")?.reason).toMatch(/keep ch_data/i);
+    expect(ownership.operatorDispositions.find((row) => row.id === "tooling-10b")?.task).toBe("T-0187");
+    expect(ownership.operatorDispositions.find((row) => row.id === "critic-05b")?.task).toBe("T-0200");
+    expect(ownership.operatorDispositions.find((row) => row.id === "tooling-12b")?.outcome).toBe("ruled-out");
+    for (const id of ["app-01a", "app-01b", "app-01c", "app-01d", "app-01h"]) {
+      expect(ownership.operatorDispositions.find((row) => row.id === id)?.task).toBe("T-0192");
+    }
+    expect(ownership.findings.find((row) => row.id === "org-11")?.task).toBe("T-0187");
+    expect(ownership.findings.find((row) => row.id === "lib-data-05")?.task).toBe("T-0199");
+    for (const row of ownership.operatorDispositions.filter((item) => item.id.startsWith("lib-data-05"))) {
+      expect(row.task).toBe("T-0199");
+    }
     for (const id of ["gap-074.b", "gap-080.a", "gap-083.b", "gap-095.c", "gap-101.a"]) {
       expect(ownership.coverage.find((row) => row.id === id)?.outcome).toBe("planned");
     }

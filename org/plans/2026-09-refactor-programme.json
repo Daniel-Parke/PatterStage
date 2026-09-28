@@ -1,0 +1,772 @@
+{
+  "sourceRevision": "1d6b23d1745eac47918ac7ff70fc2a950b783304",
+  "approval": "pending-operator-approval",
+  "releaseGate": "Q-011: the operator cuts rc.1 and v1.0.0 after prerelease security and defect repair, with migration and Docker acceptance on a copy of a real install; structural work starts only after that release and separate approval of this plan.",
+  "decisionAuthority": [
+    "Q-009",
+    "Q-010",
+    "Q-011",
+    "Q-012",
+    "Q-013",
+    "Q-014",
+    "Q-015",
+    "Q-016",
+    "Q-017",
+    "Q-019",
+    "Q-020",
+    "Q-021",
+    "Q-022",
+    "Q-023",
+    "Q-024",
+    "Q-025",
+    "Q-026",
+    "Q-027",
+    "Q-028",
+    "Q-029",
+    "Q-030",
+    "ADR-0011",
+    "ADR-0012",
+    "ADR-0013",
+    "ADR-0014"
+  ],
+  "evidence": [
+    "org/reviews/2026-09-t0164-refactor-recon.md",
+    "org/reviews/2026-09-t0164-findings.jsonl",
+    "org/reviews/2026-09-t0164-coverage.jsonl",
+    "org/reviews/2026-09-t0164-defects.md"
+  ],
+  "batches": [
+    {
+      "id": "T-0180",
+      "name": "Make full-history secret scanning effective",
+      "phase": "prerelease-security",
+      "tierProposed": "R2",
+      "claims": [
+        ".gitleaks.toml",
+        ".github/workflows/gitleaks.yml",
+        "tests/security/secret-scan-*",
+        "org/reviews/2026-09-gitleaks-*"
+      ],
+      "dependsOn": [],
+      "authority": [
+        "Q-012",
+        "Q-024",
+        "S1",
+        "tooling-29",
+        "T-0164 strict-default control"
+      ],
+      "invariants": [
+        "Default scanner rules remain active with narrow named fixture allowances.",
+        "No candidate or expired historical alert is silently declared clear."
+      ],
+      "rollback": "Restore the prior scan configuration only with a replacement strict scan that still catches the planted secret; retain redacted history evidence.",
+      "verify": "A disposable-history planted secret makes the configured Gitleaks job exit nonzero; strict redacted scans record scanner version, ref coverage and every historical candidate, and hosted push plus PR scan jobs pass after remediation."
+    },
+    {
+      "id": "T-0181",
+      "name": "Close filesystem and URL containment proofs",
+      "phase": "prerelease-security",
+      "tierProposed": "R2",
+      "claims": [
+        "src/lib/fs/log-files.ts",
+        "src/lib/search/url-guard.ts",
+        "src/app/api/logs/route.ts",
+        "tests/unit/log-files-*.test.ts",
+        "tests/fixtures/mutants/T-0181.json"
+      ],
+      "dependsOn": [
+        "T-0180"
+      ],
+      "authority": [
+        "S2",
+        "critic-14",
+        "Q-012"
+      ],
+      "invariants": [
+        "GET cannot read and DELETE cannot truncate a sentinel beyond the authorised log root.",
+        "Windows development and Linux production retain normal in-root log access."
+      ],
+      "rollback": "Revert only if a replacement realpath or descriptor-based containment guard passes the same isolated sentinel oracle.",
+      "verify": "On Linux an isolated in-root x.log symlink to an outside sentinel is refused by both GET and DELETE without changing sentinel hash; regular logs still work, mapped private URL addresses are refused in a bounded listener probe, and the Windows-focused guard suite passes."
+    },
+    {
+      "id": "T-0182",
+      "name": "Design and validate a deployable CSP",
+      "phase": "prerelease-security",
+      "tierProposed": "R3",
+      "claims": [
+        "src/proxy.ts",
+        "src/app/layout.tsx",
+        "next.config.ts",
+        "tests/e2e/csp-*.spec.ts",
+        "docs/running/security.md"
+      ],
+      "dependsOn": [
+        "T-0181"
+      ],
+      "authority": [
+        "C1",
+        "critic-04",
+        "T-0164 built-app CSP probe",
+        "Q-012"
+      ],
+      "invariants": [
+        "Frame denial and session origin checks stay intact.",
+        "A nonce or equivalent policy must allow framework hydration without unsafe-inline as a blanket exception."
+      ],
+      "rollback": "Restore the prior headers only if the accepted security design is replaced and the measured CSP gap is explicitly reopened.",
+      "verify": "A built app at desktop and phone widths completes sign-in, Missions dialog, Composer and Help with the candidate enforced policy and zero CSP violations; a planted untrusted inline script is blocked. Record bundle and caching effects and independent R3 approval."
+    },
+    {
+      "id": "T-0183",
+      "name": "Make mission dispatch and cancellation single-owner",
+      "phase": "prerelease-defects",
+      "tierProposed": "R2",
+      "claims": [
+        "src/lib/missions/mission-queue-tick.ts",
+        "src/lib/orchestration/dispatch.ts",
+        "src/lib/missions/mission-handlers/cancel.ts",
+        "tests/unit/mission-dispatch-race*.test.ts"
+      ],
+      "dependsOn": [
+        "T-0182"
+      ],
+      "authority": [
+        "M1",
+        "M2",
+        "Q-027"
+      ],
+      "invariants": [
+        "Overlapping ticks submit at most one paid run for one due mission.",
+        "Cancellation remains final after late acknowledgements; elapsed run deadlines and grace semantics stay unchanged."
+      ],
+      "rollback": "Restore the former scheduling path only with a compatible single-owner reservation that passes the concurrent oracle.",
+      "verify": "A delayed-gateway concurrent tick test submits exactly once, and a late acknowledgement cannot undo cancellation; elapsed deadline and grace fixtures retain their results."
+    },
+    {
+      "id": "T-0184",
+      "name": "Make mission edits and category moves atomic",
+      "phase": "prerelease-defects",
+      "tierProposed": "R2",
+      "claims": [
+        "src/lib/missions/mission-promote-handler.ts",
+        "src/lib/missions/mission-category-repository.ts",
+        "tests/unit/mission-category-atomic*.test.ts",
+        "src/lib/missions/mission-repository.ts"
+      ],
+      "dependsOn": [
+        "T-0183"
+      ],
+      "authority": [
+        "M4",
+        "M5",
+        "Q-014",
+        "M3"
+      ],
+      "invariants": [
+        "A rejected nonblank cron leaves all prior mission columns intact.",
+        "Catalog, legacy/category IDs and disk templates cannot be left silently orphaned by a failed move."
+      ],
+      "rollback": "Restore prior writes only with a replacement transaction and file-failure compensation proven by the same fixtures.",
+      "verify": "Queued-to-cron transition cannot retain or omit the wrong queue flag; invalid nonblank cron, conflicting legacy IDs, catalog rows and an injected template file-write failure each preserve a coherent pre-operation state and report failure."
+    },
+    {
+      "id": "T-0185",
+      "name": "Validate mission prompt, model and old links",
+      "phase": "prerelease-defects",
+      "tierProposed": "R1",
+      "claims": [
+        "src/lib/missions/build-mission-prompt.ts",
+        "src/lib/missions/mission-body.ts",
+        "src/hooks/useMissionsApi.ts",
+        "src/lib/missions/mission-deep-link.ts",
+        "tests/e2e/mission-old-link*.spec.ts"
+      ],
+      "dependsOn": [
+        "T-0184"
+      ],
+      "authority": [
+        "M6",
+        "M7",
+        "M8",
+        "Q-010 public URL preservation"
+      ],
+      "invariants": [
+        "Accepted prompt syntax round-trips without task capture from context.",
+        "Malformed model input returns 4xx without a write; missions beyond the first 200 keep their deep links."
+      ],
+      "rollback": "Revert the bounded parser, validation and by-ID lookup together only if old URLs and 4xx refusals still pass.",
+      "verify": "Literal CDATA context and ordinary nested task examples round-trip through dispatch; modelId 42 receives 4xx with no write; the oldest of 201 seeded missions opens by URL at 1440 and 390 widths."
+    },
+    {
+      "id": "T-0186",
+      "name": "Remove unsafe Hindsight rederive and repair Story Weaver save feedback",
+      "phase": "prerelease-defects",
+      "tierProposed": "R2",
+      "claims": [
+        "scripts/maintenance/hindsight-rederive.sh",
+        "src/app/recroom/story-weaver/[id]/page.tsx",
+        "tests/unit/hindsight-rederive-safety.test.ts",
+        "tests/e2e/story-weaver-save-failure.spec.ts"
+      ],
+      "dependsOn": [
+        "T-0185"
+      ],
+      "authority": [
+        "H1",
+        "A1",
+        "Q-013",
+        "Q-011"
+      ],
+      "invariants": [
+        "A count-only or omitted target cannot delete a live Hindsight bank.",
+        "A failed chapter read-status POST leaves local state unsaved and shows feedback; successful saves remain unchanged."
+      ],
+      "rollback": "Restore only a harmless count-only rederive command if still needed; never reintroduce a live-destructive default or success UI after a failed save.",
+      "verify": "An isolated dry-run Hindsight fixture proves the ruled script cannot delete a live bank by default; failed HTTP and network saves leave Story Weaver status unchanged with visible error, and successful save remains functional at desktop and phone widths."
+    },
+    {
+      "id": "T-0187",
+      "name": "Warn on legacy boot names and retire individually ruled dev-only shims",
+      "phase": "prerelease-release-contract",
+      "tierProposed": "R2",
+      "claims": [
+        "src/instrumentation.ts",
+        "src/lib/config/**",
+        "scripts/bootstrap/**",
+        "tests/unit/legacy-boot-warning.test.ts",
+        "scripts/hardware/ch-db-backup.sh",
+        "scripts/hardware/ch-disk-report.sh",
+        "scripts/hardware/ch-health-check.sh",
+        "scripts/hardware/ch-log-rotate.sh",
+        "scripts/hardware/ch-system-report.sh",
+        "scripts/tooling/eos-compile.mjs",
+        "tests/unit/b15-corpus-moves-under-org.test.ts",
+        "tests/unit/b15-docs-pipeline-is-wired.test.ts",
+        "org/COMPILE_REPORT.md",
+        "org/VENTURE_BRIEF.md",
+        "org/EOS_FEEDBACK.md",
+        "docs/running/host-scheduling.md",
+        "docs/running/cross-platform.md"
+      ],
+      "dependsOn": [
+        "T-0186"
+      ],
+      "authority": [
+        "Q-011",
+        "cross-cutting-04",
+        "tooling-11",
+        "tooling-10b",
+        "org-11"
+      ],
+      "invariants": [
+        "Legacy names and 52 redirects continue to work through v1.0.0.",
+        "A used legacy name emits one non-secret boot warning; no credential value appears in logs.",
+        "Only the five specifically ruled dev-only hardware shims and the refused EOS compiler are retired before v1.0.0; installed data-dir copies and ch-backup remain.",
+        "The accepted org-11 removal changes two b15 test identities explicitly; record that item-specific exception, retirement note and append-only EOS feedback entry."
+      ],
+      "rollback": "Restore compatible alias reads with the warning; restore a retired file only if its ruled caller inventory is refuted. Never remove other aliases before v1.0.0.",
+      "verify": "A real boot with each supported legacy family emits the bounded warning and still starts; a PS-only boot emits none; secret values never appear. The five ruled dev-only shims and refused EOS compiler are absent, installed shims still work, EOS retirement note and feedback exist, the two b15 removals are itemised, and x-ch and redirect acceptance pass before the v1.0.0 tag."
+    },
+    {
+      "id": "T-0188",
+      "name": "Converge migration and table drivers",
+      "phase": "post-v1-structural",
+      "tierProposed": "R2",
+      "claims": [
+        "src/lib/db/migrations/**",
+        "src/lib/db/table-driver/**",
+        "src/lib/db/upgrade.ts",
+        "src/lib/db/apply-benchmark-config-migration.ts",
+        "scripts/data/**",
+        "tests/unit/migration-*.test.ts"
+      ],
+      "dependsOn": [
+        "T-0187",
+        "operator-v1-release"
+      ],
+      "authority": [
+        "Q-011",
+        "Q-014",
+        "lib-data-01",
+        "lib-data-02",
+        "D1"
+      ],
+      "invariants": [
+        "Fresh and old supported databases converge in one pass or fail loudly.",
+        "Backup precedes migration and user data remains intact."
+      ],
+      "rollback": "Keep a database backup and revert only the driver consolidation; never roll a migrated schema backward in place.",
+      "verify": "Fresh, prior-version and deliberately damaged v15 fixtures yield the specified schema or explicit failure without version advancement; install/update acceptance proves backup-before-migrate on Linux and Windows."
+    },
+    {
+      "id": "T-0189",
+      "name": "Centralise data parsing and transactions",
+      "phase": "post-v1-structural",
+      "tierProposed": "R2",
+      "claims": [
+        "src/lib/db/**",
+        "src/lib/data/**",
+        "tests/unit/data-transaction-*.test.ts"
+      ],
+      "dependsOn": [
+        "T-0188"
+      ],
+      "authority": [
+        "Q-014",
+        "lib-data-03",
+        "lib-data-10",
+        "T-0164 SQLite column inventory"
+      ],
+      "invariants": [
+        "Column readers, writers and recovery are traced before any schema or table removal.",
+        "Invalid JSON and transaction failure do not create partial application state."
+      ],
+      "rollback": "Revert code paths with a fixture database; defer any irreversible column drop until compatibility evidence and a separate ruling exist.",
+      "verify": "Table-driver and JSON boundary suites reject malformed rows predictably; injected write failure rolls back every related row, and the 529-column inventory records each proposed change with reader/writer/migration evidence."
+    },
+    {
+      "id": "T-0190",
+      "name": "Converge client reads and write ownership",
+      "phase": "post-v1-structural",
+      "tierProposed": "R2",
+      "claims": [
+        "src/hooks/**",
+        "src/app/work/missions/**",
+        "src/lib/api/api-write.ts",
+        "tests/unit/hooks-*.test.ts"
+      ],
+      "dependsOn": [
+        "T-0189"
+      ],
+      "authority": [
+        "Q-016",
+        "hooks-01",
+        "hooks-03",
+        "hooks-07",
+        "hooks-08",
+        "app-02"
+      ],
+      "invariants": [
+        "Missions board errors remain visible in place.",
+        "Mutation invalidation, deadline timing and read-only refusals survive composition-root moves."
+      ],
+      "rollback": "Revert one page or hook cohort independently while retaining the shared contract and original read/write behaviour.",
+      "verify": "The missions board uses the shared cache, a failed read renders feedback, one representative write invalidates the correct keys, and focused browser plus hook tests retain their test-name set."
+    },
+    {
+      "id": "T-0191",
+      "name": "Unify proven component primitives and names",
+      "phase": "post-v1-structural",
+      "tierProposed": "R2",
+      "claims": [
+        "src/components/ui/**",
+        "src/components/**",
+        "src/lib/chat/chat-utils.ts",
+        "tests/unit/components-*.test.tsx",
+        "tests/e2e/component-accessibility*.spec.ts"
+      ],
+      "dependsOn": [
+        "T-0190"
+      ],
+      "authority": [
+        "Q-016",
+        "Q-025",
+        "components-02",
+        "components-03",
+        "components-04",
+        "components-05",
+        "components-08"
+      ],
+      "invariants": [
+        "Select and Picker remain distinct.",
+        "Contextual names, keyboard focus, reduced motion and responsive hierarchy remain accessible.",
+        "Chat uses SimpleMarkdown with guarded links and a Copy button for code blocks."
+      ],
+      "rollback": "Revert each independently measured primitive fold with its consumers and preserve named accessibility fixes.",
+      "verify": "Ten unnamed dropdowns gain contextual names; 1440x900 and 390x844 visual states plus keyboard/ARIA checks pass, and every folded primitive has a documented net-line benefit and unchanged public interaction."
+    },
+    {
+      "id": "T-0192",
+      "name": "Converge API route envelopes and validation",
+      "phase": "post-v1-structural",
+      "tierProposed": "R2",
+      "claims": [
+        "src/app/api/**",
+        "src/lib/api/**",
+        "tests/e2e/route-contract-*.spec.ts",
+        "docs/reference/api.md",
+        "tests/unit/api-route-caller-gate.test.ts"
+      ],
+      "dependsOn": [
+        "T-0191"
+      ],
+      "authority": [
+        "Q-010 public contract",
+        "Q-016",
+        "app-04",
+        "cross-cutting-01",
+        "cross-cutting-02",
+        "app-01a-d/h"
+      ],
+      "invariants": [
+        "Every shipped URL and method remains reachable.",
+        "Body validation, auth, read-only, errors and status codes stay exact while large pages move to hooks."
+      ],
+      "rollback": "Revert one route/page cohort at a time with URL and method oracle intact.",
+      "verify": "A generated route matrix preserves every public method and URL, app-01's four operator routes have item-specific API reference labels and an explicit caller-gate allowlist, malformed bodies return deliberate 4xx, auth and read-only refusals remain exact, and full desktop/phone API-backed smoke journeys pass."
+    },
+    {
+      "id": "T-0193",
+      "name": "Extract large page hooks without losing visible state",
+      "phase": "post-v1-structural",
+      "tierProposed": "R2",
+      "claims": [
+        "src/app/work/composer/**",
+        "src/app/work/missions/**",
+        "src/app/recroom/story-weaver/**",
+        "src/hooks/page-*.ts",
+        "tests/e2e/page-state-*.spec.ts"
+      ],
+      "dependsOn": [
+        "T-0192"
+      ],
+      "authority": [
+        "Q-016",
+        "app-02",
+        "hooks-07",
+        "hooks-08",
+        "T-0164 44-state route walk"
+      ],
+      "invariants": [
+        "URL state, deep links, errors, dropdowns, inspector and dialogs survive the hook move.",
+        "Desktop and phone layouts retain their measured accessible structure."
+      ],
+      "rollback": "Revert one page and its owned hook at a time; preserve the corrected Composer stacking and contrast oracles.",
+      "verify": "Desktop and phone walks of Composer, Missions and Story Weaver show the same route state, controls, dialogs, focus, h1 and no overflow or console errors; moved test names agree and the page-hook net change is measured."
+    },
+    {
+      "id": "T-0194",
+      "name": "Align library domains and Hermes ownership",
+      "phase": "post-v1-structural",
+      "tierProposed": "R2",
+      "claims": [
+        "src/lib/**",
+        "src/modules/hermes/**",
+        "tests/unit/lib-domain-*.test.ts"
+      ],
+      "dependsOn": [
+        "T-0193"
+      ],
+      "authority": [
+        "ADR-0005",
+        "Q-016",
+        "lib-domains-01",
+        "lib-domains-02",
+        "lib-domains-03"
+      ],
+      "invariants": [
+        "Laboratory changes wait for an ADR-0005-compatible design.",
+        "All five path spellings, including regex alternations, are checked when files move."
+      ],
+      "rollback": "Restore the former module exports with aliases only for documented callers; retain moved tests and public behaviour.",
+      "verify": "TypeScript, Knip, path-citation scan and complete test-name comparison pass; agent_root and Hermes section ownership reside in the Hermes module, and Laboratory has the accepted ADR scope before any move."
+    },
+    {
+      "id": "T-0195",
+      "name": "Simplify test harnesses without losing questions",
+      "phase": "post-v1-structural",
+      "tierProposed": "R2",
+      "claims": [
+        "tests/helpers/**",
+        "tests/unit/**",
+        "jest.config.*",
+        "tests/e2e/**"
+      ],
+      "dependsOn": [
+        "T-0194"
+      ],
+      "authority": [
+        "Q-015",
+        "tests-04",
+        "tests-06",
+        "tests-07",
+        "tests-09",
+        "tests-10"
+      ],
+      "invariants": [
+        "Every moved test retains its name and assertion intent; coverage floors never fall.",
+        "Closed-oracle changes use a different author and a dated amendment."
+      ],
+      "rollback": "Revert one fixture or suite cohort while keeping behaviour tests that exposed defects.",
+      "verify": "Before/after test-name sets agree except red-first additions; jsdom default and node exceptions match execution needs, source-reading suites converted only where behavioural replacements pass, and e2e flake reruns record both results."
+    },
+    {
+      "id": "T-0196",
+      "name": "Consolidate tooling and CI paths",
+      "phase": "post-v1-structural",
+      "tierProposed": "R2",
+      "claims": [
+        "scripts/**",
+        ".github/workflows/**",
+        "Dockerfile",
+        ".dockerignore",
+        "docker-compose.yml",
+        "docker-compose.real-hermes.yml",
+        "docker-compose.bench-gateway.yml",
+        "tests/scripts/**"
+      ],
+      "dependsOn": [
+        "T-0195"
+      ],
+      "authority": [
+        "Q-009",
+        "Q-013",
+        "tooling-04",
+        "tooling-05",
+        "tooling-16",
+        "tooling-19",
+        "tooling-22"
+      ],
+      "invariants": [
+        "Windows Git Bash development remains supported.",
+        "Every public npm command keeps its name except the individually ruled dead test:e2e-bench-gateway removal in T-0199; the complete gate remains exit-code binding.",
+        "The ch_data, ch_hermes and /data/ch Compose names stay to preserve existing data; add why-comments."
+      ],
+      "rollback": "Restore a removed internal wrapper only if its caller test demonstrates a live need; do not restore blind gates.",
+      "verify": "Windows and Linux install, update, build, Docker context, CI and ten-step gate pass; planted design/read/write violations fail, and live tooling census falls against its frozen target."
+    },
+    {
+      "id": "T-0197",
+      "name": "Repair running and root documentation",
+      "phase": "post-v1-structural",
+      "tierProposed": "R1",
+      "claims": [
+        "docs/**",
+        "README.md",
+        "CONTRIBUTING.md",
+        "CHANGELOG.md"
+      ],
+      "dependsOn": [
+        "T-0196"
+      ],
+      "authority": [
+        "Q-011",
+        "Q-013",
+        "docs-01",
+        "docs-02",
+        "docs-04",
+        "docs-08"
+      ],
+      "invariants": [
+        "Canonical running, migration and security commands remain correct.",
+        "Manifest and link checks are generated from source and no synced output is hand-edited."
+      ],
+      "rollback": "Revert only an inaccurate source document and regenerate its derived manifest.",
+      "verify": "Every documented command is exercised or explicitly marked operator-only, manifest and link checks pass, CHANGELOG matches shipped versions, and the live-doc scope is measured against its fixed baseline."
+    },
+    {
+      "id": "T-0198",
+      "name": "Consolidate live organisation guidance",
+      "phase": "post-v1-structural",
+      "tierProposed": "R2",
+      "claims": [
+        "org/HANDOVER.md",
+        "org/QUESTIONS.md",
+        "org/PLAYBOOKS.md",
+        "org/tasks/new-records-only",
+        "tests/unit/org-process-*.test.ts"
+      ],
+      "dependsOn": [
+        "T-0197"
+      ],
+      "authority": [
+        "Q-010",
+        "Q-015",
+        "org-04",
+        "org-09",
+        "ADR-0011"
+      ],
+      "invariants": [
+        "Protected set, historical tasks, append-only ledgers and derived views are untouched without their specific authority.",
+        "Claims and rendered views remain reproducible."
+      ],
+      "rollback": "Revert only live guidance changes and render views from unchanged task records; do not rewrite history.",
+      "verify": "A fresh task record renders views deterministically, a planted protected edit is refused without accepted ADR, claims enforce two writers, and live organisation scope is reported separately from protected/history/generated counts."
+    },
+    {
+      "id": "T-0199",
+      "name": "Remove ruled dead internal surfaces",
+      "phase": "post-v1-removal",
+      "tierProposed": "R2",
+      "claims": [
+        "package.json",
+        "docker-compose.bench-gateway.yml",
+        "tests/scripts/bench-gateway-itest.sh",
+        "test-harness/bench-gateway.Dockerfile",
+        "test-harness/bench-gateway-entrypoint.sh",
+        "test-harness/bench-gateway-e2e.mjs",
+        "test-harness/baseline-fix-verify.mjs",
+        "test-harness/poll-pair.mjs",
+        "test-harness/poll-run.mjs",
+        "src/lib/db/upgrade.ts",
+        "src/lib/db/index.ts",
+        "scripts/lib/ps-migrate.sh",
+        "docs/running/migration.md",
+        "docs/running/backup.md",
+        "docs/running/data-storage.md",
+        "docs/contributing/testing.md",
+        "tests/unit/db-upgrade.integration.test.ts",
+        "tests/unit/b6-backup-route.test.ts",
+        "tests/unit/b6-database-backup.test.ts",
+        "tests/fixtures/dead-surface-*.json"
+      ],
+      "dependsOn": [
+        "T-0198",
+        "operator-v1-release"
+      ],
+      "authority": [
+        "Q-011",
+        "Q-013",
+        "tooling-02",
+        "tooling-12",
+        "lib-data-05"
+      ],
+      "invariants": [
+        "Only individually ruled dead and uncalled internals are removed.",
+        "Documented routes, database tables and data-bearing paths stay until their separate ruling; test:e2e-bench-gateway is the expressly ruled npm command exception.",
+        "ps-relocate.sh remains supported while control-hub directory discovery remains.",
+        "Removing lib-data-05's unreachable rebuild includes its caller, shell warning, tests and documented promise; pre-baseline backup listing remains."
+      ],
+      "rollback": "Restore any accidentally live path immediately with its caller oracle; retain compatibility until the post-1.0 retirement release.",
+      "verify": "A static and runtime caller inventory proves each removed internal has no supported caller; the eight ruled benchmark harness files and test:e2e-bench-gateway command are absent, ps-relocate remains. The unreachable baseline rebuild, index caller, shell warning and false guide promise are absent while old pre-baseline backup listings and their b6 tests remain; full install/update and URL matrix stay green, and every removed path is itemised with its Q-013 or Q-014 ruling."
+    },
+    {
+      "id": "T-0200",
+      "name": "Retire first-post-1.0 aliases as one release unit",
+      "phase": "post-v1-removal",
+      "tierProposed": "R3",
+      "claims": [
+        "scripts/bootstrap/**",
+        "src/lib/config/**",
+        "src/lib/api/api-auth.ts",
+        "src/lib/api/read-only.ts",
+        "src/lib/host/paths.ts",
+        "src/proxy.ts",
+        "next.config.ts",
+        "scripts/application/ch-deploy.sh",
+        "scripts/hardware/ch-backup.sh",
+        "docs/running/migration.md",
+        "tests/unit/legacy-alias-retirement.test.ts",
+        "scripts/bootstrap/backup-hermes-config.sh",
+        "scripts/bootstrap/setup-hindsight.sh",
+        "scripts/bootstrap/setup.mjs",
+        "scripts/bootstrap/setup.sh",
+        "scripts/docs/build-site.mjs",
+        "scripts/docs/extract.ts",
+        "scripts/docs/lib.mjs",
+        "scripts/hardware/ps-db-backup.mjs",
+        "scripts/hardware/ps-db-backup.sh",
+        "scripts/hardware/ps-disk-report.mjs",
+        "scripts/hardware/ps-disk-report.sh",
+        "scripts/hardware/ps-log-rotate.mjs",
+        "scripts/hardware/ps-log-rotate.sh",
+        "scripts/hardware/reconnect-hindsight.sh",
+        "scripts/lib/ps-dotenv-local.sh",
+        "scripts/lib/ps-env.sh",
+        "scripts/lib/ps-rename-migrate.sh",
+        "scripts/maintenance/ps-migrate.sh",
+        "scripts/maintenance/ps-relocate.sh",
+        "scripts/tooling/_env-local.mjs",
+        "scripts/tooling/discover-agents.mjs",
+        "scripts/tooling/ensure-hermes-model-sync.ts",
+        "scripts/tooling/hermes-registry-import.mjs",
+        "scripts/tooling/import-hermes-state.ts",
+        "scripts/tooling/migrate-to-runtime.mjs",
+        "scripts/tooling/ps-deploy.mjs",
+        "scripts/tooling/seed-catalog.ts",
+        "src/app/agent/profiles/page.tsx",
+        "src/app/agent/settings/restore/page.tsx",
+        "src/app/agent/skills/page.tsx",
+        "src/app/agent/tools/page.tsx",
+        "src/app/api/agent/profiles/sync/pull/route.ts",
+        "src/app/results/sessions/page.tsx",
+        "src/app/work/research/page.tsx",
+        "src/components/missions/MissionCreateForm.tsx",
+        "src/hooks/useModelActions.ts",
+        "src/lib/api/api-fetch.ts",
+        "src/lib/api/api-write.ts",
+        "src/lib/composer/engine.ts",
+        "src/lib/composer/schema.ts",
+        "src/lib/composer/seed.ts",
+        "src/lib/db/apply-bench-gateways-migration.ts",
+        "src/lib/db/apply-research-composer-link-migration.ts",
+        "src/lib/db/apply-research-options-migration.ts",
+        "src/lib/db/sql-migrations.ts",
+        "src/lib/git/git-branch.ts",
+        "src/lib/missions/mission-handlers/dispatch.ts",
+        "src/lib/missions/mission-promote-handler.ts",
+        "src/lib/missions/mission-submit-requirement.ts",
+        "src/lib/orchestration/run-deadline.ts",
+        "src/lib/orchestration/scheduler/tick.ts",
+        "src/lib/search/index.ts",
+        "src/lib/templates-handlers/update.ts",
+        "src/lib/ui/dispatch-mode.ts",
+        "src/lib/update-handlers/shared.ts",
+        "src/modules/hermes/lib/agent-runtime.ts",
+        "src/modules/hermes/lib/home.ts",
+        "src/modules/hermes/lib/profile-paths.ts"
+      ],
+      "dependsOn": [
+        "T-0199",
+        "operator-v1-release"
+      ],
+      "authority": [
+        "Q-011",
+        "cross-cutting-04",
+        "tooling-11",
+        "critic-08"
+      ],
+      "invariants": [
+        "CH_, CONTROL_HUB_, AGENT_HOME, x-ch-*, the still-supported ch-deploy/ch-backup shims and 52 redirects survive through v1.0.0; T-0187's five specifically ruled dev-only shims are the exception.",
+        "control-hub.db discovery, ps-relocate and ch_data/ch_hermes Compose volume names survive retirement; security aliases without PS twins refuse boot."
+      ],
+      "rollback": "Keep a tagged pre-retirement release and migration route; restore aliases only together with their warning and tripwire contracts.",
+      "verify": "The operator's v1.0.0 tag and T-0187 warning proof precede retirement; a fresh git-grep alias inventory accounts for every active CH_, CONTROL_HUB_, AGENT_HOME, x-ch and ch.sessions reader, with exact file claims and PS replacement tests. Old aliases work in 1.0 and are absent only in the first post-1.0 candidate, missing PS security twins fail boot, while historical database discovery, ps-relocate, Compose volume names and every ruled redirect remain intact under migration tests."
+    },
+    {
+      "id": "T-0201",
+      "name": "Close the programme row by row",
+      "phase": "closing",
+      "tierProposed": "R2",
+      "claims": [
+        "org/plans/2026-09-refactor-programme.md",
+        "org/plans/2026-09-refactor-ownership.json",
+        "org/plans/2026-09-refactor-final-dispositions.json",
+        "org/HANDOVER.md",
+        "scripts/tooling/refactor-closing-oracle.mjs"
+      ],
+      "dependsOn": [
+        "T-0200"
+      ],
+      "authority": [
+        "Q-009",
+        "Q-017",
+        "Q-023",
+        "T-0164 itemised ledgers"
+      ],
+      "invariants": [
+        "Original and new targets never move; every miss names its baseline, final number and reason.",
+        "Every preliminary finding, split decision and coverage atom ends done, ruled out or deferred with evidence and owner."
+      ],
+      "rollback": "Reopen the closing record if any CI job, route, census row or finding disposition is unverified; never edit the frozen baselines.",
+      "verify": "The closing oracle reads committed baseline files and reports all eight rows and each miss; all 265 findings, 163 split decisions and 285 atoms have unique final reasoned dispositions, all local and hosted jobs are green, and no protected edit or removal lacks its ruling."
+    }
+  ],
+  "closing": {
+    "measureFile": "org/plans/2026-09-refactor-measures.json",
+    "dispositionFile": "org/plans/2026-09-refactor-final-dispositions.json",
+    "oracle": "scripts/tooling/refactor-closing-oracle.mjs",
+    "missPolicy": "Report every miss with the committed baseline, target, final number and written reason; aggregate improvement cannot conceal any failed row."
+  }
+}
