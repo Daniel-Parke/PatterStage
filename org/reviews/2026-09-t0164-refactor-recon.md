@@ -2,7 +2,7 @@
 summary: T-0164 current-tree reconnaissance after foundation and session-security batches
 type: review
 tags: [review, phase-1, refactor]
-status: in-progress
+status: done
 ---
 
 # PatterStage refactor reconnaissance, 28 September 2026
@@ -47,11 +47,11 @@ The independent source reviews cover [app and hooks](2026-09-t0164-dimension-app
 current-tree source anchor and a qualification. `live` describes the source
 shape only. It does not authorise removal or establish net saving.
 
-Independent sceptics challenge each dimension separately. Their corrections
-must be applied to the itemised ledger before closing this review. The final
-completeness critic must check that every assigned ID occurs exactly once,
-that every atom has a defensible disposition, and that no pending verdict is
-misstated as acceptance. This review remains open until those steps finish.
+Independent sceptics challenged each dimension separately. Their corrections
+were applied to the itemised ledger. The final completeness critic checked
+that every assigned ID occurs exactly once, that every atom has a defensible
+disposition, and that no pending verdict is misstated as acceptance. The
+remaining unresolved or deferred proofs stay explicit in the coverage ledger.
 
 ## Security and deployment
 
@@ -219,8 +219,15 @@ reduction target, and the baseline file cannot count itself.
 
 ## Open proof and exit
 
-T-0164 remains open until the unchanged-tree full gate, committed-tree
-mutation sweep and every hosted job are recorded by exit code.
+At committed `babf76ac`, the unchanged-tree full gate passed all ten steps.
+Jest passed 7,322 tests in 752 suites with four skips; Playwright passed 316
+cases with 24 existing skips. The committed-tree mutation sweep killed all
+four mutants by assertions and verified the restored controls. The two
+intermediate red gates and their repairs are in T-0164's task record. Hosted
+job results are recorded there after the closure push. The line census now
+holds 133,754 test lines after the independently amended bloom oracle; its
+seven added lines have a committed growth reason. No new structural target
+is inferred from this review alone.
 T-0165 can then use this recon to propose fixed structural targets and
 independently revertible batches. Approval of that complete plan is a separate
 operator action. Q-011 still places the first release before structural

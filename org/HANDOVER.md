@@ -9,6 +9,36 @@ updated: 2026-09-28
 
 ## Current status, 2026-09-28
 
+T-0164's current-tree reconnaissance is closed at `babf76ac` pending this
+record's hosted closure checks. Its linked ledgers account for 265 preliminary
+findings, 163 split operator dispositions and all 285 atomic obligations from
+107 original coverage bullets. The defensible current dispositions are 244
+verified **source observations**, 12 refuted and nine unresolved findings;
+25 narrow verified, 215 unresolved and 45 deferred coverage atoms. A source
+observation is not a demonstrated user defect or permission to remove a
+feature. The independent sceptics and final completeness critic are recorded
+in `org/reviews/2026-09-t0164-sceptics.md`.
+
+The unchanged-tree T-0164 gate passed all ten steps in the isolated
+`t0158-sweep` worktree: 752 Jest suites (7,322 passed, four skipped), 316
+Playwright passes (24 skipped), production build, build purity, Knip,
+canary and both censuses. Its tree hash was
+`e98ebe32caa4f78b5f846647f1006032bddaa02cf5dfef1661432aa7c6b52b0a`.
+All four committed-tree mutants were killed by assertions, and restoration
+left the worktree clean. Two earlier gates stopped honestly: first at six
+CommonJS lint errors, then at one stale bloom selector oracle. A different
+author corrected the closed oracle without changing its nine test names.
+The line census records its seven added test lines with a reason.
+
+The controlled app walk used port **3802** for 19 component states at
+1440×900 and 390×844; a supplemental 22-route walk used port **3805**.
+The CSP probe used port **3804**. All used isolated data. Optional Hindsight
+returned 503 without its backend, and the empty-log path returned 404. These
+are bounded route and visual checks, not acceptance of every external-provider
+journey. T-0165 remains the full Phase 2 plan for separate operator approval.
+Q-011 still requires the operator's first release before structural batches;
+PR #157 remains the sole promotion PR.
+
 T-0158's opaque browser sessions and managed transport are complete on
 `dev@b54701bb` under accepted ADR-0012, ADR-0013 and ADR-0014. The final
 isolated ten-step gate exited 0 with an unchanged tree
@@ -57,15 +87,11 @@ no assertion result or faulting-module attribution. The normal parallel final
 gate passed. The six diagnostic test lines were held in the committed census
 with a written reason; the original five targets were not moved.
 
-T-0164 remains the main prerequisite: decompose all 107 preliminary coverage
-bullets into an itemised evidence ledger, finish the full-history secret scan,
-dependency and licence attribution, built-app CSP and route-bundle review,
-SQLite column traces, controlled component states, independent sceptics and
-completeness critic. T-0165 is the full Phase 2 plan after that evidence and
-requires separate operator approval before structural execution. PR #157
-remains the sole working promotion PR; no release has been made. Local
-worktrees with unique or ignored state remain preserved. Three untracked
-T-0164 gitleaks control files in the primary checkout are not T-0158 work.
+T-0164 was the main prerequisite when T-0158 closed. Its current result and
+limits are now at the top of this handover. T-0165 is the full Phase 2 plan
+after that evidence and requires separate operator approval before structural
+execution. PR #157 remains the sole working promotion PR; no release has been
+made. Local worktrees with unique or ignored state remain preserved.
 
 ## Dated status, 2026-09-27
 
