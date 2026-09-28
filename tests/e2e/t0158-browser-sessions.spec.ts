@@ -1,11 +1,12 @@
 import { test, expect } from '@playwright/test';
-import { spawn, type ChildProcess } from 'node:child_process';
+import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createServer as createHttpServer, request as httpRequest, type Server, type ServerResponse } from 'node:http';
-import { createServer } from 'node:net';
+import { createServer as createHttpsServer } from 'node:https';
+import { connect as connectTcp, createServer } from 'node:net';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { basename, dirname, join, resolve } from 'node:path';
 import Database from 'better-sqlite3';
 
 const token = process.env.PS_E2E_AUTH_TOKEN;
@@ -709,16 +710,173 @@ test.describe('T-0158 managed network startup', () => {
     });
   });
 
-  test('Given private-proxy mode, direct HTTP cannot mint a session by claiming HTTPS in forwarded headers', async () => {
-    await fixture('private-proxy', async (origin, publicOrigin, child) => {
-      await waitForListener(origin, child);
-      const response = await fetch(`${origin}/api/auth/sign-in`, {
-        method: 'POST', headers: { Origin: publicOrigin, Host: 'stage.example', 'X-Forwarded-Proto': 'https', 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: operatorToken }),
+  test('Given private-proxy mode, direct HTTP cannot mint a session by claiming HTTPS in forwarded headers', async ({ browser }) => {
+    const directory = mkdtempSync(join(tmpdir(), 't0158-private-proxy-'));
+    let app: ChildProcess | undefined;
+    let proxy: ReturnType<typeof createHttpsServer> | undefined;
+    let context: Awaited<ReturnType<typeof browser.newContext>> | undefined;
+    try {
+      // A refused connection is evidence of binding isolation only if this address is usable.
+      const aliasProbe = createServer(socket => { socket.on('error', () => {}); socket.end(); });
+      try {
+        await new Promise<void>((ready, reject) => {
+          aliasProbe.once('error', reject);
+          aliasProbe.listen(0, '127.0.0.2', () => ready());
+        });
+        const address = aliasProbe.address();
+        if (!address || typeof address === 'string') throw new Error('127.0.0.2 preflight has no TCP port');
+        await new Promise<void>((connected, reject) => {
+          const socket = connectTcp({ host: '127.0.0.2', port: address.port });
+          socket.setTimeout(2_000, () => socket.destroy(new Error('127.0.0.2 preflight timed out')));
+          socket.once('connect', () => { socket.end(); connected(); });
+          socket.once('error', reject);
+        });
+      } finally {
+        if (aliasProbe.listening) await new Promise<void>(done => aliasProbe.close(() => done()));
+      }
+
+      const opensslCandidates = process.platform === 'win32'
+        ? [join(process.env.ProgramFiles ?? 'C:\\Program Files', 'Git', 'usr', 'bin', 'openssl.exe'), 'openssl']
+        : ['openssl'];
+      const openssl = opensslCandidates.find(candidate => {
+        const result = spawnSync(candidate, ['version'], { windowsHide: true, shell: false, timeout: 5_000, encoding: 'utf8' });
+        return !result.error && result.status === 0;
       });
-      expect([401, 403]).toContain(response.status);
-      expect(response.headers.get('set-cookie') ?? '').not.toMatch(/ps_session=[^;]+/);
-    });
+      if (!openssl) throw new Error('OpenSSL is required for the T-0158 HTTPS proxy test; no usable executable was found');
+      const keyPath = join(directory, 'loopback.key');
+      const certPath = join(directory, 'loopback.crt');
+      const certificate = spawnSync(openssl, [
+        'req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-sha256', '-days', '1',
+        '-keyout', keyPath, '-out', certPath, '-subj', '/CN=127.0.0.2',
+        '-addext', 'subjectAltName=IP:127.0.0.2',
+      ], { windowsHide: true, shell: false, timeout: 15_000, encoding: 'utf8', env: { ...process.env, MSYS_NO_PATHCONV: '1' } });
+      if (certificate.error || certificate.status !== 0) {
+        throw new Error(`OpenSSL could not create the temporary loopback certificate (exit ${certificate.status ?? 'unavailable'})`);
+      }
+
+      const appPort = await new Promise<number>((ready, reject) => {
+        const socket = createServer();
+        socket.once('error', reject);
+        socket.listen(0, '127.0.0.1', () => {
+          const address = socket.address();
+          if (!address || typeof address === 'string') return reject(new Error('No app TCP port'));
+          socket.close(() => ready(address.port));
+        });
+      });
+      let proxyPort = 0;
+      proxy = createHttpsServer({ key: readFileSync(keyPath), cert: readFileSync(certPath) }, (incoming, outgoing) => {
+        const headers = { ...incoming.headers };
+        for (const name of Object.keys(headers)) {
+          if (name === 'forwarded' || name.startsWith('x-forwarded-')) delete headers[name];
+        }
+        headers.host = `127.0.0.2:${proxyPort}`;
+        headers['x-forwarded-proto'] = 'https';
+        headers['x-forwarded-host'] = headers.host;
+        const upstream = httpRequest({
+          hostname: '127.0.0.1', port: appPort, method: incoming.method, path: incoming.url, headers,
+        }, response => {
+          outgoing.writeHead(response.statusCode ?? 502, response.headers);
+          response.pipe(outgoing);
+        });
+        upstream.once('error', () => {
+          if (!outgoing.headersSent) outgoing.writeHead(502);
+          outgoing.end();
+        });
+        incoming.pipe(upstream);
+      });
+      for (let attempt = 0; attempt < 5; attempt++) {
+        await new Promise<void>((ready, reject) => {
+          proxy!.once('error', reject);
+          proxy!.listen(0, '127.0.0.2', () => ready());
+        });
+        const proxyAddress = proxy.address();
+        if (!proxyAddress || typeof proxyAddress === 'string') throw new Error('HTTPS proxy has no TCP port');
+        proxyPort = proxyAddress.port;
+        if (proxyPort !== appPort) break;
+        await new Promise<void>(done => proxy!.close(() => done()));
+      }
+      if (proxyPort === appPort) throw new Error('Could not allocate a proxy port distinct from the app port');
+      const publicOrigin = `https://127.0.0.2:${proxyPort}`;
+      const environment: NodeJS.ProcessEnv = {
+        ...process.env, PS_DATA_DIR: directory, CH_DATA_DIR: directory,
+        HERMES_HOME: join(directory, 'hermes-home'), PS_AUTH_TOKEN: operatorToken,
+        PS_AUTH_MODE: 'token', PS_PUBLIC_ORIGIN: publicOrigin,
+        PS_PRIVATE_PROXY_NETWORK: '1', PS_READ_ONLY: '1',
+      };
+      delete environment.PS_INSECURE_LAN_HTTP;
+      app = spawn(process.execPath, [
+        join(process.cwd(), 'node_modules', 'next', 'dist', 'bin', 'next'),
+        'start', '-H', '127.0.0.1', '-p', String(appPort),
+      ], { cwd: process.cwd(), env: environment, stdio: 'ignore', windowsHide: true });
+      let appReady = false;
+      for (let attempt = 0; attempt < 100; attempt++) {
+        if (app.exitCode !== null) throw new Error(`Loopback app exited ${app.exitCode} before listening`);
+        try {
+          const health = await fetch(`http://127.0.0.1:${appPort}/api/health`, { signal: AbortSignal.timeout(500) });
+          if (health.ok) { appReady = true; break; }
+        } catch { /* wait for listener */ }
+        await new Promise(ready => setTimeout(ready, 200));
+      }
+      if (!appReady) throw new Error('Loopback app did not become healthy within 20 seconds');
+
+      const directBody = JSON.stringify({ token: operatorToken });
+      const direct = await new Promise<{ refused: boolean; issuedSessionCookie: boolean }>((ready, reject) => {
+        const request = httpRequest({
+          hostname: '127.0.0.2', port: appPort, path: '/api/auth/sign-in', method: 'POST',
+          headers: {
+            Host: `127.0.0.2:${proxyPort}`, Origin: publicOrigin,
+            'X-Forwarded-Proto': 'https', 'X-Forwarded-Host': `127.0.0.2:${proxyPort}`,
+            'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(directBody),
+          },
+        }, response => {
+          const setCookie = response.headers['set-cookie']?.join(';') ?? '';
+          response.resume();
+          response.once('end', () => ready({ refused: false, issuedSessionCookie: /ps_session=[^;,]+/i.test(setCookie) }));
+          response.once('error', reject);
+        });
+        request.setTimeout(3_000, () => request.destroy(new Error('Direct HTTP probe timed out')));
+        request.once('error', error => {
+          if ((error as NodeJS.ErrnoException).code === 'ECONNREFUSED') ready({ refused: true, issuedSessionCookie: false });
+          else reject(new Error(`Direct HTTP probe failed with ${(error as NodeJS.ErrnoException).code ?? 'unknown error'}`));
+        });
+        request.end(directBody);
+      });
+
+      context = await browser.newContext({ ignoreHTTPSErrors: true });
+      const signIn = await context.request.get(`${publicOrigin}/?ps_token=${encodeURIComponent(operatorToken)}`, {
+        headers: {
+          'X-Forwarded-Proto': 'http',
+          'X-Forwarded-Host': 'spoof.invalid', Forwarded: 'proto=http;host=spoof.invalid',
+        },
+        maxRedirects: 0,
+      });
+      const session = (await context.cookies(publicOrigin)).find(cookie => cookie.name === 'ps_session');
+      expect(signIn.status()).toBeGreaterThanOrEqual(300);
+      expect(signIn.status()).toBeLessThan(400);
+      expect({ secure: session?.secure, httpOnly: session?.httpOnly, opaque: session?.value !== operatorToken })
+        .toEqual({ secure: true, httpOnly: true, opaque: true });
+      expect(direct).toEqual({ refused: true, issuedSessionCookie: false });
+    } finally {
+      try {
+        await context?.close();
+        if (app?.pid && app.exitCode === null) {
+          if (process.platform === 'win32') {
+            const killer = spawn('taskkill', ['/PID', String(app.pid), '/T', '/F'], { stdio: 'ignore', windowsHide: true });
+            await new Promise<void>(done => { killer.once('exit', () => done()); killer.once('error', () => done()); });
+          } else app.kill();
+          await new Promise<void>(done => { app!.once('exit', () => done()); setTimeout(done, 5_000).unref(); });
+        }
+        if (proxy?.listening) {
+          proxy.closeAllConnections();
+          await new Promise<void>(done => proxy!.close(() => done()));
+        }
+      } finally {
+        if (resolve(dirname(directory)) !== resolve(tmpdir()) || !basename(directory).startsWith('t0158-private-proxy-')) {
+          throw new Error('Refusing to remove a directory outside the private-proxy test area');
+        }
+        rmSync(directory, { recursive: true, force: true });
+      }
+    }
   });
 });
 
