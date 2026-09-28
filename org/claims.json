@@ -3,15 +3,15 @@
   "assigned": "2026-09-28",
   "lanes": [
     {
-      "lane_id": "t0182-global-error-oracle",
+      "lane_id": "t0182-csp-oracle-amendment",
       "task_id": "T-0182",
       "session_id": "01a0e985-73b3-7a80-a8ca-d7df490c3a74",
       "host": "local",
       "harness_task_id": "01a0e985-73b3-7a80-a8ca-d7df490c3a74",
-      "path_claims": ["tests/e2e/t0182-global-error.spec.ts"],
-      "acquired": "2026-09-28T19:37:15Z",
-      "expires": "2026-09-29T19:37:15Z"
+      "path_claims": ["tests/e2e/t0182-csp.spec.ts"],
+      "acquired": "2026-09-28T19:50:00Z",
+      "expires": "2026-09-29T19:50:00Z"
     }
   ],
-  "note": "A second independent R3 ORACLE session owns only the newly discovered global-error acceptance test. The coordinator is read-only until that test is frozen; uncommitted implementation files are outside this lane's claims."
+  "note": "The operator authorised an independent amendment to the two injected-script cases. A separate ORACLE author owns only the frozen CSP e2e file. The coordinator is read-only until the amendment is complete."
 }

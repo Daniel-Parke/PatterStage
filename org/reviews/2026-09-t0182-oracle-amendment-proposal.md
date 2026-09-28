@@ -2,13 +2,13 @@
 summary: Proposed independent amendment to the T-0182 injected-script oracle
 type: review
 tags: [security, csp, oracle]
-status: proposed
+status: accepted
 inspected_revision: 6460bb9d
 ---
 
 # T-0182 injected-script oracle amendment proposal
 
-**Status:** awaiting operator authorisation under the R3 ORACLE charter.
+**Status:** operator authorised on 2026-09-28 under the R3 ORACLE charter.
 The implementing coordinator will not edit the frozen oracle.
 
 The independent oracle was frozen in `6460bb9d`. Its desktop and phone
