@@ -89,6 +89,22 @@
       "replacement": "const guardedMethod = undefined;",
       "tests": ["tests/unit/c1-one-route-body.test.ts"],
       "why": "The read-only scanner must count and inspect response-guarded handler implementations."
+    },
+    {
+      "id": "m12-ignore-bare-auth-at-response-release",
+      "file": "src/lib/api/response-route.ts",
+      "anchor": "const supplied = request.headers.get(\"authorization\");",
+      "replacement": "const supplied = request.headers.get(\"authorization\")?.match(/^Bearer\\s+(.+)$/i)?.[1];",
+      "tests": ["tests/unit/t0158-bare-header-rotation.test.ts"],
+      "why": "A bare Authorization credential accepted by the proxy must be rechecked after token rotation."
+    },
+    {
+      "id": "m13-reject-valid-bare-auth-at-release",
+      "file": "src/lib/auth/stream-guard.ts",
+      "anchor": "const supplied = header?.replace(/^Bearer\\s+/i, \"\");",
+      "replacement": "const supplied = header?.match(/^Bearer\\s+(.+)$/i)?.[1];",
+      "tests": ["tests/unit/t0158-bare-header-rotation.test.ts"],
+      "why": "The completion guard must preserve a valid raw Authorization client while checking rotation."
     }
   ]
 }

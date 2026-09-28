@@ -23,6 +23,16 @@ export interface HeldResponse {
   release: () => void;
 }
 
+/** Install only the upstream gateway double; route and session modules remain real. */
+export function installHeldGatewayMock(): jest.Mock {
+  const mockFetchGateway = jest.fn();
+  jest.doMock("@/lib/models/gateway-client", () => ({
+    ...jest.requireActual("@/lib/models/gateway-client"),
+    fetchGateway: (...args: unknown[]) => mockFetchGateway(...args),
+  }));
+  return mockFetchGateway;
+}
+
 /** Hold the route-specific upstream response until the test releases it. */
 export function createHeldUpstream(makeResponse: () => Response) {
   let markCalled!: () => void;
@@ -32,6 +42,26 @@ export function createHeldUpstream(makeResponse: () => Response) {
     release = () => resolve(makeResponse());
   });
   return { called, markCalled, upstream, release };
+}
+
+/** Call the real gateway models route while its mocked upstream response waits. */
+export function heldGatewayModels(
+  fetchGateway: jest.Mock,
+  headers: Record<string, string>,
+  marker: string,
+): HeldResponse {
+  const gate = createHeldUpstream(() => new Response(JSON.stringify({ data: [{ id: marker }] }), {
+    status: 200, headers: { "content-type": "application/json" },
+  }));
+  fetchGateway.mockImplementation(() => {
+    gate.markCalled();
+    return gate.upstream;
+  });
+  // Pass the request even while GET's declared signature takes no arguments.
+  type RequestAwareGet = (request: NextRequest) => Promise<Response>;
+  const pending = import("@/app/api/gateway/models/route").then(({ GET }) =>
+    (GET as RequestAwareGet)(new NextRequest(`${origin}/api/gateway/models`, { headers })));
+  return { pending, called: gate.called, release: gate.release };
 }
 
 export async function finishHeldResponse(

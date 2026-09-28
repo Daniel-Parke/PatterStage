@@ -2,7 +2,7 @@
   "measuredAt": "2026-09-28",
   "counts": {
     "srcLines": 102131,
-    "testLines": 133518,
+    "testLines": 133585,
     "scriptsLines": 13770,
     "srcRepeatedWindowLines": 1012,
     "testRepeatedWindowLines": 4786,
@@ -805,6 +805,11 @@
       "measuredAt": "2026-09-28",
       "rise": "testLines rose from 133503 to 133518",
       "reason": "T-0158: different-author backup oracle amendment adds a non-vacuous guard check for the new POSTImpl export while preserving all 11 test names and assertions."
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "testLines rose from 133518 to 133585",
+      "reason": "T-0158: independent raw Authorization rotation oracle adds three held-response cases; a different author shared the gateway fixture for a net nine-line reduction and kept repeated test windows at 4786."
     }
   ]
 }

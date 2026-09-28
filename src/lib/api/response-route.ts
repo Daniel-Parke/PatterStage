@@ -7,9 +7,9 @@ export async function guardCompletedResponse(request: NextRequest | undefined, r
   if (!request || typeof request.headers?.get !== "function" || typeof request.cookies?.get !== "function") {
     return response;
   }
-  const bearer = request.headers.get("authorization")?.match(/^Bearer\s+(.+)$/i)?.[1];
+  const supplied = request.headers.get("authorization");
   const cookie = request.cookies.get("ps_session")?.value;
-  if (!bearer && !cookie) return response;
+  if (!supplied && !cookie) return response;
   const { streamAuthorizer } = await import("@/lib/auth/stream-guard");
   if (streamAuthorizer(request)()) return response;
   return NextResponse.json({ error: "Browser session is no longer authorised." }, {

@@ -75,3 +75,17 @@ header and a prefixed Bearer request are controls. Use a real temporary
 credential/session environment; do not mock the response guard. Run this
 against the current source and commit its intended red failure before the
 coordinator changes source. No source or existing oracle edits.
+
+## Shared gateway held-test fixture
+
+The new bare-header oracle overlaps the earlier direct gateway held-response
+suite by 14 counted six-line windows. A different author from their oracle
+author may extract the shared gateway hold setup into
+`tests/helpers/t0158-held-session.ts`, and change only
+`tests/unit/t0158-direct-held-response.test.ts` and
+`tests/unit/t0158-bare-header-rotation.test.ts` to use it. The helper must
+remain a real route call with the same mocked upstream release, not mock the
+completion guard or SQLite. Preserve all six full test names and their
+cookie, raw-header, prefixed Bearer and rotation assertions. Prove name-set
+identity, focused green, test TypeScript and ESLint, and that the measured
+repeated test windows return to 4,786 or lower. Report net lines.

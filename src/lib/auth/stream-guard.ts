@@ -7,8 +7,8 @@ import { validateBrowserSession } from "./session-store";
 export function streamAuthorizer(request: NextRequest): () => boolean {
   if (getAuthMode() === "none") return () => true;
   const header = request.headers.get("authorization");
-  const bearer = header?.match(/^Bearer\s+(.+)$/i)?.[1];
-  if (bearer) return () => tokenMatches(bearer, readAuthToken());
+  const supplied = header?.replace(/^Bearer\s+/i, "");
+  if (supplied) return () => tokenMatches(supplied, readAuthToken());
 
   const secret = request.cookies.get(SESSION_COOKIE)?.value;
   if (!secret) return () => false;
