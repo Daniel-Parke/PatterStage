@@ -18,7 +18,7 @@ import { RuntimeRequestError } from "@/lib/runtime/types";
 import { listConversations, createConversation } from "@/lib/chat/chat-repository";
 import { route } from "@/lib/api/api-route";
 
-export const GET = route("GET /api/chat", "list", "Failed to list conversations", async (request?: NextRequest) => {
+export const GET = route("GET /api/chat", "list", "Failed to list conversations", async (request: NextRequest) => {
   return ok({ conversations: listConversations(boundsFrom(request, { defaultLimit: 100, maxLimit: 500 }).limit) });
 });
 

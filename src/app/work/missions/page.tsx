@@ -127,7 +127,7 @@ export default function MissionsPage() {
           >
             <RefreshCw className="w-4 h-4" />
           </button>
-          <Button onClick={handleOpenCreate} size="sm">
+          <Button onClick={handleOpenCreate} size="sm" disabled={loading}>
             <Plus className="w-3.5 h-3.5" /> New Mission
           </Button>
         </>

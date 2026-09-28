@@ -38,9 +38,10 @@ The full gate's Turbopack build found a second exact fail-closed pattern:
 seven blocked framework chunk requests (six unique, including one
 repeated runtime URL), the same two inline scripts and one inline style,
 ten events total. The operator accepted both named patterns while retaining
-Turbopack. Independent oracle amendment and its verification are pending.
-The
-page retains its useful heading, HTTP 500 and frame denial. No production
+Turbopack. A third independent author amended the oracle without changing
+its four names; the focused Turbopack run passed 4/4. The Webpack branch
+of the revised oracle has not been rerun. The page retains its useful
+heading, HTTP 500 and frame denial. No production
 script allowance was added for it.
 
 The first `next build` exposed five pre-existing GET route signatures with
@@ -53,5 +54,7 @@ passed, so the panic was transient. A built Chromium probe located
 Composer's `script-src: eval` event in a Zod `Function` feature probe;
 setting Zod's supported `jitless` mode in the Composer schema removed it.
 The Missions header action was disabled during initial loading to avoid
-an inert pre-hydration click. The full gate, mutation sweep, route-cache
+an inert pre-hydration click. The full gate later found Composer's Build
+tab could likewise be clicked before hydration under phone-width load;
+its control now stays disabled until client setup completes. The mutation sweep, route-cache
 and bundle measurements remain pending at this evidence revision.

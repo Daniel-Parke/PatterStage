@@ -9,6 +9,11 @@
 
 import { z } from "zod";
 
+// Composer validation runs in the browser. Zod's cached Function probe emits a
+// CSP violation even when its exception is caught, so disable JIT before any
+// Composer schema is parsed.
+z.config({ jitless: true });
+
 // ── Enums ────────────────────────────────────────────────────────
 const nodeGateSchema = z.enum(["hil", "auto"]);
 export type NodeGate = z.infer<typeof nodeGateSchema>;

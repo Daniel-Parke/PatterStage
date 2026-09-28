@@ -37,6 +37,14 @@ requires `PS_PUBLIC_ORIGIN` and exactly one explicit mode:
 
 The dev-only cross-origin check on `/_next/webpack-hmr` belongs to `next dev`.
 
+Production page responses carry a fresh CSP nonce for framework scripts and
+must not be cached by a reverse proxy. Keep the browser-visible
+`Content-Security-Policy` header paired with the page response; the
+application forwards that policy and nonce to Next during rendering. A proxy
+must not replace the policy with an inline-script allowance. The internal
+pre-rendered 500 fallback intentionally fails closed under this policy; see
+[ADR-0016](../../org/decisions/ADR-0016-global-error-csp-exception.md).
+
 For **`next dev` on another machine** using a URL with a **literal IP** (e.g. `http://192.168.1.10:42069`), the browser `Origin` must be listed in **`PS_ALLOWED_DEV_ORIGINS`** (setup generates common cases). Opening the site via a **`.local` hostname** matches the `*.local` pattern in `next.config.ts` without extra entries.
 
 Override the host port in Docker Compose with **`PORT`** (see `docker-compose.yml`).

@@ -1,17 +1,6 @@
 {
   "version": 1,
   "assigned": "2026-09-28",
-  "lanes": [
-    {
-      "lane_id": "t0182-bundler-error-oracle-amendment",
-      "task_id": "T-0182",
-      "session_id": "01a0e1fd-fece-7642-8b9d-ec3e48d04e25",
-      "host": "local",
-      "harness_task_id": "01a0e1fd-fece-7642-8b9d-ec3e48d04e25",
-      "path_claims": ["tests/e2e/t0182-global-error.spec.ts"],
-      "acquired": "2026-09-28T20:16:00Z",
-      "expires": "2026-09-29T20:16:00Z"
-    }
-  ],
-  "note": "A third independent R3 ORACLE author owns only the accepted Webpack/Turbopack global-error pattern amendment. Coordinator is read-only while that author writes."
+  "lanes": [],
+  "note": "The independent Webpack/Turbopack global-error amendment was frozen in b7624e21. Coordinator implementation is the sole writing lane."
 }

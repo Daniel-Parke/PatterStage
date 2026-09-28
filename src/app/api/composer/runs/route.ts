@@ -35,7 +35,7 @@ const startSchema = z
   .strict()
   .refine((v) => v.workflowId || v.workflowKey, { message: "workflowId or workflowKey is required" });
 
-export const GET = route("GET /api/composer/runs", "list", "Failed to list runs", async (request?: NextRequest) => {
+export const GET = route("GET /api/composer/runs", "list", "Failed to list runs", async (request: NextRequest) => {
   if (!isFeatureEnabled("composer")) {
     return serviceUnavailable("Composer is not enabled. Set PS_COMPOSER=1 to enable workflows.");
   }

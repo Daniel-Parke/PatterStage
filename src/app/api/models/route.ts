@@ -19,7 +19,7 @@ import { syncDefaultsToHermesConfig } from "@/modules/hermes/lib/config-sync";
 import { recordEvent } from "@/lib/analytics/record-event";
 import { route } from "@/lib/api/api-route";
 
-export const GET = route("GET /api/models", "listing models", "Failed to list models", async (request?: NextRequest) => {
+export const GET = route("GET /api/models", "listing models", "Failed to list models", async (request: NextRequest) => {
   return ok({ models: listModels({ limit: boundsFrom(request, MODEL_LIST_BOUNDS).limit }) });
 });
 

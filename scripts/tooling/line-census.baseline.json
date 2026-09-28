@@ -1,11 +1,11 @@
 {
   "measuredAt": "2026-09-28",
   "counts": {
-    "srcLines": 102188,
-    "testLines": 134465,
+    "srcLines": 102234,
+    "testLines": 134898,
     "scriptsLines": 13865,
     "srcRepeatedWindowLines": 1012,
-    "testRepeatedWindowLines": 4786,
+    "testRepeatedWindowLines": 4792,
     "routesWithTryCatch": 18,
     "handRolledReadHooks": 5,
     "writeHooksWithoutMutation": 0,
@@ -875,6 +875,21 @@
       "measuredAt": "2026-09-28",
       "rise": "testRepeatedWindowLines rose from 4786 to 4802",
       "reason": "T-0181 security boundary adds descriptor, symlink and hardlink protection plus independently amended filesystem oracles without removing tests"
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "srcLines rose from 102188 to 102234",
+      "reason": "T-0182 adds six independent Jest CSP checks and sixteen desktop/phone browser cases, including the separately ruled fail-closed 500 oracle; source growth is the nonce policy and pre-hydration controls, with no removals or loosened coverage."
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "testLines rose from 134465 to 134898",
+      "reason": "T-0182 adds six independent Jest CSP checks and sixteen desktop/phone browser cases, including the separately ruled fail-closed 500 oracle; source growth is the nonce policy and pre-hydration controls, with no removals or loosened coverage."
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "testRepeatedWindowLines rose from 4786 to 4792",
+      "reason": "T-0182 adds six independent Jest CSP checks and sixteen desktop/phone browser cases, including the separately ruled fail-closed 500 oracle; source growth is the nonce policy and pre-hydration controls, with no removals or loosened coverage."
     }
   ]
 }

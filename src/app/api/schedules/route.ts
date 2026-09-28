@@ -36,7 +36,7 @@ const scheduleCreateSchema = z
   })
   .strict();
 
-export const GET = route("GET /api/schedules", "list", "Failed to list schedules", async (request?: NextRequest) => {
+export const GET = route("GET /api/schedules", "list", "Failed to list schedules", async (request: NextRequest) => {
   return ok({ schedules: listSchedules({ limit: boundsFrom(request, SCHEDULE_LIST_BOUNDS).limit }) });
 });
 

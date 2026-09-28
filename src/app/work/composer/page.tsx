@@ -140,6 +140,7 @@ export default function ComposerPage() {
   // T-0133). Staying mounted keeps T-0106 D7: a look at a running workflow
   // does not throw away what is on the board.
   const [buildOpened, setBuildOpened] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
   const [input, setInput] = useState("");
   const [workflowId, setWorkflowId] = useState<string>("");
   const [profileName, setProfileName] = useState<string>("");
@@ -183,6 +184,7 @@ export default function ComposerPage() {
     const r = sp.get("runId");
     if (w) setWorkflowId(w);
     if (r) setSelectedId(r);
+    setHydrated(true);
   }, []);
   useEffect(() => {
     const sp = new URLSearchParams(window.location.search);
@@ -300,6 +302,7 @@ export default function ComposerPage() {
           <button
             key={m}
             type="button"
+            disabled={m === "build" && !hydrated}
             onClick={() => {
               setMode(m);
               if (m === "build") setBuildOpened(true);

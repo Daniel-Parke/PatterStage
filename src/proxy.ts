@@ -5,6 +5,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextResponse, type NextRequest } from "next/server";
+import { randomBytes } from "node:crypto";
 
 import {
   SESSION_COOKIE,
@@ -25,6 +26,27 @@ import {
 } from "@/lib/api/auth-throttle";
 
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
+type RequestPolicy = { nonce: string; value: string };
+
+function requestPolicy(): RequestPolicy {
+  const nonce = randomBytes(16).toString("base64");
+  const development = process.env.NODE_ENV === "development";
+  const value = [
+    "default-src 'self'",
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${development ? " 'unsafe-eval'" : ""}`,
+    "script-src-attr 'none'",
+    `style-src-elem 'self' 'nonce-${nonce}'`,
+    "style-src-attr 'unsafe-inline'",
+    "img-src 'self' data: blob:",
+    "font-src 'self'",
+    `connect-src 'self'${development ? " ws: wss:" : ""}`,
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'none'",
+  ].join("; ");
+  return { nonce, value };
+}
 
 /**
  * Reachable without a token. Deliberately tiny: a liveness probe the deploy
@@ -96,10 +118,16 @@ function refuseReadOnly(): NextResponse {
  * Every pass-through below goes through this, and
  * tests/unit/b3-titles-from-registry.test.ts refuses a bare next() call.
  */
-function pass(request: NextRequest, pathname: string): NextResponse {
+function pass(request: NextRequest, pathname: string, policy: RequestPolicy): NextResponse {
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-ps-pathname", pathname);
-  return NextResponse.next({ request: { headers: requestHeaders } });
+  requestHeaders.set("x-nonce", policy.nonce);
+  requestHeaders.set("Content-Security-Policy", policy.value);
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
+  if (!isApiPath(pathname) && (request.method === "GET" || request.method === "HEAD")) {
+    response.headers.set("Cache-Control", "no-store");
+  }
+  return response;
 }
 
 function isApiPath(pathname: string): boolean {
@@ -184,7 +212,7 @@ function isInteractiveNavigation(request: NextRequest): boolean {
     && request.headers.get("sec-fetch-user") === "?1";
 }
 
-export function proxy(request: NextRequest): NextResponse {
+function proxyImpl(request: NextRequest, policy: RequestPolicy): NextResponse {
   const { pathname } = request.nextUrl;
   const isSafe = SAFE_METHODS.has(request.method);
   const lifecycleWrite = AUTH_LIFECYCLE_WRITES.has(`${request.method} ${pathname}`);
@@ -195,7 +223,7 @@ export function proxy(request: NextRequest): NextResponse {
   // a public path would have punched straight through the mode. /api/health is
   // GET-only today, so this was a latent hole rather than a live one (T-0048).
   if (PUBLIC_PATHS.has(pathname) && isSafe) {
-    return hasHandoffToken ? redirectWithoutHandoffToken(request) : pass(request, pathname);
+    return hasHandoffToken ? redirectWithoutHandoffToken(request) : pass(request, pathname, policy);
   }
   if (pathname === "/auth/session-unavailable" && isSafe) {
     if (hasHandoffToken) return redirectWithoutHandoffToken(request);
@@ -212,7 +240,7 @@ export function proxy(request: NextRequest): NextResponse {
     if (pathname.startsWith("/api/auth/")) return NextResponse.json({ error: "Session management requires token authentication." }, { status: 403 });
     if (readOnlyRefusal) return refuseReadOnly();
     if (isHostSideEffectWrite(pathname, isSafe)) return refuseHostWrite();
-    return pass(request, pathname);
+    return pass(request, pathname, policy);
   }
 
   // FAILED-AUTH THROTTLE (T-0083, operator ruling 2). Checked before the token
@@ -255,14 +283,14 @@ export function proxy(request: NextRequest): NextResponse {
   // The public body-token hand-off has exactly one method/path exception. The
   // handler checks Origin, body size, credential, throttle and committed insert.
   if (request.method === "POST" && pathname === "/api/auth/sign-in") {
-    return pass(request, pathname);
+    return pass(request, pathname, policy);
   }
 
   // These two handlers demand a fresh operator token from the body or an
   // explicit Bearer header. A browser session alone never authorises them.
   if (BODY_TOKEN_MANAGEMENT.has(`${request.method} ${pathname}`) &&
       !request.headers.has("authorization")) {
-    return pass(request, pathname);
+    return pass(request, pathname, policy);
   }
 
   // 2a. One-time hand-off: ?ps_token=<token> on a navigation exchanges the
@@ -300,7 +328,7 @@ export function proxy(request: NextRequest): NextResponse {
       return unauthorized(request);
     }
     clearAuthFailures(clientKey);
-    return readOnlyRefusal ? refuseReadOnly() : pass(request, pathname);
+    return readOnlyRefusal ? refuseReadOnly() : pass(request, pathname, policy);
   }
 
   const cookie = request.cookies.get(SESSION_COOKIE)?.value;
@@ -320,7 +348,17 @@ export function proxy(request: NextRequest): NextResponse {
     return NextResponse.json({ error: "Cross-origin write rejected." }, { status: 403 });
   }
 
-  return readOnlyRefusal ? refuseReadOnly() : pass(request, pathname);
+  return readOnlyRefusal ? refuseReadOnly() : pass(request, pathname, policy);
+}
+
+export function proxy(request: NextRequest): NextResponse {
+  const policy = requestPolicy();
+  const response = proxyImpl(request, policy);
+  response.headers.set("Content-Security-Policy", policy.value);
+  if (response.headers.get("content-type")?.toLowerCase().startsWith("text/html")) {
+    response.headers.set("Cache-Control", "no-store");
+  }
+  return response;
 }
 
 export const config = {

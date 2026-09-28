@@ -38,6 +38,8 @@ itself. Do not build on a proposed ADR without saying that is what you are doing
 | [ADR-0012](../../org/decisions/ADR-0012-browser-sessions.md) | Replace raw-token browser cookies with revocable opaque sessions and a declared transport boundary | accepted |
 | [ADR-0013](../../org/decisions/ADR-0013-session-boundary-clarifications.md) | Complete the session transport, rotation, read-only and onboarding boundary | accepted |
 | [ADR-0014](../../org/decisions/ADR-0014-auth-session-retention.md) | Prune expired or revoked browser-session metadata after 30 days at the next sign-in | accepted |
+| [ADR-0015](../../org/decisions/ADR-0015-content-security-policy.md) | Enforce a fresh nonce-based browser script policy | accepted |
+| [ADR-0016](../../org/decisions/ADR-0016-global-error-csp-exception.md) | Keep Next's static 500 fallback useful while its un-nonced assets fail closed | accepted |
 
 ## Relationship to the EOS
 

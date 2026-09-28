@@ -35,7 +35,7 @@ const startSchema = z
   })
   .strict();
 
-export const GET = route("GET /api/laboratory/research", "list", "Failed to list research runs", async (request?: NextRequest) => {
+export const GET = route("GET /api/laboratory/research", "list", "Failed to list research runs", async (request: NextRequest) => {
   ensureDb();
   return ok({ runs: listResearchRuns(boundsFrom(request, { defaultLimit: 50, maxLimit: 500 }).limit) });
 });

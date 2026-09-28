@@ -51,7 +51,7 @@ beforeEach(() => {
 describe("GET /api/schedules", () => {
   it("returns the schedule list", async () => {
     listSchedules.mockReturnValue([{ id: "s1" }]);
-    const res = await listGET();
+    const res = await listGET(req());
     expect(res.status).toBe(200);
     expect(await jsonOf(res)).toEqual({ data: { schedules: [{ id: "s1" }] } });
   });
