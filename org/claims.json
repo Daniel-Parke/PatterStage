@@ -1,17 +1,6 @@
 {
   "version": 1,
   "assigned": "2026-09-28",
-  "lanes": [
-    {
-      "lane_id": "t0183-independent-oracle",
-      "task_id": "T-0183",
-      "session_id": "01a0e9d5-0c59-7351-910f-a63a186c033c",
-      "host": "local",
-      "harness_task_id": "01a0e9d5-0c59-7351-910f-a63a186c033c",
-      "path_claims": ["tests/unit/mission-dispatch-race.test.ts"],
-      "acquired": "2026-09-28T21:04:12Z",
-      "expires": "2026-09-29T21:04:12Z"
-    }
-  ],
-  "note": "Independent R2 ORACLE author owns only the new race suite. Coordinator is read-only while this lane writes."
+  "lanes": [],
+  "note": "The independent T-0183 seven-case oracle was frozen in 4eddd81b. Coordinator implementation is the sole writing lane."
 }

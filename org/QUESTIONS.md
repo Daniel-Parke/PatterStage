@@ -227,3 +227,11 @@ are recorded in `org/reviews/2026-09-refactor-addendum.md`.
   the gap between the workflow's branch filter and its existing main-only
   publishing test. A `github-pages` environment rule restricted to `main`
   is a separate release-setting check for the operator before Pages is enabled.
+
+- Q-031 (mission dispatch): if PatterStage restarts after a gateway may have
+  accepted a mission but before the reply is recorded, should it replay the
+  submission? Answer from the operator on 2026-09-28: hold the outcome as
+  unconfirmed for operator review. Do not automatically replay, and do not
+  claim the run was never submitted. T-0183 owns the durable claim, visible
+  uncertainty and cancellation behaviour. This ruling does not assert that
+  the gateway provides durable idempotency or that a remote run was stopped.
