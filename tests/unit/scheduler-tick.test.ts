@@ -9,7 +9,7 @@
  * left real (it's covered by next-run.test.ts).
  */
 
-import type { ScheduleRecord } from "@/lib/schedule/schedules-repository";
+import { makeSchedule } from "../helpers/schedule-record-fixture";
 
 const getDueSchedules = jest.fn();
 const advanceSchedule = jest.fn();
@@ -31,32 +31,6 @@ jest.mock("@/lib/api/api-logger", () => ({ logApiError: jest.fn() }));
 import { runSchedulerTick } from "@/lib/orchestration/scheduler/tick";
 
 const NOW = new Date("2026-06-15T10:00:00.000Z");
-
-function makeSchedule(over: Partial<ScheduleRecord> = {}): ScheduleRecord {
-  return {
-    id: "sch1",
-    // Required since 041 (T-0107): every row says what it fires. These cases
-    // are all about missions, which is what every row was before it.
-    kind: "mission",
-    scriptName: null,
-    missionId: "m1",
-    name: "S",
-    schedule: "every 30m",
-    scheduleDisplay: "every 30m",
-    enabled: true,
-    catchUpPolicy: "fire_once",
-    repeatTimes: null,
-    repeatDone: 0,
-    profileName: null,
-    nextRunAt: "2026-06-15T10:00:00.000Z",
-    lastRunAt: null,
-    lastRunId: null,
-    lastStatus: null,
-    createdAt: "2026-06-15T09:00:00.000Z",
-    updatedAt: "2026-06-15T09:00:00.000Z",
-    ...over,
-  };
-}
 
 beforeEach(() => {
   jest.clearAllMocks();

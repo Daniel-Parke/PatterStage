@@ -52,7 +52,7 @@ jest.mock("@/lib/api/api-logger", () => ({
 }));
 
 import type { NextRequest } from "next/server";
-import type { ScheduleRecord } from "@/lib/schedule/schedules-repository";
+import { makeSchedule } from "../helpers/schedule-record-fixture";
 
 import { POST as createPOST } from "@/app/api/schedules/route";
 import { PATCH as idPATCH } from "@/app/api/schedules/[id]/route";
@@ -76,30 +76,6 @@ async function errorOf(res: Response): Promise<string> {
 }
 
 const NOW = new Date("2026-06-15T10:00:00.000Z");
-
-function makeSchedule(over: Partial<ScheduleRecord> = {}): ScheduleRecord {
-  return {
-    id: "sch1",
-    kind: "mission",
-    scriptName: null,
-    missionId: "m1",
-    name: "S",
-    schedule: "every 30m",
-    scheduleDisplay: "every 30m",
-    enabled: true,
-    catchUpPolicy: "fire_once",
-    repeatTimes: null,
-    repeatDone: 0,
-    profileName: null,
-    nextRunAt: "2026-06-15T10:00:00.000Z",
-    lastRunAt: null,
-    lastRunId: null,
-    lastStatus: null,
-    createdAt: "2026-06-15T09:00:00.000Z",
-    updatedAt: "2026-06-15T09:00:00.000Z",
-    ...over,
-  };
-}
 
 beforeEach(() => {
   jest.clearAllMocks();
