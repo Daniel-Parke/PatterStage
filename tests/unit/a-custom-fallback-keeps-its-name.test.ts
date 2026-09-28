@@ -67,7 +67,8 @@ describe("042_fallback_identity.sql", () => {
     const numbers = readdirSync(migrationsDir)
       .filter((f) => /^\d{3}_.*\.sql$/.test(f))
       .map((f) => parseInt(f.slice(0, 3), 10));
-    expect(Math.max(...numbers)).toBe(42);
+    expect(Math.max(...numbers)).toBe(43);
+    expect(numbers.filter((number) => number >= 41).sort((a, b) => a - b)).toEqual([41, 42, 43]);
     expect(applier().FALLBACK_IDENTITY_SCHEMA_VERSION).toBe(42);
   });
 
