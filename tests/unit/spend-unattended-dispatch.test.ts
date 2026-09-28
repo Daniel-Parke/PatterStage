@@ -28,10 +28,8 @@ jest.mock("@/lib/spend/spend-guard", () => ({
 // ── scheduler tick collaborators ──────────────────────────────
 const getDueSchedules = jest.fn();
 const advanceSchedule = jest.fn();
-const createRun = jest.fn();
-const hasDispatchedMission = jest.fn();
+const reserveMissionRun = jest.fn();
 const dispatchMissionRun = jest.fn();
-const getNextQueuedMission = jest.fn();
 const dispatchMissionNow = jest.fn();
 const listActiveComposerRuns = jest.fn();
 const isFeatureEnabled = jest.fn();
@@ -40,10 +38,8 @@ jest.mock("@/lib/schedule/schedules-repository", () => ({
   getDueSchedules: (...a: unknown[]) => getDueSchedules(...a),
   advanceSchedule: (...a: unknown[]) => advanceSchedule(...a),
 }));
-jest.mock("@/lib/runs/runs-repository", () => ({ createRun: (...a: unknown[]) => createRun(...a) }));
 jest.mock("@/lib/missions/mission-repository", () => ({
-  hasDispatchedMission: (...a: unknown[]) => hasDispatchedMission(...a),
-  getNextQueuedMission: (...a: unknown[]) => getNextQueuedMission(...a),
+  reserveMissionRun: (...a: unknown[]) => reserveMissionRun(...a),
 }));
 jest.mock("@/lib/orchestration/dispatch", () => ({
   dispatchMissionRun: (...a: unknown[]) => dispatchMissionRun(...a),
@@ -89,12 +85,10 @@ const ALLOWED = { allowed: true, reason: null };
 beforeEach(() => {
   jest.clearAllMocks();
   checkUnattendedSpend.mockReturnValue(ALLOWED);
-  hasDispatchedMission.mockReturnValue(false);
-  createRun.mockReturnValue(true);
+  reserveMissionRun.mockReturnValue({ kind: "claimed", missionId: "m1", runId: "r1" });
   dispatchMissionRun.mockResolvedValue({ ok: true, backendRunId: "b1", runId: "r1" });
   dispatchMissionNow.mockResolvedValue({ ok: true });
   getDueSchedules.mockReturnValue([]);
-  getNextQueuedMission.mockReturnValue(null);
   listActiveComposerRuns.mockReturnValue([]);
   isFeatureEnabled.mockReturnValue(true);
 });
@@ -108,6 +102,7 @@ describe("clause 4: the schedule tick stops when the armed figure is breached", 
     expect(res.fired).toBe(0);
     expect(res.blocked).toBe(BLOCKED.reason);
     expect(getDueSchedules).not.toHaveBeenCalled();
+    expect(reserveMissionRun).not.toHaveBeenCalled();
     expect(dispatchMissionRun).not.toHaveBeenCalled();
     // A blocked tick must not consume the occurrence. Leaving next_run_at alone
     // is what makes the stop a pause rather than a silent cancellation: the
@@ -130,7 +125,6 @@ describe("clause 4: the schedule tick stops when the armed figure is breached", 
 describe("clause 4: the queued-mission drain stops when the armed figure is breached", () => {
   it("dispatches nothing and says why", async () => {
     checkUnattendedSpend.mockReturnValue(BLOCKED);
-    getNextQueuedMission.mockReturnValue({ id: "m1" });
 
     const res = await runMissionQueueTick();
 
@@ -138,14 +132,14 @@ describe("clause 4: the queued-mission drain stops when the armed figure is brea
     expect(res.blocked).toBe(BLOCKED.reason);
     expect(dispatchMissionNow).not.toHaveBeenCalled();
     // The mission stays queued. Nothing is failed, cancelled or dropped.
-    expect(getNextQueuedMission).not.toHaveBeenCalled();
+    expect(reserveMissionRun).not.toHaveBeenCalled();
   });
 
   it("drains normally when the gate allows it", async () => {
-    getNextQueuedMission.mockReturnValue({ id: "m1" });
     const res = await runMissionQueueTick();
     expect(res.ran).toBe(true);
-    expect(dispatchMissionNow).toHaveBeenCalledWith("m1");
+    expect(reserveMissionRun).toHaveBeenCalledWith({ kind: "queue" });
+    expect(dispatchMissionNow).toHaveBeenCalledWith("m1", { runId: "r1" });
   });
 });
 

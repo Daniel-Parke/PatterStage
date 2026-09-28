@@ -21,8 +21,7 @@ const deleteSchedule = jest.fn();
 const recordScheduleRun = jest.fn();
 const getDueSchedules = jest.fn();
 const advanceSchedule = jest.fn();
-const createRun = jest.fn();
-const hasDispatchedMission = jest.fn();
+const reserveMissionRun = jest.fn();
 const dispatchMissionRun = jest.fn();
 
 jest.mock("@/lib/schedule/schedules-repository", () => ({
@@ -36,9 +35,8 @@ jest.mock("@/lib/schedule/schedules-repository", () => ({
   advanceSchedule: (...a: unknown[]) => advanceSchedule(...a),
 }));
 jest.mock("@/lib/api/api-auth", () => ({ requireAuth: () => null }));
-jest.mock("@/lib/runs/runs-repository", () => ({ createRun: (...a: unknown[]) => createRun(...a) }));
 jest.mock("@/lib/missions/mission-repository", () => ({
-  hasDispatchedMission: (...a: unknown[]) => hasDispatchedMission(...a),
+  reserveMissionRun: (...a: unknown[]) => reserveMissionRun(...a),
 }));
 jest.mock("@/lib/orchestration/dispatch", () => ({
   dispatchMissionRun: (...a: unknown[]) => dispatchMissionRun(...a),
@@ -108,9 +106,8 @@ beforeEach(() => {
   createSchedule.mockReturnValue({ id: "sch1", profileName: null });
   getSchedule.mockReturnValue({ id: "sch1" });
   updateSchedule.mockReturnValue({ id: "sch1" });
-  hasDispatchedMission.mockReturnValue(false);
-  createRun.mockReturnValue({ id: "run1" });
-  dispatchMissionRun.mockResolvedValue({ ok: true, backendRunId: "b1", runId: "run1" });
+  reserveMissionRun.mockReturnValue({ kind: "claimed", missionId: "m1", runId: "sch_sch1_2026-06-15T10:00:00.000Z" });
+  dispatchMissionRun.mockResolvedValue({ ok: true, backendRunId: "b1", runId: "sch_sch1_2026-06-15T10:00:00.000Z" });
 });
 
 describe("the interval floor", () => {
@@ -222,7 +219,7 @@ describe("a stored bad schedule cannot spin the tick", () => {
 
     expect(res.fired).toBe(0);
     expect(dispatchMissionRun).not.toHaveBeenCalled();
-    expect(createRun).not.toHaveBeenCalled();
+    expect(reserveMissionRun).not.toHaveBeenCalled();
     expect(advanceSchedule).toHaveBeenCalledWith(
       "sch1",
       expect.objectContaining({ enabled: false, nextRunAt: null }),
@@ -239,6 +236,7 @@ describe("a stored bad schedule cannot spin the tick", () => {
 
     expect(res.fired).toBe(0);
     expect(dispatchMissionRun).not.toHaveBeenCalled();
+    expect(reserveMissionRun).not.toHaveBeenCalled();
     expect(advanceSchedule).toHaveBeenCalledWith(
       "sch1",
       expect.objectContaining({ enabled: false, nextRunAt: null }),
@@ -253,6 +251,8 @@ describe("a stored bad schedule cannot spin the tick", () => {
     const res = await runSchedulerTick({ now: NOW });
 
     expect(res.fired).toBe(0);
+    expect(reserveMissionRun).not.toHaveBeenCalled();
+    expect(dispatchMissionRun).not.toHaveBeenCalled();
     expect(advanceSchedule).toHaveBeenCalledWith(
       "sch1",
       expect.objectContaining({ enabled: false, nextRunAt: null }),
@@ -265,7 +265,22 @@ describe("a stored bad schedule cannot spin the tick", () => {
     const res = await runSchedulerTick({ now: NOW });
 
     expect(res.fired).toBe(1);
+    expect(reserveMissionRun).toHaveBeenCalledWith({
+      kind: "schedule",
+      missionId: "m1",
+      runId: "sch_sch1_2026-06-15T10:00:00.000Z",
+      scheduleId: "sch1",
+      profileName: null,
+    });
     expect(dispatchMissionRun).toHaveBeenCalledTimes(1);
+    expect(dispatchMissionRun).toHaveBeenCalledWith("m1", {
+      runId: "sch_sch1_2026-06-15T10:00:00.000Z",
+      scheduleId: "sch1",
+    });
+    expect(advanceSchedule).toHaveBeenCalledWith(
+      "sch1",
+      expect.objectContaining({ incrementDone: true, lastStatus: "dispatched" }),
+    );
   });
 });
 

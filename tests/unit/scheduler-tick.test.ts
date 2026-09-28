@@ -4,7 +4,7 @@
  * Tests for the PatterStage-owned scheduler tick
  * (src/lib/orchestration/scheduler/tick.ts). The tick's branches (ownership,
  * orphan, catch-up, single-flight, exactly-once claim, dispatch, exhausted
- * repeats) are driven by mocking the repository + runs + mission + dispatch
+ * repeats) are driven by mocking the repository + mission + dispatch
  * collaborators and asserting the advance/dispatch calls. `computeNextRun` is
  * left real (it's covered by next-run.test.ts).
  */
@@ -13,17 +13,15 @@ import type { ScheduleRecord } from "@/lib/schedule/schedules-repository";
 
 const getDueSchedules = jest.fn();
 const advanceSchedule = jest.fn();
-const createRun = jest.fn();
-const hasDispatchedMission = jest.fn();
+const reserveMissionRun = jest.fn();
 const dispatchMissionRun = jest.fn();
 
 jest.mock("@/lib/schedule/schedules-repository", () => ({
   getDueSchedules: (...a: unknown[]) => getDueSchedules(...a),
   advanceSchedule: (...a: unknown[]) => advanceSchedule(...a),
 }));
-jest.mock("@/lib/runs/runs-repository", () => ({ createRun: (...a: unknown[]) => createRun(...a) }));
 jest.mock("@/lib/missions/mission-repository", () => ({
-  hasDispatchedMission: (...a: unknown[]) => hasDispatchedMission(...a),
+  reserveMissionRun: (...a: unknown[]) => reserveMissionRun(...a),
 }));
 jest.mock("@/lib/orchestration/dispatch", () => ({
   dispatchMissionRun: (...a: unknown[]) => dispatchMissionRun(...a),
@@ -62,9 +60,8 @@ function makeSchedule(over: Partial<ScheduleRecord> = {}): ScheduleRecord {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  hasDispatchedMission.mockReturnValue(false);
-  createRun.mockReturnValue({ id: "run1" }); // claim succeeds by default
-  dispatchMissionRun.mockResolvedValue({ ok: true, backendRunId: "b1", runId: "run1" });
+  reserveMissionRun.mockReturnValue({ kind: "claimed", missionId: "m1", runId: "sch_sch1_2026-06-15T10:00:00.000Z" });
+  dispatchMissionRun.mockResolvedValue({ ok: true, backendRunId: "b1", runId: "sch_sch1_2026-06-15T10:00:00.000Z" });
 });
 
 it("does nothing when this process is not the owner", async () => {
@@ -99,20 +96,33 @@ it("catch-up 'skip' past the grace window advances without firing", async () => 
 });
 
 it("single-flight: skips entirely when a mission is already dispatched (leaves next_run_at)", async () => {
-  hasDispatchedMission.mockReturnValue(true);
+  reserveMissionRun.mockReturnValue({ kind: "busy" });
   getDueSchedules.mockReturnValue([makeSchedule()]);
   const res = await runSchedulerTick({ now: NOW });
   expect(res.fired).toBe(0);
-  expect(createRun).not.toHaveBeenCalled();
+  expect(reserveMissionRun).toHaveBeenCalledWith({
+    kind: "schedule",
+    missionId: "m1",
+    runId: "sch_sch1_2026-06-15T10:00:00.000Z",
+    scheduleId: "sch1",
+    profileName: null,
+  });
   expect(dispatchMissionRun).not.toHaveBeenCalled();
   expect(advanceSchedule).not.toHaveBeenCalled();
 });
 
 it("exactly-once: a duplicate claim (createRun -> null) advances without re-dispatching", async () => {
-  createRun.mockReturnValue(null);
+  reserveMissionRun.mockReturnValue({ kind: "duplicate" });
   getDueSchedules.mockReturnValue([makeSchedule()]);
   const res = await runSchedulerTick({ now: NOW });
   expect(res.fired).toBe(0);
+  expect(reserveMissionRun).toHaveBeenCalledWith({
+    kind: "schedule",
+    missionId: "m1",
+    runId: "sch_sch1_2026-06-15T10:00:00.000Z",
+    scheduleId: "sch1",
+    profileName: null,
+  });
   expect(dispatchMissionRun).not.toHaveBeenCalled();
   expect(advanceSchedule).toHaveBeenCalledWith(
     "sch1",
@@ -124,10 +134,17 @@ it("happy path: claims, dispatches, advances with incrementDone + 'dispatched'",
   getDueSchedules.mockReturnValue([makeSchedule()]);
   const res = await runSchedulerTick({ now: NOW });
   expect(res.fired).toBe(1);
-  expect(createRun).toHaveBeenCalledWith(
-    expect.objectContaining({ missionId: "m1", scheduleId: "sch1" }),
-  );
-  expect(dispatchMissionRun).toHaveBeenCalledWith("m1", expect.objectContaining({ scheduleId: "sch1" }));
+  expect(reserveMissionRun).toHaveBeenCalledWith({
+    kind: "schedule",
+    missionId: "m1",
+    runId: "sch_sch1_2026-06-15T10:00:00.000Z",
+    scheduleId: "sch1",
+    profileName: null,
+  });
+  expect(dispatchMissionRun).toHaveBeenCalledWith("m1", {
+    runId: "sch_sch1_2026-06-15T10:00:00.000Z",
+    scheduleId: "sch1",
+  });
   expect(advanceSchedule).toHaveBeenCalledWith(
     "sch1",
     expect.objectContaining({ incrementDone: true, lastStatus: "dispatched", lastRunId: "b1" }),
