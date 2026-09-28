@@ -455,10 +455,12 @@ test.describe('T-0158 built server and real SQLite', () => {
         : `/api/laboratory/research/${runId}/events`;
     const controller = new AbortController();
     try {
+      const fetchStartedAt = performance.now();
       const stream = await fetch(`${origin}${route}`, {
         headers: { Authorization: `Bearer ${operatorToken}`, Accept: 'text/event-stream' },
         signal: AbortSignal.any([controller.signal, AbortSignal.timeout(15_000)]),
       });
+      const headersReceivedAt = performance.now();
       expect(stream.status).toBe(200);
       expect(stream.headers.get('content-type') ?? '').toMatch(/text\/event-stream/i);
       const reader = stream.body?.getReader();
@@ -467,7 +469,11 @@ test.describe('T-0158 built server and real SQLite', () => {
       let closed = false;
       void drained.finished.then(() => { closed = true; });
       await new Promise(resolve => setTimeout(resolve, 3_000));
-      expect(closed).toBe(false);
+      const appState = server
+        ? `pid=${server.pid ?? 'unknown'}, exit=${server.exitCode ?? 'running'}, signal=${server.signalCode ?? 'none'}, killed=${server.killed}`
+        : 'missing';
+      const frameTail = JSON.stringify(drained.text().replaceAll(operatorToken, '[redacted]').slice(-512));
+      expect(closed, `Quiet ${streamKind} stream closed before revocation: fetchMs=${Math.round(headersReceivedAt - fetchStartedAt)}, observedMs=${Math.round(performance.now() - headersReceivedAt)}, app=${appState}, gatewayListening=${upstreamGateway?.listening ?? false}, framesTail=${frameTail}`).toBe(false);
     } finally { controller.abort(); }
     const cookie = await signIn();
     const activity = (): string => {
