@@ -3,15 +3,15 @@
   "assigned": "2026-09-28",
   "lanes": [
     {
-      "lane_id": "t0182-missions-selector-oracle-amendment",
+      "lane_id": "t0182-global-error-oracle-amendment",
       "task_id": "T-0182",
-      "session_id": "01a0e985-73b3-7a80-a8ca-d7df490c3a74",
+      "session_id": "01a0e972-3fa5-7c60-a1a8-945a893b6dfd",
       "host": "local",
-      "harness_task_id": "01a0e985-73b3-7a80-a8ca-d7df490c3a74",
-      "path_claims": ["tests/e2e/t0182-csp.spec.ts"],
-      "acquired": "2026-09-28T20:10:00Z",
-      "expires": "2026-09-29T20:10:00Z"
+      "harness_task_id": "01a0e972-3fa5-7c60-a1a8-945a893b6dfd",
+      "path_claims": ["tests/e2e/t0182-global-error.spec.ts"],
+      "acquired": "2026-09-28T20:25:00Z",
+      "expires": "2026-09-29T20:25:00Z"
     }
   ],
-  "note": "The operator authorised a second independent R3 ORACLE amendment, limited to selecting the existing header New Mission action. Coordinator is read-only while the separate author writes."
+  "note": "The operator authorised a named fail-closed exception for Next 16.3.6's pre-rendered global error. A different ORACLE author owns only its acceptance test. Coordinator is read-only while the separate author writes."
 }
