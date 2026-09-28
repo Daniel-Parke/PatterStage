@@ -167,6 +167,19 @@ async function main() {
   const missionId = (await created.json())?.data?.mission?.id;
   check("mission created over HTTP", typeof missionId === "string", `status ${created.status}`);
 
+  const knownCreated = await fetch(`${BASE}/api/missions`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      action: "dispatch",
+      name: "restart-known-backend-control",
+      instruction: "a separate mission whose backend run is known",
+      dispatchMode: "save",
+    }),
+  });
+  const knownMissionId = (await knownCreated.json())?.data?.mission?.id;
+  check("known-backend control has its own mission", typeof knownMissionId === "string" && knownMissionId !== missionId, `status ${knownCreated.status}`);
+
   // ── Seed four things mid-flight, as a crash would leave them ──
   // `seededAt` is hoisted so the CONTROL below can prove the row was not
   // written, rather than merely that it still reads `started`.
@@ -184,9 +197,10 @@ async function main() {
     //    the backend may still be executing it.
     db.prepare(
       "INSERT INTO runs (id, run_id, mission_id, status, submitted_at, updated_at) VALUES (?,?,?,'started',?,?)",
-    ).run("run-submitted", "backend-abc", missionId, now, now);
+    ).run("run-submitted", "backend-abc", knownMissionId, now, now);
 
     db.prepare("UPDATE missions SET status='dispatched' WHERE id=?").run(missionId);
+    db.prepare("UPDATE missions SET status='dispatched' WHERE id=?").run(knownMissionId);
 
     // 3. A research run left 'running'. Backdated past the 30-minute cutoff.
     db.prepare(
@@ -231,7 +245,7 @@ async function main() {
   );
   check("…and its mission remains claimed", mission?.status === "dispatched", `status ${mission?.status}`);
   check("…with the unconfirmed outcome visible", /submission outcome unconfirmed/i.test(mission?.result ?? ""), mission?.result);
-  check("…without replaying a run", one("SELECT count(*) c FROM runs WHERE mission_id=?", missionId)?.c === 2);
+  check("…without replaying a run", one("SELECT count(*) c FROM runs WHERE mission_id=?", missionId)?.c === 1);
 
   // 2. CONTROL: the submitted run is untouched — by ANY writer.
   //
@@ -252,6 +266,12 @@ async function main() {
     "…and no writer touched it at all",
     run2?.error === null && run2?.updated_at === seededAt,
     `error ${JSON.stringify(run2?.error)}, updated_at ${run2?.updated_at} vs seeded ${seededAt}`,
+  );
+  const knownMission = one("SELECT status, result FROM missions WHERE id=?", knownMissionId);
+  check(
+    "…and its separate mission stays dispatched without an unknown-outcome note",
+    knownMission?.status === "dispatched" && !/submission outcome unconfirmed/i.test(knownMission?.result ?? ""),
+    `status ${knownMission?.status}, result ${knownMission?.result}`,
   );
 
   // 3. The stuck research run is failed.
