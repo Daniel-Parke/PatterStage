@@ -25,8 +25,9 @@ function resolveFixture(hostPort?: string) {
     (_match, name: string, fallback: string) => hostEnvironment[name as keyof typeof hostEnvironment] || fallback);
   const environment = Object.fromEntries(Object.entries(service.environment).map(([key, value]) => [key, interpolate(value)]));
   const publishedPort = interpolate(service.ports[0]);
-  const portMatch = /^(\d+):(\d+)$/.exec(publishedPort);
+  const portMatch = /^127\.0\.0\.1:(\d+):(\d+)$/.exec(publishedPort);
   expect(portMatch).not.toBeNull();
+  expect(compose.services.hermes.ports[0]).toBe("127.0.0.1:${HERMES_PORT:-8642}:8642");
   return { environment, publishedHostPort: portMatch![1], containerPort: portMatch![2] };
 }
 
@@ -47,7 +48,7 @@ describe("T-0158 real-Hermes network fixture", () => {
 
     let origin: URL | undefined;
     expect(() => { origin = boundary.configuredPublicOrigin(environment); }).not.toThrow();
-    expect(origin?.port).toBe(publishedHostPort);
+    expect(origin?.origin).toBe(`http://127.0.0.1:${publishedHostPort}`);
     expect(boundary.selectedNetworkMode(origin!, environment)).toBe("insecure-lan");
   });
 
