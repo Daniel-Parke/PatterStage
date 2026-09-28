@@ -57,7 +57,7 @@ it("keeps a duplicate occurrence due until its owner receives the gateway acknow
   expect(duplicate.fired).toBe(0);
   expect(stillDue.nextRunAt).toBe(dueAt);
   expect(stillDue.repeatDone).toBe(0);
-  expect(stillDue.lastStatus).not.toMatch(/duplicate|finished/i);
+  expect(stillDue.lastStatus ?? "").not.toMatch(/duplicate|finished/i);
   expect(ownedRun.id).toBe(`sch_${schedule.id}_${dueAt}`);
   expect(requestRun).toHaveBeenCalledTimes(1);
 

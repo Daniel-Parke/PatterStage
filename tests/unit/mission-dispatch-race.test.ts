@@ -172,10 +172,14 @@ describe("T-0183 unattended dispatch has one durable owner", () => {
       expect(claimedRunId).toBeTruthy();
       testDb!.close();
       testDb = openFileDb(databasePath, false);
+      updateMission(missionId, { result: null });
+      expect(getMission(missionId)?.result).toBeUndefined();
 
       // A new module instance has no in-process knowledge of the old worker.
       jest.resetModules();
+      const { reconcileRunsOnBoot } = await import("@/lib/orchestration/run-reconcile");
       const { runMissionQueueTick: restartedTick } = await import("@/lib/missions/mission-queue-tick");
+      expect(reconcileRunsOnBoot()).toEqual({ failed: 0 });
       await restartedTick();
 
       const mission = getMission(missionId);

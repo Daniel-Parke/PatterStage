@@ -15,6 +15,7 @@ const getDueSchedules = jest.fn();
 const advanceSchedule = jest.fn();
 const reserveMissionRun = jest.fn();
 const dispatchMissionRun = jest.fn();
+const getRun = jest.fn();
 
 jest.mock("@/lib/schedule/schedules-repository", () => ({
   getDueSchedules: (...a: unknown[]) => getDueSchedules(...a),
@@ -25,6 +26,9 @@ jest.mock("@/lib/missions/mission-repository", () => ({
 }));
 jest.mock("@/lib/orchestration/dispatch", () => ({
   dispatchMissionRun: (...a: unknown[]) => dispatchMissionRun(...a),
+}));
+jest.mock("@/lib/runs/runs-repository", () => ({
+  getRun: (...a: unknown[]) => getRun(...a),
 }));
 jest.mock("@/lib/api/api-logger", () => ({ logApiError: jest.fn() }));
 
@@ -87,6 +91,11 @@ it("single-flight: skips entirely when a mission is already dispatched (leaves n
 
 it("exactly-once: a duplicate claim (createRun -> null) advances without re-dispatching", async () => {
   reserveMissionRun.mockReturnValue({ kind: "duplicate" });
+  getRun.mockReturnValue({
+    id: "sch_sch1_2026-06-15T10:00:00.000Z",
+    runId: "b1",
+    status: "started",
+  });
   getDueSchedules.mockReturnValue([makeSchedule()]);
   const res = await runSchedulerTick({ now: NOW });
   expect(res.fired).toBe(0);
@@ -98,9 +107,11 @@ it("exactly-once: a duplicate claim (createRun -> null) advances without re-disp
     profileName: null,
   });
   expect(dispatchMissionRun).not.toHaveBeenCalled();
+  expect(getRun).toHaveBeenCalledWith("sch_sch1_2026-06-15T10:00:00.000Z");
+  expect(advanceSchedule).toHaveBeenCalledTimes(1);
   expect(advanceSchedule).toHaveBeenCalledWith(
     "sch1",
-    expect.objectContaining({ lastStatus: "duplicate occurrence" }),
+    expect.objectContaining({ incrementDone: true, lastStatus: "dispatched", lastRunId: "b1" }),
   );
 });
 
