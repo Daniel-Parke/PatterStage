@@ -61,11 +61,13 @@ jobs:
         continue-on-error: true
         with:
           token: ${{ github.token }}
+          fetch-depth: 0
       - name: Checkout repository (retry)
         if: steps.checkout1.outcome != 'success'
         uses: actions/checkout@v5
         with:
           token: ${{ github.token }}
+          fetch-depth: 0
       - uses: actions/setup-node@v5
         with:
           node-version: "20"
@@ -135,11 +137,13 @@ jobs:
         continue-on-error: true
         with:
           token: ${{ github.token }}
+          fetch-depth: 0
       - name: Checkout repository (retry)
         if: steps.checkout1.outcome != 'success'
         uses: actions/checkout@v5
         with:
           token: ${{ github.token }}
+          fetch-depth: 0
       - uses: actions/setup-node@v5
         with:
           node-version: "20"
