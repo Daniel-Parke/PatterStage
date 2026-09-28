@@ -13,15 +13,15 @@
       "expires": "2026-09-29T22:30:00Z"
     },
     {
-      "lane_id": "t0183-reconcile-oracle",
+      "lane_id": "t0183-schedule-fixture-consolidation",
       "task_id": "T-0183",
-      "session_id": "01a0e9ef-f0aa-77f0-8abf-86f99c020cae",
+      "session_id": "01a0ea00-c377-79b2-b561-eaac2bd581e0",
       "host": "local",
-      "harness_task_id": "01a0e9ef-f0aa-77f0-8abf-86f99c020cae",
-      "path_claims": ["tests/unit/mission-reconcile-cancellation-race.test.ts", "tests/unit/mission-uncertain-submit.test.ts", "tests/unit/b13-scheduler-runs-scripts.test.ts", "tests/integration/runtime/restart-recovery.mjs"],
+      "harness_task_id": "01a0ea00-c377-79b2-b561-eaac2bd581e0",
+      "path_claims": ["tests/unit/scheduler-tick.test.ts", "tests/unit/schedule-minimum-interval.test.ts", "tests/helpers/schedule-record-fixture.ts"],
       "acquired": "2026-09-28T22:30:00Z",
       "expires": "2026-09-29T22:30:00Z"
     }
   ],
-  "note": "Two disjoint writing lanes: coordinator owns source and governance; independent R2 ORACLE author owns two new race suites and two named closed-test amendments."
+  "note": "Two disjoint writing lanes: coordinator owns source and governance; an independent author consolidates two identical schedule fixtures without weakening the fixed census or tests."
 }
