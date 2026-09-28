@@ -8,20 +8,20 @@
       "session_id": "01a09490-d778-7ac2-a183-6bfb646c6757",
       "host": "local",
       "harness_task_id": "01a09490-d778-7ac2-a183-6bfb646c6757",
-      "path_claims": ["src/lib/missions/", "src/lib/orchestration/", "src/lib/runs/", "src/lib/db/index.ts", "src/lib/schedule/schedules-repository.ts", "org/tasks/T-0183.json", "org/briefs/T-0183-final-oracle-amendment.md", "org/reviews/2026-09-t0183-single-owner-adr-proposal.md", "org/reviews/2026-09-t0183-race-evidence.md", "org/decisions/ADR-0017-single-owner-mission-dispatch.md", "org/TASKS.md", "org/STATE.md", "org/HANDOVER.md", "tests/fixtures/mutants/T-0183.json", "scripts/tooling/line-census.baseline.json"],
+      "path_claims": ["src/lib/missions/", "src/lib/orchestration/", "src/lib/runs/", "src/lib/db/index.ts", "src/lib/schedule/schedules-repository.ts", "org/tasks/T-0183.json", "org/briefs/T-0183-final-oracle-amendment.md", "org/briefs/T-0183-legacy-mock-amendment.md", "org/reviews/2026-09-t0183-single-owner-adr-proposal.md", "org/reviews/2026-09-t0183-race-evidence.md", "org/decisions/ADR-0017-single-owner-mission-dispatch.md", "org/TASKS.md", "org/STATE.md", "org/HANDOVER.md", "tests/fixtures/mutants/T-0183.json", "scripts/tooling/line-census.baseline.json"],
       "acquired": "2026-09-28T22:30:00Z",
       "expires": "2026-09-29T22:30:00Z"
     },
     {
-      "lane_id": "t0183-closed-oracle-amendment",
+      "lane_id": "t0183-legacy-test-double-amendment",
       "task_id": "T-0183",
       "session_id": "01a0ea01-be1e-7b83-94b3-4773cd2b1a2d",
       "host": "local",
       "harness_task_id": "01a0ea01-be1e-7b83-94b3-4773cd2b1a2d",
-      "path_claims": ["tests/unit/mission-dispatch-race.test.ts", "tests/unit/mission-schedule-claim-contention.test.ts", "tests/unit/scheduler-tick.test.ts"],
-      "acquired": "2026-09-28T23:00:00Z",
-      "expires": "2026-09-29T23:00:00Z"
+      "path_claims": ["tests/unit/b4-emits-memory-missions-templates.test.ts", "tests/unit/cancel-and-gather-tell-the-truth.test.ts", "tests/unit/mission-require-or-not-found.test.ts", "tests/unit/mission-handlers-delete-cancel.test.ts", "tests/unit/dispatch-mode-is-validated.test.ts", "tests/unit/mission-promote-handler.test.ts"],
+      "acquired": "2026-09-28T23:30:00Z",
+      "expires": "2026-09-29T23:30:00Z"
     }
   ],
-  "note": "Two disjoint writing lanes: coordinator owns source/governance; independent ORACLE amendment author owns only two named test suites."
+  "note": "Two disjoint writing lanes: coordinator owns source and governance; independent amendment author owns only six legacy test-double suites."
 }
