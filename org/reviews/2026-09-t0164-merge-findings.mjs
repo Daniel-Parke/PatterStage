@@ -1,7 +1,7 @@
 // Reconcile dimension review tables into the itemised finding ledger.
 // Run only after all five independently authored dimension reviews exist.
-const { readFileSync } = require('node:fs');
-const { join } = require('node:path');
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 const base = 'org/reviews';
 const input = join(base, '2026-09-t0164-findings.jsonl');

@@ -33,8 +33,8 @@ implemented, tested in a browser or approved for removal. The same command
 generates **285 coverage atoms: 25 verified narrow facts, 215 unresolved and
 45 deferred**, under all 107 parent bullets. The independent coverage
 sceptic upheld 25 narrow facts and left the other 260 explicitly open.
-`2026-09-t0164-merge-findings.cjs` and
-`2026-09-t0164-adjudicate-coverage.cjs` were rerun against their output; both
+`2026-09-t0164-merge-findings.mjs` and
+`2026-09-t0164-adjudicate-coverage.mjs` were rerun against their output; both
 produced byte-identical SHA-256 results on the second pass.
 
 ## Methods and dimension review
@@ -140,7 +140,7 @@ damaged-state defect needs an oracle before repair.
 ## Source and test classifications
 
 The [AST classification](2026-09-t0164-classification.json), reproducible with
-`node org/reviews/2026-09-t0164-classify.cjs`, identified 253 bindingless
+`node org/reviews/2026-09-t0164-classify.mjs`, identified 253 bindingless
 `catch` clauses and 126 *candidate* source-reading suites. Semantic categories
 distinguish fallback, parsing, lifecycle, best-effort and silent foreground
 handling; 101 suites were classed as live source assertions, 17 as fixture or

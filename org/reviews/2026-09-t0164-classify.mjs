@@ -1,6 +1,8 @@
 // Current-tree mechanical inventory with independent primary-behaviour labels.
-// Run from repository root: node org/reviews/2026-09-t0164-classify.cjs
-const fs = require('fs'), path = require('path'), ts = require('typescript');
+// Run from repository root: node org/reviews/2026-09-t0164-classify.mjs
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import ts from 'typescript';
 function walk(dir) {
   return fs.readdirSync(dir, { withFileTypes: true })
     .flatMap(e => e.isDirectory()
