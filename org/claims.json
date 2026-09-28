@@ -9,6 +9,14 @@
       "path_claims": ["org/tasks/T-0164.json", "org/reviews/2026-09-t0164-*", "org/reviews/2026-09-gitleaks-*", "org/HANDOVER.md", "org/claims.json", "org/TASKS.md", "org/STATE.md", "tests/unit/t0164-recon-ledger.test.ts", "tests/e2e/t0164-composer-inspector.spec.ts", "src/app/globals.css", "tests/fixtures/mutants/T-0164.json", "scripts/tooling/line-census.baseline.json"],
       "expires": "2026-10-15T23:00:00Z",
       "liveness": "red-first itemised reconnaissance, independent sceptics, full gate, committed sweep and hosted acceptance"
+    },
+    {
+      "lane_id": "T-0164-independent-bloom-oracle",
+      "task_id": "T-0164",
+      "session_id": "01a0e702-808f-75f0-921f-ba37030f0947",
+      "path_claims": ["tests/unit/bloom-paint-rule.test.ts"],
+      "expires": "2026-10-15T23:00:00Z",
+      "liveness": "Q-015 independent author: preserve bloom oracle test names while checking absolute Composer positioning"
     }
   ],
   "note": "T-0158 closed after independent R3 approval, 13/13 mutation kills and all implementation hosted jobs. T-0164 owns the current reconnaissance files; T-0159 historical ledger remains read-only."

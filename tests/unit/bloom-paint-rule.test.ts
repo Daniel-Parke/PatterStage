@@ -54,7 +54,14 @@ describe("the [data-bloom] paint rule", () => {
   });
 
   it("positions the container so the field has something to be inset against", () => {
-    expect(fine).toMatch(/\[data-bloom\]\s*\{\s*position:\s*relative;\s*\}/);
+    const rules = [...fine.replace(/\/\*[\s\S]*?\*\//g, "").matchAll(/([^{}]+)\{([^{}]*)\}/g)];
+    const relativelyPositionedBloomSelectors = rules
+      .filter(([, selector, declarations]) =>
+        selector.includes("[data-bloom]") && /(?:^|;)\s*position:\s*relative\s*;/.test(declarations),
+      )
+      .map(([, selector]) => selector.trim());
+
+    expect(relativelyPositionedBloomSelectors).toEqual(["[data-bloom]:not(.absolute)"]);
   });
 
   it("never eats a pointer event", () => {
