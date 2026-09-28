@@ -100,16 +100,34 @@ for (const [name, viewport] of [
         !inlineStyleEvents.includes(violation),
       );
       expect(unexpected, "the error fallback must produce no new CSP violation kind").toEqual([]);
-      expect(chunkEvents, "only the six known framework script requests may be blocked").toHaveLength(6);
-      expect(new Set(chunkEvents.map((violation) => violation.blockedURI)).size).toBe(5);
       const webpackEvents = chunkEvents.filter((violation) =>
-        new URL(violation.blockedURI).pathname.includes("webpack"),
+        /^\/_next\/static\/chunks\/webpack-[^/]+\.js$/.test(new URL(violation.blockedURI).pathname),
       );
-      expect(webpackEvents, "the repeated blocked chunk must be webpack").toHaveLength(2);
-      expect(webpackEvents[0]?.blockedURI).toBe(webpackEvents[1]?.blockedURI);
+      const turbopackEvents = chunkEvents.filter((violation) =>
+        /^\/_next\/static\/chunks\/turbopack-[^/]+\.js$/.test(new URL(violation.blockedURI).pathname),
+      );
+      const isWebpack = webpackEvents.length === 2 && turbopackEvents.length === 0;
+      const isTurbopack = webpackEvents.length === 0 && turbopackEvents.length === 1;
+      expect(isWebpack || isTurbopack, "only the measured Webpack or Turbopack error fallback is allowed").toBe(true);
+
+      const requestCounts = new Map<string, number>();
+      for (const { blockedURI } of chunkEvents) {
+        requestCounts.set(blockedURI, (requestCounts.get(blockedURI) ?? 0) + 1);
+      }
+      const repeatedURL = [...requestCounts].filter(([, count]) => count === 2).map(([url]) => url);
+      expect(chunkEvents, "only the measured framework chunk requests may be blocked").toHaveLength(isWebpack ? 6 : 7);
+      expect(requestCounts.size, "the known chunk URL count must be preserved").toBe(isWebpack ? 5 : 6);
+      expect([...requestCounts.values()].sort(), "exactly one framework chunk request repeats").toEqual(
+        isWebpack ? [1, 1, 1, 1, 2] : [1, 1, 1, 1, 1, 2],
+      );
+      if (isWebpack) {
+        expect(repeatedURL).toEqual([webpackEvents[0].blockedURI]);
+      } else {
+        expect(repeatedURL, "the Turbopack fallback repeats one chunk URL").toHaveLength(1);
+      }
       expect(inlineScriptEvents, "the static fallback blocks its two inline scripts").toHaveLength(2);
       expect(inlineStyleEvents, "the static fallback blocks its inline style element").toHaveLength(1);
-      expect(observed).toHaveLength(9);
+      expect(observed).toHaveLength(isWebpack ? 9 : 10);
     });
 
     test.describe("without JavaScript", () => {
