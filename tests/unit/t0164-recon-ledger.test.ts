@@ -36,6 +36,7 @@ function expectEvidence(row: ReconRow) {
   expect(row.method.trim().length).toBeGreaterThan(9);
   expect(row.evidence.trim()).not.toBe("");
   expect(row.sceptic.verdict.trim()).not.toBe("");
+  expect(row.sceptic.verdict).not.toMatch(/^pending/);
   expect(row.sceptic.evidence.trim()).not.toBe("");
   expect(row.ruling.trim()).not.toBe("");
   expect(row.owningTask).toMatch(/^T-\d{4}$/);
