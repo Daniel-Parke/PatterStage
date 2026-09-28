@@ -9,22 +9,43 @@ updated: 2026-09-28
 
 ## Current status, 2026-09-28
 
-T-0158's opaque browser sessions and managed transport are implemented on
-`dev@656e7724` under accepted ADR-0012, ADR-0013 and ADR-0014. The final
-isolated ten-step gate exited 0 with an unchanged tree: 746 Jest suites,
-7,303 passing tests and four skips; 314 Playwright passes and 24 existing
-skips; design and line censuses held. The committed-tree sweep killed all
-four mutants by assertion and restored the clean tree. A separate real-browser
-lifecycle walk at 1440x900 and 390x844 passed sign-in, session listing,
-sign-out and re-entry denial on local port **3801**, with one h1, no horizontal
-overflow and no signed-in console errors. Screenshot SHA-256 values for sign-in
+T-0158's opaque browser sessions and managed transport are complete on
+`dev@b54701bb` under accepted ADR-0012, ADR-0013 and ADR-0014. The final
+isolated ten-step gate exited 0 with an unchanged tree
+(`39b54acf61e6d3ae462da066db6025a723ae6dab91023811efc4eb1a15b0d4fb`):
+751 Jest suites, 7,319 passing tests and four skips; 314 Playwright passes
+and 24 existing skips; design and line censuses held. The committed-tree
+sweep killed all 13 mutants by assertion and restored the clean tree. An
+independent R3 reviewer approved the final response boundary after red-first
+oracles exposed both held cookie responses and a bare Authorization rotation
+path. All 174 API method exports are now accounted for: 112 use `route()`, 56
+use `guardRoute()`, four are specialised auth lifecycle methods and two are
+public health endpoints. A separate real-browser lifecycle walk at 1440x900
+and 390x844 passed sign-in, session listing, sign-out and re-entry denial on
+local port **3801**, with one h1, no horizontal overflow and no signed-in
+console errors. That walk preceded the later response-only route guards;
+the final 314-case browser gate passed on `b54701bb`. Screenshot SHA-256 values for sign-in
 are `26000F417FB54A16AC967420B20D87420BD69A101EB2918CBF197420AB739048`
 and `7A983BC071ED2BED0D7EA93670FB852A85C176CAEA3F982CAA0205FDB1D5B6EF`;
 for session management they are
 `0CDF0E3C90C42AF685B1C1D6947E1CAF5B544FB18C888254FCCDD5AD44B0ED12`
 and `A04C0C117C60CA54D974C8D7945456084AFBB487D0E98AAF4EB82E91904946BD`.
-The final gate record is in the managed `t0158-sweep` worktree's `.gate` folder;
-hosted push and PR jobs have not yet been observed at this revision.
+The final gate record is in the managed `t0158-sweep` worktree's `.gate` folder.
+At `b54701bb`, push CI `36423013904`, PR CI `36423022563`, push Gitleaks
+`36423014068` and PR Gitleaks `36423022551` all completed successfully. Every
+PR CI job passed, including full browser acceptance, fresh install/update,
+real Hermes, Docker, Linux and macOS. Push CI skips full browser acceptance by
+design, but its remaining jobs passed. T-0158's record is closed. The earlier
+`a228a708` CI runs also passed, but the independent R3 review then found a
+queued-response revocation race, so they are not the closure evidence.
+
+The first hosted attempt at `b73e1c23` failed only the real-Hermes job. Its
+test Compose service omitted the origin and explicit network mode required by
+`start:network`; the integration never reached the contract assertions. An
+independent red-first oracle, then a different-author loopback amendment,
+preceded the repair. Both test services now publish fixed test credentials only
+on `127.0.0.1`, and the harness uses that same address. The repaired hosted
+real-Hermes job passed without relaxing the production startup guard.
 
 The failed intermediate gates remain evidence. A fabricated running Composer
 row with no current node could be marked failed by the background tick and
