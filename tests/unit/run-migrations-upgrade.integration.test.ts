@@ -19,6 +19,7 @@ import {
 import { OPERATOR_PREFS_SCHEMA_VERSION, MODELS_ORIGIN_SCHEMA_VERSION, RUNS_SPEND_SOURCE_SCHEMA_VERSION, SCHEDULE_KIND_SCHEMA_VERSION, FALLBACK_IDENTITY_SCHEMA_VERSION, RESEARCH_GATHER_SCHEMA_VERSION, RESEARCH_USAGE_SCHEMA_VERSION } from "@/lib/db/sql-migrations";
 import { COMPOSER_NODE_CANCELLED_SCHEMA_VERSION } from "@/lib/db/apply-composer-node-cancelled-migration";
 import { COMPOSER_REJECTED_SCHEMA_VERSION } from "@/lib/db/apply-composer-rejected-migration";
+import { applyAuthSessionsMigration } from "@/lib/db/apply-auth-sessions-migration";
 
 // jest.setup globally mocks "@/lib/db" (no runMigrations on the mock); pull the
 // real implementation so we exercise the actual wiring.
@@ -236,8 +237,13 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
   // rather than on the install that trips over it.
   describe("the head constant cannot drift from the chain", () => {
     it("equals the last applier's version gate", () => {
-      // Amended 2026-09-10 (T-0140): the fallback identity applier is the head.
-      expect(MIGRATION_HEAD_SCHEMA_VERSION).toBe(FALLBACK_IDENTITY_SCHEMA_VERSION);
+      const db = openRealDb();
+      try {
+        db.exec("CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)");
+        setSchemaVersion(db, FALLBACK_IDENTITY_SCHEMA_VERSION);
+        expect(applyAuthSessionsMigration(db, migrationsDir)).toBe(MIGRATION_HEAD_SCHEMA_VERSION);
+        expect(getSchemaVersion(db)).toBe(MIGRATION_HEAD_SCHEMA_VERSION);
+      } finally { db.close(); }
     });
 
     // schema_version strictly increases and a gate is claimed once, which is
@@ -245,6 +251,7 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
     // above the applier that used to hold it is what that rule looks like from
     // the outside, and it catches a new migration that reuses or skips a number.
     it("sits exactly one above the gate it displaced", () => {
+      expect(MIGRATION_HEAD_SCHEMA_VERSION).toBe(FALLBACK_IDENTITY_SCHEMA_VERSION + 1);
       expect(FALLBACK_IDENTITY_SCHEMA_VERSION).toBe(SCHEDULE_KIND_SCHEMA_VERSION + 1);
       expect(SCHEDULE_KIND_SCHEMA_VERSION).toBe(RUNS_SPEND_SOURCE_SCHEMA_VERSION + 1);
       expect(RUNS_SPEND_SOURCE_SCHEMA_VERSION).toBe(MODELS_ORIGIN_SCHEMA_VERSION + 1);

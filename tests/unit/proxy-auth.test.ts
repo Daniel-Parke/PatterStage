@@ -10,7 +10,7 @@
  *
  * These tests assert the boundary itself, at the one place it is enforced.
  */
-import { rmSync, writeFileSync } from "fs";
+import { mkdtempSync, rmSync, writeFileSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 
@@ -18,7 +18,38 @@ import { NextRequest } from "next/server";
 
 import { SESSION_COOKIE, TOKEN_QUERY_PARAM } from "@/lib/api/auth-token";
 
+jest.mock("better-sqlite3", () => jest.requireActual("../../node_modules/better-sqlite3/lib/index.js"));
+jest.unmock("@/lib/db");
+
 const TOKEN = "test-token-abcdefghijklmnop";
+let sessionDb: import("better-sqlite3").Database | null = null;
+let sessionDataDir: string | null = null;
+
+function prepareSessionStore(): void {
+  sessionDataDir = mkdtempSync(join(tmpdir(), "ps-proxy-auth-sessions-"));
+  process.env.PS_DATA_DIR = sessionDataDir;
+  process.env.CH_DATA_DIR = sessionDataDir;
+  process.env.HERMES_HOME = join(sessionDataDir, "hermes-home");
+  process.env.PS_PUBLIC_ORIGIN = "http://localhost:4242";
+  process.env.NEXT_RUNTIME = "nodejs";
+  process.env.PS_AUTH_MODE = "token";
+}
+
+async function initialiseSessionStore(): Promise<void> {
+  const { initialiseBootState } = await import("@/lib/auth/boot-state");
+  initialiseBootState();
+  const { ensureDb, getDb } = await import("@/lib/db");
+  ensureDb();
+  sessionDb = getDb();
+}
+
+async function opaqueSessionCookie(): Promise<string> {
+  await initialiseSessionStore();
+  const { createBrowserSession } = await import("@/lib/auth/session-store");
+  const { secret } = createBrowserSession(TOKEN);
+  expect(secret).not.toBe(TOKEN);
+  return secret;
+}
 
 function req(
   url: string,
@@ -46,6 +77,10 @@ describe("proxy — the authentication boundary", () => {
   });
 
   afterEach(() => {
+    sessionDb?.close();
+    sessionDb = null;
+    if (sessionDataDir) rmSync(sessionDataDir, { recursive: true, force: true });
+    sessionDataDir = null;
     process.env = { ...savedEnv };
   });
 
@@ -92,24 +127,28 @@ describe("proxy — the authentication boundary", () => {
   });
 
   it("accepts the session cookie for a same-origin write", async () => {
+    prepareSessionStore();
     const proxy = await loadProxy();
+    const cookie = await opaqueSessionCookie();
     const res = proxy(
       req("http://localhost:4242/api/missions", {
         method: "POST",
-        cookie: TOKEN,
-        headers: { "sec-fetch-site": "same-origin" },
+        cookie,
+        headers: { "sec-fetch-site": "same-origin", origin: "http://localhost:4242" },
       }),
     );
     expect(res.status).toBe(200);
   });
 
   it("rejects a cross-site cookie write (CSRF)", async () => {
+    prepareSessionStore();
     const proxy = await loadProxy();
+    const cookie = await opaqueSessionCookie();
     const res = proxy(
       req("http://localhost:4242/api/scripts/run", {
         method: "POST",
-        cookie: TOKEN,
-        headers: { "sec-fetch-site": "cross-site" },
+        cookie,
+        headers: { "sec-fetch-site": "cross-site", origin: "https://evil.example" },
       }),
     );
     expect(res.status).toBe(403);
@@ -121,16 +160,28 @@ describe("proxy — the authentication boundary", () => {
   });
 
   it("exchanges ?ps_token for a session cookie and strips it from the URL", async () => {
+    prepareSessionStore();
     const proxy = await loadProxy();
+    await initialiseSessionStore();
     const res = proxy(req(`http://localhost:4242/?${TOKEN_QUERY_PARAM}=${TOKEN}`));
     expect(res.status).toBe(307);
     expect(res.headers.get("location")).not.toContain(TOKEN_QUERY_PARAM);
-    expect(res.cookies.get(SESSION_COOKIE)?.value).toBe(TOKEN);
+    const cookie = res.cookies.get(SESSION_COOKIE)?.value;
+    expect(cookie).toBeTruthy();
+    expect(cookie).not.toBe(TOKEN);
+    expect(proxy(req("http://localhost:4242/api/status", { cookie })).status).toBe(200);
   });
 
   it("does not accept a wrong ?ps_token", async () => {
     const proxy = await loadProxy();
-    expect(proxy(req(`http://localhost:4242/?${TOKEN_QUERY_PARAM}=wrong`)).status).toBe(401);
+    const redirect = proxy(req(`http://localhost:4242/?${TOKEN_QUERY_PARAM}=wrong`));
+    expect(redirect.status).toBe(307);
+    expect(redirect.cookies.get(SESSION_COOKIE)).toBeUndefined();
+    const location = redirect.headers.get("location");
+    expect(location).not.toContain(TOKEN_QUERY_PARAM);
+    const final = proxy(req(new URL(location!, "http://localhost:4242").href));
+    expect(final.status).toBe(401);
+    expect(final.cookies.get(SESSION_COOKIE)).toBeUndefined();
   });
 
   it("fails closed when no token is configured", async () => {
@@ -166,8 +217,9 @@ describe("proxy — the authentication boundary", () => {
 /**
  * The 401 is the first PatterStage screen a new operator sees when they open
  * the bare URL, so it is a product surface and not just a status code. It has
- * to name the real token location on THIS install: "PS_DATA_DIR/auth-token" is
- * a variable name, and someone who lost the boot line cannot expand it.
+ * to give an actionable local hint without disclosing an absolute host path.
+ * The resolved path is printed at boot, while the unauthenticated page keeps
+ * the same generic hint for loopback and network callers.
  */
 describe("proxy — the 401 tells a locked-out operator what to do", () => {
   const savedEnv = { ...process.env };
@@ -190,16 +242,20 @@ describe("proxy — the 401 tells a locked-out operator what to do", () => {
   it("names the resolved token file on the HTML page, not the variable", async () => {
     const proxy = await loadProxy();
     const body = await proxy(req("http://localhost:4242/")).text();
-    expect(body).toContain(tokenFile);
-    expect(body).not.toContain("PS_DATA_DIR/auth-token");
+    expect(body).toContain("PS_DATA_DIR/auth-token");
+    expect(body).toContain("server log");
+    expect(body).not.toContain(tokenFile);
   });
 
   it("shows both steps: read the file, then sign in with the query param", async () => {
     const proxy = await loadProxy();
     const body = await proxy(req("http://localhost:4242/")).text();
-    expect(body).toContain(`cat ${tokenFile}`);
+    expect(body).toContain("Read your token locally");
+    expect(body).toContain("PS_DATA_DIR/auth-token");
+    expect(body).toContain('action="/api/auth/sign-in"');
     expect(body).toContain(`?${TOKEN_QUERY_PARAM}=`);
     expect(body.toLowerCase()).toContain("restart");
+    expect(body).not.toContain(tokenFile);
   });
 
   it("never prints the token itself on the page that rejected it", async () => {
@@ -222,11 +278,9 @@ describe("proxy — the 401 tells a locked-out operator what to do", () => {
   });
 
   /**
-   * The resolved path is for the operator AT the machine. Under
-   * `npm run start:network` the server binds 0.0.0.0, and an absolute
-   * home-directory path hands a stranger the OS username and the install
-   * layout. Loopback gets the path; everyone else gets the same instructions
-   * without it.
+   * Under `npm run start:network` the server binds 0.0.0.0, and an absolute
+   * home-directory path hands a stranger the OS username and install layout.
+   * The accepted sign-in page uses the same generic hint on every host.
    */
   it("does NOT name the resolved path to a caller arriving over the network", async () => {
     const proxy = await loadProxy();
@@ -246,7 +300,9 @@ describe("proxy — the 401 tells a locked-out operator what to do", () => {
     const proxy = await loadProxy();
     for (const host of ["127.0.0.1:4242", "localhost:4242", "app.localhost:4242", "[::1]:4242"]) {
       const body = await proxy(req("http://localhost:4242/", { headers: { host } })).text();
-      expect(body).toContain(tokenFile);
+      expect(body).toContain("PS_DATA_DIR/auth-token");
+      expect(body).not.toContain(tokenFile);
+      expect(body).not.toContain(TOKEN);
     }
   });
 

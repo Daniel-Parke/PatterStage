@@ -76,11 +76,26 @@ function gatewayDown(): TypeError {
 }
 
 async function eventStreamBody(): Promise<string> {
-  const { GET } = await import("@/app/api/runs/[id]/events/route");
-  const res = await GET(null as unknown as NextRequest, {
-    params: Promise.resolve({ id: "ps-run-1" }),
-  });
-  return await res.text();
+  const credential = "t0158-chat-failure-stream-oracle";
+  const previousToken = process.env.PS_AUTH_TOKEN;
+  const previousMode = process.env.PS_AUTH_MODE;
+  process.env.PS_AUTH_TOKEN = credential;
+  process.env.PS_AUTH_MODE = "token";
+  try {
+    const { GET } = await import("@/app/api/runs/[id]/events/route");
+    const res = await GET(new NextRequest("http://127.0.0.1:3000/api/runs/ps-run-1/events", {
+      headers: { Authorization: `Bearer ${credential}` },
+    }), {
+      params: Promise.resolve({ id: "ps-run-1" }),
+    });
+    expect(res.status).toBe(200);
+    return await res.text();
+  } finally {
+    if (previousToken === undefined) delete process.env.PS_AUTH_TOKEN;
+    else process.env.PS_AUTH_TOKEN = previousToken;
+    if (previousMode === undefined) delete process.env.PS_AUTH_MODE;
+    else process.env.PS_AUTH_MODE = previousMode;
+  }
 }
 
 beforeEach(() => {

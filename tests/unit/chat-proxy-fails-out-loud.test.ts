@@ -39,10 +39,10 @@ jest.mock("@/lib/analytics/record-event", () => ({ recordEvent: jest.fn() }));
 
 import { POST } from "@/app/api/orchestration/chat/route";
 
-function post(body: unknown): NextRequest {
+function post(body: unknown, headers: Record<string, string> = {}): NextRequest {
   return new NextRequest("http://localhost/api/orchestration/chat", {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: { "content-type": "application/json", ...headers },
     body: JSON.stringify(body),
   });
 }
@@ -128,16 +128,26 @@ describe("a chat turn against a stopped gateway explains itself", () => {
 
 describe("GREEN CONTROLS: everything else is unchanged", () => {
   it("a gateway that answers still streams straight through", async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      body: "a-readable-stream",
-    } as unknown as Response);
+    const credential = "t0158-chat-stream-control-token";
+    process.env.PS_AUTH_TOKEN = credential;
+    process.env.PS_AUTH_MODE = "token";
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(new TextEncoder().encode("data: hi\n\n"));
+        controller.close();
+      },
+    });
+    mockFetch.mockResolvedValueOnce(new Response(body, {
+      status: 200, headers: { "Content-Type": "text/event-stream" },
+    }));
 
-    const res = await POST(post({ messages: [{ role: "user", content: "hi" }] }));
+    const res = await POST(post({ messages: [{ role: "user", content: "hi" }] }, {
+      Authorization: `Bearer ${credential}`,
+    }));
 
     expect(res.status).toBe(200);
     expect(res.headers.get("Content-Type")).toBe("text/event-stream");
+    expect(await res.text()).toContain("data: hi");
   });
 
   it("a non-streaming turn still returns the parsed JSON", async () => {

@@ -83,20 +83,34 @@ describe("one cancel", () => {
 describe("a stream that lets go", () => {
   it("hands the runtime an abort signal and pulls it when the client cancels", async () => {
     receivedSignal = undefined;
-    const { GET } = await import("@/app/api/runs/[id]/events/route");
-    const res = await GET(new NextRequest("http://localhost/api/runs/r1/events"), {
-      params: Promise.resolve({ id: "r1" }),
-    });
-    expect(res.status).toBe(200);
-    const reader = res.body!.getReader();
-    await reader.read(); // the route's own `open` frame
-    await reader.read(); // the backend's first event, so the generator has started
-    expect(receivedSignal).toBeInstanceOf(AbortSignal);
-    expect(receivedSignal!.aborted).toBe(false);
+    const credential = "t0158-b1-cancellation-oracle-token";
+    const previousToken = process.env.PS_AUTH_TOKEN;
+    const previousMode = process.env.PS_AUTH_MODE;
+    process.env.PS_AUTH_TOKEN = credential;
+    process.env.PS_AUTH_MODE = "token";
+    try {
+      const { GET } = await import("@/app/api/runs/[id]/events/route");
+      const res = await GET(new NextRequest("http://localhost/api/runs/r1/events", {
+        headers: { Authorization: `Bearer ${credential}` },
+      }), {
+        params: Promise.resolve({ id: "r1" }),
+      });
+      expect(res.status).toBe(200);
+      const reader = res.body!.getReader();
+      await reader.read(); // the route's own `open` frame
+      await reader.read(); // the backend's first event, so the generator has started
+      expect(receivedSignal).toBeInstanceOf(AbortSignal);
+      expect(receivedSignal!.aborted).toBe(false);
 
-    await expect(reader.cancel()).resolves.toBeUndefined();
+      await expect(reader.cancel()).resolves.toBeUndefined();
 
-    expect(receivedSignal!.aborted).toBe(true);
+      expect(receivedSignal!.aborted).toBe(true);
+    } finally {
+      if (previousToken === undefined) delete process.env.PS_AUTH_TOKEN;
+      else process.env.PS_AUTH_TOKEN = previousToken;
+      if (previousMode === undefined) delete process.env.PS_AUTH_MODE;
+      else process.env.PS_AUTH_MODE = previousMode;
+    }
   });
 
   it("HermesRuntime forwards the caller's signal to fetch", async () => {
