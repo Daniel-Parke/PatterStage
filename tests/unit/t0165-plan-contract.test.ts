@@ -106,7 +106,7 @@ describe("T-0165 Phase 2 plan contract", () => {
   it("assigns every finding and atomic proof exactly once without reviving refuted items", () => {
     expect(existsSync(join(root, ownershipPath))).toBe(true);
     if (!existsSync(join(root, ownershipPath))) return;
-    const ownership = readJson<{ findings: Owner[]; coverage: Owner[] }>(ownershipPath);
+    const ownership = readJson<{ findings: Owner[]; coverage: Owner[]; operatorDispositions: Owner[] }>(ownershipPath);
     const findings = readJsonl(findingsPath);
     const coverage = readJsonl(coveragePath);
     expect(ownership.findings.map((row) => row.id).sort()).toEqual(findings.map((row) => row.id).sort());
@@ -123,6 +123,26 @@ describe("T-0165 Phase 2 plan contract", () => {
     }
     for (const finding of findings.filter((row) => row.status === "refuted")) {
       expect(ownership.findings.find((row) => row.id === finding.id)?.outcome).toBe("ruled-out");
+    }
+    const splitIds = readFileSync(join(root, findingsPath), "utf8").trim().split("\n")
+      .flatMap((line) => (JSON.parse(line) as { operatorDispositions?: { id: string }[] }).operatorDispositions ?? [])
+      .map((row) => row.id);
+    expect(splitIds).toHaveLength(163);
+    expect(ownership.operatorDispositions).toBeDefined();
+    if (!ownership.operatorDispositions) return;
+    expect(ownership.operatorDispositions.map((row) => row.id).sort()).toEqual(splitIds.sort());
+    for (const row of ownership.operatorDispositions) {
+      expect(row.reason.length).toBeGreaterThan(10);
+      if (row.outcome === "planned") expect(tasks.has(row.task ?? "")).toBe(true);
+      else expect(row.task).toBeNull();
+    }
+    for (const id of ["app-01h", "cross-cutting-04b", "docs-05b"]) {
+      expect(ownership.operatorDispositions.find((row) => row.id === id)?.outcome).toBe("planned");
+    }
+    expect(ownership.operatorDispositions.find((row) => row.id === "cross-cutting-04b")?.task).toBe("T-0197");
+    expect(ownership.operatorDispositions.find((row) => row.id === "docs-05a")?.outcome).toBe("deferred");
+    for (const id of ["gap-074.b", "gap-080.a", "gap-083.b", "gap-095.c", "gap-101.a"]) {
+      expect(ownership.coverage.find((row) => row.id === id)?.outcome).toBe("planned");
     }
   });
 });
