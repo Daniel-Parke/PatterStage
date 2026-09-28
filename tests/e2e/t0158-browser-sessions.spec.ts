@@ -445,7 +445,7 @@ test.describe('T-0158 built server and real SQLite', () => {
       if (streamKind === 'composer') {
         db.prepare('INSERT INTO composer_workflows (id, name) VALUES (?, ?)').run(`workflow-${runId}`, 'T-0158 stream fixture');
         db.prepare('INSERT INTO composer_runs (id, workflow_id, status) VALUES (?, ?, ?)')
-          .run(runId, `workflow-${runId}`, 'running');
+          .run(runId, `workflow-${runId}`, 'awaiting_approval');
       }
       if (streamKind === 'research') db.prepare('INSERT INTO research_runs (id, query, status) VALUES (?, ?, ?)')
         .run(runId, 't0158-stream', 'running');
