@@ -1,9 +1,9 @@
 /** @jest-environment node */
 
-import { spawnSync } from "node:child_process";
 import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, join } from "node:path";
+import { isolatedChildEnv, requireLaunch, runCli } from "../helpers/t0161-isolated-cli";
 
 const ROOT = join(__dirname, "..", "..");
 const SOURCE_MANIFEST = join(ROOT, "data", "seed", "profiles", "manifest.json");
@@ -28,42 +28,8 @@ const FIXTURE_PRELOAD = String.raw`
   require('node:module').syncBuiltinESMExports();
 `;
 
-function childEnv(root: string, dataDir: string, hermesHome: string): NodeJS.ProcessEnv {
-  const env: NodeJS.ProcessEnv = {
-    NODE_ENV: "test",
-    NODE_OPTIONS: "",
-    HOME: root,
-    USERPROFILE: root,
-    APPDATA: root,
-    LOCALAPPDATA: root,
-    PS_DATA_DIR: dataDir,
-    CH_DATA_DIR: dataDir,
-    CONTROL_HUB_DATA_DIR: dataDir,
-    HERMES_HOME: hermesHome,
-    ORACLE_LOCAL_ENV: join(ROOT, ".env.local"),
-    ORACLE_SOURCE_MANIFEST: SOURCE_MANIFEST,
-  };
-  for (const key of ["PATH", "PATHEXT", "SYSTEMROOT", "WINDIR", "COMSPEC", "TEMP", "TMP", "TMPDIR", "LANG", "LC_ALL"]) {
-    if (process.env[key] !== undefined) env[key] = process.env[key];
-  }
-  return env;
-}
-
 function run(script: string, args: string[], preload: string, env: NodeJS.ProcessEnv) {
-  return spawnSync(process.execPath, ["--require", preload, "--import", "tsx", script, ...args], {
-    cwd: ROOT,
-    env,
-    encoding: "utf8",
-    stdio: ["ignore", "pipe", "pipe"],
-    timeout: 60_000,
-    windowsHide: true,
-  });
-}
-
-function requireLaunch(result: ReturnType<typeof run>, step: string): void {
-  if (result.error || result.signal || result.status === null) {
-    throw new Error(`INFRASTRUCTURE: ${step} did not complete (${result.error?.message ?? result.signal ?? result.status})`);
-  }
+  return runCli(ROOT, script, args, preload, env);
 }
 
 describe("T-0161 explicit catalog seed reports a module failure", () => {
@@ -82,7 +48,7 @@ describe("T-0161 explicit catalog seed reports a module failure", () => {
       copyFileSync(SOURCE_MANIFEST, goodManifest);
       writeFileSync(badManifest, "{ malformed profiles manifest\n");
       writeFileSync(preload, FIXTURE_PRELOAD);
-      const env = childEnv(root, dataDir, hermesHome);
+      const env = isolatedChildEnv(ROOT, root, dataDir, hermesHome, SOURCE_MANIFEST);
 
       const migration = run("scripts/tooling/migrate-db.ts", [], preload, env);
       requireLaunch(migration, "disposable migration");
