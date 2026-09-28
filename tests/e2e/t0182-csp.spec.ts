@@ -130,13 +130,40 @@ for (const viewport of [
       expect(violations).toEqual([]);
     });
 
-    test("an injected inline script cannot execute", async ({ page }) => {
-      await openHydratedMissions(page);
-      await page.evaluate(() => {
-        const script = document.createElement("script");
-        script.textContent = "window.__t0182InlineExecuted = true";
-        document.body.append(script);
+    test("an injected inline script cannot execute", async ({ page, request }) => {
+      let injectedDocuments = 0;
+      await page.route("**/work/missions", async (route) => {
+        if (!route.request().isNavigationRequest()) {
+          await route.continue();
+          return;
+        }
+        const original = await route.fetch();
+        const body = await original.body();
+        const closingBody = body.lastIndexOf(Buffer.from("</body>"));
+        expect(closingBody, "the built document must contain </body>").toBeGreaterThanOrEqual(0);
+        const injectedScript = Buffer.from("<script>window.__t0182InlineExecuted = true</script>");
+        const injectedBody = Buffer.concat([
+          body.subarray(0, closingBody),
+          injectedScript,
+          body.subarray(closingBody),
+        ]);
+        injectedDocuments += 1;
+        await route.fulfill({ response: original, body: injectedBody });
       });
+
+      const documentResponse = page.waitForResponse((response) =>
+        response.request().isNavigationRequest() && new URL(response.url()).pathname === "/work/missions",
+      );
+      await openHydratedMissions(page);
+      const delivered = await documentResponse;
+      expect(injectedDocuments).toBe(1);
+      const deliveredNonce = directive(delivered.headers()["content-security-policy"], "script-src")
+        .match(/'nonce-([A-Za-z0-9+/_=-]+)'/);
+      expect(deliveredNonce, "the injected document must retain its request nonce").not.toBeNull();
+      expect(Buffer.from(deliveredNonce![1].replace(/-/g, "+").replace(/_/g, "/"), "base64")).toHaveLength(16);
+      const nextDocument = await request.get("/work/missions");
+      expect(nextDocument.status()).toBe(200);
+      expect(deliveredNonce![1]).not.toBe(nonce(nextDocument));
       expect(await page.evaluate(() => Boolean((window as Window & { __t0182InlineExecuted?: boolean }).__t0182InlineExecuted))).toBe(false);
     });
 
