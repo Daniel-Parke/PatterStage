@@ -13,15 +13,15 @@
       "expires": "2026-09-29T22:30:00Z"
     },
     {
-      "lane_id": "t0183-closed-oracle-amendment",
+      "lane_id": "t0183-reconcile-oracle",
       "task_id": "T-0183",
-      "session_id": "01a0e9ea-6097-7943-a435-9dee69f62558",
+      "session_id": "01a0e9ef-f0aa-77f0-8abf-86f99c020cae",
       "host": "local",
-      "harness_task_id": "01a0e9ea-6097-7943-a435-9dee69f62558",
-      "path_claims": ["tests/unit/spend-unattended-dispatch.test.ts", "tests/unit/scheduler-tick.test.ts", "tests/unit/schedule-minimum-interval.test.ts"],
+      "harness_task_id": "01a0e9ef-f0aa-77f0-8abf-86f99c020cae",
+      "path_claims": ["tests/unit/mission-reconcile-cancellation-race.test.ts", "tests/unit/mission-uncertain-submit.test.ts", "tests/unit/b13-scheduler-runs-scripts.test.ts", "tests/integration/runtime/restart-recovery.mjs"],
       "acquired": "2026-09-28T22:30:00Z",
       "expires": "2026-09-29T22:30:00Z"
     }
   ],
-  "note": "Two disjoint writing lanes: coordinator owns source and governance; independent R2 ORACLE author owns only three closed scheduler test doubles."
+  "note": "Two disjoint writing lanes: coordinator owns source and governance; independent R2 ORACLE author owns two new race suites and two named closed-test amendments."
 }
