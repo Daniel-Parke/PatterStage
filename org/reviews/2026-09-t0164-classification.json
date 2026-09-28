@@ -1,0 +1,1904 @@
+{
+  "method": "TypeScript AST catch clauses without bindings; suite screen is readFileSync plus a src literal anywhere in one test AST. Labels are semantic inspection, not a claim of defect or exhaustive source-text detection.",
+  "catchCount": 253,
+  "candidateSuiteCount": 126,
+  "catches": [
+    {
+      "id": 0,
+      "location": "src/app/agent/settings/system/page.tsx:81",
+      "category": "surfaced"
+    },
+    {
+      "id": 1,
+      "location": "src/app/agent/settings/system/page.tsx:92",
+      "category": "surfaced"
+    },
+    {
+      "id": 2,
+      "location": "src/app/api/admin/sessions/backfill-status/route.ts:42",
+      "category": "parse"
+    },
+    {
+      "id": 3,
+      "location": "src/app/api/auth/session/route.ts:9",
+      "category": "surfaced"
+    },
+    {
+      "id": 4,
+      "location": "src/app/api/auth/sessions/list/route.ts:12",
+      "category": "surfaced"
+    },
+    {
+      "id": 5,
+      "location": "src/app/api/auth/sessions/revoke/route.ts:19",
+      "category": "surfaced"
+    },
+    {
+      "id": 6,
+      "location": "src/app/api/fs/list/route.ts:41",
+      "category": "skip"
+    },
+    {
+      "id": 7,
+      "location": "src/app/api/memory/route.ts:51",
+      "category": "fallback"
+    },
+    {
+      "id": 8,
+      "location": "src/app/api/models/defaults/route.ts:55",
+      "category": "fallback"
+    },
+    {
+      "id": 9,
+      "location": "src/app/api/models/import/route.ts:131",
+      "category": "bestEffort"
+    },
+    {
+      "id": 10,
+      "location": "src/app/api/models/sync/push/route.ts:56",
+      "category": "surfaced"
+    },
+    {
+      "id": 11,
+      "location": "src/app/api/monitor/route.ts:77",
+      "category": "fallback"
+    },
+    {
+      "id": 12,
+      "location": "src/app/api/orchestration/chat/route.ts:39",
+      "category": "lifecycle"
+    },
+    {
+      "id": 13,
+      "location": "src/app/api/runs/[id]/events/route.ts:76",
+      "category": "lifecycle"
+    },
+    {
+      "id": 14,
+      "location": "src/app/api/runs/[id]/events/route.ts:83",
+      "category": "lifecycle"
+    },
+    {
+      "id": 15,
+      "location": "src/app/api/runs/[id]/events/route.ts:110",
+      "category": "lifecycle"
+    },
+    {
+      "id": 16,
+      "location": "src/app/api/sessions/[id]/route.ts:93",
+      "category": "parse"
+    },
+    {
+      "id": 17,
+      "location": "src/app/layout.tsx:74",
+      "category": "fallback"
+    },
+    {
+      "id": 18,
+      "location": "src/app/recroom/story-weaver/[id]/page.tsx:124",
+      "category": "bestEffort"
+    },
+    {
+      "id": 19,
+      "location": "src/app/recroom/story-weaver/[id]/page.tsx:126",
+      "category": "silentForeground"
+    },
+    {
+      "id": 20,
+      "location": "src/app/recroom/story-weaver/[id]/page.tsx:140",
+      "category": "fallback"
+    },
+    {
+      "id": 21,
+      "location": "src/app/recroom/story-weaver/[id]/page.tsx:378",
+      "category": "silentForeground"
+    },
+    {
+      "id": 22,
+      "location": "src/app/recroom/story-weaver/[id]/page.tsx:412",
+      "category": "silentForeground"
+    },
+    {
+      "id": 23,
+      "location": "src/app/recroom/story-weaver/create/page.tsx:232",
+      "category": "parse"
+    },
+    {
+      "id": 24,
+      "location": "src/app/work/scripts/page.tsx:223",
+      "category": "surfaced"
+    },
+    {
+      "id": 25,
+      "location": "src/components/help/HelpLink.tsx:54",
+      "category": "fallback"
+    },
+    {
+      "id": 26,
+      "location": "src/components/missions/MissionEditorPanel.tsx:100",
+      "category": "silentForeground"
+    },
+    {
+      "id": 27,
+      "location": "src/components/missions/MissionPromptPreview.tsx:79",
+      "category": "silentForeground"
+    },
+    {
+      "id": 28,
+      "location": "src/components/models/ModelSyncButtons.tsx:207",
+      "category": "surfaced"
+    },
+    {
+      "id": 29,
+      "location": "src/components/models/ModelSyncButtons.tsx:249",
+      "category": "silentForeground"
+    },
+    {
+      "id": 30,
+      "location": "src/hooks/useApiResource.ts:115",
+      "category": "fallback"
+    },
+    {
+      "id": 31,
+      "location": "src/hooks/useEventStream.ts:37",
+      "category": "parse"
+    },
+    {
+      "id": 32,
+      "location": "src/hooks/useEventStream.ts:47",
+      "category": "parse"
+    },
+    {
+      "id": 33,
+      "location": "src/hooks/useRunProgress.ts:77",
+      "category": "parse"
+    },
+    {
+      "id": 34,
+      "location": "src/hooks/useSelectedProfile.ts:40",
+      "category": "fallback"
+    },
+    {
+      "id": 35,
+      "location": "src/hooks/useSelectedProfile.ts:55",
+      "category": "bestEffort"
+    },
+    {
+      "id": 36,
+      "location": "src/hooks/useStoredBool.ts:50",
+      "category": "fallback"
+    },
+    {
+      "id": 37,
+      "location": "src/hooks/useStoredBool.ts:60",
+      "category": "bestEffort"
+    },
+    {
+      "id": 38,
+      "location": "src/hooks/useVersionFooter.ts:234",
+      "category": "parse"
+    },
+    {
+      "id": 39,
+      "location": "src/hooks/useVersionFooter.ts:373",
+      "category": "lifecycle"
+    },
+    {
+      "id": 40,
+      "location": "src/instrumentation.ts:49",
+      "category": "bestEffort"
+    },
+    {
+      "id": 41,
+      "location": "src/instrumentation.ts:59",
+      "category": "bestEffort"
+    },
+    {
+      "id": 42,
+      "location": "src/instrumentation.ts:84",
+      "category": "bestEffort"
+    },
+    {
+      "id": 43,
+      "location": "src/instrumentation.ts:96",
+      "category": "bestEffort"
+    },
+    {
+      "id": 44,
+      "location": "src/lib/agents/agent-skills-count.ts:43",
+      "category": "fallback"
+    },
+    {
+      "id": 45,
+      "location": "src/lib/agents/agent-skills-count.ts:47",
+      "category": "fallback"
+    },
+    {
+      "id": 46,
+      "location": "src/lib/agents/roster.ts:25",
+      "category": "fallback"
+    },
+    {
+      "id": 47,
+      "location": "src/lib/analytics/analytics-repository.ts:43",
+      "category": "fallback"
+    },
+    {
+      "id": 48,
+      "location": "src/lib/analytics/run-aggregates.ts:20",
+      "category": "fallback"
+    },
+    {
+      "id": 49,
+      "location": "src/lib/analytics/run-aggregates.ts:97",
+      "category": "skip"
+    },
+    {
+      "id": 50,
+      "location": "src/lib/analytics/run-aggregates.ts:140",
+      "category": "skip"
+    },
+    {
+      "id": 51,
+      "location": "src/lib/api/audit-log.ts:32",
+      "category": "bestEffort"
+    },
+    {
+      "id": 52,
+      "location": "src/lib/api/auth-token.ts:49",
+      "category": "fallback"
+    },
+    {
+      "id": 53,
+      "location": "src/lib/api/parse-json-body.ts:21",
+      "category": "parse"
+    },
+    {
+      "id": 54,
+      "location": "src/lib/api/parse-optional-json-body.ts:40",
+      "category": "parse"
+    },
+    {
+      "id": 55,
+      "location": "src/lib/auth/public-origin.ts:18",
+      "category": "parse"
+    },
+    {
+      "id": 56,
+      "location": "src/lib/auth/public-origin.ts:35",
+      "category": "parse"
+    },
+    {
+      "id": 57,
+      "location": "src/lib/auth/request-auth.ts:28",
+      "category": "surfaced"
+    },
+    {
+      "id": 58,
+      "location": "src/lib/auth/request-auth.ts:43",
+      "category": "parse"
+    },
+    {
+      "id": 59,
+      "location": "src/lib/auth/stream-guard.ts:17",
+      "category": "fallback"
+    },
+    {
+      "id": 60,
+      "location": "src/lib/chat/chat-repository.ts:100",
+      "category": "parse"
+    },
+    {
+      "id": 61,
+      "location": "src/lib/chat/chat-utils.ts:408",
+      "category": "parse"
+    },
+    {
+      "id": 62,
+      "location": "src/lib/chat/chat-utils.ts:454",
+      "category": "parse"
+    },
+    {
+      "id": 63,
+      "location": "src/lib/config/config-cache.ts:38",
+      "category": "fallback"
+    },
+    {
+      "id": 64,
+      "location": "src/lib/config/config-cache.ts:53",
+      "category": "bestEffort"
+    },
+    {
+      "id": 65,
+      "location": "src/lib/config/config-cache.ts:108",
+      "category": "bestEffort"
+    },
+    {
+      "id": 66,
+      "location": "src/lib/db-schema.ts:43",
+      "category": "schema"
+    },
+    {
+      "id": 67,
+      "location": "src/lib/db/apply-bench-gateways-migration.ts:40",
+      "category": "schema"
+    },
+    {
+      "id": 68,
+      "location": "src/lib/db/apply-benchmark-config-migration.ts:48",
+      "category": "schema"
+    },
+    {
+      "id": 69,
+      "location": "src/lib/db/apply-composer-group-link-migration.ts:28",
+      "category": "schema"
+    },
+    {
+      "id": 70,
+      "location": "src/lib/db/apply-composer-migration.ts:28",
+      "category": "schema"
+    },
+    {
+      "id": 71,
+      "location": "src/lib/db/apply-cron-schedule-canonicalisation.ts:75",
+      "category": "parse"
+    },
+    {
+      "id": 72,
+      "location": "src/lib/db/apply-cron-schedule-canonicalisation.ts:93",
+      "category": "parse"
+    },
+    {
+      "id": 73,
+      "location": "src/lib/db/apply-legacy-column-repair.ts:32",
+      "category": "schema"
+    },
+    {
+      "id": 74,
+      "location": "src/lib/db/apply-legacy-column-repair.ts:46",
+      "category": "schema"
+    },
+    {
+      "id": 75,
+      "location": "src/lib/db/apply-mission-phases-migration.ts:37",
+      "category": "schema"
+    },
+    {
+      "id": 76,
+      "location": "src/lib/db/apply-mission-queue-migration.ts:30",
+      "category": "schema"
+    },
+    {
+      "id": 77,
+      "location": "src/lib/db/apply-mission-repeat-migration.ts:14",
+      "category": "schema"
+    },
+    {
+      "id": 78,
+      "location": "src/lib/db/apply-mission-repeat-migration.ts:42",
+      "category": "schema"
+    },
+    {
+      "id": 79,
+      "location": "src/lib/db/apply-models-api-style-migration.ts:28",
+      "category": "schema"
+    },
+    {
+      "id": 80,
+      "location": "src/lib/db/apply-models-api-style-migration.ts:45",
+      "category": "schema"
+    },
+    {
+      "id": 81,
+      "location": "src/lib/db/apply-neutral-column-names.ts:33",
+      "category": "schema"
+    },
+    {
+      "id": 82,
+      "location": "src/lib/db/apply-neutral-column-names.ts:80",
+      "category": "schema"
+    },
+    {
+      "id": 83,
+      "location": "src/lib/db/apply-profiles-tools-upgrade.ts:34",
+      "category": "schema"
+    },
+    {
+      "id": 84,
+      "location": "src/lib/db/apply-research-composer-link-migration.ts:28",
+      "category": "schema"
+    },
+    {
+      "id": 85,
+      "location": "src/lib/db/apply-research-options-migration.ts:27",
+      "category": "schema"
+    },
+    {
+      "id": 86,
+      "location": "src/lib/db/apply-retire-mission-phases-migration.ts:35",
+      "category": "schema"
+    },
+    {
+      "id": 87,
+      "location": "src/lib/db/apply-runs-schedules-migration.ts:31",
+      "category": "schema"
+    },
+    {
+      "id": 88,
+      "location": "src/lib/db/backup.ts:103",
+      "category": "skip"
+    },
+    {
+      "id": 89,
+      "location": "src/lib/db/backup.ts:113",
+      "category": "fallback"
+    },
+    {
+      "id": 90,
+      "location": "src/lib/db/index.ts:109",
+      "category": "skip"
+    },
+    {
+      "id": 91,
+      "location": "src/lib/db/index.ts:120",
+      "category": "skip"
+    },
+    {
+      "id": 92,
+      "location": "src/lib/db/index.ts:167",
+      "category": "lifecycle"
+    },
+    {
+      "id": 93,
+      "location": "src/lib/db/parse-json.ts:17",
+      "category": "parse"
+    },
+    {
+      "id": 94,
+      "location": "src/lib/db/upgrade.ts:82",
+      "category": "schema"
+    },
+    {
+      "id": 95,
+      "location": "src/lib/db/upgrade.ts:107",
+      "category": "fallback"
+    },
+    {
+      "id": 96,
+      "location": "src/lib/db/upgrade.ts:129",
+      "category": "skip"
+    },
+    {
+      "id": 97,
+      "location": "src/lib/db/upgrade.ts:246",
+      "category": "skip"
+    },
+    {
+      "id": 98,
+      "location": "src/lib/deploy/deploy-status.ts:113",
+      "category": "bestEffort"
+    },
+    {
+      "id": 99,
+      "location": "src/lib/deploy/deploy-status.ts:119",
+      "category": "fallback"
+    },
+    {
+      "id": 100,
+      "location": "src/lib/deploy/deploy-status.ts:172",
+      "category": "bestEffort"
+    },
+    {
+      "id": 101,
+      "location": "src/lib/deploy/deploy-status.ts:185",
+      "category": "fallback"
+    },
+    {
+      "id": 102,
+      "location": "src/lib/frameworks/repository.ts:63",
+      "category": "fallback"
+    },
+    {
+      "id": 103,
+      "location": "src/lib/fs/fs-helpers.ts:29",
+      "category": "bestEffort"
+    },
+    {
+      "id": 104,
+      "location": "src/lib/fs/fs-helpers.ts:114",
+      "category": "fallback"
+    },
+    {
+      "id": 105,
+      "location": "src/lib/fs/fs-stats.ts:36",
+      "category": "fallback"
+    },
+    {
+      "id": 106,
+      "location": "src/lib/fs/path-security.ts:50",
+      "category": "parse"
+    },
+    {
+      "id": 107,
+      "location": "src/lib/git/git-workspace-branches.ts:66",
+      "category": "fallback"
+    },
+    {
+      "id": 108,
+      "location": "src/lib/help/help-source.ts:76",
+      "category": "fallback"
+    },
+    {
+      "id": 109,
+      "location": "src/lib/help/help-source.ts:134",
+      "category": "fallback"
+    },
+    {
+      "id": 110,
+      "location": "src/lib/host/host-scheduler.ts:83",
+      "category": "lifecycle"
+    },
+    {
+      "id": 111,
+      "location": "src/lib/host/paths.ts:86",
+      "category": "fallback"
+    },
+    {
+      "id": 112,
+      "location": "src/lib/host/platform.ts:56",
+      "category": "surfaced"
+    },
+    {
+      "id": 113,
+      "location": "src/lib/host/platform.ts:90",
+      "category": "lifecycle"
+    },
+    {
+      "id": 114,
+      "location": "src/lib/host/platform.ts:96",
+      "category": "lifecycle"
+    },
+    {
+      "id": 115,
+      "location": "src/lib/host/platform.ts:138",
+      "category": "fallback"
+    },
+    {
+      "id": 116,
+      "location": "src/lib/host/platform.ts:147",
+      "category": "fallback"
+    },
+    {
+      "id": 117,
+      "location": "src/lib/host/platform.ts:156",
+      "category": "fallback"
+    },
+    {
+      "id": 118,
+      "location": "src/lib/host/platform.ts:182",
+      "category": "fallback"
+    },
+    {
+      "id": 119,
+      "location": "src/lib/laboratory/deep-research/engine.ts:173",
+      "category": "fallback"
+    },
+    {
+      "id": 120,
+      "location": "src/lib/laboratory/deep-research/report.ts:43",
+      "category": "parse"
+    },
+    {
+      "id": 121,
+      "location": "src/lib/laboratory/deep-research/report.ts:70",
+      "category": "parse"
+    },
+    {
+      "id": 122,
+      "location": "src/lib/logs/log-line-format.ts:94",
+      "category": "parse"
+    },
+    {
+      "id": 123,
+      "location": "src/lib/memory/hindsight-read-actions.ts:44",
+      "category": "fallback"
+    },
+    {
+      "id": 124,
+      "location": "src/lib/memory/memory-providers/hindsight-provider.ts:76",
+      "category": "fallback"
+    },
+    {
+      "id": 125,
+      "location": "src/lib/memory/memory-providers/repository.ts:96",
+      "category": "fallback"
+    },
+    {
+      "id": 126,
+      "location": "src/lib/missions/mission-category-repository.ts:80",
+      "category": "schema"
+    },
+    {
+      "id": 127,
+      "location": "src/lib/missions/mission-category-repository.ts:156",
+      "category": "skip"
+    },
+    {
+      "id": 128,
+      "location": "src/lib/missions/mission-category-repository.ts:268",
+      "category": "skip"
+    },
+    {
+      "id": 129,
+      "location": "src/lib/missions/mission-composer-utils.ts:39",
+      "category": "bestEffort"
+    },
+    {
+      "id": 130,
+      "location": "src/lib/missions/mission-composer-utils.ts:48",
+      "category": "fallback"
+    },
+    {
+      "id": 131,
+      "location": "src/lib/missions/mission-deep-link.ts:50",
+      "category": "parse"
+    },
+    {
+      "id": 132,
+      "location": "src/lib/missions/mission-repository.ts:336",
+      "category": "lifecycle"
+    },
+    {
+      "id": 133,
+      "location": "src/lib/models/llm.ts:144",
+      "category": "fallback"
+    },
+    {
+      "id": 134,
+      "location": "src/lib/orchestration/scheduler/BackgroundScheduler.ts:45",
+      "category": "fallback"
+    },
+    {
+      "id": 135,
+      "location": "src/lib/orchestration/scheduler/BackgroundScheduler.ts:53",
+      "category": "bestEffort"
+    },
+    {
+      "id": 136,
+      "location": "src/lib/orchestration/scheduler/BackgroundScheduler.ts:62",
+      "category": "lifecycle"
+    },
+    {
+      "id": 137,
+      "location": "src/lib/orchestration/scheduler/health.ts:64",
+      "category": "fallback"
+    },
+    {
+      "id": 138,
+      "location": "src/lib/quests/quest-latch.ts:49",
+      "category": "fallback"
+    },
+    {
+      "id": 139,
+      "location": "src/lib/runs/runs-repository.ts:60",
+      "category": "parse"
+    },
+    {
+      "id": 140,
+      "location": "src/lib/runtime/HermesRuntime.ts:139",
+      "category": "fallback"
+    },
+    {
+      "id": 141,
+      "location": "src/lib/runtime/HermesRuntime.ts:164",
+      "category": "parse"
+    },
+    {
+      "id": 142,
+      "location": "src/lib/runtime/HermesRuntime.ts:401",
+      "category": "skip"
+    },
+    {
+      "id": 143,
+      "location": "src/lib/runtime/memory-db.ts:42",
+      "category": "fallback"
+    },
+    {
+      "id": 144,
+      "location": "src/lib/runtime/state-db.ts:114",
+      "category": "fallback"
+    },
+    {
+      "id": 145,
+      "location": "src/lib/runtime/state-db.ts:118",
+      "category": "lifecycle"
+    },
+    {
+      "id": 146,
+      "location": "src/lib/runtime/state-db.ts:180",
+      "category": "lifecycle"
+    },
+    {
+      "id": 147,
+      "location": "src/lib/schedule/picker-resolver.ts:60",
+      "category": "parse"
+    },
+    {
+      "id": 148,
+      "location": "src/lib/scripts/scripts-manager.ts:190",
+      "category": "bestEffort"
+    },
+    {
+      "id": 149,
+      "location": "src/lib/scripts/scripts-manager.ts:207",
+      "category": "surfaced"
+    },
+    {
+      "id": 150,
+      "location": "src/lib/scripts/scripts-manager.ts:268",
+      "category": "fallback"
+    },
+    {
+      "id": 151,
+      "location": "src/lib/scripts/scripts-manager.ts:279",
+      "category": "parse"
+    },
+    {
+      "id": 152,
+      "location": "src/lib/scripts/scripts-manager.ts:308",
+      "category": "fallback"
+    },
+    {
+      "id": 153,
+      "location": "src/lib/scripts/scripts-manager.ts:344",
+      "category": "bestEffort"
+    },
+    {
+      "id": 154,
+      "location": "src/lib/scripts/scripts-manager.ts:410",
+      "category": "bestEffort"
+    },
+    {
+      "id": 155,
+      "location": "src/lib/search/duckduckgo.ts:31",
+      "category": "parse"
+    },
+    {
+      "id": 156,
+      "location": "src/lib/search/duckduckgo.ts:70",
+      "category": "fallback"
+    },
+    {
+      "id": 157,
+      "location": "src/lib/search/searxng.ts:42",
+      "category": "fallback"
+    },
+    {
+      "id": 158,
+      "location": "src/lib/search/url-guard.ts:140",
+      "category": "parse"
+    },
+    {
+      "id": 159,
+      "location": "src/lib/search/url-guard.ts:188",
+      "category": "surfaced"
+    },
+    {
+      "id": 160,
+      "location": "src/lib/search/visit.ts:79",
+      "category": "fallback"
+    },
+    {
+      "id": 161,
+      "location": "src/lib/seed/catalog-seed.ts:145",
+      "category": "strict"
+    },
+    {
+      "id": 162,
+      "location": "src/lib/seed/catalog-seed.ts:187",
+      "category": "strict"
+    },
+    {
+      "id": 163,
+      "location": "src/lib/seed/catalog-seed.ts:220",
+      "category": "strict"
+    },
+    {
+      "id": 164,
+      "location": "src/lib/seed/catalog-seed.ts:372",
+      "category": "fallback"
+    },
+    {
+      "id": 165,
+      "location": "src/lib/seed/catalog-seed.ts:382",
+      "category": "fallback"
+    },
+    {
+      "id": 166,
+      "location": "src/lib/seed/catalog-seed.ts:407",
+      "category": "fallback"
+    },
+    {
+      "id": 167,
+      "location": "src/lib/seed/catalog-seed.ts:434",
+      "category": "fallback"
+    },
+    {
+      "id": 168,
+      "location": "src/lib/seed/catalog-seed.ts:442",
+      "category": "fallback"
+    },
+    {
+      "id": 169,
+      "location": "src/lib/sessions/session-mission-links.ts:28",
+      "category": "fallback"
+    },
+    {
+      "id": 170,
+      "location": "src/lib/sessions/session-mission-links.ts:41",
+      "category": "fallback"
+    },
+    {
+      "id": 171,
+      "location": "src/lib/sessions/session-mission-links.ts:54",
+      "category": "fallback"
+    },
+    {
+      "id": 172,
+      "location": "src/lib/sessions/session-orphan-sweep.ts:78",
+      "category": "bestEffort"
+    },
+    {
+      "id": 173,
+      "location": "src/lib/sessions/session-orphan-sweep.ts:90",
+      "category": "bestEffort"
+    },
+    {
+      "id": 174,
+      "location": "src/lib/sessions/session-orphan-sweep.ts:131",
+      "category": "bestEffort"
+    },
+    {
+      "id": 175,
+      "location": "src/lib/sessions/session-orphan-sweep.ts:150",
+      "category": "bestEffort"
+    },
+    {
+      "id": 176,
+      "location": "src/lib/sessions/session-sync.ts:63",
+      "category": "schema"
+    },
+    {
+      "id": 177,
+      "location": "src/lib/sessions/session-sync.ts:131",
+      "category": "bestEffort"
+    },
+    {
+      "id": 178,
+      "location": "src/lib/sessions/session-sync.ts:220",
+      "category": "bestEffort"
+    },
+    {
+      "id": 179,
+      "location": "src/lib/spend/spend-summary.ts:92",
+      "category": "fallback"
+    },
+    {
+      "id": 180,
+      "location": "src/lib/spend/spend-window.ts:165",
+      "category": "skip"
+    },
+    {
+      "id": 181,
+      "location": "src/lib/sse/event-stream.ts:36",
+      "category": "fallback"
+    },
+    {
+      "id": 182,
+      "location": "src/lib/sse/event-stream.ts:43",
+      "category": "lifecycle"
+    },
+    {
+      "id": 183,
+      "location": "src/lib/sse/event-stream.ts:53",
+      "category": "lifecycle"
+    },
+    {
+      "id": 184,
+      "location": "src/lib/stats/agent-experience.ts:93",
+      "category": "fallback"
+    },
+    {
+      "id": 185,
+      "location": "src/lib/stats/agent-progression.ts:179",
+      "category": "parse"
+    },
+    {
+      "id": 186,
+      "location": "src/lib/stats/agent-stats.ts:66",
+      "category": "parse"
+    },
+    {
+      "id": 187,
+      "location": "src/lib/stats/agent-stats.ts:76",
+      "category": "parse"
+    },
+    {
+      "id": 188,
+      "location": "src/lib/stats/agent-stats.ts:96",
+      "category": "fallback"
+    },
+    {
+      "id": 189,
+      "location": "src/lib/stats/agent-stats.ts:129",
+      "category": "fallback"
+    },
+    {
+      "id": 190,
+      "location": "src/lib/stats/agent-stats.ts:177",
+      "category": "fallback"
+    },
+    {
+      "id": 191,
+      "location": "src/lib/stats/stats-repository.ts:119",
+      "category": "parse"
+    },
+    {
+      "id": 192,
+      "location": "src/lib/stats/stats-repository.ts:132",
+      "category": "fallback"
+    },
+    {
+      "id": 193,
+      "location": "src/lib/stats/stats-repository.ts:140",
+      "category": "fallback"
+    },
+    {
+      "id": 194,
+      "location": "src/lib/stats/stats-repository.ts:193",
+      "category": "fallback"
+    },
+    {
+      "id": 195,
+      "location": "src/lib/stats/stats-repository.ts:265",
+      "category": "fallback"
+    },
+    {
+      "id": 196,
+      "location": "src/lib/stats/stats-repository.ts:293",
+      "category": "fallback"
+    },
+    {
+      "id": 197,
+      "location": "src/lib/status/runtime-status.ts:39",
+      "category": "fallback"
+    },
+    {
+      "id": 198,
+      "location": "src/lib/status/runtime-status.ts:47",
+      "category": "fallback"
+    },
+    {
+      "id": 199,
+      "location": "src/lib/status/runtime-status.ts:55",
+      "category": "fallback"
+    },
+    {
+      "id": 200,
+      "location": "src/lib/sync/sources/EnvSync.ts:47",
+      "category": "fallback"
+    },
+    {
+      "id": 201,
+      "location": "src/lib/sync/sources/LogSync.ts:70",
+      "category": "fallback"
+    },
+    {
+      "id": 202,
+      "location": "src/lib/sync/sources/MemorySync.ts:28",
+      "category": "fallback"
+    },
+    {
+      "id": 203,
+      "location": "src/lib/sync/sources/ProcessSync.ts:93",
+      "category": "fallback"
+    },
+    {
+      "id": 204,
+      "location": "src/lib/sync/sources/ProcessSync.ts:117",
+      "category": "bestEffort"
+    },
+    {
+      "id": 205,
+      "location": "src/lib/sync/sources/ProcessSync.ts:177",
+      "category": "bestEffort"
+    },
+    {
+      "id": 206,
+      "location": "src/lib/sync/sources/SessionSync.ts:39",
+      "category": "bestEffort"
+    },
+    {
+      "id": 207,
+      "location": "src/lib/sync/sync-repository.ts:52",
+      "category": "fallback"
+    },
+    {
+      "id": 208,
+      "location": "src/lib/system/operator-prefs-repository.ts:64",
+      "category": "skip"
+    },
+    {
+      "id": 209,
+      "location": "src/lib/system/tool-catalog-repository.ts:38",
+      "category": "parse"
+    },
+    {
+      "id": 210,
+      "location": "src/lib/system/tool-catalog-repository.ts:59",
+      "category": "fallback"
+    },
+    {
+      "id": 211,
+      "location": "src/lib/templates-handlers/list.ts:44",
+      "category": "skip"
+    },
+    {
+      "id": 212,
+      "location": "src/lib/templates-handlers/shared.ts:146",
+      "category": "fallback"
+    },
+    {
+      "id": 213,
+      "location": "src/lib/update-handlers/remote-branches.ts:76",
+      "category": "skip"
+    },
+    {
+      "id": 214,
+      "location": "src/lib/update-handlers/remote-branches.ts:82",
+      "category": "fallback"
+    },
+    {
+      "id": 215,
+      "location": "src/lib/update-handlers/remote-branches.ts:97",
+      "category": "surfaced"
+    },
+    {
+      "id": 216,
+      "location": "src/lib/update-handlers/version-check.ts:48",
+      "category": "fallback"
+    },
+    {
+      "id": 217,
+      "location": "src/lib/update-handlers/version-check.ts:56",
+      "category": "bestEffort"
+    },
+    {
+      "id": 218,
+      "location": "src/lib/update-handlers/version-check.ts:85",
+      "category": "fallback"
+    },
+    {
+      "id": 219,
+      "location": "src/lib/update-handlers/version-check.ts:104",
+      "category": "surfaced"
+    },
+    {
+      "id": 220,
+      "location": "src/lib/utils.ts:18",
+      "category": "parse"
+    },
+    {
+      "id": 221,
+      "location": "src/modules/hermes/lib/config-import.ts:114",
+      "category": "fallback"
+    },
+    {
+      "id": 222,
+      "location": "src/modules/hermes/lib/config-import.ts:228",
+      "category": "bestEffort"
+    },
+    {
+      "id": 223,
+      "location": "src/modules/hermes/lib/cron-jobs.ts:50",
+      "category": "fallback"
+    },
+    {
+      "id": 224,
+      "location": "src/modules/hermes/lib/hermes-config-read.ts:52",
+      "category": "fallback"
+    },
+    {
+      "id": 225,
+      "location": "src/modules/hermes/lib/hermes-config-read.ts:135",
+      "category": "fallback"
+    },
+    {
+      "id": 226,
+      "location": "src/modules/hermes/lib/hermes-config-write.ts:43",
+      "category": "lifecycle"
+    },
+    {
+      "id": 227,
+      "location": "src/modules/hermes/lib/hermes-config-write.ts:81",
+      "category": "fallback"
+    },
+    {
+      "id": 228,
+      "location": "src/modules/hermes/lib/hermes-config-write.ts:153",
+      "category": "fallback"
+    },
+    {
+      "id": 229,
+      "location": "src/modules/hermes/lib/hermes-config-write.ts:165",
+      "category": "skip"
+    },
+    {
+      "id": 230,
+      "location": "src/modules/hermes/lib/hermes-fallback-config.ts:59",
+      "category": "fallback"
+    },
+    {
+      "id": 231,
+      "location": "src/modules/hermes/lib/profile-config-builder.ts:84",
+      "category": "parse"
+    },
+    {
+      "id": 232,
+      "location": "src/modules/hermes/lib/profile-config-builder.ts:103",
+      "category": "parse"
+    },
+    {
+      "id": 233,
+      "location": "src/modules/hermes/lib/profile-discovery.ts:52",
+      "category": "strict"
+    },
+    {
+      "id": 234,
+      "location": "src/modules/hermes/lib/profile-discovery.ts:113",
+      "category": "strict"
+    },
+    {
+      "id": 235,
+      "location": "src/modules/hermes/lib/profile-pull.ts:179",
+      "category": "skip"
+    },
+    {
+      "id": 236,
+      "location": "src/modules/hermes/lib/seed-agent-catalog.ts:264",
+      "category": "bestEffort"
+    },
+    {
+      "id": 237,
+      "location": "src/modules/hermes/lib/skills-known.ts:24",
+      "category": "fallback"
+    },
+    {
+      "id": 238,
+      "location": "src/modules/hermes/sync/ConfigSync.ts:33",
+      "category": "fallback"
+    },
+    {
+      "id": 239,
+      "location": "src/modules/rec-room/components/ReaderSettings.tsx:57",
+      "category": "parse"
+    },
+    {
+      "id": 240,
+      "location": "src/modules/rec-room/components/ReaderSettings.tsx:81",
+      "category": "bestEffort"
+    },
+    {
+      "id": 241,
+      "location": "src/modules/rec-room/handlers/create.ts:83",
+      "category": "parse"
+    },
+    {
+      "id": 242,
+      "location": "src/modules/rec-room/handlers/create.ts:86",
+      "category": "parse"
+    },
+    {
+      "id": 243,
+      "location": "src/modules/rec-room/handlers/create.ts:93",
+      "category": "parse"
+    },
+    {
+      "id": 244,
+      "location": "src/modules/rec-room/handlers/create.ts:110",
+      "category": "bestEffort"
+    },
+    {
+      "id": 245,
+      "location": "src/modules/rec-room/handlers/create.ts:152",
+      "category": "fallback"
+    },
+    {
+      "id": 246,
+      "location": "src/modules/rec-room/handlers/crud.ts:21",
+      "category": "fallback"
+    },
+    {
+      "id": 247,
+      "location": "src/modules/rec-room/handlers/crud.ts:129",
+      "category": "fallback"
+    },
+    {
+      "id": 248,
+      "location": "src/modules/rec-room/handlers/edit.ts:184",
+      "category": "parse"
+    },
+    {
+      "id": 249,
+      "location": "src/modules/rec-room/handlers/generate.ts:139",
+      "category": "fallback"
+    },
+    {
+      "id": 250,
+      "location": "src/modules/rec-room/handlers/shared.ts:59",
+      "category": "parse"
+    },
+    {
+      "id": 251,
+      "location": "src/modules/rec-room/lib/story-repository.ts:212",
+      "category": "skip"
+    },
+    {
+      "id": 252,
+      "location": "src/proxy.ts:312",
+      "category": "surfaced"
+    }
+  ],
+  "suites": [
+    {
+      "id": 0,
+      "file": "tests/unit/analytics-repository.test.ts",
+      "category": "fixtureOrExecutionRead"
+    },
+    {
+      "id": 1,
+      "file": "tests/unit/b1-api-md-matches-the-route-tree.test.ts",
+      "category": "otherStaticContract"
+    },
+    {
+      "id": 2,
+      "file": "tests/unit/b1-colour-classes-name-declared-tokens.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 3,
+      "file": "tests/unit/b1-deploy-api-flag.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 4,
+      "file": "tests/unit/b1-one-cancel-and-a-stream-that-lets-go.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 5,
+      "file": "tests/unit/b10-category-write-failures.test.tsx",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 6,
+      "file": "tests/unit/b10-mission-panel-schedule-and-sessions.test.tsx",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 7,
+      "file": "tests/unit/b11-session-row-and-group.test.tsx",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 8,
+      "file": "tests/unit/b11-sessions-sql-filters.test.ts",
+      "category": "fixtureOrExecutionRead"
+    },
+    {
+      "id": 9,
+      "file": "tests/unit/b13-script-extensions-are-one-rule.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 10,
+      "file": "tests/unit/b15-corpus-moves-under-org.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 11,
+      "file": "tests/unit/b16-concept-hint-a11y.test.tsx",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 12,
+      "file": "tests/unit/b16-help-link-on-every-header.test.tsx",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 13,
+      "file": "tests/unit/b17-the-latch-survives-a-reset.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 14,
+      "file": "tests/unit/b17-the-two-read-events.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 15,
+      "file": "tests/unit/b19-no-screen-claims-a-published-rate.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 16,
+      "file": "tests/unit/b2-confirm-button.test.tsx",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 17,
+      "file": "tests/unit/b2-copy.test.ts",
+      "category": "otherStaticContract"
+    },
+    {
+      "id": 18,
+      "file": "tests/unit/b2-focus-is-visible.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 19,
+      "file": "tests/unit/b2-read-contract.test.tsx",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 20,
+      "file": "tests/unit/b2-status-vocabulary.test.tsx",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 21,
+      "file": "tests/unit/b2-toasts-stack.test.tsx",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 22,
+      "file": "tests/unit/b3-titles-from-registry.test.tsx",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 23,
+      "file": "tests/unit/b4-taxonomy.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 24,
+      "file": "tests/unit/b5-dashboard-source-shape.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 25,
+      "file": "tests/unit/b6-backup-route.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 26,
+      "file": "tests/unit/b6-credentials-rotate-route.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 27,
+      "file": "tests/unit/b6-keyless-providers.test.tsx",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 28,
+      "file": "tests/unit/b6-models-diff-route.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 29,
+      "file": "tests/unit/b6-models-origin.test.ts",
+      "category": "fixtureOrExecutionRead"
+    },
+    {
+      "id": 30,
+      "file": "tests/unit/b7-logs-terminal-and-actions.test.tsx",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 31,
+      "file": "tests/unit/b7-memory-empty-states.test.tsx",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 32,
+      "file": "tests/unit/b7-memory-provider-is-one-switch.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 33,
+      "file": "tests/unit/b8-agents-page.test.tsx",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 34,
+      "file": "tests/unit/b9-tools-and-skills-routes.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 35,
+      "file": "tests/unit/baseline-schema.test.ts",
+      "category": "fixtureOrExecutionRead"
+    },
+    {
+      "id": 36,
+      "file": "tests/unit/bloom-paint-rule.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 37,
+      "file": "tests/unit/c0-the-line-census.test.ts",
+      "category": "otherStaticContract"
+    },
+    {
+      "id": 38,
+      "file": "tests/unit/c1-one-route-body.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 39,
+      "file": "tests/unit/c2-one-type-each.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 40,
+      "file": "tests/unit/c3-one-way-to-write.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 41,
+      "file": "tests/unit/c5-comments-that-narrate.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 42,
+      "file": "tests/unit/c6-the-page-layer.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 43,
+      "file": "tests/unit/c7-the-lib-root.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 44,
+      "file": "tests/unit/cancel-and-gather-tell-the-truth.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 45,
+      "file": "tests/unit/chat-repository.test.ts",
+      "category": "fixtureOrExecutionRead"
+    },
+    {
+      "id": 46,
+      "file": "tests/unit/close-orphaned-sessions.test.ts",
+      "category": "fixtureOrExecutionRead"
+    },
+    {
+      "id": 47,
+      "file": "tests/unit/composer-cancel-is-a-decision.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 48,
+      "file": "tests/unit/composer-reject-is-not-a-cliff.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 49,
+      "file": "tests/unit/config-put-refuses-unparseable-yaml.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 50,
+      "file": "tests/unit/console-shapes-and-dead-ends.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 51,
+      "file": "tests/unit/count-templates-in-category.test.ts",
+      "category": "fixtureOrExecutionRead"
+    },
+    {
+      "id": 52,
+      "file": "tests/unit/db-baseline.test.ts",
+      "category": "fixtureOrExecutionRead"
+    },
+    {
+      "id": 53,
+      "file": "tests/unit/db-migrations-incremental.test.ts",
+      "category": "fixtureOrExecutionRead"
+    },
+    {
+      "id": 54,
+      "file": "tests/unit/db-upgrade.integration.test.ts",
+      "category": "fixtureOrExecutionRead"
+    },
+    {
+      "id": 55,
+      "file": "tests/unit/ensure-default-categories.test.ts",
+      "category": "fixtureOrExecutionRead"
+    },
+    {
+      "id": 56,
+      "file": "tests/unit/feature-flag-route-is-dynamic.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 57,
+      "file": "tests/unit/feedback-is-perceivable.test.tsx",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 58,
+      "file": "tests/unit/gateway-models-route.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 59,
+      "file": "tests/unit/k1-ci-can-go-green.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 60,
+      "file": "tests/unit/k3-a-closed-record-keeps-its-spelling.test.ts",
+      "category": "otherStaticContract"
+    },
+    {
+      "id": 61,
+      "file": "tests/unit/k4-the-security-fixes.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 62,
+      "file": "tests/unit/k5-the-ruled-security-fixes.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 63,
+      "file": "tests/unit/k6-the-gates-see.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 64,
+      "file": "tests/unit/kit-provenance.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 65,
+      "file": "tests/unit/lockbook-tokens.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 66,
+      "file": "tests/unit/memory-switch-is-honoured.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 67,
+      "file": "tests/unit/memory-tab-render.test.tsx",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 68,
+      "file": "tests/unit/mission-composer-finishes.test.tsx",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 69,
+      "file": "tests/unit/mission-delete-cleans-disk.test.ts",
+      "category": "fixtureOrExecutionRead"
+    },
+    {
+      "id": 70,
+      "file": "tests/unit/missions-read-only-reads.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 71,
+      "file": "tests/unit/model-select-dropdown-source-pattern.test.tsx",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 72,
+      "file": "tests/unit/models-section-header.test.tsx",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 73,
+      "file": "tests/unit/nav-phrases-name-real-places.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 74,
+      "file": "tests/unit/output-canary.test.ts",
+      "category": "otherStaticContract"
+    },
+    {
+      "id": 75,
+      "file": "tests/unit/read-only-actually-reads.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 76,
+      "file": "tests/unit/record-surface-containers.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 77,
+      "file": "tests/unit/schema-json-drift.test.ts",
+      "category": "otherStaticContract"
+    },
+    {
+      "id": 78,
+      "file": "tests/unit/session-size-is-a-number.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 79,
+      "file": "tests/unit/session-totals-whole-table.test.ts",
+      "category": "fixtureOrExecutionRead"
+    },
+    {
+      "id": 80,
+      "file": "tests/unit/sessions-search.test.ts",
+      "category": "fixtureOrExecutionRead"
+    },
+    {
+      "id": 81,
+      "file": "tests/unit/spend-unattended-dispatch.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 82,
+      "file": "tests/unit/t0161-backup-creation.test.ts",
+      "category": "fixtureOrExecutionRead"
+    },
+    {
+      "id": 83,
+      "file": "tests/unit/t0162-blind-gates.test.ts",
+      "category": "otherStaticContract"
+    },
+    {
+      "id": 84,
+      "file": "tests/unit/the-ledger-answers-when-a-script-last-ran.test.ts",
+      "category": "fixtureOrExecutionRead"
+    },
+    {
+      "id": 85,
+      "file": "tests/unit/the-numbers-stop-lying.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 86,
+      "file": "tests/unit/u0-the-gate-sees-what-it-claims.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 87,
+      "file": "tests/unit/u11-models-memory-and-the-eyebrows.test.tsx",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 88,
+      "file": "tests/unit/u12-five-entries-become-two.test.ts",
+      "category": "otherStaticContract"
+    },
+    {
+      "id": 89,
+      "file": "tests/unit/u12-story-weaver-on-the-primitives.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 90,
+      "file": "tests/unit/u12-the-reader-register.test.tsx",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 91,
+      "file": "tests/unit/u13-help-names-itself.test.tsx",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 92,
+      "file": "tests/unit/u13-link-button.test.tsx",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 93,
+      "file": "tests/unit/u13-quests-is-one-card-level.test.tsx",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 94,
+      "file": "tests/unit/u13-the-dashboard-says-it-once.test.tsx",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 95,
+      "file": "tests/unit/u14-a-failed-run-is-an-error.test.tsx",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 96,
+      "file": "tests/unit/u14-the-rail-between-768-and-1024.test.tsx",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 97,
+      "file": "tests/unit/u14-the-ring-paints-and-motion-stops.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 98,
+      "file": "tests/unit/u15-nothing-lives-only-for-its-test.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 99,
+      "file": "tests/unit/u15-one-driver-for-sql-migrations.test.ts",
+      "category": "fixtureOrExecutionRead"
+    },
+    {
+      "id": 100,
+      "file": "tests/unit/u15-reads-go-through-the-hook.test.tsx",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 101,
+      "file": "tests/unit/u15-the-dead-are-gone.test.tsx",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 102,
+      "file": "tests/unit/u17-split-pane.test.tsx",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 103,
+      "file": "tests/unit/u17-the-phone-keeps-its-title.test.tsx",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 104,
+      "file": "tests/unit/u18-one-push-all.test.tsx",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 105,
+      "file": "tests/unit/u18-the-header-says-what-the-panel-says.test.tsx",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 106,
+      "file": "tests/unit/u18-the-transcript-says-it-once.test.tsx",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 107,
+      "file": "tests/unit/u19-an-empty-page-offers-its-action.test.tsx",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 108,
+      "file": "tests/unit/u19-the-board-comes-first.test.tsx",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 109,
+      "file": "tests/unit/u19-the-canvas-waits-for-build.test.tsx",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 110,
+      "file": "tests/unit/u19-the-terminal-owns-its-toolbar.test.tsx",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 111,
+      "file": "tests/unit/u2-the-contrast-gate-refuses.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 112,
+      "file": "tests/unit/u2-the-token-layer.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 113,
+      "file": "tests/unit/u20-polish.test.tsx",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 114,
+      "file": "tests/unit/u3-page-geometry.test.tsx",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 115,
+      "file": "tests/unit/u4-surfaces-and-edges.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 116,
+      "file": "tests/unit/u5-the-type-scale.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 117,
+      "file": "tests/unit/u6-colour-that-is-there.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 118,
+      "file": "tests/unit/u6-the-scales.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 119,
+      "file": "tests/unit/u6-the-status-ladder.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 120,
+      "file": "tests/unit/u7-the-rail.test.tsx",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 121,
+      "file": "tests/unit/u8-the-card-primitive.test.tsx",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 122,
+      "file": "tests/unit/u8-the-focus-ring.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 123,
+      "file": "tests/unit/u9-no-dangling-variant.test.ts",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 124,
+      "file": "tests/unit/use-copy-to-clipboard.test.tsx",
+      "category": "liveSrcAssertion"
+    },
+    {
+      "id": 125,
+      "file": "tests/unit/viz-chrome-tokens.test.ts",
+      "category": "liveSrcAssertion"
+    }
+  ]
+}

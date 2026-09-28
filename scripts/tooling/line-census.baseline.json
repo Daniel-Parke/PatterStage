@@ -1,8 +1,8 @@
 {
   "measuredAt": "2026-09-28",
   "counts": {
-    "srcLines": 102131,
-    "testLines": 133585,
+    "srcLines": 102141,
+    "testLines": 133747,
     "scriptsLines": 13770,
     "srcRepeatedWindowLines": 1012,
     "testRepeatedWindowLines": 4786,
@@ -810,6 +810,16 @@
       "measuredAt": "2026-09-28",
       "rise": "testLines rose from 133518 to 133585",
       "reason": "T-0158: independent raw Authorization rotation oracle adds three held-response cases; a different author shared the gateway fixture for a net nine-line reduction and kept repeated test windows at 4786."
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "srcLines rose from 102131 to 102141",
+      "reason": "T-0164: two Composer visibility and contrast fixes with red-first Playwright oracles; independent-recon ledger closure assertion"
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "testLines rose from 133585 to 133747",
+      "reason": "T-0164: two Composer visibility and contrast fixes with red-first Playwright oracles; independent-recon ledger closure assertion"
     }
   ]
 }

@@ -1,0 +1,413 @@
+{
+  "buildRoot": "<isolated build checkout>",
+  "revision": "74071c2653bcac9c67ec50706ce750d0ef7df0c9",
+  "buildId": "ITGkkkJuItk_WZAZ1tw6c",
+  "port": 3802,
+  "dataDir": "<isolated temporary directory>",
+  "fixtures": {
+    "missions": 3,
+    "scripts": 2,
+    "characters": 2,
+    "themes": 2
+  },
+  "captures": [
+    {
+      "name": "1440-missions",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "h1": [
+        "Missions"
+      ],
+      "overflow": false,
+      "scrollWidth": 1440,
+      "stageInspector": [],
+      "flowControls": [],
+      "sha256": "9a6a28e540705c17defcaec2c21352f09ac70a90d7e99982a677dbf9a695f3f7"
+    },
+    {
+      "name": "1440-mission-form",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "h1": [
+        "Missions"
+      ],
+      "overflow": false,
+      "scrollWidth": 1440,
+      "stageInspector": [],
+      "flowControls": [],
+      "sha256": "58191786edd817d4f47e7a2ea226677e3af07c6a0f60d2b1958cdac70f74520c"
+    },
+    {
+      "name": "1440-mission-validation",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "h1": [
+        "Missions"
+      ],
+      "overflow": false,
+      "scrollWidth": 1440,
+      "stageInspector": [],
+      "flowControls": [],
+      "sha256": "983a73b69f831a0b09bbf52879263594ba6db9854524b97350d078a00994a582"
+    },
+    {
+      "name": "1440-composer",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "h1": [
+        "Composer"
+      ],
+      "overflow": false,
+      "scrollWidth": 1440,
+      "stageInspector": [],
+      "flowControls": [],
+      "sha256": "33bb0434ac8889497f494312fe7237e949033f4bf7bd3f8234a2dc067466b143"
+    },
+    {
+      "name": "1440-composer-status-dropdown",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "h1": [
+        "Composer"
+      ],
+      "overflow": false,
+      "scrollWidth": 1440,
+      "stageInspector": [],
+      "flowControls": [],
+      "sha256": "0618702d3e9287c7783ec3653c046df3f08682aff927d07b859f9a5506b4a802"
+    },
+    {
+      "name": "1440-composer-build",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "h1": [
+        "Composer"
+      ],
+      "overflow": false,
+      "scrollWidth": 1440,
+      "stageInspector": [],
+      "flowControls": [
+        {
+          "background": "rgb(30, 48, 66)",
+          "color": "rgba(255, 255, 255, 0.92)",
+          "fill": "rgba(255, 255, 255, 0.92)"
+        },
+        {
+          "background": "rgb(30, 48, 66)",
+          "color": "rgba(255, 255, 255, 0.92)",
+          "fill": "rgba(255, 255, 255, 0.92)"
+        },
+        {
+          "background": "rgb(30, 48, 66)",
+          "color": "rgba(255, 255, 255, 0.92)",
+          "fill": "rgba(255, 255, 255, 0.92)"
+        },
+        {
+          "background": "rgb(30, 48, 66)",
+          "color": "rgba(255, 255, 255, 0.92)",
+          "fill": "rgba(255, 255, 255, 0.92)"
+        }
+      ],
+      "sha256": "cc8fc6fe991c5b5e3a5171d35d7797440524b0bbdc28d9c97c67294dfde24b70"
+    },
+    {
+      "name": "1440-composer-inspector",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "h1": [
+        "Composer"
+      ],
+      "overflow": false,
+      "scrollWidth": 1440,
+      "stageInspector": [
+        {
+          "rect": {
+            "x": 1128,
+            "y": 293,
+            "width": 262,
+            "height": 23,
+            "top": 293,
+            "right": 1390,
+            "bottom": 316,
+            "left": 1128
+          },
+          "parentDisplay": "block",
+          "parentVisibility": "visible"
+        }
+      ],
+      "flowControls": [
+        {
+          "background": "rgb(30, 48, 66)",
+          "color": "rgba(255, 255, 255, 0.92)",
+          "fill": "rgba(255, 255, 255, 0.92)"
+        },
+        {
+          "background": "rgb(30, 48, 66)",
+          "color": "rgba(255, 255, 255, 0.92)",
+          "fill": "rgba(255, 255, 255, 0.92)"
+        },
+        {
+          "background": "rgb(30, 48, 66)",
+          "color": "rgba(255, 255, 255, 0.92)",
+          "fill": "rgba(255, 255, 255, 0.92)"
+        },
+        {
+          "background": "rgb(30, 48, 66)",
+          "color": "rgba(255, 255, 255, 0.92)",
+          "fill": "rgba(255, 255, 255, 0.92)"
+        }
+      ],
+      "sha256": "d51b1c1ea682a93554b054895472f936312071b78285bfe56f335350b9a3613e"
+    },
+    {
+      "name": "1440-hindsight",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "h1": [
+        "Memory"
+      ],
+      "overflow": false,
+      "scrollWidth": 1440,
+      "stageInspector": [],
+      "flowControls": [],
+      "sha256": "ac53d526826ee095b3ed537d03645c29400465650891d61b8e7b46c9cdd07012"
+    },
+    {
+      "name": "1440-hindsight-add-memory",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "h1": [
+        "Memory"
+      ],
+      "overflow": false,
+      "scrollWidth": 1440,
+      "stageInspector": [],
+      "flowControls": [],
+      "sha256": "6593a79a0a16d5be636b7576bf3c30faccb3a7e9b94f1ee101febc81fd453d72"
+    },
+    {
+      "name": "1440-hindsight-directive-dialog",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "h1": [
+        "Memory"
+      ],
+      "overflow": false,
+      "scrollWidth": 1440,
+      "stageInspector": [],
+      "flowControls": [],
+      "sha256": "2b10e582ecd6e9c4e0674e86209e0352308b549a22820b53b6491c50687c3769"
+    },
+    {
+      "name": "1440-hindsight-model-dialog",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "h1": [
+        "Memory"
+      ],
+      "overflow": false,
+      "scrollWidth": 1440,
+      "stageInspector": [],
+      "flowControls": [],
+      "sha256": "4198374b6d12ba9640eb22c9f3bbe663c975510f3b66f9b7a0a526f12f1cd70d"
+    },
+    {
+      "name": "390-missions",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "h1": [
+        "Missions"
+      ],
+      "overflow": false,
+      "scrollWidth": 390,
+      "stageInspector": [],
+      "flowControls": [],
+      "sha256": "a3477c9c9ed8366632dd6e0ad16b47c7d9fcf21224bc4c2c6c270390cec5e752"
+    },
+    {
+      "name": "390-mission-form",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "h1": [
+        "Missions"
+      ],
+      "overflow": false,
+      "scrollWidth": 390,
+      "stageInspector": [],
+      "flowControls": [],
+      "sha256": "9f219c53c3dd01687921156f88254f0d603a5386e1a749bfbe25008511b19c9e"
+    },
+    {
+      "name": "390-mission-validation",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "h1": [
+        "Missions"
+      ],
+      "overflow": false,
+      "scrollWidth": 390,
+      "stageInspector": [],
+      "flowControls": [],
+      "sha256": "5dae789868afb4aee2d9e0b2503fa1aff55d023596d2e8e74404c57d72baabf5"
+    },
+    {
+      "name": "390-composer",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "h1": [
+        "Composer"
+      ],
+      "overflow": false,
+      "scrollWidth": 390,
+      "stageInspector": [],
+      "flowControls": [],
+      "sha256": "8885d0dad5cc4bd0b8b1842028b32a1a8524f1cc76e806a4a85dfbb9b3f36778"
+    },
+    {
+      "name": "390-hindsight",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "h1": [
+        "Memory"
+      ],
+      "overflow": false,
+      "scrollWidth": 390,
+      "stageInspector": [],
+      "flowControls": [],
+      "sha256": "a3e428b38331e3fcd4ffc8ca8ad3f7f4a17cd6dee027ac6f70885977c0e91028"
+    },
+    {
+      "name": "390-hindsight-add-memory",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "h1": [
+        "Memory"
+      ],
+      "overflow": false,
+      "scrollWidth": 390,
+      "stageInspector": [],
+      "flowControls": [],
+      "sha256": "a2f89a5a08dd243da19ad7624ee3f1519590be24791b9a406803b425124e6adb"
+    },
+    {
+      "name": "390-hindsight-directive-dialog",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "h1": [
+        "Memory"
+      ],
+      "overflow": false,
+      "scrollWidth": 390,
+      "stageInspector": [],
+      "flowControls": [],
+      "sha256": "6860d5e7ccebc752011264482068223ec18c17b799dfd9c1bc110937b796a093"
+    },
+    {
+      "name": "390-hindsight-model-dialog",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "h1": [
+        "Memory"
+      ],
+      "overflow": false,
+      "scrollWidth": 390,
+      "stageInspector": [],
+      "flowControls": [],
+      "sha256": "d1ba577560c5fbd1a4625d876493d6a2f91d7766e179f71911215e6a54411dfc"
+    }
+  ],
+  "errors": [
+    {
+      "kind": "http",
+      "status": 503,
+      "path": "/api/memory/hindsight?action=list&limit=50"
+    },
+    {
+      "kind": "console",
+      "message": "Failed to load resource: the server responded with a status of 503 (Service Unavailable)"
+    },
+    {
+      "kind": "http",
+      "status": 503,
+      "path": "/api/memory/hindsight?action=directives"
+    },
+    {
+      "kind": "console",
+      "message": "Failed to load resource: the server responded with a status of 503 (Service Unavailable)"
+    },
+    {
+      "kind": "http",
+      "status": 503,
+      "path": "/api/memory/hindsight?action=mental-models"
+    },
+    {
+      "kind": "console",
+      "message": "Failed to load resource: the server responded with a status of 503 (Service Unavailable)"
+    },
+    {
+      "kind": "http",
+      "status": 503,
+      "path": "/api/memory/hindsight?action=list&limit=50"
+    },
+    {
+      "kind": "console",
+      "message": "Failed to load resource: the server responded with a status of 503 (Service Unavailable)"
+    },
+    {
+      "kind": "http",
+      "status": 503,
+      "path": "/api/memory/hindsight?action=directives"
+    },
+    {
+      "kind": "console",
+      "message": "Failed to load resource: the server responded with a status of 503 (Service Unavailable)"
+    },
+    {
+      "kind": "http",
+      "status": 503,
+      "path": "/api/memory/hindsight?action=mental-models"
+    },
+    {
+      "kind": "console",
+      "message": "Failed to load resource: the server responded with a status of 503 (Service Unavailable)"
+    }
+  ]
+}
