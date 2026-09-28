@@ -22,12 +22,19 @@ jest.mock("@/lib/runtime", () => ({ runtime: {
 } }));
 jest.mock("@/lib/spend/spend-guard", () => ({ checkUnattendedSpend: () => ({ allowed: true }) }));
 jest.mock("@/lib/api/api-logger", () => ({ logApiError: (...args: unknown[]) => errors(...args) }));
+jest.mock("@/lib/api/audit-log", () => ({ appendAuditLine: jest.fn() }));
 jest.mock("@/lib/analytics/record-event", () => ({ recordEvent: jest.fn() }));
+jest.mock("@/lib/missions/mission-queue-tick", () => {
+  const actual = jest.requireActual("@/lib/missions/mission-queue-tick");
+  return { ...actual, runMissionQueueTick: jest.fn(actual.runMissionQueueTick) };
+});
 
 import { createMission, getMission, updateMission } from "@/lib/missions/mission-repository";
 import { runMissionQueueTick } from "@/lib/missions/mission-queue-tick";
+import * as queueTickModule from "@/lib/missions/mission-queue-tick";
 import { createRun, attachBackendRun } from "@/lib/runs/runs-repository";
 import { handleCancelMission } from "@/lib/missions/mission-handlers/cancel";
+import { handleDispatchMission } from "@/lib/missions/mission-handlers/dispatch";
 import { reconcileActiveRuns, reconcileRunsOnBoot } from "@/lib/orchestration/run-reconcile";
 import { describeMissionRunState } from "@/lib/missions/mission-run-state";
 
@@ -116,36 +123,41 @@ it("shows an active held submission as running, then an ambiguous outcome as rev
   expect(uncertain.note).toMatch(/unconfirmed|uncertain|unknown/i);
 });
 
-it("reports a failed queue reservation and leaves the due mission untouched", async () => {
+it("keeps a failed reservation visible to sync and handles the detached dispatch rejection", async () => {
   const missionId = dueMission();
   const locked = Object.assign(new Error("database is locked"), { code: "SQLITE_BUSY" });
   const transactionSpy = jest.spyOn(database!, "transaction").mockImplementationOnce(() => {
     throw locked;
   });
+  let escaped: unknown = null;
   try {
-    let escaped: unknown = null;
-    let result: Awaited<ReturnType<typeof runMissionQueueTick>> | undefined;
     try {
-      result = await runMissionQueueTick();
+      await runMissionQueueTick();
     } catch (error) {
       escaped = error;
     }
-    expect({
-      escaped,
-      result,
-      logged: errors.mock.calls.length,
-      mission: getMission(missionId),
-      runs: runRows(missionId),
-      submits: gateway.submit.mock.calls.length,
-    }).toMatchObject({
-      escaped: null,
-      result: { ran: false },
-      logged: 1,
-      mission: { status: "queued", queuedForRun: true },
-      runs: [],
-      submits: 0,
-    });
   } finally {
     transactionSpy.mockRestore();
   }
+  expect(escaped).toBe(locked);
+  expect(getMission(missionId)).toMatchObject({ status: "queued", queuedForRun: true });
+  expect(runRows(missionId)).toHaveLength(0);
+  expect(gateway.submit).not.toHaveBeenCalled();
+
+  let rejectionHandled = false;
+  const controlled = {
+    catch(onRejected: (reason: Error) => unknown) {
+      rejectionHandled = true;
+      onRejected(locked);
+      return Promise.resolve({ ran: false });
+    },
+  } as unknown as ReturnType<typeof runMissionQueueTick>;
+  const detachedTick = jest.mocked(queueTickModule.runMissionQueueTick);
+  detachedTick.mockClear();
+  detachedTick.mockImplementationOnce(() => controlled);
+  const response = await handleDispatchMission({ instruction: "Queue an isolated mission", dispatchMode: "queue" });
+  expect(response.status).toBe(201);
+  expect(detachedTick).toHaveBeenCalledTimes(1);
+  expect(rejectionHandled).toBe(true);
+  expect(errors.mock.calls.some((call) => call.includes(locked))).toBe(true);
 });
