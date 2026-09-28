@@ -26,3 +26,27 @@ test('Composer palette and selected-stage inspector stay inside the canvas', asy
     }
   }
 });
+
+test('Composer canvas controls have visible icons against their buttons', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/work/composer');
+  await page.getByRole('button', { name: 'Build', exact: true }).click();
+  await page.locator('.react-flow__controls-button').first().waitFor();
+  const contrasts = await page.locator('.react-flow__controls-button').evaluateAll((buttons) => {
+    const luminance = (colour: string) => {
+      const values = colour.match(/[\d.]+/g)?.slice(0, 3).map(Number) ?? [];
+      const channels = values.map((value) => {
+        const linear = value / 255;
+        return linear <= 0.04045 ? linear / 12.92 : ((linear + 0.055) / 1.055) ** 2.4;
+      });
+      return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+    };
+    return buttons.map((button) => {
+      const background = luminance(getComputedStyle(button).backgroundColor);
+      const foreground = luminance(getComputedStyle(button.querySelector('svg') ?? button).fill);
+      return (Math.max(background, foreground) + 0.05) / (Math.min(background, foreground) + 0.05);
+    });
+  });
+  expect(contrasts).toHaveLength(4);
+  for (const ratio of contrasts) expect(ratio).toBeGreaterThanOrEqual(3);
+});
