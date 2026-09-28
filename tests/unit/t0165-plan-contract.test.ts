@@ -139,7 +139,7 @@ describe("T-0165 Phase 2 plan contract", () => {
     for (const id of ["app-01h", "cross-cutting-04b", "docs-05b"]) {
       expect(ownership.operatorDispositions.find((row) => row.id === id)?.outcome).toBe("planned");
     }
-    expect(ownership.operatorDispositions.find((row) => row.id === "cross-cutting-04b")?.task).toBe("T-0197");
+    expect(ownership.operatorDispositions.find((row) => row.id === "cross-cutting-04b")?.task).toBe("T-0200");
     expect(ownership.operatorDispositions.find((row) => row.id === "docs-05a")?.outcome).toBe("deferred");
     for (const id of ["gap-074.b", "gap-080.a", "gap-083.b", "gap-095.c", "gap-101.a"]) {
       expect(ownership.coverage.find((row) => row.id === id)?.outcome).toBe("planned");
