@@ -3,6 +3,7 @@
 // Path-validated under PS_DATA_DIR/scripts; no shell, no user args.
 // ═══════════════════════════════════════════════════════════════
 
+import { guardRoute } from "@/lib/api/response-route";
 import { NextRequest, NextResponse } from "next/server";
 import { isReadOnly, requireAuthenticatedHostWrites } from "@/lib/api/api-auth";
 import { serverErrorFromCatch } from "@/lib/api/api-logger";
@@ -12,7 +13,7 @@ import { parseJsonBody } from "@/lib/api/parse-json-body";
 import { runScriptFile } from "@/lib/scripts/scripts-manager";
 import { recordEvent } from "@/lib/analytics/record-event";
 
-export async function POST(request: NextRequest) {
+async function POSTImpl(request: NextRequest) {
   // This is the route that EXECUTES on the host. Its siblings that write the
   // script carried this guard from the start; the one that runs it did not
   // (T-0095, D42). The proxy refuses the same request first; this is the belt.
@@ -52,3 +53,5 @@ export async function POST(request: NextRequest) {
     return serverErrorFromCatch("POST /api/scripts/run", name, error, "Failed to run script");
   }
 }
+
+export const POST = guardRoute(POSTImpl);

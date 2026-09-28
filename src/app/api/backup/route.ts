@@ -12,6 +12,7 @@
 // server stopped, and the card shows the command rather than running it.
 // ═══════════════════════════════════════════════════════════════
 
+import { guardRoute } from "@/lib/api/response-route";
 import { recordEvent } from "@/lib/analytics/record-event";
 import { serverErrorFromCatch } from "@/lib/api/api-logger";
 import { created, ok } from "@/lib/api/api-response";
@@ -33,7 +34,7 @@ export const GET = route("GET /api/backup", "listing the database backups", "Fai
   });
 });
 
-export async function POST(): Promise<Response> {
+async function POSTImpl(): Promise<Response> {
   try {
     const backup = await snapshotDatabase("manual");
     appendAuditLine({ action: "backup.create", resource: backup.name, ok: true });
@@ -60,3 +61,5 @@ export async function POST(): Promise<Response> {
     );
   }
 }
+
+export const POST = guardRoute(POSTImpl);

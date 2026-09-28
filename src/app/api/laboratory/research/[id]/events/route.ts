@@ -5,6 +5,7 @@
 // page also polls as a fallback). Closes when the run is terminal.
 // ═══════════════════════════════════════════════════════════════
 
+import { guardRoute } from "@/lib/api/response-route";
 import { NextRequest } from "next/server";
 import { ensureDb } from "@/lib/db";
 import { sseStream } from "@/lib/sse/event-stream";
@@ -20,7 +21,7 @@ interface Ctx {
 
 const TERMINAL = new Set(["completed", "failed", "cancelled"]);
 
-export async function GET(request: NextRequest, ctx: Ctx) {
+async function GETImpl(request: NextRequest, ctx: Ctx) {
   const { id } = await ctx.params;
   ensureDb();
   return sseStream({
@@ -34,3 +35,5 @@ export async function GET(request: NextRequest, ctx: Ctx) {
     signal: request.signal,
   });
 }
+
+export const GET = guardRoute(GETImpl);

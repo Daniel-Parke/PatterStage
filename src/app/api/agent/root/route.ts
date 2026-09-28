@@ -1,3 +1,4 @@
+import { guardRoute } from "@/lib/api/response-route";
 import { NextRequest, NextResponse } from "next/server";
 
 import { parseJsonBody } from "@/lib/api/parse-json-body";
@@ -68,12 +69,16 @@ export const PUT = route("PUT /api/agent/root", "renaming the root agent", "Fail
   return ok({ success: true, displayName: row.displayName, description: row.description });
 });
 
-export async function GET() {
+async function GETImpl() {
   const row = getAgentRoot();
   return ok({ displayName: row.displayName, description: row.description });
 }
 
-export async function POST() {
+async function POSTImpl() {
   return methodNotAllowed(
     "The root agent already exists — send PUT to rename it", ["GET", "PUT"]);
 }
+
+export const GET = guardRoute(GETImpl);
+
+export const POST = guardRoute(POSTImpl);

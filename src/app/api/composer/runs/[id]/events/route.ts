@@ -5,6 +5,7 @@
 // the page also polls as a fallback). Closes when the run is terminal.
 // ═══════════════════════════════════════════════════════════════
 
+import { guardRoute } from "@/lib/api/response-route";
 import { NextRequest } from "next/server";
 import { serviceUnavailable } from "@/lib/api/api-response";
 import { ensureDb } from "@/lib/db";
@@ -21,7 +22,7 @@ interface Ctx {
 // The one list, not a local copy: a status that ends a run but is missing here
 // leaves the stream open on a finished run forever. See schema.ts.
 
-export async function GET(request: NextRequest, ctx: Ctx) {
+async function GETImpl(request: NextRequest, ctx: Ctx) {
   // The same guard every other composer route carries. This one served an
   // existing run with the feature off, and docs/reference/api.md described the exception
   // rather than closing it (T-0095, D5).
@@ -41,3 +42,5 @@ export async function GET(request: NextRequest, ctx: Ctx) {
     signal: request.signal,
   });
 }
+
+export const GET = guardRoute(GETImpl);

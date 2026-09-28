@@ -11,6 +11,7 @@
 // the route's own gate and never a second token check (design-lint
 // no-auth-in-route-handler).
 
+import { guardRoute } from "@/lib/api/response-route";
 import { NextRequest, NextResponse } from "next/server";
 
 import { parseJsonBody } from "@/lib/api/parse-json-body";
@@ -22,7 +23,7 @@ import type { TemplateActionBody } from "@/lib/templates-handlers/shared";
 import { handleUpdateTemplate } from "@/lib/templates-handlers/update";
 import { route } from "@/lib/api/api-route";
 
-export async function GET() {
+async function GETImpl() {
   return handleListTemplates();
 }
 
@@ -55,3 +56,5 @@ export const POST = route("POST /api/templates", "processing request", "Failed t
 
   return NextResponse.json({ error: "Unknown action" }, { status: 400 });
 });
+
+export const GET = guardRoute(GETImpl);

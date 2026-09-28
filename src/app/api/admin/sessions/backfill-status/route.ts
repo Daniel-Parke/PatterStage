@@ -23,6 +23,7 @@
 // unreachable. Kept as defence-in-depth under the shared message (T-0048).
 // ═══════════════════════════════════════════════════════════════
 
+import { guardRoute } from "@/lib/api/response-route";
 import { NextRequest, NextResponse } from "next/server";
 
 import { getDb } from "@/lib/db";
@@ -34,7 +35,7 @@ import { methodNotAllowed } from "@/lib/api/api-response";
 import { appendAuditLine } from "@/lib/api/audit-log";
 import { logApiError } from "@/lib/api/api-logger";
 
-export async function POST(request: NextRequest) {
+async function POSTImpl(request: NextRequest) {
   let body: { dryRun?: boolean } = {};
   try {
     body = (await request.json().catch(() => ({}))) as { dryRun?: boolean };
@@ -79,7 +80,10 @@ export async function POST(request: NextRequest) {
 
 // Named "status", so a GET is the natural guess — and it is a WRITE: it
 // backfills. Saying so is the whole point of this stub.
-export async function GET() {
+async function GETImpl() {
   return methodNotAllowed(
     "GET is not supported here — this endpoint BACKFILLS session status and is POST-only", ["POST"]);
 }
+
+export const POST = guardRoute(POSTImpl);
+export const GET = guardRoute(GETImpl);

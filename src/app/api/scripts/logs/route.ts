@@ -2,13 +2,14 @@
 // GET /api/scripts/logs?name=<file.sh>&lines=N — tail a script's log.
 // ═══════════════════════════════════════════════════════════════
 
+import { guardRoute } from "@/lib/api/response-route";
 import { NextRequest } from "next/server";
 
 import { serverErrorFromCatch } from "@/lib/api/api-logger";
 import { ok, badRequest } from "@/lib/api/api-response";
 import { tailScriptLog } from "@/lib/scripts/scripts-manager";
 
-export async function GET(request: NextRequest) {
+async function GETImpl(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const name = searchParams.get("name") ?? "";
   if (!name) return badRequest("name is required");
@@ -22,3 +23,5 @@ export async function GET(request: NextRequest) {
     return serverErrorFromCatch("GET /api/scripts/logs", name, error, "Failed to read script log");
   }
 }
+
+export const GET = guardRoute(GETImpl);

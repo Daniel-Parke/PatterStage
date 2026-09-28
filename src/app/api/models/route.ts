@@ -4,6 +4,7 @@
 //
 // SQLite-backed registry. Replaces /api/config/model (deleted in PR 4).
 // API key is never returned in any GET response.
+import { guardRoute } from "@/lib/api/response-route";
 import { NextRequest, NextResponse } from "next/server";
 
 import { listModels, createModel, deleteModel } from "@/lib/models/models-repository";
@@ -22,7 +23,7 @@ export const GET = route("GET /api/models", "listing models", "Failed to list mo
   return ok({ models: listModels({ limit: boundsFrom(request, MODEL_LIST_BOUNDS).limit }) });
 });
 
-export async function POST(request: NextRequest) {
+async function POSTImpl(request: NextRequest) {
   const parsed = await parseAndValidateJsonBody(request, modelPostSchema);
   if (parsed instanceof NextResponse) return parsed;
 
@@ -54,3 +55,5 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export const POST = guardRoute(POSTImpl);

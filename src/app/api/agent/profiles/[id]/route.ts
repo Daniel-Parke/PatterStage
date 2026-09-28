@@ -1,3 +1,4 @@
+import { guardRoute } from "@/lib/api/response-route";
 import { NextRequest, NextResponse } from "next/server";
 import { renameSync, existsSync } from "fs";
 
@@ -124,7 +125,9 @@ export const DELETE = route("DELETE /api/agent/profiles/[id]", "deleting profile
 
 // GET is not supported on a single profile: the list route returns every
 // profile in full, so there is nothing this could add.
-export async function GET() {
+async function GETImpl() {
   return methodNotAllowed(
     "GET is not supported here — /api/agent/profiles returns every profile in full", ["PUT", "DELETE"]);
 }
+
+export const GET = guardRoute(GETImpl);

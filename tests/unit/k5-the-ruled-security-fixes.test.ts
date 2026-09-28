@@ -207,6 +207,8 @@ describe("K5 · app-06 · read-only still refuses over HTTP everything it refuse
 const PRAGMA = /\/\/\s*check-read-only-guards-disable-next-line\s+--\s+\S/;
 const HANDLER =
   /^export (?:(?:async )?function (GET|HEAD|OPTIONS|POST|PUT|DELETE|PATCH)\b|const (GET|HEAD|OPTIONS|POST|PUT|DELETE|PATCH) = route\()/;
+const WRAPPED_IMPL = /^(?:async )?function (GET|HEAD|OPTIONS|POST|PUT|DELETE|PATCH)Impl\b/;
+const WRAPPED_EXPORT = /^export const (GET|HEAD|OPTIONS|POST|PUT|DELETE|PATCH) = guardRoute\(\1Impl\);?$/;
 const GUARD = /\b(requireAuth|requireNotReadOnly|isReadOnly)\s*\(/;
 const HOST_GUARD = /\brequireAuthenticatedHostWrites\s*\(/;
 
@@ -237,13 +239,24 @@ function guardSites(): string[] {
   handlersSeen = 0;
   for (const file of routeFiles()) {
     const path = rel(API_ROOT, file);
+    const lines = readFileSync(file, "utf-8").split(/\r?\n/);
+    const wrappedMethods = new Set(lines.flatMap((raw) => {
+      const exported = WRAPPED_EXPORT.exec(raw);
+      return exported ? [exported[1]] : [];
+    }));
     let method = "";
     let exempt = false;
-    for (const raw of readFileSync(file, "utf-8").split(/\r?\n/)) {
+    for (const raw of lines) {
       const handler = HANDLER.exec(raw);
       if (handler) {
         method = handler[1] ?? handler[2];
         handlersSeen += 1;
+      } else {
+        const impl = WRAPPED_IMPL.exec(raw);
+        if (impl) {
+          method = wrappedMethods.has(impl[1]) ? impl[1] : "";
+          if (method) handlersSeen += 1;
+        }
       }
       const trimmed = raw.trim();
       if (trimmed.startsWith("//") || trimmed.startsWith("*") || trimmed.startsWith("/*")) {

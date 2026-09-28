@@ -3,6 +3,7 @@
 // Pushes model to config.yaml primary section, and optionally
 // pushes linked credential to .env if pushCredential is true.
 // ═══════════════════════════════════════════════════════════════
+import { guardRoute } from "@/lib/api/response-route";
 import { NextRequest, NextResponse } from "next/server";
 
 import { parseAndValidateJsonBody } from "@/lib/api/parse-json-body";
@@ -13,7 +14,7 @@ import { ok } from "@/lib/api/api-response";
 import { answerSingle } from "@/modules/hermes/lib/sync-answer";
 import { z } from "zod";
 
-export async function POST(request: NextRequest) {
+async function POSTImpl(request: NextRequest) {
   // `modelId` is required; `pushCredential` defaults to `true` when absent.
   const pushPostSchema = z
     .object({
@@ -73,3 +74,5 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export const POST = guardRoute(POSTImpl);

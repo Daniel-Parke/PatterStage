@@ -12,6 +12,7 @@
 // the stream's own cancel() both abort the upstream fetch.
 // ═══════════════════════════════════════════════════════════════
 
+import { guardRoute } from "@/lib/api/response-route";
 import { NextRequest } from "next/server";
 import { runtime } from "@/lib/runtime";
 import { getRun } from "@/lib/runs/runs-repository";
@@ -42,7 +43,7 @@ function wireEventName(type: string): string {
   return type === "error" ? RUN_ERROR_EVENT : type;
 }
 
-export async function GET(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
+async function GETImpl(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const authorised = streamAuthorizer(request);
   const { id } = await ctx.params;
   const run = getRun(id);
@@ -126,3 +127,5 @@ export async function GET(request: NextRequest, ctx: { params: Promise<{ id: str
     },
   });
 }
+
+export const GET = guardRoute(GETImpl);

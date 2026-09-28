@@ -1,3 +1,4 @@
+import { guardRoute } from "@/lib/api/response-route";
 import { NextRequest, NextResponse } from "next/server";
 
 import { logApiError } from "@/lib/api/api-logger";
@@ -45,7 +46,7 @@ import { checkVersion } from "@/lib/update-handlers/version-check";
 // no-auth-in-route-handler).
 
 // GET /api/update
-export async function GET(request: NextRequest) {
+async function GETImpl(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
 
@@ -89,7 +90,7 @@ export async function GET(request: NextRequest) {
 }
 
 // POST /api/update
-export async function POST(request: NextRequest) {
+async function POSTImpl(request: NextRequest) {
   const correlationId = getCorrelationId(request);
   // Spawning the deploy script is a host write. The proxy refuses it under
   // PS_AUTH_MODE=none before this runs; the route says so itself as well
@@ -134,3 +135,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Update failed" }, { status: 500 });
   }
 }
+
+export const GET = guardRoute(GETImpl);
+export const POST = guardRoute(POSTImpl);

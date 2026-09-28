@@ -21,6 +21,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextRequest, NextResponse } from "next/server";
+import { guardRoute } from "@/lib/api/response-route";
 import { logApiError } from "@/lib/api/api-logger";
 import { messageFromError } from "@/lib/api/api-fetch";
 
@@ -56,7 +57,7 @@ import { memoryFailureMessage } from "@/lib/memory/memory-error-copy";
 // ── Routes ───────────────────────────────────────────────────
 
 // GET — List memories, recall, reflect, health check
-export async function GET(request: NextRequest) {
+async function GETImpl(request: NextRequest) {
   const action = request.nextUrl.searchParams.get("action") || "list";
   const query = request.nextUrl.searchParams.get("query") || undefined;
   const budget = request.nextUrl.searchParams.get("budget") || undefined;
@@ -124,7 +125,7 @@ export async function GET(request: NextRequest) {
 }
 
 // POST — Retain memory, create directive, create mental model
-export async function POST(request: NextRequest) {
+async function POSTImpl(request: NextRequest) {
   const bodyResult = await parseJsonBody(request);
   if (bodyResult instanceof NextResponse) return bodyResult;
 
@@ -210,7 +211,7 @@ export async function POST(request: NextRequest) {
 }
 
 // DELETE — Remove directive or mental model
-export async function DELETE(request: NextRequest) {
+async function DELETEImpl(request: NextRequest) {
   const bodyResult = await parseJsonBody(request);
   if (bodyResult instanceof NextResponse) return bodyResult;
   const body = bodyResult;
@@ -238,3 +239,7 @@ export async function DELETE(request: NextRequest) {
     return hindsightErrorFromCatch("DELETE /api/memory/hindsight", "delete", error);
   }
 }
+
+export const GET = guardRoute(GETImpl);
+export const POST = guardRoute(POSTImpl);
+export const DELETE = guardRoute(DELETEImpl);

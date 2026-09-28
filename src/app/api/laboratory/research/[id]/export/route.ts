@@ -2,6 +2,7 @@
 // GET /api/laboratory/research/[id]/export — standalone interactive HTML report
 // ═══════════════════════════════════════════════════════════════
 
+import { guardRoute } from "@/lib/api/response-route";
 import { NextRequest, NextResponse } from "next/server";
 
 import { ensureDb } from "@/lib/db";
@@ -12,7 +13,7 @@ interface Ctx {
   params: Promise<{ id: string }>;
 }
 
-export async function GET(_request: NextRequest, ctx: Ctx) {
+async function GETImpl(_request: NextRequest, ctx: Ctx) {
   const { id } = await ctx.params;
   ensureDb();
   const run = getResearchRun(id);
@@ -29,3 +30,5 @@ export async function GET(_request: NextRequest, ctx: Ctx) {
     },
   });
 }
+
+export const GET = guardRoute(GETImpl);

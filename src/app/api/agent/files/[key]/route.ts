@@ -1,3 +1,4 @@
+import { guardRoute } from "@/lib/api/response-route";
 import { NextRequest, NextResponse } from "next/server";
 import { existsSync, readFileSync, writeFileSync } from "fs";
 import { dirname } from "path";
@@ -130,7 +131,7 @@ function resolveFilePath(
   return { path: resolvedPath, name: fileConfig.name, description: fileConfig.description };
 }
 
-export async function GET(
+async function GETImpl(
   request: NextRequest,
   { params }: { params: Promise<{ key: string }> },
 ) {
@@ -205,7 +206,7 @@ export async function GET(
   }
 }
 
-export async function PUT(
+async function PUTImpl(
   request: NextRequest,
   { params }: { params: Promise<{ key: string }> },
 ) {
@@ -345,3 +346,6 @@ export async function PUT(
     );
   }
 }
+
+export const GET = guardRoute(GETImpl);
+export const PUT = guardRoute(PUTImpl);

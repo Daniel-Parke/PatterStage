@@ -30,6 +30,7 @@
 // to remove exactly when removing it matters most.
 // ═══════════════════════════════════════════════════════════════
 
+import { guardRoute } from "@/lib/api/response-route";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -167,7 +168,9 @@ export const DELETE = route("DELETE /api/credentials/[id]", (p) => `id=${p.id}`,
 // GET is not supported, and the reason is the point: this route addresses a
 // secret. `apiKey` is never returned by any response in this surface, so a
 // per-credential read would exist only to tempt one into being added.
-export async function GET() {
+async function GETImpl() {
   return methodNotAllowed(
     "GET is not supported here — /api/credentials lists credentials without their keys", ["PATCH", "DELETE"]);
 }
+
+export const GET = guardRoute(GETImpl);

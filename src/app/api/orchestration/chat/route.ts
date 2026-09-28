@@ -7,6 +7,7 @@
 // Returns streaming response (SSE format) or non-streaming JSON.
 // ═══════════════════════════════════════════════════════════════
 
+import { guardRoute } from "@/lib/api/response-route";
 import { NextRequest, NextResponse } from "next/server";
 import { logApiError, serverErrorFromCatch } from "@/lib/api/api-logger";
 
@@ -118,7 +119,7 @@ async function fetchGateway(
   return ok(data);
 }
 
-export async function POST(request: NextRequest) {
+async function POSTImpl(request: NextRequest) {
   const bodyResult = await parseJsonBody(request);
   if (bodyResult instanceof NextResponse) return bodyResult;
   const body = bodyResult as { messages?: unknown; model?: string; stream?: boolean };
@@ -172,3 +173,5 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export const POST = guardRoute(POSTImpl);

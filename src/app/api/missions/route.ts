@@ -6,6 +6,7 @@
 //
 // This route is a thin auth + parse + router: each POST action lives in
 // its own module under src/lib/missions/mission-handlers/*.
+import { guardRoute } from "@/lib/api/response-route";
 import { NextRequest, NextResponse } from "next/server";
 
 import { listMissions } from "@/lib/missions/mission-repository";
@@ -33,7 +34,7 @@ import { route } from "@/lib/api/api-route";
 // This route used to call requireAuth(), which authenticates nothing and
 // answers 503 under PS_READ_ONLY, so setting the flag to browse safely made
 // the missions board unreadable (T-0034).
-export async function GET(request: NextRequest) {
+async function GETImpl(request: NextRequest) {
   ensureSyncLayer();
   const url = new URL(request.url);
   const id = url.searchParams.get("id");
@@ -110,3 +111,5 @@ export const POST = route("POST /api/missions", "processing request", "Internal 
       return badRequest(`Unknown action: ${action}`);
   }
 });
+
+export const GET = guardRoute(GETImpl);

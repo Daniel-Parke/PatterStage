@@ -1,3 +1,4 @@
+import { guardRoute } from "@/lib/api/response-route";
 import { NextRequest, NextResponse } from "next/server";
 
 import { methodNotAllowed, notFound, ok } from "@/lib/api/api-response";
@@ -61,6 +62,8 @@ export const PUT = route("PUT /api/agent/profiles/[id]/toolsets", "saving toolse
   return ok({ success: true, profile: result.profile, platformToolsets });
 });
 
-export async function DELETE() {
+async function DELETEImpl() {
   return methodNotAllowed("Method not allowed", ["GET", "PUT"]);
 }
+
+export const DELETE = guardRoute(DELETEImpl);

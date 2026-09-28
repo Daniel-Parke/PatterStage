@@ -1,3 +1,4 @@
+import { guardRoute } from "@/lib/api/response-route";
 import { NextRequest } from "next/server";
 
 import { requireAuthenticatedHostWrites, isReadOnly } from "@/lib/api/api-auth";
@@ -33,11 +34,11 @@ import { handleUpdateHardwareCron } from "@/lib/hardware-cron-handlers/update";
  * that were NOT host-side and kept these.
  */
 
-export async function GET(_request: NextRequest) {
+async function GETImpl(_request: NextRequest) {
   return handleListHardwareCrons();
 }
 
-export async function POST(request: NextRequest) {
+async function POSTImpl(request: NextRequest) {
   // Installing a crontab line makes the host execute code on a timer.
   const hostWrites = requireAuthenticatedHostWrites();
   if (hostWrites) return hostWrites;
@@ -48,7 +49,7 @@ export async function POST(request: NextRequest) {
   return handleCreateHardwareCron(request);
 }
 
-export async function PUT(request: NextRequest) {
+async function PUTImpl(request: NextRequest) {
   // Installing a crontab line makes the host execute code on a timer.
   const hostWrites = requireAuthenticatedHostWrites();
   if (hostWrites) return hostWrites;
@@ -59,7 +60,7 @@ export async function PUT(request: NextRequest) {
   return handleUpdateHardwareCron(request);
 }
 
-export async function DELETE(request: NextRequest) {
+async function DELETEImpl(request: NextRequest) {
   // Installing a crontab line makes the host execute code on a timer.
   const hostWrites = requireAuthenticatedHostWrites();
   if (hostWrites) return hostWrites;
@@ -69,3 +70,8 @@ export async function DELETE(request: NextRequest) {
 
   return handleDeleteHardwareCron(request);
 }
+
+export const GET = guardRoute(GETImpl);
+export const POST = guardRoute(POSTImpl);
+export const PUT = guardRoute(PUTImpl);
+export const DELETE = guardRoute(DELETEImpl);

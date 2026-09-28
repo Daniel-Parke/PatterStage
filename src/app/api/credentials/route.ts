@@ -4,6 +4,7 @@
 //
 // `apiKey` is NEVER returned in any response. List/get exposes
 // `keyHint` only.
+import { guardRoute } from "@/lib/api/response-route";
 import { NextRequest, NextResponse } from "next/server";
 
 import { listCredentials, createCredential, deleteCredential } from "@/lib/models/credentials-repository";
@@ -22,7 +23,7 @@ export const GET = route("GET /api/credentials", "listing credentials", "Failed 
   return ok({ credentials: listCredentials() });
 });
 
-export async function POST(request: NextRequest) {
+async function POSTImpl(request: NextRequest) {
   // Hoist body parsing out of the main try/catch so malformed JSON returns
   // 400 (via parseAndValidateJsonBody) rather than 500. Aligns with every
   // other route in the Models/Config/Fallbacks surface.
@@ -69,3 +70,5 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export const POST = guardRoute(POSTImpl);

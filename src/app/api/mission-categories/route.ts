@@ -2,6 +2,7 @@
 // /api/mission-categories — User-managed mission categories
 // ═══════════════════════════════════════════════════════════════
 
+import { guardRoute } from "@/lib/api/response-route";
 import { NextRequest, NextResponse } from "next/server";
 
 import { logApiError } from "@/lib/api/api-logger";
@@ -37,7 +38,7 @@ function withCounts() {
   }));
 }
 
-export async function GET(_request: NextRequest) {
+async function GETImpl(_request: NextRequest) {
   try {
     ensureDb();
     ensureDefaultCategories();
@@ -66,7 +67,7 @@ export async function GET(_request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+async function POSTImpl(request: NextRequest) {
   try {
     ensureDb();
     ensureDefaultCategories();
@@ -95,7 +96,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function PUT(request: NextRequest) {
+async function PUTImpl(request: NextRequest) {
   try {
     const body = await parseJsonBody(request);
     if (body instanceof NextResponse) return body;
@@ -125,7 +126,7 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-export async function DELETE(request: NextRequest) {
+async function DELETEImpl(request: NextRequest) {
   try {
     const url = new URL(request.url);
     const id = url.searchParams.get("id");
@@ -173,3 +174,8 @@ export async function DELETE(request: NextRequest) {
     return serverError(msg);
   }
 }
+
+export const GET = guardRoute(GETImpl);
+export const POST = guardRoute(POSTImpl);
+export const PUT = guardRoute(PUTImpl);
+export const DELETE = guardRoute(DELETEImpl);

@@ -9,12 +9,13 @@
 // that aren't in the PatterStage Models registry.
 // ═══════════════════════════════════════════════════════════════
 
+import { guardRoute } from "@/lib/api/response-route";
 import { logApiError } from "@/lib/api/api-logger";
 import { fetchGateway } from "@/lib/models/gateway-client";
 import { ok } from "@/lib/api/api-response";
 
 /** GET /api/gateway/models — List models from Hermes Gateway. */
-export async function GET() {
+async function GETImpl() {
   try {
     const res = await fetchGateway("/v1/models", { method: "GET" });
     if (res.ok) {
@@ -40,3 +41,5 @@ function parseModelList(
     .map((m) => (typeof m === "string" ? m : m.id))
     .filter((m): m is string => Boolean(m));
 }
+
+export const GET = guardRoute(GETImpl);

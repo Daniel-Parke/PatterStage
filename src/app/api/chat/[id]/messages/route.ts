@@ -6,6 +6,7 @@
 // stream the reply live.
 // ═══════════════════════════════════════════════════════════════
 
+import { guardRoute } from "@/lib/api/response-route";
 import { NextRequest, NextResponse } from "next/server";
 
 import { ok, badRequest, notFound, serviceUnavailable, methodNotAllowed } from "@/lib/api/api-response";
@@ -64,7 +65,9 @@ export const POST = route("POST /api/chat/[id]/messages", (p) => p.id, "Failed t
 
 // GET is not supported. Messages arrive with the conversation from
 // /api/chat/[id]; this route only appends.
-export async function GET() {
+async function GETImpl() {
   return methodNotAllowed(
     "GET is not supported here — messages come back with GET /api/chat/[id]", ["POST"]);
 }
+
+export const GET = guardRoute(GETImpl);

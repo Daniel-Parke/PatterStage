@@ -21,8 +21,9 @@
 // same a hundred times.
 // ═══════════════════════════════════════════════════════════════
 
-import type { NextResponse } from "next/server";
+import type { NextRequest, NextResponse } from "next/server";
 
+import { guardCompletedResponse } from "@/lib/api/response-route";
 import { serverErrorFromCatch } from "@/lib/api/api-logger";
 
 type Params = Record<string, string>;
@@ -47,10 +48,12 @@ export function route<Args extends unknown[]>(
 ): (...args: Args) => Promise<NextResponse | Response> {
   return async (...args: Args) => {
     try {
-      return await handler(...args);
+      const response = await handler(...args);
+      return await guardCompletedResponse(args[0] as NextRequest | undefined, response);
     } catch (error) {
       const params = await paramsOf(args).catch(() => ({}) as Params);
-      return serverErrorFromCatch(say(name, params), say(doing, params), error, say(failed, params));
+      const response = serverErrorFromCatch(say(name, params), say(doing, params), error, say(failed, params));
+      return await guardCompletedResponse(args[0] as NextRequest | undefined, response);
     }
   };
 }

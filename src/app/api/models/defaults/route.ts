@@ -2,6 +2,7 @@
 // /api/models/defaults — read & write the 11 task-slot defaults
 // Hermes-only; no framework scoping needed.
 // ═══════════════════════════════════════════════════════════════
+import { guardRoute } from "@/lib/api/response-route";
 import { NextRequest, NextResponse } from "next/server";
 
 import { getDefaultModel, getModelDefaults, setDefaultModel } from "@/lib/models/models-repository";
@@ -73,7 +74,7 @@ export const GET = route("GET /api/models/defaults", "reading defaults", "Failed
   return ok({ defaults: getModelDefaults(), modelReadiness: resolveReadiness(agentDefault) });
 });
 
-export async function PUT(request: NextRequest) {
+async function PUTImpl(request: NextRequest) {
   const parsed = await parseAndValidateJsonBody(request, setDefaultPutSchema);
   if (parsed instanceof NextResponse) return parsed;
 
@@ -112,3 +113,5 @@ export async function PUT(request: NextRequest) {
     );
   }
 }
+
+export const PUT = guardRoute(PUTImpl);

@@ -1,3 +1,4 @@
+import { guardRoute } from "@/lib/api/response-route";
 import type { NextRequest } from "next/server";
 // ═══════════════════════════════════════════════════════════════
 // /api/tools — Hermes toolset catalog (read-only reference)
@@ -22,14 +23,17 @@ import {
 // PUT-only, and T-0083 gave it a GET that answers 405. A comment naming a
 // sibling that is not there sends the next reader looking for a precedent
 // rather than at the code in front of them.
-export async function GET() {
+async function GETImpl() {
   return ok({
     platforms: HERMES_PLATFORMS,
     toolsets: HERMES_CONFIGURABLE_TOOLSETS,
   });
 }
 
-export async function POST(_request: NextRequest) {
+async function POSTImpl(_request: NextRequest) {
   return methodNotAllowed(
     "Tool registry mutations are disabled. Configure Hermes runtime toolsets on Agent → Tools (profile-scoped platform_toolsets).", ["GET"]);
 }
+
+export const GET = guardRoute(GETImpl);
+export const POST = guardRoute(POSTImpl);

@@ -1,3 +1,4 @@
+import { guardRoute } from "@/lib/api/response-route";
 import { NextRequest, NextResponse } from "next/server";
 
 import { badRequest, methodNotAllowed, notFound, ok } from "@/lib/api/api-response";
@@ -5,10 +6,10 @@ import { badRequest, methodNotAllowed, notFound, ok } from "@/lib/api/api-respon
 // Round 6, finding 15: GET/POST here answered Next's empty framework 405.
 // The verb is PUT; say so, in the body and in Allow (T-0089).
 const NOT_THIS_VERB = "Toggle a skill with PUT /api/skills/[name]/toggle and a JSON body { enabled: boolean, profile?: string }";
-export async function GET() {
+async function GETImpl() {
   return methodNotAllowed(`GET is not supported here. ${NOT_THIS_VERB}`, ["PUT"]);
 }
-export async function POST() {
+async function POSTImpl() {
   return methodNotAllowed(`POST is not supported here. ${NOT_THIS_VERB}`, ["PUT"]);
 }
 import { parseJsonBody } from "@/lib/api/parse-json-body";
@@ -90,3 +91,7 @@ export const PUT = route("PUT /api/skills/[name]/toggle", (p) => `toggle ${p.nam
   });
   return ok({ success: true, skill: name, profile, enabled });
 });
+
+export const GET = guardRoute(GETImpl);
+
+export const POST = guardRoute(POSTImpl);

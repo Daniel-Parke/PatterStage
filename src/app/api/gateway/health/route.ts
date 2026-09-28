@@ -4,6 +4,7 @@
 // GET /api/gateway/health
 // ═══════════════════════════════════════════════════════════════
 
+import { guardRoute } from "@/lib/api/response-route";
 import { logApiError } from "@/lib/api/api-logger";
 import { fetchGateway } from "@/lib/models/gateway-client";
 import { getAgentGateway } from "@/lib/runtime/gateway";
@@ -29,7 +30,7 @@ import { ok } from "@/lib/api/api-response";
  * credential" -- taken for this exact confusion. The bearer key is never
  * returned here, and `authConfigured` says only whether one worked.
  */
-export async function GET() {
+async function GETImpl() {
   const { baseUrl } = getAgentGateway();
   try {
     const res = await fetchGateway("/v1/models", { method: "GET" });
@@ -40,3 +41,5 @@ export async function GET() {
     return ok({ online: false, authConfigured: false, baseUrl });
   }
 }
+
+export const GET = guardRoute(GETImpl);

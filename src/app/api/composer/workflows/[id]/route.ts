@@ -8,6 +8,7 @@
 // current node). Gated by the `composer` flag + auth for mutations.
 // ═══════════════════════════════════════════════════════════════
 
+import { guardRoute } from "@/lib/api/response-route";
 import { NextRequest, NextResponse } from "next/server";
 
 import { serverErrorFromCatch } from "@/lib/api/api-logger";
@@ -44,7 +45,7 @@ export const GET = route("GET /api/composer/workflows/[id]", (p) => `id=${p.id}`
   return ok({ workflow: graph });
 });
 
-export async function PUT(request: NextRequest, ctx: Ctx) {
+async function PUTImpl(request: NextRequest, ctx: Ctx) {
   if (!isFeatureEnabled("composer")) {
     return serviceUnavailable("Composer is not enabled. Set PS_COMPOSER=1 to enable workflows.");
   }
@@ -111,3 +112,5 @@ export const DELETE = route("DELETE /api/composer/workflows/[id]", (p) => `id=${
   deleteWorkflow(id);
   return ok({ deleted: true });
 });
+
+export const PUT = guardRoute(PUTImpl);

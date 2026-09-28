@@ -24,11 +24,11 @@ async function flagsOf(res: { json: () => Promise<unknown> }) {
 
 describe("GET /api/feature-flags", () => {
   it("reports composer ON by default", async () => {
-    expect(await flagsOf(GET())).toEqual({ composer: true });
+    expect(await flagsOf(await GET())).toEqual({ composer: true });
   });
 
   it("reports composer OFF when PS_COMPOSER=0", async () => {
     process.env.PS_COMPOSER = "0";
-    expect(await flagsOf(GET())).toEqual({ composer: false });
+    expect(await flagsOf(await GET())).toEqual({ composer: false });
   });
 });

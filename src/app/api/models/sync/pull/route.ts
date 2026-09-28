@@ -3,6 +3,7 @@
 // Reads all model sections from config.yaml and updates matching
 // DB records by provider+modelId.
 // ═══════════════════════════════════════════════════════════════
+import { guardRoute } from "@/lib/api/response-route";
 import { NextRequest, NextResponse } from "next/server";
 
 import { parseAndValidateJsonBody } from "@/lib/api/parse-json-body";
@@ -14,7 +15,7 @@ import { notFound, ok } from "@/lib/api/api-response";
 import { modelKey } from "@/lib/models/model-key";
 import { z } from "zod";
 
-export async function POST(request: NextRequest) {
+async function POSTImpl(request: NextRequest) {
   // Body is entirely optional — `{}` triggers a bulk pull, `{ modelId }`
   // triggers a single-model pull, `{ modelId, excluded: [...] }` pulls
   // one model minus the excluded fields. All fields are optional.
@@ -102,3 +103,5 @@ export async function POST(request: NextRequest) {
     diffs: allDiffs,
   });
 }
+
+export const POST = guardRoute(POSTImpl);

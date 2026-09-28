@@ -5,9 +5,12 @@
 // disabled features without a rebuild. Flags default ON; see feature-flags.ts.
 // ═══════════════════════════════════════════════════════════════
 
+import { guardRoute } from "@/lib/api/response-route";
 import { ok } from "@/lib/api/api-response";
 import { getFeatureFlags } from "@/lib/feature-flags";
 
-export function GET() {
+function GETImpl() {
   return ok({ flags: getFeatureFlags() });
 }
+
+export const GET = guardRoute(GETImpl);

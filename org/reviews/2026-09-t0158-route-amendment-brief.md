@@ -48,3 +48,16 @@ then release the handler. Require a denial with no protected marker. Include a
 valid-cookie and Bearer control. Run it against the unmodified route and commit
 the intended red result before the coordinator changes source. Preserve the
 shared held-session helper and all existing oracle files unchanged.
+
+## Backup route oracle amendment
+
+The full Jest coordinator run found one source-shape failure in
+`tests/unit/b6-backup-route.test.ts`: its POST export check recognises direct
+functions and `route()` but not `guardRoute(POSTImpl)`. The canary itself
+recognises any exported const method. Amend the closed test through an author
+other than the route repair author. Require both the `POSTImpl` declaration and
+its exact exported `guardRoute(POSTImpl)` mapping. The following read-only
+guard search must inspect the actual implementation body rather than pass on
+an empty POST match. Preserve every test name, all behaviour assertions and
+the no-guard claim. Prove old/new test-name identity, focused green, test
+TypeScript and ESLint. Do not edit source or gate scripts.

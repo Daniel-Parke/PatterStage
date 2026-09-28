@@ -41,6 +41,54 @@
       "replacement": "${HERMES_PORT:-8642}:8642",
       "tests": ["tests/unit/t0158-real-hermes-network-fixture.test.ts"],
       "why": "The real-Hermes stack uses fixed test credentials; its host port must stay bound to loopback."
+    },
+    {
+      "id": "m6-release-revoked-response",
+      "file": "src/lib/api/response-route.ts",
+      "anchor": "if (streamAuthorizer(request)()) return response;",
+      "replacement": "if (true) return response;",
+      "tests": ["tests/unit/t0158-held-response-revocation.test.ts", "tests/unit/t0158-direct-held-response.test.ts"],
+      "why": "A browser response held across revocation must not return its protected body."
+    },
+    {
+      "id": "m7-unwrap-direct-gateway-response",
+      "file": "src/app/api/gateway/models/route.ts",
+      "anchor": "export const GET = guardRoute(GETImpl);",
+      "replacement": "export const GET = GETImpl;",
+      "tests": ["tests/unit/t0158-direct-held-response.test.ts"],
+      "why": "A direct API route must pass its completed response through the common guard."
+    },
+    {
+      "id": "m8-unwrap-shared-route-response",
+      "file": "src/lib/api/api-route.ts",
+      "anchor": "const response = await handler(...args);",
+      "replacement": "const response = await handler(...args); return response;",
+      "tests": ["tests/unit/t0158-held-response-revocation.test.ts"],
+      "why": "The shared route wrapper must recheck the caller after an awaited handler."
+    },
+    {
+      "id": "m9-unwrap-hindsight-response",
+      "file": "src/app/api/memory/hindsight/route.ts",
+      "anchor": "export const GET = guardRoute(GETImpl);",
+      "replacement": "export const GET = GETImpl;",
+      "tests": ["tests/unit/t0158-held-response-revocation.test.ts"],
+      "why": "A Hindsight provider completion must not bypass revocation at hand-off."
+    },
+    {
+      "id": "m10-unwrap-mixed-templates-response",
+      "file": "src/app/api/templates/route.ts",
+      "anchor": "export const GET = guardRoute(GETImpl);",
+      "replacement": "export const GET = GETImpl;",
+      "tests": ["tests/unit/t0158-mixed-held-response.test.ts"],
+      "why": "A direct method inside a mixed route file must also withhold a response after revocation."
+    },
+    {
+      "id": "m11-blind-read-only-wrapper-scan",
+      "file": "scripts/tooling/check-read-only-guards.mjs",
+      "anchor": "const guardedMethod = implementation ? guarded.get(implementation[1]) : undefined;",
+      "replacement": "const guardedMethod = undefined;",
+      "tests": ["tests/unit/c1-one-route-body.test.ts"],
+      "why": "The read-only scanner must count and inspect response-guarded handler implementations."
     }
   ]
 }

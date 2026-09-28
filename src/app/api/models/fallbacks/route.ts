@@ -8,6 +8,7 @@
 //        (toggle/reorder/custom/import/sync) consolidated here; the
 //        per-entry GET/PUT/DELETE stays at /[id] and the behaviour
 //        config at /config.
+import { guardRoute } from "@/lib/api/response-route";
 import { NextRequest, NextResponse } from "next/server";
 
 import { parseAndValidateJsonBody } from "@/lib/api/parse-json-body";
@@ -34,7 +35,7 @@ export const GET = route("GET /api/models/fallbacks", "reading fallback chain", 
   return ok({ entries: listFallbackChain(), config: getFallbackConfig() });
 });
 
-export async function POST(request: NextRequest) {
+async function POSTImpl(request: NextRequest) {
   const parsed = await parseAndValidateJsonBody(request, fallbackActionSchema);
   if (parsed instanceof NextResponse) return parsed;
 
@@ -141,3 +142,5 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export const POST = guardRoute(POSTImpl);

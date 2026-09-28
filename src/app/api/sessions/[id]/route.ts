@@ -1,3 +1,4 @@
+import { guardRoute } from "@/lib/api/response-route";
 import { NextRequest } from "next/server";
 import { readFileSync, statSync } from "fs";
 import { basename } from "path";
@@ -30,7 +31,7 @@ import {
 // detail view tries the newer format first, then falls back to the log.
 const MISSION_FILE_EXTENSIONS = [".session", ".output.log"] as const;
 
-export async function GET(
+async function GETImpl(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -297,3 +298,5 @@ export async function GET(
     );
   }
 }
+
+export const GET = guardRoute(GETImpl);

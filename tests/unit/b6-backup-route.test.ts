@@ -259,28 +259,39 @@ describe("the route file, as the gates read it", () => {
   const lines = () => readFileSync(file, "utf-8").split(/\r?\n/);
 
   it("declares GET and POST at column zero, so the canary and the guard check can see them", () => {
-    // Two spellings since C1 (T-0136): a handler through the route() wrapper
-    // is `export const GET = route(`, also at column zero, and both gates
-    // read both.
+    // GET uses route(); POST's implementation is exported through guardRoute.
+    // The declaration and exact mapping must both exist for the guard scan.
     const src = lines();
     expect(src.some((l) => /^export (?:async function GET\(|const GET = route\()/.test(l))).toBe(true);
-    expect(src.some((l) => /^export (?:async function POST\(|const POST = route\()/.test(l))).toBe(true);
+    expect(src.some((l) => /^async function POSTImpl\s*\(/.test(l))).toBe(true);
+    expect(src.some((l) => /^export const POST = guardRoute\(POSTImpl\);?$/.test(l))).toBe(true);
   });
 
   it("carries no read-only guard inside GET, and none inside POST either", () => {
     // Mirrors check-read-only-guards.mjs: attribute each guard call to the
-    // enclosing handler, skipping comment lines.
-    const byMethod: Record<string, number> = {};
-    let current = "";
-    for (const raw of lines()) {
-      const handler = /^export (?:(?:async )?function (GET|HEAD|OPTIONS|POST|PUT|DELETE|PATCH)\b|const (GET|HEAD|OPTIONS|POST|PUT|DELETE|PATCH) = route\()/.exec(raw);
-      if (handler) current = handler[1] ?? handler[2];
-      const t = raw.trim();
-      if (t.startsWith("//") || t.startsWith("*") || t.startsWith("/*")) continue;
-      if (/\b(requireAuth|requireNotReadOnly|isReadOnly)\s*\(/.test(raw)) {
-        byMethod[current] = (byMethod[current] ?? 0) + 1;
+    // enclosing handler, including the exported POSTImpl body, skipping comments.
+    const src = lines();
+    const postImplIndex = src.findIndex((l) => /^async function POSTImpl\s*\(/.test(l));
+    const postExportIndex = src.findIndex((l) => /^export const POST = guardRoute\(POSTImpl\);?$/.test(l));
+    expect(postImplIndex).toBeGreaterThan(-1);
+    expect(postExportIndex).toBeGreaterThan(postImplIndex);
+
+    const guardCounts = (source: string[]): Record<string, number> => {
+      const byMethod: Record<string, number> = {};
+      let current = "";
+      for (const raw of source) {
+        const handler = /^export (?:(?:async )?function (GET|HEAD|OPTIONS|POST|PUT|DELETE|PATCH)\b|const (GET|HEAD|OPTIONS|POST|PUT|DELETE|PATCH) = route\()/.exec(raw);
+        if (handler) current = handler[1] ?? handler[2];
+        if (/^async function POSTImpl\s*\(/.test(raw)) current = "POST";
+        const t = raw.trim();
+        if (t.startsWith("//") || t.startsWith("*") || t.startsWith("/*")) continue;
+        if (/\b(requireAuth|requireNotReadOnly|isReadOnly)\s*\(/.test(raw)) {
+          byMethod[current] = (byMethod[current] ?? 0) + 1;
+        }
       }
-    }
+      return byMethod;
+    };
+    const byMethod = guardCounts(src);
     // GET was always 0: check-read-only-guards.mjs fails the build on a guard
     // in a read handler, because the proxy has already allowed the method.
     // POST was 1 until app-06, and is 0 now for the mirror-image reason — the
@@ -289,5 +300,9 @@ describe("the route file, as the gates read it", () => {
     // the three host-side routes where that caller is guarded against.
     expect(byMethod.GET ?? 0).toBe(0);
     expect(byMethod.POST ?? 0).toBe(0);
+
+    const withPostGuard = [...src];
+    withPostGuard.splice(postImplIndex + 1, 0, "  if (isReadOnly()) return;");
+    expect(guardCounts(withPostGuard).POST).toBe(1);
   });
 });

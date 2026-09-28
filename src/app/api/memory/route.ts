@@ -5,6 +5,7 @@
 // None: tell the user to run `hermes memory setup`
 // ═══════════════════════════════════════════════════════════════
 
+import { guardRoute } from "@/lib/api/response-route";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
@@ -23,7 +24,7 @@ import type { MemoryReadResult } from "@/lib/memory/memory-providers";
 // which returned "none" (provider unset / malformed YAML) while Hindsight was
 // live with thousands of facts. That mismatch was the three-endpoint drift the
 // QA report flagged; now all three agree.
-export async function GET(_request: NextRequest) {
+async function GETImpl(_request: NextRequest) {
   // Holographic reports from its local DB; everything else probes the live
   // provider over HTTP (the registry defaults to Hindsight).
   if (getMemoryProviderType() === "holographic") {
@@ -82,6 +83,8 @@ function unsupportedWriteHandler(_request: NextRequest): NextResponse {
   );
 }
 
-export const POST = unsupportedWriteHandler;
-export const PUT = unsupportedWriteHandler;
-export const DELETE = unsupportedWriteHandler;
+export const POST = guardRoute(unsupportedWriteHandler);
+export const PUT = guardRoute(unsupportedWriteHandler);
+export const DELETE = guardRoute(unsupportedWriteHandler);
+
+export const GET = guardRoute(GETImpl);

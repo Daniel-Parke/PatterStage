@@ -11,6 +11,7 @@
 // under `auxiliary.vision` previewed another model's values. Both halves now
 // compare, and the pull half shares `diffModelAgainstHermes` with the pull
 // route so the ids the operator excludes are the ids the pull honours.
+import { guardRoute } from "@/lib/api/response-route";
 import { existsSync } from "fs";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -149,7 +150,9 @@ export const POST = route("POST /api/models/[id]/diff", "computing diff", "Faile
 });
 
 // A diff is computed from a submitted candidate, so there is nothing to GET.
-export async function GET() {
+async function GETImpl() {
   return methodNotAllowed(
     "GET is not supported here — POST the candidate model to diff it against the stored one", ["POST"]);
 }
+
+export const GET = guardRoute(GETImpl);

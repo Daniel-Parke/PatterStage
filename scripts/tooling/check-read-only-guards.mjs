@@ -41,12 +41,12 @@ const READ_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 /** The guards. `requireAuth` is gone, and is listed so its return is caught. */
 const GUARD = /\b(requireAuth|requireNotReadOnly|isReadOnly)\s*\(/;
 
-// Two spellings: the declared function, and since C1 (T-0136) the handler
-// exported through the route() wrapper, `export const GET = route(`. A
-// scanner that knew only the first would count zero handlers after the
-// codemod and read that as a pass, which the guard below is written to
-// refuse.
+// Declared functions, C1 route() exports and response-guarded implementations
+// all remain handlers. A guarded GETImpl counts only when it is exported as
+// GET through guardRoute(GETImpl); a similarly named private helper does not.
 const HANDLER = /^export\s+(?:(?:async\s+)?function\s+([A-Z]+)\b|const\s+([A-Z]+)\s*=\s*route\()/;
+const GUARDED_EXPORT = /^export const ([A-Z]+) = guardRoute\(([A-Z]+Impl)\);?$/;
+const GUARDED_IMPL = /^(?:async\s+)?function\s+([A-Z]+Impl)\b/;
 
 /** `// check-read-only-guards-disable-next-line -- <reason>`, reason required. */
 const PRAGMA = /\/\/\s*check-read-only-guards-disable-next-line\s+--\s+\S/;
@@ -68,13 +68,20 @@ for (const file of routeFiles(API_ROOT)) {
   scanned += 1;
   const rel = file.replace(/\\/g, "/").split("/src/")[1];
   const lines = readFileSync(file, "utf-8").split(/\r?\n/);
+  const guarded = new Map();
+  for (const raw of lines) {
+    const match = GUARDED_EXPORT.exec(raw);
+    if (match && match[2] === `${match[1]}Impl`) guarded.set(match[2], match[1]);
+  }
 
   let method = "";
   let exempt = false;
   lines.forEach((raw, i) => {
     const handler = HANDLER.exec(raw);
-    if (handler) {
-      method = handler[1] ?? handler[2];
+    const implementation = GUARDED_IMPL.exec(raw);
+    const guardedMethod = implementation ? guarded.get(implementation[1]) : undefined;
+    if (handler || guardedMethod) {
+      method = handler ? (handler[1] ?? handler[2]) : guardedMethod;
       handlersSeen += 1;
     }
 
