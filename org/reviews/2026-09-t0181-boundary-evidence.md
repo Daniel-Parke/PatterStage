@@ -2,7 +2,7 @@
 summary: T-0181 isolated log symlink and mapped-private URL boundary proof
 type: review
 tags: [review, security, phase-2]
-status: in-progress
+status: complete
 ---
 
 # T-0181 boundary evidence, 28 September 2026
@@ -59,8 +59,18 @@ The isolated `t0181-gate` checkout passed all ten gate steps with an unchanged
 tree. Jest reported 7,344 passes and eight skips; Playwright reported 316
 passes and 24 skips on the owned port-3000 server. A byte comparison found
 97 otherwise unchanged tracked files with different line endings between
-that fresh worktree and the primary checkout, so the gate's content hash is
-specific to the worktree. The same full gate is being repeated on the primary
-tree with isolated `PS_DATA_DIR` and `HERMES_HOME` before commit.
+that fresh worktree and the primary checkout. The same full gate then passed
+on the exact primary tree with isolated `PS_DATA_DIR` and `HERMES_HOME`, with
+no tree movement and hash
+`86aa0180d1ce00268cdd91e8b460814f2d262854a77f3437b9d19c664a72c75c`.
 
-The mutation sweep and hosted results remain pending.
+The committed `e116f5fc` native-Linux sweep killed all three mutants through
+structured assertion failures, restored each edit and passed the final
+control. The Windows sweep refused its control because Linux-only cases skip
+there; that result was not called a kill. Exact-head push CI
+`36467397118`, PR CI `36467405410`, push Gitleaks `36467397002` and PR
+Gitleaks `36467405370` all concluded successfully. The PR run's full browser,
+real Hermes, install/update, Docker, Ubuntu, macOS and acceptance jobs all
+passed. The push run's full browser job was skipped by its existing event
+condition. This evidence does not claim a release, production deployment or
+concurrent local-adversary atomicity.

@@ -10,10 +10,24 @@ updated: 2026-09-28
 ## Current status, 2026-09-28
 
 The operator approved the complete Phase 2 plan on 28 September 2026 and
-authorised T-0180–T-0187 prerelease work. **T-0180 is done** at
-`dev@ccd7c103`; Q-011 still holds every structural batch until the operator's
-rc.1 and v1.0.0 release. The next batch is T-0181, the log symlink and URL
-containment proof. T-0180 restored default Gitleaks rules without excluding
+authorised T-0180–T-0187 prerelease work. **T-0181 is done** at
+`dev@e116f5fc`; Q-011 still holds every structural batch until the operator's
+rc.1 and v1.0.0 release. The next batch is T-0182, the built-app CSP and
+transport design. T-0181 rejects planted symlink, dangling-link and hardlink
+aliases for log GET and DELETE without reading or truncating an outside
+sentinel; regular logs still work. The mapped-private URL fetch guard already
+refused the bounded listener, so its candidate source defect was refuted.
+The exact primary-tree gate passed all ten steps, unchanged SHA-256
+`86aa0180d1ce00268cdd91e8b460814f2d262854a77f3437b9d19c664a72c75c`:
+7,344 Jest passes and eight skips, 316 Playwright passes and 24 skips on
+**port 3000**. The native-Linux committed-tree sweep killed all three mutants.
+Push CI `36467397118`, PR CI `36467405410`, push Gitleaks `36467397002`
+and PR Gitleaks `36467405370` all passed on the implementation head; every
+PR acceptance job was green. The [boundary evidence](reviews/2026-09-t0181-boundary-evidence.md)
+states the planted-file and concurrent-race limits. T-0182 is R3 proposed:
+its strict CSP design needs an independent oracle and specific approval.
+
+T-0180 is done at `dev@ccd7c103`. It restored default Gitleaks rules without excluding
 tests, retained ten exact reviewed historical fingerprints, added a planted
 secret control, and made hosted jobs scan fetched branch history. Its original
 three-case oracle and independent four-case amendment were each committed red
