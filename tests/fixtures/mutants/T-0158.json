@@ -5,8 +5,8 @@
     {
       "id": "m1-skip-auth-session-version",
       "file": "src/lib/db/apply-auth-sessions-migration.ts",
-      "anchor": "const AUTH_SESSIONS_SCHEMA_VERSION = 43;",
-      "replacement": "const AUTH_SESSIONS_SCHEMA_VERSION = 42;",
+      "anchor": "setSchemaVersion(database, AUTH_SESSIONS_SCHEMA_VERSION);",
+      "replacement": "setSchemaVersion(database, 42);",
       "tests": ["tests/unit/t0158-session-store.test.ts"],
       "why": "A fresh database must reach v43 and contain the auth_sessions table."
     },
@@ -21,8 +21,8 @@
     {
       "id": "m3-open-every-auth-post",
       "file": "src/proxy.ts",
-      "anchor": "request.method === \"POST\" && pathname === \"/api/auth/sign-in\"",
-      "replacement": "request.method === \"POST\" && pathname.startsWith(\"/api/auth/\")",
+      "anchor": "if (request.method === \"POST\" && pathname === \"/api/auth/sign-in\") {",
+      "replacement": "if (request.method === \"POST\" && pathname.startsWith(\"/api/auth/\")) {",
       "tests": ["tests/unit/t0158-session-proxy.test.ts"],
       "why": "Only the exact body-token sign-in path may bypass pre-existing browser authentication."
     },
