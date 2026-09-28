@@ -14,7 +14,7 @@
   ],
   "status": "in_progress",
   "owner_session": "2026-09-28-refactor-prerelease",
-  "claims": ["org/tasks/T-0180.json", ".gitleaks.toml", ".gitleaksignore", ".github/workflows/gitleaks.yml", "tests/unit/t0180-secret-scan-config.test.ts", "tests/security/secret-scan-canary.mjs", "org/reviews/2026-09-t0180-gitleaks-evidence.md", "org/plans/2026-09-refactor-programme.md", "org/HANDOVER.md", "org/claims.json", "org/TASKS.md", "org/STATE.md", "scripts/tooling/line-census.baseline.json", "tests/fixtures/mutants/T-0180.json"],
+  "claims": ["org/tasks/T-0180.json", ".gitleaks.toml", ".gitleaksignore", ".github/workflows/gitleaks.yml", "tests/unit/t0180-secret-scan-config.test.ts", "tests/unit/t0180-workflow-order-amendment.test.ts", "tests/security/secret-scan-canary.mjs", "org/briefs/T-0180-independent-amendment.md", "org/reviews/2026-09-t0180-gitleaks-evidence.md", "org/plans/2026-09-refactor-programme.md", "org/HANDOVER.md", "org/claims.json", "org/TASKS.md", "org/STATE.md", "scripts/tooling/line-census.baseline.json", "tests/fixtures/mutants/T-0180.json"],
   "timestamps": {"opened": "2026-09-28T16:55:12Z", "updated": "2026-09-28T16:55:12Z"},
   "invariants": [
     "Default Gitleaks rules remain active; no broad tests path exclusion or rule disablement hides a new candidate.",
@@ -23,5 +23,7 @@
     "Unresolved expired alerts and scanner-versus-Git patch-count differences remain explicitly unresolved."
   ],
   "rollback": "Revert the workflow, config, exact-fingerprint ignore list and oracle together only if a replacement strict scan continues to catch the planted finding; retain the redacted history evidence.",
-  "verify_line": "A disposable-history planted secret makes the configured Gitleaks job exit nonzero; strict redacted scans record scanner version, ref coverage and every historical candidate, and hosted push plus PR scan jobs pass after remediation."
+  "verify_line": "A disposable-history planted secret makes the configured Gitleaks job exit nonzero; strict redacted scans record scanner version, ref coverage and every historical candidate, and hosted push plus PR scan jobs pass after remediation.",
+  "oracle_provenance": "Red-first commit fc2d2bd8 failed all three tests in tests/unit/t0180-secret-scan-config.test.ts before implementation. The scanner's disposable-repository canary supplies a separate behavioural check; the frozen Jest oracle file is unchanged.",
+  "approval": "The operator approved the complete Phase 2 plan on 2026-09-28 and authorised prerelease T-0180–T-0187; Q-011 still gates structural work on the operator's rc.1 and v1.0.0 release."
 }
