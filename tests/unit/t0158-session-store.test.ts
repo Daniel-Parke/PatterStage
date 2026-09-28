@@ -34,7 +34,7 @@ afterEach(() => {
 
 test('Given a fresh SQLite database, migration creates a separate auth_sessions table', () => {
   const { ensureDb, getDb } = jest.requireActual('@/lib/db') as typeof import('@/lib/db');
-  ensureDb();
+  expect(() => ensureDb()).not.toThrow();
   const database = getDb();
   openedDb = database;
   const row = database.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='auth_sessions'").get();
