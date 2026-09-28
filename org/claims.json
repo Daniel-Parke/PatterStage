@@ -8,7 +8,7 @@
       "session_id": "01a09490-d778-7ac2-a183-6bfb646c6757",
       "host": "local",
       "harness_task_id": "01a09490-d778-7ac2-a183-6bfb646c6757",
-      "path_claims": ["src/lib/missions/", "src/lib/orchestration/", "src/lib/runs/", "org/tasks/T-0183.json", "org/reviews/2026-09-t0183-single-owner-adr-proposal.md", "org/decisions/ADR-0017-single-owner-mission-dispatch.md"],
+      "path_claims": ["src/lib/missions/", "src/lib/orchestration/", "src/lib/runs/", "src/lib/db/index.ts", "org/tasks/T-0183.json", "org/reviews/2026-09-t0183-single-owner-adr-proposal.md", "org/reviews/2026-09-t0183-race-evidence.md", "org/decisions/ADR-0017-single-owner-mission-dispatch.md"],
       "acquired": "2026-09-28T22:30:00Z",
       "expires": "2026-09-29T22:30:00Z"
     },
