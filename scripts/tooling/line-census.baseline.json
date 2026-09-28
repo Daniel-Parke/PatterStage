@@ -2,7 +2,7 @@
   "measuredAt": "2026-09-28",
   "counts": {
     "srcLines": 101970,
-    "testLines": 133067,
+    "testLines": 133073,
     "scriptsLines": 13763,
     "srcRepeatedWindowLines": 1012,
     "testRepeatedWindowLines": 4786,
@@ -775,6 +775,11 @@
       "measuredAt": "2026-09-28",
       "rise": "oneImporterComponents rose from 103 to 104",
       "reason": "T-0158 opaque browser-session security: new auth/session source and scripts, independent security oracles, one sign-in component, and explicit session interfaces; no legacy target changed"
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "testLines rose from 133067 to 133073",
+      "reason": "T-0158 independent six-line failure-only quiet-stream diagnostics after a reproducible full-load flake; 31 browser test names and assertions retained"
     }
   ]
 }
