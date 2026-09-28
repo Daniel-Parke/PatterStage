@@ -2,7 +2,7 @@
 summary: T-0180 redacted full-history secret-scan repair and remaining limits
 type: review
 tags: [review, security, phase-2]
-status: in-progress
+status: done
 ---
 
 # T-0180 Gitleaks evidence, 28 September 2026
@@ -45,9 +45,28 @@ are disabled because the job no longer has write permission. A malicious PR
 that changes both its scanner configuration and its own workflow still needs
 the repository's separate branch-protection review boundary; a job cannot
 make its checked-out workflow immutable. The hosted push and PR results are
-still required before this batch closes.
+recorded below.
 
 Independent R2 review found the canary ordering and Git-log option mismatch.
 A different author committed a separate four-case oracle amendment red at
 four of four in `d8f8dc68`. The original three-case oracle and its test names
 remain unchanged.
+
+## Hosted result at `dev@ccd7c103`
+
+The remote had exactly `dev@ccd7c103` and `main@7b9d6d68` branch heads when
+queried after the push. Push and PR Gitleaks jobs `36458230381` and
+`36458237777` both passed. Each job successfully fetched remote heads, ran the
+Docker full-history scan, ran Gitleaks action v8.30.1 and passed the planted
+control. The Docker scan reported **1,621 patches** and no unignored finding
+in each job; the action then scanned three push commits or 30 PR commits.
+Those smaller action windows are why the separate Docker history scan matters.
+The hosted checkout and fetched refs do not include deleted branches,
+unreachable Git objects or unrelated PR-only refs. The three expired July 25
+alerts and the local scanner-versus-Git patch-count gap remain unresolved.
+
+Push CI `36458230201` and PR CI `36458237763` also passed. PR acceptance ran
+the full E2E, install, native build, Docker and real-Hermes jobs. The push
+workflow skipped full E2E and acceptance under its existing event condition;
+all its executed jobs passed. The final local ten-step gate and three-mutant
+sweep results are in `org/tasks/T-0180.json`.

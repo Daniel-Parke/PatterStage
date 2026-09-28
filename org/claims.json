@@ -2,5 +2,5 @@
   "version": 1,
   "assigned": "2026-09-28",
   "lanes": [],
-  "note": "T-0165 Phase 2 plan and all four hosted workflows completed successfully at 052cedd2. The plan remains proposed for separate operator approval; T-0159 historical ledger remains read-only."
+  "note": "The operator approved the Phase 2 plan on 2026-09-28. T-0180 completed at ccd7c103 with a ten-step local gate, three killed mutants and four green hosted workflows. No writing lane is currently claimed; T-0181 is next."
 }

@@ -10,20 +10,32 @@ updated: 2026-09-28
 ## Current status, 2026-09-28
 
 The operator approved the complete Phase 2 plan on 28 September 2026 and
-authorised T-0180–T-0187 prerelease work. T-0180 is in progress; Q-011 still
-holds every structural batch until the operator's rc.1 and v1.0.0 release.
-The last closed dev head is `66037154`, with all four hosted workflows green.
-The T-0180 red-first secret-scan oracle is committed at `fc2d2bd8`.
+authorised T-0180–T-0187 prerelease work. **T-0180 is done** at
+`dev@ccd7c103`; Q-011 still holds every structural batch until the operator's
+rc.1 and v1.0.0 release. The next batch is T-0181, the log symlink and URL
+containment proof. T-0180 restored default Gitleaks rules without excluding
+tests, retained ten exact reviewed historical fingerprints, added a planted
+secret control, and made hosted jobs scan fetched branch history. Its original
+three-case oracle and independent four-case amendment were each committed red
+before their fixes. The final isolated ten-step gate passed on unchanged tree
+SHA-256 `6814b5222d272f603b3de87508fe9c39f5164bcd3d07f6af831ede355adc18ff`:
+756 Jest suites, 7,335 passes and four skips; 316 Playwright passes and 24
+skips on **port 3000**. Three committed-tree mutants were killed, with clean
+restoration. Push CI `36458230201`, PR CI `36458237763`, push Gitleaks
+`36458230381` and PR Gitleaks `36458237777` all passed. Full Playwright
+acceptance ran in the PR job; the push job skipped that path by event design.
+The expired July 25 alerts and scanner patch-count discrepancy remain open,
+as the [redacted evidence](reviews/2026-09-t0180-gitleaks-evidence.md) states.
 
-T-0165 is closed locally and on hosted CI at `dev@052cedd2`. The
+T-0165 is closed locally and on hosted CI at `dev@66037154`. The
 [approved Phase 2 plan](plans/2026-09-refactor-programme.md) has 22 sequential
 batches T-0180–T-0201. Its ownership map
 accounts for all 265 findings, 163 split rulings and 285 atomic proofs, with
 248 local proofs assigned and 12 external or operator proofs deferred. Eight
 new programme targets are frozen against committed pre-plan baselines; the
 original five consolidation targets remain historical commitments. The
-independent sceptic accepted the final plan scope. No structural batch is
-approved, PR #157 has not merged, and Q-011 still requires the operator's
+independent sceptic accepted the final plan scope. Structural execution waits
+on Q-011, PR #157 has not merged, and Q-011 still requires the operator's
 rc.1 and v1.0.0 release before structural execution.
 
 The T-0165 ten-step gate passed on an unchanged tree (SHA-256
