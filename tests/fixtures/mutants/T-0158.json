@@ -33,6 +33,14 @@
       "replacement": "response.cookies.set(SESSION_COOKIE, handoff,",
       "tests": ["tests/unit/t0158-session-proxy.test.ts"],
       "why": "The deliberate URL hand-off must issue an opaque cookie and never write the operator token into it."
+    },
+    {
+      "id": "m5-expose-test-hermes-port",
+      "file": "docker-compose.real-hermes.yml",
+      "anchor": "127.0.0.1:${HERMES_PORT:-8642}:8642",
+      "replacement": "${HERMES_PORT:-8642}:8642",
+      "tests": ["tests/unit/t0158-real-hermes-network-fixture.test.ts"],
+      "why": "The real-Hermes stack uses fixed test credentials; its host port must stay bound to loopback."
     }
   ]
 }

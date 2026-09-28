@@ -2,7 +2,7 @@
   "measuredAt": "2026-09-28",
   "counts": {
     "srcLines": 101970,
-    "testLines": 133073,
+    "testLines": 133135,
     "scriptsLines": 13763,
     "srcRepeatedWindowLines": 1012,
     "testRepeatedWindowLines": 4786,
@@ -780,6 +780,11 @@
       "measuredAt": "2026-09-28",
       "rise": "testLines rose from 133067 to 133073",
       "reason": "T-0158 independent six-line failure-only quiet-stream diagnostics after a reproducible full-load flake; 31 browser test names and assertions retained"
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "testLines rose from 133073 to 133135",
+      "reason": "T-0158 red-first real-Hermes network fixture oracle adds 62 test lines to protect the explicit public origin, loopback host bindings and PORT override after hosted acceptance failed; original five targets remain fixed"
     }
   ]
 }

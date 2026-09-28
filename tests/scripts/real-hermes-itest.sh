@@ -26,7 +26,7 @@ ${COMPOSE} up -d --build
 echo "[itest] waiting for PatterStage (depends on real Hermes being healthy)…"
 up=0
 for i in $(seq 1 150); do
-  code=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${PS_PORT}/api/health" 2>/dev/null || echo 000)
+  code=$(curl -s -o /dev/null -w "%{http_code}" "http://127.0.0.1:${PS_PORT}/api/health" 2>/dev/null || echo 000)
   if [ "$code" = "200" ]; then up=1; echo "[itest] patterstage up after ~$((i*2))s"; break; fi
   sleep 2
 done
@@ -35,11 +35,11 @@ if [ "$up" != "1" ]; then
 fi
 
 echo "[itest] ── contract conformance (raw real Hermes API server) ──"
-HERMES_URL="http://localhost:${H_PORT}" API_SERVER_KEY="${KEY}" \
+HERMES_URL="http://127.0.0.1:${H_PORT}" API_SERVER_KEY="${KEY}" \
   node tests/integration/runtime/hermes-contract.mjs
 
 echo "[itest] ── full-stack smoke (PatterStage → real Hermes) ──"
-PS_URL="http://localhost:${PS_PORT}" HERMES_URL="http://localhost:${H_PORT}" API_SERVER_KEY="${KEY}" \
+PS_URL="http://127.0.0.1:${PS_PORT}" HERMES_URL="http://127.0.0.1:${H_PORT}" API_SERVER_KEY="${KEY}" \
   PS_AUTH_TOKEN="${PS_TOKEN}" \
   node tests/integration/runtime/full-stack-smoke.mjs
 
@@ -69,7 +69,7 @@ ${COMPOSE} run --rm --no-deps --entrypoint node patterstage -e '
 ${COMPOSE} start patterstage >/dev/null
 up=0
 for i in $(seq 1 60); do
-  code=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${PS_PORT}/api/health" 2>/dev/null || echo 000)
+  code=$(curl -s -o /dev/null -w "%{http_code}" "http://127.0.0.1:${PS_PORT}/api/health" 2>/dev/null || echo 000)
   if [ "$code" = "200" ]; then up=1; break; fi
   sleep 2
 done
@@ -79,8 +79,8 @@ fi
 # /api/cron was removed with the legacy cron page (Phase M); assert /api/schedules
 # instead — it requires the `schedules` table the legacy seed dropped, so a 200
 # proves the v2→latest migration restored the runs/schedules schema.
-mcode=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer ${PS_TOKEN}" "http://localhost:${PS_PORT}/api/missions")
-scode=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer ${PS_TOKEN}" "http://localhost:${PS_PORT}/api/schedules")
+mcode=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer ${PS_TOKEN}" "http://127.0.0.1:${PS_PORT}/api/missions")
+scode=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer ${PS_TOKEN}" "http://127.0.0.1:${PS_PORT}/api/schedules")
 echo "[itest] post-upgrade: /api/missions=${mcode} /api/schedules=${scode}"
 if [ "$mcode" != "200" ] || [ "$scode" != "200" ]; then
   echo "[itest] upgrade FAILED — runs/schedules migration likely incomplete"; ${COMPOSE} logs --tail 40 patterstage; exit 1

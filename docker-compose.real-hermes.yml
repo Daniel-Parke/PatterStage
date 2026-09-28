@@ -31,7 +31,7 @@ services:
     volumes:
       - hermes_data:/opt/data
     ports:
-      - "${HERMES_PORT:-8642}:8642"
+      - "127.0.0.1:${HERMES_PORT:-8642}:8642"
     depends_on:
       hermes-seed:
         condition: service_completed_successfully
@@ -50,6 +50,8 @@ services:
     build: .
     environment:
       PORT: "42069"
+      PS_PUBLIC_ORIGIN: "http://127.0.0.1:${PORT:-42069}"
+      PS_INSECURE_LAN_HTTP: "1"
       PS_DATA_DIR: /data/ch
       HERMES_HOME: /data/hermes
       HERMES_GATEWAY_URL: http://hermes:8642
@@ -58,7 +60,7 @@ services:
       # the itest harness can authenticate; must match real-hermes-itest.sh.
       PS_AUTH_TOKEN: hermes-real-itest-token
     ports:
-      - "${PORT:-42069}:42069"
+      - "127.0.0.1:${PORT:-42069}:42069"
     depends_on:
       hermes:
         condition: service_healthy
