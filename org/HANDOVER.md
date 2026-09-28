@@ -9,6 +9,32 @@ updated: 2026-09-28
 
 ## Current status, 2026-09-28
 
+T-0165 is closed locally and on hosted CI at `dev@052cedd2`. The
+[proposed Phase 2 plan](plans/2026-09-refactor-programme.md) has 22 sequential
+batches T-0180–T-0201 for **separate operator approval**. Its ownership map
+accounts for all 265 findings, 163 split rulings and 285 atomic proofs, with
+248 local proofs assigned and 12 external or operator proofs deferred. Eight
+new programme targets are frozen against committed pre-plan baselines; the
+original five consolidation targets remain historical commitments. The
+independent sceptic accepted the final plan scope. No structural batch is
+approved, PR #157 has not merged, and Q-011 still requires the operator's
+rc.1 and v1.0.0 release before structural execution.
+
+The T-0165 ten-step gate passed on an unchanged tree (SHA-256
+`fb21defab40f337117817880f459fbe61e25688ea042d41d2078eecf176d71c4`):
+754 Jest suites, 7,328 passed and four skipped; 316 Playwright passed and 24
+skipped. Four committed-tree mutants were killed and the worktree restored
+clean. Playwright used **port 3000** with isolated data. Hosted push CI
+`36450688619`, PR CI `36450698007`, push Gitleaks `36450688607` and PR
+Gitleaks `36450698040` all completed successfully on `052cedd2`. Every PR CI
+job passed, including full E2E, both native builds, Docker, install/update,
+real Hermes and the acceptance gate. The first hosted CI attempt at
+`c91b9fcb` failed both coverage jobs because its committed-baseline oracle
+needed history absent from shallow checkouts. The exact oracle stayed intact;
+the two coverage jobs now fetch full history, including retry paths. A later
+local gate correctly stopped on a stale derived R2 view, which was rendered
+from the canonical record before the whole gate was repeated green.
+
 T-0164's current-tree reconnaissance is closed at `1d6b23d1`. Its linked
 ledgers account for 265 preliminary
 findings, 163 split operator dispositions and all 285 atomic obligations from
@@ -40,7 +66,7 @@ The controlled app walk used port **3802** for 19 component states at
 The CSP probe used port **3804**. All used isolated data. Optional Hindsight
 returned 503 without its backend, and the empty-log path returned 404. These
 are bounded route and visual checks, not acceptance of every external-provider
-journey. T-0165 remains the full Phase 2 plan for separate operator approval.
+journey. T-0165's proposed plan is now linked at the top of this handover.
 Q-011 still requires the operator's first release before structural batches;
 PR #157 remains the sole promotion PR.
 
@@ -92,9 +118,9 @@ no assertion result or faulting-module attribution. The normal parallel final
 gate passed. The six diagnostic test lines were held in the committed census
 with a written reason; the original five targets were not moved.
 
-T-0164 was the main prerequisite when T-0158 closed. Its current result and
-limits are now at the top of this handover. T-0165 is the full Phase 2 plan
-after that evidence and requires separate operator approval before structural
+T-0164 was the main prerequisite when T-0158 closed. Its result and limits,
+and the now-complete T-0165 planning prerequisite, are at the top of this
+handover. The plan still requires separate operator approval before structural
 execution. PR #157 remains the sole working promotion PR; no release has been
 made. Local worktrees with unique or ignored state remain preserved.
 
@@ -122,8 +148,8 @@ advisories (two low, three moderate, five high). All four T-0179 closure
 workflows and every required job passed at `dev@b2be4a64`. T-0158 session
 security is active under accepted ADR-0012/0013; its live record now rejects
 the old universal proxy-protocol claim and requires a production-bundle
-generation proof before source implementation. T-0164/T-0165 reconnaissance
-and planning remain open. The old local worktrees with unique or ignored
+generation proof before source implementation. T-0164 reconnaissance and
+T-0165 planning have since closed, as recorded at the top. The old local worktrees with unique or ignored
 state remain preserved; remote heads are only `dev` and `main`.
 
 T-0178 carried PR #228's Playwright 1.62.1 proposal onto `dev@e7081b1a`
@@ -355,7 +381,8 @@ An earlier final-candidate gate lost its owned web server after 223 Playwright
 passes; the first affected spec passed alone and the next unchanged full gate
 passed. T-0163 records both runs, the earlier config-mock failure and its fix.
 Hosted push and PR jobs failed only the later-corrected macOS oracle as noted
-above. T-0164 reconnaissance and T-0165 Phase 2 plan remain open. PR #157
+above. T-0164 and T-0165 have since closed; their current evidence is at the
+top. PR #157
 remains open; Q-011 still bars structural cleanup before an operator release.
 
 T-0162 repaired the remaining blind read, write, form-name and Knip gates at
