@@ -35,6 +35,7 @@
     "src/lib/db-schema.ts",
     "src/lib/sse/event-stream.ts",
     "src/app/api/auth/",
+    "src/app/api/",
     "src/app/api/runs/[id]/events/route.ts",
     "src/app/api/orchestration/chat/route.ts",
     "src/app/api/memory/hindsight/route.ts",
@@ -105,6 +106,7 @@
     "tests/unit/t0158-throttle-clock.test.ts",
     "tests/unit/t0158-real-hermes-network-fixture.test.ts",
     "tests/unit/t0158-held-response-revocation.test.ts",
+    "tests/unit/t0158-direct-held-response.test.ts",
     "jest.config.js",
     "org/TASKS.md",
     "org/STATE.md"

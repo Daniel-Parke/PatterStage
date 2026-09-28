@@ -26,6 +26,13 @@ leave the other red.
 
 The coordinator will use the oracle to repair release-time authorisation and
 audit other delayed API handlers, including the shared `route()` wrapper and
-direct handlers. The independent reviewer must review the finished repair
+direct handlers. A second independent oracle file,
+`tests/unit/t0158-direct-held-response.test.ts`, must hold the unwrapped
+`GET /api/gateway/models` gateway response, revoke a real browser session,
+then require denial without its protected model marker. Include valid-cookie
+and Bearer controls. Pass the real Next request even though the current
+handler ignores its parameter; the export wrapper must receive that request
+at runtime. Commit that oracle red before wrapping direct handlers.
+The independent reviewer must review the finished repair
 before T-0158 can close. The full unchanged-tree gate, committed-tree sweep and
 all hosted jobs must then run again.
