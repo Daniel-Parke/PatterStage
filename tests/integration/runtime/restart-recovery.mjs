@@ -15,14 +15,13 @@
 // Not dispatch. BOOT RECOVERY: the three sweeps that run when a PatterStage
 // process starts and finds work its predecessor left mid-flight.
 //
-//   BackgroundScheduler  → reconcileRunsOnBoot()      runs with no backend id
+//   BackgroundScheduler  → reconcileRunsOnBoot()      holds uncertain mission submissions
 //   instrumentation      → failStuckResearchRuns()    research left 'running'
 //   instrumentation      → failStuckChatMessages()    turns left 'streaming'
 //
-// Each exists because a crash leaves a row that nothing else will ever move: a
-// fire-and-forget job has no in-process resume, so without these the Deep
-// Research page spins forever and a chat bubble stays mid-reply for the life of
-// the database.
+// A crash leaves each row without its in-process owner. Research and chat
+// sweeps fail stale rows. A mission with no backend ID is held for review:
+// the gateway may have accepted its submission before the reply was lost.
 //
 // ── WHY THE IN-FLIGHT STATE IS SEEDED, AND WHY THAT IS HONEST ──
 //
@@ -42,27 +41,15 @@
 //    in flight. The seeds are backdated for that reason, and a naive version of
 //    this test would have passed for the wrong reason or failed for one.
 //
-// 2. A RUN THAT REACHED THE BACKEND IS LEFT ALONE. reconcileRunsOnBoot only
-//    fails runs with NO backend runId; one that was submitted is left for the
-//    live reconcile tick, because the backend may still be executing it and
-//    failing it here would report a running job as dead. That is the control
-//    below, and it is the assertion most likely to catch a well-meant widening.
+// 2. A RUN THAT REACHED THE BACKEND IS LEFT ALONE. A missing backend ID is
+//    uncertain and must not trigger a replay. A known backend run is left for
+//    the live reconcile tick because the backend may still be executing it.
 //
 // ── PROVED TO GO RED ───────────────────────────────────────────
 //
-// Five mutations, five caught. Worth recording one of them: removing
-// reconcileRunsOnBoot ENTIRELY still leaves the run `failed`, because the live
-// reconcile tick reaches it too -- with a different message ("run was never
-// submitted to the backend" rather than "PatterStage restarted before the run
-// was submitted"). So the status assertion alone would have passed on a build
-// with the boot sweep deleted, and it is the REASON assertions that carry the
-// weight. Two sweeps agreeing on an outcome and disagreeing on the explanation
-// is exactly the kind of thing a status-only test cannot see.
-//
-// The others: deleting either instrumentation sweep leaves its row untouched;
-// widening reconcileRunsOnBoot to fail every active run trips the control; and
-// dropping the isPidAlive check from claimOwnership leaves the lease with the
-// killed pid.
+// The original five mutations tested the old fail-on-boot policy. This amended
+// scenario checks the new unconfirmed hold and retained research, chat, known
+// backend-run and scheduler-lease controls.
 //
 // Env: none required. Uses a throwaway HERMES_HOME under the OS temp dir and a
 // port of its own. Exits non-zero on any failed assertion.
@@ -188,7 +175,7 @@ async function main() {
     const db = open();
     const now = seededAt;
 
-    // 1. A run that never reached the backend. reconcileRunsOnBoot's subject.
+    // 1. A run with no known backend ID. The submission outcome is uncertain.
     db.prepare(
       "INSERT INTO runs (id, run_id, mission_id, status, submitted_at, updated_at) VALUES (?,NULL,?,'started',?,?)",
     ).run("run-unsubmitted", missionId, now, now);
@@ -230,23 +217,21 @@ async function main() {
   }
   check("second server became healthy", true);
 
-  // 1. The unsubmitted run is failed, and says why.
-  const run1 = await until(
-    () => one("SELECT status, error FROM runs WHERE id='run-unsubmitted'"),
-    (r) => r?.status === "failed",
+  // 1. Boot exposes the uncertain mission claim and does not replay it.
+  const mission = await until(
+    () => one("SELECT status, result FROM missions WHERE id=?", missionId),
+    (m) => /submission outcome unconfirmed/i.test(m?.result ?? ""),
   );
-  check("an unsubmitted run is failed on boot", run1?.status === "failed", `status ${run1?.status}`);
+  const run1 = one("SELECT status, error, run_id, updated_at FROM runs WHERE id='run-unsubmitted'");
+  check("an unsubmitted run is held on boot", run1?.status === "started" && run1?.run_id === null, `status ${run1?.status}, backend ${run1?.run_id}`);
   check(
-    "…and the reason names the restart, not a generic failure",
-    /restart/i.test(run1?.error ?? ""),
+    "…and no failure was invented for its run",
+    run1?.error === null && run1?.updated_at === seededAt,
     run1?.error,
   );
-
-  // …and the mission it belongs to is finalised with it, or the board shows a
-  // mission running forever behind a run that ended.
-  const mission = one("SELECT status, result FROM missions WHERE id=?", missionId);
-  check("…and its mission is finalised too", mission?.status === "failed", `status ${mission?.status}`);
-  check("…with the interruption as the result", /interrupt/i.test(mission?.result ?? ""), mission?.result);
+  check("…and its mission remains claimed", mission?.status === "dispatched", `status ${mission?.status}`);
+  check("…with the unconfirmed outcome visible", /submission outcome unconfirmed/i.test(mission?.result ?? ""), mission?.result);
+  check("…without replaying a run", one("SELECT count(*) c FROM runs WHERE mission_id=?", missionId)?.c === 2);
 
   // 2. CONTROL: the submitted run is untouched — by ANY writer.
   //

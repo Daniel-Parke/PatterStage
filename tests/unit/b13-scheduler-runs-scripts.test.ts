@@ -55,14 +55,12 @@ jest.mock("@/lib/schedule/schedules-repository", () => ({
   listScriptSchedules: () => [],
 }));
 
-const createRun = jest.fn<{ id: string } | null, [Record<string, unknown>]>();
-jest.mock("@/lib/runs/runs-repository", () => ({
-  createRun: (input: Record<string, unknown>) => createRun(input),
-}));
-
-const hasDispatchedMission = jest.fn<boolean, []>();
+const reserveMissionRun = jest.fn<
+  { kind: "claimed"; runId: string; missionId: string } | { kind: "busy" },
+  [Record<string, unknown>]
+>();
 jest.mock("@/lib/missions/mission-repository", () => ({
-  hasDispatchedMission: () => hasDispatchedMission(),
+  reserveMissionRun: (input: Record<string, unknown>) => reserveMissionRun(input),
 }));
 
 interface DispatchResult {
@@ -144,8 +142,9 @@ function sched(over: Partial<SchedRow> = {}): SchedRow {
 beforeEach(() => {
   jest.clearAllMocks();
   getDueSchedules.mockReturnValue([]);
-  hasDispatchedMission.mockReturnValue(false);
-  createRun.mockReturnValue({ id: "run1" });
+  reserveMissionRun.mockImplementation((input) => ({
+    kind: "claimed", runId: String(input.runId), missionId: String(input.missionId),
+  }));
   dispatchMissionRun.mockResolvedValue({ ok: true, backendRunId: "b1" });
   runScriptFile.mockResolvedValue({ ok: true, outcome: "succeeded", exitCode: 0, logFile: "/data/logs/x.log" });
   listScriptFiles.mockResolvedValue([]);
@@ -317,12 +316,12 @@ describe("the scheduler tick, on a script schedule", () => {
   it("is not an agent run: no run row is claimed and no mission is dispatched", async () => {
     getDueSchedules.mockReturnValue([sched()]);
     await runSchedulerTick({ now: NOW });
-    expect(createRun).not.toHaveBeenCalled();
+    expect(reserveMissionRun).not.toHaveBeenCalled();
     expect(dispatchMissionRun).not.toHaveBeenCalled();
   });
 
   it("is not held behind the mission single-flight", async () => {
-    hasDispatchedMission.mockReturnValue(true);
+    reserveMissionRun.mockReturnValue({ kind: "busy" });
     getDueSchedules.mockReturnValue([sched()]);
     const res = await runSchedulerTick({ now: NOW });
     expect(runScriptFile).toHaveBeenCalledWith("ps-db-backup.mjs");
@@ -417,7 +416,13 @@ describe("the scheduler tick, on a script schedule", () => {
   it("GREEN CONTROL: a mission row still goes down the mission path", async () => {
     getDueSchedules.mockReturnValue([sched({ kind: "mission", missionId: "m1", scriptName: null })]);
     const res = await runSchedulerTick({ now: NOW });
-    expect(dispatchMissionRun).toHaveBeenCalled();
+    expect(reserveMissionRun).toHaveBeenCalledWith(expect.objectContaining({
+      kind: "schedule", missionId: "m1", scheduleId: "sch-s1",
+    }));
+    const claimedRunId = reserveMissionRun.mock.calls[0][0].runId;
+    expect(dispatchMissionRun).toHaveBeenCalledWith("m1", expect.objectContaining({
+      runId: claimedRunId, scheduleId: "sch-s1",
+    }));
     expect(runScriptFile).not.toHaveBeenCalled();
     expect(res.fired).toBe(1);
   });
