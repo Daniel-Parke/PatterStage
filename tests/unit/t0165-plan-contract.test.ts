@@ -91,7 +91,11 @@ describe("T-0165 Phase 2 plan contract", () => {
       expect(batch.rollback.length).toBeGreaterThan(20);
       expect(batch.verify.length).toBeGreaterThan(30);
       for (const dependency of batch.dependsOn) {
-        if (dependency.startsWith("T-")) expect(plan.batches.findIndex((candidate) => candidate.id === dependency)).toBeLessThan(plan.batches.indexOf(batch));
+        if (dependency.startsWith("T-")) {
+          const earlier = plan.batches.findIndex((candidate) => candidate.id === dependency);
+          expect(earlier).toBeGreaterThanOrEqual(0);
+          expect(earlier).toBeLessThan(plan.batches.indexOf(batch));
+        }
       }
     }
     expect(plan.closing.measureFile).toBe(measuresPath);
