@@ -3,18 +3,15 @@
   "assigned": "2026-09-28",
   "lanes": [
     {
-      "lane_id": "t0182-independent-oracle",
+      "lane_id": "t0182-global-error-oracle",
       "task_id": "T-0182",
-      "session_id": "01a0e972-3fa5-7c60-a1a8-945a893b6dfd",
+      "session_id": "01a0e985-73b3-7a80-a8ca-d7df490c3a74",
       "host": "local",
-      "harness_task_id": "01a0e972-3fa5-7c60-a1a8-945a893b6dfd",
-      "path_claims": [
-        "tests/e2e/t0182-csp.spec.ts",
-        "tests/unit/t0182-csp-policy.test.ts"
-      ],
-      "acquired": "2026-09-28T19:16:16Z",
-      "expires": "2026-09-29T19:16:16Z"
+      "harness_task_id": "01a0e985-73b3-7a80-a8ca-d7df490c3a74",
+      "path_claims": ["tests/e2e/t0182-global-error.spec.ts"],
+      "acquired": "2026-09-28T19:37:15Z",
+      "expires": "2026-09-29T19:37:15Z"
     }
   ],
-  "note": "T-0182 R3 independent ORACLE session owns only its two new test files. The coordinator is read-only while this lane writes, then owns source, record, documentation and integration. Two-lane cap remains in force."
+  "note": "A second independent R3 ORACLE session owns only the newly discovered global-error acceptance test. The coordinator is read-only until that test is frozen; uncommitted implementation files are outside this lane's claims."
 }
