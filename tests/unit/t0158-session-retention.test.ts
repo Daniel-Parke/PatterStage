@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { migrationsDir, openRealDb, type RealDb } from "../helpers/baseline-db";
 
 let testDb: RealDb | null = null;
-jest.mock("@/lib/db", () => require("../helpers/baseline-db").dbSingletonMock(() => testDb));
+jest.mock("@/lib/db", () => jest.requireActual<typeof import("../helpers/baseline-db")>("../helpers/baseline-db").dbSingletonMock(() => testDb));
 
 const NOW = Date.parse("2026-10-28T12:00:00.000Z");
 const DAY_MS = 24 * 60 * 60 * 1000;

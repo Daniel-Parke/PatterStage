@@ -6,7 +6,7 @@ import { NextRequest } from "next/server";
 import { migrationsDir, openRealDb, type RealDb } from "../helpers/baseline-db";
 
 let testDb: RealDb | null = null;
-jest.mock("@/lib/db", () => require("../helpers/baseline-db").dbSingletonMock(() => testDb));
+jest.mock("@/lib/db", () => jest.requireActual<typeof import("../helpers/baseline-db")>("../helpers/baseline-db").dbSingletonMock(() => testDb));
 
 const OLD_TOKEN = "t0158-old-root-token-for-race-oracle";
 const NEW_TOKEN = "t0158-new-root-token-for-race-oracle";
