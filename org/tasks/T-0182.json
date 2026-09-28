@@ -1,0 +1,29 @@
+{
+  "id": "T-0182",
+  "intent": "Design and validate an enforced, nonce-based built-app Content Security Policy while preserving authentication, framing denial, loopback HTTP and supported browser journeys.",
+  "declared": {
+    "capabilities": ["edit-source", "edit-config", "edit-tests", "edit-docs", "run-isolated-listener", "git", "git-push"],
+    "side_effects": ["touches-auth", "rollback-cost", "sends-external"]
+  },
+  "mode": "high-assurance",
+  "tier_proposed": "R3",
+  "tier_ruled": "R3",
+  "reasons": [
+    {"factor": "irreversible-action", "tier_floor": "R3", "source": "declared", "evidence": "declared side effect: rollback-cost"},
+    {"factor": "auth-surface", "tier_floor": "R2", "source": "declared", "evidence": "declared side effect: touches-auth"},
+    {"factor": "boundary-contact", "tier_floor": "R1", "source": "declared", "evidence": "declared side effect: sends-external"}
+  ],
+  "status": "in_progress",
+  "owner_session": "2026-09-28-refactor-prerelease",
+  "claims": ["org/tasks/T-0182.json", "org/reviews/2026-09-t0182-csp-adr-proposal.md", "org/reviews/2026-09-t0182-csp-evidence.md", "org/decisions/ADR-0015-content-security-policy.md", "org/briefs/T-0182-independent-oracle.md", "src/proxy.ts", "src/app/layout.tsx", "next.config.ts", "tests/e2e/t0182-csp.spec.ts", "tests/unit/t0182-csp-policy.test.ts", "tests/fixtures/mutants/T-0182.json", "docs/SECURITY.md", "docs/running/deploy.md", "scripts/tooling/line-census.baseline.json", "org/HANDOVER.md", "org/claims.json", "org/TASKS.md", "org/STATE.md"],
+  "timestamps": {"opened": "2026-09-28T19:08:00Z", "updated": "2026-09-28T19:08:00Z"},
+  "invariants": [
+    "A fresh unpredictable nonce permits framework hydration and required application scripts without script-src unsafe-inline in production; injected untrusted inline script and event-handler code are blocked.",
+    "X-Frame-Options DENY and frame-ancestors none persist on protected HTML, authentication refusals and API errors.",
+    "Sign-in, session navigation, Missions, Composer and Help retain their status, cookie, origin and read-only contracts at desktop and phone widths.",
+    "Loopback HTTP and the explicitly opted-in insecure LAN mode remain usable; production HTTPS retains secure cookies and exact public-origin checks.",
+    "Nonce-bearing HTML is not reused across requests; static assets keep their existing safe caching behaviour."
+  ],
+  "rollback": "If enforcement breaks a supported journey, revert only through a forward-reviewed policy change that records the reopened inline-script exposure; preserve frame denial and authentication controls. Restore a corrected nonce policy as the preferred repair.",
+  "verify_line": "On a production build at 1440x900 and 390x844, sign-in, Missions dialog, Composer and Help work without CSP violations; two page requests use different nonces, an injected untrusted inline script is blocked, framing and auth refusals survive, local HTTP and HTTPS cookie rules hold, and route caching and bundle effects are measured."
+}
