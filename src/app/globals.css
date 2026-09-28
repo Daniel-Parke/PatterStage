@@ -490,6 +490,14 @@
 }
 /* Active edge on the live run canvas (react-flow): cyan glow on the stroke. */
 .ps-edge-glow .react-flow__edge-path { filter: drop-shadow(0 0 3px rgb(var(--ps-rgb-neon-cyan) / 0.7)); }
+/* xyflow paints its controls white by default, which hid the white icons on
+   the Composer's dark canvas even though the controls wrapper was themed. */
+.react-flow .react-flow__controls-button {
+  background-color: var(--color-ps-surface-panel);
+  color: var(--color-ps-text-primary);
+  border-bottom: 1px solid var(--color-ps-edge-hairline);
+}
+.react-flow .react-flow__controls-button svg { fill: currentColor; }
 
 @media (prefers-reduced-motion: reduce) {
   /* Deny by default. This was an allowlist of seven class names, written when
