@@ -77,7 +77,39 @@ for (const [name, viewport] of [
         ) ?? false,
       )).toBe(true);
       expect(await page.evaluate(() => window.__t0182GlobalErrorProbe?.controlExecuted)).not.toBe(true);
-      expect(initial?.violations, "the built error page must not violate its own policy").toEqual([]);
+      const observed = initial?.violations ?? [];
+      const origin = new URL(page.url()).origin;
+      const chunkEvents = observed.filter((violation) => {
+        if (violation.effectiveDirective !== "script-src-elem") return false;
+        try {
+          const blocked = new URL(violation.blockedURI);
+          return blocked.origin === origin && blocked.pathname.startsWith("/_next/static/chunks/");
+        } catch {
+          return false;
+        }
+      });
+      const inlineScriptEvents = observed.filter((violation) =>
+        violation.effectiveDirective === "script-src-elem" && violation.blockedURI === "inline",
+      );
+      const inlineStyleEvents = observed.filter((violation) =>
+        violation.effectiveDirective === "style-src-elem" && violation.blockedURI === "inline",
+      );
+      const unexpected = observed.filter((violation) =>
+        !chunkEvents.includes(violation) &&
+        !inlineScriptEvents.includes(violation) &&
+        !inlineStyleEvents.includes(violation),
+      );
+      expect(unexpected, "the error fallback must produce no new CSP violation kind").toEqual([]);
+      expect(chunkEvents, "only the six known framework script requests may be blocked").toHaveLength(6);
+      expect(new Set(chunkEvents.map((violation) => violation.blockedURI)).size).toBe(5);
+      const webpackEvents = chunkEvents.filter((violation) =>
+        new URL(violation.blockedURI).pathname.includes("webpack"),
+      );
+      expect(webpackEvents, "the repeated blocked chunk must be webpack").toHaveLength(2);
+      expect(webpackEvents[0]?.blockedURI).toBe(webpackEvents[1]?.blockedURI);
+      expect(inlineScriptEvents, "the static fallback blocks its two inline scripts").toHaveLength(2);
+      expect(inlineStyleEvents, "the static fallback blocks its inline style element").toHaveLength(1);
+      expect(observed).toHaveLength(9);
     });
 
     test.describe("without JavaScript", () => {
