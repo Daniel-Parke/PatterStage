@@ -9,11 +9,28 @@ updated: 2026-09-28
 
 ## Current status, 2026-09-28
 
+**T-0182 is implemented** at `dev@c9b84131` and awaits the closing-record
+push and hosted job observation. The accepted ADR-0015 nonce CSP blocks
+untrusted scripts and event handlers while keeping framework hydration,
+session navigation and static-asset caching. ADR-0016 records exact
+fail-closed Webpack and Turbopack violations on Next's static 500 page;
+the error heading remains useful and frame denial stays active. The
+unchanged-tree ten-step gate passed with 7,350 Jest passes, eight skips,
+332 Playwright passes and 24 skips on **port 3000**. The gate tree SHA-256
+was `8baa0c72b84736e5b9d1c40d14976e65f72a70e4dbc434e20d865608168c89b8`.
+All three committed-tree mutants were killed and the tree restored cleanly.
+A controlled 1440×900/390×844 Missions, Composer and Help walk on isolated
+**port 3902** found no missing heading, overflow, page error or CSP
+violation. [The T-0182 evidence](reviews/2026-09-t0182-csp-evidence.md)
+records the failed infrastructure gate attempt, screenshot hashes, cache
+headers, route manifest sizes and the final oracle's unrerun Webpack branch.
+T-0183 is the next prerelease batch. Q-011 still holds structural work until
+the operator's rc.1 and v1.0.0 release.
+
 The operator approved the complete Phase 2 plan on 28 September 2026 and
 authorised T-0180–T-0187 prerelease work. **T-0181 is done** at
 `dev@e116f5fc`; Q-011 still holds every structural batch until the operator's
-rc.1 and v1.0.0 release. The next batch is T-0182, the built-app CSP and
-transport design. T-0181 rejects planted symlink, dangling-link and hardlink
+rc.1 and v1.0.0 release. T-0181 rejects planted symlink, dangling-link and hardlink
 aliases for log GET and DELETE without reading or truncating an outside
 sentinel; regular logs still work. The mapped-private URL fetch guard already
 refused the bounded listener, so its candidate source defect was refuted.
