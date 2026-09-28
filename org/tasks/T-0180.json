@@ -1,0 +1,27 @@
+{
+  "id": "T-0180",
+  "intent": "Restore effective full-history secret scanning with default rules and exact, reviewed historical false-positive dispositions; prove a planted finding makes CI fail.",
+  "declared": {
+    "capabilities": ["edit-tooling", "edit-tests", "edit-docs", "git", "git-push"],
+    "side_effects": ["sends-external"]
+  },
+  "mode": "high-assurance",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [
+    {"factor": "ci-stateful-infra", "tier_floor": "R2", "source": "org/policy.json risk factors", "evidence": "The owned diff changes the hosted Gitleaks workflow and its security gate."},
+    {"factor": "boundary-contact", "tier_floor": "R1", "source": "declared", "evidence": "The completed batch pushes dev and observes hosted CI."}
+  ],
+  "status": "in_progress",
+  "owner_session": "2026-09-28-refactor-prerelease",
+  "claims": ["org/tasks/T-0180.json", ".gitleaks.toml", ".gitleaksignore", ".github/workflows/gitleaks.yml", "tests/unit/t0180-secret-scan-config.test.ts", "tests/security/secret-scan-canary.mjs", "org/reviews/2026-09-t0180-gitleaks-evidence.md", "org/plans/2026-09-refactor-programme.md", "org/HANDOVER.md", "org/claims.json", "org/TASKS.md", "org/STATE.md", "scripts/tooling/line-census.baseline.json", "tests/fixtures/mutants/T-0180.json"],
+  "timestamps": {"opened": "2026-09-28T16:55:12Z", "updated": "2026-09-28T16:55:12Z"},
+  "invariants": [
+    "Default Gitleaks rules remain active; no broad tests path exclusion or rule disablement hides a new candidate.",
+    "Only the ten individually reviewed historical findings may be ignored, by exact fingerprint and with their redacted dispositions on record.",
+    "A disposable-history planted secret makes the same configured scanner exit nonzero without exposing a secret in logs.",
+    "Unresolved expired alerts and scanner-versus-Git patch-count differences remain explicitly unresolved."
+  ],
+  "rollback": "Revert the workflow, config, exact-fingerprint ignore list and oracle together only if a replacement strict scan continues to catch the planted finding; retain the redacted history evidence.",
+  "verify_line": "A disposable-history planted secret makes the configured Gitleaks job exit nonzero; strict redacted scans record scanner version, ref coverage and every historical candidate, and hosted push plus PR scan jobs pass after remediation."
+}
