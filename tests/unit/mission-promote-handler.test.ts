@@ -6,7 +6,7 @@ jest.mock("@/lib/schedule/schedules-repository", () => ({
   createSchedule: jest.fn(() => ({ id: "sched1" })),
 }));
 const mockDispatchMissionNow = jest.fn().mockResolvedValue({ ok: true });
-const mockRunMissionQueueTick = jest.fn();
+const mockRunMissionQueueTick = jest.fn().mockResolvedValue({ ran: false });
 
 jest.mock("@/lib/missions/mission-dispatch", () => ({
   dispatchMissionNow: (...args: unknown[]) => mockDispatchMissionNow(...args),

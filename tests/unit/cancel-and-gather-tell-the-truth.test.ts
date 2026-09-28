@@ -53,10 +53,14 @@ jest.mock("@/lib/sessions/session-repository", () => ({
   closeSessionForMission: (...a: unknown[]) => mockCloseSessionForMission(...a),
 }));
 
-const mockGetLatestRunForMission = jest.fn(() => null as unknown);
+const mockStoredRunForMission = jest.fn(() => null as { id: string; status: string } | null);
+const mockListActiveRunsForMission = jest.fn(() => {
+  const run = mockStoredRunForMission();
+  return run?.status === "started" ? [run] : [];
+});
 const mockUpdateRun = jest.fn();
 jest.mock("@/lib/runs/runs-repository", () => ({
-  getLatestRunForMission: (...a: unknown[]) => mockGetLatestRunForMission(...(a as [])),
+  listActiveRunsForMission: (...a: unknown[]) => mockListActiveRunsForMission(...(a as [])),
   updateRun: (...a: unknown[]) => mockUpdateRun(...a),
 }));
 
@@ -74,7 +78,9 @@ const mockDispatchMissionNow = jest.fn().mockResolvedValue({ ok: true });
 jest.mock("@/lib/missions/mission-dispatch", () => ({
   dispatchMissionNow: (...a: unknown[]) => mockDispatchMissionNow(...a),
 }));
-jest.mock("@/lib/missions/mission-queue-tick", () => ({ runMissionQueueTick: jest.fn() }));
+jest.mock("@/lib/missions/mission-queue-tick", () => ({
+  runMissionQueueTick: jest.fn(() => Promise.resolve({ ran: false })),
+}));
 jest.mock("@/lib/missions/mission-category-repository", () => ({ getCategory: jest.fn(() => null) }));
 
 import { readFileSync } from "fs";
@@ -121,7 +127,7 @@ function mission(over: Partial<Mission> = {}): Mission {
 beforeEach(() => {
   jest.clearAllMocks();
   mockStopBackendRunForMission.mockReturnValue(Promise.resolve());
-  mockGetLatestRunForMission.mockReturnValue(null);
+  mockStoredRunForMission.mockReturnValue(null);
 });
 
 describe("a cancelled mission does not read as a failure", () => {
@@ -188,7 +194,7 @@ describe("the two cancel entry points leave the same state", () => {
     // the wrong thing for as long as the background call took.
     mockGetMission.mockReturnValue(mission({ status: "dispatched" }));
     mockUpdateMission.mockReturnValue(mission({ status: "failed" }));
-    mockGetLatestRunForMission.mockReturnValue({ id: "run-1", status: "started" });
+    mockStoredRunForMission.mockReturnValue({ id: "run-1", status: "started" });
 
     handleCancelMission({ id: "m1" });
 
@@ -205,7 +211,7 @@ describe("the two cancel entry points leave the same state", () => {
     // visible.
     mockGetMission.mockReturnValue(mission({ status: "dispatched" }));
     mockUpdateMission.mockReturnValue(mission({ status: "failed" }));
-    mockGetLatestRunForMission.mockReturnValue({ id: "run-1", status: "completed" });
+    mockStoredRunForMission.mockReturnValue({ id: "run-1", status: "completed" });
 
     handleCancelMission({ id: "m1" });
 

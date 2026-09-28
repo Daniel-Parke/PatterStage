@@ -85,7 +85,7 @@ jest.mock("@/lib/missions/mission-repository", () => ({
   updateMission: (...a: unknown[]) => mockUpdateMission(...a),
 }));
 jest.mock("@/lib/runs/runs-repository", () => ({
-  getLatestRunForMission: jest.fn(() => null),
+  listActiveRunsForMission: jest.fn(() => []),
   updateRun: jest.fn(),
 }));
 jest.mock("@/lib/sessions/session-repository", () => ({

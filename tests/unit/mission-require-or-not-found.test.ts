@@ -53,7 +53,7 @@ jest.mock("@/lib/orchestration", () => ({
 
 // The seams the shared cancel finaliser touches (T-0070).
 jest.mock("@/lib/runs/runs-repository", () => ({
-  getLatestRunForMission: jest.fn(() => null),
+  listActiveRunsForMission: jest.fn(() => []),
   updateRun: jest.fn(),
 }));
 
@@ -66,7 +66,7 @@ jest.mock("@/lib/missions/mission-dispatch", () => ({
 }));
 
 jest.mock("@/lib/missions/mission-queue-tick", () => ({
-  runMissionQueueTick: jest.fn(),
+  runMissionQueueTick: jest.fn(() => Promise.resolve({ ran: false })),
 }));
 
 jest.mock("@/lib/sync", () => ({

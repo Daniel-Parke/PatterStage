@@ -32,10 +32,10 @@ jest.mock("@/lib/sessions/session-repository", () => ({
 }));
 
 // T-0070 moved the local record into one shared writer; these are its seams.
-const mockGetLatestRunForMission = jest.fn(() => null as unknown);
+const mockListActiveRunsForMission = jest.fn(() => []);
 const mockUpdateRun = jest.fn();
 jest.mock("@/lib/runs/runs-repository", () => ({
-  getLatestRunForMission: (...a: unknown[]) => mockGetLatestRunForMission(...(a as [])),
+  listActiveRunsForMission: (...a: unknown[]) => mockListActiveRunsForMission(...(a as [])),
   updateRun: (...a: unknown[]) => mockUpdateRun(...a),
 }));
 

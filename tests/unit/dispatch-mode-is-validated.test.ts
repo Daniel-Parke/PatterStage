@@ -45,7 +45,7 @@ const mockUpdateMission = jest.fn();
 const mockDispatchMissionNow = jest.fn<Promise<{ ok: boolean; error?: string }>, unknown[]>(
   async () => ({ ok: true }),
 );
-const mockRunMissionQueueTick = jest.fn();
+const mockRunMissionQueueTick = jest.fn().mockResolvedValue({ ran: false });
 const mockCreateSchedule = jest.fn();
 const mockAppendAuditLine = jest.fn();
 
