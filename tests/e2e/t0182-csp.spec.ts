@@ -25,7 +25,7 @@ async function openHydratedMissions(page: Page): Promise<void> {
   const response = await page.goto("/work/missions", { waitUntil: "domcontentloaded" });
   expect(response?.status()).toBe(200);
   await expect(page.getByRole("heading", { name: "Missions", exact: true })).toBeVisible({ timeout: 30_000 });
-  await expect(page.getByRole("button", { name: /New Mission/i })).toBeEnabled({ timeout: 30_000 });
+  await expect(page.locator("header").getByRole("button", { name: /New Mission/i })).toBeEnabled({ timeout: 30_000 });
 }
 
 test.describe("T-0182 built response policy", () => {
@@ -116,7 +116,7 @@ for (const viewport of [
         });
       });
       await openHydratedMissions(page);
-      await page.getByRole("button", { name: /New Mission/i }).click();
+      await page.locator("header").getByRole("button", { name: /New Mission/i }).click();
       await expect(page.getByPlaceholder("e.g., Research quantum computing trends")).toBeVisible({ timeout: 15_000 });
       violations.push(...await page.evaluate(() => (window as Window & { __t0182Violations?: string[] }).__t0182Violations ?? []));
       await page.goto("/work/composer", { waitUntil: "domcontentloaded" });
