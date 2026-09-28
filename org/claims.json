@@ -18,7 +18,7 @@
       "session_id": "01a0ea01-be1e-7b83-94b3-4773cd2b1a2d",
       "host": "local",
       "harness_task_id": "01a0ea01-be1e-7b83-94b3-4773cd2b1a2d",
-      "path_claims": ["tests/unit/mission-dispatch-race.test.ts", "tests/unit/mission-schedule-claim-contention.test.ts"],
+      "path_claims": ["tests/unit/mission-dispatch-race.test.ts", "tests/unit/mission-schedule-claim-contention.test.ts", "tests/unit/scheduler-tick.test.ts"],
       "acquired": "2026-09-28T23:00:00Z",
       "expires": "2026-09-29T23:00:00Z"
     }
