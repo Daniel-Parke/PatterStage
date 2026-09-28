@@ -2,10 +2,49 @@
 summary: What the consolidation programme did and left behind, how a batch was landed, what is open, and what waits next
 type: venture
 tags: [handover, consolidation]
-updated: 2026-09-27
+updated: 2026-09-28
 ---
 
-# Handover · PatterStage, 2026-09-27
+# Handover · PatterStage, 2026-09-28
+
+## Current status, 2026-09-28
+
+T-0158's opaque browser sessions and managed transport are implemented on
+`dev@656e7724` under accepted ADR-0012, ADR-0013 and ADR-0014. The final
+isolated ten-step gate exited 0 with an unchanged tree: 746 Jest suites,
+7,303 passing tests and four skips; 314 Playwright passes and 24 existing
+skips; design and line censuses held. The committed-tree sweep killed all
+four mutants by assertion and restored the clean tree. A separate real-browser
+lifecycle walk at 1440x900 and 390x844 passed sign-in, session listing,
+sign-out and re-entry denial on local port **3801**, with one h1, no horizontal
+overflow and no signed-in console errors. Screenshot SHA-256 values for sign-in
+are `26000F417FB54A16AC967420B20D87420BD69A101EB2918CBF197420AB739048`
+and `7A983BC071ED2BED0D7EA93670FB852A85C176CAEA3F982CAA0205FDB1D5B6EF`;
+for session management they are
+`0CDF0E3C90C42AF685B1C1D6947E1CAF5B544FB18C888254FCCDD5AD44B0ED12`
+and `A04C0C117C60CA54D974C8D7945456084AFBB487D0E98AAF4EB82E91904946BD`.
+The final gate record is in the managed `t0158-sweep` worktree's `.gate` folder;
+hosted push and PR jobs have not yet been observed at this revision.
+
+The failed intermediate gates remain evidence. A fabricated running Composer
+row with no current node could be marked failed by the background tick and
+close its test stream. The independent fixture repair uses the genuine quiet
+`awaiting_approval` state and preserves all 31 browser case names and
+revocation assertions. A separate Windows Playwright worker exited with
+`0xC0000409` in one full run and in two parallel focused attempts; there was
+no assertion result or faulting-module attribution. The normal parallel final
+gate passed. The six diagnostic test lines were held in the committed census
+with a written reason; the original five targets were not moved.
+
+T-0164 remains the main prerequisite: decompose all 107 preliminary coverage
+bullets into an itemised evidence ledger, finish the full-history secret scan,
+dependency and licence attribution, built-app CSP and route-bundle review,
+SQLite column traces, controlled component states, independent sceptics and
+completeness critic. T-0165 is the full Phase 2 plan after that evidence and
+requires separate operator approval before structural execution. PR #157
+remains the sole working promotion PR; no release has been made. Local
+worktrees with unique or ignored state remain preserved. Three untracked
+T-0164 gitleaks control files in the primary checkout are not T-0158 work.
 
 ## Dated status, 2026-09-27
 
