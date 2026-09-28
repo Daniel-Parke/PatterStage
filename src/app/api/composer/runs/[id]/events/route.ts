@@ -10,6 +10,7 @@ import { serviceUnavailable } from "@/lib/api/api-response";
 import { ensureDb } from "@/lib/db";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import { sseStream } from "@/lib/sse/event-stream";
+import { streamAuthorizer } from "@/lib/auth/stream-guard";
 import { getComposerRun, listNodeRuns } from "@/lib/composer/composer-repository";
 import { isTerminalComposerRunStatus } from "@/lib/composer/schema";
 
@@ -30,6 +31,7 @@ export async function GET(request: NextRequest, ctx: Ctx) {
   const { id } = await ctx.params;
   ensureDb();
   return sseStream({
+    authorize: streamAuthorizer(request),
     snapshot: () => {
       const run = getComposerRun(id);
       if (!run) return null;

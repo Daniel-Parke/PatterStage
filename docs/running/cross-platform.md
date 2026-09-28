@@ -54,7 +54,7 @@ for the self-update OS coupling in `src/lib/host/platform.ts` alone will not fin
 git clone https://github.com/Daniel-Parke/PatterStage.git
 cd PatterStage
 bash scripts/bootstrap/install.sh --in-repo   # or omit --in-repo to clone to ~/patterstage
-npm run start:network
+npm run start
 ```
 
 ### Windows → WSL2 (Ubuntu)

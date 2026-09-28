@@ -82,6 +82,7 @@ USER nextjs
 EXPOSE 42069
 ENV HOSTNAME=0.0.0.0
 ENV PORT=42069
+ENV PS_NEXT_BIND_HOST=0.0.0.0
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
   CMD node -e "require('http').get('http://127.0.0.1:'+(process.env.PORT||42069),(r)=>process.exit(r.statusCode&&r.statusCode<500?0:1)).on('error',()=>process.exit(1))"
 CMD ["npm", "run", "start:network"]

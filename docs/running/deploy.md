@@ -24,7 +24,18 @@ How I run this in production and on a home LAN: ports, scripts, and the deploy b
 
 Next.js reads **`PORT`**. After **`bash scripts/bootstrap/setup.sh`**, `.env.local` contains **`PORT`** (first free in **42069, 42100** by default, or your chosen port) and **`PS_ALLOWED_DEV_ORIGINS`** for LAN development.
 
-For **production / household LAN**, use **`npm run start:network`** (`next start -H 0.0.0.0`). Note that **`npm run start`** reaches the LAN too: `next start` already defaults to `0.0.0.0`, and `start:network` only states the bind explicitly. The dev-only cross-origin check on `/_next/webpack-hmr` this section used to cite belongs to `next dev`, covered next.
+**`npm run start` binds `127.0.0.1`**. Use it directly on the host or behind a
+same-host HTTPS proxy. Set `PS_PUBLIC_ORIGIN` to the browser's exact origin for
+the proxy. For a listener on a network interface, `npm run start:network`
+requires `PS_PUBLIC_ORIGIN` and exactly one explicit mode:
+
+- `PS_PRIVATE_PROXY_NETWORK=1` with an `https://` public origin. Restrict the
+  app's HTTP port to the trusted proxy by container network or firewall. The
+  proxy removes client forwarding headers and sets its own.
+- `PS_INSECURE_LAN_HTTP=1` with an `http://` public origin. This permits direct
+  LAN HTTP, where a network observer can capture browser cookies.
+
+The dev-only cross-origin check on `/_next/webpack-hmr` belongs to `next dev`.
 
 For **`next dev` on another machine** using a URL with a **literal IP** (e.g. `http://192.168.1.10:42069`), the browser `Origin` must be listed in **`PS_ALLOWED_DEV_ORIGINS`** (setup generates common cases). Opening the site via a **`.local` hostname** matches the `*.local` pattern in `next.config.ts` without extra entries.
 
@@ -97,7 +108,7 @@ Run PatterStage where you trust the network, or place it behind your own reverse
 ## Docker, the CI parity rig
 
 **This is not a way to deploy PatterStage.** The supported model is the native
-host install: `bash scripts/bootstrap/install.sh`, then `npm run start:network`
+host install: `bash scripts/bootstrap/install.sh`, then `npm run start`
 (or `ps-deploy.sh`) and sidebar deploy, on a host with Node 20+. If you are
 reading this to work out how to run the app, you are in the wrong section, and
 [the install path](../README.md) is the one to follow.
@@ -118,15 +129,15 @@ docker compose up -d
 
 The image defaults to **`PORT=42069`** (override with `-e PORT=...` or Compose `environment`). Map the same value on the host, e.g. `PORT=42069 docker compose up -d`.
 
-The production image includes the full **`scripts/`** tree, plus `bash`, `ca-certificates`, `curl`, `git`, `iproute2` (`ss`), `psmisc` and `socat`, so **`POST /api/update`** can spawn **`node scripts/tooling/ps-deploy.mjs`**. Of those the runner itself shells out to `git`, `npm` and `ss`/`lsof`; `bash` is there for the CLI wrapper and the bundled `.sh` host scripts. `psmisc` (`fuser`) and `socat` are installed but nothing in the repo calls either. **`restart`** brings Next back on **`0.0.0.0:$PORT`** by default (same as `npm run start:network`).
+The production image includes the full **`scripts/`** tree, plus `bash`, `ca-certificates`, `curl`, `git`, `iproute2` (`ss`), `psmisc` and `socat`, so **`POST /api/update`** can spawn **`node scripts/tooling/ps-deploy.mjs`**. Of those the runner itself shells out to `git`, `npm` and `ss`/`lsof`; `bash` is there for the CLI wrapper and the bundled `.sh` host scripts. `psmisc` (`fuser`) and `socat` are installed but nothing in the repo calls either. The image declares **`PS_NEXT_BIND_HOST=0.0.0.0`** for restart, so it requires the same explicit network mode as first startup. The included Compose rig binds the host port to `127.0.0.1` and sets the insecure-HTTP test mode explicitly.
 
 > **`PS_SOCAT_RELAY`, `PS_SOCAT_RELAY_PORT` and `PS_SOCAT_BIND` are inert.** The
 > relay was launched by the old bash `ps-deploy-impl.sh`; when deploy moved to
 > Node, the launcher went with it and only the stop-side pid cleanup in
 > [`scripts/lib/ps-env.sh`](../../scripts/lib/ps-env.sh) and the commented-out lines
 > in `.env.example` survive. Setting them starts nothing. Since both `restart`
-> and `npm run start:network` already bind `0.0.0.0`, there is nothing left for a
-> loopback relay to do; put a reverse proxy in front if you need a second port.
+> can bind the network listener only under an explicit mode, there is no relay
+> to enable; put a trusted reverse proxy in front if you need a second port.
 
 **`update` / `rebuild` / GET branch list** need a **git working tree** at `process.cwd()` (`/app`). The default **`.dockerignore` excludes `.git`**, so a plain image build is not a checkout; mount a clone if you need those flows in a container.
 

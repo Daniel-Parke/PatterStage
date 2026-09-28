@@ -76,7 +76,7 @@ export default defineConfig({
     // for the full account and the CI failure it caused.
     command:
       `node tests/e2e/prepare-data-dir.mjs "${e2eDataDir}" && ` +
-      `npm run start -- -p ${port} -H 0.0.0.0`,
+      `npm run start -- -p ${port}`,
     url: baseURL,
     reuseExistingServer: !process.env.CI && !process.env.PS_GATE_OWN_SERVER,
     timeout: 120_000,

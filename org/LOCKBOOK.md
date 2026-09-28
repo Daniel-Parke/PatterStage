@@ -159,14 +159,13 @@ because the whole point of this section is that it cannot quietly stop being tru
 
 **Enforced today, in `npm run lint`:**
 
-- **Authentication is enforced once, in `src/proxy.ts`, and never in a route
-  handler.** `DOC-IDENT-001`, binding estate doctrine, from the identity-access
-  pack: deny unless something permitted, and decide at one layer.
-  `design-lint no-auth-in-route-handler` fails the
-  build on `readAuthToken`, `tokenMatches` or `ps_session` under `src/app/api/`.
-  The prohibition exists because the alternative gives no way to distinguish a
-  route that is deliberately public from one where somebody forgot, which is
-  exactly how this repo shipped an unauthenticated RCE chain before 2026-07.
+- **Route handlers do not read the root token directly.**
+  `design-lint no-auth-in-route-handler` fails on literal `readAuthToken`,
+  `tokenMatches` or `ps_session` use under `src/app/api/`. ADR-0012 and
+  ADR-0013 permit the exact sign-in and session-management handlers to call a
+  shared fresh-credential helper after `src/proxy.ts` has applied the common
+  boundary. The lint rule does not detect calls hidden behind that helper;
+  behavioural auth tests must prove the exception stays narrow.
 - **Core never imports a module.** ADR-0005, WG-ARCH-001. Module capability is
   reached through one of three named composition points, `src/lib/modules/server.ts`,
   `src/lib/frameworks/registry.ts` and `src/lib/runtime/`. Enforced by
@@ -242,6 +241,14 @@ because the whole point of this section is that it cannot quietly stop being tru
 **Ruled and NOT yet enforced.** Each carries its queue item; none may be quietly
 dropped:
 
+- **The complete authentication boundary remains an executable contract.**
+  `DOC-IDENT-001` supplies the deny-by-default rule, while ADR-0012 and
+  ADR-0013 make the fresh-credential auth lifecycle a deliberate exception.
+  `src/proxy.ts` gates requests; the exact auth handlers verify credentials
+  again; protected streams recheck access. The direct-use lint rule above
+  cannot prove this whole flow or detect a helper-based new exception.
+  T-0158 owns its behavioural proof and T-0164 audits the remaining detector
+  gap before the structural programme relies on it.
 - **A move must be provable output-neutral before it is made.** WG-ARCH-006 (B).
   The canary exists now and is gated (`docs/OUTPUT_CANARY.md`, `npm run
   canary:check` in CI), which discharges the condition WG-ARCH-001's option C
@@ -255,6 +262,9 @@ dropped:
   `retention_prune_runs` record. WO-0009 closed. This row read "Unmet" for some
   time after the work landed, which is its own lesson: a ratchet nobody re-reads
   understates what the system guarantees and keeps a closed work order looking open.
+  ADR-0014 adds a separate bound for `auth_sessions`: the next sign-in removes
+  rows unusable for at least 30 days in the same transaction as session
+  insertion. It does not change the opt-in readings prune or its ledger.
 - **Recorded growth survives the deletion of the history it came from.**
   WG-ARCH-003 (C for the per-Body record), ADR-0004. MET as of migration
   `031_agent_progression.sql`, verified 2026-08-30: `agent_progression_snapshots`

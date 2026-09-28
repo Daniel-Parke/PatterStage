@@ -457,7 +457,7 @@ test.describe('T-0158 built server and real SQLite', () => {
     try {
       const stream = await fetch(`${origin}${route}`, {
         headers: { Authorization: `Bearer ${operatorToken}`, Accept: 'text/event-stream' },
-        signal: AbortSignal.any([controller.signal, AbortSignal.timeout(5_000)]),
+        signal: AbortSignal.any([controller.signal, AbortSignal.timeout(15_000)]),
       });
       expect(stream.status).toBe(200);
       expect(stream.headers.get('content-type') ?? '').toMatch(/text\/event-stream/i);

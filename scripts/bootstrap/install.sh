@@ -245,7 +245,7 @@ Or clone into a different INSTALL_DIR, or remove this directory and re-run the i
             info "Running setup in existing directory..."
             bash scripts/bootstrap/setup.sh
             echo ""
-            ok "Setup complete! Start with: npm run start:network"
+            ok "Setup complete! Start with: npm run start (loopback)"
             exit 0
         else
             fail "setup.sh not found in $INSTALL_DIR — directory may be corrupted"
@@ -439,8 +439,8 @@ if [ -f "$INSTALL_DIR/.env.local" ]; then
 fi
 echo "Start the server:"
 echo "  cd $INSTALL_DIR"
-echo "  npm run start:network"
+echo "  npm run start"
 echo ""
 echo "Listen port: $PS_DONE_PORT  →  http://127.0.0.1:${PS_DONE_PORT}/"
 echo ""
-ok "Install complete. Start the server with: cd $INSTALL_DIR && npm run start:network"
+ok "Install complete. Start the server with: cd $INSTALL_DIR && npm run start"

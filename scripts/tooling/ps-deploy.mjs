@@ -23,6 +23,7 @@ import {
   OWNER_ONLY_FILE, copyOwnerOnly, restrictToOwner,
 } from "./_platform.mjs";
 import { loadEnvLocal, readEnvLocalValue } from "./_env-local.mjs";
+import { configuredPublicOrigin, selectedNetworkMode } from "./network-boundary.mjs";
 
 const SCRIPTS_TOOLING = dirname(fileURLToPath(import.meta.url));
 const SCRIPTS_ROOT = join(SCRIPTS_TOOLING, "..");
@@ -291,7 +292,15 @@ export async function resolvePort() {
 
 async function restartBody() {
   const port = await resolvePort();
-  const host = process.env.PS_NEXT_BIND_HOST || "0.0.0.0";
+  const host = process.env.PS_NEXT_BIND_HOST || "127.0.0.1";
+  if (!["127.0.0.1", "localhost", "::1"].includes(host)) {
+    try {
+      selectedNetworkMode(configuredPublicOrigin());
+    } catch (error) {
+      log("ps-restart.log", `ERROR: network restart refused: ${error instanceof Error ? error.message : "invalid configuration"}`);
+      return false;
+    }
+  }
   // Grace before we tear down the listener. On a bare `restart`, the HTTP
   // request that spawned us is being served BY the very server on `port`;
   // deploy-spawn (src/lib/deploy/deploy-spawn.ts) probes our liveness for ~2s before

@@ -21,7 +21,7 @@ is being retired by the rebuild, it says so rather than pretending.
 ```bash
 npm run dev              # dev server (PORT from .env.local)
 npm run build            # production build
-npm run start            # production server (binds 0.0.0.0, same as start:network)
+npm run start            # production server on 127.0.0.1
 npm run lint             # the whole gate, nine steps: see below
 npm test                 # jest
 npm run lint:design      # the design-law debt, by rule
@@ -66,8 +66,9 @@ because a gate you have to remember to run separately is not a gate.
   drift that made the suite unable to catch refactors. It was moved in when it
   reached zero, so a mock that lies about a module's shape is now a red build.
 
-On first boot an access token is minted into `PS_DATA_DIR/auth-token` and the
-sign-in URL is printed to the log. See [SECURITY.md](../SECURITY.md).
+On first boot an access token is minted into `PS_DATA_DIR/auth-token`. The log
+names its location, never the secret or a token-bearing URL. See
+[SECURITY.md](../SECURITY.md).
 
 ## Where data lives
 

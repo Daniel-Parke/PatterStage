@@ -113,7 +113,7 @@ function launch(root: string, preload: string, driver: string, env: Record<strin
 function runDeployBackup(bothCandidates: boolean): { fixture: ReturnType<typeof fixture>; result: ReturnType<typeof spawnSync>; copied: CopyEvent[] } {
   const testData = fixture(bothCandidates);
   mkdirSync(join(testData.root, "scripts", "tooling"), { recursive: true });
-  for (const source of ["scripts/tooling/ps-deploy.mjs", "scripts/tooling/_platform.mjs", "scripts/tooling/_env-local.mjs"]) {
+  for (const source of ["scripts/tooling/ps-deploy.mjs", "scripts/tooling/_platform.mjs", "scripts/tooling/_env-local.mjs", "scripts/tooling/network-boundary.mjs"]) {
     copyFileSync(join(ROOT, source), join(testData.root, source));
   }
   const driver = join(testData.root, "deploy-driver.mjs");

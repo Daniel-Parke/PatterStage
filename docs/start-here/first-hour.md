@@ -91,19 +91,17 @@ reachable gateway as a usable agent.
 agent's `.env`; the two `API_SERVER_KEY` values do not match; or something else
 holds port 8642.
 
-## 2. Start PatterStage and open the link it prints
+## 2. Start PatterStage and sign in locally
 
 ```bash
 npm run start
 ```
 
-The first `[auth]` line of the output carries a one-time sign-in URL of the form
-`http://127.0.0.1:<PORT>/?ps_token=<token>`. Open it once. The token is swapped
-for a session cookie and removed from the address bar, so you never paste it
-again in that browser.
-
-If you scrolled past the line, the token is the single line in
-`<PS_DATA_DIR>/auth-token`, and restarting the server prints the URL again.
+Open `http://127.0.0.1:<PORT>/`. The sign-in page asks for the operator token,
+which is the single line in `<PS_DATA_DIR>/auth-token`. Read it locally. The boot
+log prints the resolved file location but never the token or a token-bearing URL.
+The browser receives an opaque session cookie. Sign in again after every server
+restart.
 
 ## 3. Read the Subsystems panel before anything else
 

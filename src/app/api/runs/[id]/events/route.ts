@@ -16,6 +16,7 @@ import { NextRequest } from "next/server";
 import { runtime } from "@/lib/runtime";
 import { getRun } from "@/lib/runs/runs-repository";
 import { messageFromError } from "@/lib/api/api-fetch";
+import { streamAuthorizer } from "@/lib/auth/stream-guard";
 
 /**
  * The run-level failure event.
@@ -42,6 +43,7 @@ function wireEventName(type: string): string {
 }
 
 export async function GET(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
+  const authorised = streamAuthorizer(request);
   const { id } = await ctx.params;
   const run = getRun(id);
   if (!run) {
@@ -56,23 +58,30 @@ export async function GET(request: NextRequest, ctx: { params: Promise<{ id: str
   const encoder = new TextEncoder();
 
   // One controller for the upstream fetch, pulled by either end going away.
-  // `request` is optional-chained because a unit harness hands this handler a
-  // bare null; the stream's own cancel() is the other, always-present, pull.
   const upstream = new AbortController();
   const abortUpstream = () => upstream.abort();
-  const requestSignal: AbortSignal | null = request?.signal ?? null;
-  requestSignal?.addEventListener("abort", abortUpstream, { once: true });
+  const requestSignal = request.signal;
+  requestSignal.addEventListener("abort", abortUpstream, { once: true });
   let closed = false;
+  let guardInterval: ReturnType<typeof setInterval> | null = null;
 
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
-      const emit = (event: string, data: unknown) => {
+      const stop = () => {
         if (closed) return;
+        closed = true;
+        upstream.abort();
+        if (guardInterval) clearInterval(guardInterval);
+        try { controller.close(); } catch { /* client already closed */ }
+      };
+      guardInterval = setInterval(() => { if (!authorised()) stop(); }, 1000);
+      const emit = (event: string, data: unknown) => {
+        if (closed || !authorised()) { stop(); return; }
         try {
           controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
         } catch {
           // The client cancelled between the check and the enqueue.
-          closed = true;
+          stop();
         }
       };
       try {
@@ -93,7 +102,8 @@ export async function GET(request: NextRequest, ctx: { params: Promise<{ id: str
         }
       } finally {
         closed = true;
-        requestSignal?.removeEventListener("abort", abortUpstream);
+        if (guardInterval) clearInterval(guardInterval);
+        requestSignal.removeEventListener("abort", abortUpstream);
         try {
           controller.close();
         } catch {
@@ -103,6 +113,7 @@ export async function GET(request: NextRequest, ctx: { params: Promise<{ id: str
     },
     cancel() {
       closed = true;
+      if (guardInterval) clearInterval(guardInterval);
       upstream.abort();
     },
   });

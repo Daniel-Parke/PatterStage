@@ -13,7 +13,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { Copy, HardDrive, Settings, Archive, Download } from "lucide-react";
+import { Copy, HardDrive, Settings, Archive, Download, ShieldCheck } from "lucide-react";
 
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
@@ -23,6 +23,7 @@ import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { useToast } from "@/components/ui/Toast";
 import { DeployControls } from "@/components/system/DeployControls";
+import SessionManager from "@/components/auth/SessionManager";
 import { useApiResource } from "@/hooks/useApiResource";
 import { useVersionFooter } from "@/hooks/useVersionFooter";
 import { formatRuntimeStatus, type RuntimeStatus } from "@/lib/status/runtime-status-format";
@@ -149,6 +150,12 @@ export default function SystemPage() {
             </>
           )}
         </SystemCard>
+
+        {s?.authMode === "token" && (
+          <SystemCard icon={ShieldCheck} title="Browser sessions">
+            <SessionManager />
+          </SystemCard>
+        )}
 
         <SystemCard icon={Download} title="Updates">
           <DeployControls state={deploy} />

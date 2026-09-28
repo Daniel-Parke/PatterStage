@@ -37,6 +37,7 @@ itself. Do not build on a proposed ADR without saying that is what you are doing
 | [ADR-0011](../../org/decisions/ADR-0011-t-0144-unsanctioned-org-edits.md) | T-0144 edited the protected set without an ADR: the four path lines are ratified, the closed records restored | accepted |
 | [ADR-0012](../../org/decisions/ADR-0012-browser-sessions.md) | Replace raw-token browser cookies with revocable opaque sessions and a declared transport boundary | accepted |
 | [ADR-0013](../../org/decisions/ADR-0013-session-boundary-clarifications.md) | Complete the session transport, rotation, read-only and onboarding boundary | accepted |
+| [ADR-0014](../../org/decisions/ADR-0014-auth-session-retention.md) | Prune expired or revoked browser-session metadata after 30 days at the next sign-in | accepted |
 
 ## Relationship to the EOS
 

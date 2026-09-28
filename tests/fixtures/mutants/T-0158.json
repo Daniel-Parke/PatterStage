@@ -1,0 +1,38 @@
+{
+  "task": "T-0158",
+  "why": "The frozen Jest oracles must detect missing session migration, a broadened public sign-in path and disclosure of the root token as a browser cookie. Built-server expiry, revocation and transport cases remain in the Playwright acceptance suite.",
+  "mutants": [
+    {
+      "id": "m1-skip-auth-session-version",
+      "file": "src/lib/db/apply-auth-sessions-migration.ts",
+      "anchor": "const AUTH_SESSIONS_SCHEMA_VERSION = 43;",
+      "replacement": "const AUTH_SESSIONS_SCHEMA_VERSION = 42;",
+      "tests": ["tests/unit/t0158-session-store.test.ts"],
+      "why": "A fresh database must reach v43 and contain the auth_sessions table."
+    },
+    {
+      "id": "m2-ignore-required-auth-sql",
+      "file": "src/lib/db/apply-auth-sessions-migration.ts",
+      "anchor": "const sql = readFileSync(join(migrationsDir, FILE), \"utf-8\");",
+      "replacement": "const sql = \"\";",
+      "tests": ["tests/unit/t0158-session-store.test.ts"],
+      "why": "Missing migration SQL must fail closed rather than letting later requests in."
+    },
+    {
+      "id": "m3-open-every-auth-post",
+      "file": "src/proxy.ts",
+      "anchor": "request.method === \"POST\" && pathname === \"/api/auth/sign-in\"",
+      "replacement": "request.method === \"POST\" && pathname.startsWith(\"/api/auth/\")",
+      "tests": ["tests/unit/t0158-session-proxy.test.ts"],
+      "why": "Only the exact body-token sign-in path may bypass pre-existing browser authentication."
+    },
+    {
+      "id": "m4-cookie-contains-root-token",
+      "file": "src/proxy.ts",
+      "anchor": "response.cookies.set(SESSION_COOKIE, session.secret,",
+      "replacement": "response.cookies.set(SESSION_COOKIE, handoff,",
+      "tests": ["tests/unit/t0158-session-proxy.test.ts"],
+      "why": "The deliberate URL hand-off must issue an opaque cookie and never write the operator token into it."
+    }
+  ]
+}

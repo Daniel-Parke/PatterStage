@@ -16,9 +16,55 @@ import { getAgentGateway } from "@/lib/runtime/gateway";
 import { describeGatewayFailure } from "@/lib/runtime/gateway-error";
 import { getGatewayKey } from "@/lib/runtime/secrets";
 import { CHAT_DEFAULT_MODEL } from "@/types/chat";
+import { streamAuthorizer } from "@/lib/auth/stream-guard";
+
+function guardedChatBody(request: NextRequest, body: ReadableStream<Uint8Array>, upstream: AbortController): ReadableStream<Uint8Array> {
+  const authorised = streamAuthorizer(request);
+  const reader = body.getReader();
+  let closed = false;
+  let guardInterval: ReturnType<typeof setInterval> | null = null;
+  const abortSource = () => {
+    upstream.abort();
+    void reader.cancel().catch(() => {});
+    if (guardInterval) clearInterval(guardInterval);
+  };
+
+  return new ReadableStream<Uint8Array>({
+    async start(controller) {
+      const close = () => {
+        if (closed) return;
+        closed = true;
+        abortSource();
+        try { controller.close(); } catch { /* downstream already closed */ }
+      };
+      guardInterval = setInterval(() => { if (!authorised()) close(); }, 1000);
+      try {
+        while (!closed) {
+          if (!authorised()) { close(); return; }
+          const chunk = await reader.read();
+          if (chunk.done) break;
+          if (!authorised()) { close(); return; }
+          controller.enqueue(chunk.value);
+        }
+        close();
+      } catch (error) {
+        if (!closed) {
+          closed = true;
+          abortSource();
+          controller.error(error);
+        }
+      }
+    },
+    cancel() {
+      closed = true;
+      abortSource();
+    },
+  });
+}
 
 /** Shared gateway fetch — both streaming and non-streaming paths use this. */
 async function fetchGateway(
+  request: NextRequest,
   apiUrl: string,
   gatewayBody: Record<string, unknown>,
   isStreaming: boolean,
@@ -28,6 +74,8 @@ async function fetchGateway(
   // API_SERVER_KEY setup had written answered 401 to every fast turn
   // (T-0095, D44).
   const key = getGatewayKey();
+  const upstream = new AbortController();
+  request.signal?.addEventListener("abort", () => upstream.abort(), { once: true });
   const response = await fetch(apiUrl, {
     method: "POST",
     headers: {
@@ -35,6 +83,7 @@ async function fetchGateway(
       ...(key ? { Authorization: `Bearer ${key}` } : {}),
     },
     body: JSON.stringify(gatewayBody),
+    signal: upstream.signal,
   });
 
   if (!response.ok) {
@@ -46,8 +95,8 @@ async function fetchGateway(
   }
 
   if (isStreaming) {
-    // Return the streaming response directly
-    return new Response(response.body, {
+    if (!response.body) return NextResponse.json({ error: "Gateway returned no stream." }, { status: 502 });
+    return new Response(guardedChatBody(request, response.body, upstream), {
       headers: {
         "Content-Type": "text/event-stream",
         "Cache-Control": "no-cache",
@@ -58,6 +107,14 @@ async function fetchGateway(
 
   // Non-streaming — return JSON
   const data = await response.json();
+  // A gateway can finish after this browser session was revoked. The proxy
+  // checked entry; recheck the actual caller before releasing its completion.
+  if (!streamAuthorizer(request)()) {
+    return NextResponse.json({ error: "Browser session is no longer authorised." }, {
+      status: 401,
+      headers: { "Cache-Control": "no-store" },
+    });
+  }
   return ok(data);
 }
 
@@ -89,7 +146,7 @@ export async function POST(request: NextRequest) {
     // settles it AFTER the block has exited, so the catch below never saw a
     // connection failure and the handler answered a bodiless 500 — the
     // operator's chat failing with nothing on screen at all (T-0080).
-    return await fetchGateway(apiUrl, gatewayBody, isStreaming);
+    return await fetchGateway(request, apiUrl, gatewayBody, isStreaming);
   } catch (error) {
     // The third raw fetch to the gateway in the product, and the only one on
     // the fast-mode chat path. Same treatment as HermesRuntime's two: name the

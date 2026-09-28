@@ -1,22 +1,11 @@
 // ═══════════════════════════════════════════════════════════════
 // auth-token.ts — the single-operator access token
 //
-// PatterStage is a single-operator control plane, so authentication is one
-// shared secret rather than a user table: a random token minted at first boot
-// into PS_DATA_DIR/auth-token (mode 0600). Every request is checked against it
-// in src/proxy.ts — NOT in route handlers.
-//
-// Two ways to present it:
-//   • `Authorization: Bearer <token>`  — scripts, curl, the deploy runner.
-//   • the `ps_session` cookie          — the browser, set by the proxy after a
-//     one-time `?ps_token=<token>` hand-off (the Jupyter model).
-//
-// Deliberately NOT a password/login: there is no user to name, and a login form
-// would imply an account system this app does not have and should not grow.
+// Scripts use the operator token as Bearer. Browsers use revocable sessions.
 // ═══════════════════════════════════════════════════════════════
 
 import { randomBytes, timingSafeEqual } from "crypto";
-import { mkdirSync, readFileSync, statSync, writeFileSync } from "fs";
+import { mkdirSync, readFileSync, writeFileSync } from "fs";
 
 import { OWNER_ONLY_DIR, OWNER_ONLY_FILE, restrictToOwner } from "@/lib/fs/fs-helpers";
 
@@ -36,47 +25,26 @@ export function getAuthMode(): AuthMode {
   return readEnv("PS_AUTH_MODE")?.toLowerCase() === "none" ? "none" : "token";
 }
 
-export function getAuthTokenPath(): string {
+function getAuthTokenPath(): string {
   return readEnv("PS_AUTH_TOKEN_FILE") ?? PS_DATA_DIR + "/auth-token";
 }
 
-/**
- * Where the ACTIVE token actually comes from, resolved the same way
- * `readAuthToken()` resolves it.
- *
- * The 401 page used to say "the token lives in PS_DATA_DIR/auth-token", which
- * is the name of a variable, not a place: a first-time user who lost the boot
- * line has no way to expand it. This returns the real answer for the install in
- * front of them, including the container case where the file is not read at all
- * because `PS_AUTH_TOKEN` won.
- */
+/** Report the active token source without exposing its value. */
 export function describeTokenSource(): { kind: "env" | "file"; location: string } {
   if (readEnv("PS_AUTH_TOKEN")) return { kind: "env", location: "PS_AUTH_TOKEN" };
   return { kind: "file", location: getAuthTokenPath() };
 }
 
-// The token is read on every request, so cache it and re-read only when the
-// file's mtime/size changes (statSync is cheap; a rotated token takes effect
-// without a restart).
-let cached: { token: string; mtimeMs: number; size: number } | null = null;
-
-/**
- * The active token, or null when none is configured. `PS_AUTH_TOKEN` wins so a
- * container can inject it without a writable data dir.
- */
+/** The active token; the environment value takes precedence over the file. */
 export function readAuthToken(): string | null {
   const fromEnv = readEnv("PS_AUTH_TOKEN");
   if (fromEnv) return fromEnv;
 
   const path = getAuthTokenPath();
   try {
-    const stat = statSync(path);
-    if (cached && cached.mtimeMs === stat.mtimeMs && cached.size === stat.size) {
-      return cached.token;
-    }
+    // Read on every request: replacement may preserve size and timestamp.
     const token = readFileSync(path, "utf-8").trim();
     if (!token) return null;
-    cached = { token, mtimeMs: stat.mtimeMs, size: stat.size };
     return token;
   } catch {
     return null;
@@ -101,7 +69,6 @@ export function ensureAuthToken(): string {
   restrictToOwner(dir, OWNER_ONLY_DIR);
   writeFileSync(path, token + "\n", { encoding: "utf-8", mode: OWNER_ONLY_FILE });
   restrictToOwner(path, OWNER_ONLY_FILE);
-  cached = null;
   return token;
 }
 

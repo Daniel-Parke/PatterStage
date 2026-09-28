@@ -12,7 +12,7 @@ compiled_from: normalised
 
 Dry reference for REST routes: envelope shape, inventory, auth notes. For behaviour in plain language, see [USER_WALKTHROUGH_GUIDE.md](../README.md) or the feature docs linked from [README.md](../README.md).
 
-All JSON API routes return the envelope:
+Most JSON API routes return the envelope:
 
 ```typescript
 { data?: T; error?: string }
@@ -20,12 +20,13 @@ All JSON API routes return the envelope:
 
 Some error responses also include `details` (Zod validation). Handlers must call `logApiError(route, context, error)` from `@/lib/api/api-logger` in catch blocks.
 
-Seven routes deliberately sit outside the envelope, and a client integrator should special-case them:
+These routes deliberately sit outside the envelope, and a client integrator should special-case them:
 
 - `/api/health` and `/api/healthz` return a bare `{ ok: true }` (no `data` wrapper) for unauthenticated JSON liveness probes.
 - `/healthz` returns plain-text `ok` (200, `text/plain`, `no-store`) for unauthenticated load-balancer and uptime probes.
 - The three SSE routes (`/api/runs/[id]/events`, `/api/composer/runs/[id]/events`, `/api/laboratory/research/[id]/events`) return a `text/event-stream` body, and their pre-stream errors are plain text, not JSON.
 - `/api/laboratory/research/[id]/export` returns raw HTML with a `Content-Disposition` header.
+- The four `/api/auth/` lifecycle routes return direct JSON results or, for successful sign-in, a redirect. They do not return the standard `data` envelope.
 
 ## Route inventory
 
@@ -42,6 +43,10 @@ Every `route.ts` under `src/app/api` has a row, here or in the Chat / Composer /
 | `/api/agent/profiles/sync/import` | `GET`, `POST` | `GET` lists profiles discovered on Hermes disk (each with an `inDatabase` flag); `POST` imports them into the DB (`{ importSkills }`, `{ importAllDiscovered }`, or `{ slug }`). |
 | `/api/agents` | `GET` | Inspect running Hermes agent processes (OS-dependent). Not the same as `agent/profiles`. |
 | `/api/agents/experience` | `GET` | Every profile's accumulated Agent Experience, ranked. Derived from completed runs, active days, enabled skills, attached toolsets and memory facts. The surviving half of the deleted benchmark subsystem (ADR-0004): no capability claim, only what the agent actually did or was given. |
+| `/api/auth/sign-in` | `POST` | Public body-token sign-in. Requires the exact configured browser `Origin`, a fresh operator token and a bounded body. On success, commits an opaque browser session, sets its `HttpOnly` cookie and redirects with **303**. An invalid credential is throttled and never sets a session. |
+| `/api/auth/session` | `DELETE` | Revoke the current browser session and clear its cookie. Requires an authenticated request and an exact `Origin` when using the cookie. |
+| `/api/auth/sessions/list` | `POST` | List active browser-session metadata after a freshly supplied operator token, by Bearer header or request body. Never returns session secrets or hashes. |
+| `/api/auth/sessions/revoke` | `POST` | Revoke one browser session by `sessionId` after a freshly supplied operator token. Only the specified row is revoked. |
 | `/api/config` | `GET`, `PUT` | Read/update parsed Hermes config content. `GET` masks every `api_key` and, when the file did not parse, carries `configError` beside the (empty) payload. `PUT` answers **400** when a value breaks its declared type, option list or min/max, and a `null` value deletes the key so Hermes falls back to its own default; the write refreshes `agent_root.config_yaml` so a later Push cannot revert it. |
 | `/api/credentials` | `GET`, `POST` | API key credentials (masked list; create via POST). |
 | `/api/credentials/[id]` | `PATCH`, `DELETE` | `PATCH { apiKey }` rotates the stored key and rewrites the provider's Hermes `.env` variable; a failed `.env` write puts the old key back and answers **500**. `DELETE` removes the credential: its `.env` variable goes with it unless a same-provider sibling still uses it, and the models that pointed at it are unlinked; the answer says which happened. `GET` returns **405**. |
@@ -255,7 +260,7 @@ Managed crontab lines must run a script **under** `scriptsDir` (default `PS_DATA
 
 ## Auth and safety notes
 
-- **`PS_READ_ONLY`** rejects unsafe HTTP **methods** with a 503, in `src/proxy.ts`, before any handler runs. Reads keep working, which is the point of the mode. It applies to every route uniformly by method. Three reads do bookkeeping writes of their own on every poll (the `/api/stats` progression capture, the toolsets normalisation, the `/api/sessions` state.db sync); each skips that write under the mode and still answers, and the linter that forbids a read-only guard in a GET accepts exactly those three, each with its reason on the line above.
+- **`PS_READ_ONLY`** rejects application writes with a 503 in `src/proxy.ts`, before their handlers run. Its exact authentication-lifecycle exceptions are `POST /api/auth/sign-in`, `DELETE /api/auth/session`, `POST /api/auth/sessions/list` and `POST /api/auth/sessions/revoke`. A qualified top-level navigation may renew the browser session. Three reads do bookkeeping writes on every poll (the `/api/stats` progression capture, toolsets normalisation and `/api/sessions` state.db sync); each skips that write under read-only mode and still answers.
 - The refusal happens **after** authentication, so an unauthenticated write gets a 401 rather than learning whether the instance is read-only.
 - Routes used to carry their own `requireAuth()` guard. It authenticated nothing, and because 34 GET handlers called it the mode blanked the dashboard it exists to enable. It was deleted in T-0048; `scripts/tooling/check-read-only-guards.mjs` fails the build if one comes back.
 - Deploy actions (`POST /api/update`) require `PS_ENABLE_DEPLOY_API`. Setup writes it `true` on a fresh install (only when absent, so a choice survives a re-run); set it `0`/`false`/`no` to close the route, and the sidebar block says so before the click. Unset, the gate falls back to `NODE_ENV !== "production"`, so an install that predates setup writing it is *enabled* under `npm run dev` and closed under `npm run start`.

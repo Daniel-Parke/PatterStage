@@ -1,16 +1,16 @@
 {
-  "measuredAt": "2026-09-27",
+  "measuredAt": "2026-09-28",
   "counts": {
-    "srcLines": 101155,
-    "testLines": 130580,
-    "scriptsLines": 13694,
-    "srcRepeatedWindowLines": 1000,
-    "testRepeatedWindowLines": 4789,
+    "srcLines": 101970,
+    "testLines": 133067,
+    "scriptsLines": 13763,
+    "srcRepeatedWindowLines": 1012,
+    "testRepeatedWindowLines": 4786,
     "routesWithTryCatch": 18,
     "handRolledReadHooks": 5,
     "writeHooksWithoutMutation": 0,
     "repeatedTypeShapeFiles": 2,
-    "oneImporterComponents": 103,
+    "oneImporterComponents": 104,
     "libRootFiles": 6,
     "commentEssays": 9,
     "suitesMockingDbInline": 14
@@ -750,6 +750,31 @@
       "measuredAt": "2026-09-27",
       "rise": "testLines rose from 130502 to 130580",
       "reason": "T-0179 adds 78 test lines for the independent paired-React and peer-compatibility oracle; repeated windows remain 4,789"
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "srcLines rose from 101155 to 101970",
+      "reason": "T-0158 opaque browser-session security: new auth/session source and scripts, independent security oracles, one sign-in component, and explicit session interfaces; no legacy target changed"
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "testLines rose from 130580 to 133067",
+      "reason": "T-0158 opaque browser-session security: new auth/session source and scripts, independent security oracles, one sign-in component, and explicit session interfaces; no legacy target changed"
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "scriptsLines rose from 13694 to 13763",
+      "reason": "T-0158 opaque browser-session security: new auth/session source and scripts, independent security oracles, one sign-in component, and explicit session interfaces; no legacy target changed"
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "srcRepeatedWindowLines rose from 1000 to 1012",
+      "reason": "T-0158 opaque browser-session security: new auth/session source and scripts, independent security oracles, one sign-in component, and explicit session interfaces; no legacy target changed"
+    },
+    {
+      "measuredAt": "2026-09-28",
+      "rise": "oneImporterComponents rose from 103 to 104",
+      "reason": "T-0158 opaque browser-session security: new auth/session source and scripts, independent security oracles, one sign-in component, and explicit session interfaces; no legacy target changed"
     }
   ]
 }

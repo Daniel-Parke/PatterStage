@@ -197,7 +197,7 @@ async function main() {
   log("║       Setup Complete!                     ║");
   log("╚══════════════════════════════════════════╝");
   log(`PORT: ${port} · PS_DATA_DIR: ${dataRoot} · HERMES_HOME: ${HERMES_HOME}`);
-  log("Start:  npm run start:network");
+  log("Start:  npm run start (loopback). Network startup needs an explicit mode; see docs/SECURITY.md.");
 }
 
 main().catch((e) => {

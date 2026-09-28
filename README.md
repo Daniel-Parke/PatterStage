@@ -62,20 +62,20 @@ Reboot if prompted, open the Ubuntu app, and run the four commands above inside
 it. WSL2 forwards `localhost`, so the console opens in an ordinary Windows
 browser at the address the server prints.
 
-### Open the link the server prints, not the bare address
+### Sign in from the local address
 
-PatterStage has no login. It mints one random access token on first boot and
-checks every request against it, so `http://127.0.0.1:<PORT>/` answers 401 on
-purpose. The first `[auth]` line of the server output is your way in:
+PatterStage mints one operator token on first boot. Open
+`http://127.0.0.1:<PORT>/`; the sign-in page asks for the token. The boot log
+names the local file without printing the secret:
 
 ```
-[auth] Open PatterStage at http://127.0.0.1:<PORT>/?ps_token=<your token>
-[auth] Token file: <PS_DATA_DIR>/auth-token
+[auth] Read the operator token locally from <PS_DATA_DIR>/auth-token, then sign in.
 ```
 
-Open that URL once. The token is exchanged for a session cookie and stripped
-back out of the address bar, so you paste it once per browser. Lose the line and
-the token is the single line in that file; restarting prints the URL again.
+Read the single line in that file locally and enter it on the sign-in page.
+The browser receives a revocable session cookie, never the operator token.
+You must sign in again after a server restart. The deliberate `?ps_token=`
+handoff still works for existing bookmarks, but no token-bearing URL is logged.
 
 That token grants mission dispatch, and the agent's toolset includes terminal
 access. Treat it as root on the host, and read

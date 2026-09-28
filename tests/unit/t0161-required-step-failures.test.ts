@@ -167,7 +167,7 @@ function runDeployFixture(mode: "legacy-failure" | "config-present" | "config-lo
   mkdirSync(hermesHome);
   writeFileSync(join(dataDir, "patterstage.db"), "existing database sentinel");
   writeFileSync(join(hermesHome, "config.yaml"), "model: fixture-only\n");
-  for (const source of ["scripts/tooling/ps-deploy.mjs", "scripts/tooling/_platform.mjs", "scripts/tooling/_env-local.mjs"]) {
+  for (const source of ["scripts/tooling/ps-deploy.mjs", "scripts/tooling/_platform.mjs", "scripts/tooling/_env-local.mjs", "scripts/tooling/network-boundary.mjs"]) {
     copyFileSync(join(ROOT, source), join(root, source));
   }
   writeFileSync(preload, DEPLOY_PRELOAD);

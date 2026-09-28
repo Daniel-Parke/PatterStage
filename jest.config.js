@@ -48,9 +48,11 @@ const config = {
     "!src/**/layout.tsx",
   ],
   coverageThreshold,
+  // Relative globs also match a Windows checkout under a dot-directory.
+  // next/jest otherwise normalises <rootDir> into a mixed-separator pattern.
   testMatch: [
-    "<rootDir>/tests/unit/**/*.test.ts",
-    "<rootDir>/tests/unit/**/*.test.tsx",
+    "**/tests/unit/**/*.test.ts",
+    "**/tests/unit/**/*.test.tsx",
   ],
   // Keep jest out of tmp/ entirely.
   //

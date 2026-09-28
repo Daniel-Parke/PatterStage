@@ -20,8 +20,10 @@ cleanup() {
 trap cleanup EXIT
 
 docker run -d --name "$NAME" \
-  -p "${HOST_PORT}:42069" \
+  -p "127.0.0.1:${HOST_PORT}:42069" \
   -e PORT=42069 \
+  -e PS_INSECURE_LAN_HTTP=1 \
+  -e "PS_PUBLIC_ORIGIN=http://127.0.0.1:${HOST_PORT}" \
   -e NODE_ENV=production \
   -e PS_ENABLE_DEPLOY_API=true \
   "$IMAGE"

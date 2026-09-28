@@ -8,6 +8,7 @@
 import { NextRequest } from "next/server";
 import { ensureDb } from "@/lib/db";
 import { sseStream } from "@/lib/sse/event-stream";
+import { streamAuthorizer } from "@/lib/auth/stream-guard";
 import {
   getResearchRun,
   listResearchSteps,
@@ -23,6 +24,7 @@ export async function GET(request: NextRequest, ctx: Ctx) {
   const { id } = await ctx.params;
   ensureDb();
   return sseStream({
+    authorize: streamAuthorizer(request),
     snapshot: () => {
       const run = getResearchRun(id);
       if (!run) return null;

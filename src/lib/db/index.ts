@@ -27,7 +27,7 @@ import Database, { type Database as _DatabaseType } from "better-sqlite3";
 import { join } from "path";
 import { existsSync, readFileSync, readdirSync, statSync } from "fs";
 import { PS_DATA_DIR, getDbPath } from "../host/paths";
-import { getSchemaVersion, setSchemaVersion } from "../db-schema";
+import { getSchemaVersion, MIGRATION_HEAD_SCHEMA_VERSION, setSchemaVersion } from "../db-schema";
 import {
   countMissionCategories,
   missionCategoriesTableExists,
@@ -75,6 +75,7 @@ import { applyFrameworksMigration } from "./apply-frameworks-migration";
 import { applyNeutralColumnNames } from "./apply-neutral-column-names";
 import { applyComposerRejectedMigration } from "./apply-composer-rejected-migration";
 import { applyComposerNodeCancelledMigration } from "./apply-composer-node-cancelled-migration";
+import { applyAuthSessionsMigration, assertAuthSessionsSchema } from "./apply-auth-sessions-migration";
 
 const dataDir = PS_DATA_DIR;
 const DB_PATH = getDbPath(dataDir);
@@ -82,6 +83,7 @@ const DB_PATH = getDbPath(dataDir);
 // ── Connection factory ─────────────────────────────────────────
 
 let _db: Database.Database | null = null;
+let _migrationFailure: unknown = null;
 
 /**
  * Narrow the database copies an older install left lying in the data directory.
@@ -124,6 +126,7 @@ function restrictExistingDatabaseFiles(dir: string): void {
 
 /** Open (or reuse) the SQLite database connection. Runs migrations on first open. */
 export function getDb(): Database.Database {
+  if (_migrationFailure) throw _migrationFailure;
   if (_db) return _db;
 
   // Importing this module during a production build must not mutate the data
@@ -131,32 +134,40 @@ export function getDb(): Database.Database {
   ensureDir(dataDir);
   restrictToOwner(dataDir, OWNER_ONLY_DIR);
   _db = new Database(DB_PATH);
-  // SQLite creates -wal and -shm with the database's own mode, so narrowing the
-  // database before WAL is enabled narrows all three.
-  restrictToOwner(DB_PATH, OWNER_ONLY_FILE);
-  restrictExistingDatabaseFiles(dataDir);
-  _db.pragma("journal_mode = WAL");
-  _db.pragma("foreign_keys = ON");
-  _db.pragma("busy_timeout = 5000");
+  try {
+    // SQLite creates -wal and -shm with the database's own mode, so narrowing
+    // the database before WAL is enabled narrows all three.
+    restrictToOwner(DB_PATH, OWNER_ONLY_FILE);
+    restrictExistingDatabaseFiles(dataDir);
+    _db.pragma("journal_mode = WAL");
+    _db.pragma("foreign_keys = ON");
+    _db.pragma("busy_timeout = 5000");
 
-  // Run migrations to convergence. A brand-new DB applies the baseline (v3) and
-  // returns early; the incremental appliers (v4→) only run on the *next* pass.
-  // Loop here — exactly like `npm run db:migrate` — so a single getDb() reaches
-  // the terminal schema version, instead of leaving a fresh DB half-migrated for
-  // the whole process (the old "across boot" footgun: a first boot on an empty
-  // PS_DATA_DIR would 500 with "no such table: composer_workflows"). The appliers
-  // are idempotent + version-guarded, so the steady state is a cheap no-op pass.
-  // runMigrations may reopen `_db` (baseline rebuild), so re-read it each pass.
-  runMigrations(_db);
-  let last = getSchemaVersion(_db);
-  for (let i = 0; i < 8; i++) {
-    runMigrations(_db!);
-    const next = getSchemaVersion(_db!);
-    if (next === last) break;
-    last = next;
+    // A fresh DB applies the baseline (v3) on the first pass. Later passes
+    // climb the incremental chain. Re-read _db because a baseline rebuild can
+    // replace the connection.
+    runMigrations(_db);
+    let last = getSchemaVersion(_db);
+    for (let i = 0; i < 8; i++) {
+      runMigrations(_db!);
+      const next = getSchemaVersion(_db!);
+      if (next === last) break;
+      last = next;
+    }
+
+    if (getSchemaVersion(_db!) !== MIGRATION_HEAD_SCHEMA_VERSION) {
+      throw new Error("Database migrations did not reach the required schema version");
+    }
+    assertAuthSessionsSchema(_db!);
+    return _db!;
+  } catch (error) {
+    _migrationFailure = error;
+    try {
+      if (_db?.open) _db.close();
+    } catch { /* retain the original migration failure */ }
+    _db = null;
+    throw error;
   }
-
-  return _db!;
 }
 
 // ── Shorthand helpers ─────────────────────────────────────────
@@ -381,6 +392,7 @@ export function runMigrations(database: Database.Database): void {
   // custom_model_id, so a custom fallback keeps what the operator typed
   // instead of reading Custom from a JOIN it has no row in.
   applyFallbackIdentityMigration(database, migrationsDir);
+  applyAuthSessionsMigration(database, migrationsDir);
 }
 
 // ── Bootstrap: ensure DB + schema exist ───────────────────────
@@ -395,8 +407,8 @@ let _bootstrapped = false;
  */
 export function ensureDb(): void {
   if (_bootstrapped) return;
-  _bootstrapped = true;
   getDb(); // forces open + migrate
+  _bootstrapped = true;
 }
 
 export interface SchemaHealth {

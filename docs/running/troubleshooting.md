@@ -20,13 +20,12 @@ else, because it usually names the problem outright.
 ## Getting in
 
 **"PatterStage needs your access token", or a bare 401.**
-Working as designed. There is no login; one random token is minted on first boot
-and every request is checked against it. Open
-`http://127.0.0.1:<PORT>/?ps_token=<token>` once and the token is exchanged for
-a session cookie. The token is the single line in `<PS_DATA_DIR>/auth-token`,
-and restarting the server prints the full URL on its first `[auth]` line.
-Deleting the token file and restarting mints a new one and signs every browser
-out. See [security](../SECURITY.md).
+Working as designed. Read the operator token locally from
+`<PS_DATA_DIR>/auth-token` and enter it on the sign-in page. The boot log names
+the file without printing its contents. Browser sessions are opaque and require
+sign-in after every server restart. Deleting a lost token file and restarting
+mints a new token; this also invalidates existing Bearer clients. See
+[security](../SECURITY.md).
 
 **The address does not answer at all.**
 Read `PORT` in `.env.local`. Either something else has the port, in which case

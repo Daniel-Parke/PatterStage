@@ -1,24 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
-// proxy.ts — the ONE authentication + CSRF + read-only boundary
-//
-// Next 16 renamed `middleware` to `proxy` and runs it on the Node.js runtime,
-// so this file can read the token file directly. It runs before every route.
-//
-// Why here and not in route handlers: `requireAuth()` in src/lib/api/api-auth.ts
-// never authenticated anything (it only checked the read-only flag), so all 100
-// API routes were open to anyone who could reach the port — and BOTH start
-// scripts bind 0.0.0.0, not just `start:network`. `next start` has no loopback
-// default; with no -H it listens on every interface and prints the LAN URL. The
-// naming used to suggest otherwise here and in the README, which made the
-// exposure sound opt-in when it is the default. A boundary that each new route
-// has to remember to opt into is not a boundary. This one cannot be forgotten.
-//
-// Three checks, in order:
-//   1. read-only     — PS_READ_ONLY rejects unsafe METHODS (not, as before,
-//                      whichever handlers happened to call the guard).
-//   2. authentication — Bearer token or the ps_session cookie.
-//   3. CSRF          — a cookie-authenticated unsafe request must be same-origin,
-//                      so a page you visit cannot drive your control plane.
+// proxy.ts — authentication, exact-origin CSRF and read-only boundary.
+// Bearer clients retain the operator token. Browsers use revocable, opaque
+// SQLite sessions. Routes recheck credentials before protected stream output.
 // ═══════════════════════════════════════════════════════════════
 
 import { NextResponse, type NextRequest } from "next/server";
@@ -31,6 +14,8 @@ import {
   readAuthToken,
   tokenMatches,
 } from "@/lib/api/auth-token";
+import { createBrowserSession, SessionCredentialChangedError, validateBrowserSession } from "@/lib/auth/session-store";
+import { hasExactOrigin, publicOrigin, sessionCookieOptions } from "@/lib/auth/public-origin";
 import { isReadOnly, readOnlyMessage } from "@/lib/api/read-only";
 import {
   authClientKey,
@@ -47,6 +32,16 @@ const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
  * `/api/status` is NOT here — it reports real system state.
  */
 const PUBLIC_PATHS = new Set(["/api/health", "/api/healthz", "/healthz"]);
+const AUTH_LIFECYCLE_WRITES = new Set([
+  "POST /api/auth/sign-in",
+  "DELETE /api/auth/session",
+  "POST /api/auth/sessions/list",
+  "POST /api/auth/sessions/revoke",
+]);
+const BODY_TOKEN_MANAGEMENT = new Set([
+  "POST /api/auth/sessions/list",
+  "POST /api/auth/sessions/revoke",
+]);
 
 /**
  * The routes whose WRITES reach the host: a script the editor saves is executed
@@ -84,7 +79,7 @@ function refuseHostWrite(): NextResponse {
  *
  * Deliberately raised only AFTER the caller has been authenticated. Refusing an
  * anonymous write with 503 tells anyone who can reach the port whether this
- * instance is read-only, and `npm run start:network` binds 0.0.0.0. An
+ * instance is read-only. An
  * unauthenticated caller learns nothing but 401 (T-0048).
  */
 function refuseReadOnly(): NextResponse {
@@ -112,132 +107,109 @@ function isApiPath(pathname: string): boolean {
 }
 
 /**
- * HTML-escape a server-derived string before it goes into the 401 page. The
- * only interpolation is the token path, which comes from env/config rather than
- * the request, but a page that hand-builds HTML should escape unconditionally
- * rather than rely on where today's input happens to come from.
- */
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
-/**
- * Did this request arrive over loopback?
- *
- * It decides whether the 401 may name the token file's RESOLVED absolute path.
- * A caller on the machine needs that path to sign in; a caller across the
- * network must not be handed the OS username and install layout, which is what
- * an absolute home-directory path discloses. Under `npm run start:network` the
- * server binds 0.0.0.0, so the two are genuinely different audiences.
- *
- * The Host header is the right signal here: a request that reached a loopback
- * address is one that came through loopback, because a remote client cannot
- * route to another machine's 127.0.0.1. Getting this wrong only ever costs a
- * less specific error message; it can never grant access.
- */
-function isLoopbackRequest(request: NextRequest): boolean {
-  const host = (request.headers.get("host") || request.nextUrl.hostname || "")
-    .replace(/:\d+$/, "")
-    .replace(/^\[|\]$/g, "")
-    .toLowerCase();
-  return host === "localhost" || host === "127.0.0.1" || host === "::1" || host.endsWith(".localhost");
-}
-
-/**
  * The 401 is the first PatterStage screen a lot of people ever see: the
- * installer finishes, they open the bare URL, and this is what answers. So it
- * has to be a set of instructions, not a refusal.
- *
- * It names the RESOLVED token location (a first-time user cannot expand
- * "PS_DATA_DIR" themselves), the command that prints it, and the way to recover
- * a token that is lost entirely. It reflects nothing from the request, so there
- * is no host or path to smuggle into the markup.
- *
- * None of this relaxes the check. The token requirement is unchanged; only the
- * explanation of how to satisfy it is.
+ * installer finishes and they open the local URL. Give the local file hint
+ * without exposing an absolute host path to an unverified network caller.
  */
-function unauthorized(request: NextRequest): NextResponse {
+function unauthorized(request: NextRequest, clearLegacyCookie = false): NextResponse {
   const source = describeTokenSource();
 
   if (isApiPath(request.nextUrl.pathname)) {
     // No path here, on purpose. The consumer is a script, which cannot act on a
     // filesystem hint anyway, and this branch answers unauthenticated callers
     // from anywhere the server is reachable.
-    return NextResponse.json(
+    const response = NextResponse.json(
       {
         error:
-          "Unauthorized. Send 'Authorization: Bearer <token>'. The server prints the full sign-in URL on the first [auth] line of its log at every start.",
+          "Unauthorized. Send 'Authorization: Bearer <token>' or sign in with your operator credential.",
       },
       { status: 401 },
     );
+    if (clearLegacyCookie) response.cookies.delete(SESSION_COOKIE);
+    return response;
   }
-
-  // Only a caller at the machine gets the resolved path.
-  const local = isLoopbackRequest(request);
 
   const readHint =
     source.kind === "env"
       ? `<p>This server takes its token from the <code>PS_AUTH_TOKEN</code> environment variable it was started with. Read it from your container or service definition.</p>`
-      : local
-        ? `<p><strong>1.</strong> Your token is the single line in this file:</p>` +
-          `<pre style="background:#0d1420;padding:.6rem .8rem;border-radius:6px;overflow-x:auto"><code>${escapeHtml(source.location)}</code></pre>` +
-          `<p>Print it with <code>cat ${escapeHtml(source.location)}</code>.</p>`
-        : `<p><strong>1.</strong> Your token is the single line in <code>auth-token</code>, inside the data directory on the machine running PatterStage. Read it there, or read the sign-in URL off that server's log.</p>`;
+      : `<p>Read your token locally from <code>PS_DATA_DIR/auth-token</code>. The server log gives the resolved file location but never prints the token.</p>`;
 
-  return new NextResponse(
+  const response = new NextResponse(
     `<!doctype html><meta charset="utf-8"><title>PatterStage: access token required</title>` +
       `<body style="font:16px/1.6 system-ui;max-width:38rem;margin:10vh auto;padding:0 1.5rem;background:#05080d;color:#eaf2f8">` +
       `<h1 style="font-size:1.4rem">PatterStage needs your access token</h1>` +
-      `<p>PatterStage is a single-operator control plane, so there is no login. The server minted one random token for you on first boot and every request is checked against it.</p>` +
+      `<p>PatterStage is a single-operator control plane. The server minted one random operator token on first boot.</p>` +
       readHint +
-      `<p><strong>${source.kind === "env" ? "Then" : "2."}</strong> Open this address once with the token on the end:</p>` +
-      `<pre style="background:#0d1420;padding:.6rem .8rem;border-radius:6px;overflow-x:auto"><code>?${TOKEN_QUERY_PARAM}=&lt;your token&gt;</code></pre>` +
-      `<p>PatterStage swaps it for a session cookie and strips it back out of the URL, so you only paste it once per browser.</p>` +
+      `<form method="post" action="/api/auth/sign-in"><label for="token">Operator token</label><br>` +
+      `<input id="token" name="token" type="password" autocomplete="off" required style="font:inherit;width:100%;box-sizing:border-box;padding:.6rem;margin:.4rem 0 1rem;background:#152132;color:#fff;border:1px solid #68819a;border-radius:6px">` +
+      `<button type="submit" style="font:inherit;padding:.55rem 1rem">Sign in</button></form>` +
+      `<p>For a deliberate URL hand-off, open <code>?${TOKEN_QUERY_PARAM}=&lt;your token&gt;</code> once. The URL is then cleared.</p>` +
       `<h2 style="font-size:1rem;margin-top:2rem">Lost it completely?</h2>` +
-      `<p>Restart PatterStage. It prints the whole sign-in URL, token included, on the first <code>[auth]</code> line of the server log at every start.</p>` +
-      (source.kind === "file" && local
-        ? `<p>Deleting that file and restarting mints a fresh token. That is also how you revoke the old one: every browser signed in with it is signed out.</p>`
+      `<p>Read the token from your local file or service secret. Restarting the server requires browser sign-in again.</p>` +
+      (source.kind === "file"
+        ? `<p>If the token file is lost, delete it and restart to mint a new one. This also invalidates existing Bearer credentials and browser sessions.</p>`
         : "") +
       `</body>`,
     { status: 401, headers: { "content-type": "text/html; charset=utf-8" } },
   );
+  if (clearLegacyCookie) response.cookies.delete(SESSION_COOKIE);
+  return response;
 }
 
-/**
- * Same-origin test for cookie-authenticated writes. `Sec-Fetch-Site` is sent by
- * every current browser and is the reliable signal; the Origin host comparison
- * is the fallback for clients that omit it.
- */
-function isSameOrigin(request: NextRequest): boolean {
-  const site = request.headers.get("sec-fetch-site");
-  if (site) return site === "same-origin" || site === "none";
+function redirectWithoutHandoffToken(request: NextRequest): NextResponse {
+  const clean = request.nextUrl.clone();
+  clean.searchParams.delete(TOKEN_QUERY_PARAM);
+  return NextResponse.redirect(clean, {
+    status: 307,
+    headers: { "Cache-Control": "no-store", "Referrer-Policy": "no-referrer" },
+  });
+}
 
-  const origin = request.headers.get("origin");
-  if (!origin) return true; // non-browser client; the bearer path covers it
-  try {
-    return new URL(origin).host === request.headers.get("host");
-  } catch {
-    return false;
-  }
+function redirectToSessionUnavailable(request: NextRequest): NextResponse {
+  const clean = request.nextUrl.clone();
+  clean.pathname = "/auth/session-unavailable";
+  clean.search = "";
+  return NextResponse.redirect(clean, {
+    status: 307,
+    headers: { "Cache-Control": "no-store", "Referrer-Policy": "no-referrer" },
+  });
+}
+
+/** Only an activated, top-level document navigation renews idle activity. */
+function isInteractiveNavigation(request: NextRequest): boolean {
+  if (request.method !== "GET" || isApiPath(request.nextUrl.pathname)) return false;
+  if (request.headers.get("purpose")?.toLowerCase() === "prefetch" || request.headers.has("next-router-prefetch")) return false;
+  return request.headers.get("sec-fetch-mode") === "navigate"
+    && request.headers.get("sec-fetch-dest") === "document"
+    && request.headers.get("sec-fetch-user") === "?1";
 }
 
 export function proxy(request: NextRequest): NextResponse {
   const { pathname } = request.nextUrl;
   const isSafe = SAFE_METHODS.has(request.method);
+  const lifecycleWrite = AUTH_LIFECYCLE_WRITES.has(`${request.method} ${pathname}`);
+  const hasHandoffToken = request.method === "GET" && request.nextUrl.searchParams.has(TOKEN_QUERY_PARAM);
 
   // A public path is exempt from AUTHENTICATION, never from read-only. It used
   // to return here, above the read-only branch, so any non-safe method added to
   // a public path would have punched straight through the mode. /api/health is
   // GET-only today, so this was a latent hole rather than a live one (T-0048).
-  if (PUBLIC_PATHS.has(pathname) && isSafe) return pass(request, pathname);
+  if (PUBLIC_PATHS.has(pathname) && isSafe) {
+    return hasHandoffToken ? redirectWithoutHandoffToken(request) : pass(request, pathname);
+  }
+  if (pathname === "/auth/session-unavailable" && isSafe) {
+    if (hasHandoffToken) return redirectWithoutHandoffToken(request);
+    return new NextResponse("Browser sessions are unavailable.", {
+      status: 503,
+      headers: { "Cache-Control": "no-store", "Content-Type": "text/plain; charset=utf-8", "Referrer-Policy": "no-referrer" },
+    });
+  }
 
-  const readOnlyRefusal = !isSafe && isReadOnly();
+  const readOnlyRefusal = !isSafe && isReadOnly() && !lifecycleWrite;
 
   if (getAuthMode() === "none") {
+    if (hasHandoffToken) return redirectWithoutHandoffToken(request);
+    if (pathname.startsWith("/api/auth/")) return NextResponse.json({ error: "Session management requires token authentication." }, { status: 403 });
     if (readOnlyRefusal) return refuseReadOnly();
     if (isHostSideEffectWrite(pathname, isSafe)) return refuseHostWrite();
     return pass(request, pathname);
@@ -251,8 +223,13 @@ export function proxy(request: NextRequest): NextResponse {
   // attacker are the same client, and an unbounded lock would be a denial of
   // service against the operator.
   const clientKey = authClientKey(request.headers);
-  const penalty = authPenaltySeconds(clientKey);
+  // Only a root-credential attempt needs this budget. An already validated
+  // browser session can still navigate or sign out during bad guesses.
+  const rootCredentialAttempt = hasHandoffToken || request.headers.has("authorization") ||
+    (request.method === "POST" && pathname === "/api/auth/sign-in");
+  const penalty = rootCredentialAttempt ? authPenaltySeconds(clientKey) : 0;
   if (penalty > 0) {
+    if (hasHandoffToken) return redirectWithoutHandoffToken(request);
     return NextResponse.json(
       { error: `Too many failed sign-in attempts. Try again in ${penalty}s.` },
       { status: 429, headers: { "Retry-After": String(penalty) } },
@@ -261,34 +238,57 @@ export function proxy(request: NextRequest): NextResponse {
 
   const expected = readAuthToken();
   if (!expected) {
+    if (hasHandoffToken) return redirectWithoutHandoffToken(request);
     // Fail CLOSED. A missing token file means boot has not minted one yet; the
     // alternative (allow everything) is how this app shipped an RCE.
-    return NextResponse.json(
+    const response = NextResponse.json(
       { error: "PatterStage has no access token configured yet. Restart the server to mint one." },
       { status: 503 },
     );
+    if (request.method === "DELETE" && pathname === "/api/auth/session") {
+      const origin = publicOrigin(request);
+      if (origin && hasExactOrigin(request, origin)) response.cookies.delete(SESSION_COOKIE);
+    }
+    return response;
+  }
+
+  // The public body-token hand-off has exactly one method/path exception. The
+  // handler checks Origin, body size, credential, throttle and committed insert.
+  if (request.method === "POST" && pathname === "/api/auth/sign-in") {
+    return pass(request, pathname);
+  }
+
+  // These two handlers demand a fresh operator token from the body or an
+  // explicit Bearer header. A browser session alone never authorises them.
+  if (BODY_TOKEN_MANAGEMENT.has(`${request.method} ${pathname}`) &&
+      !request.headers.has("authorization")) {
+    return pass(request, pathname);
   }
 
   // 2a. One-time hand-off: ?ps_token=<token> on a navigation exchanges the
   //     token for an httpOnly cookie, then redirects to strip it from the URL
   //     (and from the browser history / referrer).
   const handoff = request.nextUrl.searchParams.get(TOKEN_QUERY_PARAM);
-  if (handoff && isSafe) {
+  if (hasHandoffToken) {
     if (!tokenMatches(handoff, expected)) {
       recordAuthFailure(clientKey);
-      return unauthorized(request);
+      return redirectWithoutHandoffToken(request);
+    }
+    const origin = publicOrigin(request);
+    if (!origin) return redirectWithoutHandoffToken(request);
+    let session;
+    try { session = createBrowserSession(handoff!); }
+    catch (error) {
+      if (error instanceof SessionCredentialChangedError) {
+        recordAuthFailure(clientKey);
+        return redirectWithoutHandoffToken(request);
+      }
+      return redirectToSessionUnavailable(request);
     }
     clearAuthFailures(clientKey);
-    const clean = request.nextUrl.clone();
-    clean.searchParams.delete(TOKEN_QUERY_PARAM);
-    const response = NextResponse.redirect(clean);
-    response.cookies.set(SESSION_COOKIE, expected, {
-      httpOnly: true,
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 365,
-      secure: request.nextUrl.protocol === "https:",
-    });
+    const response = redirectWithoutHandoffToken(request);
+    response.cookies.set(SESSION_COOKIE, session.secret,
+      sessionCookieOptions(origin, Math.floor((session.expiresAtMs - Date.now()) / 1000)));
     return response;
   }
 
@@ -304,20 +304,20 @@ export function proxy(request: NextRequest): NextResponse {
   }
 
   const cookie = request.cookies.get(SESSION_COOKIE)?.value;
-  if (!tokenMatches(cookie, expected)) {
-    // A request carrying NO cookie at all is the normal first visit, not an
-    // attempt: counting it would penalise a browser for arriving.
-    if (cookie) recordAuthFailure(clientKey);
-    return unauthorized(request);
+  if (!cookie) return unauthorized(request);
+  const origin = publicOrigin(request);
+  if (!origin) return NextResponse.json({ error: "Browser origin is not configured safely." }, { status: 503 });
+  let session;
+  try { session = validateBrowserSession(cookie, isInteractiveNavigation(request)); }
+  catch { return NextResponse.json({ error: "Browser sessions are unavailable." }, { status: 503 }); }
+  if (!session) {
+    // A revoked, expired or pre-upgrade cookie can be sent by many concurrent
+    // page requests after sign-out or restart. It is not a root-token guess.
+    // Counting those requests can block the operator's next sign-in.
+    return unauthorized(request, Boolean(cookie));
   }
-  clearAuthFailures(clientKey);
-
-  // 3. Cookie-authenticated writes must be same-origin.
-  if (!isSafe && !isSameOrigin(request)) {
-    return NextResponse.json(
-      { error: "Cross-origin write rejected." },
-      { status: 403 },
-    );
+  if (!isSafe && !hasExactOrigin(request, origin)) {
+    return NextResponse.json({ error: "Cross-origin write rejected." }, { status: 403 });
   }
 
   return readOnlyRefusal ? refuseReadOnly() : pass(request, pathname);

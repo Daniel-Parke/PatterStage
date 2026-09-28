@@ -14,23 +14,26 @@
 export async function register(): Promise<void> {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
 
-  // Access token: mint one on first boot so an existing install that predates
-  // authentication is not locked out, and print the hand-off URL the way a
-  // self-hosted tool should. src/proxy.ts enforces it on every request.
+  // Proxy, routes and streams read this one process-owned generation. A
+  // missing generation denies browser-session access instead of recreating
+  // state from a database row after a restart.
+  const { initialiseBootState } = await import("@/lib/auth/boot-state");
+  initialiseBootState();
+
+  // Mint a token on first boot without placing it in persistent logs.
   try {
-    const { ensureAuthToken, getAuthMode, getAuthTokenPath, TOKEN_QUERY_PARAM } =
+    const { ensureAuthToken, getAuthMode, describeTokenSource } =
       await import("@/lib/api/auth-token");
     if (getAuthMode() === "none") {
       console.warn(
         "[auth] PS_AUTH_MODE=none — every endpoint is UNAUTHENTICATED. Only correct behind your own access control.",
       );
     } else {
-      const token = ensureAuthToken();
-      const port = process.env.PORT ?? "3000";
-      console.info(
-        `[auth] Open PatterStage at http://127.0.0.1:${port}/?${TOKEN_QUERY_PARAM}=${token}\n` +
-          `[auth] Token file: ${getAuthTokenPath()}`,
-      );
+      ensureAuthToken();
+      const source = describeTokenSource();
+      console.info(source.kind === "file"
+        ? `[auth] Read the operator token locally from ${source.location}, then sign in. The token is never printed here.`
+        : "[auth] Read the operator token from your service's PS_AUTH_TOKEN secret source, then sign in. The token is never printed here.");
     }
   } catch (error) {
     console.error("[auth] could not establish an access token", error);

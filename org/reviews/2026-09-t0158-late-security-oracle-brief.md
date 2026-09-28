@@ -28,3 +28,15 @@ must not make missing browser cookies count as failed token guesses. Existing
 tests that assume an untrusted forwarded header identifies a distinct client
 need independent, identity-preserving amendments with recorded hashes; no
 lint or coverage threshold may change.
+
+The independent sceptic then found a clock-boundary gap: after five failed
+guesses, moving the wall clock ten minutes backwards makes the reported
+`Retry-After` 601 seconds rather than the 15-second maximum. Add a separate
+red-first controlled-clock oracle with an ordinary clock control before
+changing the throttle implementation. A valid browser session must remain
+usable during a root-token penalty; root Bearer guesses can share the bounded
+penalty as the accepted availability tradeoff.
+
+# 2026-09-28 isolated browser gate amendment
+
+The full isolated gate passed lint, typecheck, 746 Jest suites (7,303 passing tests, four skips), Knip, canary, build and build purity. Its browser step had 313 passes, 24 existing skips and one failure: the first quiet Composer stream closed before the three-second pre-revocation assertion. The same 31-test browser-session spec passed alone by `npm run gate -- --rerun-alone tests/e2e/t0158-browser-sessions.spec.ts`. The first stream fetch uses a five-second `AbortSignal.timeout` before awaiting the response, so load during response setup can consume the time left for the three-second assertion. An independent author must confirm the cause and may lengthen only that safety deadline while preserving the three-second quiet-stream assertion, revocation assertions and all 31 test names. Both the full-run failure and solo pass remain recorded under the isolated worktree's `.gate` evidence.

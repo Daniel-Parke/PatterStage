@@ -47,7 +47,7 @@ describe("T-0161 deploy CLI recognises an aliased entry path", () => {
       mkdirSync(join(realDir, "scripts", "tooling"), { recursive: true });
       mkdirSync(dataDir);
       mkdirSync(hermesHome);
-      for (const source of ["scripts/tooling/ps-deploy.mjs", "scripts/tooling/_platform.mjs", "scripts/tooling/_env-local.mjs"]) {
+      for (const source of ["scripts/tooling/ps-deploy.mjs", "scripts/tooling/_platform.mjs", "scripts/tooling/_env-local.mjs", "scripts/tooling/network-boundary.mjs"]) {
         copyFileSync(join(ROOT, source), join(realDir, source));
       }
       writeFileSync(join(realDir, "identity-probe.mjs"),

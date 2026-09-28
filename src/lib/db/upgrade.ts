@@ -293,6 +293,11 @@ export function rebuildToBaseline(
   dbPath: string,
   baselineSql: string
 ): void {
+  // The legacy rebuild imports a fixed list of old application tables. Refuse
+  // to replace a database carrying browser-session rows it cannot preserve.
+  if (tableExists(database, "auth_sessions")) {
+    throw new Error("Baseline rebuild cannot preserve auth_sessions; migration refused");
+  }
   const snapshot = exportLegacySnapshot(database);
   database.close();
 

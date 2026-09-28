@@ -67,23 +67,21 @@ browser at the address the server prints.
    npm run start
    ```
 
-   Next binds every interface by default. `npm run start:network` is the same
-   thing with the bind stated explicitly.
+   `npm run start` binds loopback. For network access, configure a trusted
+   HTTPS proxy or explicitly opt into insecure LAN HTTP as described in
+   [security](../SECURITY.md).
 
-4. **Open the link the server prints.** PatterStage has no login. It mints one
-   random access token on first boot and checks every request against it, so the
-   bare address answers 401 on purpose. The first `[auth]` line of the output is
-   your way in:
+4. **Open the local address and sign in.** PatterStage mints an operator token
+   on first boot. The boot log identifies its file but never prints the token:
 
    ```
-   [auth] Open PatterStage at http://127.0.0.1:<PORT>/?ps_token=<your token>
-   [auth] Token file: <PS_DATA_DIR>/auth-token
+   [auth] Read the operator token locally from <PS_DATA_DIR>/auth-token, then sign in.
    ```
 
-   Open that URL once. The token is exchanged for a session cookie and stripped
-   back out of the address bar, so you paste it once per browser. Lose the line
-   and the token is the single line in that file; restarting prints the URL
-   again.
+   Open `http://127.0.0.1:<PORT>/`, read that file locally and enter its single
+   line on the sign-in page. The browser gets an opaque session cookie. A server
+   restart requires another sign-in. The intentional `?ps_token=` handoff remains
+   available for compatibility, but the server does not log such a URL.
 
 That token grants mission dispatch, and the agent's toolset includes terminal
 access. Treat it as root on the host, and read
@@ -105,7 +103,7 @@ which file the server actually opened is in
 ## If it did not work
 
 - **The page says PatterStage needs your access token.** That is the design, not
-  a fault. Use the `?ps_token=` URL above.
+  a fault. Read the local token file and use the sign-in form.
 - **The port is already in use.** Read `PORT` in `.env.local`, then either
   `bash scripts/bootstrap/stop.sh` or change the port and re-run setup.
 - **Missions fail immediately.** Usually the agent is missing or has no model.

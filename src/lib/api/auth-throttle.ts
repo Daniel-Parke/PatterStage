@@ -10,6 +10,7 @@
 // operator; the ceiling is seconds and a correct token clears the record. IN
 // MEMORY: a restart costs one window, and a table would put a write on the hot
 // path of the one request an attacker controls the rate of.
+// The clock is monotonic so a wall-clock correction cannot extend a lockout.
 
 /** Failures allowed at full speed before a penalty applies. A typo budget. */
 export const FREE_AUTH_ATTEMPTS = 5;
@@ -28,13 +29,16 @@ interface FailureRecord {
 }
 
 const records = new Map<string, FailureRecord>();
+type SharedFailureRecord = FailureRecord & { firstClaimedClient: string; rotatedClaim: boolean };
+let sharedFailures: SharedFailureRecord | null = null;
 
 /**
  * Who is failing. One derivation, which the sessions limiter imports rather
  * than copies: two answers to "which client" would be two security boundaries.
  *
- * Next fills x-forwarded-for from the socket when the caller sent none, so a
- * loopback caller keys on 127.0.0.1 or ::1; "local" means neither header came.
+ * This header is a claimed identity, not a trusted peer address. The shared
+ * failure budget below stops a caller from resetting the token budget by
+ * rotating it. A single failing client retains its local budget.
  */
 export function authClientKey(headers: {
   get(name: string): string | null;
@@ -52,18 +56,20 @@ function prune(now: number): void {
   for (const [key, rec] of records) {
     if (now - rec.lastSeen > RECORD_TTL_MS) records.delete(key);
   }
+  if (sharedFailures && now - sharedFailures.lastSeen > RECORD_TTL_MS) sharedFailures = null;
 }
 
 /** Seconds this client must wait, or 0. Called BEFORE the compare, so a penalised client gets none. */
-export function authPenaltySeconds(key: string, now = Date.now()): number {
+export function authPenaltySeconds(key: string, now = performance.now()): number {
   const rec = records.get(key);
-  if (!rec) return 0;
-  if (now - rec.lastSeen > RECORD_TTL_MS) {
+  if (rec && now - rec.lastSeen > RECORD_TTL_MS) {
     records.delete(key);
-    return 0;
   }
-  if (rec.penaltyUntil <= now) return 0;
-  return Math.max(1, Math.ceil((rec.penaltyUntil - now) / 1000));
+  if (sharedFailures && now - sharedFailures.lastSeen > RECORD_TTL_MS) sharedFailures = null;
+  const localUntil = rec && now - rec.lastSeen <= RECORD_TTL_MS ? rec.penaltyUntil : 0;
+  const sharedUntil = sharedFailures?.rotatedClaim ? sharedFailures.penaltyUntil : 0;
+  const until = Math.max(localUntil, sharedUntil);
+  return until <= now ? 0 : Math.max(1, Math.ceil((until - now) / 1000));
 }
 
 /**
@@ -71,16 +77,29 @@ export function authPenaltySeconds(key: string, now = Date.now()): number {
  * capped at the ceiling, so it never passes the point where an operator would
  * rather restart the server than wait.
  */
-export function recordAuthFailure(key: string, now = Date.now()): void {
+export function recordAuthFailure(key: string, now = performance.now()): void {
   prune(now);
   const rec = records.get(key) ?? { failures: 0, penaltyUntil: 0, lastSeen: now };
   rec.failures += 1;
   rec.lastSeen = now;
-  if (rec.failures > FREE_AUTH_ATTEMPTS) {
-    const grown = 2 ** (rec.failures - FREE_AUTH_ATTEMPTS - 1);
+  if (rec.failures >= FREE_AUTH_ATTEMPTS) {
+    const grown = 2 ** (rec.failures - FREE_AUTH_ATTEMPTS);
     rec.penaltyUntil = now + Math.min(grown, MAX_AUTH_PENALTY_SECONDS) * 1000;
   }
   records.set(key, rec);
+
+  const aggregate = sharedFailures ?? {
+    failures: 0, penaltyUntil: 0, lastSeen: now,
+    firstClaimedClient: key, rotatedClaim: false,
+  };
+  aggregate.rotatedClaim ||= aggregate.firstClaimedClient !== key;
+  aggregate.failures += 1;
+  aggregate.lastSeen = now;
+  if (aggregate.rotatedClaim && aggregate.failures >= FREE_AUTH_ATTEMPTS) {
+    const grown = 2 ** (aggregate.failures - FREE_AUTH_ATTEMPTS);
+    aggregate.penaltyUntil = now + Math.min(grown, MAX_AUTH_PENALTY_SECONDS) * 1000;
+  }
+  sharedFailures = aggregate;
 }
 
 /**
@@ -89,13 +108,14 @@ export function recordAuthFailure(key: string, now = Date.now()): void {
  */
 export function clearAuthFailures(key: string): void {
   records.delete(key);
+  // Only a correct root credential calls this. A valid browser cookie is not
+  // proof of that credential and must not reset the shared guess budget.
+  sharedFailures = null;
 }
 
 /**
- * How many clients are remembered. Exported for one assertion: `x-forwarded-for`
- * is attacker-controlled, and that the map SHRINKS is not observable from any
- * response, so without this the pruning could be deleted unnoticed. No reset
- * seam: the proxy tests jest.resetModules() and re-import, so a clear() would be dead code.
+ * How many claimed clients are remembered. Exported because pruning is not
+ * observable from a response. The shared record is fixed-size and excluded.
  */
 export function authThrottleRecordCount(): number {
   return records.size;

@@ -59,7 +59,10 @@ Enforced in `src/proxy.ts` for every request. See [SECURITY.md](../SECURITY.md) 
 | `PS_AUTH_TOKEN` | Supply the operator token directly (containers). Wins over the token file. |
 | `PS_AUTH_TOKEN_FILE` | Override the token path (default `PS_DATA_DIR/auth-token`, minted on first boot). |
 | `PS_AUTH_MODE` | `none`: disable authentication entirely. Only correct behind your own access control; host-executing writes are refused in this mode. |
-| `PS_READ_ONLY` | `1`: reject unsafe HTTP **methods** (503). Reads keep working. |
+| `PS_PUBLIC_ORIGIN` | Exact HTTP(S) browser origin (scheme, host and optional port). Required for network startup; HTTPS selects Secure cookies. |
+| `PS_INSECURE_LAN_HTTP` | `1`: explicitly allow direct network HTTP with an `http://` public origin. The network may observe browser sessions. |
+| `PS_PRIVATE_PROXY_NETWORK` | `1`: declare that the app's HTTP listener is isolated from browsers behind a trusted HTTPS proxy. Use an `https://` public origin. |
+| `PS_READ_ONLY` | `1`: reject application writes (503). Exact sign-in, sign-out, session list and revoke operations, plus qualified navigation renewal, remain available. |
 
 ## Deploy API (sidebar Update / Rebuild)
 

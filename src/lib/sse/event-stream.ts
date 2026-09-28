@@ -18,6 +18,8 @@ export interface SseStreamOptions<T> {
   intervalMs?: number;
   /** Client-disconnect signal (request.signal). */
   signal?: AbortSignal;
+  /** Rechecked before every frame and every quiet heartbeat. */
+  authorize?: () => boolean;
 }
 
 /** Build a `text/event-stream` Response that pushes snapshot deltas. */
@@ -29,11 +31,18 @@ export function sseStream<T>(opts: SseStreamOptions<T>): Response {
 
   const stream = new ReadableStream<Uint8Array>({
     start(controller) {
+      const authorised = () => {
+        try { return opts.authorize?.() ?? true; }
+        catch { return false; }
+      };
       const enqueue = (chunk: string) => {
+        if (!authorised()) return false;
         try {
           controller.enqueue(encoder.encode(chunk));
+          return true;
         } catch {
           // controller already closed
+          return false;
         }
       };
       const close = () => {
@@ -48,6 +57,7 @@ export function sseStream<T>(opts: SseStreamOptions<T>): Response {
 
       // Returns true when the stream should stop.
       const tick = (): boolean => {
+        if (!authorised()) return true;
         let snap: T | null;
         try {
           snap = opts.snapshot();
@@ -72,9 +82,9 @@ export function sseStream<T>(opts: SseStreamOptions<T>): Response {
         const json = JSON.stringify(snap);
         if (json !== lastJson) {
           lastJson = json;
-          enqueue(`event: state\ndata: ${json}\n\n`);
+          if (!enqueue(`event: state\ndata: ${json}\n\n`)) return true;
         } else {
-          enqueue(`: ping\n\n`); // heartbeat (comment line)
+          if (!enqueue(`: ping\n\n`)) return true; // heartbeat (comment line)
         }
         if (opts.isTerminal?.(snap)) {
           enqueue(`event: end\ndata: {"reason":"terminal"}\n\n`);
