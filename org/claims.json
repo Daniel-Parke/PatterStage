@@ -12,8 +12,8 @@
       "task": "T-0187",
       "owner": "independent-oracle-branch-port",
       "mode": "high-assurance",
-      "paths": ["tests/unit/legacy-branch-and-port-provenance.test.ts"]
+      "paths": ["tests/unit/legacy-hardware-log-provenance.test.ts"]
     }
   ],
-  "note": "The coordinator owns T-0187 source, docs, records and removals. A second independent ORACLE lane owns only tests/unit/legacy-branch-and-port-provenance.test.ts for the final reviewer counterexamples; no source edit is permitted there."
+  "note": "The branch-port oracle is committed and its writer released. The coordinator owns T-0187 source, docs, records and removals. A second independent ORACLE lane owns only tests/unit/legacy-hardware-log-provenance.test.ts for the final hardware-log counterexample; no source edit is permitted there."
 }
