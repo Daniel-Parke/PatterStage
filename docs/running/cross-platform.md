@@ -115,8 +115,8 @@ Schedule the cross-platform Node versions of the bundled hardware scripts:
 `ps-db-backup.mjs`, `ps-health-check.mjs`, `ps-log-rotate.mjs`,
 `ps-disk-report.mjs`, `ps-system-report.mjs`. What ships and what gets installed
 is not Node-only, though: `scripts/hardware/` also holds a bash sibling of each
-of those five, the Hindsight backup `ps-backup.sh`, and six pre-rename `ch-*.sh`
-shims, and setup copies **every** `.sh` and `.mjs` into `PS_DATA_DIR/scripts`. So
+of those five, the Hindsight backup `ps-backup.sh`, and the retained pre-rename
+`ch-backup.sh` shim. Setup copies **every** `.sh` and `.mjs` into `PS_DATA_DIR/scripts` when absent. Five other dev-only `ch-*.sh` shims no longer ship, but copies already installed in a data directory remain and still forward to their same-directory `ps-*.sh` twins. So
 the Scripts page will list the `.sh` files too. `ps-backup.sh` needs bash and a
 running Hindsight server, which makes it Unix-only rather than Linux-only: it
 works on macOS.

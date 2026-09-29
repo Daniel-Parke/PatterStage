@@ -11,6 +11,8 @@
 // Gated to the Node.js runtime: the Edge runtime has no filesystem / SQLite.
 // ═══════════════════════════════════════════════════════════════
 
+let legacyBootWarningEmitted = false;
+
 export async function register(): Promise<void> {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
 
@@ -48,6 +50,19 @@ export async function register(): Promise<void> {
     console.info(`[config] ${describeOperationalFlags()}`);
   } catch {
     /* non-fatal diagnostic */
+  }
+
+  if (!legacyBootWarningEmitted) {
+    const { describeLegacyBootWarning } = await import("@/lib/config/legacy-boot");
+    const { selectedLegacyHermesHomeName } = await import("@/modules/hermes/lib/home");
+    const hermesHomeName = selectedLegacyHermesHomeName(process.env);
+    const warning = describeLegacyBootWarning(process.env, hermesHomeName ? [hermesHomeName] : []);
+    // Another register() may have completed the same imports while this one
+    // waited. Claim the one-time warning synchronously at the emission point.
+    if (warning && !legacyBootWarningEmitted) {
+      legacyBootWarningEmitted = true;
+      console.warn(`[config] ${warning}`);
+    }
   }
 
   // Loud warning if we may be reading the wrong (emptier) DB than a sibling data

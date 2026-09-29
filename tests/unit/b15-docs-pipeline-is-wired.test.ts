@@ -2,8 +2,8 @@
  * B15 (T-0109), decisions 3 and 9 — the pipeline is wired, not just written.
  *
  * A generator nobody runs is a folder of dead code, and this repository has the
- * receipts: `eos-compile.mjs` still names paths it has not written since the
- * scale matrix changed shape. So B15's generator is held to the same standard as
+ * receipts: the refused Session 0 compiler was retired under org-11 rather than
+ * allowed to write obsolete governance paths. B15's generator is held to the same standard as
  * every other gate here — it runs inside `npm run lint` (by EXIT CODE, never by
  * grepping its output), it runs in CI, its derived file is held by
  * `check-derived-views`, and its two outputs are git-ignored so nobody commits a

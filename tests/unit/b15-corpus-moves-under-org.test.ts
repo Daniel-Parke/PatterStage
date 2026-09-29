@@ -135,20 +135,6 @@ describe("B15 · every inbound reference moves in the same commit (ADR-0010 §2)
     expect(hits).toEqual([]);
   });
 
-  it("eos-compile.mjs reads the session-0 fills from org/, not docs/", () => {
-    // The one LIVE path in the sweep rather than a comment: line 134 today reads
-    // join(OUT, "docs", "eos-session0", "fills.json"), which the substring sweep
-    // above cannot see because the segments are separate arguments.
-    const source = readFileSync(join(ROOT, "scripts", "tooling", "eos-compile.mjs"), "utf-8");
-    expect(source).not.toContain('"docs", "eos-session0"');
-  });
-
-  it("eos-compile.mjs's HAND_WRITTEN list names the new homes", () => {
-    const source = readFileSync(join(ROOT, "scripts", "tooling", "eos-compile.mjs"), "utf-8");
-    expect(source).toContain("org/VENTURE_BRIEF.md");
-    expect(source).toContain("org/EOS_FEEDBACK.md");
-  });
-
   it("docs/README.md points at org/ once and carries no Governance table", () => {
     const readme = readFileSync(join(ROOT, "docs", "README.md"), "utf-8");
     expect(readme).toContain("org/EOS_OPERATORS_GUIDE.md");

@@ -35,6 +35,16 @@ where it did not.
 
 ## Entries
 
+- `2026-09-29 · friction` · **The Session 0 local compiler was retired; the
+  estate matrix path mismatch still needs a source-of-truth change.** The
+  operator's org-11 ruling removed `scripts/tooling/eos-compile.mjs` after it
+  refused to run against the v2 matrix. Its two compiler-only b15 checks
+  retired with it, and `org/COMPILE_REPORT.md` item 5 records the decision.
+  ADR-0010 asked the estate to move the matching `kernel/SCALE_MATRIX.md`
+  rows from the old `docs/` homes to `org/`; that upstream correction is
+  still outstanding. This new entry leaves the earlier dated reports
+  unchanged and does not request regeneration of hand-maintained governance.
+
 - `2026-08-30 · friction` · **`eos-compile.mjs` has been a silent no-op
   and reported success the whole time.** Found during the T-0057
   documentation audit, when the audit's own premise (that seven `docs/`

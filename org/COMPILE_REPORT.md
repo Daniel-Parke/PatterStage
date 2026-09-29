@@ -564,6 +564,13 @@ answered without reconstructing the reasoning.
    note**, as recorded under the ancestry above. This recompile was
    performed by hand and does not claim the script generated anything.
 
+   **Retirement note, 2026-09-29 (T-0187):** The operator accepted the
+   org-11 ruling to retire this refused Session 0 script and its two
+   compiler-only b15 checks. No local compiler now writes the obsolete
+   matrix paths. The estate's `SCALE_MATRIX.md` path mismatch remains
+   unresolved and is filed in the new EOS feedback entry. This report's
+   original ancestry and sign-off evidence remains historical.
+
 ## Sign-off (human rubric items)
 
 A migrated seed is a new seed, so every item was unsigned until the operator

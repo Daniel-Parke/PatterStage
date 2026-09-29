@@ -7,13 +7,7 @@
       "owner": "2026-09-29-refactor-prerelease",
       "mode": "high-assurance",
       "paths": ["org/tasks/T-0187.json", "org/claims.json", "org/HANDOVER.md", "org/briefs/T-0187-oracle.md", "org/briefs/T-0187-bridge-oracle.md", "org/briefs/T-0187-precedence-oracle.md", "org/briefs/T-0187-fixture-refactor.md", "org/briefs/T-0187-review.md", "org/TASKS.md", "org/STATE.md", "src/instrumentation.ts", "src/lib/config/legacy-boot.ts", "src/modules/hermes/lib/home.ts", "src/lib/host/paths.ts", "next.config.ts", "scripts/bootstrap/", "scripts/lib/ps-dotenv-local.sh", "scripts/tooling/_env-local.mjs", "scripts/tooling/line-census.baseline.json", "tests/fixtures/mutants/T-0187.json", "scripts/hardware/ch-db-backup.sh", "scripts/hardware/ch-disk-report.sh", "scripts/hardware/ch-health-check.sh", "scripts/hardware/ch-log-rotate.sh", "scripts/hardware/ch-system-report.sh", "scripts/tooling/eos-compile.mjs", "tests/unit/b15-corpus-moves-under-org.test.ts", "tests/unit/b15-docs-pipeline-is-wired.test.ts", "org/COMPILE_REPORT.md", "org/VENTURE_BRIEF.md", "org/EOS_FEEDBACK.md", "docs/running/host-scheduling.md", "docs/running/cross-platform.md", "docs/running/env-reference.md", "CHANGELOG.md"]
-    },
-    {
-      "task": "T-0187",
-      "owner": "independent-oracle-branch-port",
-      "mode": "high-assurance",
-      "paths": ["tests/unit/legacy-concurrent-boot-warning.test.ts"]
     }
   ],
-  "note": "The branch-port and hardware-log oracles are committed and their writers released. The coordinator owns T-0187 source, docs, records and removals. A second independent ORACLE lane owns only tests/unit/legacy-concurrent-boot-warning.test.ts for the concurrent register counterexample; no source edit is permitted there."
+  "note": "All T-0187 oracle and fixture writers are released. The coordinator owns the remaining source, docs, records, gate, sweep and landing."
 }

@@ -52,9 +52,16 @@ const setEnvLocalIfAbsent = (key, val) => setEnvVarIfAbsent(ENV_FILE, key, val);
 
 // ── data dir ────────────────────────────────────────────────────
 function resolveDataDir() {
+  const selectedEnvironmentKey = ["PS_DATA_DIR", "CH_DATA_DIR", "CONTROL_HUB_DATA_DIR"]
+    .find((key) => process.env[key]);
   const raw = process.env.PS_DATA_DIR || process.env.CH_DATA_DIR || process.env.CONTROL_HUB_DATA_DIR
     || readEnvLocal().PS_DATA_DIR;
-  if (raw && raw.trim()) return raw.trim().replace(/[/\\]+$/, "");
+  if (raw && raw.trim()) {
+    if (selectedEnvironmentKey && selectedEnvironmentKey !== "PS_DATA_DIR") {
+      console.warn(`[config] ${selectedEnvironmentKey} supplied the data directory for setup. Use PS_DATA_DIR; the pre-rename name retires after v1.0.0.`);
+    }
+    return raw.trim().replace(/[/\\]+$/, "");
+  }
   const next = join(homedir(), "patterstage", "data");
   const legacy = join(homedir(), "control-hub", "data");
   return !existsSync(next) && existsSync(legacy) ? legacy : next;

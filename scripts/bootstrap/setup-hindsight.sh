@@ -422,9 +422,13 @@ echo "  PostgreSQL: sudo systemctl status postgresql"
 fi
 echo ""
 PS_WEB_PORT="${CONTROL_HUB_PORT:-3000}"
+_p=""
 if [ -f "$REPO_ROOT/.env.local" ]; then
   _p="$(grep -E '^PORT=' "$REPO_ROOT/.env.local" 2>/dev/null | tail -n1 | sed 's/^PORT=//' | tr -d '\r')"
   [ -n "$_p" ] && PS_WEB_PORT="$_p"
+fi
+if [ -n "${CONTROL_HUB_PORT:-}" ] && [ -z "${_p:-}" ]; then
+  warn "CONTROL_HUB_PORT supplied the dashboard port. Use PORT in .env.local; the pre-rename name retires after v1.0.0."
 fi
 echo "Dashboard:"
 echo "  Memory page at http://localhost:${PS_WEB_PORT}/memory"

@@ -1,20 +1,10 @@
 /** @jest-environment node */
 
+import { resetLegacyBootEnvironment } from "../helpers/legacy-boot-fixture";
+
 // T-0187: exercise concurrent calls to the actual Node boot entrypoint.
-jest.mock("@/lib/auth/boot-state", () => ({ initialiseBootState: jest.fn() }));
-jest.mock("@/lib/api/auth-token", () => ({
-  getAuthMode: () => "token",
-  ensureAuthToken: jest.fn(),
-  describeTokenSource: () => ({ kind: "environment" }),
-}));
-jest.mock("@/lib/deploy/boot-diagnostics", () => ({ describeOperationalFlags: () => "oracle boot" }));
 jest.mock("@/modules/hermes/lib/home", () => ({ selectedLegacyHermesHomeName: () => null }));
 jest.mock("@/lib/host/paths", () => ({ shadowedDataWarning: () => null }));
-jest.mock("@/lib/sync", () => ({ ensureSyncLayer: jest.fn() }));
-jest.mock("@/lib/orchestration", () => ({ ensureBackgroundScheduler: jest.fn() }));
-jest.mock("@/lib/seed/catalog-seed", () => ({ ensureCatalogSeededOnce: jest.fn() }));
-jest.mock("@/lib/laboratory/deep-research/research-repository", () => ({ failStuckResearchRuns: () => 0 }));
-jest.mock("@/lib/chat/chat-repository", () => ({ failStuckChatMessages: () => 0 }));
 
 const savedEnvironment = { ...process.env };
 const selectionKeys = [
@@ -31,9 +21,7 @@ let info: jest.SpyInstance;
 let error: jest.SpyInstance;
 
 beforeEach(() => {
-  jest.resetModules();
-  process.env = { ...savedEnvironment, NEXT_RUNTIME: "nodejs" };
-  for (const key of selectionKeys) delete process.env[key];
+  resetLegacyBootEnvironment(savedEnvironment, selectionKeys);
   warn = jest.spyOn(console, "warn").mockImplementation(() => {});
   info = jest.spyOn(console, "info").mockImplementation(() => {});
   error = jest.spyOn(console, "error").mockImplementation(() => {});

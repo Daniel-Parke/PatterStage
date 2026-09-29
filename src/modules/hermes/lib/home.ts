@@ -22,3 +22,13 @@ export function getHermesHome(): string {
   }
   return DEFAULT_HERMES_HOME;
 }
+
+/** Name only the legacy key that actually wins this adapter's home selection. */
+export function selectedLegacyHermesHomeName(
+  environment: Readonly<Record<string, string | undefined>>,
+): string | null {
+  const selected = environment.HERMES_HOME || environment.AGENT_HOME;
+  return selected?.trim() && !environment.HERMES_HOME
+    ? "AGENT_HOME → HERMES_HOME"
+    : null;
+}

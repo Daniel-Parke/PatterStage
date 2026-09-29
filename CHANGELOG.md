@@ -535,7 +535,23 @@ The work leading to the 1.0.0 release.
 - **Failures during category rename, scheduled-mission delete, pause and run-now
   are shown** instead of the page reloading over them.
 
+### Deprecated
+
+- **Pre-rename configuration names.** `CH_*`, `CONTROL_HUB_*` and
+  `AGENT_HOME` still work through v1.0.0. When one supplies the selected
+  value, boot names it and its replacement without printing the value.
+  Move to the canonical names in the [environment reference](docs/running/env-reference.md)
+  before their planned retirement in the first release after v1.0.0.
+
 ### Removed
+
+- **Five dev-only pre-rename hardware shims** (`ch-db-backup.sh`,
+  `ch-disk-report.sh`, `ch-health-check.sh`, `ch-log-rotate.sh` and
+  `ch-system-report.sh`) from fresh installs. Existing installed copies
+  and their same-directory `ps-*.sh` targets remain; `ch-backup.sh` stays.
+- **The refused Session 0 EOS compiler**, `scripts/tooling/eos-compile.mjs`.
+  It had no npm entry and could not compile the v2 matrix. The governed
+  retirement and remaining estate feedback are in `org/COMPILE_REPORT.md`.
 
 - **Three API routes nothing called**: the full drift report, the scripts
   directory lookup, and the per-mission dispatch route that its own header said

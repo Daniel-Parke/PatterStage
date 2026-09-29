@@ -1,9 +1,9 @@
 {
   "measuredAt": "2026-09-29",
   "counts": {
-    "srcLines": 102611,
-    "testLines": 137521,
-    "scriptsLines": 13629,
+    "srcLines": 102681,
+    "testLines": 138619,
+    "scriptsLines": 13504,
     "srcRepeatedWindowLines": 1010,
     "testRepeatedWindowLines": 4794,
     "routesWithTryCatch": 18,
@@ -985,6 +985,56 @@
       "measuredAt": "2026-09-29",
       "rise": "testLines rose from 137520 to 137521",
       "reason": "T-0186: independent amendment adds one explicit Jest presence matcher so the mutation sweep can classify a missing banner by structured assertion"
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "srcLines rose from 102611 to 102675",
+      "reason": "T-0187: independent red-first boot and bridge oracles add 370 test lines, including a shared process fixture; the one-time key-only warning and Hermes adapter add 64 source lines. Exactly two ruled EOS-compiler-only test identities retire; the fixed C4 repeated-window ceiling remains 4800 and current repeated test windows remain 4794."
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "testLines rose from 137521 to 137891",
+      "reason": "T-0187: independent red-first boot and bridge oracles add 370 test lines, including a shared process fixture; the one-time key-only warning and Hermes adapter add 64 source lines. Exactly two ruled EOS-compiler-only test identities retire; the fixed C4 repeated-window ceiling remains 4800 and current repeated test windows remain 4794."
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "srcLines rose from 102675 to 102679",
+      "reason": "T-0187: independent red-first inherited environment and repeated-line oracles add 417 test lines; repairing final warning provenance adds 54 script lines and four source lines; fixed repeated-window ceilings do not rise"
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "testLines rose from 137891 to 138308",
+      "reason": "T-0187: independent red-first inherited environment and repeated-line oracles add 417 test lines; repairing final warning provenance adds 54 script lines and four source lines; fixed repeated-window ceilings do not rise"
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "scriptsLines rose from 13439 to 13493",
+      "reason": "T-0187: independent red-first inherited environment and repeated-line oracles add 417 test lines; repairing final warning provenance adds 54 script lines and four source lines; fixed repeated-window ceilings do not rise"
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "testLines rose from 138308 to 138470",
+      "reason": "T-0187: independent final provenance oracle adds 162 test lines; exact inherited branch and Hindsight port repairs add 11 script lines; repeated-window ceilings unchanged"
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "scriptsLines rose from 13493 to 13504",
+      "reason": "T-0187: independent final provenance oracle adds 162 test lines; exact inherited branch and Hindsight port repairs add 11 script lines; repeated-window ceilings unchanged"
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "testLines rose from 138470 to 138519",
+      "reason": "T-0187: independent hardware-log red-first oracle adds 49 test lines; selectors corrected without script growth; repeated-window ceilings unchanged"
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "srcLines rose from 102679 to 102681",
+      "reason": "T-0187: independent concurrent-register red-first oracle adds 100 net test lines after name-preserving fixture extraction; one-time warning race repair adds two source lines; C4 repeated windows remain 4794 below fixed 4800 ceiling"
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "testLines rose from 138519 to 138619",
+      "reason": "T-0187: independent concurrent-register red-first oracle adds 100 net test lines after name-preserving fixture extraction; one-time warning race repair adds two source lines; C4 repeated windows remain 4794 below fixed 4800 ceiling"
     }
   ]
 }

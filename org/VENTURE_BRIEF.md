@@ -19,17 +19,16 @@ machine to control one Hermes AI agent: configure it, commission work, gate the
 work that needs judgement, and watch what ran. Founding a governed project from
 PatterTech EOS seed packs is the venture's other half, and today it is an
 intention rather than a surface: this paragraph used to say the console generated
-them, and no page, route or library under `src/` mentions EOS at all. The only
-compiler in the tree is `scripts/tooling/eos-compile.mjs`, a Session 0
-command-line artefact the application never invokes, which reads its templates
-from a separate PatterTech_EOS checkout named by `EOS_ROOT` and pins the scale at
-M; `docs/COMPILE_REPORT.md` item 5 already records that it owes a v2 pass or a
-retirement note. Nothing else plugs in until someone other than its author has
+them, and no page, route or library under `src/` mentions EOS at all. The
+refused Session 0 `scripts/tooling/eos-compile.mjs` was retired under the
+operator's org-11 ruling; [`org/COMPILE_REPORT.md`](COMPILE_REPORT.md) item 5
+records why and preserves the recompile ancestry. There is no local EOS
+compiler now. Nothing else plugs in until someone other than its author has
 installed it from scratch and used it for a week: integrating PatterTech's wider
 product layers is deliberately deferred, not undecided.
 
-- One line: the local console for one AI agent, and the place a governed project
-  is meant to be founded once that compiler is ported.
+- One line: the local console for one AI agent, with governed project founding
+  still an intended surface that needs a new, reviewed implementation.
 - Who it serves: **both, equally** (the operator's word). A public open-source
   control plane for anyone running Hermes locally, AND PatterTech's own estate
   console. Neither audience is the junior partner.

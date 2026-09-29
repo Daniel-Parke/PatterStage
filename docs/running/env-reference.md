@@ -12,7 +12,23 @@ compiled_from: normalised
 
 Quick lookup for PatterStage and Hermes paths. Set values in `.env.local` (created by `scripts/bootstrap/setup.sh`) or export them before `npm run start`.
 
-> **Env naming:** canonical variables use the **`PS_`** prefix. The legacy **`CH_`** names (and `CONTROL_HUB_*`) are still read as fallbacks, so an existing `.env.local` keeps working. See [MIGRATION.md → Path & environment rename](migration.md#path--environment-rename-control-hub--patterstage).
+> **Env naming:** canonical variables use the **`PS_`** prefix. The legacy **`CH_`** names (and `CONTROL_HUB_*`) are still read as fallbacks through v1.0.0, so an existing `.env.local` keeps working. A boot warning names a legacy key only when it supplied the selected value; it never prints that value. These aliases retire in the first release after v1.0.0. Move to the canonical names before then. See [MIGRATION.md → Path & environment rename](migration.md#path--environment-rename-control-hub--patterstage).
+
+| Deprecated input | Replacement |
+|------------------|-------------|
+| `CH_DATA_DIR`, `CONTROL_HUB_DATA_DIR` | `PS_DATA_DIR` |
+| `CH_SCRIPTS_DIR` | `PS_SCRIPTS_DIR` |
+| `CH_HARDWARE_LOG_DIR` | `PS_HARDWARE_LOG_DIR` |
+| `CH_ENABLE_DEPLOY_API` | `PS_ENABLE_DEPLOY_API` |
+| `CH_REQUEST_SIGNING_SECRET` | `PS_REQUEST_SIGNING_SECRET` |
+| `CH_READ_ONLY` | `PS_READ_ONLY` |
+| `CH_RUN_MAX_MINUTES` | `PS_RUN_MAX_MINUTES` |
+| `CH_UPDATE_GIT_BRANCH` | `PS_UPDATE_GIT_BRANCH` |
+| `CH_PULL_RECONCILE_DISK` | `PS_PULL_RECONCILE_DISK` |
+| `CONTROL_HUB_LLM_API` | `PS_LLM_API` |
+| `CH_ALLOWED_DEV_ORIGINS` | `PS_ALLOWED_DEV_ORIGINS` |
+| `CONTROL_HUB_PORT` | `PORT` in the Hindsight setup script |
+| `AGENT_HOME` | `HERMES_HOME` |
 
 ## Naming
 
