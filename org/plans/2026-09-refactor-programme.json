@@ -649,6 +649,7 @@
       "claims": [
         "scripts/bootstrap/**",
         "src/lib/config/**",
+        "src/lib/config/legacy-boot.ts",
         "src/lib/api/api-auth.ts",
         "src/lib/api/read-only.ts",
         "src/lib/host/paths.ts",

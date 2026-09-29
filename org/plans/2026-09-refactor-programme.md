@@ -222,7 +222,7 @@ historic SQLite compatibility and optional Hindsight backend are also
 unproven. T-0180, T-0189 and T-0196 own the local work; external or operator
 proof is named in the coverage ledger.
 
-T-0200's register claims the 62 files found by the current tracked-source
+T-0200's register claims the 63 files found by the current tracked-source
 `CH_|CONTROL_HUB_|AGENT_HOME|x-ch-|ch.sessions.` inventory across `src/`,
 `scripts/` and `next.config.ts`. Its oracle checks that file set. At batch
 opening, refresh the inventory and claim any newly added readers. Historical
