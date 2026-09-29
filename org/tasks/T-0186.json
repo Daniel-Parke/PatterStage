@@ -34,6 +34,7 @@
     "tests/e2e/story-weaver-save-boundaries.spec.ts",
     "tests/e2e/story-weaver-save-layout.spec.ts",
     "tests/e2e/story-weaver-save-controls-layout.spec.ts",
+    "tests/e2e/story-weaver-chapter-heading-layout.spec.ts",
     "tests/fixtures/mutants/T-0186.json",
     "scripts/tooling/line-census.baseline.json"
   ],
@@ -61,7 +62,7 @@
       ]
     }
   ],
-  "verification": "The added phone chapter-control oracle failed red before the second layout repair: alert box x16 y96 358x43 intersects Show chapters x239.1875 y93 46x32 after settled navigation, 1 of 1 intended failure on owned port 3998. Earlier full gate passed before this added oracle and layout change; final gate remains pending.",
+  "verification": "The phone chapter-control oracle failed red before the second layout repair: alert box x16 y96 358x43 intersected Show chapters x239.1875 y93 46x32 after settled navigation, 1 of 1 intended failure on owned port 3998. After placing the banner inside the header, 21 focused cases passed and a viewport walk showed the chapter h2 still partly behind the header. A separate heading oracle failed red, 1 of 1, at heading y185 versus alert bottom y200 on the isolated listener. Earlier full gate passed before these added oracles and layout changes; final gate remains pending.",
   "mutation": "Pending.",
   "deviations": "None."
 }
