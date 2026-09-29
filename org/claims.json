@@ -10,10 +10,10 @@
     },
     {
       "task": "T-0187",
-      "owner": "independent-r2-effective-alias-oracle",
+      "owner": "independent-r2-boot-fixture-refactor",
       "mode": "high-assurance",
-      "paths": ["tests/unit/legacy-effective-alias-warning.test.ts", "tests/unit/legacy-script-alias-warning.test.ts"]
+      "paths": ["tests/helpers/legacy-boot-fixture.ts", "tests/unit/legacy-boot-warning.test.ts", "tests/unit/legacy-run-limit-warning.test.ts", "tests/unit/legacy-effective-alias-warning.test.ts", "tests/unit/legacy-script-alias-warning.test.ts"]
     }
   ],
-  "note": "Earlier T-0187 oracles are committed red-first. The coordinator owns source, docs, records and removals; a separate R2 ORACLE owns only the two comprehensive effective-alias suites before those warning repairs."
+  "note": "All T-0187 oracles are committed red-first. The coordinator owns source, docs, records and removals; a separate R2 writer owns only named boot-oracle suites and their shared fixture to preserve identity while restoring C4's fixed repeated-window ceiling."
 }
