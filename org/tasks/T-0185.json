@@ -11,7 +11,7 @@
   "reasons": [
     {"factor": "public-contract", "tier_floor": "R2", "source": "declared", "evidence": "declared side effect: public-api-delta"}
   ],
-  "status": "in_progress",
+  "status": "done",
   "owner_session": "2026-09-29-refactor-prerelease",
   "claims": [
     "org/tasks/T-0185.json",
@@ -49,7 +49,7 @@
     "tests/fixtures/mutants/T-0185.json",
     "scripts/tooling/line-census.baseline.json"
   ],
-  "timestamps": {"opened": "2026-09-29T15:44:37Z", "updated": "2026-09-29T15:44:37Z"},
+  "timestamps": {"opened": "2026-09-29T15:44:37Z", "updated": "2026-09-29T18:11:41Z"},
   "invariants": [
     "A literal task tag inside context cannot replace the mission's real task when a stored prompt is parsed for edit.",
     "An ordinary nested task example and CDATA break sequence preserve their accepted round-trip meanings.",
@@ -101,7 +101,7 @@
       ]
     }
   ],
-  "verification": "Pending.",
-  "mutation": "First clean-tree sweep at 178551c2: 4 KILLED, 2 SURVIVED, clean restoration. m1 lacked a literal task sequence inside the real instruction; m6 lacked a later board refresh after a stale earlier success. New independent behaviour suites are claimed for these survivors before the sweep repeats.",
-  "deviations": "Planned R1 rose to R2: the declared public-api-delta activated the router's public-contract factor. No source implementation preceded the ruling."
+  "verification": "The final unchanged-tree ten-step full gate on committed dev@3b60a760 exited zero at every step, with tree SHA-256 865c029170f5b85c112e27f7785273d64923ce88f4427d671f3aa1c9ffc7772f before and after: lint, TypeScript, Jest (776 passing suites, 7,415 passing tests, eight skips), Knip, canary, production build, build purity, Playwright (333 passes, 24 skips), design census and line census. The amended old-link journey passed in the loaded Playwright gate. The isolated browser walk on owned port 3997 opened the oldest of 201 missions beyond the first page at 1440x900 and 390x844, observed a live refresh after 16 seconds, checked missing-ID feedback and deletion success without a contradictory toast, and found one h1, no horizontal overflow and no console errors. Screenshot SHA-256: desktop-old 990c1667b3707760caf8f96a5c5fba2484a395cdde1509354dcc1b8cc1dac048; phone-old e5616463880499e6ee3235e5f6ef09926afbe9c16f99d8ec01835f85158be1f0; phone-after-delete 67cf5a277ca302c5148cc0e9b1d81df318ca5d2c731b3a8b53149cea0fe1dc54. The committed line census records source 102598, tests 137040, source repeated windows 1010, test repeated windows 4794 and one-importer components 104, with a written growth reason and unchanged C4 ceiling. Hosted acceptance remains to be observed after push.",
+  "mutation": "The first clean-tree sweep at 178551c2 killed four of six mutants and reported two survivors honestly. Independent behaviour suites in 2587b252 killed those survivors. The final clean committed-tree sweep at 3b60a760 killed all six mutants by named assertions, with zero NOT-APPLIED, INEFFECTIVE or SURVIVED outcomes. Restoration and unmodified controls passed; Git remained clean.",
+  "deviations": "Planned R1 rose to R2 because the declared public-api-delta activated the router's public-contract factor. No source implementation preceded the ruling. The full Jest coordinator pass found C4 at 4908 above the fixed 4800 ceiling; an independently authorised fixture consolidation brought it to 4794 without changing test names, assertions or the ceiling. Knip found two unused new helper exports, removed by a separate ORACLE. Two loaded Playwright gates then lost the new old-link worker with Windows exit 3221226505 while its isolated run passed. An independently authorised, name-preserving fixture amendment reduced 200 HTTP setup writes to one isolated SQLite transaction; the final loaded full gate passed. The original crash cause is not proven. No failing gate was weakened, and hosted jobs await the closure push."
 }

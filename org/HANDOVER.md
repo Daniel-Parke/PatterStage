@@ -9,6 +9,25 @@ updated: 2026-09-29
 
 ## Current status, 2026-09-29
 
+**T-0185 is closed locally** with implementation at `178551c2` and final
+committed test tree `dev@3b60a760`. Mission prompt parsing keeps the real task
+when context contains CDATA or task-shaped references. Non-string `modelId`
+values receive a client error before a write. The Missions board opens an
+older mission beyond its first 200 rows and keeps the deep link current across
+refresh, deletion and overlapping requests. The unchanged-tree ten-step gate
+exited zero with 7,415 Jest passes, eight skips, 333 Playwright passes and 24
+skips; tree SHA-256 was
+`865c029170f5b85c112e27f7785273d64923ce88f4427d671f3aa1c9ffc7772f`.
+All six committed-tree mutants were killed and the tree restored cleanly. An
+isolated browser walk on port **3997** checked the oldest of 201 missions at
+1440×900 and 390×844, a live refresh, missing-ID feedback and deletion, with
+one h1 and no overflow or console errors. The full gate uses port **3000**.
+Two loaded Playwright attempts lost the new old-link worker; an independently
+authorised fixture amendment retained the browser journey and passed under
+the final loaded gate. The cause of those Windows worker exits is unproven.
+Hosted acceptance remains to be observed after push. T-0186 is next; Q-011
+still holds structural work until the operator's rc.1 and v1.0.0 release.
+
 **T-0184 is closed** at `dev@9b8ba9e8`, with implementation in `2dd1910a`.
 Mission cron promotion now validates before
 writing, clears the immediate queue flag and rolls back the mission if schedule
