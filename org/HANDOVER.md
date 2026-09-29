@@ -9,8 +9,8 @@ updated: 2026-09-29
 
 ## Current status, 2026-09-29
 
-**T-0185 is closed locally** with implementation at `178551c2` and final
-committed test tree `dev@3b60a760`. Mission prompt parsing keeps the real task
+**T-0185 is closed** with implementation at `178551c2` and final
+committed test tree `dev@d6de9a9b`. Mission prompt parsing keeps the real task
 when context contains CDATA or task-shaped references. Non-string `modelId`
 values receive a client error before a write. The Missions board opens an
 older mission beyond its first 200 rows and keeps the deep link current across
@@ -25,7 +25,10 @@ one h1 and no overflow or console errors. The full gate uses port **3000**.
 Two loaded Playwright attempts lost the new old-link worker; an independently
 authorised fixture amendment retained the browser journey and passed under
 the final loaded gate. The cause of those Windows worker exits is unproven.
-Hosted acceptance remains to be observed after push. T-0186 is next; Q-011
+Hosted push CI `36610475984`, PR CI `36610486709`, push Gitleaks
+`36610475991` and PR Gitleaks `36610486685` all passed on the exact closure
+head `d6de9a9b`. Every PR acceptance job passed, including full E2E,
+native builds, Docker, install and real Hermes. T-0186 is next; Q-011
 still holds structural work until the operator's rc.1 and v1.0.0 release.
 
 **T-0184 is closed** at `dev@9b8ba9e8`, with implementation in `2dd1910a`.
