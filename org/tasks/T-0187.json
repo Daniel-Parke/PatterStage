@@ -15,7 +15,7 @@
   "status": "active",
   "owner_session": "2026-09-29-refactor-prerelease",
   "claims": [
-    "org/tasks/T-0187.json", "org/claims.json", "org/HANDOVER.md", "org/briefs/T-0187-oracle.md", "org/briefs/T-0187-bridge-oracle.md",
+    "org/tasks/T-0187.json", "org/claims.json", "org/HANDOVER.md", "org/briefs/T-0187-oracle.md", "org/briefs/T-0187-bridge-oracle.md", "org/briefs/T-0187-review.md",
     "org/TASKS.md", "org/STATE.md", "src/instrumentation.ts", "src/lib/config/legacy-boot.ts",
     "src/lib/host/paths.ts", "next.config.ts", "scripts/bootstrap/setup.sh", "scripts/bootstrap/setup.mjs",
     "scripts/bootstrap/setup-hindsight.sh", "scripts/lib/ps-dotenv-local.sh", "scripts/tooling/_env-local.mjs",
