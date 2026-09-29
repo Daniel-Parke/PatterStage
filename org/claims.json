@@ -8,20 +8,10 @@
       "session_id": "01a09490-d778-7ac2-a183-6bfb646c6757",
       "host": "local",
       "harness_task_id": "01a09490-d778-7ac2-a183-6bfb646c6757",
-      "path_claims": ["org/tasks/T-0186.json", "org/claims.json", "org/HANDOVER.md", "org/briefs/T-0186-supplemental-oracle.md", "org/TASKS.md", "org/STATE.md", "scripts/maintenance/hindsight-rederive.sh", "src/app/recroom/story-weaver/[id]/page.tsx", "tests/unit/hindsight-rederive-safety.test.ts", "tests/e2e/story-weaver-save-failure.spec.ts", "tests/fixtures/mutants/T-0186.json", "scripts/tooling/line-census.baseline.json"],
+      "path_claims": ["org/tasks/T-0186.json", "org/claims.json", "org/HANDOVER.md", "org/briefs/T-0186-supplemental-oracle.md", "org/briefs/T-0186-oracle-amendment.md", "org/briefs/T-0186-layout-oracle.md", "org/TASKS.md", "org/STATE.md", "scripts/maintenance/hindsight-rederive.sh", "src/app/recroom/story-weaver/[id]/page.tsx", "src/modules/rec-room/components/ReaderBanners.tsx", "tests/unit/hindsight-rederive-safety.test.ts", "tests/fixtures/mutants/T-0186.json", "scripts/tooling/line-census.baseline.json"],
       "acquired": "2026-09-29T18:15:02Z",
       "expires": "2026-09-30T18:15:02Z"
-    },
-    {
-      "lane_id": "t0186-supplemental-oracle",
-      "task_id": "T-0186",
-      "session_id": "01a0ee69-17d0-74d1-b624-de37ec9e1477",
-      "host": "local",
-      "harness_task_id": "01a0ee69-17d0-74d1-b624-de37ec9e1477",
-      "path_claims": ["tests/e2e/story-weaver-save-boundaries.spec.ts"],
-      "acquired": "2026-09-29T18:27:00Z",
-      "expires": "2026-09-30T18:27:00Z"
     }
   ],
-  "note": "Two disjoint T-0186 writing lanes: coordinator owns source and records; independent ORACLE owns only the supplemental browser suite."
+  "note": "The independent layout ORACLE lane is released after its two red geometric cases. The coordinator owns the ReaderBanners.tsx repair, repeat full gate and closure."
 }

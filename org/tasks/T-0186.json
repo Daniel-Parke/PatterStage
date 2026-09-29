@@ -19,27 +19,44 @@
     "org/claims.json",
     "org/HANDOVER.md",
     "org/briefs/T-0186-supplemental-oracle.md",
+    "org/briefs/T-0186-oracle-amendment.md",
+    "org/briefs/T-0186-layout-oracle.md",
     "org/TASKS.md",
     "org/STATE.md",
     "scripts/maintenance/hindsight-rederive.sh",
     "src/app/recroom/story-weaver/[id]/page.tsx",
+    "src/modules/rec-room/components/ReaderBanners.tsx",
     "tests/unit/hindsight-rederive-safety.test.ts",
     "tests/e2e/story-weaver-save-failure.spec.ts",
     "tests/e2e/story-weaver-save-boundaries.spec.ts",
+    "tests/e2e/story-weaver-save-layout.spec.ts",
     "tests/fixtures/mutants/T-0186.json",
     "scripts/tooling/line-census.baseline.json"
   ],
-  "timestamps": {"opened": "2026-09-29T18:15:02Z", "updated": "2026-09-29T18:15:02Z"},
+  "timestamps": {"opened": "2026-09-29T18:15:02Z", "updated": "2026-09-29T18:52:12Z"},
   "invariants": [
     "A count-only or omitted target cannot delete a live Hindsight bank; Q-013's ruled rederive command is no longer callable.",
     "A failed read-status POST leaves Story Weaver's local read status unsaved and gives visible feedback for HTTP and network failures.",
+    "The save-error message and dismiss control stay readable without covering the global navigation or story heading at desktop and phone widths.",
     "A successful read-status save still marks the selected chapter read and preserves navigation."
   ],
   "rollback": "Restore only a harmless count-only Hindsight command if still needed; never restore a live-destructive default. Revert Story Weaver feedback only with an equivalent failure-safe save implementation that passes the same browser oracle.",
   "verify_line": "The specifically ruled Hindsight rederive entrypoint is absent and cannot delete a live bank by default; unsuccessful HTTP and network chapter saves leave read status unsaved with visible error at 1440 and 390 widths, while successful saves mark read and navigation remains usable.",
   "approval": "The operator approved prerelease T-0180–T-0187 on 2026-09-28 and specifically ruled hindsight-rederive.sh for deletion in Q-013. H1 and A1 were independently rechecked in org/reviews/2026-09-t0164-defects.md.",
-  "oracle_provenance": "The coordinator authored the R2 oracle before any source change: tests/unit/hindsight-rederive-safety.test.ts SHA-256 F676B063232BEE1FB09E24F2ACC51DA42B798000DFA16595039737504556265F and tests/e2e/story-weaver-save-failure.spec.ts SHA-256 A5BBA95DC99077457D56D637BF02C3881AEBD2C637D182660517D4ED02D31053. The unit removal assertion failed as intended, with the dangerous script still present. The owned isolated Playwright listener on port 3998 ran six cases at 1440x900 and 390x844: four failed at the intended missing save-error alert, while both successful-save controls passed. TypeScript passed. This oracle was frozen before source repair. After independent sceptic review exposed two further save gaps, distinct ORACLE 01a0ee69-17d0-74d1-b624-de37ec9e1477 authored only tests/e2e/story-weaver-save-boundaries.spec.ts SHA-256 AF247F24C263422DF273462605667755C2443AEF050172EE2B636E4D5EB17660. Its fixture models the actual server merge by chapter number. Against the still-unfixed save implementation, the ORACLE and coordinator each observed ten intended failures and two passing confirmed-save/reload controls across 1440x900 and 390x844. The supplemental oracle is frozen before the corresponding source repair.",
-  "claim_expansion": "An independent read-only sceptic found two defects in the initial implementation: overlapping selections can send stale full chapter arrays and erase a read mark on the server, and a 200 response without confirmed saved chapter data is treated as success. The existing basic oracle does not cover either. A separate ORACLE owns a new suite with red-first proof; the existing frozen suite remains unchanged.",
+  "oracle_provenance": "The coordinator authored the R2 oracle before any source change: tests/unit/hindsight-rederive-safety.test.ts SHA-256 F676B063232BEE1FB09E24F2ACC51DA42B798000DFA16595039737504556265F and tests/e2e/story-weaver-save-failure.spec.ts SHA-256 A5BBA95DC99077457D56D637BF02C3881AEBD2C637D182660517D4ED02D31053. The unit removal assertion failed as intended, with the dangerous script still present. The owned isolated Playwright listener on port 3998 ran six cases at 1440x900 and 390x844: four failed at the intended missing save-error alert, while both successful-save controls passed. TypeScript passed. This oracle was frozen before source repair. After independent sceptic review exposed two further save gaps, distinct ORACLE 01a0ee69-17d0-74d1-b624-de37ec9e1477 authored only tests/e2e/story-weaver-save-boundaries.spec.ts SHA-256 AF247F24C263422DF273462605667755C2443AEF050172EE2B636E4D5EB17660. Its fixture models the actual server merge by chapter number. Against the still-unfixed save implementation, the ORACLE and coordinator each observed ten intended failures and two passing confirmed-save/reload controls across 1440x900 and 390x844. That supplemental oracle was frozen before its source repair. After the visual walk showed the banner covering global chrome, the same independent ORACLE authored tests/e2e/story-weaver-save-layout.spec.ts SHA-256 68F468A0AF5AB92BCC3012DEEAD21B649F6FD08426F5C68C78C825AE18623093. The ORACLE and coordinator each observed both geometric cases red at the intended overlap assertion, with text and dismiss controls inside the viewport. This layout oracle is frozen before ReaderBanners.tsx changes.",
+  "claim_expansion": "An independent read-only sceptic found two defects in the initial implementation: overlapping selections can send stale full chapter arrays and erase a read mark on the server, and a 200 response without confirmed saved chapter data is treated as success. The existing basic oracle did not cover either. A separate ORACLE authored a supplemental red-first suite. The same sceptic later authorised one narrow success-fixture correction to the original suite; a distinct ORACLE authored it, with names and assertions preserved and the historical freeze retained. The isolated visual walk then exposed a mobile save-error banner covering the global brand/header; the shared reader banner and an independently authored geometric browser oracle join this task before that component is changed.",
+  "oracle_amendments": [
+    {
+      "date": "2026-09-29",
+      "reason": "The original successful-update mock returned an unchanged unread story, while the actual update handler returns a saved story with the submitted chapter marked read. Requiring response confirmation made this mock contradict a real successful save.",
+      "authoriser": "Independent R2 REVIEWER 01a0ee66-3b69-7041-ad71-a1c57ea8b9e8",
+      "author": "Independent ORACLE 01a0ee69-17d0-74d1-b624-de37ec9e1477, distinct from the frozen suite's author",
+      "change": "Only the success fixture now merges the submitted selected chapter into the returned story. Both success test names and all assertions remain; HTTP and network failure fixtures, worker count, retries and timeout are unchanged. The original red-first commit 6f23bd9b remains the historical freeze. All six cases passed with the supplemental suite after rebuilding.",
+      "files": [
+        {"path": "tests/e2e/story-weaver-save-failure.spec.ts", "old_sha256": "A5BBA95DC99077457D56D637BF02C3881AEBD2C637D182660517D4ED02D31053", "new_sha256": "69A48B5B826D8257423880BF7B41DAB2464B019AF286DF6B2F0547133C6F28F2"}
+      ]
+    }
+  ],
   "verification": "Pending.",
   "mutation": "Pending.",
   "deviations": "None."
