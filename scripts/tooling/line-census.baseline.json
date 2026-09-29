@@ -2,7 +2,7 @@
   "measuredAt": "2026-09-29",
   "counts": {
     "srcLines": 102681,
-    "testLines": 138619,
+    "testLines": 138659,
     "scriptsLines": 13504,
     "srcRepeatedWindowLines": 1010,
     "testRepeatedWindowLines": 4794,
@@ -1035,6 +1035,11 @@
       "measuredAt": "2026-09-29",
       "rise": "testLines rose from 138519 to 138619",
       "reason": "T-0187: independent concurrent-register red-first oracle adds 100 net test lines after name-preserving fixture extraction; one-time warning race repair adds two source lines; C4 repeated windows remain 4794 below fixed 4800 ceiling"
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "testLines rose from 138619 to 138659",
+      "reason": "T-0187: independent survivor oracle for m2 adds 40 test lines; fixed cross-file repeated-window count remains 4794"
     }
   ]
 }
