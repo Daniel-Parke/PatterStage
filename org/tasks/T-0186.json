@@ -32,6 +32,7 @@
     "src/modules/rec-room/components/ReaderHeader.tsx",
     "src/modules/rec-room/components/StoryReaderOverlays.tsx",
     "tests/unit/hindsight-rederive-safety.test.ts",
+    "tests/unit/story-reader-error-banner.test.tsx",
     "tests/e2e/story-weaver-save-failure.spec.ts",
     "tests/e2e/story-weaver-save-boundaries.spec.ts",
     "tests/e2e/story-weaver-save-layout.spec.ts",
@@ -91,6 +92,6 @@
     }
   ],
   "verification": "The phone chapter-control oracle failed red before the second layout repair: alert box x16 y96 358x43 intersected Show chapters x239.1875 y93 46x32 after settled navigation, 1 of 1 intended failure on owned port 3998. After placing the banner inside the header, 21 focused cases passed and a viewport walk showed the chapter h2 still partly behind the header. A separate heading oracle failed red, 1 of 1, at heading y185 versus alert bottom y200 on the isolated listener. Earlier full gate passed before these added oracles and layout changes; final gate remains pending.",
-  "mutation": "Pending.",
+  "mutation": "The committed-tree sweep at c934469d reported m1-drop-reader-error-from-header SURVIVED: the existing U12 Jest control did not assert the save-error banner. A focused component oracle and a second sweep are required; no survivor is treated as killed.",
   "deviations": "None."
 }

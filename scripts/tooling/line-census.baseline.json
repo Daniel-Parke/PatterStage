@@ -2,7 +2,7 @@
   "measuredAt": "2026-09-29",
   "counts": {
     "srcLines": 102611,
-    "testLines": 137471,
+    "testLines": 137520,
     "scriptsLines": 13629,
     "srcRepeatedWindowLines": 1010,
     "testRepeatedWindowLines": 4794,
@@ -975,6 +975,11 @@
       "measuredAt": "2026-09-29",
       "rise": "testRepeatedWindowLines rose from 4794 to 4834",
       "reason": "T-0186: two separate red-first phone geometry oracles add shared isolated Story Weaver fixtures; source lines fall and the fixed closing target remains unchanged"
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "testLines rose from 137471 to 137520",
+      "reason": "T-0186: the mutation survivor required one focused reader-header behaviour suite with a dismiss control; the fixed repeated-window target remains at 4800"
     }
   ]
 }
