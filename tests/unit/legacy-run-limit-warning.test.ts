@@ -2,20 +2,9 @@
 
 // T-0187: the warning must describe the limit the app actually uses.
 import { runLegacyEnvLoader, type LegacyEnvLoader } from "../helpers/legacy-env-loader";
+import { captureLegacyBoot } from "../helpers/legacy-boot-fixture";
 
-jest.mock("@/lib/auth/boot-state", () => ({ initialiseBootState: jest.fn() }));
-jest.mock("@/lib/api/auth-token", () => ({
-  getAuthMode: () => "token",
-  ensureAuthToken: jest.fn(),
-  describeTokenSource: () => ({ kind: "environment" }),
-}));
-jest.mock("@/lib/deploy/boot-diagnostics", () => ({ describeOperationalFlags: () => "oracle boot" }));
 jest.mock("@/lib/host/paths", () => ({ shadowedDataWarning: () => null }));
-jest.mock("@/lib/sync", () => ({ ensureSyncLayer: jest.fn() }));
-jest.mock("@/lib/orchestration", () => ({ ensureBackgroundScheduler: jest.fn() }));
-jest.mock("@/lib/seed/catalog-seed", () => ({ ensureCatalogSeededOnce: jest.fn() }));
-jest.mock("@/lib/laboratory/deep-research/research-repository", () => ({ failStuckResearchRuns: () => 0 }));
-jest.mock("@/lib/chat/chat-repository", () => ({ failStuckChatMessages: () => 0 }));
 
 const originalEnvironment = { ...process.env };
 const submittedAt = "2026-09-29T12:00:00.000Z";
@@ -28,31 +17,17 @@ const clearedKeys = [
 ] as const;
 
 async function appDeadlineAndWarnings(legacyValue: string): Promise<{ minutes: number; warnings: string[] }> {
-  jest.resetModules();
-  process.env = { ...originalEnvironment, NEXT_RUNTIME: "nodejs" };
-  for (const key of clearedKeys) delete process.env[key];
-  process.env.CH_RUN_MAX_MINUTES = legacyValue;
-  process.env.PS_DATA_DIR = privatePath;
-  process.env.PS_REQUEST_SIGNING_SECRET = privateToken;
-
-  const warning = jest.spyOn(console, "warn").mockImplementation(() => {});
-  const info = jest.spyOn(console, "info").mockImplementation(() => {});
-  const error = jest.spyOn(console, "error").mockImplementation(() => {});
-  try {
-    const { register } = await import("@/instrumentation");
-    await register();
-    await register();
+  const { result: minutes, warnings } = await captureLegacyBoot(originalEnvironment, clearedKeys, () => {
+    process.env.CH_RUN_MAX_MINUTES = legacyValue;
+    process.env.PS_DATA_DIR = privatePath;
+    process.env.PS_REQUEST_SIGNING_SECRET = privateToken;
+  }, async () => {
     const { runDeadline, GRACE_MINUTES } = await import("@/lib/orchestration/run-deadline");
     const deadline = runDeadline(submittedAt, null);
     expect(deadline).not.toBeNull();
-    const minutes = (Date.parse(deadline!.at) - Date.parse(submittedAt)) / 60_000 - GRACE_MINUTES;
-    return { minutes, warnings: warning.mock.calls.map((call: unknown[]) => call.map(String).join(" ")) };
-  } finally {
-    warning.mockRestore();
-    info.mockRestore();
-    error.mockRestore();
-    process.env = { ...originalEnvironment };
-  }
+    return (Date.parse(deadline!.at) - Date.parse(submittedAt)) / 60_000 - GRACE_MINUTES;
+  });
+  return { minutes, warnings };
 }
 
 function expectSafeWarning(warnings: string[], value: string): void {

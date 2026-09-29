@@ -1,20 +1,11 @@
 /** @jest-environment node */
 
 // T-0187: compare each warning with the value an actual app consumer uses.
-jest.mock("@/lib/auth/boot-state", () => ({ initialiseBootState: jest.fn() }));
-jest.mock("@/lib/api/auth-token", () => ({
-  getAuthMode: () => "token", ensureAuthToken: jest.fn(),
-  describeTokenSource: () => ({ kind: "environment" }),
-}));
-jest.mock("@/lib/deploy/boot-diagnostics", () => ({ describeOperationalFlags: () => "oracle boot" }));
+import { captureLegacyBoot } from "../helpers/legacy-boot-fixture";
+
 jest.mock("@/lib/host/paths", () => ({
   ...jest.requireActual("@/lib/host/paths"), shadowedDataWarning: () => null,
 }));
-jest.mock("@/lib/chat/chat-repository", () => ({ failStuckChatMessages: () => 0 }));
-jest.mock("@/lib/seed/catalog-seed", () => ({ ensureCatalogSeededOnce: jest.fn() }));
-jest.mock("@/lib/sync", () => ({ ensureSyncLayer: jest.fn() }));
-jest.mock("@/lib/laboratory/deep-research/research-repository", () => ({ failStuckResearchRuns: () => 0 }));
-jest.mock("@/lib/orchestration", () => ({ ensureBackgroundScheduler: jest.fn() }));
 jest.mock("@/lib/api/api-auth", () => ({
   ...jest.requireActual("@/lib/api/api-auth"),
   requireAuthenticatedHostWrites: () => null,
@@ -56,23 +47,9 @@ async function consumerResult(consumer: Consumer): Promise<unknown> {
 }
 
 async function bootAndRead(consumer: Consumer, legacyKey?: string, value?: string) {
-  jest.resetModules();
-  process.env = { ...savedEnvironment, NEXT_RUNTIME: "nodejs", NODE_ENV: "production" };
-  for (const key of keys) delete process.env[key];
-  if (legacyKey && value !== undefined) process.env[legacyKey] = value;
-  const warn = jest.spyOn(console, "warn").mockImplementation(() => {});
-  const error = jest.spyOn(console, "error").mockImplementation(() => {});
-  const info = jest.spyOn(console, "info").mockImplementation(() => {});
-  try {
-    const { register } = await import("@/instrumentation");
-    await register();
-    await register();
-    const warnings = warn.mock.calls.map((call: unknown[]) => call.map(String).join(" "));
-    return { result: await consumerResult(consumer), warnings };
-  } finally {
-    warn.mockRestore(); info.mockRestore(); error.mockRestore();
-    process.env = { ...savedEnvironment };
-  }
+  return captureLegacyBoot(savedEnvironment, keys, () => {
+    if (legacyKey && value !== undefined) process.env[legacyKey] = value;
+  }, () => consumerResult(consumer), { NODE_ENV: "production" });
 }
 
 describe("T-0187 effective app aliases", () => {
