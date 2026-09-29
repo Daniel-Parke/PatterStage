@@ -6,8 +6,14 @@
       "task": "T-0187",
       "owner": "2026-09-29-refactor-prerelease",
       "mode": "high-assurance",
-      "paths": ["org/tasks/T-0187.json", "org/claims.json", "org/HANDOVER.md", "org/briefs/T-0187-oracle.md", "org/TASKS.md", "org/STATE.md", "src/instrumentation.ts", "src/lib/config/legacy-boot.ts", "src/lib/host/paths.ts", "next.config.ts", "scripts/bootstrap/", "scripts/lib/ps-dotenv-local.sh", "scripts/tooling/_env-local.mjs", "tests/unit/legacy-boot-warning.test.ts", "tests/unit/t0187-retired-tools.test.ts", "tests/fixtures/mutants/T-0187.json", "scripts/hardware/ch-db-backup.sh", "scripts/hardware/ch-disk-report.sh", "scripts/hardware/ch-health-check.sh", "scripts/hardware/ch-log-rotate.sh", "scripts/hardware/ch-system-report.sh", "scripts/tooling/eos-compile.mjs", "tests/unit/b15-corpus-moves-under-org.test.ts", "tests/unit/b15-docs-pipeline-is-wired.test.ts", "org/COMPILE_REPORT.md", "org/VENTURE_BRIEF.md", "org/EOS_FEEDBACK.md", "docs/running/host-scheduling.md", "docs/running/cross-platform.md", "docs/running/env-reference.md", "CHANGELOG.md"]
+      "paths": ["org/tasks/T-0187.json", "org/claims.json", "org/HANDOVER.md", "org/briefs/T-0187-oracle.md", "org/TASKS.md", "org/STATE.md", "src/instrumentation.ts", "src/lib/config/legacy-boot.ts", "src/lib/host/paths.ts", "next.config.ts", "scripts/bootstrap/", "scripts/lib/ps-dotenv-local.sh", "scripts/tooling/_env-local.mjs", "tests/fixtures/mutants/T-0187.json", "scripts/hardware/ch-db-backup.sh", "scripts/hardware/ch-disk-report.sh", "scripts/hardware/ch-health-check.sh", "scripts/hardware/ch-log-rotate.sh", "scripts/hardware/ch-system-report.sh", "scripts/tooling/eos-compile.mjs", "tests/unit/b15-corpus-moves-under-org.test.ts", "tests/unit/b15-docs-pipeline-is-wired.test.ts", "org/COMPILE_REPORT.md", "org/VENTURE_BRIEF.md", "org/EOS_FEEDBACK.md", "docs/running/host-scheduling.md", "docs/running/cross-platform.md", "docs/running/env-reference.md", "CHANGELOG.md"]
+    },
+    {
+      "task": "T-0187",
+      "owner": "independent-r2-oracle",
+      "mode": "high-assurance",
+      "paths": ["tests/unit/legacy-boot-warning.test.ts", "tests/unit/t0187-retired-tools.test.ts"]
     }
   ],
-  "note": "T-0186 exact-head push, PR and both Gitleaks workflows completed success before the T-0187 writing claim opened. One writing lane owns all T-0187 paths; independent review is read-only until an oracle brief assigns disjoint test ownership."
+  "note": "T-0186 exact-head push, PR and both Gitleaks workflows completed success before T-0187 opened. The coordinator owns source, docs, records and removals; an independent ORACLE owns only two new test files. No other writer may edit them until freeze and release of that lane."
 }
