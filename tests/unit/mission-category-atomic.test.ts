@@ -173,7 +173,7 @@ describe("category deletion with reassignment", () => {
       failure = error;
     }
 
-    expect(failure).toBeInstanceOf(Error);
+    expect(failure).toHaveProperty("message", "injected catalogue update failure");
     expect(currentState()).toEqual(before);
   });
 });
