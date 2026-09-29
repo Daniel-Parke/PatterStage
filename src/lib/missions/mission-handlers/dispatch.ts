@@ -24,7 +24,7 @@ import { parseSchedule, scheduleDisplayFromParsed } from "@/lib/schedule/parse-s
 import { computeNextRun, scheduleCanEverFire } from "@/lib/schedule/next-run";
 import { scheduleIntervalProblem } from "@/lib/schedule/interval-bounds";
 import { dispatchMissionNow } from "@/lib/missions/mission-dispatch";
-import { parseMissionBodyFields } from "@/lib/missions/mission-body";
+import { missionModelIdError, parseMissionBodyFields } from "@/lib/missions/mission-body";
 import { missionTimeoutError } from "@/lib/missions/mission-timeout";
 import { runMissionQueueTick } from "@/lib/missions/mission-queue-tick";
 import { missionResponse } from "@/lib/missions/mission-response";
@@ -36,6 +36,8 @@ import { missionNameFrom } from "@/lib/missions/mission-name";
 export async function handleDispatchMission(
   body: Record<string, unknown>,
 ): Promise<NextResponse> {
+  const modelError = missionModelIdError(body);
+  if (modelError) return badRequest(modelError);
   const { name, instruction, context, localDirs, references, skills, suggestedToolsets, goals, modelId, provider, profileName, missionTimeMinutes, timeoutMinutes, categoryId: categoryIdRaw, outputFormat, constraints } =
     parseMissionBodyFields(body);
   const { dispatchMode, schedule: scheduleVal, profileId } = body as {

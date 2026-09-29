@@ -11,7 +11,7 @@ import { NextResponse } from "next/server";
 
 import { ok, badRequest } from "@/lib/api/api-response";
 import { appendAuditLine } from "@/lib/api/audit-log";
-import { parseMissionBodyFields } from "@/lib/missions/mission-body";
+import { missionModelIdError, parseMissionBodyFields } from "@/lib/missions/mission-body";
 import { missionTimeoutError } from "@/lib/missions/mission-timeout";
 import { promoteMission } from "@/lib/missions/mission-promote-handler";
 
@@ -29,6 +29,8 @@ export async function handlePromoteMission(
   };
   const timeoutError = missionTimeoutError(rest);
   if (timeoutError) return badRequest(timeoutError);
+  const modelError = missionModelIdError(rest);
+  if (modelError) return badRequest(modelError);
   const f = parseMissionBodyFields(rest);
   const { name, instruction, context, localDirs, references, skills, suggestedToolsets, goals, modelId, provider, profileName, missionTimeMinutes, timeoutMinutes, schedule: scheduleVal, categoryId: categoryIdRaw, outputFormat, constraints } = f;
 

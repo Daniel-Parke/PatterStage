@@ -1,58 +1,17 @@
 /** @jest-environment jsdom */
 
-import { act, renderHook, waitFor } from "@testing-library/react";
-import { useMissionsData } from "@/hooks/useMissionsData";
-import type { MissionDetail, MissionRow } from "@/hooks/missions-page-types";
-
-const oldId = "oldest-of-201";
-const oldMission = {
-  id: oldId, name: "Old mission", status: "queued", queuedForRun: false,
-} as MissionRow;
-const changedMission = { ...oldMission, status: "successful" } as MissionRow;
-
-const fetchMissions = jest.fn(async (): Promise<MissionRow[]> => []);
-const fetchTemplates = jest.fn(async () => []);
-const fetchCategories = jest.fn(async () => []);
-const fetchMissionDetail = jest.fn(async (_id: string): Promise<MissionDetail | null> => ({
-  mission: oldMission, run: null, schedule: null,
-}));
-
-jest.mock("@/hooks/useMissionsApi", () => ({
-  useMissionsApi: () => ({ fetchMissions, fetchTemplates, fetchCategories, fetchMissionDetail }),
-}));
-
-const showToast = jest.fn();
-const applyTemplateToForm = jest.fn();
-const setShowCreate = jest.fn();
-
-function renderOldLink() {
-  return renderHook(() => useMissionsData({
-    showToast,
-    applyTemplateToForm,
-    setShowCreate,
-  }));
-}
-
-async function waitForOldLink(result: ReturnType<typeof renderOldLink>["result"]) {
-  await waitFor(() => {
-    expect(result.current.missions.map((mission) => mission.id)).toContain(oldId);
-    expect(result.current.expandedId).toBe(oldId);
-    expect(result.current.detail?.mission.id).toBe(oldId);
-  });
-}
+import { act, waitFor } from "@testing-library/react";
+import {
+  changedMission, clearOldLinkBoundary, fetchMissionDetail, fetchMissions, oldId,
+  renderOldLink, resetOldLinkBoundary, showToast, waitForOldLink,
+} from "../helpers/mission-old-link-boundary";
 
 beforeEach(() => {
-  window.history.replaceState({}, "", `/work/missions?mission=${oldId}`);
-  fetchMissions.mockClear();
-  fetchTemplates.mockClear();
-  fetchCategories.mockClear();
-  fetchMissionDetail.mockReset();
-  fetchMissionDetail.mockResolvedValue({ mission: oldMission, run: null, schedule: null });
-  showToast.mockClear();
+  resetOldLinkBoundary();
 });
 
 afterEach(() => {
-  window.history.replaceState({}, "", "/work/missions");
+  clearOldLinkBoundary();
 });
 
 describe("a mission retained from an old published deep link", () => {

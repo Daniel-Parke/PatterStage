@@ -50,10 +50,18 @@ function timeoutOrUndefined(value: unknown): number | undefined {
   return parsed === "invalid" ? undefined : parsed;
 }
 
+/** Validate the public model selector before any mission action writes a row. */
+export function missionModelIdError(body: Record<string, unknown>): string | null {
+  const value = body.modelId;
+  return value !== undefined && typeof value !== "string"
+    ? "modelId must be a string"
+    : null;
+}
+
 export function parseMissionBodyFields(
   body: Record<string, unknown>,
 ): MissionBodyFields {
-  const rawModelId = body.modelId as string | undefined;
+  const rawModelId = typeof body.modelId === "string" ? body.modelId : undefined;
   const trimmedModelId = rawModelId?.trim() ?? "";
 
   let resolvedModelId: string | undefined;

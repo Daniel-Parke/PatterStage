@@ -1,14 +1,11 @@
 /** @jest-environment jsdom */
 
-import { act, renderHook, waitFor } from "@testing-library/react";
-import { useMissionsData } from "@/hooks/useMissionsData";
-import type { MissionDetail, MissionRow } from "@/hooks/missions-page-types";
-
-const oldId = "oldest-of-201";
-const oldMission = {
-  id: oldId, name: "Old mission", status: "queued", queuedForRun: false,
-} as MissionRow;
-const changedMission = { ...oldMission, status: "successful" } as MissionRow;
+import { act, waitFor } from "@testing-library/react";
+import type { MissionDetail } from "@/hooks/missions-page-types";
+import {
+  changedMission, clearOldLinkBoundary, detailFor, fetchMissionDetail, oldId, oldMission,
+  renderOldLink, resetOldLinkBoundary, waitForOldLink,
+} from "../helpers/mission-old-link-boundary";
 
 function deferred<T>() {
   let resolve!: (value: T) => void;
@@ -20,51 +17,12 @@ function deferred<T>() {
   return { promise, resolve, reject };
 }
 
-function detailFor(mission: MissionRow): MissionDetail {
-  return { mission, run: null, schedule: null };
-}
-
-const fetchMissions = jest.fn(async (): Promise<MissionRow[]> => []);
-const fetchTemplates = jest.fn(async () => []);
-const fetchCategories = jest.fn(async () => []);
-const fetchMissionDetail = jest.fn<Promise<MissionDetail | null>, [string]>();
-
-jest.mock("@/hooks/useMissionsApi", () => ({
-  useMissionsApi: () => ({ fetchMissions, fetchTemplates, fetchCategories, fetchMissionDetail }),
-}));
-
-const showToast = jest.fn();
-const applyTemplateToForm = jest.fn();
-const setShowCreate = jest.fn();
-
-function renderOldLink() {
-  return renderHook(() => useMissionsData({
-    showToast,
-    applyTemplateToForm,
-    setShowCreate,
-  }));
-}
-
-async function waitForOldLink(result: ReturnType<typeof renderOldLink>["result"]) {
-  await waitFor(() => {
-    expect(result.current.missions.map((mission) => mission.id)).toContain(oldId);
-    expect(result.current.expandedId).toBe(oldId);
-    expect(result.current.detail?.mission.id).toBe(oldId);
-  });
-}
-
 beforeEach(() => {
-  window.history.replaceState({}, "", `/work/missions?mission=${oldId}`);
-  fetchMissions.mockClear();
-  fetchTemplates.mockClear();
-  fetchCategories.mockClear();
-  fetchMissionDetail.mockReset();
-  fetchMissionDetail.mockResolvedValue(detailFor(oldMission));
-  showToast.mockClear();
+  resetOldLinkBoundary();
 });
 
 afterEach(() => {
-  window.history.replaceState({}, "", "/work/missions");
+  clearOldLinkBoundary();
 });
 
 describe("overlapping refreshes of a mission retained from an old deep link", () => {

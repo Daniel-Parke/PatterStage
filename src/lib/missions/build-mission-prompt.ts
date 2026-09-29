@@ -121,18 +121,39 @@ function unescapeCdata(content: string): string {
   return content.replace(/\]\]\]\]><!\[CDATA\[>/g, "]]>");
 }
 
+function insideCdata(raw: string, index: number): boolean {
+  let cursor = 0;
+  while (true) {
+    const start = raw.indexOf("<![CDATA[", cursor);
+    if (start < 0 || start >= index) return false;
+    const end = raw.indexOf("]]>", start + "<![CDATA[".length);
+    if (end < 0 || index < end + 3) return true;
+    cursor = end + 3;
+  }
+}
+
 function extractXmlTag(
   raw: string,
   tagName: string,
   cdata = false,
 ): string {
   if (cdata) {
-    const re = new RegExp(
-      `<${tagName}[^>]*>\\s*<!\\[CDATA\\[([\\s\\S]*)\\]\\]>\\s*</${tagName}>`,
-      "i",
+    const opening = new RegExp(
+      `<${tagName}(?=[\\s>])[^>]*>\\s*<!\\[CDATA\\[`,
+      "gi",
     );
-    const m = raw.match(re);
-    return m ? unescapeCdata(m[1].trim()) : "";
+    let content = "";
+    for (const match of raw.matchAll(opening)) {
+      if (insideCdata(raw, match.index)) continue;
+      const contentStart = match.index + match[0].length;
+      const closing = new RegExp(`\\]\\]>\\s*</${tagName}>`, "i")
+        .exec(raw.slice(contentStart));
+      if (!closing) continue;
+      // Builder-owned sections follow references. A reference can quote a
+      // complete task tag; the final valid section is the stored one.
+      content = unescapeCdata(raw.slice(contentStart, contentStart + closing.index).trim());
+    }
+    return content;
   }
   const re = new RegExp(
     `<${tagName}[^>]*>\\s*([\\s\\S]*?)\\s*</${tagName}>`,

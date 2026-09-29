@@ -24,9 +24,8 @@ export type MissionDeepLink =
   /** The param named a mission that is in the loaded list: open its panel. */
   | { kind: "open"; missionId: string }
   /**
-   * The param named a mission that is not in the list: deleted, or from
-   * another data directory. Say so; silently doing nothing would make the
-   * link look broken again.
+   * The param named a mission that is not in the bounded list. The caller
+   * must ask the by-ID route before saying the mission no longer exists.
    */
   | { kind: "missing"; missionId: string };
 

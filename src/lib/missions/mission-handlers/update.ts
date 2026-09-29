@@ -11,7 +11,7 @@ import { updateMission } from "@/lib/missions/mission-repository";
 import { badRequest, notFound } from "@/lib/api/api-response";
 import { appendAuditLine } from "@/lib/api/audit-log";
 import { buildMissionFieldPatch } from "@/lib/missions/mission-field-updates";
-import { parseMissionBodyFields } from "@/lib/missions/mission-body";
+import { missionModelIdError, parseMissionBodyFields } from "@/lib/missions/mission-body";
 import { missionTimeoutError } from "@/lib/missions/mission-timeout";
 import { missionResponse } from "@/lib/missions/mission-response";
 
@@ -27,6 +27,8 @@ export function handleUpdateMission(body: Record<string, unknown>): NextResponse
   };
   const timeoutError = missionTimeoutError(rest);
   if (timeoutError) return badRequest(timeoutError);
+  const modelError = missionModelIdError(rest);
+  if (modelError) return badRequest(modelError);
   const f = parseMissionBodyFields(rest);
   const { name, instruction, localDirs, references, skills, suggestedToolsets, goals, modelId, provider, profileName, missionTimeMinutes, timeoutMinutes, schedule, context, categoryId: categoryIdRaw, outputFormat, constraints } = f;
   const existing = requireMissionOrNotFound(body);

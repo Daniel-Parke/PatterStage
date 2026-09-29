@@ -1,0 +1,53 @@
+{
+  "task": "T-0185",
+  "mutants": [
+    {
+      "id": "m1-capture-decoy-cdata-task",
+      "file": "src/lib/missions/build-mission-prompt.ts",
+      "anchor": "if (insideCdata(raw, match.index)) continue;",
+      "replacement": "void 0;",
+      "tests": ["tests/unit/mission-prompt-cdata-boundary.test.ts"],
+      "why": "A task-shaped literal inside context must not become the stored mission task."
+    },
+    {
+      "id": "m2-dispatch-accept-numeric-model",
+      "file": "src/lib/missions/mission-handlers/dispatch.ts",
+      "anchor": "if (modelError) return badRequest(modelError);",
+      "replacement": "void modelError;",
+      "tests": ["tests/unit/mission-model-input-boundary.test.ts", "tests/unit/mission-model-null-boundary.test.ts"],
+      "why": "Dispatch must refuse malformed model selectors before creating a mission."
+    },
+    {
+      "id": "m3-promote-accept-numeric-model",
+      "file": "src/lib/missions/mission-handlers/promote.ts",
+      "anchor": "if (modelError) return badRequest(modelError);",
+      "replacement": "void modelError;",
+      "tests": ["tests/unit/mission-model-input-boundary.test.ts", "tests/unit/mission-model-null-boundary.test.ts"],
+      "why": "Promotion must refuse malformed model selectors before changing a mission."
+    },
+    {
+      "id": "m4-update-accept-numeric-model",
+      "file": "src/lib/missions/mission-handlers/update.ts",
+      "anchor": "if (modelError) return badRequest(modelError);",
+      "replacement": "void modelError;",
+      "tests": ["tests/unit/mission-model-input-boundary.test.ts", "tests/unit/mission-model-null-boundary.test.ts"],
+      "why": "An update must refuse malformed model selectors before changing a mission."
+    },
+    {
+      "id": "m5-first-reference-task-wins",
+      "file": "src/lib/missions/build-mission-prompt.ts",
+      "anchor": "content = unescapeCdata(raw.slice(contentStart, contentStart + closing.index).trim());",
+      "replacement": "return unescapeCdata(raw.slice(contentStart, contentStart + closing.index).trim());",
+      "tests": ["tests/unit/mission-prompt-reference-boundary.test.ts"],
+      "why": "A task-shaped reference before the real task must not replace the instruction."
+    },
+    {
+      "id": "m6-stale-lookup-restores-deleted-row",
+      "file": "src/hooks/useMissionsData.ts",
+      "anchor": "const latest: MissionDetail | null = await fetchMissionDetail(retainedId);\n          if (version !== refreshVersion.current || olderLinkedMission.current?.id !== retainedId) return;",
+      "replacement": "const latest: MissionDetail | null = await fetchMissionDetail(retainedId);",
+      "tests": ["tests/unit/mission-old-link-overlap.test.tsx"],
+      "why": "An earlier successful lookup must not resurrect a row after a later 404."
+    }
+  ]
+}

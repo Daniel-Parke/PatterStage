@@ -19,6 +19,7 @@
     "org/briefs/T-0185-sceptic.md",
     "org/briefs/T-0185-sceptic-oracle.md",
     "org/briefs/T-0185-final-oracle.md",
+    "org/briefs/T-0185-census-amendment.md",
     "org/claims.json",
     "org/HANDOVER.md",
     "org/TASKS.md",
@@ -38,6 +39,8 @@
     "tests/unit/mission-old-link-retention.test.tsx",
     "tests/unit/mission-prompt-reference-boundary.test.ts",
     "tests/unit/mission-old-link-overlap.test.tsx",
+    "tests/helpers/mission-model-boundary.ts",
+    "tests/helpers/mission-old-link-boundary.tsx",
     "tests/fixtures/mutants/T-0185.json",
     "scripts/tooling/line-census.baseline.json"
   ],
@@ -55,6 +58,33 @@
   "claim_expansion": "The independent sceptic confirmed the initial frozen tests green after repair, then found supplied modelId:null still writes through the shared parser and a retained old-link row survives deletion or external status changes. Both fall under the approved non-string-input and truthful-old-link invariants. Two new claimed suites were committed red before their source repair; the frozen originals remain unchanged. A second sceptic pass confirmed those two repairs and reproduced a task-shaped reference that overrides the real instruction, plus a state-order race where an earlier refresh resurrects a row after a later 404. Two further new suites are claimed for red-first proof before that repair.",
   "supplemental_oracle_provenance": "Independent ORACLE 01a0edef-1193-7d51-924d-de89cba5a175 authored tests/unit/mission-model-null-boundary.test.ts SHA-256 69B75AB289C22600EE578352F0D955D08B3DB7C0493136C69A77AA781B083A45 and tests/unit/mission-old-link-retention.test.tsx SHA-256 8D9ECD6D77853FB89F27C1532838056A44268CC63E7F29B5DD5060BF717B945B. Before the supplemental source repair, the coordinator reran nine focused cases: five intended assertion failures and four passing controls. The null update case used a dispatched mission and a same-fields omitted-model control that reached the write path, avoiding a false 4xx from an invalid status. The 404/503 hook doubles carried numeric HTTP status. No frozen original test was amended.",
   "final_oracle_provenance": "Independent ORACLE 01a0edff-4205-7720-94b3-c27119cbfa35 authored tests/unit/mission-prompt-reference-boundary.test.ts SHA-256 BF2545D7063C0EE2A28BFDC7397A29D61AA39DE569DE60A4AC2BF399FE60E484 and tests/unit/mission-old-link-overlap.test.tsx SHA-256 25EC05B6E9D07558B8BBF6845CF8FF1E24527C5B49BB46B0EE2191256BD452D5. Coordinator reran focused Jest against the unfixed source: two intended failures (reference decoy returned as instruction; stale earlier success resurrected a row after later 404) and two passing controls. The previous frozen suites remain unchanged.",
+  "oracle_amendments": [
+    {
+      "date": "2026-09-29",
+      "reason": "The full Jest coordinator pass found C4's fixed 4,800 repeated-test-window ceiling red at 4,908 because the four new mission boundary suites repeated setup. No ceiling or coverage rule was changed.",
+      "authoriser": "Independent R2 REVIEWER 01a0ede9-58e2-7bd2-aeaa-81309bab9c32, after measuring the four suites' 130 counted repeated lines",
+      "author": "Independent ORACLE 01a0ee0d-ed2e-70a3-98d6-d06ab55870c8",
+      "change": "Extracted genuine mock, database and old-link setup into two counted tests/helpers files. All 16 test names and every behavioural assertion remain. C4 fell 4908 to 4794, below the fixed 4800 ceiling; the committed shrink-only census baseline still requires a separately reasoned growth entry for the remaining 16 lines.",
+      "files": [
+        {"path": "tests/unit/mission-model-input-boundary.test.ts", "old_sha256": "7A2F91CC673D3C98CACD80FFE41546AD525FC9B9EBCE8EC6347575259EFD8FA1", "new_sha256": "F6D96E13046BA71D6F42F5E9AE2ABB6D9F7F69486BE30FF7465F2246AA4745B0"},
+        {"path": "tests/unit/mission-model-null-boundary.test.ts", "old_sha256": "69B75AB289C22600EE578352F0D955D08B3DB7C0493136C69A77AA781B083A45", "new_sha256": "234397B8524629115E2771809EB1A388CD9F8BA8E6268ABCA12EFD379D51185A"},
+        {"path": "tests/unit/mission-old-link-retention.test.tsx", "old_sha256": "8D9ECD6D77853FB89F27C1532838056A44268CC63E7F29B5DD5060BF717B945B", "new_sha256": "003235C39F93060CA54DF7B6075982FC558019D1CC4A89273CF2E10992D6E92A"},
+        {"path": "tests/unit/mission-old-link-overlap.test.tsx", "old_sha256": "25EC05B6E9D07558B8BBF6845CF8FF1E24527C5B49BB46B0EE2191256BD452D5", "new_sha256": "359CBF4ED7BE4E737FE898E45D5074B300F8DE5EC84E2C6D64C9AD71BCBDE879"},
+        {"path": "tests/helpers/mission-model-boundary.ts", "old_sha256": null, "new_sha256": "75EBB3352535B69546D1D800E02F30E44FEE8B587A30B93E08B321210B8C1122"},
+        {"path": "tests/helpers/mission-old-link-boundary.tsx", "old_sha256": null, "new_sha256": "28C0CBA084330FFCBEC7D476F9F27E42E46AD80CEAF94E10C11FC26041042FA3"}
+      ]
+    },
+    {
+      "date": "2026-09-29",
+      "reason": "The full gate's Jest stage found two new unused helper exports through the frozen T-0177 Knip baseline test; all other 7,410 Jest cases passed.",
+      "authoriser": "Independent R2 REVIEWER 01a0ede9-58e2-7bd2-aeaa-81309bab9c32's bounded four-suite and counted-helper amendment authorisation",
+      "author": "Independent ORACLE 01a0ee19-c312-75a1-b9ab-2cd4a1103a02, distinct from the helper's original author",
+      "change": "Removed only the export modifiers from two internal mock functions. No test name, assertion, mock response or baseline changed; the old-link suites and T-0177 test passed 12/12, test typecheck and lint:knip passed with 18 exact baseline findings.",
+      "files": [
+        {"path": "tests/helpers/mission-old-link-boundary.tsx", "old_sha256": "28C0CBA084330FFCBEC7D476F9F27E42E46AD80CEAF94E10C11FC26041042FA3", "new_sha256": "487A8475F7841F465A6624816BA13CD6AAD9BF911237590C998363ABC516BA28"}
+      ]
+    }
+  ],
   "verification": "Pending.",
   "mutation": "Pending.",
   "deviations": "Planned R1 rose to R2: the declared public-api-delta activated the router's public-contract factor. No source implementation preceded the ruling."

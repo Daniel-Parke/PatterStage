@@ -42,6 +42,14 @@ import {
 
 type ToastFn = (message: string, type?: ToastType) => void;
 
+function missionRowFromDetail(detail: MissionDetail): MissionRow {
+  return { ...detail.mission, run: detail.run, scheduleStatus: detail.schedule };
+}
+
+function hasHttpStatus(error: unknown, status: number): boolean {
+  return typeof error === "object" && error !== null && "status" in error && error.status === status;
+}
+
 export interface UseMissionsDataArgs {
   showToast: ToastFn;
   /** Composer form population — the deep-link template apply writes through it. */
@@ -79,6 +87,8 @@ export function useMissionsData({
     null,
   );
   const expandedIdRef = useRef<string | null>(null);
+  const olderLinkedMission = useRef<MissionRow | null>(null);
+  const refreshVersion = useRef(0);
 
   const updateMission = useCallback(
     (id: string, updater: (mission: MissionRow) => MissionRow) => {
@@ -152,9 +162,46 @@ export function useMissionsData({
   );
 
   const fetchData = useCallback(async () => {
+    const version = ++refreshVersion.current;
     try {
-      const list = await fetchMissions();
-      setMissions(list);
+      const list: MissionRow[] = await fetchMissions();
+      let retained = olderLinkedMission.current;
+      const retainedIdBeforeRefresh = retained?.id;
+      const refreshed = retainedIdBeforeRefresh
+        ? list.find((mission) => mission.id === retainedIdBeforeRefresh)
+        : undefined;
+      if (refreshed) {
+        retained = refreshed;
+        olderLinkedMission.current = refreshed;
+      } else if (retained) {
+        const retainedId = retained.id;
+        try {
+          const latest: MissionDetail | null = await fetchMissionDetail(retainedId);
+          if (version !== refreshVersion.current || olderLinkedMission.current?.id !== retainedId) return;
+          if (latest?.mission) {
+            retained = missionRowFromDetail(latest);
+            olderLinkedMission.current = retained;
+            setDetail((current) => current?.mission.id === retainedId ? latest : current);
+          } else {
+            olderLinkedMission.current = null;
+            retained = null;
+          }
+        } catch (error) {
+          if (version !== refreshVersion.current || olderLinkedMission.current?.id !== retainedId) return;
+          if (!hasHttpStatus(error, 404)) throw error;
+          olderLinkedMission.current = null;
+          retained = null;
+        }
+        if (!retained) {
+          setExpandedId((current) => current === retainedId ? null : current);
+          setDeepLinkedMissionId((current) => current === retainedId ? null : current);
+          setDetail((current) => current?.mission.id === retainedId ? null : current);
+          // The delete action already reports success. A refresh cannot tell
+          // whether this 404 followed that action or another writer's delete.
+        }
+      }
+      if (version !== refreshVersion.current) return;
+      setMissions(retained && !refreshed ? [...list, retained] : list);
       setMissionsLoadError(null);
       // `?mission=<id>` deep link, the destination of every "open the
       // parent mission" affordance on the sessions surface. Sibling of the
@@ -164,7 +211,6 @@ export function useMissionsData({
         const link = resolveMissionDeepLink(window.location.href, list);
         if (link.kind !== "none") {
           missionFocused.current = true;
-          window.history.replaceState({}, "", MISSIONS_PATH);
           if (link.kind === "open") {
             setExpandedId(link.missionId);
             // Published so the board's view state can make the panel
@@ -173,11 +219,36 @@ export function useMissionsData({
             // of them. Distinct from `expandedId` because a plain click
             // must NOT expand the column it was clicked in.
             setDeepLinkedMissionId(link.missionId);
+            window.history.replaceState({}, "", MISSIONS_PATH);
           } else {
-            showToast(
-              `Mission ${link.missionId.slice(0, 8)} no longer exists`,
-              "error",
-            );
+            // The board is bounded to 200 rows. Absence from that page does
+            // not establish deletion, so ask the by-ID route before showing
+            // missing feedback or consuming the URL.
+            try {
+              const linked: MissionDetail | null = await fetchMissionDetail(link.missionId);
+              if (linked?.mission) {
+                const row = missionRowFromDetail(linked);
+                olderLinkedMission.current = row;
+                setMissions((current) =>
+                  current.some((mission) => mission.id === row.id)
+                    ? current
+                    : [...current, row],
+                );
+                setExpandedId(row.id);
+                setDeepLinkedMissionId(row.id);
+              } else {
+                showToast(`Mission ${link.missionId.slice(0, 8)} no longer exists`, "error");
+              }
+              window.history.replaceState({}, "", MISSIONS_PATH);
+            } catch (error) {
+              if (hasHttpStatus(error, 404)) {
+                showToast(`Mission ${link.missionId.slice(0, 8)} no longer exists`, "error");
+                window.history.replaceState({}, "", MISSIONS_PATH);
+              } else {
+                missionFocused.current = false;
+                toastError(showToast, error, "Failed to load linked mission");
+              }
+            }
           }
         }
       }
@@ -214,7 +285,7 @@ export function useMissionsData({
     } catch (error) {
       toastError(showToast, error, "Failed to load templates");
     }
-  }, [fetchMissions, fetchTemplates, showToast, loadCategories, loadAndApplyTemplate]);
+  }, [fetchMissions, fetchMissionDetail, fetchTemplates, showToast, loadCategories, loadAndApplyTemplate]);
 
   const fetchDetail = useCallback(
     (id: string, showLoading = true) => {

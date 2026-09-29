@@ -1,11 +1,11 @@
 {
   "measuredAt": "2026-09-29",
   "counts": {
-    "srcLines": 102493,
-    "testLines": 136318,
+    "srcLines": 102598,
+    "testLines": 136927,
     "scriptsLines": 13865,
-    "srcRepeatedWindowLines": 998,
-    "testRepeatedWindowLines": 4778,
+    "srcRepeatedWindowLines": 1010,
+    "testRepeatedWindowLines": 4794,
     "routesWithTryCatch": 18,
     "handRolledReadHooks": 5,
     "writeHooksWithoutMutation": 0,
@@ -915,6 +915,26 @@
       "measuredAt": "2026-09-29",
       "rise": "testRepeatedWindowLines rose from 4766 to 4778",
       "reason": "T-0184: 20 red-first mission/category cases and transactional file recovery add measured lines; original programme targets remain unchanged"
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "srcLines rose from 102493 to 102598",
+      "reason": "T-0185: 105 source lines implement prompt, model and old-link guards; 609 test lines add independent behaviour oracles and shared fixtures; 12 source and 16 test repeated-window lines remain after the reviewed fixture consolidation, below C4's fixed 4800 ceiling"
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "testLines rose from 136318 to 136927",
+      "reason": "T-0185: 105 source lines implement prompt, model and old-link guards; 609 test lines add independent behaviour oracles and shared fixtures; 12 source and 16 test repeated-window lines remain after the reviewed fixture consolidation, below C4's fixed 4800 ceiling"
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "srcRepeatedWindowLines rose from 998 to 1010",
+      "reason": "T-0185: 105 source lines implement prompt, model and old-link guards; 609 test lines add independent behaviour oracles and shared fixtures; 12 source and 16 test repeated-window lines remain after the reviewed fixture consolidation, below C4's fixed 4800 ceiling"
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "testRepeatedWindowLines rose from 4778 to 4794",
+      "reason": "T-0185: 105 source lines implement prompt, model and old-link guards; 609 test lines add independent behaviour oracles and shared fixtures; 12 source and 16 test repeated-window lines remain after the reviewed fixture consolidation, below C4's fixed 4800 ceiling"
     }
   ]
 }
