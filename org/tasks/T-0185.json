@@ -20,6 +20,7 @@
     "org/briefs/T-0185-sceptic-oracle.md",
     "org/briefs/T-0185-final-oracle.md",
     "org/briefs/T-0185-census-amendment.md",
+    "org/briefs/T-0185-mutation-followup.md",
     "org/claims.json",
     "org/HANDOVER.md",
     "org/TASKS.md",
@@ -41,6 +42,9 @@
     "tests/unit/mission-old-link-overlap.test.tsx",
     "tests/helpers/mission-model-boundary.ts",
     "tests/helpers/mission-old-link-boundary.tsx",
+    "tests/unit/mission-prompt-instruction-literal.test.ts",
+    "tests/unit/mission-old-link-restoration-boundary.test.tsx",
+    "tests/helpers/mission-async-deferred.ts",
     "tests/fixtures/mutants/T-0185.json",
     "scripts/tooling/line-census.baseline.json"
   ],
@@ -58,6 +62,7 @@
   "claim_expansion": "The independent sceptic confirmed the initial frozen tests green after repair, then found supplied modelId:null still writes through the shared parser and a retained old-link row survives deletion or external status changes. Both fall under the approved non-string-input and truthful-old-link invariants. Two new claimed suites were committed red before their source repair; the frozen originals remain unchanged. A second sceptic pass confirmed those two repairs and reproduced a task-shaped reference that overrides the real instruction, plus a state-order race where an earlier refresh resurrects a row after a later 404. Two further new suites are claimed for red-first proof before that repair.",
   "supplemental_oracle_provenance": "Independent ORACLE 01a0edef-1193-7d51-924d-de89cba5a175 authored tests/unit/mission-model-null-boundary.test.ts SHA-256 69B75AB289C22600EE578352F0D955D08B3DB7C0493136C69A77AA781B083A45 and tests/unit/mission-old-link-retention.test.tsx SHA-256 8D9ECD6D77853FB89F27C1532838056A44268CC63E7F29B5DD5060BF717B945B. Before the supplemental source repair, the coordinator reran nine focused cases: five intended assertion failures and four passing controls. The null update case used a dispatched mission and a same-fields omitted-model control that reached the write path, avoiding a false 4xx from an invalid status. The 404/503 hook doubles carried numeric HTTP status. No frozen original test was amended.",
   "final_oracle_provenance": "Independent ORACLE 01a0edff-4205-7720-94b3-c27119cbfa35 authored tests/unit/mission-prompt-reference-boundary.test.ts SHA-256 BF2545D7063C0EE2A28BFDC7397A29D61AA39DE569DE60A4AC2BF399FE60E484 and tests/unit/mission-old-link-overlap.test.tsx SHA-256 25EC05B6E9D07558B8BBF6845CF8FF1E24527C5B49BB46B0EE2191256BD452D5. Coordinator reran focused Jest against the unfixed source: two intended failures (reference decoy returned as instruction; stale earlier success resurrected a row after later 404) and two passing controls. The previous frozen suites remain unchanged.",
+  "mutation_followup_provenance": "Independent ORACLE 01a0ee41-b9aa-76c1-9979-08df0aa83c52 authored two new suites after the first clean-tree sweep: tests/unit/mission-prompt-instruction-literal.test.ts SHA-256 F7548C2E9F4032D9D1B86C0D6E093F8DB039EEA7ED7686ED131C549A11766963, tests/unit/mission-old-link-restoration-boundary.test.tsx SHA-256 77378E94279B208A4BE89CF15622E8270CDB5FFBCD214F0CAEFBFD14779DD3F5, and a counted deferred helper tests/helpers/mission-async-deferred.ts SHA-256 D69922E14B49ADAF14CCEDB40D3FD6B948165D406A26ABC4C96EB986D1DA9F33. Four new behaviour cases passed; coordinator reran them with C4 at 28/28. Test names and assertions in frozen suites remain unchanged. The helper keeps repeated test windows at the committed 4794 baseline.",
   "oracle_amendments": [
     {
       "date": "2026-09-29",
@@ -86,6 +91,6 @@
     }
   ],
   "verification": "Pending.",
-  "mutation": "Pending.",
+  "mutation": "First clean-tree sweep at 178551c2: 4 KILLED, 2 SURVIVED, clean restoration. m1 lacked a literal task sequence inside the real instruction; m6 lacked a later board refresh after a stale earlier success. New independent behaviour suites are claimed for these survivors before the sweep repeats.",
   "deviations": "Planned R1 rose to R2: the declared public-api-delta activated the router's public-contract factor. No source implementation preceded the ruling."
 }

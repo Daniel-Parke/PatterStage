@@ -6,7 +6,7 @@
       "file": "src/lib/missions/build-mission-prompt.ts",
       "anchor": "if (insideCdata(raw, match.index)) continue;",
       "replacement": "void 0;",
-      "tests": ["tests/unit/mission-prompt-cdata-boundary.test.ts"],
+      "tests": ["tests/unit/mission-prompt-cdata-boundary.test.ts", "tests/unit/mission-prompt-instruction-literal.test.ts"],
       "why": "A task-shaped literal inside context must not become the stored mission task."
     },
     {
@@ -46,7 +46,7 @@
       "file": "src/hooks/useMissionsData.ts",
       "anchor": "const latest: MissionDetail | null = await fetchMissionDetail(retainedId);\n          if (version !== refreshVersion.current || olderLinkedMission.current?.id !== retainedId) return;",
       "replacement": "const latest: MissionDetail | null = await fetchMissionDetail(retainedId);",
-      "tests": ["tests/unit/mission-old-link-overlap.test.tsx"],
+      "tests": ["tests/unit/mission-old-link-overlap.test.tsx", "tests/unit/mission-old-link-restoration-boundary.test.tsx"],
       "why": "An earlier successful lookup must not resurrect a row after a later 404."
     }
   ]

@@ -2,7 +2,7 @@
   "measuredAt": "2026-09-29",
   "counts": {
     "srcLines": 102598,
-    "testLines": 136927,
+    "testLines": 137029,
     "scriptsLines": 13865,
     "srcRepeatedWindowLines": 1010,
     "testRepeatedWindowLines": 4794,
@@ -935,6 +935,11 @@
       "measuredAt": "2026-09-29",
       "rise": "testRepeatedWindowLines rose from 4778 to 4794",
       "reason": "T-0185: 105 source lines implement prompt, model and old-link guards; 609 test lines add independent behaviour oracles and shared fixtures; 12 source and 16 test repeated-window lines remain after the reviewed fixture consolidation, below C4's fixed 4800 ceiling"
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "testLines rose from 136927 to 137029",
+      "reason": "T-0185 mutation follow-up: 102 test lines add two independent behaviour suites and a counted deferred fixture to kill the two surviving mutants; repeated test windows remain 4794 below C4's fixed 4800 ceiling"
     }
   ]
 }
