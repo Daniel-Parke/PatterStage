@@ -10,10 +10,10 @@
     },
     {
       "task": "T-0187",
-      "owner": "independent-r2-run-limit-oracle",
+      "owner": "independent-r2-effective-alias-oracle",
       "mode": "high-assurance",
-      "paths": ["tests/unit/legacy-run-limit-warning.test.ts"]
+      "paths": ["tests/unit/legacy-effective-alias-warning.test.ts", "tests/unit/legacy-script-alias-warning.test.ts"]
     }
   ],
-  "note": "Earlier T-0187 oracles are committed red-first. The coordinator owns source, docs, records and removals; a separate R2 ORACLE owns only the effective run-limit counterexample suite before that repair."
+  "note": "Earlier T-0187 oracles are committed red-first. The coordinator owns source, docs, records and removals; a separate R2 ORACLE owns only the two comprehensive effective-alias suites before those warning repairs."
 }
