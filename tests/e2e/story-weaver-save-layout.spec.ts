@@ -1,15 +1,7 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import { createStoryWeaverSaveFixture, fulfillStoryWeaverLoadOrSpend } from "../helpers/story-weaver-save-fixture";
 
-const story = {
-  id: "t0186-layout-oracle",
-  title: "The Save Boundary",
-  status: "active",
-  chapters: [
-    { number: 1, title: "First", status: "complete", readStatus: "unread", wordCount: 100 },
-    { number: 2, title: "Second", status: "complete", readStatus: "unread", wordCount: 100 },
-  ],
-  chapterContents: { "1": "First chapter text.", "2": "Second chapter text." },
-};
+const story = createStoryWeaverSaveFixture("t0186-layout-oracle");
 
 type Box = NonNullable<Awaited<ReturnType<Locator["boundingBox"]>>>;
 
@@ -33,14 +25,7 @@ function insideViewport(box: Box, width: number, height: number): boolean {
 async function openFailedSave(page: Page): Promise<void> {
   await page.route("**/api/stories", async (route) => {
     const body = route.request().postDataJSON() as { action?: string };
-    if (body.action === "load") {
-      await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ data: story }) });
-      return;
-    }
-    if (body.action === "spend") {
-      await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ data: { spend: null } }) });
-      return;
-    }
+    if (await fulfillStoryWeaverLoadOrSpend(route, body.action, story)) return;
     if (body.action === "update") {
       await route.fulfill({ status: 503, contentType: "application/json", body: JSON.stringify({ error: "Save unavailable" }) });
       return;

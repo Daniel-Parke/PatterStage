@@ -1,9 +1,9 @@
 {
   "measuredAt": "2026-09-29",
   "counts": {
-    "srcLines": 102598,
-    "testLines": 137040,
-    "scriptsLines": 13865,
+    "srcLines": 102611,
+    "testLines": 137471,
+    "scriptsLines": 13629,
     "srcRepeatedWindowLines": 1010,
     "testRepeatedWindowLines": 4794,
     "routesWithTryCatch": 18,
@@ -945,6 +945,36 @@
       "measuredAt": "2026-09-29",
       "rise": "testLines rose from 137029 to 137040",
       "reason": "T-0185 loaded e2e fixture amendment: 11 test lines replace 200 concurrent HTTP seeds with an isolated SQLite transaction and add an exact 201-row proof; repeated test windows stay 4794"
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "srcLines rose from 102598 to 102616",
+      "reason": "T-0186: Story Weaver read-status saves now check HTTP and network outcomes before local commit, and the red-first browser and removal oracles add 93 test lines; the operator-ruled destructive Hindsight script removes 236 tooling lines."
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "testLines rose from 137040 to 137133",
+      "reason": "T-0186: Story Weaver read-status saves now check HTTP and network outcomes before local commit, and the red-first browser and removal oracles add 93 test lines; the operator-ruled destructive Hindsight script removes 236 tooling lines."
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "srcLines rose from 102616 to 102617",
+      "reason": "T-0186 supplemental red-first browser oracle adds 169 counted lines for unconfirmed 200 replies, overlapping saves and Next navigation at two widths; an independent name-preserving success-fixture correction adds six lines, and the final source message adds one line. The fixed repeated-window and C4 ceilings are unchanged."
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "testLines rose from 137133 to 137308",
+      "reason": "T-0186 supplemental red-first browser oracle adds 169 counted lines for unconfirmed 200 replies, overlapping saves and Next navigation at two widths; an independent name-preserving success-fixture correction adds six lines, and the final source message adds one line. The fixed repeated-window and C4 ceilings are unchanged."
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "testLines rose from 137308 to 137484",
+      "reason": "T-0186: two separate red-first phone geometry oracles add shared isolated Story Weaver fixtures; source lines fall and the fixed closing target remains unchanged"
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "testRepeatedWindowLines rose from 4794 to 4834",
+      "reason": "T-0186: two separate red-first phone geometry oracles add shared isolated Story Weaver fixtures; source lines fall and the fixed closing target remains unchanged"
     }
   ]
 }

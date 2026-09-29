@@ -21,6 +21,8 @@
     "org/briefs/T-0186-supplemental-oracle.md",
     "org/briefs/T-0186-oracle-amendment.md",
     "org/briefs/T-0186-layout-oracle.md",
+    "org/briefs/T-0186-layout-oracle-consolidation.md",
+    "org/briefs/T-0186-save-oracle-consolidation.md",
     "org/TASKS.md",
     "org/STATE.md",
     "scripts/maintenance/hindsight-rederive.sh",
@@ -35,6 +37,8 @@
     "tests/e2e/story-weaver-save-layout.spec.ts",
     "tests/e2e/story-weaver-save-controls-layout.spec.ts",
     "tests/e2e/story-weaver-chapter-heading-layout.spec.ts",
+    "tests/helpers/story-weaver-save-layout.ts",
+    "tests/helpers/story-weaver-save-fixture.ts",
     "tests/fixtures/mutants/T-0186.json",
     "scripts/tooling/line-census.baseline.json"
   ],
@@ -59,6 +63,30 @@
       "change": "Only the success fixture now merges the submitted selected chapter into the returned story. Both success test names and all assertions remain; HTTP and network failure fixtures, worker count, retries and timeout are unchanged. The original red-first commit 6f23bd9b remains the historical freeze. All six cases passed with the supplemental suite after rebuilding.",
       "files": [
         {"path": "tests/e2e/story-weaver-save-failure.spec.ts", "old_sha256": "A5BBA95DC99077457D56D637BF02C3881AEBD2C637D182660517D4ED02D31053", "new_sha256": "69A48B5B826D8257423880BF7B41DAB2464B019AF286DF6B2F0547133C6F28F2"}
+      ]
+    },
+    {
+      "date": "2026-09-29",
+      "reason": "The full gate's unchanged C4 test caught 4,834 repeated test-window lines against its fixed 4,800 ceiling. The two new phone geometry oracles repeated their isolated story and failed-save route setup. The amendment extracts only that setup into a shared helper; 4,820 remains pending a separate review of other T-0186 fixtures.",
+      "authoriser": "Independent R2 REVIEWER 01a0ee95-b0e8-7680-8cc0-4323fd31a085",
+      "author": "Independent ORACLE 01a0ee97-1818-7920-8c25-b98fb6f96ddc, distinct from both frozen suites' author",
+      "change": "Both test names, all assertions within each test, Chapter 2 selection, response behaviour, 390x844 viewport, worker and retry policy remain. A first draft moved assertions into the helper and was rejected against the reviewer's scope; the final diff keeps them in each test. Both focused cases passed on owned port 3998. The historical red-first commits fd3450e2 and 4bf790f0 remain.",
+      "files": [
+        {"path": "tests/e2e/story-weaver-save-controls-layout.spec.ts", "old_sha256": "046D69782E01F83BECB88EC5D62CD55BEC8E0BE2837F001BB9DEEECBCEE53CE9", "new_sha256": "85ECD9BA422F7597C9F80EC40A0AF5EF4275DFD17B9093E9627B0AF2F790462B"},
+        {"path": "tests/e2e/story-weaver-chapter-heading-layout.spec.ts", "old_sha256": "6C04D28B2CEC59E0801B812A382A6C052A0E5EB2947EBF506BD777FE5CF8BF21", "new_sha256": "071B2A8FFCCB4958E0A0BCEFEE148CDBFF77EBC78F69C2C69E598F7AB02D6A19"},
+        {"path": "tests/helpers/story-weaver-save-layout.ts", "old_sha256": null, "new_sha256": "B54A9213B84F5F3794C0757310AC07EE4C01C8AEB464B3C3DB502D014F85481B"}
+      ]
+    },
+    {
+      "date": "2026-09-29",
+      "reason": "After the first layout-fixture extraction, the fixed C4 test still found 4,820 repeated test-window lines. Independent review traced exactly 26 covered lines to the T-0186 save-failure and save-layout fixtures.",
+      "authoriser": "Independent R2 REVIEWER 01a0ee95-b0e8-7680-8cc0-4323fd31a085",
+      "author": "Independent ORACLE 01a0ee97-1818-7920-8c25-b98fb6f96ddc, distinct from both frozen suites' authors",
+      "change": "Shared only story construction and load/spend route responses. All eight test names and assertions, distinct story IDs, update responses, 503 and network failures, viewports, worker and retry policy remain. Eight focused cases passed on owned port 3998. The C4 count fell from 4,820 to 4,794, below its unchanged 4,800 ceiling.",
+      "files": [
+        {"path": "tests/e2e/story-weaver-save-failure.spec.ts", "old_sha256": "69A48B5B826D8257423880BF7B41DAB2464B019AF286DF6B2F0547133C6F28F2", "new_sha256": "44BFB500305D5A173A1F2C2F60689D80FCCE8DBD8D6B3FCBCA523B8C4D7856AC"},
+        {"path": "tests/e2e/story-weaver-save-layout.spec.ts", "old_sha256": "68F468A0AF5AB92BCC3012DEEAD21B649F6FD08426F5C68C78C825AE18623093", "new_sha256": "954D9DAF13B92380B523A9C93C187A811CB90193E1C766FD6E325B26D0918BDF"},
+        {"path": "tests/helpers/story-weaver-save-fixture.ts", "old_sha256": null, "new_sha256": "0D89A88792445F07904E42A04073D83889A1821F60ED45D79BF5F5C107D9E12E"}
       ]
     }
   ],

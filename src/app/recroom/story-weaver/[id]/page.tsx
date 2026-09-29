@@ -22,6 +22,7 @@ import { deriveReaderView } from "@/modules/rec-room/components/story-reader-vie
 import { ReaderLoading, ReaderNotFound } from "@/modules/rec-room/components/ReaderPlaceholders";
 import StoryReaderOverlays from "@/modules/rec-room/components/StoryReaderOverlays";
 import ReaderBody from "@/modules/rec-room/components/ReaderBody";
+import { ReaderErrorBanner } from "@/modules/rec-room/components/ReaderBanners";
 import type { SpendWindowSource } from "@/lib/spend/spend-window";
 
 /** Stop auto-generating after this many consecutive failures. */
@@ -360,27 +361,50 @@ export default function StoryReaderPage() {
     setEditModalOpen(true);
   };
 
+  const saveReadStatus = useCallback(async (chapterNumber: number): Promise<boolean> => {
+    try {
+      const response = await fetch("/api/stories", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "update", storyId, chapters: [{ number: chapterNumber, readStatus: "read" }] }),
+      });
+      const result = await response.json().catch(() => null) as {
+        data?: { chapters?: Chapter[] };
+        error?: unknown;
+      } | null;
+      const confirmed = Array.isArray(result?.data?.chapters)
+        && result.data.chapters.some((chapter) =>
+          chapter.number === chapterNumber && chapter.readStatus === "read"
+        );
+      if (!response.ok || result?.error || !confirmed) {
+        setError(typeof result?.error === "string" ? result.error : "Could not confirm chapter read-status save. Please try again.");
+        return false;
+      }
+      return true;
+    } catch {
+      setError("Could not save chapter read status. Please try again.");
+      return false;
+    }
+  }, [storyId]);
+
   const handleNextChapter = useCallback(async () => {
     if (!story) return;
     const chapters: Chapter[] = story.chapters || [];
     const currentMeta = chapters[currentChapter - 1];
     if (currentMeta?.readStatus !== "read") {
-      try {
-        const updatedChapters = chapters.map((c: Chapter) =>
-          c.number === currentChapter ? { ...c, readStatus: "read" as const } : c
-        );
-        const updatedStory = { ...story, chapters: updatedChapters };
-        setStory(updatedStory);
-        await fetch("/api/stories", {
-          method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "update", storyId, chapters: updatedChapters }),
+      setError(null);
+      if (await saveReadStatus(currentChapter)) {
+        setStory((prev: StoryState | null) => prev && {
+          ...prev,
+          chapters: prev.chapters.map((c: Chapter) =>
+            c.number === currentChapter ? { ...c, readStatus: "read" as const } : c
+          ),
         });
-      } catch {}
+      }
     }
     const nextComplete = chapters.find((c: Chapter) => c.number > currentChapter && c.status === "complete");
     if (nextComplete) {
       setCurrentChapter(nextComplete.number);
-      setTimeout(() => document.getElementById("chapter-top")?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+      setTimeout(() => contentRef.current?.scrollTo({ top: 0, behavior: "smooth" }), 50);
       setStory((prev: StoryState | null) => {
         if (!prev) return prev;
         return {
@@ -391,26 +415,22 @@ export default function StoryReaderPage() {
         };
       });
     }
-  }, [story, currentChapter, storyId]);
+  }, [story, currentChapter, saveReadStatus]);
 
   const handleChapterSelect = async (num: number) => {
     setCurrentChapter(num);
-    setTimeout(() => document.getElementById("chapter-top")?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+    setTimeout(() => contentRef.current?.scrollTo({ top: 0, behavior: "smooth" }), 50);
 
-    const updatedChapters = (story?.chapters || []).map((c: Chapter) =>
-      c.number === num && c.status === "complete" ? { ...c, readStatus: "read" as const } : c
-    );
-    setStory((prev: StoryState | null) => {
-      if (!prev) return prev;
-      return { ...prev, chapters: updatedChapters };
-    });
-    try {
-      await fetch("/api/stories", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "update", storyId, chapters: updatedChapters }),
-      });
-    } catch {}
     if (window.innerWidth < 768) setSidebarOpen(false);
+    setError(null);
+    if (await saveReadStatus(num)) {
+      setStory((prev: StoryState | null) => prev && {
+        ...prev,
+        chapters: prev.chapters.map((c: Chapter) =>
+          c.number === num && c.status === "complete" ? { ...c, readStatus: "read" as const } : c
+        ),
+      });
+    }
   };
 
   const fontObj = FONTS.find(f => f.name === settings.fontFamily) || FONTS[0];
@@ -440,10 +460,6 @@ export default function StoryReaderPage() {
       <PageTitle title={story?.title || "Story Weaver"} />
       <StoryReaderOverlays
         story={story}
-        error={error}
-        autoPaused={autoPaused}
-        maxAutoFailures={MAX_AUTO_FAILURES}
-        onDismissError={() => setError(null)}
         bibleOpen={bibleOpen}
         onCloseBible={() => setBibleOpen(false)}
         overlayVisible={continuing || editing}
@@ -473,6 +489,14 @@ export default function StoryReaderPage() {
 
       <ReaderBody
         title={story.title}
+        errorBanner={error && (
+          <ReaderErrorBanner
+            error={error}
+            autoPaused={autoPaused}
+            maxAutoFailures={MAX_AUTO_FAILURES}
+            onDismiss={() => setError(null)}
+          />
+        )}
         view={view}
         currentChapter={currentChapter}
         fontFamily={fontObj.family}

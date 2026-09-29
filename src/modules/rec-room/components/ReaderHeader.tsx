@@ -8,6 +8,7 @@
 "use client";
 
 import { BookMarked, BookOpen, ChevronLeft, PlayCircle, RefreshCw, Square } from "lucide-react";
+import type { ReactNode } from "react";
 
 import Button from "@/components/ui/Button";
 import IconButton from "@/components/ui/IconButton";
@@ -19,6 +20,7 @@ import type { SpendWindowSource } from "@/lib/spend/spend-window";
 
 export interface ReaderHeaderProps {
   title: string;
+  errorBanner?: ReactNode;
   chapters: Chapter[];
   currentChapter: number;
   allComplete: boolean;
@@ -46,6 +48,7 @@ export interface ReaderHeaderProps {
 
 export default function ReaderHeader({
   title,
+  errorBanner,
   chapters,
   currentChapter,
   allComplete,
@@ -139,6 +142,7 @@ export default function ReaderHeader({
         <ChapterDots chapters={chapters} currentChapter={currentChapter} onSelect={onSelectChapter} withTitles />
         <StorySpendNote spend={spend} />
       </div>
+      {errorBanner}
     </div>
   );
 }

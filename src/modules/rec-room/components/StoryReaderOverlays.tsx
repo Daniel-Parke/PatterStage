@@ -1,5 +1,5 @@
 // ── StoryReaderOverlays — everything the reader renders ON TOP of itself:
-// the dismissible error banner, the story bible panel, the generate overlay,
+// the story bible panel, the generate overlay,
 // the edit-chapter and continue-story modals, and the sticky
 // generation-failed banner, in that DOM order.
 //
@@ -12,17 +12,13 @@
 
 import StoryBiblePanel from "@/modules/rec-room/components/StoryBiblePanel";
 import GenerateOverlay from "@/modules/rec-room/components/GenerateOverlay";
-import { ReaderErrorBanner, StoryFailureBanner } from "@/modules/rec-room/components/ReaderBanners";
+import { StoryFailureBanner } from "@/modules/rec-room/components/ReaderBanners";
 import EditChapterModal from "@/modules/rec-room/components/EditChapterModal";
 import ContinueStoryModal from "@/modules/rec-room/components/ContinueStoryModal";
 import type { StoryState } from "@/modules/rec-room/components/story-reader-types";
 
 export interface StoryReaderOverlaysProps {
   story: StoryState;
-  error: string | null;
-  autoPaused: boolean;
-  maxAutoFailures: number;
-  onDismissError: () => void;
   bibleOpen: boolean;
   onCloseBible: () => void;
   overlayVisible: boolean;
@@ -52,10 +48,6 @@ export interface StoryReaderOverlaysProps {
 
 export default function StoryReaderOverlays({
   story,
-  error,
-  autoPaused,
-  maxAutoFailures,
-  onDismissError,
   bibleOpen,
   onCloseBible,
   overlayVisible,
@@ -84,16 +76,6 @@ export default function StoryReaderOverlays({
 }: StoryReaderOverlaysProps) {
   return (
     <>
-      {/* Error banner — rendered above the overlay so it is always visible */}
-      {error && (
-        <ReaderErrorBanner
-          error={error}
-          autoPaused={autoPaused}
-          maxAutoFailures={maxAutoFailures}
-          onDismiss={onDismissError}
-        />
-      )}
-
       {/* Story Bible — read-only view of the predetermined arc */}
       <StoryBiblePanel
         storyArc={story.storyArc}

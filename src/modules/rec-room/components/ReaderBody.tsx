@@ -9,7 +9,7 @@
 
 "use client";
 
-import { useEffect, useState, type RefObject } from "react";
+import { useEffect, useState, type ReactNode, type RefObject } from "react";
 
 import ChapterList from "@/modules/rec-room/components/ChapterList";
 import ReaderHeader from "@/modules/rec-room/components/ReaderHeader";
@@ -22,6 +22,7 @@ import type { SpendWindowSource } from "@/lib/spend/spend-window";
 
 export interface ReaderBodyProps {
   title: string;
+  errorBanner: ReactNode;
   /** The page's per-render derivations, from deriveReaderView. */
   view: ReaderView;
   currentChapter: number;
@@ -67,6 +68,7 @@ function useNarrow(): boolean {
 
 export default function ReaderBody({
   title,
+  errorBanner,
   view,
   currentChapter,
   fontFamily,
@@ -99,6 +101,7 @@ export default function ReaderBody({
     <>
       <ReaderHeader
         title={title}
+        errorBanner={errorBanner}
         chapters={chapters}
         currentChapter={currentChapter}
         allComplete={allComplete}

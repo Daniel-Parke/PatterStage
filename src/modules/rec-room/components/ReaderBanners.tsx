@@ -1,4 +1,4 @@
-// ── ReaderBanners — the two fixed banners above the reader.
+// ── ReaderBanners — reader error and story failure alerts.
 // ReaderErrorBanner is the dismissible per-action error, including the
 // auto-generation pause note; StoryFailureBanner is the sticky one for a
 // story whose generation failed outright. Both are alerts painted from the
@@ -28,7 +28,7 @@ export function ReaderErrorBanner({
   onDismiss: () => void;
 }) {
   return (
-    <div role="alert" className={`fixed left-0 right-0 top-0 z-toast flex items-center gap-2 border-b px-4 py-2 ${FAIL.border} ${FAIL.fill}`}>
+    <div role="alert" className={`flex w-full items-start gap-2 border-b px-4 py-2 ${FAIL.border} ${FAIL.fill}`}>
       <AlertTriangle className={`h-4 w-4 shrink-0 ${FAIL.text}`} aria-hidden="true" />
       <span className="flex-1 text-body text-ps-text-primary">
         {error}
