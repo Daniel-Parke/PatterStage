@@ -1,0 +1,45 @@
+{
+  "id": "T-0184",
+  "intent": "Make mission cron promotion and category reassignment preserve a coherent state when validation or a database or template-file write fails.",
+  "declared": {
+    "capabilities": ["edit-source", "edit-tests", "edit-docs", "run-isolated-listener", "git", "git-push"],
+    "side_effects": ["database-write", "filesystem-write", "public-api-delta"]
+  },
+  "mode": "high-assurance",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [
+    {"factor": "public-contract", "tier_floor": "R2", "source": "declared", "evidence": "declared side effect: public-api-delta"}
+  ],
+  "status": "in_progress",
+  "owner_session": "2026-09-29-refactor-prerelease",
+  "claims": [
+    "org/tasks/T-0184.json",
+    "org/briefs/T-0184-oracle.md",
+    "src/lib/missions/mission-promote-handler.ts",
+    "src/lib/missions/mission-category-repository.ts",
+    "src/lib/missions/mission-repository.ts",
+    "src/lib/templates/catalog-template-repository.ts",
+    "tests/unit/mission-promote-atomic.test.ts",
+    "tests/unit/mission-category-atomic.test.ts",
+    "tests/fixtures/mutants/T-0184.json",
+    "org/claims.json",
+    "org/HANDOVER.md",
+    "org/TASKS.md",
+    "org/STATE.md"
+  ],
+  "timestamps": {"opened": "2026-09-29T00:00:00Z", "updated": "2026-09-29T00:00:00Z"},
+  "invariants": [
+    "A queued-to-cron promotion clears the queue flag, while a draft-to-cron promotion remains unqueued until its schedule fires.",
+    "A rejected nonblank cron expression leaves all previous mission columns and schedule rows unchanged.",
+    "A failed category move preserves mission rows, catalog rows, disk templates and the category itself, with an explicit failure.",
+    "A successful move updates every reference to the source category, including catalog rows and matching legacy disk fields, without changing a different explicit category ID."
+  ],
+  "rollback": "Restore earlier writes only with an equivalent transaction and file-failure compensation that passes the same isolated database and disk oracles. Do not reintroduce silent partial category moves or mutation before cron validation.",
+  "verify_line": "On an isolated database and template directory, queued-to-cron and draft-to-cron transitions set the correct flag; invalid nonblank cron expressions preserve the old mission and schedule; conflicting legacy IDs, catalog rows, and injected template write failure either move completely or report failure with the pre-operation state intact.",
+  "approval": "The operator approved prerelease T-0180–T-0187 on 2026-09-28. T-0184 follows T-0183 and the M3/M4/M5 findings verified in the Phase 1 defect ledger.",
+  "oracle_provenance": "Independent R2 ORACLE 01a0ed9b-064f-7533-aced-98a68c654099 authored only tests/unit/mission-promote-atomic.test.ts (SHA-256 60E6F4A46CB42A8044FF963C848795142BD2C92DEB10F7CB96F2D1C7CF5BE325) and tests/unit/mission-category-atomic.test.ts (SHA-256 79FBD870C88924625817FF6559634EA4265065DEFF77A1806D5CD22153051F14). Against unchanged source, the coordinator reran 12 focused cases: 11 intended assertion failures and one passing draft-to-cron control. No fixture or import failure. The test-name set is frozen before implementation.",
+  "verification": "Pending red-first oracle, implementation, full gate, mutation sweep and hosted acceptance.",
+  "mutation": "Pending.",
+  "deviations": "None yet."
+}
