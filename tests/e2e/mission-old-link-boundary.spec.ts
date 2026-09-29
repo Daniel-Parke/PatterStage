@@ -1,6 +1,6 @@
 import { test, expect, request, type APIRequestContext, type Page } from "@playwright/test";
 import { spawn, spawnSync, type ChildProcess } from "node:child_process";
-import { randomBytes } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 import { mkdtempSync, realpathSync, rmSync } from "node:fs";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
@@ -86,19 +86,30 @@ test("the oldest of 201 saved missions opens by its published link at desktop an
     const runId = `${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
     const oldestName = `Oldest link fixture ${runId}`;
     const oldestId = await saveMission(api, oldestName);
-    await new Promise((resolve) => setTimeout(resolve, 25));
 
-    // The first saved row is older than all 200 later rows. No request dispatches a run.
-    for (let start = 0; start < 200; start += 10) {
-      await Promise.all(Array.from({ length: 10 }, (_, offset) =>
-        saveMission(api!, `Newer link fixture ${runId}-${start + offset}`)));
-    }
-
-    const fixtureDb = new Database(join(dataDir, "patterstage.db"), { readonly: true });
+    const fixtureDb = new Database(join(dataDir, "patterstage.db"));
     try {
       const oldest = fixtureDb.prepare("SELECT created_at FROM missions WHERE id = ?")
         .get(oldestId) as { created_at: string } | undefined;
       expect(oldest, "oldest mission remains in the owned database").toBeDefined();
+      const oldestTimestamp = Date.parse(oldest!.created_at);
+      expect(Number.isFinite(oldestTimestamp), "oldest mission has a valid timestamp").toBe(true);
+      const insertNewer = fixtureDb.prepare(`
+        INSERT INTO missions (id, name, prompt, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?)
+      `);
+      const seedNewer = fixtureDb.transaction(() => {
+        for (let index = 0; index < 200; index += 1) {
+          const name = `Newer link fixture ${runId}-${index}`;
+          const timestamp = new Date(oldestTimestamp + (index + 1) * 1000).toISOString();
+          insertNewer.run(randomUUID(), name, `Saved task for ${name}`, timestamp, timestamp);
+        }
+      });
+      seedNewer();
+
+      const total = fixtureDb.prepare("SELECT COUNT(*) AS count FROM missions")
+        .get() as { count: number };
+      expect(total.count, "the owned database contains exactly 201 missions").toBe(201);
       const newer = fixtureDb.prepare("SELECT COUNT(*) AS count FROM missions WHERE created_at > ?")
         .get(oldest!.created_at) as { count: number };
       expect(newer.count, "200 mission timestamps must be strictly newer").toBe(200);

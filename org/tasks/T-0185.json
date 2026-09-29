@@ -21,6 +21,7 @@
     "org/briefs/T-0185-final-oracle.md",
     "org/briefs/T-0185-census-amendment.md",
     "org/briefs/T-0185-mutation-followup.md",
+    "org/briefs/T-0185-e2e-load-amendment.md",
     "org/claims.json",
     "org/HANDOVER.md",
     "org/TASKS.md",
@@ -87,6 +88,16 @@
       "change": "Removed only the export modifiers from two internal mock functions. No test name, assertion, mock response or baseline changed; the old-link suites and T-0177 test passed 12/12, test typecheck and lint:knip passed with 18 exact baseline findings.",
       "files": [
         {"path": "tests/helpers/mission-old-link-boundary.tsx", "old_sha256": "28C0CBA084330FFCBEC7D476F9F27E42E46AD80CEAF94E10C11FC26041042FA3", "new_sha256": "487A8475F7841F465A6624816BA13CD6AAD9BF911237590C998363ABC516BA28"}
+      ]
+    },
+    {
+      "date": "2026-09-29",
+      "reason": "The owned old-link Playwright worker exited unexpectedly with Windows code 3221226505 in two loaded full-gate runs; the spec passed alone and in one full run. The 200 ten-way HTTP fixture writes were unnecessary to the old-link behaviour being tested. This is a load-cause hypothesis, not proof that those writes caused the exit.",
+      "authoriser": "Independent R2 REVIEWER 01a0ee4f-3f54-7cc1-85c5-5db46e4c2623",
+      "author": "Independent ORACLE 01a0ee51-3a4e-7ba1-b47a-4d892e3bca83, distinct from the frozen spec author",
+      "change": "The oldest mission still saves through the real API. A single transaction inserts 200 newer minimal rows in the isolated SQLite fixture with explicit timestamps derived from the oldest row. The spec adds an exact 201-row assertion and preserves its test name, first-200 exclusion, by-ID browser journey at 1440x900 and 390x844, Edit draft action, and missing-ID feedback. Worker count, retries and timeouts did not change. The amended spec passed alone 1/1; the full gate must still verify it under load.",
+      "files": [
+        {"path": "tests/e2e/mission-old-link-boundary.spec.ts", "old_sha256": "261CD5AFE9C2C341CDB18D7D758E5D7949617030A311765B14645D234D7F222E", "new_sha256": "0205C0C3157A6D20673CD90CDEC36F9B01225B9878F01F2F18F790B7D67AA6E9"}
       ]
     }
   ],

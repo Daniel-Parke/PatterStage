@@ -8,10 +8,10 @@
       "session_id": "01a09490-d778-7ac2-a183-6bfb646c6757",
       "host": "local",
       "harness_task_id": "01a09490-d778-7ac2-a183-6bfb646c6757",
-      "path_claims": ["org/tasks/T-0185.json", "org/briefs/T-0185-oracle.md", "org/briefs/T-0185-sceptic.md", "org/briefs/T-0185-sceptic-oracle.md", "org/briefs/T-0185-final-oracle.md", "org/briefs/T-0185-census-amendment.md", "org/briefs/T-0185-mutation-followup.md", "org/claims.json", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", "src/lib/missions/build-mission-prompt.ts", "src/lib/missions/mission-body.ts", "src/lib/missions/mission-deep-link.ts", "src/hooks/useMissionsApi.ts", "src/hooks/useMissionsData.ts", "src/lib/missions/mission-handlers/dispatch.ts", "src/lib/missions/mission-handlers/promote.ts", "src/lib/missions/mission-handlers/update.ts", "tests/fixtures/mutants/T-0185.json", "scripts/tooling/line-census.baseline.json"],
+      "path_claims": ["org/tasks/T-0185.json", "org/briefs/T-0185-oracle.md", "org/briefs/T-0185-sceptic.md", "org/briefs/T-0185-sceptic-oracle.md", "org/briefs/T-0185-final-oracle.md", "org/briefs/T-0185-census-amendment.md", "org/briefs/T-0185-mutation-followup.md", "org/briefs/T-0185-e2e-load-amendment.md", "org/claims.json", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", "src/lib/missions/build-mission-prompt.ts", "src/lib/missions/mission-body.ts", "src/lib/missions/mission-deep-link.ts", "src/hooks/useMissionsApi.ts", "src/hooks/useMissionsData.ts", "src/lib/missions/mission-handlers/dispatch.ts", "src/lib/missions/mission-handlers/promote.ts", "src/lib/missions/mission-handlers/update.ts", "tests/fixtures/mutants/T-0185.json", "scripts/tooling/line-census.baseline.json"],
       "acquired": "2026-09-29T15:44:37Z",
       "expires": "2026-09-30T15:44:37Z"
     }
   ],
-  "note": "All T-0185 independent ORACLE lanes are released after frozen red commits, two REVIEWER-authorised amendments and two mutation follow-up suites. The coordinator owns the clean-tree sweep and closure. T-0184 hosted CI and PR acceptance passed on 9b8ba9e8."
+  "note": "All T-0185 ORACLE lanes are released. A separate ORACLE amended the old-link fixture under independent R2 REVIEWER authorisation after two loaded Windows worker exits. Six mutants were killed on the clean committed tree. The coordinator owns the final full gate and closure."
 }
