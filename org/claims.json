@@ -10,10 +10,10 @@
     },
     {
       "task": "T-0187",
-      "owner": "independent-r2-inherited-env-oracle",
+      "owner": "independent-oracle-branch-port",
       "mode": "high-assurance",
-      "paths": ["tests/unit/legacy-inherited-env-warning.test.ts", "tests/unit/legacy-repeated-lines-warning.test.ts"]
+      "paths": ["tests/unit/legacy-branch-and-port-provenance.test.ts"]
     }
   ],
-  "note": "The boot-fixture lane is released. The coordinator owns T-0187 source, docs, records and removals; an independent R2 ORACLE owns only inherited-env and repeated-line counterexample suites before the final loader repair."
+  "note": "The coordinator owns T-0187 source, docs, records and removals. A second independent ORACLE lane owns only tests/unit/legacy-branch-and-port-provenance.test.ts for the final reviewer counterexamples; no source edit is permitted there."
 }
