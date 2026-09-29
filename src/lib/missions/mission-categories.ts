@@ -134,11 +134,12 @@ export interface TemplateLike {
   color?: string;
   description?: string;
   category?: string;
-  categoryId?: string;
+  categoryId?: string | null;
   isCustom?: boolean;
 }
 
 function getTemplateCategoryId(t: TemplateLike): string | null {
+  if (t.categoryId === null) return null;
   if (t.categoryId) return t.categoryId;
   if (t.category) {
     const slug = t.category

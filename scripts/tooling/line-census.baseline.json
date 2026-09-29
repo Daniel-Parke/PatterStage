@@ -1,11 +1,11 @@
 {
-  "measuredAt": "2026-09-28",
+  "measuredAt": "2026-09-29",
   "counts": {
-    "srcLines": 102420,
-    "testLines": 135739,
+    "srcLines": 102493,
+    "testLines": 136318,
     "scriptsLines": 13865,
-    "srcRepeatedWindowLines": 1012,
-    "testRepeatedWindowLines": 4766,
+    "srcRepeatedWindowLines": 998,
+    "testRepeatedWindowLines": 4778,
     "routesWithTryCatch": 18,
     "handRolledReadHooks": 5,
     "writeHooksWithoutMutation": 0,
@@ -900,6 +900,21 @@
       "measuredAt": "2026-09-28",
       "rise": "testLines rose from 134898 to 135739",
       "reason": "T-0183 adds frozen mission concurrency, cancellation, cron and restart oracles plus durable claim guards; all moved test names are preserved"
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "srcLines rose from 102420 to 102493",
+      "reason": "T-0184: 20 red-first mission/category cases and transactional file recovery add measured lines; original programme targets remain unchanged"
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "testLines rose from 135739 to 136318",
+      "reason": "T-0184: 20 red-first mission/category cases and transactional file recovery add measured lines; original programme targets remain unchanged"
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "testRepeatedWindowLines rose from 4766 to 4778",
+      "reason": "T-0184: 20 red-first mission/category cases and transactional file recovery add measured lines; original programme targets remain unchanged"
     }
   ]
 }

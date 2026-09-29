@@ -10,6 +10,7 @@ import { buildMissionFieldPatch } from "@/lib/missions/mission-field-updates";
 import { dispatchMissionNow } from "@/lib/missions/mission-dispatch";
 import { runMissionQueueTick } from "@/lib/missions/mission-queue-tick";
 import { createSchedule } from "@/lib/schedule/schedules-repository";
+import { inTransaction } from "@/lib/db";
 import { parseSchedule, scheduleDisplayFromParsed } from "@/lib/schedule/parse-schedule";
 import { computeNextRun, scheduleCanEverFire } from "@/lib/schedule/next-run";
 import { scheduleIntervalProblem } from "@/lib/schedule/interval-bounds";
@@ -95,6 +96,32 @@ export async function promoteMission(
     return { ok: false, status: 400, error: "schedule is required for cron promote" };
   }
 
+  let cronPlan: { scheduleDisplay: string; nextRunAt: string | null } | null = null;
+  if (isCronMode) {
+    const parsed = parseSchedule(input.schedule!);
+    if (parsed.kind === "invalid") {
+      return { ok: false, status: 400, error: `Unrecognized schedule: ${input.schedule}` };
+    }
+    if (!scheduleCanEverFire(input.schedule!)) {
+      return {
+        ok: false,
+        status: 400,
+        error:
+          `Schedule "${input.schedule}" can never fire: it names a date that does not ` +
+          `exist, or a field outside its range. Check the day-of-month against the month.`,
+      };
+    }
+    const tooFrequent = scheduleIntervalProblem(input.schedule!);
+    if (tooFrequent) {
+      return { ok: false, status: 400, error: tooFrequent };
+    }
+    const next = computeNextRun(input.schedule!, new Date());
+    cronPlan = {
+      scheduleDisplay: scheduleDisplayFromParsed(parsed, input.schedule!),
+      nextRunAt: next ? next.toISOString() : null,
+    };
+  }
+
   const { updates } = buildMissionFieldPatch(
     existing,
     {
@@ -123,6 +150,8 @@ export async function promoteMission(
     updates.queuedForRun = false;
   } else if (isQueueMode) {
     updates.queuedForRun = true;
+  } else if (isCronMode) {
+    updates.queuedForRun = false;
   }
 
   // Re-activating a mission clears any stale result from a previous run so the
@@ -133,60 +162,36 @@ export async function promoteMission(
   // finished mission silently destroyed the output it had produced, with no
   // warning and nothing to undo it with (T-0070). Nothing is being re-activated,
   // so there is no stale result to clear.
+  if (isCronMode) {
+    try {
+      const promoted = inTransaction(() => {
+        const current = updateMission(input.missionId, { ...updates, result: null });
+        if (!current) return null;
+        createSchedule({
+          missionId: input.missionId,
+          name: current.name,
+          schedule: input.schedule!,
+          scheduleDisplay: cronPlan!.scheduleDisplay,
+          enabled: true,
+          profileName: input.profileName ?? current.profileName ?? null,
+          nextRunAt: cronPlan!.nextRunAt,
+        });
+        return enrichedMission(input.missionId)!;
+      });
+      if (!promoted) return { ok: false, status: 404, error: "Mission not found" };
+      return { ok: true, mission: promoted };
+    } catch (err) {
+      logApiError("promoteMission", "schedule promote", err);
+      return { ok: false, status: 500, error: "Failed to schedule mission" };
+    }
+  }
+
   const mission = updateMission(
     input.missionId,
     isSaveMode ? updates : { ...updates, result: null },
   );
   if (!mission) {
     return { ok: false, status: 404, error: "Mission not found" };
-  }
-
-  if (isCronMode) {
-    // Recurring promote → a PatterStage `schedules` row (the scheduler fires it);
-    // no legacy cron_jobs / jobs.json. Mirrors the dispatch cron branch.
-    const parsed = parseSchedule(input.schedule!);
-    if (parsed.kind === "invalid") {
-      return { ok: false, status: 400, error: `Unrecognized schedule: ${input.schedule}` };
-    }
-    // Shape is not satisfiability -- see the note in src/app/api/schedules/route.ts.
-    if (!scheduleCanEverFire(input.schedule!)) {
-      return {
-        ok: false,
-        status: 400,
-        error:
-          `Schedule "${input.schedule}" can never fire: it names a date that does not ` +
-          `exist, or a field outside its range. Check the day-of-month against the month.`,
-      };
-    }
-    // The opposite failure to the one above, and the expensive one: `every 0m`
-    // is due again the instant it fires, so it dispatches a paid agent run on
-    // every tick.
-    const tooFrequent = scheduleIntervalProblem(input.schedule!);
-    if (tooFrequent) {
-      return { ok: false, status: 400, error: tooFrequent };
-    }
-    try {
-      const current = getMission(input.missionId)!;
-      const next = computeNextRun(input.schedule!, new Date());
-      createSchedule({
-        missionId: input.missionId,
-        name: current.name,
-        schedule: input.schedule!,
-        scheduleDisplay: scheduleDisplayFromParsed(parsed, input.schedule!),
-        enabled: true,
-        profileName: input.profileName ?? current.profileName ?? null,
-        nextRunAt: next ? next.toISOString() : null,
-      });
-      // No first run here, for the reason the dispatch handler gives at the
-      // same spot: putting a mission on a timer is not asking for a run now,
-      // and the operator had a Run now button to choose instead (T-0114).
-    } catch (err) {
-      logApiError("promoteMission", "schedule promote", err);
-      updateMission(input.missionId, { status: "failed" });
-      return { ok: false, status: 500, error: "Failed to schedule mission" };
-    }
-
-    return { ok: true, mission: enrichedMission(input.missionId)! };
   }
 
   if (isNowMode) {

@@ -30,25 +30,7 @@ export const DATA_DIR = PATHS.templates;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- body is action-discriminated; per-branch validators narrow the shape
 export type TemplateActionBody = any;
 
-// ── Simple in-memory cache (30s TTL) ───────────────────────
-let templatesCache: { data: unknown; timestamp: number } | null = null;
-const CACHE_TTL_MS = 30_000;
-
-export function getTemplatesCached() {
-  const now = Date.now();
-  if (templatesCache && now - templatesCache.timestamp < CACHE_TTL_MS) {
-    return templatesCache.data;
-  }
-  return null;
-}
-
-export function setTemplatesCache(data: unknown) {
-  templatesCache = { data, timestamp: Date.now() };
-}
-
-export function invalidateTemplatesCache() {
-  templatesCache = null;
-}
+export { getTemplatesCached, setTemplatesCache, invalidateTemplatesCache } from "@/lib/templates/template-list-cache";
 
 export function sanitizeTemplateId(id: string): string {
   return id.replace(/[^a-zA-Z0-9_-]/g, "");
@@ -64,7 +46,7 @@ export interface CustomTemplate {
   icon: string;
   color: string;
   category: string;
-  categoryId?: string;
+  categoryId?: string | null;
   profile: string;
   description: string;
   instruction: string;
@@ -118,7 +100,9 @@ export function enrichCustomTemplateFromDisk(
       : undefined;
 
   const categoryId =
-    typeof raw.categoryId === "string"
+    raw.categoryId === null
+      ? null
+      : typeof raw.categoryId === "string"
       ? raw.categoryId
       : resolveTemplateCategoryId(
           typeof raw.category === "string" ? raw.category : undefined,
@@ -129,7 +113,7 @@ export function enrichCustomTemplateFromDisk(
     localDirs,
     references,
     timeoutMinutes,
-    categoryId: categoryId ?? "general",
+    categoryId: categoryId === null ? null : categoryId ?? "general",
     category:
       typeof raw.category === "string" ? raw.category : "Custom",
     isCustom: true as const,

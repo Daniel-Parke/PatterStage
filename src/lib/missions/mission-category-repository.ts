@@ -2,11 +2,12 @@
 // mission-category-repository.ts — User-managed mission categories
 // ═══════════════════════════════════════════════════════════════
 
-import { existsSync, readdirSync, readFileSync, writeFileSync } from "fs";
+import { copyFileSync, existsSync, lstatSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "fs";
 
-import { getDb, inTransaction, now } from "../db";
+import { getDb, inTransaction, now, uuid } from "../db";
 import { PATHS } from "../host/paths";
 import { listCatalogTemplates } from "../templates/catalog-template-repository";
+import { invalidateTemplatesCache } from "../templates/template-list-cache";
 
 export interface MissionCategory {
   id: string;
@@ -57,6 +58,20 @@ function slugifyCategoryName(name: string): string {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
   return base || "category";
+}
+
+function explicitTemplateCategory(raw: Record<string, unknown>): string | null | undefined {
+  if (raw.categoryId === null) return null;
+  if (typeof raw.categoryId === "string") return raw.categoryId;
+  if (raw.category_id === null) return null;
+  if (typeof raw.category_id === "string") return raw.category_id;
+  return undefined;
+}
+
+function templateBelongsToCategory(raw: Record<string, unknown>, categoryId: string): boolean {
+  const explicit = explicitTemplateCategory(raw);
+  if (explicit !== undefined) return explicit === categoryId;
+  return typeof raw.category === "string" && slugifyCategoryName(raw.category) === categoryId;
 }
 
 function uniqueCategoryId(baseSlug: string): string {
@@ -141,18 +156,7 @@ export function countTemplatesInCategory(categoryId: string): number {
         const raw = JSON.parse(
           readFileSync(dir + "/" + file, "utf-8"),
         ) as Record<string, unknown>;
-        const cid = raw.categoryId ?? raw.category_id;
-        if (typeof cid === "string" && cid === categoryId) {
-          count += 1;
-          continue;
-        }
-        const legacy = raw.category;
-        if (
-          typeof legacy === "string" &&
-          slugifyCategoryName(legacy) === categoryId
-        ) {
-          count += 1;
-        }
+        if (templateBelongsToCategory(raw, categoryId)) count += 1;
       } catch {
         // skip invalid files
       }
@@ -236,39 +240,53 @@ function reassignMissionsCategory(
 ): void {
   getDb()
     .prepare(
-      "UPDATE missions SET category_id = ?, updated_at = ? WHERE category_id = ? AND deleted_at IS NULL",
+      "UPDATE missions SET category_id = ?, updated_at = ? WHERE category_id = ?",
     )
     .run(toId, now(), fromId);
 }
 
-function reassignTemplatesCategory(
-  fromId: string,
-  toId: string | null,
-): void {
+interface TemplateMove {
+  path: string;
+  stagedPath: string;
+  backupPath: string;
+  contents: string;
+  replaced: boolean;
+}
+
+function planTemplateMoves(fromId: string, toId: string | null): TemplateMove[] {
   const dir = PATHS.templates;
-  if (!existsSync(dir)) return;
+  if (!existsSync(dir)) return [];
+  const moves: TemplateMove[] = [];
   for (const file of readdirSync(dir)) {
     if (!file.endsWith(".json")) continue;
     const path = dir + "/" + file;
+    if (!lstatSync(path).isFile()) continue;
+    // A failed read may hide a reference to the source category. Abort the
+    // move instead of deleting that category with an orphaned template.
+    const contents = readFileSync(path, "utf-8");
+    let raw: Record<string, unknown>;
     try {
-      const raw = JSON.parse(readFileSync(path, "utf-8")) as Record<
-        string,
-        unknown
-      >;
-      const cid = raw.categoryId ?? raw.category_id;
-      const legacy =
-        typeof raw.category === "string"
-          ? slugifyCategoryName(raw.category)
-          : "";
-      if (cid === fromId || legacy === fromId) {
-        raw.categoryId = toId;
-        delete raw.category;
-        writeFileSync(path, JSON.stringify(raw, null, 2), "utf-8");
-      }
+      const value: unknown = JSON.parse(contents);
+      if (!value || typeof value !== "object" || Array.isArray(value)) continue;
+      raw = value as Record<string, unknown>;
     } catch {
-      // skip
+      // A readable but malformed file has no usable category reference.
+      continue;
     }
+    if (!templateBelongsToCategory(raw, fromId)) continue;
+    raw.categoryId = toId;
+    delete raw.category_id;
+    delete raw.category;
+    const suffix = `.category-${uuid()}`;
+    moves.push({
+      path,
+      stagedPath: `${path}${suffix}.tmp`,
+      backupPath: `${path}${suffix}.bak`,
+      contents: JSON.stringify(raw, null, 2),
+      replaced: false,
+    });
   }
+  return moves;
 }
 
 export function deleteCategory(
@@ -277,22 +295,66 @@ export function deleteCategory(
 ): boolean {
   const existing = getCategory(id);
   if (!existing) return false;
+  if (reassignToId === id) {
+    throw new Error("A category cannot be reassigned to itself");
+  }
   const missionCount = countMissionsInCategory(id);
   const templateCount = countTemplatesInCategory(id);
-  if (missionCount > 0 || templateCount > 0) {
-    if (reassignToId === undefined) {
-      throw new Error("reassignToId required when category is in use");
-    }
-    if (reassignToId !== null && !getCategory(reassignToId)) {
-      throw new Error("Reassign target category not found");
-    }
-    inTransaction(() => {
-      reassignMissionsCategory(id, reassignToId);
-      reassignTemplatesCategory(id, reassignToId);
-    });
+  if ((missionCount > 0 || templateCount > 0) && reassignToId === undefined) {
+    throw new Error("reassignToId required when category is in use");
+  }
+  if (reassignToId !== undefined && reassignToId !== null && !getCategory(reassignToId)) {
+    throw new Error("Reassign target category not found");
   }
 
-  getDb().prepare("DELETE FROM mission_categories WHERE id = ?").run(id);
+  const moves: TemplateMove[] = [];
+  let restorationFailed = false;
+  try {
+    inTransaction(() => {
+      moves.push(...planTemplateMoves(id, reassignToId ?? null));
+      if (moves.length > 0 && reassignToId === undefined) {
+        throw new Error("reassignToId required when category is in use");
+      }
+      for (const move of moves) {
+        writeFileSync(move.stagedPath, move.contents, { encoding: "utf-8", flag: "wx", mode: 0o600 });
+        copyFileSync(move.path, move.backupPath);
+      }
+      reassignMissionsCategory(id, reassignToId ?? null);
+      getDb()
+        .prepare("UPDATE catalog_templates SET category_id = ?, updated_at = ? WHERE category_id = ?")
+        .run(reassignToId ?? null, now(), id);
+      for (const move of moves) {
+        renameSync(move.stagedPath, move.path);
+        move.replaced = true;
+      }
+      getDb().prepare("DELETE FROM mission_categories WHERE id = ?").run(id);
+    }, "immediate");
+  } catch (error) {
+    let recoveryError: unknown;
+    for (const move of moves) {
+      if (!move.replaced) continue;
+      try {
+        copyFileSync(move.backupPath, move.path);
+      } catch (restoreError) {
+        recoveryError = restoreError;
+      }
+    }
+    if (recoveryError) {
+      restorationFailed = true;
+      throw new Error(`Category move failed and a template could not be restored; backup files remain in ${PATHS.templates}`, {
+        cause: recoveryError,
+      });
+    }
+    throw error;
+  } finally {
+    for (const move of moves) {
+      try { rmSync(move.stagedPath, { force: true }); } catch { /* preserve the original failure */ }
+      if (!restorationFailed) {
+        try { rmSync(move.backupPath, { force: true }); } catch { /* preserve the original failure */ }
+      }
+    }
+  }
+  invalidateTemplatesCache();
   return true;
 }
 

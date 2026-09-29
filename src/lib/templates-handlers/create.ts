@@ -36,7 +36,9 @@ export function handleCreateTemplate(body: TemplateActionBody): NextResponse {
     category:
       typeof body.category === "string" ? body.category : "Custom",
     categoryId:
-      typeof body.categoryId === "string" && body.categoryId
+      body.categoryId === null
+        ? null
+        : typeof body.categoryId === "string" && body.categoryId
         ? body.categoryId
         : resolveTemplateCategoryId(body.category) ?? "general",
     profile: typeof body.profile === "string" ? body.profile : "",

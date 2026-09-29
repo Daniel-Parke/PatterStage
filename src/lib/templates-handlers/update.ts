@@ -35,7 +35,7 @@ export function handleUpdateTemplate(body: TemplateActionBody): NextResponse {
   if (body.category !== undefined) template.category = body.category;
   if (body.categoryId !== undefined) {
     template.categoryId =
-      typeof body.categoryId === "string" ? body.categoryId : undefined;
+      body.categoryId === null ? null : typeof body.categoryId === "string" ? body.categoryId : undefined;
   }
   if (body.profile !== undefined) template.profile = body.profile;
   if (body.description !== undefined) template.description = body.description;
