@@ -16,6 +16,8 @@
   "claims": [
     "org/tasks/T-0185.json",
     "org/briefs/T-0185-oracle.md",
+    "org/briefs/T-0185-sceptic.md",
+    "org/briefs/T-0185-sceptic-oracle.md",
     "org/claims.json",
     "org/HANDOVER.md",
     "org/TASKS.md",
@@ -31,6 +33,8 @@
     "tests/unit/mission-prompt-cdata-boundary.test.ts",
     "tests/unit/mission-model-input-boundary.test.ts",
     "tests/e2e/mission-old-link-boundary.spec.ts",
+    "tests/unit/mission-model-null-boundary.test.ts",
+    "tests/unit/mission-old-link-retention.test.tsx",
     "tests/fixtures/mutants/T-0185.json",
     "scripts/tooling/line-census.baseline.json"
   ],
@@ -45,6 +49,8 @@
   "verify_line": "Literal CDATA task text in context and ordinary nested task examples round-trip through the stored dispatch prompt; modelId 42 receives 4xx without a mission write; the oldest of 201 seeded missions opens through ?mission= at 1440 and 390 widths, while a nonexistent ID still reports missing.",
   "approval": "The operator approved prerelease T-0180–T-0187 on 2026-09-28. M6, M7 and M8 are independently rechecked source candidates in the Phase 1 defect ledger; Q-010 preserves public URLs. The source and claim expansion covers action handlers and the board's deep-link effect, which own the proposed API and UI behaviour.",
   "oracle_provenance": "Independent R2 ORACLE 01a0edd7-2a9b-72a0-a8b6-e63b8a4ebc6f authored only three claimed files before any T-0185 source edit: tests/unit/mission-prompt-cdata-boundary.test.ts SHA-256 01FD4644A29B4243DDCA303CD16C61E3A3F6223298721FEA9C31F350A9D80E50, tests/unit/mission-model-input-boundary.test.ts SHA-256 7A2F91CC673D3C98CACD80FFE41546AD525FC9B9EBCE8EC6347575259EFD8FA1, and tests/e2e/mission-old-link-boundary.spec.ts SHA-256 261CD5AFE9C2C341CDB18D7D758E5D7949617030A311765B14645D234D7F222E. The coordinator reran focused Jest: five intended assertion failures and three passing controls. The owned-listener browser case failed the missing oldest mission name and Edit draft action at both 1440x900 and 390x844; its timestamp/page-exclusion and truly missing-ID controls passed. The independent author reported focused ESLint and test typecheck exit zero. All test names are frozen before source repair.",
+  "claim_expansion": "The independent sceptic confirmed the initial frozen tests green after repair, then found supplied modelId:null still writes through the shared parser and a retained old-link row survives deletion or external status changes. Both fall under the approved non-string-input and truthful-old-link invariants. Two new claimed suites were committed red before their source repair; the frozen originals remain unchanged.",
+  "supplemental_oracle_provenance": "Independent ORACLE 01a0edef-1193-7d51-924d-de89cba5a175 authored tests/unit/mission-model-null-boundary.test.ts SHA-256 69B75AB289C22600EE578352F0D955D08B3DB7C0493136C69A77AA781B083A45 and tests/unit/mission-old-link-retention.test.tsx SHA-256 8D9ECD6D77853FB89F27C1532838056A44268CC63E7F29B5DD5060BF717B945B. Before the supplemental source repair, the coordinator reran nine focused cases: five intended assertion failures and four passing controls. The null update case used a dispatched mission and a same-fields omitted-model control that reached the write path, avoiding a false 4xx from an invalid status. The 404/503 hook doubles carried numeric HTTP status. No frozen original test was amended.",
   "verification": "Pending.",
   "mutation": "Pending.",
   "deviations": "Planned R1 rose to R2: the declared public-api-delta activated the router's public-contract factor. No source implementation preceded the ruling."
