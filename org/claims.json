@@ -8,20 +8,20 @@
       "session_id": "01a09490-d778-7ac2-a183-6bfb646c6757",
       "host": "local",
       "harness_task_id": "01a09490-d778-7ac2-a183-6bfb646c6757",
-      "path_claims": ["org/tasks/T-0185.json", "org/briefs/T-0185-oracle.md", "org/briefs/T-0185-sceptic.md", "org/briefs/T-0185-sceptic-oracle.md", "org/claims.json", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", "src/lib/missions/build-mission-prompt.ts", "src/lib/missions/mission-body.ts", "src/lib/missions/mission-deep-link.ts", "src/hooks/useMissionsApi.ts", "src/hooks/useMissionsData.ts", "src/lib/missions/mission-handlers/dispatch.ts", "src/lib/missions/mission-handlers/promote.ts", "src/lib/missions/mission-handlers/update.ts", "tests/fixtures/mutants/T-0185.json", "scripts/tooling/line-census.baseline.json"],
+      "path_claims": ["org/tasks/T-0185.json", "org/briefs/T-0185-oracle.md", "org/briefs/T-0185-sceptic.md", "org/briefs/T-0185-sceptic-oracle.md", "org/briefs/T-0185-final-oracle.md", "org/claims.json", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", "src/lib/missions/build-mission-prompt.ts", "src/lib/missions/mission-body.ts", "src/lib/missions/mission-deep-link.ts", "src/hooks/useMissionsApi.ts", "src/hooks/useMissionsData.ts", "src/lib/missions/mission-handlers/dispatch.ts", "src/lib/missions/mission-handlers/promote.ts", "src/lib/missions/mission-handlers/update.ts", "tests/fixtures/mutants/T-0185.json", "scripts/tooling/line-census.baseline.json"],
       "acquired": "2026-09-29T15:44:37Z",
       "expires": "2026-09-30T15:44:37Z"
     },
     {
-      "lane_id": "t0185-independent-sceptic-oracle",
+      "lane_id": "t0185-final-independent-oracle",
       "task_id": "T-0185",
-      "session_id": "01a0edef-1193-7d51-924d-de89cba5a175",
+      "session_id": "01a0edff-4205-7720-94b3-c27119cbfa35",
       "host": "local",
-      "harness_task_id": "01a0edef-1193-7d51-924d-de89cba5a175",
-      "path_claims": ["tests/unit/mission-model-null-boundary.test.ts", "tests/unit/mission-old-link-retention.test.tsx"],
-      "acquired": "2026-09-29T16:11:09Z",
-      "expires": "2026-09-30T16:11:09Z"
+      "harness_task_id": "01a0edff-4205-7720-94b3-c27119cbfa35",
+      "path_claims": ["tests/unit/mission-prompt-reference-boundary.test.ts", "tests/unit/mission-old-link-overlap.test.tsx"],
+      "acquired": "2026-09-29T16:20:00Z",
+      "expires": "2026-09-30T16:20:00Z"
     }
   ],
-  "note": "The original T-0185 ORACLE lane is released after frozen d7555b0f. T-0184 hosted CI and PR acceptance passed on 9b8ba9e8. The second independent ORACLE lane owns two supplemental sceptic suites, disjoint from coordinator source."
+  "note": "The previous T-0185 ORACLE lanes are released after frozen red commits. T-0184 hosted CI and PR acceptance passed on 9b8ba9e8. The final independent ORACLE lane owns two supplemental sceptic suites, disjoint from coordinator source."
 }
