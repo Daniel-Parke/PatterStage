@@ -9,8 +9,8 @@ updated: 2026-09-29
 
 ## Current status, 2026-09-29
 
-**T-0184 is locally complete** in `2dd1910a`; closure and hosted acceptance
-are pending this handover's push. Mission cron promotion now validates before
+**T-0184 is closed** at `dev@9b8ba9e8`, with implementation in `2dd1910a`.
+Mission cron promotion now validates before
 writing, clears the immediate queue flag and rolls back the mission if schedule
 creation fails. Category deletion moves SQLite and matching disk references as
 one operation with file restoration on failure. Explicit Uncategorized values
@@ -24,7 +24,11 @@ All four committed-tree mutants were killed by assertions and the tree was
 restored cleanly. The isolated browser walk on port **3996** created and deleted
 categories at 1440×900 and 390×844 without a missing h1, overflow or console
 error; screenshot hashes are in `org/tasks/T-0184.json`. The full gate uses
-isolated port **3000**. T-0185 is the next prerelease batch. Q-011 still holds
+isolated port **3000**. Exact-head push CI `36592094339`, PR CI
+`36592106910`, push Gitleaks `36592094381` and PR Gitleaks `36592106941`
+all passed. Every PR acceptance job was green, including full E2E, native
+builds, Docker, install and real Hermes. T-0185 is the next prerelease batch.
+Q-011 still holds
 structural work until the operator's rc.1 and v1.0.0 release.
 
 **T-0183 is closed** at `dev@014cfb14`, with its implementation in `3d9f84c4`.

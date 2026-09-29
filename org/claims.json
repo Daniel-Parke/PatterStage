@@ -1,6 +1,27 @@
 {
   "version": 1,
   "assigned": "2026-09-29",
-  "lanes": [],
-  "note": "T-0184 is closed locally; its two writing lanes are released. Three independent red-first oracle commits and one separate name-preserving amendment were followed by gate-verified implementation and a clean four-mutant sweep."
+  "lanes": [
+    {
+      "lane_id": "t0185-coordinator-source",
+      "task_id": "T-0185",
+      "session_id": "01a09490-d778-7ac2-a183-6bfb646c6757",
+      "host": "local",
+      "harness_task_id": "01a09490-d778-7ac2-a183-6bfb646c6757",
+      "path_claims": ["org/tasks/T-0185.json", "org/briefs/T-0185-oracle.md", "org/claims.json", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", "src/lib/missions/build-mission-prompt.ts", "src/lib/missions/mission-body.ts", "src/lib/missions/mission-deep-link.ts", "src/hooks/useMissionsApi.ts", "src/hooks/useMissionsData.ts", "src/lib/missions/mission-handlers/dispatch.ts", "src/lib/missions/mission-handlers/promote.ts", "src/lib/missions/mission-handlers/update.ts", "tests/fixtures/mutants/T-0185.json", "scripts/tooling/line-census.baseline.json"],
+      "acquired": "2026-09-29T15:44:37Z",
+      "expires": "2026-09-30T15:44:37Z"
+    },
+    {
+      "lane_id": "t0185-independent-oracle",
+      "task_id": "T-0185",
+      "session_id": "01a0edd7-2a9b-72a0-a8b6-e63b8a4ebc6f",
+      "host": "local",
+      "harness_task_id": "01a0edd7-2a9b-72a0-a8b6-e63b8a4ebc6f",
+      "path_claims": ["tests/unit/mission-prompt-cdata-boundary.test.ts", "tests/unit/mission-model-input-boundary.test.ts", "tests/e2e/mission-old-link-boundary.spec.ts"],
+      "acquired": "2026-09-29T15:44:37Z",
+      "expires": "2026-09-30T15:44:37Z"
+    }
+  ],
+  "note": "T-0185 has two disjoint writing lanes: coordinator source and record, independent ORACLE tests. T-0184 hosted CI remains under observation before the next push."
 }
