@@ -40,7 +40,7 @@ it("keeps a save failure and dismiss control inside the reader header beside usa
 
   render(<ReaderHeader {...props} />);
   const alert = screen.queryByRole("alert");
-  expect(alert).toBeInTheDocument();
+  expect(alert).not.toBeNull();
   const chapters = screen.getByTitle("Show chapters");
   expect(alert).toHaveTextContent("Save unavailable");
   expect(alert!.closest(".sticky")).toContainElement(chapters);

@@ -24,6 +24,7 @@
     "org/briefs/T-0186-layout-oracle-consolidation.md",
     "org/briefs/T-0186-save-oracle-consolidation.md",
     "org/briefs/T-0186-mutant-oracle-amendment.md",
+    "org/briefs/T-0186-mutant-matcher-correction.md",
     "org/TASKS.md",
     "org/STATE.md",
     "scripts/maintenance/hindsight-rederive.sh",
@@ -99,6 +100,16 @@
       "change": "Changed only the alert lookup to queryByRole and immediately asserted presence with a Jest matcher. The test name, fixture, save-error text, sticky-header containment, dismiss click and once-only callback remain. The normal one-test Jest control passed; clean-tree sweep and full gate follow the commit.",
       "files": [
         {"path": "tests/unit/story-reader-error-banner.test.tsx", "old_sha256": "5F8CBC8C80B3C29CB186DEDF37058FEE3EBD5AF80FB9068627B980B2DC6BADBA", "new_sha256": "101FA61A1324824A2B072C9ADD2C8DA5AF8F43FC8E18EBF613B93CE73A93F135"}
+      ]
+    },
+    {
+      "date": "2026-09-29",
+      "reason": "The first non-throwing presence assertion used jest-dom toBeInTheDocument, which still threw on null and left failureDetails without matcherResult. The strict sweep correctly returned ERROR, with 27 executed tests and one unstructured failure in the diagnostic report.",
+      "authoriser": "Independent R2 REVIEWER 01a0ee95-b0e8-7680-8cc0-4323fd31a085",
+      "author": "Independent ORACLE 01a0eeb3-de4f-7f02-915b-227421d61f87, distinct from the original suite and preceding amendment authors",
+      "change": "Replaced only the immediate presence matcher with core Jest expect(alert).not.toBeNull(). The test name, queryByRole, fixture, text, header containment and dismiss assertions remain. The one-test normal Jest control passed; clean-tree sweep and full gate follow the commit.",
+      "files": [
+        {"path": "tests/unit/story-reader-error-banner.test.tsx", "old_sha256": "101FA61A1324824A2B072C9ADD2C8DA5AF8F43FC8E18EBF613B93CE73A93F135", "new_sha256": "C0CB97FC7357B3E236756A22E11F3B3995C6471C3E9D55260E735BF6E461CEC5"}
       ]
     }
   ],
