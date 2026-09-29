@@ -10,10 +10,10 @@
     },
     {
       "task": "T-0187",
-      "owner": "independent-r2-boot-fixture-refactor",
+      "owner": "independent-r2-inherited-env-oracle",
       "mode": "high-assurance",
-      "paths": ["tests/helpers/legacy-boot-fixture.ts", "tests/unit/legacy-boot-warning.test.ts", "tests/unit/legacy-run-limit-warning.test.ts", "tests/unit/legacy-effective-alias-warning.test.ts", "tests/unit/legacy-script-alias-warning.test.ts"]
+      "paths": ["tests/unit/legacy-inherited-env-warning.test.ts", "tests/unit/legacy-repeated-lines-warning.test.ts"]
     }
   ],
-  "note": "All T-0187 oracles are committed red-first. The coordinator owns source, docs, records and removals; a separate R2 writer owns only named boot-oracle suites and their shared fixture to preserve identity while restoring C4's fixed repeated-window ceiling."
+  "note": "The boot-fixture lane is released. The coordinator owns T-0187 source, docs, records and removals; an independent R2 ORACLE owns only inherited-env and repeated-line counterexample suites before the final loader repair."
 }
