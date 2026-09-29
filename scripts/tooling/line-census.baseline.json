@@ -2,7 +2,7 @@
   "measuredAt": "2026-09-29",
   "counts": {
     "srcLines": 102611,
-    "testLines": 137520,
+    "testLines": 137521,
     "scriptsLines": 13629,
     "srcRepeatedWindowLines": 1010,
     "testRepeatedWindowLines": 4794,
@@ -980,6 +980,11 @@
       "measuredAt": "2026-09-29",
       "rise": "testLines rose from 137471 to 137520",
       "reason": "T-0186: the mutation survivor required one focused reader-header behaviour suite with a dismiss control; the fixed repeated-window target remains at 4800"
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "testLines rose from 137520 to 137521",
+      "reason": "T-0186: independent amendment adds one explicit Jest presence matcher so the mutation sweep can classify a missing banner by structured assertion"
     }
   ]
 }

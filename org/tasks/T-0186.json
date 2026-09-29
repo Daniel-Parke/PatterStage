@@ -23,6 +23,7 @@
     "org/briefs/T-0186-layout-oracle.md",
     "org/briefs/T-0186-layout-oracle-consolidation.md",
     "org/briefs/T-0186-save-oracle-consolidation.md",
+    "org/briefs/T-0186-mutant-oracle-amendment.md",
     "org/TASKS.md",
     "org/STATE.md",
     "scripts/maintenance/hindsight-rederive.sh",
@@ -88,6 +89,16 @@
         {"path": "tests/e2e/story-weaver-save-failure.spec.ts", "old_sha256": "69A48B5B826D8257423880BF7B41DAB2464B019AF286DF6B2F0547133C6F28F2", "new_sha256": "44BFB500305D5A173A1F2C2F60689D80FCCE8DBD8D6B3FCBCA523B8C4D7856AC"},
         {"path": "tests/e2e/story-weaver-save-layout.spec.ts", "old_sha256": "68F468A0AF5AB92BCC3012DEEAD21B649F6FD08426F5C68C78C825AE18623093", "new_sha256": "954D9DAF13B92380B523A9C93C187A811CB90193E1C766FD6E325B26D0918BDF"},
         {"path": "tests/helpers/story-weaver-save-fixture.ts", "old_sha256": null, "new_sha256": "0D89A88792445F07904E42A04073D83889A1821F60ED45D79BF5F5C107D9E12E"}
+      ]
+    },
+    {
+      "date": "2026-09-29",
+      "reason": "The first committed mutation sweep reported ERROR (infrastructure) because a missing alert made Testing Library throw before Jest reached a matcher. The sweep must see a structured failed assertion, not count an unstructured exception as a kill.",
+      "authoriser": "Independent R2 REVIEWER 01a0ee95-b0e8-7680-8cc0-4323fd31a085",
+      "author": "Independent ORACLE 01a0ee97-1818-7920-8c25-b98fb6f96ddc, distinct from the frozen unit suite's author",
+      "change": "Changed only the alert lookup to queryByRole and immediately asserted presence with a Jest matcher. The test name, fixture, save-error text, sticky-header containment, dismiss click and once-only callback remain. The normal one-test Jest control passed; clean-tree sweep and full gate follow the commit.",
+      "files": [
+        {"path": "tests/unit/story-reader-error-banner.test.tsx", "old_sha256": "5F8CBC8C80B3C29CB186DEDF37058FEE3EBD5AF80FB9068627B980B2DC6BADBA", "new_sha256": "101FA61A1324824A2B072C9ADD2C8DA5AF8F43FC8E18EBF613B93CE73A93F135"}
       ]
     }
   ],
