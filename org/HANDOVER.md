@@ -9,20 +9,35 @@ updated: 2026-09-29
 
 ## Current status, 2026-09-29
 
-**T-0183 is locally complete** at `dev@87b1672d`, with its implementation
-in `3d9f84c4`. The operator accepted ADR-0017 on 2026-09-29: queue and
-cron ticks use one durable claim, cancellation remains final, and a
-post-restart claim without a recorded backend ID waits for operator review.
-The ten-step full gate passed by exit code on an unchanged tree with 7,370
-Jest passes, eight skips, 332 Playwright passes and 24 skips. Three of three
-committed-tree mutants were killed and restored. The restart probe passed
-21/21 on isolated port 3994; the browser walk used isolated port 3995 at
-1440×900 and 390×844. [The race evidence](reviews/2026-09-t0183-race-evidence.md)
-records the local limits. The ADR/record closure full gate passed all ten
-steps by exit code on the unchanged tree, including 7,370 Jest passes and
-332 Playwright passes. The closure still needs its push and hosted acceptance
-observation. T-0184 is the next prerelease batch. Q-011
-still holds structural work until the operator's rc.1 and v1.0.0 release.
+**T-0184 is locally complete** in `2dd1910a`; closure and hosted acceptance
+are pending this handover's push. Mission cron promotion now validates before
+writing, clears the immediate queue flag and rolls back the mission if schedule
+creation fails. Category deletion moves SQLite and matching disk references as
+one operation with file restoration on failure. Explicit Uncategorized values
+survive disk/API reads, template edits and UI grouping. Three red-first oracle
+commits and one independent name-preserving amendment established 20 cases;
+all passed after implementation. The unchanged
+tree ten-step gate exited zero with 7,390 Jest passes, eight skips, 332
+Playwright passes and 24 skips (tree SHA-256
+`6e29ae195fed885497cbf8919adecf4623fe9a1b91b1c421ad61bc4dc5648f4f`).
+All four committed-tree mutants were killed by assertions and the tree was
+restored cleanly. The isolated browser walk on port **3996** created and deleted
+categories at 1440×900 and 390×844 without a missing h1, overflow or console
+error; screenshot hashes are in `org/tasks/T-0184.json`. The full gate uses
+isolated port **3000**. T-0185 is the next prerelease batch. Q-011 still holds
+structural work until the operator's rc.1 and v1.0.0 release.
+
+**T-0183 is closed** at `dev@014cfb14`, with its implementation in `3d9f84c4`.
+The operator accepted ADR-0017 on 2026-09-29: queue and cron ticks use one
+durable claim, cancellation remains final, and a post-restart claim without a
+recorded backend ID waits for operator review. Its closure gate passed all ten
+steps by exit code with 7,370 Jest and 332 Playwright passes. Three committed
+mutants were killed; the isolated restart probe passed 21/21 on port 3994 and
+the browser walk used port 3995 at 1440×900 and 390×844.
+[The race evidence](reviews/2026-09-t0183-race-evidence.md) records its limits.
+Exact-head push CI `36583775675`, PR CI `36583784707`, push Gitleaks
+`36583775454` and PR Gitleaks `36583784723` all completed successfully;
+the PR job ran full acceptance. PR #157 remains open.
 
 **T-0182 is closed** and its PR-head hosted checks passed. The following
 section retains its implementation and evidence details.

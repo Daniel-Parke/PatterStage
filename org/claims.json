@@ -1,27 +1,6 @@
 {
   "version": 1,
   "assigned": "2026-09-29",
-  "lanes": [
-    {
-      "lane_id": "t0184-coordinator-source",
-      "task_id": "T-0184",
-      "session_id": "01a09490-d778-7ac2-a183-6bfb646c6757",
-      "host": "local",
-      "harness_task_id": "01a09490-d778-7ac2-a183-6bfb646c6757",
-      "path_claims": ["org/tasks/T-0184.json", "org/briefs/T-0184-oracle.md", "org/briefs/T-0184-oracle-amendment.md", "org/briefs/T-0184-sceptic-oracle.md", "org/briefs/T-0184-final-oracle.md", "org/claims.json", "src/lib/missions/mission-promote-handler.ts", "src/lib/missions/mission-category-repository.ts", "src/lib/missions/mission-categories.ts", "src/lib/missions/mission-repository.ts", "src/lib/templates/catalog-template-repository.ts", "src/lib/templates-handlers/shared.ts", "src/lib/templates-handlers/create.ts", "src/lib/templates-handlers/update.ts", "src/lib/templates/template-list-cache.ts", "tests/fixtures/mutants/T-0184.json", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md"],
-      "acquired": "2026-09-29T14:50:00Z",
-      "expires": "2026-09-30T14:50:00Z"
-    },
-    {
-      "lane_id": "t0184-independent-final-oracle",
-      "task_id": "T-0184",
-      "session_id": "01a0edc4-57d4-7c62-9944-1f8f3daa7569",
-      "host": "local",
-      "harness_task_id": "01a0edc4-57d4-7c62-9944-1f8f3daa7569",
-      "path_claims": ["tests/unit/mission-category-final-boundary.test.ts"],
-      "acquired": "2026-09-29T15:40:00Z",
-      "expires": "2026-09-30T15:40:00Z"
-    }
-  ],
-  "note": "Original independent oracle d04fdd37, separate realm-sensitive amendment ccddf140, and supplemental red oracle 2ef592b4 are frozen. A fourth author owns only the final I/O and grouping boundary oracle; the coordinator owns source and records."
+  "lanes": [],
+  "note": "T-0184 is closed locally; its two writing lanes are released. Three independent red-first oracle commits and one separate name-preserving amendment were followed by gate-verified implementation and a clean four-mutant sweep."
 }
