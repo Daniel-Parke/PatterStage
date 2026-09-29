@@ -9,6 +9,14 @@ updated: 2026-09-29
 
 ## Current status, 2026-09-29
 
+**Hosted T-0186 acceptance is green** at the exact pushed head `8f94ca15`.
+Push CI `36623107215`, PR CI `36623116469`, push Gitleaks `36623106757`
+and PR Gitleaks `36623116087` all completed successfully on 2026-09-29.
+The PR run included full browser acceptance; the push run's full E2E skip
+was its configured path, not a substitute for that PR job. T-0187 is now
+active at R2. Its file claim is recorded in `org/claims.json`; no
+protected or historical task record is claimed.
+
 **T-0186 is locally closed** at `dev@d8906acf`; its implementation is
 `c934469d`. The Q-013-ruled destructive Hindsight rederive script is gone.
 Story Weaver now confirms each chapter read-status save before marking it
