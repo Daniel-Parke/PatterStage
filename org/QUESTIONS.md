@@ -235,3 +235,12 @@ are recorded in `org/reviews/2026-09-refactor-addendum.md`.
   claim the run was never submitted. T-0183 owns the durable claim, visible
   uncertainty and cancellation behaviour. This ruling does not assert that
   the gateway provides durable idempotency or that a remote run was stopped.
+
+- Q-032 (programme sequence): may the approved structural batches run before
+  the main release? Answer, from the operator on 2026-09-30: amend Q-011 and
+  finish consolidation before release. The approved T-0188–T-0201 structural
+  work may proceed on `dev` after the current release-verification repairs.
+  Merging PR #157, tagging and publishing remain operator actions. The earlier
+  Q-011 answer is preserved as history; this answer supersedes its release-first
+  sequencing requirement. Item-specific compatibility retirement dates require
+  their own explicit disposition and are not silently inferred from sequence.

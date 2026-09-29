@@ -1,0 +1,77 @@
+{
+  "id": "T-0202",
+  "intent": "Repair the HTTP-enabled release-install harness so it proves public readiness, anonymous refusal and authenticated application access with bounded requests and owned-process cleanup.",
+  "declared": {
+    "capabilities": [
+      "edit-tests",
+      "edit-docs",
+      "run-isolated-listener",
+      "run-owned-containers",
+      "git",
+      "git-push"
+    ],
+    "side_effects": [
+      "touches-auth",
+      "infra-state"
+    ]
+  },
+  "mode": "high-assurance",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [
+    {
+      "factor": "auth-surface",
+      "tier_floor": "R2",
+      "source": "declared",
+      "evidence": "declared side effect: touches-auth"
+    },
+    {
+      "factor": "ci-stateful-infra",
+      "tier_floor": "R2",
+      "source": "declared",
+      "evidence": "declared side effect: infra-state"
+    }
+  ],
+  "status": "active",
+  "owner_session": "2026-09-30-release-verification",
+  "claims": [
+    "org/QUESTIONS.md",
+    "org/tasks/T-0202.json",
+    "org/briefs/T-0202-oracle.md",
+    "org/briefs/T-0202-review.md",
+    "org/reviews/2026-09-release-verification.md",
+    "org/HANDOVER.md",
+    "org/claims.json",
+    "org/TASKS.md",
+    "org/STATE.md",
+    "tests/integration/test_full_install_update_process.py",
+    "tests/unit/release-install-http-smoke.test.ts",
+    "tests/helpers/release-install-http-probe.py",
+    "tests/fixtures/mutants/T-0202.json",
+    "scripts/tooling/line-census.baseline.json"
+  ],
+  "timestamps": {
+    "opened": "2026-09-29T23:24:00Z",
+    "updated": "2026-09-29T23:24:00Z"
+  },
+  "invariants": [
+    "Production authentication remains unchanged: anonymous protected navigation is 401 and a valid Bearer credential grants 200; public health is required to be exactly 200.",
+    "All HTTP probes and server termination have bounds; only the server launched by this probe may be stopped. A dead launch or occupied listener cannot count as readiness.",
+    "Probe credentials are ephemeral and never printed or embedded in failure logs. Existing scenario and test identities remain; HTTP checks are enabled in the release rerun.",
+    "The approved plan reserves T-0188 through T-0201. This auxiliary verification repair uses the next unreserved ID and does not bypass Q-011 or start structural work."
+  ],
+  "rollback": "Revert only the release-harness repair and its new oracle. Retain the recorded anonymous-401 counterexample and continue to report the HTTP-enabled release matrix red until a correct probe lands.",
+  "verify_line": "An independently authored behavioural oracle rejects anonymous-only readiness, a wrong credential, non-200 health, stalled probes and dead launches; success proves anonymous 401 plus authenticated 200 and owned cleanup. Run the unchanged full gate, committed-tree sweep, then the entire HTTP-enabled release and interactive install matrix on a clean isolated clone; report every failure and bounded dependency limitation.",
+  "authority": "The operator requested all remaining functionality and release preparation to be tested. Q-009 binds the full gate and hosted checks; Q-011 reserves release and structural decisions. This corrects a newly reproduced release-only test defect without changing application contracts or protected files.",
+  "evidence": "At clean dev@c548be18 the release profile with HTTP enabled reached completed fresh and Hermes-fixture setup, then both failed the anonymous curl / probe (tmp/t0187-release-install.log:622 and :1231). A direct unauthenticated request to the isolated production app on port 3997 returned 401. CI intentionally uses --skip-http and all exact-head jobs passed. The failing matrix was stopped after those two identical defects; its remaining owned dashboard container was explicitly removed. The interrupted run is not a completed matrix.",
+  "oracle": {
+    "author": "independent ORACLE 01a0ef7c-4f50-7ce3-88ba-5b8029ea0672",
+    "suite": "tests/unit/release-install-http-smoke.test.ts",
+    "helper": "tests/helpers/release-install-http-probe.py",
+    "red": "Coordinator independently reran the unchanged harness before implementation: Jest exited 1 with 11 assertion failures, three passes, zero skips across the same 14 names. The successful fixture control, dead launch and occupied-listener refusal passed. Result: tmp/t0202-coordinator-red.json; all 11 failures have structured matcher evidence. Targeted lint, Python syntax and test TypeScript passed in the ORACLE session.",
+    "sha256": {
+      "suite": "f5601e1420d246be1edca594e4ff0028ccb970ed235255f36cc33dff74ae35fc",
+      "helper": "c2fa52345a6aa07f8369f8dd21114c404e5c1d765ad009556bab58e2380ac3d9"
+    }
+  }
+}

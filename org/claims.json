@@ -1,6 +1,9 @@
 {
   "version": 1,
-  "assigned": "2026-09-29",
-  "lanes": [],
-  "note": "T-0187 is locally complete after the final unchanged-tree gate and 22-mutant sweep. All writing lanes are released; the closure push and exact-head hosted checks remain."
+  "assigned": "2026-09-30",
+  "lanes": [
+    {"task": "T-0202", "owner": "2026-09-30-release-verification", "mode": "high-assurance", "paths": ["org/QUESTIONS.md", "org/tasks/T-0202.json", "org/briefs/T-0202-oracle.md", "org/briefs/T-0202-review.md", "org/reviews/2026-09-release-verification.md", "org/HANDOVER.md", "org/claims.json", "org/TASKS.md", "org/STATE.md", "tests/integration/test_full_install_update_process.py", "tests/fixtures/mutants/T-0202.json", "scripts/tooling/line-census.baseline.json"]},
+    {"task": "T-0202", "owner": "independent-release-http-oracle", "mode": "parallel", "paths": ["tests/unit/release-install-http-smoke.test.ts", "tests/helpers/release-install-http-probe.py"]}
+  ],
+  "note": "T-0187 exact-head push CI, PR CI including acceptance, and both Gitleaks runs passed. T-0202 is an auxiliary release-verification repair after the reserved plan IDs; at most the coordinator and independent ORACLE write."
 }

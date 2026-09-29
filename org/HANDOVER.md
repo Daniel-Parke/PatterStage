@@ -9,6 +9,26 @@ updated: 2026-09-30
 
 ## Current status, 2026-09-30
 
+**Q-032 now permits approved structural T-0188–T-0201 before release.**
+The operator amended the release-first sequencing in Q-011. PR #157's merge,
+tags and releases remain operator actions. The separate compatibility promise
+has not been changed. The plan register and its closed oracle need a dated,
+independent authority amendment before structural execution.
+
+**T-0187 hosted acceptance passed at `dev@c548be18`.** Push CI `36643616502`,
+PR CI `36643621005`, push Gitleaks `36643616541` and PR Gitleaks `36643620989`
+all completed success. Every scheduled PR job passed, including full browser
+acceptance, real Hermes and install verification. The release-only harness
+with HTTP enabled then reproduced an anonymous-root readiness defect after
+successful setup/build in two scenarios. **T-0202 is active** to repair that
+probe with an independent red-first oracle; the matrix is incomplete.
+
+The [release verification](reviews/2026-09-release-verification.md) records
+46 authenticated desktop/phone route walks on owned port **3997**, draft and
+session lifecycle journeys, and real-Hermes contract/full-stack checks on
+owned ports **3999/8651**. These checks do not prove every pathway. The full
+gate uses **3000**. All operator data remains separate from the fixtures.
+
 **T-0187 is locally closed at `dev@e8ab14d3` plus its record commit.**
 Supported `CH_`, `CONTROL_HUB_` and `AGENT_HOME` settings that supply the
 selected value now produce one key-only boot warning. The exact five
@@ -25,8 +45,8 @@ authenticated 1440×900 and 390×844 walks across five routes each had one
 h1, no overflow and no page errors. Screenshot hashes, load-only Help
 worker failure/retry and the source-informed survivor oracle are recorded
 in `org/tasks/T-0187.json`. The T-0200 plan claim now names the new alias
-reader. Hosted acceptance awaits the closure push. **Q-011 next requires
-operator rc.1 and v1.0.0 release decisions before structural T-0188.**
+reader. Hosted acceptance passed on the closure head as recorded above.
+Q-032 now supersedes Q-011's release-first ordering.
 
 **Hosted T-0186 acceptance is green** at the exact pushed head `8f94ca15`.
 Push CI `36623107215`, PR CI `36623116469`, push Gitleaks `36623106757`
