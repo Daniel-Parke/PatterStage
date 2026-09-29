@@ -15,11 +15,11 @@
   "status": "active",
   "owner_session": "2026-09-29-refactor-prerelease",
   "claims": [
-    "org/tasks/T-0187.json", "org/claims.json", "org/HANDOVER.md", "org/briefs/T-0187-oracle.md", "org/briefs/T-0187-bridge-oracle.md", "org/briefs/T-0187-precedence-oracle.md", "org/briefs/T-0187-review.md",
+    "org/tasks/T-0187.json", "org/claims.json", "org/HANDOVER.md", "org/briefs/T-0187-oracle.md", "org/briefs/T-0187-bridge-oracle.md", "org/briefs/T-0187-precedence-oracle.md", "org/briefs/T-0187-fixture-refactor.md", "org/briefs/T-0187-review.md",
     "org/TASKS.md", "org/STATE.md", "src/instrumentation.ts", "src/lib/config/legacy-boot.ts", "src/modules/hermes/lib/home.ts",
     "src/lib/host/paths.ts", "next.config.ts", "scripts/bootstrap/setup.sh", "scripts/bootstrap/setup.mjs",
     "scripts/bootstrap/setup-hindsight.sh", "scripts/lib/ps-dotenv-local.sh", "scripts/tooling/_env-local.mjs",
-    "tests/unit/legacy-boot-warning.test.ts", "tests/unit/legacy-env-bridge-warning.test.ts", "tests/unit/legacy-bridge-precedence.test.ts", "tests/unit/t0187-retired-tools.test.ts",
+    "tests/unit/legacy-boot-warning.test.ts", "tests/unit/legacy-env-bridge-warning.test.ts", "tests/unit/legacy-bridge-precedence.test.ts", "tests/helpers/legacy-env-loader.ts", "tests/unit/t0187-retired-tools.test.ts",
     "tests/fixtures/mutants/T-0187.json",
     "scripts/hardware/ch-db-backup.sh", "scripts/hardware/ch-disk-report.sh",
     "scripts/hardware/ch-health-check.sh", "scripts/hardware/ch-log-rotate.sh",

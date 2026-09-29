@@ -10,10 +10,10 @@
     },
     {
       "task": "T-0187",
-      "owner": "independent-r2-precedence-oracle",
+      "owner": "independent-r2-fixture-refactor",
       "mode": "high-assurance",
-      "paths": ["tests/unit/legacy-bridge-precedence.test.ts"]
+      "paths": ["tests/helpers/legacy-env-loader.ts", "tests/unit/legacy-env-bridge-warning.test.ts", "tests/unit/legacy-bridge-precedence.test.ts"]
     }
   ],
-  "note": "Independent R2 review rejected two bridge-warning precedence cases. The coordinator owns source, docs, records and removals. A separate ORACLE owns only tests/unit/legacy-bridge-precedence.test.ts before either confirmed loader gap is repaired; all earlier frozen tests remain read-only."
+  "note": "The independent red-first precedence oracle is committed. The coordinator owns source, docs, records and removals; a second R2 writer owns only the two environment-bridge oracle suites and their common fixture to preserve test identities while lowering the genuine repeated-window count."
 }
