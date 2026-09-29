@@ -9,6 +9,26 @@ updated: 2026-09-29
 
 ## Current status, 2026-09-29
 
+**T-0186 is locally closed** at `dev@d8906acf`; its implementation is
+`c934469d`. The Q-013-ruled destructive Hindsight rederive script is gone.
+Story Weaver now confirms each chapter read-status save before marking it
+locally, reports HTTP, network and unconfirmed-response failures, and sends
+one chapter patch so overlapping selections preserve both read marks. The
+error sits in the reader header without covering global navigation, chapter
+controls or the chapter heading. A controlled walk on owned **port 3997**
+checked failure and confirmed-save paths at 1440×900 and 390×844, with one
+h1, no overflow or page error; the expected injected 503 was the only browser
+console error. Screenshot hashes are in `org/tasks/T-0186.json`. The final
+unchanged-tree ten-step gate exited zero with 7,417 Jest passes, eight skips,
+355 Playwright passes and 24 skips on gate **port 3000**; tree SHA-256 was
+`a8bbf62c13f8b1031bb802c0084be396e3132608c51263b026d5cf4502b3715c`.
+The committed-tree sweep killed its one mutant with a structured assertion
+and restored the tree. The fixed C4 repeated-test ceiling is 4,800; the
+measured value is 4,794 after independently authorised fixture extraction.
+Hosted push and PR acceptance await this closure push. T-0187 is the last
+approved prerelease batch. Q-011 still reserves rc.1 and v1.0.0 release
+decisions for the operator before structural work.
+
 **T-0185 is closed** with implementation at `178551c2` and final
 committed test tree `dev@d6de9a9b`. Mission prompt parsing keeps the real task
 when context contains CDATA or task-shaped references. Non-string `modelId`

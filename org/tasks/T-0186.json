@@ -12,7 +12,7 @@
     {"factor": "public-contract", "tier_floor": "R2", "source": "declared", "evidence": "Story Weaver save feedback changes a user-visible response"},
     {"factor": "ruled-removal", "tier_floor": "R2", "source": "Q-013", "evidence": "The operator specifically ruled hindsight-rederive.sh for retirement before v1.0.0"}
   ],
-  "status": "in_progress",
+  "status": "done",
   "owner_session": "2026-09-29-refactor-prerelease",
   "claims": [
     "org/tasks/T-0186.json",
@@ -45,7 +45,7 @@
     "tests/fixtures/mutants/T-0186.json",
     "scripts/tooling/line-census.baseline.json"
   ],
-  "timestamps": {"opened": "2026-09-29T18:15:02Z", "updated": "2026-09-29T18:52:12Z"},
+  "timestamps": {"opened": "2026-09-29T18:15:02Z", "updated": "2026-09-29T19:57:25Z"},
   "invariants": [
     "A count-only or omitted target cannot delete a live Hindsight bank; Q-013's ruled rederive command is no longer callable.",
     "A failed read-status POST leaves Story Weaver's local read status unsaved and gives visible feedback for HTTP and network failures.",
@@ -113,7 +113,7 @@
       ]
     }
   ],
-  "verification": "The phone chapter-control oracle failed red before the second layout repair: alert box x16 y96 358x43 intersected Show chapters x239.1875 y93 46x32 after settled navigation, 1 of 1 intended failure on owned port 3998. After placing the banner inside the header, 21 focused cases passed and a viewport walk showed the chapter h2 still partly behind the header. A separate heading oracle failed red, 1 of 1, at heading y185 versus alert bottom y200 on the isolated listener. Earlier full gate passed before these added oracles and layout changes; final gate remains pending.",
-  "mutation": "The committed-tree sweep at c934469d reported m1-drop-reader-error-from-header SURVIVED: the existing U12 Jest control did not assert the save-error banner. A focused component oracle and a second sweep are required; no survivor is treated as killed.",
-  "deviations": "None."
+  "verification": "The final unchanged-tree ten-step gate on dev@d8906acf exited zero at every step with SHA-256 a8bbf62c13f8b1031bb802c0084be396e3132608c51263b026d5cf4502b3715c before and after: lint, TypeScript, Jest (778 passing suites, 7,417 passing tests, eight skips), Knip, canary, production build, build purity, Playwright (355 passes, 24 skips), design census and line census. The ruled Hindsight rederive script is absent. Failed HTTP, network, unconfirmed 200, overlapping selection and Next-button saves passed the focused and loaded browser cases; confirmed saves survived reload. The isolated 1440x900 and 390x844 reader walk used owned port 3997 and checked failure, success, one h1, no horizontal overflow, unobstructed chapter controls and heading, and no page errors. The only console error was the deliberately injected 503. Screenshot SHA-256: desktop failure aecef4ce16678b7b79ef5e34981ecabf6580d9853d9aaea59b52be0aba5aef34; desktop confirmed bb29202f9966bca42adcac3595c0a3a16dbc4f0c2e8f11706bea6c4d03682d7f; phone failure 98561ca49d0699c695e387a6e78d2ebf9a55d11b0a7b582b25fce8f64cd25242; phone confirmed 40d7856f168ee5ca5b7f4fc3beb23a986930c207a5a4166b0452a95a58ab85fb. The committed line census reads source 102611, tests 137521, source repeated windows 1010, test repeated windows 4794, one-importer components 104. The C4 ceiling remains 4800. Hosted acceptance is pending the closure push.",
+  "mutation": "The clean-tree sweep at c934469d reported one honest SURVIVED mutant. A new behaviour suite was committed separately at f7e529d0. Sweeps at f7e529d0 and 8647e1dc reported ERROR (infrastructure), not a kill: first a throwing Testing Library lookup, then jest-dom toBeInTheDocument on null produced no matcherResult. Independently authorised amendments kept the test name and assertions. The final clean-tree sweep at d8906acf killed the single mutant by a structured Jest assertion, with zero NOT-APPLIED, INEFFECTIVE, SURVIVED or ERROR outcomes. The source was restored and the unmodified control passed; Git stayed clean.",
+  "deviations": "The visual walk found two real mobile overlaps after the initial implementation. Separate red-first geometry oracles preceded each repair. The first full gate stopped on a missing optional presentation prop in an older test; the next stopped on C4 at 4834 versus fixed 4800. No check was loosened: independently authorised fixture consolidations brought C4 to 4794 while preserving test names and assertions. The mutation sweep then exposed one survivor and two unstructured assertion failures; each was reported honestly and resolved through new or independently amended oracles. The final full gate and sweep passed. Hosted jobs await the closure push."
 }
