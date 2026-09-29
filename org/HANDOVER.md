@@ -2,20 +2,37 @@
 summary: What the consolidation programme did and left behind, how a batch was landed, what is open, and what waits next
 type: venture
 tags: [handover, consolidation]
-updated: 2026-09-29
+updated: 2026-09-30
 ---
 
-# Handover · PatterStage, 2026-09-29
+# Handover · PatterStage, 2026-09-30
 
-## Current status, 2026-09-29
+## Current status, 2026-09-30
+
+**T-0187 is locally closed at `dev@e8ab14d3` plus its record commit.**
+Supported `CH_`, `CONTROL_HUB_` and `AGENT_HOME` settings that supply the
+selected value now produce one key-only boot warning. The exact five
+Q-013-ruled repository hardware shims and the org-11-refused EOS compiler
+are gone; installed copies, same-directory `ps-*` twins, `ch-backup.sh`,
+aliases, x-ch headers and all 52 redirects remain. The two named
+compiler-only b15 identities are the only test removals. The final
+unchanged-tree ten-step gate passed with 7,507 Jest passes, eight skips,
+355 Playwright passes and 24 skips; its tree SHA-256 was
+`e81db1a32ef7cbdc3c81bd96a691bb90a57305f2e746496e07e4c4e569d199a3`.
+All 22 committed mutants were killed and the tree restored cleanly. An
+isolated production boot on port **3997** warned once for `CH_DATA_DIR`;
+authenticated 1440×900 and 390×844 walks across five routes each had one
+h1, no overflow and no page errors. Screenshot hashes, load-only Help
+worker failure/retry and the source-informed survivor oracle are recorded
+in `org/tasks/T-0187.json`. The T-0200 plan claim now names the new alias
+reader. Hosted acceptance awaits the closure push. **Q-011 next requires
+operator rc.1 and v1.0.0 release decisions before structural T-0188.**
 
 **Hosted T-0186 acceptance is green** at the exact pushed head `8f94ca15`.
 Push CI `36623107215`, PR CI `36623116469`, push Gitleaks `36623106757`
 and PR Gitleaks `36623116087` all completed successfully on 2026-09-29.
 The PR run included full browser acceptance; the push run's full E2E skip
-was its configured path, not a substitute for that PR job. T-0187 is now
-active at R2. Its file claim is recorded in `org/claims.json`; no
-protected or historical task record is claimed.
+was its configured path, not a substitute for that PR job.
 
 **T-0186 is locally closed** at `dev@d8906acf`; its implementation is
 `c934469d`. The Q-013-ruled destructive Hindsight rederive script is gone.
@@ -33,9 +50,9 @@ unchanged-tree ten-step gate exited zero with 7,417 Jest passes, eight skips,
 The committed-tree sweep killed its one mutant with a structured assertion
 and restored the tree. The fixed C4 repeated-test ceiling is 4,800; the
 measured value is 4,794 after independently authorised fixture extraction.
-Hosted push and PR acceptance await this closure push. T-0187 is the last
-approved prerelease batch. Q-011 still reserves rc.1 and v1.0.0 release
-decisions for the operator before structural work.
+The exact-head hosted push and PR acceptance is green as recorded above.
+T-0187 was the last approved prerelease batch. Q-011 still reserves rc.1
+and v1.0.0 release decisions for the operator before structural work.
 
 **T-0185 is closed** with implementation at `178551c2` and final
 committed test tree `dev@d6de9a9b`. Mission prompt parsing keeps the real task
