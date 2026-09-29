@@ -10,10 +10,10 @@
     },
     {
       "task": "T-0187",
-      "owner": "independent-r2-supported-alias-oracle",
+      "owner": "independent-r2-run-limit-oracle",
       "mode": "high-assurance",
-      "paths": ["tests/unit/legacy-supported-alias-warning.test.ts"]
+      "paths": ["tests/unit/legacy-run-limit-warning.test.ts"]
     }
   ],
-  "note": "The independent bridge fixture lane is released. The coordinator owns source, docs, records and removals; a separate R2 ORACLE owns only the supported-alias counterexample suite before the remaining loader repair."
+  "note": "Earlier T-0187 oracles are committed red-first. The coordinator owns source, docs, records and removals; a separate R2 ORACLE owns only the effective run-limit counterexample suite before that repair."
 }
