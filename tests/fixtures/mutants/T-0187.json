@@ -14,7 +14,7 @@
       "file": "scripts/tooling/_env-local.mjs",
       "anchor": "const canonical = Object.hasOwn(map, psKey) ? map[psKey] : inherited[psKey];",
       "replacement": "const canonical = process.env[psKey];",
-      "tests": ["tests/unit/legacy-bridge-precedence.test.ts"],
+      "tests": ["tests/unit/legacy-bridge-precedence.test.ts", "tests/unit/legacy-node-bridge-order.test.ts"],
       "why": "An empty canonical line cannot silence the warning while the legacy directory still wins."
     },
     {
