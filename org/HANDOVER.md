@@ -2,15 +2,32 @@
 summary: What the consolidation programme did and left behind, how a batch was landed, what is open, and what waits next
 type: venture
 tags: [handover, consolidation]
-updated: 2026-09-28
+updated: 2026-09-29
 ---
 
-# Handover · PatterStage, 2026-09-28
+# Handover · PatterStage, 2026-09-29
 
-## Current status, 2026-09-28
+## Current status, 2026-09-29
 
-**T-0182 is implemented** at `dev@c9b84131` and awaits the closing-record
-push and hosted job observation. The accepted ADR-0015 nonce CSP blocks
+**T-0183 is locally complete** at `dev@87b1672d`, with its implementation
+in `3d9f84c4`. The operator accepted ADR-0017 on 2026-09-29: queue and
+cron ticks use one durable claim, cancellation remains final, and a
+post-restart claim without a recorded backend ID waits for operator review.
+The ten-step full gate passed by exit code on an unchanged tree with 7,370
+Jest passes, eight skips, 332 Playwright passes and 24 skips. Three of three
+committed-tree mutants were killed and restored. The restart probe passed
+21/21 on isolated port 3994; the browser walk used isolated port 3995 at
+1440×900 and 390×844. [The race evidence](reviews/2026-09-t0183-race-evidence.md)
+records the local limits. The ADR/record closure full gate passed all ten
+steps by exit code on the unchanged tree, including 7,370 Jest passes and
+332 Playwright passes. The closure still needs its push and hosted acceptance
+observation. T-0184 is the next prerelease batch. Q-011
+still holds structural work until the operator's rc.1 and v1.0.0 release.
+
+**T-0182 is closed** and its PR-head hosted checks passed. The following
+section retains its implementation and evidence details.
+
+T-0182 was implemented at `dev@c9b84131`. The accepted ADR-0015 nonce CSP blocks
 untrusted scripts and event handlers while keeping framework hydration,
 session navigation and static-asset caching. ADR-0016 records exact
 fail-closed Webpack and Turbopack violations on Next's static 500 page;
@@ -24,8 +41,7 @@ A controlled 1440×900/390×844 Missions, Composer and Help walk on isolated
 violation. [The T-0182 evidence](reviews/2026-09-t0182-csp-evidence.md)
 records the failed infrastructure gate attempt, screenshot hashes, cache
 headers, route manifest sizes and the final oracle's unrerun Webpack branch.
-T-0183 is the next prerelease batch. Q-011 still holds structural work until
-the operator's rc.1 and v1.0.0 release.
+Q-011 still holds structural work until the operator's rc.1 and v1.0.0 release.
 
 The operator approved the complete Phase 2 plan on 28 September 2026 and
 authorised T-0180–T-0187 prerelease work. **T-0181 is done** at

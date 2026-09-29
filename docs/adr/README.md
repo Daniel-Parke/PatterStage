@@ -40,6 +40,7 @@ itself. Do not build on a proposed ADR without saying that is what you are doing
 | [ADR-0014](../../org/decisions/ADR-0014-auth-session-retention.md) | Prune expired or revoked browser-session metadata after 30 days at the next sign-in | accepted |
 | [ADR-0015](../../org/decisions/ADR-0015-content-security-policy.md) | Enforce a fresh nonce-based browser script policy | accepted |
 | [ADR-0016](../../org/decisions/ADR-0016-global-error-csp-exception.md) | Keep Next's static 500 fallback useful while its un-nonced assets fail closed | accepted |
+| [ADR-0017](../../org/decisions/ADR-0017-single-owner-mission-dispatch.md) | Give unattended mission dispatch one durable owner and hold uncertain submissions for review | accepted |
 
 ## Relationship to the EOS
 
