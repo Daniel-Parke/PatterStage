@@ -8,20 +8,20 @@
       "session_id": "01a09490-d778-7ac2-a183-6bfb646c6757",
       "host": "local",
       "harness_task_id": "01a09490-d778-7ac2-a183-6bfb646c6757",
-      "path_claims": ["org/tasks/T-0184.json", "org/briefs/T-0184-oracle.md", "org/claims.json", "src/lib/missions/mission-promote-handler.ts", "src/lib/missions/mission-category-repository.ts", "src/lib/missions/mission-repository.ts", "src/lib/templates/catalog-template-repository.ts", "tests/fixtures/mutants/T-0184.json", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md"],
+      "path_claims": ["org/tasks/T-0184.json", "org/briefs/T-0184-oracle.md", "org/briefs/T-0184-oracle-amendment.md", "org/briefs/T-0184-sceptic-oracle.md", "org/claims.json", "src/lib/missions/mission-promote-handler.ts", "src/lib/missions/mission-category-repository.ts", "src/lib/missions/mission-repository.ts", "src/lib/templates/catalog-template-repository.ts", "src/lib/templates-handlers/shared.ts", "src/lib/templates-handlers/create.ts", "src/lib/templates-handlers/update.ts", "src/lib/templates/template-list-cache.ts", "tests/fixtures/mutants/T-0184.json", "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md"],
       "acquired": "2026-09-29T14:50:00Z",
       "expires": "2026-09-30T14:50:00Z"
     },
     {
-      "lane_id": "t0184-independent-oracle",
+      "lane_id": "t0184-independent-sceptic-oracle",
       "task_id": "T-0184",
-      "session_id": "01a0ed9b-064f-7533-aced-98a68c654099",
+      "session_id": "01a0edb2-7998-7eb3-9928-3555ee79d486",
       "host": "local",
-      "harness_task_id": "01a0ed9b-064f-7533-aced-98a68c654099",
-      "path_claims": ["tests/unit/mission-promote-atomic.test.ts", "tests/unit/mission-category-atomic.test.ts"],
-      "acquired": "2026-09-29T14:50:00Z",
-      "expires": "2026-09-30T14:50:00Z"
+      "harness_task_id": "01a0edb2-7998-7eb3-9928-3555ee79d486",
+      "path_claims": ["tests/unit/mission-category-visibility.test.ts"],
+      "acquired": "2026-09-29T15:20:00Z",
+      "expires": "2026-09-30T15:20:00Z"
     }
   ],
-  "note": "T-0184 has two disjoint writing lanes. The independent oracle lane must commit red before the coordinator edits source."
+  "note": "Original independent oracle red commit d04fdd37 and separate realm-sensitive amendment ccddf140 are frozen. A third author owns only the sceptic's supplemental category-visibility oracle; the coordinator owns source and records."
 }
