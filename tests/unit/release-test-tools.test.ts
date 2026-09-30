@@ -77,6 +77,7 @@ type Options = {
   installFails?: "coreutils" | "bash";
   prefixFails?: "coreutils" | "bash";
   noisyInstall?: boolean;
+  delayedTerm?: boolean;
   installOmitsTools?: boolean;
   publication?: "file" | "absent" | "directory";
 };
@@ -105,12 +106,77 @@ function fixture(options: Options = {}) {
   }
   writeCommand(join(bin, "bash"), `exec ${quote(tools.bash)} "$@"`);
   writeCommand(join(bin, "uname"), `printf '%s\\n' ${quote(options.os || "Darwin")}`);
+  const delayLog = join(bin, "delayed-term-events");
+  const delayControl = join(root, "delayed-term-control");
+  if (options.delayedTerm) {
+    const fifo = launch(["-c", "type -P mkfifo"]);
+    if (fifo.status !== 0 || !fifo.stdout.trim()) throw new Error("T-0203 infrastructure: mkfifo unavailable");
+    writeCommand(delayControl, `
+work=""; timer_pid=""; child_pid=""; reap_wait=""
+: > "$T0203_DELAY_LOG" || exit 90
+cleanup() {
+  status=$?
+  trap - EXIT HUP INT TERM
+  if [[ -n "$timer_pid" ]]; then
+    kill -TERM "$timer_pid" 2>/dev/null || :
+    wait "$timer_pid" 2>/dev/null || :
+    printf 'REAPED_GNU\\n' >> "$T0203_DELAY_LOG" || status=90
+  fi
+  if [[ -n "$work" && -f "$work/child.pid" ]]; then
+    IFS= read -r child_pid < "$work/child.pid"
+    kill -KILL "$child_pid" 2>/dev/null || :
+    for attempt in {1..40}; do
+      kill -0 "$child_pid" 2>/dev/null || break
+      value=""
+      IFS= read -r -t 0.05 -u "$reap_wait" value || :
+    done
+    if kill -0 "$child_pid" 2>/dev/null; then
+      printf 'CHILD_STILL_PRESENT\\n' >> "$T0203_DELAY_LOG"; status=90
+    else
+      printf 'REAPED_CHILD\\n' >> "$T0203_DELAY_LOG" || status=90
+    fi
+  fi
+  if [[ -n "$reap_wait" ]]; then exec {reap_wait}<&-; fi
+  if [[ -n "$work" ]]; then
+    case "$work" in "$T0203_DELAY_ROOT"/delay.*) rm -rf "$work" || status=90;; *) status=90;; esac
+  fi
+  printf 'CLEANUP\\n' >> "$T0203_DELAY_LOG" || status=90
+  exit "$status"
+}
+trap cleanup EXIT
+trap 'exit 91' HUP INT TERM
+work=$(mktemp -d "$T0203_DELAY_ROOT/delay.XXXXXX") || exit 90
+export T0203_DELAY_FIFO="$work/pause"
+${quote(fifo.stdout.trim())} "$T0203_DELAY_FIFO" || exit 90
+export T0203_DELAY_PID="$work/child.pid"
+exec {reap_wait}<>"$T0203_DELAY_FIFO" || exit 90
+cat > "$work/child" <<'CHILD'
+exec {pause}<>"$T0203_DELAY_FIFO" || exit 90
+printf '%s\\n' "$BASHPID" > "$T0203_DELAY_PID"
+trap 'trap "" TERM; printf "TERM\\n" >> "$T0203_DELAY_LOG"; value=""; IFS= read -r -t 0.6 -u "$pause" value; status=$?; [[ "$status" == 142 ]] || exit 93; printf "CLEAN\\n" >> "$T0203_DELAY_LOG"; exit 0' TERM
+printf 'READY\\n' >> "$T0203_DELAY_LOG"
+value=""
+IFS= read -r -t 10 -u "$pause" value
+exit 94
+CHILD
+${quote(tools.timeout)} "$1" "$2" ${quote(tools.bash)} --noprofile --norc "$work/child" &
+timer_pid=$!
+wait "$timer_pid"
+status=$?
+timer_pid=""
+printf 'STATUS\\t%s\\nREAPED_GNU\\n' "$status" >> "$T0203_DELAY_LOG"
+exit "$status"`);
+  }
   const timeoutTemplate = join(root, "timeout-template");
   writeCommand(timeoutTemplate, `
 printf 'timeout' >> "$T0203_CALLS"; printf '\t%s' "$@" >> "$T0203_CALLS"; printf '\n' >> "$T0203_CALLS"
 if [[ "$T0203_TIMEOUT_MODE" == foreign ]]; then printf 'BSD timeout\\n'; exit 125; fi
 if [[ "$T0203_TIMEOUT_MODE" == no-kill-after && "$1" != --version && "$1" != --help ]]; then exit 125; fi
-${quote(tools.timeout)} "$@"
+if [[ "$T0203_DELAY_TERM" == yes && "$#" == 4 && "$1" == --kill-after=* && "$2" == 0.2 && "$3" == sleep && "$4" == 2 ]]; then
+  ${quote(tools.bash)} "$T0203_DELAY_CONTROL" "$@"
+else
+  ${quote(tools.timeout)} "$@"
+fi
 status=$?
 if [[ "$T0203_TIMEOUT_MODE" == wrong-expiry && ( "$status" == 124 || "$status" == 137 ) ]]; then exit 0; fi
 exit "$status"`);
@@ -164,6 +230,8 @@ esac`);
     T0203_TIMEOUT_MODE: options.timeoutMode || "gnu", T0203_BASH_MODE: options.bashMode || "working",
     T0203_INSTALL_FAILS: options.installFails || "", T0203_PREFIX_FAILS: options.prefixFails || "",
     T0203_NOISY_INSTALL: options.noisyInstall ? "yes" : "no",
+    T0203_DELAY_TERM: options.delayedTerm ? "yes" : "no", T0203_DELAY_LOG: shellPath(delayLog),
+    T0203_DELAY_ROOT: shellPath(root), T0203_DELAY_CONTROL: shellPath(delayControl),
     T0203_INSTALL_OMITS: options.installOmitsTools ? "yes" : "no", GITHUB_PATH: shellPath(pathFile),
   };
   delete env.BASH_ENV;
@@ -205,7 +273,7 @@ describe("T-0203 release test prerequisites", () => {
     expect(launch(["-c", 'timeout --version'], env).stdout).toContain("GNU coreutils");
     expect(launch(["-c", 'timeout --kill-after=0.2 2 bash --noprofile --norc -c "$T0203_TIMER_CHECK"'], env).status).toBe(0);
     expect(launch(["-c", "timeout --kill-after=0.2 2 bash -c 'exit 37'"], env).status).toBe(37);
-    expect(launch(["-c", "timeout --kill-after=0.2 0.2 sleep 2"], env).status).toBe(124);
+    expect(launch(["-c", "timeout --kill-after=2 0.2 sleep 2"], env).status).toBe(124);
     // Keep an observing shell alive: MSYS exposes a raw native kill code if
     // Bash replaces itself with the final command instead of waiting for it.
     expect(launch(["-c", "timeout --kill-after=0.2 0.5 bash -c 'trap \"\" TERM; while :; do :; done'; status=$?; exit \"$status\""], env).status).toBe(137);
@@ -326,6 +394,30 @@ describe("T-0203 release test prerequisites", () => {
     const state = fixture({ noisyInstall: true });
     expect(state.prepare().status).toBe(0);
     expect(installed(state).sort()).toEqual(["bash", "coreutils"]);
+    assertReady(state);
+  }, 20_000);
+
+  it("P21 real GNU delayed TERM distinguishes kill grace and preserves prerequisite acceptance", () => {
+    const state = fixture({ coreutils: true, bash: true, delayedTerm: true });
+    const env = { ...state.env, PATH: `${state.gnubin}:${state.bashbin}:${state.bin}` };
+    const events = () => readFileSync(join(state.nativeBin, "delayed-term-events"), "utf8").trim().split("\n");
+    const runExpiry = (grace: "0.2" | "2") => launch(["-c", "timeout --kill-after=" + grace + " 0.2 sleep 2; status=$?; exit \"$status\""], env);
+    expect(runExpiry("0.2").status).toBe(137);
+    expect(events()).toEqual(["READY", "TERM", "STATUS\t137", "REAPED_GNU", "REAPED_CHILD", "CLEANUP"]);
+    expect(runExpiry("2").status).toBe(124);
+    expect(events()).toEqual(["READY", "TERM", "CLEAN", "STATUS\t124", "REAPED_GNU", "REAPED_CHILD", "CLEANUP"]);
+    expect(state.calls().filter((call) => call[0] === "timeout")).toEqual([
+      ["timeout", "--kill-after=0.2", "0.2", "sleep", "2"],
+      ["timeout", "--kill-after=2", "0.2", "sleep", "2"],
+    ]);
+    const result = state.prepare();
+    expect(state.calls().slice(2).some((call) => call[0] === "timeout" && call[1].startsWith("--kill-after=") && call[2] === "0.2" && call[3] === "sleep" && call[4] === "2")).toBe(true);
+    const preparedEvents = events();
+    expect(preparedEvents.slice(0, 2)).toEqual(["READY", "TERM"]);
+    expect(preparedEvents.slice(-3)).toEqual(["REAPED_GNU", "REAPED_CHILD", "CLEANUP"]);
+    expect(result.status).toBe(0);
+    expect(preparedEvents).toEqual(["READY", "TERM", "CLEAN", "STATUS\t124", "REAPED_GNU", "REAPED_CHILD", "CLEANUP"]);
+    expect(installed(state)).toEqual([]);
     assertReady(state);
   }, 20_000);
 
