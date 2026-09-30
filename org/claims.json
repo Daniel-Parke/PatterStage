@@ -1,6 +1,9 @@
 {
   "version": 1,
   "assigned": "2026-09-30",
-  "lanes": [],
-  "note": "T-0202 is locally closed after the unchanged full gate and clean twelve-mutant sweep at 1f556c49. All author/coordinator claims are released. Required exact-head hosted acceptance follows the closure push before T-0188. Frozen helpers, append-only ledger and historical task records remain closed to edits."
+  "lanes": [
+    {"id": "T-0203-coordinator", "session": "2026-09-30-hosted-prerequisite-repair", "path_claims": [".github/workflows/ci.yml", "scripts/tooling/prepare-release-test-tools.sh", "tests/fixtures/mutants/T-0203.json", "org/tasks/T-0203.json", "org/briefs/T-0203-oracle.md", "org/briefs/T-0203-review.md", "org/reviews/2026-09-release-verification.md", "org/HANDOVER.md", "org/claims.json", "org/TASKS.md", "org/STATE.md", "scripts/tooling/line-census.baseline.json"]},
+    {"id": "T-0203-oracle", "session": "01a0f0cf-033e-7b82-af84-94713bfa5bd7", "path_claims": ["tests/unit/release-test-tools.test.ts"]}
+  ],
+  "note": "Two disjoint T-0203 writing lanes; ORACLE writes only its new suite before implementation. Goodall's T-0188 authority preflight is read-only. Frozen T-0202 files and closed records remain immutable. Hosted repair acceptance precedes structural execution."
 }
