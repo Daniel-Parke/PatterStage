@@ -7,6 +7,22 @@ status: in-progress
 
 # Release verification, 30 September 2026
 
+## T-0203 first full-gate result
+
+The first unchanged T-0203 gate stopped at Jest with exit 1. Lint and types
+passed. Jest passed 795 suites and 7,559 assertions, with nine skips; its only
+failure was the prerequisite fixture's F00 expiry control, which expected 124
+and received 137. The frozen suite then passed alone: 27 passes, one new native
+macOS skip, normal exit zero. Both receipts remain in
+`tmp/t0203-full-gate` and `tmp/t0203-load-failure-alone.json/.log`.
+This standalone result does not close the complete gate.
+
+[GNU's timeout contract](https://www.gnu.org/software/coreutils/manual/html_node/timeout-invocation.html)
+defines 137 for a KILL signal and states that system conditions affect short
+durations. The existing 0.2-second kill grace is under independent review.
+No scheduling assumption, repeated pass or infrastructure failure is accepted
+as a mutation kill or a replacement for the full gate.
+
 ## Revision and authority
 
 The product under inspection is `dev@c548be18bf2d1ef94d923b51d885a72223ea9422`.
@@ -413,6 +429,47 @@ install matrix remains the explicitly byte-bound 15-scenario snapshot already
 recorded, with final executed controller hash `1deb…`. Local closure does not
 establish exact-head hosted acceptance or completion of every user pathway.
 Hosted push and PR jobs are required after the closure push before T-0188.
+
+### T-0203 hosted prerequisite repair, 2026-09-30
+
+Push CI [36673082669](https://github.com/Daniel-Parke/PatterStage/actions/runs/36673082669)
+at `88c5d28b` passed eight scheduled jobs but failed macOS coverage. All 21
+HTTP fixture assertions stopped before their witnesses because `timeout` was
+absent from the shell PATH. The log remains
+`tmp/t0202-hosted-push-failure.log`. No retry or reduced suite counts as repair.
+Push Gitleaks passed; the push's full E2E and acceptance jobs were skipped by
+their existing event conditions. PR #157 took approximately ten minutes to
+refresh from `c548be18` to this head, then scheduled PR CI `36673905866` and
+Gitleaks `36673905723`. Both Gitleaks runs passed. The completed PR CI passed
+all ten other scheduled jobs, including full browser and acceptance, but
+failed macOS coverage. Earlier-head acceptance is not current acceptance.
+
+The narrow R2 follow-up is T-0203. macOS requires GNU coreutils' timeout and a
+Bash that supports the fixture's fractional read waits. Apple's published
+[Bash 3.2 implementation](https://github.com/apple-oss-distributions/bash/blob/main/bash-3.2/builtins/read.def#L195-L205)
+accepts integer timeout values only. Homebrew documents the
+[coreutils gnubin path](https://formulae.brew.sh/formula/coreutils).
+The fixture's native PATH preference would override a selected Homebrew Bash;
+Goodall independently authorised Beauvoir's exact Darwin-only routing proposal
+under Q-015. Instrument authorisation does not establish native execution or
+hosted acceptance. No T-0202 closed-record edit, deadline, assertion, coverage
+or application-authentication change is authorised.
+
+The independent prerequisite oracle was committed red in `6efd9828`: three
+controls passed, 23 intended matcher failures and one new macOS-only case
+skipped on Windows. The selected-Bash amendment preserves every other helper
+byte; 21 unchanged Windows HTTP assertions and coordinator Linux's 20 process
+controls, complete audits and deadline/protocol/cancellation negatives passed.
+The first source implementation failed seven positive cases. An explicit
+ready signal from its owned pipe writer removed a Windows startup race.
+An independent additive P20 oracle then exposed install stdout contaminating
+the captured directory: 26 passes, one matcher failure and the native skip,
+committed red in `775d609d`. It preserves all 27 original cases and the ledger
+prefix. Routing install output to stderr made the coordinator's 48 focused
+assertions pass, with the native case still awaiting macOS. Types and focused
+lint passed. Full gate, clean committed sweep and hosted checks remain required.
+The written census growth is 409 TypeScript test lines and 62 script lines;
+repeated windows and every fixed programme target are unchanged.
 
 T-0202's first full Jest run reported 7,521 passes and eight skips, but did not
 exit. A diagnostic rerun found exactly one open interval: the real sync
