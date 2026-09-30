@@ -21,3 +21,16 @@ Commit no implementation. Run the new suite against the missing script and
 unmodified workflow; identify intended matcher failures separately from launch
 or configuration errors. Supply test names, LF SHA-256 and changed paths.
 The coordinator commits this red oracle before any implementation.
+
+Goodall authorised the exact ignored proposal on 2026-09-30 under Q-015.
+Proposal SHA-256: `090e28fd1a93ec22f40367babba5e553044029e0b8278f8970071273fb26c01f`.
+The expanded committed author claim includes only the initial Darwin-only
+PATH block in `tests/helpers/release-install-http-probe.py` and its new
+append-only `org/reviews/2026-09-t0203-oracle-amendment.md`.
+Write the dated author/reviewer/old-hash/new-hash provenance first, then apply
+the exact block. Expected new LF helper hash:
+`5a807ccd3ee885890934ceb0b3b23b8072f30a1b5dcc9bd84a30c255d0852de8`.
+No other fixture byte, bound, function or existing assertion changes.
+Preserve all 21 HTTP/default names and prove unchanged Windows/Linux controls.
+Native macOS interpreter/curl selection and original-PATH negative controls
+remain obligations, not evidence supplied by this authorisation.
