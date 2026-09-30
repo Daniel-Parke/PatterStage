@@ -98,3 +98,43 @@ has not executed here. Linux, native macOS and exact-head hosted acceptance
 remain coordinator obligations. This receipt is technical evidence, not an
 independent acceptance verdict. No commit, implementation or workflow edit
 was made by this oracle author.
+
+## 2026-09-30: noisy Homebrew installation stdout regression
+
+- Author: independent clean-context ORACLE session `01a0f0f5-ee39-7c43-a378-f7ec83e3fbb7`.
+- Authoriser: independent REVIEWER Goodall, explicit Q-015 authorisation on 2026-09-30.
+- Authority: committed `org/briefs/T-0203-noisy-install-oracle.md` and exclusive test/ledger claims at `b13bb2035a076467c8368d484e2070c548cfa488`. The operator explicitly instructed this authorised additive amendment.
+- Provenance date: `2026-09-30T06:27:17.576Z`.
+- Amended file: `tests/unit/release-test-tools.test.ts`.
+- Old LF SHA-256: `6e4382247e521b90e9362a17a4db6eb5fe30b2f35b35ba43e06b9de7d7dcdf0a`.
+- Authorised target LF SHA-256: `6ebdcaf032074b24b2ed5acfe5ea4463d378db1c0298618f86a5a29f89bbbffd`.
+- Preserved ledger prefix: 5361 bytes, raw SHA-256 `de95ccb43e8abb66daea25a3a46fd933b93455e6f5c162bda8378b1d0de57c24`.
+
+This provenance is appended before the test change. The target hash is the prepared additive candidate, not a test result. Reason: the dependency contract permits Homebrew install progress on stdout, but the frozen installer stub was silent. Add only optional `noisyInstall`, explicit default-off `T0203_NOISY_INSTALL`, one stdout progress line per installed formula, and `P20 macOS install stdout logs do not corrupt resolved tool paths`. P20 first proves exact non-path stdout and normal exit using a separate noisy control fixture. It then uses a fresh noisy fixture to require setup success, exactly one installation of each formula, and unchanged `assertReady` publication/resolution/behaviour assertions. It retains the existing 20,000 ms success-case bound and 15,000 ms process watchdog.
+
+All 27 original expanded identities, complete case calls including bodies/assertions/bounds, and all prior fixture/helper bytes are retained. Removing the four inserted blocks reconstructs the exact frozen input. The suite now has 28 identities. No implementation or workflow is read or edited, and no existing test is skipped or relaxed by the amendment. Native macOS, source repair, integration and the wider gate remain coordinator obligations.
+
+### Bounded red receipt and frozen handoff
+
+One full run of this single 28-identity suite against the current implementation exited normally with status 1: 26 passed, only P20 failed, one unchanged native-macOS N01 platform skip, zero suite runtime errors. Runtime reported by Jest: 33.798 s. Command:
+
+```text
+npm test -- --runInBand --runTestsByPath tests/unit/release-test-tools.test.ts --json --outputFile=tmp/t0203-noisy-install-oracle-red.json
+```
+
+P20 passed its separate installation control: normal exit 0 and exact stdout lines `==> Installing coreutils` and `==> Installing bash`. In its fresh fixture it then failed the setup-status matcher at `tests/unit/release-test-tools.test.ts:327`: expected 0, received 1. The launcher rejects spawn errors, signals and outer-watchdog expiry before that matcher, so this is an intended normal-exit regression red, not an infrastructure failure. P20 did not reach its later installation/publication matchers. Every original portable identity passed; N01 retains its original platform condition.
+
+- Red receipt: `tmp/t0203-noisy-install-oracle-red.json`, raw SHA-256 `5e6318c372d7e42429cd405e61578c425ee03cf0ad1aa7f2f7183f043896ff22`.
+- Observed frozen suite LF SHA-256: `6ebdcaf032074b24b2ed5acfe5ea4463d378db1c0298618f86a5a29f89bbbffd`.
+- Identity/diff/prefix proof: `tmp/t0203-noisy-install-oracle-freeze.json`, includes all original and amended name/call hashes and the exact preserved ledger prefix length/hash.
+- Static checks: focused ESLint and `git diff --check` exited 0; TypeScript parsing found zero syntax diagnostics. All 27 original case call hashes are identical. The test diff consists of four insertion blocks, 14 added lines, zero removed lines.
+
+The original ledger prefix remains byte-identical: raw SHA-256 `de95ccb43e8abb66daea25a3a46fd933b93455e6f5c162bda8378b1d0de57c24`, LF SHA-256 `de95ccb43e8abb66daea25a3a46fd933b93455e6f5c162bda8378b1d0de57c24`, 5361 bytes. This section is solely an additive amendment and receipt.
+
+Independent ORACLE freeze handed off with the hashes above; author writes cease here. Coordinator owns source stdout repair, integration, claims release and the wider gate. No source, workflow, claim, task or historical record was edited by this author. No commit was made. Native macOS and hosted acceptance remain unproved by this Windows run.
+
+## 2026-09-30: specific amendment authority clarification
+
+Dated clarification: `2026-09-30T06:30:59.956Z`. The earlier sentence "The operator explicitly instructed this authorised additive amendment." is superseded by this authority clarification. The specific P20 amendment authority is independent REVIEWER Goodall's R2 Q-015 authorisation and the coordinator's committed `org/briefs/T-0203-noisy-install-oracle.md` and exclusive claims at `b13bb2035a076467c8368d484e2070c548cfa488`, under the operator's general programme implementation request. No new specific operator ruling, human answer for P20 or ADR acceptance occurred or is claimed.
+
+All prior ledger bytes are preserved. This clarification changes authority attribution only. The frozen test and red receipt retain their recorded hashes and outcomes. The independent ORACLE handoff remains frozen; author writes cease after this clarification.

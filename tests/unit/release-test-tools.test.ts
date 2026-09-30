@@ -76,6 +76,7 @@ type Options = {
   bashMode?: "working" | "broken-timer";
   installFails?: "coreutils" | "bash";
   prefixFails?: "coreutils" | "bash";
+  noisyInstall?: boolean;
   installOmitsTools?: boolean;
   publication?: "file" | "absent" | "directory";
 };
@@ -151,6 +152,7 @@ case "$operation" in
         bash) cp "$T0203_BASH_TEMPLATE" "$T0203_BASH_PREFIX/bin/bash";;
         *) exit 92;;
       esac
+      if [[ "$T0203_NOISY_INSTALL" == yes ]]; then printf '==> Installing %s\\n' "$formula"; fi
     done;;
   *) exit 92;;
 esac`);
@@ -161,6 +163,7 @@ esac`);
     T0203_TIMEOUT_TEMPLATE: shellPath(timeoutTemplate), T0203_BASH_TEMPLATE: shellPath(bashTemplate),
     T0203_TIMEOUT_MODE: options.timeoutMode || "gnu", T0203_BASH_MODE: options.bashMode || "working",
     T0203_INSTALL_FAILS: options.installFails || "", T0203_PREFIX_FAILS: options.prefixFails || "",
+    T0203_NOISY_INSTALL: options.noisyInstall ? "yes" : "no",
     T0203_INSTALL_OMITS: options.installOmitsTools ? "yes" : "no", GITHUB_PATH: shellPath(pathFile),
   };
   delete env.BASH_ENV;
@@ -314,6 +317,17 @@ describe("T-0203 release test prerequisites", () => {
       expect(state.published()).toEqual(["/already-published"]);
     });
   }
+
+  it("P20 macOS install stdout logs do not corrupt resolved tool paths", () => {
+    const control = fixture({ noisyInstall: true });
+    const install = launch(["-c", "brew install coreutils bash"], control.env);
+    expect(install.status).toBe(0);
+    expect(install.stdout.trim().split("\n")).toEqual(["==> Installing coreutils", "==> Installing bash"]);
+    const state = fixture({ noisyInstall: true });
+    expect(state.prepare().status).toBe(0);
+    expect(installed(state).sort()).toEqual(["bash", "coreutils"]);
+    assertReady(state);
+  }, 20_000);
 
   it("W01 prepares release tools before unchanged coverage only in the macOS job", () => {
     type Step = { run?: string; shell?: string; if?: string; "continue-on-error"?: boolean };
