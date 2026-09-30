@@ -56,6 +56,11 @@ beforeEach(() => {
   );
 });
 
+afterAll(() => {
+  const { getSyncScheduler } = require("@/lib/sync") as typeof import("@/lib/sync");
+  getSyncScheduler().stop();
+});
+
 async function postRoute(body: Record<string, unknown>) {
   const route = require("@/app/api/missions/route") as { POST: (req: Request) => unknown };
   const req = {

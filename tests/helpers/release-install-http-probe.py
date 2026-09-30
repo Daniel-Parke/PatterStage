@@ -16,6 +16,7 @@ import os
 from pathlib import Path
 import secrets
 import shutil
+import sqlite3
 import subprocess
 import sys
 import tempfile
@@ -28,6 +29,8 @@ ROOT = Path(__file__).resolve().parents[2]
 CASES = ("control", "healthy", "wrong-credential", "anonymous-200", "health-204",
          "health-503", "health-redirect", "anonymous-redirect", "auth-redirect",
          "auth-403", "dead-launch", "occupied-listener", "stalled", "stubborn")
+DEFAULT_CASES = ("default-control", "default-fresh", "default-uppercase-db",
+                 "default-uppercase-legacy-db", "default-wrong-token", "default-wrong-control")
 
 
 def shell_path(path: Path) -> str:
@@ -127,6 +130,38 @@ while :; do /usr/bin/sleep 0.01; done
 '''
 
 
+def prepare_defaults(fixture: Path, case: str, token: str) -> tuple[Path, dict[str, object], list[str]]:
+    home = fixture / "owned home with spaces"
+    uppercase = "uppercase" in case
+    data = home / ("PatterStage" if uppercase else "patterstage") / "data"
+    data.mkdir(parents=True)
+    wrong = "wrong" in case
+    file_token = secrets.token_hex(24) if wrong else token
+    (data / "auth-token").write_text(file_token, encoding="utf-8")
+    database = "control-hub.db" if "legacy" in case else "patterstage.db" if uppercase else None
+    if database:
+        with contextlib.closing(sqlite3.connect(data / database)) as connection:
+            connection.execute("CREATE TABLE fixture (value TEXT)")
+            connection.execute("INSERT INTO fixture VALUES ('populated')")
+            connection.commit()
+    lower = home / "patterstage/data"
+    lower.mkdir(parents=True, exist_ok=True)
+    distinct = uppercase and not data.samefile(lower)
+    credentials = [token, file_token]
+    if distinct:
+        stale_token = secrets.token_hex(24)
+        (lower / "auth-token").write_text(stale_token, encoding="utf-8")
+        credentials.append(stale_token)
+    return home, {
+        "platform": os.name, "homeOwned": home.is_relative_to(fixture),
+        "tokenRelativePath": (data / "auth-token").relative_to(home).as_posix(),
+        "fileCredential": "wrong" if wrong else "valid", "databaseName": database,
+        "lowerDirectoryExists": lower.is_dir(), "physicalCaseDistinct": distinct,
+        "staleTokenDistinct": distinct,
+        "lowerHasDatabase": any((lower / name).exists() for name in ("patterstage.db", "control-hub.db")),
+    }, credentials
+
+
 def run_case(case: str, bash: str) -> dict[str, object]:
     token = secrets.token_hex(24)
     requests: list[dict[str, object]] = []
@@ -137,8 +172,12 @@ def run_case(case: str, bash: str) -> dict[str, object]:
         install.mkdir(exist_ok=True)
         for name in ("bin", "scratch"):
             (fixture / name).mkdir()
-        (install / "data").mkdir()
-        (install / "data/auth-token").write_text(token, encoding="utf-8")
+        defaults, credentials = {}, [token]
+        if case in DEFAULT_CASES:
+            home, defaults, credentials = prepare_defaults(fixture, case, token)
+        else:
+            (install / "data").mkdir()
+            (install / "data/auth-token").write_text(token, encoding="utf-8")
         for name, source in (("bin/node", LAUNCH), ("bin/decoy", DECOY), ("supervisor.sh", SUPERVISOR)):
             shell_file(fixture / name, source)
         for name in ("pkill", "killall", "fuser", "docker", "npm", "npx"):
@@ -186,6 +225,12 @@ def run_case(case: str, bash: str) -> dict[str, object]:
         (install / ".env.local").write_text(f"PORT={port}\nCH_DATA_DIR={workspace}/data\nPS_DATA_DIR={workspace}/data\n", encoding="utf-8")
         environment = {key: value for key, value in os.environ.items() if not key.startswith(("CH_", "PS_", "CONTROL_HUB_"))}
         environment.update(T0202_ROOT=shell_path(fixture), T0202_WORKSPACE=workspace, T0202_CASE=case, CH_DATA_DIR=f"{workspace}/data", PS_DATA_DIR=f"{workspace}/data")
+        if defaults:
+            environment.pop("CH_DATA_DIR")
+            environment.pop("PS_DATA_DIR")
+            environment.update(HOME=shell_path(home), T0202_DEFAULT_TOKEN_FILE=f"{shell_path(home)}/{defaults['tokenRelativePath']}")
+            (install / ".env.local").write_text(f"PORT={port}\n", encoding="utf-8")
+            defaults.update(dataEnvironmentAbsent=not any(key in environment for key in ("PS_DATA_DIR", "CH_DATA_DIR", "CONTROL_HUB_DATA_DIR")), dotenvKeys=["PORT"])
         output, captured, executions, scripts = io.StringIO(), [], [], []
         listener_controls: list[int] = []
 
@@ -235,6 +280,15 @@ curl --connect-timeout 1 --max-time 1 -s -o /dev/null -H "Authorization: Bearer 
 kill "$PID"
 wait "$PID"
 ''')
+                    elif case in ("default-control", "default-wrong-control"):
+                        # Independent launch/HTTP controls bypass the harness's data guard.
+                        execute("fixture", f'''set -e
+node fixture & PID=$!
+trap 'kill "$PID"; wait "$PID"' EXIT
+for ((attempt=0; attempt<100; attempt++)); do [[ -f active ]] && break; sleep 1; done
+for endpoint in /api/health /; do curl --connect-timeout 1 --max-time 1 -s -o /dev/null "http://127.0.0.1:{port}$endpoint"; done
+curl --connect-timeout 1 --max-time 1 -s -o /dev/null -H "Authorization: Bearer $(cat "$T0202_DEFAULT_TOKEN_FILE")" 'http://127.0.0.1:{port}/'
+''')
                     else:
                         spec = importlib.util.spec_from_file_location("t0202_harness", ROOT / "tests/integration/test_full_install_update_process.py")
                         if spec is None or spec.loader is None:
@@ -261,10 +315,11 @@ wait "$PID"
             "signalsOwned": "forbidden" not in content("signals") and content("decoy.pid") not in content("signals").splitlines(),
             "withinDeadline": all(status not in (124, 137) for status in executions),
             "requestsBounded": bool(content("bounds")) and all(line.startswith("1 ") for line in content("bounds").splitlines()),
-            "credentialLeaked": any(token in text for text in captured),
-            "scriptContainsCredential": any(token in script for script in scripts),
+            "credentialLeaked": any(value in text for value in credentials for text in captured),
+            "scriptContainsCredential": any(value in script for value in credentials for script in scripts),
             "workspaceHasSpaces": " " in workspace,
             "listenerControlStatuses": listener_controls, "requests": requests,
+            **({"defaults": defaults} if defaults else {}),
         }
 
 
@@ -274,7 +329,7 @@ def main() -> None:
         raise RuntimeError("Bash is required")
     subprocess.run([bash, "--noprofile", "--norc", "-c", "export PATH=/usr/bin:/bin:$PATH; command -v curl >/dev/null && command -v timeout >/dev/null"], check=True, capture_output=True)
     cases = sys.argv[1:] or CASES
-    if any(case not in CASES for case in cases):
+    if any(case not in (*CASES, *DEFAULT_CASES) for case in cases):
         raise ValueError("Unknown T-0202 case")
     print(json.dumps({case: run_case(case, bash) for case in cases}))
 
