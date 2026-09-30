@@ -868,23 +868,94 @@ test -f /root/.hermes/config.yaml
             return
         ws = workspace.replace("'", "'\"'\"'")
         script = f"""
-set -e
-PORT=$(grep -E '^PORT=' {ws}/.env.local | tail -n1 | sed 's/^PORT=//' | tr -d '\\r')
+set +x
+set -euo pipefail
+cd '{ws}'
+# The harness writes literal dotenv values, never shell commands. Retain
+# Next's inherited environment and production-file precedence for these keys.
+setting() {{
+  local key="$1" file line value='' found=0
+  if declare -p "$key" >/dev/null 2>&1; then printf '%s' "${{!key}}"; return; fi
+  for file in .env.production.local .env.local .env.production .env; do
+    [[ -f "$file" ]] || continue
+    while IFS= read -r line || [[ -n "$line" ]]; do
+      line="${{line%$'\\r'}}"
+      if [[ "$line" == "$key="* ]]; then value="${{line#*=}}"; found=1; fi
+    done < "$file"
+    if [[ "$found" == 1 ]]; then
+      if [[ "$value" == \\"*\\" || "$value" == \\'*\\' ]]; then value="${{value:1:${{#value}}-2}}"; fi
+      printf '%s' "$value"
+      return
+    fi
+  done
+}}
+PORT=$(setting PORT)
 export PORT="${{PORT:-3000}}"
-cd {ws}
-CH_ENABLE_DEPLOY_API=true NODE_OPTIONS= node node_modules/next/dist/bin/next start -p "$PORT" -H 127.0.0.1 >> /tmp/ch-http-smoke.log 2>&1 &
-PID=$!
-for i in $(seq 1 45); do
-  if curl -sf -o /dev/null "http://127.0.0.1:${{PORT}}/"; then
-    kill "$PID" 2>/dev/null || true
-    wait "$PID" 2>/dev/null || true
-    exit 0
+DATA_DIR=$(setting PS_DATA_DIR)
+[[ -n "${{DATA_DIR//[[:space:]]/}}" ]] || DATA_DIR=$(setting CH_DATA_DIR)
+[[ -n "${{DATA_DIR//[[:space:]]/}}" ]] || DATA_DIR=$(setting CONTROL_HUB_DATA_DIR)
+if [[ -z "${{DATA_DIR//[[:space:]]/}}" ]]; then
+  DATA_DIR=''
+  CANDIDATES=("$HOME/PatterStage/data" "$HOME/patterstage/data" "$HOME/control-hub/data")
+  for candidate in "${{CANDIDATES[@]}}"; do
+    if [[ -e "$candidate/patterstage.db" || -e "$candidate/control-hub.db" ]]; then DATA_DIR="$candidate"; break; fi
+  done
+  if [[ -z "$DATA_DIR" ]]; then
+    for candidate in "${{CANDIDATES[@]}}"; do
+      if [[ -d "$candidate" ]]; then DATA_DIR="$candidate"; break; fi
+    done
   fi
+  DATA_DIR="${{DATA_DIR:-$HOME/patterstage/data}}"
+fi
+TOKEN_FILE=$(setting PS_AUTH_TOKEN_FILE)
+TOKEN_FILE="${{TOKEN_FILE:-$DATA_DIR/auth-token}}"
+BASE="http://127.0.0.1:$PORT"
+DEADLINE=$((SECONDS + 75))
+PID=''
+cleanup() {{
+  local status=$? attempt
+  trap - EXIT
+  if [[ -n "$PID" ]] && kill -0 "$PID" 2>/dev/null; then
+    kill -TERM "$PID" 2>/dev/null || true
+    for attempt in $(seq 1 20); do
+      kill -0 "$PID" 2>/dev/null || break
+      sleep 0.1
+    done
+    if kill -0 "$PID" 2>/dev/null; then kill -KILL "$PID" 2>/dev/null || true; fi
+  fi
+  if [[ -n "$PID" ]]; then wait "$PID" 2>/dev/null || true; fi
+  exit "$status"
+}}
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+status_code() {{ curl --connect-timeout 1 --max-time 2 -s -o /dev/null -w '%{{http_code}}' "$@"; }}
+# A response before launch belongs to somebody else. Never stop that listener.
+PREEXISTING=$(status_code "$BASE/api/health" || true)
+if [[ "$PREEXISTING" != 000 ]]; then echo "HTTP smoke port already answers" >&2; exit 1; fi
+PS_ENABLE_DEPLOY_API=true NODE_OPTIONS= node node_modules/next/dist/bin/next start -p "$PORT" -H 127.0.0.1 >> /tmp/ch-http-smoke.log 2>&1 &
+PID=$!
+READY=0
+for attempt in $(seq 1 20); do
+  kill -0 "$PID" 2>/dev/null || {{ echo "HTTP smoke server exited" >&2; exit 1; }}
+  [[ "$SECONDS" -lt "$DEADLINE" ]] || break
+  HEALTH=$(status_code "$BASE/api/health" || true)
+  if [[ "$HEALTH" == 200 ]]; then READY=1; break; fi
   sleep 1
 done
-kill "$PID" 2>/dev/null || true
-echo "HTTP smoke timeout" >&2
-exit 1
+[[ "$READY" == 1 ]] || {{ echo "HTTP smoke health did not return 200" >&2; exit 1; }}
+kill -0 "$PID" 2>/dev/null || {{ echo "HTTP smoke server exited" >&2; exit 1; }}
+ANONYMOUS=$(status_code "$BASE/" || true)
+[[ "$ANONYMOUS" == 401 ]] || {{ echo "HTTP smoke anonymous access was not 401" >&2; exit 1; }}
+AUTH_TOKEN=$(setting PS_AUTH_TOKEN)
+if [[ -z "$AUTH_TOKEN" && -s "$TOKEN_FILE" ]]; then AUTH_TOKEN=$(cat "$TOKEN_FILE"); fi
+[[ -n "$AUTH_TOKEN" ]] || {{ echo "HTTP smoke operator token unavailable" >&2; exit 1; }}
+kill -0 "$PID" 2>/dev/null || {{ echo "HTTP smoke server exited" >&2; exit 1; }}
+AUTHENTICATED=$(status_code -H "Authorization: Bearer $AUTH_TOKEN" "$BASE/" || true)
+[[ "$AUTHENTICATED" == 200 ]] || {{ echo "HTTP smoke authenticated access was not 200" >&2; exit 1; }}
+kill -0 "$PID" 2>/dev/null || {{ echo "HTTP smoke server exited" >&2; exit 1; }}
+[[ "$SECONDS" -lt "$DEADLINE" ]] || {{ echo "HTTP smoke deadline exceeded" >&2; exit 1; }}
+echo "HTTP smoke: health 200, anonymous 401, authenticated 200"
 """
         self.docker_exec(container, script, workdir="/")
 

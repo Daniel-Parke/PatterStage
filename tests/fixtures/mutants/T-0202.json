@@ -1,0 +1,69 @@
+{
+  "task": "T-0202",
+  "mutants": [
+    {
+      "id": "m1-accept-204-health",
+      "file": "tests/integration/test_full_install_update_process.py",
+      "anchor": "if [[ \"$HEALTH\" == 200 ]]; then READY=1; break; fi",
+      "replacement": "if [[ \"$HEALTH\" == 204 ]]; then READY=1; break; fi",
+      "tests": ["tests/unit/release-install-http-smoke.test.ts"],
+      "why": "Readiness requires exact public health 200."
+    },
+    {
+      "id": "m2-accept-anonymous-200",
+      "file": "tests/integration/test_full_install_update_process.py",
+      "anchor": "[[ \"$ANONYMOUS\" == 401 ]]",
+      "replacement": "[[ \"$ANONYMOUS\" == 200 ]]",
+      "tests": ["tests/unit/release-install-http-smoke.test.ts"],
+      "why": "The protected root must refuse an anonymous browser."
+    },
+    {
+      "id": "m3-accept-invalid-credential",
+      "file": "tests/integration/test_full_install_update_process.py",
+      "anchor": "[[ \"$AUTHENTICATED\" == 200 ]]",
+      "replacement": "[[ \"$AUTHENTICATED\" == 200 || \"$AUTHENTICATED\" == 401 ]]",
+      "tests": ["tests/unit/release-install-http-smoke.test.ts"],
+      "why": "A wrong credential cannot qualify as authenticated access."
+    },
+    {
+      "id": "m4-omit-request-deadline",
+      "file": "tests/integration/test_full_install_update_process.py",
+      "anchor": "curl --connect-timeout 1 --max-time 2 -s",
+      "replacement": "curl --connect-timeout 1 -s",
+      "tests": ["tests/unit/release-install-http-smoke.test.ts"],
+      "why": "A stalled response must not exhaust the independent watchdog."
+    },
+    {
+      "id": "m5-adopt-unowned-listener",
+      "file": "tests/integration/test_full_install_update_process.py",
+      "anchor": "if [[ \"$PREEXISTING\" != 000 ]]; then echo \"HTTP smoke port already answers\" >&2; exit 1; fi",
+      "replacement": "if [[ \"$PREEXISTING\" != 000 ]]; then :; fi",
+      "tests": ["tests/unit/release-install-http-smoke.test.ts"],
+      "why": "An already healthy listener is not evidence that the launched installation works."
+    },
+    {
+      "id": "m6-leave-stubborn-server-running",
+      "file": "tests/integration/test_full_install_update_process.py",
+      "anchor": "if kill -0 \"$PID\" 2>/dev/null; then kill -KILL \"$PID\" 2>/dev/null || true; fi",
+      "replacement": "if kill -0 \"$PID\" 2>/dev/null; then :; fi",
+      "tests": ["tests/unit/release-install-http-smoke.test.ts"],
+      "why": "TERM refusal cannot leave the owned process or its wait unbounded."
+    },
+    {
+      "id": "m7-print-operator-token",
+      "file": "tests/integration/test_full_install_update_process.py",
+      "anchor": "AUTHENTICATED=$(status_code -H \"Authorization: Bearer $AUTH_TOKEN\" \"$BASE/\" || true)",
+      "replacement": "echo \"$AUTH_TOKEN\"\nAUTHENTICATED=$(status_code -H \"Authorization: Bearer $AUTH_TOKEN\" \"$BASE/\" || true)",
+      "tests": ["tests/unit/release-install-http-smoke.test.ts"],
+      "why": "Diagnostic output must not disclose the selected credential."
+    },
+    {
+      "id": "m8-refuse-supported-default-install",
+      "file": "tests/integration/test_full_install_update_process.py",
+      "anchor": "CANDIDATES=(\"$HOME/PatterStage/data\" \"$HOME/patterstage/data\" \"$HOME/control-hub/data\")",
+      "replacement": "exit 1",
+      "tests": ["tests/unit/release-install-http-defaults.test.ts"],
+      "why": "A fresh install without an explicit data setting must use runtime-compatible discovery and execute all HTTP checks."
+    }
+  ]
+}

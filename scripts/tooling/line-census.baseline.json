@@ -1,8 +1,8 @@
 {
-  "measuredAt": "2026-09-29",
+  "measuredAt": "2026-09-30",
   "counts": {
     "srcLines": 102681,
-    "testLines": 138659,
+    "testLines": 138872,
     "scriptsLines": 13504,
     "srcRepeatedWindowLines": 1010,
     "testRepeatedWindowLines": 4794,
@@ -1040,6 +1040,16 @@
       "measuredAt": "2026-09-29",
       "rise": "testLines rose from 138619 to 138659",
       "reason": "T-0187: independent survivor oracle for m2 adds 40 test lines; fixed cross-file repeated-window count remains 4794"
+    },
+    {
+      "measuredAt": "2026-09-29",
+      "rise": "testLines rose from 138659 to 138764",
+      "reason": "T-0202: the independently authored 14-case release HTTP oracle adds 105 counted TypeScript lines. Application lines and repeated-window counts stay unchanged; the separate Python fixture and bounded harness repair are verification cost, not structural savings."
+    },
+    {
+      "measuredAt": "2026-09-30",
+      "rise": "testLines rose from 138764 to 138872",
+      "reason": "T-0202: seven independently authored default-install checks and scheduler teardown add 108 counted TypeScript test lines after the original 105-line HTTP oracle. Source lines and repeated windows are unchanged; Python fixture and harness lines are verification cost. Fixed C4 ceiling remains 4800."
     }
   ]
 }

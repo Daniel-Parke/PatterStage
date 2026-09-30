@@ -44,6 +44,17 @@ redirects, wrong credentials, a dead launch, an occupied listener, stalled
 requests and bounded owned-process cleanup. Linux and the entire HTTP-enabled
 release/interactive matrix must pass before this section can be closed.
 
+The initial repair then exposed another harness defect: it required an explicit
+data-directory key, although fresh setup uses the supported HOME default. That
+isolated fresh run failed after its build; it is not a completed matrix.
+Independent default-path cases were committed red in `b023f233`, with four
+semantic failures and three passes. The repaired probe now follows the runtime
+candidate order, prioritising either database name before an existing directory.
+The coordinator's final focused run passed all 21 HTTP cases and the four
+unchanged mission-route tests, with normal exit zero. Windows cannot establish
+physical separation of differently cased HOME directories; Linux fixtures do.
+The full gate and HTTP-enabled matrix remain to run on the finished tree.
+
 ## Browser evidence and limits
 
 An isolated production app uses port **3997**, its own database and Hermes
@@ -86,6 +97,24 @@ analytics and persisted Agent chat. It did not exercise the legacy-database
 phase or all browser model/configuration pathways. The raw gateway and the
 app's local Hermes configuration live in separate owned volumes.
 
+The real-stack browser walkthrough subsequently passed model validation,
+synthetic credential/model creation and default synchronisation at both
+widths. Agent and Fast chat each sent a message, received the deterministic
+real-gateway reply and retained the transcript after reload at both widths.
+All six captures had no JavaScript page errors; hashes are in the owned
+checkout's `tmp/release-userwalk/model-chat-ui.json`. These are model/gateway
+integration checks, not a paid-provider or tool-approval rehearsal.
+
+One early chat probe lost its typed input while New Chat completed. A held
+creation response then reproduced this at both widths: text entered while
+creation was pending became empty when the response arrived. Before/after
+image hashes are in `tmp/release-userwalk/new-chat-race.json`. The source
+clears input after awaiting conversation creation in `useChatConversations`.
+T-0190 must add its regression oracle before repairing the race. The
+settled-creation chat journey above does not refute it. Earlier mode/title selectors also matched
+multiple legitimate controls; those selector failures are preserved in the
+ignored probe logs and do not establish product defects.
+
 ## Remaining verification defects and dependency limits
 
 The independent release review found that `real-hermes-itest.sh` seeds a
@@ -94,6 +123,21 @@ runtime selects by size, while the fixture's HTTP 200 assertions do not prove
 which database served the request. A meaningful legacy migration rehearsal
 must identify its database and preserve unique seeded rows. This is a
 separate unresolved harness defect, not a claim that data was lost.
+
+T-0202's first full Jest run reported 7,521 passes and eight skips, but did not
+exit. A diagnostic rerun found exactly one open interval: the real sync
+scheduler started by `missions-delete-null-check.test.ts`. Both owned runs
+were stopped after the report; neither is a successful gate. An independent
+REVIEWER authorised `afterAll` teardown using the existing scheduler stop API,
+with all four tests and their assertions preserved. No `--forceExit` is used.
+
+The corrected log-path and explicit-status kill shim subsequently passed all
+14 cases on Windows and Linux. Both changes and the earlier invalid Linux
+results remain in the append-only T-0202 amendment record. The HTTP-enabled
+matrix's first rerun then stopped after fresh setup/build because the probe
+required an explicit data directory. Fresh setup supports HOME/patterstage/data
+without that key. An additional independent red-first oracle precedes the
+fallback repair; this 0/1 result is not a completed 15-scenario matrix.
 
 The Python harness also removes a container from tracking without requiring
 successful removal, and its signal handler cleans up then returns. These
