@@ -1277,14 +1277,14 @@ echo "[harness] {action} lifecycle OK (pid $SPID on port $PORT)"
             self._rm_container(c)
 
     def scenario_setup_interactive(self) -> None:
-        """Interactive ``setup.sh``: port auto (Enter), Advanced no."""
+        """Interactive ``setup.sh``: port auto, Advanced no, catalogue yes."""
         ws = self.temp_workspace()
         c = self.start_container("setup-interactive")
         try:
             self.docker_cp_workspace(c, ws)
             self.seed_fresh(c)
             exp = r"""
-# setup.sh + ch-port.sh: Port [Enter = auto]: then Advanced: ... [y/N]:
+# setup.sh: automatic port, default paths, then catalogue acceptance.
 log_user 1
 set timeout -1
 set cmd {cd /workspace && unset CI CH_INSTALL_NONINTERACTIVE && exec bash scripts/bootstrap/setup.sh}
@@ -1293,6 +1293,8 @@ expect -re {Port \[Enter = auto\]:}
 send "\r"
 expect -re {Advanced:.*\[y/N\]:}
 send "n\r"
+expect -re {Install/refresh professional catalog now\? \[Y/n\]:}
+send "y\r"
 expect eof
 catch wait result
 exit [lindex $result 3]
@@ -1311,7 +1313,7 @@ exit [lindex $result 3]
             self.docker_cp_workspace(c, ws)
             self.seed_fresh(c)
             exp = r"""
-# install.sh --in-repo: setup.sh port + advanced, then profile templates [y/N]:
+# Decline catalogue seeding to isolate the missing-profile copy assertion.
 log_user 1
 set timeout -1
 set cmd {cd /workspace && unset CI CH_INSTALL_NONINTERACTIVE INSTALL_HERMES_PROFILE_TEMPLATES && mkdir -p /root/.hermes/logs && printf '%s\n' 'version: 1' > /root/.hermes/config.yaml && exec bash scripts/bootstrap/install.sh --in-repo}
@@ -1320,7 +1322,9 @@ expect -re {Port \[Enter = auto\]:}
 send "\r"
 expect -re {Advanced:.*\[y/N\]:}
 send "n\r"
-expect -re {Install bundled profile templates now\? \[y/N\]:}
+expect -re {Install/refresh professional catalog now\? \[Y/n\]:}
+send "n\r"
+expect -re {Copy missing bundled profile files to Hermes now\? \[y/N\]:}
 send "n\r"
 expect eof
 catch wait result
@@ -1345,7 +1349,7 @@ exit [lindex $result 3]
             self.docker_cp_workspace(c, ws)
             self.seed_fresh(c)
             exp = r"""
-# install.sh --in-repo: setup.sh port + advanced, then profile templates [y/N]:
+# Decline catalogue seeding to isolate the missing-profile copy assertion.
 log_user 1
 set timeout -1
 set cmd {cd /workspace && unset CI CH_INSTALL_NONINTERACTIVE INSTALL_HERMES_PROFILE_TEMPLATES && mkdir -p /root/.hermes/logs && printf '%s\n' 'version: 1' > /root/.hermes/config.yaml && exec bash scripts/bootstrap/install.sh --in-repo}
@@ -1354,7 +1358,9 @@ expect -re {Port \[Enter = auto\]:}
 send "\r"
 expect -re {Advanced:.*\[y/N\]:}
 send "n\r"
-expect -re {Install bundled profile templates now\? \[y/N\]:}
+expect -re {Install/refresh professional catalog now\? \[Y/n\]:}
+send "n\r"
+expect -re {Copy missing bundled profile files to Hermes now\? \[y/N\]:}
 send "y\r"
 expect eof
 catch wait result
@@ -1389,7 +1395,7 @@ test -s /root/.hermes/profiles/qa/AGENTS.md
             )
             self.prepare_hub_bare_repo(c)
             exp = r"""
-# install.sh bootstrap: Hermes [Y/n]; setup.sh port + advanced; profiles [y/N]; Hindsight [y/N] (-n1)
+# Bootstrap: skip Hermes, accept catalogue, decline profiles, skip Hindsight.
 log_user 1
 set timeout -1
 set cmd {cd /workspace && unset CI CH_INSTALL_NONINTERACTIVE && export REPO_URL=file:///tmp/ch-hub-bare.git BRANCH=dev INSTALL_DIR=/tmp/ch-install-harness && rm -rf /tmp/ch-install-harness && exec bash scripts/bootstrap/install.sh}
@@ -1400,10 +1406,12 @@ expect -re {Port \[Enter = auto\]:}
 send "\r"
 expect -re {Advanced:.*\[y/N\]:}
 send "n\r"
+expect -re {Install/refresh professional catalog now\? \[Y/n\]:}
+send "y\r"
 expect -re {Install bundled profile templates now\? \[y/N\]:}
 send "n\r"
-expect -re {Set up Hindsight memory\? \[y/N\]:}
-send "n"
+expect -re {Choice \[d/n/s\]:}
+send "s"
 expect eof
 catch wait result
 exit [lindex $result 3]

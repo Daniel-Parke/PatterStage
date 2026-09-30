@@ -2,7 +2,7 @@
   "measuredAt": "2026-09-30",
   "counts": {
     "srcLines": 102681,
-    "testLines": 138872,
+    "testLines": 138942,
     "scriptsLines": 13504,
     "srcRepeatedWindowLines": 1010,
     "testRepeatedWindowLines": 4794,
@@ -1050,6 +1050,11 @@
       "measuredAt": "2026-09-30",
       "rise": "testLines rose from 138764 to 138872",
       "reason": "T-0202: seven independently authored default-install checks and scheduler teardown add 108 counted TypeScript test lines after the original 105-line HTTP oracle. Source lines and repeated windows are unchanged; Python fixture and harness lines are verification cost. Fixed C4 ceiling remains 4800."
+    },
+    {
+      "measuredAt": "2026-09-30",
+      "rise": "testLines rose from 138872 to 138942",
+      "reason": "T-0202: independent red-first interactive protocol oracle adds 70 counted TypeScript test lines. Its separate native Python companion has 354 physical lines outside this historical measure. No fixed programme target changes; repeated test windows stay 4794 against the fixed 4800 ceiling."
     }
   ]
 }

@@ -21,13 +21,49 @@ all completed success. Every scheduled PR job passed, including full browser
 acceptance, real Hermes and install verification. The release-only harness
 with HTTP enabled then reproduced an anonymous-root readiness defect after
 successful setup/build in two scenarios. **T-0202 is active** to repair that
-probe with an independent red-first oracle; the matrix is incomplete.
+probe with independent red-first oracles. Implementation `5be22712` passed
+the unchanged-tree ten-step gate (7,528 Jest passes, eight skips; 355 browser
+passes, 24 skips) and all eight mutants. The HTTP-enabled matrix passed its
+11 non-interactive scenarios, then blocked at an unanswered catalogue prompt
+in the first interactive scenario. Independent oracle commit `e63de259`
+reproduced four failures before the embedded-Tcl repair. All 30 focused tests
+and ten native Expect cases now pass; real interactive setup passed with HTTP
+enabled. The complete, hash-bound HTTP-enabled matrix has now passed all
+15 scenarios in 1,837.7 seconds. A full gate failed two HTTP fixture
+observations after 7,531 passing Jest assertions and eight skips; repeating
+without concurrent install builds still failed the deadline after 7,532
+passes. The isolated 14-case suite passes. An independent curl transport
+amendment now passes its Windows and Linux failure, mapping and ownership
+controls and has Q-015 acceptance; complete-gate reliability remains open.
+Full-gate repair, the expanded
+12-mutant sweep and exact-head
+hosted acceptance remain open before closure and push.
 
 The [release verification](reviews/2026-09-release-verification.md) records
 46 authenticated desktop/phone route walks on owned port **3997**, draft and
 session lifecycle journeys, and real-Hermes contract/full-stack checks on
 owned ports **3999/8651**. These checks do not prove every pathway. The full
 gate uses **3000**. All operator data remains separate from the fixtures.
+Offline Research start/report/export and backup/catalogue merge/replace also
+passed at both widths. The real New Chat pending-response input-loss defect
+is recorded for T-0190. Real Hindsight and the remaining full lifecycles still
+need their pathway evidence. A disposable offline database restore passed
+21 checks, recovered all four snapshot missions, rejected restored browser
+sessions and preserved read-only refusals after production boot on temporary
+owned port 4001. This does not cover Hermes or Hindsight store recovery.
+The real test-model Story Weaver journey passed creation, explicit writing of
+all three chapters, bible, reload, shelf persistence and confirmed deletion
+at both widths. Saved theme and character creation, edit, reuse, persistence
+and confirmed deletion also passed. These walks do not cover story quality,
+Stop, Retry, rewrite or continuation.
+
+The extended real-Hermes Composer walk exposed a release blocker: the pinned
+gateway counts completed, unconsumed event queues against its ten-run cap.
+The first HIL smoke passed; a following full UI run failed with 429 after ten
+completed queues accumulated within the 300-second retention window.
+Independent installed-source/API evidence is in release verification.
+T-0194 must cover this polling-path compatibility defect with a regression
+and reviewed remedy. No fixture restart or longer retry is counted as a fix.
 
 **T-0187 is locally closed at `dev@e8ab14d3` plus its record commit.**
 Supported `CH_`, `CONTROL_HUB_` and `AGENT_HOME` settings that supply the
