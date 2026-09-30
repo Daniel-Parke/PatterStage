@@ -2,8 +2,8 @@
   "version": 1,
   "assigned": "2026-09-30",
   "lanes": [
-    {"id": "T-0203-coordinator", "session": "2026-09-30-hosted-prerequisite-repair", "path_claims": [".github/workflows/ci.yml", "scripts/tooling/prepare-release-test-tools.sh", "tests/fixtures/mutants/T-0203.json", "org/tasks/T-0203.json", "org/briefs/T-0203-oracle.md", "org/briefs/T-0203-review.md", "org/reviews/2026-09-release-verification.md", "org/HANDOVER.md", "org/claims.json", "org/TASKS.md", "org/STATE.md", "scripts/tooling/line-census.baseline.json"]},
-    {"id": "T-0203-oracle", "session": "01a0f0cf-033e-7b82-af84-94713bfa5bd7", "path_claims": ["tests/unit/release-test-tools.test.ts"]}
+    {"lane_id": "T-0203-coordinator", "task_id": "T-0203", "session_id": "2026-09-30-hosted-prerequisite-repair", "host": "NUCBOX_M6ULTRA", "harness_task_id": "2026-09-30-hosted-prerequisite-repair", "acquired": "2026-09-30T05:36:00Z", "expires": "2026-10-01T05:36:00Z", "path_claims": [".github/workflows/ci.yml", "scripts/tooling/prepare-release-test-tools.sh", "tests/fixtures/mutants/T-0203.json", "org/tasks/T-0203.json", "org/briefs/T-0203-oracle.md", "org/briefs/T-0203-review.md", "org/reviews/2026-09-release-verification.md", "org/HANDOVER.md", "org/claims.json", "org/TASKS.md", "org/STATE.md", "scripts/tooling/line-census.baseline.json"]},
+    {"lane_id": "T-0203-oracle", "task_id": "T-0203", "session_id": "01a0f0cf-033e-7b82-af84-94713bfa5bd7", "host": "NUCBOX_M6ULTRA", "harness_task_id": "01a0f0cf-033e-7b82-af84-94713bfa5bd7", "acquired": "2026-09-30T05:36:00Z", "expires": "2026-10-01T05:36:00Z", "path_claims": ["tests/unit/release-test-tools.test.ts"]}
   ],
   "note": "Two disjoint T-0203 writing lanes; ORACLE writes only its new suite before implementation. Goodall's T-0188 authority preflight is read-only. Frozen T-0202 files and closed records remain immutable. Hosted repair acceptance precedes structural execution."
 }
