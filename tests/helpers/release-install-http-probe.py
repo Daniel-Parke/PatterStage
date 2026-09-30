@@ -69,7 +69,7 @@ curl() {
 }
 kill() {
   local target="${!#}" owned='' decoy=''
-  if [[ "$1" == -0 ]]; then builtin kill "$@"; return; fi
+  if [[ "$1" == -0 ]]; then builtin kill "$@"; return "$?"; fi
   [[ -f "$T0202_ROOT/owned.pid" ]] && owned=$(<"$T0202_ROOT/owned.pid")
   [[ -f "$T0202_ROOT/decoy.pid" ]] && decoy=$(<"$T0202_ROOT/decoy.pid")
   if [[ "$target" != "$owned" && "$target" != "$decoy" ]]; then

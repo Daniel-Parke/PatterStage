@@ -135,3 +135,52 @@ amendment on 2026-09-30. The earlier frontmatter wording, "exact amendment
 authorised by the operator on 2026-09-30", overstates the authority and is
 superseded by this correction. The earlier entry remains as ledger history;
 no prior text has been edited.
+
+## Second exact amendment, 2026-09-30
+
+- Author: `01a0ef6e-78e7-7290-9aac-e9af8a73ebcb`.
+- Authoriser: independent REVIEWER Goodall,
+  `01a0ef6e-780c-77e2-9377-b20014518524`, under Q-015.
+- Authority: Goodall's specific ruling relayed by the coordinator; no additional
+  operator approval specific to this amendment is claimed.
+- Old helper SHA-256: `bb8a75c57f8d8434c4e4777e7aff9cfa6dadded0959ca7f4e7ea186da5a18b25`.
+- New helper SHA-256: `d5bb88e8fd2fabfde3691ecb0446112952d6e55afecef42c6b2a9f40a238599e`.
+- Unchanged suite SHA-256: `f5601e1420d246be1edca594e4ff0028ccb970ed235255f36cc33dff74ae35fc`.
+- Hash normalisation: UTF-8 file bytes with CRLF converted to LF.
+
+Reason: in a nonzero Linux EXIT trap, the kill shim's bare `return` inherited
+that trap's status instead of reporting the successful builtin liveness check.
+The fixture falsely considered its live child absent and waited without sending
+TERM. Goodall independently reproduced native builtin, stock shim and explicit
+status behaviour in `tmp/t0202-review-cleanup-debug.json` and `.ps1`.
+The earlier nine Linux cleanup/deadline failures were an instrument defect.
+
+The only helper change replaces
+`if [[ "$1" == -0 ]]; then builtin kill "$@"; return; fi`
+with
+`if [[ "$1" == -0 ]]; then builtin kill "$@"; return "$?"; fi`.
+Reversing this single replacement reconstructs the recorded old normalised hash.
+Python syntax passed without bytecode output. All 14 frozen test names, the
+control and every TypeScript assertion remain unchanged. The harness was not
+edited. No default-path cases were added and no commit was made.
+
+The Windows rerun used the same focused Jest command recorded above. Observed:
+exit 0, one suite passed, 14 tests passed, zero snapshots, 28.921 seconds.
+
+The Linux rerun used the same disposable owned container, image `47d80115ce62`,
+executable `/tmp` tmpfs, isolated network and two read-only test mounts recorded
+above. The Python wrapper mirrored all frozen Jest assertions over the helper's
+14 JSON observations. Observed: exit 0, 14 cases, zero semantic failures,
+11.610 seconds. Linux Jest itself was not run.
+
+Control, healthy and stubborn returned `accepted=true`; every adverse case
+returned `accepted=false`. Every case reported `ownedStopped=true`,
+`withinDeadline=true`, `decoySurvived=true` and `signalsOwned=true`. Both
+credential-leak fields were false in every case. Request bounds, exact response
+expectations and the occupied-listener control also passed. Every case launched
+once except occupied-listener, which correctly launched zero times.
+
+This successful rerun supersedes the earlier Linux validation limitation for
+these 14 instrumented cases. Earlier entries remain unchanged as ledger history.
+The scaled-fixture and release-evidence limits still apply. This entry records
+only the independently authorised instrument amendment and its validation.
