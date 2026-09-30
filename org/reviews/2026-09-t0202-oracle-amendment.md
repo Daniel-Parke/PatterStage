@@ -344,3 +344,161 @@ file. The report is `tmp/t0202-defaults-oracle-census.json`.
 This entry is appended to the existing ledger. It records a frozen red oracle
 and bounded controlled-listener evidence, not a fallback implementation, full
 Jest run, release matrix or hosted acceptance. No commit was made.
+
+## Interactive oracle extension, 2026-09-30
+
+- Author: independent ORACLE Kuhn, `01a0efe4-18ed-7f61-a92b-52d5837d1359`.
+- Authoriser: independent REVIEWER Goodall,
+  `01a0ef6e-780c-77e2-9377-b20014518524`, under Q-015.
+- Authority: Goodall explicitly authorised the revised portable/native scope and
+  precise choices; the parent coordinator relayed that ruling on 2026-09-30.
+  This is scope authorisation, not final implementation acceptance.
+- Starting and frozen implementation HEAD:
+  `5be227125a5ea0e4a5b43533c14a482d8061609a`.
+- New suite: `tests/unit/release-install-interactive.test.ts`, old hash absent,
+  frozen SHA-256 `3ddbf20d8abdfbd685325bbeabe30573b6905873d605ed99bc12dda8948557ad`.
+- New helper: `tests/helpers/release-install-interactive-probe.py`, old hash absent,
+  frozen SHA-256 `d5c0590c0f3c94e54b2d41905e9e8b09034868d7c889ad5b44e6dcd3399aaa0f`.
+- Unchanged harness SHA-256:
+  `0fd3d085f1541873eed95f8682ca98513886e629c69eb81b62bcb9b3cfc697c0`.
+- Prior ledger prefix SHA-256:
+  `3035a70890637a28b49d0b37e7705e31eef1f6a01fcaa43727792367701b8ee0`.
+- Hash normalisation: UTF-8 file bytes with CRLF converted to LF.
+
+Reason: the HTTP-enabled real release matrix passed its 11 non-interactive
+scenarios, then setup waited at an unanswered catalogue prompt. This independent
+session captures Tcl by calling all four actual Harness scenario methods with
+preparation and unrelated path/HTTP methods stubbed. The actual QA shell
+assertions are captured unchanged. The independent fixture contract comes from
+the task, brief and literal current installer prompts. No repair implementation
+was authored or observed. Only the two new oracle files and this appended entry
+were written; no harness, installer, application, claim, task or baseline edit and
+no commit was made by this author.
+
+Goodall approved these ordered choices. Port uses Enter and Advanced uses `n`:
+
+| Scenario | Catalogue | Other choices |
+| --- | --- | --- |
+| `setup_interactive` | `y` | none |
+| `install_in_repo_interactive_profiles_no` | `n` | missing profiles `n` |
+| `install_in_repo_interactive_profiles_yes` | `n` | missing profiles `y` |
+| `install_bootstrap_interactive` | `y` | Hermes `n`, profiles `n`, Hindsight `s` |
+
+Live source verification found setup.sh:282's catalogue prompt, install.sh:123's
+`Copy missing bundled profile files to Hermes now? [y/N]:`, and install.sh:397's
+`Choice [d/n/s]:`. The old in-repo profile and Hindsight Tcl patterns are stale.
+At the current Hindsight prompt, `n` requests native installation; `s` preserves
+the existing skip intent. Goodall explicitly authorised that semantic correction.
+The installer was not changed. Source hashes at verification:
+setup.sh `9969f25e478cc3d2d91e62dc153f0e81eb82d330b21ac6f2c8ae585bec4b2355`;
+install.sh `70a052d67d5acc28cad2bff8da134a685cbc288e9183fd8e1b7521ea0ec5fafc`.
+
+### Frozen portable red and HTTP preservation
+
+Default Jest calls the helper with Python standard-library tooling only. It
+asserts the ordered expect/send protocol emitted by the actual methods, the
+preserved QA assertions, one captured finally-cleanup call, and all 15 identities.
+This is generated-protocol assurance. It does not execute Tcl or prove installer
+completion. No Docker/Expect dependency, skip, new dependency or CI change was
+added to default Jest. Host inspection found Python 3.14.4 and no Expect or Tclsh.
+
+| Frozen portable name | Result |
+| --- | --- |
+| I00 emitted setup protocol answers the catalogue after port and Advanced | red |
+| I01 emitted profiles-no protocol declines catalogue and missing profiles | red |
+| I02 emitted profiles-yes protocol declines catalogue and accepts missing profiles | red |
+| I03 emitted bootstrap protocol accepts catalogue and skips optional installs | red |
+| I04 capture preserves all 15 release identities without a native unit-test dependency | pass |
+
+The combined focused Jest run exited 1: 26 tests, 22 passes, four failures, zero
+pending tests and zero runtime-error suites, 40.196 seconds. The 14 original HTTP
+cases and seven default cases all passed. Structured results and log are
+`tmp/t0202-interactive-oracle-red.json` and `.log`. Each new failure has a
+structured matcherResult for missing expect/send operations (`toHaveLength`).
+The final focused portable rerun exited 1 with four failures, one pass and zero
+pending/runtime-error cases, 0.526 seconds, recorded in
+`tmp/t0202-interactive-oracle-protocol-red.json` and `.log`.
+
+All frozen HTTP files remain unchanged:
+
+- Original suite SHA-256:
+  `f5601e1420d246be1edca594e4ff0028ccb970ed235255f36cc33dff74ae35fc`.
+- Defaults suite SHA-256:
+  `a09b0d4cc31c852764850d5367e424ad1772f5d8731ec25e46de5637488388a4`.
+- HTTP helper SHA-256:
+  `f1c569875985e2a62f1e90b149f166fb394224e9e33f043cf0683ff2886c4523`.
+
+### Separate native Expect red
+
+The companion runs `python3 /oracle/probe.py --native --assert` in the existing
+image `patterstage-fulltest:latest`, inspected without pulling and then addressed
+by immutable image ID:
+`sha256:aff42dcc8f30c278fdcf5d2321fcb4263ff229a626b778814ed5f90e9cd11da4`.
+Observed versions: native Expect 5.45.4, Tcl 8.6.13, Python 3.11.2
+(`[GCC 12.2.0]`, build May 12 2026 05:17:27), GNU Bash 5.2.15(1)-release,
+Linux amd64. The container flags are `--rm --init --pull=never --network=none
+--read-only --tmpfs /tmp:rw,exec,nosuid,nodev`, with bytecode disabled and exactly
+two read-only bind mounts: the new helper at `/oracle/probe.py` and unchanged
+harness at `/oracle/harness.py`. No application, operator data, network, download
+or additional image/dependency is used.
+
+Only the captured Tcl spawn command is substituted to run a deterministic owned
+installer. Actual expect/send/timeout/exit commands remain intact. The fake emits
+literal current prompts, records each answer, uses single-character terminal
+input for Hindsight, and models catalogue/profile QA-file effects. Four independent
+complete Tcl drivers must succeed with correct ordered answers, effects, QA
+assertions and owned cleanup before actual-driver evidence is collected.
+
+Final native result: actual Docker exit 1, ten cases, six passes, four semantic
+failures and zero infrastructure errors. The four `control:<scenario>` cases,
+`malformed-control`, and `catalogue-contamination-control` pass. Each actual
+scenario launches once, answers port/Advanced (and bootstrap Hermes), then stalls
+at `catalogue`, classified `missing-answer`, with `completed=false`. The four-second
+fixture watchdog stops only the recorded owned installer/Expect processes. Every
+case reports ownedStopped, decoySurvived, signalsOwned and withinDeadline true.
+Aggregate native case duration: 16.328 seconds. JSON and stderr are preserved at
+`tmp/t0202-interactive-oracle-native-final.json` and `.log`; the JSON binds the
+executed helper/harness hashes and original captured-driver hashes.
+
+The malformed control has exit 1, zero launches, no watchdog and classification
+`tcl-error`. The adverse catalogue control completes but creates QA files, so the
+preserved profiles-no absence assertion fails as required. These controls keep
+instrument errors and catalogue/profile conflation separate from valid timeout
+counterexamples. Missing tools or failed successful controls exit 2, never pass.
+
+Two earlier attempts are invalid behavioural evidence: the preliminary Docker
+unit run failed before any control because its Tcl preflight passed the filename
+incorrectly; an intermediate native rerun hit a cleanup race after the owned
+child exited. Those results are retained in
+`tmp/t0202-interactive-oracle-preliminary.json` and
+`tmp/t0202-interactive-oracle-native-red.log`. The final helper corrects the
+preflight and tolerates an already-exited owned child. No semantic assertion was
+weakened. The successful final native result supersedes both instrument failures.
+
+### Identity, checks and limits
+
+The captured exact release identity set is:
+
+```text
+fresh, hermes, dashboard, both, update, restart, rebuild, install_bootstrap,
+install_in_repo, update_preserves_user_data, update_runs_seed_catalog,
+setup_interactive, install_in_repo_interactive_profiles_no,
+install_in_repo_interactive_profiles_yes, install_bootstrap_interactive
+```
+
+Python syntax via compile(), targeted ESLint and test TypeScript exited zero.
+The census report exited zero: testRepeatedWindowLines remains 4794, below the
+fixed ceiling 4800; counted test lines are 138942, a 70-line increase over the
+preceding extension. The report is `tmp/t0202-interactive-oracle-census.json`.
+This author did not edit the baseline or claim normal baseline comparison passed.
+
+Native evidence covers captured scenario dialogue with independent owned fake
+installer effects. It does not prove actual installation, catalogue SQLite
+contents, real application HTTP behaviour, production duration/cleanup, hosted
+CI or full Jest. Actual native drivers stop at catalogue, so the later stale
+profile/Hindsight patterns are established by source inspection and portable
+contract assertions, not reached in these red executions. The existing QA
+absence/presence assertions and all scenario identities remain intact. The
+coordinator must commit this authorised red oracle before source repair, then
+rerun native proof, the unchanged full gate, mutation sweep and all 15 real
+HTTP-enabled installation scenarios. No release acceptance is claimed here.

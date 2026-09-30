@@ -40,6 +40,7 @@
     "org/briefs/T-0202-oracle.md",
     "org/briefs/T-0202-review.md",
     "org/briefs/T-0202-defaults-oracle.md",
+    "org/briefs/T-0202-interactive-oracle.md",
     "org/reviews/2026-09-release-verification.md",
     "org/reviews/2026-09-t0202-oracle-amendment.md",
     "org/HANDOVER.md",
@@ -49,8 +50,10 @@
     "tests/integration/test_full_install_update_process.py",
     "tests/unit/release-install-http-smoke.test.ts",
     "tests/unit/release-install-http-defaults.test.ts",
+    "tests/unit/release-install-interactive.test.ts",
     "tests/unit/missions-delete-null-check.test.ts",
     "tests/helpers/release-install-http-probe.py",
+    "tests/helpers/release-install-interactive-probe.py",
     "tests/fixtures/mutants/T-0202.json",
     "scripts/tooling/line-census.baseline.json"
   ],
@@ -69,7 +72,8 @@
   "authority": "The operator requested all remaining functionality and release preparation to be tested. Q-009 binds the full gate and hosted checks; Q-011 reserves release and structural decisions. This corrects a newly reproduced release-only test defect without changing application contracts or protected files.",
   "evidence": "At clean dev@c548be18 the release profile with HTTP enabled reached completed fresh and Hermes-fixture setup, then both failed the anonymous curl / probe (tmp/t0187-release-install.log:622 and :1231). A direct unauthenticated request to the isolated production app on port 3997 returned 401. CI intentionally uses --skip-http and all exact-head jobs passed. The failing matrix was stopped after those two identical defects; its remaining owned dashboard container was explicitly removed. The interrupted run is not a completed matrix.",
   "coordinator_checks": "Frozen 14-case oracle passed on Windows Git Bash after requests were bounded to a 60-second startup window, with a 75-second request deadline and bounded teardown. The first two implementations failed H12's independent watchdog; both failed results are preserved. App and test TypeScript plus targeted ESLint exited zero. Two full Jest runs reported 7521 passing assertions and eight skips but did not exit. The diagnostic identified exactly one SyncScheduler interval from missions-delete-null-check; both owned runs were stopped and neither is counted as gate success. Independently authorised afterAll teardown preserved its four names/assertions/mocks, and the coordinator's targeted detectOpenHandles run then exited zero with no open handles. The additive seven-case default oracle was committed red at four failures and three passes in b023f233, independently repeated by the coordinator. After runtime-compatible directory discovery, all 25 focused tests passed with normal exit zero (21 HTTP cases and four unchanged mission-route cases). Full gate, committed sweep and HTTP-enabled matrix remain separate obligations.",
-  "claim_expansion": "The release matrix exposed a supported default data directory rejected by the initial probe repair. The independently authored defaults oracle and its written brief join the claim before fallback implementation. The full-Jest open-handle diagnostic requires a narrow, different-author afterAll teardown amendment in missions-delete-null-check.test.ts; its four names/assertions/mocks remain intact. Both oracle extensions are REVIEWER-authorised under Q-015, not operator-specific new rulings. No application or protected source joins this harness repair.",
+  "claim_expansion": "The release matrix exposed a supported default data directory rejected by the initial probe repair. The independently authored defaults oracle and its written brief joined the claim before fallback implementation. The full-Jest open-handle diagnostic required a narrow, different-author afterAll teardown amendment in missions-delete-null-check.test.ts; its four names/assertions/mocks remain intact. Those extensions are REVIEWER-authorised under Q-015. The repaired matrix then passed all 11 non-interactive scenarios but blocked at setup's unhandled professional-catalogue prompt. A new independent native-Expect oracle and helper join the claim before changing any embedded Tcl; all 15 scenario names, QA-file assertions and installer prompts remain. No application or protected source joins this harness repair.",
+  "interactive_counterexample": "The HTTP-enabled owned run b8bt5qv5fg passed fresh, hermes, dashboard, both, update, restart, rebuild, install_bootstrap, install_in_repo, update_preserves_user_data and update_runs_seed_catalog. It then reached setup_interactive and waited at Install/refresh professional catalog now? [Y/n]:. The current Tcl answers port and Advanced, then expects EOF without answering this prompt. The verified owned Python process 12388 and only that run's container were stopped; process exit -1 is not matrix success. Complete log: tmp/t0202-release-install-complete.log. The remaining interactive scenarios were not reached.",
   "independent_review": "REVIEWER 01a0ef6e-780c-77e2-9377-b20014518524 accepted the scoped harness at SHA-256 99cee7ad1526a0feb1b786d008562a1ec12cda84661993bec4a763a1e4c2baa4. Its 14 frozen Windows cases and eight additional settings/INT/TERM probes passed. The review covers literal harness-generated dotenv values, ordinary token files and controlled listeners; arbitrary dotenv expansion or an adversarial bind race after preflight are not claimed. Linux, the full gate, mutation and release matrix remain separate obligations.",
   "oracle": {
     "author": "independent ORACLE 01a0ef7c-4f50-7ce3-88ba-5b8029ea0672",
