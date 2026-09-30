@@ -197,7 +197,7 @@ def run_case(case: str, bash: str) -> dict[str, object]:
             # Docker's CalledProcessError can include the entire original script.
             # Check before path adaptation; never export the script or token.
             scripts.append(script)
-            shell_file(fixture / "probe.sh", script.replace("/tmp/", f"{shell_path(fixture)}/scratch/"))
+            shell_file(fixture / "probe.sh", script.replace("/tmp/ch-http-smoke.log", f"{shell_path(fixture)}/scratch/ch-http-smoke.log"))
             result = subprocess.run([bash, "--noprofile", "--norc", f"{shell_path(fixture)}/supervisor.sh"], env={**environment, **(env or {})}, capture_output=True, text=True, timeout=25)
             if result.returncode:
                 raise RuntimeError("Fixture supervisor failed")
