@@ -51,7 +51,11 @@ def shell_file(path: Path, source: str) -> None:
 
 
 SUPERVISOR = r'''
-export PATH="$T0202_ROOT/bin:/usr/bin:/bin:$PATH"
+if [[ "$OSTYPE" == darwin* ]]; then
+  export PATH="$T0202_ROOT/bin:${BASH%/*}:/usr/bin:/bin:$PATH"
+else
+  export PATH="$T0202_ROOT/bin:/usr/bin:/bin:$PATH"
+fi
 export T0202_RPC_CLIENT=$(type -P curl)
 # Python holds the pipe's writer open. A builtin wait avoids launching a Git
 # Bash sleep process for every accelerated poll. EOF/data is fixture failure.
