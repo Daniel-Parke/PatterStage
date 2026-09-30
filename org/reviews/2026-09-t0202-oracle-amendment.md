@@ -502,3 +502,249 @@ absence/presence assertions and all scenario identities remain intact. The
 coordinator must commit this authorised red oracle before source repair, then
 rerun native proof, the unchanged full gate, mutation sweep and all 15 real
 HTTP-enabled installation scenarios. No release acceptance is claimed here.
+
+## 2026-09-30: bounded HTTP fixture timer amendment
+
+Author: independent ORACLE Poincare,
+`01a0f00d-cf39-7fe2-993a-36e482bf3f85`.
+Authoriser: independent REVIEWER Goodall,
+`01a0ef6e-780c-77e2-9377-b20014518524`, under Q-015.
+Goodall authorised the exact timer-only proposal before the first frozen edit.
+His completed authorisation turn is `01a0f011-d268-7850-8d63-dba158fdeedd`.
+This author owns only the HTTP helper and this appended entry. The coordinator
+owns the harness, task record, claims, full gate and committed sweep. No commit
+was made. There are two writing lanes; the REVIEWER remains read-only.
+
+### Reason and exact change
+
+The unchanged latest full-gate log, `tmp/t0202-interactive-gate-final/jest.log`,
+records H04/H06 failing `ownedStopped` and H05/H12 failing `withinDeadline`:
+four failed assertions, 7,529 passes and eight skips. That red result remains.
+The coordinator's unchanged focused rerun passed 21/21; that result does not
+refute load-dependent failures or replace the complete gate.
+
+The helper accelerated each sleep to 0.01 seconds but launched an external Git
+Bash sleep process for every poll and both owned fake-process lifetime loops.
+An independent 100-wait control measured 6.354 seconds for `/usr/bin/sleep`
+versus 1.618 seconds for Bash `read -t 0.01`, both exit 0. Goodall's independent
+external control exceeded its 20-second diagnostic limit; his separate builtin
+control completed 100 waits in 1.951 seconds, exit 0. Scheduling/launch overhead
+is therefore material to the instrument. These controls alone do not explain
+each of the four historical failures.
+
+The sole frozen code change replaces fixture sleep-process creation with Bash
+timed reads on inherited fd9. Python holds the anonymous pipe's writer open
+until the supervisor returns, then closes both descriptors in `finally`.
+The exported `fixture_pause` returns success only for read timeout status 142.
+Missing fd9, unexpected data or EOF writes a fixture-error marker and returns
+90. Python checks that marker even if a shell caller suppresses the status.
+Such errors raise `RuntimeError`, not a semantic observation.
+
+Readiness and cleanup sleep calls remain 0.01 seconds. The decoy startup and
+owned/decoy lifetime waits use the same timer. The occupied-listener delay
+remains a real one-second wait. No script loop count changes. The six-second
+watchdog, its 0.2-second kill-after bound, 25-second supervisor bound, real curl,
+0.1-second explicit curl bounds, 20 readiness/cleanup iterations, signal
+ownership checks and immediate process observations are unchanged. There is
+no observation grace, delayed sampling, skip or concurrency workaround.
+
+### Frozen provenance and identities
+
+SHA-256 values below use UTF-8 file bytes. Raw and LF-normalised hashes agree.
+
+| Surface | SHA-256 |
+| --- | --- |
+| Old HTTP helper | `f1c569875985e2a62f1e90b149f166fb394224e9e33f043cf0683ff2886c4523` |
+| New HTTP helper | `254bfcbb1b4f688971e2006c81c41a1d458b6ac3290ce8f48715ddde1360feaa` |
+| Unchanged 14-case suite | `f5601e1420d246be1edca594e4ff0028ccb970ed235255f36cc33dff74ae35fc` |
+| Unchanged seven-case defaults suite | `a09b0d4cc31c852764850d5367e424ad1772f5d8731ec25e46de5637488388a4` |
+| Unchanged current harness | `1deb5a3bfb2b7694098d5e0ead2526877d35fd486e48755e3591ee31e1d8971b` |
+
+Both suites are byte-identical. All names, assertions and ordering for F00,
+H01 through H13, and D00 through D06 remain. The Python fixture executes 14
+HTTP cases plus six default process cases; D06 remains the unchanged runtime
+discovery test in Jest. The helper diff has 24 added and eight removed lines.
+No application, harness, baseline, scenario identity or QA assertion changed
+in this lane. Python `compile()` and scoped `git diff --check` exited 0.
+
+### Actual controls, load evidence and counterevidence
+
+The initial amended Git Bash control run covered control, healthy, H04/H05/H06,
+stalled, TERM refusal and an occupied listener. Every expected outcome passed.
+Each health refusal and stall preserved all 20 readiness attempts. The unchanged
+two-suite Jest command, with ordinary configured parallel execution and no
+worker override, exited 0: 21/21 tests, zero skips, 26.849 seconds. Evidence:
+`tmp/t0202-http-timer-first.json`,
+`tmp/t0202-http-timer-focused.json` and `.log`.
+
+The controlled load wrapper starts and finally terminates exactly six owned
+CPU workers, each also bounded to 100 seconds. It runs the four cases through
+real Git Bash/curl without changing test/helper concurrency. A diagnostic-only
+trace records event types, timestamps and statuses, never commands or tokens.
+Before repair it imports the frozen helper from an ignored byte-identical copy.
+After repair it imports the current helper. The frozen H12 result was red before
+repair: watchdog status 124 with 20 requests. The other three cases passed in
+that reproduction. All four amended cases then completed with immediate
+`ownedStopped=true` and `withinDeadline=true`, script status 1 as required for
+the refused/stalled semantics. No later fixture teardown makes those observations
+green. All load workers were stopped.
+
+| Case | Frozen overall seconds / script status | Amended overall seconds / script status | Amended readiness requests |
+| --- | --- | --- | --- |
+| H04, health 204 | 4.405 / 1 | 3.407 / 1 | 20 |
+| H05, health 503 | 4.419 / 1 | 3.394 / 1 | 20 |
+| H06, health redirect | 4.468 / 1 | 3.387 / 1 | 20 |
+| H12, stalled | 6.789 / 124 | 5.503 / 1 | 20 |
+
+Overall duration includes supervisor launch and listener teardown, so it is
+not the six-second script watchdog duration. Each amended trace has 21 curl
+starts: the separate preflight plus 20 readiness attempts. Evidence:
+`tmp/t0202-http-loaded-trace.json` and `.log`,
+`tmp/t0202-http-loaded-trace-meta.json`,
+`tmp/t0202-http-loaded-trace-timer.json` and `.log`, and
+`tmp/t0202-http-loaded-trace-timer-meta.json`.
+
+An intentionally harder experiment saturated all 12 reported host CPUs while
+running the unchanged two Jest suites. Both frozen and amended instruments
+failed the supervisor's 25-second infrastructure bound. The frozen run had
+seven passes and 14 infrastructure failures. The amended run had six passes,
+14 infrastructure failures and D00's successful-control acceptance assertion
+failure. These runs do not demonstrate a repaired gate or a production cleanup
+defect. They bound the current instrument's load tolerance and remain red.
+There was no worker or deadline reduction to obtain a pass. The wrappers
+confirmed all their owned load workers stopped, and a subsequent process
+inspection found no Bash process with a T-0202 fixture path. Evidence:
+`tmp/t0202-http-loaded-red.json`, `.log` and `-load.json`, and
+`tmp/t0202-http-loaded-timer.json`, `.log` and `-load.json`.
+
+Linux controls use existing immutable image
+`sha256:3ac74fc5fa072e3f28bf05ed2d0fc44d03014a26e4c9db9444e06ec53ac1029d`.
+The historical aff42dcc image is not used. Runs use `--rm --init --pull=never
+--network=none --read-only --tmpfs /tmp:rw,exec,nosuid,nodev`, bytecode disabled,
+three read-only helper/harness/diagnostic mounts and `python3` as entry point.
+There is no application, operator data or external network. The independent
+wrapper checks every fixture's expected acceptance, launch count, ownership,
+deadline, request bounds and secrecy, plus controlled response/default-path
+effects. Both frozen and amended Linux runs exited 0 at 20/20 expected outcomes:
+`tmp/t0202-http-linux-before.json/.log` and
+`tmp/t0202-http-linux-timer.json/.log`. This is fixture evidence, not Linux Jest.
+
+Seven negative diagnostic controls passed on Git Bash and Linux. Missing fd9,
+EOF, unexpected timer data and suppressed EOF errors all produced infrastructure
+`RuntimeError`. Suppressing owned signal delivery retained `ownedStopped=false`
+and watchdog failure. Signalling the unowned decoy retained `decoySurvived=false`.
+Removing the real curl total-time bound from a stalled request retained
+`withinDeadline=false`; only one request started before the unchanged watchdog.
+Credentials remained absent from observations/logs. Evidence:
+`tmp/t0202-http-negative-windows.json/.log` and
+`tmp/t0202-http-negative-linux-final.json/.log`.
+The first Linux negative diagnostic accidentally injected timer data into
+Python's internal subprocess error pipe and failed before the semantic controls.
+Its log is retained at `tmp/t0202-http-negative-linux.log`; the temporary driver
+was corrected to inject only the first timer pipe. The frozen helper did not
+change for that repair. The failed diagnostic is not acceptance evidence.
+
+The historical red harness from `10881bca`, SHA-256
+`9f474eb645210c68346a03d3c77090b6266daf15f3d898b2be62ca2c70984145`,
+was executed through the amended instrument in the same immutable Linux image.
+It still produced three expected passes and 11 failed case outcomes, with 25
+failed checks and no infrastructure error, exit 1. Control, dead launch and
+occupied listener passed. Existing readiness/authentication/bound/cleanup defects
+remain observable. Evidence: `tmp/t0202-http-reference-red-linux.json/.log`.
+
+### Evidence boundary and final disposition
+
+This is a bounded timer-instrument repair. It reproduces and removes the frozen
+H12 watchdog defect under the six-worker diagnostic load. It does not establish
+the exact cause of historical H04/H06 immediate ownership failures or H05's
+deadline failure, and it does not promise success under all-core saturation.
+No current native production cleanup defect was established. A future valid
+immediate cleanup counterexample must remain red and return to the coordinator.
+The unchanged complete gate, committed sweep and real installation matrix remain
+coordinator obligations after final freeze. Final read-only REVIEWER acceptance
+and the separately running six-worker loaded Jest result are recorded below.
+
+The first timer revision's ordinary parallel Jest run under six CPU workers
+completed at 21/21, zero skips, exit 0, 35.581 Jest seconds and 38.078 wrapper
+seconds. All load workers stopped. The earlier message reporting 34.463 Jest
+seconds was incorrect; the actual log establishes 35.581 seconds. Evidence:
+`tmp/t0202-http-loaded-timer-six.json/.log` and `-load.json`.
+
+### Authorised input-validation completion and final freeze
+
+Goodall independently identified that unterminated pipe data could produce read
+timeout status 142. The diagnostic then reproduced that instrument defect:
+`partial-data` incorrectly produced a semantic result with `accepted=true`.
+The eight-control diagnostic exited 1 at
+`tmp/t0202-http-negative-partial-red.json/.log`. This is instrument red before
+repair; it is not a harness counterexample or a gate pass.
+
+Before the second frozen edit, Goodall authorised the exact correction in turn
+`01a0f020-54ce-7ca1-80cb-402a7be7d031`: initialise a local empty `value`, read
+into `value`, and accept only status 142 with `value` still empty. Partial input
+now writes the existing fixture-error marker and returns 90, even if shell
+errors are suppressed. No bound, delay, loop or observation changed.
+
+**Final frozen HTTP helper SHA-256:**
+`c53915174248fa014691aaf08b04cd32eaacf47e6197292bf5ee3f2de889e27b`.
+This supersedes the intermediate `254bfcbb...` helper hash above. The amendment's
+original starting helper remains `f1c56987...`. The two suite hashes, all 14+7
+names/assertions and current harness hash `1deb5a3b...` remain byte-identical.
+The complete final helper diff still has 24 added and eight removed lines.
+
+The final ordinary parallel Jest run exited 0 at 21/21, zero skips, 31.054
+seconds: `tmp/t0202-http-final-focused.json/.log`. The final repeat under six
+owned CPU workers also exited 0 at 21/21, zero skips, 35.014 Jest seconds and
+36.917 wrapper seconds. All six load workers stopped. Evidence:
+`tmp/t0202-http-final-loaded-six.json/.log` and `-load.json`.
+
+The final Linux reruns first failed before tests because immutable image
+`3ac74fc5...` had become unavailable. These infrastructure failures are retained
+in `tmp/t0202-http-final-linux.log` and
+`tmp/t0202-http-final-negative-linux.log`; neither is semantic evidence.
+No image was pulled, built or removed by this author. Read-only inspection of
+the existing `patterstage-fulltest:latest` resolved current immutable ID
+`sha256:f68789033e507ec0ed8bea4784b708615f3a95515d3e3a0ce619af36c3baa2c1`.
+Final native runs used that exact ID with the same isolated flags and mounts.
+This is separately identified evidence, not a claim that the image is unchanged.
+
+Final Linux controls exited 0 at 20/20, no failed checks, binding final helper
+`c5391517...` and unchanged harness `1deb5a3b...`:
+`tmp/t0202-http-final-linux-pinned.json/.log`.
+The final eight negative controls exited 0 on Git Bash and Linux, with
+`allDetected=true`. Partial data now produces infrastructure `RuntimeError`,
+as do the four previous invalid timer modes. Missing owned cleanup, unowned
+signal delivery and the unbounded stall still produce their adverse ownership
+or deadline observations. Evidence:
+`tmp/t0202-http-final-negative-windows.json/.log` and
+`tmp/t0202-http-final-negative-linux-pinned.json/.log`.
+
+The final helper was also repeated against the same historical `10881bca`
+harness in current immutable image `f6878903...`. It retained three expected
+passes, 11 failed case outcomes, 25 failed checks and zero infrastructure errors,
+exit 1. Evidence: `tmp/t0202-http-final-reference-red-linux.json/.log`, binding
+final helper `c5391517...` and historical source `9f474eb6...`.
+All earlier red outcomes and the all-core saturation limit remain preserved.
+
+The original amendment file's complete 29,627-byte prefix was retained,
+SHA-256 `80bf47be1c1001435b5ae633c9e3488e21f24846264e6ffdce92e1f4f3ef2a35`.
+The author checked the exact byte prefix before and after appending, Python
+syntax and scoped diff whitespace. No full gate or commit was run in this lane.
+
+### Final independent R2 acceptance
+
+Goodall returned **R2 PASS for the Q015 timer-only amendment** at final helper
+SHA-256 `c53915174248fa014691aaf08b04cd32eaacf47e6197292bf5ee3f2de889e27b`,
+in completed review turn `01a0f027-67a5-7000-b05e-c54fd95b9c89` on 2026-09-30.
+He independently reproduced rejection of unterminated timer data, verified the
+unchanged suites/harness and preserved bounds/iterations/immediate observations,
+reviewed focused and loaded 21/21 reports, native 20/20 outcomes and both sets
+of negative controls, and checked all eight negative HTTP status witnesses.
+He also verified the complete original 29,627-byte amendment prefix.
+The REVIEWER made no writes. The final process inspection found no remaining
+Bash process with a T-0202 fixture path.
+
+Acceptance covers this instrument repair only. The four historical full-gate
+failures, all-core saturation failures and missing-image attempts remain red
+records. Complete-gate, committed-sweep and real-matrix acceptance remain with
+the coordinator. The two claimed files are now released at this final freeze.

@@ -45,7 +45,18 @@ def shell_file(path: Path, source: str) -> None:
 
 SUPERVISOR = r'''
 export PATH="$T0202_ROOT/bin:/usr/bin:/bin:$PATH"
-sleep() { /usr/bin/sleep 0.01; }
+# Python holds the pipe's writer open. A builtin wait avoids launching a Git
+# Bash sleep process for every accelerated poll. EOF/data is fixture failure.
+exec 9<&0 || exit 90
+fixture_pause() {
+  local status value=''
+  if IFS= read -r -t "$1" -u 9 value; then status=0; else status=$?; fi
+  if [[ "$status" != 142 || -n "$value" ]]; then
+    printf 'invalid-timer\n' >> "$T0202_ROOT/fixture-error"
+    return 90
+  fi
+}
+sleep() { fixture_pause 0.01; }
 curl() {
   local args=() arg flag='' bounded=0 connected=0
   for arg in "$@"; do
@@ -81,11 +92,11 @@ kill() {
   printf '%s\n' "$target" >> "$T0202_ROOT/signals"
   builtin kill "$@"
 }
-export -f sleep curl kill
+export -f fixture_pause sleep curl kill
 "$T0202_ROOT/bin/decoy" >/dev/null 2>&1 &
 for ((attempt=0; attempt<100; attempt++)); do
   [[ -f "$T0202_ROOT/decoy.pid" ]] && break
-  /usr/bin/sleep 0.01
+  fixture_pause 0.01
 done
 trap 'for name in owned decoy; do
   if [[ -f "$T0202_ROOT/$name.pid" ]]; then
@@ -114,19 +125,19 @@ if [[ "$T0202_CASE" == dead-launch ]]; then exit 78; fi
 if [[ "$T0202_CASE" == occupied-listener ]]; then
   # A healthy foreign listener answers while this child is still alive.
   # The delay is real, not the accelerated readiness sleep function.
-  /usr/bin/sleep 1
+  fixture_pause 1 || exit 90
   printf 'bind-failed\n' > "$T0202_ROOT/bind-failure"
   exit 78
 fi
 touch "$T0202_ROOT/active"
 if [[ "$T0202_CASE" == stubborn ]]; then trap '' TERM
 else trap 'rm -f "$T0202_ROOT/active"; exit 0' TERM INT; fi
-while :; do /usr/bin/sleep 0.01; done
+while :; do fixture_pause 0.01 || exit 90; done
 '''
 DECOY = r'''#!/usr/bin/env bash
 printf '%s\n' "$$" > "$T0202_ROOT/decoy.pid"
 trap 'exit 0' TERM INT
-while :; do /usr/bin/sleep 0.01; done
+while :; do fixture_pause 0.01 || exit 90; done
 '''
 
 
@@ -243,8 +254,13 @@ def run_case(case: str, bash: str) -> dict[str, object]:
             # Check before path adaptation; never export the script or token.
             scripts.append(script)
             shell_file(fixture / "probe.sh", script.replace("/tmp/ch-http-smoke.log", f"{shell_path(fixture)}/scratch/ch-http-smoke.log"))
-            result = subprocess.run([bash, "--noprofile", "--norc", f"{shell_path(fixture)}/supervisor.sh"], env={**environment, **(env or {})}, capture_output=True, text=True, timeout=25)
-            if result.returncode:
+            timer_read, timer_write = os.pipe()
+            try:
+                result = subprocess.run([bash, "--noprofile", "--norc", f"{shell_path(fixture)}/supervisor.sh"], env={**environment, **(env or {})}, stdin=timer_read, capture_output=True, text=True, timeout=25)
+            finally:
+                os.close(timer_read)
+                os.close(timer_write)
+            if result.returncode or content("fixture-error"):
                 raise RuntimeError("Fixture supervisor failed")
             status = int(content("status"))
             executions.append(status)
