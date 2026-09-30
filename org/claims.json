@@ -1,8 +1,6 @@
 {
   "version": 1,
   "assigned": "2026-09-30",
-  "lanes": [
-    {"task": "T-0202", "owner": "2026-09-30-release-verification", "mode": "high-assurance", "paths": ["org/QUESTIONS.md", "org/tasks/T-0202.json", "org/briefs/T-0202-oracle.md", "org/briefs/T-0202-review.md", "org/briefs/T-0202-defaults-oracle.md", "org/briefs/T-0202-interactive-oracle.md", "org/briefs/T-0202-http-load-amendment.md", "org/reviews/2026-09-release-verification.md", "org/HANDOVER.md", "org/claims.json", "org/TASKS.md", "org/STATE.md", "tests/integration/test_full_install_update_process.py", "tests/fixtures/mutants/T-0202.json", "scripts/tooling/line-census.baseline.json"]}
-  ],
-  "note": "Poincare applied and released the Q-015-authorised helper 5b36c32e, bridge fe32217d and appended ledger c9a0e096. All 44,592 prior ledger bytes and 21 suite names/assertions remain frozen. Coordinator owns source, metadata, commit and gate; only one writing lane remains. Frozen helper and ledger contents are closed to coordinator edits."
+  "lanes": [],
+  "note": "T-0202 is locally closed after the unchanged full gate and clean twelve-mutant sweep at 1f556c49. All author/coordinator claims are released. Required exact-head hosted acceptance follows the closure push before T-0188. Frozen helpers, append-only ledger and historical task records remain closed to edits."
 }

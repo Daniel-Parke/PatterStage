@@ -15,12 +15,27 @@ tags and releases remain operator actions. The separate compatibility promise
 has not been changed. The plan register and its closed oracle need a dated,
 independent authority amendment before structural execution.
 
+**T-0202 is locally closed at implementation `1f556c49`.** The final unchanged
+ten-step gate passed at tree SHA-256
+`c8087803f89c05e462417f6feaea3baaa12234fb8c0bf497884282d62f06bdb1`:
+7,533 Jest passes, eight existing skips, 355 browser passes, 24 existing skips,
+both database-free build controls and both censuses. All twelve committed
+mutants were killed by assertion failures; controls passed before and after,
+and restoration left Git clean. The independently accepted curl instrument
+is frozen in `5249123f`. The 15-scenario HTTP-enabled real Linux matrix passed
+on its explicitly byte-bound product/controller snapshot. Earlier failed
+gates and configuration attempts remain historical evidence. Required hosted
+push and PR acceptance is pending the closure push; do not start T-0188 before
+every scheduled job passes. Then apply the separately authored plan-authority
+amendment and route/record T-0188. T-0190's chat race and T-0194's Composer 429
+remain open functional defects, and T-0200's compatibility ruling is pending.
+
 **T-0187 hosted acceptance passed at `dev@c548be18`.** Push CI `36643616502`,
 PR CI `36643621005`, push Gitleaks `36643616541` and PR Gitleaks `36643620989`
 all completed success. Every scheduled PR job passed, including full browser
 acceptance, real Hermes and install verification. The release-only harness
 with HTTP enabled then reproduced an anonymous-root readiness defect after
-successful setup/build in two scenarios. **T-0202 is active** to repair that
+successful setup/build in two scenarios. **T-0202's prior investigation** repaired that
 probe with independent red-first oracles. Implementation `5be22712` passed
 the unchanged-tree ten-step gate (7,528 Jest passes, eight skips; 355 browser
 passes, 24 skips) and all eight mutants. The HTTP-enabled matrix passed its
@@ -36,8 +51,8 @@ passes. The isolated 14-case suite passes. An independent curl transport
 amendment now passes its Windows and Linux failure, mapping and ownership
 controls and has Q-015 acceptance; complete-gate reliability remains open.
 Full-gate repair, the expanded
-12-mutant sweep and exact-head
-hosted acceptance remain open before closure and push.
+12-mutant sweep were completed as recorded in the local closure above;
+exact-head hosted acceptance remains open before structural execution.
 
 The [release verification](reviews/2026-09-release-verification.md) records
 46 authenticated desktop/phone route walks on owned port **3997**, draft and

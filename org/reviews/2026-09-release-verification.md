@@ -394,6 +394,26 @@ output and validated arguments, not arbitrary binary output or changing
 environments between calls. This is independent instrument acceptance. A
 new complete gate and clean committed twelve-mutant sweep remain required.
 
+### T-0202 local close, 2026-09-30
+
+The subsequent complete gate exited zero at all ten steps on the unchanged
+tree `c8087803f89c05e462417f6feaea3baaa12234fb8c0bf497884282d62f06bdb1`:
+7,533 Jest assertions passed with eight existing skips, 355 browser tests
+passed with 24 existing skips, both build-purity controls passed, and lint,
+TypeScript, Knip, canary, build and both censuses passed. Full evidence remains
+`tmp/t0202-rpc-full-gate/summary.json`; earlier failed gates are not overwritten.
+The accepted instrument was committed separately as `5249123f`, followed by
+implementation `1f556c4909afcaac168704ed8b79bc5204e5fab6`.
+
+The clean committed sweep exited zero, killed all twelve mutants through
+structured assertion failures, passed controls before and after, and restored
+a clean Git tree. No survivor, ineffective/not-applied mutant or infrastructure
+kill occurred. Evidence: `tmp/t0202-final-twelve-mutants.log`. The complete real
+install matrix remains the explicitly byte-bound 15-scenario snapshot already
+recorded, with final executed controller hash `1deb…`. Local closure does not
+establish exact-head hosted acceptance or completion of every user pathway.
+Hosted push and PR jobs are required after the closure push before T-0188.
+
 T-0202's first full Jest run reported 7,521 passes and eight skips, but did not
 exit. A diagnostic rerun found exactly one open interval: the real sync
 scheduler started by `missions-delete-null-check.test.ts`. Both owned runs
