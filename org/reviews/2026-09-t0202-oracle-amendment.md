@@ -748,3 +748,145 @@ Acceptance covers this instrument repair only. The four historical full-gate
 failures, all-core saturation failures and missing-image attempts remain red
 records. Complete-gate, committed-sweep and real-matrix acceptance remain with
 the coordinator. The two claimed files are now released at this final freeze.
+
+
+## 2026-09-30: Q015 real-curl launch transport amendment
+
+Author: independent ORACLE Poincare, session
+`01a0f00d-cf39-7fe2-993a-36e482bf3f85`.
+Authoriser: independent REVIEWER Goodall,
+`01a0ef6e-780c-77e2-9377-b20014518524`.
+Goodall explicitly authorised the exact candidate in completed review turn
+`01a0f09e-58ce-71b0-8e6c-2c43c5ca61ad`, then confirmed that authorisation
+remained valid in `01a0f0a4-ec37-7781-9221-2d55bf7aeacc`.
+The coordinator expanded the task record and disjoint claims before tracked
+writes, at 04:51 UTC. The two-lane cap is retained. This author owns only the
+two helpers and this new appended entry; the coordinator owns source and gate.
+
+### Exact byte-for-byte amendment
+
+Old HTTP helper SHA256:
+`c53915174248fa014691aaf08b04cd32eaacf47e6197292bf5ee3f2de889e27b`.
+New `tests/helpers/release-install-http-probe.py` SHA256:
+`5b36c32e905b51dca3681e3a67db4cd3aa5fca342c7faececf0d166cdd4fbedf`.
+New specific `tests/helpers/release-install-http-curl-bridge.py` SHA256:
+`fe32217daf2d684aa6a913fb3de2109d1554c67616051fed1b27d0db8d208ee1`.
+Both are promoted byte-for-byte from the independently reviewed ignored
+candidate. No candidate repair, test rerun, full gate or commit occurs here.
+
+Unchanged production harness SHA256:
+`1deb5a3bfb2b7694098d5e0ead2526877d35fd486e48755e3591ee31e1d8971b`.
+Unchanged 14-case HTTP suite SHA256:
+`f5601e1420d246be1edca594e4ff0028ccb970ed235255f36cc33dff74ae35fc`.
+Unchanged seven-case defaults suite SHA256:
+`a09b0d4cc31c852764850d5367e424ad1772f5d8731ec25e46de5637488388a4`.
+All 21 names and assertions remain byte-identical. Real curl, 0.1-second request
+scaling, 20 readiness attempts, 20 cleanup iterations, 0.01-second fixture waits,
+the six-second watchdog, 25-second supervisor and immediate PID observations
+remain. No worker, retry, coverage or concurrency setting changes.
+
+The physical Python increase is **+309 lines**: HTTP helper **354 to 386**
+(+32), plus the new bridge **277**. These files are outside the historical
+TypeScript line census. No census baseline or derived file is edited here.
+
+### Repair and saved assurance
+
+Bash built-ins send validated arguments over authenticated owned localhost IPC.
+Python launches the same actual curl, and Bash returns its exit/stdout/stderr,
+preserving caller `|| true`. A once-per-fixture native Python registration from
+the actual Bash call site captures MSYS argument/environment mapping and cwd
+in memory. Captured `/dev/null` mapping is `nul` on Windows. Credentials and
+raw environment/arguments are not persisted. Finally reaps only registered
+curl process objects and closes owned IPC/listener/worker resources. Optional
+audits use exclusive per-case UUID files, without a shared append writer.
+
+Actual Windows fixture client: `/mingw64/bin/curl`, Git curl 8.19.0, SHA256
+`ed817c3886ea667ba251060a50ff934257f92ff6fe2e8efb75a966f506d4abac`.
+Linux `/usr/bin/curl` SHA256:
+`27125f0331490b7fbf4da11f2bd913ce1b94e071367b2fa8e535ce8c5526e29c`.
+Linux used existing immutable image
+`sha256:f68789033e507ec0ed8bea4784b708615f3a95515d3e3a0ce619af36c3baa2c1`,
+no pull/network, read-only mounts and executable owned tmpfs.
+
+Author evidence under `tmp/t0202-rpc-assurance/`:
+- `final-jest.json/.log`: exit 0, 21/21, zero failures/pending, 26.591 seconds;
+  all original suite bodies preserved apart from ignored helper-path routing.
+- `final-jest-audit/`: all 20 unique case records; zero errors; curl, listener
+  and IPC stopped; environment registered in every record.
+- `final-linux.json/.log`: exit 0, Linux assurance and 20/20 process controls;
+  all 20 case audits complete and clean. This is not Linux Jest or D06.
+- `final-body.json/.log`: both controls pass, each with three real 496-byte
+  bodies discarded; original acceptance/ownership/bounds/secrecy observations
+  pass. Body audit records both cases and all resource cleanup.
+- `final-windows-assurance.json` and Linux assurance: missing-max-time reaches
+  one actual stalled request after one owned launch, returns watchdog status
+  124, accepted=false, withinDeadline=false, requestsBounded=false, no leak.
+  Total elapsed is 6.869 seconds Windows and 6.278 seconds Linux, including
+  launch/teardown; the watchdog itself remains six seconds. Invalid magic,
+  argument count and curl Popen failure remain infrastructure errors. Real
+  owned-only cancellation reaps one owned curl while a separate real curl
+  survives. Five normal/inline/missing-bound/header/noproxy native recorder
+  comparisons match environment, complete supported argv and cwd on both OS.
+
+Finished proposal: `tmp/t0202-rpc-assurance/finished-proposal.md`, SHA256
+`6e76749aec7b78bab783da260722ccf4e0fd2b400ff56216f21e78783e5eebb1`.
+Coordinator Windows assurance independently passed. Coordinator Linux repeat
+passed 20/20, negatives and all 20 clean audits with executable owned tmpfs:
+`tmp/t0202-coordinator-rpc-windows-assurance.json` and
+`tmp/t0202-coordinator-rpc-linux-exec.json`. These saved repeats precede the
+mechanical tracked promotion; no new experiment is used to justify writing.
+
+### Every earlier failure remains evidence
+
+All 44,592 original ledger bytes are retained unchanged, SHA256
+`5a3cb6133b2d7258a540e8065ddf9aa7b2b75ce52ab544ba66d697a6bf965e87`.
+Earlier red-before-repair entries, invalid timer/partial-data red, historical
+harness 11 failures/three passes, all-core saturation, missing-image attempts,
+incomplete runs and prior review limits remain intact. The initial interactive
+gate's two E2E failures and timer gate's census failure remain failed runs.
+
+The original four-case loaded HTTP failure (H04/H06 ownedStopped and H05/H12
+deadline), later complete-gate H04/H12 failure, and quiet-complete-gate H12
+deadline after the matrix finished remain red. Isolated 21/21 passes do not
+refute those counterexamples. No production cleanup defect was proved.
+
+Direct exec remains rejected: curl status 52 bypassed inner `|| true`, causing
+zero launches and five of seven failed semantic cases on Windows and Linux.
+Its saved verdict/controls remain. The initial explicit-native comparison did
+not select its intended client; later corrected System32 seven-case controls
+did not establish a performance repair. The reviewer's bare shell used
+System32 8.21.0/SHA256
+`73d24149ff289afc49ec41f08918ef9faa727d39ad993e929757dc2ddafab805`,
+which differs from the actual fixture's Git binary above. No rejected hypothesis
+was extended or fitted into production.
+
+Earlier RPC discovery setup errors and zero-match Jest exits remain in their
+original logs. Prototype v1 and `mapping-before.json` preserve the incorrect
+Python-parent environment and native HOME/PATH/data/PWD/SHLVL mismatch.
+The old shared audit's missing control record (19/20) remains preserved.
+Intermediate versions remain under `tmp/t0202-rpc-assurance/`.
+The diagnostic foreign-curl temporary-directory cleanup error and Linux
+shallow-path error occurred in ignored diagnostics and were retained before
+their corrections. The coordinator's first Linux noexec tmpfs configuration
+yielded requests=0, launched=0, status=1; `/proc/mounts` established noexec.
+It is retained in `tmp/t0202-coordinator-rpc-linux-negative.json` and the
+wrapper-first-failure report as infrastructure evidence, not a mutation kill.
+Correcting only the mount to executable owned tmpfs produced the passed repeat.
+
+### Bounded acceptance and author release
+
+Acceptance covers the frozen fixture's stable exported environment, owned cwd,
+validated GET argv and small text stdout/stderr. The native recorder executable
+is Python; only `_` is normalised to curl's identity in differential comparison.
+The snapshot is taken once after configuration. Arbitrary later environment
+mutation, unknown wrappers/argv or a different production source are outside
+this proof. Embedded NUL, output over 64 KiB or invalid statuses are
+infrastructure errors; arbitrary binary stdout equivalence is not claimed.
+No loaded reliability or complete-gate acceptance is asserted.
+
+The before/after ledger prefix, full final ledger hash, exact candidate byte
+identity, source/suite hashes, physical counts, author/reviewer identities and
+expanded claim proof are frozen in `tmp/t0202-rpc-assurance/tracked-freeze.json`.
+After that freeze this author releases all three writing paths to the
+coordinator and makes no further writes. Coordinator owns claim removal,
+independent final pass, complete gate and committed-tree sweep.

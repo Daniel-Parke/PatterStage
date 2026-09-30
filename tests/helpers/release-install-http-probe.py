@@ -26,6 +26,13 @@ from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
 ROOT = Path(__file__).resolve().parents[2]
+BRIDGE_PATH = Path(__file__).resolve().with_name("release-install-http-curl-bridge.py")
+_bridge_spec = importlib.util.spec_from_file_location("release_install_http_curl_bridge", BRIDGE_PATH)
+if _bridge_spec is None or _bridge_spec.loader is None:
+    raise RuntimeError("Cannot load release-install curl bridge")
+_bridge_module = importlib.util.module_from_spec(_bridge_spec)
+_bridge_spec.loader.exec_module(_bridge_module)
+CurlBridge = _bridge_module.CurlBridge
 CASES = ("control", "healthy", "wrong-credential", "anonymous-200", "health-204",
          "health-503", "health-redirect", "anonymous-redirect", "auth-redirect",
          "auth-403", "dead-launch", "occupied-listener", "stalled", "stubborn")
@@ -45,6 +52,7 @@ def shell_file(path: Path, source: str) -> None:
 
 SUPERVISOR = r'''
 export PATH="$T0202_ROOT/bin:/usr/bin:/bin:$PATH"
+export T0202_RPC_CLIENT=$(type -P curl)
 # Python holds the pipe's writer open. A builtin wait avoids launching a Git
 # Bash sleep process for every accelerated poll. EOF/data is fixture failure.
 exec 9<&0 || exit 90
@@ -79,7 +87,30 @@ curl() {
     esac
   done
   printf '%s %s\n' "$bounded" "$connected" >> "$T0202_ROOT/bounds"
-  command curl "${args[@]}"
+  if [[ ! -f "$T0202_ROOT/rpc-ready" ]]; then
+    if ! command "$T0202_RPC_PYTHON" "$T0202_RPC_HELPER" --register "$T0202_RPC_PORT" "$T0202_RPC_CLIENT" "${args[@]}"; then
+      printf 'rpc-registration\n' >> "$T0202_ROOT/fixture-error"; return 90
+    fi
+  fi
+  local channel kind status output errors
+  if ! exec {channel}<>"/dev/tcp/127.0.0.1/$T0202_RPC_PORT"; then
+    printf 'rpc-connect\n' >> "$T0202_ROOT/fixture-error"; return 90
+  fi
+  printf '%s\0' T0202 "$T0202_RPC_KEY" "${#args[@]}" "$T0202_RPC_CLIENT" "${args[@]}" >&"$channel"
+  if ! IFS= read -r -d '' -t 25 kind <&"$channel" || [[ "$kind" != OK ]] ||
+     ! IFS= read -r -d '' -t 25 status <&"$channel" ||
+     ! IFS= read -r -d '' -t 25 output <&"$channel" ||
+     ! IFS= read -r -d '' -t 25 errors <&"$channel"; then
+    exec {channel}>&-
+    printf 'rpc-protocol\n' >> "$T0202_ROOT/fixture-error"; return 90
+  fi
+  exec {channel}>&-
+  if [[ ! "$status" =~ ^[0-9]+$ ]] || ((status > 255)); then
+    printf 'rpc-status\n' >> "$T0202_ROOT/fixture-error"; return 90
+  fi
+  printf '%s' "$errors" >&2
+  printf '%s' "$output"
+  return "$status"
 }
 kill() {
   local target="${!#}" owned='' decoy=''
@@ -256,7 +287,8 @@ def run_case(case: str, bash: str) -> dict[str, object]:
             shell_file(fixture / "probe.sh", script.replace("/tmp/ch-http-smoke.log", f"{shell_path(fixture)}/scratch/ch-http-smoke.log"))
             timer_read, timer_write = os.pipe()
             try:
-                result = subprocess.run([bash, "--noprofile", "--norc", f"{shell_path(fixture)}/supervisor.sh"], env={**environment, **(env or {})}, stdin=timer_read, capture_output=True, text=True, timeout=25)
+                with CurlBridge(fixture, port, {**environment, **(env or {})}, bash) as bridge:
+                    result = subprocess.run([bash, "--noprofile", "--norc", f"{shell_path(fixture)}/supervisor.sh"], env={**environment, **(env or {}), "T0202_RPC_PORT": str(bridge.port), "T0202_RPC_KEY": bridge.key, "T0202_RPC_PYTHON": shell_path(Path(sys.executable)), "T0202_RPC_HELPER": shell_path(BRIDGE_PATH)}, stdin=timer_read, capture_output=True, text=True, timeout=25)
             finally:
                 os.close(timer_read)
                 os.close(timer_write)
