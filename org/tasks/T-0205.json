@@ -1,0 +1,66 @@
+{
+  "id": "T-0205",
+  "intent": "Reduce repeated HTTP status-call subshell overhead in the install verification harness while preserving actual curl requests, all refusal paths and frozen time bounds.",
+  "declared": {
+    "capabilities": [
+      "edit-tests",
+      "edit-docs",
+      "run-isolated-process",
+      "owned-temporary-git",
+      "owned-container",
+      "git",
+      "git-push"
+    ],
+    "side_effects": [
+      "sends-external"
+    ]
+  },
+  "mode": "high-assurance",
+  "tier_proposed": "R2",
+  "status": "active",
+  "owner_session": "2026-10-01-migration-driver-consolidation",
+  "timestamps": {
+    "opened": "2026-10-01T21:11:46.044703+00:00",
+    "updated": "2026-10-01T21:15:13.900Z"
+  },
+  "authority": "Operator authorises completion of approved batches and prerequisite repairs. Adopt separate-author frozen oracle and independent R2 acceptance even if declaration router minimum is R1. Narrow Q015 amendment authority must be recorded before source/mutant amendments; no protected changes or weakening of bounds is authorised.",
+  "claims": [
+    "org/tasks/T-0205.json",
+    "org/briefs/T-0205-oracle.md",
+    "org/reviews/2026-10-t0205-http-context-verification.md",
+    "tests/integration/test_full_install_update_process.py",
+    "tests/fixtures/mutants/T-0205.json",
+    "org/HANDOVER.md",
+    "org/claims.json",
+    "org/TASKS.md",
+    "org/STATE.md",
+    "scripts/tooling/line-census.baseline.json",
+    "tests/unit/release-install-http-context.test.ts",
+    "tests/helpers/release-install-http-context-probe.py"
+  ],
+  "invariants": [
+    "All existing test names, assertions, 75-second production deadline, 20 readiness attempts, six-second fixture watchdog, 0.1-second accelerated request bounds, 0.2-second watchdog kill grace and 25-second RPC/outer bounds remain.",
+    "Every HTTP request still executes the selected real native curl with the same arguments, registered environment and working directory. No response cache, removed attempt, simulated client or retry hides a failure.",
+    "Only a newly created, exclusive, owner-only status scratch path may be removed. HTTP bodies and credentials are never retained in it. Per-call output is cleared and malformed or unreadable status fails closed.",
+    "Owned server cleanup preserves the original exit status and never stops an unrelated listener. Scratch creation failure occurs before server launch.",
+    "The historical full-gate failure cause remains uncertain. Measured performance and call-context evidence support this change; only a passing whole unchanged-tree gate establishes current acceptance.",
+    "T-0188 remains active and uncommitted until this prerequisite and every required hosted job pass. Existing T-0202/03/04 task records remain historical."
+  ],
+  "rollback": "Revert only the T0205 harness, independent oracle and narrow m7 anchor amendment. Retain failed gate evidence; do not close T0188 or weaken HTTP deadlines.",
+  "verify_line": "Independent behavioural oracle proves curl entries execute in the main probe shell, all 21 real stalled-case requests remain, malformed/partial status and scratch refusals fail closed, and owned cleanup holds. Commit intended red, implement, run all historical HTTP/default/native controls, Windows/Linux real curl checks, full unchanged-tree gate, clean committed structured mutation controls/restoration and independent R2 acceptance, then every required exact-head hosted push/PR job.",
+  "preflight": "Four failed T0188 gate attempts retained; two H12 failures involved the unchanged six-second supervisor. Alone14 and diagnostic wholeJest7645 pass do not waive them. tmp/t0205-subshell-prototype/receipt.json records eight in-memory comparisons,21 real curl calls each, all deadlines/cleanup pass. Mean gaps quiet0.892→0.344sec, CPUloaded1.011→0.495sec; only two samples per variant/condition. Windowsnul calibration corrects a diagnostic /dev/null expectation without rewriting raw receipts. Buffered transport experiments did not show material benefit and are not implemented.",
+  "tier_ruled": "R1",
+  "reasons": [
+    {
+      "factor": "boundary-contact",
+      "tier_floor": "R1",
+      "source": "declared",
+      "evidence": "declared side effect: sends-external"
+    }
+  ],
+  "record_validation": {
+    "method": "Canonical kernel schema projection with retained venture evidence; router and require_claim run against venture",
+    "schema_path": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterTech_EOS\\kernel\\schemas\\task-record.schema.json"
+  },
+  "oracle_independence": "Dalton 01a0f94f-c8b3-75f1-ba60-4e4fd74c1812, fresh context and separate files. Reviewer Schrodinger permits record/new oracle only; replacement and closed m7 amendment await secure in-budget complete-output proof."
+}

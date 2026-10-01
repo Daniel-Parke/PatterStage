@@ -37,15 +37,33 @@
         "scripts/tooling/line-census.baseline.json",
         "docs/running/migration.md",
         "scripts/tooling/migrate-db.ts",
-        "docs/manifest.json"
+        "docs/manifest.json",
+        "org/QUESTIONS.md",
+        "org/tasks/T-0205.json",
+        "org/briefs/T-0205-oracle.md",
+        "tests/integration/test_full_install_update_process.py",
+        "tests/fixtures/mutants/T-0205.json"
       ],
       "expires": "2026-10-02T18:45:00Z",
       "lane_id": "T-0188-coordinator",
       "session_id": "2026-10-01-migration-driver-consolidation",
       "acquired": "2026-10-01T18:39:49Z",
       "harness_task_id": "2026-10-01-migration-driver-consolidation"
+    },
+    {
+      "task_id": "T-0205",
+      "host": "NUCBOX_M6ULTRA",
+      "lane_id": "T-0205-oracle",
+      "session_id": "T-0205-oracle",
+      "acquired": "2026-10-01T21:12:30.603Z",
+      "expires": "2026-10-02T18:45:00Z",
+      "path_claims": [
+        "tests/unit/release-install-http-context.test.ts",
+        "tests/helpers/release-install-http-context-probe.py",
+        "org/reviews/2026-10-t0205-http-context-verification.md"
+      ]
     }
   ],
   "version": 1,
-  "note": "One coordinator writing lane. Independent non-NULL witness amendment frozen; source/test reviewers remain read-only. Derived views and docs manifest are rendered only."
+  "note": "Two writers maximum: coordinator T0188/T0205 records and pending implementation; fresh T0205 ORACLE owns only three new oracle files. Reviewers and prototype sidecars remain read-only."
 }
