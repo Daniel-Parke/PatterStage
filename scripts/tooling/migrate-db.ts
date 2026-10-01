@@ -92,11 +92,8 @@ async function main(): Promise<void> {
     return row?.value ? parseInt(row.value, 10) : 0;
   };
 
-  // Converge to the terminal schema version. On a brand-new DB, runMigrations
-  // applies the baseline (the full current schema) and returns early; the
-  // upgrade-only appliers run on subsequent passes. The app reaches the terminal
-  // version across boot, but a standalone migrator should finish in one
-  // invocation — so re-run until the version stops advancing (idempotent; capped).
+  // Fresh installs reach the head in one runMigrations call. Retain bounded
+  // convergence for the legacy rebuild path, which can replace the connection.
   let last = versionOf();
   for (let i = 0; i < 5; i++) {
     runMigrations(database);

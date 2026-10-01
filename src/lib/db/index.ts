@@ -40,7 +40,18 @@ import { applyMissionQueueMigration } from "./apply-mission-queue-migration";
 import { applyCronScheduleCanonicalisation } from "./apply-cron-schedule-canonicalisation";
 import { applyRunsSchedulesMigration } from "./apply-runs-schedules-migration";
 import { applyLegacyColumnRepair } from "./apply-legacy-column-repair";
-// The seventeen one-file migrations, as a table (T-0129).
+import { applyBenchmarkConfigMigration } from "./apply-benchmark-config-migration";
+import { applyBenchGatewaysMigration } from "./apply-bench-gateways-migration";
+import { applyMissionPhasesMigration } from "./apply-mission-phases-migration";
+import { applyRetireMissionPhasesMigration } from "./apply-retire-mission-phases-migration";
+import { applyComposerMigration } from "./apply-composer-migration";
+import { applyMemoryProvidersMigration } from "./apply-memory-providers-migration";
+import { applyResearchOptionsMigration } from "./apply-research-options-migration";
+import { applyModelsApiStyleMigration } from "./apply-models-api-style-migration";
+import { applyResearchComposerLinkMigration } from "./apply-research-composer-link-migration";
+import { applyComposerGroupLinkMigration } from "./apply-composer-group-link-migration";
+import { applyFrameworksMigration } from "./apply-frameworks-migration";
+// Ordered SQL migrations, including guarded additions and empty-only seeds.
 import {
   applyDropGameTablesMigration,
   applyAnalyticsEventsMigration,
@@ -61,17 +72,6 @@ import {
   applyScheduleKindMigration,
   applyFallbackIdentityMigration,
 } from "./sql-migrations";
-import { applyBenchmarkConfigMigration } from "./apply-benchmark-config-migration";
-import { applyBenchGatewaysMigration } from "./apply-bench-gateways-migration";
-import { applyMissionPhasesMigration } from "./apply-mission-phases-migration";
-import { applyRetireMissionPhasesMigration } from "./apply-retire-mission-phases-migration";
-import { applyComposerMigration } from "./apply-composer-migration";
-import { applyMemoryProvidersMigration } from "./apply-memory-providers-migration";
-import { applyResearchOptionsMigration } from "./apply-research-options-migration";
-import { applyModelsApiStyleMigration } from "./apply-models-api-style-migration";
-import { applyResearchComposerLinkMigration } from "./apply-research-composer-link-migration";
-import { applyComposerGroupLinkMigration } from "./apply-composer-group-link-migration";
-import { applyFrameworksMigration } from "./apply-frameworks-migration";
 import { applyNeutralColumnNames } from "./apply-neutral-column-names";
 import { applyComposerRejectedMigration } from "./apply-composer-rejected-migration";
 import { applyComposerNodeCancelledMigration } from "./apply-composer-node-cancelled-migration";
@@ -143,9 +143,8 @@ export function getDb(): Database.Database {
     _db.pragma("foreign_keys = ON");
     _db.pragma("busy_timeout = 5000");
 
-    // A fresh DB applies the baseline (v3) on the first pass. Later passes
-    // climb the incremental chain. Re-read _db because a baseline rebuild can
-    // replace the connection.
+    // Fresh installs reach the head in one pass. Retain the convergence loop
+    // for the legacy rebuild path, which can replace the connection.
     runMigrations(_db);
     let last = getSchemaVersion(_db);
     for (let i = 0; i < 8; i++) {
@@ -243,7 +242,6 @@ export function runMigrations(database: Database.Database): void {
   if (currentVersion === 0 && !hasCoreSchema && baselineSql) {
     database.exec(baselineSql);
     setSchemaVersion(database, BASELINE_SCHEMA_VERSION);
-    return;
   }
 
   if (needsBaselineRebuild(database) && baselineSql) {

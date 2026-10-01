@@ -29,7 +29,7 @@
   "owner_session": "2026-10-01-migration-driver-consolidation",
   "timestamps": {
     "opened": "2026-10-01T16:45:00Z",
-    "updated": "2026-10-01T19:59:50.563Z"
+    "updated": "2026-10-01T22:35:42.269Z"
   },
   "authority": "Operator approved Phase2 on2026-09-28 and Q032 supersedes Q011 release-first sequencing. T0202/T0203 obligations remain; latest repair T0204 independently accepted at a238abf3 and closed at e269a895388795fb189863c7e7783366f650b484, with every required exact-head push/PR job passing. Failed9c824422scan remains historical, not a prerequisite requiring impossible retrospective success. T0200 item-specific post1.0 authority remains. Independent R2 REVIEWER Schrodinger authorises only the four Q015 amendments plus additive T0204 contract described in committed brief. Schema declaration router verdict remains R2; actual diff reroutes upward.",
   "claims": [
@@ -73,7 +73,8 @@
     "scripts/tooling/line-census.baseline.json",
     "docs/running/migration.md",
     "scripts/tooling/migrate-db.ts",
-    "docs/manifest.json"
+    "docs/manifest.json",
+    "org/QUESTIONS.md"
   ],
   "invariants": [
     "Preserve all eleven wrapper module paths, exports, signatures, return contracts and already-applied no-op behaviour. SQL history, public configuration and supported URLs remain intact.",
@@ -103,7 +104,7 @@
     "push_gitleaks": 36905827739,
     "pr_gitleaks": 36905837612
   },
-  "validation_topology": "Schrodinger accepts detached validation checkouts with conditions: committed red HEAD plus explicit allowlist overlay covers additions/modifications/deletions/modes and matches primary bytes; each checkout keeps its own before/after stamp. Pin shared node_modules target, Node24.21.0/ABI137 and lockfile; no installs/mutation. Copy no operator env/data. Set owned PS_DATA_DIR/CH_DATA_DIR/HERMES_HOME, own all ports/processes, resolve EOS dependencies explicitly. Fresh implementation-commit checkout runs clean sweep; preserve controls/restoration and all gates.",
+  "validation_topology": "Schrodinger accepts detached validation checkouts with conditions: committed red HEAD plus explicit allowlist overlay covers additions/modifications/deletions/modes and matches primary bytes; each checkout keeps its own before/after stamp. Pin shared node_modules target, Node24.21.0/ABI137 and lockfile; no installs/mutation. Copy no operator env/data. Set owned PS_DATA_DIR/CH_DATA_DIR/HERMES_HOME, own all ports/processes, resolve EOS dependencies explicitly. Fresh implementation-commit checkout runs clean sweep; preserve controls/restoration and all gates. Build topology correction: shared immutable junction is valid for focused tests but rejected by Turbopack. Complete gate uses a private materialised copy of the previously byte-proven native pool (35758files/570528555bytes, SHA a76d872b...). Robocopy retains file data/attributes/timestamps and semantic exit result; no dependency install or operator environment.",
   "oracle_provenance": {
     "author_session": "01a0f80a-5091-7ac3-9d66-89e159495160",
     "independence": "Separate clean-context ORACLE; real SQLite and independently replayed historical fixtures; implementation not inspected.",
@@ -193,7 +194,182 @@
       "receipt": "tmp/t0188-coordinator-green-first/summary.json",
       "result": "103pass/2fail/0skip/0runtime, normal1, unchanged tree",
       "cause": "Native better-sqlite3 errors loaded from a separate Jest realm can fail instanceof Error; the narrow duplicate-column allowance now classifies String(error) while still rethrowing every other error. Historical test names/assertions untouched. Pending revalidation."
+    },
+    {
+      "result": "Candidate overlay refused before Jest launch",
+      "reason": "Newly committed witness amendment was absent from an older detached overlay. Guard caught old fixture SHA. Overlay now compares against validation HEAD, includes committed additions/modifications, verifies bytes/modes, and all105 amended cases pass. No tests ran in the refused attempt."
+    },
+    {
+      "receipt": "tmp/t0188-full-gate-20261001/summary.json",
+      "sha256": "151351b1f0396c30ea88f1c567d52d7714236233daebb13a96c7aaeeedb8663b",
+      "result": "Full gate lint0/tsc0/Jest1; 7638pass/7fail/9existing skips; tree unchanged, stopped honestly before remaining seven steps.",
+      "cause": "One source reachability failure: eleven public wrapper modules became test-only when index imported directly from the table driver. Restore real index consumption through the delegating wrapper paths. Six alias-warning failures were validation launcher pollution from CONTROL_HUB_DATA_DIR, which the historical focused suite does not clear. Remove that redundant launcher variable; owned PS_DATA_DIR and CH_DATA_DIR remain. No test, rule, coverage floor or product alias is weakened."
+    },
+    {
+      "receipt": "tmp/t0188-full-gate-wrapper-callers-20261001/summary.json",
+      "sha256": "ceadc66b04d37ec7781f79f87c15a734aaf416ba910959629af39d1ea25b5723",
+      "result": "Second full gate lint0/tsc0/Jest1; 7644pass/1fail/9existing skips, unchanged tree; H12 ownedStopped false. Other seven failures resolved unchanged tests.",
+      "alone": {
+        "receipt": "tmp/t0188-http-alone.json",
+        "sha256": "baf2ae1f2b8360e3518fc768ef15b5299fbfda95220897ae37bd5b0065b0f159",
+        "result": "Same unchanged HTTP suite, isolated run: 14pass/0fail, normal0."
+      },
+      "limit": "A passing alone control is not a green whole gate or proof of the transient cause. Preserve both receipts. Repeat the entire gate after the independent private dependency scan finishes; do not reduce concurrency or coverage."
+    },
+    {
+      "receipt": "tmp/t0188-full-gate-owned-home-20261001/summary.json",
+      "sha256": "2d57fb284e9e2b93c3e1325639de6d7d27636530de94ea9122b026511816c751",
+      "result": "Third full gate lint/tsc/Jest/Knip/canary0; 7645pass/9existing skips; build1; tracked tree unchanged.",
+      "cause": "Turbopack rejects node_modules junction escaping its project root. Tests accepted the shared immutable pool, but the real production build needs a materialised private copy. Replace only the verified owned junction with a real copied pool; preserve primary/private source pool, production Turbopack and all checks. No product or test/config edit."
+    },
+    {
+      "receipt": "tmp/t0188-full-gate-private-dependencies-20261001/summary.json",
+      "sha256": "a128280c875561814f4cd5550b4ebda12f61a10ad9c473338bc886de21321d1d",
+      "result": "Fourth full gate lint0/tsc0/Jest1; H12 withinDeadline false, unchanged tree. Materialised private dependencies; no concurrent auxiliary validation. Remaining steps did not run.",
+      "cause": "The six-second fixture supervisor watchdog involvement is observed, but its root cause is not yet established. Repeated gate retries stopped. Independent read-only reviewers investigate transport/launch/cleanup performance while preserving frozen bounds, all historical names and native curl semantics. Alone14pass does not clear this failure."
+    },
+    {
+      "receipt": "tmp/t0188-coordinator-green-final-pair/summary.json",
+      "result": "104pass/1infrastructurefailure; os.userInfo ENOMEM in tsx before backup assertion",
+      "control": "Direct Node os.userInfo fails restricted and succeeds with native access. Unchanged native105/105 rerun binds to samec98e25f2 tree; no product/test changes."
     }
   ],
-  "evidence_attribution_correction": "The original oracle report phrase operator separately reports four Windows controls means coordinator-owned CLI execution, not a human action. Coordinator actual candidate entrypoint receipts have Windows4/Linux4 successful invocations, exact backups, preserved sentinel rows and schema43; full installer/updater acceptance remains separately labelled."
+  "evidence_attribution_correction": "The original oracle report phrase operator separately reports four Windows controls means coordinator-owned CLI execution, not a human action. Coordinator actual candidate entrypoint receipts have Windows4/Linux4 successful invocations, exact backups, preserved sentinel rows and schema43; full installer/updater acceptance remains separately labelled.",
+  "coordinator_checks": {
+    "strengthened_oracle": {
+      "receipt": "tmp/t0188-coordinator-green-amended/summary.json",
+      "sha256": "2f179c507de97ee9b736e440598b53b7f25e7dac1cef8aac4e76e4475320357a",
+      "pass": 105,
+      "fail": 0,
+      "skip": 0,
+      "runtimeErrors": 0,
+      "before": "e912eb9079418f674d3415646baec9336529d8d6036a8f0d52d9ea62f153584b",
+      "after": "e912eb9079418f674d3415646baec9336529d8d6036a8f0d52d9ea62f153584b"
+    },
+    "static": "Test TypeScript and scoped ESLint exit0 on owned candidate with isolated Node24.21.0. Initial singular tsconfig.test.json invocation was infrastructure (nonexistent file), corrected to the canonical tsconfig.tests.json. No test/config changed.",
+    "installed_entrypoints": [
+      {
+        "receipt": "tmp/t0188-native-install/candidate-first/result.json",
+        "sha256": "fa28e93e1b85176784650d61f579a85017916961e955ef58ff8f131c56b02853",
+        "evidence": "Actual public CLI with real native dependencies: two private prior-version3 fixtures, canonical and legacy-dominant, repeat twice; four normal0 calls, exact backup bytes, preserved rows, live version43. Source overlay18 paths verified. Not full installer/updater or online/WAL backup acceptance."
+      },
+      {
+        "receipt": "tmp/t0188-native-install/linux-candidate-first.json",
+        "sha256": "5b8244fbc90a06626a1ac341168d40dca78bbcb258fd03fe5f59a91fb09ca7d0",
+        "evidence": "Actual public CLI with real native dependencies: two private prior-version3 fixtures, canonical and legacy-dominant, repeat twice; four normal0 calls, exact backup bytes, preserved rows, live version43. Source overlay18 paths verified. Not full installer/updater or online/WAL backup acceptance."
+      }
+    ],
+    "census": {
+      "srcLines": 102201,
+      "testLines": 140927,
+      "scriptsLines": 13563,
+      "srcRepeatedWindowLines": 968,
+      "testRepeatedWindowLines": 4794,
+      "routesWithTryCatch": 18,
+      "handRolledReadHooks": 5,
+      "writeHooksWithoutMutation": 0,
+      "repeatedTypeShapeFiles": 2,
+      "oneImporterComponents": 104,
+      "libRootFiles": 6,
+      "commentEssays": 9,
+      "suitesMockingDbInline": 14
+    },
+    "preservation": "Historical SQL/Auth43 unchanged; exactly3owner bindings; all105selectednames preserved, +70newcases in corpus, no existing test removed; targets and T0200 row intact.",
+    "remaining": "Separate clean committed T0188/T0205/T0202 sweeps with intended matcher failures and restoration, final-head source binding, independent R2 acceptance and every exact-head hosted job.",
+    "private_dependencies": {
+      "before": "tmp/t0188-native-install/dependencies-before.json",
+      "after": "tmp/t0188-native-install/dependencies-after.json",
+      "sha256": "a76d872b4ae4442b740e8473b872fba0cbc485f6ec5995d82e0a451d0f11a24d",
+      "files": 35758,
+      "bytes": 570528555,
+      "result": "Identical paths, modes, bytes and symlinks before and after actual Windows public migration entrypoints; private copied pool, Node24.21.0/ABI137."
+    },
+    "materialised_gate_dependencies": {
+      "receipt": "tmp/t0188-gate-pool-base-equivalence.json",
+      "sha256": "6af19282da20a6e09e1cd71dc47534c158d9fb941c4765357f928e717f2a4631",
+      "result": "All 35758 package files,570528555bytes,paths/modes/links match private install pool hash a76d872b4ae4442b740e8473b872fba0cbc485f6ec5995d82e0a451d0f11a24d. Full gate pool additionally has exactly one generated4707byte Playwright Jiti config cache; metadata comparison identifies that exact path and hash comparison excludes only it. No package mutation. No concurrent whole gate during hashing."
+    },
+    "full_gate": {
+      "receipt": "tmp/t0188-full-gate-http-context-20261001/summary.json",
+      "sha256": "d3f6874b9845b930b4870f49c589e8c04fc139afacc52b0f83328666e8c9ae82",
+      "tree": "c98e25f24f855cead528d021856c18d59c06fab916e77cc0ba84765bcacb09f6",
+      "complete": true,
+      "steps": [
+        {
+          "step": "lint",
+          "code": 0
+        },
+        {
+          "step": "tsc",
+          "code": 0
+        },
+        {
+          "step": "jest",
+          "code": 0
+        },
+        {
+          "step": "knip",
+          "code": 0
+        },
+        {
+          "step": "canary",
+          "code": 0
+        },
+        {
+          "step": "build",
+          "code": 0
+        },
+        {
+          "step": "build-purity",
+          "code": 0
+        },
+        {
+          "step": "e2e",
+          "code": 0
+        },
+        {
+          "step": "census",
+          "code": 0
+        },
+        {
+          "step": "census-lines",
+          "code": 0
+        }
+      ],
+      "jest": "7665pass/9existing skips",
+      "browser": "355pass/24existing skips",
+      "purity": "2pass",
+      "independentBinding": "Schrodinger independently recomputed the private checkout stamp and all33 current changed/new paths, LF-normalised. Both task claims and frozen source hashes match. Gate stamp includes detached HEAD/index; final committed source content must be rebound separately."
+    },
+    "personal_walk": {
+      "receipt": "tmp/t0188-green-validation/tmp/t0188-personal-walk-1790893531215/walk.json",
+      "sha256": "10ef2db94d4213884f6f4a46799edab33883b2813b510521c257ed70a007813b",
+      "ownership": "tmp/t0188-green-validation/tmp/t0188-personal-walk-1790893531215/ownership.json",
+      "providerFixture": "tmp/t0188-green-validation/tmp/t0188-personal-walk-1790893531215/memory-fixture.json",
+      "evidence": "Settled-content nine-route walk at1440x900/390x844, opaque HttpOnly sign-in and protected401 after sign-out;18 screenshot hashes, zero page/console errors/overflow, oneh1. Coordinator inspected phoneMissions/desktopSettings screenshots. Own port3998 stopped. Owned empty-state HTTP provider fixture, not real Hindsight or all-pathway acceptance.",
+      "retained": "Two external-provider refusal receipts1790893245478/1790893301021; premature capture1790893388093; network-idle timeout1790893429959 retained. Final readiness uses actual busy/spinner indicators and enabled mission controls; persistent streams make global network-idle inappropriate."
+    },
+    "final_focused": {
+      "receipt": "tmp/t0188-coordinator-green-final-pair-native/summary.json",
+      "sha256": "e81c4ccad2324744ddf32307043d5cd35f4d06b9a09f9ea9dbead50ec2b0c012",
+      "pass": 105,
+      "fail": 0,
+      "skip": 0,
+      "runtimeErrors": 0,
+      "tree": "c98e25f24f855cead528d021856c18d59c06fab916e77cc0ba84765bcacb09f6"
+    },
+    "windows_updater": {
+      "receipt": "tmp/t0188-real-updater-windows-20261001/result.json",
+      "sha256": "75b400b87bdd5ab17219103aa6e1483152f33bf21db502fa5b13252688fe092b",
+      "evidence": "Real public updater, genuine same-sourceTurbopackartifact, exclusively owned localGitdevorigin. Rebuild/schema3 exact backup/schema43/sentinel rows/200401200 pass; own3999server stopped. Installed distribution fixture with verifiedlock/ABI/nativepool and original source-locktimestamp; not fresh dependency installation or online/WAL acceptance."
+    },
+    "linux_updater": {
+      "receipt": "tmp/t0188-linux-real-updater-final.json",
+      "sha256": "85f69c7a04c39374d8a9abb40d930216a15988ced942a49b0c150be8bc2080d6",
+      "evidence": "Actual public update from exclusively owned localGitdevorigin, real local LinuxTurbopackartifact and matching lock/nativepool/Node24.21ABI137. Exactschema3 backup precedes migration, live43/sentinelrows/200401200 pass and ownedserver exits. Networknone/inittrue/nohostmounts.",
+      "retained": "tmp/t0188-linux-real-updater-first.json reports immediate post-signal ownedStoppedfalse; bounded cleanup wait added only to ignored QA launcher, then repeated actualupdate with fresh data. Not fresh npm installation or online/WAL snapshot acceptance."
+    }
+  },
+  "compatibility_retirement": "Operator explicitly confirmed 2026-10-01: keep compatibility through v1.0.0 and defer T-0200 retirement. Q-033 records this without changing the protected set or whole T-0200 row. No early removal authority is inferred.",
+  "prerequisite": "T-0205 secure status-capture implementation authorised by independent R2 reviewer after frozen red19/20; final 74 focused cases pass Windows/Linux with one native macOS skip. No frozen bounds changed. Four previous gate failures retained. Combined full gate, installed/visual checks, separate committed sweeps and final acceptance remain."
 }

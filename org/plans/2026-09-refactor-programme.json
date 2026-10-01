@@ -1,7 +1,7 @@
 {
   "sourceRevision": "1d6b23d1745eac47918ac7ff70fc2a950b783304",
-  "approval": "pending-operator-approval",
-  "releaseGate": "Q-011: the operator cuts rc.1 and v1.0.0 after prerelease security and defect repair, with migration and Docker acceptance on a copy of a real install; structural work starts only after that release and separate approval of this plan.",
+  "approval": "operator-approved-2026-09-28",
+  "releaseGate": "Q-032 supersedes Q-011 release-first sequencing for approved T-0188 through T-0199 consolidation before release. Q-011 item-specific compatibility promises remain: T-0200 retirement is first post-1.0 only. The operator owns rc.1/v1.0.0 release, real-install acceptance, PR #157 merge, tags and publication.",
   "decisionAuthority": [
     "Q-009",
     "Q-010",
@@ -27,7 +27,9 @@
     "ADR-0011",
     "ADR-0012",
     "ADR-0013",
-    "ADR-0014"
+    "ADR-0014",
+    "Q-032",
+    "Q-033"
   ],
   "evidence": [
     "org/reviews/2026-09-t0164-refactor-recon.md",
@@ -271,26 +273,62 @@
     {
       "id": "T-0188",
       "name": "Converge migration and table drivers",
-      "phase": "post-v1-structural",
+      "phase": "prerelease-structural",
       "tierProposed": "R2",
       "claims": [
-        "src/lib/db/migrations/**",
-        "src/lib/db/table-driver/**",
-        "src/lib/db/upgrade.ts",
+        "src/lib/db/index.ts",
+        "src/lib/db/sql-migrations.ts",
+        "src/lib/db/apply-sql.ts",
         "src/lib/db/apply-benchmark-config-migration.ts",
-        "scripts/data/**",
-        "tests/unit/migration-*.test.ts"
+        "src/lib/db/apply-bench-gateways-migration.ts",
+        "src/lib/db/apply-mission-phases-migration.ts",
+        "src/lib/db/apply-retire-mission-phases-migration.ts",
+        "src/lib/db/apply-composer-migration.ts",
+        "src/lib/db/apply-memory-providers-migration.ts",
+        "src/lib/db/apply-research-options-migration.ts",
+        "src/lib/db/apply-models-api-style-migration.ts",
+        "src/lib/db/apply-research-composer-link-migration.ts",
+        "src/lib/db/apply-composer-group-link-migration.ts",
+        "src/lib/db/apply-frameworks-migration.ts",
+        "src/lib/db/apply-composer-rejected-migration.ts",
+        "src/lib/db/apply-composer-node-cancelled-migration.ts",
+        "src/lib/db/apply-table-rebuild.ts",
+        "tests/unit/migration-t0188-wrappers.test.ts",
+        "tests/unit/migration-t0188-behaviour.test.ts",
+        "tests/unit/migration-t0188-update-backup-order.test.ts",
+        "tests/unit/t0165-plan-contract.test.ts",
+        "tests/unit/run-migrations-upgrade.integration.test.ts",
+        "tests/unit/u15-one-driver-for-sql-migrations.test.ts",
+        "tests/fixtures/mutants/T-0188.json",
+        "org/reviews/2026-10-t0188-oracle-amendment.md",
+        "org/reviews/2026-10-t0188-migration-verification.md",
+        "org/briefs/T-0188-oracle.md",
+        "org/briefs/T-0188-review.md",
+        "org/tasks/T-0188.json",
+        "org/claims.json",
+        "org/plans/2026-09-refactor-programme.json",
+        "org/plans/2026-09-refactor-programme.md",
+        "org/plans/2026-09-refactor-ownership.mjs",
+        "org/plans/2026-09-refactor-ownership.json",
+        "org/HANDOVER.md",
+        "org/TASKS.md",
+        "org/STATE.md",
+        "scripts/tooling/line-census.baseline.json",
+        "docs/running/migration.md",
+        "scripts/tooling/migrate-db.ts",
+        "docs/manifest.json"
       ],
       "dependsOn": [
         "T-0187",
-        "operator-v1-release"
+        "release-verification-repairs-complete"
       ],
       "authority": [
         "Q-011",
         "Q-014",
         "lib-data-01",
         "lib-data-02",
-        "D1"
+        "D1",
+        "Q-032"
       ],
       "invariants": [
         "Fresh and old supported databases converge in one pass or fail loudly.",
@@ -302,7 +340,7 @@
     {
       "id": "T-0189",
       "name": "Centralise data parsing and transactions",
-      "phase": "post-v1-structural",
+      "phase": "prerelease-structural",
       "tierProposed": "R2",
       "claims": [
         "src/lib/db/**",
@@ -316,7 +354,8 @@
         "Q-014",
         "lib-data-03",
         "lib-data-10",
-        "T-0164 SQLite column inventory"
+        "T-0164 SQLite column inventory",
+        "Q-032"
       ],
       "invariants": [
         "Column readers, writers and recovery are traced before any schema or table removal.",
@@ -328,7 +367,7 @@
     {
       "id": "T-0190",
       "name": "Converge client reads and write ownership",
-      "phase": "post-v1-structural",
+      "phase": "prerelease-structural",
       "tierProposed": "R2",
       "claims": [
         "src/hooks/**",
@@ -345,7 +384,8 @@
         "hooks-03",
         "hooks-07",
         "hooks-08",
-        "app-02"
+        "app-02",
+        "Q-032"
       ],
       "invariants": [
         "Missions board errors remain visible in place.",
@@ -357,7 +397,7 @@
     {
       "id": "T-0191",
       "name": "Unify proven component primitives and names",
-      "phase": "post-v1-structural",
+      "phase": "prerelease-structural",
       "tierProposed": "R2",
       "claims": [
         "src/components/ui/**",
@@ -376,7 +416,8 @@
         "components-03",
         "components-04",
         "components-05",
-        "components-08"
+        "components-08",
+        "Q-032"
       ],
       "invariants": [
         "Select and Picker remain distinct.",
@@ -389,7 +430,7 @@
     {
       "id": "T-0192",
       "name": "Converge API route envelopes and validation",
-      "phase": "post-v1-structural",
+      "phase": "prerelease-structural",
       "tierProposed": "R2",
       "claims": [
         "src/app/api/**",
@@ -407,7 +448,8 @@
         "app-04",
         "cross-cutting-01",
         "cross-cutting-02",
-        "app-01a-d/h"
+        "app-01a-d/h",
+        "Q-032"
       ],
       "invariants": [
         "Every shipped URL and method remains reachable.",
@@ -419,7 +461,7 @@
     {
       "id": "T-0193",
       "name": "Extract large page hooks without losing visible state",
-      "phase": "post-v1-structural",
+      "phase": "prerelease-structural",
       "tierProposed": "R2",
       "claims": [
         "src/app/work/composer/**",
@@ -436,7 +478,8 @@
         "app-02",
         "hooks-07",
         "hooks-08",
-        "T-0164 44-state route walk"
+        "T-0164 44-state route walk",
+        "Q-032"
       ],
       "invariants": [
         "URL state, deep links, errors, dropdowns, inspector and dialogs survive the hook move.",
@@ -448,7 +491,7 @@
     {
       "id": "T-0194",
       "name": "Align library domains and Hermes ownership",
-      "phase": "post-v1-structural",
+      "phase": "prerelease-structural",
       "tierProposed": "R2",
       "claims": [
         "src/lib/**",
@@ -463,7 +506,8 @@
         "Q-016",
         "lib-domains-01",
         "lib-domains-02",
-        "lib-domains-03"
+        "lib-domains-03",
+        "Q-032"
       ],
       "invariants": [
         "Laboratory changes wait for an ADR-0005-compatible design.",
@@ -475,7 +519,7 @@
     {
       "id": "T-0195",
       "name": "Simplify test harnesses without losing questions",
-      "phase": "post-v1-structural",
+      "phase": "prerelease-structural",
       "tierProposed": "R2",
       "claims": [
         "tests/helpers/**",
@@ -492,7 +536,8 @@
         "tests-06",
         "tests-07",
         "tests-09",
-        "tests-10"
+        "tests-10",
+        "Q-032"
       ],
       "invariants": [
         "Every moved test retains its name and assertion intent; coverage floors never fall.",
@@ -504,7 +549,7 @@
     {
       "id": "T-0196",
       "name": "Consolidate tooling and CI paths",
-      "phase": "post-v1-structural",
+      "phase": "prerelease-structural",
       "tierProposed": "R2",
       "claims": [
         "scripts/**",
@@ -526,7 +571,8 @@
         "tooling-05",
         "tooling-16",
         "tooling-19",
-        "tooling-22"
+        "tooling-22",
+        "Q-032"
       ],
       "invariants": [
         "Windows Git Bash development remains supported.",
@@ -539,7 +585,7 @@
     {
       "id": "T-0197",
       "name": "Repair running and root documentation",
-      "phase": "post-v1-structural",
+      "phase": "prerelease-structural",
       "tierProposed": "R1",
       "claims": [
         "docs/**",
@@ -556,7 +602,8 @@
         "docs-01",
         "docs-02",
         "docs-04",
-        "docs-08"
+        "docs-08",
+        "Q-032"
       ],
       "invariants": [
         "Canonical running, migration and security commands remain correct.",
@@ -568,7 +615,7 @@
     {
       "id": "T-0198",
       "name": "Consolidate live organisation guidance",
-      "phase": "post-v1-structural",
+      "phase": "prerelease-structural",
       "tierProposed": "R2",
       "claims": [
         "org/HANDOVER.md",
@@ -585,7 +632,8 @@
         "Q-015",
         "org-04",
         "org-09",
-        "ADR-0011"
+        "ADR-0011",
+        "Q-032"
       ],
       "invariants": [
         "Protected set, historical tasks, append-only ledgers and derived views are untouched without their specific authority.",
@@ -597,7 +645,7 @@
     {
       "id": "T-0199",
       "name": "Remove ruled dead internal surfaces",
-      "phase": "post-v1-removal",
+      "phase": "prerelease-removal",
       "tierProposed": "R2",
       "claims": [
         "package.json",
@@ -622,15 +670,15 @@
         "tests/fixtures/dead-surface-*.json"
       ],
       "dependsOn": [
-        "T-0198",
-        "operator-v1-release"
+        "T-0198"
       ],
       "authority": [
         "Q-011",
         "Q-013",
         "tooling-02",
         "tooling-12",
-        "lib-data-05"
+        "lib-data-05",
+        "Q-032"
       ],
       "invariants": [
         "Only individually ruled dead and uncalled internals are removed.",
@@ -769,5 +817,98 @@
     "dispositionFile": "org/plans/2026-09-refactor-final-dispositions.json",
     "oracle": "scripts/tooling/refactor-closing-oracle.mjs",
     "missPolicy": "Report every miss with the committed baseline, target, final number and written reason; aggregate improvement cannot conceal any failed row."
+  },
+  "externalPrerequisites": {
+    "release-verification-repairs-complete": {
+      "requiresAll": {
+        "T-0202": {
+          "independentAcceptance": "required",
+          "closure": "required",
+          "localFullGate": {
+            "requiredResult": "pass"
+          },
+          "sweep": {
+            "committed": true,
+            "clean": true
+          },
+          "httpMatrix": {
+            "enabled": true,
+            "cases": 15,
+            "requiredResult": "all-pass"
+          }
+        },
+        "T-0203": {
+          "independentAcceptance": "required",
+          "closure": "required",
+          "localFullGate": {
+            "revision": "current-head",
+            "requiredResult": "pass"
+          },
+          "sweep": {
+            "committed": true,
+            "clean": true
+          },
+          "hostedJobs": {
+            "revision": "exact-head",
+            "events": [
+              "push",
+              "pull_request"
+            ],
+            "selection": "every-required-job",
+            "requiredResult": "all-pass"
+          },
+          "nativeMacHttp": {
+            "execution": "native-macos",
+            "enabled": true,
+            "cases": 21,
+            "requiredResult": "all-pass"
+          }
+        },
+        "T-0204": {
+          "revision": "latest-repair-head",
+          "independentAcceptance": {
+            "tier": "R2",
+            "requiredResult": "accepted"
+          },
+          "closure": "required",
+          "localFullGate": {
+            "scope": "complete",
+            "tree": "unchanged",
+            "requiredResult": "pass"
+          },
+          "sweep": {
+            "committed": true,
+            "clean": true
+          },
+          "scannerAcceptance": {
+            "execution": "actual",
+            "imageIdentity": "digest-pinned",
+            "cleanScan": {
+              "requiredResult": "accepted"
+            },
+            "plantedScanner": {
+              "deterministic": true,
+              "requiredResult": "accepted"
+            }
+          },
+          "frozenT0203Checks": {
+            "selection": "all",
+            "requiredResult": "all-pass"
+          },
+          "repairedCanary": {
+            "requiredResult": "pass"
+          },
+          "hostedJobs": {
+            "revision": "exact-head",
+            "events": [
+              "push",
+              "pull_request"
+            ],
+            "selection": "every-required-job",
+            "requiredResult": "all-pass"
+          }
+        }
+      }
+    }
   }
 }

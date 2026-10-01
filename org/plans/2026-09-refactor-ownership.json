@@ -407,7 +407,7 @@
     {
       "id": "lib-data-01",
       "outcome": "planned",
-      "task": "T-0189",
+      "task": "T-0188",
       "reason": "Reverify this T-0164 source-level observation and its item ruling before any edit: Wrappers remain. Folding must retain the 003/004 gate invariant and account for test imports."
     },
     {
@@ -425,7 +425,7 @@
     {
       "id": "lib-data-02",
       "outcome": "planned",
-      "task": "T-0189",
+      "task": "T-0188",
       "reason": "Reverify this T-0164 source-level observation and its item ruling before any edit: Migration 037 still reports 035. Driver-based saving depends on 01."
     },
     {
@@ -1976,7 +1976,7 @@
       "id": "lib-data-01",
       "parentId": "lib-data-01",
       "outcome": "planned",
-      "task": "T-0189",
+      "task": "T-0188",
       "reason": "org/reviews/2026-09-decision-register.md:3096; Reverify the item-specific free-band disposition against its accepted decision and parent qualification."
     },
     {

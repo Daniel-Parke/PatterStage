@@ -1,24 +1,11 @@
-// ═══════════════════════════════════════════════════════════════
-// sql-migrations — the migrations that are one .sql file each
-//
-// Seventeen of the chain's thirty-eight steps were the identical stanza in
-// their own file: read the version, return if at or past N, exec one .sql
-// file, set N. Twenty-eight to forty lines each to say `[N, "NNN_name.sql"]`.
-// They are that table now, and one function (T-0129). The twenty-one steps
-// that do real work (rebuilds behind shape guards, canonicalisations, the
-// legacy column repair) keep their own files, because their bodies ARE the
-// migration.
-//
-// The names survive below as one-line exports, so runMigrations reads as it
-// did and the tests that call applyArtifactsMigration(db, dir) still can, and
-// the version constants the tests read survive beside them.
-// ═══════════════════════════════════════════════════════════════
+// Ordered SQL migrations and their historical guarded additions or seeds.
+// Rebuilds, canonicalisation and live-shape repairs retain specialised drivers.
 
 import type Database from "better-sqlite3";
 import { join } from "path";
 
 import { getSchemaVersion, setSchemaVersion } from "@/lib/db-schema";
-import { execMigrationFile } from "./apply-sql";
+import { execAdditiveMigrationFile, execIdempotent, execMigrationFile } from "./apply-sql";
 
 /** `[schema version it takes the database to, the file that does it]`, ascending. */
 export const SQL_MIGRATIONS: ReadonlyArray<readonly [version: number, file: string]> = [
@@ -26,8 +13,19 @@ export const SQL_MIGRATIONS: ReadonlyArray<readonly [version: number, file: stri
   [12, "012_analytics_events.sql"],
   [13, "013_chat.sql"],
   [14, "014_benchmarks.sql"],
+  [15, "015_benchmark_config.sql"],
   [16, "016_benchmark_catalog.sql"],
+  [17, "017_bench_gateways.sql"],
+  [18, "018_mission_phases.sql"],
   [19, "019_deep_research.sql"],
+  [20, "020_retire_mission_phases.sql"],
+  [21, "021_composer.sql"],
+  [22, "022_memory_providers.sql"],
+  [23, "023_research_options.sql"],
+  [24, "024_models_api_style.sql"],
+  [25, "025_research_composer_link.sql"],
+  [26, "026_composer_group_link.sql"],
+  [27, "027_frameworks.sql"],
   [28, "028_artifacts.sql"],
   [29, "029_recroom_library.sql"],
   [31, "031_agent_progression.sql"],
@@ -42,6 +40,55 @@ export const SQL_MIGRATIONS: ReadonlyArray<readonly [version: number, file: stri
   [42, "042_fallback_identity.sql"],
 ];
 
+function addColumns(database: Database.Database, table: string, declarations: readonly string[]): void {
+  const columns = new Set((database.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[]).map((row) => row.name));
+  for (const declaration of declarations) {
+    if (!columns.has(declaration.split(" ", 1)[0])) database.exec(`ALTER TABLE ${table} ADD COLUMN ${declaration}`);
+  }
+}
+
+function seedEmptyRegistry(
+  database: Database.Database, table: "memory_providers" | "frameworks", labelColumn: "label" | "name",
+  type: string, label: string, config: Record<string, unknown>,
+): void {
+  const count = (database.prepare(`SELECT COUNT(*) AS c FROM ${table}`).get() as { c: number }).c;
+  if (count === 0) {
+    database.prepare(`INSERT INTO ${table} (type, ${labelColumn}, enabled, is_active, config_json) VALUES (?, ?, 1, 1, ?)`)
+      .run(type, label, JSON.stringify(config));
+  }
+}
+
+const afterSql: Partial<Record<number, (database: Database.Database) => void>> = {
+  17: (database) => addColumns(database, "benchmark_item_results", ["metrics_json TEXT"]),
+  18: (database) => {
+    addColumns(database, "missions", ["version TEXT NOT NULL DEFAULT 'v1'", "current_phase_id TEXT"]);
+    addColumns(database, "runs", ["phase_action_id TEXT"]);
+  },
+  20: (database) => {
+    // Historical best-effort drops retain compatibility with older SQLite engines.
+    for (const [table, column] of [["missions", "version"], ["missions", "current_phase_id"], ["runs", "phase_action_id"]]) {
+      try {
+        execIdempotent(database, `ALTER TABLE ${table} DROP COLUMN ${column}`);
+      } catch (error) {
+        if (!/near "DROP": syntax error/i.test(String(error))) throw error;
+      }
+    }
+  },
+  21: (database) => addColumns(database, "runs", ["composer_node_run_id TEXT"]),
+  22: (database) => seedEmptyRegistry(database, "memory_providers", "label", "hindsight", "Hindsight", { host: "127.0.0.1", port: 9177, bank: "hermes" }),
+  23: (database) => addColumns(database, "research_runs", ["config_json TEXT"]),
+  24: (database) => {
+    addColumns(database, "models", ["api_style TEXT"]);
+    database.exec(`UPDATE models SET api_style = CASE
+      WHEN provider = 'anthropic' THEN 'anthropic'
+      WHEN base_url LIKE '%/anthropic' OR base_url LIKE '%/anthropic/%' THEN 'anthropic'
+      ELSE 'openai' END WHERE api_style IS NULL`);
+  },
+  25: (database) => addColumns(database, "research_runs", ["composer_node_run_id TEXT"]),
+  26: (database) => addColumns(database, "composer_runs", ["parent_node_run_id TEXT"]),
+  27: (database) => seedEmptyRegistry(database, "frameworks", "name", "hermes", "Hermes", { home: null }),
+};
+
 /**
  * Apply the .sql migration that takes the schema to `version`, unless the
  * database is already there or past it. Returns the version the database is
@@ -53,7 +100,10 @@ export function applySqlMigration(database: Database.Database, migrationsDir: st
   if (!entry) throw new Error(`sql-migrations: no migration takes the schema to version ${version}`);
   const current = getSchemaVersion(database);
   if (current >= version) return current;
-  execMigrationFile(database, join(migrationsDir, entry[1]));
+  const path = join(migrationsDir, entry[1]);
+  if (version === 15) execAdditiveMigrationFile(database, path);
+  else execMigrationFile(database, path);
+  afterSql[version]?.(database);
   setSchemaVersion(database, version);
   return version;
 }
@@ -65,8 +115,19 @@ export const applyDropGameTablesMigration = at(11);
 export const applyAnalyticsEventsMigration = at(12);
 export const applyChatMigration = at(13);
 export const applyBenchmarksMigration = at(14);
+export const applyBenchmarkConfigMigration = at(15);
 export const applyBenchmarkCatalogMigration = at(16);
+export const applyBenchGatewaysMigration = at(17);
+export const applyMissionPhasesMigration = at(18);
 export const applyDeepResearchMigration = at(19);
+export const applyRetireMissionPhasesMigration = at(20);
+export const applyComposerMigration = at(21);
+export const applyMemoryProvidersMigration = at(22);
+export const applyResearchOptionsMigration = at(23);
+export const applyModelsApiStyleMigration = at(24);
+export const applyResearchComposerLinkMigration = at(25);
+export const applyComposerGroupLinkMigration = at(26);
+export const applyFrameworksMigration = at(27);
 export const applyArtifactsMigration = at(28);
 export const applyRecroomLibraryMigration = at(29);
 export const applyAgentProgressionMigration = at(31);

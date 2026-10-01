@@ -9,7 +9,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import type Database from "better-sqlite3";
-import { existsSync, readFileSync } from "fs";
+import { readFileSync } from "fs";
 
 /** Errors that mean "already applied", the idempotency the appliers need; anything else is genuine. */
 export function isAlreadyAppliedError(error: unknown): boolean {
@@ -37,11 +37,21 @@ export function execIdempotent(database: Database.Database, sql: string): void {
 }
 
 /**
- * Execute a migration file if present. A MISSING file is not an error:
- * `prebuild-db.mjs` ships a database with the early migrations applied and the
- * .sql files are not always deployed beside it. Present and broken IS an error.
+ * Execute a required pending migration. Already-applied callers return before
+ * reading the file; a missing pending file must never complete its version.
  */
 export function execMigrationFile(database: Database.Database, path: string): void {
-  if (!existsSync(path)) return;
   execIdempotent(database, readFileSync(path, "utf-8"));
+}
+
+/** Historical 015 contains only additive statements; finish a partial apply. */
+export function execAdditiveMigrationFile(database: Database.Database, path: string): void {
+  const sql = readFileSync(path, "utf-8").replace(/--[^\n]*/g, "");
+  for (const statement of sql.split(";").map((part) => part.trim()).filter(Boolean)) {
+    try {
+      database.exec(statement);
+    } catch (error) {
+      if (!String(error).toLowerCase().includes("duplicate column name")) throw error;
+    }
+  }
 }

@@ -9,9 +9,10 @@ status: approved
 
 **Approved by the operator on 28 September 2026 for prerelease execution.**
 This plan completes T-0165's planning prerequisite; approval does not authorise
-PR #157's merge or a release. Q-011 still requires
-the operator's rc.1 and v1.0.0 release before structural work. T-0180 to
-T-0187 are proposed prerelease security, defect and compatibility batches. If a red-first
+PR #157's merge or a release. Q-032 permits approved T-0188 to T-0199
+consolidation before release. Q-011's item-specific post-1.0 compatibility
+retirement date remains. T-0180 to T-0187 are prerelease security, defect and
+compatibility batches. If a red-first
 oracle refutes a source-level candidate, its batch records the refutation and
 does not manufacture a fix.
 
@@ -45,8 +46,8 @@ The decisions binding this programme are:
    ten-step gate by exit code, an unchanged tree, at most two writing lanes
    with claims, and an independent R2 review. Public contract covers routes,
    npm commands, environment variables, config keys and documented exports.
-2. **Q-011:** Ship rc.1 and v1.0.0 after security and build lifecycle repair,
-   before structural cleanup. Legacy aliases and 52 redirects remain through
+2. **Q-011, amended by Q-032:** Finish the approved consolidation before
+   release. Legacy aliases and 52 redirects remain through
    1.0; retire them together in the first post-1.0 release. The operator owns
    the real-install migration rehearsal, Docker matrix, tag and merge.
 3. **Q-012, Q-019 to Q-024 and ADR-0012 to ADR-0014:** Preserve opaque,
@@ -164,8 +165,12 @@ alias, written path, joined path segments, relative import and regex literal.
 The register supplies exact file claims, rollback and full Verify text. The
 following ordered rows show the gate each batch must meet. The chain keeps
 each batch independently revertible and waits for hosted CI between pushes.
-T-0188 and every later structural batch also depend on the operator's v1.0.0
-release. T-0200 is the first post-1.0 compatibility-retirement unit.
+T-0188 depends on T-0187 and the independently accepted release-verification
+repairs T-0202, T-0203 and T-0204. Their machine-readable obligations retain
+the complete local gates, committed clean sweeps, enabled HTTP matrices,
+actual pinned scanner controls and every required exact-head hosted job.
+The failed historical closure scan stays recorded. Q-032 permits T-0188 to
+T-0199 before release. T-0200 remains the first post-1.0 retirement unit.
 
 | Task | Scope and dependency | Exact acceptance focus |
 | --- | --- | --- |
@@ -177,8 +182,8 @@ release. T-0200 is the first post-1.0 compatibility-retirement unit.
 | T-0185 | Mission prompt, model input and older links | CDATA round-trips, malformed modelId returns 4xx without write, and mission 201 opens by deep link. |
 | T-0186 | Hindsight rederive safety and Story Weaver failed saves | The ruled destructive script cannot run live by default; failed saves leave state unsaved and show feedback. |
 | T-0187 | Legacy-name warning and individually ruled prerelease shim retirement | Supported old names still boot with one token-free warning; the five dev-only hardware shims and refused EOS compiler retire with their item-specific evidence. |
-| **Operator gate** | rc.1 and v1.0.0 after prerelease repair and real-install rehearsal | Operator checks release checklist, CI, migration backup and Docker matrix; no agent tags or merges. |
-| T-0188 | Migration and table driver, after release | Fresh, old and damaged v15 fixtures converge or fail loudly without version advancement or data loss. |
+| **Verification prerequisite** | Accepted T-0202, T-0203 and T-0204 repairs | Complete gates, clean committed sweeps, actual scanner acceptance and all required exact-head hosted jobs pass. |
+| T-0188 | Migration and table driver, before release under Q-032 | Fresh, old and damaged v15 fixtures converge or fail loudly without version advancement or data loss. |
 | T-0189 | Data parsing, transactions and column traces | Malformed JSON and injected failure do not create partial rows; proposed column changes have reader/writer/migration proof. |
 | T-0190 | Client reads, writes and composition roots | Missions uses cache and shows read errors; mutation invalidation and read-only refusal survive. |
 | T-0191 | Components, accessibility and primitives | Select/Picker stay distinct; named controls and desktop/phone states pass; folds save net lines. |
@@ -189,9 +194,14 @@ release. T-0200 is the first post-1.0 compatibility-retirement unit.
 | T-0196 | Tooling and CI consolidation | Both platforms, Docker, install/update and planted lint defects pass; Compose volume names keep existing data. |
 | T-0197 | Running, root and CHANGELOG documentation | Canonical commands, manifest, links and live-doc scope pass; protected token-rule edit remains ADR-gated. |
 | T-0198 | Live organisation guidance | Claims, task rendering and protected-write refusal pass; protected/history/generated scopes remain separate. |
-| T-0199 | Ruled dead internals, after release | Every removed path has a caller inventory and item ruling; the dead benchmark npm command and unreachable baseline rebuild leave while old backup listings, routes and data remain. |
+| T-0199 | Ruled dead internals, before release under Q-032 | Every removed path has a caller inventory and item ruling; the dead benchmark npm command and unreachable baseline rebuild leave while old backup listings, routes and data remain. |
 | T-0200 | Legacy alias and redirect retirement, R3 | 1.0 keeps supported aliases; first post-1.0 candidate retires them together with boot tripwire, all claimed readers and migration preservation. |
 | T-0201 | Row-by-row close | Eight fixed targets, every miss and final 265 finding, 163 split-decision and 285 atom dispositions are reported; all CI jobs green. |
+
+The operator's rc.1/v1.0.0 gate follows consolidation and the real-install
+rehearsal. It retains the release checklist, CI, migration backup and Docker
+matrix. Agents do not merge, tag or publish. Q-033 confirms that T-0200
+retirement is deferred through v1.0.0; no early removal follows from Q-032.
 
 ## Deliberate non-actions and unresolved proof
 

@@ -244,3 +244,10 @@ are recorded in `org/reviews/2026-09-refactor-addendum.md`.
   Q-011 answer is preserved as history; this answer supersedes its release-first
   sequencing requirement. Item-specific compatibility retirement dates require
   their own explicit disposition and are not silently inferred from sequence.
+
+- Q-033 (compatibility retirement): does Q-032 also bring T-0200 legacy
+  configuration aliases, signing headers and redirect retirement before
+  v1.0.0? Answer, from the operator on 2026-10-01: keep compatibility through
+  v1.0.0 and defer T-0200 retirement. Q-032 permits the other approved
+  consolidation before release. The separate item-specific retirement
+  promise remains; T-0200 is not silently marked implemented or removed.

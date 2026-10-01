@@ -1,10 +1,10 @@
 {
   "measuredAt": "2026-10-01",
   "counts": {
-    "srcLines": 102681,
-    "testLines": 139889,
-    "scriptsLines": 13566,
-    "srcRepeatedWindowLines": 1010,
+    "srcLines": 102201,
+    "testLines": 140927,
+    "scriptsLines": 13563,
+    "srcRepeatedWindowLines": 968,
     "testRepeatedWindowLines": 4794,
     "routesWithTryCatch": 18,
     "handRolledReadHooks": 5,
@@ -1080,6 +1080,16 @@
       "measuredAt": "2026-10-01",
       "rise": "testLines rose from 139517 to 139889",
       "reason": "T-0204: 359 independently authored CLI oracle and calibrated preload lines plus 13 canary repair lines preserve redaction, real Git witnesses, failure classification and cleanup. Repeated test windows remain 4794 below the unchanged 4800 ceiling; all fixed programme targets remain unchanged."
+    },
+    {
+      "measuredAt": "2026-10-01",
+      "rise": "testLines rose from 139889 to 140730",
+      "reason": "T-0188: 70 independently authored oracle cases and preserved-name Q-015/witness amendments add 841 test lines; migration implementation removes 480 source lines and 42 repeated source-window lines. Test repeated-window ceiling4800 and all historical/programme targets remain unchanged."
+    },
+    {
+      "measuredAt": "2026-10-01",
+      "rise": "testLines rose from 140730 to 140927",
+      "reason": "T-0205: +197 measured TypeScript test lines add the independent20-case native HTTP call-context oracle; all prior names/assertions and repeated-window ceiling4800 remain. The Python observer and Python harness repair lie outside this existing measure scope and remain separately inventoried. Fixed programme and historical targets do not change."
     }
   ]
 }

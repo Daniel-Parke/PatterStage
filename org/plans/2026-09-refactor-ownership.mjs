@@ -16,6 +16,7 @@ const deliberateKeep = new Set([
   "critic-02", "critic-15",
 ]);
 const specific = new Map([
+  ["lib-data-01", "T-0188"], ["lib-data-02", "T-0188"],
   ["critic-01", "T-0181"], ["critic-06", "T-0196"],
   ["critic-14", "T-0181"], ["tooling-29", "T-0180"],
   ["app-15", "T-0200"], ["docs-04", "T-0200"],

@@ -49,21 +49,8 @@
       "session_id": "2026-10-01-migration-driver-consolidation",
       "acquired": "2026-10-01T18:39:49Z",
       "harness_task_id": "2026-10-01-migration-driver-consolidation"
-    },
-    {
-      "task_id": "T-0205",
-      "host": "NUCBOX_M6ULTRA",
-      "lane_id": "T-0205-oracle",
-      "session_id": "T-0205-oracle",
-      "acquired": "2026-10-01T21:12:30.603Z",
-      "expires": "2026-10-02T18:45:00Z",
-      "path_claims": [
-        "tests/unit/release-install-http-context.test.ts",
-        "tests/helpers/release-install-http-context-probe.py",
-        "org/reviews/2026-10-t0205-http-context-verification.md"
-      ]
     }
   ],
   "version": 1,
-  "note": "Two writers maximum: coordinator T0188/T0205 records and pending implementation; fresh T0205 ORACLE owns only three new oracle files. Reviewers and prototype sidecars remain read-only."
+  "note": "Independent ORACLE writes ceased; coordinator only. Frozen authored files require a separately authorised amendment."
 }

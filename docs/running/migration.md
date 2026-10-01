@@ -72,10 +72,10 @@ It moves the repo + data dir, fixes `.env.local` paths, renames the DB, and prin
 
 ## Adding a schema change: the going-forward rule
 
-A schema change is **a new numbered `.sql` plus a version-gated applier that execs it**, appended to the hand-wired order. Three steps, in one commit:
+A schema change is **a new numbered `.sql` plus a version-gated driver**, appended to the explicit order. Fresh databases now climb from the baseline to schema 43 in one `runMigrations()` call. Three steps, in one commit:
 
 1. **Add the `.sql`.** A new file in `src/lib/db/migrations/`, taking the next free number.
-2. **Add the applier.** A new `src/lib/db/apply-*.ts` that reads `getSchemaVersion`, returns early when the database is already at or past its gate, execs its `.sql` through `execMigrationFile` (`src/lib/db/apply-sql.ts`), and calls `setSchemaVersion` only after that succeeds.
+2. **Add the driver entry.** Ordinary SQL migrations use `SQL_MIGRATIONS` in `src/lib/db/sql-migrations.ts`. It checks the version, requires the pending file, executes it and any guarded additions or seeds, then records completion. Preserve a named wrapper when callers need it. A specialised rebuild or data conversion needs its own driver and behavioural tests.
 3. **Wire it and raise the head.** Append one call to the end of `runMigrations()` and bump `MIGRATION_HEAD_SCHEMA_VERSION` in `src/lib/db-schema.ts` to match the new gate.
 
 The rules around it are not negotiable:
@@ -85,6 +85,14 @@ The rules around it are not negotiable:
 - **Shipped migrations are immutable.** Once a numbered `.sql` has been released it is history and is never edited, not even when it created a column that has since been renamed. `030` renames `agent_root.hermes_md`, and `001` and `002` still create `hermes_md`, deliberately. Migration history is a record of what happened, not a description of the current schema.
 - **`schema_version` strictly increases.** A gate is claimed once, never reused and never lowered. A mistake in a shipped migration is corrected by a new, higher-numbered migration.
 - **Bump the version last.** `execMigrationFile` swallows only already-applied errors (`duplicate column name`, `already exists`) and rethrows everything else, so a genuine failure leaves the version un-bumped and the boot fails loudly. Setting the version before the work, or wrapping the work in a blanket `catch`, records a half-migrated database as done and there is no retry.
+
+The SQL table driver refuses a missing pending file. An ordinary completed
+wrapper returns before reading its old file. Auth migration 043 intentionally
+requires its file and validates the live session storage even at the head.
+Migration 015 runs every historical additive statement, ignores only duplicate
+columns and refuses missing required tables. Rebuilds 035 and 037 check exact
+column sets before destructive work, commit the rebuild and version atomically,
+and restore the foreign-key setting supplied by the caller on success or failure.
 
 ### Two tables refuse to be written twice
 
@@ -118,16 +126,15 @@ Attended dispatch is never affected by any of this, at any setting. Clicking dis
 
 ### Historical exceptions
 
-Of the 30 appliers, 23 exec their numbered `.sql` through `execMigrationFile`. The other seven do not. They are **grandfathered, not a precedent**, and they are worth naming precisely, because calling all seven "embedded SQL" is less accurate than what is actually on disk.
+The chain has 39 named appliers. Twenty-nine use the SQL table driver; ten retain specialised logic. The latter include early upgrades, run/schedule repairs, row canonicalisation, column-shape repairs, the two Composer rebuilds and Auth43 validation. The historical exceptions below remain **grandfathered, not a precedent**.
 
-**Four read the numbered `.sql` directly with `readFileSync`.** They predate `apply-sql.ts` and its fail-loudly contract:
+**Three early upgrades read numbered `.sql` directly.** They predate the shared driver:
 
 | Applier | Reads | Note |
 |---|---|---|
 | `apply-profiles-tools-upgrade.ts` | `002_profiles_tools_parity.sql` | Reaches the file by scanning the migrations directory, not by naming it. Gates at v3. |
 | `apply-mission-repeat-migration.ts` | `003_mission_infinite_repeat.sql` | Gates at v4. |
 | `apply-mission-queue-migration.ts` | `004_mission_queue.sql` | Gates at v5. |
-| `apply-benchmark-config-migration.ts` | `015_benchmark_config.sql` | Gates at v15. |
 
 **Three do the work in TypeScript instead.** Only one of the three has no `.sql` at all, so do not read this table as "these have no file":
 
