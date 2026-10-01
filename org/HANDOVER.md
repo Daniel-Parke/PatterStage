@@ -47,17 +47,22 @@ real-GNU delayed-TERM regression and portable/native amendment are committed
 red at `a6d4a0f7`: 27 portable passes, one intended preparation failure,
 no skips and no runtime errors. All 29 identities and original ledger bytes
 survive. The source correction changes only the ordinary expiry kill grace
-from 0.2 to 2 seconds. Full-gate, clean-tree sweep and exact-head native macOS
-acceptance remain open. Neither the isolated pass nor the scheduling
-explanation waives a complete gate.
+from 0.2 to 2 seconds. Implementation `039dce24` now passes the full ten-step
+gate on unchanged tree `72b9d240aa9c3168758070bad22641a82f6e847a1bb22814566c97be87a7f544`:
+7,561 Jest passes, nine existing/platform skips, 355 browser passes and 24
+existing skips. Both build-purity controls and both censuses pass. The clean
+committed-tree sweep kills all eight mutants by intended assertions, with
+passing controls before and after and verified restoration. Exact-head hosted
+push/PR acceptance, including native macOS, remains required before closure.
 
 Windows validation additionally exposed a native Node worker exit
 `0xC0000409` under installed Node 24.15.0. The unchanged complete browser suite
 passes 355 cases with 24 existing skips under official, checksum-verified
 isolated Node 24.21.0. No compiler flags, workers, retries or assertions were
 weakened; global Node stays unchanged. The precise native cause is unproved.
-Both failed full gates and the runtime comparison remain on T-0203; repeat
-the whole gate using this isolated supported runtime before landing.
+Both failed full gates and the runtime comparison remain on T-0203. The full
+gate and sweep use this isolated supported runtime, independently accepted by
+the R2 reviewer. Global Node remains unchanged.
 
 **T-0187 hosted acceptance passed at `dev@c548be18`.** Push CI `36643616502`,
 PR CI `36643621005`, push Gitleaks `36643616541` and PR Gitleaks `36643620989`
