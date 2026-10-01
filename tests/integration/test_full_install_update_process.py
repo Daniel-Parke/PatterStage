@@ -912,6 +912,8 @@ TOKEN_FILE="${{TOKEN_FILE:-$DATA_DIR/auth-token}}"
 BASE="http://127.0.0.1:$PORT"
 DEADLINE=$((SECONDS + 75))
 PID=''
+STATUS_FILE=''
+STATUS=''
 cleanup() {{
   local status=$? attempt
   trap - EXIT
@@ -924,14 +926,35 @@ cleanup() {{
     if kill -0 "$PID" 2>/dev/null; then kill -KILL "$PID" 2>/dev/null || true; fi
   fi
   if [[ -n "$PID" ]]; then wait "$PID" 2>/dev/null || true; fi
+  if [[ -n "$STATUS_FILE" ]]; then
+    if ! rm -f -- "$STATUS_FILE"; then
+      echo "HTTP smoke status scratch cleanup failed" >&2
+      [[ "$status" != 0 ]] || status=1
+    fi
+  fi
   exit "$status"
 }}
 trap cleanup EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
-status_code() {{ curl --connect-timeout 1 --max-time 2 -s -o /dev/null -w '%{{http_code}}' "$@"; }}
+status_code() {{
+  local curl_status=0 read_status=0
+  STATUS=''
+  curl --connect-timeout 1 --max-time 2 -s -o /dev/null -w '%{{http_code}}' "$@" > "$STATUS_FILE" || curl_status=$?
+  IFS= read -r -d '' STATUS < "$STATUS_FILE" || read_status=$?
+  if [[ "$read_status" != 1 ]]; then STATUS=''; return 90; fi
+  while [[ "$STATUS" == *$'\\n' ]]; do STATUS="${{STATUS%$'\\n'}}"; done
+  if [[ ! "$STATUS" =~ ^[0-9]{{3}}$ ]]; then STATUS=''; return 90; fi
+  [[ "$curl_status" == 0 || "$STATUS" == 000 ]] || STATUS=''
+  return "$curl_status"
+}}
+if ! STATUS_FILE=$(umask 077; mktemp "${{TMPDIR:-/tmp}}/ps-http-status.XXXXXXXXXX"); then
+  echo "HTTP smoke status scratch unavailable" >&2
+  exit 1
+fi
 # A response before launch belongs to somebody else. Never stop that listener.
-PREEXISTING=$(status_code "$BASE/api/health" || true)
+status_code "$BASE/api/health" || true
+PREEXISTING="$STATUS"
 if [[ "$PREEXISTING" != 000 ]]; then echo "HTTP smoke port already answers" >&2; exit 1; fi
 PS_ENABLE_DEPLOY_API=true NODE_OPTIONS= node node_modules/next/dist/bin/next start -p "$PORT" -H 127.0.0.1 >> /tmp/ch-http-smoke.log 2>&1 &
 PID=$!
@@ -939,19 +962,22 @@ READY=0
 for attempt in $(seq 1 20); do
   kill -0 "$PID" 2>/dev/null || {{ echo "HTTP smoke server exited" >&2; exit 1; }}
   [[ "$SECONDS" -lt "$DEADLINE" ]] || break
-  HEALTH=$(status_code "$BASE/api/health" || true)
+  status_code "$BASE/api/health" || true
+  HEALTH="$STATUS"
   if [[ "$HEALTH" == 200 ]]; then READY=1; break; fi
   sleep 1
 done
 [[ "$READY" == 1 ]] || {{ echo "HTTP smoke health did not return 200" >&2; exit 1; }}
 kill -0 "$PID" 2>/dev/null || {{ echo "HTTP smoke server exited" >&2; exit 1; }}
-ANONYMOUS=$(status_code "$BASE/" || true)
+status_code "$BASE/" || true
+ANONYMOUS="$STATUS"
 [[ "$ANONYMOUS" == 401 ]] || {{ echo "HTTP smoke anonymous access was not 401" >&2; exit 1; }}
 AUTH_TOKEN=$(setting PS_AUTH_TOKEN)
 if [[ -z "$AUTH_TOKEN" && -s "$TOKEN_FILE" ]]; then AUTH_TOKEN=$(cat "$TOKEN_FILE"); fi
 [[ -n "$AUTH_TOKEN" ]] || {{ echo "HTTP smoke operator token unavailable" >&2; exit 1; }}
 kill -0 "$PID" 2>/dev/null || {{ echo "HTTP smoke server exited" >&2; exit 1; }}
-AUTHENTICATED=$(status_code -H "Authorization: Bearer $AUTH_TOKEN" "$BASE/" || true)
+status_code -H "Authorization: Bearer $AUTH_TOKEN" "$BASE/" || true
+AUTHENTICATED="$STATUS"
 [[ "$AUTHENTICATED" == 200 ]] || {{ echo "HTTP smoke authenticated access was not 200" >&2; exit 1; }}
 kill -0 "$PID" 2>/dev/null || {{ echo "HTTP smoke server exited" >&2; exit 1; }}
 [[ "$SECONDS" -lt "$DEADLINE" ]] || {{ echo "HTTP smoke deadline exceeded" >&2; exit 1; }}
