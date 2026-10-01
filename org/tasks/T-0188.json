@@ -74,7 +74,8 @@
     "docs/running/migration.md",
     "scripts/tooling/migrate-db.ts",
     "docs/manifest.json",
-    "org/QUESTIONS.md"
+    "org/QUESTIONS.md",
+    "org/briefs/T-0188-auth-wiring-amendment.md"
   ],
   "invariants": [
     "Preserve all eleven wrapper module paths, exports, signatures, return contracts and already-applied no-op behaviour. SQL history, public configuration and supported URLs remain intact.",
@@ -275,7 +276,7 @@
       "suitesMockingDbInline": 14
     },
     "preservation": "Historical SQL/Auth43 unchanged; exactly3owner bindings; all105selectednames preserved, +70newcases in corpus, no existing test removed; targets and T0200 row intact.",
-    "remaining": "Separate clean committed T0188/T0205/T0202 sweeps with intended matcher failures and restoration, final-head source binding, independent R2 acceptance and every exact-head hosted job.",
+    "remaining": "Independent Auth43 wiring witness amendment, repeated complete gate and committed T0188 sweep; final source binding/R2 acceptance and every hosted job. T0205 bounded local acceptance atb262 retains its qualified six and all12legacy mutants; no premature closure/push.",
     "private_dependencies": {
       "before": "tmp/t0188-native-install/dependencies-before.json",
       "after": "tmp/t0188-native-install/dependencies-after.json",
@@ -371,5 +372,14 @@
     }
   },
   "compatibility_retirement": "Operator explicitly confirmed 2026-10-01: keep compatibility through v1.0.0 and defer T-0200 retirement. Q-033 records this without changing the protected set or whole T-0200 row. No early removal authority is inferred.",
-  "prerequisite": "T-0205 secure status-capture implementation authorised by independent R2 reviewer after frozen red19/20; final 74 focused cases pass Windows/Linux with one native macOS skip. No frozen bounds changed. Four previous gate failures retained. Combined full gate, installed/visual checks, separate committed sweeps and final acceptance remain."
+  "prerequisite": "T-0205 secure status-capture implementation authorised by independent R2 reviewer after frozen red19/20; final 74 focused cases pass Windows/Linux with one native macOS skip. No frozen bounds changed. Four previous gate failures retained. Combined full gate, installed/visual checks, separate committed sweeps and final acceptance remain.",
+  "auth_wiring_amendment_authority": {
+    "date": "2026-10-01T22:55:44.419Z",
+    "authoriser": "Schrodinger, independent R2 REVIEWER under Q015",
+    "author": "Newton, independent ORACLE",
+    "brief": "org/briefs/T-0188-auth-wiring-amendment.md",
+    "verdict": "HOLD T0188 acceptance; permit additive valid historical-SQL fixture and actual public-chain malformed Auth42/43 witnesses, preserving105names and all original assertions. No source/protected/manifest edits.",
+    "retainedSweep": "tmp/t0188-migration-committed-sweep/summary.json",
+    "qualification": "13assertion-kills with clean controls/restoration; m12fails onlyfresh/upgrades, does not prove recorded43guard. Not sufficient final acceptance."
+  }
 }

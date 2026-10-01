@@ -73,7 +73,8 @@ load. The unchanged 14-case suite passes alone. A private timing observer's
 full-corpus run passes, but is diagnostic evidence and does not clear the
 failed gate. Independent reviewers investigate the delay; no timeout,
 assertion, coverage or production build rule has been loosened. Candidate
-implementation is uncommitted. The separate settled-content built-app walk
+implementations are committed separately at `f94993ba` (T-0205) and
+`b262fcb7` (T-0188), without a push. The separate settled-content built-app walk
 passes nine routes at both required viewports, opaque sign-in and sign-out,
 with eighteen screenshot hashes and no console/page errors, overflow or
 missing h1. Its owned port3998 server is stopped. The HTTP memory fixture is
@@ -85,8 +86,16 @@ its port3999 server is stopped. The Linux public updater also passes the
 same backup, migration, sentinel and authentication checks with verified
 shutdown in an init-enabled, network-isolated container. Its first immediate
 post-signal observation is retained; the ignored QA launcher now waits for
-actual exit. Committed sweeps, final R2
-acceptance and exact-head hosted jobs remain required.
+actual exit. Six T-0205 and all twelve T-0202 mutants have qualified assertion
+kills with passing controls and clean content/mode restoration. Independent
+R2 review accepts T-0205 locally at `b262fcb7`, with hosted jobs pending.
+The thirteen migration mutants trigger assertions, but m12 only demonstrates
+fresh/upgrade sensitivity. It does not prove the recorded43 Auth guard.
+T-0188 remains held for a separately authored, independently authorised
+public-chain witness amendment. The author must preserve all105 identities
+and direct-worker assertions, use a valid historical-SQL fixture, then prove
+the intended headed failure. Repeat the complete gate and committed T-0188
+sweep before acceptance or push. All earlier receipts remain.
 T-0205 implements the separately authorised HTTP-fixture prerequisite after
 its independent oracle was committed red at `59d6ca95`, with nineteen intended
 failures among twenty cases. Secure status capture reduces shell overhead
@@ -96,7 +105,7 @@ review. The unchanged twenty-case suite and historical controls pass on
 Windows and an init-enabled, network-isolated Linux container: 74 passes and
 one native macOS skip per platform. Earlier infrastructure failures are kept.
 The combined full gate, visual walk and both installed updater checks pass;
-committed sweeps, final independent acceptance and hosted jobs remain. These results
+T-0188's amended gate/sweep and independent acceptance plus hosted jobs remain. These results
 do not establish the cause of the earlier intermittent full-gate failure.
 Fourteen approved batches remain:
 T-0188–T-0201. The operator amended the release-first sequencing in Q-011. PR #157's merge,

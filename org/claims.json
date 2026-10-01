@@ -42,15 +42,29 @@
         "org/tasks/T-0205.json",
         "org/briefs/T-0205-oracle.md",
         "tests/integration/test_full_install_update_process.py",
-        "tests/fixtures/mutants/T-0205.json"
+        "tests/fixtures/mutants/T-0205.json",
+        "org/briefs/T-0188-auth-wiring-amendment.md"
       ],
       "expires": "2026-10-02T18:45:00Z",
       "lane_id": "T-0188-coordinator",
       "session_id": "2026-10-01-migration-driver-consolidation",
       "acquired": "2026-10-01T18:39:49Z",
       "harness_task_id": "2026-10-01-migration-driver-consolidation"
+    },
+    {
+      "task_id": "T-0188",
+      "host": "NUCBOX_M6ULTRA",
+      "lane_id": "T-0188-auth-wiring-oracle",
+      "session_id": "T-0188-oracle",
+      "acquired": "2026-10-01T22:55:44.421Z",
+      "expires": "2026-10-02T18:45:00Z",
+      "path_claims": [
+        "tests/unit/migration-t0188-behaviour.test.ts",
+        "org/reviews/2026-10-t0188-oracle-amendment.md",
+        "org/reviews/2026-10-t0188-migration-verification.md"
+      ]
     }
   ],
   "version": 1,
-  "note": "Independent ORACLE writes ceased; coordinator only. Frozen authored files require a separately authorised amendment."
+  "note": "Two disjoint writers: coordinator records/brief only; original independent ORACLE authors narrowly authorised Auth43 wiring witness and append-only provenance. No source implementation edits."
 }
