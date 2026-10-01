@@ -29,7 +29,7 @@
   "owner_session": "2026-10-01-migration-driver-consolidation",
   "timestamps": {
     "opened": "2026-10-01T16:45:00Z",
-    "updated": "2026-10-01T19:41:24.232Z"
+    "updated": "2026-10-01T19:59:50.563Z"
   },
   "authority": "Operator approved Phase2 on2026-09-28 and Q032 supersedes Q011 release-first sequencing. T0202/T0203 obligations remain; latest repair T0204 independently accepted at a238abf3 and closed at e269a895388795fb189863c7e7783366f650b484, with every required exact-head push/PR job passing. Failed9c824422scan remains historical, not a prerequisite requiring impossible retrospective success. T0200 item-specific post1.0 authority remains. Independent R2 REVIEWER Schrodinger authorises only the four Q015 amendments plus additive T0204 contract described in committed brief. Schema declaration router verdict remains R2; actual diff reroutes upward.",
   "claims": [
@@ -72,7 +72,8 @@
     "org/STATE.md",
     "scripts/tooling/line-census.baseline.json",
     "docs/running/migration.md",
-    "scripts/tooling/migrate-db.ts"
+    "scripts/tooling/migrate-db.ts",
+    "docs/manifest.json"
   ],
   "invariants": [
     "Preserve all eleven wrapper module paths, exports, signatures, return contracts and already-applied no-op behaviour. SQL history, public configuration and supported URLs remain intact.",
@@ -136,7 +137,43 @@
       "after": "29bd0cec873de51d6214665fd3a78291e96268ee7463eb1cdef07d00dee9045b"
     },
     "identity": "All historical identities and bounded amendments proven by independent author; three new suites add 70 tests. All 105 selected identities execute in the unchanged-tree coordinator red.",
-    "limits": "Synthetic updater controls are separately labelled. Private real Windows/Linux public migration entrypoint controls each pass four invocations before implementation; these are not full installer/updater acceptance or an online-backup claim."
+    "limits": "Synthetic updater controls are separately labelled. Private real Windows/Linux public migration entrypoint controls each pass four invocations before implementation; these are not full installer/updater acceptance or an online-backup claim.",
+    "amendments": [
+      {
+        "authority": {
+          "date": "2026-10-01T19:41:24.232Z",
+          "authoriser": "Independent R2 REVIEWER Schrodinger, 01a0f7b7-f68a-79b2-ba74-81cdddf2f3ef",
+          "requiredChange": "Add non-NULL witnesses alongside existing NULL coverage for both Composer error fields and v35 parent_node_run_id. Preserve all names and existing assertions. The former NULL-only fixture cannot detect wiping these copied values.",
+          "author": "Newton, 01a0f80a-5091-7ac3-9d66-89e159495160",
+          "scope": [
+            "tests/unit/migration-t0188-behaviour.test.ts",
+            "org/reviews/2026-10-t0188-oracle-amendment.md",
+            "org/reviews/2026-10-t0188-migration-verification.md"
+          ],
+          "constraints": "Independent author must not inspect migration implementation. Append dated provenance without rewriting prior ledger bytes; retain original freeze/receipts and make separate amendment receipts. Author against owned red/setup source, no installs/operator data. No new identity or weakened assertion."
+        },
+        "freeze_manifest": "tmp/t0188-oracle-amendment-nonnull/freeze-manifest.json",
+        "freeze_sha256": "ae787ab344ac4fc5485c642a331e16bf701c12c0630cb6a6237638a50a264bc0",
+        "files": {
+          "tests/unit/migration-t0188-behaviour.test.ts": "1653aa5dde884b431fcf175e2d646c3b990d6ed4c83934c2f766ae981440ae6f",
+          "org/reviews/2026-10-t0188-oracle-amendment.md": "2e80a5efbbce51170ff544132788ec08800df69384ad9d6dfca2762261d66056",
+          "org/reviews/2026-10-t0188-migration-verification.md": "a0c832732f3a6349ff0c5a99569a7b7dfe9395bdd04340f2724e89d60b3b19ed"
+        },
+        "original_receipt_files_preserved": 141,
+        "coordinator_red": {
+          "receipt": "tmp/t0188-coordinator-amended-red/summary.json",
+          "sha256": "71765ed9d103ef4c5fd1746df038b4300ea03f2919765edd2936476a4507e269",
+          "pass": 84,
+          "fail": 21,
+          "skip": 0,
+          "runtimeErrors": 0,
+          "total": 105,
+          "before": "29cc82283e6a6324f00f92edcc5216792f105c55948b81515fbb13a92ec58e72",
+          "after": "29cc82283e6a6324f00f92edcc5216792f105c55948b81515fbb13a92ec58e72"
+        },
+        "evidence": "Eight real owned-copy SQL controls detect four NULL-wiping fault classes across incoming FK0/1; all 105 names preserved and previous ledgers retained as byte prefixes. Author writes ceased."
+      }
+    ]
   },
   "adjacent_claims": "Correct stale migration-driver documentation and the direct migrator convergence comment, without changing its command or extra-pass behaviour. SQL history remains immutable.",
   "oracle_amendment_authority": {
@@ -157,5 +194,6 @@
       "result": "103pass/2fail/0skip/0runtime, normal1, unchanged tree",
       "cause": "Native better-sqlite3 errors loaded from a separate Jest realm can fail instanceof Error; the narrow duplicate-column allowance now classifies String(error) while still rethrowing every other error. Historical test names/assertions untouched. Pending revalidation."
     }
-  ]
+  ],
+  "evidence_attribution_correction": "The original oracle report phrase operator separately reports four Windows controls means coordinator-owned CLI execution, not a human action. Coordinator actual candidate entrypoint receipts have Windows4/Linux4 successful invocations, exact backups, preserved sentinel rows and schema43; full installer/updater acceptance remains separately labelled."
 }

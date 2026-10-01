@@ -36,29 +36,16 @@
         "org/STATE.md",
         "scripts/tooling/line-census.baseline.json",
         "docs/running/migration.md",
-        "scripts/tooling/migrate-db.ts"
+        "scripts/tooling/migrate-db.ts",
+        "docs/manifest.json"
       ],
       "expires": "2026-10-02T18:45:00Z",
       "lane_id": "T-0188-coordinator",
       "session_id": "2026-10-01-migration-driver-consolidation",
       "acquired": "2026-10-01T18:39:49Z",
       "harness_task_id": "2026-10-01-migration-driver-consolidation"
-    },
-    {
-      "task_id": "T-0188",
-      "host": "NUCBOX_M6ULTRA",
-      "lane_id": "T-0188-oracle-amendment",
-      "session_id": "01a0f80a-5091-7ac3-9d66-89e159495160",
-      "harness_task_id": "01a0f80a-5091-7ac3-9d66-89e159495160",
-      "acquired": "2026-10-01T19:41:24.233Z",
-      "expires": "2026-10-02T18:45:00Z",
-      "path_claims": [
-        "tests/unit/migration-t0188-behaviour.test.ts",
-        "org/reviews/2026-10-t0188-oracle-amendment.md",
-        "org/reviews/2026-10-t0188-migration-verification.md"
-      ]
     }
   ],
   "version": 1,
-  "note": "At most two writers. Newton owns only authorised non-NULL fixture amendment and append-only provenance; coordinator owns implementation/record paths. Read-only reviewer remains independent."
+  "note": "One coordinator writing lane. Independent non-NULL witness amendment frozen; source/test reviewers remain read-only. Derived views and docs manifest are rendered only."
 }

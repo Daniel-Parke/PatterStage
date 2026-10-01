@@ -248,6 +248,8 @@ function composer(version: number, fk: number): RealDb {
   db.exec("INSERT INTO composer_workflows (id,name) VALUES ('w','Owned workflow'); INSERT INTO composer_nodes (id,workflow_id,key,label) VALUES ('n','w','key','Owned node'); INSERT INTO runs (id,status,output) VALUES ('agent','completed','agent output')");
   db.prepare("INSERT INTO composer_runs (id,workflow_id,status,current_node_id,input,context_json,profile_name,error,created_at,updated_at,completed_at,parent_node_run_id) VALUES ('r','w','completed','n','input','{}','user-profile',NULL,'2000-01-01','2000-01-02','2000-01-03',NULL)").run();
   db.prepare("INSERT INTO composer_node_runs (id,composer_run_id,node_id,attempt,status,run_id,input,output,verdict_json,error,started_at,completed_at,created_at) VALUES ('nr','r','n',2,'completed','agent','node input','node output',?,NULL,'2000-01-01','2000-01-02','2000-01-03')").run('{"pass":true}');
+  db.prepare("INSERT INTO composer_runs (id,workflow_id,status,error,parent_node_run_id) VALUES ('r-witness','w','failed','Owned run error','nr')").run();
+  db.prepare("INSERT INTO composer_node_runs (id,composer_run_id,node_id,attempt,status,error) VALUES ('nr-witness','r','n',3,'failed','Owned node error')").run();
   db.exec("INSERT INTO composer_approvals (id,composer_run_id,node_id,action,approved,note) VALUES ('approval','r','n','accept',1,'User approval')");
   setSchemaVersion(db, version - 1);
   db.pragma(`foreign_keys = ${fk ? "ON" : "OFF"}`);
@@ -259,10 +261,50 @@ function composerRows(db: RealDb): unknown {
   }));
 }
 
+/** Fault controls change only test-owned copies of the historical copy statements. */
+function detectsNullCopyFaults(rebuild: (typeof rebuilds)[number], fk: number): void {
+  const file = rebuild.version === 35 ? "035_composer_rejected.sql" : "037_composer_node_cancelled.sql";
+  for (const table of rebuild.targets) {
+    const fields = table === "composer_runs" ? ["error", "parent_node_run_id"] : ["error"];
+    for (const field of fields) withDirectory((directory) => {
+      const db = composer(rebuild.version, fk);
+      try {
+        const before = composerRows(db);
+        const historical = sql(file);
+        const select = new RegExp(`\\bSELECT\\s+([\\w,\\s]+)\\s+FROM\\s+${table}\\s*;`, "g");
+        const copies = [...historical.matchAll(select)];
+        expect(copies).toHaveLength(1);
+        const expression = new RegExp(`\\b${field}\\b`, "g");
+        expect(copies[0][1].match(expression)).toHaveLength(1);
+        const faulty = historical.replace(select, (_statement, list: string) =>
+          `SELECT ${list.replace(expression, `NULL AS ${field}`)} FROM ${table};`);
+        writeFileSync(join(directory, file), faulty);
+        expect(rebuild.apply(db, directory)).toBe(rebuild.version);
+        const witness = table === "composer_runs" ? "r-witness" : "nr-witness";
+        const nullRow = table === "composer_runs" ? "r" : "nr";
+        expect(db.prepare(`SELECT ${field} AS value FROM ${table} WHERE id=?`).get(witness)).toEqual({ value: null });
+        expect(db.prepare(`SELECT ${field} AS value FROM ${table} WHERE id=?`).get(nullRow)).toEqual({ value: null });
+        // The same exact-row assertion used below must reject this otherwise valid rebuild.
+        expect(() => expect(composerRows(db)).toEqual(before)).toThrow(new RegExp(field));
+      } finally { db.close(); }
+    });
+  }
+}
+
 describe.each(rebuilds)("T-0188 rebuild $version (real SQLite)", (rebuild) => {
   it.each([0, 1])("preserves exact rows, constraints, indexes and incoming FK=%i", (fk) => {
     const db = composer(rebuild.version, fk);
     try {
+      expect(db.prepare("SELECT id,error,parent_node_run_id FROM composer_runs ORDER BY id").all()).toEqual([
+        { id: "r", error: null, parent_node_run_id: null },
+        { id: "r-witness", error: "Owned run error", parent_node_run_id: "nr" },
+      ]);
+      expect(db.prepare("SELECT id,error FROM composer_node_runs ORDER BY id").all()).toEqual([
+        { id: "nr", error: null }, { id: "nr-witness", error: "Owned node error" },
+      ]);
+      expect(db.prepare("SELECT id FROM composer_node_runs WHERE id=(SELECT parent_node_run_id FROM composer_runs WHERE id='r-witness')").get())
+        .toEqual({ id: "nr" });
+      detectsNullCopyFaults(rebuild, fk);
       const before = composerRows(db);
       const shape = rebuild.targets.map((table) => ({ table, columns: db.prepare(`PRAGMA table_info(${table})`).all() }));
       expect(() => db.prepare("UPDATE composer_node_runs SET status=? WHERE id='nr'").run(rebuild.status))
