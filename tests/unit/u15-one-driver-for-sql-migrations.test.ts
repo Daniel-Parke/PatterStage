@@ -32,7 +32,8 @@ describe("U15 · the table", () => {
   // Amended 2026-09-10 (T-0140): 042_fallback_identity joined the table, the
   // first migration written onto the one driver rather than folded into it.
   it("names eighteen migrations, ascending, each a real file whose prefix is its version", () => {
-    expect(SQL_MIGRATIONS).toHaveLength(18);
+    // Q-015 amendment, 2026-10-01: eleven retained wrappers join the driver; historical title stays.
+    expect(SQL_MIGRATIONS).toHaveLength(29);
     const versions = SQL_MIGRATIONS.map(([v]) => v);
     expect([...versions].sort((a, b) => a - b)).toEqual(versions);
     expect(new Set(versions).size).toBe(versions.length);

@@ -191,8 +191,8 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
     db.pragma("foreign_keys = ON");
 
     runMigrations(db); // pass 1 — baseline only
-    expect(getSchemaVersion(db)).toBe(3);
-    expect(tableNames(db)).not.toContain("composer_workflows");
+    expect(getSchemaVersion(db)).toBe(MIGRATION_HEAD_SCHEMA_VERSION);
+    expect(tableNames(db)).toContain("composer_workflows");
 
     // Replicate the getDb() convergence loop.
     let last = getSchemaVersion(db);

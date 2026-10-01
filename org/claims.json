@@ -34,34 +34,17 @@
         "org/HANDOVER.md",
         "org/TASKS.md",
         "org/STATE.md",
-        "scripts/tooling/line-census.baseline.json"
+        "scripts/tooling/line-census.baseline.json",
+        "docs/running/migration.md",
+        "scripts/tooling/migrate-db.ts"
       ],
       "expires": "2026-10-02T18:45:00Z",
       "lane_id": "T-0188-coordinator",
       "session_id": "2026-10-01-migration-driver-consolidation",
       "acquired": "2026-10-01T18:39:49Z",
       "harness_task_id": "2026-10-01-migration-driver-consolidation"
-    },
-    {
-      "task_id": "T-0188",
-      "host": "NUCBOX_M6ULTRA",
-      "path_claims": [
-        "tests/unit/migration-t0188-wrappers.test.ts",
-        "tests/unit/migration-t0188-behaviour.test.ts",
-        "tests/unit/migration-t0188-update-backup-order.test.ts",
-        "tests/unit/t0165-plan-contract.test.ts",
-        "tests/unit/run-migrations-upgrade.integration.test.ts",
-        "tests/unit/u15-one-driver-for-sql-migrations.test.ts",
-        "org/reviews/2026-10-t0188-oracle-amendment.md",
-        "org/reviews/2026-10-t0188-migration-verification.md"
-      ],
-      "expires": "2026-10-02T18:45:00Z",
-      "lane_id": "T-0188-oracle",
-      "session_id": "01a0f80a-5091-7ac3-9d66-89e159495160",
-      "acquired": "2026-10-01T18:39:49Z",
-      "harness_task_id": "01a0f80a-5091-7ac3-9d66-89e159495160"
     }
   ],
   "version": 1,
-  "note": "At most two writing lanes; separate ORACLE owns only its eight listed paths, coordinator owns code/plan/records. No migration implementation before independent red freeze. Reviewer and future sidecars are read-only."
+  "note": "One coordinator writing lane. Newton oracle frozen and ceased writing; independent reviewer and future sidecars are read-only. Frozen oracle paths remain immutable."
 }

@@ -29,7 +29,7 @@
   "owner_session": "2026-10-01-migration-driver-consolidation",
   "timestamps": {
     "opened": "2026-10-01T16:45:00Z",
-    "updated": "2026-10-01T18:39:49Z"
+    "updated": "2026-10-01T19:28:18.676Z"
   },
   "authority": "Operator approved Phase2 on2026-09-28 and Q032 supersedes Q011 release-first sequencing. T0202/T0203 obligations remain; latest repair T0204 independently accepted at a238abf3 and closed at e269a895388795fb189863c7e7783366f650b484, with every required exact-head push/PR job passing. Failed9c824422scan remains historical, not a prerequisite requiring impossible retrospective success. T0200 item-specific post1.0 authority remains. Independent R2 REVIEWER Schrodinger authorises only the four Q015 amendments plus additive T0204 contract described in committed brief. Schema declaration router verdict remains R2; actual diff reroutes upward.",
   "claims": [
@@ -70,7 +70,9 @@
     "org/HANDOVER.md",
     "org/TASKS.md",
     "org/STATE.md",
-    "scripts/tooling/line-census.baseline.json"
+    "scripts/tooling/line-census.baseline.json",
+    "docs/running/migration.md",
+    "scripts/tooling/migrate-db.ts"
   ],
   "invariants": [
     "Preserve all eleven wrapper module paths, exports, signatures, return contracts and already-applied no-op behaviour. SQL history, public configuration and supported URLs remain intact.",
@@ -100,5 +102,41 @@
     "push_gitleaks": 36905827739,
     "pr_gitleaks": 36905837612
   },
-  "validation_topology": "Schrodinger accepts detached validation checkouts with conditions: committed red HEAD plus explicit allowlist overlay covers additions/modifications/deletions/modes and matches primary bytes; each checkout keeps its own before/after stamp. Pin shared node_modules target, Node24.21.0/ABI137 and lockfile; no installs/mutation. Copy no operator env/data. Set owned PS_DATA_DIR/CH_DATA_DIR/HERMES_HOME, own all ports/processes, resolve EOS dependencies explicitly. Fresh implementation-commit checkout runs clean sweep; preserve controls/restoration and all gates."
+  "validation_topology": "Schrodinger accepts detached validation checkouts with conditions: committed red HEAD plus explicit allowlist overlay covers additions/modifications/deletions/modes and matches primary bytes; each checkout keeps its own before/after stamp. Pin shared node_modules target, Node24.21.0/ABI137 and lockfile; no installs/mutation. Copy no operator env/data. Set owned PS_DATA_DIR/CH_DATA_DIR/HERMES_HOME, own all ports/processes, resolve EOS dependencies explicitly. Fresh implementation-commit checkout runs clean sweep; preserve controls/restoration and all gates.",
+  "oracle_provenance": {
+    "author_session": "01a0f80a-5091-7ac3-9d66-89e159495160",
+    "independence": "Separate clean-context ORACLE; real SQLite and independently replayed historical fixtures; implementation not inspected.",
+    "freeze_manifest_sha256": "f6d379a7d0b735b75df887a098d7c68b8b49486b55de5dd8bce62b33fdddf79b",
+    "files": {
+      "tests/unit/migration-t0188-wrappers.test.ts": "477bac9245bba5239be0c34d6c9fb67eb1d87abdb11842146d68df470e8fb381",
+      "tests/unit/migration-t0188-behaviour.test.ts": "521ccea46246d5c9279b96a5353135087cbde0ab6553ce37577be2d094e88a91",
+      "tests/unit/migration-t0188-update-backup-order.test.ts": "88fa484128de1f933ac8cfd30d515e5aef04bb682f15649340bc9692a8e0c77e",
+      "tests/unit/t0165-plan-contract.test.ts": "2cf99094aa6fbbbc9d188fa074a7e64a2ff4eb39bc8bb43a8cd6645551345512",
+      "tests/unit/run-migrations-upgrade.integration.test.ts": "573bb6e3670b94325402919bb80ef3c2a6634fe996c8d555f4c6a3e309bca4b0",
+      "tests/unit/u15-one-driver-for-sql-migrations.test.ts": "770af455e96f60e7f7b15b27567210c5e9353fae2d7cfad4d90dc03be65876f8",
+      "org/reviews/2026-10-t0188-oracle-amendment.md": "811e8ac202a782018819584a89a6c591843eeef6bb811c3ad107e254c1fe2fa4",
+      "org/reviews/2026-10-t0188-migration-verification.md": "40e502e0d1141af2b92a0a3406b21af53c0e2e941ecf9dbec8124463835d0f8c"
+    },
+    "author_result": {
+      "total": 105,
+      "pass": 84,
+      "semanticFail": 21,
+      "infrastructureFail": 0,
+      "skip": 0
+    },
+    "coordinator_red": {
+      "receipt": "tmp/t0188-coordinator-red/summary.json",
+      "sha256": "a5fd8c8ccf82133954fe97ab6a67d1d26c48ebd10a574242a61662602fcbac82",
+      "exitCode": 1,
+      "pass": 84,
+      "fail": 21,
+      "skip": 0,
+      "runtimeErrors": 0,
+      "before": "29bd0cec873de51d6214665fd3a78291e96268ee7463eb1cdef07d00dee9045b",
+      "after": "29bd0cec873de51d6214665fd3a78291e96268ee7463eb1cdef07d00dee9045b"
+    },
+    "identity": "All historical identities and bounded amendments proven by independent author; three new suites add 70 tests. All 105 selected identities execute in the unchanged-tree coordinator red.",
+    "limits": "Synthetic updater controls are separately labelled. Private real Windows/Linux public migration entrypoint controls each pass four invocations before implementation; these are not full installer/updater acceptance or an online-backup claim."
+  },
+  "adjacent_claims": "Correct stale migration-driver documentation and the direct migrator convergence comment, without changing its command or extra-pass behaviour. SQL history remains immutable."
 }

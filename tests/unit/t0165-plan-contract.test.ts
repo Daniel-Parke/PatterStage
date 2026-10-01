@@ -14,6 +14,7 @@ type Batch = {
   id: string;
   name: string;
   phase: string;
+  tierProposed: string;
   claims: string[];
   dependsOn: string[];
   authority: string[];
@@ -22,6 +23,61 @@ type Batch = {
   verify: string;
 };
 type Owner = { id: string; outcome: string; task: string | null; reason: string };
+
+// Q-015 amendment, 2026-10-01: requirements only, never execution evidence.
+const releaseVerificationRequirements = {
+  requiresAll: {
+    "T-0202": {
+      independentAcceptance: "required",
+      closure: "required",
+      localFullGate: { requiredResult: "pass" },
+      sweep: { committed: true, clean: true },
+      httpMatrix: { enabled: true, cases: 15, requiredResult: "all-pass" },
+    },
+    "T-0203": {
+      independentAcceptance: "required",
+      closure: "required",
+      localFullGate: { revision: "current-head", requiredResult: "pass" },
+      sweep: { committed: true, clean: true },
+      hostedJobs: {
+        revision: "exact-head",
+        events: ["push", "pull_request"],
+        selection: "every-required-job",
+        requiredResult: "all-pass",
+      },
+      nativeMacHttp: {
+        execution: "native-macos",
+        enabled: true,
+        cases: 21,
+        requiredResult: "all-pass",
+      },
+    },
+    "T-0204": {
+      revision: "latest-repair-head",
+      independentAcceptance: { tier: "R2", requiredResult: "accepted" },
+      closure: "required",
+      localFullGate: { scope: "complete", tree: "unchanged", requiredResult: "pass" },
+      sweep: { committed: true, clean: true },
+      scannerAcceptance: {
+        execution: "actual",
+        imageIdentity: "digest-pinned",
+        cleanScan: { requiredResult: "accepted" },
+        plantedScanner: { deterministic: true, requiredResult: "accepted" },
+      },
+      frozenT0203Checks: { selection: "all", requiredResult: "all-pass" },
+      repairedCanary: { requiredResult: "pass" },
+      hostedJobs: {
+        revision: "exact-head",
+        events: ["push", "pull_request"],
+        selection: "every-required-job",
+        requiredResult: "all-pass",
+      },
+    },
+  },
+} as const;
+type ExternalPrerequisites = {
+  "release-verification-repairs-complete": typeof releaseVerificationRequirements;
+};
 
 function readJson<T>(path: string): T {
   return JSON.parse(readFileSync(join(root, path), "utf8")) as T;
@@ -73,10 +129,24 @@ describe("T-0165 Phase 2 plan contract", () => {
     const plan = readJson<{
       approval: string;
       releaseGate: string;
+      decisionAuthority: string[];
+      externalPrerequisites: ExternalPrerequisites;
       batches: Batch[];
       closing: { measureFile: string; dispositionFile: string; oracle: string; missPolicy: string };
     }>(planPath);
-    expect(plan.approval).toBe("pending-operator-approval");
+    expect(plan.approval).toBe("operator-approved-2026-09-28");
+    expect(plan.decisionAuthority).toContain("Q-032");
+    expect(plan.externalPrerequisites?.["release-verification-repairs-complete"])
+      .toEqual(releaseVerificationRequirements);
+    expect(plan.batches).toHaveLength(22);
+    const migrations = plan.batches.find((batch) => batch.id === "T-0188");
+    expect(migrations?.dependsOn).toEqual(["T-0187", "release-verification-repairs-complete"]);
+    expect(migrations?.phase).toBe("prerelease-structural");
+    expect(migrations?.authority).toContain("Q-032");
+    const removal = plan.batches.find((batch) => batch.id === "T-0199");
+    expect(removal?.dependsOn).toEqual(["T-0198"]);
+    expect(removal?.phase).toBe("prerelease-removal");
+    expect(removal?.authority).toContain("Q-032");
     expect(plan.releaseGate).toContain("Q-011");
     expect(plan.batches.length).toBeGreaterThanOrEqual(12);
     expect(plan.batches.map((batch) => batch.id)).toEqual(
@@ -110,6 +180,10 @@ describe("T-0165 Phase 2 plan contract", () => {
     expect(plan.batches.find((batch) => batch.id === "T-0199")?.claims).toContain("package.json");
     expect(plan.batches.find((batch) => batch.id === "T-0199")?.claims).not.toContain("scripts/maintenance/**");
     const retirement = plan.batches.find((batch) => batch.id === "T-0200");
+    expect(retirement?.tierProposed).toBe("R3");
+    expect(retirement?.phase).toBe("post-v1-removal");
+    expect(retirement?.dependsOn).toEqual(["T-0199", "operator-v1-release"]);
+    expect(plan.batches.find((batch) => batch.id === "T-0201")?.dependsOn).toEqual(["T-0200"]);
     expect(retirement?.claims).toContain("src/lib/host/paths.ts");
     const aliasReaders = execFileSync("git", ["grep", "-l", "-E", "CH_|CONTROL_HUB_|AGENT_HOME|x-ch-|ch[.]sessions[.]", "--", "src", "scripts", "next.config.ts"], {
       cwd: root, encoding: "utf8",
@@ -122,6 +196,10 @@ describe("T-0165 Phase 2 plan contract", () => {
     expect(existsSync(join(root, ownershipPath))).toBe(true);
     if (!existsSync(join(root, ownershipPath))) return;
     const ownership = readJson<{ findings: Owner[]; coverage: Owner[]; operatorDispositions: Owner[] }>(ownershipPath);
+    for (const id of ["lib-data-01", "lib-data-02"]) {
+      expect(ownership.findings.find((row) => row.id === id)?.task).toBe("T-0188");
+    }
+    expect(ownership.operatorDispositions.find((row) => row.id === "lib-data-01")?.task).toBe("T-0188");
     const findings = readJsonl(findingsPath);
     const coverage = readJsonl(coveragePath);
     expect(ownership.findings.map((row) => row.id).sort()).toEqual(findings.map((row) => row.id).sort());
