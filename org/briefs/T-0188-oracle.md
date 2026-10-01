@@ -61,3 +61,18 @@ launch/configuration/runtime failures. Freeze hashes and return identity proof;
 then cease writing before coordinator red commit and implementation. An updater
 boundary that cannot prove ordering is explicitly unresolved, not a synthetic
 substitute for Linux/Windows installed acceptance.
+
+## Additive prerequisite amendment, authorised 1 October 2026
+
+Before authorship, Schrodinger independently authorises adding T-0204 to the
+second plan-contract case and the same external prerequisite. Preserve every
+T-0202 and T-0203 obligation exactly; additionally require T-0204 independent
+R2 acceptance and closure, a complete unchanged-tree full gate, a committed
+clean-tree sweep, actual digest-pinned clean and deterministic planted-scanner
+acceptance, and every required exact-head push and PR job passing. The latest
+repair head must execute all frozen T-0203 checks and the repaired canary. The
+failed `9c824422` PR scan does not establish completion. Record the extension's
+authorisation, old/new hashes and bounded diff in the amendment ledger before
+implementation. All three test names, unrelated assertions, 22 IDs, fixed
+targets, ledger totals, three permitted ownership bindings and the entire
+T-0200 row remain as specified above. No retirement authority is granted.
