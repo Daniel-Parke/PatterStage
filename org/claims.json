@@ -1,34 +1,6 @@
 {
   "version": 1,
   "assigned": "2026-10-01",
-  "lanes": [
-    {
-      "lane_id": "T-0203-coordinator",
-      "task_id": "T-0203",
-      "session_id": "2026-09-30-hosted-prerequisite-repair",
-      "host": "NUCBOX_M6ULTRA",
-      "harness_task_id": "2026-09-30-hosted-prerequisite-repair",
-      "acquired": "2026-10-01T13:45:32Z",
-      "expires": "2026-10-02T13:45:32Z",
-      "path_claims": [
-        ".github/workflows/ci.yml",
-        "scripts/tooling/prepare-release-test-tools.sh",
-        "tests/fixtures/mutants/T-0203.json",
-        "org/tasks/T-0203.json",
-        "org/briefs/T-0203-oracle.md",
-        "org/briefs/T-0203-review.md",
-        "org/briefs/T-0203-noisy-install-oracle.md",
-        "org/briefs/T-0203-expiry-oracle.md",
-        "org/briefs/T-0203-portable-oracle.md",
-        "org/briefs/T-0203-native-control-oracle.md",
-        "org/reviews/2026-09-release-verification.md",
-        "org/HANDOVER.md",
-        "org/claims.json",
-        "org/TASKS.md",
-        "org/STATE.md",
-        "scripts/tooling/line-census.baseline.json"
-      ]
-    }
-  ],
-  "note": "Leibniz's native-control oracle amendment is frozen and author writes ceased. Coordinator is the sole writer; REVIEWER and T-0188 preflight remain read-only. Hosted acceptance precedes structural execution; T-0200 retirement requires its own ruling."
+  "lanes": [],
+  "note": "T-0203 independently accepted and closed. All writers ceased. Its closure commit still requires every exact-head hosted job before structural execution. T-0200 retirement requires its own ruling."
 }

@@ -10,7 +10,10 @@ updated: 2026-10-01
 ## Current status, 2026-10-01
 
 **Q-032 now permits approved structural T-0188–T-0201 before release.**
-The operator amended the release-first sequencing in Q-011. PR #157's merge,
+T-0203 is independently accepted and closed after all exact-head hosted jobs
+passed at `d292b0e7`. The closure commit must also pass hosted push and PR
+checks before structural execution. Fourteen approved batches remain:
+T-0188–T-0201. The operator amended the release-first sequencing in Q-011. PR #157's merge,
 tags and releases remain operator actions. The separate compatibility promise
 has not been changed. The plan register and its closed oracle need a dated,
 independent authority amendment before structural execution.
@@ -28,7 +31,7 @@ gates and configuration attempts remain historical evidence. Required hosted
 push and PR verification at `88c5d28b` failed macOS coverage before 21 HTTP
 fixture witnesses because GNU timeout was unavailable. All other scheduled
 jobs passed, including PR full browser/acceptance, install and real Hermes;
-both Gitleaks runs passed. **T-0203 is active** to supply compatible timeout
+both Gitleaks runs passed. **T-0203 subsequently repaired** compatible timeout
 and Bash prerequisites, with an independently authorised Darwin-only fixture
 routing amendment. No frozen deadline/assertion changes or historical T-0202
 record edits are permitted. Do not start T-0188 before the repair passes every
@@ -63,7 +66,7 @@ The owned Linux reproduction has 27 passes and the same single F02 failure,
 with no skips or runtime errors. A separately authorised ORACLE amendment
 pins the real outer shell and independently calibrates the temporary
 filesystem before checking fixture results. All names, deadlines and
-HTTP/authentication assertions remain. No product source changes are involved;
+HTTP/authentication assertions remain. No product source changes are involved.
 The amendment is independently accepted at `85c9d004`. Native Linux passes
 35 cases without skips; coordinator Windows passes all 49 focused cases.
 The repeated full ten-step gate passes on unchanged tree
@@ -71,7 +74,15 @@ The repeated full ten-step gate passes on unchanged tree
 7,561 Jest passes, nine existing/platform skips, 355 browser passes and 24
 existing skips. Both build-isolation controls and both censuses pass. All
 eight committed mutants are killed with passing pre/post controls and clean
-restoration. New exact-head hosted push/PR acceptance is still required.
+restoration. At `d292b0e7`, push CI `36889349357`, PR CI `36889357894`,
+push Gitleaks `36889349258` and PR Gitleaks `36889357906` all pass.
+All eleven PR jobs pass, including native macOS, full browsers, install,
+real Hermes and acceptance. Native macOS executes all 21 frozen HTTP checks.
+Independent R2 REVIEWER Schrodinger accepts T-0203 for closure. Historical
+failed receipts remain intact. A fresh isolated profile walk on port 3997
+confirms the rename metadata defect at both widths; T-0192 owns its repair.
+Only disposable profiles were used and cleanup verified zero remaining rows.
+The owned listener is now stopped. This is not whole-product acceptance.
 
 Windows validation additionally exposed a native Node worker exit
 `0xC0000409` under installed Node 24.15.0. The unchanged complete browser suite

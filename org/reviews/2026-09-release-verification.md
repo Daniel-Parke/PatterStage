@@ -548,3 +548,46 @@ Its rejected log is `tmp/release-profile-diagnostic-20261001.log`; an exact
 in-process comparison confirmed it contains no fixture credential. Locate
 only the old run's uniquely named rows when the isolated instance is started
 again. Operator profiles and repository data are outside this diagnostic.
+
+## 1 October: profile rename defect confirmed on fresh isolated data
+
+An archived checkout of `d292b0e76f66686e6459fe24602ec79fb9791565` uses the
+unchanged production build verified at `85c9d004`, isolated Node 24.21.0,
+fresh data and a fresh Hermes home. It contains no operator `.env` files.
+The owned loopback listener is port 3997. No operator profile or data is used.
+
+The actual browser journey at 1440×900 and 390×844 reproduces the same defect.
+Creation, empty-name refusal, unsaved-close refusal, Keep editing, Reset,
+SOUL save and reload pass. Submitting a different name and description changes
+the slug but retains both old metadata fields. For example, the desktop request
+names `Release Profile desktop 1790871489425 Revised` with description
+`Updated disposable description`; the returned slug ends `-revised`, but its
+name omits `Revised` and its description stays `Disposable release pathway fixture`.
+The phone request produces the equivalent result. The assertion remains red.
+
+Reproduction: after starting the owned fixture described in
+`tmp/t0203-userwalk-prepare.mjs`, run
+`node tmp/release-profiles-native-d292-ui.mjs` with isolated Node 24.21.0.
+The exact result is `tmp/release-profiles-native-d292-1790871489425/result.json`;
+the runner log is `tmp/release-profiles-native-d292-ui-evidence-20261001.log`.
+The earlier four-capture attempt is retained separately. Both attempts exit 1
+for the preserved rename assertion. Cleanup discovers only this run's owned
+rows before deleting them, preserves the primary error, and proves zero
+remaining rows at both widths. Six captures each have one main h1, no
+document/main horizontal overflow and no page errors. Console observations
+remain in the result; this is not a claim that all optional backends work.
+
+| Capture | SHA-256 |
+| --- | --- |
+| Desktop create form | fd44c4fe96d9f11cb98200c48a01cca2f64f404930b32371f34f1f9d5cc2bcd3 |
+| Desktop file editing | f24c8f0551ae4fe1349a0b4e216c9caf5c74ba44b3bb7f0db1ecba270751e22e |
+| Desktop rename state | 0eede4f44af5d9fa3a8592a9cd5b994901b0ed815b3f6bfd30ae77a433f6d911 |
+| Phone create form | 571a9cf738a9e25a97546b4820214dbd3f498fb6c4179e5d4a57339b74861e98 |
+| Phone file editing | abae26681f16e5cd9f8d2a2d8c394ade28448c195e0f8bb9017f811ce73f03d3 |
+| Phone rename state | 2a924b829477ebf6ccba0c1559dce6ce50d7865808e96cc0e6d91b4c82872721 |
+
+T-0192 owns the repair and must add an independent real-SQLite regression,
+preserving default-profile guards, saved file contents and metadata, then
+complete rename and cancelled/confirmed deletion journeys at both widths.
+The source explanation in the preceding candidate entry remains applicable;
+this new runtime evidence supersedes its unconfirmed status, not its history.
