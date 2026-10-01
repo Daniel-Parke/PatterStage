@@ -21,7 +21,7 @@
   "owner_session": "2026-10-01-migration-driver-consolidation",
   "timestamps": {
     "opened": "2026-10-01T21:11:46.044703+00:00",
-    "updated": "2026-10-01T21:15:13.900Z"
+    "updated": "2026-10-01T21:36:11.804Z"
   },
   "authority": "Operator authorises completion of approved batches and prerequisite repairs. Adopt separate-author frozen oracle and independent R2 acceptance even if declaration router minimum is R1. Narrow Q015 amendment authority must be recorded before source/mutant amendments; no protected changes or weakening of bounds is authorised.",
   "claims": [
@@ -44,10 +44,10 @@
     "Only a newly created, exclusive, owner-only status scratch path may be removed. HTTP bodies and credentials are never retained in it. Per-call output is cleared and malformed or unreadable status fails closed.",
     "Owned server cleanup preserves the original exit status and never stops an unrelated listener. Scratch creation failure occurs before server launch.",
     "The historical full-gate failure cause remains uncertain. Measured performance and call-context evidence support this change; only a passing whole unchanged-tree gate establishes current acceptance.",
-    "T-0188 remains active and uncommitted until this prerequisite and every required hosted job pass. Existing T-0202/03/04 task records remain historical."
+    "T-0188 and T-0205 remain active until accepted whole gate, separate committed sweeps and exact-head hosted jobs. Independent R2 reviewer permits paired local implementation commits after combined unchanged-tree gate; push only the final green head. Historical T0202/03/04 task records remain untouched."
   ],
   "rollback": "Revert only the T0205 harness, independent oracle and narrow m7 anchor amendment. Retain failed gate evidence; do not close T0188 or weaken HTTP deadlines.",
-  "verify_line": "Independent behavioural oracle proves curl entries execute in the main probe shell, all 21 real stalled-case requests remain, malformed/partial status and scratch refusals fail closed, and owned cleanup holds. Commit intended red, implement, run all historical HTTP/default/native controls, Windows/Linux real curl checks, full unchanged-tree gate, clean committed structured mutation controls/restoration and independent R2 acceptance, then every required exact-head hosted push/PR job.",
+  "verify_line": "Independent behavioural oracle proves curl entries execute in the main probe shell, all 21 real stalled-case native curl calls remain; recorded arrivals are separate, malformed/partial status and scratch refusals fail closed, and owned cleanup holds. Commit intended red, implement, run all historical HTTP/default/native controls, Windows/Linux real curl checks, full unchanged-tree gate, clean committed structured mutation controls/restoration and independent R2 acceptance, then every required exact-head hosted push/PR job.",
   "preflight": "Four failed T0188 gate attempts retained; two H12 failures involved the unchanged six-second supervisor. Alone14 and diagnostic wholeJest7645 pass do not waive them. tmp/t0205-subshell-prototype/receipt.json records eight in-memory comparisons,21 real curl calls each, all deadlines/cleanup pass. Mean gaps quiet0.892→0.344sec, CPUloaded1.011→0.495sec; only two samples per variant/condition. Windowsnul calibration corrects a diagnostic /dev/null expectation without rewriting raw receipts. Buffered transport experiments did not show material benefit and are not implemented.",
   "tier_ruled": "R1",
   "reasons": [
@@ -62,5 +62,110 @@
     "method": "Canonical kernel schema projection with retained venture evidence; router and require_claim run against venture",
     "schema_path": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterTech_EOS\\kernel\\schemas\\task-record.schema.json"
   },
-  "oracle_independence": "Dalton 01a0f94f-c8b3-75f1-ba60-4e4fd74c1812, fresh context and separate files. Reviewer Schrodinger permits record/new oracle only; replacement and closed m7 amendment await secure in-budget complete-output proof."
+  "oracle_independence": "Dalton 01a0f94f-c8b3-75f1-ba60-4e4fd74c1812, fresh context and separate files. Reviewer Schrodinger permits record/new oracle only; replacement and closed m7 amendment await secure in-budget complete-output proof.",
+  "amendment_authority": {
+    "authoriser": "Schrodinger 01a0f7b7-f68a-79b2-ba74-81cdddf2f3ef, independent R2 REVIEWER under Q015, 2026-10-01",
+    "verdict": "PASS narrow authority after independent oracle freeze and intended red; not final acceptance.",
+    "receipt": "tmp/t0205-subshell-prototype/lifecycle-receipt.json",
+    "sha256": "590d481d323e9ee916054d1992ef885fc1ef95ceef7fefd387916e8570429691",
+    "scope": "Only Harness.http_smoke status capture, exclusive/private owned scratch lifecycle, per-call clear/truncate, whole-output and trailing-LF handling. Different author may retarget only T0202 m7 anchor/replacement call syntax while retaining exact standalone echo \"$AUTH_TOKEN\" fault, identity, tests and why. All other mutants, frozen suites, real clients, request arguments, attempts, deadlines/watchdogs and ownership assertions unchanged.",
+    "requirements": "Support unset TMPDIR fallback/tmp. Explicit scratch removal error handling retains a previous failure exit; failed cleanup cannot silently qualify success. Native nonzero curl cannot qualify a successful-looking200; preserve000/nonzero pre-launch absence sentinel. This is an explicit verifier strengthening for real failed transfers, not solely synthetic instrumentation. New C02 allows startup52 then stalled28 rather than falsely requiring20identicaltimeouts.",
+    "limits": "29 native Windows controls and11labelled parser cases prove bounded equivalence/performance; historical full-gate cause and general platform reliability remain unproved. Full gate, separate committed sweeps, independent R2 acceptance and every exact-head hosted job remain."
+  },
+  "oracle_provenance": {
+    "author": "Dalton 01a0f94f-c8b3-75f1-ba60-4e4fd74c1812; fresh independent ORACLE",
+    "methods": "Clean context, private differential reference and seven separately labelled targeted calibrations; implementation not inspected.",
+    "originalFreeze": "tmp/t0205-oracle/freeze.json",
+    "originalFreezeSHA256": "70e635a5e077d0c5cb192dded5b6dd4349bde0332d02d3d96d81f087d709c974",
+    "attributionAmendment": "tmp/t0205-oracle/freeze-attribution-amendment.json",
+    "attributionAmendmentSHA256": "b8923b02fd3974293f9df5f474025d0674cfba8e9a48e4b86e412dbdbc34bca8",
+    "files": {
+      "tests/unit/release-install-http-context.test.ts": "3c07258e650ddba6aa515d2f7aeb4bba19b19d85e3de2f0ebdccfd306f471e24",
+      "tests/helpers/release-install-http-context-probe.py": "7614c63f07b32bd0385304a3dcabb75d836598d85f78723a98e5f22a502aca85",
+      "org/reviews/2026-10-t0205-http-context-verification.md": "0bc1749239d3ce8afb0e63050379acafc29361bd5ead16f35cc3e5637fb82b0f"
+    },
+    "identities": [
+      "T-0205 independent HTTP context oracle C01 healthy native curl entries share the probe shell and BASHPID",
+      "T-0205 independent HTTP context oracle C02 stalled readiness retains 21 native calls and distinguishes pre-launch entries",
+      "T-0205 independent HTTP context oracle C03 scratch is exclusive private and removed after success",
+      "T-0205 independent HTTP context oracle C04 scratch is exclusive private and removed after HTTP refusal",
+      "T-0205 independent HTTP context oracle C05 scratch is exclusive private and removed after stalled readiness",
+      "T-0205 independent HTTP context oracle C06 scratch utility refusal occurs before launch and preserves the decoy",
+      "T-0205 independent HTTP context oracle C07 post-native malformed suffix status fails closed",
+      "T-0205 independent HTTP context oracle C08 post-native second-line status fails closed",
+      "T-0205 independent HTTP context oracle C09 post-native partial status fails closed",
+      "T-0205 independent HTTP context oracle C10 post-native NUL status fails closed",
+      "T-0205 independent HTTP context oracle C11 post-native empty status fails closed",
+      "T-0205 independent HTTP context oracle C12 post-native successful-looking status preserves a failing curl exit",
+      "T-0205 independent HTTP context oracle C13 post-native closed status stream fails closed",
+      "T-0205 independent HTTP context oracle C14 per-call capture clears a prior successful-looking status",
+      "T-0205 independent HTTP context oracle C15 status capture preserves one trailing newline",
+      "T-0205 independent HTTP context oracle C16 status capture preserves multiple trailing newlines",
+      "T-0205 independent HTTP context oracle C17 refused credential and public health remain actual server refusals",
+      "T-0205 independent HTTP context oracle C18 occupied listener retains real 200 401 200 controls and survives refusal",
+      "T-0205 independent HTTP context oracle C19 TERM-resistant owned child stops without changing successful probe exit",
+      "T-0205 independent HTTP context oracle C20 unset TMPDIR uses owned fallback scratch and completes native HTTP"
+    ],
+    "authorWritesCeased": true,
+    "coordinatorRed": {
+      "receipt": "tmp/t0205-coordinator-red/summary.json",
+      "sha256": "e75d0d9577096c95b7fb1b921082709d0f0871ce63bd4fff7c683964fb72eb8d",
+      "exit": 1,
+      "before": "66a5272f6fd9036a73879c48633d592489475f97afe4861cc85f4b23216e8266",
+      "after": "66a5272f6fd9036a73879c48633d592489475f97afe4861cc85f4b23216e8266",
+      "pass": 1,
+      "fail": 19,
+      "skip": 0,
+      "runtimeErrors": 0,
+      "tests": [
+        "tests/unit/release-install-http-context.test.ts"
+      ],
+      "identities": [
+        "T-0205 independent HTTP context oracle C01 healthy native curl entries share the probe shell and BASHPID",
+        "T-0205 independent HTTP context oracle C02 stalled readiness retains 21 native calls and distinguishes pre-launch entries",
+        "T-0205 independent HTTP context oracle C03 scratch is exclusive private and removed after success",
+        "T-0205 independent HTTP context oracle C04 scratch is exclusive private and removed after HTTP refusal",
+        "T-0205 independent HTTP context oracle C05 scratch is exclusive private and removed after stalled readiness",
+        "T-0205 independent HTTP context oracle C06 scratch utility refusal occurs before launch and preserves the decoy",
+        "T-0205 independent HTTP context oracle C07 post-native malformed suffix status fails closed",
+        "T-0205 independent HTTP context oracle C08 post-native second-line status fails closed",
+        "T-0205 independent HTTP context oracle C09 post-native partial status fails closed",
+        "T-0205 independent HTTP context oracle C10 post-native NUL status fails closed",
+        "T-0205 independent HTTP context oracle C11 post-native empty status fails closed",
+        "T-0205 independent HTTP context oracle C12 post-native successful-looking status preserves a failing curl exit",
+        "T-0205 independent HTTP context oracle C13 post-native closed status stream fails closed",
+        "T-0205 independent HTTP context oracle C14 per-call capture clears a prior successful-looking status",
+        "T-0205 independent HTTP context oracle C15 status capture preserves one trailing newline",
+        "T-0205 independent HTTP context oracle C16 status capture preserves multiple trailing newlines",
+        "T-0205 independent HTTP context oracle C17 refused credential and public health remain actual server refusals",
+        "T-0205 independent HTTP context oracle C18 occupied listener retains real 200 401 200 controls and survives refusal",
+        "T-0205 independent HTTP context oracle C19 TERM-resistant owned child stops without changing successful probe exit",
+        "T-0205 independent HTTP context oracle C20 unset TMPDIR uses owned fallback scratch and completes native HTTP"
+      ],
+      "failedNames": [
+        "T-0205 independent HTTP context oracle C01 healthy native curl entries share the probe shell and BASHPID",
+        "T-0205 independent HTTP context oracle C02 stalled readiness retains 21 native calls and distinguishes pre-launch entries",
+        "T-0205 independent HTTP context oracle C03 scratch is exclusive private and removed after success",
+        "T-0205 independent HTTP context oracle C04 scratch is exclusive private and removed after HTTP refusal",
+        "T-0205 independent HTTP context oracle C05 scratch is exclusive private and removed after stalled readiness",
+        "T-0205 independent HTTP context oracle C06 scratch utility refusal occurs before launch and preserves the decoy",
+        "T-0205 independent HTTP context oracle C07 post-native malformed suffix status fails closed",
+        "T-0205 independent HTTP context oracle C08 post-native second-line status fails closed",
+        "T-0205 independent HTTP context oracle C09 post-native partial status fails closed",
+        "T-0205 independent HTTP context oracle C10 post-native NUL status fails closed",
+        "T-0205 independent HTTP context oracle C11 post-native empty status fails closed",
+        "T-0205 independent HTTP context oracle C12 post-native successful-looking status preserves a failing curl exit",
+        "T-0205 independent HTTP context oracle C13 post-native closed status stream fails closed",
+        "T-0205 independent HTTP context oracle C14 per-call capture clears a prior successful-looking status",
+        "T-0205 independent HTTP context oracle C15 status capture preserves one trailing newline",
+        "T-0205 independent HTTP context oracle C16 status capture preserves multiple trailing newlines",
+        "T-0205 independent HTTP context oracle C17 refused credential and public health remain actual server refusals",
+        "T-0205 independent HTTP context oracle C19 TERM-resistant owned child stops without changing successful probe exit",
+        "T-0205 independent HTTP context oracle C20 unset TMPDIR uses owned fallback scratch and completes native HTTP"
+      ],
+      "reportSHA256": "1fa86feec7d65f0ebe5276396bc83bcbcc3a2ec4b80f01de46d3012050597560"
+    },
+    "authorControls": "Final original19fail1pass; private reference20pass, seven targeted calibrated fault variants fail intended assertions. All normal exits, no skips/runtime errors. Private reference is not an implemented Harness or platform acceptance."
+  },
+  "landing_authority": "Schrodinger independent R2 REVIEWER permits combined T0188/T0205 candidate gate and installed/visual checks, separate local implementation commits, binding inputs to final content, both sweeps on fresh clean final head, separate acceptance and only final-green push with every exact-head job. No intermediate red push/check exclusion."
 }
