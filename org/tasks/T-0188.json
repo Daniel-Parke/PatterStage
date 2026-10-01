@@ -381,5 +381,76 @@
     "verdict": "HOLD T0188 acceptance; permit additive valid historical-SQL fixture and actual public-chain malformed Auth42/43 witnesses, preserving105names and all original assertions. No source/protected/manifest edits.",
     "retainedSweep": "tmp/t0188-migration-committed-sweep/summary.json",
     "qualification": "13assertion-kills with clean controls/restoration; m12fails onlyfresh/upgrades, does not prove recorded43guard. Not sufficient final acceptance."
+  },
+  "auth_wiring_amendment_freeze": {
+    "manifest": "tmp/t0188-auth-wiring-amendment/freeze-manifest.json",
+    "sha256": "0ea44d800de44977391fb2c0cd291db3aabddd53b89bf36fcda3b5efc2c270f4",
+    "author": "01a0f80a-5091-7ac3-9d66-89e159495160",
+    "normal": {
+      "total": 105,
+      "pass": 105,
+      "semanticFail": 0,
+      "infrastructureFail": 0,
+      "skip": 0
+    },
+    "m12": {
+      "id": "m12-head-auth-storage-unvalidated",
+      "pass": 22,
+      "semanticFail": 9,
+      "infrastructureFail": 0,
+      "skip": 0,
+      "controlsBeforeAfter": {
+        "passEach": 31,
+        "failEach": 0
+      },
+      "recorded43AuthSpecificMatcherFailure": true,
+      "calibrationOnly": true,
+      "allFailedNames": [
+        "T-0188 convergence and pending failures (real SQLite) a genuinely empty database reaches literal 43 in one call and stays stable",
+        "T-0188 convergence and pending failures (real SQLite) synthetic supported v3 converges once without changing user fields",
+        "T-0188 convergence and pending failures (real SQLite) synthetic supported v14 converges once without changing user fields",
+        "T-0188 convergence and pending failures (real SQLite) synthetic supported v23 converges once without changing user fields",
+        "T-0188 convergence and pending failures (real SQLite) synthetic supported v34 converges once without changing user fields",
+        "T-0188 convergence and pending failures (real SQLite) synthetic supported v36 converges once without changing user fields",
+        "T-0188 convergence and pending failures (real SQLite) synthetic supported v42 converges once without changing user fields",
+        "T-0188 Auth43 mandatory storage validation (real SQLite) malformed actual auth storage fails even with recorded version 42",
+        "T-0188 Auth43 mandatory storage validation (real SQLite) malformed actual auth storage fails even with recorded version 43"
+      ],
+      "selectedWitnesses": [
+        {
+          "fullName": "T-0188 Auth43 mandatory storage validation (real SQLite) malformed actual auth storage fails even with recorded version 42",
+          "normalStatus": "passed",
+          "m12Status": "failed",
+          "normalPassingAssertions": 11,
+          "m12PassingAssertions": 5,
+          "matcherName": "toBe",
+          "matcherMessage": "expect(received).toBe(expected) // Object.is equality\n\nExpected: 43\nReceived: 42",
+          "m12AssertionMatchesIntent": true
+        },
+        {
+          "fullName": "T-0188 Auth43 mandatory storage validation (real SQLite) malformed actual auth storage fails even with recorded version 43",
+          "normalStatus": "passed",
+          "m12Status": "failed",
+          "normalPassingAssertions": 11,
+          "m12PassingAssertions": 8,
+          "matcherName": "toThrow",
+          "matcherMessage": "expect(received).toThrow(expected)\n\nExpected pattern: /auth(?:[_ ]sessions?|43)/i\n\nReceived function did not throw",
+          "m12AssertionMatchesIntent": true
+        }
+      ],
+      "cleanBaselineRestored": true,
+      "authoredOverlaysRestored": true,
+      "definitionUnchanged": true
+    },
+    "files": {
+      "tests/unit/migration-t0188-behaviour.test.ts": "95e29d4dba1f7902c3f8bc6f656a4f3d266f4da026b980436e7af6a0f07112ee",
+      "org/reviews/2026-10-t0188-oracle-amendment.md": "98cb0af363bc828262ee71ae8e31b0798772f9270a796bbe8ca7577dfcbb71c9",
+      "org/reviews/2026-10-t0188-migration-verification.md": "4ac9a97860f21188033026f0ea088a644051293a42edc550999567867f405b33"
+    },
+    "namesPreserved": 105,
+    "originalLinesPreserved": true,
+    "priorReceiptsPreserved": 274,
+    "authorWritesCeased": true,
+    "qualification": "Independent calibration, not final committed sweep. Normal105green; existing m12 recorded43 reaches Auth-specific toThrow matcher after direct-worker/valid controls, then fails as intended. Complete gate and committed sweep still required."
   }
 }

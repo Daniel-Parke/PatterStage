@@ -397,5 +397,35 @@ describe("T-0188 Auth43 mandatory storage validation (real SQLite)", () => {
       expect(getSchemaVersion(db)).toBe(version);
       expect(snapshot(db)).toEqual(before);
     } finally { db.close(); }
+
+    // Each chain fixture is independently replayed; the valid control never builds the damaged fixture.
+    const headed = (): RealDb => {
+      const fixture = prior(43);
+      fixture.exec("INSERT INTO missions (id,name,prompt,status,created_at,updated_at) VALUES ('auth-chain-mission','Owned mission','Keep this row','successful','2000-01-01','2000-01-02')");
+      setSchemaVersion(fixture, version);
+      return fixture;
+    };
+    const control = headed();
+    try {
+      control.prepare("INSERT INTO auth_sessions (id,secret_hash,created_at_ms,last_active_at_ms,idle_expires_at_ms,absolute_expires_at_ms,boot_generation,token_binding) VALUES (?,?,1,2,3,4,'owned-chain',?)")
+        .run("auth-chain-session", Buffer.alloc(32, 3), Buffer.alloc(32, 4));
+      const rows = control.prepare("SELECT * FROM auth_sessions").all();
+      expect(tables(control)).toContain("cron_jobs");
+      expect(() => runMigrations(control)).not.toThrow();
+      expect(getSchemaVersion(control)).toBe(43);
+      expect(control.prepare("SELECT * FROM auth_sessions").all()).toEqual(rows);
+      const stable = snapshot(control);
+      runMigrations(control);
+      expect(snapshot(control)).toEqual(stable);
+    } finally { control.close(); }
+
+    const chain = headed();
+    try {
+      chain.exec("DROP TABLE auth_sessions; CREATE TABLE auth_sessions (id TEXT PRIMARY KEY, user_payload TEXT); INSERT INTO auth_sessions VALUES ('keep','owned payload')");
+      const before = snapshot(chain);
+      expect(() => runMigrations(chain)).toThrow(/auth(?:[_ ]sessions?|43)/i);
+      expect(getSchemaVersion(chain)).toBe(version);
+      expect(snapshot(chain)).toEqual(before);
+    } finally { chain.close(); }
   });
 });

@@ -2,7 +2,7 @@
   "measuredAt": "2026-10-01",
   "counts": {
     "srcLines": 102201,
-    "testLines": 140927,
+    "testLines": 140957,
     "scriptsLines": 13563,
     "srcRepeatedWindowLines": 968,
     "testRepeatedWindowLines": 4794,
@@ -1090,6 +1090,11 @@
       "measuredAt": "2026-10-01",
       "rise": "testLines rose from 140730 to 140927",
       "reason": "T-0205: +197 measured TypeScript test lines add the independent20-case native HTTP call-context oracle; all prior names/assertions and repeated-window ceiling4800 remain. The Python observer and Python harness repair lie outside this existing measure scope and remain separately inventoried. Fixed programme and historical targets do not change."
+    },
+    {
+      "measuredAt": "2026-10-01",
+      "rise": "testLines rose from 140927 to 140957",
+      "reason": "T-0188: +30 test lines add independently authorised public-chain Auth42/43 storage witnesses and valid controls within the same105 identities. All original assertions, fixed targets and repeated-window ceiling4800 remain."
     }
   ]
 }
