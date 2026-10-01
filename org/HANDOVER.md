@@ -64,7 +64,14 @@ with no skips or runtime errors. A separately authorised ORACLE amendment
 pins the real outer shell and independently calibrates the temporary
 filesystem before checking fixture results. All names, deadlines and
 HTTP/authentication assertions remain. No product source changes are involved;
-the complete gate and sweep must repeat after freeze, followed by hosted CI.
+The amendment is independently accepted at `85c9d004`. Native Linux passes
+35 cases without skips; coordinator Windows passes all 49 focused cases.
+The repeated full ten-step gate passes on unchanged tree
+`19a549ec18260ae50b42e82a566686c9f438ff8981e4072e8518859a6ad61d7a`:
+7,561 Jest passes, nine existing/platform skips, 355 browser passes and 24
+existing skips. Both build-isolation controls and both censuses pass. All
+eight committed mutants are killed with passing pre/post controls and clean
+restoration. New exact-head hosted push/PR acceptance is still required.
 
 Windows validation additionally exposed a native Node worker exit
 `0xC0000409` under installed Node 24.15.0. The unchanged complete browser suite
