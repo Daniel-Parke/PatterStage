@@ -189,3 +189,150 @@ npm test -- --runInBand --runTestsByPath tests/unit/release-test-tools.test.ts -
 Author: independent clean-context Euler `01a0f0f5-ee39-7c43-a378-f7ec83e3fbb7`. Specific authority: R2 REVIEWER Goodall `01a0ef6e-780c-77e2-9377-b20014518524`, Q-015, committed expiry brief/claims at `e53233fb73fb830557b95ca7c442f9fd70982750`. No new operator ruling or extra authority. Source SHA-256 `b444b665e2e2649bca93a31410f9cf148565fb46acfa5fb22f5f9dc608f89a59` is coordinator/task attestation only; the implementation was not read or independently hashed. No source/workflow/T-0202 edits by this author.
 
 Ownership limit: the controller directly waits GNU; after short-grace GNU death, the platform reaps its monitored child and the controller verifies that owned PID is absent. No direct grandparent wait is claimed. Arbitrary starvation, exact historical load cause, native macOS and broader gate acceptance remain unproved. Coordinator owns source repair, integration, claims release and broader gates. Accepted red handed off; author writes cease after this freeze.
+
+
+## 2026-09-30: portable controls and honest infrastructure classification
+
+Date: 2026-09-30T07:50:21.276Z. Author: fresh clean-context ORACLE Popper
+`01a0f13e-503d-7033-a808-3cf55c2c5e72`, different from original author
+Beauvoir and expiry-regression author Euler. Authoriser: independent R2
+REVIEWER Goodall `01a0ef6e-780c-77e2-9377-b20014518524`, Q-015.
+Specific authority: committed portable brief and exclusive two-lane claims
+at `ee66f84ec8d7c5f1f630c9a979c4b92bf20e0d5a`. No additional operator ruling is claimed.
+
+This entry precedes every tracked test/harness change. Target hashes are
+prospective authorised amendment bytes, not test execution results.
+
+- Frozen input main LF SHA-256: `3c1a991807d12cfe58bbdb83c6c321919211f38c9aea9bba17f4dd6e9033489c`.
+- Complete preceding ledger prefix: 19585 bytes, raw SHA-256
+  `b1d461c89d45c18bb5aadd93e2d7a20ef7f4da1fc7adbf98ff59adb53a58d17b`.
+- Exact input snapshots and prospective identity proof:
+  `tmp/t0203-portable-oracle/input-main.ts`, `input-ledger.md` and
+  `prospective-proof.json` in that directory.
+
+Authorised targets, LF SHA-256:
+
+- `tests/unit/release-test-tools.test.ts`: `2d114ad550a60aa74cf9ea994b79f616ad322b87b233e44b35998a4c100c0dd5`.
+- `tests/unit/release-test-tools-native.test.ts`: `3f6493615f88d036e11e8b4b92dc2e81ac0c66a2636f9892149d6a049fc45951`.
+- `tests/helpers/release-test-tools-harness.ts`: `1fdd357a330f6fce7d1b1341b7959711c9ce4b8f2f35e228962b2ed77940a41e`.
+
+Reason and scope: P21's direct actual-GNU status/event/call-log calibration
+and preparation READY/TERM plus reaping/cleanup lifecycle assertions are
+retained exactly, but a failure in either instrument section throws a fresh
+ordinary infrastructure Error without matcherResult or nested matcher cause.
+The GNU controller, actual 137/124 values, expiry 0.2, grace 0.2/2, sleep 2,
+event sequences, ownership/absence checks and all bounds are unchanged.
+P21 clears both calibration call and event logs before state.prepare(); its
+same preparation-command condition now examines only fresh calls. Script
+existence, preparation invocation, result status, complete prepared events,
+installation and publication checks remain semantic matchers. Valid old-grace
+137 still reaches the intended preparation-success failure.
+
+N01 moves as an exact complete case call into its native suite, retaining the
+same describe title, full name, callback bytes, assertions, Darwin condition
+and 20,000 ms bound. Only the equivalent original launcher/discovery/cleanup
+and supporting constants move to the shared helper, with exports added.
+Whole-gate tool discovery, selected Bash, isolated PATH handling, launch
+errors, 15,000 ms watchdog, 1,048,576-byte cap and owned temporary cleanup are
+unchanged. No whole fake Homebrew fixture is copied. All 29 names occur once
+across the two suites; portable registers 28 with zero skips. Every non-P21
+complete case call, including approved F00 grace 2, is byte-identical in LF.
+
+No implementation script or workflow has been read. No implementation,
+frozen GNU HTTP fixture, runner, worker, metric, baseline, threshold or
+historical-record change is made by this author. Execution evidence follows
+as a separate append; native macOS and wider hosted acceptance remain open.
+
+### Preliminary harness extraction correction before red freeze
+
+Date: 2026-09-30T07:52:03.715Z. The first target omitted exports on the
+original typed tools and roots declarations. The first portable run therefore
+failed fixture initialisation before calibration; its receipt
+`tmp/t0203-portable-oracle/red.json` is rejected instrument evidence, never
+source red. Add only export to those two moved declarations. All original
+harness statements, cases, bounds and the authorised amendment scope remain
+unchanged. This entry precedes the correction.
+
+- Previous prospective helper LF SHA-256: `1fdd357a330f6fce7d1b1341b7959711c9ce4b8f2f35e228962b2ed77940a41e`.
+- Corrected target helper LF SHA-256: `e2660a75362260ab09625127173f61d7832e5a6f38b568ff75e828c773c02af7`.
+- Entire preceding prefix: 22828 bytes, raw SHA-256 `f9b58540472041284b78382656d32a06ef6e503ad5c4e7bfbaa39b2ae18a45c7`.
+
+Popper authors this correction under the same committed Goodall Q-015
+portable brief/claims. No frozen handoff has yet occurred.
+
+### 2026-10-01: portable amendment final evidence and frozen handoff
+
+Date: `2026-10-01T13:52:04.190Z`. Fresh independent clean-context ORACLE
+Pasteur `01a0f7b7-61b3-7d90-812e-1bcf2344aefe` completes provenance for
+Popper's existing amendment bytes. Goodall's R2 Q-015 scope remains the
+authority for the amendment. Fresh independent REVIEWER Schrodinger
+`01a0f7b7-f68a-79b2-ba74-81cdddf2f3ef` returned PASS and authorised only
+this final evidence/freeze append, conditional on the hashes and prefix below.
+The operator relayed that authority and instructed the append. The renewed
+ORACLE claim names Pasteur and expires `2026-10-02T13:45:32Z`. No further
+test, harness, implementation or scope change is authorised or made here.
+
+Frozen files, LF SHA-256, independently checked immediately before this append:
+
+- `tests/unit/release-test-tools.test.ts`: `2d114ad550a60aa74cf9ea994b79f616ad322b87b233e44b35998a4c100c0dd5`.
+- `tests/unit/release-test-tools-native.test.ts`: `3f6493615f88d036e11e8b4b92dc2e81ac0c66a2636f9892149d6a049fc45951`.
+- `tests/helpers/release-test-tools-harness.ts`: `e2660a75362260ab09625127173f61d7832e5a6f38b568ff75e828c773c02af7`.
+- Frozen input main LF SHA-256: `3c1a991807d12cfe58bbdb83c6c321919211f38c9aea9bba17f4dd6e9033489c`.
+- Complete preceding ledger prefix: 23846 bytes, raw SHA-256 `0543bf1237f67d75e7b212c4ee0527ce4ec781e2578a764a07b3e1cda9ad9a0f`.
+- Original input-ledger prefix: 19585 bytes, raw SHA-256 `b1d461c89d45c18bb5aadd93e2d7a20ef7f4da1fc7adbf98ff59adb53a58d17b`.
+
+Pasteur independently compared the saved input, current files and prospective
+proof using TypeScript syntax trees and read-only test registration. The exact
+29-name union occurs once: 28 portable cases and N01 in the native suite.
+Every non-P21 complete case call and other describe statement remains exact
+after LF normalisation. N01's complete case/callback, Darwin condition and
+20000 ms bound remain exact. Shared helper statements match the original
+statements with exports added; discovery, isolated PATH, launch errors,
+15000 ms watchdog, 1048576-byte output cap and owned cleanup remain unchanged.
+The fixture and GNU controller statements are unchanged. No duplicate whole
+Homebrew fixture was introduced. The saved census reports 4794 repeated test
+window lines against the unchanged 4800 maximum; no census was rerun here.
+
+All 11 P21 assertion token streams survive, with only the authorised removal
+of the calibration-call slice after clearing both call and event logs.
+Old-grace 137, new-grace 124, expiry 0.2, grace 0.2/2, sleep 2 and lifecycle
+conditions remain exact. An initial read-only comparison flagged wrapper
+indentation; the corrected token comparison passed without editing files.
+The saved 12 synthetic classification controls agree with their expected
+outcomes: eight infrastructure failures have neither matcherResult nor cause;
+missing source, omitted preparation probe and valid old source retain semantic
+matcher failures; valid new source passes. Those controls are classification
+evidence only, not actual GNU or native acceptance.
+
+Popper's saved actual portable red contains 27 passes, one intended P21 setup
+status matcher failure (expected 0, actual 1 at line 375), zero skips and zero
+suite runtime errors, in 41.655 s. The coordinator independently reproduced
+the same 28-case result on 1 October in 35.846 s and attested normal exit 1
+on unchanged implementation. Pasteur inspected both receipts; no GNU rerun
+or fresh execution by Pasteur is claimed.
+
+- Author red: `tmp/t0203-portable-oracle/red-final.json`, raw SHA-256 `d9f0880448e38e899c7b2f854917709719f12fef8cc8c8f38e3cd8c12ffff327`.
+- Author log: `tmp/t0203-portable-oracle/red-final.log`, raw SHA-256 `db0cdd157920130a82e51cdb0fa2090362069bb3c493bc9fd10549fc45c7d43d`.
+- Coordinator red: `tmp/t0203-portable-coordinator-red-20261001.json`, raw SHA-256 `09befbf1f3ea64bc7919c99a87089e881f38f0466340680c74bd7c2bc695a409`.
+- Coordinator log: `tmp/t0203-portable-coordinator-red-20261001.log`, raw SHA-256 `e09493add3e03034a19443ec053dd3af99cde5241440afb2925658707121a750`.
+- Classification controls: `tmp/t0203-portable-oracle/classification-controls.json`, raw SHA-256 `bb0e27245942de5f6bba27c6485a7ade840fc7331005f4fdf3041f932cc383f2`.
+- Input/candidate proof: `tmp/t0203-portable-oracle/prospective-proof.json`, raw SHA-256 `f1aa7a3a7b30670820e31a7d6ea9657e5e4ce70c855ce08cd7c49da6f4d4e0a9`; its initial helper target is superseded by the preserved export-correction entry above.
+
+Initial failed extraction receipt `tmp/t0203-portable-oracle/red.json`
+(raw SHA-256 `ebf89d96753a24146b81f778f4e34b375a4928952583d40eb8ed6c2724dfe4fc`)
+remains rejected instrument evidence. Euler's earlier rejected foreground
+receipt and every previous ledger byte remain preserved. The saved Windows
+native receipt records N01 skipped under its unchanged platform condition;
+it establishes no native macOS acceptance.
+
+Implementation SHA-256 `b444b665e2e2649bca93a31410f9cf148565fb46acfa5fb22f5f9dc608f89a59`
+is task/coordinator/REVIEWER attestation only. Pasteur did not read or hash
+implementation scripts or workflow. This handoff freezes the existing three
+files and appends provenance only; no commit was made. Author writes cease
+after this append and read-only prefix/hash verification. Coordinator owns
+source repair, records, claims release and the whole gate. Final implementation
+review, full-gate, mutation, native macOS and exact-head hosted acceptance
+remain open. No gate or acceptance condition is waived.
+
+Attribution correction dated 2026-10-01: the non-human coordinator, not the operator, relayed independent REVIEWER Schrodinger's specific Q-015 continuation authority and instructed the final freeze append.
+The operator authorised programme continuation generally; this correction claims no additional human decision, and the specific continuation authority remains REVIEWER Schrodinger's PASS.

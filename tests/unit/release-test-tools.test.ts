@@ -4,68 +4,13 @@
 // Fake Homebrew controls installation only; successful tools execute real GNU
 // timeout and Bash. Native macOS/bootstrap and the frozen HTTP suite remain
 // separate obligations. No implementation source is inspected by this oracle.
-import { spawnSync } from "node:child_process";
-import { createHash } from "node:crypto";
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { load } from "js-yaml";
+import { launch, quote, roots, shellPath, timerCheck, tools } from "../helpers/release-test-tools-harness";
 
 const script = resolve("scripts/tooling/prepare-release-test-tools.sh");
-const bootstrap = process.env.T0203_BASH || (process.platform === "win32" ? "C:/Program Files/Git/bin/bash.exe" : "bash");
-const tools: Record<string, string> = {};
-const roots: string[] = [];
-const shellPath = (path: string) => path.replace(/\\/g, "/").replace(/^([A-Za-z]):/, (_, drive: string) => `/${drive.toLowerCase()}`);
-const quote = (value: string) => `'${value.replace(/'/g, "'\\''")}'`;
-const timerCheck = 'exec {channel}< <(sleep 0.2); value=""; IFS= read -r -t 0.01 -u "$channel" value; status=$?; exec {channel}<&-; [[ "$status" == 142 && -z "$value" ]]';
-
-function launch(args: string[], env: NodeJS.ProcessEnv = process.env) {
-  // Git's Windows launcher prepends host directories even with profiles off.
-  // Restore the isolated PATH inside Bash before discovery or script execution.
-  const isolated = env.T0203_CALLS !== undefined;
-  const invocation = isolated ? args[0] === "-c"
-    ? ["-c", `export PATH="$T0203_TOOL_PATH"\n${args[1]}`]
-    : ["-c", 'export PATH="$T0203_TOOL_PATH"; "$BASH" --noprofile --norc "$@"', "t0203", ...args]
-    : args;
-  const childEnv: NodeJS.ProcessEnv = { ...env, T0203_TOOL_PATH: env.PATH };
-  for (const key of Object.keys(childEnv)) {
-    if (key.toLowerCase() === "path" && key !== "PATH") delete childEnv[key];
-  }
-  const result = spawnSync(bootstrap, ["--noprofile", "--norc", ...invocation], {
-    encoding: "utf8", env: childEnv, timeout: 15_000, maxBuffer: 1024 * 1024,
-  });
-  // Spawn failure, signal or outer watchdog expiry is infrastructure, not red.
-  if (result.error || result.signal || result.status === null) {
-    throw new Error(`T-0203 infrastructure: ${result.error?.message || result.signal || "no exit status"}`);
-  }
-  return result;
-}
-
-beforeAll(() => {
-  const found = launch(["-c", `
-if [[ "$OSTYPE" == msys* || "$OSTYPE" == cygwin* ]]; then export PATH=/usr/bin:/bin:$PATH; fi
-printf 'bash\t%s\n' "$BASH"
-for name in timeout sleep cp cat dirname mktemp rm grep sed head env sh; do
-  command_path=$(type -P "$name") || exit 90
-  printf '%s\t%s\n' "$name" "$command_path"
-done`]);
-  if (found.status !== 0) throw new Error(`T-0203 tool discovery failed: ${found.stderr}`);
-  for (const line of found.stdout.trim().split("\n")) {
-    const [name, path] = line.split("\t");
-    tools[name] = path;
-  }
-}, 20_000);
-
-afterEach(() => {
-  for (const root of roots.splice(0)) {
-    const absolute = resolve(root);
-    if (!absolute.startsWith(resolve(tmpdir()) + (process.platform === "win32" ? "\\" : "/"))) {
-      throw new Error("T-0203 cleanup escaped its temporary directory");
-    }
-    rmSync(absolute, { recursive: true, force: true });
-  }
-});
-
 type Options = {
   os?: "Darwin" | "Linux" | "MINGW64_NT-10.0";
   coreutils?: boolean;
@@ -402,19 +347,31 @@ describe("T-0203 release test prerequisites", () => {
     const env = { ...state.env, PATH: `${state.gnubin}:${state.bashbin}:${state.bin}` };
     const events = () => readFileSync(join(state.nativeBin, "delayed-term-events"), "utf8").trim().split("\n");
     const runExpiry = (grace: "0.2" | "2") => launch(["-c", "timeout --kill-after=" + grace + " 0.2 sleep 2; status=$?; exit \"$status\""], env);
-    expect(runExpiry("0.2").status).toBe(137);
-    expect(events()).toEqual(["READY", "TERM", "STATUS\t137", "REAPED_GNU", "REAPED_CHILD", "CLEANUP"]);
-    expect(runExpiry("2").status).toBe(124);
-    expect(events()).toEqual(["READY", "TERM", "CLEAN", "STATUS\t124", "REAPED_GNU", "REAPED_CHILD", "CLEANUP"]);
-    expect(state.calls().filter((call) => call[0] === "timeout")).toEqual([
-      ["timeout", "--kill-after=0.2", "0.2", "sleep", "2"],
-      ["timeout", "--kill-after=2", "0.2", "sleep", "2"],
-    ]);
+    const infrastructure = (stage: string, assertion: () => void) => {
+      try { assertion(); } catch (error) {
+        throw new Error(`T-0203 infrastructure: P21 ${stage}: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    };
+    infrastructure("GNU calibration", () => {
+      expect(runExpiry("0.2").status).toBe(137);
+      expect(events()).toEqual(["READY", "TERM", "STATUS\t137", "REAPED_GNU", "REAPED_CHILD", "CLEANUP"]);
+      expect(runExpiry("2").status).toBe(124);
+      expect(events()).toEqual(["READY", "TERM", "CLEAN", "STATUS\t124", "REAPED_GNU", "REAPED_CHILD", "CLEANUP"]);
+      expect(state.calls().filter((call) => call[0] === "timeout")).toEqual([
+        ["timeout", "--kill-after=0.2", "0.2", "sleep", "2"],
+        ["timeout", "--kill-after=2", "0.2", "sleep", "2"],
+      ]);
+    });
+    // Preparation must supply fresh calls and lifecycle evidence.
+    writeFileSync(join(state.nativeBin, "delayed-term-events"), "");
+    writeFileSync(join(state.nativeBin, "..", "calls"), "");
     const result = state.prepare();
-    expect(state.calls().slice(2).some((call) => call[0] === "timeout" && call[1].startsWith("--kill-after=") && call[2] === "0.2" && call[3] === "sleep" && call[4] === "2")).toBe(true);
+    expect(state.calls().some((call) => call[0] === "timeout" && call[1].startsWith("--kill-after=") && call[2] === "0.2" && call[3] === "sleep" && call[4] === "2")).toBe(true);
     const preparedEvents = events();
-    expect(preparedEvents.slice(0, 2)).toEqual(["READY", "TERM"]);
-    expect(preparedEvents.slice(-3)).toEqual(["REAPED_GNU", "REAPED_CHILD", "CLEANUP"]);
+    infrastructure("prepared lifecycle", () => {
+      expect(preparedEvents.slice(0, 2)).toEqual(["READY", "TERM"]);
+      expect(preparedEvents.slice(-3)).toEqual(["REAPED_GNU", "REAPED_CHILD", "CLEANUP"]);
+    });
     expect(result.status).toBe(0);
     expect(preparedEvents).toEqual(["READY", "TERM", "CLEAN", "STATUS\t124", "REAPED_GNU", "REAPED_CHILD", "CLEANUP"]);
     expect(installed(state)).toEqual([]);
@@ -439,62 +396,5 @@ describe("T-0203 release test prerequisites", () => {
     expect(owners).toEqual(["build-test-macos"]);
   });
 
-  const nativeMac = process.platform === "darwin" ? it : it.skip;
-  nativeMac("N01 macOS native routing retains modern Bash and real curl and exposes original-PATH rejection", () => {
-    const root = mkdtempSync(join(tmpdir(), "t0203 native "));
-    roots.push(root);
-    mkdirSync(join(root, "bin"));
-    const child = join(root, "env-child");
-    writeFileSync(child, `#!/usr/bin/env bash\nprintf 'shebang\\t%s\\t%s\\n' "$BASH" "$BASH_VERSION"\n${timerCheck}\n`);
-    chmodSync(child, 0o700);
-    const env = { ...process.env, T0202_ROOT: root };
-    const before = launch(["-c", 'export PATH="$T0202_ROOT/bin:/usr/bin:/bin:$PATH"; type -P curl'], env);
-    expect(before.status).toBe(0);
-    const beforePath = before.stdout.trim();
-    const beforeHash = createHash("sha256").update(readFileSync(beforePath)).digest("hex");
-    const source = readFileSync(resolve("tests/helpers/release-install-http-probe.py"), "utf8").replace(/\r\n/g, "\n");
-    // Extract only the routing boundary, then execute it. No whole-helper golden.
-    const routing = source.match(/SUPERVISOR = r'''\n([\s\S]*?)\nexport T0202_RPC_CLIENT=/)?.[1];
-    expect(routing).toBeDefined();
-    const selected = launch(["-c", `
-base_path=$PATH
-export PATH="$T0202_ROOT/bin:/usr/bin:/bin:$base_path"
-printf 'curl-before\t%s\n' "$(type -P curl)"
-export PATH="$base_path"
-${routing}
-printf 'curl-after\t%s\n' "$(type -P curl)"
-printf 'parent\t%s\t%s\n' "$BASH" "$BASH_VERSION"
-bash --noprofile --norc -c ${quote(`printf 'bare\\t%s\\t%s\\n' "$BASH" "$BASH_VERSION"; ${timerCheck}`)} || exit "$?"
-${quote(child)} || exit "$?"`], env);
-    expect(selected.status).toBe(0);
-    const rows = new Map(selected.stdout.trim().split("\n").map((line) => {
-      const [name, ...values] = line.split("\t");
-      return [name, values] as const;
-    }));
-    for (const name of ["parent", "bare", "shebang"]) {
-      const [path, version] = rows.get(name) || [];
-      expect(realpathSync(path)).toBe(realpathSync(tools.bash));
-      expect(Number(version.split(".")[0])).toBeGreaterThanOrEqual(4);
-    }
-    const curlBefore = rows.get("curl-before")?.[0];
-    const curlAfter = rows.get("curl-after")?.[0];
-    expect(curlBefore).toBeDefined();
-    expect(curlBefore).toBe(beforePath);
-    expect(curlAfter).toBe(curlBefore);
-    expect(createHash("sha256").update(readFileSync(curlAfter!)).digest("hex"))
-      .toBe(beforeHash);
 
-    const nativeRead = launch(["-c", `${quote("/bin/bash")} --noprofile --norc -c ${quote('read -r -t 0.01 value </dev/null')}`]);
-    expect(nativeRead.status).not.toBe(0);
-    expect(nativeRead.stderr).toContain("invalid timeout specification");
-    const nativeDescriptor = launch(["-c", `${quote("/bin/bash")} --noprofile --norc -c ${quote('exec {channel}</dev/null')}`]);
-    expect(nativeDescriptor.status).not.toBe(0);
-
-    const original = launch(["-c", `
-export PATH="$T0202_ROOT/bin:/usr/bin:/bin:$PATH"
-bash --noprofile --norc -c ${quote('printf "%s\\n" "$BASH"; read -r -t 0.01 value </dev/null')}`], env);
-    expect(original.status).not.toBe(0);
-    expect(realpathSync(original.stdout.trim())).toBe(realpathSync("/bin/bash"));
-    expect(original.stderr).toContain("invalid timeout specification");
-  }, 20_000);
 });
