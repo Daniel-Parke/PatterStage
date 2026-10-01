@@ -527,3 +527,24 @@ remain narrower than the user's requested complete pathway validation.
 The structural batches and final walkthrough must close those gaps or name
 their specific unavailable external dependency. A passing route walk is not
 substituted for those journeys.
+
+## 1 October: profile rename candidate and stopped fixture
+
+The interrupted profile walk `tmp/release-profiles-1790754992549/result.json`
+reached desktop creation, file editing, unsaved-change handling and save.
+Its cleanup then returned 404 for the original slug and masked the preceding
+rename assertion. This is not a completed profile lifecycle or a phone pass.
+Current source at `a6d4a0f7` explains a candidate: PUT
+`src/app/api/agent/profiles/[id]/route.ts` takes the new-slug branch without
+applying the submitted display name or description, and
+`src/modules/hermes/lib/profiles-repository.ts:315` copies both existing fields.
+T-0192 must reproduce the public rename/description behaviour with real SQLite
+and a controlled UI walk before claiming a repair. Preserve default-profile
+guards, file contents and non-secret metadata.
+
+The 1 October cleanup diagnostic could not connect to owned port 3997; no
+fixture listener was present and no deletion or successful cleanup is claimed.
+Its rejected log is `tmp/release-profile-diagnostic-20261001.log`; an exact
+in-process comparison confirmed it contains no fixture credential. Locate
+only the old run's uniquely named rows when the isolated instance is started
+again. Operator profiles and repository data are outside this diagnostic.

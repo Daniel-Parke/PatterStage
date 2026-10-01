@@ -2,12 +2,12 @@
 summary: What the consolidation programme did and left behind, how a batch was landed, what is open, and what waits next
 type: venture
 tags: [handover, consolidation]
-updated: 2026-09-30
+updated: 2026-10-01
 ---
 
-# Handover · PatterStage, 2026-09-30
+# Handover · PatterStage, 2026-10-01
 
-## Current status, 2026-09-30
+## Current status, 2026-10-01
 
 **Q-032 now permits approved structural T-0188–T-0201 before release.**
 The operator amended the release-first sequencing in Q-011. PR #157's merge,
@@ -25,10 +25,39 @@ and restoration left Git clean. The independently accepted curl instrument
 is frozen in `5249123f`. The 15-scenario HTTP-enabled real Linux matrix passed
 on its explicitly byte-bound product/controller snapshot. Earlier failed
 gates and configuration attempts remain historical evidence. Required hosted
-push and PR acceptance is pending the closure push; do not start T-0188 before
-every scheduled job passes. Then apply the separately authored plan-authority
+push and PR verification at `88c5d28b` failed macOS coverage before 21 HTTP
+fixture witnesses because GNU timeout was unavailable. All other scheduled
+jobs passed, including PR full browser/acceptance, install and real Hermes;
+both Gitleaks runs passed. **T-0203 is active** to supply compatible timeout
+and Bash prerequisites, with an independently authorised Darwin-only fixture
+routing amendment. No frozen deadline/assertion changes or historical T-0202
+record edits are permitted. Do not start T-0188 before the repair passes every
+scheduled hosted job. Then apply the separately authored plan-authority
 amendment and route/record T-0188. T-0190's chat race and T-0194's Composer 429
 remain open functional defects, and T-0200's compatibility ruling is pending.
+
+T-0203's first unchanged gate stopped at Jest: F00 expected timeout status
+124 and received 137, after 795 passing suites and 7,559 passing assertions.
+The same suite passed alone with 27 passes and one new native-macOS skip.
+Both receipts remain in `tmp/t0203-full-gate` and
+`tmp/t0203-load-failure-alone.json/.log`. The independent R2 reviewer
+authorised a Q-015 correction to only the normal-expiry kill grace, preserving
+the exact 124 assertion and every other bound. The independently frozen
+real-GNU delayed-TERM regression and portable/native amendment are committed
+red at `a6d4a0f7`: 27 portable passes, one intended preparation failure,
+no skips and no runtime errors. All 29 identities and original ledger bytes
+survive. The source correction changes only the ordinary expiry kill grace
+from 0.2 to 2 seconds. Full-gate, clean-tree sweep and exact-head native macOS
+acceptance remain open. Neither the isolated pass nor the scheduling
+explanation waives a complete gate.
+
+Windows validation additionally exposed a native Node worker exit
+`0xC0000409` under installed Node 24.15.0. The unchanged complete browser suite
+passes 355 cases with 24 existing skips under official, checksum-verified
+isolated Node 24.21.0. No compiler flags, workers, retries or assertions were
+weakened; global Node stays unchanged. The precise native cause is unproved.
+Both failed full gates and the runtime comparison remain on T-0203; repeat
+the whole gate using this isolated supported runtime before landing.
 
 **T-0187 hosted acceptance passed at `dev@c548be18`.** Push CI `36643616502`,
 PR CI `36643621005`, push Gitleaks `36643616541` and PR Gitleaks `36643620989`

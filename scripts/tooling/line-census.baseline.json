@@ -1,9 +1,9 @@
 {
-  "measuredAt": "2026-09-30",
+  "measuredAt": "2026-10-01",
   "counts": {
     "srcLines": 102681,
-    "testLines": 138942,
-    "scriptsLines": 13504,
+    "testLines": 139473,
+    "scriptsLines": 13566,
     "srcRepeatedWindowLines": 1010,
     "testRepeatedWindowLines": 4794,
     "routesWithTryCatch": 18,
@@ -1055,6 +1055,21 @@
       "measuredAt": "2026-09-30",
       "rise": "testLines rose from 138872 to 138942",
       "reason": "T-0202: independent red-first interactive protocol oracle adds 70 counted TypeScript test lines. Its separate native Python companion has 354 physical lines outside this historical measure. No fixed programme target changes; repeated test windows stay 4794 against the fixed 4800 ceiling."
+    },
+    {
+      "measuredAt": "2026-09-30",
+      "rise": "testLines rose from 138942 to 139351",
+      "reason": "T-0203: independent 28-case CI prerequisite oracle, including a separately authorised noisy-install regression, and the internal macOS GNU timeout/Bash preparation script; fixed programme targets and all existing test identities remain unchanged."
+    },
+    {
+      "measuredAt": "2026-09-30",
+      "rise": "scriptsLines rose from 13504 to 13566",
+      "reason": "T-0203: independent 28-case CI prerequisite oracle, including a separately authorised noisy-install regression, and the internal macOS GNU timeout/Bash preparation script; fixed programme targets and all existing test identities remain unchanged."
+    },
+    {
+      "measuredAt": "2026-10-01",
+      "rise": "testLines rose from 139351 to 139473",
+      "reason": "T-0203: independently authored delayed-TERM regression and exact 29-identity portable/native harness extraction; infrastructure remains distinct from semantic failure; no product additions or fixed-target changes"
     }
   ]
 }

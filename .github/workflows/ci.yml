@@ -144,6 +144,9 @@ jobs:
         with:
           token: ${{ github.token }}
           fetch-depth: 0
+      - name: Prepare release test prerequisites
+        shell: bash
+        run: bash scripts/tooling/prepare-release-test-tools.sh
       - uses: actions/setup-node@v5
         with:
           node-version: "20"
