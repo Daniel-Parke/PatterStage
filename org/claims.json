@@ -43,8 +43,22 @@
       "session_id": "2026-10-01-migration-driver-consolidation",
       "acquired": "2026-10-01T18:39:49Z",
       "harness_task_id": "2026-10-01-migration-driver-consolidation"
+    },
+    {
+      "task_id": "T-0188",
+      "host": "NUCBOX_M6ULTRA",
+      "lane_id": "T-0188-oracle-amendment",
+      "session_id": "01a0f80a-5091-7ac3-9d66-89e159495160",
+      "harness_task_id": "01a0f80a-5091-7ac3-9d66-89e159495160",
+      "acquired": "2026-10-01T19:41:24.233Z",
+      "expires": "2026-10-02T18:45:00Z",
+      "path_claims": [
+        "tests/unit/migration-t0188-behaviour.test.ts",
+        "org/reviews/2026-10-t0188-oracle-amendment.md",
+        "org/reviews/2026-10-t0188-migration-verification.md"
+      ]
     }
   ],
   "version": 1,
-  "note": "One coordinator writing lane. Newton oracle frozen and ceased writing; independent reviewer and future sidecars are read-only. Frozen oracle paths remain immutable."
+  "note": "At most two writers. Newton owns only authorised non-NULL fixture amendment and append-only provenance; coordinator owns implementation/record paths. Read-only reviewer remains independent."
 }
