@@ -214,3 +214,132 @@ ledger also has a byte-preserving copy at
 renewed three-file freeze are in
 `tmp/t0205-oracle/freeze-attribution-amendment.json`. No behavioural oracle or
 helper amendment occurred. Author writes cease after that receipt is saved.
+
+## Authorised m7 call-syntax retarget after independent freeze
+
+Amendment date: 2026-10-01 UTC. Author: `T-0205-oracle`, a different author
+from the Harness implementer. Authoriser: Schrodinger
+`01a0f7b7-f68a-79b2-ba74-81cdddf2f3ef`, independent R2 REVIEWER under Q015,
+as recorded in `org/tasks/T-0205.json` at `amendment_authority`.
+The operator explicitly requested this retarget after oracle freeze and red.
+The updated lane claims only the T-0202 manifest and append-only ledger.
+
+Reason: the Harness now executes the authenticated status call directly. The
+old m7 command-substitution anchor no longer names that call. Post-freeze
+source inspection found exactly one occurrence of the new direct-call anchor.
+Only m7's `anchor` and `replacement` call syntax were changed via `apply_patch`:
+
+```sh
+status_code -H "Authorization: Bearer $AUTH_TOKEN" "$BASE/" || true
+```
+
+The replacement retains the exact standalone fault before that call:
+
+```sh
+echo "$AUTH_TOKEN"
+status_code -H "Authorization: Bearer $AUTH_TOKEN" "$BASE/" || true
+```
+
+Manifest `tests/fixtures/mutants/T-0202.json` LF SHA-256:
+
+- Old: `91966bf4bccafecbdec5a18f702714461fb727214db1d671c6bf2d30458d0d59`
+- New: `3baafaaa0c8a8a64b591d53a883ae818e49294eb739faf5d371be1bf23be7053`
+
+Explicit JSON row comparison proves all 11 other mutants identical, including
+every field. m7's id, file, why and tests are identical. Row order and root
+metadata are identical. `tmp/t0205-oracle/m7-row-proof.json` records each other
+row's old/new JSON SHA-256 and the exact standalone-fault equality check.
+
+The ledger before this append has LF SHA-256
+`0bc1749239d3ce8afb0e63050379acafc29361bd5ead16f35cc3e5637fb82b0f`.
+Its complete original bytes are retained in
+`tmp/t0205-oracle/m7-original-ledger.md`; the manifest original is retained in
+`tmp/t0205-oracle/m7-original-manifest.json`. The final dated receipt at
+`tmp/t0205-oracle/m7-amendment-receipt.json` records old/new hashes, byte-prefix
+provenance, unchanged frozen behavioural hashes and renewed cessation of writes.
+Earlier ledger text and freeze receipts remain unchanged. No test, helper,
+Harness source or other mutant was amended by this author.
+
+This retarget was checked structurally, including unique anchor applicability.
+It does not claim a mutation kill, focused implementation green, complete gate
+or independent final acceptance. Those checks remain with the coordinator and
+reviewer. Author writes cease again after the final receipt is saved.
+
+## Reviewer-authorised Python 3.11 parser amendment
+
+Amendment date: 2026-10-01 UTC. Author and lane: `T-0205-oracle`.
+Authoriser: Schrodinger `01a0f7b7-f68a-79b2-ba74-81cdddf2f3ef`, independent
+R2 REVIEWER under Q015. The coordinator conveyed explicit parser-amendment
+authority. The verified lane claims only the observer helper and append-only
+ledger. This amendment does not alter the frozen TypeScript suite.
+
+Reason: Python 3.11.2 applies positional `choices` to the empty list produced by
+`nargs="*"`. The original helper therefore exits 2 before both its default-all
+execution and its no-case `--collect` branch. Both genuine baseline failures were
+captured before amendment in the owned Linux container. Their retained stderr
+contains `argument cases: invalid choice: []`; they are parser infrastructure
+failures, not behavioural oracle kills.
+
+The only helper changes remove `choices=CASES` from the `nargs="*"` declaration
+and add explicit validation immediately after `parse_args()`. A list comprehension
+checks every supplied case. An unknown case calls `parser.error` and exits 2
+before the collect branch, subprocess preflight or post-parse filesystem work.
+The existing default-all expression, scenario order, valid-subset dispatch,
+fixture instrumentation, native clients, bounds and cleanup remain unchanged.
+
+Helper LF SHA-256:
+
+- Old: `7614c63f07b32bd0385304a3dcabb75d836598d85f78723a98e5f22a502aca85`
+- New: `7c88d3f7c8fc54ae7116b189d32905208e0bc77bc5228f74d85b85d671d6794a`
+
+Unchanged suite LF SHA-256:
+`3c07258e650ddba6aa515d2f7aeb4bba19b19d85e3de2f0ebdccfd306f471e24`.
+All 20 exact full Jest names match the original freeze on both operating systems.
+
+Actual validation used Node 24.21.0. Linux used Python 3.11.2 and ABI 137 in
+`ps-t0205-linux-http-init`, image `ps-t0203-linux-oracle:before`, with init enabled,
+network mode `none` and zero mounts. Only the amended helper and unchanged suite
+bytes were copied into `/tmp/t0205-http/app`; existing Harness and dependency
+code was not modified by this author. Windows used Python 3.14.4 and the specified
+Node runtime. The unchanged 20-test suite passed 20/20 on Linux and 20/20 on
+Windows, with Jest exit 0 on each. Native requests ran against actual fixture
+listeners; no private reference calibration was selected.
+
+Direct CLI controls also passed on each operating system:
+
+- Default with no supplied cases: exit 0 and all 18 fixture scenarios in the
+  unchanged CASES order. These 18 scenarios support the 20 frozen Jest tests.
+- Valid subset `fault-newlines`, `healthy`, `wrong-credential`: exit 0, preserved
+  order and actual native requests, with accepted results true, true, false.
+- No-case `--collect`: exit 0 and the expected receipt. This is explicitly a
+  synthetic metadata interface control, not a simulated native HTTP result.
+- Four unknown-case forms, including mixed valid/invalid arguments and an
+  invalid case before `--collect`: exit 2 each. The destination was not created,
+  controlled filesystem bytes were unchanged and a deliberately missing Bash
+  sentinel was never executed.
+
+Retained receipts are under `tmp/t0205-oracle`:
+
+- `parser-original-python311.json` preserves the two original exit-2 failures.
+- `parser-amended-python311.json` and `parser-amended-python314.json` preserve
+  actual default, subset, collect and unknown-case controls.
+- `parser-amended-linux-jest.json` and `parser-amended-windows-jest.json` preserve
+  the two unchanged 20-test runs.
+- `parser-container-context.json` records Linux Node/ABI and file LF hashes.
+- `parser-original-helper.py`, `parser-original-suite.ts` and
+  `parser-original-ledger.md` preserve the complete pre-amendment bytes.
+- `parser-amendment-freeze.json` records dated old/new helper and ledger hashes,
+  all test names, receipt hashes, scope checks and complete ledger byte-prefix
+  provenance.
+
+The complete ledger before this append was 15,404 bytes, with LF SHA-256
+`5f033ff888c67f60863df5dfb5d8634e62f2e70f4514ab2d189c789036be173d`.
+Those bytes remain an identical prefix. The final ledger hash is external in
+the new freeze receipt. Earlier ledger entries and freeze receipts remain intact.
+The original helper is retained rather than replaced in amendment history.
+
+Python AST parsing and scoped diff checking passed. These focused checks do not
+establish the coordinator's full six-suite pair, complete gate, mutation sweep,
+hosted acceptance or general platform reliability. Earlier no-init/P21 failure
+evidence was not overwritten. Original Windows ACL and reader-permission limits
+remain. Author writes cease after the new parser-amendment freeze is saved.

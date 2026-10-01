@@ -193,10 +193,13 @@ def observe(case: str, bash: str, reference: Path | None = None) -> dict[str, ob
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("cases", nargs="*", choices=CASES)
+    parser.add_argument("cases", nargs="*")
     parser.add_argument("--collect", nargs=2, metavar=("FIXTURE", "DESTINATION"))
     parser.add_argument("--reference", type=Path, help="private calibration only")
     arguments = parser.parse_args()
+    invalid_cases = [case for case in arguments.cases if case not in CASES]
+    if invalid_cases:
+        parser.error("Unknown T-0205 case")
     if arguments.collect:
         collect(*(native_path(value) for value in arguments.collect))
         return

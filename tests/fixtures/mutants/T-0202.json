@@ -64,8 +64,8 @@
     {
       "id": "m7-print-operator-token",
       "file": "tests/integration/test_full_install_update_process.py",
-      "anchor": "AUTHENTICATED=$(status_code -H \"Authorization: Bearer $AUTH_TOKEN\" \"$BASE/\" || true)",
-      "replacement": "echo \"$AUTH_TOKEN\"\nAUTHENTICATED=$(status_code -H \"Authorization: Bearer $AUTH_TOKEN\" \"$BASE/\" || true)",
+      "anchor": "status_code -H \"Authorization: Bearer $AUTH_TOKEN\" \"$BASE/\" || true",
+      "replacement": "echo \"$AUTH_TOKEN\"\nstatus_code -H \"Authorization: Bearer $AUTH_TOKEN\" \"$BASE/\" || true",
       "tests": [
         "tests/unit/release-install-http-smoke.test.ts"
       ],

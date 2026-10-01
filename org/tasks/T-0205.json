@@ -21,7 +21,7 @@
   "owner_session": "2026-10-01-migration-driver-consolidation",
   "timestamps": {
     "opened": "2026-10-01T21:11:46.044703+00:00",
-    "updated": "2026-10-01T21:36:11.804Z"
+    "updated": "2026-10-01T22:10:10.960Z"
   },
   "authority": "Operator authorises completion of approved batches and prerequisite repairs. Adopt separate-author frozen oracle and independent R2 acceptance even if declaration router minimum is R1. Narrow Q015 amendment authority must be recorded before source/mutant amendments; no protected changes or weakening of bounds is authorised.",
   "claims": [
@@ -36,7 +36,8 @@
     "org/STATE.md",
     "scripts/tooling/line-census.baseline.json",
     "tests/unit/release-install-http-context.test.ts",
-    "tests/helpers/release-install-http-context-probe.py"
+    "tests/helpers/release-install-http-context-probe.py",
+    "tests/fixtures/mutants/T-0202.json"
   ],
   "invariants": [
     "All existing test names, assertions, 75-second production deadline, 20 readiness attempts, six-second fixture watchdog, 0.1-second accelerated request bounds, 0.2-second watchdog kill grace and 25-second RPC/outer bounds remain.",
@@ -62,7 +63,7 @@
     "method": "Canonical kernel schema projection with retained venture evidence; router and require_claim run against venture",
     "schema_path": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterTech_EOS\\kernel\\schemas\\task-record.schema.json"
   },
-  "oracle_independence": "Dalton 01a0f94f-c8b3-75f1-ba60-4e4fd74c1812, fresh context and separate files. Reviewer Schrodinger permits record/new oracle only; replacement and closed m7 amendment await secure in-budget complete-output proof.",
+  "oracle_independence": "Fresh separate ORACLE author Dalton froze the 20-case suite before implementation; narrow m7 and Python3.11 parser amendments independently authorised and reviewed. Author writes ceased.",
   "amendment_authority": {
     "authoriser": "Schrodinger 01a0f7b7-f68a-79b2-ba74-81cdddf2f3ef, independent R2 REVIEWER under Q015, 2026-10-01",
     "verdict": "PASS narrow authority after independent oracle freeze and intended red; not final acceptance.",
@@ -167,5 +168,50 @@
     },
     "authorControls": "Final original19fail1pass; private reference20pass, seven targeted calibrated fault variants fail intended assertions. All normal exits, no skips/runtime errors. Private reference is not an implemented Harness or platform acceptance."
   },
-  "landing_authority": "Schrodinger independent R2 REVIEWER permits combined T0188/T0205 candidate gate and installed/visual checks, separate local implementation commits, binding inputs to final content, both sweeps on fresh clean final head, separate acceptance and only final-green push with every exact-head job. No intermediate red push/check exclusion."
+  "landing_authority": "Schrodinger independent R2 REVIEWER permits combined T0188/T0205 candidate gate and installed/visual checks, separate local implementation commits, binding inputs to final content, both sweeps on fresh clean final head, separate acceptance and only final-green push with every exact-head job. No intermediate red push/check exclusion.",
+  "independent_amendments": {
+    "parser": {
+      "receipt": "tmp/t0205-oracle/parser-amendment-freeze.json",
+      "sha256": "12490b22efaf6e8502b102f4e4090d627bd2b7844226843a41cff4e4d02f77e3",
+      "author": "Dalton, independent ORACLE",
+      "authoriser": "Schrodinger, independent R2 REVIEWER under Q015",
+      "verdict": "PASS parser-only amendment, unchanged 20-case identities and assertions; whole gate and sweeps still pending"
+    },
+    "m7": {
+      "receipt": "tmp/t0205-oracle/m7-amendment-receipt.json",
+      "sha256": "6db65a21395ad6ce7c13fb7421b952293ce5bf188d12db61b0d1ac9128a04838",
+      "scope": "Only call-syntax anchor/replacement retarget; exact standalone token echo retained, all other eleven mutants unchanged"
+    }
+  },
+  "coordinator_checks": {
+    "windows": {
+      "receipt": "tmp/t0205-coordinator-green-parser/summary.json",
+      "sha256": "4a702acb763c18f9611c7accf5ceadf7c659dda80a4daa3cafa2b468fea52bad",
+      "exit": 0,
+      "pass": 74,
+      "fail": 0,
+      "skip": 1,
+      "runtimeErrors": 0,
+      "tree": "f5e0c5bea696dcf76074cd2faab409774dffecb92c4452b4b6fba50de504b879"
+    },
+    "linux": {
+      "receipt": "tmp/t0205-linux-coordinator-all-green.json",
+      "sha256": "f8e6b4db562bb8a54bf83ebef4730bc85da2fb44d6843d454b95fc8e9c7819f8",
+      "exit": 0,
+      "pass": 74,
+      "fail": 0,
+      "skip": 1,
+      "infrastructure": "Owned init-enabled network-isolated container, Node24.21.0 ABI137, Python3.11.2; no host mounts. macOS-only test skipped."
+    },
+    "lifecycle": {
+      "receipt": "tmp/t0205-lifecycle-faults.json",
+      "sha256": "b530320fe68fd6200c48577abd85e0bed887d75146a7190ef7aa72b97995f912",
+      "scope": "Generated-shell controls preserve prior refusal and refuse successful cleanup when owned scratch removal fails; not actual NTFS permission faults."
+    },
+    "retained_infrastructure_failures": [
+      "tmp/t0205-linux-infrastructure-first.json",
+      "tmp/t0205-linux-python3-infrastructure.json"
+    ],
+    "remaining": "Full unchanged-tree combined gate, installed/visual checks, six T0205 and twelve T0202 committed mutants with intended matcher evidence, separate R2 acceptance and every exact-head hosted job."
+  }
 }
