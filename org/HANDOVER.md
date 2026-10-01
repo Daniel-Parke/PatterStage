@@ -52,68 +52,50 @@ A further phone capture proves a short credential label has zero visible
 width; T-0191 must repair this layout. These walks do not cover every product
 pathway or provider execution.
 
-**T-0188 is active.** Separate-author oracles were committed red at `cf8803e4`
-and strengthened without identity changes at `30c0d9d1`: 84 passes and 21
-intended failures among 105 selected cases. Candidate implementation passes
-all 105, adds 70 identities to the corpus, removes 480 source lines and 42
-repeated source-window lines. Eleven public wrappers remain real runtime
-dependencies and delegate to the shared table driver. Historical SQL and
-Auth43 remain unchanged. Four real public migration invocations per platform
-pass on owned Windows and Linux fixtures with exact backups and preserved
-rows; this is not full installer/updater or online-backup acceptance.
+**T-0188 and prerequisite T-0205 are locally accepted, with hosted checks pending.**
+Separate implementation commits are `b262fcb7` and `f94993ba`.
+The independent migration oracle was committed red at21 of105; the HTTP
+oracle was red at19 of20. All105 migration identities are preserved, including
+30 additive lines in the separately authorised Auth43 witness at `2cdedd3d`.
+Eleven public migration wrappers delegate to the table driver; missing SQL
+fails before version completion, partial-v15 repairs finish, and Composer
+rebuilds preserve non-NULL data, atomicity and the incoming FK setting.
+Fresh databases converge to43 in one call. Source lines fall480 and repeated
+source windows fall42. Historical SQL and protected inputs remain untouched.
 
-The complete ten-step gate now passes on unchanged tree `c98e25f24f855cead528d021856c18d59c06fab916e77cc0ba84765bcacb09f6`:
-7,665 Jest passes, nine existing skips, 355 browser passes, 24 existing skips,
-both build-purity controls and both censuses. Retained attempts exposed a wrapper
-reachability defect (fixed), redundant launcher alias pollution (removed),
-and Turbopack's rejection of an external dependency junction (replaced by a
-private copy). The corpus has passed with 7,645 tests and nine existing skips,
-but H12's six-second HTTP fixture watchdog has also failed under full-suite
-load. The unchanged 14-case suite passes alone. A private timing observer's
-full-corpus run passes, but is diagnostic evidence and does not clear the
-failed gate. Independent reviewers investigate the delay; no timeout,
-assertion, coverage or production build rule has been loosened. Candidate
-implementations are committed separately at `f94993ba` (T-0205) and
-`b262fcb7` (T-0188), without a push. The separate settled-content built-app walk
-passes nine routes at both required viewports, opaque sign-in and sign-out,
-with eighteen screenshot hashes and no console/page errors, overflow or
-missing h1. Its owned port3998 server is stopped. The HTTP memory fixture is
-an owned empty state, not real-provider acceptance. Initial provider refusals,
-premature loading capture and persistent-stream network-idle timeout remain
-recorded. The real Windows updater passes exact schema3 backup before
-migration, schema43, sentinel preservation and 200/401/200 authentication;
-its port3999 server is stopped. The Linux public updater also passes the
-same backup, migration, sentinel and authentication checks with verified
-shutdown in an init-enabled, network-isolated container. Its first immediate
-post-signal observation is retained; the ignored QA launcher now waits for
-actual exit. Six T-0205 and all twelve T-0202 mutants have qualified assertion
-kills with passing controls and clean content/mode restoration. Independent
-R2 review accepts T-0205 locally at `b262fcb7`, with hosted jobs pending.
-The thirteen migration mutants trigger assertions, but m12 only demonstrates
-fresh/upgrade sensitivity. It does not prove the recorded43 Auth guard.
-T-0188 remains held for a separately authored, independently authorised
-public-chain witness amendment. The author must preserve all105 identities
-and direct-worker assertions, use a valid historical-SQL fixture, then prove
-the intended headed failure. Repeat the complete gate and committed T-0188
-sweep before acceptance or push. All earlier receipts remain.
-T-0205 implements the separately authorised HTTP-fixture prerequisite after
-its independent oracle was committed red at `59d6ca95`, with nineteen intended
-failures among twenty cases. Secure status capture reduces shell overhead
-while retaining real curl, every request and all frozen deadlines. Narrow
-m7-anchor and Python3.11 parser amendments have separate authorship and R2
-review. The unchanged twenty-case suite and historical controls pass on
-Windows and an init-enabled, network-isolated Linux container: 74 passes and
-one native macOS skip per platform. Earlier infrastructure failures are kept.
-The combined full gate, visual walk and both installed updater checks pass;
-T-0188's amended gate/sweep and independent acceptance plus hosted jobs remain. These results
-do not establish the cause of the earlier intermittent full-gate failure.
-Fourteen approved batches remain:
-T-0188–T-0201. The operator amended the release-first sequencing in Q-011. PR #157's merge,
-tags and releases remain operator actions. The separate compatibility promise
-is confirmed by Q-033: keep aliases, signing headers and redirects through
-v1.0.0; defer T-0200 retirement. The plan-authority amendment is independently
-authored and committed. All later sections preserve earlier verification
-snapshots; this current-status section governs the next action.
+The repeated complete ten-step gate passes with unchanged tree
+`c93bc4e95a93c9c1aaaf8e1d69a0177e794aff94448e5ec386934d4c84182d61`:7,665 Jest passes/nine existing skips,
+355 browser passes/24 existing skips, both build-purity controls and both
+censuses. Every2539 candidate path matches the accepted committed content and
+modes. The fresh committed sweep kills all13 migration, six T-0205 and twelve
+T-0202 mutants by intended assertion failures, with passing controls and clean
+restoration. Recorded43 specifically detects an omitted Auth validation call;
+recorded42 is separately qualified as a convergence failure. Earlier incomplete
+sweep, failed gates, sandbox/fixture failures and their causes remain recorded.
+No check, request, deadline, coverage floor or fixed target was weakened.
+
+The owned production walk passes nine settled routes at1440x900/390x844,
+opaque sign-in and sign-out,18 capture hashes, one h1 per route and no console
+errors or overflow. Owned port3998 is stopped. Actual public Windows/Linux
+updaters pass exact closed-schema3 backup before migration, live43, sentinel
+preservation and200/401/200 authentication; owned port3999 is stopped.
+Linux validation uses an init-enabled network-isolated container. These are
+offline installed fixtures, not fresh npm installation, online/WAL snapshot,
+real Hindsight or all-product-pathway acceptance. The online-update obligation
+remains with T-0196. Personal Models/Credentials action evidence and the phone
+credential-label defect remain as recorded above.
+
+Independent R2 review accepts both bounded implementations at `2cdedd3d`.
+T-0205's actual R1 routing adopts stricter separate-author R2 acceptance.
+Its Windows/Linux focused controls pass74 with one native-macOS skip; actual
+macOS and all required exact-head hosted push/PR jobs remain mandatory before
+closure. The six-second fixture failure's historical cause is still unproved.
+
+Fourteen approved batches remain unclosed: T-0188–T-0201. After the hosted
+checks and record/view closure, continue T-0189. Q-032 permits consolidation
+before release; Q-033 retains compatibility aliases, signing headers and
+redirects through v1.0.0 and defers T-0200 retirement. PR#157 merge, tags and
+releases remain operator actions. Later sections retain historical snapshots.
 
 **T-0202 is locally closed at implementation `1f556c49`.** The final unchanged
 ten-step gate passed at tree SHA-256

@@ -21,7 +21,7 @@
   "owner_session": "2026-10-01-migration-driver-consolidation",
   "timestamps": {
     "opened": "2026-10-01T21:11:46.044703+00:00",
-    "updated": "2026-10-01T22:35:42.271Z"
+    "updated": "2026-10-01T23:36:31.140Z"
   },
   "authority": "Operator authorises completion of approved batches and prerequisite repairs. Adopt separate-author frozen oracle and independent R2 acceptance even if declaration router minimum is R1. Narrow Q015 amendment authority must be recorded before source/mutant amendments; no protected changes or weakening of bounds is authorised.",
   "claims": [
@@ -212,7 +212,7 @@
       "tmp/t0205-linux-infrastructure-first.json",
       "tmp/t0205-linux-python3-infrastructure.json"
     ],
-    "remaining": "Separate clean committed T0188/T0205/T0202 sweeps with intended matcher failures and restoration, final-head source binding, independent R2 acceptance and every exact-head hosted job.",
+    "remaining": "Push only dev and verify every required exact-head push/PR job, including native macOS and PR acceptance. Then close records, render derived views and manifest, commit and verify closure-head jobs.",
     "full_gate": {
       "receipt": "tmp/t0188-full-gate-http-context-20261001/summary.json",
       "sha256": "d3f6874b9845b930b4870f49c589e8c04fc139afacc52b0f83328666e8c9ae82",
@@ -278,6 +278,99 @@
       "sha256": "85f69c7a04c39374d8a9abb40d930216a15988ced942a49b0c150be8bc2080d6",
       "evidence": "Actual public update from exclusively owned localGitdevorigin, real local LinuxTurbopackartifact and matching lock/nativepool/Node24.21ABI137. Exactschema3 backup precedes migration, live43/sentinelrows/200401200 pass and ownedserver exits. Networknone/inittrue/nohostmounts.",
       "retained": "tmp/t0188-linux-real-updater-first.json reports immediate post-signal ownedStoppedfalse; bounded cleanup wait added only to ignored QA launcher, then repeated actualupdate with fresh data. Not fresh npm installation or online/WAL snapshot acceptance."
+    },
+    "prerequisite_mutations": {
+      "T-0202": {
+        "receipt": "tmp/t0188-auth-wiring-t0202-sweep/summary.json",
+        "sha256": "69a37a3b74b38ac976e76ca74bc481b22f54a77a9b406c35f77f5bbbb5318d03",
+        "head": "2cdedd3de43e4b7b138fd56f82acc2b69138b1dd",
+        "killed": 12,
+        "survived": 0,
+        "infrastructure": 0,
+        "restored": true,
+        "tree": "1052067dcd61acc3aabbb117561a65e4adf643c425b6d3ee03a50b029f24b9e5",
+        "controlTests": 26,
+        "qualification": "m7 H01 fails credentialLeaked at line34 (actualtrue/expectedfalse), not generic readiness. All twelve intended assertion kills and26/26 controls on the amended committed head; previous T0202 historical record is untouched."
+      }
     }
+  },
+  "verification": {
+    "summary": "tmp/t0188-full-gate-auth-wiring-20261002/summary.json",
+    "sha256": "0045446aa68f5c98ed7ea2880ca9eff5664524b6b4bc2c97aad6024d09d27a3e",
+    "tree": "c93bc4e95a93c9c1aaaf8e1d69a0177e794aff94448e5ec386934d4c84182d61",
+    "complete": true,
+    "exit": 0,
+    "jest_pass": 7665,
+    "jest_skip": 9,
+    "browser_pass": 355,
+    "browser_skip": 24,
+    "steps": [
+      {
+        "step": "lint",
+        "code": 0
+      },
+      {
+        "step": "tsc",
+        "code": 0
+      },
+      {
+        "step": "jest",
+        "code": 0
+      },
+      {
+        "step": "knip",
+        "code": 0
+      },
+      {
+        "step": "canary",
+        "code": 0
+      },
+      {
+        "step": "build",
+        "code": 0
+      },
+      {
+        "step": "build-purity",
+        "code": 0
+      },
+      {
+        "step": "e2e",
+        "code": 0
+      },
+      {
+        "step": "census",
+        "code": 0
+      },
+      {
+        "step": "census-lines",
+        "code": 0
+      }
+    ],
+    "binding": {
+      "receipt": "tmp/t0188-final-content-binding.json",
+      "sha256": "8896b7a632571d42706a618539d2f7ad3c6bf39dddfc0b2b2b41ca2c04bdc6aa",
+      "head": "2cdedd3de43e4b7b138fd56f82acc2b69138b1dd",
+      "pathCount": 2539,
+      "scope": "All paths/content/relevant modes match final committed head; raw isolated tree stamps separately preserved, text CRLF normalised only for cross-checkout comparison."
+    }
+  },
+  "mutation": {
+    "receipt": "tmp/t0188-auth-wiring-t0205-sweep/summary.json",
+    "sha256": "2b8bf67a2f9223a3885565363d3af59bd41e051da424ce6df7e6a05efb1ff4a1",
+    "head": "2cdedd3de43e4b7b138fd56f82acc2b69138b1dd",
+    "killed": 6,
+    "survived": 0,
+    "infrastructure": 0,
+    "restored": true,
+    "tree": "1052067dcd61acc3aabbb117561a65e4adf643c425b6d3ee03a50b029f24b9e5",
+    "controlTests": 20,
+    "qualification": "m5 C02 fails actual BASHPID equality at mainContext line56 after34 passing assertions, not only generic readiness refusal. All six intended failure classes and20/20 controls on the amended committed head."
+  },
+  "independent_local_acceptance": {
+    "reviewer": "Schrodinger, independent R2 REVIEWER, 01a0f7b7-f68a-79b2-ba74-81cdddf2f3ef",
+    "head": "2cdedd3de43e4b7b138fd56f82acc2b69138b1dd",
+    "receipt": "tmp/t0188-final-independent-local-verdict.txt",
+    "sha256": "2bf3b07c533445bda0fd395f068d4e8221cecdb1e1a0de5c7c7c033c7140ef20",
+    "result": "PASS bounded local implementation; every exact-head hosted job still required. No protected edit, historical record rewrite, reduced coverage or weakened oracle."
   }
 }
