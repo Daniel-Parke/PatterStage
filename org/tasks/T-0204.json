@@ -30,7 +30,7 @@
   "owner_session": "2026-10-01-deterministic-secret-canary",
   "timestamps": {
     "opened": "2026-10-01T16:56:00Z",
-    "updated": "2026-10-01T17:58:12Z"
+    "updated": "2026-10-01T18:00:55Z"
   },
   "authority": "Operator authorises completion of the programme and repair of prerequisite gate defects. Independent R2 REVIEWER Schrodinger accepts this narrow security-instrumentation proposal. The declaration router's actual minimum is R1; this task adopts stricter separate-author oracle, high-assurance verification and independent R2 acceptance under Q-009. infra-state is a reserved derived source, not a valid declared side effect. No false CI/auth declaration or policy change raises the verdict artificially.",
   "claims": [
@@ -91,5 +91,16 @@
     "summary": "tmp/t0204-full-gate-knip-entry-20261001/summary.json",
     "sha256": "96e5d84b1f231cb5c327dd760661697a2e1c33ea3dda80cc6d89ccd283c32932",
     "exit": 0
-  }
+  },
+  "mutation": {
+    "killed": 7,
+    "controls": "All 14 frozen names pass before and after; actual content and modes restored; Git clean.",
+    "head": "70f921e5be1b219ba1cf54aaa3c59d016b9f564d",
+    "exit": 0,
+    "sha256": "8bab91e19a5b070f0096e1a644a38c8bdf7dd0609b81525db089eb6d764f19ad",
+    "log": "tmp/t0204/committed-seven-mutants.log",
+    "infrastructure": 0,
+    "survived": 0
+  },
+  "hosted": "Pending every required exact-head push and PR job, including native macOS HTTP acceptance and both full-history scans. No prerequisite completion is claimed."
 }

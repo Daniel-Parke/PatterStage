@@ -13,9 +13,21 @@ updated: 2026-10-01
 T-0203 is independently accepted and closed after all exact-head hosted jobs
 passed at `d292b0e7`. Closure `9c824422` passes both CI runs and push Gitleaks,
 but PR Gitleaks `36893768530` fails its random planted-secret control.
-T-0204 repairs the confirmed candidate-generation defect without changing
-scanner rules. Its actual declaration router minimum is R1; it adopts
-separate-author high-assurance oracles and independent R2 acceptance.
+T-0204 implements the deterministic scanner control at `70f921e5` without
+changing scanner rules. Its separate-author oracle was committed red at
+`4f6d5c35` with five intended failures among fourteen new cases. The repeated
+ten-step gate passes on unchanged tree `3d60f692d279dbe19693dce3ea8b59b1c3251f58e9efe29ff5d36be96af7e417`:
+7,575 Jest passes, nine existing/platform skips, 355 browser passes and 24
+existing skips. Both build-purity controls and both censuses pass. All seven
+committed mutants are killed by intended assertions, with passing controls
+before and after and verified clean restoration. The first gate's genuine
+Knip finding remains preserved; the exact Node preload entry repairs it
+without an ignore or baseline exception. Actual pinned-scanner clean/planted
+controls pass and remove their owned repositories. Independent R2 review
+accepts the bounded implementation. Its actual router minimum is R1; it
+adopts stricter separate-author high-assurance and independent R2 acceptance.
+Every required exact-head hosted push and PR job is still pending. T-0204 is
+active and does not yet establish the structural prerequisite.
 The original failed candidate was discarded, so its exact cause is unproved.
 T-0188 remains proposed until every required repair-head hosted job passes.
 Fourteen approved batches remain:
