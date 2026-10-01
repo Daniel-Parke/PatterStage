@@ -55,6 +55,17 @@ committed-tree sweep kills all eight mutants by intended assertions, with
 passing controls before and after and verified restoration. Exact-head hosted
 push/PR acceptance, including native macOS, remains required before closure.
 
+At exact head `1171bdd4`, both hosted coverage jobs fail the F02 outer-shell
+instrument; macOS also fails D02/D03's platform-based case-sensitivity
+expectation. Native N01 passes. All other scheduled jobs pass, including PR
+acceptance, full browsers, real Hermes and install; both secret scans pass.
+The owned Linux reproduction has 27 passes and the same single F02 failure,
+with no skips or runtime errors. A separately authorised ORACLE amendment
+pins the real outer shell and independently calibrates the temporary
+filesystem before checking fixture results. All names, deadlines and
+HTTP/authentication assertions remain. No product source changes are involved;
+the complete gate and sweep must repeat after freeze, followed by hosted CI.
+
 Windows validation additionally exposed a native Node worker exit
 `0xC0000409` under installed Node 24.15.0. The unchanged complete browser suite
 passes 355 cases with 24 existing skips under official, checksum-verified

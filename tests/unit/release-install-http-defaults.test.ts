@@ -1,7 +1,9 @@
 /** @jest-environment node */
 
 import { spawnSync as runFixture } from "node:child_process";
-import { resolve as absolutePath } from "node:path";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, resolve as absolutePath } from "node:path";
 import { resolveDataDir } from "@/lib/host/paths";
 
 type DefaultObservation = {
@@ -15,18 +17,54 @@ type DefaultObservation = {
   };
 };
 let defaults: Record<string, DefaultObservation>;
+let calibratedCaseDistinct: boolean;
+
+function calibrateCaseDistinction(temporaryRoot: string): boolean {
+  const sentinel = mkdtempSync(join(temporaryRoot, "case-sentinel-"));
+  try {
+    const upper = join(sentinel, "PatterStage");
+    const lower = join(sentinel, "patterstage");
+    mkdirSync(upper);
+    writeFileSync(join(upper, "marker"), "upper-sentinel", { flag: "wx" });
+    let distinct = true;
+    try {
+      mkdirSync(lower);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
+      distinct = false;
+    }
+    if (distinct) writeFileSync(join(lower, "marker"), "lower-sentinel", { flag: "wx" });
+    const upperContent = readFileSync(join(upper, "marker"), "utf8");
+    const lowerContent = readFileSync(join(lower, "marker"), "utf8");
+    if (upperContent !== "upper-sentinel" || lowerContent !== (distinct ? "lower-sentinel" : "upper-sentinel")) {
+      throw new Error("Ambiguous case sentinel contents");
+    }
+    return distinct;
+  } catch (error) {
+    throw new Error(`Default fixture case calibration infrastructure failed: ${(error as Error).message}`);
+  } finally {
+    rmSync(sentinel, { recursive: true, force: true });
+  }
+}
 
 beforeAll(() => {
-  const probe = runFixture(process.env.PYTHON || "python", [
-    absolutePath("tests/helpers/release-install-http-probe.py"),
-    "default-control", "default-fresh", "default-uppercase-db",
-    "default-uppercase-legacy-db", "default-wrong-token", "default-wrong-control",
-  ], { encoding: "utf8", timeout: 90_000, maxBuffer: 1024 * 1024,
-    env: { ...process.env, PYTHONDONTWRITEBYTECODE: "1" } });
-  if (probe.error || probe.status !== 0) {
-    throw new Error(`Default fixture infrastructure failed (${probe.status}): ${probe.error?.message ?? probe.stderr}`);
+  const temporaryRoot = mkdtempSync(join(tmpdir(), "t0203-defaults-"));
+  try {
+    calibratedCaseDistinct = calibrateCaseDistinction(temporaryRoot);
+    const probe = runFixture(process.env.PYTHON || "python", [
+      absolutePath("tests/helpers/release-install-http-probe.py"),
+      "default-control", "default-fresh", "default-uppercase-db",
+      "default-uppercase-legacy-db", "default-wrong-token", "default-wrong-control",
+    ], { encoding: "utf8", timeout: 90_000, maxBuffer: 1024 * 1024,
+      env: { ...process.env, PYTHONDONTWRITEBYTECODE: "1",
+        TMPDIR: temporaryRoot, TEMP: temporaryRoot, TMP: temporaryRoot } });
+    if (probe.error || probe.status !== 0) {
+      throw new Error(`Default fixture infrastructure failed (${probe.status}): ${probe.error?.message ?? probe.stderr}`);
+    }
+    defaults = JSON.parse(probe.stdout) as Record<string, DefaultObservation>;
+  } finally {
+    rmSync(temporaryRoot, { recursive: true, force: true });
   }
-  defaults = JSON.parse(probe.stdout) as Record<string, DefaultObservation>;
 }, 100_000);
 
 function assertDefaultFixture(result: DefaultObservation): void {
@@ -67,8 +105,8 @@ describe("T-0202 default install HTTP probe", () => {
       const populated = defaults[fixture];
       expect(populated.defaults).toMatchObject({ tokenRelativePath: "PatterStage/data/auth-token", databaseName,
         lowerDirectoryExists: true });
-      // NTFS aliases these directories. Linux separately proves distinct stale storage.
-      const distinct = populated.defaults.platform !== "nt";
+      // The independent sentinel measures the fixture's temporary filesystem.
+      const distinct = calibratedCaseDistinct;
       expect(populated.defaults.physicalCaseDistinct).toBe(distinct);
       expect(populated.defaults.staleTokenDistinct).toBe(distinct);
       expect(populated.defaults.lowerHasDatabase).toBe(!distinct);

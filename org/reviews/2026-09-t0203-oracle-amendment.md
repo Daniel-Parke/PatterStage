@@ -336,3 +336,152 @@ remain open. No gate or acceptance condition is waived.
 
 Attribution correction dated 2026-10-01: the non-human coordinator, not the operator, relayed independent REVIEWER Schrodinger's specific Q-015 continuation authority and instructed the final freeze append.
 The operator authorised programme continuation generally; this correction claims no additional human decision, and the specific continuation authority remains REVIEWER Schrodinger's PASS.
+
+### 2026-10-01: native control amendment author and scope
+
+Independent clean-context ORACLE Leibniz `01a0f816-b84f-7dd0-bb2b-a703c1e6a376`
+authors only the two test-instrument amendments in
+`org/briefs/T-0203-native-control-oracle.md`. Authority is independent R2
+REVIEWER Schrodinger `01a0f7b7-f68a-79b2-ba74-81cdddf2f3ef`, Q-015,
+dated 1 October 2026. No new human ruling is claimed. The active validated
+claim names only the shared harness, defaults suite and this ledger.
+
+Reasons: fake inner PATH incorrectly selects the outer Bash on Linux/macOS;
+the defaults oracle incorrectly equates non-Windows with case-sensitive
+storage. Pin discovered real outer Bash after discovery, preserve Windows
+launch behaviour, and calibrate real case distinction with owned Node file
+operations before Python on the same temporary filesystem. Only the obsolete
+D02/D03 expectation assignment changes; every matcher and identity survives.
+
+Input LF SHA-256: harness
+`e2660a75362260ab09625127173f61d7832e5a6f38b568ff75e828c773c02af7`;
+defaults `a09b0d4cc31c852764850d5367e424ad1772f5d8731ec25e46de5637488388a4`.
+Complete input ledger prefix: 29760 bytes, raw SHA-256
+`8af3ee09f1a48637990d225362a65d8f0d9ca3568ab7c722b18c7537e612f665`.
+Raw input snapshots are preserved in `tmp/t0203-native-control-oracle/baseline.json`.
+
+Chronology: the initial two authorised instrument edits were applied after
+claim assignment, before the coordinator's subsequent instruction to append
+author provenance before correction. This entry records that ordering rather
+than claiming prior append. It precedes further validation and final freeze.
+No implementation script, CI, production Python helper or application source
+was read. No commits are authorised or made. The unchanged 29-name union,
+seven defaults identities, all matchers, watchdogs, output caps and historical
+ledger bytes require exact comparison before freeze. Linux red, corrected
+Linux, real filesystem and contradiction receipts will be appended at freeze;
+neither a failed invocation nor infrastructure failure is a mutation kill.
+
+### 2026-10-01: native control amendment evidence and frozen handoff
+
+Freeze evidence checked at `2026-10-01T15:43:33.390Z`. Independent ORACLE
+Leibniz `01a0f816-b84f-7dd0-bb2b-a703c1e6a376` freezes the two narrow
+instrument amendments under independent R2 REVIEWER Schrodinger
+`01a0f7b7-f68a-79b2-ba74-81cdddf2f3ef` Q-015 authority, dated
+1 October 2026, in the native-control brief. No new human ruling is claimed.
+
+Frozen LF SHA-256:
+
+- Shared harness old: `e2660a75362260ab09625127173f61d7832e5a6f38b568ff75e828c773c02af7`.
+- Shared harness new: `e08aac3a5126d92fcc05a513a1019780f85f71c80a873a7c9e946059a15d35e1`.
+- Defaults old: `a09b0d4cc31c852764850d5367e424ad1772f5d8731ec25e46de5637488388a4`.
+- Defaults new: `124242226b152697787cf576dd4d54e60ee37ffa166e3494c3d5904ea29b3d6d`.
+- Portable suite unchanged: `2d114ad550a60aa74cf9ea994b79f616ad322b87b233e44b35998a4c100c0dd5`.
+- Native suite unchanged: `3f6493615f88d036e11e8b4b92dc2e81ac0c66a2636f9892149d6a049fc45951`.
+
+Independent comparison registers exactly the original 29 prerequisite names
+once, 28 portable plus unchanged N01, and exactly the original seven defaults
+names. Portable and native suite bytes match their input exactly. Every
+defaults describe-block assertion/callback token is unchanged except the
+authorised `const distinct` assignment. All seven HTTP/auth/ownership and
+runtime-discovery cases retain their matchers. Removing only the outer Bash
+pin additions and restoring the launcher identifier reconstructs the input
+harness exactly. Initial discovery uses the original bootstrap; Windows
+continues to use that original bootstrap after discovery. Only Linux/macOS
+pin the discovered absolute Bash. Inner PATH isolation and owned cleanup
+remain exact. Bounds remain 15000 ms/1048576 bytes for launch,
+90000 ms/1048576 bytes for Python, and 100000 ms for defaults setup;
+existing prerequisite and native case bounds remain unchanged.
+
+Actual native Linux, Node v24.21.0, archived source 1171 and installed deps
+from coordinator-owned image
+`ps-t0203-linux-oracle:before` (`b5b0f1205020913d486f53088cc3af407352acdcf3f54234ccdc615467a0e950`):
+
+- Wrong-current control: `tmp/t0203-native-linux-before-valid-20261001.json`,
+  27 passes, one F02 semantic failure on empty version output, zero skips,
+  zero runtime errors, normal Docker exit 1 independently observed from the
+  retained original container. Full normal Jest JSON and companion log are
+  preserved. Raw JSON SHA-256:
+  `6ef9b3f8e584608ca503f8a77f879a9384389258d53216e3757236102ee2ca64`.
+- The earlier invocation in `tmp/t0203-native-linux-before-20261001.log`
+  failed to write JSON because its report directory was absent. It remains
+  rejected invocation evidence and does not replace the normal result above.
+- Corrected complete control: `tmp/t0203-native-control-oracle/linux-complete-jest.json`,
+  actual Jest executes all portable28 plus defaults7, 35 passes, zero failures,
+  zero skips, zero runtime errors, normal exit 0. Portable elapsed 19822 ms;
+  defaults elapsed 3757 ms. JSON SHA-256:
+  `493128e531821d0ab9ab3900ecf654546a276f43ffa6f5198c0bc1c079954b2e`.
+  The companion `.log` and `linux-complete-jest-process.json` preserve output,
+  normal status, runtime and platform. F02 now passes without case changes.
+
+The Node sentinel calibrates real directories/files with distinct contents
+before launching the actual Python fixture. Both processes use the same owned
+temporary root through TMPDIR/TEMP/TMP. A separate Python tempfile control
+confirms that exact root; sentinel cleanup precedes fixture launch, and final
+owned root removal is verified. Linux independently calibrates true and its
+actual D02/D03 both report physicalCaseDistinct/staleTokenDistinct/
+lowerHasDatabase as true/true/false. Windows independently calibrates false
+and its actual D02/D03 both report false/false/true. Expected values never
+derive from Python fixture observations.
+
+Receipts `linux-init-controls.json` and `win32-calibration-controls.json`
+under `tmp/t0203-native-control-oracle/` preserve the real calibration and
+actual six-fixture observations. On each actual filesystem, all seven possible
+contradictory boolean triples for each of D02 and D03 produce intended semantic
+matcher failures: 14 contradiction controls per platform. Diagnostic VM controls
+reuse captured actual fixture observations and independently recalibrate real
+storage; they are supplementary instrument evidence, not substitutes for the
+complete actual Jest run. Permission denial, I/O failure and ambiguous contents
+each throw nonmatcher infrastructure errors before Python and clean up both
+owned roots. No platform mock establishes the Linux result.
+
+Instrument environment attempts remain separate:
+
+- First corrected Linux invocation without Docker init: `linux-jest.json`,
+  34 passes, one P21 GNU calibration infrastructure failure, one unchanged
+  Linux-native skip, normal Jest exit 1. F02 passed, but P21 observed 90
+  instead of calibrated 137. Its JSON, log and process receipt are preserved.
+  This is neither source red nor a mutation kill.
+- With Docker `--init`: `linux-init-jest.json`, 35 passes, zero failures,
+  one unchanged native-platform skip, normal exit 0. The subsequent complete
+  two-suite invocation above has zero skips. No P21/GNU/lifecycle assertion
+  changed. These are bounded no-init 90 and init 0 observations; universal
+  process causation is not established.
+- An attempted process snapshot after the complete container exited returned
+  no such container; it provides no live snapshot. Supplemental
+  `linux-init-environment.json` from a distinct owned container with identical
+  `--init` records `/sbin/docker-init` at PID 1, sleeping, with Node as its
+  child. It is environment evidence, not a snapshot of the completed run.
+- Actual isolated Windows Node v24.21.0 Jest: `win32-jest.json`, 35 applicable
+  passes, zero failures/runtime errors, one unchanged native-platform skip,
+  normal exit 0. Focused ESLint for the two amended files and test TypeScript
+  `tsc -p tsconfig.tests.json --noEmit --incremental false` each exited 0.
+  Coordinator's separate 49-case focus and whole unchanged gate remain open.
+
+The full identity/boundary/prefix proof is `win32-freeze-proof.json`.
+The receipt hash manifest is `win32-freeze-freeze-manifest.json`, raw SHA-256
+`92ac14caefe12cd09793773c907f7a7c15a4fd78b316c169942de380c4e78564`.
+Both are under `tmp/t0203-native-control-oracle/`; the manifest includes all
+normal/rejected JSON/log/process receipts and calibration/control hashes.
+Before this append, the entire preceding ledger was 31833 bytes, raw SHA-256
+`4388ff6a6577adf215666ed4f381893d03ed8c87123033696e62f75f752e9ecb`.
+Its original 29760-byte prefix remains exact, raw SHA-256
+`8af3ee09f1a48637990d225362a65d8f0d9ca3568ab7c722b18c7537e612f665`.
+Both prefixes require a final read-only byte check after this append.
+
+Author writes cease after this append. Only final read-only hash/prefix checks
+follow. All tracked author mutations used apply_patch on the three exclusive
+claims; diagnostic scripts/snapshots used apply_patch and execution generated
+ignored receipts. No implementation source was read or changed; no commits
+were made. Coordinator owns records, claims, further verification and source.
+Independent R2 review, coordinator gate and exact-head hosted/native macOS
+acceptance remain required. This freeze waives none of those obligations.

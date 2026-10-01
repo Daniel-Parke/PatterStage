@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 
 const bootstrap = process.env.T0203_BASH || (process.platform === "win32" ? "C:/Program Files/Git/bin/bash.exe" : "bash");
+let outerBash = bootstrap;
 export const tools: Record<string, string> = {};
 export const roots: string[] = [];
 export const shellPath = (path: string) => path.replace(/\\/g, "/").replace(/^([A-Za-z]):/, (_, drive: string) => `/${drive.toLowerCase()}`);
@@ -23,7 +24,7 @@ export function launch(args: string[], env: NodeJS.ProcessEnv = process.env) {
   for (const key of Object.keys(childEnv)) {
     if (key.toLowerCase() === "path" && key !== "PATH") delete childEnv[key];
   }
-  const result = spawnSync(bootstrap, ["--noprofile", "--norc", ...invocation], {
+  const result = spawnSync(outerBash, ["--noprofile", "--norc", ...invocation], {
     encoding: "utf8", env: childEnv, timeout: 15_000, maxBuffer: 1024 * 1024,
   });
   // Spawn failure, signal or outer watchdog expiry is infrastructure, not red.
@@ -45,6 +46,11 @@ done`]);
   for (const line of found.stdout.trim().split("\n")) {
     const [name, path] = line.split("\t");
     tools[name] = path;
+  }
+  // Pin the real outer launcher; only inner commands use the controlled PATH.
+  if (process.platform !== "win32") {
+    if (!tools.bash?.startsWith("/")) throw new Error("T-0203 tool discovery did not resolve an absolute Bash");
+    outerBash = tools.bash;
   }
 }, 20_000);
 

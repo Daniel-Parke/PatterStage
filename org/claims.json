@@ -20,6 +20,7 @@
         "org/briefs/T-0203-noisy-install-oracle.md",
         "org/briefs/T-0203-expiry-oracle.md",
         "org/briefs/T-0203-portable-oracle.md",
+        "org/briefs/T-0203-native-control-oracle.md",
         "org/reviews/2026-09-release-verification.md",
         "org/HANDOVER.md",
         "org/claims.json",
@@ -29,5 +30,5 @@
       ]
     }
   ],
-  "note": "Independent portable/native oracle handoff and append-only provenance are frozen; Pasteur's writes ceased. Coordinator is the only writing lane. REVIEWER remains read-only. Hosted acceptance precedes structural execution; T-0200 retirement requires its own ruling."
+  "note": "Leibniz's native-control oracle amendment is frozen and author writes ceased. Coordinator is the sole writer; REVIEWER and T-0188 preflight remain read-only. Hosted acceptance precedes structural execution; T-0200 retirement requires its own ruling."
 }
