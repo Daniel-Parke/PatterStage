@@ -1,30 +1,76 @@
 {
   "id": "T-0188",
   "intent": "Converge eleven migration wrappers on the SQL table driver, make pending migration failures explicit, preserve lossless Composer rebuilds and reach schema 43 in one fresh pass.",
-  "declared": {"capabilities": ["edit-code", "edit-tests", "edit-docs", "git", "git-push", "run-isolated-process"], "side_effects": ["migrates-schema"]},
-  "mode": "high-assurance", "tier_proposed": "R2", "tier_ruled": "R2",
-  "reasons": [{"factor": "schema-change", "tier_floor": "R2", "source": "declared", "evidence": "declared side effect: migrates-schema"}],
-  "status": "proposed", "owner_session": "2026-10-01-migration-driver-consolidation",
-  "timestamps": {"opened": "2026-10-01T16:45:00Z", "updated": "2026-10-01T16:45:00Z"},
-  "authority": "Operator approved Phase 2 on 2026-09-28 and amended Q-011 sequencing through Q-032 on 2026-09-30. T-0202 and T-0203 repair acceptance are prerequisites; every required exact-head hosted job on T-0203 closure 9c824422 must pass before authoring or structural implementation. T-0200 retains its independent post-1.0 retirement authority. Q-014 preserves table and column history. Independent R2 REVIEWER Schrodinger authorises only the four Q-015 oracle amendments detailed in the brief.",
+  "declared": {
+    "capabilities": [
+      "edit-code",
+      "edit-tests",
+      "edit-docs",
+      "git",
+      "git-push",
+      "run-isolated-process"
+    ],
+    "side_effects": [
+      "migrates-schema"
+    ]
+  },
+  "mode": "high-assurance",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [
+    {
+      "factor": "schema-change",
+      "tier_floor": "R2",
+      "source": "declared",
+      "evidence": "declared side effect: migrates-schema"
+    }
+  ],
+  "status": "active",
+  "owner_session": "2026-10-01-migration-driver-consolidation",
+  "timestamps": {
+    "opened": "2026-10-01T16:45:00Z",
+    "updated": "2026-10-01T18:39:49Z"
+  },
+  "authority": "Operator approved Phase2 on2026-09-28 and Q032 supersedes Q011 release-first sequencing. T0202/T0203 obligations remain; latest repair T0204 independently accepted at a238abf3 and closed at e269a895388795fb189863c7e7783366f650b484, with every required exact-head push/PR job passing. Failed9c824422scan remains historical, not a prerequisite requiring impossible retrospective success. T0200 item-specific post1.0 authority remains. Independent R2 REVIEWER Schrodinger authorises only the four Q015 amendments plus additive T0204 contract described in committed brief. Schema declaration router verdict remains R2; actual diff reroutes upward.",
   "claims": [
-    "src/lib/db/index.ts", "src/lib/db/sql-migrations.ts", "src/lib/db/apply-sql.ts",
-    "src/lib/db/apply-benchmark-config-migration.ts", "src/lib/db/apply-bench-gateways-migration.ts",
-    "src/lib/db/apply-mission-phases-migration.ts", "src/lib/db/apply-retire-mission-phases-migration.ts",
-    "src/lib/db/apply-composer-migration.ts", "src/lib/db/apply-memory-providers-migration.ts",
-    "src/lib/db/apply-research-options-migration.ts", "src/lib/db/apply-models-api-style-migration.ts",
-    "src/lib/db/apply-research-composer-link-migration.ts", "src/lib/db/apply-composer-group-link-migration.ts",
-    "src/lib/db/apply-frameworks-migration.ts", "src/lib/db/apply-composer-rejected-migration.ts",
-    "src/lib/db/apply-composer-node-cancelled-migration.ts", "src/lib/db/apply-table-rebuild.ts",
-    "tests/unit/migration-t0188-wrappers.test.ts", "tests/unit/migration-t0188-behaviour.test.ts",
-    "tests/unit/migration-t0188-update-backup-order.test.ts", "tests/unit/t0165-plan-contract.test.ts",
-    "tests/unit/run-migrations-upgrade.integration.test.ts", "tests/unit/u15-one-driver-for-sql-migrations.test.ts",
-    "tests/fixtures/mutants/T-0188.json", "org/reviews/2026-10-t0188-oracle-amendment.md",
-    "org/reviews/2026-10-t0188-migration-verification.md", "org/briefs/T-0188-oracle.md",
-    "org/briefs/T-0188-review.md", "org/tasks/T-0188.json", "org/claims.json",
-    "org/plans/2026-09-refactor-programme.json", "org/plans/2026-09-refactor-programme.md",
-    "org/plans/2026-09-refactor-ownership.mjs", "org/plans/2026-09-refactor-ownership.json",
-    "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", "scripts/tooling/line-census.baseline.json"
+    "src/lib/db/index.ts",
+    "src/lib/db/sql-migrations.ts",
+    "src/lib/db/apply-sql.ts",
+    "src/lib/db/apply-benchmark-config-migration.ts",
+    "src/lib/db/apply-bench-gateways-migration.ts",
+    "src/lib/db/apply-mission-phases-migration.ts",
+    "src/lib/db/apply-retire-mission-phases-migration.ts",
+    "src/lib/db/apply-composer-migration.ts",
+    "src/lib/db/apply-memory-providers-migration.ts",
+    "src/lib/db/apply-research-options-migration.ts",
+    "src/lib/db/apply-models-api-style-migration.ts",
+    "src/lib/db/apply-research-composer-link-migration.ts",
+    "src/lib/db/apply-composer-group-link-migration.ts",
+    "src/lib/db/apply-frameworks-migration.ts",
+    "src/lib/db/apply-composer-rejected-migration.ts",
+    "src/lib/db/apply-composer-node-cancelled-migration.ts",
+    "src/lib/db/apply-table-rebuild.ts",
+    "tests/unit/migration-t0188-wrappers.test.ts",
+    "tests/unit/migration-t0188-behaviour.test.ts",
+    "tests/unit/migration-t0188-update-backup-order.test.ts",
+    "tests/unit/t0165-plan-contract.test.ts",
+    "tests/unit/run-migrations-upgrade.integration.test.ts",
+    "tests/unit/u15-one-driver-for-sql-migrations.test.ts",
+    "tests/fixtures/mutants/T-0188.json",
+    "org/reviews/2026-10-t0188-oracle-amendment.md",
+    "org/reviews/2026-10-t0188-migration-verification.md",
+    "org/briefs/T-0188-oracle.md",
+    "org/briefs/T-0188-review.md",
+    "org/tasks/T-0188.json",
+    "org/claims.json",
+    "org/plans/2026-09-refactor-programme.json",
+    "org/plans/2026-09-refactor-programme.md",
+    "org/plans/2026-09-refactor-ownership.mjs",
+    "org/plans/2026-09-refactor-ownership.json",
+    "org/HANDOVER.md",
+    "org/TASKS.md",
+    "org/STATE.md",
+    "scripts/tooling/line-census.baseline.json"
   ],
   "invariants": [
     "Preserve all eleven wrapper module paths, exports, signatures, return contracts and already-applied no-op behaviour. SQL history, public configuration and supported URLs remain intact.",
@@ -38,5 +84,21 @@
   "rollback": "Revert only this driver's consolidation and wrapper delegation, using the retained pre-migration backup for testing. Never roll a migrated live schema backwards in place. Preserve failure receipts and historical SQL.",
   "verify_line": "Independent real-SQLite wrappers, one-pass convergence, damaged-v15, partial-column, missing-SQL, seed/NULL repair, lossless/atomic rebuild and Auth43 controls go red first, then pass; preserve all historical names. Verify backup before migration on owned Linux/Windows installed fixtures, run the complete unchanged-tree ten-step gate, committed clean-tree mutation sweep, independent R2 review and every required exact-head hosted push/PR job.",
   "preflight": "Read-only reproduction tmp/t0188-preflight-verified.json/.log confirms pending v15 hides an absent benchmark_runs table and missing SQL at version 11 still advances to 12. These are hypotheses reproduced before implementation, not acceptance. The router declaration returns R2; actual implementation diff is rerouted upward if its evidence requires it.",
-  "additional_prerequisite": "T-0204 repairs the failed PR canary at closure9c824422. On 2026-10-01 independent R2 REVIEWER Schrodinger authorises only an additive external-prerequisite amendment: preserve all T-0202/T-0203 obligations and require T-0204 independent R2 acceptance/closure, full unchanged-tree gate, committed clean sweep, actual pinned clean/deterministic planted scanner acceptance and every exact-head hosted push/PR job. The latest repair head must execute every frozen T-0203 check and the repaired canary. The dated brief precedes authorship; no structural work or T-0200 retirement authority is inferred from the failed closure scan."
+  "additional_prerequisite": "T-0204 repairs the failed PR canary at closure9c824422. On 2026-10-01 independent R2 REVIEWER Schrodinger authorises only an additive external-prerequisite amendment: preserve all T-0202/T-0203 obligations and require T-0204 independent R2 acceptance/closure, full unchanged-tree gate, committed clean sweep, actual pinned clean/deterministic planted scanner acceptance and every exact-head hosted push/PR job. The latest repair head must execute every frozen T-0203 check and the repaired canary. The dated brief precedes authorship; no structural work or T-0200 retirement authority is inferred from the failed closure scan.",
+  "prerequisite_acceptance": {
+    "pr_ci": 36905837641,
+    "result": "All required jobs pass; every11PR job success. Native macOS7579pass5skip includes frozen portable/native HTTP controls.",
+    "receipt_directory": "tmp/t0204/closure-*-e269.json",
+    "push_ci": 36905827656,
+    "head": "e269a895388795fb189863c7e7783366f650b484",
+    "hashes": {
+      "push_scan": "714e7172536a83361d431c90976aa0b42e63e3025574cf7694f3e9f32a23de33",
+      "pr_scan": "328d48f58cecaf7a2668253db88cb9e21216868e595eb5deef1e3aecdb15b8fe",
+      "push_ci": "bd0cba94802953154535c77eef3214473b9766b1a7295f48d470a5430d82b4cc",
+      "pr_ci": "8e1845eb119b35d1b1f3a2d983f9e3056070a3c057f209e80ee1050292374d7d"
+    },
+    "push_gitleaks": 36905827739,
+    "pr_gitleaks": 36905837612
+  },
+  "validation_topology": "Schrodinger accepts detached validation checkouts with conditions: committed red HEAD plus explicit allowlist overlay covers additions/modifications/deletions/modes and matches primary bytes; each checkout keeps its own before/after stamp. Pin shared node_modules target, Node24.21.0/ABI137 and lockfile; no installs/mutation. Copy no operator env/data. Set owned PS_DATA_DIR/CH_DATA_DIR/HERMES_HOME, own all ports/processes, resolve EOS dependencies explicitly. Fresh implementation-commit checkout runs clean sweep; preserve controls/restoration and all gates."
 }

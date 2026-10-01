@@ -1,6 +1,67 @@
 {
-  "version": 1,
   "assigned": "2026-10-01",
-  "lanes": [],
-  "note": "T-0204 independently accepted and closed at a238abf3; all writers ceased. T-0188 remains proposed until every closure-head hosted job passes; then commit disjoint claims before dispatch. T-0200 retirement awaits its own ruling."
+  "lanes": [
+    {
+      "task_id": "T-0188",
+      "host": "NUCBOX_M6ULTRA",
+      "path_claims": [
+        "src/lib/db/index.ts",
+        "src/lib/db/sql-migrations.ts",
+        "src/lib/db/apply-sql.ts",
+        "src/lib/db/apply-benchmark-config-migration.ts",
+        "src/lib/db/apply-bench-gateways-migration.ts",
+        "src/lib/db/apply-mission-phases-migration.ts",
+        "src/lib/db/apply-retire-mission-phases-migration.ts",
+        "src/lib/db/apply-composer-migration.ts",
+        "src/lib/db/apply-memory-providers-migration.ts",
+        "src/lib/db/apply-research-options-migration.ts",
+        "src/lib/db/apply-models-api-style-migration.ts",
+        "src/lib/db/apply-research-composer-link-migration.ts",
+        "src/lib/db/apply-composer-group-link-migration.ts",
+        "src/lib/db/apply-frameworks-migration.ts",
+        "src/lib/db/apply-composer-rejected-migration.ts",
+        "src/lib/db/apply-composer-node-cancelled-migration.ts",
+        "src/lib/db/apply-table-rebuild.ts",
+        "tests/fixtures/mutants/T-0188.json",
+        "org/briefs/T-0188-oracle.md",
+        "org/briefs/T-0188-review.md",
+        "org/tasks/T-0188.json",
+        "org/claims.json",
+        "org/plans/2026-09-refactor-programme.json",
+        "org/plans/2026-09-refactor-programme.md",
+        "org/plans/2026-09-refactor-ownership.mjs",
+        "org/plans/2026-09-refactor-ownership.json",
+        "org/HANDOVER.md",
+        "org/TASKS.md",
+        "org/STATE.md",
+        "scripts/tooling/line-census.baseline.json"
+      ],
+      "expires": "2026-10-02T18:45:00Z",
+      "lane_id": "T-0188-coordinator",
+      "session_id": "2026-10-01-migration-driver-consolidation",
+      "acquired": "2026-10-01T18:39:49Z",
+      "harness_task_id": "2026-10-01-migration-driver-consolidation"
+    },
+    {
+      "task_id": "T-0188",
+      "host": "NUCBOX_M6ULTRA",
+      "path_claims": [
+        "tests/unit/migration-t0188-wrappers.test.ts",
+        "tests/unit/migration-t0188-behaviour.test.ts",
+        "tests/unit/migration-t0188-update-backup-order.test.ts",
+        "tests/unit/t0165-plan-contract.test.ts",
+        "tests/unit/run-migrations-upgrade.integration.test.ts",
+        "tests/unit/u15-one-driver-for-sql-migrations.test.ts",
+        "org/reviews/2026-10-t0188-oracle-amendment.md",
+        "org/reviews/2026-10-t0188-migration-verification.md"
+      ],
+      "expires": "2026-10-02T18:45:00Z",
+      "lane_id": "T-0188-oracle",
+      "session_id": "01a0f80a-5091-7ac3-9d66-89e159495160",
+      "acquired": "2026-10-01T18:39:49Z",
+      "harness_task_id": "01a0f80a-5091-7ac3-9d66-89e159495160"
+    }
+  ],
+  "version": 1,
+  "note": "At most two writing lanes; separate ORACLE owns only its eight listed paths, coordinator owns code/plan/records. No migration implementation before independent red freeze. Reviewer and future sidecars are read-only."
 }

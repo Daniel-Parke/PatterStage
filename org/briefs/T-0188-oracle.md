@@ -1,10 +1,19 @@
 # T-0188 independent oracle brief, 1 October 2026
 
 Newton adopts ORACLE. Read the task record and assigned claims; do not inspect
-the migration implementation. Authoring starts only after every required
-hosted job at T-0203 closure `9c824422` passes and the coordinator assigns the
-disjoint writing lane. At most two writers may run. Use real SQLite with owned
+the migration implementation. Authoring starts after every required hosted
+job at the latest repair closure `e269a895` passes and the coordinator commits
+the disjoint writing lane. Those jobs now pass; `9c824422`'s failed scan stays
+historical. At most two writers may run. Use real SQLite with owned
 temporary data and the isolated, checksum-verified Node 24.21.0 runtime.
+
+The coordinator provides a detached validation checkout of the committed task
+setup with the same immutable Node ABI/lockfile/dependency target. Copy no local
+environment or operator data; use owned PS_DATA_DIR, CH_DATA_DIR and HERMES_HOME.
+Author your assigned files in the primary claims, then overlay only those files
+for tests and verify their bytes. Record each checkout's before/after stamp.
+No installs, dependency mutation or unowned listeners are permitted. Missing
+bootstrap dependencies are infrastructure failures, never skipped checks.
 
 Author `migration-t0188-wrappers.test.ts` and
 `migration-t0188-behaviour.test.ts`. Keep synthetic fixture builders local.
