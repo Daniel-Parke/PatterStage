@@ -1,0 +1,21 @@
+{
+  "id": "T-0204",
+  "intent": "Make the configured full-history scanner's positive canary deterministic and preserve fail-closed distinction between infrastructure failure and a completed missed detection.",
+  "declared": {"capabilities": ["edit-tests", "edit-docs", "run-isolated-process", "owned-temporary-git", "owned-container", "git", "git-push"], "side_effects": ["sends-external"]},
+  "mode": "high-assurance", "tier_proposed": "R2", "tier_ruled": "R1",
+  "reasons": [{"factor": "boundary-contact", "tier_floor": "R1", "source": "declared", "evidence": "declared side effect: sends-external"}],
+  "status": "active", "owner_session": "2026-10-01-deterministic-secret-canary",
+  "timestamps": {"opened": "2026-10-01T16:56:00Z", "updated": "2026-10-01T16:56:00Z"},
+  "authority": "Operator authorises completion of the programme and repair of prerequisite gate defects. Independent R2 REVIEWER Schrodinger accepts this narrow security-instrumentation proposal. The declaration router's actual minimum is R1; this task adopts stricter separate-author oracle, high-assurance verification and independent R2 acceptance under Q-009. infra-state is a reserved derived source, not a valid declared side effect. No false CI/auth declaration or policy change raises the verdict artificially.",
+  "claims": ["tests/security/secret-scan-canary.mjs", "tests/unit/secret-scan-canary-behaviour.test.ts", "tests/helpers/secret-scan-canary-preload.mjs", "tests/fixtures/mutants/T-0204.json", "org/tasks/T-0204.json", "org/briefs/T-0204-oracle.md", "org/reviews/2026-10-t0204-canary-verification.md", "org/HANDOVER.md", "org/claims.json", "org/TASKS.md", "org/STATE.md", "scripts/tooling/line-census.baseline.json", "org/tasks/T-0188.json", "org/briefs/T-0188-oracle.md", "org/briefs/T-0188-review.md"],
+  "invariants": [
+    "The scanner config, ignore policy, pinned image digest, default rules, workflow, existing oracle identities, redaction and 120-second scanner/Git bounds remain unchanged.",
+    "A constructed deterministic noncredential positive control is detected in real committed history by generic-api-key at planted.txt. The clean control passes without findings.",
+    "Launch, timeout, malformed/missing report and Git failures remain fail-closed infrastructure, distinct from a completed scan that misses the candidate. No retry or scanner exception hides a failure.",
+    "The canary always removes only its owned temporary repository and does not print candidate values.",
+    "T-0203 remains closed and historical. T-0188 authoring and structural execution wait for this repair and every required exact-head hosted job."
+  ],
+  "rollback": "Revert only the canary repair and retain failure evidence; do not declare prerequisite completion while the random control can produce an allowed candidate. No operator data is touched.",
+  "verify_line": "A fresh ORACLE forces a letters-only random result and observes the unchanged canary fail against the real pinned scanner, then freezes cross-platform behavioural CLI controls. Implement deterministic candidate construction, run actual clean/planted scanner controls, all focused and full unchanged-tree gates, clean committed mutation sweep and independent R2 review, then every required exact-head hosted push/PR job.",
+  "preflight": "T-0203 closure9c824422 has both CI runs green, push Gitleaks green and PR Gitleaks36893768530 failed at its planted control. Failed redacted log tmp/t0203-closure-pr-gitleaks-failure.log is retained. Unchanged pinned Docker diagnostic tmp/t0204/diagnostic.json SHA-256 c577431e9e93d813469e0785da1decf0cba5ab84d9ccdb435fa641628e49ff3c: clean and high-entropy letters-only controls exit0/no findings, balanced letter/digit control exits1 with generic-api-key/planted.txt. The stopword-labelled candidate is also letters-only and does not isolate stopwords. The original hosted candidate was discarded, so its exact cause remains unproved. Independent reviewer verified these limits."
+}

@@ -11,8 +11,14 @@ updated: 2026-10-01
 
 **Q-032 now permits approved structural T-0188–T-0201 before release.**
 T-0203 is independently accepted and closed after all exact-head hosted jobs
-passed at `d292b0e7`. The closure commit must also pass hosted push and PR
-checks before structural execution. Fourteen approved batches remain:
+passed at `d292b0e7`. Closure `9c824422` passes both CI runs and push Gitleaks,
+but PR Gitleaks `36893768530` fails its random planted-secret control.
+T-0204 repairs the confirmed candidate-generation defect without changing
+scanner rules. Its actual declaration router minimum is R1; it adopts
+separate-author high-assurance oracles and independent R2 acceptance.
+The original failed candidate was discarded, so its exact cause is unproved.
+T-0188 remains proposed until every required repair-head hosted job passes.
+Fourteen approved batches remain:
 T-0188–T-0201. The operator amended the release-first sequencing in Q-011. PR #157's merge,
 tags and releases remain operator actions. The separate compatibility promise
 has not been changed. The plan register and its closed oracle need a dated,

@@ -1,0 +1,41 @@
+{
+  "id": "T-0188",
+  "intent": "Converge eleven migration wrappers on the SQL table driver, make pending migration failures explicit, preserve lossless Composer rebuilds and reach schema 43 in one fresh pass.",
+  "declared": {"capabilities": ["edit-code", "edit-tests", "edit-docs", "git", "git-push", "run-isolated-process"], "side_effects": ["migrates-schema"]},
+  "mode": "high-assurance", "tier_proposed": "R2", "tier_ruled": "R2",
+  "reasons": [{"factor": "schema-change", "tier_floor": "R2", "source": "declared", "evidence": "declared side effect: migrates-schema"}],
+  "status": "proposed", "owner_session": "2026-10-01-migration-driver-consolidation",
+  "timestamps": {"opened": "2026-10-01T16:45:00Z", "updated": "2026-10-01T16:45:00Z"},
+  "authority": "Operator approved Phase 2 on 2026-09-28 and amended Q-011 sequencing through Q-032 on 2026-09-30. T-0202 and T-0203 repair acceptance are prerequisites; every required exact-head hosted job on T-0203 closure 9c824422 must pass before authoring or structural implementation. T-0200 retains its independent post-1.0 retirement authority. Q-014 preserves table and column history. Independent R2 REVIEWER Schrodinger authorises only the four Q-015 oracle amendments detailed in the brief.",
+  "claims": [
+    "src/lib/db/index.ts", "src/lib/db/sql-migrations.ts", "src/lib/db/apply-sql.ts",
+    "src/lib/db/apply-benchmark-config-migration.ts", "src/lib/db/apply-bench-gateways-migration.ts",
+    "src/lib/db/apply-mission-phases-migration.ts", "src/lib/db/apply-retire-mission-phases-migration.ts",
+    "src/lib/db/apply-composer-migration.ts", "src/lib/db/apply-memory-providers-migration.ts",
+    "src/lib/db/apply-research-options-migration.ts", "src/lib/db/apply-models-api-style-migration.ts",
+    "src/lib/db/apply-research-composer-link-migration.ts", "src/lib/db/apply-composer-group-link-migration.ts",
+    "src/lib/db/apply-frameworks-migration.ts", "src/lib/db/apply-composer-rejected-migration.ts",
+    "src/lib/db/apply-composer-node-cancelled-migration.ts", "src/lib/db/apply-table-rebuild.ts",
+    "tests/unit/migration-t0188-wrappers.test.ts", "tests/unit/migration-t0188-behaviour.test.ts",
+    "tests/unit/migration-t0188-update-backup-order.test.ts", "tests/unit/t0165-plan-contract.test.ts",
+    "tests/unit/run-migrations-upgrade.integration.test.ts", "tests/unit/u15-one-driver-for-sql-migrations.test.ts",
+    "tests/fixtures/mutants/T-0188.json", "org/reviews/2026-10-t0188-oracle-amendment.md",
+    "org/reviews/2026-10-t0188-migration-verification.md", "org/briefs/T-0188-oracle.md",
+    "org/briefs/T-0188-review.md", "org/tasks/T-0188.json", "org/claims.json",
+    "org/plans/2026-09-refactor-programme.json", "org/plans/2026-09-refactor-programme.md",
+    "org/plans/2026-09-refactor-ownership.mjs", "org/plans/2026-09-refactor-ownership.json",
+    "org/HANDOVER.md", "org/TASKS.md", "org/STATE.md", "scripts/tooling/line-census.baseline.json"
+  ],
+  "invariants": [
+    "Preserve all eleven wrapper module paths, exports, signatures, return contracts and already-applied no-op behaviour. SQL history, public configuration and supported URLs remain intact.",
+    "A pending missing or broken migration fails without completing its version. Partial v15 additive state receives every remaining column; absent required tables are failures.",
+    "Fresh and supported prior schemas converge to 43 in one call, retain user rows and remain stable on repeated calls. Auth43 always validates actual storage shape.",
+    "Only empty provider/framework tables receive default seeds; explicit model API styles remain intact and only NULL values are repaired.",
+    "035 and 037 reject missing or unexpected columns before destructive work. Each rebuild is atomic and restores the incoming foreign-key setting after success or failure.",
+    "Backup-before-migrate acceptance uses isolated installed data on Linux and Windows; synthetic SQLite controls are separately labelled.",
+    "Independent oracle amendments preserve historical test identities and all unrelated assertions. Five historical and eight current programme targets, 22 batch IDs and all ledger totals stay fixed."
+  ],
+  "rollback": "Revert only this driver's consolidation and wrapper delegation, using the retained pre-migration backup for testing. Never roll a migrated live schema backwards in place. Preserve failure receipts and historical SQL.",
+  "verify_line": "Independent real-SQLite wrappers, one-pass convergence, damaged-v15, partial-column, missing-SQL, seed/NULL repair, lossless/atomic rebuild and Auth43 controls go red first, then pass; preserve all historical names. Verify backup before migration on owned Linux/Windows installed fixtures, run the complete unchanged-tree ten-step gate, committed clean-tree mutation sweep, independent R2 review and every required exact-head hosted push/PR job.",
+  "preflight": "Read-only reproduction tmp/t0188-preflight-verified.json/.log confirms pending v15 hides an absent benchmark_runs table and missing SQL at version 11 still advances to 12. These are hypotheses reproduced before implementation, not acceptance. The router declaration returns R2; actual implementation diff is rerouted upward if its evidence requires it."
+}
