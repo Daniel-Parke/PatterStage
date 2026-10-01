@@ -26,9 +26,22 @@ without an ignore or baseline exception. Actual pinned-scanner clean/planted
 controls pass and remove their owned repositories. Independent R2 review
 accepts the bounded implementation. Its actual router minimum is R1; it
 adopts stricter separate-author high-assurance and independent R2 acceptance.
-Every required exact-head hosted push and PR job is still pending. T-0204 is
-active and does not yet establish the structural prerequisite.
+Independent final R2 acceptance passes at `a238abf3`. Push CI `36903672085`,
+PR CI `36903681264`, push Gitleaks `36903671907` and PR Gitleaks `36903681338`
+all pass. Every one of the eleven PR jobs passes, including acceptance, full
+browser, install and real Hermes. Native macOS passes 7,579 tests with five
+existing skips and executes the frozen HTTP acceptance checks. T-0204 is
+closed against that accepted head; its record-only closure head must also
+pass every required hosted job before T-0188 authoring starts.
 The original failed candidate was discarded, so its exact cause is unproved.
+The personal Models walk also passes at both required widths: validation,
+keyless creation, edit/reload persistence, primary selection/reset and guarded
+delete. Eight screenshot hashes and the owned fixture are in
+`tmp/release-models-owned-1790878093677/result.json`, SHA-256
+`d8140736074769ed93543d148e224c5e7f3356ea2871d81dfa6d83fc63eb4890`.
+No console or page errors, overflow or missing h1 was observed; cleanup leaves
+zero owned model rows. The owned port 3997 listener is stopped. Credentials,
+fallbacks and the other pending product journeys are not covered by this walk.
 T-0188 remains proposed until every required repair-head hosted job passes.
 Fourteen approved batches remain:
 T-0188–T-0201. The operator amended the release-first sequencing in Q-011. PR #157's merge,

@@ -26,11 +26,12 @@
       "evidence": "declared side effect: sends-external"
     }
   ],
-  "status": "active",
+  "status": "done",
   "owner_session": "2026-10-01-deterministic-secret-canary",
   "timestamps": {
     "opened": "2026-10-01T16:56:00Z",
-    "updated": "2026-10-01T18:00:55Z"
+    "updated": "2026-10-01T18:18:16Z",
+    "closed": "2026-10-01T18:18:16Z"
   },
   "authority": "Operator authorises completion of the programme and repair of prerequisite gate defects. Independent R2 REVIEWER Schrodinger accepts this narrow security-instrumentation proposal. The declaration router's actual minimum is R1; this task adopts stricter separate-author oracle, high-assurance verification and independent R2 acceptance under Q-009. infra-state is a reserved derived source, not a valid declared side effect. No false CI/auth declaration or policy change raises the verdict artificially.",
   "claims": [
@@ -102,5 +103,65 @@
     "infrastructure": 0,
     "survived": 0
   },
-  "hosted": "Pending every required exact-head push and PR job, including native macOS HTTP acceptance and both full-history scans. No prerequisite completion is claimed."
+  "hosted": "All required exact-head jobs pass at a238abf3eb02cca62d38479fb62c08d1177d7663. Push CI36903672085, PR CI36903681264, push Gitleaks36903671907, PR Gitleaks36903681338. All11 PR jobs success including acceptance/full browsers/install/real Hermes; push full/acceptance are event-condition skips with both actual PR paths green. Native macOS7579pass5skip includes frozen native/portable HTTP checks. The record-only closure head must also pass every required job before T-0188 authoring.",
+  "final_acceptance": {
+    "receipt_hashes": {
+      "pr_ci": "f0986b947125d7426c9c3576062bb4948be620b303c8ceb0157647ee1f5dfdac",
+      "push_ci": "c1b95a5a0e6d93a69e3f79b9a82c5058d768d2f7e022de2ff00b0db9bba8206c",
+      "pr_gitleaks": "a54efb7cfc10cff3ab60ddb3f459da6d184180f6201a99c19a76b4a05c96ef18",
+      "push_gitleaks": "3f82afb882cd2958a757c80eef3f3687b45824486c3d66f41284af845b6ff891"
+    },
+    "commits": {
+      "implementation": "70f921e5be1b219ba1cf54aaa3c59d016b9f564d",
+      "record": "fa1eda0c1c87f57ff3d587a3c10a9758bfb37638",
+      "oracle_red": "4f6d5c358087bb6c65574936e849456dc9584aa9",
+      "verified_head": "a238abf3eb02cca62d38479fb62c08d1177d7663"
+    },
+    "reviewer": "Schrodinger independent R2 REVIEWER PASS: live metadata matches four saved receipts; both macOS logs, frozen oracles, actual scanner acceptance, gate and sweep verified. PR merge checkout has no file differences. No blocking concern. Closure head jobs remain required before T0188.",
+    "head": "a238abf3eb02cca62d38479fb62c08d1177d7663"
+  },
+  "additional_pathways": {
+    "sha256": "d8140736074769ed93543d148e224c5e7f3356ea2871d81dfa6d83fc63eb4890",
+    "pass": "Both1440x900/390x844: validation/keyless create/edit/reload/primary select-reset/delete expiry and confirm; 8 captures, no console/page errors, overflow or missing h1; zero owned rows and stopped port3997.",
+    "limits": "First probe had a broad duplicate Add Model selector and is preserved separately; narrower header probe passed. Credentials, fallback/bulk actions and other feature journeys remain untested here. No whole-product acceptance.",
+    "receipt": "tmp/release-models-owned-1790878093677/result.json",
+    "application_equivalent": "a238abf3eb02cca62d38479fb62c08d1177d7663",
+    "source": "d292b0e76f66686e6459fe24602ec79fb9791565",
+    "captures": [
+      {
+        "image": "desktop-0.png",
+        "sha256": "523b721aba1d02983e8caeee56d22b163b6f63d51a4e4dd22a871de897d1a505"
+      },
+      {
+        "image": "desktop-1.png",
+        "sha256": "0a3ede2097f37c027a4ad0e251929ad128620fa4e415fc41566a923d941b9201"
+      },
+      {
+        "image": "desktop-2.png",
+        "sha256": "da6323297b66a18a4d067163be92772506a56f05b9b24629092b68190466e67d"
+      },
+      {
+        "image": "desktop-3.png",
+        "sha256": "d881776e11cb43528d7e693b3b1351b411b3e96b94d996594c56705d1b9a4666"
+      },
+      {
+        "image": "phone-5.png",
+        "sha256": "ff626a1a4df41b214a9f1707c12343ecc9d22a2f742bf12db49dc2991a5b64ea"
+      },
+      {
+        "image": "phone-6.png",
+        "sha256": "6640bfb5872da08e9ec6c2bc8e70d6ba8b173428e5db067ff1f905eb725f2041"
+      },
+      {
+        "image": "phone-7.png",
+        "sha256": "10d9642427085e265d2980aa702691807893def6f5c47b39beff3a9314d28384"
+      },
+      {
+        "image": "phone-8.png",
+        "sha256": "acd7188b42f2fd0b37a3ed938b1d1c346b076ec4372080379a4eba31c9a3d6d3"
+      }
+    ],
+    "build": "85c9d0043e3ee640a9e813fb92a85e0823cbeac7"
+  },
+  "deviation": "No scanner rule, ignore, workflow, frozen test or fixed target changed. Exact Node --import entry repaired the genuine first-gate Knip finding. Actual router minimum R1 retained with stricter separate-author/independent R2 acceptance. No protected or historical record edit; no application visual change."
 }
