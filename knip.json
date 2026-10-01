@@ -9,7 +9,8 @@
     "tests/integration/runtime/*.mjs",
     "test-harness/baseline-fix-verify.mjs",
     "test-harness/bench-gateway-e2e.mjs",
-    "tests/e2e/prepare-data-dir.mjs"
+    "tests/e2e/prepare-data-dir.mjs",
+    "tests/helpers/secret-scan-canary-preload.mjs"
   ],
   "project": [
     "src/**/*.{ts,tsx}",

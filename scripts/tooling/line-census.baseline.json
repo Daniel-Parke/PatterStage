@@ -2,7 +2,7 @@
   "measuredAt": "2026-10-01",
   "counts": {
     "srcLines": 102681,
-    "testLines": 139517,
+    "testLines": 139889,
     "scriptsLines": 13566,
     "srcRepeatedWindowLines": 1010,
     "testRepeatedWindowLines": 4794,
@@ -1075,6 +1075,11 @@
       "measuredAt": "2026-10-01",
       "rise": "testLines rose from 139473 to 139517",
       "reason": "T-0203: independently authorised real outer-shell pin and separate same-filesystem calibration retain 29 prerequisite and seven defaults identities, real HTTP/authentication and all bounds; 44 test harness lines, no product change or fixed-target increase."
+    },
+    {
+      "measuredAt": "2026-10-01",
+      "rise": "testLines rose from 139517 to 139889",
+      "reason": "T-0204: 359 independently authored CLI oracle and calibrated preload lines plus 13 canary repair lines preserve redaction, real Git witnesses, failure classification and cleanup. Repeated test windows remain 4794 below the unchanged 4800 ceiling; all fixed programme targets remain unchanged."
     }
   ]
 }

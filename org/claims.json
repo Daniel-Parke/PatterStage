@@ -2,8 +2,44 @@
   "version": 1,
   "assigned": "2026-10-01",
   "lanes": [
-    {"lane_id": "T-0204-coordinator", "task_id": "T-0204", "session_id": "2026-10-01-deterministic-secret-canary", "host": "NUCBOX_M6ULTRA", "harness_task_id": "2026-10-01-deterministic-secret-canary", "acquired": "2026-10-01T16:56:00Z", "expires": "2026-10-02T16:56:00Z", "path_claims": ["tests/security/secret-scan-canary.mjs", "tests/fixtures/mutants/T-0204.json", "org/tasks/T-0204.json", "org/briefs/T-0204-oracle.md", "org/HANDOVER.md", "org/claims.json", "org/TASKS.md", "org/STATE.md", "scripts/tooling/line-census.baseline.json", "org/tasks/T-0188.json", "org/briefs/T-0188-oracle.md", "org/briefs/T-0188-review.md"]},
-    {"lane_id": "T-0204-oracle-frozen", "task_id": "T-0204", "session_id": "01a0f816-b84f-7dd0-bb2b-a703c1e6a376", "host": "NUCBOX_M6ULTRA", "harness_task_id": "01a0f816-b84f-7dd0-bb2b-a703c1e6a376", "acquired": "2026-10-01T16:56:00Z", "expires": "2026-10-02T16:56:00Z", "path_claims": ["tests/unit/secret-scan-canary-behaviour.test.ts", "tests/helpers/secret-scan-canary-preload.mjs", "org/reviews/2026-10-t0204-canary-verification.md"]}
+    {
+      "lane_id": "T-0204-coordinator",
+      "task_id": "T-0204",
+      "session_id": "2026-10-01-deterministic-secret-canary",
+      "host": "NUCBOX_M6ULTRA",
+      "harness_task_id": "2026-10-01-deterministic-secret-canary",
+      "acquired": "2026-10-01T16:56:00Z",
+      "expires": "2026-10-02T16:56:00Z",
+      "path_claims": [
+        "tests/security/secret-scan-canary.mjs",
+        "tests/fixtures/mutants/T-0204.json",
+        "org/tasks/T-0204.json",
+        "org/briefs/T-0204-oracle.md",
+        "org/HANDOVER.md",
+        "org/claims.json",
+        "org/TASKS.md",
+        "org/STATE.md",
+        "scripts/tooling/line-census.baseline.json",
+        "org/tasks/T-0188.json",
+        "org/briefs/T-0188-oracle.md",
+        "org/briefs/T-0188-review.md",
+        "knip.json"
+      ]
+    },
+    {
+      "lane_id": "T-0204-oracle-frozen",
+      "task_id": "T-0204",
+      "session_id": "01a0f816-b84f-7dd0-bb2b-a703c1e6a376",
+      "host": "NUCBOX_M6ULTRA",
+      "harness_task_id": "01a0f816-b84f-7dd0-bb2b-a703c1e6a376",
+      "acquired": "2026-10-01T16:56:00Z",
+      "expires": "2026-10-02T16:56:00Z",
+      "path_claims": [
+        "tests/unit/secret-scan-canary-behaviour.test.ts",
+        "tests/helpers/secret-scan-canary-preload.mjs",
+        "org/reviews/2026-10-t0204-canary-verification.md"
+      ]
+    }
   ],
   "note": "T-0204 ORACLE is frozen and author writes ceased. Coordinator is the sole active writer; R2 REVIEWER stays read-only. T-0188 drafts remain proposed with no structural or test authorship. T-0200 retirement requires its own ruling."
 }

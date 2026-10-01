@@ -1,13 +1,56 @@
 {
   "id": "T-0204",
   "intent": "Make the configured full-history scanner's positive canary deterministic and preserve fail-closed distinction between infrastructure failure and a completed missed detection.",
-  "declared": {"capabilities": ["edit-tests", "edit-docs", "run-isolated-process", "owned-temporary-git", "owned-container", "git", "git-push"], "side_effects": ["sends-external"]},
-  "mode": "high-assurance", "tier_proposed": "R2", "tier_ruled": "R1",
-  "reasons": [{"factor": "boundary-contact", "tier_floor": "R1", "source": "declared", "evidence": "declared side effect: sends-external"}],
-  "status": "active", "owner_session": "2026-10-01-deterministic-secret-canary",
-  "timestamps": {"opened": "2026-10-01T16:56:00Z", "updated": "2026-10-01T16:56:00Z"},
+  "declared": {
+    "capabilities": [
+      "edit-tests",
+      "edit-docs",
+      "run-isolated-process",
+      "owned-temporary-git",
+      "owned-container",
+      "git",
+      "git-push"
+    ],
+    "side_effects": [
+      "sends-external"
+    ]
+  },
+  "mode": "high-assurance",
+  "tier_proposed": "R2",
+  "tier_ruled": "R1",
+  "reasons": [
+    {
+      "factor": "boundary-contact",
+      "tier_floor": "R1",
+      "source": "declared",
+      "evidence": "declared side effect: sends-external"
+    }
+  ],
+  "status": "active",
+  "owner_session": "2026-10-01-deterministic-secret-canary",
+  "timestamps": {
+    "opened": "2026-10-01T16:56:00Z",
+    "updated": "2026-10-01T17:58:12Z"
+  },
   "authority": "Operator authorises completion of the programme and repair of prerequisite gate defects. Independent R2 REVIEWER Schrodinger accepts this narrow security-instrumentation proposal. The declaration router's actual minimum is R1; this task adopts stricter separate-author oracle, high-assurance verification and independent R2 acceptance under Q-009. infra-state is a reserved derived source, not a valid declared side effect. No false CI/auth declaration or policy change raises the verdict artificially.",
-  "claims": ["tests/security/secret-scan-canary.mjs", "tests/unit/secret-scan-canary-behaviour.test.ts", "tests/helpers/secret-scan-canary-preload.mjs", "tests/fixtures/mutants/T-0204.json", "org/tasks/T-0204.json", "org/briefs/T-0204-oracle.md", "org/reviews/2026-10-t0204-canary-verification.md", "org/HANDOVER.md", "org/claims.json", "org/TASKS.md", "org/STATE.md", "scripts/tooling/line-census.baseline.json", "org/tasks/T-0188.json", "org/briefs/T-0188-oracle.md", "org/briefs/T-0188-review.md"],
+  "claims": [
+    "tests/security/secret-scan-canary.mjs",
+    "tests/unit/secret-scan-canary-behaviour.test.ts",
+    "tests/helpers/secret-scan-canary-preload.mjs",
+    "tests/fixtures/mutants/T-0204.json",
+    "org/tasks/T-0204.json",
+    "org/briefs/T-0204-oracle.md",
+    "org/reviews/2026-10-t0204-canary-verification.md",
+    "org/HANDOVER.md",
+    "org/claims.json",
+    "org/TASKS.md",
+    "org/STATE.md",
+    "scripts/tooling/line-census.baseline.json",
+    "org/tasks/T-0188.json",
+    "org/briefs/T-0188-oracle.md",
+    "org/briefs/T-0188-review.md",
+    "knip.json"
+  ],
   "invariants": [
     "The scanner config, ignore policy, pinned image digest, default rules, workflow, existing oracle identities, redaction and 120-second scanner/Git bounds remain unchanged.",
     "A constructed deterministic noncredential positive control is detected in real committed history by generic-api-key at planted.txt. The clean control passes without findings.",
@@ -18,5 +61,35 @@
   "rollback": "Revert only the canary repair and retain failure evidence; do not declare prerequisite completion while the random control can produce an allowed candidate. No operator data is touched.",
   "verify_line": "A fresh ORACLE forces a letters-only random result and observes the unchanged canary fail against the real pinned scanner, then freezes cross-platform behavioural CLI controls. Implement deterministic candidate construction, run actual clean/planted scanner controls, all focused and full unchanged-tree gates, clean committed mutation sweep and independent R2 review, then every required exact-head hosted push/PR job.",
   "preflight": "T-0203 closure9c824422 has both CI runs green, push Gitleaks green and PR Gitleaks36893768530 failed at its planted control. Failed redacted log tmp/t0203-closure-pr-gitleaks-failure.log is retained. Unchanged pinned Docker diagnostic tmp/t0204/diagnostic.json SHA-256 c577431e9e93d813469e0785da1decf0cba5ab84d9ccdb435fa641628e49ff3c: clean and high-entropy letters-only controls exit0/no findings, balanced letter/digit control exits1 with generic-api-key/planted.txt. The stopword-labelled candidate is also letters-only and does not isolate stopwords. The original hosted candidate was discarded, so its exact cause remains unproved. Independent reviewer verified these limits.",
-  "oracle_provenance": {"author": "Leibniz 01a0f816-b84f-7dd0-bb2b-a703c1e6a376, fresh security dimension without implementation inspection", "hashes": {"tests/unit/secret-scan-canary-behaviour.test.ts": "0897c0367bc4b84e690a427b50af49d61853407859ad9ed6246799a858d7028f", "tests/helpers/secret-scan-canary-preload.mjs": "9b1dd060740f5791918264de5d806a9f9644613758e88ecd624217528d56a045"}, "real_red": "Actual pinned scanner and real Git, no scanner substitute: clean0/no findings, planted0/no findings with two committed history entries, canary normalexit1 at intended positive detection assertion. Owned cleanup verified. tmp/t0204-oracle/real-red-complete-process.json and instrument/log; independent R2 REVIEWER verifies current source SHA8bece2fb and calibration SHA0a46fbbf. Exact original hosted cause remains unproved.", "coordinator_red": "tmp/t0204/coordinator-red.json/.log: all14 frozen new identities plus seven unchanged T-0180 controls execute; 16 pass, five intended matcher failures, zero skips/runtime errors, normalexit1. Source/config/ignore/workflow remain unchanged. Author writes ceased. Detailed identities, limits and rejected attempts are in the append-only new verification ledger."}
+  "oracle_provenance": {
+    "author": "Leibniz 01a0f816-b84f-7dd0-bb2b-a703c1e6a376, fresh security dimension without implementation inspection",
+    "hashes": {
+      "tests/unit/secret-scan-canary-behaviour.test.ts": "0897c0367bc4b84e690a427b50af49d61853407859ad9ed6246799a858d7028f",
+      "tests/helpers/secret-scan-canary-preload.mjs": "9b1dd060740f5791918264de5d806a9f9644613758e88ecd624217528d56a045"
+    },
+    "real_red": "Actual pinned scanner and real Git, no scanner substitute: clean0/no findings, planted0/no findings with two committed history entries, canary normalexit1 at intended positive detection assertion. Owned cleanup verified. tmp/t0204-oracle/real-red-complete-process.json and instrument/log; independent R2 REVIEWER verifies current source SHA8bece2fb and calibration SHA0a46fbbf. Exact original hosted cause remains unproved.",
+    "coordinator_red": "tmp/t0204/coordinator-red.json/.log: all14 frozen new identities plus seven unchanged T-0180 controls execute; 16 pass, five intended matcher failures, zero skips/runtime errors, normalexit1. Source/config/ignore/workflow remain unchanged. Author writes ceased. Detailed identities, limits and rejected attempts are in the append-only new verification ledger."
+  },
+  "coordinator_checks": "All21 focused cases pass with zero skips/runtime errors and normalexit0, tmp/t0204/coordinator-green.json/.log. Scoped ESLint and test TypeScript exit0. Direct public CLI and both letters/zeros crypto controls pass against actual pinned Docker scanner and real Git: clean0, planted1/exact rule/file, no scanner substitute, owned roots absent. Receipts tmp/t0204/native-{direct,letters,zeros}-green.log and observed instrument JSON. New oracle hashes remain frozen; config/ignore/workflow and all previous tests are unchanged. Rolling line census explicitly holds +372 test-scoped lines: 359 independently authored oracle/preload plus 13 canary implementation, with repeated windows unchanged4794 and ceiling4800 unchanged. All fixed targets remain. Full gate, clean committed seven-mutant sweep and hosted jobs are still required.",
+  "full_gate_attempts": [
+    {
+      "path": "tmp/t0204-full-gate-20261001/summary.json",
+      "treeMoved": false,
+      "exit": 1,
+      "reason": "Knip finds dynamic Node --import preload entry absent from configured roots; 7574 pass, one genuine Knip identity failure, nine existing skips. Add exact executable entry; no ignore, baseline exception or oracle edit."
+    }
+  ],
+  "implementation_review": "Schrodinger independent R2 REVIEWER PASS, 2026-10-01: calibrated deterministic candidate, fail-closed infrastructure distinctions, all 11 freeze-manifest hashes, seven unique executable mutant anchors and narrow Knip preload entry accepted. LF canary ea6901cd308405001d11a27bb51e66d119fcd5f87a1dc677afc9d939049218f1; Knip 177aa55bca214291ecfbe8290845d7c0f4037ceeea4aa83da0185c23cc8d1a14. Gate/sweep/hosted acceptance remain separately required.",
+  "verification": {
+    "browser_skip": 24,
+    "steps": "All ten exit zero; build-purity both controls and both censuses pass. Frozen hashes unchanged. No product visual change; public CLI controls exercise every authored failure path. Existing product-pathway defects remain assigned to subsequent batches.",
+    "tree": "3d60f692d279dbe19693dce3ea8b59b1c3251f58e9efe29ff5d36be96af7e417",
+    "jest_skip": 9,
+    "jest_pass": 7575,
+    "browser_pass": 355,
+    "complete": true,
+    "summary": "tmp/t0204-full-gate-knip-entry-20261001/summary.json",
+    "sha256": "96e5d84b1f231cb5c327dd760661697a2e1c33ea3dda80cc6d89ccd283c32932",
+    "exit": 0
+  }
 }

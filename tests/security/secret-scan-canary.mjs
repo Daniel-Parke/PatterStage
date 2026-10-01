@@ -1,4 +1,3 @@
-import { randomBytes } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -14,6 +13,7 @@ function command(binary, args, cwd) {
     execFileSync(binary, args, { cwd, stdio: "pipe", timeout: 120_000 });
     return 0;
   } catch (error) {
+    if (error.code === "ETIMEDOUT" || error.signal) throw new Error(`${binary} timed out or terminated`);
     if (typeof error.status !== "number") throw new Error(`${binary} failed to launch`);
     return error.status;
   }
@@ -27,7 +27,18 @@ function scan() {
   const exit = native
     ? command(native, [...common, "--config", join(directory, ".gitleaks.toml"), "--gitleaks-ignore-path", join(directory, ".gitleaksignore"), "--report-path", report], directory)
     : command("docker", ["run", "--rm", "--network", "none", "--mount", `type=bind,source=${directory},target=/probe`, "--workdir", "/probe", pinnedImage, ...common, "--config", "/probe/.gitleaks.toml", "--gitleaks-ignore-path", "/probe/.gitleaksignore", "--report-path", "/probe/scan-report.json"], directory);
-  const findings = existsSync(report) ? JSON.parse(readFileSync(report, "utf8")) : [];
+  if (exit !== 0 && exit !== 1) throw new Error(`Scanner infrastructure failure: invalid exit ${exit}`);
+  if (!existsSync(report)) throw new Error("Scanner infrastructure failure: missing JSON report");
+  let findings;
+  try {
+    findings = JSON.parse(readFileSync(report, "utf8"));
+    if (!Array.isArray(findings) || findings.some(finding => !finding ||
+        typeof finding.RuleID !== "string" || typeof finding.File !== "string")) {
+      throw new Error("Invalid report shape");
+    }
+  } catch {
+    throw new Error("Scanner infrastructure failure: malformed JSON report");
+  }
   return { exit, findings };
 }
 
@@ -43,7 +54,9 @@ try {
   const clear = scan();
   if (clear.exit !== 0 || clear.findings.length !== 0) throw new Error("Configured scanner failed the clean control");
 
-  writeFileSync(join(directory, "planted.txt"), `api_key = "${randomBytes(32).toString("base64url")}"\n`);
+  // A balanced synthetic value avoids the default rule's letters-only allowance.
+  const plantedValue = Array.from({ length: 26 }, (_, index) => String.fromCharCode(65 + index) + String(index % 10)).join("");
+  writeFileSync(join(directory, "planted.txt"), `api_key = "${plantedValue}"\n`);
   if (command("git", ["add", "planted.txt"], directory) !== 0 ||
       command("git", ["commit", "-qm", "planted control"], directory) !== 0) throw new Error("Cannot commit planted control");
   const planted = scan();
