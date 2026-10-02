@@ -1,5 +1,21 @@
 # T-0190 independent oracle brief
 
+Independent REVIEWER scope PASS, Schrodinger, before freeze:
+
+- Add `returning to a conversation does not reactivate its obsolete work`:
+  A to B to A, then release old A work. Assert visible state, not a counter
+  mechanism. Comparing only conversation IDs is insufficient.
+- M7 must preserve a newer unrelated field on the affected mission as well as
+  an unrelated row. Whole-row rollback can lose the former.
+- Give blank-conversation reuse and clicked-row export explicit historical
+  witness names or named new positive controls in the freeze inventory.
+- Q1 freezes controlled timer/latency/focus observations, not incidental wall
+  time or an assumed single timer. It does not authorise stats-hook changes.
+- The current exact claims/opening text governs the older design copied below.
+  C1/C2 have coordinator runtime proof; other races await independent evidence.
+  Neither conditional historical seam is authorised for amendment now.
+  Provider-wrapper amendments retain one stable query client across rerenders.
+
 Author: Carver. Adopt ORACLE charter. Ruled R2; source implementation has not
 started. Use the explicit thirteen test claims in org/claims.json. The six
 historical amendments are provider-wrapper changes only, independently authored
