@@ -341,11 +341,9 @@ interface SessionTotalsRow {
  * would bring it to 2.4ms if the table ever grows enough to want one; that is
  * a schema change and needs its own ruling.
  *
- * `message_count` is guarded rather than assumed: 001_baseline.sql predates
- * 006_sessions_message_count and `runMigrations` returns straight after
- * applying the baseline, so a fresh install's first boot has a `sessions`
- * table without that column. The same pragma guard the sync layer uses for
- * the same reason (operator ruling D6).
+ * `message_count` remains guarded for legacy or partially repaired databases
+ * under operator ruling D6. Fresh installs now complete the migration chain
+ * before their first query; the baseline alone predates that column.
  */
 function readSessionTotals(
   database: ReturnType<typeof getDb>,

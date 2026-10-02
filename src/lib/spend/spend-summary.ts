@@ -16,6 +16,7 @@
 // unreachable, but it is the contract an unrecorded FUTURE source would use.
 
 import { DEFAULT_RATE } from "@/lib/analytics/model-cost";
+import { safeRead } from "@/lib/db/safe-read";
 
 import {
   SPEND_PERIODS,
@@ -84,14 +85,6 @@ export interface SpendSummary {
    */
   estimateNote: string | null;
   generatedAt: string;
-}
-
-function safeRead<T>(fn: () => T, fallback: T): T {
-  try {
-    return fn();
-  } catch {
-    return fallback;
-  }
 }
 
 function periodRow(period: SpendPeriod, nowIso: string): SpendPeriodRow {

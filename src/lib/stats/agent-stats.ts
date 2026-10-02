@@ -8,6 +8,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { createAgentSkillsCounter } from "@/lib/agents/agent-skills-count";
+import { parseStoredUsage } from "@/lib/runs/parse-stored-usage";
 
 import {
   readAgentProfileStatsRows,
@@ -54,19 +55,6 @@ export interface AgentPerformance {
   toolsets: number;
 }
 
-function num(v: unknown): number {
-  const n = Number(v);
-  return Number.isFinite(n) ? n : 0;
-}
-function parseTotalTokens(raw: string | null): number {
-  if (!raw) return 0;
-  try {
-    const o = JSON.parse(raw) as { inputTokens?: number; outputTokens?: number; totalTokens?: number };
-    return num(o.totalTokens) || num(o.inputTokens) + num(o.outputTokens);
-  } catch {
-    return 0;
-  }
-}
 function jsonLen(raw: string | null): number {
   if (!raw) return 0;
   try {
@@ -101,7 +89,7 @@ function runsByProfile(): Map<string, RunAgg> {
     const a = out.get(key) ?? { runs: 0, completed: 0, tokens: 0, durSum: 0, durCount: 0 };
     a.runs++;
     if (r.status === "completed") a.completed++;
-    a.tokens += parseTotalTokens(r.usage_json);
+    a.tokens += parseStoredUsage(r.usage_json)?.totalTokens ?? 0;
     if (r.status === "completed" && r.completed_at && r.submitted_at) {
       // Timestamps are ISO-8601 with a 'Z'; appending another 'Z' → NaN → no avg.
       const d = (Date.parse(r.completed_at) - Date.parse(r.submitted_at)) / 1000;

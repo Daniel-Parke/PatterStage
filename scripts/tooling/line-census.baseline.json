@@ -1,10 +1,10 @@
 {
   "measuredAt": "2026-10-02",
   "counts": {
-    "srcLines": 102201,
-    "testLines": 141292,
-    "scriptsLines": 13677,
-    "srcRepeatedWindowLines": 968,
+    "srcLines": 102216,
+    "testLines": 142884,
+    "scriptsLines": 13667,
+    "srcRepeatedWindowLines": 946,
     "testRepeatedWindowLines": 4794,
     "routesWithTryCatch": 18,
     "handRolledReadHooks": 5,
@@ -13,7 +13,7 @@
     "oneImporterComponents": 104,
     "libRootFiles": 6,
     "commentEssays": 9,
-    "suitesMockingDbInline": 14
+    "suitesMockingDbInline": 15
   },
   "allowed": [
     {
@@ -1125,6 +1125,31 @@
       "measuredAt": "2026-10-02",
       "rise": "scriptsLines rose from 13645 to 13677",
       "reason": "T-0205 adds typed, redacted stalled-context diagnostic metrics for unresolved hosted macOS cleanup failures; preserves all formal tests, deadlines and coverage floors."
+    },
+    {
+      "measuredAt": "2026-10-02",
+      "rise": "testLines rose from 141292 to 142727",
+      "reason": "T-0189 adds 421 independently authored red-first data boundary, migration, recovery and concurrency oracle cases across eight suites (1435 test lines). Source shrinks by 49 lines, repeated source windows by 22 and tooling by 10; test identities and coverage floors remain intact. Programme targets are unchanged."
+    },
+    {
+      "measuredAt": "2026-10-02",
+      "rise": "suitesMockingDbInline rose from 14 to 15",
+      "reason": "T-0189 adds 421 independently authored red-first data boundary, migration, recovery and concurrency oracle cases across eight suites (1435 test lines). Source shrinks by 49 lines, repeated source windows by 22 and tooling by 10; test identities and coverage floors remain intact. Programme targets are unchanged."
+    },
+    {
+      "measuredAt": "2026-10-02",
+      "rise": "srcLines rose from 102152 to 102216",
+      "reason": "T-0189 independent review added four red-first recovery preservation cases and a minimal inherited-env typing correction. A local validated-JSON span scanner preserves unrelated numeric lexemes and duplicate fields on Node20; whole-object serialisation would corrupt stored values. No historical tests, targets or coverage floors were removed or lowered."
+    },
+    {
+      "measuredAt": "2026-10-02",
+      "rise": "testLines rose from 142727 to 142881",
+      "reason": "T-0189 independent review added four red-first recovery preservation cases and a minimal inherited-env typing correction. A local validated-JSON span scanner preserves unrelated numeric lexemes and duplicate fields on Node20; whole-object serialisation would corrupt stored values. No historical tests, targets or coverage floors were removed or lowered."
+    },
+    {
+      "measuredAt": "2026-10-02",
+      "rise": "testLines rose from 142881 to 142884",
+      "reason": "T-0189 adds three type-only oracle lines to expose its genuine migration dependency to Knip. Independent verification proves byte-identical emitted JavaScript and unchanged 31 cases; no static-analysis ignore, baseline exception, target or coverage-floor change."
     }
   ]
 }

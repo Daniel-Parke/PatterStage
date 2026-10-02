@@ -23,6 +23,7 @@
 // rate on file, what was not, and which models it could not price.
 
 import { estimateCostWithBasis } from "@/lib/analytics/model-cost";
+import { parseStoredUsage } from "@/lib/runs/parse-stored-usage";
 import { SPEND_SOURCES, type SpendSource } from "./spend-law";
 import {
   readResearchUsageSince,
@@ -156,31 +157,19 @@ function foldUsage(
   };
 
   for (const row of rows) {
-    let input = 0;
-    let output = 0;
-    try {
-      const u = JSON.parse(row.usage) as { inputTokens?: number; outputTokens?: number };
-      input = Number(u.inputTokens ?? 0);
-      output = Number(u.outputTokens ?? 0);
-    } catch {
-      // A run whose usage JSON will not parse recorded no usable counts. It is
-      // skipped rather than guessed at: inventing a number here would be the
-      // same lie as pricing Deep Research at zero, in a smaller place.
-      continue;
-    }
-    if (!Number.isFinite(input)) input = 0;
-    if (!Number.isFinite(output)) output = 0;
+    const usage = parseStoredUsage(row.usage);
+    if (!usage) continue;
 
     const key: "agent" | "composer" | "story" =
       row.source === "composer" || row.source === "story" ? row.source : "agent";
     const target = acc[key];
     target.runs += 1;
-    target.inputTokens += input;
-    target.outputTokens += output;
+    target.inputTokens += usage.inputTokens;
+    target.outputTokens += usage.outputTokens;
     // A null model (every Composer stage, every story chapter) resolves to
     // model-cost's DEFAULT_RATE, which is deliberately non-zero. Unknown must
     // never read as free, and it must never read as priced either.
-    const priced = estimateCostWithBasis(row.model, input, output);
+    const priced = estimateCostWithBasis(row.model, usage.inputTokens, usage.outputTokens);
     target.costUsd = (target.costUsd ?? 0) + priced.usd;
     target.estimatedUsd += basis.add(row.model, priced.usd, priced.fromKnownRate);
   }

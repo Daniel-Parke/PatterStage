@@ -7,6 +7,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { getDb } from "@/lib/db";
+import { parseStoredUsage } from "@/lib/runs/parse-stored-usage";
 import * as questEval from "@/lib/quests/evaluate";
 import { readQuestLatch } from "@/lib/quests/quest-latch";
 import {
@@ -103,24 +104,6 @@ function num(v: unknown): number {
   return Number.isFinite(n) ? n : 0;
 }
 
-interface UsageShape {
-  inputTokens?: number;
-  outputTokens?: number;
-  totalTokens?: number;
-}
-function parseTokens(raw: string | null): { input: number; output: number; total: number } {
-  if (!raw) return { input: 0, output: 0, total: 0 };
-  try {
-    const o = JSON.parse(raw) as UsageShape;
-    const input = num(o.inputTokens);
-    const output = num(o.outputTokens);
-    const total = num(o.totalTokens) || input + output;
-    return { input, output, total };
-  } catch {
-    return { input: 0, output: 0, total: 0 };
-  }
-}
-
 function countBy(table: string, where = ""): Record<string, number> {
   try {
     const rows = getDb()
@@ -206,14 +189,14 @@ export function computeDashboard(): { stats: DashboardStats; raw: RawMetrics } {
   const completionHours: number[] = [];
 
   for (const r of runRows) {
-    const t = parseTokens(r.usage_json);
-    totalTokens += t.total;
-    inputTokens += t.input;
-    outputTokens += t.output;
+    const usage = parseStoredUsage(r.usage_json);
+    totalTokens += usage?.totalTokens ?? 0;
+    inputTokens += usage?.inputTokens ?? 0;
+    outputTokens += usage?.outputTokens ?? 0;
     if (r.status === "completed" && r.completed_at) {
       const day = r.completed_at.slice(0, 10);
       completedByDay.set(day, (completedByDay.get(day) ?? 0) + 1);
-      tokensByDay.set(day, (tokensByDay.get(day) ?? 0) + t.total);
+      tokensByDay.set(day, (tokensByDay.get(day) ?? 0) + (usage?.totalTokens ?? 0));
       activeDates.add(day);
       completionHours.push(num(r.completed_at.slice(11, 13)));
       if (r.submitted_at) {

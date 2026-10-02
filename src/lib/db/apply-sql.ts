@@ -44,7 +44,7 @@ export function execMigrationFile(database: Database.Database, path: string): vo
   execIdempotent(database, readFileSync(path, "utf-8"));
 }
 
-/** Historical 015 contains only additive statements; finish a partial apply. */
+/** Finish files whose individual statements can be replayed after duplicate column additions. */
 export function execAdditiveMigrationFile(database: Database.Database, path: string): void {
   const sql = readFileSync(path, "utf-8").replace(/--[^\n]*/g, "");
   for (const statement of sql.split(";").map((part) => part.trim()).filter(Boolean)) {

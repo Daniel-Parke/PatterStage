@@ -10,7 +10,8 @@ import { exec } from "child_process";
 import { access, constants, readFile } from "fs/promises";
 import { getAgentWorkspace } from "@/lib/runtime/workspace";
 import { now } from "@/lib/db";
-import { deleteAllAgentProcesses, insertAgentProcesses } from "@/lib/sync/sync-repository";
+import { replaceAgentProcesses } from "@/lib/sync/sync-repository";
+import { hasToken, readEnvTokenPresence } from "@/lib/sync/env-token-presence";
 import { setSystemStat } from "@/lib/system/system-repository";
 import { logApiError } from "@/lib/api/api-logger";
 import type { SyncSource, SyncResult } from "@/lib/sync/types";
@@ -95,22 +96,16 @@ export class ProcessSync implements SyncSource {
           }
           if (envExists) {
             const envContent = await readFile(envPath, "utf-8");
+            const tokens = readEnvTokenPresence(envContent);
             const platforms: string[] = [];
-            if (
-              envContent.includes("DISCORD_BOT_TOKEN=") &&
-              !envContent.match(/^#\s*DISCORD_BOT_TOKEN/m)
-            )
+            if (hasToken(tokens, "DISCORD_BOT_TOKEN"))
               platforms.push("Discord");
-            if (
-              envContent.includes("TELEGRAM_BOT_TOKEN=") &&
-              !envContent.match(/^#\s*TELEGRAM_BOT_TOKEN/m)
-            )
+            if (hasToken(tokens, "TELEGRAM_BOT_TOKEN"))
               platforms.push("Telegram");
-            if (
-              envContent.includes("SLACK_BOT_TOKEN=") &&
-              !envContent.match(/^#\s*SLACK_BOT_TOKEN/m)
-            )
+            if (hasToken(tokens, "SLACK_BOT_TOKEN"))
               platforms.push("Slack");
+            if (hasToken(tokens, "WHATSAPP_API_KEY", "WHATSAPP_PHONE_ID"))
+              platforms.push("WhatsApp");
             if (platforms.length > 0)
               platformLabel = platforms.join(" + ");
           }
@@ -157,12 +152,7 @@ export class ProcessSync implements SyncSource {
       // ── Write to DB ───────────────────────────────────────
       const timestamp = now();
 
-      // Clear stale entries first
-      deleteAllAgentProcesses();
-
-      if (processes.length > 0) {
-        insertAgentProcesses(processes, timestamp);
-      }
+      replaceAgentProcesses(processes, timestamp);
 
       // ── Track system uptime from /proc/uptime ─────────────
       try {

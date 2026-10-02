@@ -8,7 +8,6 @@
 
 import { syncHermesSessionsToDb } from "@/lib/sessions/session-sync";
 import { logApiError } from "@/lib/api/api-logger";
-import { recordSyncFailure, recordSyncSuccess } from "@/lib/sync/sync-repository";
 import type { SyncSource, SyncResult } from "@/lib/sync/types";
 import { syncFailure, syncSuccess } from "@/lib/sync/types";
 
@@ -20,9 +19,6 @@ export class SessionSync implements SyncSource {
     try {
       const result = syncHermesSessionsToDb();
 
-      // Record sync status in sync_registry
-      recordSyncSuccess(this.name, result.synced);
-
       // No second line here. syncHermesSessionsToDb already reports skips, with
       // the actual causes and a signature gate. This used to log the same fact
       // through logApiError, at ERROR level, having SYNTHESISED an Error from
@@ -32,11 +28,6 @@ export class SessionSync implements SyncSource {
       return syncSuccess(this.name, result.synced, start);
     } catch (err) {
       logApiError("SessionSync", "syncing sessions", err);
-
-      // Record failure in sync_registry
-      try {
-        recordSyncFailure(this.name, String(err));
-      } catch { /* best-effort */ }
 
       return syncFailure(this.name, err, start);
     }

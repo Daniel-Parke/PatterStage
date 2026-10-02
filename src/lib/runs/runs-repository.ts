@@ -12,6 +12,7 @@ import { logApiError } from "../api/api-logger";
 import type { SpendSource } from "../spend/spend-law";
 import { buildUpdate } from "../db/build-update";
 import type { RunStatus, RunUsage } from "@/lib/runtime/types";
+import { parseStoredUsage } from "./parse-stored-usage";
 
 export interface RunRecord {
   id: string;
@@ -48,20 +49,6 @@ interface RunRow {
   updated_at: string;
 }
 
-function parseUsage(raw: string | null): RunUsage | null {
-  if (!raw) return null;
-  try {
-    const o = JSON.parse(raw) as Partial<RunUsage>;
-    return {
-      inputTokens: Number(o.inputTokens ?? 0),
-      outputTokens: Number(o.outputTokens ?? 0),
-      totalTokens: Number(o.totalTokens ?? 0),
-    };
-  } catch {
-    return null;
-  }
-}
-
 function rowToRun(row: RunRow | undefined): RunRecord | null {
   if (!row) return null;
   return {
@@ -74,7 +61,7 @@ function rowToRun(row: RunRow | undefined): RunRecord | null {
     sessionId: row.session_id,
     status: row.status as RunStatus,
     output: row.output,
-    usage: parseUsage(row.usage_json),
+    usage: parseStoredUsage(row.usage_json),
     error: row.error,
     submittedAt: row.submitted_at,
     completedAt: row.completed_at,

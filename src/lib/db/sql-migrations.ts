@@ -101,11 +101,35 @@ export function applySqlMigration(database: Database.Database, migrationsDir: st
   const current = getSchemaVersion(database);
   if (current >= version) return current;
   const path = join(migrationsDir, entry[1]);
+  if (version === 40) {
+    return database.transaction(() => {
+      // Older upgrade paths may have added the columns before the backfill ran.
+      execAdditiveMigrationFile(database, path);
+      ensureRunsStoryIndex(database);
+      setSchemaVersion(database, version);
+      return version;
+    })();
+  }
   if (version === 15) execAdditiveMigrationFile(database, path);
   else execMigrationFile(database, path);
   afterSql[version]?.(database);
   setSchemaVersion(database, version);
   return version;
+}
+
+/** Restore the existing index without replaying a completed spend classification backfill. */
+export function ensureRunsStoryIndex(database: Database.Database): void {
+  const index = database.prepare("SELECT sql FROM sqlite_master WHERE type = 'index' AND name = 'idx_runs_story'")
+    .get() as { sql: string } | undefined;
+  if (!index) {
+    database.exec("CREATE INDEX idx_runs_story ON runs(story_id) WHERE story_id IS NOT NULL");
+    return;
+  }
+  const definition = index.sql.toLowerCase().replace(/["`\[\]]/g, "").replace(/\s+/g, " ")
+    .replace(/\s*\(\s*/g, "(").replace(/\s*\)/g, ")").replace(/\bif not exists /, "").replace(/;$/, "").trim();
+  if (definition !== "create index idx_runs_story on runs(story_id) where story_id is not null") {
+    throw new Error("idx_runs_story has a conflicting definition; preserve it for operator review");
+  }
 }
 
 const at = (version: number) => (database: Database.Database, migrationsDir: string) =>

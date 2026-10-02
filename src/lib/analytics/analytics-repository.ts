@@ -8,6 +8,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { getDb, inTransaction, uuid } from "../db";
+import { safeRead } from "../db/safe-read";
 import type { AnalyticsEventType, AnalyticsEntityType } from "./event-types";
 
 export interface InsertEventInput {
@@ -35,14 +36,6 @@ export function insertEvent(input: InsertEventInput): void {
         input.metadataJson ?? null,
       );
   });
-}
-
-function safeRead<T>(fn: () => T, fallback: T): T {
-  try {
-    return fn();
-  } catch {
-    return fallback;
-  }
 }
 
 /** Clamp to a non-negative integer for safe `'-N days'` interpolation. */

@@ -35,8 +35,8 @@ export function pickEnum<T extends string>(
 let pendingSync: Promise<void> | null = null;
 
 /**
- * One-shot Hermes session sync, coalescing calls within the window so a burst
- * of /api/sessions requests does not hammer the sync layer. Tests pass a shorter window.
+ * Initialise the sync layer once within the debounce window. This does not
+ * request another sync cycle from an already initialised layer.
  */
 export function triggerSyncOnce(debounceMs: number = 30_000): void {
   if (pendingSync) return;

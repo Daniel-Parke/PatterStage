@@ -9,29 +9,10 @@ import { access, constants } from "fs/promises";
 import { readFile } from "fs/promises";
 import { getAgentWorkspace } from "@/lib/runtime/workspace";
 import { upsertGatewayPlatforms } from "@/lib/sync/sync-repository";
+import { hasToken, readEnvTokenPresence } from "@/lib/sync/env-token-presence";
 import { logApiError } from "@/lib/api/api-logger";
 import type { SyncSource, SyncResult } from "@/lib/sync/types";
 import { syncFailure, syncSuccess } from "@/lib/sync/types";
-
-/** Parse .env content into a key-value map. */
-function parseEnvVars(content: string): Record<string, string> {
-  const vars: Record<string, string> = {};
-  for (const line of content.split("\n")) {
-    const eqIdx = line.indexOf("=");
-    if (eqIdx > 0 && !line.startsWith("#")) {
-      const key = line.slice(0, eqIdx).trim();
-      let val = line.slice(eqIdx + 1).trim();
-      val = val.replace(/^["']|["']$/g, "");
-      if (val && val !== "changeme") vars[key] = val;
-    }
-  }
-  return vars;
-}
-
-/** Check if a platform has a valid token configured. */
-function hasToken(vars: Record<string, string>, ...keys: string[]): boolean {
-  return keys.some((k) => !!vars[k]);
-}
 
 export class EnvSync implements SyncSource {
   readonly name = "env";
@@ -52,7 +33,7 @@ export class EnvSync implements SyncSource {
       }
 
       const content = await readFile(envPath, "utf-8");
-      const vars = parseEnvVars(content);
+      const vars = readEnvTokenPresence(content);
 
       const platforms: Array<{
         platform: string;

@@ -20,7 +20,7 @@ import { join } from "path";
 import { createInterface } from "readline";
 import { getAgentWorkspace } from "@/lib/runtime/workspace";
 import { now } from "@/lib/db";
-import { insertErrorLogEntries, pruneErrorLogEntries } from "@/lib/sync/sync-repository";
+import { insertAndPruneErrorLogEntries } from "@/lib/sync/sync-repository";
 import { logApiError } from "@/lib/api/api-logger";
 import type { SyncSource, SyncResult } from "@/lib/sync/types";
 import { syncFailure, syncSuccess } from "@/lib/sync/types";
@@ -140,20 +140,17 @@ export class LogSync implements SyncSource {
         return syncSuccess(this.name, 0, start);
       }
 
-      // Deduplicate: use (source + timestamp + first 80 chars of message) as dedup key
+      // Include the full tuple without delimiter collisions or message truncation.
       const seen = new Set<string>();
       const uniqueEntries = allEntries.filter((e) => {
-        const key = `${e.source}|${e.timestamp}|${e.message.slice(0, 80)}`;
+        const key = JSON.stringify([e.source, e.timestamp, e.message]);
         if (seen.has(key)) return false;
         seen.add(key);
         return true;
       });
 
       const ingestedAt = now();
-      insertErrorLogEntries(uniqueEntries, ingestedAt);
-
-      // Prune old entries — keep only the most recent 500
-      pruneErrorLogEntries();
+      insertAndPruneErrorLogEntries(uniqueEntries, ingestedAt);
 
       return syncSuccess(this.name, uniqueEntries.length, start);
     } catch (err) {

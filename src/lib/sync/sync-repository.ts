@@ -1,10 +1,9 @@
 // ═══════════════════════════════════════════════════════════════
 // sync/sync-repository.ts — the tables the sync layer owns
 //
-// Four tables are written by the background sync sources and by
+// Three tables are written by the background sync sources and by
 // nothing else: gateway_platforms (EnvSync), error_log_entries
-// (LogSync), agent_processes (ProcessSync) and sync_registry
-// (every source's own status row). Each source used to prepare its
+// (LogSync) and agent_processes (ProcessSync). Each source used to prepare its
 // own statements inline, which made the column list of each table a
 // public interface spread across five files.
 //
@@ -82,7 +81,7 @@ export interface ErrorLogEntryInput {
   severity: string;
 }
 
-/** Append a batch of error log entries in one transaction. */
+/** Append unseen source/timestamp/message identities in one transaction. */
 export function insertErrorLogEntries(
   entries: readonly ErrorLogEntryInput[],
   ingestedAt: string,
@@ -90,11 +89,14 @@ export function insertErrorLogEntries(
   const database = getDb();
   const insert = database.prepare(
     `INSERT INTO error_log_entries (source, message, timestamp, severity, ingested_at)
-         VALUES (?, ?, ?, ?, ?)`,
+         SELECT ?, ?, ?, ?, ? WHERE NOT EXISTS (
+           SELECT 1 FROM error_log_entries WHERE source = ? AND timestamp = ? AND message = ?
+         )`,
   );
   const tx = database.transaction(() => {
     for (const entry of entries) {
-      insert.run(entry.source, entry.message, entry.timestamp, entry.severity, ingestedAt);
+      insert.run(entry.source, entry.message, entry.timestamp, entry.severity, ingestedAt,
+        entry.source, entry.timestamp, entry.message);
     }
   });
   tx();
@@ -112,13 +114,15 @@ export interface ErrorLogEntryRow {
 export function readRecentErrorLogEntries(): ErrorLogEntryRow[] {
   return getDb()
     .prepare(
-      "SELECT source, message, timestamp, severity FROM error_log_entries ORDER BY timestamp DESC LIMIT 10",
+      `SELECT source, message, timestamp, severity FROM error_log_entries
+       WHERE id IN (SELECT MIN(id) FROM error_log_entries GROUP BY source, timestamp, message)
+       ORDER BY timestamp DESC LIMIT 10`,
     )
     .all() as ErrorLogEntryRow[];
 }
 
 /** Keep only the 500 most recent error log entries. */
-export function pruneErrorLogEntries(): void {
+function pruneErrorLogEntries(): void {
   getDb()
     .prepare(
       `DELETE FROM error_log_entries WHERE id NOT IN (
@@ -126,6 +130,17 @@ export function pruneErrorLogEntries(): void {
           )`,
     )
     .run();
+}
+
+/** Commit log ingestion and the existing retention policy as one tick. */
+export function insertAndPruneErrorLogEntries(
+  entries: readonly ErrorLogEntryInput[],
+  ingestedAt: string,
+): void {
+  getDb().transaction(() => {
+    insertErrorLogEntries(entries, ingestedAt);
+    pruneErrorLogEntries();
+  })();
 }
 
 // ── agent_processes (ProcessSync) ────────────────────────────
@@ -165,12 +180,12 @@ export function readAgentProcesses(): AgentProcessRow[] {
 }
 
 /** Clear the process table before a fresh scan writes into it. */
-export function deleteAllAgentProcesses(): void {
+function deleteAllAgentProcesses(): void {
   getDb().prepare("DELETE FROM agent_processes").run();
 }
 
 /** Write a freshly-scanned batch of processes in one transaction. */
-export function insertAgentProcesses(
+function insertAgentProcesses(
   processes: readonly AgentProcessInput[],
   lastSeenAt: string,
 ): void {
@@ -197,24 +212,13 @@ export function insertAgentProcesses(
   tx();
 }
 
-// ── sync_registry (per-source status) ────────────────────────
-
-/** Record a successful tick for a sync source. */
-export function recordSyncSuccess(sourceName: string, syncedCount: number): void {
-  getDb()
-    .prepare(/* sql */ `
-        INSERT OR REPLACE INTO sync_registry (source_name, last_synced_at, status, synced_count, error)
-        VALUES (?, datetime('now'), 'ok', ?, NULL)
-      `)
-    .run(sourceName, syncedCount);
-}
-
-/** Record a failed tick for a sync source, with the error text. */
-export function recordSyncFailure(sourceName: string, error: string): void {
-  getDb()
-    .prepare(/* sql */ `
-          INSERT OR REPLACE INTO sync_registry (source_name, last_synced_at, status, synced_count, error)
-          VALUES (?, datetime('now'), 'error', 0, ?)
-        `)
-    .run(sourceName, error);
+/** Replace the complete snapshot, including an empty successful scan. */
+export function replaceAgentProcesses(
+  processes: readonly AgentProcessInput[],
+  lastSeenAt: string,
+): void {
+  getDb().transaction(() => {
+    deleteAllAgentProcesses();
+    insertAgentProcesses(processes, lastSeenAt);
+  })();
 }

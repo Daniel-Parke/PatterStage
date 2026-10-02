@@ -12,15 +12,9 @@ import {
   readRunUsageByModel,
 } from "./analytics-repository";
 import { estimateCost } from "./model-cost";
+import { parseStoredUsage } from "@/lib/runs/parse-stored-usage";
+import { safeRead } from "@/lib/db/safe-read";
 import type { HistogramBin } from "@/components/viz/DistributionHistogram";
-
-function safeRead<T>(fn: () => T, fallback: T): T {
-  try {
-    return fn();
-  } catch {
-    return fallback;
-  }
-}
 
 function days(n: number): string {
   return `-${Math.max(0, Math.floor(n))} days`;
@@ -86,17 +80,8 @@ export function getModelUsage(sinceDays = 90): ModelUsageRow[] {
     const byModel = new Map<string, ModelUsageRow>();
     for (const r of rows) {
       const model = r.model || "unknown";
-      let input = 0;
-      let output = 0;
-      let total = 0;
-      try {
-        const u = JSON.parse(r.usage) as { inputTokens?: number; outputTokens?: number; totalTokens?: number };
-        input = Number(u.inputTokens ?? 0);
-        output = Number(u.outputTokens ?? 0);
-        total = Number(u.totalTokens ?? input + output);
-      } catch {
-        continue;
-      }
+      const usage = parseStoredUsage(r.usage);
+      if (!usage) continue;
       const agg = byModel.get(model) ?? {
         model,
         provider: r.provider,
@@ -107,10 +92,10 @@ export function getModelUsage(sinceDays = 90): ModelUsageRow[] {
         costUsd: 0,
       };
       agg.runs += 1;
-      agg.inputTokens += input;
-      agg.outputTokens += output;
-      agg.totalTokens += total;
-      agg.costUsd += estimateCost(model, input, output);
+      agg.inputTokens += usage.inputTokens;
+      agg.outputTokens += usage.outputTokens;
+      agg.totalTokens += usage.totalTokens;
+      agg.costUsd += estimateCost(model, usage.inputTokens, usage.outputTokens);
       byModel.set(model, agg);
     }
     return [...byModel.values()].sort((a, b) => b.totalTokens - a.totalTokens);
@@ -134,12 +119,8 @@ export function getTopMissions(limit = 6, sinceDays = 90): TopMissionRow[] {
     const tokenRows = readCompletedRunUsageByMission(days(sinceDays));
     const tokensByMission = new Map<string, number>();
     for (const t of tokenRows) {
-      try {
-        const u = JSON.parse(t.usage) as { totalTokens?: number };
-        tokensByMission.set(t.id, (tokensByMission.get(t.id) ?? 0) + Number(u.totalTokens ?? 0));
-      } catch {
-        /* skip */
-      }
+      const usage = parseStoredUsage(t.usage);
+      if (usage) tokensByMission.set(t.id, (tokensByMission.get(t.id) ?? 0) + usage.totalTokens);
     }
     return rows
       .map((r) => ({

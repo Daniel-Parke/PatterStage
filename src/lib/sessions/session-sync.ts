@@ -167,8 +167,6 @@ export function syncHermesSessionsToDb(): { synced: number; skipped: number } {
               ? candidateMissionId
               : null;
         }
-      } else if (row.source === "api_server") {
-        // api_server sessions mapped to api source
       }
 
       try {
@@ -215,8 +213,7 @@ export function syncHermesSessionsToDb(): { synced: number; skipped: number } {
   // >=100; that state lives in the sweep. Audit reference:
   // dogfood-output/report.md Issue #3.
   try {
-    const result = closeOrphanedActiveSessions(database, { log: true });
-    void result; // logging side-effect captured in module-level state
+    closeOrphanedActiveSessions(database, { log: true });
   } catch {
     // non-fatal cleanup
   }

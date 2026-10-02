@@ -71,6 +71,7 @@ import {
   applyRunsSpendSourceMigration,
   applyScheduleKindMigration,
   applyFallbackIdentityMigration,
+  ensureRunsStoryIndex,
 } from "./sql-migrations";
 import { applyNeutralColumnNames } from "./apply-neutral-column-names";
 import { applyComposerRejectedMigration } from "./apply-composer-rejected-migration";
@@ -392,6 +393,7 @@ export function runMigrations(database: Database.Database): void {
   // instead of reading Custom from a JOIN it has no row in.
   applyFallbackIdentityMigration(database, migrationsDir);
   applyAuthSessionsMigration(database, migrationsDir);
+  ensureRunsStoryIndex(database);
 }
 
 // ── Bootstrap: ensure DB + schema exist ───────────────────────

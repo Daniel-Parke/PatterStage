@@ -82,7 +82,7 @@ async function main(): Promise<void> {
   // The specifier is unchanged across the D8 move of db.ts into db/index.ts:
   // tsx resolves the directory to its index, same as the bundler and Jest.
   // Smoke-tested both ways on a fresh database (0 -> 30) before leaving it.
-  const { getDb, runMigrations } = await import("../../src/lib/db");
+  const { getDb } = await import("../../src/lib/db");
   const database = getDb();
 
   const versionOf = (): number => {
@@ -91,16 +91,6 @@ async function main(): Promise<void> {
       .get() as { value?: string } | undefined;
     return row?.value ? parseInt(row.value, 10) : 0;
   };
-
-  // Fresh installs reach the head in one runMigrations call. Retain bounded
-  // convergence for the legacy rebuild path, which can replace the connection.
-  let last = versionOf();
-  for (let i = 0; i < 5; i++) {
-    runMigrations(database);
-    const next = versionOf();
-    if (next === last) break;
-    last = next;
-  }
 
   const after = versionOf();
   console.log(`schema_version after: ${after}`);

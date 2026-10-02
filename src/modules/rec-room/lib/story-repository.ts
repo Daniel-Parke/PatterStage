@@ -52,19 +52,108 @@ interface StoryRow {
   deleted_at: string | null;
 }
 
+function parseStoredJson(raw: string | null): unknown {
+  try {
+    return raw ? JSON.parse(raw) : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function isObject(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function readObject(raw: string | null): Record<string, unknown> | undefined {
+  const parsed = parseStoredJson(raw);
+  return isObject(parsed) ? parsed : undefined;
+}
+
+function isChapter(value: unknown): value is StoryChapter {
+  return isObject(value)
+    && typeof value.number === "number" && Number.isFinite(value.number)
+    && typeof value.wordCount === "number" && Number.isFinite(value.wordCount)
+    && typeof value.title === "string"
+    && ["pending", "writing", "complete", "failed"].some((status) => status === value.status);
+}
+
+interface JsonSpan { start: number; end: number }
+interface JsonEdit extends JsonSpan { text: string }
+
+// Locate members only after JSON.parse has validated the document. Recovery must
+// preserve unknown values verbatim, including numbers JavaScript cannot represent.
+function jsonMemberSpans(raw: string): JsonSpan[] {
+  const open = raw.search(/\S/);
+  const close = raw.trimEnd().length - 1;
+  if (!((raw[open] === "[" && raw[close] === "]") || (raw[open] === "{" && raw[close] === "}"))) {
+    throw new Error("Story recovery could not locate JSON members");
+  }
+  const spans: JsonSpan[] = [];
+  let start = open + 1, depth = 0, quoted = false, escaped = false;
+  for (let i = start; i < close; i += 1) {
+    const char = raw[i];
+    if (quoted) {
+      if (escaped) escaped = false;
+      else if (char === "\\") escaped = true;
+      else if (char === '"') quoted = false;
+    } else if (char === '"') quoted = true;
+    else if (char === "[" || char === "{") depth += 1;
+    else if (char === "]" || char === "}") depth -= 1;
+    else if (char === "," && depth === 0) {
+      spans.push({ start, end: i });
+      start = i + 1;
+    }
+    if (depth < 0) throw new Error("Story recovery JSON nesting disagrees with validated document");
+  }
+  if (quoted || depth !== 0) throw new Error("Story recovery JSON boundaries disagree with validated document");
+  if (raw.slice(start, close).trim()) spans.push({ start, end: close });
+  return spans;
+}
+
+function applyJsonEdits(raw: string, edits: JsonEdit[]): string {
+  for (const { start, end, text } of edits.sort((a, b) => b.start - a.start)) {
+    raw = raw.slice(0, start) + text + raw.slice(end);
+  }
+  return raw;
+}
+
+function recoverChapterJson(raw: string, reason: string): string {
+  const fields = new Map<string, JsonSpan>();
+  for (const span of jsonMemberSpans(raw)) {
+    const member = raw.slice(span.start, span.end);
+    const key = /^\s*("(?:\\.|[^"\\])*")\s*:\s*/.exec(member);
+    if (!key) throw new Error("Story recovery could not locate a validated property");
+    fields.set(JSON.parse(key[1]), {
+      start: span.start + key[0].length,
+      end: span.start + member.trimEnd().length,
+    });
+  }
+  const status = fields.get("status");
+  if (!status) throw new Error("Story recovery could not locate the validated status");
+  const error = fields.get("error");
+  const close = raw.trimEnd().length - 1;
+  return applyJsonEdits(raw, [
+    { ...status, text: JSON.stringify("failed") },
+    error ? { ...error, text: JSON.stringify(reason) }
+      : { start: close, end: close, text: `,"error":${JSON.stringify(reason)}` },
+  ]);
+}
+
 function rowToStory(row: StoryRow | undefined): Story | null {
   if (!row || row.deleted_at) return null;
-  const config = JSON.parse(row.config || "{}") as Record<string, unknown>;
+  const config = readObject(row.config) ?? {};
+  const chapters = parseStoredJson(row.chapters);
   return {
     id: row.id,
     title: row.title,
     config,
     premise: typeof config.premise === "string" ? config.premise : undefined,
     masterPrompt: row.master_prompt ?? undefined,
-    storyArc: row.story_arc ? JSON.parse(row.story_arc) : undefined,
+    storyArc: readObject(row.story_arc),
     rollingSummary: row.rolling_summary ?? undefined,
-    chapters: JSON.parse(row.chapters || "[]"),
-    chapterContents: JSON.parse(row.chapter_contents || "{}"),
+    chapters: Array.isArray(chapters) ? chapters.filter(isChapter) : [],
+    chapterContents: Object.fromEntries(Object.entries(readObject(row.chapter_contents) ?? {})
+      .filter((entry): entry is [string, string] => typeof entry[1] === "string")),
     status: row.status as Story["status"],
     generationError: row.generation_error ?? undefined,
     createdAt: row.created_at,
@@ -140,8 +229,9 @@ export function updateStory(
   id: string,
   updates: Partial<Omit<Story, "id" | "createdAt">>
 ): Story | null {
-  const existing = getStory(id);
-  if (!existing) return null;
+  const stored = getDb().prepare("SELECT * FROM stories WHERE id = ?").get(id) as StoryRow | undefined;
+  const existing = rowToStory(stored);
+  if (!existing || !stored) return null;
   const ts = now();
 
   const merged: Story = { ...existing, ...updates, updatedAt: ts };
@@ -157,12 +247,12 @@ export function updateStory(
       )
       .run(
         merged.title,
-        JSON.stringify(merged.config),
+        Object.hasOwn(updates, "config") ? JSON.stringify(merged.config) : stored.config,
         merged.masterPrompt ?? null,
-        merged.storyArc ? JSON.stringify(merged.storyArc) : null,
+        Object.hasOwn(updates, "storyArc") ? (merged.storyArc ? JSON.stringify(merged.storyArc) : null) : stored.story_arc,
         merged.rollingSummary ?? null,
-        JSON.stringify(merged.chapters),
-        JSON.stringify(merged.chapterContents),
+        Object.hasOwn(updates, "chapters") ? JSON.stringify(merged.chapters) : stored.chapters,
+        Object.hasOwn(updates, "chapterContents") ? JSON.stringify(merged.chapterContents) : stored.chapter_contents,
         merged.status,
         merged.generationError ?? null,
         ts,
@@ -195,33 +285,33 @@ export function reconcileStoriesOnBoot(): { failedStories: number; failedChapter
   const reason = "Generation was interrupted by a restart. Retry to continue.";
   const db = getDb();
   const ts = now();
-  const stories = db
-    .prepare(
-      "UPDATE stories SET status = 'failed', generation_error = ?, updated_at = ? WHERE status = 'generating' AND deleted_at IS NULL",
-    )
-    .run(reason, ts).changes;
+  return inTransaction(() => {
+    const stories = db
+      .prepare(
+        "UPDATE stories SET status = 'failed', generation_error = ?, updated_at = ? WHERE status = 'generating' AND deleted_at IS NULL",
+      )
+      .run(reason, ts).changes;
 
-  let chapters = 0;
-  const rows = db
-    .prepare("SELECT id, chapters FROM stories WHERE deleted_at IS NULL AND chapters LIKE ?")
-    .all('%"writing"%') as Array<{ id: string; chapters: string }>;
-  for (const row of rows) {
-    let parsed: StoryChapter[];
-    try {
-      parsed = JSON.parse(row.chapters) as StoryChapter[];
-    } catch {
-      continue;
+    let chapters = 0;
+    const rows = db
+      .prepare("SELECT id, chapters FROM stories WHERE deleted_at IS NULL")
+      .all() as Array<{ id: string; chapters: string }>;
+    for (const row of rows) {
+      const parsed = parseStoredJson(row.chapters);
+      if (!Array.isArray(parsed)) continue;
+      const spans = jsonMemberSpans(row.chapters);
+      if (spans.length !== parsed.length) throw new Error("Story recovery member count disagrees with validated array");
+      const edits: JsonEdit[] = [];
+      parsed.forEach((c, index) => {
+        if (!isChapter(c) || c.status !== "writing") return;
+        const span = spans[index];
+        edits.push({ ...span, text: recoverChapterJson(row.chapters.slice(span.start, span.end), reason) });
+        chapters += 1;
+      });
+      if (edits.length) {
+        db.prepare("UPDATE stories SET chapters = ?, updated_at = ? WHERE id = ?").run(applyJsonEdits(row.chapters, edits), ts, row.id);
+      }
     }
-    let touched = false;
-    const swept = parsed.map((c) => {
-      if (c.status !== "writing") return c;
-      touched = true;
-      chapters += 1;
-      return { ...c, status: "failed" as const, error: reason };
-    });
-    if (touched) {
-      db.prepare("UPDATE stories SET chapters = ?, updated_at = ? WHERE id = ?").run(JSON.stringify(swept), ts, row.id);
-    }
-  }
-  return { failedStories: stories, failedChapters: chapters };
+    return { failedStories: stories, failedChapters: chapters };
+  });
 }

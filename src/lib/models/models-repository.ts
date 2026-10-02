@@ -238,40 +238,42 @@ export function createModel(input: CreateModelInput): ModelRecord {
   const id = uuid();
   const ts = now();
 
-  getDb()
-    .prepare(
-      `INSERT INTO models (
-         id, name, provider, model_id, base_url, context_length, credentials_id,
-         api_style, origin, created_at, updated_at
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'user', ?, ?)`
-    )
-    .run(
-      id,
-      input.name.trim(),
-      input.provider.trim(),
-      input.modelId.trim(),
-      input.baseUrl ?? null,
-      input.contextLength ?? null,
-      input.credentialsId ?? null,
-      input.apiStyle ?? inferApiStyle(input.provider, input.baseUrl ?? null),
-      ts,
-      ts
-    );
+  inTransaction(() => {
+    getDb()
+      .prepare(
+        `INSERT INTO models (
+           id, name, provider, model_id, base_url, context_length, credentials_id,
+           api_style, origin, created_at, updated_at
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'user', ?, ?)`
+      )
+      .run(
+        id,
+        input.name.trim(),
+        input.provider.trim(),
+        input.modelId.trim(),
+        input.baseUrl ?? null,
+        input.contextLength ?? null,
+        input.credentialsId ?? null,
+        input.apiStyle ?? inferApiStyle(input.provider, input.baseUrl ?? null),
+        ts,
+        ts
+      );
 
-  // Process default-slot flags: if any defaults are set, clear existing
-  // defaults for that slot, then set the new defaults.
-  if (input.defaults && Object.values(input.defaults).some(Boolean)) {
-    for (const [slot, isDefault] of Object.entries(input.defaults)) {
-      if (isDefault && isTaskType(slot)) {
-        getDb()
-          .prepare("DELETE FROM model_defaults WHERE task_type = ?")
-          .run(slot);
-        getDb()
-          .prepare("INSERT INTO model_defaults (id, task_type, model_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?)")
-          .run(uuid(), slot, id, ts, ts);
+    // Process default-slot flags: if any defaults are set, clear existing
+    // defaults for that slot, then set the new defaults.
+    if (input.defaults && Object.values(input.defaults).some(Boolean)) {
+      for (const [slot, isDefault] of Object.entries(input.defaults)) {
+        if (isDefault && isTaskType(slot)) {
+          getDb()
+            .prepare("DELETE FROM model_defaults WHERE task_type = ?")
+            .run(slot);
+          getDb()
+            .prepare("INSERT INTO model_defaults (id, task_type, model_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?)")
+            .run(uuid(), slot, id, ts, ts);
+        }
       }
     }
-  }
+  });
 
   return getModel(id)!;
 }
