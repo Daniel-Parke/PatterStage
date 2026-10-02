@@ -43,7 +43,9 @@
         "org/briefs/T-0205-oracle.md",
         "tests/integration/test_full_install_update_process.py",
         "tests/fixtures/mutants/T-0205.json",
-        "org/briefs/T-0188-auth-wiring-amendment.md"
+        "org/briefs/T-0188-auth-wiring-amendment.md",
+        ".github/workflows/ci.yml",
+        "tests/helpers/release-install-http-timing-diagnostic.py"
       ],
       "expires": "2026-10-02T18:45:00Z",
       "lane_id": "T-0188-coordinator",
@@ -53,5 +55,5 @@
     }
   ],
   "version": 1,
-  "note": "Oracle amendment frozen; independent author writes ceased. Coordinator only, no source implementation changes."
+  "note": "Coordinator only: independently authorised current T0188/T0205 CI isolation and additive native timing diagnostic. Frozen fixtures and bounds unchanged; no future batch tonight."
 }

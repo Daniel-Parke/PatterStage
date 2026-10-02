@@ -23,13 +23,19 @@
       "tier_floor": "R2",
       "source": "declared",
       "evidence": "declared side effect: migrates-schema"
+    },
+    {
+      "factor": "ci-stateful-infra",
+      "tier_floor": "R2",
+      "source": "derived",
+      "evidence": "CI or infra file touched: .github/workflows/ci.yml"
     }
   ],
   "status": "active",
   "owner_session": "2026-10-01-migration-driver-consolidation",
   "timestamps": {
     "opened": "2026-10-01T16:45:00Z",
-    "updated": "2026-10-01T23:36:31.137Z"
+    "updated": "2026-10-02T00:24:12.652Z"
   },
   "authority": "Operator approved Phase2 on2026-09-28 and Q032 supersedes Q011 release-first sequencing. T0202/T0203 obligations remain; latest repair T0204 independently accepted at a238abf3 and closed at e269a895388795fb189863c7e7783366f650b484, with every required exact-head push/PR job passing. Failed9c824422scan remains historical, not a prerequisite requiring impossible retrospective success. T0200 item-specific post1.0 authority remains. Independent R2 REVIEWER Schrodinger authorises only the four Q015 amendments plus additive T0204 contract described in committed brief. Schema declaration router verdict remains R2; actual diff reroutes upward.",
   "claims": [
@@ -75,7 +81,8 @@
     "scripts/tooling/migrate-db.ts",
     "docs/manifest.json",
     "org/QUESTIONS.md",
-    "org/briefs/T-0188-auth-wiring-amendment.md"
+    "org/briefs/T-0188-auth-wiring-amendment.md",
+    ".github/workflows/ci.yml"
   ],
   "invariants": [
     "Preserve all eleven wrapper module paths, exports, signatures, return contracts and already-applied no-op behaviour. SQL history, public configuration and supported URLs remain intact.",
@@ -276,7 +283,7 @@
       "suitesMockingDbInline": 14
     },
     "preservation": "Historical SQL/Auth43 unchanged; exactly3owner bindings; all105selectednames preserved, +70newcases in corpus, no existing test removed; targets and T0200 row intact.",
-    "remaining": "Push only dev and verify every required exact-head push/PR job, including native macOS and PR acceptance. Then close records, render derived views and manifest, commit and verify closure-head jobs.",
+    "remaining": "Collect redacted native macOS phases via additive post-coverage diagnostic; establish and repair the actual cause without changing frozen checks or25-second lifecycle bound. Repeat full unchanged-tree gate, committed qualified sweeps, independent R2 acceptance, every required exact-head hosted job and record/view closure before T0189. No future batch tonight.",
     "private_dependencies": {
       "before": "tmp/t0188-native-install/dependencies-before.json",
       "after": "tmp/t0188-native-install/dependencies-after.json",
@@ -557,5 +564,346 @@
     "receipt": "tmp/t0188-final-independent-local-verdict.txt",
     "sha256": "2bf3b07c533445bda0fd395f068d4e8221cecdb1e1a0de5c7c7c033c7140ef20",
     "result": "PASS bounded local implementation; every exact-head hosted job still required. No protected edit, historical record rewrite, reduced coverage or weakened oracle."
+  },
+  "hosted_failures": [
+    {
+      "head": "c97a7be78f96a6dbe30a73bae876a2b062612256",
+      "pushCI": 36941818115,
+      "prCI": 36941824707,
+      "scope": "Both Ubuntu coverage jobs fail six synthetic updater cases at the explicit owned PS_DATA_DIR precondition, before any updater action. 7666pass/6fail/2existing-platformskips. Other passing hosted jobs do not waive this failure.",
+      "receipts": [
+        {
+          "path": "tmp/t0188-hosted-c97a/push-ubuntu-failed.log",
+          "sha256": "d21b10e11318d26385f7dbff082f4e397a8bdef99199abeb8168b11d0bf02cf3"
+        },
+        {
+          "path": "tmp/t0188-hosted-c97a/pull_request-ubuntu-failed.log",
+          "sha256": "fd60c30c6b3107321e54f1e4c06828d7999c602d6bcc723847dda795944c74d8"
+        }
+      ],
+      "cause": "The existing db:migrate step owns PS_DATA_DIR/HERMES_HOME but GitHub step-local env does not reach the later coverage step. Whole local gate deliberately supplies owned roots. No product or migration failure inferred from this setup refusal."
+    },
+    {
+      "kind": "native-macos-lifecycle",
+      "head": "c97a7be78f96a6dbe30a73bae876a2b062612256",
+      "pushCI": 36941818115,
+      "prCI": 36941824707,
+      "scope": "Both native macOS coverage jobs fail the same six missing-owned-data fixture preconditions plus C01/C03 elapsedSeconds <25. Healthy observations are shared by C01/C03; two hosted measurements, not four independent slow executions. 7661pass/8fail/5existing skips.",
+      "elapsedSeconds": {
+        "push": 36.217422375,
+        "pull_request": 36.02320825
+      },
+      "receipts": [
+        {
+          "path": "tmp/t0188-hosted-c97a/push-macos-failed.log",
+          "sha256": "0b15b49ce7da715d169690b0817e27bb3c976aaf213f38d30db145b5d274a78c"
+        },
+        {
+          "path": "tmp/t0188-hosted-c97a/pull_request-macos-failed.log",
+          "sha256": "d39df4ebcdbe5c21b2fed7498bd70d8bae6f7783b745d1bd67c685db057ebafd"
+        }
+      ],
+      "uncertainty": "The original full-lifecycle timer includes preparation and cleanup beyond the supervisor subprocess timeout. No receipt isolates the slow phase. Windows/Linux greens and eventual ownedStopped do not establish the macOS cause; deadlines remain unchanged."
+    }
+  ],
+  "ci_environment_repair": {
+    "scope": ".github/workflows/ci.yml",
+    "proposal": "Copy the two existing owned runner.temp PS_DATA_DIR/HERMES_HOME values into each of Ubuntu/macOS coverage steps. Preserve frozen tests and every assertion, command, deadline and job. Current R2 schema minimum remains; actual CI-config diff reroutes upward before landing.",
+    "status": "independently-authorised-implemented-validation-pending",
+    "routing": {
+      "tier": "R2",
+      "reasons": [
+        {
+          "factor": "schema-change",
+          "tier_floor": "R2",
+          "source": "declared",
+          "evidence": "declared side effect: migrates-schema"
+        },
+        {
+          "factor": "ci-stateful-infra",
+          "tier_floor": "R2",
+          "source": "derived",
+          "evidence": "CI or infra file touched: .github/workflows/ci.yml"
+        }
+      ],
+      "discrepancies": []
+    },
+    "authoriser": "Schrodinger independent R2 REVIEWER; exact two coverage-step canonical environment maps only, no oracle changes, 2026-10-01T23:52Z"
+  },
+  "native_timing_diagnostic": {
+    "authoriser": "Independent R2 REVIEWER Schrodinger 01a0f7b7-f68a-79b2-ba74-81cdddf2f3ef",
+    "date": "2026-10-02T00:15:03.717Z",
+    "status": "implemented-calibrated-pending-fresh-gate-and-native-evidence",
+    "scope": ".github/workflows/ci.yml",
+    "contract": "Invoke unchanged T0205 observe(healthy,bash). Temporary process-local phase wrappers delegate original arguments, environment, streams, return values and exceptions and restore in finally. Retain original lifecycle elapsed. Emit only phase durations, counts, statuses and tool identities; no scripts, request arguments, environment values, credentials or exception text.",
+    "placement": "Existing macOS job after blocking coverage, including its failure; explicitly an alone diagnostic on an already exercised runner, not formal acceptance or cold-start proof.",
+    "constraints": "Every frozen source/oracle byte, deadline, bound, assertion and retry remains unchanged. No repair or oracle amendment is authorised by diagnostic approval. No T0189 work tonight.",
+    "helper": {
+      "path": "tests/helpers/release-install-http-timing-diagnostic.py",
+      "sha256": "ef16253570e84f2de74ddc860be578cf5c71ba9b0680121c0236f571505d8a26"
+    },
+    "calibration": {
+      "path": "tmp/t0188-timing-diagnostic-windows-path-corrected.json",
+      "sha256": "1e7ad65e858ecc39b5efbb2bd7893c820be52c84c58cd3629f751b5f9eba852d"
+    },
+    "retainedCalibrationFailure": {
+      "path": "tmp/t0188-timing-diagnostic-windows-preflight-failure.json",
+      "sha256": "150302a5bcc5bda03361645ca4c022b4c8e47b1bda95b74bfe689050c7c12459"
+    }
+  },
+  "post_ci_isolation_validation": {
+    "scope": "Six-line CI coverage environment repair candidate; precedes additive native diagnostic.",
+    "gate": {
+      "path": "tmp/t0188-full-gate-ci-isolation-controlled-20261002/summary.json",
+      "sha256": "560cc6fba173d9f2cd7c2465a24354d081ae0df02fa2db4b1a73b5da1b843d80"
+    },
+    "complete": true,
+    "steps": [
+      {
+        "step": "lint",
+        "code": 0
+      },
+      {
+        "step": "tsc",
+        "code": 0
+      },
+      {
+        "step": "jest",
+        "code": 0
+      },
+      {
+        "step": "knip",
+        "code": 0
+      },
+      {
+        "step": "canary",
+        "code": 0
+      },
+      {
+        "step": "build",
+        "code": 0
+      },
+      {
+        "step": "build-purity",
+        "code": 0
+      },
+      {
+        "step": "e2e",
+        "code": 0
+      },
+      {
+        "step": "census",
+        "code": 0
+      },
+      {
+        "step": "census-lines",
+        "code": 0
+      }
+    ],
+    "treeBefore": "59b0f7d64024013f5711dd3f084925d664d544ea0c93fcc561a34fb07b07fd88",
+    "treeAfter": "59b0f7d64024013f5711dd3f084925d664d544ea0c93fcc561a34fb07b07fd88",
+    "jest": "7665pass/9existing skips",
+    "browser": "355pass/24existing skips",
+    "binding": {
+      "path": "tmp/t0188-ci-isolation-candidate-binding.json",
+      "sha256": "4e17808855d2b3de16a265a0edca243b97799aa1416eee8134399e7d7483def6"
+    },
+    "retainedFailure": {
+      "path": "tmp/t0188-full-gate-ci-isolation-20261002/summary.json",
+      "sha256": "8a08a3085d3759dad27f2bf5fae6de5f58d80e05d9732cc6f8198661232aa3c9",
+      "result": "Unchanged full gate stops at Jest1:7664pass/1fail/9existing skips. Actual EPERM atomic config rename; PUT refuses500 and preserves old file. Lock owner and cause unproved, no writer retry/source/test modification."
+    },
+    "alone": {
+      "path": "tmp/t0188-ci-isolation-b6-alone/summary.json",
+      "sha256": "7af369acc65cd9631a3b30e70fa6c5e699f2920aa240e47b70d443257bef7149",
+      "result": "Identical candidate/runtime/env/concurrency/temp-root alone control:16pass,0fail/skip/runtime,normal0, same stamp. Alone does not waive full gate or establish a cause."
+    },
+    "controlAuthority": "Independent R2 REVIEWER permits exactly one complete unchanged uninstrumented control with no competing auxiliary validation; all ten stages pass. Both earlier failure and alone receipts retained. No repeated retry or assertion change.",
+    "limits": "New additive native diagnostic still needs a fresh full gate, committed sweep and independent review. Neither this local gate nor prior31 kills clears the native macOS failure."
+  },
+  "hosted_job_observation": {
+    "path": "tmp/t0188-hosted-c97a/snapshot-1790898905410.json",
+    "sha256": "e309b8fce3f1f029b8738116f0513c1cd3600a7c5b99df4363b8b663a992dcd8",
+    "head": "c97a7be78f96a6dbe30a73bae876a2b062612256",
+    "allRunsCompleted": true,
+    "runs": [
+      {
+        "event": "pull_request",
+        "name": "Gitleaks",
+        "id": 36941824909,
+        "result": "success",
+        "jobs": [
+          {
+            "id": 110634863090,
+            "name": "scan",
+            "status": "completed",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "event": "pull_request",
+        "name": "CI",
+        "id": 36941824707,
+        "result": "failure",
+        "jobs": [
+          {
+            "id": 110634862689,
+            "name": "shell-custom-scripts",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110634862916,
+            "name": "e2e-smoke",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110634862959,
+            "name": "build-test-macos",
+            "status": "completed",
+            "conclusion": "failure"
+          },
+          {
+            "id": 110634862979,
+            "name": "boot-smoke (macos-latest)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110634862984,
+            "name": "docker-image",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110634863009,
+            "name": "build-test-ubuntu",
+            "status": "completed",
+            "conclusion": "failure"
+          },
+          {
+            "id": 110634863018,
+            "name": "install-harness",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110634863021,
+            "name": "boot-smoke (ubuntu-latest)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110634863069,
+            "name": "e2e-full (PLAYWRIGHT_SMOKE unset)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110634863152,
+            "name": "real-hermes-integration",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110637465714,
+            "name": "acceptance-gate (full suite + install journey + real Hermes)",
+            "status": "completed",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "event": "push",
+        "name": "Gitleaks",
+        "id": 36941818110,
+        "result": "success",
+        "jobs": [
+          {
+            "id": 110634840227,
+            "name": "scan",
+            "status": "completed",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "event": "push",
+        "name": "CI",
+        "id": 36941818115,
+        "result": "failure",
+        "jobs": [
+          {
+            "id": 110634840903,
+            "name": "shell-custom-scripts",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110634841037,
+            "name": "real-hermes-integration",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110634841052,
+            "name": "e2e-smoke",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110634841102,
+            "name": "boot-smoke (ubuntu-latest)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110634841127,
+            "name": "build-test-ubuntu",
+            "status": "completed",
+            "conclusion": "failure"
+          },
+          {
+            "id": 110634841152,
+            "name": "docker-image",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110634841160,
+            "name": "build-test-macos",
+            "status": "completed",
+            "conclusion": "failure"
+          },
+          {
+            "id": 110634841192,
+            "name": "install-harness",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110634841261,
+            "name": "boot-smoke (macos-latest)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110634842011,
+            "name": "e2e-full (PLAYWRIGHT_SMOKE unset)",
+            "status": "completed",
+            "conclusion": "skipped"
+          },
+          {
+            "id": 110637918699,
+            "name": "acceptance-gate (full suite + install journey + real Hermes)",
+            "status": "completed",
+            "conclusion": "skipped"
+          }
+        ]
+      }
+    ],
+    "limits": "PR acceptance, full browser, install, real Hermes and both Gitleaks scans pass, but both coverage jobs fail. No green-head or batch-closure claim."
   }
 }

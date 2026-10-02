@@ -103,6 +103,9 @@ jobs:
         run: npx tsc --noEmit -p tsconfig.json
       - name: Unit tests with coverage
         run: npm run test:coverage
+        env:
+          PS_DATA_DIR: ${{ runner.temp }}/patterstage-ci-data
+          HERMES_HOME: ${{ runner.temp }}/patterstage-ci-hermes
       - name: Next.js production build
         run: npm run build
       - name: Build leaves databases unchanged
@@ -166,7 +169,19 @@ jobs:
       - name: TypeScript (tsc --noEmit)
         run: npx tsc --noEmit -p tsconfig.json
       - name: Unit tests with coverage
+        id: unit_coverage
         run: npm run test:coverage
+        env:
+          PS_DATA_DIR: ${{ runner.temp }}/patterstage-ci-data
+          HERMES_HOME: ${{ runner.temp }}/patterstage-ci-hermes
+      - name: T-0205 native timing diagnostic (not acceptance)
+        if: ${{ !cancelled() && (steps.unit_coverage.outcome == 'success' || steps.unit_coverage.outcome == 'failure') }}
+        timeout-minutes: 3
+        run: '"${PYTHON:-python}" tests/helpers/release-install-http-timing-diagnostic.py'
+        env:
+          PS_DATA_DIR: ${{ runner.temp }}/patterstage-ci-data
+          HERMES_HOME: ${{ runner.temp }}/patterstage-ci-hermes
+          PYTHONDONTWRITEBYTECODE: "1"
       - name: Next.js production build
         # No retry, and no font warmup before it (WG-DEL-004, ruled C:
         # determinism first). Both existed because Turbopack fetched six font

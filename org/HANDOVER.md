@@ -2,12 +2,84 @@
 summary: What the consolidation programme did and left behind, how a batch was landed, what is open, and what waits next
 type: venture
 tags: [handover, consolidation]
-updated: 2026-10-01
+updated: 2026-10-02
 ---
 
-# Handover · PatterStage, 2026-10-01
+# Handover · PatterStage, 2026-10-02
 
-## Current status, 2026-10-01
+## Current work and overnight boundary, 2026-10-02
+
+The operator asks to finish only the current T-0188/T-0205 work tonight and
+leave a complete pickup list. Do not begin T-0189. Both current records remain
+active. Implementation is committed on dev at c97a7be7; that head is **not
+hosted green**. Both CI runs fail Ubuntu/macOS coverage; every other PR job,
+including full browser, install, real Hermes and acceptance, passes. Both
+Gitleaks runs pass. Exact job receipts are in both current task records.
+
+Coverage did not inherit the migration step's owned PS_DATA_DIR/HERMES_HOME.
+The independently authorised six-line coverage environment repair passes
+the whole local ten-step gate with unchanged stamp
+59b0f7d64024013f5711dd3f084925d664d544ea0c93fcc561a34fb07b07fd88:
+7,665 Jest passes/nine existing skips, 355 browser passes/24 existing skips,
+both database-free build checks and all census checks. The previous EPERM
+config-rename failure and16-case alone pass remain retained and unexplained;
+only one unchanged full control was independently authorised.
+
+Native macOS additionally fails C01/C03's unchanged25-second lifecycle check:
+36.217 seconds on push and36.023 seconds on PR. The two names share each
+healthy observation. The slow phase is unproved. An independently authorised
+additive observer measures the **unchanged healthy context path**, after
+blocking macOS coverage even when coverage fails. It emits redacted timings,
+tool identities and counts only. Diagnostic results are not formal acceptance.
+No frozen fixture, assertion, deadline, coverage floor or target changes.
+
+The full approved plan contains22 distinct batches. Foundations T-0150,
+T-0152, T-0156–T-0165 are done. T-0180–T-0187 are done: full-history scanning,
+path/URL containment, CSP, single-owner mission dispatch, atomic mission edits,
+prompt/model/deep-link validation, Hindsight/Story Weaver repair and ruled
+legacy boot warnings/shims. Extra verification repairs T-0202–T-0204 are done.
+T-0188/T-0205 have local implementation evidence but await final acceptance.
+
+Thirteen subsequent planned batches have not been opened:
+
+| Task | Remaining scope |
+| --- | --- |
+| T-0189 | Data parsing and transactions |
+| T-0190 | Client reads and write ownership |
+| T-0191 | Component primitives and contextual names |
+| T-0192 | API envelopes and validation |
+| T-0193 | Large page hooks and visible-state preservation |
+| T-0194 | Library domains and Hermes ownership |
+| T-0195 | Test harness consolidation and stability |
+| T-0196 | Tooling and CI consolidation |
+| T-0197 | Running and root documentation |
+| T-0198 | Live organisation guidance |
+| T-0199 | Individually ruled dead internal surfaces |
+| T-0200 | Compatibility retirement after v1.0.0, deferred by Q-033 |
+| T-0201 | Row-by-row closure, still dependent on T-0200 |
+
+The ownership audit accounts for265 findings,163 split decisions and285
+coverage atoms without duplicate/missing owners. Ownership is not completion.
+The final dispositions file is still absent. The read-only closing audit at
+c97a7be7 reports all eight fixed targets missed; preserve each baseline/target
+and report each actual closing miss individually. No target has been moved.
+
+Keep these functional gaps visible: T-0190 chat input-loss race/read-only
+paths; T-0191 phone credential label with zero visible width; T-0192 profile
+rename metadata; T-0194 Composer/Hermes429; T-0196 coherent online SQLite/WAL
+backup and old-writer ownership. Closed-database updater tests do not prove
+online backup safety. The nine-route walk and Models/Credentials actions do
+not establish every provider, Hindsight, Composer, Story Weaver, recovery or
+lifecycle pathway. Complete these proofs in their owning batches and closure.
+
+Q-032 permits T-0188–T-0199 before release. Q-033 keeps aliases, signing
+headers and redirects through v1.0.0. PR#157 merge, tags, releases and external
+repository settings remain operator actions. Required hosted jobs must pass
+on implementation and record-closure heads before advancing. Test listeners
+3998/3999 and owned Linux containers are stopped; gate ports3000/3577 are
+temporary owned validation instances, not a persistent deployment.
+
+## Previous status snapshot, 2026-10-01
 
 **Q-032 now permits approved structural T-0188–T-0201 before release.**
 T-0203 is independently accepted and closed after all exact-head hosted jobs
@@ -53,6 +125,12 @@ width; T-0191 must repair this layout. These walks do not cover every product
 pathway or provider execution.
 
 **T-0188 and prerequisite T-0205 are locally accepted, with hosted checks pending.**
+Hosted head `c97a7be7` fails both Ubuntu coverage jobs: six updater cases
+refuse missing owned PS_DATA_DIR before any command. The migration step
+has isolated data/home env, but coverage does not inherit step-local env.
+Record-only closure is blocked; retain failure logs and fix CI isolation
+without amending frozen assertions. The operator stops after the current
+T-0188/T-0205 landing for the night. No T-0189 implementation tonight.
 Separate implementation commits are `b262fcb7` and `f94993ba`.
 The independent migration oracle was committed red at21 of105; the HTTP
 oracle was red at19 of20. All105 migration identities are preserved, including
