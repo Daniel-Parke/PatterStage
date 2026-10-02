@@ -1,0 +1,299 @@
+{
+  "id": "T-0189",
+  "intent": "Centralise stored-usage parsing, guard story JSON boundaries and repair partial sync transactions; account for all twenty owned findings, six split rulings and thirty-one coverage obligations before closure.",
+  "declared": {
+    "capabilities": [
+      "edit-code",
+      "edit-tests",
+      "edit-docs",
+      "git",
+      "git-push",
+      "run-isolated-process",
+      "owned-temporary-git"
+    ],
+    "side_effects": [
+      "financial-impact",
+      "sends-external"
+    ]
+  },
+  "mode": "high-assurance",
+  "tier_proposed": "R2",
+  "status": "active",
+  "owner_session": "2026-10-02-t0189-coordinator",
+  "claims": [
+    "src/lib/runs/parse-stored-usage.ts",
+    "src/lib/runs/runs-repository.ts",
+    "src/lib/stats/stats-repository.ts",
+    "src/lib/stats/agent-stats.ts",
+    "src/lib/analytics/run-aggregates.ts",
+    "src/lib/spend/spend-window.ts",
+    "src/modules/rec-room/lib/story-repository.ts",
+    "src/lib/sync/sync-repository.ts",
+    "src/lib/sync/sources/ProcessSync.ts",
+    "src/lib/sync/sources/LogSync.ts",
+    "tests/unit/data-transaction-usage.test.ts",
+    "tests/unit/data-transaction-stories.test.ts",
+    "tests/unit/data-transaction-sync.test.ts",
+    "org/tasks/T-0189.json",
+    "org/claims.json",
+    "org/briefs/T-0189-oracle.md",
+    "org/briefs/T-0189-review.md",
+    "org/reviews/2026-10-t0189-data-verification.md",
+    "org/reviews/2026-10-t0189-dispositions.json",
+    "org/plans/2026-09-refactor-programme.json",
+    "org/HANDOVER.md",
+    "org/TASKS.md",
+    "org/STATE.md",
+    "docs/manifest.json",
+    "scripts/tooling/line-census.baseline.json",
+    "tests/fixtures/mutants/T-0189.json"
+  ],
+  "timestamps": {
+    "opened": "2026-10-02T14:10:33.645498+00:00",
+    "updated": "2026-10-02T14:10:33.645498+00:00"
+  },
+  "tier_ruled": "R2",
+  "reasons": [
+    {
+      "factor": "money",
+      "tier_floor": "R2",
+      "source": "declared",
+      "evidence": "declared side effect: financial-impact"
+    },
+    {
+      "factor": "boundary-contact",
+      "tier_floor": "R1",
+      "source": "declared",
+      "evidence": "declared side effect: sends-external"
+    }
+  ],
+  "authority": "Approved Phase2, Q032 before-release consolidation, Q014 and item-specific lib-data rulings. Q033 compatibility retirement remains deferred. No public feature, table, column, schema, protected file or historical oracle removal is authorised by this record.",
+  "prerequisite": {
+    "head": "d6989a30d9ce0f2e04ed024d953595be4951a9d2",
+    "snapshot": "tmp/t0188-hosted-root-context-closure/snapshot-1790950075533.json",
+    "sha256": "cd6f62ebe719fda92876343227bcb008bcb7504acce47bc296db60be12176130",
+    "allRequiredJobsPassed": true,
+    "runs": [
+      {
+        "conclusion": "success",
+        "databaseId": 37016036475,
+        "event": "pull_request",
+        "headSha": "d6989a30d9ce0f2e04ed024d953595be4951a9d2",
+        "status": "completed",
+        "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37016036475",
+        "workflowName": "CI",
+        "receipt": "tmp/t0188-hosted-root-context-closure/pull_request-ci-37016036475-1790950072255.json",
+        "jobs": [
+          {
+            "id": 110867007454,
+            "name": "build-test-macos",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110867007723,
+            "name": "boot-smoke (macos-latest)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110867007732,
+            "name": "e2e-smoke",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110867007801,
+            "name": "docker-image",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110867007906,
+            "name": "shell-custom-scripts",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110867007940,
+            "name": "boot-smoke (ubuntu-latest)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110867007965,
+            "name": "real-hermes-integration",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110867007993,
+            "name": "e2e-full (PLAYWRIGHT_SMOKE unset)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110867008072,
+            "name": "build-test-ubuntu",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110867008115,
+            "name": "install-harness",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110871230163,
+            "name": "acceptance-gate (full suite + install journey + real Hermes)",
+            "status": "completed",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 37016036027,
+        "event": "pull_request",
+        "headSha": "d6989a30d9ce0f2e04ed024d953595be4951a9d2",
+        "status": "completed",
+        "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37016036027",
+        "workflowName": "Gitleaks",
+        "receipt": "tmp/t0188-hosted-root-context-closure/pull_request-gitleaks-37016036027-1790950073367.json",
+        "jobs": [
+          {
+            "id": 110867004982,
+            "name": "scan",
+            "status": "completed",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 37016027471,
+        "event": "push",
+        "headSha": "d6989a30d9ce0f2e04ed024d953595be4951a9d2",
+        "status": "completed",
+        "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37016027471",
+        "workflowName": "Gitleaks",
+        "receipt": "tmp/t0188-hosted-root-context-closure/push-gitleaks-37016027471-1790950074405.json",
+        "jobs": [
+          {
+            "id": 110866975323,
+            "name": "scan",
+            "status": "completed",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 37016027242,
+        "event": "push",
+        "headSha": "d6989a30d9ce0f2e04ed024d953595be4951a9d2",
+        "status": "completed",
+        "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37016027242",
+        "workflowName": "CI",
+        "receipt": "tmp/t0188-hosted-root-context-closure/push-ci-37016027242-1790950075532.json",
+        "jobs": [
+          {
+            "id": 110866975880,
+            "name": "e2e-smoke",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110866976000,
+            "name": "real-hermes-integration",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110866976165,
+            "name": "install-harness",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110866976287,
+            "name": "boot-smoke (macos-latest)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110866976296,
+            "name": "boot-smoke (ubuntu-latest)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110866976331,
+            "name": "build-test-macos",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110866976370,
+            "name": "shell-custom-scripts",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110866976382,
+            "name": "build-test-ubuntu",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110866976508,
+            "name": "docker-image",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110866977951,
+            "name": "e2e-full (PLAYWRIGHT_SMOKE unset)",
+            "status": "completed",
+            "conclusion": "skipped"
+          },
+          {
+            "id": 110870946070,
+            "name": "acceptance-gate (full suite + install journey + real Hermes)",
+            "status": "completed",
+            "conclusion": "skipped"
+          }
+        ]
+      }
+    ],
+    "independentReviewer": "Schrodinger 01a0f7b7-f68a-79b2-ba74-81cdddf2f3ef: PASS exact-head all11PR,9applicablepush,2configuredskips,bothscans; source/tests unchanged; T0189 prerequisite cleared."
+  },
+  "scope_note": "Plan src/lib/data/** path does not exist. Exact allowlist replaces that placeholder. Initial oracle scope is the ten-file parsing/transaction slice. Remaining owned findings and coverage are under independent disposition review and cannot be silently closed; additional claims/oracles must precede their implementation.",
+  "invariants": [
+    "Explicit finite stored totals, including zero, remain authoritative; absent totals fall back to input plus output. Missing usage is not fabricated provider measurement; spend hard-stop failure remains closed.",
+    "Malformed story reads and restart recovery do not crash or overwrite damaged raw JSON with display defaults. Unrelated updates preserve raw JSON; valid stored fields and deleted-row semantics survive.",
+    "A failed process replacement preserves the entire prior snapshot. Successful empty refresh clears stale rows. Log insertion and existing retention pruning roll back together.",
+    "Error identity is full source/timestamp/message; repeated ticks are idempotent. Existing duplicate rows are hidden using MIN(id) before LIMIT, never deleted by a new cleanup. Existing 500-row retention remains.",
+    "No schema or column is removed; the 49-table/529-column owned-fixture census is not evidence of deadness. All twenty findings, six decisions and thirty-one coverage obligations receive evidenced dispositions.",
+    "Historical tests and test identities, all target baselines, auth schema43, provider usage normalisation, read-only refusals and protected governance remain intact."
+  ],
+  "rollback": "Revert only this batch code on an owned fixture. No migration or live data rewrite is proposed; preserve original stored JSON, failure receipts and worktrees.",
+  "verify_line": "Separate-author red-first behaviour oracle with real SQLite rollback and parser metamorphic cases; unchanged historical test identities; focused and full Jest/type checks; desktop1440x900/phone390x844 affected journeys; complete unchanged-tree ten-step gate; clean committed mutation controls/restoration; independent R2 acceptance; every required exact-head hosted push and PR job.",
+  "preflight": [
+    {
+      "receipt": "tmp/t0189-source-preflight-20261002/receipt.json",
+      "result": "Actual source plus real SQLite: second insert abort loses prior process snapshot; repeated logs occupy ten-row window and exclude older distinct error."
+    },
+    {
+      "receipt": "tmp/t0189-story-preflight-20261002.json",
+      "result": "Actual source plus real SQLite: malformed config SyntaxError; null config TypeError; object-shaped writing chapters TypeError. Raw fixture bytes retained."
+    },
+    {
+      "receipt": "tmp/t0189-live-schema-inventory-20261002.json",
+      "result": "Read-only isolated actual production fixture:49tables/529columns. No column deadness inference."
+    }
+  ],
+  "oracle_status": "Not authored or frozen yet. No implementation permitted before independent oracle red commit.",
+  "oracle_author": "Sartre 01a0fcf4-e827-7393-8d98-3ababa620034; separate clean context plus parser metamorphic cases; no implementation exists; awaiting committed disjoint claims and isolated checkout before authorship."
+}

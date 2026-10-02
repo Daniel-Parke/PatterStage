@@ -19,8 +19,10 @@ native macOS full runs and the unchanged 20-case context checks run alone.
 Content, modes and tracked inventories match across 2,560 paths. See the
 [final acceptance](reviews/2026-10-t0188-t0205-final-acceptance.md).
 
-The closure-record head must still pass every required hosted job before
-T-0189 opens. No overnight stop remains. Nine of 22 main-plan batches are done;
+Closure head `d6989a30` now passes every required hosted job: all 11 PR jobs,
+nine applicable push jobs and both secret scans. Independent review confirms
+the prerequisite. T-0189 is active at ruled R2, with separate-author oracles
+before implementation. No overnight stop remains. Nine of 22 main-plan batches are done;
 13 remain, including Q-033's deferred T-0200 and dependent T-0201 closure.
 
 T-0188 removes 480 source lines by converging 11 wrappers on the table driver;
