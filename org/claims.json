@@ -42,17 +42,7 @@
         "src/lib/db/sql-migrations.ts",
         "src/lib/db/index.ts",
         "src/lib/db/apply-sql.ts",
-        "org/briefs/T-0189-sync-implementation.md"
-      ],
-      "acquired": "2026-10-02T14:10:33.645498+00:00",
-      "expires": "2026-10-03T14:10:33.645498+00:00"
-    },
-    {
-      "lane_id": "T-0189-sync",
-      "task_id": "T-0189",
-      "session_id": "01a0fd33-6991-7a93-be6b-9285743b5ccc",
-      "host": "local",
-      "path_claims": [
+        "org/briefs/T-0189-sync-implementation.md",
         "src/lib/sync/sync-repository.ts",
         "src/lib/sync/sources/ProcessSync.ts",
         "src/lib/sync/sources/EnvSync.ts",
@@ -62,9 +52,20 @@
         "src/lib/sync/SyncScheduler.ts"
       ],
       "acquired": "2026-10-02T14:10:33.645498+00:00",
+      "expires": "2026-10-03T14:10:33.645498+00:00"
+    },
+    {
+      "lane_id": "T-0189-oracle-typing",
+      "task_id": "T-0189",
+      "session_id": "01a0fd41-d8a8-7df1-861b-b12aa52122e6",
+      "host": "local",
+      "path_claims": [
+        "tests/unit/data-transaction-migration-parity.test.ts"
+      ],
+      "acquired": "2026-10-02T14:10:33.645498+00:00",
       "expires": "2026-10-03T14:10:33.645498+00:00",
-      "harness_task_id": "01a0fd33-6991-7a93-be6b-9285743b5ccc"
+      "harness_task_id": "01a0fd41-d8a8-7df1-861b-b12aa52122e6"
     }
   ],
-  "note": "Two disjoint implementation lanes released after final red commit. All421oraclecases frozen; historical tests immutable. Schrodinger independent review required before closure."
+  "note": "Carver stopped writing and transferred seven sync paths to coordinator. Independent Averroes may apply only the frozen migration oracle NODE_ENV typing correction described in the amendment brief. Two disjoint writers; no assertion changes."
 }

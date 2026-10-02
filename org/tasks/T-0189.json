@@ -434,6 +434,14 @@
         "tests/unit/data-transaction-schema-health.test.ts": "4af2dd92655ec12888d7ccf8a5b07a0c8b61f50fcaddf81db75836b7a635bd66"
       },
       "reviewer": "Schrodinger PASS finalfreeze7167ff358e7efddce3dd4eb6e33be53747145fe804d8beef375b41d85a8aba0f:all421names/hashes verified, migration16pass15matcherreds; no preimplementation blocker. Implement only after exact red commit; no final acceptance."
+    },
+    "typing_correction": {
+      "author": "Averroes/01a0fd41-d8a8-7df1-861b-b12aa52122e6",
+      "status": "claimed; release after this metadata commit",
+      "reason": "Full test-program typecheck reports TS2769 at migration oracle line123 because Object.fromEntries loses required NODE_ENV. Earlier app-program filtered check did not establish full test typing.",
+      "scope": "Explicitly preserve process.env.NODE_ENV after filtered environment spread; no assertion, fixture, execution, test-name or suppression changes.",
+      "verify": "Full tsconfig.tests.json noEmit exits0; all31 migration cases execute/pass without skips; before/after names identical; hashes and exact unchanged validation source recorded.",
+      "failed_evidence": "tmp/t0189-static-check/1790955201191/summary.json; tmp/t0189-sync-lane/handoff.json"
     }
   },
   "schema_maintenance": {

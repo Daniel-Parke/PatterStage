@@ -57,3 +57,9 @@ suggests the older all-file upgrade partially applies040 before the ordered
 driver, which then stops on a duplicate ALTER and omits the index. Treat the
 precise intermediate sequence as an inference unless observed. The existing
 fresh/degraded parity failures already demonstrate the missing final index.
+# Independent typing correction, 2026-10-02
+
+Averroes owns only `tests/unit/data-transaction-migration-parity.test.ts` after the committed lane transfer. The full test-program check exposes TS2769 at the CLI spawn: the filtered environment loses Next's required `NODE_ENV` property. Preserve `process.env.NODE_ENV` explicitly after the existing filtered environment spread. Do not alter assertions, names, fixture values, environment filtering or execution semantics, and do not suppress diagnostics. Do not inspect implementation bodies to derive assertions.
+
+Use the coordinator's integrated isolated checkout with pinned Node 24.21.0 and matching native dependencies. Run the complete `tsconfig.tests.json` typecheck without filtering and all 31 migration cases with structured Jest output. Prove unchanged names, zero skips, before/after hashes and unchanged validated source. Preserve every previous red freeze and failed typecheck receipt. Return an amendment receipt for Schrodinger's independent review; no final task acceptance is implied.
+
