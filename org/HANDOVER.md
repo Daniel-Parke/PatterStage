@@ -11,8 +11,8 @@ updated: 2026-10-02
 
 The operator asks to finish only the current T-0188/T-0205 work tonight and
 leave a complete pickup list. Do not begin T-0189. Both current records remain
-active. Implementation is committed on dev at c97a7be7; that head is **not
-hosted green**. Both CI runs fail Ubuntu/macOS coverage; every other PR job,
+active. Latest hosted implementation is dev at b586556d; that head is **not
+hosted green**. Both CI runs pass Ubuntu and fail macOS coverage; every other PR job,
 including full browser, install, real Hermes and acceptance, passes. Both
 Gitleaks runs pass. Exact job receipts are in both current task records.
 
@@ -25,13 +25,25 @@ both database-free build checks and all census checks. The previous EPERM
 config-rename failure and16-case alone pass remain retained and unexplained;
 only one unchanged full control was independently authorised.
 
-Native macOS additionally fails C01/C03's unchanged25-second lifecycle check:
-36.217 seconds on push and36.023 seconds on PR. The two names share each
-healthy observation. The slow phase is unproved. An independently authorised
-additive observer measures the **unchanged healthy context path**, after
-blocking macOS coverage even when coverage fails. It emits redacted timings,
-tool identities and counts only. Diagnostic results are not formal acceptance.
-No frozen fixture, assertion, deadline, coverage floor or target changes.
+Native macOS still fails C01/C03's unchanged25-second lifecycle check. Both
+names share one healthy observation. The b586 diagnostics isolate about35
+seconds before Harness import. The stdlib numeric-loopback constructor calls
+socket.getfqdn; native DNS duration remains unproved. Under independent Q015
+authority, a seven-case loopback oracle was committed red at652f7e1f:6pass,
+one intended resolver assertion failure, zero skips/runtime errors. Only the
+owned listener binding is being amended. An additive original-first/amended-
+second diagnostic retains actual HTTP and lifecycle timings, tool identities
+and exact restoration. Windows calibration passes; it does not establish
+macOS cause. Every existing assertion, deadline and target remains.
+
+The additive [overnight audit](reviews/2026-10-refactor-overnight-audit.md)
+records earlier closure evidence gaps and work outside the22-batch plan.
+Locate final acceptance for T0182–T0186 before treating their metadata as
+fully reconciled. T0182's actual a7447e96 closure-head hosted metadata was
+recovered: all four workflows and every required PR job passed. Remote heads
+are only dev/main with one openPR#157, but preserved local Cursor/oracle
+branches and older T0003/T0004/T0055/T0056/T0059/T0066/T0074/T0113 records
+still require reconciliation. No historical record was rewritten.
 
 The full approved plan contains22 distinct batches. Foundations T-0150,
 T-0152, T-0156–T-0165 are done. T-0180–T-0187 are done: full-history scanning,

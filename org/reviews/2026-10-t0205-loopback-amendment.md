@@ -242,3 +242,54 @@ the m7 future anchor still occurs zero times and remains NOT APPLIED.
 Fixture implementation remains stopped pending the coordinator's RED commit
 and explicit proceed message. Post-implementation m7 application/restoration,
 full gates, committed sweeps and native DNS attribution remain unproved.
+
+## 2026-10-02: authorised fixture amendment and tracked-write close
+
+The operator reported independent acceptance of the constructor-hook freeze
+and an isolated coordinator RED with six passes, one L02 assertion failure,
+zero skips/runtime errors and an unchanged tree. The coordinator committed
+RED at `652f7e1fb401a3d124d146972274ea65a1f9bd23`. The operator then explicitly
+authorised this binding implementation and focused/private qualification.
+
+The fixture amendment adds only the `TCPServer` import, the
+`LoopbackHttpServer(ThreadingHTTPServer)` binding subclass and one listener
+constructor replacement. `server_bind` calls `TCPServer.server_bind(self)`
+and assigns `server_name` and `server_port` from the actual numeric
+`socket.getsockname()`. Threading, socket options, activation, handlers,
+requests, authentication, ownership, cleanup and all frozen timers remain.
+
+Original fixture SHA-256:
+`5a807ccd3ee885890934ceb0b3b23b8072f30a1b5dcc9bd84a30c255d0852de8`.
+Amended fixture SHA-256:
+`753ee93c00fc805d2c57753e35ee236d3438c541cc4ef6d56ee7b2aa6716f2b8`.
+Frozen observer, all new/historical test bytes and the approved seven-mutant
+manifest are unchanged.
+
+Focused primary validation used the pinned Node24.21/ABI137 runtime and an
+exclusively owned minimal environment. The new loopback suite, historical
+HTTP smoke suite, historical default-path suite and historical context suite
+all passed: 48 passed, zero failed, skipped or runtime-error suites, normal
+Jest exit 0. This includes all seven new tests, fourteen HTTP tests, seven
+default-path tests and twenty context tests.
+
+Structured report:
+`tmp/t0205-loopback-oracle/implementation/focused-jest.json`, SHA-256
+`690cfe78ded1a55194cca8804872b78664721f3347715c58c7ca009ea0f8eff5`.
+The corresponding summary preserves every exact test identity.
+
+m7 now has exactly one actual constructor anchor. Its initial owned-private
+control attempt stopped during Next/Jest configuration with an unresolved
+relative `config-sections` import. No mutation had been applied, no structured
+test report existed and no kill is claimed for that infrastructure refusal.
+The private launcher and stderr are retained. Private control, intended L02
+failure, actual native exchanges and exact restoration evidence belong in
+new receipts under `tmp/t0205-loopback-oracle/implementation/`.
+
+The operator requested cessation of tracked writes before the coordinator's
+unchanged full gate. This entry closes this author's tracked writes. Any
+remaining private m7 qualification writes only within the exclusively owned
+ignored root. The final ignored implementation receipt binds the source and
+this provenance and preserves qualification results. No further tracked edit,
+full gate, commit or push is performed by this author. Native A/B attribution,
+committed whole-batch sweeps and final acceptance remain coordinator/reviewer
+work.

@@ -45,7 +45,10 @@
         "org/briefs/T-0188-auth-wiring-amendment.md",
         ".github/workflows/ci.yml",
         "tests/helpers/release-install-http-timing-diagnostic.py",
-        "org/briefs/T-0205-loopback-oracle.md"
+        "org/briefs/T-0205-loopback-oracle.md",
+        "org/reviews/2026-10-refactor-overnight-audit.md",
+        "org/briefs/T-0205-loopback-type-amendment.md",
+        "org/briefs/T-0205-cleanup-assertion-amendment.md"
       ],
       "expires": "2026-10-02T18:45:00Z",
       "lane_id": "T-0188-coordinator",
@@ -57,19 +60,18 @@
       "task_id": "T-0205",
       "host": "NUCBOX_M6ULTRA",
       "path_claims": [
-        "tests/helpers/release-install-http-probe.py",
-        "tests/helpers/release-install-http-loopback-probe.py",
+        "tests/unit/release-install-http-context.test.ts",
         "tests/unit/release-install-http-loopback.test.ts",
-        "org/reviews/2026-10-t0205-loopback-amendment.md",
-        "tests/fixtures/mutants/T-0205.json"
+        "tests/helpers/release-http-cleanup-assertions.ts",
+        "org/reviews/2026-10-t0205-cleanup-assertion-amendment.md"
       ],
       "expires": "2026-10-02T18:45:00Z",
-      "lane_id": "T-0205-loopback-oracle",
-      "session_id": "01a0fa2e-b45c-72b0-9e03-984a3403bb34",
-      "acquired": "2026-10-02T01:15:59.925Z",
+      "lane_id": "T-0205-cleanup-oracle",
+      "session_id": "01a0fa65-49e8-7eb2-afc4-cd450c8ecbab",
+      "acquired": "2026-10-01T18:39:49Z",
       "harness_task_id": "2026-10-01-migration-driver-consolidation"
     }
   ],
   "version": 1,
-  "note": "Exactly two writing lanes: coordinator owns records/CI/additive diagnostic; fresh independent ORACLE owns only loopback fixture and new oracle/provenance. Historical records and other frozen files untouched."
+  "note": "Two writers maximum: coordinator and fresh cleanup-assertion ORACLE. Priorauthorsclosed;reviewerreadonly. Allwritersstopduringfullgate."
 }

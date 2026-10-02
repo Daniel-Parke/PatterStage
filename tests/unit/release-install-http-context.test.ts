@@ -1,6 +1,7 @@
 /** @jest-environment node */
 
 import { spawnSync } from "node:child_process";
+import { assertHttpCleanup } from "../helpers/release-http-cleanup-assertions";
 import { resolve } from "node:path";
 
 type Observation = {
@@ -31,13 +32,7 @@ beforeAll(() => {
 
 function clean(result: Observation, launched = 1): void {
   expect(result.launched).toBe(launched);
-  expect(result.ownedStopped).toBe(true);
-  expect(result.decoySurvived).toBe(true);
-  expect(result.signalsOwned).toBe(true);
-  expect(result.withinDeadline).toBe(true);
-  expect(result.elapsedSeconds).toBeLessThan(25);
-  expect(result.credentialLeaked).toBe(false);
-  expect(result.scriptContainsCredential).toBe(false);
+  assertHttpCleanup(result);
   expect(result.native.errors).toBe(0);
   expect(result.native.cancelled).toBe(0);
   expect(result.native.ownedCurlStopped).toBe(true);

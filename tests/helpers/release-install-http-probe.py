@@ -22,6 +22,7 @@ import sys
 import tempfile
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from socketserver import TCPServer
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
@@ -38,6 +39,14 @@ CASES = ("control", "healthy", "wrong-credential", "anonymous-200", "health-204"
          "auth-403", "dead-launch", "occupied-listener", "stalled", "stubborn")
 DEFAULT_CASES = ("default-control", "default-fresh", "default-uppercase-db",
                  "default-uppercase-legacy-db", "default-wrong-token", "default-wrong-control")
+
+
+class LoopbackHttpServer(ThreadingHTTPServer):
+    """Bind the numeric loopback listener without resolving a host name."""
+
+    def server_bind(self) -> None:
+        TCPServer.server_bind(self)
+        self.server_name, self.server_port = self.socket.getsockname()[:2]
 
 
 def shell_path(path: Path) -> str:
@@ -263,7 +272,7 @@ def run_case(case: str, bash: str) -> dict[str, object]:
                 except (BrokenPipeError, ConnectionResetError):
                     pass
 
-        server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        server = LoopbackHttpServer(("127.0.0.1", 0), Handler)
         server.daemon_threads = True
         listener = threading.Thread(target=server.serve_forever, daemon=True)
         listener.start()

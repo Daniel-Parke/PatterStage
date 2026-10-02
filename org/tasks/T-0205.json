@@ -21,7 +21,7 @@
   "owner_session": "2026-10-01-migration-driver-consolidation",
   "timestamps": {
     "opened": "2026-10-01T21:11:46.044703+00:00",
-    "updated": "2026-10-02T01:15:59.925Z"
+    "updated": "2026-10-02T01:50:58.657Z"
   },
   "authority": "Operator authorises completion of approved batches and prerequisite repairs. Adopt separate-author frozen oracle and independent R2 acceptance even if declaration router minimum is R1. Narrow Q015 amendment authority must be recorded before source/mutant amendments; no protected changes or weakening of bounds is authorised.",
   "claims": [
@@ -43,7 +43,12 @@
     "tests/helpers/release-install-http-loopback-probe.py",
     "tests/unit/release-install-http-loopback.test.ts",
     "org/briefs/T-0205-loopback-oracle.md",
-    "org/reviews/2026-10-t0205-loopback-amendment.md"
+    "org/reviews/2026-10-t0205-loopback-amendment.md",
+    "org/briefs/T-0205-loopback-type-amendment.md",
+    "org/reviews/2026-10-t0205-loopback-type-amendment.md",
+    "org/briefs/T-0205-cleanup-assertion-amendment.md",
+    "tests/helpers/release-http-cleanup-assertions.ts",
+    "org/reviews/2026-10-t0205-cleanup-assertion-amendment.md"
   ],
   "invariants": [
     "All existing test names, assertions, 75-second production deadline, 20 readiness attempts, six-second fixture watchdog, 0.1-second accelerated request bounds, 0.2-second watchdog kill grace and 25-second RPC/outer bounds remain.",
@@ -717,5 +722,245 @@
       "scope": "tests/fixtures/mutants/T-0205.json",
       "contract": "Exclusive freshORACLE ownership. Appendm7 only; all6existingrows/selections/anchors/reasons unchanged. Swapone actual amended numeric-loopback listener constructor for original stdHTTP constructor, preservinghandler/address/ephemeralport. Selectnewloopbackoracle only; executedresolver-callassertion and realHTTP controls required. Beforeimplementation NOT-APPLIED is notred orkill. Afterimplementation proveuniqueapplication/control/qualification/restoration. NohistoricalDNScauseclaim."
     }
+  },
+  "loopback_candidate": {
+    "redCommit": "652f7e1f",
+    "independentFreeze": {
+      "path": "tmp/t0205-loopback-oracle/constructor-hook-freeze.json",
+      "sha256": "5f440f615f8af32e728d8b6600abe6151d689cd42085e8541603f95fbf819592"
+    },
+    "coordinatorRed": {
+      "path": "tmp/t0188-loopback-coordinator-red-overlaid/summary.json",
+      "sha256": "c25e46162bf1cbdf8d54059a3e07c12090c75b34f4f1d7454c90e3a76b3e6a6c",
+      "result": "Normal1,6pass/1 intended L02 resolver assertion,0skip/runtime,unchangedtree"
+    },
+    "retainedInfrastructure": {
+      "path": "tmp/t0188-loopback-coordinator-red/summary.json",
+      "reason": "Missing overlay argument; no suite executed. Not oracle red or mutation kill."
+    },
+    "diagnostic": {
+      "path": "tmp/t0188-timing-diagnostic-windows-loopback-ab.json",
+      "sha256": "dc35b42a286def3afb274bd6c6a0ea5e0df0d53cf1d5c7f69df489258b378a87",
+      "helperSHA256": "302e5b92165bde68a616682d5700311fd4907c23489f6a10e63ac0fcc939fc03",
+      "result": "Windows original-first1.5682025s one.0047032slookup; amended-second1.4681528s zero lookup. ActualHTTP/lifecycle/cleanup and exact restoration hold; no nativeMac attribution."
+    },
+    "limits": "Current repair still requires unchanged fullgate, clean committed32-mutant sweeps, final independent acceptance and all hosted implementation/closurejobs. Existing deadlines/assertions unchanged."
+  },
+  "hosted_latest_failure": {
+    "head": "b586556db4e7b95e3f5d8b5f48d191f30d124d3f",
+    "path": "tmp/t0188-hosted-b586/snapshot-1790904463570.json",
+    "sha256": "4d04bd6b9591cd09eaf995f5604fef2300859c237151912d2192cab2b05a3bb1",
+    "runs": [
+      {
+        "conclusion": "failure",
+        "databaseId": 36947932775,
+        "event": "pull_request",
+        "headSha": "b586556db4e7b95e3f5d8b5f48d191f30d124d3f",
+        "status": "completed",
+        "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/36947932775",
+        "workflowName": "CI",
+        "receipt": "tmp/t0188-hosted-b586/pull_request-ci-36947932775-1790904460614.json",
+        "jobs": [
+          {
+            "id": 110654149240,
+            "name": "shell-custom-scripts",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110654149390,
+            "name": "e2e-smoke",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110654149416,
+            "name": "build-test-macos",
+            "status": "completed",
+            "conclusion": "failure"
+          },
+          {
+            "id": 110654149417,
+            "name": "install-harness",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110654149421,
+            "name": "boot-smoke (macos-latest)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110654149437,
+            "name": "build-test-ubuntu",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110654149449,
+            "name": "e2e-full (PLAYWRIGHT_SMOKE unset)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110654149511,
+            "name": "docker-image",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110654149540,
+            "name": "real-hermes-integration",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110654149605,
+            "name": "boot-smoke (ubuntu-latest)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110656906635,
+            "name": "acceptance-gate (full suite + install journey + real Hermes)",
+            "status": "completed",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 36947932717,
+        "event": "pull_request",
+        "headSha": "b586556db4e7b95e3f5d8b5f48d191f30d124d3f",
+        "status": "completed",
+        "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/36947932717",
+        "workflowName": "Gitleaks",
+        "receipt": "tmp/t0188-hosted-b586/pull_request-gitleaks-36947932717-1790904461542.json",
+        "jobs": [
+          {
+            "id": 110654148872,
+            "name": "scan",
+            "status": "completed",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 36947929371,
+        "event": "push",
+        "headSha": "b586556db4e7b95e3f5d8b5f48d191f30d124d3f",
+        "status": "completed",
+        "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/36947929371",
+        "workflowName": "Gitleaks",
+        "receipt": "tmp/t0188-hosted-b586/push-gitleaks-36947929371-1790904462443.json",
+        "jobs": [
+          {
+            "id": 110654138370,
+            "name": "scan",
+            "status": "completed",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "conclusion": "failure",
+        "databaseId": 36947929356,
+        "event": "push",
+        "headSha": "b586556db4e7b95e3f5d8b5f48d191f30d124d3f",
+        "status": "completed",
+        "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/36947929356",
+        "workflowName": "CI",
+        "receipt": "tmp/t0188-hosted-b586/push-ci-36947929356-1790904463569.json",
+        "jobs": [
+          {
+            "id": 110654138156,
+            "name": "build-test-macos",
+            "status": "completed",
+            "conclusion": "failure"
+          },
+          {
+            "id": 110654138309,
+            "name": "boot-smoke (ubuntu-latest)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110654138372,
+            "name": "install-harness",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110654138392,
+            "name": "boot-smoke (macos-latest)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110654138405,
+            "name": "build-test-ubuntu",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110654138455,
+            "name": "shell-custom-scripts",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110654138489,
+            "name": "real-hermes-integration",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110654138510,
+            "name": "e2e-smoke",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110654138749,
+            "name": "docker-image",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110654139736,
+            "name": "e2e-full (PLAYWRIGHT_SMOKE unset)",
+            "status": "completed",
+            "conclusion": "skipped"
+          },
+          {
+            "id": 110657169240,
+            "name": "acceptance-gate (full suite + install journey + real Hermes)",
+            "status": "completed",
+            "conclusion": "skipped"
+          }
+        ]
+      }
+    ],
+    "result": "Allcompleted. BothGitleaks and allotherPRjobs includingacceptance succeed; Ubuntu passes; Mac only C01/C03 sharedhealthy25secondcheck fails. Diagnosticpreparation35s beforeHarness, nativeDNScauseunproved."
+  },
+  "overnight_audit": "org/reviews/2026-10-refactor-overnight-audit.md; noT0189 tonight, historicalapprovalreceipt reconciliation and olderbacklog explicitly preserved.",
+  "type_amendment_authority": {
+    "authoriser": "Independent R2 REVIEWER Schrodinger underQ015,2026-10-02",
+    "status": "authorised-before-edits",
+    "scope": "org/briefs/T-0205-loopback-type-amendment.md",
+    "reason": "Fullgate actualTS2741. Nextaugmentation requiresNODE_ENV inProcessEnv but isolatedPython childenvironment deliberatelyomitsit.",
+    "contract": "OnlyenvironmentRecord<string,string|undefined> and externalspawn boundary asNodeJS.ProcessEnv; no runtime/envvalue/allowlist/matcher/name/timer/cleanupchanges. Freshauthor,datedrefreeze,typecheckESLint7and48casesrequired.",
+    "retainedGate": "tmp/t0188-full-gate-loopback-20261002/summary.json"
+  },
+  "cleanup_assertion_amendment_authority": {
+    "authoriser": "Independent R2 REVIEWER Schrodinger underQ015,2026-10-02",
+    "status": "authorised-before-edits",
+    "scope": "org/briefs/T-0205-cleanup-assertion-amendment.md",
+    "contract": "Fresh independentnonimplementer extracts exact7expectstatements inoriginalorder/matcher/value,requiredstructural7fields. Unconditionalhelpercalls atsameplace/frequency;27namesandallotherassertions/env/timers/cleanup unchanged. Helper joinsfrozenoracle surface.",
+    "reason": "Actual4808 >unchangedC4cap4800; newlyduplicated14windowlines. Predicted4794requiresmeasurement; no cap/baselineexception/algorithm/manifest/gatechange.",
+    "retainedGate": "tmp/t0188-full-gate-loopback-typecorrected-20261002/summary.json"
   }
 }

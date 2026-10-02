@@ -1,6 +1,7 @@
 /** @jest-environment node */
 
 import { spawnSync } from "node:child_process";
+import { assertHttpCleanup } from "../helpers/release-http-cleanup-assertions";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
@@ -31,7 +32,7 @@ let report: Report;
 beforeAll(() => {
   const owned = mkdtempSync(join(tmpdir(), "t0205-loopback-env-"));
   // Carry only process/tool essentials. All data, home and temporary paths are owned.
-  const environment: NodeJS.ProcessEnv = {};
+  const environment: Record<string, string | undefined> = {};
   for (const name of ["PATH", "Path", "PATHEXT", "SystemRoot", "SYSTEMROOT", "WINDIR", "COMSPEC"]) {
     if (process.env[name]) environment[name] = process.env[name];
   }
@@ -41,7 +42,7 @@ beforeAll(() => {
   try {
     const result = spawnSync(process.env.PYTHON || "python", [resolve("tests/helpers/release-install-http-loopback-probe.py")], {
       cwd: process.cwd(), encoding: "utf8", timeout: 150_000, maxBuffer: 1024 * 1024,
-      env: environment,
+      env: environment as NodeJS.ProcessEnv,
     });
     if (result.error || result.status !== 0) throw new Error(`T-0205 loopback observer infrastructure failed (${result.status})`);
     report = JSON.parse(result.stdout) as Report;
@@ -65,13 +66,7 @@ function realNative(result: Observation, minimumCalls = 3): void {
 
 function clean(result: Observation): void {
   expect(result.executions).toBe(1);
-  expect(result.ownedStopped).toBe(true);
-  expect(result.decoySurvived).toBe(true);
-  expect(result.signalsOwned).toBe(true);
-  expect(result.withinDeadline).toBe(true);
-  expect(result.elapsedSeconds).toBeLessThan(25);
-  expect(result.credentialLeaked).toBe(false);
-  expect(result.scriptContainsCredential).toBe(false);
+  assertHttpCleanup(result);
   expect(result.listenerSocketsClosed).toBe(true);
   expect(result.listenerThreadsStopped).toBe(true);
   expect(result.restored).toBe(true);

@@ -9,6 +9,7 @@ import os
 from pathlib import Path
 import platform
 import shutil
+import socket
 import socketserver
 import subprocess
 import sys
@@ -24,6 +25,8 @@ def main() -> int:
     restorations: list[tuple] = []
     observation: dict = {}
     tools: dict = {}
+    reference_constructor = False
+    restored = False
 
     def measured(label, function, *args, **kwargs):
         begin = time.monotonic()
@@ -48,12 +51,16 @@ def main() -> int:
     original_wait = subprocess.Popen.wait
     original_join = threading.Thread.join
     original_cleanup = tempfile.TemporaryDirectory.cleanup
+    original_http_init = ThreadingHTTPServer.__init__
+    original_getfqdn = socket.getfqdn
 
     def exec_module(self, module):
         if Path(self.path).name == "test_full_install_update_process.py":
             return measured("harness.import", original_exec, self, module)
         result = original_exec(self, module)
         if Path(self.path).name == "release-install-http-probe.py":
+            if reference_constructor:
+                replace(module, "LoopbackHttpServer", ThreadingHTTPServer)
             bridge_class = module.CurlBridge
 
             class ObservedBridge(bridge_class):
@@ -101,6 +108,8 @@ def main() -> int:
         replace(subprocess.Popen, "wait", lambda self, *args, **kwargs: measured("process.wait", original_wait, self, *args, **kwargs))
         replace(threading.Thread, "join", lambda self, *args, **kwargs: measured("thread.join", original_join, self, *args, **kwargs))
         replace(tempfile.TemporaryDirectory, "cleanup", lambda self: measured("temporary-directory.cleanup", original_cleanup, self))
+        replace(ThreadingHTTPServer, "__init__", lambda self, *args, **kwargs: measured("http.construct", original_http_init, self, *args, **kwargs))
+        replace(socket, "getfqdn", lambda *args, **kwargs: measured("http.reverse-name-lookup", original_getfqdn, *args, **kwargs))
         helper = Path(__file__).with_name("release-install-http-context-probe.py")
         spec = importlib.util.spec_from_file_location("t0205_timing_context", helper)
         if spec is None or spec.loader is None:
@@ -119,13 +128,20 @@ def main() -> int:
         version = subprocess.run([str(timeout_path), "--version"], check=True, capture_output=True, text=True, timeout=25)
         if "GNU coreutils" not in version.stdout:
             raise RuntimeError("diagnostic GNU timeout unavailable")
-        result = measured("observe.healthy", module.observe, "healthy", bash)
+        for label, is_reference in (("original-constructor-first", True), ("amended-constructor-second", False)):
+            reference_constructor = is_reference
+            phase_begin = len(events)
+            result = measured("observe.healthy", module.observe, "healthy", bash)
+            observation[label] = {
+                name: result[name] for name in
+                ("elapsedSeconds", "accepted", "ownedStopped", "decoySurvived", "signalsOwned", "withinDeadline")
+            }
+            observation[label]["phases"] = events[phase_begin:].copy()
+            observation[label]["nativeCurlSHA256"] = sorted(set(result["native"]["clients"].values()))
         tools = {"bashSHA256": hashlib.sha256(Path(bash).read_bytes()).hexdigest(),
                  "gnuTimeoutSHA256": hashlib.sha256(timeout_path.read_bytes()).hexdigest(),
                  "gnuTimeoutVersion": version.stdout.splitlines()[0],
                  "nativeCurlSHA256": sorted(set(result["native"]["clients"].values()))}
-        for name in ("elapsedSeconds", "accepted", "ownedStopped", "decoySurvived", "signalsOwned", "withinDeadline"):
-            observation[name] = result[name]
     except Exception:
         diagnostic_failed = True
     finally:
@@ -134,11 +150,22 @@ def main() -> int:
                 setattr(target, name, original)
             else:
                 delattr(target, name)
+        def same_binding(current, original):
+            return current is original or (
+                hasattr(original, "__func__") and
+                getattr(current, "__func__", None) is original.__func__ and
+                getattr(current, "__self__", None) is original.__self__)
+
+        restored = all(same_binding(getattr(target, name), original) and
+                       (name in vars(target)) == owned_attribute
+                       for target, name, original, owned_attribute in restorations)
     print(json.dumps({"diagnosticOnly": True, "control": "healthy alone; CI schedules after coverage on an already exercised runner",
-                      "failed": diagnostic_failed, "python": platform.python_version(),
+                      "failed": diagnostic_failed, "restored": restored,
+                      "order": ["original-constructor-first", "amended-constructor-second"],
+                      "python": platform.python_version(),
                       "platform": platform.system(), "architecture": platform.machine(),
                       "tools": tools, "originalObservation": observation, "phases": events}))
-    return 90 if diagnostic_failed else 0
+    return 90 if diagnostic_failed or not restored else 0
 
 
 if __name__ == "__main__":

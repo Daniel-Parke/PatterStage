@@ -2,7 +2,7 @@
   "measuredAt": "2026-10-02",
   "counts": {
     "srcLines": 102201,
-    "testLines": 140957,
+    "testLines": 141143,
     "scriptsLines": 13563,
     "srcRepeatedWindowLines": 968,
     "testRepeatedWindowLines": 4794,
@@ -1095,6 +1095,21 @@
       "measuredAt": "2026-10-01",
       "rise": "testLines rose from 140927 to 140957",
       "reason": "T-0188: +30 test lines add independently authorised public-chain Auth42/43 storage witnesses and valid controls within the same105 identities. All original assertions, fixed targets and repeated-window ceiling4800 remain."
+    },
+    {
+      "measuredAt": "2026-10-02",
+      "rise": "testLines rose from 140957 to 141133",
+      "reason": "T-0205 adds seven independently authored loopback binding and native HTTP ownership regression tests; fixed programme targets remain unchanged."
+    },
+    {
+      "measuredAt": "2026-10-02",
+      "rise": "testRepeatedWindowLines rose from 4794 to 4808",
+      "reason": "T-0205 adds seven independently authored loopback binding and native HTTP ownership regression tests; fixed programme targets remain unchanged."
+    },
+    {
+      "measuredAt": "2026-10-02",
+      "rise": "testLines rose from 141133 to 141143",
+      "reason": "T-0205 independent seven-assertion cleanup extraction costs 10 census-counted test lines and removes 14 repeated lines; unchanged C4 ceiling and all fixed programme targets remain."
     }
   ]
 }
