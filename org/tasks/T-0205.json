@@ -21,7 +21,7 @@
   "owner_session": "2026-10-01-migration-driver-consolidation",
   "timestamps": {
     "opened": "2026-10-01T21:11:46.044703+00:00",
-    "updated": "2026-10-02T00:24:12.652Z"
+    "updated": "2026-10-02T01:15:59.925Z"
   },
   "authority": "Operator authorises completion of approved batches and prerequisite repairs. Adopt separate-author frozen oracle and independent R2 acceptance even if declaration router minimum is R1. Narrow Q015 amendment authority must be recorded before source/mutant amendments; no protected changes or weakening of bounds is authorised.",
   "claims": [
@@ -38,7 +38,12 @@
     "tests/unit/release-install-http-context.test.ts",
     "tests/helpers/release-install-http-context-probe.py",
     "tests/fixtures/mutants/T-0202.json",
-    "tests/helpers/release-install-http-timing-diagnostic.py"
+    "tests/helpers/release-install-http-timing-diagnostic.py",
+    "tests/helpers/release-install-http-probe.py",
+    "tests/helpers/release-install-http-loopback-probe.py",
+    "tests/unit/release-install-http-loopback.test.ts",
+    "org/briefs/T-0205-loopback-oracle.md",
+    "org/reviews/2026-10-t0205-loopback-amendment.md"
   ],
   "invariants": [
     "All existing test names, assertions, 75-second production deadline, 20 readiness attempts, six-second fixture watchdog, 0.1-second accelerated request bounds, 0.2-second watchdog kill grace and 25-second RPC/outer bounds remain.",
@@ -690,5 +695,27 @@
       }
     ],
     "limits": "PR acceptance, full browser, install, real Hermes and both Gitleaks scans pass, but both coverage jobs fail. No green-head or batch-closure claim."
+  },
+  "loopback_amendment_authority": {
+    "date": "2026-10-02T01:15:59.925Z",
+    "authoriser": "Independent R2 REVIEWER Schrodinger 01a0f7b7-f68a-79b2-ba74-81cdddf2f3ef under Q015",
+    "status": "authorised-before-implementation",
+    "oldFixtureSHA256": "5a807ccd3ee885890934ceb0b3b23b8072f30a1b5dcc9bd84a30c255d0852de8",
+    "hypothesis": "Both b586 native diagnostics spend about35seconds in preparation before Harness import. The owned literal IPv4 HTTP constructor performs unbounded socket.getfqdn; DNS duration is not yet established.",
+    "scope": [
+      "tests/helpers/release-install-http-probe.py",
+      "tests/helpers/release-install-http-loopback-probe.py",
+      "tests/unit/release-install-http-loopback.test.ts",
+      "org/briefs/T-0205-loopback-oracle.md",
+      "org/reviews/2026-10-t0205-loopback-amendment.md"
+    ],
+    "contract": "Fresh separate ORACLE author distinct from coordinator and originalT0202author. Red-first portable resolver-call sentinel must yield structured assertion failure on old constructor while actual native HTTP exchanges still execute. Only listener binding may inherit ThreadingHTTPServer, call TCPServer.server_bind and set server_name/server_port from actual numeric bound address. Preserve threading/socket options/activation/handlers/cleanup, all names/requests/arguments/deadlines and Harness/curl/other frozen bytes.",
+    "nativeProof": "Coordinator additive diagnostic uses original stdHTTPconstructor FIRST and amended constructor SECOND with passive constructor/getfqdn timing, original full lifecycle measurements, identities/outcomes/cleanup and exact finally restoration. Native DNS attribution requires actual measured reference getfqdn duration; faster amended run alone is insufficient. Preserve exercised-runner/order qualification, blockingcoverage/guard/3min cap.",
+    "additiveMutant": {
+      "authoriser": "Independent R2 REVIEWER Schrodinger underQ015,2026-10-02",
+      "oldManifestSHA256": "b50f44b99209fd9b305b119e3b38c10dc8f42f8eac98a17f020174a4374d8430",
+      "scope": "tests/fixtures/mutants/T-0205.json",
+      "contract": "Exclusive freshORACLE ownership. Appendm7 only; all6existingrows/selections/anchors/reasons unchanged. Swapone actual amended numeric-loopback listener constructor for original stdHTTP constructor, preservinghandler/address/ephemeralport. Selectnewloopbackoracle only; executedresolver-callassertion and realHTTP controls required. Beforeimplementation NOT-APPLIED is notred orkill. Afterimplementation proveuniqueapplication/control/qualification/restoration. NohistoricalDNScauseclaim."
+    }
   }
 }

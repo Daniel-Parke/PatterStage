@@ -60,6 +60,16 @@
       "tests": [
         "tests/unit/release-install-http-context.test.ts"
       ]
+    },
+    {
+      "id": "m7-restore-resolver-binding",
+      "anchor": "        server = LoopbackHttpServer((\"127.0.0.1\", 0), Handler)",
+      "replacement": "        server = ThreadingHTTPServer((\"127.0.0.1\", 0), Handler)",
+      "why": "Literal loopback listener binding must perform zero resolver calls while retaining actual native HTTP exchanges.",
+      "file": "tests/helpers/release-install-http-probe.py",
+      "tests": [
+        "tests/unit/release-install-http-loopback.test.ts"
+      ]
     }
   ]
 }
