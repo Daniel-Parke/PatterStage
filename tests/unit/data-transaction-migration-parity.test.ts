@@ -8,7 +8,10 @@ import { getSchemaVersion, setSchemaVersion } from "@/lib/db-schema";
 import { applyAuthSessionsMigration, assertAuthSessionsSchema } from "@/lib/db/apply-auth-sessions-migration";
 import { applyMissionRepeatMigration } from "@/lib/db/apply-mission-repeat-migration";
 import { applyRunsSpendSourceMigration } from "@/lib/db/sql-migrations";
-const { runMigrations } = jest.requireActual<typeof import("@/lib/db")>("@/lib/db");
+import type { runMigrations as runMigrationsExport } from "@/lib/db";
+const { runMigrations } = jest.requireActual<{
+  runMigrations: typeof runMigrationsExport;
+}>("@/lib/db");
 
 function fixture(degraded: boolean): RealDb {
   const db = openRealDb();

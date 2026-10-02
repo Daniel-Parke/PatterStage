@@ -470,11 +470,16 @@
       "runtime_scope": "Node20-compatible recovery; parse all live story rows once at boot to recognise escaped semantic writing status. No periodic scan or new schema."
     },
     "static_dependency": {
-      "status": "claimed;release after metadata commit",
+      "status": "independent correction frozen and verified",
       "author": "Averroes",
       "reason": "Knip cannot trace jest.requireActual callers after redundant CLI importer removed",
       "scope": "Named type-only dependency for existing requireActual; exact emittedJS,31names/assertions preserved",
-      "verify": "Full test types/scopedlint/Knip/historicalproposalcheck0,31migrationcasespass, identical emittedJS and test names."
+      "verify": "Full test types/scopedlint/Knip/historicalproposalcheck0,31migrationcasespass, identical emittedJS and test names.",
+      "receipt": "tmp/t0189-oracle-amendment/static-dependency-1790958177898/freeze.json",
+      "receipt_sha256": "5e00ae4c845631dd7ce3d32a8717fa4b9c2669841ffb90aa86dff8fe094dff50",
+      "suite_sha256": "7f8eb5c000c02414e9c240be6f20843b4b76f4fb0abb62a1efb1274238fa67f8",
+      "result": "ESNext/CommonJS emittedJS identical;31migration and6historicalKnipproposal cases pass; fulltesttypes/scopedlint/Knip0;names/assertions/baseline/source unchanged;oldreceipts preserved.",
+      "reviewer": "Schrodinger PASS exact type-onlydiff,identicalJS,31+6cases/types/lint/Knip0;freezeSHA2565e00ae4c845631dd7ce3d32a8717fa4b9c2669841ffb90aa86dff8fe094dff50. Amendment accepted, notwholebatch."
     }
   },
   "schema_maintenance": {
@@ -530,7 +535,22 @@
       },
       "tree_unchanged": true,
       "jest": "8099pass,7fail,9existing skips;6launcher-contaminated legacy warnings,1Knip dynamic-test dependency finding. Seven later gate steps unexecuted.",
-      "disposition": "Fix own launcher CONTROL_HUB_DATA_DIR injection and expose genuine oracle import to Knip through independent type-only amendment. No checks suppressed, no baseline exception."
+      "disposition": "Fix own launcher CONTROL_HUB_DATA_DIR injection and expose genuine oracle import to Knip through independent type-only amendment. No checks suppressed, no baseline exception.",
+      "focused_followup": "Unchanged9/9aliascasespass after removing private CONTROL_HUB_DATA_DIR assignment:tmp/t0189-alias-control-1790958139125/summary.json. Type-only oracle amendment resolves Knip without new exceptions. Complete gate must rerun."
+    },
+    {
+      "receipt": "tmp/t0189-full-gate-1790959016924/summary.json",
+      "exit": 1,
+      "steps": {
+        "lint": 0,
+        "tsc": 0,
+        "jest": 1
+      },
+      "tree_unchanged": true,
+      "jest": "8105pass,1fail,9existing skips. T0161after-catalogsetup fixture cleanup EPERM; all previous alias and Knip failures resolved. Seven later steps unexecuted.",
+      "alone": "Unchanged4/4suitepass,0skips:tmp/t0189-coordinator-check/1790959482685/summary.json",
+      "diagnostic": "FullJestwithtransparentprivateprocess/cleanupobserver:8106pass,9existing skips,0fail;unchangedtree;tmp/t0189-shell-observation-1790959743905/summary.json. Allfoursetupreturns690-1031ms andcleanupcompleted. Observer changes timing; notfullgateacceptance.",
+      "remaining_uncertainty": "Originalsetupoutcome was not recorded beforefinally EPERM. Timeout/orphan/OS-lock cause unconfirmed. Retainfailedfixture gNpLkD; no matching livebash/nodecommandlinefound. Repeatnormalwholegate withoutobserver; recurrentfailure requires stronger prerequisite investigation, no waiver."
     }
   ]
 }

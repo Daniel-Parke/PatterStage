@@ -714,7 +714,16 @@
         "Closed-oracle changes use a different author and a dated amendment."
       ],
       "rollback": "Revert one fixture or suite cohort while keeping behaviour tests that exposed defects.",
-      "verify": "Before/after test-name sets agree except red-first additions; jsdom default and node exceptions match execution needs, source-reading suites converted only where behavioural replacements pass, and e2e flake reruns record both results."
+      "verify": "Before/after test-name sets agree except red-first additions; jsdom default and node exceptions match execution needs, source-reading suites converted only where behavioural replacements pass, and e2e flake reruns record both results.",
+      "reviewed_followups": [
+        {
+          "id": "t0189-windows-shell-fixture-cleanup",
+          "status": "unresolved-harness-failure",
+          "evidence": "tmp/t0189-full-gate-1790959016924/summary.json;tmp/t0189-coordinator-check/1790959482685/summary.json;tmp/t0189-shell-observation-1790959743905/summary.json",
+          "finding": "Unchanged T0161after-catalog shell fixture once failed Windows cleanup EPERM in full Jest;4/4alone and8106-test diagnostic workload passed. A finally cleanup error can hide a primary setup failure. Originalrootcauseunconfirmed.",
+          "required": "Preserve four historical names/assertions and30-second setupdeadline. Investigate nativeprocess ownership and preserve primary pluscleanup failures. No silentretry/deadlinegrowth/skips; controlled Windows failed-run lifecycle proof before closure."
+        }
+      ]
     },
     {
       "id": "T-0196",

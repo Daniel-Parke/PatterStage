@@ -173,3 +173,67 @@ oracle supplies the actual SQLite fixture through its route boundary and
 exercises the real missing-table health result. This is a named fixture
 exception, not a removed lint check. Later preservation witnesses and their
 implementation still need a fresh census. Programme targets remain unchanged.
+
+The final independent story freeze executed 51 cases: 47 original passes and
+four new matcher failures. Its SHA256 is
+`e8b01a7d3552f01425b6020cae3a401b47ed0116bc68086618d302da3824c717`;
+`tmp/t0189-oracle-amendment/story-final-red-1790956875734/freeze.json`
+records unchanged source, preserved names, full test typing and scoped lint.
+Schrodinger accepted that oracle before red commit a49e016d.
+
+The repaired integrated tree passes all 425 oracle cases without skips or runtime
+errors in `tmp/t0189-coordinator-check/1790957188311/summary.json`; its tree stamp
+does not move. Both complete TypeScript programs and scoped lint exit zero in
+`tmp/t0189-static-check/1790957252020/summary.json`. Recovery now uses spans from
+already validated JSON and changes only the effective status/error values. It
+parses all live story rows once at boot so escaped writing statuses are included;
+this adds parsing work, not a periodic scan. Numeric lexemes, duplicate fields,
+unknown metadata and unrelated raw substrings survive.
+
+The revised census is source 102216, tests 142881, tooling 13667 and repeated
+source windows 946. Against the pre-batch baseline this is +15 source lines,
++1589 test lines, -10 tooling lines and -22 repeated source windows. The added
+preservation code costs more than the earlier consolidation saved; the baseline
+records that reason instead of hiding it. No target moves. Full gate, browser
+walk, 31 proposed mutants, final independent acceptance and hosted CI remain open.
+
+The first full gate stopped at Jest (exit 1) on an unchanged tree:
+`tmp/t0189-full-gate-1790957390217/summary.json`. Lint and app typing exited zero;
+Jest reported 8099 passes, seven failures and nine existing skips. Seven later
+gate steps were not executed. Six failures were caused by the private launcher's
+unnecessary CONTROL_HUB_DATA_DIR assignment contaminating legacy-warning checks.
+After removing that assignment while retaining prefix clearing and owned paths,
+the unchanged alias suite passes nine of nine in
+`tmp/t0189-alias-control-1790958139125/summary.json`.
+
+The seventh failure exposed a real static-analysis gap: removing the redundant
+CLI call leaves runMigrations consumed through jest.requireActual, which Knip
+does not trace. Averroes independently adds a used named type import in the new
+oracle. Its emitted ESNext and CommonJS JavaScript is byte-identical; all 31
+migration cases and six unchanged historical Knip-proposal cases pass, as do
+full test typing, scoped lint and the unchanged Knip ratchet. Receipt:
+`tmp/t0189-oracle-amendment/static-dependency-1790958177898/freeze.json`.
+No ignore, baseline exception or historical test change was made. The full gate
+must run again; these focused results do not replace it.
+
+Schrodinger accepted the type-only correction at freeze hash
+`5e00ae4c845631dd7ce3d32a8717fa4b9c2669841ffb90aa86dff8fe094dff50`.
+The second complete gate attempt, `tmp/t0189-full-gate-1790959016924/summary.json`,
+again stopped at Jest on an unchanged tree: 8105 passed, one failed, nine
+existing skips. The seven prior failures were resolved. This failure is the
+historically observed Windows EPERM while the unchanged T-0161 after-catalog
+fixture removes its owned temporary root. Seven later stages were not run.
+
+The unchanged suite then passed all four cases alone in
+`tmp/t0189-coordinator-check/1790959482685/summary.json`. A private transparent
+spawn/cleanup observer ran the full Jest workload, retaining process status,
+signal, elapsed time and non-secret phase markers before cleanup could mask a
+primary failure. All 8106 tests passed, with nine existing skips and an unchanged
+tree, in `tmp/t0189-shell-observation-1790959743905/summary.json`. All four setup
+processes completed in 690-1031 ms and cleanup succeeded. Instrumentation changes
+timing, so this does not identify the prior cause or replace the full gate.
+The original failed root remains preserved; inspection found no live bash/node
+command line referencing it. No frozen test, deadline or coverage floor changed.
+The unresolved failure is also explicit in T-0195's review follow-up. The normal
+entire gate must now pass without the observer; a recurring failure cannot be
+waived. Current test census: 142884 lines; original and programme targets remain.
