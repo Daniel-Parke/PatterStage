@@ -139,3 +139,37 @@ empty list; LogSync's stream error handler resolves its partial buffer. The
 current transaction oracle proves write atomicity and successful empty scans,
 not whether those discovery failures should publish success. No runtime failure
 injection or behaviour change for these two paths is claimed here.
+
+## Implementation review before the full gate
+
+The integrated coordinator slice passed 380 of 380 new oracle cases and 164 of
+164 historical controls, without skips. Receipts are
+`tmp/t0189-coordinator-check/1790955082237/summary.json` and
+`tmp/t0189-coordinator-check/1790955142468/summary.json`. Carver's separate sync
+slice passed 63 of 63 focused cases, preserving all names and 950 historical
+test-file hashes, in `tmp/t0189-sync-lane/handoff.json`. These partial runs do
+not establish full-gate or mutation acceptance.
+
+Full test-program typing exposed TS2769 in the frozen migration oracle's
+filtered environment object. The earlier app-program check did not validate
+that program. Averroes independently preserves the inherited NODE_ENV value
+explicitly. The initial sandboxed attempt recorded 29 passes and two CLI
+infrastructure failures from uv_os_get_passwd; the unchanged source then passed
+all 31 cases and full test typing outside the sandbox. Both receipts remain in
+`tmp/t0189-oracle-amendment/typing-1790956076855/` and
+`tmp/t0189-oracle-amendment/typing-retry-1790956209331/`. Infrastructure failures
+are not behavioural reds or mutation kills.
+
+Schrodinger found a further implementation blocker: whole-array serialisation
+during recovery can null an untouched overflowing numeric value when another
+chapter is recovered. An independent mixed-array regression witness is required
+before repair. Preserve numeric lexemes, unknown metadata and effective duplicate
+key semantics; the current Node20 CI path excludes a Node24-only JSON API fix.
+
+The provisional line census is source 102152, tests 142727, tooling 13667 and
+repeated source windows 946. The new eight independent suites add 1435 test lines.
+The inline database fixture count also rises from 14 to 15: the schema-health
+oracle supplies the actual SQLite fixture through its route boundary and
+exercises the real missing-table health result. This is a named fixture
+exception, not a removed lint check. Later preservation witnesses and their
+implementation still need a fresh census. Programme targets remain unchanged.

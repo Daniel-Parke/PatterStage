@@ -437,11 +437,16 @@
     },
     "typing_correction": {
       "author": "Averroes/01a0fd41-d8a8-7df1-861b-b12aa52122e6",
-      "status": "claimed; release after this metadata commit",
+      "status": "independently accepted narrow typing correction; broader batch remains open",
       "reason": "Full test-program typecheck reports TS2769 at migration oracle line123 because Object.fromEntries loses required NODE_ENV. Earlier app-program filtered check did not establish full test typing.",
       "scope": "Explicitly preserve process.env.NODE_ENV after filtered environment spread; no assertion, fixture, execution, test-name or suppression changes.",
       "verify": "Full tsconfig.tests.json noEmit exits0; all31 migration cases execute/pass without skips; before/after names identical; hashes and exact unchanged validation source recorded.",
-      "failed_evidence": "tmp/t0189-static-check/1790955201191/summary.json; tmp/t0189-sync-lane/handoff.json"
+      "failed_evidence": "tmp/t0189-static-check/1790955201191/summary.json; tmp/t0189-sync-lane/handoff.json",
+      "receipt": "tmp/t0189-oracle-amendment/typing-retry-1790956209331/receipt.json",
+      "receipt_sha256": "530f978908cdc119cb3c924bf70f9caf1b8f78c6c5914f34a57bc65718db64c8",
+      "suite_sha256": "9368e42d82a6a52e247de9508ec98efb57f0be565546a4b5b3724c9a5f0eb95b",
+      "verification": "Full tsconfig.tests exit0;31/31migrationcasespass,0skips/runtimeerrors;all31namesidentical,sourceunchanged; earlier29pass2sandboxinfrastructureerrors preserved, not mutationkills.",
+      "reviewer": "Schrodinger PASS exact diff and receipt; does not accept story recovery or whole task."
     },
     "recovery_numeric_preservation": {
       "status": "independent additive witness claimed; red evidence required before repair",
@@ -483,6 +488,6 @@
   "implementation_lanes": {
     "coordinator": "2026-10-02-t0189-coordinator",
     "sync": "Carver 01a0fd33-6991-7a93-be6b-9285743b5ccc",
-    "status": "Released after this red commit; coordinator and Carver source paths disjoint; all frozen/historical tests immutable."
+    "status": "Carver completed seven-path sync slice and stopped. Coordinator owns integrated source; Averroes independently owns typing correction and additive recovery witness. Two writers maximum."
   }
 }

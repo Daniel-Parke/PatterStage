@@ -115,7 +115,10 @@ function cliFixture() {
   return root;
 }
 function migrateCli(root: string, data = join(root, "data")) {
-  const env = Object.fromEntries(Object.entries(process.env).filter(([key]) => !/^(PS_|CH_|CONTROL_HUB_|NODE_OPTIONS$|NODE_PATH$)/i.test(key)));
+  const env = {
+    ...Object.fromEntries(Object.entries(process.env).filter(([key]) => !/^(PS_|CH_|CONTROL_HUB_|NODE_OPTIONS$|NODE_PATH$)/i.test(key))),
+    NODE_ENV: process.env.NODE_ENV,
+  };
   Object.assign(env, { PS_DATA_DIR: data, CH_DATA_DIR: data, CONTROL_HUB_DATA_DIR: data,
     HERMES_HOME: join(root, "hermes"), HOME: join(root, "home"), USERPROFILE: join(root, "home"),
     TMP: join(root, "temp"), TEMP: join(root, "temp"), TMPDIR: join(root, "temp") });
