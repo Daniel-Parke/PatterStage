@@ -7,158 +7,64 @@ updated: 2026-10-02
 
 # Handover · PatterStage, 2026-10-02
 
-## Resumed programme, 2026-10-02
+## Current programme, 2026-10-02
 
-The operator has resumed all remaining authorised batches and requested a full
-personal functional and UI/UX review. This supersedes the overnight stop below.
-T-0188/T-0205 are active again with their failed receipts preserved. Resolve
-their Windows cleanup and macOS observer blockers before advancing. Q-033's
-post-v1.0 compatibility retirement and operator release actions still apply.
+The operator resumed all remaining authorised batches and requested personal
+functional and UI/UX review. T-0188 and prerequisite T-0205 are independently
+accepted at `3d34b5f4`. All 10 unchanged-tree gate stages, 7,681 Jest tests,
+355 browser tests, two build-purity checks and 33 committed mutants pass.
+The nine existing Jest skips and 24 browser skips remain explicit. All four
+implementation-head hosted workflows and all 11 PR jobs pass, including both
+native macOS full runs and the unchanged 20-case context checks run alone.
+Content, modes and tracked inventories match across 2,560 paths. See the
+[final acceptance](reviews/2026-10-t0188-t0205-final-acceptance.md).
 
-The passive diagnostic corpus passes 7,681 tests with nine existing skips on
-the unchanged earlier candidate. All four T-0161 shell calls and cleanups
-complete normally; the historical EPERM cause remains unknown. The forced
-Jest worker-exit warning remains a T-0195 stability obligation. A separate
-author has frozen a portable listener witness: seven existing names pass,
-20 controls pass and four deliberate false-positive variants are rejected.
-It observes actual accepted connections instead of querying SO_ACCEPTCONN.
-The a92487c4 candidate passed the local whole gate and 33 committed mutants,
-but hosted Ubuntu found the new diagnostic missing from T0200 legacy-reader
-claims. The local Git-based check missed that then-untracked file. Preserve
-the failed jobs and the clean committed one-failure reproduction. Add the
-missing claim and compare tracked inventories before a fresh whole gate.
-No batch closure or all-pathway acceptance follows from the local green.
+The closure-record head must still pass every required hosted job before
+T-0189 opens. No overnight stop remains. Nine of 22 main-plan batches are done;
+13 remain, including Q-033's deferred T-0200 and dependent T-0201 closure.
 
-Both a924 CI runs also failed the nine-case worker-budget setup on macOS;
-the PR run failed two context cleanup assertions. A separate author has
-frozen a two-line owned-root canonicalisation. Independent review verified
-all 307 evidence hashes, nine unchanged identities and real-junction controls.
-It also accepted additive redacted stalled-case diagnostics and an unchanged
-context-suite-alone macOS step. Neither is a waiver for the blocking coverage
-run. Native causes remain unconfirmed. The inventory-only ten-stage gate
-passed, but predates these amendments. A new full gate, committed sweeps and
-every exact-head hosted job remain required before T-0188/T-0205 can close.
+T-0188 removes 480 source lines by converging 11 wrappers on the table driver;
+strict Auth43 validation, atomic lossless Composer rebuilds, seeds, explicit
+model choices and owned Windows/Linux backup-before-migrate proofs survive.
+T-0205 preserves real curl, deadlines and process ownership. The worker pool
+is bounded at two workers, listener evidence observes actual accepts, and owned roots
+use canonical identity. No coverage floor or target moved. Prior failed
+receipts and worktrees remain. Windows EPERM and historical native macOS failure
+causes remain unconfirmed; the worker-exit warning stays with T-0195.
 
-Personal production walks used owned data on port3998, then stopped that
-server. Credential create, reload, rotation and deletion pass at both widths.
-The 390px Chat input is clipped and the credential name has zero visible width;
-both are recorded for red-first T-0191 repair. An independent T-0185 review
-also identifies two unconfirmed stale-response races for T-0190. These bounded
-walks do not establish complete platform or release acceptance.
+Next: T-0189 data, T-0190 client, T-0191 components/accessibility, T-0192 API,
+T-0193 page hooks, T-0194 domains/Hermes, T-0195 tests, T-0196 tooling/CI,
+T-0197 docs, T-0198 org and T-0199 ruled dead internals. T-0200 compatibility
+retirement remains after v1.0.0; merging PR #157, settings, tags/releases and
+operator release acceptance remain operator actions.
 
-## Current work and overnight boundary, 2026-10-02
+Personal review uses isolated production port 3998, stopped after each walk.
+Credential create, reload, rotate and confirmed delete passed at 1440×900 and 390×844.
+T-0191 owns confirmed phone Chat clipping and zero-width credential labels,
+and must investigate the fallback Actions column cut off in the phone capture.
+Absence of document overflow does not prove table controls are usable. T-0190 must
+reproduce the independent review's mission-detail and stale-list-error races.
 
-The operator asks to finish only current T-0188/T-0205 tonight; do not begin
-T-0189. Both are interrupted for the overnight handover, not done. Local HEAD
-is e7d66fb7; hosted dev remains6e156740. Two independent worker-oracle red
-commits are local and unpushed. The implementation candidate is intentionally
-uncommitted because its full gate is red. Hosted dev is also not green. That
-revision's unchanged local ten-stage gate passed 7,672 Jest and 355 browser
-tests, both build-purity checks and censuses. Its32 committed mutants were
-independently qualified with controls and restoration. The current additive
-diagnostic candidate has no passing whole gate. Allfour6e hosted workflows completed;
-both scans and every other CI job, including PR acceptance, pass. macOS fails
-only the new seven-case observer's setup, exit1; no assertion executed there.
+T-0192 now has four live reproductions at both widths: changed-slug profile
+rename retains old name/description; a pending settings save discards newer
+edits; disabling/deleting the final fallback leaves YAML unchanged after
+explicit sync; bulk auxiliary defaults show success despite 11 actual HTTP 200
+responses carrying YAML errors. Receipts and inspected screenshots are in
+tmp/t0192-*-live-finding-20261002.md. These are scheduled defects, not fixes.
+Probe setup/timing mistakes are retained and distinguished from product faults.
+T-0189's actual-source/in-memory-SQLite preflight confirms failed process
+snapshot replacement loses prior rows and repeated logs hide distinct errors:
+tmp/t0189-source-preflight-20261002/receipt.json. Independent red-first oracles
+and exact claims still precede implementation.
 
-Original-first native diagnostics now establish about35seconds in getfqdn
-on both macOS runners. Amended-second performs zero lookup and takes about
-.86seconds for the actual healthy lifecycle. Old HTTP/context formal suites
-pass on macOS. A separate additive redacted diagnostic preserves the frozen
-observer's exact launcher and150second/1MiB bounds; it emits no exception
-message, source line, argument, credential, environment or raw observer output.
-Independent reviewer approved its scope and source. It still needs a fresh
-whole gate, clean sweeps and hosted evidence before a different-author repair.
-
-All failed receipts remain. The first sandboxed diagnostic gate hit Windows
-user-info ENOMEM; the permitted gate then caught an incorrectly regenerated
-script baseline and C02/C16 signalsOwnedfalse under load. Baseline generator
-flags are corrected with the written82-line diagnostic reason, without changing
-any target. Correction: that permitted run failed C02/C05 withinDeadline,
-not C02/C16 signalsOwned. The unchanged context suite alone passes all20 cases;
-the load failure remains unexplained and does not clear the whole gate. No deadline,
-matcher, test identity, coverage floor or failing check was weakened.
-
-The next default-pool whole gate again fails C02's six-second watchdog and
-C05 scratch removal on the shared stalled observation. One independently
-authorised scheduling comparison runs the entire corpus with two workers:
-7,672 pass/nine existing skips, coverage floors hold, unchanged tree,241.465s.
-This supports scheduling sensitivity; it is not a gate pass or a proven
-mechanism. A fresh independent nine-case worker oracle and different-author
-amendment were subsequently frozen and committed red. Independent R2 review
-authorised the precise maxWorkers2 change before implementation. The candidate
-now contains that change, preserving every deadline, assertion and coverage floor.
-
-The latest unchanged-tree whole gate passes lint and TypeScript, then stops
-at Jest:7,680 pass,one failure,nine existing skips. T-0161's unchanged shell
-fixture fails rmSync cleanup with Windows EPERM at line166. The same suite
-alone passes allfour tests on the identical tree stamp. Neither that control
-nor a plausible held directory handle establishes the cause or clears the
-whole gate. Its owned residue is preserved; no retry or check was weakened.
-The other seven gate stages did not execute on this candidate.
-
-Start tomorrow with the seven-key resume objects in T-0188/T-0205 and the
-latest supplement in the overnight audit. Diagnose the cleanup failure, then
-complete allten stages, content binding and fresh33 committed mutation checks
-(13 migration,eightT0205,twelveT0202). Obtain native macOS observer evidence,
-an independent repair if demonstrated, final acceptance and all required
-implementation/closure-head hosted jobs before closing either record. All
-agents have stopped; no owned validation listener remains on ports3000,3577
-or3997–3999. Operator data, Docker Desktop and preserved worktrees remain intact.
-
-The additive [overnight audit](reviews/2026-10-refactor-overnight-audit.md)
-records earlier closure evidence gaps and work outside the22-batch plan.
-Locate final acceptance for T0182–T0186 before treating their metadata as
-fully reconciled. T0182's actual a7447e96 closure-head hosted metadata was
-recovered: all four workflows and every required PR job passed. Remote heads
-are only dev/main with one openPR#157, but preserved local Cursor/oracle
-branches and older T0003/T0004/T0055/T0056/T0059/T0066/T0074/T0113 records
-still require reconciliation. No historical record was rewritten.
-
-The full approved plan contains22 distinct batches. Foundations T-0150,
-T-0152, T-0156–T-0165 are done. T-0180–T-0187 are done: full-history scanning,
-path/URL containment, CSP, single-owner mission dispatch, atomic mission edits,
-prompt/model/deep-link validation, Hindsight/Story Weaver repair and ruled
-legacy boot warnings/shims. Extra verification repairs T-0202–T-0204 are done.
-T-0188/T-0205 have local implementation evidence but await final acceptance.
-
-Thirteen subsequent planned batches have not been opened:
-
-| Task | Remaining scope |
-| --- | --- |
-| T-0189 | Data parsing and transactions |
-| T-0190 | Client reads and write ownership |
-| T-0191 | Component primitives and contextual names |
-| T-0192 | API envelopes and validation |
-| T-0193 | Large page hooks and visible-state preservation |
-| T-0194 | Library domains and Hermes ownership |
-| T-0195 | Test harness consolidation and stability |
-| T-0196 | Tooling and CI consolidation |
-| T-0197 | Running and root documentation |
-| T-0198 | Live organisation guidance |
-| T-0199 | Individually ruled dead internal surfaces |
-| T-0200 | Compatibility retirement after v1.0.0, deferred by Q-033 |
-| T-0201 | Row-by-row closure, still dependent on T-0200 |
-
-The ownership audit accounts for265 findings,163 split decisions and285
-coverage atoms without duplicate/missing owners. Ownership is not completion.
-The final dispositions file is still absent. The read-only closing audit at
-6e156740 reports all eight fixed targets missed; preserve each baseline/target
-and report each actual closing miss individually. No target has been moved.
-
-Keep these functional gaps visible: T-0190 chat input-loss race/read-only
-paths; T-0191 phone credential label with zero visible width; T-0192 profile
-rename metadata; T-0194 Composer/Hermes429; T-0196 coherent online SQLite/WAL
-backup and old-writer ownership. Closed-database updater tests do not prove
-online backup safety. The nine-route walk and Models/Credentials actions do
-not establish every provider, Hindsight, Composer, Story Weaver, recovery or
-lifecycle pathway. Complete these proofs in their owning batches and closure.
-
-Q-032 permits T-0188–T-0199 before release. Q-033 keeps aliases, signing
-headers and redirects through v1.0.0. PR#157 merge, tags, releases and external
-repository settings remain operator actions. Required hosted jobs must pass
-on implementation and record-closure heads before advancing. Test listeners
-3998/3999 and owned Linux containers are stopped; gate ports3000/3577 are
-temporary owned validation instances, not a persistent deployment.
+The [audit](reviews/2026-10-refactor-overnight-audit.md) retains backlog and limits.
+Five historical final independent acceptances remain unlocated; recovered
+hosted closure jobs do not replace them. All 265 findings, 163 split decisions
+and 285 coverage atoms have owners; final dispositions and all eight fixed target
+rows remain unfinished. Controlled fixtures do not prove external providers,
+real Hindsight, online-WAL update safety or complete platform acceptance.
+Preserve local worktrees/branches until containment and dirty-state review.
+Older T0003/T0004/T0055/T0056/T0059/T0066/T0074/T0113 queues remain visible.
 
 ## Previous status snapshot, 2026-10-01
 
