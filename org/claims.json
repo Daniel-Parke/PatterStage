@@ -53,20 +53,7 @@
       ],
       "acquired": "2026-10-02T14:10:33.645498+00:00",
       "expires": "2026-10-03T14:10:33.645498+00:00"
-    },
-    {
-      "lane_id": "T-0189-oracle-typing",
-      "task_id": "T-0189",
-      "session_id": "01a0fd41-d8a8-7df1-861b-b12aa52122e6",
-      "host": "local",
-      "path_claims": [
-        "tests/unit/data-transaction-migration-parity.test.ts",
-        "tests/unit/data-transaction-stories.test.ts"
-      ],
-      "acquired": "2026-10-02T14:10:33.645498+00:00",
-      "expires": "2026-10-03T14:10:33.645498+00:00",
-      "harness_task_id": "01a0fd41-d8a8-7df1-861b-b12aa52122e6"
     }
   ],
-  "note": "Carver stopped writing and transferred seven sync paths to coordinator. Independent Averroes may apply only the frozen migration oracle NODE_ENV typing correction described in the amendment brief. Two disjoint writers; no assertion changes."
+  "note": "Averroes stopped writing after final independent red recovery freeze. One coordinator implementation lane remains; frozen tests immutable and independent R2 review required."
 }

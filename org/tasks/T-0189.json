@@ -333,7 +333,7 @@
       "result": "Actualsource: failed default insertion leaves newmodel/clearsolddefault; resolved scheduler failure loses lastError; concurrent and post-timeout callers execute source again while underlying pending. Allpendingwork settled. Preflight used actual default30second source timeout; independent oracle pins timeout boundaries separately."
     }
   ],
-  "oracle_status": "Independent red421case oracle accepted before implementation:196pass,159behavioural failures,1labelledmissing-parser infrastructure,65unexecuted parsercases. All421mustexecute/pass for green; no skips.",
+  "oracle_status": "425 independently authored cases now frozen: original421 plus4recoverypreservationwitnesses. The four new cases are committed red before repair; all425mustexecute/pass for green.",
   "oracle_author": "01a0fcf4-e827-7393-8d98-3ababa620034; independent ORACLE; stopped writing at 2026-10-02T14:48:54.280Z",
   "scope_review": "Turing 01a0fcea-6e43-74d1-b149-9bd09f700a8f recommends exact15source/8oracle allowance, noQ015amendment; coordinator independently reproduced additional model/scheduler defects before claiming their implementation.",
   "additional_consolidation": {
@@ -449,11 +449,25 @@
       "reviewer": "Schrodinger PASS exact diff and receipt; does not accept story recovery or whole task."
     },
     "recovery_numeric_preservation": {
-      "status": "independent additive witness claimed; red evidence required before repair",
+      "status": "independent four-case additive oracle frozen red before repair",
       "author": "Averroes/01a0fd41-d8a8-7df1-861b-b12aa52122e6",
       "reviewer": "Schrodinger found mixed-array untouched overflow serialises to null",
       "scope": "Preserve all prior names/assertions; add mixed recovery witness including raw numeric overflow and large-integer metadata preservation; no implementation edits in ORACLE lane.",
-      "verify": "Structured new matcher failure on current source, independent red freeze and commit before repair; all old names retained; no skips."
+      "verify": "Structured new matcher failure on current source, independent red freeze and commit before repair; all old names retained; no skips.",
+      "receipt": "tmp/t0189-oracle-amendment/story-final-red-1790956875734/freeze.json",
+      "receipt_sha256": "e8b01a7d3552f01425b6020cae3a401b47ed0116bc68086618d302da3824c717",
+      "suite_sha256": "d5b6e86f0334c76ad4ec4970157a953b954098f69fbd327d1727cf4b03a5708f",
+      "counts": {
+        "total": 51,
+        "passed": 47,
+        "failed": 4,
+        "skipped": 0,
+        "todo": 0,
+        "runtimeErrorSuites": 0,
+        "structuredMatcherFailures": 4
+      },
+      "verification": "All47priorstorycasespass;4newstructuredmatcherfailures;0skips/runtimeerrors;fulltesttypesandscopedeslint0;sourceunchanged;previousfreezesretained.",
+      "runtime_scope": "Node20-compatible recovery; parse all live story rows once at boot to recognise escaped semantic writing status. No periodic scan or new schema."
     }
   },
   "schema_maintenance": {
