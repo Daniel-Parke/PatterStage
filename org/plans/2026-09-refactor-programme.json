@@ -911,7 +911,16 @@
         "Claims and rendered views remain reproducible."
       ],
       "rollback": "Revert only live guidance changes and render views from unchanged task records; do not rewrite history.",
-      "verify": "A fresh task record renders views deterministically, a planted protected edit is refused without accepted ADR, claims enforce two writers, and live organisation scope is reported separately from protected/history/generated counts."
+      "verify": "A fresh task record renders views deterministically, a planted protected edit is refused without accepted ADR, claims enforce two writers, and live organisation scope is reported separately from protected/history/generated counts.",
+      "readiness_followups_20261002": {
+        "reviewer": "Schrodinger, read-only readiness; not acceptance",
+        "evidence": "tmp/t0198-t0201-readiness-20261002.md",
+        "items": [
+          "Reconcile all40owned items, not only guidance length. Preserve historical/protected/generated material and account additively for unlocated finalR2receipts T0182-T0186.",
+          "Run pinnedEOS seed/session/task-schema proof, deterministic views, protected-edit refusal and two-writer enforcement on owned fixtures."
+        ],
+        "scope": "Opening requirements only; exact claims, routing and independent oracles precede implementation."
+      }
     },
     {
       "id": "T-0199",
@@ -958,7 +967,15 @@
         "Removing lib-data-05's unreachable rebuild includes its caller, shell warning, tests and documented promise; pre-baseline backup listing remains."
       ],
       "rollback": "Restore any accidentally live path immediately with its caller oracle; retain compatibility until the post-1.0 retirement release.",
-      "verify": "A static and runtime caller inventory proves each removed internal has no supported caller; the eight ruled benchmark harness files and test:e2e-bench-gateway command are absent, ps-relocate remains. The unreachable baseline rebuild, index caller, shell warning and false guide promise are absent while old pre-baseline backup listings and their b6 tests remain; full install/update and URL matrix stay green, and every removed path is itemised with its Q-013 or Q-014 ruling."
+      "verify": "A static and runtime caller inventory proves each removed internal has no supported caller; the eight ruled benchmark harness files and test:e2e-bench-gateway command are absent, ps-relocate remains. The unreachable baseline rebuild, index caller, shell warning and false guide promise are absent while old pre-baseline backup listings and their b6 tests remain; full install/update and URL matrix stay green, and every removed path is itemised with its Q-013 or Q-014 ruling.",
+      "readiness_followups_20261002": {
+        "reviewer": "Schrodinger, read-only readiness; not acceptance",
+        "evidence": "tmp/t0198-t0201-readiness-20261002.md",
+        "items": [
+          "Explicitly inherit T0189 deferred gap-041.2. Claim scripts/tooling/prebuild-db.mjs, inspected db-schema-ensure consumers and affected docs/tests at opening. Manual invocation belowversion3 still deletes DB/WAL/SHM; database-free npm build does not prove this path safe. Use isolated fixtures and the existing ruled removal authority. Preserve T0189 history."
+        ],
+        "scope": "Opening requirements only; exact claims, routing and independent oracles precede implementation."
+      }
     },
     {
       "id": "T-0200",
@@ -1053,7 +1070,15 @@
         "control-hub.db discovery, ps-relocate and ch_data/ch_hermes Compose volume names survive retirement; security aliases without PS twins refuse boot."
       ],
       "rollback": "Keep a tagged pre-retirement release and migration route; restore aliases only together with their warning and tripwire contracts.",
-      "verify": "The operator's v1.0.0 tag and T-0187 warning proof precede retirement; a fresh git-grep alias inventory accounts for every active CH_, CONTROL_HUB_, AGENT_HOME, x-ch and ch.sessions reader, with exact file claims and PS replacement tests. Old aliases work in 1.0 and are absent only in the first post-1.0 candidate, missing PS security twins fail boot, while historical database discovery, ps-relocate, Compose volume names and every ruled redirect remain intact under migration tests."
+      "verify": "The operator's v1.0.0 tag and T-0187 warning proof precede retirement; a fresh git-grep alias inventory accounts for every active CH_, CONTROL_HUB_, AGENT_HOME, x-ch and ch.sessions reader, with exact file claims and PS replacement tests. Old aliases work in 1.0 and are absent only in the first post-1.0 candidate, missing PS security twins fail boot, while historical database discovery, ps-relocate, Compose volume names and every ruled redirect remain intact under migration tests.",
+      "readiness_followups_20261002": {
+        "reviewer": "Schrodinger, read-only readiness; not acceptance",
+        "evidence": "tmp/t0198-t0201-readiness-20261002.md",
+        "items": [
+          "Before post-v1.0 opening obtain different-author dated correction to contradictory redirect Verify:52ruled redirects survive throughv1.0 and retire after it; historical DB discovery,ps-relocate,Compose names remain preservation exceptions. Q033 deferral unchanged."
+        ],
+        "scope": "Opening requirements only; exact claims, routing and independent oracles precede implementation."
+      }
     },
     {
       "id": "T-0201",
@@ -1081,7 +1106,15 @@
         "Every preliminary finding, split decision and coverage atom ends done, ruled out or deferred with evidence and owner."
       ],
       "rollback": "Reopen the closing record if any CI job, route, census row or finding disposition is unverified; never edit the frozen baselines.",
-      "verify": "The closing oracle reads committed baseline files and reports all eight rows and each miss; all 265 findings, 163 split decisions and 285 atoms have unique final reasoned dispositions, all local and hosted jobs are green, and no protected edit or removal lacks its ruling."
+      "verify": "The closing oracle reads committed baseline files and reports all eight rows and each miss; all 265 findings, 163 split decisions and 285 atoms have unique final reasoned dispositions, all local and hosted jobs are green, and no protected edit or removal lacks its ruling.",
+      "readiness_followups_20261002": {
+        "reviewer": "Schrodinger, read-only readiness; not acceptance",
+        "evidence": "tmp/t0198-t0201-readiness-20261002.md",
+        "items": [
+          "Prepare unique final dispositions for265findings163splitdecisions285atoms, including inherited batchdeferreditems and current finalcounts against frozen targets. A completed all-pathway matrix is still required; individual greenwalks are bounded. T0200dependency and operatorreleaseboundary unchanged."
+        ],
+        "scope": "Opening requirements only; exact claims, routing and independent oracles precede implementation."
+      }
     }
   ],
   "closing": {

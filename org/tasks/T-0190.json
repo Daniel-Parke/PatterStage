@@ -94,7 +94,10 @@
     "org/briefs/T-0190-supplementary-oracle.md",
     "org/briefs/T-0190-client-repair.md",
     "tests/unit/mission-link-poll-ownership.test.tsx",
-    "org/briefs/T-0190-poll-oracle.md"
+    "org/briefs/T-0190-poll-oracle.md",
+    "tests/unit/story-cache-settlement.test.tsx",
+    "org/briefs/T-0190-story-cache-oracle.md",
+    "tests/unit/mission-link-handoff.test.tsx"
   ],
   "timestamps": {
     "opened": "2026-10-02T17:49:07.371181+00:00",
@@ -743,7 +746,8 @@
       "verdict": "PASS",
       "scope": "Polling oracle freeze and red commit only",
       "evidence": "14cases10pass4structuredmatcherred0skip/runtime; types/lint0.17evidencehashes866sourcesnapshotfiles match,previous14frozenfiles unchanged. Actual query bridge/polling, selection/unmount/collapse controls; source-informed method and unreached assertions recorded."
-    }
+    },
+    "commit": "54d592acf96437b526191785cc25af9cb7642a7d"
   },
   "integrated_repairs": {
     "oracle": "tmp/t0190-coordinator-jest-1790970024249/summary.json",
@@ -752,5 +756,57 @@
     "types": "tmp/t0190-coordinator-types-1790970072317/summary.json",
     "lint": "tmp/t0190-coordinator-lint-1790970131198/summary.json",
     "limitation": "Polling hypothesis unresolved; not full-gate or final acceptance."
+  },
+  "story_cache_oracle": {
+    "author": "Carver",
+    "file": "tests/unit/story-cache-settlement.test.tsx",
+    "brief": "org/briefs/T-0190-story-cache-oracle.md",
+    "status": "Frozen and independently accepted for red commit; implementation pending",
+    "manifest": "tmp\\t0190-story-cache-oracle\\freeze.json",
+    "manifestSha256": "b4feff552f592fc0cd55d0360b0f05eb4630ef37314983e75622a5785d1d0651",
+    "sha256": "1e5f526a21207ac5168f3964c98ac0315e589085130e9c9ed5cd47f5718c0b89",
+    "counts": {
+      "total": 9,
+      "passed": 6,
+      "failed": 3,
+      "skipped": 0,
+      "runtimeErrors": 0
+    },
+    "results": [
+      {
+        "stage": "lint",
+        "exit": 0,
+        "receipt": "tmp/t0190-story-cache-oracle/lint-1790970991944/receipt.json"
+      },
+      {
+        "stage": "red",
+        "exit": 1,
+        "counts": {
+          "passed": 6,
+          "failed": 3,
+          "skipped": 0,
+          "runtimeErrorSuites": 0
+        },
+        "receipt": "tmp/t0190-story-cache-oracle/red-1790970942931/receipt.json"
+      },
+      {
+        "stage": "types",
+        "exit": 0,
+        "receipt": "tmp/t0190-story-cache-oracle/types-1790970968564/receipt.json"
+      }
+    ],
+    "interpretation": "No provider calls: three bounded unchanged-placeholder/advancing-updatedAt responses trigger four automatic sync-titles requests from one load. Both concurrent partial-confirmation arrival orders lose the earlier flag in the visible reader and actual query observer. Six controls pass, including successful/nonfatal title repair, single/sequential/refused updates and explicit generation/Stop.",
+    "independence": "Source-informed controlled ordering; no implementation changes by author. Not clean-context authorship.",
+    "review": {
+      "reviewer": "Sagan 01a0fe05-a6c0-7d22-ae2f-ba3716eded80",
+      "verdict": "PASS",
+      "scope": "Story oracle freeze/redcommit only",
+      "evidence": "9cases6pass3behaviouralreds0skip/runtime,types/lint0.17evidencehashes866sourcefiles match;previous15frozenfiles unchanged. Validcontrols/source-informed method and retainedlauncherfailure/unreachedassertions qualified."
+    }
+  },
+  "handoff_oracle": {
+    "author": "Carver",
+    "file": "tests/unit/mission-link-handoff.test.tsx",
+    "status": "Independent reproduction of refreshed list/detail handoff joining superseded initial lookup."
   }
 }

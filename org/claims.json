@@ -66,11 +66,23 @@
         "src/components/memory/hindsight/useHindsightCrudTab.ts",
         "src/components/memory/hindsight/useHindsightMemories.ts",
         "src/hooks/usePreferenceWrite.ts",
-        "org/briefs/T-0190-poll-oracle.md"
+        "org/briefs/T-0190-poll-oracle.md",
+        "org/briefs/T-0190-story-cache-oracle.md"
       ],
       "acquired": "2026-10-02T17:49:07.371181+00:00",
       "expires": "2026-10-03T17:49:07.371181+00:00"
+    },
+    {
+      "lane_id": "T-0190-story-cache-oracle",
+      "task_id": "T-0190",
+      "session_id": "2026-10-02-t0190-story-cache-carver",
+      "host": "local",
+      "path_claims": [
+        "tests/unit/mission-link-handoff.test.tsx"
+      ],
+      "acquired": "2026-10-02T19:51:11.274026+00:00",
+      "expires": "2026-10-03T19:51:11.274026+00:00"
     }
   ],
-  "note": "Carver and Averroes stopped. Coordinator owns source and metadata, all15oraclefiles frozen without writer. Sagan independently reviews."
+  "note": "Carver Storyoracle frozen. Coordinator source/metadata, Carver newMissionhandofforacle only;16frozenfiles have no writer."
 }
