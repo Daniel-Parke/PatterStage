@@ -18,7 +18,7 @@
   },
   "mode": "high-assurance",
   "tier_proposed": "R2",
-  "status": "active",
+  "status": "done",
   "owner_session": "2026-10-02-t0190-coordinator",
   "claims": [
     "src/hooks/useChatPage.ts",
@@ -102,11 +102,13 @@
     "org/briefs/T-0190-oracle-amendment.md",
     "tests/unit/mission-write-continuation.test.tsx",
     "org/briefs/T-0190-continuation-oracle.md",
-    "org/briefs/T-0190-mutation-tests.md"
+    "org/briefs/T-0190-mutation-tests.md",
+    "org/reviews/2026-10-t0190-final-acceptance.md"
   ],
   "timestamps": {
     "opened": "2026-10-02T17:49:07.371181+00:00",
-    "updated": "2026-10-02T17:49:07.371181+00:00"
+    "updated": "2026-10-02T22:45:23.884673+00:00",
+    "closed": "2026-10-02T22:45:23.884673+00:00"
   },
   "tier_ruled": "R2",
   "reasons": [
@@ -335,7 +337,7 @@
   ],
   "rollback": "Revert each Chat, Mission, Story/Hindsight or preference cohort independently with its shared interfaces and oracles. Keep every prior receipt/checkpoint; no database migration or stored-key rewrite.",
   "verify_line": "Freeze independent public-action behavioural oracles and historical identities before changes. Prove controlled async ownership/cache/error/storage/explicit-action cases, real page browser journeys at1440x900/390x844 and measured stats observer trace. Run app/test types,fullJest,unchangedten-stagegate; cleancommittedmutation controls/restoration; independentR2; all implementation/closure-head hosted jobs. Disposition all48ownershipitems without overstating provider/integration proof.",
-  "oracle_status": "Frozen before implementation: 50 intended behavioural reds of105 new cases;48historical controls unchanged and passing.",
+  "oracle_status": "169 integrated client oracle cases pass, with original red commits and independently accepted amendments preserved.",
   "oracle_design": "tmp/t0190-oracle-design-20261002.md",
   "readiness": "tmp/t0190-full-readiness-review-20261002.md",
   "claim_review": "tmp/t0190-claims-and-controls-20261002.md",
@@ -1063,7 +1065,7 @@
     "failed": 0,
     "skipped": 0,
     "runtimeErrors": 0,
-    "mutation": "m30 removes the request-initiation guard;30anchors apply, sweep pending."
+    "mutation": "m30 is caught in the complete committed30-mutant sweep at08bd39cf."
   },
   "current_candidate": {
     "baseline": {
@@ -1081,7 +1083,7 @@
       "commentEssays": 9,
       "suitesMockingDbInline": 15
     },
-    "remaining": "Independent mutation-driven test amendment, unchanged full gate, amended test commit and complete clean committed sweep, independent final acceptance, push/all hosted jobs and record closure."
+    "remaining": "Local and implementation-head hosted acceptance complete; observe closure-head hosted jobs before T0191."
   },
   "first_committed_sweep": {
     "head": "f583d2de7e1f568f9936f3810c694547299d2765",
@@ -1139,7 +1141,8 @@
       "sha256": "94298ed8ec4a1dbd966c7109ab0d51c4dbf6c6ca8125ccb28f9b04c2933b4b4d",
       "scope": "Freeze and test-strengthening commit only; complete gate, committed sweep and hosted acceptance remain separate."
     },
-    "coordinator": "tmp/t0190-coordinator-jest-1790977696786/summary.json"
+    "coordinator": "tmp/t0190-coordinator-jest-1790977696786/summary.json",
+    "commit": "08bd39cfc4d95bd8b8a5c4367ddfdacdab8f1a4d"
   },
   "third_full_gate": {
     "receipt": "tmp/t0190-full-gate-1790975360957/summary.json",
@@ -1168,5 +1171,112 @@
     "reviewer": "Sagan",
     "verdict": "PASS",
     "scope": "Existing frozen handoff suite detects stale success,404,503 query reuse. Add its selection to m05; this is not independent proof of a new post-write scenario."
+  },
+  "final_full_gate": {
+    "head": "08bd39cfc4d95bd8b8a5c4367ddfdacdab8f1a4d",
+    "receipt": "tmp/t0190-full-gate-1790978188485/summary.json",
+    "sha256": "ad3a444df809140e852bff4e669ed13266abe5d39dc00b8513e4150ca21054a3",
+    "steps": 10,
+    "treeStamp": "24a27e6edcc2642730e8f4e824a1ed378705ea838fadd598462af328ec975a55",
+    "unchanged": true,
+    "jest": {
+      "passed": 8275,
+      "existingSkipped": 9
+    },
+    "browser": {
+      "passed": 365,
+      "existingSkipped": 24
+    },
+    "buildPurity": 2
+  },
+  "sandbox_gate_failure": {
+    "receipt": "tmp/t0190-full-gate-1790978145533/summary.json",
+    "result": "FAIL before lint execution, nine later stages unexecuted",
+    "causeEvidence": "tsx calls Node os.userInfo; the same pinned Node minimal probe fails uv_os_get_passwd in the sandbox and succeeds outside it without printing account data.",
+    "resolution": "Run unchanged complete gate with required permission, owned isolated environment and processes. No check or source change."
+  },
+  "verification": "Independent R2 acceptance at08bd39cf: all10 unchanged-tree gate stages,8275Jest/365browser/2build-purity checks,169integrated oracle cases;30intended committed mutation kills,167controls before/after and restoration. All19latest frozen files preserved,50amended names/assertions and602historical identities retained. All48owned dispositions accounted for:36done8ruledout4deferred. Every required exact-head hosted job passes. NineJest/24browser pre-existing skips remain explicit.",
+  "mutation": {
+    "receipt": "tmp/t0190-final-sweep-qualification.json",
+    "sha256": "518ae5949cb85c3eb92ab3370812360ee66956de788937b10289cedda737185c",
+    "killed": 30,
+    "controls": 167,
+    "restored": true,
+    "qualification": "m05 is proved through existing fresh-read handoff cases, not a new independently executed post-write scenario. m28 has an additional DOM lookup exception which is excluded; its mounted aggregate supplies the qualifying structured failure. Original26KILLED/2SURVIVED/2ERROR sweep remains recorded."
+  },
+  "deviation": "Retain both failed product gates, isolated phone repeat and traces, first failed sweep, intermediate calibration infrastructure result and sandbox prelint failure. No source changed after f583 during mutation strengthening. Independent test amendments preserve identities and add three cases; 21 test lines admitted with a reason. Targets, the 4800 C4 ceiling, coverage floors, mutation classifier and protected/history files are unchanged. Forty-five cross-checkout LF/CRLF differences have unchanged Git blob proof. Personal walks use controlled HTTP, not provider execution. The authorised dev push reports a configured PR-rule bypass; repository settings remain unchanged.",
+  "final_acceptance": {
+    "head": "08bd39cfc4d95bd8b8a5c4367ddfdacdab8f1a4d",
+    "review": "org/reviews/2026-10-t0190-final-acceptance.md",
+    "reviewer": "Sagan, independent R2",
+    "verdictSHA256": "2c898c720893c749d9101eb84100e61e625327d36a6f6eaec09b67c9d0a11db5",
+    "local": "tmp/t0190-independent-local-verdict.md",
+    "hosted": {
+      "receipt": "tmp\\t0190-hosted-implementation\\snapshot-1790980658914.json",
+      "sha256": "fa62f504bcefa7a5642b0f09c997b92bb6c0d94c8b3ddf57071a178aff29cf07",
+      "runs": [
+        {
+          "databaseId": 37072135148,
+          "event": "pull_request",
+          "workflowName": "Gitleaks",
+          "headSha": "08bd39cfc4d95bd8b8a5c4367ddfdacdab8f1a4d",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37072135148"
+        },
+        {
+          "databaseId": 37072135145,
+          "event": "pull_request",
+          "workflowName": "CI",
+          "headSha": "08bd39cfc4d95bd8b8a5c4367ddfdacdab8f1a4d",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37072135145"
+        },
+        {
+          "databaseId": 37072130632,
+          "event": "push",
+          "workflowName": "Gitleaks",
+          "headSha": "08bd39cfc4d95bd8b8a5c4367ddfdacdab8f1a4d",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37072130632"
+        },
+        {
+          "databaseId": 37072130598,
+          "event": "push",
+          "workflowName": "CI",
+          "headSha": "08bd39cfc4d95bd8b8a5c4367ddfdacdab8f1a4d",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37072130598"
+        }
+      ]
+    },
+    "limits": "Bounded local and hosted integration proof. No real-provider, foreign-database, general online-update, physical-phone-keyboard or release acceptance. Closure-head hosted jobs remain required."
+  },
+  "closure_next": "Observe all closure-head hosted jobs. Then open T0191, explicitly reconcile the review ownership handoffs and freeze independent responsive/feedback oracles. Q033 still defers T0200 until afterv1.0;T0201 depends on it.",
+  "additional_reader_review": {
+    "reachability": "tmp/t0190-green-validation/tmp/t0190-personal-1790980121526/walk.json",
+    "reachabilityResult": "Four short/long desktop/phone cases pass ordinary wheel, pointer and keyboard navigation. The broad unreachable-footer hypothesis is refuted within these fixtures.",
+    "harnessFailure": "Earlier1790980007675 incorrectly expected Next to mark the arriving chapter read. Source and captured requests correctly mark the departing chapter; no product assertion was changed.",
+    "currentFailure": "tmp/t0190-green-validation/tmp/t0190-personal-1790980296275/walk.json",
+    "baselineFailure": "tmp/t0189-green-validation/tmp/t0190-personal-1790980426201/walk.json",
+    "finding": "Two long chapters reproduce Next retaining MAIN scrollTop2162/3202 and leaving chapter2 heading at-2013/-3012px after5seconds, identically at08bd39cf and01040a43.",
+    "remainingOwner": "T-0191",
+    "scope": "Pre-existing layout/scroll repair with exact ReaderBody/ChapterReader claims and independent browser oracle. No source or frozen-test edits; owned servers stopped, stamps unchanged. Not a T0190 regression or whole-platform acceptance."
+  },
+  "additional_story_refusal_review": {
+    "current": "tmp/t0190-green-validation/tmp/t0190-personal-1790980892020/walk.json",
+    "baseline": "tmp/t0189-green-validation/tmp/t0190-personal-1790980945735/walk.json",
+    "finding": "All four edit/continue desktop/phone cases show Your story is ready and100% after an intercepted503, before the retained error appears. Both08bd39cf and01040a43 reproduce it, with unchanged chapter content, one write and no page exceptions.",
+    "remainingOwner": "T-0191",
+    "scope": "Confirmed pre-existing feedback defect. Independent red oracle and narrow Reader caller/GenerateOverlay claims precede repair. No provider calls or source changes; owned servers stopped and stamps held.",
+    "independentQualification": {
+      "reviewer": "Sagan",
+      "receipt": "tmp/t0190-independent-overlay-qualification.md",
+      "sha256": "b2f5e0a140b874eff1397f0454b257a751465b56048da0890c2d41ffb912377a",
+      "scope": "Pre-existing T0191 follow-up; T0190 R2 verdict unchanged."
+    }
   }
 }

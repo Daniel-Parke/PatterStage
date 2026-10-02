@@ -245,3 +245,73 @@ The line baseline records 21 additional test lines for this strengthening;
 are additions for demonstrated coverage gaps, not consolidation savings.
 The original full-sweep failure remains evidence. Final full gate, clean
 committed sweep and hosted acceptance still follow.
+
+## Final bounded acceptance
+
+At 08bd39cf, the final gate in tmp/t0190-full-gate-1790978188485 passes
+all ten stages on one unchanged tree: 8,275 unit tests, 365 browser tests,
+both database-purity checks and both censuses. Nine unit and 24 browser skips
+are unchanged. The preceding sandbox attempt stopped before lint because
+Node userInfo failed; the minimal probe reproduced the sandbox boundary,
+and the complete unchanged gate passed with the required permission.
+
+The complete committed sweep catches all 30 mutants, with 167 passing controls
+before and after and exact restoration. The gate and sweep share tree stamp
+24a27e6edcc2642730e8f4e824a1ed378705ea838fadd598462af328ec975a55.
+The qualification report binds each executed case to its intended mutation.
+All 19 current frozen files match in primary and isolated checkouts. The
+previous failed sweeps and gates are retained. Sagan's independent acceptance
+and every required implementation-head hosted job pass; see final acceptance.
+Closure-head jobs remain to be observed before the next batch opens.
+
+The 48-row disposition ledger now binds this revision: 36 done, eight ruled
+out and four deferred. Mission prop composition remains with T0192; legacy
+hook aliases remain with T0200. Source lines are 102,378; test lines 145,150;
+repeated source/test windows 895/4,796; one-importer components 104. These
+figures are not target attainment. The fixed original and programme targets
+remain unchanged. Two named manual-read detector hits remain explicit.
+
+## Completeness handoffs before the next batch
+
+The read-only audit in tmp/prerelease-ownership-audit-20261002.md found items
+assigned to closed prerelease tasks without corresponding proof. A closed
+task does not discharge a misassigned item. At T0191 opening, change the
+canonical ownership generator through explicit overrides, regenerate its
+view and record the handoffs; do not rewrite the T0164 ledgers or closed tasks.
+
+- T0191: critic-09 and its split disposition cover only the four ruled RGB
+  mirrors and three comments. critic-13 covers simulated progress. Add the
+  personally observed Mission metadata truncation and cancellation feedback
+  overlap to the responsive review. The footer is reachable in four bounded
+  ordinary-scroll/keyboard cases, but Next retaining the old scroll position
+  is now reproduced with two long chapters on both widths and both current
+  08bd39cf and pre-T0190 01040a43 builds. See the additional_reader_review
+  receipts in the task record. Refused edit/continue success messages also now
+  reproduce in four cases on each current and pre-T0190 build; see the separate
+  additional_story_refusal_review receipts. Freeze independent red oracles
+  before repairing either pre-existing defect.
+- T0194: gap-105a/b/c require path, URL/DNS and execution-boundary evidence.
+  critic-03/03a/03b and gap-002a/003a/007a/007b/007c require reconciliation with
+  existing authentication evidence. Missing proof is not an established exploit.
+- T0195: critic-12 requires proving Jest module mapping and restoration before
+  correcting the setup comment. Retain the separate Windows EPERM evidence.
+- T0196: critic-11 needs net-cost and Docker-packaging measurement for mock
+  request readers. gap-005b retains the unresolved historical scan discrepancy
+  and expired findings; a replacement scan does not clear that history.
+
+T0193 also needs an explicit current page-hook cohort rather than inheriting
+only a favicon coverage row. Parent findings with children owned by several
+tasks must roll up those child dispositions before closure. T0198 retains
+unlocated historical independent acceptances; T0199 retains the separately
+ruled destructive manual prebuild path. These obligations are not waived by
+the T0190 acceptance or by green hosted jobs.
+
+The current remote inventory contains only main/dev and PR157. Four local
+branch-attached historical worktrees remain. The read-only containment audit
+in tmp/local-branch-containment-20261002.md confirms all three oracle changes
+are preserved in dev/history. All 15 dirty Cursor files, including both
+untracked files, are preserved in the existing rescue patch. The older
+unsaved-files statement is stale; retain the historical record and reconcile
+this evidence under T0198. No local ref, worktree, ignored data or rescue was
+deleted. Ref retirement and any separate worktree archival must preserve
+original commit provenance and the retained files.

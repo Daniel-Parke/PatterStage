@@ -9,38 +9,60 @@ updated: 2026-10-02
 
 ## Current programme, 2026-10-02
 
-Closure `888413eb` passed all 11 PR jobs, nine applicable push jobs and both
-secret scans. T-0190 is now active at ruled R2. Its exact claims and independent
-oracle brief precede implementation. Controlled browser probes reproduce delayed
-New Chat clearing newer input and overriding a later conversation selection at
-both widths. No T-0190 source implementation or acceptance is claimed yet.
+T-0190 is independently accepted at `08bd39cf`. All ten unchanged-tree gate
+stages pass: 8,275 unit tests, 365 browser tests and two database-purity checks.
+The nine unit and 24 browser skips are pre-existing. All 30 committed mutants
+are caught, with 167 passing controls before and after and exact restoration.
+Every required implementation-head hosted job passes. Closure-head hosted
+jobs must pass before T-0191 opens. See the
+[independent acceptance](reviews/2026-10-t0190-final-acceptance.md) and
+[verification and completeness handoffs](reviews/2026-10-t0190-client-verification.md).
 
-T-0189 is independently accepted at `01040a43`. All ten unchanged-tree gate
-stages pass: 8,106 Jest tests, 355 browser tests and two build-purity checks,
-with nine and 24 existing skips respectively. All 31 committed mutants are
-caught, both 423-case controls pass and restoration is verified. The 425-case
-independent oracle and 1,006 historical/protected/migration hashes survive.
-Every required implementation-head hosted job passes; closure-head jobs must
-pass before T-0190. See [T-0189 acceptance](reviews/2026-10-t0189-final-acceptance.md)
-and its 57-row ledger: 47 done, eight ruled out, two deferred.
+Eleven of 22 main batches are done. T-0191 through T-0199 remain authorised.
+Q-033 keeps T-0200 compatibility retirement after v1.0.0; T-0201 still depends
+on that retirement. PR #157 merging, settings, tags and releases remain operator
+actions. No whole-platform or release acceptance is claimed.
 
-Ten of 22 main batches are done; 12 remain. Next is T-0190, then T-0191–T-0199.
-Q-033 keeps T-0200 after v1.0.0; T-0201 still depends on retirement. No overnight
-stop remains. Targets are unchanged. Current census: 102,216 source lines,
-142,884 test lines, 13,667 tooling lines, 946 repeated source windows,
-4,794 repeated test windows and 104 one-importer components.
+The 48 T-0190 dispositions are 36 done, eight ruled out and four deferred.
+Current census: 102,378 source lines, 145,150 test lines, 13,667 tooling lines,
+895 repeated source windows, 4,796 repeated test windows and 104 one-importer
+components. All targets and the fixed 4,800 test-repeat ceiling are unchanged.
+Two named manual-read detector hits remain; no universal read-conversion claim.
 
-The owned Story walk passes at both widths on port 3998; its server stopped.
-The additional Sessions walk proves search/URL persistence, the failed-filter
-request and return navigation, but FAILS the missing-transcript h1 check at
-both widths. T-0191 owns that repair alongside the cramped Story card and
-previous phone defects. Receipt 1790961702953 remains; no all-pathways claim.
-T-0195 retains unresolved Windows EPERM/worker-exit evidence; T-0196 retains
-discovery-failure limits. External-history proof and T-0199's manual destructive
-prebuild path remain open. Real-provider, foreign-database, online-update and
-operator release acceptance remain separate.
+Personal production walks used port 3998 at 1440x900 and 390x844, with owned
+data, real sign-in and controlled service responses. Memory recovery, Story
+title/read-flag settlement and Mission cancellation/selection passed their
+bounded checks. Screenshots were inspected and owned servers stopped. The
+full gate used its own port 3000 instance. Physical phone keyboards, external
+providers, foreign databases and general online-update safety remain separate.
 
-The earlier checkpoint below is retained for provenance.
+T-0191 must open with exact claims and independent oracles for the six recorded
+UI repairs, truthful progress, operation-owned cancellation feedback and readable
+Mission metadata. Ordinary Reader footer reachability passes;
+Next retaining the old scroll position fails with two long chapters on both
+current and pre-T0190 builds. Refused edit/continue also announces false success
+on both builds. T-0191 owns these confirmed repairs and must freeze their
+independent red oracles before implementation. Select and Picker remain
+separate; the existing dark-neon and reader identities remain.
+
+The completeness audit found several findings incorrectly assigned to closed
+prerelease tasks. Apply the explicit ownership-generator handoffs listed in the
+verification review at the next opening. Also reconcile T-0193's missing page
+cohort and parent/child disposition roll-ups. T-0195 retains unresolved Windows
+EPERM evidence; T-0196 retains historical secret-scan gaps; T-0198 retains
+unlocated independent acceptances; T-0199 retains the destructive manual
+prebuild path. Neither task status nor a green gate clears these obligations.
+
+Remote refs remain main/dev with only PR #157 open. Four local historical
+branch/worktree pairs remain preserved. The new containment audit proves all
+three oracle changes and all 15 dirty Cursor files are saved. T-0198 must
+reconcile that evidence with the older stale unsaved-files statement before
+retiring refs or considering separate worktree archival. No files were deleted.
+
+Earlier checkpoints below are retained for provenance; their pending statements
+describe those earlier revisions. T-0189 closure `888413eb` passed all required
+hosted jobs before T-0190 opened.
+
 
 The operator resumed all remaining authorised batches and requested personal
 functional and UI/UX review. T-0188 and prerequisite T-0205 are independently
