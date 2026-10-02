@@ -88,7 +88,8 @@
     "docs/manifest.json",
     "scripts/tooling/line-census.baseline.json",
     "scripts/tooling/design-lint.baseline.json",
-    "tests/fixtures/mutants/T-0190.json"
+    "tests/fixtures/mutants/T-0190.json",
+    "org/briefs/T-0190-client-implementation.md"
   ],
   "timestamps": {
     "opened": "2026-10-02T17:49:07.371181+00:00",
@@ -604,5 +605,34 @@
       "No production implementation, post-implementation acceptance, new build, complete gate, mutation sweep, human UX sample or hosted acceptance was performed by this oracle writer."
     ],
     "limits": "Red oracle freeze, not implementation acceptance. Original fixture/type failures retained; no production change or provider work."
+  },
+  "oracle_commit": "0471baf018652ad6367f9e16b34b964caff5755d",
+  "implementation_lanes": {
+    "coordinator": "2026-10-02-t0190-coordinator",
+    "client": "2026-10-02-t0190-client-averroes",
+    "client_paths": [
+      "src/hooks/useOperatorPrefs.ts",
+      "src/hooks/usePreferenceWrite.ts",
+      "src/components/layout/Sidebar.tsx",
+      "src/app/recroom/story-weaver/[id]/page.tsx",
+      "src/app/recroom/story-weaver/create/page.tsx",
+      "src/components/memory/HindsightBrowser.tsx",
+      "src/components/memory/hindsight/useHindsightCrudTab.ts",
+      "src/components/memory/hindsight/useHindsightMemories.ts",
+      "src/components/memory/hindsight/useHindsightModels.ts",
+      "src/components/memory/hindsight/useHindsightDirectives.ts",
+      "src/lib/memory/hindsight-client.ts",
+      "src/hooks/useModels.ts",
+      "src/hooks/useModelsPage.ts",
+      "src/hooks/useModelActions.ts",
+      "src/hooks/useModelFallbackConfig.ts",
+      "src/hooks/useModelFallbackChain.ts",
+      "src/components/providers/FeedbackProvider.tsx",
+      "src/lib/ui/theme.ts",
+      "src/components/ui/Input.tsx",
+      "src/components/ui/Select.tsx"
+    ],
+    "brief": "org/briefs/T-0190-client-implementation.md",
+    "oracle_writer_stopped": true
   }
 }
