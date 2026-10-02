@@ -90,14 +90,21 @@ migration-parity, schema-health and repository-contracts. Their exact paths are
 in the committed claims. A real-source preflight reproduced model creation
 leaving one new row and removing the old default after the new default insert
 failed. Require one atomic creation/default replacement, including rollback
-after clearing an earlier slot and preservation of unrelated defaults.
+after clearing an earlier slot and preservation of unrelated defaults. Include
+failure on a later slot after an earlier replacement succeeded; roll back the
+new model and every touched slot. Preserve validation and explicit API style.
 
 The same preflight reproduced concurrent source execution, repeated execution
 after timeout while underlying work was pending, and lost lastError on resolved
 `success:false`. Test runOne/runAll/forceSync overlap, timeout, late settlement,
-rejection and later retry, while different sources may progress. Keep the
-per-source execution claim until the underlying work settles. A failed result
-must retain its error; a late result must not overwrite a newer observation.
+rejection and later retry, while different sources may progress. Coalesce callers
+by source name onto the same bounded result. After timeout, return the recorded
+timeout promptly to overlapping callers rather than awaiting the underlying
+promise indefinitely or starting again. Keep the per-source execution claim
+until that underlying work settles. A failed result must retain its error; a
+late success/rejection only releases ownership, never clears the timeout or
+overwrites a newer observation. Catch late rejections. Timeout cannot pre-empt
+synchronous JavaScript; no test or comment may claim that it can.
 Preserve ConfigSync's deliberate nonfatal malformed-YAML result. Fake timers
 may pin timeout boundaries, but settle all owned promises and restore timers.
 
@@ -112,6 +119,27 @@ retention/progression, preferences and defensive-read contracts with meaningful
 behaviour rather than restating source or adding generic assertion inventories.
 Resolve the exact remaining disposition matrix before claiming those obligations
 covered; this suite title is not a claim of complete repository acceptance.
+
+## Bounded consolidation characterisation
+
+Additional claims cover reuse of getSchemaVersion/setSchemaVersion by the
+mission-repeat migration, removal of the CLI's redundant convergence after
+getDb has already validated head43, one shared safeRead for the three existing
+defensive display consumers, empty session-sync branch/result cleanup and factual
+migration/initialisation prose. Preserve all existing test names and behaviour.
+Exercise the real CLI on an owned fresh fixture and retain its failure exit path;
+the application convergence loop remains until the separately owned rebuild path
+is retired. Check migration repeat/no-op and error semantics through its public
+applier, not source text. Safe reads preserve synchronous return/throw/fallback
+identity and never enter the hard-stop path. Existing spend-guard tests remain.
+
+Retain the session initialisation debounce contract, including custom delays;
+only its inaccurate claim of triggering an actual sync is corrected. A timestamp
+replacement does not preserve pending-timer/event-loop semantics. Retain runtime
+category seed SQL and its standalone asset, but compare actual repository seeding
+with the asset in real SQLite. Existing custom rows must remain unchanged and a
+missing table must not trigger writes. The old asset-only test does not prove
+runtime parity. No seed keys, files or interfaces are retired.
 
 ## Freeze and limits
 

@@ -35,7 +35,16 @@
         "src/lib/sync/sources/EnvSync.ts",
         "src/lib/sync/env-token-presence.ts",
         "src/lib/models/models-repository.ts",
-        "src/lib/sync/SyncScheduler.ts"
+        "src/lib/sync/SyncScheduler.ts",
+        "src/lib/db/apply-mission-repeat-migration.ts",
+        "scripts/tooling/migrate-db.ts",
+        "docs/running/migration.md",
+        "src/lib/sessions/session-repository.ts",
+        "src/lib/sessions/session-sync.ts",
+        "src/lib/db/safe-read.ts",
+        "src/lib/analytics/analytics-repository.ts",
+        "src/lib/spend/spend-summary.ts",
+        "src/lib/sessions/sessions-api-helpers.ts"
       ],
       "acquired": "2026-10-02T14:10:33.645498+00:00",
       "expires": "2026-10-03T14:10:33.645498+00:00"

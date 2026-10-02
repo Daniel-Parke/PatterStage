@@ -378,7 +378,16 @@
         "tests/unit/data-transaction-scheduler.test.ts",
         "tests/unit/data-transaction-migration-parity.test.ts",
         "tests/unit/data-transaction-schema-health.test.ts",
-        "tests/unit/data-transaction-repository-contracts.test.ts"
+        "tests/unit/data-transaction-repository-contracts.test.ts",
+        "src/lib/db/apply-mission-repeat-migration.ts",
+        "scripts/tooling/migrate-db.ts",
+        "docs/running/migration.md",
+        "src/lib/sessions/session-repository.ts",
+        "src/lib/sessions/session-sync.ts",
+        "src/lib/db/safe-read.ts",
+        "src/lib/analytics/analytics-repository.ts",
+        "src/lib/spend/spend-summary.ts",
+        "src/lib/sessions/sessions-api-helpers.ts"
       ],
       "dependsOn": [
         "T-0188"

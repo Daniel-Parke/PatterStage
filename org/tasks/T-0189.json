@@ -56,7 +56,16 @@
     "tests/unit/data-transaction-scheduler.test.ts",
     "tests/unit/data-transaction-migration-parity.test.ts",
     "tests/unit/data-transaction-schema-health.test.ts",
-    "tests/unit/data-transaction-repository-contracts.test.ts"
+    "tests/unit/data-transaction-repository-contracts.test.ts",
+    "src/lib/db/apply-mission-repeat-migration.ts",
+    "scripts/tooling/migrate-db.ts",
+    "docs/running/migration.md",
+    "src/lib/sessions/session-repository.ts",
+    "src/lib/sessions/session-sync.ts",
+    "src/lib/db/safe-read.ts",
+    "src/lib/analytics/analytics-repository.ts",
+    "src/lib/spend/spend-summary.ts",
+    "src/lib/sessions/sessions-api-helpers.ts"
   ],
   "timestamps": {
     "opened": "2026-10-02T14:10:33.645498+00:00",
@@ -313,5 +322,22 @@
   ],
   "oracle_status": "Not authored or frozen yet. No implementation permitted before independent oracle red commit.",
   "oracle_author": "Sartre 01a0fcf4-e827-7393-8d98-3ababa620034; separate clean context plus parser metamorphic cases; no implementation exists; awaiting committed disjoint claims and isolated checkout before authorship.",
-  "scope_review": "Turing 01a0fcea-6e43-74d1-b149-9bd09f700a8f recommends exact15source/8oracle allowance, noQ015amendment; coordinator independently reproduced additional model/scheduler defects before claiming their implementation."
+  "scope_review": "Turing 01a0fcea-6e43-74d1-b149-9bd09f700a8f recommends exact15source/8oracle allowance, noQ015amendment; coordinator independently reproduced additional model/scheduler defects before claiming their implementation.",
+  "additional_consolidation": {
+    "findingIds": [
+      "lib-data-03",
+      "lib-data-06",
+      "lib-data-07",
+      "lib-data-12",
+      "lib-data-14",
+      "lib-data-19",
+      "lib-data-24"
+    ],
+    "evidence": "tmp/t0189-net-assessment-20261002.json",
+    "intent": "Shared version reader/writer; remove only redundant CLI convergence; factual prose; three-consumer display safeRead; empty session branch/result cleanup. Preserve application legacy loop, custom-delay debounce semantics and runtime/asset category seed contexts with actual parity proof.",
+    "estimate": "Three identical safeRead bodies total21 lines; proposed shared helper/comment/three imports11 lines, net-10 before final census. Category SQL10 data lines identical; retain bounded duplication to avoid a new runtime filesystem dependency.",
+    "limits": "No implementation yet. All additional behaviour must be pinned before red freeze; no historical test amendment requested."
+  },
+  "preservation_baseline": "tmp/t0189-preservation-baseline-20261002.json:1006 historical tests/protected/migration paths with content hashes and committed blob IDs.",
+  "disposition_register": "org/reviews/2026-10-t0189-dispositions.json:20findings+6splitrulings+31coverage, all pending final disposition; generated ID-set validation matches ownership."
 }
