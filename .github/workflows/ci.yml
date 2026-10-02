@@ -182,6 +182,10 @@ jobs:
           PS_DATA_DIR: ${{ runner.temp }}/patterstage-ci-data
           HERMES_HOME: ${{ runner.temp }}/patterstage-ci-hermes
           PYTHONDONTWRITEBYTECODE: "1"
+      - name: T-0205 redacted loopback diagnostic (not acceptance)
+        if: ${{ !cancelled() && (steps.unit_coverage.outcome == 'success' || steps.unit_coverage.outcome == 'failure') }}
+        timeout-minutes: 3
+        run: node scripts/tooling/t0205-loopback-diagnostic.mjs
       - name: Next.js production build
         # No retry, and no font warmup before it (WG-DEL-004, ruled C:
         # determinism first). Both existed because Turbopack fetched six font

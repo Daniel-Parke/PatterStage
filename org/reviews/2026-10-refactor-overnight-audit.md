@@ -165,3 +165,84 @@ after retirement, while Q-033 requires their first post-v1.0 retirement. Queue
 a different-author authorised amendment that separates pre-retirement
 preservation from post-retirement acceptance before opening T-0200. Preserve
 the currently frozen row until then; this is not authority to retire anything.
+
+## Final overnight checkpoint, 2026-10-02
+
+This supplement supersedes the earlier current-status wording. Local HEAD is
+`e7d66fb7eafa871cbbb564ea83f1921b62167a87`; hosted dev remains
+`6e156740f9a30223ee849b67c3246de3cbce748b`. T-0188/T-0205 are interrupted,
+not done. Do not begin T-0189 before their final acceptance. The two local
+worker-oracle red commits remain unpushed; the candidate implementation is
+preserved uncommitted. No failed check or frozen assertion was weakened.
+
+The separate worker author produced nine new behavioural names. A different
+author strengthened exact two-worker resolution and genuine completed Jest
+configuration validation. Both canonical red runs passed seven names and
+failed two intended names on unchanged trees. After independent R2 approval,
+the coordinator implemented only `maxWorkers: 2` and its short rationale.
+The new native observer diagnostic and its CI wiring remain additive and
+unaccepted. No native macOS exception trace is yet available from that step.
+
+The latest full gate, `tmp/t0188-full-gate-worker-budget-20261002/summary.json`,
+passes lint and TypeScript, then exits1 at Jest:7,680 pass,one failure,nine
+existing skips. Allseven subsequent stages are unexecuted. Before/after stamp
+is `44d5700ea824bc136a695cb7d009abd7cafe6079cbc5c18f5a194c7308596886`.
+The failure is Windows EPERM at T-0161 shell fixture cleanup,line166. Its
+unchanged alone control, `tmp/t0188-shell-seed-alone-20261002/summary.json`,
+passes allfour names with the same stamp and no skips/runtime errors.
+Cleanup can mask an earlier exception, so this does not prove preceding
+assertions passed in the full run. Cause is unresolved; no owner or process
+leak is established. Preserve the empty owned residue at
+`tmp/t0188-green-validation/tmp/paired-whole-gate/temp/t0161-shell-seed-kIFZCB/repo`.
+
+Correction to the earlier permitted-run narrative: its context failures were
+C02/C05 `withinDeadline`, not C02/C16 `signalsOwned`. The next default-pool
+run failed C02 `withinDeadline` and C05 scratch removal. Original logs remain
+unchanged. The two-worker diagnostic establishes only bounded scheduling
+sensitivity; the latest red gate prevents any claim of repaired reliability.
+
+Independent reviewer Schrodinger accepts an honest interrupted checkpoint
+and explicitly holds batch acceptance and push. Receipt SHA256s are
+`5048f624191ab24f38785165c33a0fc7d6df0140f6a7ccee5f489b1034065e44`
+for the latest full gate and
+`f12289d3fe0ace6172135596e4b9afc4453697a98d53f2316087b7eeb1cbb752`
+for the alone control. This is not a final acceptance verdict.
+
+Tomorrow: diagnose the cleanup blocker; complete the ten-stage unchanged-tree
+gate and candidate content/mode binding; commit the passing candidate; run
+fresh33 committed mutants with controls and restoration; obtain native macOS
+observer evidence and an independently authored repair if demonstrated;
+obtain final independent acceptance and every required hosted job on both
+implementation and closure heads. Keep the five earlier final-acceptance
+receipt gaps, all eight fixed target misses, absent final dispositions,
+online-WAL and full-pathway proof limits visible. Q-033's post-v1.0 retirement
+and T-0201 dependency remain. No protected/history file was edited and no
+local worktree, fixture residue or operator data was discarded.
+
+## Resumed verification, 2026-10-02
+
+The operator resumed all remaining authorised stages. The overnight stop is
+superseded; Q-033 compatibility deferral remains. Passive tracing on the
+unchanged earlier candidate passes 7,681 tests with nine existing skips. All
+four original T-0161 fixture calls and cleanups complete normally. The old
+EPERM is not reproduced or explained, and the Jest worker-exit warning remains
+a named T-0195 stability obligation. Neither result waives a renewed failure.
+
+A different author has frozen the portable actual-accept observer amendment.
+The unchanged seven-case suite passes on Windows. The frozen calibration
+passes 20 positive controls and rejects four deliberate false positives on
+both Windows and Linux. Linux uses image
+`sha256:64af3819f9275802414d7cdc38c27e9d82bd564dec4d4da87d008255d36c63b4`,
+without external networking or operator data. The native macOS failure's
+original stack frame remains unconfirmed; native hosted acceptance is still
+required. Frozen provenance uses "operator" for the coordinator who reported
+the passive trace; this is an attribution correction, not a new human ruling.
+
+The five historical final-acceptance receipt gaps remain after a second narrow
+archive search. Original T-0185 reviewer `01a0ee4f-3f54-7cc1-85c5-5db46e4c2623`
+and T-0186 reviewer `01a0ee95-b0e8-7680-8cc0-4323fd31a085` report only amendment
+authority in their accessible conversations, with no final implementation
+acceptance for the named candidate/closure heads. This is a bounded retrieval
+result, not proof that review never occurred elsewhere. Recover existing
+receipts or perform a fresh dated review of the then-current implementation;
+never manufacture historical approval or rewrite the closed records.

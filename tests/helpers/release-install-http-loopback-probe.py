@@ -89,6 +89,7 @@ def observe(case: str, bash: str, *, fixture_override: Any = None) -> dict[str, 
     metadata: list[dict[str, object]] = []
     handler_hooks: list[tuple[Any, Any]] = []
     serve_hooks: list[tuple[Any, Any, bool]] = []
+    accept_hooks: list[tuple[Any, Any, bool, Any]] = []
 
     def sentinel(name: str = "") -> str:
         resolver_calls.append(name)
@@ -112,16 +113,29 @@ def observe(case: str, bash: str, *, fixture_override: Any = None) -> dict[str, 
         original_init(server, *args, **kwargs)
         servers.append(server)
         address = server.socket.getsockname()
-        metadata.append({
+        listener: dict[str, object] = {
             "requestedAddress": requested[0], "requestedPort": requested[1],
             "boundAddress": address[0], "boundPort": address[1],
             "serverAddress": list(server.server_address), "serverName": server.server_name,
             "className": type(server).__name__,
             "serverPort": server.server_port, "family": int(server.socket.family),
             "socketType": int(server.socket.type),
-            "accepting": server.socket.getsockopt(socket.SOL_SOCKET, socket.SO_ACCEPTCONN) == 1,
+            "accepting": False,
             "reuseAddress": bool(server.socket.getsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR)),
-        })
+        }
+        metadata.append(listener)
+        original_accept = server.get_request
+        accept_was_local = "get_request" in server.__dict__
+        original_local_accept = server.__dict__.get("get_request")
+        accept_hooks.append((server, original_accept, accept_was_local, original_local_accept))
+
+        @functools.wraps(original_accept)
+        def accept(*accept_args: Any, **accept_kwargs: Any) -> Any:
+            connection = original_accept(*accept_args, **accept_kwargs)
+            listener["accepting"] = True
+            return connection
+
+        server.get_request = accept
         original_serve = server.serve_forever
         serve_hooks.append((server, original_serve, "serve_forever" in server.__dict__))
 
@@ -151,6 +165,11 @@ def observe(case: str, bash: str, *, fixture_override: Any = None) -> dict[str, 
         socket.getfqdn = original_fqdn
         for handler, original_get in reversed(handler_hooks):
             handler.do_GET = original_get
+        for server, _, was_local, original_local in reversed(accept_hooks):
+            if was_local:
+                server.get_request = original_local
+            else:
+                del server.get_request
         for server, original_serve, was_local in reversed(serve_hooks):
             if was_local:
                 server.serve_forever = original_serve
@@ -178,6 +197,12 @@ def observe(case: str, bash: str, *, fixture_override: Any = None) -> dict[str, 
         and fixture.ThreadingHTTPServer is original_constructor and fixture.CurlBridge is original_bridge
         and HTTPServer.__init__ is original_init and ("__init__" in HTTPServer.__dict__) == init_was_local
         and all(handler.do_GET is original_get for handler, original_get in handler_hooks)
+        and all(
+            ("get_request" in server.__dict__) == was_local
+            and (server.__dict__.get("get_request") is original_local if was_local
+                 else server.get_request == original_accept)
+            for server, original_accept, was_local, original_local in accept_hooks
+        )
         and all(("serve_forever" in server.__dict__) == was_local for server, _, was_local in serve_hooks),
     }
 

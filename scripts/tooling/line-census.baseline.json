@@ -2,8 +2,8 @@
   "measuredAt": "2026-10-02",
   "counts": {
     "srcLines": 102201,
-    "testLines": 141143,
-    "scriptsLines": 13563,
+    "testLines": 141292,
+    "scriptsLines": 13645,
     "srcRepeatedWindowLines": 968,
     "testRepeatedWindowLines": 4794,
     "routesWithTryCatch": 18,
@@ -1110,6 +1110,16 @@
       "measuredAt": "2026-10-02",
       "rise": "testLines rose from 141133 to 141143",
       "reason": "T-0205 independent seven-assertion cleanup extraction costs 10 census-counted test lines and removes 14 repeated lines; unchanged C4 ceiling and all fixed programme targets remain."
+    },
+    {
+      "measuredAt": "2026-10-02",
+      "rise": "scriptsLines rose from 13563 to 13645",
+      "reason": "T-0205: 82-line additive redacted native observer diagnostic, independent R2 authorised, preserves exact launcher, setup/launch/cleanup failures; closing targets unchanged"
+    },
+    {
+      "measuredAt": "2026-10-02",
+      "rise": "testLines rose from 141143 to 141292",
+      "reason": "T-0205: nine new independent worker-budget cases and different-author strict validation amendment preserve all existing identities/floors/deadlines; plus82-line redacted diagnostic; targets unchanged"
     }
   ]
 }

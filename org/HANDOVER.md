@@ -7,10 +7,30 @@ updated: 2026-10-02
 
 # Handover · PatterStage, 2026-10-02
 
+## Resumed programme, 2026-10-02
+
+The operator has resumed all remaining authorised batches and requested a full
+personal functional and UI/UX review. This supersedes the overnight stop below.
+T-0188/T-0205 are active again with their failed receipts preserved. Resolve
+their Windows cleanup and macOS observer blockers before advancing. Q-033's
+post-v1.0 compatibility retirement and operator release actions still apply.
+
+The passive diagnostic corpus passes 7,681 tests with nine existing skips on
+the unchanged earlier candidate. All four T-0161 shell calls and cleanups
+complete normally; the historical EPERM cause remains unknown. The forced
+Jest worker-exit warning remains a T-0195 stability obligation. A separate
+author has frozen a portable listener witness: seven existing names pass,
+20 controls pass and four deliberate false-positive variants are rejected.
+It observes actual accepted connections instead of querying SO_ACCEPTCONN.
+No whole-gate or hosted acceptance follows from those focused results.
+
 ## Current work and overnight boundary, 2026-10-02
 
 The operator asks to finish only current T-0188/T-0205 tonight; do not begin
-T-0189. Both remain active at hosted dev@6e156740, not hosted green. That
+T-0189. Both are interrupted for the overnight handover, not done. Local HEAD
+is e7d66fb7; hosted dev remains6e156740. Two independent worker-oracle red
+commits are local and unpushed. The implementation candidate is intentionally
+uncommitted because its full gate is red. Hosted dev is also not green. That
 revision's unchanged local ten-stage gate passed 7,672 Jest and 355 browser
 tests, both build-purity checks and censuses. Its32 committed mutants were
 independently qualified with controls and restoration. The current additive
@@ -31,8 +51,9 @@ All failed receipts remain. The first sandboxed diagnostic gate hit Windows
 user-info ENOMEM; the permitted gate then caught an incorrectly regenerated
 script baseline and C02/C16 signalsOwnedfalse under load. Baseline generator
 flags are corrected with the written82-line diagnostic reason, without changing
-any target. The unchanged context suite alone passes all20 cases; the load
-failure remains unexplained and does not clear the whole gate. No deadline,
+any target. Correction: that permitted run failed C02/C05 withinDeadline,
+not C02/C16 signalsOwned. The unchanged context suite alone passes all20 cases;
+the load failure remains unexplained and does not clear the whole gate. No deadline,
 matcher, test identity, coverage floor or failing check was weakened.
 
 The next default-pool whole gate again fails C02's six-second watchdog and
@@ -40,7 +61,27 @@ C05 scratch removal on the shared stalled observation. One independently
 authorised scheduling comparison runs the entire corpus with two workers:
 7,672 pass/nine existing skips, coverage floors hold, unchanged tree,241.465s.
 This supports scheduling sensitivity; it is not a gate pass or a proven
-mechanism. No permanent worker-pool change has been authorised or implemented.
+mechanism. A fresh independent nine-case worker oracle and different-author
+amendment were subsequently frozen and committed red. Independent R2 review
+authorised the precise maxWorkers2 change before implementation. The candidate
+now contains that change, preserving every deadline, assertion and coverage floor.
+
+The latest unchanged-tree whole gate passes lint and TypeScript, then stops
+at Jest:7,680 pass,one failure,nine existing skips. T-0161's unchanged shell
+fixture fails rmSync cleanup with Windows EPERM at line166. The same suite
+alone passes allfour tests on the identical tree stamp. Neither that control
+nor a plausible held directory handle establishes the cause or clears the
+whole gate. Its owned residue is preserved; no retry or check was weakened.
+The other seven gate stages did not execute on this candidate.
+
+Start tomorrow with the seven-key resume objects in T-0188/T-0205 and the
+latest supplement in the overnight audit. Diagnose the cleanup failure, then
+complete allten stages, content binding and fresh33 committed mutation checks
+(13 migration,eightT0205,twelveT0202). Obtain native macOS observer evidence,
+an independent repair if demonstrated, final acceptance and all required
+implementation/closure-head hosted jobs before closing either record. All
+agents have stopped; no owned validation listener remains on ports3000,3577
+or3997–3999. Operator data, Docker Desktop and preserved worktrees remain intact.
 
 The additive [overnight audit](reviews/2026-10-refactor-overnight-audit.md)
 records earlier closure evidence gaps and work outside the22-batch plan.
@@ -79,7 +120,7 @@ Thirteen subsequent planned batches have not been opened:
 The ownership audit accounts for265 findings,163 split decisions and285
 coverage atoms without duplicate/missing owners. Ownership is not completion.
 The final dispositions file is still absent. The read-only closing audit at
-c97a7be7 reports all eight fixed targets missed; preserve each baseline/target
+6e156740 reports all eight fixed targets missed; preserve each baseline/target
 and report each actual closing miss individually. No target has been moved.
 
 Keep these functional gaps visible: T-0190 chat input-loss race/read-only
