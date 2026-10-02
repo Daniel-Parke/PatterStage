@@ -9,6 +9,12 @@ updated: 2026-10-02
 
 ## Current programme, 2026-10-02
 
+Closure `888413eb` passed all 11 PR jobs, nine applicable push jobs and both
+secret scans. T-0190 is now active at ruled R2. Its exact claims and independent
+oracle brief precede implementation. Controlled browser probes reproduce delayed
+New Chat clearing newer input and overriding a later conversation selection at
+both widths. No T-0190 source implementation or acceptance is claimed yet.
+
 T-0189 is independently accepted at `01040a43`. All ten unchanged-tree gate
 stages pass: 8,106 Jest tests, 355 browser tests and two build-purity checks,
 with nine and 24 existing skips respectively. All 31 committed mutants are

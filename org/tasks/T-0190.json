@@ -1,0 +1,432 @@
+{
+  "id": "T-0190",
+  "intent": "Converge shared client reads and preference writes; prevent stale Chat and Mission responses from replacing current input or selection; preserve explicit Story and Hindsight actions and truthful scoped feedback. Account for21findings,5splitrulings,22coverageitems and reviewed races.",
+  "declared": {
+    "capabilities": [
+      "edit-code",
+      "edit-tests",
+      "edit-docs",
+      "git",
+      "git-push",
+      "run-isolated-process",
+      "owned-temporary-git"
+    ],
+    "side_effects": [
+      "financial-impact",
+      "sends-external"
+    ]
+  },
+  "mode": "high-assurance",
+  "tier_proposed": "R2",
+  "status": "active",
+  "owner_session": "2026-10-02-t0190-coordinator",
+  "claims": [
+    "src/hooks/useChatPage.ts",
+    "src/hooks/useChatConversations.ts",
+    "src/hooks/useChatSend.ts",
+    "src/hooks/useChatTranscript.ts",
+    "src/hooks/useAgentRunStream.ts",
+    "src/lib/chat/chat-utils.ts",
+    "src/hooks/useMissionsApi.ts",
+    "src/hooks/useMissionsData.ts",
+    "src/hooks/useMissionCategories.ts",
+    "src/hooks/useMissionDispatch.ts",
+    "src/hooks/useMissionTemplateActions.ts",
+    "src/hooks/useMissionComposer.ts",
+    "src/hooks/useMissionsPage.ts",
+    "src/app/work/missions/page.tsx",
+    "src/components/missions/MissionsList.tsx",
+    "src/components/missions/MissionEditorPanel.tsx",
+    "src/components/missions/MissionCreateForm.tsx",
+    "src/hooks/useApiResource.ts",
+    "src/lib/api/api-write.ts",
+    "src/lib/api/api-fetch.ts",
+    "src/hooks/useOperatorPrefs.ts",
+    "src/hooks/usePreferenceWrite.ts",
+    "src/components/layout/Sidebar.tsx",
+    "src/app/recroom/story-weaver/[id]/page.tsx",
+    "src/app/recroom/story-weaver/create/page.tsx",
+    "src/components/memory/HindsightBrowser.tsx",
+    "src/components/memory/hindsight/useHindsightCrudTab.ts",
+    "src/components/memory/hindsight/useHindsightMemories.ts",
+    "src/components/memory/hindsight/useHindsightModels.ts",
+    "src/components/memory/hindsight/useHindsightDirectives.ts",
+    "src/lib/memory/hindsight-client.ts",
+    "src/hooks/useModels.ts",
+    "src/hooks/useModelsPage.ts",
+    "src/hooks/useModelActions.ts",
+    "src/hooks/useModelFallbackConfig.ts",
+    "src/hooks/useModelFallbackChain.ts",
+    "src/hooks/useVersionFooter.ts",
+    "src/components/providers/FeedbackProvider.tsx",
+    "src/lib/ui/theme.ts",
+    "src/components/ui/Input.tsx",
+    "src/components/ui/Select.tsx",
+    "tests/unit/chat-response-ownership.test.tsx",
+    "tests/unit/mission-query-ownership.test.tsx",
+    "tests/unit/story-client-boundaries.test.tsx",
+    "tests/unit/hindsight-query-feedback.test.tsx",
+    "tests/unit/preference-write-contract.test.tsx",
+    "tests/unit/client-query-observers.test.tsx",
+    "tests/e2e/client-read-ownership.spec.ts",
+    "tests/unit/b14-story-reader-writes-on-request.test.tsx",
+    "tests/unit/story-stop-and-the-write-latch.test.tsx",
+    "tests/unit/story-stop-holds-every-call.test.tsx",
+    "tests/unit/story-cost-is-on-screen.test.tsx",
+    "tests/unit/hindsight-browser-render.test.tsx",
+    "tests/unit/b7-memory-empty-states.test.tsx",
+    "org/tasks/T-0190.json",
+    "org/claims.json",
+    "org/briefs/T-0190-oracle.md",
+    "org/briefs/T-0190-review.md",
+    "org/reviews/2026-10-t0190-client-verification.md",
+    "org/reviews/2026-10-t0190-dispositions.json",
+    "org/plans/2026-09-refactor-programme.json",
+    "org/HANDOVER.md",
+    "org/TASKS.md",
+    "org/STATE.md",
+    "docs/manifest.json",
+    "scripts/tooling/line-census.baseline.json",
+    "scripts/tooling/design-lint.baseline.json",
+    "tests/fixtures/mutants/T-0190.json"
+  ],
+  "timestamps": {
+    "opened": "2026-10-02T17:49:07.371181+00:00",
+    "updated": "2026-10-02T17:49:07.371181+00:00"
+  },
+  "tier_ruled": "R2",
+  "reasons": [
+    {
+      "factor": "money",
+      "tier_floor": "R2",
+      "source": "declared",
+      "evidence": "declared side effect: financial-impact"
+    },
+    {
+      "factor": "boundary-contact",
+      "tier_floor": "R1",
+      "source": "declared",
+      "evidence": "declared side effect: sends-external"
+    }
+  ],
+  "authority": "Approved Phase2/Q016/Q032 and item rulings. Q033 preserves compatibility throughv1.0. No protected edit, public endpoint/key removal or provider execution authorised by this record.",
+  "prerequisite": {
+    "head": "888413eb58950754af82f4882e2504c3c842892d",
+    "observed": "2026-10-02T17:48:42.522Z",
+    "allRequiredJobsPassed": true,
+    "runs": [
+      {
+        "conclusion": "success",
+        "databaseId": 37041748268,
+        "event": "pull_request",
+        "headSha": "888413eb58950754af82f4882e2504c3c842892d",
+        "status": "completed",
+        "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37041748268",
+        "workflowName": "Gitleaks",
+        "receipt": "tmp/t0189-hosted-closure/pull_request-gitleaks-37041748268-1790963318911.json",
+        "jobs": [
+          {
+            "id": 110953268910,
+            "name": "scan",
+            "status": "completed",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 37041748290,
+        "event": "pull_request",
+        "headSha": "888413eb58950754af82f4882e2504c3c842892d",
+        "status": "completed",
+        "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37041748290",
+        "workflowName": "CI",
+        "receipt": "tmp/t0189-hosted-closure/pull_request-ci-37041748290-1790963320072.json",
+        "jobs": [
+          {
+            "id": 110953270421,
+            "name": "boot-smoke (ubuntu-latest)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110953270424,
+            "name": "e2e-full (PLAYWRIGHT_SMOKE unset)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110953270569,
+            "name": "install-harness",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110953270666,
+            "name": "build-test-ubuntu",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110953270670,
+            "name": "shell-custom-scripts",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110953270700,
+            "name": "e2e-smoke",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110953270707,
+            "name": "boot-smoke (macos-latest)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110953270848,
+            "name": "build-test-macos",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110953270880,
+            "name": "real-hermes-integration",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110953270936,
+            "name": "docker-image",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110957354264,
+            "name": "acceptance-gate (full suite + install journey + real Hermes)",
+            "status": "completed",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 37041738676,
+        "event": "push",
+        "headSha": "888413eb58950754af82f4882e2504c3c842892d",
+        "status": "completed",
+        "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37041738676",
+        "workflowName": "CI",
+        "receipt": "tmp/t0189-hosted-closure/push-ci-37041738676-1790963321291.json",
+        "jobs": [
+          {
+            "id": 110953237986,
+            "name": "real-hermes-integration",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110953238256,
+            "name": "build-test-macos",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110953238268,
+            "name": "boot-smoke (ubuntu-latest)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110953238304,
+            "name": "boot-smoke (macos-latest)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110953238317,
+            "name": "docker-image",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110953238411,
+            "name": "shell-custom-scripts",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110953238412,
+            "name": "install-harness",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110953238458,
+            "name": "build-test-ubuntu",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110953239063,
+            "name": "e2e-smoke",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 110953239985,
+            "name": "e2e-full (PLAYWRIGHT_SMOKE unset)",
+            "status": "completed",
+            "conclusion": "skipped"
+          },
+          {
+            "id": 110956781455,
+            "name": "acceptance-gate (full suite + install journey + real Hermes)",
+            "status": "completed",
+            "conclusion": "skipped"
+          }
+        ]
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 37041738660,
+        "event": "push",
+        "headSha": "888413eb58950754af82f4882e2504c3c842892d",
+        "status": "completed",
+        "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37041738660",
+        "workflowName": "Gitleaks",
+        "receipt": "tmp/t0189-hosted-closure/push-gitleaks-37041738660-1790963322521.json",
+        "jobs": [
+          {
+            "id": 110953237744,
+            "name": "scan",
+            "status": "completed",
+            "conclusion": "success"
+          }
+        ]
+      }
+    ]
+  },
+  "scope_note": "Readiness expands original hook-only globs into41exact production paths. Retain facade contracts and old-link mocks if cache requirements permit. T0192 owns prop restructuring; T0191 owns responsive presentation repairs. No implementation before independent oracle freeze/redcommit.",
+  "invariants": [
+    "Delayed creation, send, approval, Stop and stream reconciliation cannot overwrite a newer selection, draft, transcript or approval. Current-generation completion, blank-chat reuse and clicked-row export still work.",
+    "Missions share canonical raw-envelope cache keys with Dashboard; list/detail/template/category errors stay scoped and visible, with banner-only mission read feedback. Preserve injected fetchers,15-second polling/focus behaviour,200-row list/older-link retention and optimistic rollback without erasing unrelated updates.",
+    "Independent mission and template drafts and dispatch acknowledgement survive. Use canonical dispatch modes; malformed template mode retains last valid mode with visible feedback and cannot submit the malformed value.",
+    "Story storage failure never destroys current input or turns successful server creation into failure. Keep stored keys, POST-read identities,unknown-spend semantics,explicit write intent,abort signals and Stop/write-latch contracts.",
+    "Hindsight failures differ from successful emptiness; errors support explicit retry. Preserve active-tab reads,health/count/stale semantics,CRUD draft/pending states,model identity,tags/priority and explicit-only reflection. No automatic provider-work retry.",
+    "Shared preference writes preserve Sidebar initial server value,local optimistic quiet failure and no extra preference read; operator preferences retain pending/error feedback and canonical invalidation.",
+    "Keep Select/Picker distinction,theme tokens,legacy storage migration,standalone toast fallback,provider ownership,elapsed deadlines,read-only/auth boundaries and all historical test identities. Only independently authorised provider-wrapper amendments may change existing suites."
+  ],
+  "rollback": "Revert each Chat, Mission, Story/Hindsight or preference cohort independently with its shared interfaces and oracles. Keep every prior receipt/checkpoint; no database migration or stored-key rewrite.",
+  "verify_line": "Freeze independent public-action behavioural oracles and historical identities before changes. Prove controlled async ownership/cache/error/storage/explicit-action cases, real page browser journeys at1440x900/390x844 and measured stats observer trace. Run app/test types,fullJest,unchangedten-stagegate; cleancommittedmutation controls/restoration; independentR2; all implementation/closure-head hosted jobs. Disposition all48ownershipitems without overstating provider/integration proof.",
+  "oracle_status": "Not yet authored/frozen; implementation prohibited.",
+  "oracle_design": "tmp/t0190-oracle-design-20261002.md",
+  "readiness": "tmp/t0190-full-readiness-review-20261002.md",
+  "claim_review": "tmp/t0190-claims-and-controls-20261002.md",
+  "historical_cohort": [
+    "tests/unit/b14-story-reader-writes-on-request.test.tsx",
+    "tests/unit/story-stop-and-the-write-latch.test.tsx",
+    "tests/unit/story-stop-holds-every-call.test.tsx",
+    "tests/unit/story-cost-is-on-screen.test.tsx",
+    "tests/unit/hindsight-browser-render.test.tsx",
+    "tests/unit/b7-memory-empty-states.test.tsx",
+    "tests/unit/chat-failure-truth-streams.test.tsx",
+    "tests/unit/chat-failure-truth.test.ts",
+    "tests/unit/b13-chat-export-and-load-errors.test.tsx",
+    "tests/unit/chat-page-toast.test.tsx",
+    "tests/unit/b1-fast-chat-carries-the-key.test.ts",
+    "tests/unit/mission-old-link-retention.test.tsx",
+    "tests/unit/mission-old-link-restoration-boundary.test.tsx",
+    "tests/unit/mission-old-link-overlap.test.tsx",
+    "tests/unit/b10-category-write-failures.test.tsx",
+    "tests/unit/b10-category-modal-keeps-a-refusal.test.tsx",
+    "tests/unit/b10-template-editor-has-its-own-draft.test.tsx",
+    "tests/unit/mission-composer-finishes.test.tsx",
+    "tests/unit/mission-composer-actions.test.tsx",
+    "tests/unit/mission-dispatch-gate.test.tsx",
+    "tests/unit/mission-dispatch-edge-contract.test.ts",
+    "tests/unit/dispatch-mode.test.ts",
+    "tests/unit/dispatch-mode-is-validated.test.ts",
+    "tests/unit/mission-editor-panel-run-state.test.tsx",
+    "tests/unit/b10-mission-panel-schedule-and-sessions.test.tsx",
+    "tests/unit/b14-story-create-library-and-model.test.tsx",
+    "tests/unit/story-reader-error-banner.test.tsx",
+    "tests/unit/story-stop-is-not-a-provider-timeout.test.ts",
+    "tests/unit/hindsight-unreachable-banner.test.tsx",
+    "tests/unit/load-hindsight-list.test.ts",
+    "tests/unit/u11-models-memory-and-the-eyebrows.test.tsx",
+    "tests/unit/b3-operator-prefs.test.ts",
+    "tests/unit/use-api-resource.test.tsx",
+    "tests/unit/api-resource-keeps-the-failed-body.test.tsx",
+    "tests/unit/u15-reads-go-through-the-hook.test.tsx",
+    "tests/unit/api-write.test.ts",
+    "tests/unit/api-fetch-deadline-reach.test.ts",
+    "tests/unit/run-deadline.test.ts",
+    "tests/unit/b1-deploy-footer-tells-the-truth.test.tsx",
+    "tests/unit/b2-toasts-stack.test.tsx",
+    "tests/unit/b2-confirm-button.test.tsx",
+    "tests/unit/c3-one-way-to-write.test.ts",
+    "tests/unit/c6-the-page-layer.test.ts",
+    "tests/unit/u15-nothing-lives-only-for-its-test.test.ts",
+    "tests/unit/u6-colour-that-is-there.test.ts",
+    "tests/unit/u8-the-focus-ring.test.ts",
+    "tests/unit/b2-focus-is-visible.test.ts",
+    "tests/unit/lockbook-tokens.test.ts",
+    "tests/unit/api-auth.test.ts",
+    "tests/unit/b1-host-writes-need-a-token.test.ts",
+    "tests/unit/failed-auth-costs-something.test.ts",
+    "tests/unit/proxy-auth.test.ts",
+    "tests/unit/read-only-actually-reads.test.ts",
+    "tests/unit/read-only-is-testable.test.ts",
+    "tests/unit/t0158-held-response-revocation.test.ts",
+    "tests/unit/t0158-direct-held-response.test.ts",
+    "tests/unit/t0158-mixed-held-response.test.ts",
+    "tests/unit/api-schemas-narrowing.test.ts",
+    "tests/unit/api-response.test.ts",
+    "tests/unit/api-response-server-error-from-helper-result.test.ts",
+    "tests/e2e/mission-old-link-boundary.spec.ts",
+    "tests/e2e/missions-compose.spec.ts",
+    "tests/e2e/missions-flows.spec.ts",
+    "tests/e2e/missions-stats-strip.spec.ts",
+    "tests/e2e/requests.spec.ts",
+    "tests/e2e/story-weaver.spec.ts",
+    "tests/e2e/story-weaver-save-failure.spec.ts",
+    "tests/e2e/story-weaver-save-boundaries.spec.ts"
+  ],
+  "independent_amendments": {
+    "scope": [
+      "tests/unit/b14-story-reader-writes-on-request.test.tsx",
+      "tests/unit/story-stop-and-the-write-latch.test.tsx",
+      "tests/unit/story-stop-holds-every-call.test.tsx",
+      "tests/unit/story-cost-is-on-screen.test.tsx",
+      "tests/unit/hindsight-browser-render.test.tsx",
+      "tests/unit/b7-memory-empty-states.test.tsx"
+    ],
+    "rule": "Different author changes only necessary QueryClient render wrappers, preserving names/assertions/fixtures/action sequences. Capture original controls and exact emitted identities before amendment. No other historical amendment authorised."
+  },
+  "preflight": [
+    {
+      "receipt": "tmp/t0190-chat-browser-preflight-20261002.md",
+      "result": "Controlled production UI atbothwidths: delayed NewChat clears newlytypedinput; selectingBwhilepending also replacedbyNewChat. Coordinator reproduction, notindependentoracle orproviderproof."
+    }
+  ],
+  "oracle_author": "Carver 01a0fd33-6991-7a93-be6b-9285743b5ccc, independent of T0190implementation",
+  "oracle_session": "2026-10-02-t0190-oracle-carver",
+  "oracle_claims": [
+    "tests/unit/chat-response-ownership.test.tsx",
+    "tests/unit/mission-query-ownership.test.tsx",
+    "tests/unit/story-client-boundaries.test.tsx",
+    "tests/unit/hindsight-query-feedback.test.tsx",
+    "tests/unit/preference-write-contract.test.tsx",
+    "tests/unit/client-query-observers.test.tsx",
+    "tests/e2e/client-read-ownership.spec.ts",
+    "tests/unit/b14-story-reader-writes-on-request.test.tsx",
+    "tests/unit/story-stop-and-the-write-latch.test.tsx",
+    "tests/unit/story-stop-holds-every-call.test.tsx",
+    "tests/unit/story-cost-is-on-screen.test.tsx",
+    "tests/unit/hindsight-browser-render.test.tsx",
+    "tests/unit/b7-memory-empty-states.test.tsx"
+  ]
+}

@@ -1,0 +1,641 @@
+{
+  "task": "T-0190",
+  "inspectedRevision": "888413eb58950754af82f4882e2504c3c842892d",
+  "counts": {
+    "findings": 21,
+    "operatorDispositions": 5,
+    "coverage": 22
+  },
+  "groups": {
+    "findings": [
+      {
+        "id": "hooks-07",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/hooks-07",
+        "inspectedRevision": "888413eb58950754af82f4882e2504c3c842892d",
+        "evidence": [
+          "tmp/t0190-full-readiness-review-20261002.md"
+        ],
+        "scepticVerdict": "Read-only readiness; independent final sceptic pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Composition roots still re-list slice fields. The historic 197-line saving is not a current net measurement.",
+        "owningTask": "T-0190",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind implemented,retained or deferred conclusion to actual verification before closure."
+      },
+      {
+        "id": "hooks-08",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/hooks-08",
+        "inspectedRevision": "888413eb58950754af82f4882e2504c3c842892d",
+        "evidence": [
+          "tmp/t0190-full-readiness-review-20261002.md"
+        ],
+        "scepticVerdict": "Read-only readiness; independent final sceptic pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Parallel draft state persists. `dispatchAcknowledged` side effect must survive any merge.",
+        "owningTask": "T-0190",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind implemented,retained or deferred conclusion to actual verification before closure."
+      },
+      {
+        "id": "hooks-01",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/hooks-01",
+        "inspectedRevision": "888413eb58950754af82f4882e2504c3c842892d",
+        "evidence": [
+          "tmp/t0190-full-readiness-review-20261002.md"
+        ],
+        "scepticVerdict": "Read-only readiness; independent final sceptic pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Board still fetches by hand beside cache. Migration must add template/detail error surfaces and preserve optimistic updates and injected test fetchers.",
+        "owningTask": "T-0190",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind implemented,retained or deferred conclusion to actual verification before closure."
+      },
+      {
+        "id": "hooks-06",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/hooks-06",
+        "inspectedRevision": "888413eb58950754af82f4882e2504c3c842892d",
+        "evidence": [
+          "tmp/t0190-full-readiness-review-20261002.md"
+        ],
+        "scepticVerdict": "Read-only readiness; independent final sceptic pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Single-slot fallback is unused beneath the shell but is not universally dead; tests and standalone use remain.",
+        "owningTask": "T-0190",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind implemented,retained or deferred conclusion to actual verification before closure."
+      },
+      {
+        "id": "hooks-15",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/hooks-15",
+        "inspectedRevision": "888413eb58950754af82f4882e2504c3c842892d",
+        "evidence": [
+          "tmp/t0190-full-readiness-review-20261002.md"
+        ],
+        "scepticVerdict": "Read-only readiness; independent final sceptic pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Empty focus map and aliases remain. Do not delete the separate lock-book token mirror.",
+        "owningTask": "T-0190",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind implemented,retained or deferred conclusion to actual verification before closure."
+      },
+      {
+        "id": "hooks-09",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/hooks-09",
+        "inspectedRevision": "888413eb58950754af82f4882e2504c3c842892d",
+        "evidence": [
+          "tmp/t0190-full-readiness-review-20261002.md"
+        ],
+        "scepticVerdict": "Read-only readiness; independent final sceptic pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Local poll and bare fetch remain, but attempts and each request are bounded. No measured polling cost.",
+        "owningTask": "T-0190",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind implemented,retained or deferred conclusion to actual verification before closure."
+      },
+      {
+        "id": "hooks-17",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/hooks-17",
+        "inspectedRevision": "888413eb58950754af82f4882e2504c3c842892d",
+        "evidence": [
+          "tmp/t0190-full-readiness-review-20261002.md"
+        ],
+        "scepticVerdict": "Read-only readiness; independent final sceptic pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Event lists differ. Consumers have different stream semantics; a shared list needs an event-contract oracle.",
+        "owningTask": "T-0190",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind implemented,retained or deferred conclusion to actual verification before closure."
+      },
+      {
+        "id": "hooks-25",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/hooks-25",
+        "inspectedRevision": "888413eb58950754af82f4882e2504c3c842892d",
+        "evidence": [
+          "tmp/t0190-full-readiness-review-20261002.md"
+        ],
+        "scepticVerdict": "Read-only readiness; independent final sceptic pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Legacy browser-key migration remains.",
+        "owningTask": "T-0190",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind implemented,retained or deferred conclusion to actual verification before closure."
+      },
+      {
+        "id": "hooks-12",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/hooks-12",
+        "inspectedRevision": "888413eb58950754af82f4882e2504c3c842892d",
+        "evidence": [
+          "tmp/t0190-full-readiness-review-20261002.md"
+        ],
+        "scepticVerdict": "Read-only readiness; independent final sceptic pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: `ApiModel` already uses the canonical library type; local `ApiDefaults` still spells twelve fields. Wholesale type-duplication claim is too broad.",
+        "owningTask": "T-0190",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind implemented,retained or deferred conclusion to actual verification before closure."
+      },
+      {
+        "id": "hooks-13",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/hooks-13",
+        "inspectedRevision": "888413eb58950754af82f4882e2504c3c842892d",
+        "evidence": [
+          "tmp/t0190-full-readiness-review-20261002.md"
+        ],
+        "scepticVerdict": "Read-only readiness; independent final sceptic pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Repeated toast function types remain, with small parameter/type variants.",
+        "owningTask": "T-0190",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind implemented,retained or deferred conclusion to actual verification before closure."
+      },
+      {
+        "id": "hooks-18",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/hooks-18",
+        "inspectedRevision": "888413eb58950754af82f4882e2504c3c842892d",
+        "evidence": [
+          "tmp/t0190-full-readiness-review-20261002.md"
+        ],
+        "scepticVerdict": "Read-only readiness; independent final sceptic pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Preference write is duplicated. A shared-hook change must preserve pending/error semantics.",
+        "owningTask": "T-0190",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind implemented,retained or deferred conclusion to actual verification before closure."
+      },
+      {
+        "id": "hooks-16",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/hooks-16",
+        "inspectedRevision": "888413eb58950754af82f4882e2504c3c842892d",
+        "evidence": [
+          "tmp/t0190-full-readiness-review-20261002.md"
+        ],
+        "scepticVerdict": "Read-only readiness; independent final sceptic pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Old route and deleted-helper names persist in comments; some nearby comments have been corrected.",
+        "owningTask": "T-0190",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind implemented,retained or deferred conclusion to actual verification before closure."
+      },
+      {
+        "id": "hooks-11",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/hooks-11",
+        "inspectedRevision": "888413eb58950754af82f4882e2504c3c842892d",
+        "evidence": [
+          "tmp/t0190-full-readiness-review-20261002.md"
+        ],
+        "scepticVerdict": "Read-only readiness; independent final sceptic pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Comment promises deference to an outer query client; component always constructs and mounts one. Product impact of nested providers is unproved.",
+        "owningTask": "T-0190",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind implemented,retained or deferred conclusion to actual verification before closure."
+      },
+      {
+        "id": "hooks-14",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/hooks-14",
+        "inspectedRevision": "888413eb58950754af82f4882e2504c3c842892d",
+        "evidence": [
+          "tmp/t0190-full-readiness-review-20261002.md"
+        ],
+        "scepticVerdict": "Read-only readiness; independent final sceptic pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Duplicate union and unchecked template-mode cast remain.",
+        "owningTask": "T-0190",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind implemented,retained or deferred conclusion to actual verification before closure."
+      },
+      {
+        "id": "hooks-02",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/hooks-02",
+        "inspectedRevision": "888413eb58950754af82f4882e2504c3c842892d",
+        "evidence": [
+          "tmp/t0190-full-readiness-review-20261002.md"
+        ],
+        "scepticVerdict": "Read-only readiness; independent final sceptic pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Failed polls can repeat assertive alerts every 15 seconds. No browser accessibility journey run. Templates/detail need new error surfaces before removing toasts.",
+        "owningTask": "T-0190",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind implemented,retained or deferred conclusion to actual verification before closure."
+      },
+      {
+        "id": "hooks-20",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/hooks-20",
+        "inspectedRevision": "888413eb58950754af82f4882e2504c3c842892d",
+        "evidence": [
+          "tmp/t0190-full-readiness-review-20261002.md"
+        ],
+        "scepticVerdict": "Read-only readiness; independent final sceptic pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Server-oriented helper remains under `ui`, but the placement was deliberate and a second move has no measured gain.",
+        "owningTask": "T-0190",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind implemented,retained or deferred conclusion to actual verification before closure."
+      },
+      {
+        "id": "hooks-22",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/hooks-22",
+        "inspectedRevision": "888413eb58950754af82f4882e2504c3c842892d",
+        "evidence": [
+          "tmp/t0190-full-readiness-review-20261002.md"
+        ],
+        "scepticVerdict": "Read-only readiness; independent final sceptic pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Conditional spreads and `refetch().data.value` access persist. No failure or positive net saving shown.",
+        "owningTask": "T-0190",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind implemented,retained or deferred conclusion to actual verification before closure."
+      },
+      {
+        "id": "hooks-24",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/hooks-24",
+        "inspectedRevision": "888413eb58950754af82f4882e2504c3c842892d",
+        "evidence": [
+          "tmp/t0190-full-readiness-review-20261002.md"
+        ],
+        "scepticVerdict": "Read-only readiness; independent final sceptic pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Hook accepts arbitrary media queries despite mobile name. No behaviour fault shown.",
+        "owningTask": "T-0190",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind implemented,retained or deferred conclusion to actual verification before closure."
+      },
+      {
+        "id": "hooks-21",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/hooks-21",
+        "inspectedRevision": "888413eb58950754af82f4882e2504c3c842892d",
+        "evidence": [
+          "tmp/t0190-full-readiness-review-20261002.md"
+        ],
+        "scepticVerdict": "Read-only readiness; independent final sceptic pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Returned object and `isArmedFor` are recreated. Actual render cost is unmeasured.",
+        "owningTask": "T-0190",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind implemented,retained or deferred conclusion to actual verification before closure."
+      },
+      {
+        "id": "hooks-04",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/hooks-04",
+        "inspectedRevision": "888413eb58950754af82f4882e2504c3c842892d",
+        "evidence": [
+          "tmp/t0190-full-readiness-review-20261002.md"
+        ],
+        "scepticVerdict": "Read-only readiness; independent final sceptic pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Rule now detects raw `fetch` writes; four files remain on named baselines. The detection fix does not convert those writes. C3/C6 focused tests passed.",
+        "owningTask": "T-0190",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind implemented,retained or deferred conclusion to actual verification before closure."
+      },
+      {
+        "id": "hooks-05",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/hooks-05",
+        "inspectedRevision": "888413eb58950754af82f4882e2504c3c842892d",
+        "evidence": [
+          "tmp/t0190-full-readiness-review-20261002.md"
+        ],
+        "scepticVerdict": "Read-only readiness; independent final sceptic pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Census now identifies five hand-read files. Visibility is fixed; the reads themselves remain. Focused census/C3 tests passed.",
+        "owningTask": "T-0190",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind implemented,retained or deferred conclusion to actual verification before closure."
+      }
+    ],
+    "operatorDispositions": [
+      {
+        "id": "hooks-01",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#operatorDispositions/hooks-01",
+        "inspectedRevision": "888413eb58950754af82f4882e2504c3c842892d",
+        "evidence": [
+          "tmp/t0190-full-readiness-review-20261002.md"
+        ],
+        "scepticVerdict": "Read-only readiness; independent final sceptic pending",
+        "ruling": "org/reviews/2026-09-decision-register.md:2353; Reverify the item-specific ruled disposition against its accepted decision and parent qualification.",
+        "owningTask": "T-0190",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind implemented,retained or deferred conclusion to actual verification before closure."
+      },
+      {
+        "id": "hooks-15a",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#operatorDispositions/hooks-15a",
+        "inspectedRevision": "888413eb58950754af82f4882e2504c3c842892d",
+        "evidence": [
+          "tmp/t0190-full-readiness-review-20261002.md"
+        ],
+        "scepticVerdict": "Read-only readiness; independent final sceptic pending",
+        "ruling": "org/reviews/2026-09-decision-register.md:3094; Reverify the item-specific free-band disposition against its accepted decision and parent qualification.",
+        "owningTask": "T-0190",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind implemented,retained or deferred conclusion to actual verification before closure."
+      },
+      {
+        "id": "hooks-25",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#operatorDispositions/hooks-25",
+        "inspectedRevision": "888413eb58950754af82f4882e2504c3c842892d",
+        "evidence": [
+          "tmp/t0190-full-readiness-review-20261002.md"
+        ],
+        "scepticVerdict": "Read-only readiness; independent final sceptic pending",
+        "ruling": "org/reviews/2026-09-decision-register.md:1335; Reverify the item-specific ruled disposition against its accepted decision and parent qualification.",
+        "owningTask": "T-0190",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind implemented,retained or deferred conclusion to actual verification before closure."
+      },
+      {
+        "id": "hooks-02",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#operatorDispositions/hooks-02",
+        "inspectedRevision": "888413eb58950754af82f4882e2504c3c842892d",
+        "evidence": [
+          "tmp/t0190-full-readiness-review-20261002.md"
+        ],
+        "scepticVerdict": "Read-only readiness; independent final sceptic pending",
+        "ruling": "org/reviews/2026-09-decision-register.md:2368; Reverify the item-specific ruled disposition against its accepted decision and parent qualification.",
+        "owningTask": "T-0190",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind implemented,retained or deferred conclusion to actual verification before closure."
+      },
+      {
+        "id": "cross-cutting-21a",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#operatorDispositions/cross-cutting-21a",
+        "inspectedRevision": "888413eb58950754af82f4882e2504c3c842892d",
+        "evidence": [
+          "tmp/t0190-full-readiness-review-20261002.md"
+        ],
+        "scepticVerdict": "Read-only readiness; independent final sceptic pending",
+        "ruling": "org/reviews/2026-09-decision-register.md:3070; Guard the four browser-storage calls without renaming stored keys.",
+        "owningTask": "T-0190",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind implemented,retained or deferred conclusion to actual verification before closure."
+      }
+    ],
+    "coverage": [
+      {
+        "id": "gap-064.1",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-064.1",
+        "inspectedRevision": "888413eb58950754af82f4882e2504c3c842892d",
+        "evidence": [
+          "tmp/t0190-full-readiness-review-20261002.md"
+        ],
+        "scepticVerdict": "Read-only readiness; independent final sceptic pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Observe repeated failed board reads and toast announcements. Starting check: src/hooks/useMissionsData.ts:193-260; src/hooks/useMissionCategories.ts:32-45. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0190",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind implemented,retained or deferred conclusion to actual verification before closure."
+      },
+      {
+        "id": "gap-064.2",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-064.2",
+        "inspectedRevision": "888413eb58950754af82f4882e2504c3c842892d",
+        "evidence": [
+          "tmp/t0190-full-readiness-review-20261002.md"
+        ],
+        "scepticVerdict": "Read-only readiness; independent final sceptic pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Verify dashboard/template/category cache staleness after board writes. Starting check: src/hooks/useDashboard.ts:118-136; src/hooks/useMissionsData.ts:154-217. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0190",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind implemented,retained or deferred conclusion to actual verification before closure."
+      },
+      {
+        "id": "gap-064.3",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-064.3",
+        "inspectedRevision": "888413eb58950754af82f4882e2504c3c842892d",
+        "evidence": [
+          "tmp/t0190-full-readiness-review-20261002.md"
+        ],
+        "scepticVerdict": "Read-only readiness; independent final sceptic pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Measure staggered /api/stats requests with multiple observers. Starting check: src/hooks/useStats.ts:12-16; src/hooks/useApiResource.ts:95-121. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0190",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind implemented,retained or deferred conclusion to actual verification before closure."
+      },
+      {
+        "id": "gap-065.1",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-065.1",
+        "inspectedRevision": "888413eb58950754af82f4882e2504c3c842892d",
+        "evidence": [
+          "tmp/t0190-full-readiness-review-20261002.md"
+        ],
+        "scepticVerdict": "Read-only readiness; independent final sceptic pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Count suites actually broken by removing useToast fallback in isolation. Starting check: src/components/ui/Toast.tsx:175-224; rg -l 'toastElement|useToast|role=.alert' tests/unit. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0190",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind implemented,retained or deferred conclusion to actual verification before closure."
+      },
+      {
+        "id": "gap-066.1",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-066.1",
+        "inspectedRevision": "888413eb58950754af82f4882e2504c3c842892d",
+        "evidence": [
+          "tmp/t0190-full-readiness-review-20261002.md"
+        ],
+        "scepticVerdict": "Read-only readiness; independent final sceptic pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Trace reads and writes in useHindsightCrudTab. Starting check: src/components/memory/hindsight/useHindsightCrudTab.ts:45-116. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0190",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind implemented,retained or deferred conclusion to actual verification before closure."
+      },
+      {
+        "id": "gap-066.2",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-066.2",
+        "inspectedRevision": "888413eb58950754af82f4882e2504c3c842892d",
+        "evidence": [
+          "tmp/t0190-full-readiness-review-20261002.md"
+        ],
+        "scepticVerdict": "Read-only readiness; independent final sceptic pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Trace reads and writes in useHindsightMemories. Starting check: src/components/memory/hindsight/useHindsightMemories.ts:57-157. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0190",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind implemented,retained or deferred conclusion to actual verification before closure."
+      },
+      {
+        "id": "gap-066.3",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-066.3",
+        "inspectedRevision": "888413eb58950754af82f4882e2504c3c842892d",
+        "evidence": [
+          "tmp/t0190-full-readiness-review-20261002.md"
+        ],
+        "scepticVerdict": "Read-only readiness; independent final sceptic pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Trace reads and writes in useHindsightModels. Starting check: src/components/memory/hindsight/useHindsightModels.ts:46-51. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0190",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind implemented,retained or deferred conclusion to actual verification before closure."
+      },
+      {
+        "id": "gap-066.4",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-066.4",
+        "inspectedRevision": "888413eb58950754af82f4882e2504c3c842892d",
+        "evidence": [
+          "tmp/t0190-full-readiness-review-20261002.md"
+        ],
+        "scepticVerdict": "Read-only readiness; independent final sceptic pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Trace reads and writes in useHindsightDirectives. Starting check: src/components/memory/hindsight/useHindsightDirectives.ts:55-59. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0190",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind implemented,retained or deferred conclusion to actual verification before closure."
+      },
+      {
+        "id": "gap-067.1",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-067.1",
+        "inspectedRevision": "888413eb58950754af82f4882e2504c3c842892d",
+        "evidence": [
+          "tmp/t0190-full-readiness-review-20261002.md"
+        ],
+        "scepticVerdict": "Read-only readiness; independent final sceptic pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Read TemplateEditorModal body for hooks-07/-08 prop claim. Starting check: src/components/missions/templates/TemplateEditorModal.tsx:1. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0190",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind implemented,retained or deferred conclusion to actual verification before closure."
+      },
+      {
+        "id": "gap-067.2",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-067.2",
+        "inspectedRevision": "888413eb58950754af82f4882e2504c3c842892d",
+        "evidence": [
+          "tmp/t0190-full-readiness-review-20261002.md"
+        ],
+        "scepticVerdict": "Read-only readiness; independent final sceptic pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Read MissionCreateForm body for hooks-07/-08 prop claim. Starting check: src/components/missions/MissionCreateForm.tsx:1. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0190",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind implemented,retained or deferred conclusion to actual verification before closure."
+      },
+      {
+        "id": "gap-067.3",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-067.3",
+        "inspectedRevision": "888413eb58950754af82f4882e2504c3c842892d",
+        "evidence": [
+          "tmp/t0190-full-readiness-review-20261002.md"
+        ],
+        "scepticVerdict": "Read-only readiness; independent final sceptic pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Read MissionsList body for hooks-07/-08 prop claim. Starting check: src/components/missions/MissionsList.tsx:1. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0190",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind implemented,retained or deferred conclusion to actual verification before closure."
+      },
+      {
+        "id": "gap-067.4",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-067.4",
+        "inspectedRevision": "888413eb58950754af82f4882e2504c3c842892d",
+        "evidence": [
+          "tmp/t0190-full-readiness-review-20261002.md"
+        ],
+        "scepticVerdict": "Read-only readiness; independent final sceptic pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Recalculate prop-reshape saving after the three bodies are read. Starting check: src/app/work/missions/page.tsx:171-245. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0190",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind implemented,retained or deferred conclusion to actual verification before closure."
+      },
+      {
+        "id": "gap-068.1",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-068.1",
+        "inspectedRevision": "888413eb58950754af82f4882e2504c3c842892d",
+        "evidence": [
+          "tmp/t0190-full-readiness-review-20261002.md"
+        ],
+        "scepticVerdict": "Read-only readiness; independent final sceptic pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Audit api-auth security semantics. Starting check: src/lib/api/api-auth.ts:1. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0190",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind implemented,retained or deferred conclusion to actual verification before closure."
+      },
+      {
+        "id": "gap-068.2",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-068.2",
+        "inspectedRevision": "888413eb58950754af82f4882e2504c3c842892d",
+        "evidence": [
+          "tmp/t0190-full-readiness-review-20261002.md"
+        ],
+        "scepticVerdict": "Read-only readiness; independent final sceptic pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Audit auth-token security semantics. Starting check: src/lib/api/auth-token.ts:1. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0190",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind implemented,retained or deferred conclusion to actual verification before closure."
+      },
+      {
+        "id": "gap-068.3",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-068.3",
+        "inspectedRevision": "888413eb58950754af82f4882e2504c3c842892d",
+        "evidence": [
+          "tmp/t0190-full-readiness-review-20261002.md"
+        ],
+        "scepticVerdict": "Read-only readiness; independent final sceptic pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Audit auth-throttle security semantics. Starting check: src/lib/api/auth-throttle.ts:1. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0190",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind implemented,retained or deferred conclusion to actual verification before closure."
+      },
+      {
+        "id": "gap-068.4",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-068.4",
+        "inspectedRevision": "888413eb58950754af82f4882e2504c3c842892d",
+        "evidence": [
+          "tmp/t0190-full-readiness-review-20261002.md"
+        ],
+        "scepticVerdict": "Read-only readiness; independent final sceptic pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Audit read-only method/path enforcement. Starting check: src/lib/api/read-only.ts:1. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0190",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind implemented,retained or deferred conclusion to actual verification before closure."
+      },
+      {
+        "id": "gap-068.5",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-068.5",
+        "inspectedRevision": "888413eb58950754af82f4882e2504c3c842892d",
+        "evidence": [
+          "tmp/t0190-full-readiness-review-20261002.md"
+        ],
+        "scepticVerdict": "Read-only readiness; independent final sceptic pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Audit api-schemas validation and refusal semantics. Starting check: src/lib/api/api-schemas.ts:1. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0190",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind implemented,retained or deferred conclusion to actual verification before closure."
+      },
+      {
+        "id": "gap-068.6",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-068.6",
+        "inspectedRevision": "888413eb58950754af82f4882e2504c3c842892d",
+        "evidence": [
+          "tmp/t0190-full-readiness-review-20261002.md"
+        ],
+        "scepticVerdict": "Read-only readiness; independent final sceptic pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Audit api-response status/body semantics. Starting check: src/lib/api/api-response.ts:1. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0190",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind implemented,retained or deferred conclusion to actual verification before closure."
+      },
+      {
+        "id": "gap-069.1",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-069.1",
+        "inspectedRevision": "888413eb58950754af82f4882e2504c3c842892d",
+        "evidence": [
+          "tmp/t0190-full-readiness-review-20261002.md"
+        ],
+        "scepticVerdict": "Read-only readiness; independent final sceptic pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Recount Story Weaver raw fetch call sites. Starting check: rg -n 'fetch\\(' src/app/recroom/story-weaver src/modules/rec-room. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0190",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind implemented,retained or deferred conclusion to actual verification before closure."
+      },
+      {
+        "id": "gap-069.2",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-069.2",
+        "inspectedRevision": "888413eb58950754af82f4882e2504c3c842892d",
+        "evidence": [
+          "tmp/t0190-full-readiness-review-20261002.md"
+        ],
+        "scepticVerdict": "Read-only readiness; independent final sceptic pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, each of ten fetch calls: classify operation, failure handling and intended page-layer owner. Starting check: src/app/recroom/story-weaver/[id]/page.tsx:98,115,133,162,269,301,333,374,408; src/app/recroom/story-weaver/create/page.tsx:469. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0190",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind implemented,retained or deferred conclusion to actual verification before closure."
+      },
+      {
+        "id": "gap-070.1",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-070.1",
+        "inspectedRevision": "888413eb58950754af82f4882e2504c3c842892d",
+        "evidence": [
+          "tmp/t0190-full-readiness-review-20261002.md"
+        ],
+        "scepticVerdict": "Read-only readiness; independent final sceptic pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Inventory direct client fetch/query/write primitives under rec-room module. Starting check: rg -n 'fetch\\(|apiFetch|runWrite|useApiResource|useMutation|useQuery' src/modules/rec-room. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0190",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind implemented,retained or deferred conclusion to actual verification before closure."
+      },
+      {
+        "id": "gap-070.2",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-070.2",
+        "inspectedRevision": "888413eb58950754af82f4882e2504c3c842892d",
+        "evidence": [
+          "tmp/t0190-full-readiness-review-20261002.md"
+        ],
+        "scepticVerdict": "Read-only readiness; independent final sceptic pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Trace callback props from 24 client rec-room components to page-owned reads and writes. Starting check: rg -n '^\"use client\"' src/modules/rec-room/components; rg -n 'on[A-Z]' src/modules/rec-room/components. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0190",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind implemented,retained or deferred conclusion to actual verification before closure."
+      }
+    ]
+  }
+}
