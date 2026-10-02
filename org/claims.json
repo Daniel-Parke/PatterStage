@@ -43,17 +43,7 @@
         "scripts/tooling/line-census.baseline.json",
         "scripts/tooling/design-lint.baseline.json",
         "tests/fixtures/mutants/T-0190.json",
-        "org/briefs/T-0190-client-implementation.md"
-      ],
-      "acquired": "2026-10-02T17:49:07.371181+00:00",
-      "expires": "2026-10-03T17:49:07.371181+00:00"
-    },
-    {
-      "lane_id": "T-0190-client",
-      "task_id": "T-0190",
-      "session_id": "2026-10-02-t0190-client-averroes",
-      "host": "local",
-      "path_claims": [
+        "org/briefs/T-0190-client-implementation.md",
         "src/hooks/useOperatorPrefs.ts",
         "src/hooks/usePreferenceWrite.ts",
         "src/components/layout/Sidebar.tsx",
@@ -73,11 +63,12 @@
         "src/components/providers/FeedbackProvider.tsx",
         "src/lib/ui/theme.ts",
         "src/components/ui/Input.tsx",
-        "src/components/ui/Select.tsx"
+        "src/components/ui/Select.tsx",
+        "org/briefs/T-0190-supplementary-oracle.md"
       ],
-      "acquired": "2026-10-02T18:38:26.750374+00:00",
-      "expires": "2026-10-03T18:38:26.750374+00:00"
+      "acquired": "2026-10-02T17:49:07.371181+00:00",
+      "expires": "2026-10-03T17:49:07.371181+00:00"
     }
   ],
-  "note": "Independent oracle writer stopped. Frozen tests have no implementation writer. Two disjoint source lanes:coordinator21 andAverroes20. Read-only reviewers write nothing."
+  "note": "Both source worker and supplementary oracle writer stopped. Coordinator owns source/metadata; all14oraclefiles frozen without a writer. Sagan independently reviews."
 }

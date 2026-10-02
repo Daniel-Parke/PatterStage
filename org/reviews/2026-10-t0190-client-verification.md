@@ -63,3 +63,49 @@ binds all13files,95unit cases(53pass/42behaviouralred),10browser cases(2pass/8re
 ownership mappings. Exact hashes are recorded on the task. The extra first-chat
 detail race is independently reproduced. Baseline assertions after failures stay
 unexecuted. Production source remains unchanged before the red commit.
+
+## Integrated implementation checks, before supplementary repairs
+
+The two implementation lanes have integrated. Averroes stopped after the20-file
+receipt at tmp/t0190-client/receipt.json; its source hashes matched on copying.
+Coordinator evidence against unchanged isolated snapshots:
+
+- Original95unit oracle cases pass: tmp/t0190-coordinator-jest-1790967587142/summary.json.
+- All602historical controls pass,0skips: tmp/t0190-coordinator-jest-1790968067443/summary.json.
+  Exact expanded names and statuses match the original602-case run:
+  tmp/t0190-integrated-historical-identities.json.
+- Full test-program typing passes: tmp/t0190-coordinator-types-1790967857087/summary.json.
+- Production build passes and creates no database: tmp/t0190-integrated-build-1790967914089/summary.json.
+- Original10browser cases pass,0skips/flakes: tmp/t0190-browser-oracle-1790967997265/summary.json.
+  This executes the previously blocked Hindsight recovery, Story update and Chat
+  selection assertions. Owned process17816 stopped and3998 was free afterwards.
+
+The coordinator also walked Hindsight collection failures, Retry recovery and
+create/cancel dialogs at1440x900 and390x844. Receipt and12image hashes:
+tmp/t0190-green-validation/tmp/t0190-personal-1790968308149/walk.json.
+Phone directive/model dialogs, phone recovered toolbar and desktop failure
+screenshots were personally inspected. Both views have one main h1, no document
+overflow and no page exceptions. Console evidence retains the expected pre-sign-in
+401 and injected503responses; this is not a zero-console-errors claim. The phone
+NewDirective label still wraps outside its compact button, already assigned to
+T0191. Owned server23444 stopped;3998 free; source stamp unchanged.
+
+Independent source reviews identified additional asynchronous ownership
+hypotheses. They remain unresolved pending the independently authored controlled
+regressions in org/briefs/T-0190-supplementary-oracle.md. Original105green cases
+do not establish those additional invariants. The full gate, committed mutation
+sweep, final independent acceptance and hosted checks are still outstanding.
+
+Supplementary freeze: Schrodinger authored33controlled-order/metamorphic cases,
+17passing controls and16structured behavioural reds,0skips/runtimeerrors. This
+is source-informed authorship, not clean-context. Final oracle SHA256
+81020a839abcc4003181551b56aea920ca81aaba8d98598e17d834c427998459;
+manifest tmp/t0190-supplementary-oracle/freeze.json SHA256
+c9db8b9b3d5302318bff035f5351a79f5b833f8071e86c981e48f723e8dc561f.
+Fresh reviewer Sagan accepts freeze/red-commit readiness. All seven ownership
+groups have reproduced failures; the separate pre-version retained-ref assignment
+has no independently established visible regression through the actual bridge
+and is boundedly refuted, not counted as one of those reds. The original13files
+remain unchanged. The final type/comment-only api-write drift is qualified in
+the manifest; final integrated typing remains required. No repair of the seven
+groups preceded this supplementary red freeze.

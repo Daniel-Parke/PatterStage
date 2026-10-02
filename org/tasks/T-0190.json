@@ -89,7 +89,9 @@
     "scripts/tooling/line-census.baseline.json",
     "scripts/tooling/design-lint.baseline.json",
     "tests/fixtures/mutants/T-0190.json",
-    "org/briefs/T-0190-client-implementation.md"
+    "org/briefs/T-0190-client-implementation.md",
+    "tests/unit/client-late-ownership.test.tsx",
+    "org/briefs/T-0190-supplementary-oracle.md"
   ],
   "timestamps": {
     "opened": "2026-10-02T17:49:07.371181+00:00",
@@ -633,6 +635,46 @@
       "src/components/ui/Select.tsx"
     ],
     "brief": "org/briefs/T-0190-client-implementation.md",
-    "oracle_writer_stopped": true
+    "oracle_writer_stopped": true,
+    "client_stopped_receipt": "tmp/t0190-client/receipt.json"
+  },
+  "supplementary_oracle": {
+    "author": "Schrodinger 01a0f7b7-f68a-79b2-ba74-81cdddf2f3ef",
+    "file": "tests/unit/client-late-ownership.test.tsx",
+    "brief": "org/briefs/T-0190-supplementary-oracle.md",
+    "status": "Frozen and independently accepted for red commit; implementation acceptance pending",
+    "manifest": "tmp/t0190-supplementary-oracle/freeze.json",
+    "manifestSha256": "c9db8b9b3d5302318bff035f5351a79f5b833f8071e86c981e48f723e8dc561f",
+    "sha256": "81020a839abcc4003181551b56aea920ca81aaba8d98598e17d834c427998459",
+    "independence": "Source-informed controlled-order/metamorphic invariants with valid controls. NOT clean-context: author previously reviewed source. Fresh independent reviewer required.",
+    "counts": {
+      "total": 33,
+      "passed": 17,
+      "structuredMatcherFailed": 16,
+      "skipped": 0,
+      "runtimeErrors": 0
+    },
+    "receipts": [
+      "tmp/t0190-supplementary-oracle/final-red-1790968838862/receipt.json",
+      "tmp/t0190-supplementary-oracle/types-1790968860384/receipt.json",
+      "tmp/t0190-supplementary-oracle/lint-1790968883552/receipt.json"
+    ],
+    "typesExit": 0,
+    "lintExit": 0,
+    "retainedRowSubcase": "Bounded reasoned refutation of a standalone visible-row regression, not a forced red: useMissionsData.ts155-157 can assign the retained ref before checking refreshVersion, but matches only the currently retained ID on resumption. The version guard at185 prevents publishing that stale list, and this ref assignment itself sets no reactive state. The next refresh replaces the row from its own list or obtains current by-ID detail with version/ID guards before publishing. Ordinary reads share a query flight and after-write reads cancel it. Independent mocked stale list promises would bypass that actual bridge. No separate user-visible retained-row corruption is established; this is not proof against every possible future interleaving. Six initial deep-link reds exercise another branch and must not be cited as proof of this subcase.",
+    "snapshotHash": "e6f847c451a813bf138473b70114c9e7e2f85e23e46e052e08073c6d263f664f",
+    "driftQualification": "Coordinator api-write type-only ShowToastFn alias/import and comment changed during final handoff. Runtime behaviour unchanged by inspection, but final typing receipt binds tested snapshot only; integrated typing remains coordinator responsibility. All seven ownership surfaces and frozen13 unchanged.",
+    "limits": "Assertions after first failure remain unexecuted. Original13frozen files unchanged. Integrated types, full gate, mutation, final independent review and hosted acceptance remain.",
+    "review": {
+      "reviewer": "Sagan 01a0fe05-a6c0-7d22-ae2f-ba3716eded80",
+      "verdict": "PASS",
+      "scope": "Supplementary freeze and red-commit readiness only",
+      "evidence": "33identities unchanged;17pass16structuredmatcherfailures0skip/runtime. Final2nullassertions additive. Types/lint0,54snapshot/receipt hashes match,original13frozen unchanged. Source-informed metamorphic independence recorded; retained-row bounded refutation accepted. api-write drift type/commentonly; integratedtyping remains required."
+    }
+  },
+  "final_reviewer": {
+    "session": "01a0fe05-a6c0-7d22-ae2f-ba3716eded80",
+    "name": "Sagan",
+    "independence": "Authored neither source implementation nor original/supplementary oracles. Schrodinger moved from original freeze reviewer to supplementary oracle author and cannot accept final implementation."
   }
 }

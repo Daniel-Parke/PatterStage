@@ -706,6 +706,15 @@
             ],
             "receiptNote": "tmp/t0189-story-live-finding-20261002.md",
             "verify": "Injected read failure plus healthy/empty and visible consumer recovery. Explicit bug-fix exception to unchanged error/status wording; preserve URL/method, claim consumers only if required."
+          },
+          {
+            "title": "Null API error envelope loses HTTP status",
+            "evidenceStatus": "reproduced with an in-memory fetch stub; no network",
+            "sourcePaths": [
+              "src/lib/api/api-fetch.ts"
+            ],
+            "receiptNote": "tmp/t0192-api-null-probe.json",
+            "verify": "Independent oracle covers non-2xx JSON null, object, primitive and invalid JSON; preserve status and deliberate error wording without throwing a null-property TypeError. T0190 claims this transport file for comment correction only; add exact implementation authority at T0192 opening."
           }
         ],
         "claim_rule": "Name exact new unit .tsx and browser oracle paths; current glob claims do not establish ownership. Amend Verify and rollback at opening. Preserve T0189 -> T0190 -> T0191 -> T0192 dependencies."
