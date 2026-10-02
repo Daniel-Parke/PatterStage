@@ -538,8 +538,17 @@
             "sourcePaths": [
               "src/modules/rec-room/components/StoryCard.tsx"
             ],
-            "receiptNote": "tmp/t0189-story-live-finding-20261002.md",
-            "verify": "Pin observed20character title/six metadata items, action hierarchy and existing functions; consume accepted T0189 fixture."
+            "receiptNote": "tmp/t0189-green-validation/tmp/t0188-chat-viewport-1790960747006/walk.json",
+            "verify": "At390x844 keep Owned review story and Owned damaged fixture titles readable; allow complete metadata items the available width and separate action row. Preserve desktop1440x900 identity, all data/actions and two-step delete; include longer title/status and keyboard states. This is authorised responsive repair, not a visual redesign."
+          },
+          {
+            "title": "Missing transcript has no primary heading",
+            "evidenceStatus": "Reproduced in owned production fixture on01040a43 at both widths; independent source verification pending",
+            "sourcePaths": [
+              "src/app/results/sessions/[id]/page.tsx"
+            ],
+            "receiptNote": "tmp/t0189-green-validation/tmp/t0188-chat-viewport-1790961702953/walk.json",
+            "verify": "Independently freeze missing404/server-error heading cases before repair; require one primary heading, error feedback/retry/backlink and existing wording at1440x900/390x844. Keep normal transcript and loading states. Search, URLreload and Failedfilter request work; no actual foreign-transcript integration claim."
           }
         ],
         "claim_rule": "Name exact new unit .tsx and browser oracle paths; current glob claims do not establish ownership. Amend Verify and rollback at opening. Preserve T0189 -> T0190 -> T0191 -> T0192 dependencies."

@@ -1,6 +1,12 @@
-# T-0189 data verification, in progress
+# T-0189 data verification
 
-The task is ruled R2. No implementation or acceptance is recorded yet. Closure
+Current candidate: `01040a434187215e071e4b3788dc950074d7474d`. Implementation,
+full local gate, owned browser walk and committed mutation sweep are complete.
+Independent final acceptance and implementation-head hosted jobs pass; closure-head jobs remain required. The sections below
+retain earlier checkpoints and failures; their pending statements describe those
+checkpoints, not the current candidate.
+
+The task is ruled R2. At opening, no implementation or acceptance was recorded. Closure
 head `d6989a30` passed all11 PR jobs, nine applicable push jobs and both secret
 scans, independently confirmed by Schrodinger. Setup commits `d0b9a7ed` and
 `780fb143` record exact claims before separate-author oracle work.
@@ -237,3 +243,55 @@ command line referencing it. No frozen test, deadline or coverage floor changed.
 The unresolved failure is also explicit in T-0195's review follow-up. The normal
 entire gate must now pass without the observer; a recurring failure cannot be
 waived. Current test census: 142884 lines; original and programme targets remain.
+
+## Completed local candidate
+
+The ordinary third full gate passed all ten stages by exit code. Receipt:
+`tmp/t0189-full-gate-1790960113841/summary.json`. Both stamps are
+`0c53aa0acda50553758a27a2e08a694c62a8b761cea80a094a1881cb5078b8e8`.
+Jest passed 8106 cases with nine existing skips; the browser suite passed 355
+with 24 existing skips. The two build-purity checks passed. This green result
+does not explain the earlier Windows EPERM, which remains assigned to T-0195.
+
+The owned production Story Weaver walk used port3998 at1440x900 and390x844:
+`tmp/t0189-green-validation/tmp/t0188-chat-viewport-1790960747006/walk.json`.
+Both healthy and damaged rows remain visible, raw damaged config remains
+unchanged, the reader works, and deletion requires confirmation and survives
+reload. Each checked view has one h1, no document overflow and no page errors.
+The desktop library and phone library/reader screenshots were personally
+inspected; all six images have hashes in the receipt. The phone card is cramped,
+with title truncation and metadata stacked into a narrow column. T-0191 retains
+that quality issue; no WCAG violation is inferred from the image alone. The
+owned server stopped successfully. Real model generation was not exercised.
+
+Implementation commit `01040a43` contains the exact validated source. The
+isolated checkpoint `8e92b131` has the identical Git tree; it was preserved before
+switching to the implementation commit. Receipt:
+`tmp/t0189-implementation-landing.json`. All1006 historical-test, protected and
+immutable-migration file hashes still match the preservation baseline.
+
+The clean committed sweep is `tmp/t0189-sweep-20261002/summary.json`:31 intended
+structured assertion kills, no survivors/non-applied/ineffective outcomes,
+33 recorded invocations including both passing controls. The before/after
+content/path/mode stamps are identical:
+`11703adc5d28cd1aa0b68fadc1129fc2b344134e843ca8de7c261ce06a1244ce`.
+Detailed qualification is `tmp/t0189-sweep-qualification.json`. Mutant17 also
+caused two product TypeErrors after deliberately removing the display fallback;
+those exceptions are retained separately and are not counted as structured
+kill evidence. Its two intended matcher failures establish its kill. All other
+mutants have structured matcher failures only.
+Its control union covers423 cases; the separate complete oracle covers425,
+including the two schema-health cases that have no proposed mutant.
+
+The disposition ledger accounts for all20 findings, six split rulings and31
+coverage obligations:47 done, eight ruled out with retention reasons, two
+deferred. External historical-installation/SQL evidence remains open under
+gap-035.b; synthetic WAL backup is not a substitute. T-0199 owns gap-041.2's
+manual destructive prebuild/rebuild path. Retained contracts are distinguished
+from new implementation. Final independent acceptance remains a separate gate.
+
+Committed census:102216 source lines,142884 test lines,13667 tooling lines,
+946 repeated source windows,4794 repeated test windows,104 one-importer
+components. Relative to opening: source+15, tests+1592, tooling-10, repeated
+source windows-22. Necessary lossless JSON recovery and425 new oracle cases
+explain growth; the written baseline reasons do not change programme targets.

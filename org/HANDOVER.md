@@ -9,6 +9,33 @@ updated: 2026-10-02
 
 ## Current programme, 2026-10-02
 
+T-0189 is independently accepted at `01040a43`. All ten unchanged-tree gate
+stages pass: 8,106 Jest tests, 355 browser tests and two build-purity checks,
+with nine and 24 existing skips respectively. All 31 committed mutants are
+caught, both 423-case controls pass and restoration is verified. The 425-case
+independent oracle and 1,006 historical/protected/migration hashes survive.
+Every required implementation-head hosted job passes; closure-head jobs must
+pass before T-0190. See [T-0189 acceptance](reviews/2026-10-t0189-final-acceptance.md)
+and its 57-row ledger: 47 done, eight ruled out, two deferred.
+
+Ten of 22 main batches are done; 12 remain. Next is T-0190, then T-0191–T-0199.
+Q-033 keeps T-0200 after v1.0.0; T-0201 still depends on retirement. No overnight
+stop remains. Targets are unchanged. Current census: 102,216 source lines,
+142,884 test lines, 13,667 tooling lines, 946 repeated source windows,
+4,794 repeated test windows and 104 one-importer components.
+
+The owned Story walk passes at both widths on port 3998; its server stopped.
+The additional Sessions walk proves search/URL persistence, the failed-filter
+request and return navigation, but FAILS the missing-transcript h1 check at
+both widths. T-0191 owns that repair alongside the cramped Story card and
+previous phone defects. Receipt 1790961702953 remains; no all-pathways claim.
+T-0195 retains unresolved Windows EPERM/worker-exit evidence; T-0196 retains
+discovery-failure limits. External-history proof and T-0199's manual destructive
+prebuild path remain open. Real-provider, foreign-database, online-update and
+operator release acceptance remain separate.
+
+The earlier checkpoint below is retained for provenance.
+
 The operator resumed all remaining authorised batches and requested personal
 functional and UI/UX review. T-0188 and prerequisite T-0205 are independently
 accepted at `3d34b5f4`. All 10 unchanged-tree gate stages, 7,681 Jest tests,
@@ -21,9 +48,8 @@ Content, modes and tracked inventories match across 2,560 paths. See the
 
 Closure head `d6989a30` now passes every required hosted job: all 11 PR jobs,
 nine applicable push jobs and both secret scans. Independent review confirms
-the prerequisite. T-0189 is active at ruled R2, with separate-author oracles
-before implementation. No overnight stop remains. Nine of 22 main-plan batches are done;
-13 remain, including Q-033's deferred T-0200 and dependent T-0201 closure.
+the prerequisite. At that checkpoint T-0189 opened at ruled R2 with separate-author oracles.
+The current accepted state is recorded above.
 
 T-0188 removes 480 source lines by converging 11 wrappers on the table driver;
 strict Auth43 validation, atomic lossless Composer rebuilds, seeds, explicit
@@ -34,7 +60,7 @@ use canonical identity. No coverage floor or target moved. Prior failed
 receipts and worktrees remain. Windows EPERM and historical native macOS failure
 causes remain unconfirmed; the worker-exit warning stays with T-0195.
 
-Next: T-0189 data, T-0190 client, T-0191 components/accessibility, T-0192 API,
+Earlier queue: T-0189 data, T-0190 client, T-0191 components/accessibility, T-0192 API,
 T-0193 page hooks, T-0194 domains/Hermes, T-0195 tests, T-0196 tooling/CI,
 T-0197 docs, T-0198 org and T-0199 ruled dead internals. T-0200 compatibility
 retirement remains after v1.0.0; merging PR #157, settings, tags/releases and

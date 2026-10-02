@@ -19,7 +19,7 @@
   },
   "mode": "high-assurance",
   "tier_proposed": "R2",
-  "status": "active",
+  "status": "done",
   "owner_session": "2026-10-02-t0189-coordinator",
   "claims": [
     "src/lib/runs/parse-stored-usage.ts",
@@ -71,11 +71,13 @@
     "src/lib/db/sql-migrations.ts",
     "src/lib/db/index.ts",
     "src/lib/db/apply-sql.ts",
-    "org/briefs/T-0189-sync-implementation.md"
+    "org/briefs/T-0189-sync-implementation.md",
+    "org/reviews/2026-10-t0189-final-acceptance.md"
   ],
   "timestamps": {
     "opened": "2026-10-02T14:10:33.645498+00:00",
-    "updated": "2026-10-02T14:10:33.645498+00:00"
+    "updated": "2026-10-02T17:32:47.993155+00:00",
+    "closed": "2026-10-02T17:32:47.993155+00:00"
   },
   "tier_ruled": "R2",
   "reasons": [
@@ -333,7 +335,7 @@
       "result": "Actualsource: failed default insertion leaves newmodel/clearsolddefault; resolved scheduler failure loses lastError; concurrent and post-timeout callers execute source again while underlying pending. Allpendingwork settled. Preflight used actual default30second source timeout; independent oracle pins timeout boundaries separately."
     }
   ],
-  "oracle_status": "425 independently authored cases now frozen: original421 plus4recoverypreservationwitnesses. The four new cases are committed red before repair; all425mustexecute/pass for green.",
+  "oracle_status": "425 independent oracle cases pass; original red freezes and narrow independently accepted amendments remain recorded.",
   "oracle_author": "01a0fcf4-e827-7393-8d98-3ababa620034; independent ORACLE; stopped writing at 2026-10-02T14:48:54.280Z",
   "scope_review": "Turing 01a0fcea-6e43-74d1-b149-9bd09f700a8f recommends exact15source/8oracle allowance, noQ015amendment; coordinator independently reproduced additional model/scheduler defects before claiming their implementation.",
   "additional_consolidation": {
@@ -514,7 +516,7 @@
   "implementation_lanes": {
     "coordinator": "2026-10-02-t0189-coordinator",
     "sync": "Carver 01a0fd33-6991-7a93-be6b-9285743b5ccc",
-    "status": "Carver completed seven-path sync slice and stopped. Coordinator owns integrated source; Averroes independently owns typing correction and additive recovery witness. Two writers maximum."
+    "status": "All implementation and amendment writers stopped; claims released at closure."
   },
   "integrated_pre_gate": {
     "oracle": "tmp/t0189-coordinator-check/1790957188311/summary.json",
@@ -522,7 +524,7 @@
     "static": "tmp/t0189-static-check/1790957252020/summary.json",
     "static_result": "Fullapp/testprogramtypesandscopedeslintall0",
     "mutation": "31proposedmutants;notyetexecuted",
-    "remaining": "Independentrepairreview,fullunchangedgate,builtbrowserwalk,committedsweep,57dispositions,finalR2acceptance,pushandallhostedjobs."
+    "remaining": "Independentlocal/hosted acceptance complete; recordclosure pushed next,closure-head jobs required beforeT0190."
   },
   "gate_attempts": [
     {
@@ -551,6 +553,277 @@
       "alone": "Unchanged4/4suitepass,0skips:tmp/t0189-coordinator-check/1790959482685/summary.json",
       "diagnostic": "FullJestwithtransparentprivateprocess/cleanupobserver:8106pass,9existing skips,0fail;unchangedtree;tmp/t0189-shell-observation-1790959743905/summary.json. Allfoursetupreturns690-1031ms andcleanupcompleted. Observer changes timing; notfullgateacceptance.",
       "remaining_uncertainty": "Originalsetupoutcome was not recorded beforefinally EPERM. Timeout/orphan/OS-lock cause unconfirmed. Retainfailedfixture gNpLkD; no matching livebash/nodecommandlinefound. Repeatnormalwholegate withoutobserver; recurrentfailure requires stronger prerequisite investigation, no waiver."
+    },
+    {
+      "receipt": "tmp/t0189-full-gate-1790960113841/summary.json",
+      "exit": 0,
+      "steps": {
+        "lint": 0,
+        "tsc": 0,
+        "jest": 0,
+        "knip": 0,
+        "canary": 0,
+        "build": 0,
+        "build-purity": 0,
+        "e2e": 0,
+        "census": 0,
+        "census-lines": 0
+      },
+      "tree_unchanged": true,
+      "jest": "8106 passed, nine existing skips;811 suites passed,two existing skipped",
+      "browser": "355 passed,24existing skips",
+      "purity": "Two checks pass",
+      "limits": "Earlier EPERM cause unresolved; T0195 follow-up remains."
     }
-  ]
+  ],
+  "local_acceptance": {
+    "head": "01040a434187215e071e4b3788dc950074d7474d",
+    "gate": "tmp/t0189-full-gate-1790960113841/summary.json",
+    "binding": "tmp/t0189-final-binding.json",
+    "mutation": "tmp/t0189-sweep-qualification.json",
+    "browser": "tmp/t0189-green-validation/tmp/t0188-chat-viewport-1790960747006/walk.json",
+    "dispositions": "org/reviews/2026-10-t0189-dispositions.json",
+    "counts": {
+      "oracle": 425,
+      "mutationControl": 423,
+      "killed": 31,
+      "preservedFiles": 1006,
+      "trackedPaths": 2580,
+      "dispositions": 57
+    },
+    "limits": "Independent final R2 and implementation-head hosted jobs pass. Closure-head hosted jobs remain required. No real provider or whole-platform release claim."
+  },
+  "verification": "Independent R2 acceptance at01040a43:10unchanged-tree gate stages,8106Jest/355browser/2build-purity checks,425independent oracle cases;31intended committed mutation kills with423/423 before/after controls and restoration. All2580tracked content/mode paths and1006historical preservation hashes match. All57owned dispositions accounted for:47done,8ruledout,2deferred. All required exact-head hosted jobs pass. NineJest/24browser existing skips explicit.",
+  "mutation": {
+    "receipt": "tmp/t0189-sweep-qualification.json",
+    "sha256": "0f42964a5ded35f9674194d52585b6dbffd5a0430055e780fde0e40cb48d7ec9",
+    "killed": 31,
+    "controls": 423,
+    "restored": true,
+    "qualification": "m17two productTypeErrors excluded from kill evidence; two intended matcher failures establish that kill."
+  },
+  "deviation": "Preserve both failed gates, independent oracle amendments and observer diagnostics. Windows EPERM cause remains unconfirmed underT0195. No historical tests, protected files, targets or coverage floors weakened. Lossless recovery adds source lines; explicit census growth reasons retained. External-history proof and manual prebuild retirement remain separately deferred. Authorised dev push reports configured PR-rule bypass; settings unchanged.",
+  "final_acceptance": {
+    "head": "01040a434187215e071e4b3788dc950074d7474d",
+    "review": "org/reviews/2026-10-t0189-final-acceptance.md",
+    "reviewer": "Schrodinger, independent R2",
+    "verdictSHA256": "61a3938e4bf4678ae7f86cc68099c86bed5b8493f6d36cb21665029a82cb55bc",
+    "local": {
+      "head": "01040a434187215e071e4b3788dc950074d7474d",
+      "gate": "tmp/t0189-full-gate-1790960113841/summary.json",
+      "binding": "tmp/t0189-final-binding.json",
+      "mutation": "tmp/t0189-sweep-qualification.json",
+      "browser": "tmp/t0189-green-validation/tmp/t0188-chat-viewport-1790960747006/walk.json",
+      "dispositions": "org/reviews/2026-10-t0189-dispositions.json",
+      "counts": {
+        "oracle": 425,
+        "mutationControl": 423,
+        "killed": 31,
+        "preservedFiles": 1006,
+        "trackedPaths": 2580,
+        "dispositions": 57
+      },
+      "limits": "Independent final R2 and implementation-head hosted jobs pass. Closure-head hosted jobs remain required. No real provider or whole-platform release claim."
+    },
+    "hosted": {
+      "receipt": "tmp\\t0189-hosted-implementation\\snapshot-1790962260856.json",
+      "sha256": "f73b6b251f3adc24f41eaca73fc068af8fb44fe44ec3320199adf3539c5dcbe5",
+      "runs": [
+        {
+          "conclusion": "success",
+          "databaseId": 37039829162,
+          "event": "pull_request",
+          "headSha": "01040a434187215e071e4b3788dc950074d7474d",
+          "status": "completed",
+          "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37039829162",
+          "workflowName": "Gitleaks",
+          "receipt": "tmp/t0189-hosted-implementation/pull_request-gitleaks-37039829162-1790962257150.json",
+          "jobs": [
+            {
+              "id": 110946923993,
+              "name": "scan",
+              "status": "completed",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37039829021,
+          "event": "pull_request",
+          "headSha": "01040a434187215e071e4b3788dc950074d7474d",
+          "status": "completed",
+          "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37039829021",
+          "workflowName": "CI",
+          "receipt": "tmp/t0189-hosted-implementation/pull_request-ci-37039829021-1790962258529.json",
+          "jobs": [
+            {
+              "id": 110946924084,
+              "name": "real-hermes-integration",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 110946924274,
+              "name": "install-harness",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 110946924306,
+              "name": "docker-image",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 110946924331,
+              "name": "build-test-ubuntu",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 110946924389,
+              "name": "e2e-smoke",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 110946924418,
+              "name": "shell-custom-scripts",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 110946924473,
+              "name": "e2e-full (PLAYWRIGHT_SMOKE unset)",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 110946924478,
+              "name": "build-test-macos",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 110946924576,
+              "name": "boot-smoke (macos-latest)",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 110946924596,
+              "name": "boot-smoke (ubuntu-latest)",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 110951103296,
+              "name": "acceptance-gate (full suite + install journey + real Hermes)",
+              "status": "completed",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37039825156,
+          "event": "push",
+          "headSha": "01040a434187215e071e4b3788dc950074d7474d",
+          "status": "completed",
+          "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37039825156",
+          "workflowName": "Gitleaks",
+          "receipt": "tmp/t0189-hosted-implementation/push-gitleaks-37039825156-1790962259607.json",
+          "jobs": [
+            {
+              "id": 110946910268,
+              "name": "scan",
+              "status": "completed",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37039825128,
+          "event": "push",
+          "headSha": "01040a434187215e071e4b3788dc950074d7474d",
+          "status": "completed",
+          "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37039825128",
+          "workflowName": "CI",
+          "receipt": "tmp/t0189-hosted-implementation/push-ci-37039825128-1790962260854.json",
+          "jobs": [
+            {
+              "id": 110946910420,
+              "name": "build-test-ubuntu",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 110946910732,
+              "name": "install-harness",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 110946910805,
+              "name": "real-hermes-integration",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 110946910813,
+              "name": "docker-image",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 110946910823,
+              "name": "shell-custom-scripts",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 110946910870,
+              "name": "boot-smoke (macos-latest)",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 110946910883,
+              "name": "boot-smoke (ubuntu-latest)",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 110946910896,
+              "name": "build-test-macos",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 110946910902,
+              "name": "e2e-smoke",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 110946912564,
+              "name": "e2e-full (PLAYWRIGHT_SMOKE unset)",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "id": 110950998045,
+              "name": "acceptance-gate (full suite + install journey + real Hermes)",
+              "status": "completed",
+              "conclusion": "skipped"
+            }
+          ]
+        }
+      ]
+    },
+    "limits": "Bounded local and hosted integration proof, not real provider/foreign DB/general online-update/release acceptance. Closure-head hosted jobs remain required."
+  },
+  "closure_next": "Observe every closure-head hosted job, then openT0190with independent oracles and explicitclaims; preserveQ033T0200deferral andT0201dependency."
 }
