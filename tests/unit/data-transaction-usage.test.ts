@@ -71,8 +71,11 @@ function parse(raw: string | null | undefined): RunUsage | null {
 }
 
 it("INFRASTRUCTURE: proposed parseStoredUsage module is available", () => {
-  expect({ parserModuleAvailable: parserPresent }).toEqual({ parserModuleAvailable: true });
+  if (!parserPresent) {
+    throw new Error("INFRASTRUCTURE: proposed parseStoredUsage module is unavailable: src/lib/runs/parse-stored-usage.ts");
+  }
 });
+
 
 (parserPresent ? describe : describe.skip)("T-0189 pure stored usage parser", () => {
   it.each(cases)("normalises $label", ({ raw, expected }) => {
@@ -205,3 +208,7 @@ describe("T-0189 existing usage consumers", () => {
     expect(checkUnattendedSpend().allowed).toBe(false);
   });
 });
+
+// Amendment 2026-10-02, Planck 01a0fd1f-516a-7323-af9c-0682d6bbbe6c:
+// Missing proposed parser throws infrastructure evidence, never a matcher assertion.
+// Authorised by committed T-0189-oracle-amendment.md; original freeze retained.

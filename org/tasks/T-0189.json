@@ -332,7 +332,7 @@
       "result": "Actualsource: failed default insertion leaves newmodel/clearsolddefault; resolved scheduler failure loses lastError; concurrent and post-timeout callers execute source again while underlying pending. Allpendingwork settled. Preflight used actual default30second source timeout; independent oracle pins timeout boundaries separately."
     }
   ],
-  "oracle_status": "Frozen before implementation:398 discovered,333 executed,192 passed,140 behavioural failures,1 labelled missing-parser infrastructure failure,65 parser cases conditional on module availability. Implementation acceptance requires all398 execute and pass, with no skips. REVIEWER HOLD: this is an evidential checkpoint only; narrow independent strengthening amendment required before implementation.",
+  "oracle_status": "First red checkpoint plus independently accepted four-suite strengthening amendment:403discovered,191passed,146behavioural failures,1infrastructure,65unexecuted. All398originalnames preserved. Fifth migration-parity witnesses remain before implementation release.",
   "oracle_author": "01a0fcf4-e827-7393-8d98-3ababa620034; independent ORACLE; stopped writing at 2026-10-02T14:48:54.280Z",
   "scope_review": "Turing 01a0fcea-6e43-74d1-b149-9bd09f700a8f recommends exact15source/8oracle allowance, noQ015amendment; coordinator independently reproduced additional model/scheduler defects before claiming their implementation.",
   "additional_consolidation": {
@@ -397,7 +397,20 @@
     "author": "Planck 01a0fd1f-516a-7323-af9c-0682d6bbbe6c",
     "authority": "EXECUTOR/ORACLE different-author frozen-gate procedure; strengthening within existing T-0189 invariants. No weakening or historical oracle amendment.",
     "brief": "org/briefs/T-0189-oracle-amendment.md",
-    "reviewer": "Schrodinger HOLD: story mixed elements/recovery/rollback; process old-row and WhatsApp assertions; explicit infrastructure failure; third display fallback."
+    "reviewer": "Schrodinger HOLD: story mixed elements/recovery/rollback; process old-row and WhatsApp assertions; explicit infrastructure failure; third display fallback.",
+    "first_freeze": {
+      "receipt": "tmp/t0189-oracle-amendment/freeze-20261002.json",
+      "sha256": "d036bf8000e13ed3fe2602574af87b04e6fafb314d1e260c944d4691d4aaca30",
+      "reviewer": "Schrodinger PASS:403 names,398original plus5new; four amended files hash/identity verified; source unchanged.146behavioural reds=145matcher failures plus1production JSON parse exception, not146mutation kills.",
+      "counts": {
+        "discovered": 403,
+        "passed": 191,
+        "behaviouralFailures": 146,
+        "infrastructureFailures": 1,
+        "unexecuted": 65
+      },
+      "remaining": "Additional fifth migration-parity suite witnesses pending; implementation still held."
+    }
   },
   "schema_maintenance": {
     "scope": "Complete partially applied historical040 and repair its missing existing idx_runs_story at head43, without replaying its backfill at head, changing immutable SQL, new schema elements or dropping/replacing indexes.",

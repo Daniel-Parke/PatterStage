@@ -88,6 +88,8 @@ describe("T-0189 process snapshots", () => {
     expect(result.durationMs).toBeGreaterThanOrEqual(0);
     expect(rows.length).toBeGreaterThanOrEqual(2);
     expect(rows.map((row) => row.id)).not.toEqual(expect.arrayContaining(["old-a", "old-b"]));
+    expect(rows.map((row) => row.id)).not.toContain("old-a");
+    expect(rows.map((row) => row.id)).not.toContain("old-b");
     expect(rows.map((row) => row.pid)).toEqual(expect.arrayContaining([4101, 4102]));
     for (const row of rows) expect(Date.parse(row.last_seen_at)).toBeGreaterThanOrEqual(before - 1000);
     expect(mockExec).toHaveBeenCalled();
@@ -224,8 +226,10 @@ describe("T-0189 token presence agrees across sync sources", () => {
     expect(await new EnvSync().sync()).toMatchObject({ success: true });
     expect(await new ProcessSync().sync()).toMatchObject({ success: true });
     expect(readGatewayPlatforms().find((row) => row.platform === "whatsapp")?.enabled).toBe(1);
+    expect(readAgentProcesses().map((row) => row.name).join(" ").toLowerCase()).toContain("whatsapp");
   });
 });
+
 
 describe("T-0189 SessionSync retires registry writes", () => {
   it.each(["success", "rejection"])("preserves registry history on underlying %s", async (outcome) => {
@@ -241,3 +245,7 @@ describe("T-0189 SessionSync retires registry writes", () => {
     expect(mockSessionSync).toHaveBeenCalledTimes(1);
   });
 });
+
+// Amendment 2026-10-02, Planck 01a0fd1f-516a-7323-af9c-0682d6bbbe6c:
+// Require each stale process to disappear and WhatsApp process labels for either key.
+// Authorised by committed T-0189-oracle-amendment.md; original freeze retained.

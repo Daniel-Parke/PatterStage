@@ -92,7 +92,18 @@ describe("T-0189 story boundaries", () => {
     put(story.id, "chapters", JSON.stringify([null, complete, 8, { status: "writing" }, writing]));
     const before = rawRow(story.id);
     expect(() => listStories()).not.toThrow();
-    expect(getStory(story.id)?.chapters).toEqual(expect.arrayContaining([complete, writing]));
+    expect(getStory(story.id)?.chapters).toEqual([complete, writing]);
+    expect(listStories()[0]?.chapters).toEqual([complete, writing]);
+    expect(rawRow(story.id)).toEqual(before);
+  });
+  it("omits unusable chapter content values from display while preserving strings and raw storage", () => {
+    const story = seed();
+    const raw = ' {"1":"Original prose","2":null,"3":17,"4":true,"5":[],"6":{},"7":"","8":"  ","9":"Later prose"} ';
+    put(story.id, "chapter_contents", raw);
+    const before = rawRow(story.id);
+    const expected = { "1": "Original prose", "7": "", "8": "  ", "9": "Later prose" };
+    expect(getStory(story.id)?.chapterContents).toEqual(expected);
+    expect(listStories()[0]?.chapterContents).toEqual(expected);
     expect(rawRow(story.id)).toEqual(before);
   });
   it("a title-only update preserves every damaged JSON field verbatim", () => {
@@ -125,6 +136,15 @@ describe("T-0189 story boundaries", () => {
 });
 
 describe("T-0189 restart recovery", () => {
+  it.each([' {"status":"writing"} ', ' "writing" ', '{"status":"writing",broken'])
+    ("preserves wrong-shaped or malformed writing document %s after the SQL prefilter selects it", (raw) => {
+      const story = seed();
+      put(story.id, "chapters", raw);
+      const before = rawRow(story.id);
+      expect(() => reconcileStoriesOnBoot()).not.toThrow();
+      expect(reconcileStoriesOnBoot()).toEqual({ failedStories: 0, failedChapters: 0 });
+      expect(rawRow(story.id)).toEqual(before);
+    });
   it.each(invalidChapters)("preserves unusable raw chapter document %s", (raw) => {
     const story = seed();
     put(story.id, "chapters", raw);
@@ -180,12 +200,20 @@ describe("T-0189 restart recovery", () => {
       WHEN (SELECT COUNT(*) FROM stories WHERE status = 'failed' OR chapters LIKE '%"status":"failed"%') >= ${earlierWrites}
       BEGIN SELECT RAISE(ABORT, 'oracle recovery failure'); END;`);
     let failure: unknown;
-    try { reconcileStoriesOnBoot(); } catch (error) { failure = error; }
+    let threw = false;
+    let result: ReturnType<typeof reconcileStoriesOnBoot> | undefined;
+    try { result = reconcileStoriesOnBoot(); } catch (error) { failure = error; threw = true; }
     expect(testDb!.prepare("SELECT * FROM stories ORDER BY id").all()).toEqual(before);
     // Either a thrown failure or a rollback result is permitted, never a partial success.
     if (failure) expect(String(failure)).toContain("oracle recovery failure");
+    if (threw) expect(String(failure)).toContain("oracle recovery failure");
+    else expect(result).toEqual({ failedStories: 0, failedChapters: 0 });
     expect(rawRow(generating.id).status).toBe("generating");
     testDb!.exec("DROP TRIGGER oracle_recovery_failure");
     expect(reconcileStoriesOnBoot()).toEqual({ failedStories: 1, failedChapters: 2 });
   });
 });
+
+// Amendment 2026-10-02, Planck 01a0fd1f-516a-7323-af9c-0682d6bbbe6c:
+// Strengthen exact display filtering, writing-prefilter recovery and rollback reporting.
+// Authorised by committed T-0189-oracle-amendment.md; original freeze retained.

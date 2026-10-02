@@ -123,3 +123,19 @@ records unchanged source and selected-suite hashes. This covers existing
 retention, progression, Composer, credentials, schedules, chat, research spend,
 stats, analytics, spend refusal, ConfigSync, scheduler, backup and migration
 controls. It does not replace the new oracle or the finished-tree full gate.
+
+An additional synthetic recovery probe invokes the actual snapshotDatabase API
+with the source database open in WAL mode, then closes it and copies the backup
+to a separate, previously absent owned path. All five candidate column values
+survive and restored integrity_check returns ok. Receipt
+`tmp/t0189-column-backup/1790953996932/receipt.json` binds the source to f652de00
+and records the backup hash. This establishes preservation in that fixture only;
+it does not inspect operator history, prove concurrent updater ownership or test
+application/authentication restart after restore.
+
+Adjacent source-only hypotheses remain for host-tooling verification in T-0196:
+ProcessSync's process enumerator converts an exec error without stdout into an
+empty list; LogSync's stream error handler resolves its partial buffer. The
+current transaction oracle proves write atomicity and successful empty scans,
+not whether those discovery failures should publish success. No runtime failure
+injection or behaviour change for these two paths is claimed here.

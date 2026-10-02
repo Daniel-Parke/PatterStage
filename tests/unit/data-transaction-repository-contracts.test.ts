@@ -8,6 +8,7 @@ import { openBaselineDb, type RealDb } from "../helpers/baseline-db";
 import { applyOperatorPrefsMigration } from "@/lib/db/sql-migrations";
 import { countByType, insertEvent } from "@/lib/analytics/analytics-repository";
 import { getDashboardStats } from "@/lib/stats/stats-repository";
+import { getModelUsage, getTopMissions } from "@/lib/analytics/run-aggregates";
 import { getSpendSummary } from "@/lib/spend/spend-summary";
 let testDb: RealDb | null = null;
 jest.mock("@/lib/db", () => require("../helpers/baseline-db").dbSingletonMock(() => testDb));
@@ -58,6 +59,12 @@ describe("T-0189 actual default-category seeding", () => {
 });
 
 describe("T-0189 three defensive display consumers retain synchronous fallbacks", () => {
+  it("run aggregates return empty arrays when real SQLite cannot read runs", () => {
+    testDb!.exec("DROP TABLE runs");
+    expect(() => testDb!.prepare("SELECT * FROM runs").all()).toThrow(/no such table: runs/);
+    expect(getModelUsage()).toEqual([]);
+    expect(getTopMissions()).toEqual([]);
+  });
   it("analytics returns its empty-map fallback while a write still propagates SQL failure", () => {
     expect(testDb!.prepare("SELECT name FROM sqlite_master WHERE name='analytics_events'").get()).toBeUndefined();
     expect(countByType()).toEqual({});
@@ -76,6 +83,7 @@ describe("T-0189 three defensive display consumers retain synchronous fallbacks"
     expect(summary.periods.map((row) => row.totalUsd)).toEqual([0, 0, 0]);
   });
 });
+
 
 describe("T-0189 session initialisation debounce remains timer based", () => {
   beforeEach(() => { jest.useFakeTimers(); _resetSyncDebounceForTests(); mockInitialiseSync.mockClear(); });
@@ -114,3 +122,7 @@ describe("T-0189 preferences preserve existing values on refused writes", () => 
     expect(readOperatorPrefs()).toEqual({ "sidebar.collapsed": true, "quests.skipped": ["2.3"] });
   });
 });
+
+// Amendment 2026-10-02, Planck 01a0fd1f-516a-7323-af9c-0682d6bbbe6c:
+// Exercise actual run-aggregate SQL failure while retaining the dashboard control.
+// Authorised by committed T-0189-oracle-amendment.md; original freeze retained.
