@@ -65,7 +65,8 @@
     "src/lib/db/safe-read.ts",
     "src/lib/analytics/analytics-repository.ts",
     "src/lib/spend/spend-summary.ts",
-    "src/lib/sessions/sessions-api-helpers.ts"
+    "src/lib/sessions/sessions-api-helpers.ts",
+    "org/briefs/T-0189-oracle-amendment.md"
   ],
   "timestamps": {
     "opened": "2026-10-02T14:10:33.645498+00:00",
@@ -320,8 +321,8 @@
       "result": "Actualsource: failed default insertion leaves newmodel/clearsolddefault; resolved scheduler failure loses lastError; concurrent and post-timeout callers execute source again while underlying pending. Allpendingwork settled. Preflight used actual default30second source timeout; independent oracle pins timeout boundaries separately."
     }
   ],
-  "oracle_status": "Not authored or frozen yet. No implementation permitted before independent oracle red commit.",
-  "oracle_author": "Sartre 01a0fcf4-e827-7393-8d98-3ababa620034; separate clean context plus parser metamorphic cases; no implementation exists; awaiting committed disjoint claims and isolated checkout before authorship.",
+  "oracle_status": "Frozen before implementation:398 discovered,333 executed,192 passed,140 behavioural failures,1 labelled missing-parser infrastructure failure,65 parser cases conditional on module availability. Implementation acceptance requires all398 execute and pass, with no skips. REVIEWER HOLD: this is an evidential checkpoint only; narrow independent strengthening amendment required before implementation.",
+  "oracle_author": "01a0fcf4-e827-7393-8d98-3ababa620034; independent ORACLE; stopped writing at 2026-10-02T14:48:54.280Z",
   "scope_review": "Turing 01a0fcea-6e43-74d1-b149-9bd09f700a8f recommends exact15source/8oracle allowance, noQ015amendment; coordinator independently reproduced additional model/scheduler defects before claiming their implementation.",
   "additional_consolidation": {
     "findingIds": [
@@ -336,8 +337,55 @@
     "evidence": "tmp/t0189-net-assessment-20261002.json",
     "intent": "Shared version reader/writer; remove only redundant CLI convergence; factual prose; three-consumer display safeRead; empty session branch/result cleanup. Preserve application legacy loop, custom-delay debounce semantics and runtime/asset category seed contexts with actual parity proof.",
     "estimate": "Three identical safeRead bodies total21 lines; proposed shared helper/comment/three imports11 lines, net-10 before final census. Category SQL10 data lines identical; retain bounded duplication to avoid a new runtime filesystem dependency.",
-    "limits": "No implementation yet. All additional behaviour must be pinned before red freeze; no historical test amendment requested."
+    "limits": "Implementation remains prohibited until the frozen oracle red commit. Historical tests remain unchanged. All57 dispositions still need qualified final evidence."
   },
   "preservation_baseline": "tmp/t0189-preservation-baseline-20261002.json:1006 historical tests/protected/migration paths with content hashes and committed blob IDs.",
-  "disposition_register": "org/reviews/2026-10-t0189-dispositions.json:20findings+6splitrulings+31coverage, all pending final disposition; generated ID-set validation matches ownership."
+  "disposition_register": "org/reviews/2026-10-t0189-dispositions.json:20findings+6splitrulings+31coverage, all pending final disposition; generated ID-set validation matches ownership.",
+  "oracle_freeze": {
+    "receipt": "tmp/t0189-oracle/freeze-20261002.json",
+    "sha256": "bdca5764cedea1fa31baa84e1cb463fd1087786be8f6067063a372d14d2c238e",
+    "criteriaHead": "7b22ebb8091a4b3b1976a9a14603022acf9e6f80",
+    "validationHead": "d0b9a7eddfee73fe3df9f6d697aa7802e3a0e412",
+    "counts": {
+      "discovered": 398,
+      "executed": 333,
+      "passed": 192,
+      "failed": 141,
+      "behaviouralFailures": 140,
+      "infrastructureFailures": 1,
+      "skipped": 65,
+      "runtimeErrorSuites": 0,
+      "summedSuiteRuntimeMs": 5657
+    },
+    "checks": {
+      "node": "v24.21.0",
+      "abi": "137",
+      "jestExitCode": 1,
+      "typeDiagnostics": 0,
+      "scopedEslintExitCode": 0,
+      "treeBefore": "b6cc17294e55179de718a5608fe458906da226149a069a275cd698319a7438c4",
+      "treeAfter": "b6cc17294e55179de718a5608fe458906da226149a069a275cd698319a7438c4",
+      "treeAtFreeze": "b6cc17294e55179de718a5608fe458906da226149a069a275cd698319a7438c4",
+      "treeUnchanged": true,
+      "sourceAndInfrastructureDiffFromValidationBase": "",
+      "dependencyChanges": false,
+      "buildExecuted": false
+    },
+    "suites": {
+      "tests/unit/data-transaction-migration-parity.test.ts": "0e3ab6e8a979fa351f88e03b6b77df9162c04c18bc730b57cb5338f1ddd01cd1",
+      "tests/unit/data-transaction-models.test.ts": "fdf9790657530a4255a37ab9ed1c79f1e49329e85486cc2c743edd3c290a3196",
+      "tests/unit/data-transaction-repository-contracts.test.ts": "d85509fd81167ae8cc6b14e90c3b05ebe9b2a5801638eb9cb54893cba7f658a4",
+      "tests/unit/data-transaction-scheduler.test.ts": "e34a2f0003f8239488d33ca331d65691bfb98e3844b9ce7474fe6e2be6c08c58",
+      "tests/unit/data-transaction-schema-health.test.ts": "4af2dd92655ec12888d7ccf8a5b07a0c8b61f50fcaddf81db75836b7a635bd66",
+      "tests/unit/data-transaction-stories.test.ts": "d16474720731b496042aa6efb576aa5b02215bd3fd1112f64558ea791246cb30",
+      "tests/unit/data-transaction-sync.test.ts": "b7bd46a0ea94c4661a141b91bc945c2712bbd57a9a715f2268c815cc789e6de8",
+      "tests/unit/data-transaction-usage.test.ts": "421f8293ebc06b777078c27278ef61672ca133006e7c280b1ae786eeab7dca9d"
+    }
+  },
+  "oracle_amendment": {
+    "author": "Planck 01a0fd1f-516a-7323-af9c-0682d6bbbe6c",
+    "authority": "EXECUTOR/ORACLE different-author frozen-gate procedure; strengthening within existing T-0189 invariants. No weakening or historical oracle amendment.",
+    "brief": "org/briefs/T-0189-oracle-amendment.md",
+    "reviewer": "Schrodinger HOLD: story mixed elements/recovery/rollback; process old-row and WhatsApp assertions; explicit infrastructure failure; third display fallback."
+  }
 }

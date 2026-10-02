@@ -44,30 +44,27 @@
         "src/lib/db/safe-read.ts",
         "src/lib/analytics/analytics-repository.ts",
         "src/lib/spend/spend-summary.ts",
-        "src/lib/sessions/sessions-api-helpers.ts"
+        "src/lib/sessions/sessions-api-helpers.ts",
+        "org/briefs/T-0189-oracle-amendment.md"
       ],
       "acquired": "2026-10-02T14:10:33.645498+00:00",
       "expires": "2026-10-03T14:10:33.645498+00:00"
     },
     {
+      "lane_id": "T-0189-oracle-amendment",
       "task_id": "T-0189",
+      "session_id": "01a0fd1f-516a-7323-af9c-0682d6bbbe6c",
       "host": "local",
-      "acquired": "2026-10-02T14:10:33.645498+00:00",
-      "expires": "2026-10-03T14:10:33.645498+00:00",
-      "lane_id": "T-0189-oracle",
-      "session_id": "01a0fcf4-e827-7393-8d98-3ababa620034",
-      "harness_task_id": "01a0fcf4-e827-7393-8d98-3ababa620034",
       "path_claims": [
         "tests/unit/data-transaction-usage.test.ts",
         "tests/unit/data-transaction-stories.test.ts",
         "tests/unit/data-transaction-sync.test.ts",
-        "tests/unit/data-transaction-models.test.ts",
-        "tests/unit/data-transaction-scheduler.test.ts",
-        "tests/unit/data-transaction-migration-parity.test.ts",
-        "tests/unit/data-transaction-schema-health.test.ts",
         "tests/unit/data-transaction-repository-contracts.test.ts"
-      ]
+      ],
+      "acquired": "2026-10-02T14:10:33.645498+00:00",
+      "expires": "2026-10-03T14:10:33.645498+00:00",
+      "harness_task_id": "01a0fd1f-516a-7323-af9c-0682d6bbbe6c"
     }
   ],
-  "note": "Exactly two writing lanes. Sartre writes only the three new oracle suites after setup commit; coordinator writes only metadata until red freeze. Turing and Schrodinger remain read-only. No implementation before red-first oracle commit."
+  "note": "Two disjoint writing lanes: coordinator metadata only until amended red oracle; Planck four new oracle files only. Original frozen evidence retained. Reviewer read-only."
 }
