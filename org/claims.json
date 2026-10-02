@@ -53,7 +53,19 @@
       ],
       "acquired": "2026-10-02T14:10:33.645498+00:00",
       "expires": "2026-10-03T14:10:33.645498+00:00"
+    },
+    {
+      "lane_id": "T-0189-oracle-static-dependency",
+      "task_id": "T-0189",
+      "session_id": "01a0fd41-d8a8-7df1-861b-b12aa52122e6",
+      "host": "local",
+      "path_claims": [
+        "tests/unit/data-transaction-migration-parity.test.ts"
+      ],
+      "acquired": "2026-10-02T14:10:33.645498+00:00",
+      "expires": "2026-10-03T14:10:33.645498+00:00",
+      "harness_task_id": "01a0fd41-d8a8-7df1-861b-b12aa52122e6"
     }
   ],
-  "note": "Averroes stopped writing after final independent red recovery freeze. One coordinator implementation lane remains; frozen tests immutable and independent R2 review required."
+  "note": "Two disjoint lanes: coordinator repairs launcher environment; independent oracle author exposes genuine migration dependency statically without runtime or assertion changes."
 }

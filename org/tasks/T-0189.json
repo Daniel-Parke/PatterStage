@@ -451,7 +451,7 @@
     "recovery_numeric_preservation": {
       "status": "independent four-case additive oracle frozen red before repair",
       "author": "Averroes/01a0fd41-d8a8-7df1-861b-b12aa52122e6",
-      "reviewer": "Schrodinger found mixed-array untouched overflow serialises to null",
+      "reviewer": "Schrodinger PASS finalredfreeze e8b01a7d3552f01425b6020cae3a401b47ed0116bc68086618d302da3824c717 before repair;51cases47pass4matcherreds;currentimplementationreviewpending.",
       "scope": "Preserve all prior names/assertions; add mixed recovery witness including raw numeric overflow and large-integer metadata preservation; no implementation edits in ORACLE lane.",
       "verify": "Structured new matcher failure on current source, independent red freeze and commit before repair; all old names retained; no skips.",
       "receipt": "tmp/t0189-oracle-amendment/story-final-red-1790956875734/freeze.json",
@@ -468,6 +468,13 @@
       },
       "verification": "All47priorstorycasespass;4newstructuredmatcherfailures;0skips/runtimeerrors;fulltesttypesandscopedeslint0;sourceunchanged;previousfreezesretained.",
       "runtime_scope": "Node20-compatible recovery; parse all live story rows once at boot to recognise escaped semantic writing status. No periodic scan or new schema."
+    },
+    "static_dependency": {
+      "status": "claimed;release after metadata commit",
+      "author": "Averroes",
+      "reason": "Knip cannot trace jest.requireActual callers after redundant CLI importer removed",
+      "scope": "Named type-only dependency for existing requireActual; exact emittedJS,31names/assertions preserved",
+      "verify": "Full test types/scopedlint/Knip/historicalproposalcheck0,31migrationcasespass, identical emittedJS and test names."
     }
   },
   "schema_maintenance": {
@@ -503,5 +510,27 @@
     "coordinator": "2026-10-02-t0189-coordinator",
     "sync": "Carver 01a0fd33-6991-7a93-be6b-9285743b5ccc",
     "status": "Carver completed seven-path sync slice and stopped. Coordinator owns integrated source; Averroes independently owns typing correction and additive recovery witness. Two writers maximum."
-  }
+  },
+  "integrated_pre_gate": {
+    "oracle": "tmp/t0189-coordinator-check/1790957188311/summary.json",
+    "result": "425/425pass,0skips/runtimeerrors;unchangedvalidatedtree",
+    "static": "tmp/t0189-static-check/1790957252020/summary.json",
+    "static_result": "Fullapp/testprogramtypesandscopedeslintall0",
+    "mutation": "31proposedmutants;notyetexecuted",
+    "remaining": "Independentrepairreview,fullunchangedgate,builtbrowserwalk,committedsweep,57dispositions,finalR2acceptance,pushandallhostedjobs."
+  },
+  "gate_attempts": [
+    {
+      "receipt": "tmp/t0189-full-gate-1790957390217/summary.json",
+      "exit": 1,
+      "steps": {
+        "lint": 0,
+        "tsc": 0,
+        "jest": 1
+      },
+      "tree_unchanged": true,
+      "jest": "8099pass,7fail,9existing skips;6launcher-contaminated legacy warnings,1Knip dynamic-test dependency finding. Seven later gate steps unexecuted.",
+      "disposition": "Fix own launcher CONTROL_HUB_DATA_DIR injection and expose genuine oracle import to Knip through independent type-only amendment. No checks suppressed, no baseline exception."
+    }
+  ]
 }

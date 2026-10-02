@@ -1,5 +1,9 @@
 # T-0189 oracle strengthening amendment, 2 October 2026
 
+## Independent static dependency correction after the full gate
+
+Averroes may amend only the new migration parity oracle to make its genuine `runMigrations` dependency statically visible. Removing the redundant CLI call exposed Knip's inability to follow the existing `jest.requireActual<typeof import(...)>` use, despite many real test callers. Prefer a named type-only import used to type that same requireActual binding. Preserve runtime imports, mocking, emitted JavaScript, all 31 names and assertions. Do not suppress Knip, add a baseline exception or edit historical suites. Verify identical emitted JavaScript, complete test typing, scoped lint, all 31 cases and both Knip and its historical proposal check. Preserve the first full-gate failure receipt.
+
 ## Independent recovery preservation witness
 
 Schrodinger's further contract: retain Node20 compatibility; cover nested extra values, escaped strings and decoded property names, duplicate status/error keys with last-property-wins semantics, absent error fields, multiple writing chapters and repeat stability. Only effective status/error value spans may change. Preserve other substrings, including shadowed duplicate values. Span disagreement must fail and roll back rather than silently serialising the whole document. These are independent preservation witnesses, not instructions to mirror a particular parser implementation.
