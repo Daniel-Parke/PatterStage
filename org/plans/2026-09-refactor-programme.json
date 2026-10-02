@@ -613,6 +613,16 @@
             ],
             "receiptNote": "tmp/t0189-green-validation/tmp/t0188-chat-viewport-1790961702953/walk.json",
             "verify": "Independently freeze missing404/server-error heading cases before repair; require one primary heading, error feedback/retry/backlink and existing wording at1440x900/390x844. Keep normal transcript and loading states. Search, URLreload and Failedfilter request work; no actual foreign-transcript integration claim."
+          },
+          {
+            "title": "Hindsight phone collection toolbar",
+            "evidenceStatus": "Personally inspected controlled production screenshot; geometry and keyboard oracle pending",
+            "sourcePaths": [
+              "src/components/memory/hindsight/DirectivesTab.tsx",
+              "src/components/memory/hindsight/MentalModelsTab.tsx"
+            ],
+            "receiptNote": "tmp/t0189-green-validation/tmp/t0188-chat-viewport-1790964744875/walk.json",
+            "verify": "At390x844 the collection description must not compress New Directive into a two-line label outside its compact button. Preserve complete readable labels, reachable Refresh/create actions, keyboard focus and desktop hierarchy. Test both collection toolbars and long metadata. This is responsive repair, not redesign; independently freeze before implementation."
           }
         ],
         "claim_rule": "Name exact new unit .tsx and browser oracle paths; current glob claims do not establish ownership. Amend Verify and rollback at opening. Preserve T0189 -> T0190 -> T0191 -> T0192 dependencies."

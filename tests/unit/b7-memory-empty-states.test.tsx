@@ -23,6 +23,8 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+// T-0190 independent amendment: query provider only; assertions and identities retained.
+import { renderWithQuery } from "../helpers/render-with-query";
 
 jest.mock("lucide-react", () => require("../helpers/mocks").lucideMock());
 
@@ -98,7 +100,7 @@ describe("Enter runs the search the label promises", () => {
       return { ok: true, status: 200, json: async () => body, text: async () => "{}" } as unknown as Response;
     }) as unknown as typeof fetch;
 
-    render(<HindsightBrowser />);
+    renderWithQuery(<HindsightBrowser />);
     await waitFor(() => expect(calls.some((c) => c.includes("action=list"))).toBe(true));
 
     const box = screen.getByPlaceholderText(/Search memories/i);
@@ -123,7 +125,7 @@ describe("the browser hands the search down to the list", () => {
       return { ok: true, status: 200, json: async () => body, text: async () => "{}" } as unknown as Response;
     }) as unknown as typeof fetch;
 
-    render(<HindsightBrowser />);
+    renderWithQuery(<HindsightBrowser />);
     const box = await screen.findByPlaceholderText(/Search memories/i);
     fireEvent.change(box, { target: { value: "quantum" } });
     fireEvent.keyDown(box, { key: "Enter" });
@@ -153,7 +155,7 @@ describe("the browser hands the search down to the list", () => {
       return answer;
     }) as unknown as typeof fetch;
 
-    render(<HindsightBrowser />);
+    renderWithQuery(<HindsightBrowser />);
     const box = await screen.findByPlaceholderText(/Search memories/i);
     fireEvent.change(box, { target: { value: "reports" } });
     fireEvent.keyDown(box, { key: "Enter" });

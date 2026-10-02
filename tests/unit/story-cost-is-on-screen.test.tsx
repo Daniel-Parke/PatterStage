@@ -21,7 +21,7 @@
 // are real, so what is asserted is what a person would read.
 // ═══════════════════════════════════════════════════════════════
 
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 // Amended 2026-09-10 (C3, T-0138): the create page reads its libraries through useApiResource.
 import { renderWithQuery } from "../helpers/render-with-query";
 
@@ -109,7 +109,7 @@ beforeEach(() => {
 describe("the story reader", () => {
   it("shows what this story has cost so far", async () => {
     spendNow = { runs: 1, costUsd: 0.8 };
-    render(<StoryReaderPage />);
+    renderWithQuery(<StoryReaderPage />);
     await screen.findByRole("heading", { level: 1 });
 
     await waitFor(() => expect(note()).toHaveTextContent("$0.80"));
@@ -120,7 +120,7 @@ describe("the story reader", () => {
 
   it("still discloses the cost before anything has been spent", async () => {
     spendNow = { runs: 0, costUsd: 0 };
-    render(<StoryReaderPage />);
+    renderWithQuery(<StoryReaderPage />);
     await screen.findByRole("heading", { level: 1 });
 
     // The disclosure is not conditional on there being a bill yet: the point
@@ -130,7 +130,7 @@ describe("the story reader", () => {
 
   it("re-reads the figure once a chapter has been written", async () => {
     spendNow = { runs: 1, costUsd: 0.8 };
-    render(<StoryReaderPage />);
+    renderWithQuery(<StoryReaderPage />);
     await screen.findByRole("heading", { level: 1 });
     await waitFor(() => expect(note()).toHaveTextContent("$0.80"));
 
@@ -152,7 +152,7 @@ describe("the story reader", () => {
       return ok({ data: {} });
     });
 
-    render(<StoryReaderPage />);
+    renderWithQuery(<StoryReaderPage />);
     // A spend read that fails must not take the story down with it.
     expect(await screen.findByRole("heading", { level: 1 })).toBeInTheDocument();
   });

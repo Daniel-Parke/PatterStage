@@ -321,7 +321,7 @@
   ],
   "rollback": "Revert each Chat, Mission, Story/Hindsight or preference cohort independently with its shared interfaces and oracles. Keep every prior receipt/checkpoint; no database migration or stored-key rewrite.",
   "verify_line": "Freeze independent public-action behavioural oracles and historical identities before changes. Prove controlled async ownership/cache/error/storage/explicit-action cases, real page browser journeys at1440x900/390x844 and measured stats observer trace. Run app/test types,fullJest,unchangedten-stagegate; cleancommittedmutation controls/restoration; independentR2; all implementation/closure-head hosted jobs. Disposition all48ownershipitems without overstating provider/integration proof.",
-  "oracle_status": "Not yet authored/frozen; implementation prohibited.",
+  "oracle_status": "Frozen before implementation: 50 intended behavioural reds of105 new cases;48historical controls unchanged and passing.",
   "oracle_design": "tmp/t0190-oracle-design-20261002.md",
   "readiness": "tmp/t0190-full-readiness-review-20261002.md",
   "claim_review": "tmp/t0190-claims-and-controls-20261002.md",
@@ -410,6 +410,10 @@
     {
       "receipt": "tmp/t0190-chat-browser-preflight-20261002.md",
       "result": "Controlled production UI atbothwidths: delayed NewChat clears newlytypedinput; selectingBwhilepending also replacedbyNewChat. Coordinator reproduction, notindependentoracle orproviderproof."
+    },
+    {
+      "receipt": "tmp/t0189-green-validation/tmp/t0188-chat-viewport-1790964744875/walk.json",
+      "result": "Controlled production UI at 1440x900 and390x844: directives and mental-model collections return503, but show successful-empty claims and no collection failure. Four image hashes recorded; desktop models and phone directives personally inspected. No provider calls. Phone New Directive label wraps beyond its compact button; queued T0191 presentation repair."
     }
   ],
   "oracle_author": "Carver 01a0fd33-6991-7a93-be6b-9285743b5ccc, independent of T0190implementation",
@@ -428,5 +432,177 @@
     "tests/unit/story-cost-is-on-screen.test.tsx",
     "tests/unit/hindsight-browser-render.test.tsx",
     "tests/unit/b7-memory-empty-states.test.tsx"
-  ]
+  ],
+  "historical_control": {
+    "receipt": "tmp/t0190-historical-controls/1790963747932/summary.json",
+    "head": "39571be6ba35027b21531a36f1549dc93e4e7ef1",
+    "suites": 60,
+    "passed": 602,
+    "skipped": 0,
+    "tree": "5ccbd52c603b70c43c9e09bd306ab6040053600027979889ca61f70fddf5740b",
+    "unchanged": true,
+    "preservation": "tmp/t0190-preservation-baseline-20261002.json",
+    "preservedPaths": 1208,
+    "allowedAmendments": [
+      "tests/unit/b14-story-reader-writes-on-request.test.tsx",
+      "tests/unit/story-stop-and-the-write-latch.test.tsx",
+      "tests/unit/story-stop-holds-every-call.test.tsx",
+      "tests/unit/story-cost-is-on-screen.test.tsx",
+      "tests/unit/hindsight-browser-render.test.tsx",
+      "tests/unit/b7-memory-empty-states.test.tsx"
+    ],
+    "limits": "Preimplementation controls, not acceptance of new behaviour or provider integration."
+  },
+  "oracle_freeze": {
+    "receipt": "tmp/t0190-oracle/freeze-manifest.json",
+    "sha256": "79533b7c969bbe75f4a79b819d331cc850819ee9051ec0a32da92d6145615af8",
+    "criteriaHead": "25b6aa7fb42a21f89bd9313de63cd96c3a6f7d57",
+    "validationHead": "39571be6ba35027b21531a36f1549dc93e4e7ef1",
+    "author": "Carver / independent ORACLE",
+    "independence": "Separate author before any production implementation. Real composed hooks/pages with controlled HTTP/EventSource/storage/timer boundaries. Non-default methods: arrival-order permutations and table-driven write-intent/response-validation invariants. Constant Story identity fails the two-ID shared-client contract; no source-shape oracle. Human UX sampling and mutation adequacy remain coordinator/reviewer gates.",
+    "unit": {
+      "receipt": "tmp/t0190-oracle/unit-freeze-1790965745051",
+      "passed": 53,
+      "failed": 42,
+      "pending": 0,
+      "suites": 6,
+      "runtimeErrorSuites": 0
+    },
+    "browser": {
+      "receipt": "tmp/t0190-browser-oracle-1790965354099",
+      "hash": "9cea3bb813dbbb99862660361de3b65ce092e886dce651a75096f4b1d59fbd81",
+      "passed": 2,
+      "behaviouralReds": 8,
+      "skipped": 0,
+      "ownedProcessStopped": true,
+      "independentAuthor": "Carver",
+      "runner": "coordinator on isolated prebuilt production app"
+    },
+    "typing": "tmp/t0190-oracle/types-1790965935901",
+    "lint": "tmp/t0190-oracle/lint-1790965967869",
+    "suites": {
+      "tests/unit/chat-response-ownership.test.tsx": "e46fbed07b018175510a2e80fa552eeeca847e15fec96d846cf93e347227ff27",
+      "tests/unit/mission-query-ownership.test.tsx": "303c3c9db8a01b3fde25b9f41f8005d35c2a9e522f7a95cfd8f4b2471a96f6f8",
+      "tests/unit/story-client-boundaries.test.tsx": "9b70ef6709088cd497ae01a9b99776e0f72b235c515a83ef8cc48c159f70b4c7",
+      "tests/unit/hindsight-query-feedback.test.tsx": "e9732c9bb50829ee550639ec15ba7f0d44f31f6b0d78db52f9824cd4f0a908d7",
+      "tests/unit/preference-write-contract.test.tsx": "fcaaeb892f9ad94fabb2b6ec5df40ed1c8f0a62547b952d88114fec064858a6e",
+      "tests/unit/client-query-observers.test.tsx": "a773c698555c85aa73b021685402c2edcf8f1c777c0f70d1c566997f1c746b04",
+      "tests/e2e/client-read-ownership.spec.ts": "9cea3bb813dbbb99862660361de3b65ce092e886dce651a75096f4b1d59fbd81",
+      "tests/unit/b14-story-reader-writes-on-request.test.tsx": "c3307aec82d6da4c3d33719ff556abd939033b4e811560d172221e44b4755277",
+      "tests/unit/story-stop-and-the-write-latch.test.tsx": "945fe2bb371ae096e34a3f6840ff87dccbfbfb5e72c5f19bcb3cccb5ab67b15b",
+      "tests/unit/story-stop-holds-every-call.test.tsx": "6c43de88091cae9231fb9ae7360fb0595973c6f82353673f2a2d73a60b762b35",
+      "tests/unit/story-cost-is-on-screen.test.tsx": "f210fe43a8f7b40e8b55abf0a521e48329d737d8578b60865f0d501c3cc3235e",
+      "tests/unit/hindsight-browser-render.test.tsx": "22a22b8cb6702438173b10258890b24394d08de304f93fb56af21fc4c4671c8e",
+      "tests/unit/b7-memory-empty-states.test.tsx": "8e75de4a10294ac8e92ed42cb4016d9211caf39dd569371f85a2037bccb0804f"
+    },
+    "historicalIdentity": {
+      "before": 48,
+      "after": 48,
+      "nameDifferences": 0,
+      "skipped": 0,
+      "proof": [
+        {
+          "file": "tests/unit/b14-story-reader-writes-on-request.test.tsx",
+          "original": {
+            "file": "tests/unit/b14-story-reader-writes-on-request.test.tsx",
+            "rawSha256": "915a8e0517340ed93230ee74a8e4b195da4e695e9c409f766a11db3e73cef7bf",
+            "lfSha256": "915a8e0517340ed93230ee74a8e4b195da4e695e9c409f766a11db3e73cef7bf"
+          },
+          "amended": {
+            "rawSha256": "c3307aec82d6da4c3d33719ff556abd939033b4e811560d172221e44b4755277",
+            "lfSha256": "c3307aec82d6da4c3d33719ff556abd939033b4e811560d172221e44b4755277"
+          },
+          "wrapperOnlyExactTransform": true,
+          "stableClientAcrossRerenders": "existing renderWithQuery closure; helper unchanged"
+        },
+        {
+          "file": "tests/unit/story-stop-and-the-write-latch.test.tsx",
+          "original": {
+            "file": "tests/unit/story-stop-and-the-write-latch.test.tsx",
+            "rawSha256": "aa1cfd43c58e25250ad2bf6c63dfd33452522464f69369ae09e691f73972d52a",
+            "lfSha256": "aa1cfd43c58e25250ad2bf6c63dfd33452522464f69369ae09e691f73972d52a"
+          },
+          "amended": {
+            "rawSha256": "945fe2bb371ae096e34a3f6840ff87dccbfbfb5e72c5f19bcb3cccb5ab67b15b",
+            "lfSha256": "945fe2bb371ae096e34a3f6840ff87dccbfbfb5e72c5f19bcb3cccb5ab67b15b"
+          },
+          "wrapperOnlyExactTransform": true,
+          "stableClientAcrossRerenders": "existing renderWithQuery closure; helper unchanged"
+        },
+        {
+          "file": "tests/unit/story-stop-holds-every-call.test.tsx",
+          "original": {
+            "file": "tests/unit/story-stop-holds-every-call.test.tsx",
+            "rawSha256": "e0b5051d85aca4b3ebaae1a454eee4c5ea9a0989945d3714cc2817c0a890693b",
+            "lfSha256": "e0b5051d85aca4b3ebaae1a454eee4c5ea9a0989945d3714cc2817c0a890693b"
+          },
+          "amended": {
+            "rawSha256": "6c43de88091cae9231fb9ae7360fb0595973c6f82353673f2a2d73a60b762b35",
+            "lfSha256": "6c43de88091cae9231fb9ae7360fb0595973c6f82353673f2a2d73a60b762b35"
+          },
+          "wrapperOnlyExactTransform": true,
+          "stableClientAcrossRerenders": "existing renderWithQuery closure; helper unchanged"
+        },
+        {
+          "file": "tests/unit/story-cost-is-on-screen.test.tsx",
+          "original": {
+            "file": "tests/unit/story-cost-is-on-screen.test.tsx",
+            "rawSha256": "812cb36f8414bfa3982bed3d4447aec0132709b4031b06bb19820b57df75e1c7",
+            "lfSha256": "812cb36f8414bfa3982bed3d4447aec0132709b4031b06bb19820b57df75e1c7"
+          },
+          "amended": {
+            "rawSha256": "f210fe43a8f7b40e8b55abf0a521e48329d737d8578b60865f0d501c3cc3235e",
+            "lfSha256": "f210fe43a8f7b40e8b55abf0a521e48329d737d8578b60865f0d501c3cc3235e"
+          },
+          "wrapperOnlyExactTransform": true,
+          "stableClientAcrossRerenders": "existing renderWithQuery closure; helper unchanged"
+        },
+        {
+          "file": "tests/unit/hindsight-browser-render.test.tsx",
+          "original": {
+            "file": "tests/unit/hindsight-browser-render.test.tsx",
+            "rawSha256": "21743225b3a187ba44fe0c3e2943f4c2d3551faaccb0636a8a1005b1cc96299a",
+            "lfSha256": "21743225b3a187ba44fe0c3e2943f4c2d3551faaccb0636a8a1005b1cc96299a"
+          },
+          "amended": {
+            "rawSha256": "22a22b8cb6702438173b10258890b24394d08de304f93fb56af21fc4c4671c8e",
+            "lfSha256": "22a22b8cb6702438173b10258890b24394d08de304f93fb56af21fc4c4671c8e"
+          },
+          "wrapperOnlyExactTransform": true,
+          "stableClientAcrossRerenders": "existing renderWithQuery closure; helper unchanged"
+        },
+        {
+          "file": "tests/unit/b7-memory-empty-states.test.tsx",
+          "original": {
+            "file": "tests/unit/b7-memory-empty-states.test.tsx",
+            "rawSha256": "34bef1af19090473c6dad15ea3dc603b694a9ac97f9cf10e6a7a793273d823f8",
+            "lfSha256": "34bef1af19090473c6dad15ea3dc603b694a9ac97f9cf10e6a7a793273d823f8"
+          },
+          "amended": {
+            "rawSha256": "8e75de4a10294ac8e92ed42cb4016d9211caf39dd569371f85a2037bccb0804f",
+            "lfSha256": "8e75de4a10294ac8e92ed42cb4016d9211caf39dd569371f85a2037bccb0804f"
+          },
+          "wrapperOnlyExactTransform": true,
+          "stableClientAcrossRerenders": "existing renderWithQuery closure; helper unchanged"
+        }
+      ]
+    },
+    "mappedObligations": 48,
+    "review": {
+      "verdict": "PASS",
+      "reviewer": "Schrodinger 01a0f7b7-f68a-79b2-ba74-81cdddf2f3ef, independent read-only REVIEWER",
+      "manifestSha256": "79533b7c969bbe75f4a79b819d331cc850819ee9051ec0a32da92d6145615af8",
+      "evidence": "All13hashes and current receipts match.95unitcases53pass42behaviouralred0skips/runtimeerrors;48historical before/after pass and identity match; all48ownership mappings qualified. Full test typing/lint exit0. Browser2pass8behaviouralred,originalfixture failures excluded. First-chat race and strengthened Retry/latency/payload/identity witnesses verified. Source diff from39571be6 empty.",
+      "scope": "Preimplementation oracle freeze and red-commit readiness only. Implementation, whole gate, mutation, completed browser journeys and hosted acceptance remain required. Reviewer performed no writes or test execution."
+    },
+    "firstChatHypothesis": "Reproduced: releasing earlier empty detail erases optimistic user turn and live assistant output while activeId=N and streaming=true. Added focused controlled-boundary regression; not labelled refuted or green.",
+    "unexecuted": [
+      "Browser Hindsight retry/data recovery after missing-error assertion: both widths blocked by the earlier intended red.",
+      "Browser Story reader update after denied cleanup: both widths blocked by the earlier intended red.",
+      "Browser Chat selected-B post-completion assertion and final page-error/unexpected-write assertions are after the failed draft assertion; do not count those later assertions as executed.",
+      "All assertions following each unit case first failure remain unexecuted on baseline; exact failure locations are preserved in identities.json.",
+      "No production implementation, post-implementation acceptance, new build, complete gate, mutation sweep, human UX sample or hosted acceptance was performed by this oracle writer."
+    ],
+    "limits": "Red oracle freeze, not implementation acceptance. Original fixture/type failures retained; no production change or provider work."
+  }
 }

@@ -53,6 +53,9 @@ Malformed template dispatch: retain last valid mode, expose validation feedback
 and never dispatch the malformed value. Preserve independent drafts and explicit
 dispatch acknowledgement. Retain both runWrite and useMutation. Hindsight read
 errors may use scoped feedback; no global no-toast rule is implied.
+The retained valid mode may be submitted after an explicit valid, acknowledged
+user action. Do not invent a persistent invalid-form state or prohibit every
+POST after rejecting one malformed template value. Prove the submitted payload.
 
 The following independently prepared design is the contract inventory. Its
 proposed paths now have the claims above; all48 ownership items still need final

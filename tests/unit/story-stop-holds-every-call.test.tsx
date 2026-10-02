@@ -23,7 +23,9 @@
 // component are real, so what these assert is what a person sees and clicks.
 // ═══════════════════════════════════════════════════════════════
 
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
+// T-0190 independent amendment: query provider only; assertions and identities retained.
+import { renderWithQuery } from "../helpers/render-with-query";
 
 // Icons leave the accessibility tree, so an icon-only button that names
 // itself with `title` still resolves by its accessible name.
@@ -82,7 +84,7 @@ function parkedFor(action: string): Parked[] {
 
 async function mount(initial: ReturnType<typeof story>) {
   current = initial;
-  const utils = render(<StoryReaderPage />);
+  const utils = renderWithQuery(<StoryReaderPage />);
   await screen.findByRole("heading", { level: 1 });
   return utils;
 }

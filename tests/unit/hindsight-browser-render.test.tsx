@@ -5,7 +5,9 @@
 // timeAgo, read-only tag badges, tab CTAs.
 
 import "@testing-library/jest-dom";
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { screen, waitFor, fireEvent } from "@testing-library/react";
+// T-0190 independent amendment: query provider only; assertions and identities retained.
+import { renderWithQuery } from "../helpers/render-with-query";
 import { jsonResponse } from "../helpers/fetch-map";
 
 import HindsightBrowser from "@/components/memory/HindsightBrowser";
@@ -66,7 +68,7 @@ describe("HindsightBrowser", () => {
   it("shows memories empty copy aligned with Hermes curation", async () => {
     mockHindsightFetch({ memories: [] });
 
-    render(<HindsightBrowser />);
+    renderWithQuery(<HindsightBrowser />);
 
     await waitFor(() => {
       expect(screen.getByText(/No memories yet/i)).toBeInTheDocument();
@@ -109,7 +111,7 @@ describe("HindsightBrowser", () => {
       ],
     });
 
-    render(<HindsightBrowser />);
+    renderWithQuery(<HindsightBrowser />);
 
     await waitFor(() => {
       expect(screen.getByText("Alpha note")).toBeInTheDocument();
@@ -137,7 +139,7 @@ describe("HindsightBrowser", () => {
   it("directives tab empty state offers CTA that opens create modal", async () => {
     mockHindsightFetch({ memories: [], directives: [] });
 
-    render(<HindsightBrowser />);
+    renderWithQuery(<HindsightBrowser />);
 
     await waitFor(() => {
       expect(screen.getByText(/No memories yet/i)).toBeInTheDocument();
@@ -161,7 +163,7 @@ describe("HindsightBrowser", () => {
   it("mental models tab empty state offers CTA that opens create modal", async () => {
     mockHindsightFetch({ memories: [], models: [] });
 
-    render(<HindsightBrowser />);
+    renderWithQuery(<HindsightBrowser />);
 
     await waitFor(() => {
       expect(screen.getByText(/No memories yet/i)).toBeInTheDocument();
