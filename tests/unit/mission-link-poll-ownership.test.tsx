@@ -1,39 +1,25 @@
 /** @jest-environment jsdom */
-import React from "react";
 import { act, cleanup, renderHook } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useMissionsData } from "@/hooks/useMissionsData";
-import type { MissionRow } from "@/hooks/missions-page-types";
 import { jsonResponse } from "../helpers/fetch-map";
+import { createMissionLinkQueryFixture, deferred, detail, missionRow, LIST, OLDER } from "../helpers/mission-link-query-fixture";
 
 // Source-informed independent oracle. The real hook, interval, facade and query
 // bridge run together; only HTTP responses and elapsed time are controlled.
-const LIST = "/api/missions?limit=200";
-const OLDER = "/api/missions?id=older";
-const savedFetch = global.fetch;
 const feedback = jest.fn();
 const options = {
   showToast: feedback,
   applyTemplateToForm: () => null,
   setShowCreate: () => undefined,
 };
-const mission = (id: string, name = `Owned mission ${id}`): MissionRow =>
-  ({ id, name, status: "dispatched", prompt: `Instruction ${id}`, queuedForRun: false } as MissionRow);
-const detail = (row: MissionRow) => jsonResponse({ data: { mission: row, run: null, schedule: null } });
-function deferred<T>() {
-  let resolve!: (value: T) => void;
-  const promise = new Promise<T>(done => { resolve = done; });
-  return { promise, resolve };
-}
-let client: QueryClient;
-let rows: MissionRow[];
-let olderRow: MissionRow;
+const mission = (id: string, name = `Owned mission ${id}`) => missionRow(id, name);
+let dispose: () => void;
+let rows: ReturnType<typeof mission>[];
+let olderRow: ReturnType<typeof mission>;
 let calls: string[];
 let unexpected: string[];
 let intercept: (url: string) => Promise<Response> | undefined;
-function Provider({ children }: { children: React.ReactNode }) {
-  return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
-}
+let Provider: ReturnType<typeof createMissionLinkQueryFixture>["Provider"];
 const count = (url: string) => calls.filter(call => call === url).length;
 async function advance(ms = 0) {
   await act(async () => { await jest.advanceTimersByTimeAsync(ms); });
@@ -43,30 +29,17 @@ beforeEach(() => {
   jest.spyOn(document, "visibilityState", "get").mockReturnValue("visible");
   window.history.replaceState({}, "", "/work/missions?mission=older");
   feedback.mockClear();
-  client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } });
   rows = [mission("A"), mission("B")]; olderRow = mission("older");
-  calls = []; unexpected = []; intercept = () => undefined;
-  global.fetch = jest.fn(async (input, init) => {
-    const url = String(input);
-    if (init?.method && init.method !== "GET") {
-      unexpected.push(`${init.method} ${url}`);
-      throw new Error(`Unexpected write: ${init.method} ${url}`);
-    }
-    calls.push(url);
-    const held = intercept(url);
-    if (held) return held;
-    if (url === LIST) return jsonResponse({ data: { missions: rows } });
-    if (url === OLDER) return detail(olderRow);
-    if (url === "/api/missions?id=B") return detail(mission("B"));
-    if (url === "/api/templates") return jsonResponse({ data: { templates: [] } });
-    if (url === "/api/mission-categories") return jsonResponse({ data: { categories: [] } });
-    unexpected.push(url);
-    throw new Error(`Unexpected read: ${url}`);
-  });
+  intercept = () => undefined;
+  ({ dispose, Provider, calls, unexpected } = createMissionLinkQueryFixture({
+    rows: () => rows, older: () => olderRow, selectedB: () => mission("B"),
+    intercept: url => intercept(url),
+    writeError: (method, url) => `Unexpected write: ${method} ${url}`,
+    readError: url => `Unexpected read: ${url}`,
+  }));
 });
 afterEach(() => {
-  cleanup(); client.clear();
-  global.fetch = savedFetch;
+  cleanup(); dispose();
   jest.restoreAllMocks(); jest.useRealTimers();
   expect(unexpected).toEqual([]);
 });

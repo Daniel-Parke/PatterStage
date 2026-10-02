@@ -67,11 +67,12 @@
         "src/components/memory/hindsight/useHindsightMemories.ts",
         "src/hooks/usePreferenceWrite.ts",
         "org/briefs/T-0190-poll-oracle.md",
-        "org/briefs/T-0190-story-cache-oracle.md"
+        "org/briefs/T-0190-story-cache-oracle.md",
+        "org/briefs/T-0190-oracle-amendment.md"
       ],
       "acquired": "2026-10-02T17:49:07.371181+00:00",
       "expires": "2026-10-03T17:49:07.371181+00:00"
     }
   ],
-  "note": "All oracle authors stopped. Coordinator source/metadata only.17oraclefiles frozen; independent reviewer Sagan."
+  "note": "All oracle authors stopped. Coordinator owns source/metadata. Independent amended oracles frozen; Sagan final reviewer."
 }

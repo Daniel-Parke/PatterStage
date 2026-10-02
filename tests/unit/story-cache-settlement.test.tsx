@@ -217,3 +217,42 @@ it("mount and cache publication never authorise generation, and explicit Write r
   expect(calls("generate-chapter")).toHaveLength(1);
   expect(screen.queryByRole("button", { name: /stop/i })).not.toBeInTheDocument();
 });
+
+it.each(["mounted", "unmounted"] as const)("a held automatic title repair respects reader ownership after a confirmed partial read-status publication [%s]", async ownership => {
+  current = { ...current, chapters: current.chapters.map(chapter => chapter.number === 1 ? { ...chapter, title: "Chapter 1" } : chapter) };
+  const titleReply = deferred<Response>(), readReply = deferred<Response>();
+  intercept = body => body.action === "sync-titles" ? titleReply.promise : body.action === "update" ? readReply.promise : undefined;
+  const view = await mount();
+  const observer = observeStory(); await settle();
+  expect(calls("sync-titles")).toHaveLength(1);
+  const chapterList = within(screen.getByRole("complementary", { name: "Chapters" }));
+  fireEvent.click(chapterList.getByRole("button", { name: /^Chapter 1/ })); await settle();
+  expect(calls("update").map(request => request.body)).toEqual([{ action: "update", storyId: "S-1", chapters: [{ number: 1, readStatus: "read" }] }]);
+  await act(async () => { readReply.resolve(confirmation(1)); }); await settle();
+  expect(cachedFlags(observer)).toEqual([true, false]);
+  expect(within(chapterList.getByRole("button", { name: /^Chapter 1/ })).queryByLabelText("Read")).not.toBeNull();
+  // The later valid server snapshot includes the confirmed flag. This tests
+  // response ownership, without prescribing how stale full snapshots merge.
+  const repaired = { ...observer.result.current.data!, updatedAt: "2026-10-02T12:01:00.000Z",
+    chapters: observer.result.current.data!.chapters.map(chapter => chapter.number === 1 ? { ...chapter, title: "The Departure" } : chapter) };
+  if (ownership === "unmounted") view.unmount();
+  await act(async () => { titleReply.resolve(jsonResponse({ data: { story: repaired } })); }); await settle();
+  if (ownership === "mounted") {
+    expect({
+      visibleTitle: chapterList.queryByRole("button", { name: /^The Departure/ }) !== null,
+      cachedTitle: observer.result.current.data?.chapters[0].title,
+      cachedFlags: cachedFlags(observer),
+    }).toEqual({ visibleTitle: true, cachedTitle: "The Departure", cachedFlags: [true, false] });
+    expect(visibleFlags()).toEqual([true, false]);
+  } else {
+    expect(screen.queryByRole("complementary", { name: "Chapters" })).toBeNull();
+    expect(observer.result.current.data?.chapters[0].title).toBe("Chapter 1");
+    expect(cachedFlags(observer)).toEqual([true, false]);
+  }
+  expect(observer.result.current.data).toMatchObject({ title: current.title, chapterContents: current.chapterContents });
+  expect(observer.result.current.data?.chapters).toHaveLength(4);
+  expect(calls("load")).toHaveLength(1);
+  expect(calls("update")).toHaveLength(1);
+  expect(calls("sync-titles")).toHaveLength(1);
+  expect(requests.filter(request => !["load", "spend", "sync-titles", "update"].includes(request.body.action))).toEqual([]);
+});

@@ -97,7 +97,9 @@
     "org/briefs/T-0190-poll-oracle.md",
     "tests/unit/story-cache-settlement.test.tsx",
     "org/briefs/T-0190-story-cache-oracle.md",
-    "tests/unit/mission-link-handoff.test.tsx"
+    "tests/unit/mission-link-handoff.test.tsx",
+    "tests/helpers/mission-link-query-fixture.tsx",
+    "org/briefs/T-0190-oracle-amendment.md"
   ],
   "timestamps": {
     "opened": "2026-10-02T17:49:07.371181+00:00",
@@ -852,5 +854,95 @@
       "evidence": "Actual6cases3pass3behaviouralred0skip/runtime;types/lint0 on capturedsnapshot. Missions and readApiResource/apiReadOptions unchanged. SubsequentStoryrepair and publishApiResource-only drift qualified; fullintegratedtyping remains required."
     },
     "authorStopped": "Carver explicitly confirmed both hashes unchanged, no further tests/edits, writing remains stopped."
+  },
+  "oracle_amendment": {
+    "author": "Schrodinger",
+    "originalAuthor": "Carver",
+    "files": [
+      "tests/unit/mission-link-poll-ownership.test.tsx",
+      "tests/unit/mission-link-handoff.test.tsx",
+      "tests/unit/story-cache-settlement.test.tsx",
+      "tests/helpers/mission-link-query-fixture.tsx"
+    ],
+    "brief": "org/briefs/T-0190-oracle-amendment.md",
+    "authority": "R2 different-author frozen-oracle procedure and existing Q015 amendment discipline; preserve every existing assertion/name. No C4 ceiling or detector changes.",
+    "status": "Frozen; author explicitly STOPPED; independent acceptance recorded before red commit",
+    "manifest": "tmp\\t0190-oracle-amendment\\freeze.json",
+    "manifestSha256": "f0776f2ea43a2d52040f9f7a793aa13ad8c9d3fb4703d5087d2baf4c86c87c77",
+    "hashes": {
+      "tests/unit/mission-link-poll-ownership.test.tsx": "05969eb52e729e164834a1429247609a0ab12a02ba6d135d328d1aab62820a2c",
+      "tests/unit/mission-link-handoff.test.tsx": "2a9267a5346f1932f63dce9bfc8b7e6b178841ff77189a90c25b82f8a87de89f",
+      "tests/unit/story-cache-settlement.test.tsx": "6cb5c4b290a2997ba71f308e26d617671b615b60276f8427823ea0a8b4b4ed6d",
+      "tests/helpers/mission-link-query-fixture.tsx": "c59aa2c23dd396d4995d3ac391c570f2d3f018f1355325548021954a270b4373"
+    },
+    "counts": {
+      "existingPreserved": 29,
+      "added": 2,
+      "amendedPassed": 30,
+      "amendedFailed": 1,
+      "c4Passed": 24,
+      "skipped": 0,
+      "runtimeErrors": 0
+    },
+    "measurement": {
+      "repeatedTestWindows": 4796,
+      "fixedCeiling": 4800,
+      "missionFixtureExtractionNetPhysicalLines": 4,
+      "wholeAmendmentNetPhysicalLines": 43
+    },
+    "review": {
+      "reviewer": "Sagan 01a0fe05-a6c0-7d22-ae2f-ba3716eded80",
+      "verdict": "PASS",
+      "scope": "Freeze and red commit only; final implementation acceptance pending"
+    }
+  },
+  "first_full_gate": {
+    "receipt": "tmp/t0190-full-gate-1790971757353/summary.json",
+    "result": "FAIL",
+    "observedExits": {
+      "lint": 0,
+      "tsc": 0,
+      "jest": 1
+    },
+    "counts": {
+      "passed": 8261,
+      "failed": 2,
+      "existingSkipped": 9
+    },
+    "failures": [
+      "b7-memory-one-card: disconnected Memory list hidden",
+      "c4-the-test-harnesses: repeated test windows4842 exceed fixed4800"
+    ],
+    "unexecuted": [
+      "knip",
+      "canary",
+      "build",
+      "build-purity",
+      "e2e",
+      "census",
+      "census-lines"
+    ]
+  },
+  "toast_removal_probe": {
+    "receipt": "tmp/t0190-toast-removal-1790972311879/summary.json",
+    "selection": "12suites selected by original gap065.1 rg expression; not universal suite count",
+    "before": 134,
+    "withoutFallback": {
+      "passed": 123,
+      "failed": 11,
+      "brokenSuites": 4,
+      "runtimeErrors": 0
+    },
+    "restored": 134,
+    "restoration": "Exact bytes and mode restored in isolated copy; primary Toast untouched",
+    "disposition": "Retain supported standalone fallback; experiment obligation remains owned/discharged byT0190, no waiver/transfer."
+  },
+  "memory_gate_repair": {
+    "historicalFailure": "b7-memory-one-card.test.tsx disconnected state hidden by collectionError guard",
+    "repair": "Render the established disconnected MemoryTab when health.available is false, while retaining error banner and retry. No false empty-state on an unreadable bank.",
+    "receipt": "tmp/t0190-coordinator-jest-1790972209306/summary.json",
+    "passed": 95,
+    "failed": 0,
+    "skipped": 0
   }
 }

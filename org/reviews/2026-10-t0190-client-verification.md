@@ -131,3 +131,31 @@ supersedes refresh ownership after the one-shot focus latch has been set. Carver
 is independently reproducing that sequence. No fix or reproduced-red claim yet.
 The128 passing cases do not prove that sequence. Full gate, current production
 build/browser checks, committed sweep and final independent acceptance remain.
+
+## First whole-gate failure and preservation repairs
+
+The first full gate at tmp/t0190-full-gate-1790971757353 exits1 on an unchanged
+tree. Lint/typecheck pass; coverage runs8261passing cases,2failures and9existing
+skips. Seven later stages remain unexecuted. Failures are the historical Memory
+disconnected-state assertion and C4's fixed4800test-repeat ceiling (actual4842).
+No check or ceiling is changed. The Memory state is restored with error/Retry
+still visible;95focused/historical cases pass at
+tmp/t0190-coordinator-jest-1790972209306/summary.json. A different oracle author
+is extracting duplicated fixture setup while preserving names/assertions.
+
+The pending gap065.1 removal experiment is now executed in the isolated copy:
+tmp/t0190-toast-removal-1790972311879/summary.json. The original rg expression
+selects12suites. All134cases pass before removal; removing only standalone
+dispatch causes11matcher failures across4suites,0runtime errors. All134pass
+after exact-byte/mode restoration. Primary Toast is untouched. This is a bounded
+selected-suite count, not a universal count or the committed mutation sweep.
+The result supports retaining the standalone behaviour and requires no waiver.
+
+The full157-case behavioural oracle set passed before this gate. Later review
+still identified an unresolved title-sync/read-status ordering schedule; the
+independent amendment must reproduce and resolve it before final acceptance.
+Earlier green evidence does not establish that new schedule.
+
+## Independent amendment, 2 October
+
+Schrodinger, different from original author Carver, preserved the20Mission and9Story test identities and assertions. Common Mission fixtures reduce actual repeated test windows from4842 to4796, below the unchanged4800C4 ceiling. Extraction costs4physical lines; the entire amendment adds43physical lines including2Story cases. It is not a net line saving. The mounted title/read-status case fails semantically; unmount preservation passes. Amended suites30pass1fail; C4 adds24passes, with0skips/runtime errors. Full test typing and scoped lint exit0. Final manifest tmp/t0190-oracle-amendment/freeze.json binds hashes, preserved controls, failed matcher and snapshot. Author STOPPED; Sagan accepted this freeze only. Implementation/full-gate/sweep/hosted acceptance remain outstanding.
