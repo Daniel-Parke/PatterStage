@@ -734,6 +734,7 @@
         "scripts/tooling/migrate-to-runtime.mjs",
         "scripts/tooling/ps-deploy.mjs",
         "scripts/tooling/seed-catalog.ts",
+        "scripts/tooling/t0205-loopback-diagnostic.mjs",
         "src/app/agent/profiles/page.tsx",
         "src/app/agent/settings/restore/page.tsx",
         "src/app/agent/skills/page.tsx",

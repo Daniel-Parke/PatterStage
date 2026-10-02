@@ -22,7 +22,7 @@
   "owner_session": "2026-10-02-refactor-resume",
   "timestamps": {
     "opened": "2026-10-01T21:11:46.044703+00:00",
-    "updated": "2026-10-02T11:51:25.390Z"
+    "updated": "2026-10-02T13:02:57.735Z"
   },
   "authority": "Operator authorises completion of approved batches and prerequisite repairs. Adopt separate-author frozen oracle and independent R2 acceptance even if declaration router minimum is R1. Narrow Q015 amendment authority must be recorded before source/mutant amendments; no protected changes or weakening of bounds is authorised.",
   "claims": [
@@ -58,7 +58,9 @@
     "org/briefs/T-0205-worker-budget-amendment.md",
     "org/reviews/2026-10-t0205-worker-budget-amendment.md",
     "org/reviews/2026-10-t0205-portable-listener-amendment.md",
-    "org/briefs/T-0205-portable-listener-amendment.md"
+    "org/briefs/T-0205-portable-listener-amendment.md",
+    "org/briefs/T-0205-worker-root-amendment.md",
+    "org/reviews/2026-10-t0205-worker-root-amendment.md"
   ],
   "invariants": [
     "All existing test names, assertions, 75-second production deadline, 20 readiness attempts, six-second fixture watchdog, 0.1-second accelerated request bounds, 0.2-second watchdog kill grace and 25-second RPC/outer bounds remain.",
@@ -1165,5 +1167,76 @@
       },
       "limits": "Not final batch acceptance. Native Mac, full gate, fresh33-mutants and independent candidate acceptance remain mandatory; EPERM cause and worker-exit warning remain unresolved."
     }
+  },
+  "inventory_repair": {
+    "source": "a92487c40330a8063c1265d00e48fd0abda5c7d2",
+    "failure": "Both hosted Ubuntu jobs and clean committed Windows-alone frozen T0165 oracle find the new diagnostic missing from T0200 legacy-reader claims.",
+    "red": {
+      "path": "tmp/t0188-plan-inventory-red/summary.json",
+      "sha256": "1ac3d2b0f1237389016cbcf26b97f9b258f56cf75d10e257581b0d4320f09c60",
+      "passed": 2,
+      "failed": 1,
+      "skipped": 0,
+      "runtime": 0
+    },
+    "cause": "Pre-commit validation checkout left the new diagnostic untracked. Gate hashes included its contents, but the frozen plan test uses git grep, which did not include that path until committed. Content equivalence alone was insufficient for Git-inventory-dependent checks.",
+    "repair": "Add exact diagnostic path to existing T0200 deferred claims. Before the new full gate, register all new candidate paths using intent-to-add only in the owned validation index and compare its tracked inventory with the primary. Existing test and all assertions remain unchanged. No compatibility removal or changed retirement date.",
+    "remaining": "Fresh whole gate, exact candidate binding including tracked inventory, committed sweeps, independent review and every hosted job. Preserve a924 failed logs; do not rerun or cancel its workflows.",
+    "gate": {
+      "path": "tmp/t0188-full-gate-inventory-20261002/summary.json",
+      "sha256": "aee0cd2a15ba1bba40bf3e7150b435b8ed1309da9f35c8419a5c2b24a87a9bab",
+      "binding": "tmp/t0188-inventory-candidate-binding.json",
+      "trackedInventory": "tmp/t0188-index-inventory-1790944290260.json",
+      "limits": "All10 pass, predates later worker-root and diagnostic changes; not the next candidate full gate."
+    }
+  },
+  "worker_root_authority": {
+    "date": "2026-10-02T12:43:45.767Z",
+    "authoriser": "Schrodinger 01a0f7b7-f68a-79b2-ba74-81cdddf2f3ef",
+    "verdict": "APPROVE narrow Q015 separate-author root canonicalisation only after actual alias-red/same-directory-green/different-directory-refusal controls; all9names,strictidentity,predicates,bounds unchanged.",
+    "brief": "org/briefs/T-0205-worker-root-amendment.md",
+    "limits": "Exact nativeMac failure predicate remains unconfirmed. No push, final acceptance or closure authority."
+  },
+  "native_context_diagnostic_authority": {
+    "date": "2026-10-02T12:43:45.767Z",
+    "authoriser": "Schrodinger 01a0f7b7-f68a-79b2-ba74-81cdddf2f3ef",
+    "verdict": "APPROVE additive bounded nativeMac context-alone unchanged formal suite plus redacted structured metrics; all20cases,6secondwatchdog,25secondlifecycleceiling and blocking coverage unchanged. Original failures retained; alone pass cannot supersede them."
+  },
+  "worker_root_freeze": {
+    "path": "tmp/t0205-worker-root-20261002-DeOPcm/freeze.json",
+    "sha256": "aa7c521ee76e4b1c136d0622ec0145f8ddbc7f41b77f15535fb0cd2b11034534",
+    "author": "Erdos 01a0fc9b-2e72-7441-8968-123c82ad4bba",
+    "files": {
+      "tests/unit/release-jest-worker-budget.test.ts": "fe674903ca731864a9096e65a7e04dda95f7d8770ef2740ea8c6cf51497721eb",
+      "org/reviews/2026-10-t0205-worker-root-amendment.md": "78124468044fb47ed6aca9d4bb83d9b701bf9725f2607848be1fe546e9a60419"
+    },
+    "verifiedHashes": 307,
+    "originalAliasRefusals": 2,
+    "amendedAliasPasses": 2,
+    "differentDirectoryRefusals": 2,
+    "normal": {
+      "passed": 9,
+      "skipped": 0,
+      "runtime": 0
+    },
+    "writesCeased": true,
+    "limits": "Exact native Mac failure predicate remains unconfirmed; fresh full gate, required sweeps, independent acceptance and native hosted evidence remain required."
+  },
+  "context_diagnostic_controls": {
+    "red": "tmp/t0188-context-diagnostic-red/summary.json",
+    "green": "tmp/t0188-context-diagnostic-green/summary.json",
+    "cases": 4,
+    "qualification": "Synthetic valid metrics and cleanup failure preserved; missing metrics and synthetic secret in numeric field refused, no payload text disclosed.",
+    "actualWindows": "tmp/t0188-context-diagnostic-observed.json",
+    "limits": "One real standalone Windows stalled probe:21 native calls,3.64s,owned cleanup and scratch removal succeed. Does not establish historical Mac cause or repair."
+  },
+  "claim_metadata_correction": "The second lane initially used owner_session/expires_at rather than canonical session_id/expires keys. Coordinator corrected the keys and recorded the actual authorisation timestamp. Exact disjoint file ownership and at most two writers were maintained; no historical task or protected file changed.",
+  "worker_root_review": {
+    "reviewer": "Schrodinger 01a0f7b7-f68a-79b2-ba74-81cdddf2f3ef",
+    "verdict": "PASS freeze and diagnostic; proceed to fresh full gate. No push or closure approval.",
+    "freezeSHA256": "aa7c521ee76e4b1c136d0622ec0145f8ddbc7f41b77f15535fb0cd2b11034534",
+    "oracleSHA256": "fe674903ca731864a9096e65a7e04dda95f7d8770ef2740ea8c6cf51497721eb",
+    "diagnosticSHA256": "468544a29526076f02f4f443fd170700726ddc42daf7bcfaa1732c21f06b0ad8",
+    "qualification": "Reviewer independently checked all 307 hashes, two-line change and unchanged nine test identities/assertions/deadlines. Historical native Mac root and cleanup causes remain unconfirmed. Original hosted failures retained. Fresh gate, committed sweeps and exact-head hosted checks required."
   }
 }

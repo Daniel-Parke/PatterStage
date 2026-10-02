@@ -246,3 +246,22 @@ acceptance for the named candidate/closure heads. This is a bounded retrieval
 result, not proof that review never occurred elsewhere. Recover existing
 receipts or perform a fresh dated review of the then-current implementation;
 never manufacture historical approval or rewrite the closed records.
+
+## Hosted candidate inventory correction
+
+At a92487c4 both Ubuntu jobs failed the unchanged T0165 plan oracle: the new
+scripts/tooling/t0205-loopback-diagnostic.mjs reads CH_DATA_DIR but was absent
+from T0200 deferred claims. The clean committed Windows reproduction has one
+intended failure and two passing controls, no skips/runtime errors. The prior
+local gate included actual content in its stamp but git grep excluded the new
+untracked file. Correct the plan claim and make candidate additions visible
+to Git inventory checks in the owned validation checkout before repeating the
+full gate. No test or retirement ruling changes.
+
+Current review additionally confirms the phone Chat input is clipped below
+844px and the credential name collapses to zero width; T0191 owns both.
+Credential create/reload/rotate/confirmed-delete/reload passed at both widths
+using fake owned values. Independent current T0185 review found two source
+race hypotheses for T0190. Detailed qualified receipts are tmp/t0191-chat-
+viewport-finding-20261002.md, tmp/t0191-credential-viewport-finding-20261002.md
+and tmp/t0185-current-review-20261002.md. No historical approval is inferred.

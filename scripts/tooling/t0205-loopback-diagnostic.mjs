@@ -7,6 +7,7 @@ import { join, resolve } from 'node:path';
 export function redactFailure(stderr) {
   const files = new Set([
     'tests/helpers/release-install-http-loopback-probe.py',
+    'tests/helpers/release-install-http-context-probe.py',
     'tests/helpers/release-install-http-probe.py',
     'tests/helpers/release-install-http-curl-bridge.py',
     'tests/integration/test_full_install_update_process.py',
@@ -35,7 +36,34 @@ export function redactFailure(stderr) {
 
 let phase = 'setup';
 
+function contextMetrics(stdout) {
+  const value = JSON.parse(stdout).stalled;
+  const boolean = (input) => {
+    if (typeof input !== 'boolean') throw new Error('Invalid observation');
+    return input;
+  };
+  const integer = (input, maximum) => {
+    if (!Number.isInteger(input) || input < 0 || input > maximum) throw new Error('Invalid observation');
+    return input;
+  };
+  const selectBooleans = (input, keys) => Object.fromEntries(keys.map((key) => [key, boolean(input[key])]));
+  if (!Number.isFinite(value.elapsedSeconds) || value.elapsedSeconds < 0 ||
+      !Array.isArray(value.native.statuses) || value.native.statuses.length > 64) throw new Error('Invalid observation');
+  return {
+    ...selectBooleans(value, ['accepted', 'ownedStopped', 'decoySurvived', 'signalsOwned', 'withinDeadline', 'scratchRemoved']),
+    probeExit: integer(value.probeExit, 255), elapsedSeconds: value.elapsedSeconds,
+    native: {
+      ...selectBooleans(value.native, ['ownedCurlStopped', 'listenerStopped', 'ipcStopped']),
+      ...Object.fromEntries(['calls', 'errors', 'cancelled'].map((key) => [key, integer(value.native[key], 10000)])),
+      statuses: value.native.statuses.map((status) => integer(status, 255)),
+    },
+  };
+}
+
 function main() {
+  const selectors = process.argv.slice(2);
+  if (selectors.length > 1 || (selectors.length === 1 && selectors[0] !== '--context')) throw new Error('Unknown diagnostic');
+  const context = selectors[0] === '--context';
   const owned = mkdtempSync(join(tmpdir(), 't0205-loopback-diagnostic-'));
   const environment = {};
   for (const name of ['PATH', 'Path', 'PATHEXT', 'SystemRoot', 'SYSTEMROOT', 'WINDIR', 'COMSPEC']) {
@@ -48,7 +76,7 @@ function main() {
   try {
     phase = 'launch';
     const result = spawnSync(process.env.PYTHON || 'python',
-      [resolve('tests/helpers/release-install-http-loopback-probe.py')], {
+      [resolve(`tests/helpers/release-install-http-${context ? 'context' : 'loopback'}-probe.py`), ...(context ? ['stalled'] : [])], {
         cwd: process.cwd(), encoding: 'utf8', timeout: 150_000,
         maxBuffer: 1024 * 1024, env: environment,
       });
@@ -57,6 +85,10 @@ function main() {
       signal: /^[A-Z0-9]+$/.test(result.signal || '') ? result.signal : null,
       launchError: result.error ? (codes.has(result.error.code) ? result.error.code : 'redacted') : null,
       ...redactFailure(result.stderr || '') };
+    if (context && result.status === 0 && !result.signal && !result.error) {
+      phase = 'observation';
+      report.context = contextMetrics(result.stdout);
+    }
   } finally {
     const previousPhase = phase;
     phase = 'cleanup';

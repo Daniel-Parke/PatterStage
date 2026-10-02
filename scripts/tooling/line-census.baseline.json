@@ -3,7 +3,7 @@
   "counts": {
     "srcLines": 102201,
     "testLines": 141292,
-    "scriptsLines": 13645,
+    "scriptsLines": 13677,
     "srcRepeatedWindowLines": 968,
     "testRepeatedWindowLines": 4794,
     "routesWithTryCatch": 18,
@@ -1120,6 +1120,11 @@
       "measuredAt": "2026-10-02",
       "rise": "testLines rose from 141143 to 141292",
       "reason": "T-0205: nine new independent worker-budget cases and different-author strict validation amendment preserve all existing identities/floors/deadlines; plus82-line redacted diagnostic; targets unchanged"
+    },
+    {
+      "measuredAt": "2026-10-02",
+      "rise": "scriptsLines rose from 13645 to 13677",
+      "reason": "T-0205 adds typed, redacted stalled-context diagnostic metrics for unresolved hosted macOS cleanup failures; preserves all formal tests, deadlines and coverage floors."
     }
   ]
 }

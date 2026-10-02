@@ -22,7 +22,29 @@ Jest worker-exit warning remains a T-0195 stability obligation. A separate
 author has frozen a portable listener witness: seven existing names pass,
 20 controls pass and four deliberate false-positive variants are rejected.
 It observes actual accepted connections instead of querying SO_ACCEPTCONN.
-No whole-gate or hosted acceptance follows from those focused results.
+The a92487c4 candidate passed the local whole gate and 33 committed mutants,
+but hosted Ubuntu found the new diagnostic missing from T0200 legacy-reader
+claims. The local Git-based check missed that then-untracked file. Preserve
+the failed jobs and the clean committed one-failure reproduction. Add the
+missing claim and compare tracked inventories before a fresh whole gate.
+No batch closure or all-pathway acceptance follows from the local green.
+
+Both a924 CI runs also failed the nine-case worker-budget setup on macOS;
+the PR run failed two context cleanup assertions. A separate author has
+frozen a two-line owned-root canonicalisation. Independent review verified
+all 307 evidence hashes, nine unchanged identities and real-junction controls.
+It also accepted additive redacted stalled-case diagnostics and an unchanged
+context-suite-alone macOS step. Neither is a waiver for the blocking coverage
+run. Native causes remain unconfirmed. The inventory-only ten-stage gate
+passed, but predates these amendments. A new full gate, committed sweeps and
+every exact-head hosted job remain required before T-0188/T-0205 can close.
+
+Personal production walks used owned data on port3998, then stopped that
+server. Credential create, reload, rotation and deletion pass at both widths.
+The 390px Chat input is clipped and the credential name has zero visible width;
+both are recorded for red-first T-0191 repair. An independent T-0185 review
+also identifies two unconfirmed stale-response races for T-0190. These bounded
+walks do not establish complete platform or release acceptance.
 
 ## Current work and overnight boundary, 2026-10-02
 

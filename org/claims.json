@@ -52,7 +52,6 @@
         "org/reviews/2026-10-refactor-overnight-audit.md",
         "scripts/tooling/t0205-loopback-diagnostic.mjs",
         "jest.config.js",
-        "tests/unit/release-jest-worker-budget.test.ts",
         "org/briefs/T-0205-worker-budget-oracle.md",
         "org/reviews/2026-10-t0205-worker-budget-oracle.md",
         "org/briefs/T-0205-worker-budget-amendment.md",
@@ -77,7 +76,10 @@
         "org/reviews/2026-10-t0205-cleanup-assertion-amendment.md",
         "org/briefs/T-0205-portable-listener-amendment.md",
         "tests/helpers/release-install-http-loopback-probe.py",
-        "org/reviews/2026-10-t0205-portable-listener-amendment.md"
+        "org/reviews/2026-10-t0205-portable-listener-amendment.md",
+        "org/briefs/T-0205-worker-root-amendment.md",
+        "tests/unit/release-jest-worker-budget.test.ts",
+        "org/reviews/2026-10-t0205-worker-root-amendment.md"
       ],
       "expires": "2026-10-02T23:23:20.716Z",
       "lane_id": "T-0188-coordinator",
@@ -87,5 +89,5 @@
     }
   ],
   "version": 1,
-  "note": "All independent author writes ceased. Final portable observer freeze accepted by R2 reviewer. Coordinator completes metadata/overlay, then no tracked writes or competing validation during full gate."
+  "note": "Independent worker-root author frozen and closed. Coordinator prepares metadata and validation; no further oracle edits without independent amendment. All failed hosted receipts preserved."
 }

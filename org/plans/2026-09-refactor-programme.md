@@ -232,9 +232,10 @@ historic SQLite compatibility and optional Hindsight backend are also
 unproven. T-0180, T-0189 and T-0196 own the local work; external or operator
 proof is named in the coverage ledger.
 
-T-0200's register claims the 63 files found by the current tracked-source
-`CH_|CONTROL_HUB_|AGENT_HOME|x-ch-|ch.sessions.` inventory across `src/`,
-`scripts/` and `next.config.ts`. Its oracle checks that file set. At batch
+T-0200's register retains the original 63-file inventory and later additions.
+On 2 October, the tracked-source `CH_|CONTROL_HUB_|AGENT_HOME|x-ch-|ch.sessions.`
+query finds 61 readers across `src/`, `scripts/` and `next.config.ts`, including
+the new redacted T-0205 diagnostic. Its oracle checks that file set. At batch
 opening, refresh the inventory and claim any newly added readers. Historical
 `control-hub.db` discovery, `ps-relocate.sh`, Compose names and installed
 data-dir copies are explicit preservation exceptions, not blanket removals.

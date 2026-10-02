@@ -2,7 +2,7 @@
 
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
+import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, symlinkSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
@@ -28,7 +28,7 @@ function infrastructure(reason: string): never {
 function probe(inventory: number, coverage: boolean, mode: "canonical" | "absent" | "invalid" = "canonical", flags: string[] = []): Observation {
   if (mode === "invalid") invalidValidationCompleted = false;
   // Preserve every uniquely owned probe, including refused launches, for diagnosis.
-  const owned = mkdtempSync(join(tmpdir(), "t0205-worker-budget-"));
+  const owned = realpathSync.native(mkdtempSync(join(tmpdir(), "t0205-worker-budget-")));
   const project = join(owned, "project");
   for (const file of supportFiles) {
     mkdirSync(dirname(join(project, file)), { recursive: true });
