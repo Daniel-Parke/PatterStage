@@ -6,6 +6,7 @@ import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, symlinkSync, writeF
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
+import { stripVTControlCharacters } from "node:util";
 
 type Observation = { maxWorkers: number; coverage: boolean; inventory: number; configHash: string };
 const repository = process.cwd();
@@ -18,12 +19,14 @@ const supportFiles = [
 ];
 const observations = new Map<string, Observation>();
 let control: Observation;
+let invalidValidationCompleted = false;
 
 function infrastructure(reason: string): never {
   throw new Error(`T-0205 worker-budget infrastructure: ${reason}`);
 }
 
 function probe(inventory: number, coverage: boolean, mode: "canonical" | "absent" | "invalid" = "canonical", flags: string[] = []): Observation {
+  if (mode === "invalid") invalidValidationCompleted = false;
   // Preserve every uniquely owned probe, including refused launches, for diagnosis.
   const owned = mkdtempSync(join(tmpdir(), "t0205-worker-budget-"));
   const project = join(owned, "project");
@@ -78,6 +81,16 @@ process.on('exit', () => fs.writeFileSync(${JSON.stringify(inventoryReceipt)}, J
   writeFileSync(join(owned, "stderr.txt"), result.stderr || "");
   writeFileSync(join(owned, "receipt.json"), JSON.stringify({ inventory, coverage, mode, flags, configHash,
     status: result.status, signal: result.signal, error: launchError?.code ?? null }, null, 2));
+  if (mode === "invalid" && !result.error && !result.signal && result.status === 1 && result.stdout.trim() === "" &&
+      stripVTControlCharacters(result.stderr).replace(/\r\n/g, "\n").trim() ===
+      "Validation Error:\n\nmaxWorkers has to be of type string or number\n\nmaxWorkers=50% or\nmaxWorkers=3") {
+    try {
+      const controlled = JSON.parse(readFileSync(inventoryReceipt, "utf8")) as { cpus: number; parallelism: number };
+      invalidValidationCompleted = controlled.cpus === inventory && controlled.parallelism === inventory;
+    } catch {
+      infrastructure(`invalid configuration inventory receipt missing; receipt ${owned}`);
+    }
+  }
   if (result.error || result.signal || result.status !== 0) infrastructure(`configuration probe refused (status ${result.status}, signal ${result.signal}, error ${launchError?.code ?? "none"}); receipt ${owned}`);
   let resolvedConfig: { globalConfig: { maxWorkers: number; collectCoverage: boolean }; configs: { rootDir: string }[] };
   let controlled: { cpus: number; parallelism: number; cpuCalls: number; parallelCalls: number };
@@ -112,6 +125,7 @@ describe("T-0205 independent canonical Jest worker budget oracle", () => {
     const result = observations.get(`${inventory}:${coverage}`)!;
     expect(result.maxWorkers).toBeGreaterThan(0);
     expect(result.maxWorkers).toBeLessThanOrEqual(2);
+    if (inventory === 64) expect(result.maxWorkers).toBe(2);
   });
 
   it("W07 removed budget exposes an unbounded large-host default through real Jest CLI", () => {
@@ -125,6 +139,10 @@ describe("T-0205 independent canonical Jest worker budget oracle", () => {
   }, 45_000);
 
   it("W09 invalid configuration is infrastructure refusal rather than a budget assertion", () => {
-    expect(() => probe(64, false, "invalid")).toThrow("T-0205 worker-budget infrastructure: configuration probe refused");
+    try {
+      expect(() => probe(64, false, "invalid")).toThrow("T-0205 worker-budget infrastructure: configuration probe refused");
+    } finally {
+      if (!invalidValidationCompleted) infrastructure("invalid maxWorkers control did not complete the expected Jest validation rejection");
+    }
   }, 25_000);
 });

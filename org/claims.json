@@ -51,7 +51,8 @@
         "org/briefs/T-0205-cleanup-assertion-amendment.md",
         "scripts/tooling/t0205-loopback-diagnostic.mjs",
         "jest.config.js",
-        "org/briefs/T-0205-worker-budget-oracle.md"
+        "org/briefs/T-0205-worker-budget-oracle.md",
+        "org/briefs/T-0205-worker-budget-amendment.md"
       ],
       "expires": "2026-10-02T18:45:00Z",
       "lane_id": "T-0188-coordinator",
@@ -64,16 +65,15 @@
       "host": "NUCBOX_M6ULTRA",
       "path_claims": [
         "tests/unit/release-jest-worker-budget.test.ts",
-        "org/reviews/2026-10-t0205-worker-budget-oracle.md",
-        "tests/fixtures/mutants/T-0205.json"
+        "org/reviews/2026-10-t0205-worker-budget-amendment.md"
       ],
       "expires": "2026-10-02T18:45:00Z",
-      "lane_id": "T-0205-worker-budget-oracle",
-      "session_id": "01a0fab0-5743-72e0-8180-82c278279ccf",
-      "acquired": "2026-10-02T03:38:25.520Z",
+      "lane_id": "T-0205-worker-budget-amendment",
+      "session_id": "01a0fac3-a432-7223-8493-2e32f9e4f113",
+      "acquired": "2026-10-02T04:00:42.116Z",
       "harness_task_id": "2026-10-01-migration-driver-consolidation"
     }
   ],
   "version": 1,
-  "note": "Coordinator owns only config/records; new independent worker-budget oracle lane will claim only new suite/provenance/appended mutant. All old oracle authors stopped. Maximumtwo writers; no edits during gate."
+  "note": "Coordinator records only; Galileo stopped. Fresh worker-amendment ORACLE lane to be assigned exactsuite/newprovenance. Max2 writers; alloldfrozenfiles/mutantrows untouched."
 }

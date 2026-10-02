@@ -54,7 +54,9 @@
     "jest.config.js",
     "tests/unit/release-jest-worker-budget.test.ts",
     "org/briefs/T-0205-worker-budget-oracle.md",
-    "org/reviews/2026-10-t0205-worker-budget-oracle.md"
+    "org/reviews/2026-10-t0205-worker-budget-oracle.md",
+    "org/briefs/T-0205-worker-budget-amendment.md",
+    "org/reviews/2026-10-t0205-worker-budget-amendment.md"
   ],
   "invariants": [
     "All existing test names, assertions, 75-second production deadline, 20 readiness attempts, six-second fixture watchdog, 0.1-second accelerated request bounds, 0.2-second watchdog kill grace and 25-second RPC/outer bounds remain.",
@@ -1030,6 +1032,34 @@
       "qualification": "Executed W05/W06 expected<=2 received63 through actualJestCLI; nine new names; not fullgate acceptance."
     },
     "provenanceQualification": "Frozen report says no product source copied; actual support inventory includes unchanged static src/lib/config/config-sections.ts. No operator environment/data/home/database copied. Required support source copied read-only into owned projects; no futureimplementation inspected.",
-    "routerQualification": "Declaration-only snapshot omits derived CI contact; current T0188 top-level R2 reasons retain CI/schema and active CI diff. No ruled riskfloor or acceptance requirement lowered."
+    "routerQualification": "Declaration-only snapshot omits derived CI contact; current T0188 top-level R2 reasons retain CI/schema and active CI diff. No ruled riskfloor or acceptance requirement lowered.",
+    "review": {
+      "reviewer": "Independent R2 Schrodinger",
+      "date": "2026-10-02T03:58:40.650Z",
+      "verdict": "freeze integrity PASS; oracle acceptance FAIL",
+      "gaps": [
+        "W05/W06 cap1 survives; require exact2 retaining asserts",
+        "W09 generic infrastructure marker accepts unexpectedlaunch/timeout/signal; require genuinecompletedmaxWorkersvalidation"
+      ],
+      "authority": "Narrow Q015 fresh nonimplementer only9name-preserving corrections and datedprovenance. Originalfreeze/receipts retained; configimplementation held untilamendedfreezePASS andnewcanonicalredcommit.",
+      "redCommit": "c1a88d7f"
+    },
+    "amendedFreeze": {
+      "path": "tmp/t0205-worker-budget-amendment-01a0fac3-e53abea633674b6681f4363fa1585fb8/freeze.json",
+      "sha256": "c57ff3f5cfa32ba97d0147aa4fcd9cc4b561486867899ceb8879d65653b7de44",
+      "author": "Boyle 01a0fac3-a432-7223-8493-2e32f9e4f113",
+      "writesCeased": true,
+      "contract": "All9names/oldasserts/bounds/eightmutants/olderfiles preserved. Largehostexact2; genuinecompletedinvalidmaxWorkersvalidation required. Invalid-onlylaunch/refusal/timeout/signal/missing/unrelatedfailures are infrastructure; injectedsignalonlyqualifiedasexplicitinjection, notnativeWindows signalproof. Alloriginalreceiptsretained."
+    },
+    "amendedCoordinatorRed": {
+      "path": "tmp/t0188-worker-budget-amended-red/summary.json",
+      "sha256": "6e3e462b42b9d5106fdb615cfbec372cf903589b9f767462228d10022c781bc1",
+      "pass": 7,
+      "fail": 2,
+      "skip": 0,
+      "runtimeErrors": 0,
+      "unchangedTree": "f3d1c6f60408d7aaff9aec18ac4d1c55afc570a28d03791ab181ceab745eb346",
+      "qualification": "CanonicalresolvedCLI W05/W06 fails≤2 at63; configstillunimplemented, not fullgate acceptance."
+    }
   }
 }
