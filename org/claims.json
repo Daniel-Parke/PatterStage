@@ -45,13 +45,9 @@
         "tests/fixtures/mutants/T-0190.json",
         "org/briefs/T-0190-client-implementation.md",
         "src/hooks/useOperatorPrefs.ts",
-        "src/hooks/usePreferenceWrite.ts",
         "src/components/layout/Sidebar.tsx",
-        "src/app/recroom/story-weaver/[id]/page.tsx",
         "src/app/recroom/story-weaver/create/page.tsx",
         "src/components/memory/HindsightBrowser.tsx",
-        "src/components/memory/hindsight/useHindsightCrudTab.ts",
-        "src/components/memory/hindsight/useHindsightMemories.ts",
         "src/components/memory/hindsight/useHindsightModels.ts",
         "src/components/memory/hindsight/useHindsightDirectives.ts",
         "src/lib/memory/hindsight-client.ts",
@@ -64,11 +60,17 @@
         "src/lib/ui/theme.ts",
         "src/components/ui/Input.tsx",
         "src/components/ui/Select.tsx",
-        "org/briefs/T-0190-supplementary-oracle.md"
+        "org/briefs/T-0190-supplementary-oracle.md",
+        "org/briefs/T-0190-client-repair.md",
+        "src/app/recroom/story-weaver/[id]/page.tsx",
+        "src/components/memory/hindsight/useHindsightCrudTab.ts",
+        "src/components/memory/hindsight/useHindsightMemories.ts",
+        "src/hooks/usePreferenceWrite.ts",
+        "org/briefs/T-0190-poll-oracle.md"
       ],
       "acquired": "2026-10-02T17:49:07.371181+00:00",
       "expires": "2026-10-03T17:49:07.371181+00:00"
     }
   ],
-  "note": "Both source worker and supplementary oracle writer stopped. Coordinator owns source/metadata; all14oraclefiles frozen without a writer. Sagan independently reviews."
+  "note": "Carver and Averroes stopped. Coordinator owns source and metadata, all15oraclefiles frozen without writer. Sagan independently reviews."
 }

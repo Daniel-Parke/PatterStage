@@ -91,7 +91,10 @@
     "tests/fixtures/mutants/T-0190.json",
     "org/briefs/T-0190-client-implementation.md",
     "tests/unit/client-late-ownership.test.tsx",
-    "org/briefs/T-0190-supplementary-oracle.md"
+    "org/briefs/T-0190-supplementary-oracle.md",
+    "org/briefs/T-0190-client-repair.md",
+    "tests/unit/mission-link-poll-ownership.test.tsx",
+    "org/briefs/T-0190-poll-oracle.md"
   ],
   "timestamps": {
     "opened": "2026-10-02T17:49:07.371181+00:00",
@@ -670,11 +673,84 @@
       "verdict": "PASS",
       "scope": "Supplementary freeze and red-commit readiness only",
       "evidence": "33identities unchanged;17pass16structuredmatcherfailures0skip/runtime. Final2nullassertions additive. Types/lint0,54snapshot/receipt hashes match,original13frozen unchanged. Source-informed metamorphic independence recorded; retained-row bounded refutation accepted. api-write drift type/commentonly; integratedtyping remains required."
-    }
+    },
+    "commit": "d0e48d9d93cb51d1554095cc92fb5d3be3a47992"
   },
   "final_reviewer": {
     "session": "01a0fe05-a6c0-7d22-ae2f-ba3716eded80",
     "name": "Sagan",
     "independence": "Authored neither source implementation nor original/supplementary oracles. Schrodinger moved from original freeze reviewer to supplementary oracle author and cannot accept final implementation."
+  },
+  "client_repair": {
+    "paths": [
+      "src/app/recroom/story-weaver/[id]/page.tsx",
+      "src/components/memory/hindsight/useHindsightCrudTab.ts",
+      "src/components/memory/hindsight/useHindsightMemories.ts",
+      "src/hooks/usePreferenceWrite.ts"
+    ],
+    "brief": "org/briefs/T-0190-client-repair.md",
+    "session": "2026-10-02-t0190-client-repair-averroes",
+    "stopped_receipt": "tmp/t0190-client/repair/receipt.json"
+  },
+  "poll_oracle": {
+    "author": "Carver",
+    "file": "tests/unit/mission-link-poll-ownership.test.tsx",
+    "brief": "org/briefs/T-0190-poll-oracle.md",
+    "status": "Frozen and independently accepted for red commit; implementation acceptance pending",
+    "manifest": "tmp\\t0190-poll-oracle\\freeze.json",
+    "manifestSha256": "9d97a1b9438b1fe450ec2a13e23e7617b46557da0a4fa86d9c04b7c5f7975f54",
+    "sha256": "c45232bbe3a24bfe38d3ecd1a4fe2733d186478be7c9d867ee3092ff22537fc8",
+    "counts": {
+      "total": 14,
+      "passed": 10,
+      "failed": 4,
+      "skipped": 0,
+      "runtimeErrors": 0
+    },
+    "results": [
+      {
+        "stage": "lint",
+        "exit": 0,
+        "receipt": "tmp/t0190-poll-oracle/lint-1790970319241/receipt.json"
+      },
+      {
+        "stage": "red",
+        "exit": 1,
+        "counts": {
+          "passed": 10,
+          "failed": 4,
+          "skipped": 0,
+          "runtimeErrorSuites": 0
+        },
+        "receipt": "tmp/t0190-poll-oracle/red-1790970270966/receipt.json"
+      },
+      {
+        "stage": "types",
+        "exit": 0,
+        "receipt": "tmp/t0190-poll-oracle/types-1790970294301/receipt.json"
+      }
+    ],
+    "independence": "Source-informed controlled ordering, actual query bridge and polling hook; not clean-context authorship.",
+    "interpretation": "Bounded reproduction: delayed original success remains unopened after one or two 15-second polls and a further post-settlement poll. This demonstrates lost completion in these schedules, not an infinite-time runtime proof. Current 404/503 outcomes are also suppressed after polling. Newer selection, unmount, original success, refreshed detail, collapse and unpolled errors pass.",
+    "limits": [
+      "Successful-open assertions after expandedId failure in both polling-success cases: deepLinkedMissionId, detail, row uniqueness, load error, URL and feedback.",
+      "404 polled case assertions after missing feedback count: feedback content, URL consumption, selected ID and rows.",
+      "503 polled case assertions after missing inline error: retained URL, feedback, retry request and recovered opening.",
+      "No production fix, full historical rerun, full application gate, browser run, mutation sweep, independent freeze approval or hosted acceptance."
+    ],
+    "review": {
+      "reviewer": "Sagan 01a0fe05-a6c0-7d22-ae2f-ba3716eded80",
+      "verdict": "PASS",
+      "scope": "Polling oracle freeze and red commit only",
+      "evidence": "14cases10pass4structuredmatcherred0skip/runtime; types/lint0.17evidencehashes866sourcesnapshotfiles match,previous14frozenfiles unchanged. Actual query bridge/polling, selection/unmount/collapse controls; source-informed method and unreached assertions recorded."
+    }
+  },
+  "integrated_repairs": {
+    "oracle": "tmp/t0190-coordinator-jest-1790970024249/summary.json",
+    "historical": "tmp/t0190-coordinator-jest-1790970221869/summary.json",
+    "identity": "tmp/t0190-repaired-historical-identities.json",
+    "types": "tmp/t0190-coordinator-types-1790970072317/summary.json",
+    "lint": "tmp/t0190-coordinator-lint-1790970131198/summary.json",
+    "limitation": "Polling hypothesis unresolved; not full-gate or final acceptance."
   }
 }

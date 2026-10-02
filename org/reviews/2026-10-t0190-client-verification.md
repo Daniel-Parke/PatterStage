@@ -109,3 +109,25 @@ and is boundedly refuted, not counted as one of those reds. The original13files
 remain unchanged. The final type/comment-only api-write drift is qualified in
 the manifest; final integrated typing remains required. No repair of the seven
 groups preceded this supplementary red freeze.
+
+## Integrated supplementary repairs
+
+All128 original and supplementary unit cases pass on an unchanged isolated tree:
+tmp/t0190-coordinator-jest-1790970024249/summary.json. The602 historical controls
+also pass, zero skips/runtime errors, at tmp/t0190-coordinator-jest-1790970221869.
+Expanded names/statuses remain identical to the preimplementation baseline:
+tmp/t0190-repaired-historical-identities.json. Full test typing and scoped lint
+exit0 at tmp/t0190-coordinator-types-1790970072317 and
+tmp/t0190-coordinator-lint-1790970131198 respectively.
+
+Averroes stopped after the four-file repair receipt:
+tmp/t0190-client/repair/receipt.json. All four primary source hashes matched.
+The coordinator integrated those files before the checks above. Query cancellation
+revokes cache settlement ownership; it does not physically abort the HTTP request.
+
+Independent Sagan review identified a further source-supported hypothesis:
+an initial older-mission lookup can be abandoned when its15-second list poll
+supersedes refresh ownership after the one-shot focus latch has been set. Carver
+is independently reproducing that sequence. No fix or reproduced-red claim yet.
+The128 passing cases do not prove that sequence. Full gate, current production
+build/browser checks, committed sweep and final independent acceptance remain.
