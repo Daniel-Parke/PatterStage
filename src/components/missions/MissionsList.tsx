@@ -91,7 +91,9 @@ export default function MissionsList({ vm }: MissionsListProps) {
     handleDuplicateMission,
     cancellingMissionId,
     missionsLoadError,
-    fetchData,
+    loadMissions,
+    fetchDetail,
+    detailLoadError,
   } = vm;
 
   const categoryMap = buildCategoryMap(categories);
@@ -259,7 +261,7 @@ export default function MissionsList({ vm }: MissionsListProps) {
       {/* The read contract (T-0096, D67): a failed read is this banner with a
           Retry, never the first-run empty state under it. */}
       {missionsLoadError && (
-        <LoadErrorBanner error={missionsLoadError} onRetry={() => void fetchData()} />
+        <LoadErrorBanner error={missionsLoadError} onRetry={() => void loadMissions()} />
       )}
       {missionsLoadError ? null : filtered.length === 0 ? (
         // The first action one click from the top: an empty board used to be
@@ -453,6 +455,8 @@ export default function MissionsList({ vm }: MissionsListProps) {
                                     <MissionEditorPanel
                                       detail={detail}
                                       detailLoading={detailLoading}
+                                      detailLoadError={detailLoadError}
+                                      onRetryDetail={() => fetchDetail(mission.id)}
                                       mission={mission}
                                       categoryLabel={catDisplay.name}
                                       promptCollapsed={promptCollapsed}

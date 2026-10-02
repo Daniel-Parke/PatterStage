@@ -969,7 +969,8 @@
       "reviewer": "Sagan 01a0fe05-a6c0-7d22-ae2f-ba3716eded80",
       "verdict": "PASS",
       "scope": "Freeze/redcommit only; no final implementation acceptance."
-    }
+    },
+    "commit": "a0051405ca8515ee4d7e38ed9cd3752602ea5310"
   },
   "second_full_gate": {
     "receipt": "tmp/t0190-full-gate-1790973879719/summary.json",
@@ -1042,5 +1043,32 @@
       "result": "PASS",
       "qualification": "Actual production UI/sign-in; all Story requests controlled. Oneh1/nohorizontaloverflow/no page exceptions; expected presignin401 retained. Screenshots personally inspected. Earlier1790974746789phone probe incorrectly looked for badge while drawerclosed; preserved as harness failure."
     }
-  ]
+  ],
+  "continuation_repair": {
+    "change": "Reject a detail request for any ID other than the current selection before it increments the detail version or changes loading.",
+    "receipt": "tmp/t0190-coordinator-jest-1790975254044/summary.json",
+    "passed": 166,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeErrors": 0,
+    "mutation": "m30 removes the request-initiation guard;30anchors apply, sweep pending."
+  },
+  "current_candidate": {
+    "baseline": {
+      "srcLines": 102378,
+      "testLines": 145129,
+      "scriptsLines": 13667,
+      "srcRepeatedWindowLines": 895,
+      "testRepeatedWindowLines": 4796,
+      "routesWithTryCatch": 18,
+      "handRolledReadHooks": 2,
+      "writeHooksWithoutMutation": 0,
+      "repeatedTypeShapeFiles": 2,
+      "oneImporterComponents": 104,
+      "libRootFiles": 6,
+      "commentEssays": 9,
+      "suitesMockingDbInline": 15
+    },
+    "remaining": "Unchanged full ten-stage gate, final built-UI evidence, implementation commit, clean committed mutation sweep, independent final acceptance, push/allhostedjobs and record closure. No green batch or release claim."
+  }
 }

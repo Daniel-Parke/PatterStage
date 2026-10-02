@@ -16,7 +16,8 @@ import type {
   ChatMode,
   ToolCall,
 } from "@/types/chat";
-import { messageFromError, safeApiCall, safeApiCallData } from "@/lib/api/api-fetch";
+import { messageFromError, safeApiCall } from "@/lib/api/api-fetch";
+import { runWriteResult } from "@/lib/api/api-write";
 import { titleCase } from "@/lib/utils";
 
 // ── Download / export helpers ───────────────────────────────────
@@ -147,15 +148,15 @@ export async function createConversationApi(input: {
   profileName?: string;
   model?: string;
 }): Promise<ChatConversation | null> {
-  const data = await safeApiCallData<{ conversation: ChatConversation }>("/api/chat", {
+  const result = await runWriteResult<{ data?: { conversation: ChatConversation } }>("/api/chat", {
     method: "POST",
     body: input,
   });
-  return data?.conversation ?? null;
+  return result.ok ? result.data?.data?.conversation ?? null : null;
 }
 
 export async function deleteConversationApi(id: string): Promise<{ ok: boolean; error?: string }> {
-  return await safeApiCall(`/api/chat/${id}`, { method: "DELETE" });
+  return await runWriteResult(`/api/chat/${id}`, { method: "DELETE" });
 }
 
 export interface SendMessageResult {
@@ -169,7 +170,7 @@ export async function sendMessageApi(
   content: string,
   mode: ChatMode,
 ): Promise<{ ok: boolean; error?: string; result?: SendMessageResult }> {
-  const res = await safeApiCall<{ data: SendMessageResult }>(`/api/chat/${id}/messages`, {
+  const res = await runWriteResult<{ data: SendMessageResult }>(`/api/chat/${id}/messages`, {
     method: "POST",
     body: { content, mode },
   });
@@ -188,7 +189,7 @@ export async function finalizeMessageApi(
     error?: string | null;
   },
 ): Promise<void> {
-  await safeApiCall(`/api/chat/${conversationId}/messages/${messageId}`, {
+  await runWriteResult(`/api/chat/${conversationId}/messages/${messageId}`, {
     method: "PATCH",
     body: patch,
   });
@@ -198,7 +199,7 @@ export async function stopRunApi(
   conversationId: string,
   runId?: string,
 ): Promise<{ ok: boolean; error?: string }> {
-  return await safeApiCall(`/api/chat/${conversationId}/stop`, {
+  return await runWriteResult(`/api/chat/${conversationId}/stop`, {
     method: "POST",
     body: runId ? { runId } : {},
   });
@@ -210,7 +211,7 @@ export async function resolveApprovalApi(
   approved: boolean,
   note?: string,
 ): Promise<{ ok: boolean; error?: string }> {
-  return await safeApiCall(`/api/chat/${conversationId}/approval`, {
+  return await runWriteResult(`/api/chat/${conversationId}/approval`, {
     method: "POST",
     body: { runId, approved, note },
   });

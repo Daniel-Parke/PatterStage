@@ -17,10 +17,10 @@
 
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Dispatch, KeyboardEvent, RefObject, MutableRefObject, SetStateAction } from "react";
 
-import type { ToastType } from "@/components/ui/Toast";
+import type { FeedbackContextValue } from "@/components/ui/feedback-context";
 import { CHAT_DEFAULT_MODEL } from "@/types/chat";
 import type { ChatConversation, ChatMessage, ChatMode } from "@/types/chat";
 import {
@@ -35,14 +35,14 @@ import {
 } from "@/lib/chat/chat-utils";
 import { localMessage, type PendingApproval } from "@/hooks/chat-local-message";
 
-type ToastFn = (message: string, type?: ToastType) => void;
+type ToastFn = FeedbackContextValue["showToast"];
 
 export interface UseChatSendArgs {
   activeId: string | null;
   setActiveId: Dispatch<SetStateAction<string | null>>;
   setConversations: Dispatch<SetStateAction<ChatConversation[]>>;
   loadConversations: () => Promise<unknown>;
-  refreshActiveConversation: () => Promise<void>;
+  refreshActiveConversation: (gen?: number, id?: string | null) => Promise<void>;
   messages: ChatMessage[];
   setMessages: Dispatch<SetStateAction<ChatMessage[]>>;
   setIsStreaming: Dispatch<SetStateAction<boolean>>;
@@ -61,6 +61,7 @@ export interface UseChatSendArgs {
   ) => void;
   input: string;
   setInput: Dispatch<SetStateAction<string>>;
+  inputVersion?: MutableRefObject<number>;
   mode: ChatMode;
   model: string;
   setModel: Dispatch<SetStateAction<string>>;
@@ -88,6 +89,7 @@ export function useChatSend({
   streamAgentRun,
   input,
   setInput,
+  inputVersion,
   mode,
   model,
   setModel,
@@ -104,6 +106,7 @@ export function useChatSend({
   // Bumped by Retry. The read lives in an effect keyed on the active id, so
   // re-running it for the SAME id needs a second key.
   const [reloadNonce, setReloadNonce] = useState(0);
+  const activeTurn = useRef<{ id: string; gen: number; skipInitialRead: boolean } | null>(null);
 
   // ── Load the active conversation's messages when it changes ──
   useEffect(() => {
@@ -113,9 +116,16 @@ export function useChatSend({
       return;
     }
     let cancelled = false;
+    const gen = streamGenRef.current;
+    const turn = activeTurn.current;
+    const initialTurnRead = turn?.id === activeId && turn.gen === gen && turn.skipInitialRead;
+    if (initialTurnRead) turn.skipInitialRead = false;
     void (async () => {
       const loaded = await fetchConversation(activeId);
-      if (cancelled) return;
+      if (cancelled || gen !== streamGenRef.current) return;
+      // Creating the first conversation also starts a detail read. Its older
+      // transcript must not replace the turn already sent on that conversation.
+      if (initialTurnRead) return;
       if (!loaded.ok || !loaded.messages || !loaded.conversation) {
         setMessages([]); // never show another conversation's turns
         setConversationError(loaded.error ?? "Failed to load conversation");
@@ -128,7 +138,7 @@ export function useChatSend({
     return () => {
       cancelled = true;
     };
-  }, [activeId, reloadNonce, setMessages, setModel]);
+  }, [activeId, reloadNonce, setMessages, setModel, streamGenRef]);
 
   /** Re-run the read above for the conversation that is already selected. */
   const reloadActiveConversation = useCallback(() => {
@@ -160,11 +170,13 @@ export function useChatSend({
 
     closeStream();
     const gen = ++streamGenRef.current;
+    const draftVersion = inputVersion?.current;
 
     // Ensure a conversation exists.
     let conversationId = activeId;
     if (!conversationId) {
       const conversation = await createConversationApi({ title: text.slice(0, 50), model });
+      if (gen !== streamGenRef.current) return;
       if (!conversation) {
         showToast("Failed to start a new conversation", "error");
         return;
@@ -178,9 +190,11 @@ export function useChatSend({
     // Optimistic local user + assistant placeholder.
     const userMsg = localMessage(conversationId, "user", text, "complete");
     const assistantMsg = localMessage(conversationId, "assistant", "", "streaming");
+    activeTurn.current = { id: conversationId, gen, skipInitialRead: activeId === null };
+    setConversationError(null);
     setMessages((prev) => [...prev, userMsg, assistantMsg]);
     const priorMessages = history;
-    setInput("");
+    if (draftVersion === inputVersion?.current) setInput("");
     setIsStreaming(true);
 
     const send = await sendMessageApi(conversationId, text, mode);
@@ -268,6 +282,7 @@ export function useChatSend({
     setIsStreaming,
     abortRef,
     streamGenRef,
+    inputVersion,
   ]);
 
   // ── Stop the active run ─────────────────────────────────────
@@ -298,11 +313,12 @@ export function useChatSend({
   const handleStop = useCallback(async () => {
     streamGenRef.current++; // supersede any in-flight stream callbacks
     closeStream();
+    const gen = streamGenRef.current;
     setIsStreaming(false);
     setPendingApproval(null);
     if (activeId) {
       await stopRunApi(activeId);
-      await refreshActiveConversation();
+      if (gen === streamGenRef.current) await refreshActiveConversation(gen, activeId);
     }
   }, [activeId, closeStream, refreshActiveConversation, streamGenRef, setIsStreaming, setPendingApproval]);
 
@@ -310,15 +326,17 @@ export function useChatSend({
   const handleApproval = useCallback(
     async (approved: boolean) => {
       if (!activeId || !pendingApproval) return;
+      const gen = streamGenRef.current;
       const { ok, error } = await resolveApprovalApi(activeId, pendingApproval.runId, approved);
+      if (gen !== streamGenRef.current) return;
       if (!ok) {
         showToast(error || "Failed to resolve approval", "error");
         return;
       }
-      setPendingApproval(null);
+      setPendingApproval((current) => current === pendingApproval ? null : current);
       showToast(approved ? "Tool approved" : "Tool denied", "success");
     },
-    [activeId, pendingApproval, showToast, setPendingApproval],
+    [activeId, pendingApproval, showToast, setPendingApproval, streamGenRef],
   );
 
   // ── Keyboard ────────────────────────────────────────────────

@@ -16,12 +16,12 @@
 
 import { useCallback, useRef, useState, type Dispatch, type SetStateAction } from "react";
 
-import type { ToastType } from "@/components/ui/Toast";
+import type { FeedbackContextValue } from "@/components/ui/feedback-context";
 import { safeApiCall } from "@/lib/api/api-fetch";
 import { runWrite } from "@/lib/api/api-write";
 import type { FallbackConfig } from "@/types/console";
 
-type ToastFn = (message: string, type?: ToastType) => void;
+type ToastFn = FeedbackContextValue["showToast"];
 
 export interface UseModelFallbackConfigArgs {
   fallbackConfig: FallbackConfig;

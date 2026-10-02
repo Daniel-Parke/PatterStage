@@ -1,0 +1,268 @@
+{
+  "task": "T-0190",
+  "mutants": [
+    {
+      "id": "m30-obsolete-write-refresh-steals-current-detail",
+      "file": "src/hooks/useMissionsData.ts",
+      "anchor": "if (expandedIdRef.current !== id) return;",
+      "replacement": "void id;",
+      "why": "An obsolete cancel/update/promote continuation cannot invalidate the current selection's pending detail or busy state.",
+      "tests": ["tests/unit/mission-write-continuation.test.tsx"]
+    },
+    {
+      "id": "m28-title-reply-loses-mounted-owner",
+      "file": "src/app/recroom/story-weaver/[id]/page.tsx",
+      "anchor": "if (owner.active && titleRepair.current === owner && response.ok",
+      "replacement": "if (owner.active && !owner.attempted && titleRepair.current === owner && response.ok",
+      "why": "A successful held title reply must publish after a confirmed read-status cache update.",
+      "tests": ["tests/unit/story-cache-settlement.test.tsx"]
+    },
+    {
+      "id": "m29-title-reply-outlives-reader",
+      "file": "src/app/recroom/story-weaver/[id]/page.tsx",
+      "anchor": "return () => { owner.active = false; };",
+      "replacement": "return () => { owner.active = true; };",
+      "why": "An unmounted reader must not publish its held title response into the shared cache.",
+      "tests": ["tests/unit/story-cache-settlement.test.tsx"]
+    },
+    {
+      "id": "m27-handoff-adopts-obsolete-detail",
+      "file": "src/hooks/useMissionsData.ts",
+      "anchor": "fetchDetail(expandedId, true, fresh);",
+      "replacement": "fetchDetail(expandedId, true);",
+      "why": "A newer list resolving a pending link must not transfer the old detail query to its newly selected panel.",
+      "tests": ["tests/unit/mission-link-handoff.test.tsx"]
+    },
+    {
+      "id": "m25-title-repair-feeds-itself",
+      "file": "src/app/recroom/story-weaver/[id]/page.tsx",
+      "anchor": "titleRepair.current.attempted = true;",
+      "replacement": "titleRepair.current.attempted = false;",
+      "why": "Publishing a failed title repair with a newer timestamp cannot authorise another automatic request.",
+      "tests": ["tests/unit/story-cache-settlement.test.tsx"]
+    },
+    {
+      "id": "m26-read-status-merges-before-publication",
+      "file": "src/app/recroom/story-weaver/[id]/page.tsx",
+      "anchor": "await publishStory(current => ({ ...current, chapters: current.chapters.map(chapter =>\n          chapter.number === chapterNumber ? { ...chapter, readStatus: \"read\" } : chapter,\n        ) }));",
+      "replacement": "await publishStory({ ...storyRef.current, chapters: storyRef.current.chapters.map(chapter =>\n          chapter.number === chapterNumber ? { ...chapter, readStatus: \"read\" } : chapter,\n        ) });",
+      "why": "Concurrent confirmations must merge against current cache state after cancellation, preserving both read flags.",
+      "tests": ["tests/unit/story-cache-settlement.test.tsx"]
+    },
+    {
+      "id": "m24-poll-abandons-pending-link",
+      "file": "src/hooks/useMissionsData.ts",
+      "anchor": "const ownsInitialLink = () => selection === selectionVersion.current && pendingMissionLink.current !== null;",
+      "replacement": "const ownsInitialLink = () => version === refreshVersion.current && selection === selectionVersion.current && pendingMissionLink.current !== null;",
+      "why": "Background polling must not strand the current initial mission lookup or hide its result.",
+      "tests": ["tests/unit/mission-link-poll-ownership.test.tsx"]
+    },
+    {
+      "id": "m01-new-chat-clears-newer-draft",
+      "file": "src/hooks/useChatConversations.ts",
+      "anchor": "if (draftVersion === inputVersion.current) setInput(\"\");",
+      "replacement": "setInput(\"\");",
+      "why": "A delayed creation must retain text typed after the request.",
+      "tests": [
+        "tests/unit/chat-response-ownership.test.tsx"
+      ]
+    },
+    {
+      "id": "m02-new-chat-takes-newer-selection",
+      "file": "src/hooks/useChatConversations.ts",
+      "anchor": "if (gen !== streamGenRef.current) return;\n    setActiveId(conversation.id);",
+      "replacement": "setActiveId(conversation.id);",
+      "why": "A delayed creation cannot select itself after another conversation is selected.",
+      "tests": [
+        "tests/unit/chat-response-ownership.test.tsx"
+      ]
+    },
+    {
+      "id": "m03-close-keeps-obsolete-generation",
+      "file": "src/hooks/useChatTranscript.ts",
+      "anchor": "streamGenRef.current++;",
+      "replacement": "void streamGenRef.current;",
+      "why": "Closing a stream must also revoke queued continuations.",
+      "tests": [
+        "tests/unit/chat-response-ownership.test.tsx"
+      ]
+    },
+    {
+      "id": "m04-reconciliation-overwrites-new-selection",
+      "file": "src/hooks/useChatConversations.ts",
+      "anchor": "if (gen === streamGenRef.current && loaded.ok && loaded.messages) setMessages(loaded.messages);",
+      "replacement": "if (loaded.ok && loaded.messages) setMessages(loaded.messages);",
+      "why": "Reconciliation belongs to its captured generation.",
+      "tests": [
+        "tests/unit/chat-response-ownership.test.tsx"
+      ]
+    },
+    {
+      "id": "m05-postwrite-joins-prewrite-read",
+      "file": "src/hooks/useApiResource.ts",
+      "anchor": "if (afterWrite) await client.cancelQueries({ queryKey: query.queryKey, exact: true });",
+      "replacement": "void afterWrite;",
+      "why": "A confirmed write requires a new read rather than joining an older flight.",
+      "tests": [
+        "tests/unit/mission-query-ownership.test.tsx"
+      ]
+    },
+    {
+      "id": "m06-obsolete-mission-detail-publishes",
+      "file": "src/hooks/useMissionsData.ts",
+      "anchor": "if (!ownsDetail()) return;",
+      "replacement": "void ownsDetail;",
+      "why": "A late detail response cannot replace the current selected mission.",
+      "tests": [
+        "tests/unit/mission-query-ownership.test.tsx"
+      ]
+    },
+    {
+      "id": "m07-template-read-hides-failure",
+      "file": "src/hooks/useMissionsData.ts",
+      "anchor": "setTemplatesLoadError(messageFromError(error, \"Failed to load templates\"))",
+      "replacement": "setTemplatesLoadError(null)",
+      "why": "Template failures must remain visible with a scoped retry.",
+      "tests": [
+        "tests/unit/mission-query-ownership.test.tsx"
+      ]
+    },
+    {
+      "id": "m08-mission-list-hides-failure",
+      "file": "src/hooks/useMissionsData.ts",
+      "anchor": "setMissionsLoadError(messageFromError(error, \"Failed to load missions\"))",
+      "replacement": "setMissionsLoadError(null)",
+      "why": "Failed mission reads cannot look like an empty board.",
+      "tests": [
+        "tests/unit/mission-query-ownership.test.tsx"
+      ]
+    },
+    {
+      "id": "m09-template-trusts-invalid-dispatch",
+      "file": "src/hooks/useMissionComposer.ts",
+      "anchor": "if (isDispatchMode(t.dispatchMode)) setNewDispatch(t.dispatchMode);",
+      "replacement": "if (t.dispatchMode) setNewDispatch(t.dispatchMode as DispatchMode);",
+      "why": "A malformed template must preserve the previous valid dispatch mode.",
+      "tests": [
+        "tests/unit/mission-query-ownership.test.tsx"
+      ]
+    },
+    {
+      "id": "m10-hindsight-erases-published-failure",
+      "file": "src/lib/memory/hindsight-client.ts",
+      "anchor": "if (result.error || result.available === false) throw new Error(typeof result.error === \"string\" ? result.error : \"Hindsight unavailable\");",
+      "replacement": "if (result.error || result.available === false) return undefined;",
+      "why": "Application-level refusals must retain their published reason.",
+      "tests": [
+        "tests/unit/hindsight-query-feedback.test.tsx"
+      ]
+    },
+    {
+      "id": "m11-preference-http-failure-looks-successful",
+      "file": "src/hooks/usePreferenceWrite.ts",
+      "anchor": "if (!result.ok) throw new Error(result.error ?? \"Failed to save the preference\");",
+      "replacement": "void result;",
+      "why": "A refused preference write exposes error state and cannot pretend persistence.",
+      "tests": [
+        "tests/unit/preference-write-contract.test.tsx"
+      ]
+    },
+    {
+      "id": "m12-deep-link-reclaims-selection",
+      "file": "src/hooks/useMissionsData.ts",
+      "anchor": "if (!ownsInitialLink()) return;\n              if (linked?.mission)",
+      "replacement": "if (linked?.mission)",
+      "why": "Initial deep-link success cannot replace a newer selection or page.",
+      "tests": ["tests/unit/client-late-ownership.test.tsx"]
+    },
+    {
+      "id": "m13-deep-link-refusal-reclaims-feedback",
+      "file": "src/hooks/useMissionsData.ts",
+      "anchor": "if (!ownsInitialLink()) return;\n              pendingMissionLink.current = null;",
+      "replacement": "pendingMissionLink.current = null;",
+      "why": "A superseded lookup cannot publish errors or consume a later page URL.",
+      "tests": ["tests/unit/client-late-ownership.test.tsx"]
+    },
+    {
+      "id": "m14-mission-delete-collapses-new-selection",
+      "file": "src/hooks/useMissionDispatch.ts",
+      "anchor": "setExpandedId((current) => current === id ? null : current);",
+      "replacement": "setExpandedId(null);",
+      "why": "Deleting A must preserve a subsequently selected B.",
+      "tests": ["tests/unit/client-late-ownership.test.tsx"]
+    },
+    {
+      "id": "m15-chat-delete-keeps-later-stream",
+      "file": "src/hooks/useChatConversations.ts",
+      "anchor": "if (activeIdRef.current === id) {",
+      "replacement": "if (activeId === id) {",
+      "why": "Deletion must invalidate a stream started on the deleted conversation after the request began.",
+      "tests": ["tests/unit/client-late-ownership.test.tsx"]
+    },
+    {
+      "id": "m16-completed-turn-blocks-explicit-reload",
+      "file": "src/hooks/useChatSend.ts",
+      "anchor": "if (initialTurnRead) return;",
+      "replacement": "if (activeTurn.current?.id === activeId && activeTurn.current.gen === gen) return;",
+      "why": "The first-turn protection must not discard a later explicit reload.",
+      "tests": ["tests/unit/client-late-ownership.test.tsx"]
+    },
+    {
+      "id": "m17-story-write-does-not-publish-cache",
+      "file": "src/hooks/useApiResource.ts",
+      "anchor": "return { data: body.data, body };",
+      "replacement": "return current;",
+      "why": "A confirmed Story write must survive a same-ID remount through its canonical read cache.",
+      "tests": ["tests/unit/client-late-ownership.test.tsx"]
+    },
+    {
+      "id": "m18-story-write-leaves-old-read-owned",
+      "file": "src/hooks/useApiResource.ts",
+      "anchor": "await client.cancelQueries({ queryKey: key, exact: true });",
+      "replacement": "void key;",
+      "why": "An older Story load cannot replace a confirmed write.",
+      "tests": ["tests/unit/client-late-ownership.test.tsx"]
+    },
+    {
+      "id": "m19-story-background-failure-hides-stop",
+      "file": "src/app/recroom/story-weaver/[id]/page.tsx",
+      "anchor": "if (storyRead.error && !story) return",
+      "replacement": "if (storyRead.error) return",
+      "why": "A background read failure cannot hide Stop while billed work remains active.",
+      "tests": ["tests/unit/client-late-ownership.test.tsx"]
+    },
+    {
+      "id": "m20-hindsight-create-joins-old-collection",
+      "file": "src/components/memory/hindsight/useHindsightCrudTab.ts",
+      "anchor": "await client.cancelQueries({ queryKey: apiQueryKey(endpoint), exact: true });",
+      "replacement": "void endpoint;",
+      "why": "Collection create must refresh after the write rather than join its initial read.",
+      "tests": ["tests/unit/client-late-ownership.test.tsx"]
+    },
+    {
+      "id": "m21-memory-add-joins-old-list",
+      "file": "src/components/memory/hindsight/useHindsightMemories.ts",
+      "anchor": "await client.cancelQueries({ queryKey: apiQueryKey(endpoint), exact: true });",
+      "replacement": "void endpoint;",
+      "why": "Memory add must supersede the initial read before reloading.",
+      "tests": ["tests/unit/client-late-ownership.test.tsx"]
+    },
+    {
+      "id": "m22-preference-write-joins-old-map",
+      "file": "src/hooks/usePreferenceWrite.ts",
+      "anchor": "await client.cancelQueries(query);",
+      "replacement": "void query;",
+      "why": "Preference observers cannot settle the pre-write map after a confirmed save.",
+      "tests": ["tests/unit/client-late-ownership.test.tsx"]
+    },
+    {
+      "id": "m23-story-storage-denial-masks-create",
+      "file": "src/app/recroom/story-weaver/create/page.tsx",
+      "anchor": "try { localStorage.removeItem(DRAFT_KEY); } catch { /* The server already created the story. */ }",
+      "replacement": "localStorage.removeItem(DRAFT_KEY);",
+      "force": true,
+      "why": "Optional local draft cleanup cannot turn a confirmed server creation into failure.",
+      "tests": ["tests/unit/story-client-boundaries.test.tsx"]
+    }
+  ]
+}

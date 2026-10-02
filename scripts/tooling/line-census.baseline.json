@@ -1,13 +1,13 @@
 {
   "measuredAt": "2026-10-02",
   "counts": {
-    "srcLines": 102216,
-    "testLines": 142884,
+    "srcLines": 102378,
+    "testLines": 145129,
     "scriptsLines": 13667,
-    "srcRepeatedWindowLines": 946,
-    "testRepeatedWindowLines": 4794,
+    "srcRepeatedWindowLines": 895,
+    "testRepeatedWindowLines": 4796,
     "routesWithTryCatch": 18,
-    "handRolledReadHooks": 5,
+    "handRolledReadHooks": 2,
     "writeHooksWithoutMutation": 0,
     "repeatedTypeShapeFiles": 2,
     "oneImporterComponents": 104,
@@ -1150,6 +1150,41 @@
       "measuredAt": "2026-10-02",
       "rise": "testLines rose from 142881 to 142884",
       "reason": "T-0189 adds three type-only oracle lines to expose its genuine migration dependency to Knip. Independent verification proves byte-identical emitted JavaScript and unchanged 31 cases; no static-analysis ignore, baseline exception, target or coverage-floor change."
+    },
+    {
+      "measuredAt": "2026-10-02",
+      "rise": "srcLines rose from 102216 to 102361",
+      "reason": "T-0190: independent red-first client/cache/selection/storage and polling oracles, plus required ownership guards and atomic confirmed-write publication. Historical test identities and all coverage floors preserved; structural targets unchanged. Named Fast Chat streaming exception and two read-detector hits remain visible."
+    },
+    {
+      "measuredAt": "2026-10-02",
+      "rise": "testLines rose from 142884 to 144916",
+      "reason": "T-0190: independent red-first client/cache/selection/storage and polling oracles, plus required ownership guards and atomic confirmed-write publication. Historical test identities and all coverage floors preserved; structural targets unchanged. Named Fast Chat streaming exception and two read-detector hits remain visible."
+    },
+    {
+      "measuredAt": "2026-10-02",
+      "rise": "testRepeatedWindowLines rose from 4794 to 4842",
+      "reason": "T-0190: independent red-first client/cache/selection/storage and polling oracles, plus required ownership guards and atomic confirmed-write publication. Historical test identities and all coverage floors preserved; structural targets unchanged. Named Fast Chat streaming exception and two read-detector hits remain visible."
+    },
+    {
+      "measuredAt": "2026-10-02",
+      "rise": "srcLines rose from 102361 to 102377",
+      "reason": "T-0190 independent Story settlement controls and lifecycle repair; preserve every existing test identity. Shared Mission fixture reduces repeated windows below unchanged4800. Programme targets remain fixed."
+    },
+    {
+      "measuredAt": "2026-10-02",
+      "rise": "testLines rose from 144916 to 144960",
+      "reason": "T-0190 independent Story settlement controls and lifecycle repair; preserve every existing test identity. Shared Mission fixture reduces repeated windows below unchanged4800. Programme targets remain fixed."
+    },
+    {
+      "measuredAt": "2026-10-02",
+      "rise": "srcLines rose from 102377 to 102378",
+      "reason": "T-0190 independent seven-case cancel/update/promote continuation oracle adds169testlines; one request-ownership guard fixes three reproduced races. Existing identities and fixed4800repeat ceiling preserved; programme targets unchanged."
+    },
+    {
+      "measuredAt": "2026-10-02",
+      "rise": "testLines rose from 144960 to 145129",
+      "reason": "T-0190 independent seven-case cancel/update/promote continuation oracle adds169testlines; one request-ownership guard fixes three reproduced races. Existing identities and fixed4800repeat ceiling preserved; programme targets unchanged."
     }
   ]
 }

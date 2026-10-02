@@ -20,16 +20,8 @@
 "use client";
 
 import { useCallback } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-
-import { safeApiCall } from "@/lib/api/api-fetch";
-
-import { apiQueryKey, useApiResource } from "./useApiResource";
-
-/** The one query key the prefs map lives under. */
-// The endpoint IS the key (T-0129), so the invalidation after a write hits
-// the same entry every reader of /api/prefs shares.
-const OPERATOR_PREFS_QUERY_KEY = apiQueryKey("/api/prefs");
+import { usePreferenceWrite } from "./usePreferenceWrite";
+import { useApiResource } from "./useApiResource";
 
 export interface UseOperatorPrefsResult {
   /** Every stored preference, keyed as the allow-list names it. */
@@ -46,7 +38,6 @@ export interface UseOperatorPrefsResult {
 }
 
 export function useOperatorPrefs(): UseOperatorPrefsResult {
-  const queryClient = useQueryClient();
   const read = useApiResource<Record<string, unknown>>("/api/prefs", {
     select: (p) => (p as { prefs?: Record<string, unknown> } | undefined)?.prefs,
     fallback: {},
@@ -54,15 +45,7 @@ export function useOperatorPrefs(): UseOperatorPrefsResult {
     staleTime: 30_000,
   });
 
-  const write = useMutation({
-    mutationFn: async ({ key, value }: { key: string; value: unknown }) => {
-      const res = await safeApiCall("/api/prefs", { method: "PUT", body: { key, value } });
-      if (!res.ok) throw new Error(res.error ?? "Failed to save the preference");
-    },
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: OPERATOR_PREFS_QUERY_KEY });
-    },
-  });
+  const write = usePreferenceWrite();
 
   const { mutate } = write;
   const setPref = useCallback((key: string, value: unknown) => mutate({ key, value }), [mutate]);

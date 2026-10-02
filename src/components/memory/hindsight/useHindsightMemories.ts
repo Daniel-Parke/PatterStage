@@ -1,32 +1,61 @@
 // ═══════════════════════════════════════════════════════════════
 // useHindsightMemories — memories tab state + recall/reflect/add + health.
-// Owns the shared `search` and `health` state (health is only ever written
-// by the memory fetch paths).
+// Keeps typed search separate from submitted recall; query results supply
+// collection data and health, while explicit actions own their pending state.
 // ═══════════════════════════════════════════════════════════════
 
 "use client";
 
-import { useState, useCallback, useEffect, useMemo } from "react";
-import type { ToastType } from "@/components/ui/Toast";
+import { useState, useCallback, useMemo } from "react";
+import type { FeedbackContextValue } from "@/components/ui/feedback-context";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiQueryKey, useApiResource } from "@/hooks/useApiResource";
 import {
   hindsightGet,
+  selectHindsightData,
   filterMemoriesByAge,
   HINDSIGHT_DEFAULT_MAX_AGE_DAYS,
 } from "@/lib/memory/hindsight-client";
 import { parseOptionalTagsInput } from "@/lib/memory/hindsight-tag-input";
 import { runWrite } from "@/lib/api/api-write";
 import { stringOr } from "./utils";
-import type { Memory, HealthState } from "./types";
+import type { Memory, HealthState, Tab } from "./types";
 
-type ShowToast = (message: string, type?: ToastType) => void;
+type ShowToast = FeedbackContextValue["showToast"];
 
-export function useHindsightMemories(showToast: ShowToast) {
-  const [memories, setMemories] = useState<Memory[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [loadingInitial, setLoadingInitial] = useState(true);
+export function useHindsightMemories(showToast: ShowToast, activeTab: Tab = "memories") {
+  const client = useQueryClient();
   const [search, setSearch] = useState("");
   const [reflectResult, setReflectResult] = useState<string | null>(null);
-  const [reflecting, setReflecting] = useState(false);
+  const [submittedQuery, setSubmittedQuery] = useState<string | null>(null);
+  type MemoryResult = { memories?: Memory[]; total?: number; mode?: string; message?: string };
+  const recentEndpoint = "/api/memory/hindsight?action=list&limit=50";
+  const recallEndpoint = `/api/memory/hindsight?${new URLSearchParams({ action: "recall", query: submittedQuery ?? "" })}`;
+  const recent = useApiResource<MemoryResult>(recentEndpoint, {
+    enabled: activeTab === "memories" && submittedQuery === null,
+    select: selectHindsightData<MemoryResult>, errorMessage: "Failed to load memories",
+  });
+  const recall = useApiResource<MemoryResult>(recallEndpoint, {
+    enabled: activeTab === "memories" && submittedQuery !== null,
+    select: selectHindsightData<MemoryResult>, errorMessage: "Failed to recall memories",
+  });
+  const read = submittedQuery === null ? recent : recall;
+  const memories = useMemo(() => read.data?.memories ?? [], [read.data]);
+  const loading = submittedQuery !== null && read.isFetching;
+  const loadingInitial = submittedQuery === null && read.isLoading;
+  const healthRead = useApiResource<HealthState>("/api/memory/hindsight?action=health", {
+    enabled: activeTab === "memories" && Boolean(read.error),
+    select: data => data as HealthState | undefined,
+  });
+  const health = useMemo<HealthState | null>(() => read.error
+    ? healthRead.data ?? { available: false, mode: "unknown", message: "No response" }
+    : read.data ? { available: true, mode: stringOr(read.data.mode, "ok"), message: stringOr(read.data.message) } : null,
+  [read.error, read.data, healthRead.data]);
+  const totalFacts = typeof recent.data?.total === "number" ? recent.data.total : null;
+  const { mutateAsync: reflect, isPending: reflecting } = useMutation({
+    retry: false,
+    mutationFn: (query: string) => hindsightGet<{ response?: string; error?: string }>("reflect", { query }),
+  });
   // Stale-fact filter toggle. When false (the default), memories older
   // than HINDSIGHT_DEFAULT_MAX_AGE_DAYS are hidden in the Memory tab.
   const [showStaleMemories, setShowStaleMemories] = useState(false);
@@ -48,85 +77,20 @@ export function useHindsightMemories(showToast: ShowToast) {
   const [newTags, setNewTags] = useState("");
   const [adding, setAdding] = useState(false);
 
-  // Health
-  const [health, setHealth] = useState<HealthState | null>(null);
-  // Real store size (from the list endpoint's `total`), distinct from the
-  // loaded page (`memories.length`) — so the UI can show "N of TOTAL".
-  const [totalFacts, setTotalFacts] = useState<number | null>(null);
-
-  const fetchHealthOnly = useCallback(async () => {
-    // `hindsightGet` returns the inner payload typed as `T | null`;
-    // `null` covers both error and missing-data cases.
-    const inner = await hindsightGet<HealthState>("health");
-    if (inner) {
-      setHealth(inner);
-    } else {
-      setHealth({ available: false, mode: "unknown", message: "No response" });
-    }
-  }, []);
-
+  const { refetch: refetchRecent } = recent;
+  const { refetch: refetchRecall } = recall;
+  const { refetch: refetchHealth } = healthRead;
+  const fetchHealthOnly = useCallback(async () => { await refetchHealth(); }, [refetchHealth]);
   const loadRecentMemories = useCallback(async () => {
-    setLoadingInitial(true);
-    const inner = await hindsightGet<{ memories?: Memory[]; total?: number; mode?: string; error?: string }>(
-      "list",
-      { limit: 50 },
-    );
-    // `hindsightGet` returns null on a non-2xx response, and an unreachable
-    // Hindsight is exactly that: the route answers 503 with
-    // `{ available: false, error: "fetch failed" }`. That null used to fall
-    // into the success branch below, which left `health` at null, so the health
-    // banner never rendered and the page told a first-time user "No memories
-    // yet. Hermes will start storing them as you converse" while no memory
-    // provider was running at all. A null response is a health question, not an
-    // empty store.
-    if (!inner || inner.error) {
-      await fetchHealthOnly();
-    } else {
-      setMemories(inner.memories || []);
-      setTotalFacts(typeof inner.total === "number" ? inner.total : null);
-      setHealth({ available: true, mode: stringOr(inner.mode, "ok") });
-    }
-    setLoadingInitial(false);
-  }, [fetchHealthOnly]);
-
-  useEffect(() => {
-    void loadRecentMemories();
-  }, [loadRecentMemories]);
-
+    setSubmittedQuery(null);
+    await refetchRecent();
+  }, [refetchRecent]);
   const runRecall = useCallback(async () => {
     const q = search.trim();
-    if (!q) {
-      showToast("Enter a search query first", "info");
-      return;
-    }
-    setLoading(true);
-    try {
-      const inner = await hindsightGet<{
-        memories?: Memory[];
-        available?: boolean;
-        mode?: string;
-        message?: string;
-        error?: string;
-      }>("recall", { query: q });
-      if (!inner) {
-        await fetchHealthOnly();
-        return;
-      }
-      setMemories(inner.memories || []);
-      const backendSaysDown = inner.available === false || (typeof inner.error === "string" && inner.error.length > 0);
-      if (!backendSaysDown) {
-        setHealth({
-          available: true,
-          mode: stringOr(inner.mode, "ok"),
-          message: stringOr(inner.message),
-        });
-      } else {
-        await fetchHealthOnly();
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [search, showToast, fetchHealthOnly]);
+    if (!q) { showToast("Enter a search query first", "info"); return; }
+    if (q === submittedQuery) await refetchRecall();
+    else setSubmittedQuery(q);
+  }, [search, submittedQuery, refetchRecall, showToast]);
 
   const handleRefreshMemories = () => {
     if (search.trim()) {
@@ -138,11 +102,9 @@ export function useHindsightMemories(showToast: ShowToast) {
 
   const handleReflect = async () => {
     if (!search.trim()) return;
-    setReflecting(true);
     setReflectResult(null);
-    const inner = await hindsightGet<{ response?: string }>("reflect", { query: search });
-    setReflecting(false);
-    if (!inner) {
+    const inner = await reflect(search);
+    if (!inner || inner.error) {
       showToast("Reflection failed", "error");
     } else {
       setReflectResult(inner.response || "No reflection generated");
@@ -165,7 +127,12 @@ export function useHindsightMemories(showToast: ShowToast) {
         setShowAddModal(false);
         setNewContent("");
         setNewTags("");
-        if (search.trim()) await runRecall();
+        const query = search.trim();
+        const endpoint = query
+          ? `/api/memory/hindsight?${new URLSearchParams({ action: "recall", query })}`
+          : recentEndpoint;
+        await client.cancelQueries({ queryKey: apiQueryKey(endpoint), exact: true });
+        if (query) await runRecall();
         else await loadRecentMemories();
       },
     });
@@ -174,6 +141,9 @@ export function useHindsightMemories(showToast: ShowToast) {
 
   return {
     memories,
+    error: read.error,
+    retry: read.refetch,
+    submittedQuery,
     loading,
     loadingInitial,
     search,

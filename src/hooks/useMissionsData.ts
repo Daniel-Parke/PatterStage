@@ -13,19 +13,17 @@
 // owns) and `fetchData` needs the `loadCategories` that same hook
 // returns. Composing it here resolves both directions in one pass.
 //
-// useMissionsApi stays its own hook and is called from here. It is NOT
-// folded into useApiResource: that hook's header deliberately excludes
-// callback grids (useMissionsApi), mutation hooks (useSchedules) and
-// multi-query bundles (useDashboard).
+// useMissionsApi shares raw query envelopes with the Dashboard. This hook
+// retains one visibility-aware polling owner and the board's local projection.
 
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type SetStateAction } from "react";
 
 import { useInterval } from "@/hooks/useInterval";
 
-import type { ToastType } from "@/components/ui/Toast";
-import { toastError } from "@/lib/api/api-fetch";
+import type { FeedbackContextValue } from "@/components/ui/feedback-context";
+import { messageFromError } from "@/lib/api/api-fetch";
 import { useMissionsApi } from "@/hooks/useMissionsApi";
 import { useMissionCategories } from "@/hooks/useMissionCategories";
 import type { useMissionComposer } from "@/hooks/useMissionComposer";
@@ -40,7 +38,7 @@ import {
   resolveMissionDeepLink,
 } from "@/lib/missions/mission-deep-link";
 
-type ToastFn = (message: string, type?: ToastType) => void;
+type ToastFn = FeedbackContextValue["showToast"];
 
 function missionRowFromDetail(detail: MissionDetail): MissionRow {
   return { ...detail.mission, run: detail.run, scheduleStatus: detail.schedule };
@@ -77,18 +75,38 @@ export function useMissionsData({
   // toast that vanished after four seconds while the board rendered "No
   // missions yet" over the failure (T-0096, D67, the read contract).
   const [missionsLoadError, setMissionsLoadError] = useState<string | null>(null);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [templatesLoadError, setTemplatesLoadError] = useState<string | null>(null);
+  const [expandedId, setExpandedIdState] = useState<string | null>(null);
   const [detail, setDetail] = useState<MissionDetail | null>(null);
+  const [detailLoadError, setDetailLoadError] = useState<string | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [promptCollapsed, setPromptCollapsed] = useState(true);
   const templateApplied = useRef(false);
   const missionFocused = useRef(false);
+  const pendingMissionLink = useRef<string | null>(null);
+  const freshDetailId = useRef<string | null>(null);
   const [deepLinkedMissionId, setDeepLinkedMissionId] = useState<string | null>(
     null,
   );
   const expandedIdRef = useRef<string | null>(null);
   const olderLinkedMission = useRef<MissionRow | null>(null);
   const refreshVersion = useRef(0);
+  const templateVersion = useRef(0);
+  const detailVersion = useRef(0);
+  const selectionVersion = useRef(0);
+
+  const setExpandedId = useCallback((update: SetStateAction<string | null>) => {
+    const id = typeof update === "function" ? update(expandedIdRef.current) : update;
+    if (id === expandedIdRef.current) return;
+    selectionVersion.current++;
+    pendingMissionLink.current = null;
+    expandedIdRef.current = id;
+    detailVersion.current++;
+    setExpandedIdState(id);
+    setDetail(null);
+    setDetailLoadError(null);
+    setDetailLoading(false);
+  }, []);
 
   const updateMission = useCallback(
     (id: string, updater: (mission: MissionRow) => MissionRow) => {
@@ -98,36 +116,6 @@ export function useMissionsData({
     },
     [],
   );
-
-  // Reload the missions + templates slices in parallel. Used as the category
-  // hook's post-delete refresh (a category delete reassigns its missions to the
-  // fallback category, so both slices go stale). Promise.allSettled so one
-  // failing slice doesn't abort the other's refetch.
-  const reloadMissionsAndTemplates = useCallback(async () => {
-    await Promise.allSettled([
-      fetchMissions().then(setMissions),
-      fetchTemplates().then(setTemplates),
-    ]);
-  }, [fetchMissions, fetchTemplates]);
-
-  // Category-management concern (catalog + CRUD + manager modal). The form's
-  // selected `newCategoryId` stays in the composer hook (compose state); the
-  // category hook owns the catalog itself.
-  const {
-    categories,
-    categoriesLoadError,
-    showCategoryManager,
-    loadCategories,
-    handleCreateCategory,
-    handleUpdateCategory,
-    handleDeleteCategory,
-    openCategoryManager,
-    closeCategoryManager,
-  } = useMissionCategories({
-    fetchCategories,
-    showToast,
-    onMissionsReassigned: reloadMissionsAndTemplates,
-  });
 
   /**
    * Apply a template to the form + open the composer in "create" mode.
@@ -150,10 +138,10 @@ export function useMissionsData({
       } = {},
     ) => {
       const cid = getCategoryIdFromTemplate(t);
-      applyTemplateToForm(t, cid);
+      const dispatchError = applyTemplateToForm(t, cid);
       if (opts.rememberCategory) rememberLastCategory(cid);
       setShowCreate(true);
-      showToast(`Template loaded: ${t.name}`, "success");
+      showToast(dispatchError || `Template loaded: ${t.name}`, dispatchError ? "error" : "success");
       if (opts.clearQueryParam) {
         window.history.replaceState({}, "", MISSIONS_PATH);
       }
@@ -161,10 +149,12 @@ export function useMissionsData({
     [applyTemplateToForm, setShowCreate, showToast],
   );
 
-  const fetchData = useCallback(async () => {
+  const loadMissions = useCallback(async (afterWrite = false) => {
     const version = ++refreshVersion.current;
+    const selection = selectionVersion.current;
+    const ownsInitialLink = () => selection === selectionVersion.current && pendingMissionLink.current !== null;
     try {
-      const list: MissionRow[] = await fetchMissions();
+      const list: MissionRow[] = await fetchMissions(afterWrite);
       let retained = olderLinkedMission.current;
       const retainedIdBeforeRefresh = retained?.id;
       const refreshed = retainedIdBeforeRefresh
@@ -176,7 +166,7 @@ export function useMissionsData({
       } else if (retained) {
         const retainedId = retained.id;
         try {
-          const latest: MissionDetail | null = await fetchMissionDetail(retainedId);
+          const latest: MissionDetail | null = await fetchMissionDetail(retainedId, afterWrite);
           if (version !== refreshVersion.current || olderLinkedMission.current?.id !== retainedId) return;
           if (latest?.mission) {
             retained = missionRowFromDetail(latest);
@@ -193,7 +183,7 @@ export function useMissionsData({
           retained = null;
         }
         if (!retained) {
-          setExpandedId((current) => current === retainedId ? null : current);
+          if (expandedIdRef.current === retainedId) setExpandedId(null);
           setDeepLinkedMissionId((current) => current === retainedId ? null : current);
           setDetail((current) => current?.mission.id === retainedId ? null : current);
           // The delete action already reports success. A refresh cannot tell
@@ -203,6 +193,14 @@ export function useMissionsData({
       if (version !== refreshVersion.current) return;
       setMissions(retained && !refreshed ? [...list, retained] : list);
       setMissionsLoadError(null);
+      // A fresh list can resolve a pending older-link lookup before it settles.
+      const pendingInList = pendingMissionLink.current && list.find(row => row.id === pendingMissionLink.current);
+      if (pendingInList && selection === selectionVersion.current) {
+        freshDetailId.current = pendingInList.id;
+        setExpandedId(pendingInList.id);
+        setDeepLinkedMissionId(pendingInList.id);
+        window.history.replaceState({}, "", MISSIONS_PATH);
+      }
       // `?mission=<id>` deep link, the destination of every "open the
       // parent mission" affordance on the sessions surface. Sibling of the
       // `?template=<id>` branch below, and latched the same way so the 15s
@@ -224,8 +222,10 @@ export function useMissionsData({
             // The board is bounded to 200 rows. Absence from that page does
             // not establish deletion, so ask the by-ID route before showing
             // missing feedback or consuming the URL.
+            pendingMissionLink.current = link.missionId;
             try {
               const linked: MissionDetail | null = await fetchMissionDetail(link.missionId);
+              if (!ownsInitialLink()) return;
               if (linked?.mission) {
                 const row = missionRowFromDetail(linked);
                 olderLinkedMission.current = row;
@@ -237,16 +237,19 @@ export function useMissionsData({
                 setExpandedId(row.id);
                 setDeepLinkedMissionId(row.id);
               } else {
+                pendingMissionLink.current = null;
                 showToast(`Mission ${link.missionId.slice(0, 8)} no longer exists`, "error");
               }
               window.history.replaceState({}, "", MISSIONS_PATH);
             } catch (error) {
+              if (!ownsInitialLink()) return;
+              pendingMissionLink.current = null;
               if (hasHttpStatus(error, 404)) {
                 showToast(`Mission ${link.missionId.slice(0, 8)} no longer exists`, "error");
                 window.history.replaceState({}, "", MISSIONS_PATH);
               } else {
                 missionFocused.current = false;
-                toastError(showToast, error, "Failed to load linked mission");
+                setMissionsLoadError(messageFromError(error, "Failed to load linked mission"));
               }
             }
           }
@@ -256,16 +259,17 @@ export function useMissionsData({
       // Not a toast: the board reads this and shows the failure with a
       // Retry in place of the list, so a failed read never looks like an
       // empty install.
-      setMissionsLoadError(
-        error instanceof Error && error.message ? error.message : "Failed to load missions",
-      );
+      if (version === refreshVersion.current) setMissionsLoadError(messageFromError(error, "Failed to load missions"));
     }
+  }, [fetchMissions, fetchMissionDetail, showToast, setExpandedId]);
 
-    await loadCategories();
-
+  const loadTemplates = useCallback(async (afterWrite = false) => {
+    const version = ++templateVersion.current;
     try {
-      const loaded = await fetchTemplates();
+      const loaded = await fetchTemplates(afterWrite);
+      if (version !== templateVersion.current) return;
       setTemplates(loaded);
+      setTemplatesLoadError(null);
       if (!templateApplied.current && loaded.length > 0) {
         const url = new URL(window.location.href);
         const templateId = url.searchParams.get("template");
@@ -283,33 +287,52 @@ export function useMissionsData({
         }
       }
     } catch (error) {
-      toastError(showToast, error, "Failed to load templates");
+      if (version === templateVersion.current) setTemplatesLoadError(messageFromError(error, "Failed to load templates"));
     }
-  }, [fetchMissions, fetchMissionDetail, fetchTemplates, showToast, loadCategories, loadAndApplyTemplate]);
+  }, [fetchTemplates, loadAndApplyTemplate]);
+
+  const reloadMissionsAndTemplates = useCallback(async () => {
+    await Promise.all([loadMissions(true), loadTemplates(true)]);
+  }, [loadMissions, loadTemplates]);
+  const category = useMissionCategories({
+    fetchCategories,
+    showToast,
+    onMissionsReassigned: reloadMissionsAndTemplates,
+  });
+  const { loadCategories } = category;
+  const fetchData = useCallback(async (afterWrite = false) => {
+    await Promise.all([loadMissions(afterWrite), loadTemplates(afterWrite), loadCategories(afterWrite)]);
+  }, [loadMissions, loadTemplates, loadCategories]);
 
   const fetchDetail = useCallback(
-    (id: string, showLoading = true) => {
+    (id: string, showLoading = true, afterWrite = false) => {
+      if (expandedIdRef.current !== id) return;
+      const version = ++detailVersion.current;
       if (showLoading) setDetailLoading(true);
-      fetchMissionDetail(id)
+      const ownsDetail = () => version === detailVersion.current && expandedIdRef.current === id;
+      fetchMissionDetail(id, afterWrite)
         .then((data) => {
-          if (data) setDetail(data);
+          if (!ownsDetail()) return;
+          setDetail(data);
+          setDetailLoadError(data ? null : "Mission detail was not returned");
         })
         .catch((error) => {
-          // The detail panel has no error state, so the toast is the
-          // user-facing surface; a bare console.error left the user seeing
-          // nothing when expanding a broken mission.
-          toastError(showToast, error, "Failed to load mission detail");
+          if (ownsDetail()) setDetailLoadError(messageFromError(error, "Failed to load mission detail"));
         })
         .finally(() => {
-          if (showLoading) setDetailLoading(false);
+          if (ownsDetail()) setDetailLoading(false);
         });
     },
-    [fetchMissionDetail, showToast],
+    [fetchMissionDetail],
   );
 
-  useEffect(() => {
-    expandedIdRef.current = expandedId;
-  }, [expandedId]);
+  useEffect(() => () => {
+    selectionVersion.current++;
+    pendingMissionLink.current = null;
+    refreshVersion.current++;
+    templateVersion.current++;
+    detailVersion.current++;
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -338,7 +361,9 @@ export function useMissionsData({
   useEffect(() => {
     if (expandedId) {
       setPromptCollapsed(true);
-      fetchDetail(expandedId, true);
+      const fresh = freshDetailId.current === expandedId;
+      freshDetailId.current = null;
+      fetchDetail(expandedId, true, fresh);
     } else {
       setDetail(null);
     }
@@ -349,6 +374,10 @@ export function useMissionsData({
     templates,
     loading,
     missionsLoadError,
+    templatesLoadError,
+    detailLoadError,
+    loadMissions,
+    loadTemplates,
     expandedId,
     setExpandedId,
     deepLinkedMissionId,
@@ -360,14 +389,6 @@ export function useMissionsData({
     fetchData,
     fetchDetail,
     loadAndApplyTemplate,
-    categories,
-    categoriesLoadError,
-    showCategoryManager,
-    loadCategories,
-    handleCreateCategory,
-    handleUpdateCategory,
-    handleDeleteCategory,
-    openCategoryManager,
-    closeCategoryManager,
+    ...category,
   };
 }

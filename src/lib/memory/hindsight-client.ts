@@ -2,11 +2,12 @@
 // localhost:9177, used by src/components/memory/HindsightBrowser.tsx and
 // src/app/api/memory/hindsight/route.ts: GET `/api/memory/hindsight?action=<name>&...`,
 // unwrap `{ data: { ...inner } }`, type the payload per action. The POST
-// surface (create / update / refresh / delete) goes through `runMutation`.
+// surface (create / update / refresh / delete) goes through `runWrite`.
 
+import type { FeedbackContextValue } from "@/components/ui/feedback-context";
 import { safeApiCall } from "@/lib/api/api-fetch";
 
-type ShowToast = (message: string, tone?: "success" | "error" | "info") => void;
+type ShowToast = (message: string, tone?: Extract<Parameters<FeedbackContextValue["showToast"]>[1], "success" | "error" | "info">) => void;
 
 /**
  * Fetch a Hindsight GET endpoint and unwrap the `{ data: { ... } }` envelope.
@@ -86,4 +87,12 @@ export function filterMemoriesByAge<T extends { created_at?: string }>(
     if (Number.isNaN(t)) return true; // unparseable → keep
     return t >= cutoffMs;
   });
+}
+
+/** A successful collection envelope may still report an application failure. */
+export function selectHindsightData<T>(data: unknown): T | undefined {
+  if (!data || typeof data !== "object") return undefined;
+  const result = data as { error?: unknown; available?: boolean };
+  if (result.error || result.available === false) throw new Error(typeof result.error === "string" ? result.error : "Hindsight unavailable");
+  return data as T;
 }

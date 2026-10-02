@@ -55,7 +55,7 @@ export interface UseAgentRunStreamArgs {
   setIsStreaming: Dispatch<SetStateAction<boolean>>;
   setPendingApproval: Dispatch<SetStateAction<PendingApproval | null>>;
   loadConversations: () => Promise<unknown>;
-  refreshActiveConversation: () => Promise<void>;
+  refreshActiveConversation: (gen?: number, id?: string | null) => Promise<void>;
 }
 
 export function useAgentRunStream({
@@ -159,7 +159,7 @@ export function useAgentRunStream({
         setIsStreaming(false);
         finalized = true;
         window.setTimeout(() => {
-          if (gen === streamGenRef.current) void refreshActiveConversation();
+          if (gen === streamGenRef.current) void refreshActiveConversation(gen, conversationId);
         }, 1500);
       };
     },

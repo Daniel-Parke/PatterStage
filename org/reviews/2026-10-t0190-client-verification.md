@@ -189,3 +189,7 @@ are intercepted, so this does not establish real-provider or release acceptance.
 ## Mission continuation oracle
 
 Independent Carver oracle reproduces cancel/update/promote ofA invalidating selectedBdetail before the15-second poll. Actual composed hooks/query/write helpers run together. Three semantic reds and four preservation controls are frozen in tmp/t0190-continuation-oracle/freeze.json. Existing18frozenfiles and866sourcefiles match the baseline. Types/lint exit0; C4 passes24cases at4796. The current line ratchet honestly exits1 for169newtestlines, pending an explicit growth reason. Author STOPPED; Sagan accepts freeze/redcommit only. No implementation or final gate acceptance follows.
+
+## Integrated continuation repair
+
+Red commit a0051405 precedes the one-line request-initiation ownership guard. All166integrated frozen client cases pass with0skips/runtime failures at tmp/t0190-coordinator-jest-1790975254044. The official line baseline records102378source lines,145129test lines,895source repeated windows and4796test repeated windows. New controls and guards have explicit growth reasons; fixed targets and the4800C4ceiling are unchanged. Thirty mutant anchors apply; no sweep outcome is claimed yet. The48-row candidate disposition ledger contains36done,8ruled-out and4deferred proposals, with final acceptance explicitly pending.

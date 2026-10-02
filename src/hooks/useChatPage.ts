@@ -26,7 +26,8 @@
 
 "use client";
 
-import { useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
+import type { Dispatch, SetStateAction } from "react";
 
 import { useToast } from "@/components/ui/Toast";
 import { COPY_BTN_CLASS, COPY_BTN_DATA_ATTR } from "@/lib/chat/chat-utils";
@@ -43,6 +44,12 @@ export function useChatPage() {
 
   const composer = useChatInput();
   const transcript = useChatTranscript();
+  const inputVersion = useRef(0);
+  const { setInput: setComposerInput } = composer;
+  const setInput: Dispatch<SetStateAction<string>> = useCallback((value) => {
+    inputVersion.current++;
+    setComposerInput(value);
+  }, [setComposerInput]);
 
   const {
     online: gatewayOnline,
@@ -61,7 +68,9 @@ export function useChatPage() {
     setIsStreaming: transcript.setIsStreaming,
     setPendingApproval: transcript.setPendingApproval,
     model: composer.model,
-    setInput: composer.setInput,
+    setInput,
+    inputVersion,
+    streamGenRef: transcript.streamGenRef,
     inputRef: composer.inputRef,
     showToast,
   });
@@ -94,7 +103,8 @@ export function useChatPage() {
     closeStream: transcript.closeStream,
     streamAgentRun,
     input: composer.input,
-    setInput: composer.setInput,
+    setInput,
+    inputVersion,
     mode: composer.mode,
     model: composer.model,
     setModel: composer.setModel,
@@ -174,7 +184,7 @@ export function useChatPage() {
     messagesEndRef: transcript.messagesEndRef,
     inputRef: composer.inputRef,
     input: composer.input,
-    setInput: composer.setInput,
+    setInput,
     handleKeyDown: send.handleKeyDown,
     handleSend: send.handleSend,
     handleRetry: send.handleRetry,

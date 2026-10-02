@@ -156,7 +156,7 @@ class ApiError extends Error {
   }
 }
 
-/** Return shape of `safeApiCall`, the non-throwing wrapper for hooks and event handlers; `runMutation` consumers read fields beyond ok/error. */
+/** Non-throwing transport result; callers may need the HTTP status and body as well as the displayed error. */
 export type SafeApiCallResult<T = unknown> = {
   ok: boolean;
   data?: T;

@@ -16,9 +16,9 @@
 
 import { scheduleBlocksDispatch } from "@/lib/ui/dispatch-mode";
 import { firstUnmetSubmitRequirement } from "@/lib/missions/mission-submit-requirement";
-import { useCallback, useState } from "react";
+import { useCallback, useState, type Dispatch, type SetStateAction } from "react";
 
-import type { ToastType } from "@/components/ui/Toast";
+import type { FeedbackContextValue } from "@/components/ui/feedback-context";
 import {
   successMessageForDispatch,
   dispatchMission,
@@ -31,16 +31,16 @@ import {
 } from "@/lib/missions/mission-board";
 import { submitToastForDispatch } from "@/lib/missions/mission-filters";
 
-type ToastFn = (message: string, type?: ToastType) => void;
+type ToastFn = FeedbackContextValue["showToast"];
 
 export interface UseMissionDispatchArgs {
   composer: ReturnType<typeof useMissionComposer>;
   missions: MissionRow[];
   updateMission: (id: string, updater: (mission: MissionRow) => MissionRow) => void;
-  fetchData: () => Promise<void>;
-  fetchDetail: (id: string, showLoading?: boolean) => void;
+  fetchData: (afterWrite?: boolean) => Promise<void>;
+  fetchDetail: (id: string, showLoading?: boolean, afterWrite?: boolean) => void;
   expandedId: string | null;
-  setExpandedId: (id: string | null) => void;
+  setExpandedId: Dispatch<SetStateAction<string | null>>;
   editingId: string | null;
   setEditingId: (id: string | null) => void;
   setShowCreate: (open: boolean) => void;
@@ -110,10 +110,10 @@ export function useMissionDispatch({
   /** Open the row a write just created or changed, and refresh its detail. */
   const showMission = useCallback(
     async (id: string | undefined) => {
-      await fetchData();
+      await fetchData(true);
       if (id) {
         setExpandedId(id);
-        void fetchDetail(id);
+        void fetchDetail(id, true, true);
       }
     },
     [fetchData, fetchDetail, setExpandedId],
@@ -166,8 +166,8 @@ export function useMissionDispatch({
           );
           if (updated) {
             finishComposer();
-            void fetchData();
-            if (expandedId === editingId) void fetchDetail(editingId);
+            void fetchData(true);
+            if (expandedId === editingId) void fetchDetail(editingId, true, true);
           }
           return;
         }
@@ -185,8 +185,8 @@ export function useMissionDispatch({
           );
           if (promoted) {
             finishComposer();
-            await fetchData();
-            if (expandedId === editingId) void fetchDetail(editingId);
+            await fetchData(true);
+            if (expandedId === editingId) void fetchDetail(editingId, true, true);
           }
           return;
         }
@@ -231,7 +231,7 @@ export function useMissionDispatch({
       if (created) {
         finishComposer();
         if (newDispatch === "now") await showMission(created.mission?.id);
-        else void fetchData();
+        else void fetchData(true);
       }
     } finally {
       setDispatching(false);
@@ -260,10 +260,10 @@ export function useMissionDispatch({
       { showToast, successMessage: "Mission deleted", errorMessage: "Failed to delete mission" },
     );
     if (deleted) {
-      if (expandedId === id) setExpandedId(null);
-      void fetchData();
+      setExpandedId((current) => current === id ? null : current);
+      void fetchData(true);
     }
-  }, [showToast, expandedId, fetchData, setExpandedId]);
+  }, [showToast, fetchData, setExpandedId]);
 
   /**
    * Cancel a running mission. The row is marked failed ahead of the answer so
@@ -272,7 +272,11 @@ export function useMissionDispatch({
   const handleCancel = useCallback(async (id: string) => {
     const previousMission = missions.find((m) => m.id === id);
     const restore = () => {
-      if (previousMission) updateMission(id, () => previousMission);
+      if (previousMission) updateMission(id, (current) =>
+        current.status === "failed" && current.result === "Cancelled by user"
+          ? { ...current, status: previousMission.status, result: previousMission.result }
+          : current,
+      );
     };
     showToast("Cancelling mission…", "info");
     updateMission(id, (m) => ({
@@ -292,8 +296,8 @@ export function useMissionDispatch({
       },
     );
     if (cancelled) {
-      await fetchData();
-      if (expandedId === id) void fetchDetail(id);
+      await fetchData(true);
+      if (expandedId === id) void fetchDetail(id, true, true);
     } else {
       restore();
     }

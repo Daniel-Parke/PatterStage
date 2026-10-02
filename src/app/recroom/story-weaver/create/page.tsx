@@ -15,6 +15,7 @@
 "use client";
 
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FolderOpen, Plus, Save, Sparkles, X } from "lucide-react";
 
@@ -101,6 +102,10 @@ export default function CreateStoryPageWrapper() {
 
 function CreateStoryPage() {
   const router = useRouter();
+  const { mutateAsync: createStory } = useMutation({
+    retry: false,
+    mutationFn: (options: RequestInit) => fetch("/api/stories", options),
+  });
   const searchParams = useSearchParams();
 
   const [generating, setGenerating] = useState(false);
@@ -186,7 +191,7 @@ function CreateStoryPage() {
   }, [searchParams, themesRead.data, applyTheme]);
 
   useEffect(() => {
-    setHasDraft(!!localStorage.getItem(DRAFT_KEY));
+    try { setHasDraft(!!localStorage.getItem(DRAFT_KEY)); } catch { /* Storage is optional. */ }
   }, []);
 
   // The two retired pages redirect to #themes and #characters. The browser's
@@ -204,13 +209,13 @@ function CreateStoryPage() {
   useEffect(() => {
     if (generating) return;
     const draft: Draft = { title, premise, genres, era, moods, setting, pov, length, wordCountRange, modelId, characters, savedAt: new Date().toISOString() };
-    localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+    try { localStorage.setItem(DRAFT_KEY, JSON.stringify(draft)); } catch { /* Keep the live form. */ }
   }, [title, premise, genres, era, moods, setting, pov, length, wordCountRange, modelId, characters, generating]);
 
   const loadDraft = () => {
-    const raw = localStorage.getItem(DRAFT_KEY);
-    if (!raw) return;
     try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (!raw) return;
       const d: Draft = JSON.parse(raw);
       setTitle(d.title);
       setTitleManuallyEdited(!!d.title);
@@ -466,7 +471,7 @@ function CreateStoryPage() {
 
     const finalTitle = title.trim() || deriveTitleFromPremise(premise);
     try {
-      const res = await fetch("/api/stories", {
+      const res = await createStory({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -484,9 +489,9 @@ function CreateStoryPage() {
         throw new Error((d && d.error) || `Story creation failed (HTTP ${res.status})`);
       }
       const newId = d.data?.id;
-      if (!newId) throw new Error("Story was created but no id was returned");
+      if (typeof newId !== "string" || !newId.trim()) throw new Error("Story was created but no id was returned");
 
-      localStorage.removeItem(DRAFT_KEY);
+      try { localStorage.removeItem(DRAFT_KEY); } catch { /* The server already created the story. */ }
       setHasDraft(false);
       setGenStoryId(newId);
       setGenDone(true);
@@ -494,7 +499,7 @@ function CreateStoryPage() {
       setGenerating(false);
       setGenError(err instanceof Error ? err.message : "Unknown error");
     }
-  }, [title, premise, genres, era, setting, moods, pov, length, characters, wordCountRange, modelId]);
+  }, [title, premise, genres, era, setting, moods, pov, length, characters, wordCountRange, modelId, createStory]);
 
   const handleGenComplete = useCallback(() => {
     if (genStoryId) router.push(`${HOME}/${genStoryId}`);

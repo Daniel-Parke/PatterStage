@@ -160,7 +160,7 @@ export const railAccentBarMap: Record<AccentColor, ColorEntry> = {
  * of the eight accents had no border rule (the pill fell back to `currentColor`
  * and drew a solid white ring) and all eight had a dead hover.
  */
-const PILL_BORDER: Record<AccentColor, ColorEntry> = {
+export const pillBorderMap: Record<AccentColor, ColorEntry> = {
   cyan: "border-neon-cyan/20",
   purple: "border-neon-purple/20",
   green: "border-neon-green/20",
@@ -171,7 +171,7 @@ const PILL_BORDER: Record<AccentColor, ColorEntry> = {
   yellow: "border-yellow-400/20",
 };
 
-const PILL_BORDER_HOVER: Record<AccentColor, ColorEntry> = {
+export const pillBorderHoverMap: Record<AccentColor, ColorEntry> = {
   cyan: "hover:border-neon-cyan/45",
   purple: "hover:border-neon-purple/45",
   green: "hover:border-neon-green/45",
@@ -198,20 +198,6 @@ export const iconMutedColorMap: Record<AccentColor, ColorEntry> = {
   yellow: "text-yellow-400/60",
 };
 
-export const pillBorderMap: Record<AccentColor, ColorEntry> = PILL_BORDER;
-export const pillBorderHoverMap: Record<AccentColor, ColorEntry> = PILL_BORDER_HOVER;
-
-// ── Focus Ring Color (for inputs/selects) ─────────────────────
-export const focusColorMap: Record<AccentColor, ColorEntry> = {
-  cyan: "",
-  purple: "",
-  green: "",
-  pink: "",
-  orange: "",
-  red: "",
-  blue: "",
-  yellow: "",
-};
 
 /** RGB triplets for `rgb(var(--glow-surface-rgb) / …)` */
 const GLOW_RGBS: Record<AccentColor, string> = {
@@ -226,7 +212,6 @@ export const glowSurfaceRgbMap: Record<AccentColor, ColorEntry> = makeMap((c) =>
 export const baseInputStyles =
   // `edge`, not `hairline`: a control's boundary is what WCAG 1.4.11 is about,
   // and on the hairline it measured 2.38:1 against the page (T-0118).
-  // design-lint-disable-next-line no-bare-outline-none -- inputFieldClasses appends the accent focus border to this base; it is never used bare
   "w-full bg-ps-surface-panel border border-ps-edge rounded-ps-md px-3 py-2 text-body text-ps-text-primary placeholder-ps-text-muted transition-colors font-mono";
 
 /**
@@ -240,7 +225,7 @@ export const baseInputStyles =
 export const sectionHeadingClasses =
   "text-micro font-mono uppercase tracking-widest text-ps-text-secondary border-b border-ps-edge-hairline pb-1.5 mb-3";
 
-/** Canonical text input / select classes with accent focus ring. */
-export function inputFieldClasses(accent: AccentColor = "cyan"): string {
-  return `${baseInputStyles} ${focusColorMap[accent]}`;
+/** Canonical control classes. Focus styling comes from the global focus-visible rule. */
+export function inputFieldClasses(_accent: AccentColor = "cyan"): string {
+  return baseInputStyles;
 }

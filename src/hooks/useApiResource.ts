@@ -25,7 +25,7 @@
 
 "use client";
 
-import { useQuery, type QueryKey } from "@tanstack/react-query";
+import { useQuery, type QueryClient, type QueryKey } from "@tanstack/react-query";
 
 import { safeApiCall } from "@/lib/api/api-fetch";
 
@@ -81,6 +81,50 @@ function statusOf(error: unknown): number | null {
   return (error as { status?: number | null } | null)?.status ?? null;
 }
 
+function apiReadOptions(endpoint: string, opts: { body?: unknown; errorMessage?: string }) {
+  return {
+    queryKey: apiQueryKey(endpoint, opts.body),
+    queryFn: async (): Promise<Envelope> => {
+      const res = opts.body === undefined
+        ? await safeApiCall<{ data?: unknown }>(endpoint)
+        : await safeApiCall<{ data?: unknown }>(endpoint, { method: "POST", body: opts.body });
+      if (!res.ok) throw failure(res.error ?? opts.errorMessage ?? "Failed to load", res.body, res.status ?? null);
+      return { data: res.data?.data, body: res.data ?? null };
+    },
+  };
+}
+
+/** An imperative read uses the same raw cache as mounted observers. */
+export async function readApiResource<T>(
+  client: QueryClient,
+  endpoint: string,
+  opts: UseApiResourceOptions<T>,
+  afterWrite = false,
+): Promise<T> {
+  const query = apiReadOptions(endpoint, opts);
+  // A successful write must not join a read that started before that write.
+  if (afterWrite) await client.cancelQueries({ queryKey: query.queryKey, exact: true });
+  const env = await client.fetchQuery({ ...query, staleTime: 0, retry: false });
+  const value = opts.select(env.data);
+  if (value !== undefined) return value;
+  if (opts.fallback !== undefined) return opts.fallback;
+  throw failure(opts.errorMessage ?? "Failed to load", env.body, null);
+}
+
+/** Publish a confirmed read-equivalent response without exposing the cache envelope. */
+export async function publishApiResource(
+  client: QueryClient,
+  endpoint: string,
+  opts: { body?: unknown; responseBody: { data: unknown } | ((current: unknown) => { data: unknown }) },
+): Promise<void> {
+  const key = apiQueryKey(endpoint, opts.body);
+  await client.cancelQueries({ queryKey: key, exact: true });
+  client.setQueryData<Envelope>(key, current => {
+    const body = typeof opts.responseBody === "function" ? opts.responseBody(current?.data) : opts.responseBody;
+    return { data: body.data, body };
+  });
+}
+
 export function useApiResource<T, M = unknown>(endpoint: string, opts: UseApiResourceOptions<T, M>) {
   const pick = (env: Envelope): { value: T; meta: M | null } => {
     const meta = opts.selectMeta ? opts.selectMeta(env.body) : null;
@@ -94,15 +138,7 @@ export function useApiResource<T, M = unknown>(endpoint: string, opts: UseApiRes
 
   const interval = opts.refetchInterval;
   const query = useQuery({
-    queryKey: apiQueryKey(endpoint, opts.body),
-    queryFn: async (): Promise<Envelope> => {
-      const res =
-        opts.body === undefined
-          ? await safeApiCall<{ data?: unknown }>(endpoint)
-          : await safeApiCall<{ data?: unknown }>(endpoint, { method: "POST", body: opts.body });
-      if (!res.ok) throw failure(res.error ?? opts.errorMessage ?? "Failed to load", res.body, res.status ?? null);
-      return { data: res.data?.data, body: res.data ?? null };
-    },
+    ...apiReadOptions(endpoint, opts),
     // Errors thrown here land in the query's error state, so "the payload was
     // not there" reads the same as "the request failed".
     select: pick,

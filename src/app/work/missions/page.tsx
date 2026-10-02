@@ -4,6 +4,7 @@ import { Loader2, Plus, RefreshCw, Rocket } from "lucide-react";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
 import AgentSetupNotice from "@/components/agents/AgentSetupNotice";
+import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import Button from "@/components/ui/Button";
 import Sheet from "@/components/ui/Sheet";
 import MissionCreateForm, {
@@ -121,7 +122,7 @@ export default function MissionsPage() {
         <>
           <button
             type="button"
-            onClick={fetchData}
+            onClick={() => void fetchData()}
             className="p-2 rounded-ps-md text-ps-text-muted hover:text-ps-text-secondary hover:bg-ps-surface-raised transition-colors"
             aria-label="Refresh missions"
           >
@@ -167,6 +168,10 @@ export default function MissionsPage() {
       <AgentSetupNotice what="Dispatching a mission" />
 
       <div className="space-y-6">
+        {vm.templatesLoadError && <LoadErrorBanner error={vm.templatesLoadError} onRetry={() => void vm.loadTemplates()} />}
+        {categoriesLoadError && !showCreate && !showCategoryManager && (
+          <LoadErrorBanner error={categoriesLoadError} onRetry={() => void loadCategories()} />
+        )}
         <MissionInsights missions={missions} />
         <MissionsList vm={vm} />
       </div>

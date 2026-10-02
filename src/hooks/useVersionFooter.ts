@@ -27,7 +27,8 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 
-import { setErrorFromCaught, safeApiCallData } from "@/lib/api/api-fetch";
+import { safeApiCallData } from "@/lib/api/api-fetch";
+import { runWrite } from "@/lib/api/api-write";
 import { useApiResource } from "@/hooks/useApiResource";
 import { sanitizeGitBranch } from "@/lib/git/git-branch";
 import { fallbackForDeployMessage } from "@/lib/deploy/deploy-action-fallback";
@@ -220,38 +221,37 @@ export function useVersionFooter(): VersionFooterState {
       if (useBusyRef) busyRef.current = true;
       setMessage(startedMessage);
       setDeployLogTail([]);
-      try {
-        const res = await fetch("/api/update", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action, ...body }),
-        });
-        if (!res.ok) {
-          let msg = fallbackForDeployMessage(startedMessage);
-          try {
-            const errBody = await res.json();
-            if (errBody?.error) msg = errBody.error;
-          } catch {
-            /* ignore */
+      await runWrite({
+        showToast: setMessage,
+        successMessage: runningMessage,
+        errorMessage: fallbackForDeployMessage(startedMessage),
+        request: async () => {
+          const res = await fetch("/api/update", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action, ...body }),
+          });
+          if (!res.ok) {
+            let msg = fallbackForDeployMessage(startedMessage);
+            try {
+              const errBody = await res.json();
+              if (errBody?.error) msg = errBody.error;
+            } catch {
+              /* ignore */
+            }
+            throw new Error(msg);
           }
-          throw new Error(msg);
-        }
-        if (action === "update") {
-          const d = await res.json();
-          if (d.error) {
-            setMessage(d.error);
-            setBusy(false);
-            if (useBusyRef) busyRef.current = false;
-            return;
+          if (action === "update") {
+            const d = await res.json();
+            if (d.error) throw new Error(d.error);
           }
-        }
-        setMessage(runningMessage);
-        pollDeployStatusRef.current(action);
-      } catch (err: unknown) {
-        setErrorFromCaught(setMessage, err, fallbackForDeployMessage(startedMessage));
-        setBusy(false);
-        if (useBusyRef) busyRef.current = false;
-      }
+        },
+        onSuccess: () => pollDeployStatusRef.current(action),
+        onError: () => {
+          setBusy(false);
+          if (useBusyRef) busyRef.current = false;
+        },
+      });
     },
     [],
   );

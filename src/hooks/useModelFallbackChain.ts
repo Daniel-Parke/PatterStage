@@ -13,11 +13,11 @@
 
 import { useCallback, useState } from "react";
 
-import type { ToastType } from "@/components/ui/Toast";
+import type { FeedbackContextValue } from "@/components/ui/feedback-context";
 import { runWrite, type RunWriteOptions } from "@/lib/api/api-write";
 import type { FallbackChainEntry } from "@/types/console";
 
-type ToastFn = (message: string, type?: ToastType) => void;
+type ToastFn = FeedbackContextValue["showToast"];
 
 export interface UseModelFallbackChainArgs {
   loadAll: () => Promise<void>;

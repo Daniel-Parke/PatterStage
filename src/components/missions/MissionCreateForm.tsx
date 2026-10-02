@@ -31,6 +31,7 @@ import {
 import { firstUnmetSubmitRequirement } from "@/lib/missions/mission-submit-requirement";
 import { useProfileToolsets } from "@/hooks/useProfileAttachables";
 import { useToolsetCatalog } from "@/hooks/useToolsetCatalog";
+import type { DispatchMode } from "@/lib/ui/dispatch-mode";
 
 export interface MissionFormState {
   newName: string;
@@ -39,7 +40,7 @@ export interface MissionFormState {
   newGoals: string;
   newOutputFormat: string;
   newConstraints: string;
-  newDispatch: "save" | "now" | "cron" | "queue";
+  newDispatch: DispatchMode;
   newSchedule: string;
   newMissionTime: number;
   newTimeout: number;

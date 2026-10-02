@@ -37,6 +37,7 @@ export function useChatTranscript() {
   );
 
   const closeStream = useCallback(() => {
+    streamGenRef.current++;
     esRef.current?.close();
     esRef.current = null;
     abortRef.current?.abort();

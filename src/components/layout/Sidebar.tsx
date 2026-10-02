@@ -24,16 +24,14 @@
 import { useState, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ChevronRight, ChevronLeft, Menu, Terminal } from "lucide-react";
 
 import { useSidebar } from "./SidebarContext";
 import { useDialogA11y } from "@/hooks/useDialogA11y";
 import { TABLET_QUERY, useIsMobile } from "@/hooks/useIsMobile";
-import { apiQueryKey } from "@/hooks/useApiResource";
+import { usePreferenceWrite } from "@/hooks/usePreferenceWrite";
 import { useStats } from "@/hooks/useStats";
 import { iconColorMap, railAccentBarMap } from "@/lib/ui/theme";
-import { safeApiCall } from "@/lib/api/api-fetch";
 import { useFeatureFlags } from "@/hooks/useFeatureFlags";
 import IconButton from "@/components/ui/IconButton";
 import { mainSections } from "./sidebar-config";
@@ -151,20 +149,11 @@ export default function Sidebar({ initialCollapsed = false }: { initialCollapsed
   // is re-read afterwards. A failed write (read-only, offline) leaves the
   // rail where the operator put it for this session and the server keeps its
   // old answer; nothing is said, because the rail is already where they put it.
-  const queryClient = useQueryClient();
-  const { mutate: savePref } = useMutation({
-    mutationFn: async (next: boolean) => {
-      const res = await safeApiCall("/api/prefs", { method: "PUT", body: { key: "sidebar.collapsed", value: next } });
-      if (!res.ok) throw new Error(res.error ?? "Failed to save the preference");
-    },
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: apiQueryKey("/api/prefs") });
-    },
-  });
+  const { mutate: savePref } = usePreferenceWrite();
   const toggleCollapsed = useCallback(() => {
     const next = !collapsed;
     setCollapsed(next);
-    savePref(next);
+    savePref({ key: "sidebar.collapsed", value: next });
   }, [collapsed, savePref]);
 
   // Flags default ON: hide a link only when its flag is explicitly disabled,

@@ -4,7 +4,6 @@
 
 import { ChevronDown } from "lucide-react";
 import type { AccentColor } from "@/types/console";
-import { focusColorMap } from "@/lib/ui/theme";
 
 interface SelectOption {
   value: string;
@@ -33,7 +32,6 @@ export function InlineSelect({
   value,
   onChange,
   options,
-  accentColor = "cyan",
   className = "",
   disabled = false,
   ariaLabel,
@@ -45,8 +43,6 @@ export function InlineSelect({
   /** Long copy the control speaks through its tooltip. */
   title?: string;
 }) {
-  const focusClass = focusColorMap[accentColor];
-
   return (
     <div className={`relative ${className}`}>
       <select
@@ -56,8 +52,7 @@ export function InlineSelect({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
-        // design-lint-disable-next-line no-bare-outline-none -- the accent focus border is focusClass on this same line, a focus:border-* class per accent
-        className={`w-full bg-ps-surface-panel border border-ps-edge rounded-ps-md px-3 py-2 pr-8 text-body text-ps-text-primary transition-colors font-mono appearance-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${focusClass}`}
+        className={`w-full bg-ps-surface-panel border border-ps-edge rounded-ps-md px-3 py-2 pr-8 text-body text-ps-text-primary transition-colors font-mono appearance-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed`}
       >
         {options.map((opt) => (
           <option key={opt.value} value={opt.value} className="bg-ps-surface-panel">

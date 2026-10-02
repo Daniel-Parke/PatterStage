@@ -16,7 +16,7 @@
 
 import { useCallback } from "react";
 
-import type { ToastType } from "@/components/ui/Toast";
+import type { FeedbackContextValue } from "@/components/ui/feedback-context";
 import { runWrite } from "@/lib/api/api-write";
 import type { useMissionComposer } from "@/hooks/useMissionComposer";
 import type { useMissionTemplatesState } from "@/hooks/useMissionTemplatesState";
@@ -24,13 +24,13 @@ import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
 import type { MissionTemplate } from "@/components/missions/TemplateModals";
 import { buildTemplatePayload } from "@/lib/missions/mission-form-utils";
 
-type ToastFn = (message: string, type?: ToastType) => void;
+type ToastFn = FeedbackContextValue["showToast"];
 
 export interface UseMissionTemplateActionsArgs {
   composer: ReturnType<typeof useMissionComposer>;
   templateState: ReturnType<typeof useMissionTemplatesState>;
   templates: MissionTemplate[];
-  fetchData: () => Promise<void>;
+  fetchData: (afterWrite?: boolean) => Promise<void>;
   /** Apply a template to the form + open the composer (shared with the deep link). */
   loadAndApplyTemplate: (
     t: MissionTemplate,
@@ -103,7 +103,7 @@ export function useMissionTemplateActions({
         errorMessage: "Failed to save template",
         onSuccess: () => {
           postSuccess();
-          void fetchData();
+          void fetchData(true);
         },
       });
     },
@@ -240,7 +240,7 @@ export function useMissionTemplateActions({
       errorMessage: "Failed to delete template",
       onSuccess: () => {
         closeTemplateManager();
-        void fetchData();
+        void fetchData(true);
       },
     });
   }, [showToast, fetchData, closeTemplateManager]);

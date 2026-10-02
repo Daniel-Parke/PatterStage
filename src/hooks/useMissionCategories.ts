@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { setErrorFromCaught } from "@/lib/api/api-fetch";
 import { runWrite } from "@/lib/api/api-write";
 import type { ManagedCategory } from "@/components/missions/CategoryManagerModal";
@@ -8,7 +8,7 @@ import type { ManagedCategory } from "@/components/missions/CategoryManagerModal
 type ToastFn = (message: string, type?: "success" | "error" | "info") => void;
 
 export interface UseMissionCategoriesOptions {
-  fetchCategories: () => Promise<ManagedCategory[]>;
+  fetchCategories: (afterWrite?: boolean) => Promise<ManagedCategory[]>;
   showToast: ToastFn;
   onMissionsReassigned: () => Promise<unknown>;
 }
@@ -28,23 +28,25 @@ export function useMissionCategories({
     null,
   );
   const [showCategoryManager, setShowCategoryManager] = useState(false);
+  const version = useRef(0);
+  useEffect(() => () => { version.current++; }, []);
 
-  const loadCategories = useCallback(async () => {
+  const loadCategories = useCallback(async (afterWrite = false) => {
+    const request = ++version.current;
     try {
-      const list = await fetchCategories();
+      const list = await fetchCategories(afterWrite);
+      if (request !== version.current) return;
       setCategories(list);
       setCategoriesLoadError(null);
     } catch (error) {
-      // One message for the banner and the toast: the banner stays, the toast
-      // says it happened.
-      const msg = setErrorFromCaught(
+      if (request !== version.current) return;
+      setErrorFromCaught(
         setCategoriesLoadError,
         error,
         "Failed to load categories",
       );
-      showToast(msg, "error");
     }
-  }, [fetchCategories, showToast]);
+  }, [fetchCategories]);
 
   const handleCreateCategory = useCallback(
     async (name: string, color?: string): Promise<string | null> => {
@@ -54,7 +56,7 @@ export function useMissionCategories({
         body: { name, color },
         successMessage: `Category "${name}" created`,
         errorMessage: "Failed to create category",
-        onSuccess: loadCategories,
+        onSuccess: () => loadCategories(true),
       });
       return res?.data?.category?.id ?? null;
     },
@@ -70,7 +72,7 @@ export function useMissionCategories({
         body: { id, ...patch },
         successMessage: "Category updated",
         errorMessage: "Failed to update category",
-        onSuccess: loadCategories,
+        onSuccess: () => loadCategories(true),
       });
       return res !== undefined;
     },
@@ -90,7 +92,7 @@ export function useMissionCategories({
         // The catalogue, and the missions and templates the delete may have
         // moved, in parallel.
         onSuccess: async () => {
-          await Promise.allSettled([loadCategories(), onMissionsReassigned()]);
+          await Promise.allSettled([loadCategories(true), onMissionsReassigned()]);
         },
       });
       return res !== undefined;

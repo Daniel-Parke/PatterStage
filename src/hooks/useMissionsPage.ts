@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// useMissionsPage — composition root for /orchestration/missions
+// useMissionsPage — composition root for /work/missions
 // ═══════════════════════════════════════════════════════════════
 //
 // This hook owns almost nothing. It holds the two pieces of state that
@@ -103,6 +103,11 @@ export function useMissionsPage() {
     templates: data.templates,
     fetchData: data.fetchData,
     showCreate,
+    loadMissions: data.loadMissions,
+    loadTemplates: data.loadTemplates,
+    templatesLoadError: data.templatesLoadError,
+    fetchDetail: data.fetchDetail,
+    detailLoadError: data.detailLoadError,
     setShowCreate,
     editingId,
     setEditingId,

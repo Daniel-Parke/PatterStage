@@ -103,8 +103,8 @@ function useQuestToasts(
  * the root layout, which is a server component and cannot hold client state
  * itself; the feedback provider is the client boundary the layout already
  * mounts, and it reads the stats poll, so the client lives here (C6, T-0143).
- * A component rendered under a test's own QueryClientProvider gets that one:
- * this provider only mounts a client when none is above it.
+ * Each mounted FeedbackProvider owns its query client, even inside another
+ * QueryClientProvider. Tests that need that outer client render without this shell.
  */
 export function FeedbackProvider({ children }: { children: ReactNode }) {
   const [client] = useState(

@@ -7,13 +7,15 @@
 
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
-import type { ToastType } from "@/components/ui/Toast";
-import { loadHindsightList } from "@/lib/memory/hindsight-client";
+import { useState, useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import type { FeedbackContextValue } from "@/components/ui/feedback-context";
+import { apiQueryKey, useApiResource } from "@/hooks/useApiResource";
+import { selectHindsightData } from "@/lib/memory/hindsight-client";
 import { runWrite } from "@/lib/api/api-write";
 import type { Tab } from "./types";
 
-type ShowToast = (message: string, type?: ToastType) => void;
+type ShowToast = FeedbackContextValue["showToast"];
 
 const HINDSIGHT_URL = "/api/memory/hindsight";
 
@@ -47,9 +49,19 @@ export function useHindsightCrudTab<TItem extends { id: string }, TForm>(
   config: HindsightCrudConfig<TItem, TForm>,
 ) {
   const { tab, listKey, deleteType, noun, emptyForm } = config;
+  const client = useQueryClient();
+  const endpoint = `${HINDSIGHT_URL}?action=${tab}`;
 
-  const [items, setItems] = useState<TItem[]>([]);
-  const [loading, setLoading] = useState(false);
+  const read = useApiResource<TItem[]>(endpoint, {
+    enabled: activeTab === tab,
+    select: data => selectHindsightData<Record<string, TItem[]>>(data)?.[listKey],
+    errorMessage: `Failed to load ${tab}`,
+  });
+  const items = read.data ?? [];
+  // Keep the public load promise and busy state aligned through the cache update.
+  const [reloading, setReloading] = useState(false);
+  const loading = read.isFetching || reloading;
+  const { refetch } = read;
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState<TForm>(emptyForm);
   const [creating, setCreating] = useState(false);
@@ -58,12 +70,13 @@ export function useHindsightCrudTab<TItem extends { id: string }, TForm>(
   const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
-    await loadHindsightList<TItem>(tab, setLoading, listKey, setItems, showToast);
-  }, [tab, listKey, showToast]);
-
-  useEffect(() => {
-    if (activeTab === tab) void load();
-  }, [activeTab, tab, load]);
+    setReloading(true);
+    try {
+      // Refetch alone can join an initial read that predates a confirmed write.
+      await client.cancelQueries({ queryKey: apiQueryKey(endpoint), exact: true });
+      await refetch(); // Query errors stay on the collection, not on the write.
+    } finally { setReloading(false); }
+  }, [client, endpoint, refetch]);
 
   const openModal = useCallback(() => setShowModal(true), [setShowModal]);
   const closeModal = useCallback(() => {
@@ -120,12 +133,13 @@ export function useHindsightCrudTab<TItem extends { id: string }, TForm>(
       body: { type: deleteType, id },
       successMessage: `${noun.title} deleted`,
       errorMessage: `Failed to delete ${noun.lower}`,
-      onSuccess: () => setItems((prev) => prev.filter((one) => one.id !== id)),
+      onSuccess: load,
     });
   };
 
   return {
     items,
+    error: read.error,
     loading,
     showModal,
     form,

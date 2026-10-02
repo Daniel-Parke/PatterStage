@@ -32,6 +32,8 @@ import { RUN_TONE_TEXT } from "@/components/missions/mission-page-constants";
 export interface MissionEditorPanelProps {
   detail: MissionDetail | null;
   detailLoading: boolean;
+  detailLoadError?: string | null;
+  onRetryDetail?: () => void;
   mission: MissionRow;
   categoryLabel?: string;
   promptCollapsed: boolean;
@@ -83,6 +85,8 @@ function MissionLiveProgress({ missionId }: { missionId: string }) {
 export default function MissionEditorPanel({
   detail,
   detailLoading,
+  detailLoadError,
+  onRetryDetail,
   mission,
   categoryLabel,
   promptCollapsed,
@@ -118,6 +122,7 @@ export default function MissionEditorPanel({
 
   return (
     <div className="border-t border-ps-edge-hairline px-3 py-3 bg-ps-surface-raised">
+      {detailLoadError && <LoadErrorBanner error={detailLoadError} onRetry={onRetryDetail} />}
       {detailLoading ? (
         <div className="flex items-center justify-center py-4">
           <Loader2 className="w-4 h-4 text-neon-cyan animate-spin" />

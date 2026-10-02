@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // Hindsight Memory Browser — Browse, search, and store memories
 // ═══════════════════════════════════════════════════════════════
-// Memories are fetched only when the user clicks Recall (action=recall), not on mount.
+// Recent memories load on mount; recall uses the last explicitly submitted query.
 // The three tab concerns are owned by their own hooks (useHindsightMemories /
 // useHindsightDirectives / useHindsightModels in ./hindsight/); this file is the
 // layout shell that wires them to the already-extracted tab + modal components.
@@ -17,6 +17,7 @@ import {
 import { SearchInput } from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
+import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import { useToast } from "@/components/ui/Toast";
 import { HINDSIGHT_DEFAULT_MAX_AGE_DAYS } from "@/lib/memory/hindsight-client";
 import type { HealthState, Tab } from "./hindsight/types";
@@ -49,7 +50,7 @@ export default function HindsightBrowser({ onHealthChange, reloadToken = 0 }: Hi
   // Each tab's state stays behind the hook that owns it. The shell used to
   // restate all three name lists as it destructured them, which is the
   // interface written twice and drifts a rename into three places.
-  const memory = useHindsightMemories(showToast);
+  const memory = useHindsightMemories(showToast, activeTab);
   const dirs = useHindsightDirectives(showToast, activeTab);
   const models = useHindsightModels(showToast, activeTab);
 
@@ -63,6 +64,16 @@ export default function HindsightBrowser({ onHealthChange, reloadToken = 0 }: Hi
   useEffect(() => {
     if (reloadToken > 0) void loadRecentMemories();
   }, [reloadToken, loadRecentMemories]);
+
+  const collectionError = activeTab === "memories" ? memory.error : activeTab === "directives" ? dirs.error : models.error;
+  const collectionMessage = collectionError && /^(fetch failed|failed to fetch)$/i.test(collectionError)
+    ? "Unable to load this memory collection. Retry when the connection is available."
+    : collectionError;
+  const retryCollection = () => {
+    if (activeTab === "memories") void memory.retry();
+    else if (activeTab === "directives") void dirs.loadDirectives();
+    else void models.loadModels();
+  };
 
   // ── Render ──
 
@@ -106,7 +117,7 @@ export default function HindsightBrowser({ onHealthChange, reloadToken = 0 }: Hi
       </div>
 
       {/* Memory insights — fresh/stale fact mix + tags for the loaded set */}
-      {!memory.loadingInitial && <MemoryInsights memories={memory.memories} hiddenStaleCount={memory.hiddenStaleCount} totalFacts={memory.totalFacts} />}
+      {!memory.loadingInitial && !memory.error && <MemoryInsights memories={memory.memories} hiddenStaleCount={memory.hiddenStaleCount} totalFacts={memory.totalFacts} />}
 
       {/* Reflect Result */}
       {memory.reflectResult && (
@@ -142,13 +153,14 @@ export default function HindsightBrowser({ onHealthChange, reloadToken = 0 }: Hi
       </div>
 
       {/* Tab Content */}
-      {activeTab === "memories" && (
+      {collectionMessage && <LoadErrorBanner error={collectionMessage} onRetry={retryCollection} />}
+      {activeTab === "memories" && (!collectionError || health?.available === false) && (
         <MemoryTab
           memories={memory.displayedMemories}
           loading={loading}
           loadingInitial={memory.loadingInitial}
           unreachable={health !== null && health.available === false}
-          activeQuery={search.trim() || null}
+          activeQuery={memory.submittedQuery}
           onClearQuery={() => {
             memory.setSearch("");
             void loadRecentMemories();
@@ -161,14 +173,14 @@ export default function HindsightBrowser({ onHealthChange, reloadToken = 0 }: Hi
           }}
         />
       )}
-      {activeTab === "directives" && (
+      {activeTab === "directives" && !collectionError && (
         <DirectivesTab
           directives={dirs.directives} loading={dirs.loadingDirectives}
           onCreateClick={dirs.openDirectiveModal} onRefresh={dirs.loadDirectives}
           onEdit={dirs.openEditDirective} onToggle={dirs.handleToggleDirective} onDelete={dirs.handleDeleteDirective}
         />
       )}
-      {activeTab === "mental-models" && (
+      {activeTab === "mental-models" && !collectionError && (
         <MentalModelsTab
           models={models.mentalModels} loading={models.loadingModels} refreshingModelId={models.refreshingModelId}
           onCreateClick={models.openModelModal} onRefresh={models.loadModels}

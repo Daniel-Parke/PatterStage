@@ -1,18 +1,13 @@
 // Story Weaver — Reader V2 (retry, edit chapter, continue story)
 //
-// Thin page shell. Story Weaver BEHAVIOUR is out of scope for T-0011 /
-// WO-0025, so nothing here changed: the loads, the auto-generate effect
-// and its failure ceiling, the retry/edit/continue calls and the
-// read-status bookkeeping are all as they were. Only the markup moved,
-// into src/modules/rec-room/components/ beside ChapterList and friends.
-//
-// OVER THE 350 TARGET, and why: all of the markup is out, and what is
-// left is the story API calls, that effect and the reader's own state.
-// Reshaping any of it would be a behaviour change the programme rules
-// out, so the file stops at the presentation boundary, inside the 400
-// ceiling, rather than being forced under 350.
+// Cached reads and explicit mutations share the client query layer (T-0190).
+// The reader retains its own write intent, abort controllers, failure ceiling
+// and overlay completion state. Presentation lives beside ChapterList.
 "use client";
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { publishApiResource, useApiResource } from "@/hooks/useApiResource";
+import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import { useRouter, useParams } from "next/navigation";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageTitle from "@/components/layout/PageTitle";
@@ -32,9 +27,34 @@ export default function StoryReaderPage() {
   const router = useRouter();
   const params = useParams();
   const storyId = params.id as string;
+  const client = useQueryClient();
 
   const [story, setStory] = useState<StoryState | null>(null);
-  const [loading, setLoading] = useState(true);
+  const storyRef = useRef(story);
+  storyRef.current = story;
+  const activeStoryId = useRef(storyId);
+  activeStoryId.current = storyId;
+  const titleRepair = useRef({ storyId, attempted: false, active: true });
+  if (titleRepair.current.storyId !== storyId) titleRepair.current = { storyId, attempted: false, active: true };
+  useEffect(() => {
+    const owner = titleRepair.current;
+    owner.active = true;
+    return () => { owner.active = false; };
+  }, [storyId]);
+  const publishStory = useCallback(async (update: StoryState | ((current: StoryState) => StoryState)) => {
+    await publishApiResource(client, "/api/stories", {
+      body: { action: "load", storyId },
+      responseBody: current => {
+        const confirmed = typeof update === "function" ? update((current ?? storyRef.current) as StoryState) : update;
+        if (!confirmed || confirmed.id !== storyId || typeof confirmed.title !== "string" || !Array.isArray(confirmed.chapters)) {
+          throw new Error("Story write could not be confirmed");
+        }
+        if (activeStoryId.current === storyId) storyRef.current = confirmed;
+        return { data: confirmed };
+      },
+    });
+    if (activeStoryId.current === storyId) setStory(storyRef.current);
+  }, [client, storyId]);
   const [currentChapter, setCurrentChapter] = useState(1);
   /**
    * How many billed calls are on the wire.
@@ -63,7 +83,6 @@ export default function StoryReaderPage() {
   const [bibleOpen, setBibleOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   /** What this story has cost so far. Null while unknown, never assumed zero. */
-  const [spend, setSpend] = useState<SpendWindowSource | null>(null);
 
   // Edit chapter state
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -94,56 +113,56 @@ export default function StoryReaderPage() {
 
   const [settings, setSettings] = useState<ReadingSettings>(DEFAULT_SETTINGS);
   useEffect(() => { setSettings(loadSettings()); }, []);
-  const loadStory = useCallback(async () => {
-    try {
-      const res = await fetch("/api/stories", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "load", storyId }),
-      });
-      const d = await res.json();
-      if (!d.data) return;
-      const loaded = d.data as StoryState;
-      setStory(loaded);
-
-      // Backfill chapter titles for stories generated before safeArc was fixed.
-      // Chapters with placeholder "Chapter N" titles need re-extracting from content.
-      const hasPlaceholders = loaded.chapters?.some(
-        (c: Chapter) => c.status === "complete" && c.title === `Chapter ${c.number}`
-      );
-      if (hasPlaceholders) {
-        try {
-          const syncRes = await fetch("/api/stories", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ action: "sync-titles", storyId }),
-          });
-          const syncData = await syncRes.json();
-          if (syncData.data?.story) {
-            setStory(syncData.data.story as StoryState);
-          }
-        } catch { /* non-fatal */ }
-      }
-    } catch {} finally { setLoading(false); }
-  }, [storyId]);
-
-  useEffect(() => { loadStory(); }, [loadStory]);
-
-  const loadSpend = useCallback(async () => {
-    try {
-      const res = await fetch("/api/stories", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "spend", storyId }),
-      });
-      const d = await res.json();
-      setSpend((d.data?.spend as SpendWindowSource | undefined) ?? null);
-    } catch {
-      // A figure that will not load must not take the story down with it. The
-      // note hides itself rather than drawing a zero nothing measured.
-      setSpend(null);
+  // Writes retain the original fetch transport: no new deadline on billed work.
+  const { mutateAsync: writeStory } = useMutation({
+    retry: false,
+    mutationFn: (options: RequestInit) => fetch("/api/stories", options),
+  });
+  const storyRead = useApiResource<StoryState>("/api/stories", {
+    body: { action: "load", storyId },
+    select: (data) => data && typeof data === "object" && Array.isArray((data as StoryState).chapters) ? data as StoryState : undefined,
+    errorMessage: "Failed to load story",
+  });
+  const spendRead = useApiResource<SpendWindowSource | null>("/api/stories", {
+    body: { action: "spend", storyId },
+    select: (data) => (data as { spend?: SpendWindowSource } | null)?.spend ?? null,
+  });
+  const spend = spendRead.error ? null : spendRead.data;
+  const { refetch: refetchStory } = storyRead;
+  const { refetch: refetchSpend } = spendRead;
+  const loadStory = useCallback(async () => { await refetchStory(); }, [refetchStory]);
+  const loadSpend = useCallback(async () => { await refetchSpend(); }, [refetchSpend]);
+  useEffect(() => {
+    const loaded = storyRead.data;
+    if (!loaded) {
+      setStory(previous => previous?.id === storyId ? previous : null);
+      return;
     }
-  }, [storyId]);
+    setStory(loaded);
+    const owner = titleRepair.current;
+    // Historical title repair is nonfatal and never starts generation.
+    if (!titleRepair.current.attempted && loaded.chapters.some(c => c.status === "complete" && c.title === `Chapter ${c.number}`)) {
+      titleRepair.current.attempted = true;
+      void writeStory({ method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "sync-titles", storyId }),
+      }).then(async response => {
+        const result = await response.json();
+        if (owner.active && titleRepair.current === owner && response.ok && !result.error && result.data?.story?.id === storyId && Array.isArray(result.data.story.chapters)) {
+          const repaired = result.data.story as StoryState;
+          await publishStory(current => ({
+            ...current,
+            ...(current.storyArc === loaded.storyArc ? { storyArc: repaired.storyArc } : {}),
+            chapters: current.chapters.map(chapter => {
+              const original = loaded.chapters.find(previous => previous.number === chapter.number);
+              const confirmed = repaired.chapters.find(next => next.number === chapter.number);
+              return original?.title === chapter.title && typeof confirmed?.title === "string"
+                ? { ...chapter, title: confirmed.title } : chapter;
+            }),
+          }));
+        }
+      }).catch(() => { /* non-fatal */ });
+    }
+  }, [storyRead.data, storyId, writeStory, publishStory]);
 
   // Re-read the figure whenever a paid operation settles, not just on mount.
   // A cost read once is a cost that is always one chapter out of date, and out
@@ -160,15 +179,16 @@ export default function StoryReaderPage() {
     callStarted();
     setError(null);
     try {
-      const res = await fetch("/api/stories", {
+      const res = await writeStory({
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "generate-chapter", storyId }),
         signal: controller.signal,
       });
       const d = await res.json();
+      if (!res.ok || d?.error || !Array.isArray(d?.data?.story?.chapters)) throw new Error(d?.error || "Story write could not be confirmed");
       if (d.data?.story) {
         autoFailuresRef.current = 0; // progress: re-arm auto-generation
-        setStory(d.data.story as StoryState);
+        await publishStory(d.data.story as StoryState);
       } else if (d.error) {
         autoFailuresRef.current += 1;
         setError(d.error);
@@ -193,7 +213,7 @@ export default function StoryReaderPage() {
       inFlightRef.current.delete(controller);
       callSettled();
     }
-  }, [story, storyId, loadStory, callStarted, callSettled]);
+  }, [story, storyId, loadStory, callStarted, callSettled, writeStory, publishStory]);
 
   /** Write exactly the next pending chapter, once. Does not arm the loop. */
   const writeNextChapter = useCallback(() => { void generateNext(); }, [generateNext]);
@@ -267,13 +287,14 @@ export default function StoryReaderPage() {
     inFlightRef.current.add(controller);
     callStarted();
     try {
-      const res = await fetch("/api/stories", {
+      const res = await writeStory({
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "retry-chapter", storyId, chapterNumber }),
         signal: controller.signal,
       });
       const d = await res.json();
-      if (d.data?.story) setStory(d.data.story as StoryState);
+      if (!res.ok || d?.error || !Array.isArray(d?.data?.story?.chapters)) throw new Error(d?.error || "Story write could not be confirmed");
+      if (d.data?.story) await publishStory(d.data.story as StoryState);
       else if (d.error) setError(d.error);
     } catch (e) {
       // A Stop is not a failure. It gives the controls back rather than raising
@@ -290,7 +311,7 @@ export default function StoryReaderPage() {
       inFlightRef.current.delete(controller);
       callSettled();
     }
-  }, [storyId, loadStory, callStarted, callSettled]);
+  }, [storyId, loadStory, callStarted, callSettled, writeStory, publishStory]);
 
   // Edit chapter with prompt
   const handleEditChapter = useCallback(async () => {
@@ -299,7 +320,7 @@ export default function StoryReaderPage() {
     setEditing(true);
     setError(null);
     try {
-      const res = await fetch("/api/stories", {
+      const res = await writeStory({
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "edit-chapter",
@@ -311,8 +332,9 @@ export default function StoryReaderPage() {
         }),
       });
       const d = await res.json();
+      if (!res.ok || d?.error || !Array.isArray(d?.data?.story?.chapters)) throw new Error(d?.error || "Story write could not be confirmed");
       if (d.data?.story) {
-        setStory(d.data.story as StoryState);
+        await publishStory(d.data.story as StoryState);
         setEditDone(true);
       } else if (d.error) {
         setError(d.error);
@@ -322,7 +344,7 @@ export default function StoryReaderPage() {
       setError(e instanceof Error ? e.message : "Edit failed");
       setEditDone(true);
     }
-  }, [storyId, editChapterNum, editPrompt, editWordCount, editCount]);
+  }, [storyId, editChapterNum, editPrompt, editWordCount, editCount, writeStory, publishStory]);
 
   // Continue story
   const handleContinue = useCallback(async () => {
@@ -331,7 +353,7 @@ export default function StoryReaderPage() {
     setContinuing(true);
     setError(null);
     try {
-      const res = await fetch("/api/stories", {
+      const res = await writeStory({
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "continue",
@@ -342,8 +364,9 @@ export default function StoryReaderPage() {
         }),
       });
       const d = await res.json();
+      if (!res.ok || d?.error || !Array.isArray(d?.data?.chapters)) throw new Error(d?.error || "Story write could not be confirmed");
       if (d.data) {
-        setStory(d.data as StoryState);
+        await publishStory(d.data as StoryState);
         setContinueDone(true);
       } else if (d.error) {
         setError(d.error);
@@ -353,7 +376,7 @@ export default function StoryReaderPage() {
       setError(e instanceof Error ? e.message : "Continue failed");
       setContinueDone(true);
     }
-  }, [storyId, continueDirection, continueCount, continueWordCount]);
+  }, [storyId, continueDirection, continueCount, continueWordCount, writeStory, publishStory]);
 
   const openEditModal = (chapterNumber: number) => {
     setEditChapterNum(chapterNumber);
@@ -363,7 +386,7 @@ export default function StoryReaderPage() {
 
   const saveReadStatus = useCallback(async (chapterNumber: number): Promise<boolean> => {
     try {
-      const response = await fetch("/api/stories", {
+      const response = await writeStory({
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "update", storyId, chapters: [{ number: chapterNumber, readStatus: "read" }] }),
       });
@@ -379,12 +402,19 @@ export default function StoryReaderPage() {
         setError(typeof result?.error === "string" ? result.error : "Could not confirm chapter read-status save. Please try again.");
         return false;
       }
+      // The update may confirm only one chapter. Preserve the complete load
+      // envelope and merge only the field this request actually confirmed.
+      if (storyRef.current && activeStoryId.current === storyId) {
+        await publishStory(current => ({ ...current, chapters: current.chapters.map(chapter =>
+          chapter.number === chapterNumber ? { ...chapter, readStatus: "read" } : chapter,
+        ) }));
+      }
       return true;
     } catch {
       setError("Could not save chapter read status. Please try again.");
       return false;
     }
-  }, [storyId]);
+  }, [storyId, writeStory, publishStory]);
 
   const handleNextChapter = useCallback(async () => {
     if (!story) return;
@@ -449,7 +479,9 @@ export default function StoryReaderPage() {
     setEditDone(false);
   }, []);
 
-  if (loading) return <ReaderLoading />;
+  if (storyRead.isLoading && !story) return <ReaderLoading />;
+
+  if (storyRead.error && !story) return <LoadErrorBanner error={storyRead.error} onRetry={() => void loadStory()} />;
 
   if (!story) return <ReaderNotFound onBack={() => router.push("/recroom/story-weaver")} />;
 
@@ -458,6 +490,7 @@ export default function StoryReaderPage() {
   return (
     <AppPageShell density="pane" variant="scanlines" className="flex flex-col">
       <PageTitle title={story?.title || "Story Weaver"} />
+      {storyRead.error && <LoadErrorBanner error={storyRead.error} onRetry={() => void loadStory()} />}
       <StoryReaderOverlays
         story={story}
         bibleOpen={bibleOpen}

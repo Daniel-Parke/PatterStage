@@ -15,9 +15,9 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { Dispatch, MouseEvent, RefObject, SetStateAction } from "react";
+import type { Dispatch, MouseEvent, RefObject, MutableRefObject, SetStateAction } from "react";
 
-import type { ToastType } from "@/components/ui/Toast";
+import type { FeedbackContextValue } from "@/components/ui/feedback-context";
 import type { ChatConversation, ChatMessage } from "@/types/chat";
 import { useApiResource } from "@/hooks/useApiResource";
 import {
@@ -31,7 +31,7 @@ import {
 } from "@/lib/chat/chat-utils";
 import { stopEvent, type PendingApproval } from "@/hooks/chat-local-message";
 
-type ToastFn = (message: string, type?: ToastType) => void;
+type ToastFn = FeedbackContextValue["showToast"];
 
 export interface UseChatConversationsArgs {
   /** Tear down the live run-event stream / fast-mode fetch. */
@@ -46,6 +46,8 @@ export interface UseChatConversationsArgs {
   /** The model a newly created conversation is stamped with. */
   model: string;
   setInput: Dispatch<SetStateAction<string>>;
+  inputVersion: MutableRefObject<number>;
+  streamGenRef: MutableRefObject<number>;
   inputRef: RefObject<HTMLTextAreaElement | null>;
   showToast: ToastFn;
 }
@@ -57,6 +59,8 @@ export function useChatConversations({
   setPendingApproval,
   model,
   setInput,
+  inputVersion,
+  streamGenRef,
   inputRef,
   showToast,
 }: UseChatConversationsArgs) {
@@ -71,7 +75,13 @@ export function useChatConversations({
     errorMessage: "Failed to load conversations",
   });
   const [conversations, setConversations] = useState<ChatConversation[]>([]);
-  const [activeId, setActiveId] = useState<string | null>(null);
+  const [activeId, setActiveIdState] = useState<string | null>(null);
+  const activeIdRef = useRef<string | null>(null);
+  const setActiveId = useCallback<Dispatch<SetStateAction<string | null>>>((update) => {
+    const id = typeof update === "function" ? update(activeIdRef.current) : update;
+    activeIdRef.current = id;
+    setActiveIdState(id);
+  }, []);
   // The list read's failure, kept apart from the list: the sidebar rendered
   // "No conversations yet" over a 500 because the reader swallowed the
   // failure into an empty array (T-0096, the read contract).
@@ -86,7 +96,7 @@ export function useChatConversations({
     if (seededRef.current) return;
     seededRef.current = true;
     if (list.data.length > 0) setActiveId(list.data[0].id);
-  }, [list.data]);
+  }, [list.data, setActiveId]);
 
   const { refetch: refetchList } = list;
   const loadConversations = useCallback(async () => {
@@ -94,17 +104,22 @@ export function useChatConversations({
     return answer.data?.value ?? ([] as ChatConversation[]);
   }, [refetchList]);
 
-  const refreshActiveConversation = useCallback(async () => {
-    if (!activeId) return;
-    const loaded = await fetchConversation(activeId);
+  const refreshActiveConversation = useCallback(async (gen = streamGenRef.current, id = activeId) => {
+    if (!id || gen !== streamGenRef.current) return;
+    const loaded = await fetchConversation(id);
     // A reconciliation read that failed leaves the transcript as it is; the
     // stream's own terminal state already says what happened.
-    if (loaded.ok && loaded.messages) setMessages(loaded.messages);
-  }, [activeId, setMessages]);
+    if (gen === streamGenRef.current && loaded.ok && loaded.messages) setMessages(loaded.messages);
+  }, [activeId, setMessages, streamGenRef]);
 
   // ── New conversation ────────────────────────────────────────
   const handleNewChat = useCallback(async () => {
     closeStream();
+    const gen = streamGenRef.current;
+    const draftVersion = inputVersion.current;
+    seededRef.current = true;
+    setIsStreaming(false);
+    setPendingApproval(null);
     // Reuse an existing blank "New Chat" instead of creating a duplicate.
     // Sending a message auto-titles the conversation, so a still-"New Chat"
     // entry is an unused blank one — and creating a second collides on the
@@ -119,25 +134,28 @@ export function useChatConversations({
     }
     const conversation = await createConversationApi({ title: "New Chat", model });
     if (!conversation) {
-      showToast("Failed to start a new conversation", "error");
+      if (gen === streamGenRef.current) showToast("Failed to start a new conversation", "error");
       return;
     }
     setConversations((prev) => [conversation, ...prev]);
+    if (gen !== streamGenRef.current) return;
     setActiveId(conversation.id);
     setMessages([]);
-    setInput("");
+    if (draftVersion === inputVersion.current) setInput("");
     inputRef.current?.focus();
-  }, [closeStream, conversations, model, showToast, setMessages, setInput, inputRef]);
+  }, [closeStream, conversations, model, showToast, setMessages, setInput, inputRef, inputVersion, streamGenRef, setIsStreaming, setPendingApproval, setActiveId]);
 
   const handleSelectConversation = useCallback(
     (id: string) => {
       if (id === activeId) return;
       closeStream();
+      seededRef.current = true;
       setIsStreaming(false);
       setPendingApproval(null);
+      setMessages([]);
       setActiveId(id);
     },
-    [activeId, closeStream, setIsStreaming, setPendingApproval],
+    [activeId, closeStream, setIsStreaming, setPendingApproval, setMessages, setActiveId],
   );
 
   // ── Delete conversation ─────────────────────────────────────
@@ -150,14 +168,20 @@ export function useChatConversations({
         showToast(error || "Failed to delete conversation", "error");
         return;
       }
+      if (activeIdRef.current === id) {
+        closeStream();
+        setIsStreaming(false);
+        setPendingApproval(null);
+        setMessages([]);
+      }
       setConversations((prev) => {
         const remaining = prev.filter((c) => c.id !== id);
-        if (id === activeId) setActiveId(remaining.length > 0 ? remaining[0].id : null);
+        setActiveId((current) => current === id ? (remaining[0]?.id ?? null) : current);
         return remaining;
       });
       showToast("Conversation deleted", "success");
     },
-    [activeId, closeStream, showToast],
+    [activeId, closeStream, showToast, setIsStreaming, setPendingApproval, setMessages, setActiveId],
   );
 
   // ── Download conversation ───────────────────────────────────

@@ -18,7 +18,7 @@
 
 import { useCallback, useState, type Dispatch, type SetStateAction } from "react";
 
-import type { ToastType } from "@/components/ui/Toast";
+import type { FeedbackContextValue } from "@/components/ui/feedback-context";
 import { API_FETCH_BULK_TIMEOUT_MS, apiFetch, messageFromError } from "@/lib/api/api-fetch";
 import { runWrite, type RunWriteOptions } from "@/lib/api/api-write";
 import type { ModelEditorRecord } from "@/components/models/ModelEditor";
@@ -28,7 +28,7 @@ import { pluralise } from "@/lib/utils";
 
 import { driftLineKey, type ApiModel, type ApiCredential, type DriftLine } from "@/components/models/types";
 
-type ToastFn = (message: string, type?: ToastType) => void;
+type ToastFn = FeedbackContextValue["showToast"];
 
 export interface UseModelActionsArgs {
   loadAll: () => Promise<void>;

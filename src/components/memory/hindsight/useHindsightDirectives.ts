@@ -7,7 +7,7 @@
 
 "use client";
 
-import type { ToastType } from "@/components/ui/Toast";
+import type { FeedbackContextValue } from "@/components/ui/feedback-context";
 import { parseOptionalTagsInput, parseTagsInput } from "@/lib/memory/hindsight-tag-input";
 import { runWrite } from "@/lib/api/api-write";
 import { useHindsightCrudTab, type HindsightCrudConfig } from "./useHindsightCrudTab";
@@ -50,7 +50,7 @@ const DIRECTIVES_TAB: HindsightCrudConfig<Directive, DirForm> = {
   }),
 };
 
-type ShowToast = (message: string, type?: ToastType) => void;
+type ShowToast = FeedbackContextValue["showToast"];
 
 export function useHindsightDirectives(showToast: ShowToast, activeTab: Tab) {
   const dirs = useHindsightCrudTab<Directive, DirForm>(showToast, activeTab, DIRECTIVES_TAB);
@@ -67,6 +67,7 @@ export function useHindsightDirectives(showToast: ShowToast, activeTab: Tab) {
   };
 
   return {
+    error: dirs.error,
     directives: dirs.items,
     loadingDirectives: dirs.loading,
     showDirectiveModal: dirs.showModal,

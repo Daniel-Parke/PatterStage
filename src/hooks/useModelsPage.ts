@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// useModelsPage — composition root for /config/models
+// useModelsPage — composition root for /agent/models
 // ═══════════════════════════════════════════════════════════════
 //
 // Four slices, composed in dependency order:

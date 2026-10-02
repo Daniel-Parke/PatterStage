@@ -28,7 +28,7 @@ import { parseMissionPrompt } from "@/lib/missions/build-mission-prompt";
 import type { MissionFormState } from "@/components/missions/MissionCreateForm";
 import type { MissionTemplate } from "@/components/missions/TemplateModals";
 import { splitGoals } from "@/lib/missions/mission-form-utils";
-import { scheduleForDispatch } from "@/lib/ui/dispatch-mode";
+import { isDispatchMode, scheduleForDispatch, type DispatchMode } from "@/lib/ui/dispatch-mode";
 import { isMissionQueuedForRun } from "@/lib/missions/mission-board";
 import {
   getCategoryIdFromTemplate,
@@ -62,7 +62,7 @@ export function useMissionComposer({ showCreate, editingId }: UseMissionComposer
   const [newOutputFormat, setNewOutputFormat] = useState("");
   const [newConstraints, setNewConstraints] = useState("");
   const [dispatchAcknowledged, setDispatchAcknowledged] = useState(false);
-  const [newDispatch, setNewDispatch] = useState<"save" | "now" | "cron" | "queue">(
+  const [newDispatch, setNewDispatch] = useState<DispatchMode>(
     "save",
   );
   const [newSchedule, setNewSchedule] = useState(DEFAULT_SCHEDULE);
@@ -297,10 +297,10 @@ export function useMissionComposer({ showCreate, editingId }: UseMissionComposer
       if (typeof tm === "number" && Number.isFinite(tm)) {
         setNewTimeout(tm);
       }
-      if (t.dispatchMode) {
-        setNewDispatch(t.dispatchMode as "save" | "now" | "cron" | "queue");
-      }
+      const invalidMode = t.dispatchMode != null && !isDispatchMode(t.dispatchMode);
+      if (isDispatchMode(t.dispatchMode)) setNewDispatch(t.dispatchMode);
       if (t.schedule) setNewSchedule(t.schedule);
+      return invalidMode ? "Template dispatch mode is invalid. The previous valid mode has been retained." : null;
     },
     [setModelAndProvider],
   );

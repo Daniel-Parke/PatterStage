@@ -27,9 +27,10 @@
 // is awaited before busy clears so a spinner outlives the reload.
 
 import type { ToastType } from "@/components/ui/Toast";
-import { apiFetch, messageFromError } from "@/lib/api/api-fetch";
+import type { FeedbackContextValue } from "@/components/ui/feedback-context";
+import { apiFetch, messageFromError, safeApiCall, type ApiFetchOptions, type SafeApiCallResult } from "@/lib/api/api-fetch";
 
-type ShowToastFn = (message: string, type?: ToastType) => void;
+type ShowToastFn = FeedbackContextValue["showToast"];
 
 /** What to say on success: the words, or the words with their own tone. */
 type WriteToast = string | { message: string; type: ToastType };
@@ -48,8 +49,8 @@ export interface RunWriteOptions<T = unknown> {
    * method and body.
    */
   request?: () => Promise<T>;
-  /** The success, as words or as a function of the response. */
-  successMessage: WriteToast | ((data: T) => WriteToast);
+  /** Success feedback; null when the caller owns its presentation. */
+  successMessage: WriteToast | null | ((data: T) => WriteToast);
   /** The failure, when the throw carries no words of its own. */
   errorMessage: string;
   /** Called with true before the call and false after, whatever happened. */
@@ -124,7 +125,7 @@ export async function runWrite<T = unknown>({
     }
     const said = typeof successMessage === "function" ? successMessage(data) : successMessage;
     if (typeof said === "string") showToast(said, "success");
-    else showToast(said.message, said.type);
+    else if (said) showToast(said.message, said.type);
     if (onSuccess) await onSuccess(data);
     return data;
   } catch (err) {
@@ -134,4 +135,27 @@ export async function runWrite<T = unknown>({
   } finally {
     setBusy(false);
   }
+}
+
+/** For transports whose caller owns feedback and needs the original status/body. */
+export async function runWriteResult<T = unknown>(
+  url: string,
+  options: Omit<ApiFetchOptions, "body" | "method"> & {
+    method: "POST" | "PUT" | "PATCH" | "DELETE";
+    body?: unknown;
+  },
+): Promise<SafeApiCallResult<T>> {
+  let result: SafeApiCallResult<T> = { ok: false, error: "Request failed" };
+  await runWrite({
+    request: async () => {
+      result = await safeApiCall<T>(url, options);
+      if (!result.ok) throw new Error(result.error ?? "Request failed");
+      return result;
+    },
+    showToast: () => undefined,
+    successMessage: null,
+    errorMessage: "Request failed",
+    checkSuccess: false,
+  });
+  return result;
 }

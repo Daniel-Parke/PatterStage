@@ -7,7 +7,7 @@
 "use client";
 
 import { useState } from "react";
-import type { ToastType } from "@/components/ui/Toast";
+import type { FeedbackContextValue } from "@/components/ui/feedback-context";
 import { parseOptionalTagsInput, parseTagsInput } from "@/lib/memory/hindsight-tag-input";
 import { runWrite } from "@/lib/api/api-write";
 import { useHindsightCrudTab, type HindsightCrudConfig } from "./useHindsightCrudTab";
@@ -41,7 +41,7 @@ const MODELS_TAB: HindsightCrudConfig<MentalModel, ModelForm> = {
   formOf: (m) => ({ name: m.name, query: m.source_query, tags: m.tags.join(", ") }),
 };
 
-type ShowToast = (message: string, type?: ToastType) => void;
+type ShowToast = FeedbackContextValue["showToast"];
 
 export function useHindsightModels(showToast: ShowToast, activeTab: Tab) {
   const models = useHindsightCrudTab<MentalModel, ModelForm>(showToast, activeTab, MODELS_TAB);
@@ -60,6 +60,7 @@ export function useHindsightModels(showToast: ShowToast, activeTab: Tab) {
   };
 
   return {
+    error: models.error,
     mentalModels: models.items,
     loadingModels: models.loading,
     showModelModal: models.showModal,

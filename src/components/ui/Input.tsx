@@ -14,7 +14,6 @@ export function SearchInput({
   value,
   onChange,
   placeholder = "Search...",
-  accentColor = "cyan",
   ariaLabel,
   onSubmit,
   className = "",
@@ -45,14 +44,6 @@ export function SearchInput({
    */
   onSubmit?: () => void;
 }) {
-  const focusBorder: Record<string, string> = {
-    cyan: "",
-    purple: "",
-    green: "",
-    pink: "",
-    orange: "",
-  };
-
   return (
     <div className="relative">
       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ps-text-muted" />
@@ -69,8 +60,7 @@ export function SearchInput({
         }
         aria-label={ariaLabel ?? placeholder ?? "Search"}
         placeholder={placeholder}
-        // design-lint-disable-next-line no-bare-outline-none -- the accent focus border comes from focusBorder on this same line; every entry is a focus:border-* class
-        className={`w-full bg-ps-surface-panel border border-ps-edge rounded-ps-md pl-10 pr-4 py-2.5 text-body text-ps-text-primary placeholder-ps-text-muted transition-colors font-mono ${focusBorder[accentColor] || focusBorder.cyan} ${className}`}
+        className={`w-full bg-ps-surface-panel border border-ps-edge rounded-ps-md pl-10 pr-4 py-2.5 text-body text-ps-text-primary placeholder-ps-text-muted transition-colors font-mono ${className}`}
       />
     </div>
   );
