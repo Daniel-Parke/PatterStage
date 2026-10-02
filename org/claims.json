@@ -48,7 +48,10 @@
         "org/briefs/T-0205-loopback-oracle.md",
         "org/reviews/2026-10-refactor-overnight-audit.md",
         "org/briefs/T-0205-loopback-type-amendment.md",
-        "org/briefs/T-0205-cleanup-assertion-amendment.md"
+        "org/briefs/T-0205-cleanup-assertion-amendment.md",
+        "scripts/tooling/t0205-loopback-diagnostic.mjs",
+        "jest.config.js",
+        "org/briefs/T-0205-worker-budget-oracle.md"
       ],
       "expires": "2026-10-02T18:45:00Z",
       "lane_id": "T-0188-coordinator",
@@ -60,18 +63,17 @@
       "task_id": "T-0205",
       "host": "NUCBOX_M6ULTRA",
       "path_claims": [
-        "tests/unit/release-install-http-context.test.ts",
-        "tests/unit/release-install-http-loopback.test.ts",
-        "tests/helpers/release-http-cleanup-assertions.ts",
-        "org/reviews/2026-10-t0205-cleanup-assertion-amendment.md"
+        "tests/unit/release-jest-worker-budget.test.ts",
+        "org/reviews/2026-10-t0205-worker-budget-oracle.md",
+        "tests/fixtures/mutants/T-0205.json"
       ],
       "expires": "2026-10-02T18:45:00Z",
-      "lane_id": "T-0205-cleanup-oracle",
-      "session_id": "01a0fa65-49e8-7eb2-afc4-cd450c8ecbab",
-      "acquired": "2026-10-01T18:39:49Z",
+      "lane_id": "T-0205-worker-budget-oracle",
+      "session_id": "01a0fab0-5743-72e0-8180-82c278279ccf",
+      "acquired": "2026-10-02T03:38:25.520Z",
       "harness_task_id": "2026-10-01-migration-driver-consolidation"
     }
   ],
   "version": 1,
-  "note": "Two writers maximum: coordinator and fresh cleanup-assertion ORACLE. Priorauthorsclosed;reviewerreadonly. Allwritersstopduringfullgate."
+  "note": "Coordinator owns only config/records; new independent worker-budget oracle lane will claim only new suite/provenance/appended mutant. All old oracle authors stopped. Maximumtwo writers; no edits during gate."
 }

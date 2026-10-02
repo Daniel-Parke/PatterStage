@@ -9,32 +9,38 @@ updated: 2026-10-02
 
 ## Current work and overnight boundary, 2026-10-02
 
-The operator asks to finish only the current T-0188/T-0205 work tonight and
-leave a complete pickup list. Do not begin T-0189. Both current records remain
-active. Latest hosted implementation is dev at b586556d; that head is **not
-hosted green**. Both CI runs pass Ubuntu and fail macOS coverage; every other PR job,
-including full browser, install, real Hermes and acceptance, passes. Both
-Gitleaks runs pass. Exact job receipts are in both current task records.
+The operator asks to finish only current T-0188/T-0205 tonight; do not begin
+T-0189. Both remain active at hosted dev@6e156740, not hosted green. That
+revision's unchanged local ten-stage gate passed 7,672 Jest and 355 browser
+tests, both build-purity checks and censuses. Its32 committed mutants were
+independently qualified with controls and restoration. The current additive
+diagnostic candidate has no passing whole gate. Allfour6e hosted workflows completed;
+both scans and every other CI job, including PR acceptance, pass. macOS fails
+only the new seven-case observer's setup, exit1; no assertion executed there.
 
-Coverage did not inherit the migration step's owned PS_DATA_DIR/HERMES_HOME.
-The independently authorised six-line coverage environment repair passes
-the whole local ten-step gate with unchanged stamp
-59b0f7d64024013f5711dd3f084925d664d544ea0c93fcc561a34fb07b07fd88:
-7,665 Jest passes/nine existing skips, 355 browser passes/24 existing skips,
-both database-free build checks and all census checks. The previous EPERM
-config-rename failure and16-case alone pass remain retained and unexplained;
-only one unchanged full control was independently authorised.
+Original-first native diagnostics now establish about35seconds in getfqdn
+on both macOS runners. Amended-second performs zero lookup and takes about
+.86seconds for the actual healthy lifecycle. Old HTTP/context formal suites
+pass on macOS. A separate additive redacted diagnostic preserves the frozen
+observer's exact launcher and150second/1MiB bounds; it emits no exception
+message, source line, argument, credential, environment or raw observer output.
+Independent reviewer approved its scope and source. It still needs a fresh
+whole gate, clean sweeps and hosted evidence before a different-author repair.
 
-Native macOS still fails C01/C03's unchanged25-second lifecycle check. Both
-names share one healthy observation. The b586 diagnostics isolate about35
-seconds before Harness import. The stdlib numeric-loopback constructor calls
-socket.getfqdn; native DNS duration remains unproved. Under independent Q015
-authority, a seven-case loopback oracle was committed red at652f7e1f:6pass,
-one intended resolver assertion failure, zero skips/runtime errors. Only the
-owned listener binding is being amended. An additive original-first/amended-
-second diagnostic retains actual HTTP and lifecycle timings, tool identities
-and exact restoration. Windows calibration passes; it does not establish
-macOS cause. Every existing assertion, deadline and target remains.
+All failed receipts remain. The first sandboxed diagnostic gate hit Windows
+user-info ENOMEM; the permitted gate then caught an incorrectly regenerated
+script baseline and C02/C16 signalsOwnedfalse under load. Baseline generator
+flags are corrected with the written82-line diagnostic reason, without changing
+any target. The unchanged context suite alone passes all20 cases; the load
+failure remains unexplained and does not clear the whole gate. No deadline,
+matcher, test identity, coverage floor or failing check was weakened.
+
+The next default-pool whole gate again fails C02's six-second watchdog and
+C05 scratch removal on the shared stalled observation. One independently
+authorised scheduling comparison runs the entire corpus with two workers:
+7,672 pass/nine existing skips, coverage floors hold, unchanged tree,241.465s.
+This supports scheduling sensitivity; it is not a gate pass or a proven
+mechanism. No permanent worker-pool change has been authorised or implemented.
 
 The additive [overnight audit](reviews/2026-10-refactor-overnight-audit.md)
 records earlier closure evidence gaps and work outside the22-batch plan.

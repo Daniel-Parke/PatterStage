@@ -70,6 +70,16 @@
       "tests": [
         "tests/unit/release-install-http-loopback.test.ts"
       ]
+    },
+    {
+      "id": "m8-expand-canonical-jest-worker-budget",
+      "anchor": "  maxWorkers: 2,",
+      "replacement": "  maxWorkers: 8,",
+      "why": "A valid larger configured Jest pool must fail the executed positive two-worker-cap assertions in ordinary and coverage resolution.",
+      "file": "jest.config.js",
+      "tests": [
+        "tests/unit/release-jest-worker-budget.test.ts"
+      ]
     }
   ]
 }

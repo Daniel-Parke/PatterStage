@@ -128,3 +128,40 @@ Q-032 permits consolidation T-0188 through T-0199 before release. Q-033 keeps
 legacy aliases, signing headers and redirects through v1.0.0. PR #157 merge,
 tags, releases and external repository settings remain operator actions.
 T-0200's separate deferral also blocks an honest full T-0201 closure.
+
+## Current evidence supplement, 2026-10-02
+
+At dev@6e156740 the actual unchanged ten-stage local gate passed7,672 Jest
+tests/nine existing skips,355 browser tests/24 existing skips, both build-purity
+checks and censuses. All32 clean committed mutants were independently qualified
+with passing controls and restoration. Allfour hosted workflows completed;
+both scans and every other CI job passed, but both macOS jobs failed only the
+new seven-case loopback observer setup, exit1. No assertion executed in that
+setup failure and no task closure follows.
+
+Both macOS original-first diagnostics measure about35seconds in getfqdn;
+the amended-second healthy lifecycle takes about.86seconds with no lookup.
+Actual HTTP, cleanup, tool identities and exact restoration hold. These are
+bounded observations on already exercised runners, not cold-start benchmarks.
+The old macOS HTTP/context formal suites pass. An independently approved
+additive launcher will report only redacted exception classes and validated
+repository-relative frame names/line numbers, preserving the frozen observer.
+
+That current diagnostic candidate lacks a passing whole gate. Retain the
+sandbox user-info ENOMEM failure, the incorrect baseline-generation failure,
+the first full-run C02/C16 signalsOwned failures, and the next full-run C02
+watchdog/C05 scratch-removal failures. The baseline flags were corrected by
+the generator with an explicit82-line diagnostic reason. No cap moved.
+The unchanged context suite alone passes all20 cases. The one authorised
+full-corpus two-worker comparison passes7,672 with nine existing skips and
+coverage floors intact, unchanged tree,241.465seconds. It supports scheduling
+sensitivity, not its mechanism, a gate pass, repair or waiver. No permanent
+scheduling change has yet been authorised or implemented.
+
+The independent completeness critic accounts for all22 batches and the exact
+265/163/285 ownership sets. It also identifies a future acceptance contradiction:
+T-0200's frozen JSON Verify text requires ruled redirects to remain intact
+after retirement, while Q-033 requires their first post-v1.0 retirement. Queue
+a different-author authorised amendment that separates pre-retirement
+preservation from post-retirement acceptance before opening T-0200. Preserve
+the currently frozen row until then; this is not authority to retire anything.

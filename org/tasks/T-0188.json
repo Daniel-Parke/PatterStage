@@ -35,7 +35,7 @@
   "owner_session": "2026-10-01-migration-driver-consolidation",
   "timestamps": {
     "opened": "2026-10-01T16:45:00Z",
-    "updated": "2026-10-02T01:50:58.653Z"
+    "updated": "2026-10-02T03:37:07.185Z"
   },
   "authority": "Operator approved Phase2 on2026-09-28 and Q032 supersedes Q011 release-first sequencing. T0202/T0203 obligations remain; latest repair T0204 independently accepted at a238abf3 and closed at e269a895388795fb189863c7e7783366f650b484, with every required exact-head push/PR job passing. Failed9c824422scan remains historical, not a prerequisite requiring impossible retrospective success. T0200 item-specific post1.0 authority remains. Independent R2 REVIEWER Schrodinger authorises only the four Q015 amendments plus additive T0204 contract described in committed brief. Schema declaration router verdict remains R2; actual diff reroutes upward.",
   "claims": [
@@ -83,7 +83,12 @@
     "org/QUESTIONS.md",
     "org/briefs/T-0188-auth-wiring-amendment.md",
     ".github/workflows/ci.yml",
-    "org/reviews/2026-10-refactor-overnight-audit.md"
+    "org/reviews/2026-10-refactor-overnight-audit.md",
+    "scripts/tooling/t0205-loopback-diagnostic.mjs",
+    "jest.config.js",
+    "tests/unit/release-jest-worker-budget.test.ts",
+    "org/briefs/T-0205-worker-budget-oracle.md",
+    "org/reviews/2026-10-t0205-worker-budget-oracle.md"
   ],
   "invariants": [
     "Preserve all eleven wrapper module paths, exports, signatures, return contracts and already-applied no-op behaviour. SQL history, public configuration and supported URLs remain intact.",
@@ -1130,5 +1135,67 @@
     ],
     "result": "Allcompleted. BothGitleaks and allotherPRjobs includingacceptance succeed; Ubuntu passes; Mac only C01/C03 sharedhealthy25secondcheck fails. Diagnosticpreparation35s beforeHarness, nativeDNScauseunproved."
   },
-  "overnight_audit": "org/reviews/2026-10-refactor-overnight-audit.md; noT0189 tonight, historicalapprovalreceipt reconciliation and olderbacklog explicitly preserved."
+  "overnight_audit": "org/reviews/2026-10-refactor-overnight-audit.md; noT0189 tonight, historicalapprovalreceipt reconciliation and olderbacklog explicitly preserved.",
+  "observer_diagnostic_authority": {
+    "date": "2026-10-02T03:13:07.095Z",
+    "authoriser": "Independent R2 REVIEWER Schrodinger 01a0f7b7-f68a-79b2-ba74-81cdddf2f3ef under current T0205 scope",
+    "status": "authorised-before-edits",
+    "scope": "scripts/tooling/t0205-loopback-diagnostic.mjs",
+    "contract": "Additive only; exact unchanged observer launcher contract, owned roots, 150s/1MiB; bounded status/signal/launch distinctions, allowlisted classes and validated repository-relative frame file/line only. No raw output/messages/arguments/env. Separate guarded3min postcoverage Mac step preserves blockingcoverage and existing A/B budget. No oracle amendment or closure authorised."
+  },
+  "observer_diagnostic_preflight": {
+    "head": "6e156740f9a30223ee849b67c3246de3cbce748b",
+    "hosted": "All4completed; bothCIonlyMacnew7setupfailstatus1, all10otherPRjobs/all8otherpushjobs and bothscanspass;2configuredpusheventskips explicit.",
+    "nativeCause": "Original-firstgetfqdn35.02-35.03seconds in bothMacjobs;amended-secondzero lookup/.86s wholehealthy. ActualHTTP/lifecycle/restoration/toolhasheshold. Alreadyexercisedrunner, boundeddiagnosticnotbenchmark.",
+    "localControls": [
+      "tmp/t0188-observer-redaction-calibration.json",
+      "tmp/t0188-observer-boundary-final-calibration-qualified.json"
+    ],
+    "retainedFailures": [
+      "tmp/t0188-full-gate-observer-diagnostic-20261002/summary.json",
+      "tmp/t0188-full-gate-observer-diagnostic-permitted-20261002/summary.json"
+    ],
+    "alone": "tmp/t0188-diagnostic-context-alone/summary.json:20pass/0fail/skip/runtime; fullrunC02/C16 signalsOwnedfalse remains causeunproved, no retry/asertionchange.",
+    "baseline": "Generatedbaseline+82scriptlines explicitindependentdiagnosticreason; initial --allow-growth omitted --update-baseline causedactualK6failure, correctedgeneratorflags, no ceiling/targetchange.",
+    "deviation": "Independentexactscopeapproval precedededits; on-diskclaimregistration immediatelyafter newhelper/wiringcreation. No otherwriter/protected/history/unrelatededit. Prior red receipts retained. No oracle repair or batchclosure."
+  },
+  "worker_budget_proposal": {
+    "authority": "Coordinator internal technical decision under operator-approved prerequisite repairs; independent R2 reviewer confirms no operator ruling automatically required, implementation requires separate red-first oracle and full acceptance.",
+    "choice": "Fixed canonical maximum2 Jest workers across ordinary and coverage runs. All corpus/floors/assertions/fixtures/deadlines and product concurrency remain unchanged.",
+    "evidence": "tmp/t0188-diagnostic-workers-two/summary.json:7672pass/9existing skips/0fail/runtime,coverage0,241.465s,unchangedtree;defaultfullfailuresretained.",
+    "limits": "Mechanism/loadgenerality unproved; worker failed to exit gracefully warning notresolved. Not a gate pass or waiver.",
+    "status": "claimed-before-oracle-and-implementation",
+    "tier": "Internal taskcode minimumR1 retained; aggregateT0188 CI/schema scope remainsR2, voluntaryindependentR2T0205 discipline retained. No riskfloor lowered.",
+    "declarationRouterVerdict": {
+      "tier": "R2",
+      "reasons": [
+        {
+          "factor": "schema-change",
+          "tier_floor": "R2",
+          "source": "declared",
+          "evidence": "declared side effect: migrates-schema"
+        }
+      ],
+      "discrepancies": []
+    },
+    "acceptanceDiscipline": "Independent red-first oracle, voluntary R2 review and aggregate R2 full gate/sweeps/hosted acceptance retained; no ruled floor lowered.",
+    "independentFreeze": {
+      "path": "tmp/t0205-worker-budget-author-1790912579436-22be7850/freeze.json",
+      "sha256": "5bbcd6ab6cc7548a4ea8d2845a4862895e1d621f27352a8c5b6f466a98d72fe5",
+      "author": "Galileo 01a0fab0-5743-72e0-8180-82c278279ccf",
+      "writesCeased": true
+    },
+    "coordinatorRed": {
+      "path": "tmp/t0188-worker-budget-coordinator-red/summary.json",
+      "sha256": "93ee8aca9662300c8fd058c7fb30e1e7e6759801cd5740c724845e255e2ce9ca",
+      "pass": 7,
+      "fail": 2,
+      "skip": 0,
+      "runtimeErrors": 0,
+      "unchangedTree": "7e2d64883169948d7e75407cbe3f2f98fafea12d51a83d4e0a3e43d96cd46bfa",
+      "qualification": "Executed W05/W06 expected<=2 received63 through actualJestCLI; nine new names; not fullgate acceptance."
+    },
+    "provenanceQualification": "Frozen report says no product source copied; actual support inventory includes unchanged static src/lib/config/config-sections.ts. No operator environment/data/home/database copied. Required support source copied read-only into owned projects; no futureimplementation inspected.",
+    "routerQualification": "Declaration-only snapshot omits derived CI contact; current T0188 top-level R2 reasons retain CI/schema and active CI diff. No ruled riskfloor or acceptance requirement lowered."
+  }
 }
