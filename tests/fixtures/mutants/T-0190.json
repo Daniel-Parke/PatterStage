@@ -104,7 +104,8 @@
       "replacement": "void afterWrite;",
       "why": "A confirmed write requires a new read rather than joining an older flight.",
       "tests": [
-        "tests/unit/mission-query-ownership.test.tsx"
+        "tests/unit/mission-query-ownership.test.tsx",
+        "tests/unit/mission-link-handoff.test.tsx"
       ]
     },
     {

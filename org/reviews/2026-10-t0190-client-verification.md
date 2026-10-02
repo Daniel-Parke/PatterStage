@@ -146,7 +146,7 @@ is extracting duplicated fixture setup while preserving names/assertions.
 The pending gap065.1 removal experiment is now executed in the isolated copy:
 tmp/t0190-toast-removal-1790972311879/summary.json. The original rg expression
 selects12suites. All134cases pass before removal; removing only standalone
-dispatch causes11matcher failures across4suites,0runtime errors. All134pass
+dispatch causes11behavioural failures across4suites,0runtime errors. All134pass
 after exact-byte/mode restoration. Primary Toast is untouched. This is a bounded
 selected-suite count, not a universal count or the committed mutation sweep.
 The result supports retaining the standalone behaviour and requires no waiver.
@@ -193,3 +193,55 @@ Independent Carver oracle reproduces cancel/update/promote ofA invalidating sele
 ## Integrated continuation repair
 
 Red commit a0051405 precedes the one-line request-initiation ownership guard. All166integrated frozen client cases pass with0skips/runtime failures at tmp/t0190-coordinator-jest-1790975254044. The official line baseline records102378source lines,145129test lines,895source repeated windows and4796test repeated windows. New controls and guards have explicit growth reasons; fixed targets and the4800C4ceiling are unchanged. Thirty mutant anchors apply; no sweep outcome is claimed yet. The48-row candidate disposition ledger contains36done,8ruled-out and4deferred proposals, with final acceptance explicitly pending.
+
+## Committed implementation and first sweep
+
+The third unchanged-tree full gate passes all ten stages at
+tmp/t0190-full-gate-1790975360957/summary.json: 8,272 unit cases,
+365 browser cases, both database-purity checks and both censuses. The nine
+unit and 24 browser skips are pre-existing. The earlier load-sensitive phone
+failure remains recorded; neither its timeout nor assertion was changed.
+Implementation commit f583d2de follows that gate. The landing receipt binds
+19 frozen files and 1,202 preservation identities. Forty-five cross-checkout
+raw-byte differences are only LF/CRLF differences with identical committed
+Git blobs and normalised content, as recorded in
+tmp/t0190-preservation-line-endings.json. No historical record was rewritten.
+
+The first clean committed sweep at tmp/t0190-sweep-f583d2de/summary.json
+fails: 26 KILLED, two SURVIVED and two ERROR. All 164 selected controls pass
+before and after, with exact restoration. The ERROR outcomes are DOM lookup
+exceptions before a structured matcher and are not accepted kills. The
+mutation runner is unchanged. Different-author test strengthening must retain
+the original names and assertions and verify the published Hindsight refusal.
+
+For m05, adding the existing frozen handoff suite gives 30 passing controls,
+three structured failures under the mutant, and 30 restored controls at
+tmp/t0190-sweep-m05-coverage-probe/summary.json. Sagan accepts this selection
+repair. Its evidence concerns fresh detail during handoff, not a new
+post-write scenario. The complete sweep still needs repeating.
+
+The latest personal Mission walk at
+tmp/t0190-green-validation/tmp/t0190-personal-1790976017477/walk.json
+confirms the selected B detail survives A's cancellation continuation at both
+required viewports. Two screenshots were inspected. The temporary overlap of
+cancellation progress and completion toasts is carried into T0191's UX review.
+No provider execution, external backend or release acceptance is claimed.
+
+## Mutation-driven oracle strengthening
+
+Different author Schrodinger retains all 50 existing Mission/Hindsight cases
+and adds three unavailable/recovery cases. Exact HTTP200 refusal text is now
+asserted; missing DOM elements fail through explicit matchers. The mutation
+runner and its classifier are unchanged. The final calibration has 53 passing
+controls before and after, two intended failures each for m07/m08 and six for
+m10, with exact restoration. The first calibration's m10 infrastructure result
+is preserved. Full test types, scoped lint and the fixed C4 gate pass.
+
+Freeze tmp/t0190-mutation-tests/freeze.json is independently accepted by Sagan
+for the test commit. All 169 integrated client cases then pass, with no skips
+or runtime failures, at tmp/t0190-coordinator-jest-1790977696786/summary.json.
+The line baseline records 21 additional test lines for this strengthening;
+4,796 repeated test windows remain below the unchanged 4,800 ceiling. These
+are additions for demonstrated coverage gaps, not consolidation savings.
+The original full-sweep failure remains evidence. Final full gate, clean
+committed sweep and hosted acceptance still follow.

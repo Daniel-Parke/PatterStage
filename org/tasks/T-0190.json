@@ -101,7 +101,8 @@
     "tests/helpers/mission-link-query-fixture.tsx",
     "org/briefs/T-0190-oracle-amendment.md",
     "tests/unit/mission-write-continuation.test.tsx",
-    "org/briefs/T-0190-continuation-oracle.md"
+    "org/briefs/T-0190-continuation-oracle.md",
+    "org/briefs/T-0190-mutation-tests.md"
   ],
   "timestamps": {
     "opened": "2026-10-02T17:49:07.371181+00:00",
@@ -1042,6 +1043,17 @@
       "images": 5,
       "result": "PASS",
       "qualification": "Actual production UI/sign-in; all Story requests controlled. Oneh1/nohorizontaloverflow/no page exceptions; expected presignin401 retained. Screenshots personally inspected. Earlier1790974746789phone probe incorrectly looked for badge while drawerclosed; preserved as harness failure."
+    },
+    {
+      "receipt": "tmp/t0190-green-validation/tmp/t0190-personal-1790976017477/walk.json",
+      "scope": "Held cancel of A followed by selected B detail and A write continuation",
+      "viewports": [
+        "1440x900",
+        "390x844"
+      ],
+      "images": 2,
+      "result": "PASS",
+      "qualification": "Actual production UI and sign-in; controlled HTTP. One h1, no horizontal overflow or page exceptions. Screenshots inspected. Earlier private probe wrongly required a success toast to have role alert; preserved as a harness error. Progress/completion toast overlap is a T0191 review candidate."
     }
   ],
   "continuation_repair": {
@@ -1056,7 +1068,7 @@
   "current_candidate": {
     "baseline": {
       "srcLines": 102378,
-      "testLines": 145129,
+      "testLines": 145150,
       "scriptsLines": 13667,
       "srcRepeatedWindowLines": 895,
       "testRepeatedWindowLines": 4796,
@@ -1069,6 +1081,92 @@
       "commentEssays": 9,
       "suitesMockingDbInline": 15
     },
-    "remaining": "Unchanged full ten-stage gate, final built-UI evidence, implementation commit, clean committed mutation sweep, independent final acceptance, push/allhostedjobs and record closure. No green batch or release claim."
+    "remaining": "Independent mutation-driven test amendment, unchanged full gate, amended test commit and complete clean committed sweep, independent final acceptance, push/all hosted jobs and record closure."
+  },
+  "first_committed_sweep": {
+    "head": "f583d2de7e1f568f9936f3810c694547299d2765",
+    "receipt": "tmp/t0190-sweep-f583d2de/summary.json",
+    "result": "FAIL",
+    "counts": {
+      "killed": 26,
+      "survived": 2,
+      "error": 2
+    },
+    "controls": {
+      "before": 164,
+      "after": 164,
+      "restored": true
+    },
+    "details": "m05/m10 survived. m07/m08 produce TestingLibraryElementError before a structured Jest matcher, so the unchanged classifier correctly reports ERROR; these are not accepted kills."
+  },
+  "mutation_test_amendment": {
+    "author": "Schrodinger",
+    "originalAuthor": "Carver",
+    "files": [
+      "tests/unit/mission-query-ownership.test.tsx",
+      "tests/unit/hindsight-query-feedback.test.tsx"
+    ],
+    "brief": "org/briefs/T-0190-mutation-tests.md",
+    "status": "Frozen, author STOPPED; independently accepted for mutation-test commit only",
+    "manifest": "tmp/t0190-mutation-tests/freeze.json",
+    "manifestSha256": "2fef6ae7d46f7f0824910399c8b2a0e6a4820c94d638e1d3f8b06eec29090b42",
+    "hashes": {
+      "tests/unit/mission-query-ownership.test.tsx": "645d7bcf373803a83a7b3e0e674d767f71f8c8a848730de9cde27443e6ce1b5a",
+      "tests/unit/hindsight-query-feedback.test.tsx": "f125c192876063affa561e1041ab145dc6160f0e856278254419dec5eecfd6f0"
+    },
+    "identities": {
+      "originalMission": 24,
+      "originalHindsight": 26,
+      "originalTotalPreserved": 50,
+      "addedHindsight": 3,
+      "finalTotal": 53,
+      "allOriginalNamesOrderPreserved": true,
+      "allSubstantiveAssertionsPreserved": true,
+      "proof": "preservation.json: reversing only enumerated authorised changes restores entire original suite texts; original files also match committed f583d2de after LF normalisation."
+    },
+    "calibration": "tmp/t0190-mutation-tests/qualification.json",
+    "controls": {
+      "before": 53,
+      "after": 53,
+      "restored": true
+    },
+    "result": "m07/m08 each two intended structured failures; m10 six. Unchanged classifier. Earlier first calibration infrastructure result remains preserved.",
+    "limits": "Source-informed and mutation-informed different-author strengthening. Not a full committed sweep or final acceptance.",
+    "review": {
+      "reviewer": "Sagan 01a0fe05-a6c0-7d22-ae2f-ba3716eded80",
+      "verdict": "PASS",
+      "receipt": "tmp/t0190-mutation-tests-independent.md",
+      "sha256": "94298ed8ec4a1dbd966c7109ab0d51c4dbf6c6ca8125ccb28f9b04c2933b4b4d",
+      "scope": "Freeze and test-strengthening commit only; complete gate, committed sweep and hosted acceptance remain separate."
+    },
+    "coordinator": "tmp/t0190-coordinator-jest-1790977696786/summary.json"
+  },
+  "third_full_gate": {
+    "receipt": "tmp/t0190-full-gate-1790975360957/summary.json",
+    "result": "PASS",
+    "treeUnchanged": true,
+    "jest": {
+      "passed": 8272,
+      "existingSkipped": 9
+    },
+    "browser": {
+      "passed": 365,
+      "existingSkipped": 24
+    },
+    "qualification": "Implementation candidate before mutation-driven test strengthening. Earlier failures remain recorded; amended tree requires another full gate."
+  },
+  "implementation_commit": "f583d2de7e1f568f9936f3810c694547299d2765",
+  "implementation_preservation": "tmp/t0190-implementation-landing.json",
+  "line_ending_preservation": "tmp/t0190-preservation-line-endings.json",
+  "m05_selection_probe": {
+    "receipt": "tmp/t0190-sweep-m05-coverage-probe/summary.json",
+    "before": 30,
+    "mutatedPassed": 27,
+    "mutatedFailed": 3,
+    "after": 30,
+    "restored": true,
+    "reviewer": "Sagan",
+    "verdict": "PASS",
+    "scope": "Existing frozen handoff suite detects stale success,404,503 query reuse. Add its selection to m05; this is not independent proof of a new post-write scenario."
   }
 }

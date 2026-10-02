@@ -69,11 +69,12 @@
         "org/briefs/T-0190-poll-oracle.md",
         "org/briefs/T-0190-story-cache-oracle.md",
         "org/briefs/T-0190-oracle-amendment.md",
-        "org/briefs/T-0190-continuation-oracle.md"
+        "org/briefs/T-0190-continuation-oracle.md",
+        "org/briefs/T-0190-mutation-tests.md"
       ],
       "acquired": "2026-10-02T17:49:07.371181+00:00",
       "expires": "2026-10-03T17:49:07.371181+00:00"
     }
   ],
-  "note": "All oracle authors stopped; coordinator source/metadata only.19frozenfiles includingfixturehelper. Sagan independent final reviewer."
+  "note": "Mutation-test author frozen and STOPPED. Coordinator owns metadata only during final validation; production and frozen suites held."
 }

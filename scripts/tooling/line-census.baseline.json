@@ -2,7 +2,7 @@
   "measuredAt": "2026-10-02",
   "counts": {
     "srcLines": 102378,
-    "testLines": 145129,
+    "testLines": 145150,
     "scriptsLines": 13667,
     "srcRepeatedWindowLines": 895,
     "testRepeatedWindowLines": 4796,
@@ -1185,6 +1185,11 @@
       "measuredAt": "2026-10-02",
       "rise": "testLines rose from 144960 to 145129",
       "reason": "T-0190 independent seven-case cancel/update/promote continuation oracle adds169testlines; one request-ownership guard fixes three reproduced races. Existing identities and fixed4800repeat ceiling preserved; programme targets unchanged."
+    },
+    {
+      "measuredAt": "2026-10-02",
+      "rise": "testLines rose from 145129 to 145150",
+      "reason": "T-0190 independent mutation-test strengthening preserves50cases and adds3HTTP200 Hindsight fallback/recovery controls;21test lines, unchanged4796duplicate windows and4800C4ceiling. Fixed programme targets remain unchanged."
     }
   ]
 }

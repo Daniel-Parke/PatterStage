@@ -46,9 +46,10 @@ it.each(tabs.flatMap(tab => ["HTTP", "network", "application"].map(failure => ({
     return Promise.resolve(jsonResponse({ data: { error: "Owned read failure" } }, failure === "HTTP" ? 503 : 200));
   };
   open(tab); await waitFor(() => expect(calls.some(c => c.action === actionFor(tab))).toBe(true));
-  await waitFor(() => expect(screen.getAllByRole("alert").some(el => /fail|error|unavailable|unable/i.test(el.textContent ?? ""))).toBe(true));
-  expect(screen.getByRole("button", { name: /retry/i })).toBeInTheDocument();
+  await waitFor(() => expect(screen.queryAllByRole("alert").some(el => /fail|error|unavailable|unable/i.test(el.textContent ?? ""))).toBe(true));
+  expect(screen.queryByRole("button", { name: /retry/i })).toBeInTheDocument();
   expect(screen.queryByText(/Hindsight returned no (directives|mental models)/i)).not.toBeInTheDocument();
+  if (failure === "application") expect(screen.queryByText("Owned read failure", { exact: true })?.textContent).toBe("Owned read failure");
 });
 
 it.each(tabs)("Hindsight retry clears the error only after a successful read [%s]", async tab => {
@@ -165,4 +166,23 @@ it("directive activation preserves tags priority and failed-write state", async 
   expect(showToast).toHaveBeenCalledWith("Toggle refused", "error");
   override = () => undefined; items.directives = [{ ...directive, is_active: false }];
   await act(async () => { await h.result.current.handleToggleDirective(directive); }); expect(h.result.current.directives[0]).toMatchObject({ is_active: false, priority: 3, tags: ["owned"] });
+});
+
+it.each(tabs)("an HTTP200 unavailable Hindsight collection publishes its fallback reason and recovers through scoped retry [%s]", async tab => {
+  let unavailable = true;
+  override = (action, method) => unavailable && method === "GET" && action === actionFor(tab)
+    ? Promise.resolve(jsonResponse({ data: { available: false } }, 200)) : undefined;
+  open(tab);
+  await waitFor(() => expect(screen.queryByText("Hindsight unavailable", { exact: true })?.textContent).toBe("Hindsight unavailable"));
+  expect(calls.some(call => call.action === actionFor(tab) && call.method === "GET")).toBe(true);
+  expect(screen.queryByText(/Hindsight returned no (directives|mental models)/i)).not.toBeInTheDocument();
+  const retry = screen.queryByRole("button", { name: /retry/i }); expect(retry).toBeInTheDocument();
+  const before = calls.filter(call => call.action === actionFor(tab) && call.method === "GET").length;
+  unavailable = false; fireEvent.click(retry!);
+  const healthy = tab === "memories" ? "Fresh fact" : tab === "directives" ? "Owned directive" : "Owned model";
+  await waitFor(() => expect(screen.queryByText(healthy, { exact: true })?.textContent).toBe(healthy));
+  expect(calls.filter(call => call.action === actionFor(tab) && call.method === "GET").length).toBeGreaterThan(before);
+  expect(screen.queryByText("Hindsight unavailable", { exact: true })).not.toBeInTheDocument();
+  expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  expect(calls.filter(call => call.method !== "GET")).toEqual([]);
 });

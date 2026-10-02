@@ -93,18 +93,18 @@ it.each(["list", "templates", "categories", "detail"])("mission read failures re
   override = url => url === target ? Promise.resolve(jsonResponse({ error: `Owned ${resource} failure` }, 500)) : undefined;
   render(<Wrapper><MissionsPage /></Wrapper>);
   if (resource === "detail") { await screen.findByText("Mission A"); fireEvent.click(screen.getByText("Mission A")); }
-  await waitFor(() => expect(screen.getAllByText(`Owned ${resource} failure`).length).toBeGreaterThan(0));
+  await waitFor(() => expect(screen.queryAllByText(`Owned ${resource} failure`).length).toBeGreaterThan(0));
   expect(screen.queryByTestId("toast")).not.toBeInTheDocument();
   const initialReads = calls.filter(c => c.url === target).length;
   await act(async () => { await jest.advanceTimersByTimeAsync(15001); });
   expect(calls.filter(c => c.url === target).length).toBeGreaterThan(initialReads);
   expect(screen.queryByTestId("toast")).not.toBeInTheDocument();
-  expect(screen.getAllByText(`Owned ${resource} failure`)).toHaveLength(1);
-  const retry = screen.getAllByRole("button", { name: /retry/i })[0]; expect(retry).toBeDefined();
+  expect(screen.queryAllByText(`Owned ${resource} failure`)).toHaveLength(1);
+  const retry = screen.queryAllByRole("button", { name: /retry/i })[0]; expect(retry).toBeDefined();
   const beforeRetry = calls.filter(c => c.url === target).length;
   fireEvent.click(retry);
   await waitFor(() => expect(calls.filter(c => c.url === target).length).toBeGreaterThan(beforeRetry));
-  expect(screen.getAllByText(`Owned ${resource} failure`)).toHaveLength(1);
+  expect(screen.queryAllByText(`Owned ${resource} failure`)).toHaveLength(1);
 });
 
 it("mission polling pauses while hidden and refreshes on return", async () => {
@@ -127,7 +127,8 @@ it.each(["list", "templates", "categories", "detail"])("a mission read retry ref
   override = url => url === target ? Promise.resolve(jsonResponse({ error: `Retry ${resource}` }, 500)) : undefined;
   render(<Wrapper><MissionsPage /></Wrapper>);
   if (resource === "detail") { await screen.findByText("Mission A"); fireEvent.click(screen.getByText("Mission A")); }
-  const error = await screen.findByText(`Retry ${resource}`);
+  await waitFor(() => expect(screen.queryByText(`Retry ${resource}`)).not.toBeNull());
+  const error = screen.queryByText(`Retry ${resource}`)!;
   const banner = error.closest<HTMLElement>('[role="alert"]'); expect(banner).not.toBeNull();
   const retry = within(banner!).getByRole("button", { name: /retry/i });
   if (resource === "templates" || resource === "categories") { fireEvent.click(screen.getByText("Mission B")); await screen.findByText("Instruction B"); }
