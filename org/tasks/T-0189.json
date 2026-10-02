@@ -70,7 +70,8 @@
     "org/briefs/T-0189-oracle-amendment.md",
     "src/lib/db/sql-migrations.ts",
     "src/lib/db/index.ts",
-    "src/lib/db/apply-sql.ts"
+    "src/lib/db/apply-sql.ts",
+    "org/briefs/T-0189-sync-implementation.md"
   ],
   "timestamps": {
     "opened": "2026-10-02T14:10:33.645498+00:00",
@@ -299,7 +300,7 @@
     ],
     "independentReviewer": "Schrodinger 01a0f7b7-f68a-79b2-ba74-81cdddf2f3ef: PASS exact-head all11PR,9applicablepush,2configuredskips,bothscans; source/tests unchanged; T0189 prerequisite cleared."
   },
-  "scope_note": "Independent read-only review adds five source paths: token consistency, ruled sync_registry writers, atomic model/default creation and scheduler single-flight/error reporting. Fifteen source files and eight new oracle suites are explicitly claimed. No historical test amendments or protected/schema changes. Other twenty-finding/six-ruling/thirty-one-coverage dispositions remain required before closure.",
+  "scope_note": "Exact claimed usage/story/model/sync and migration-driver repairs plus bounded consolidation. All57dispositions required. Independent eight-suite oracle has421cases; no historical test edits authorised.",
   "invariants": [
     "Explicit finite stored totals, including zero, remain authoritative; absent totals fall back to input plus output. Missing usage is not fabricated provider measurement; spend hard-stop failure remains closed.",
     "Malformed story reads and restart recovery do not crash or overwrite damaged raw JSON with display defaults. Unrelated updates preserve raw JSON; valid stored fields and deleted-row semantics survive.",
@@ -332,7 +333,7 @@
       "result": "Actualsource: failed default insertion leaves newmodel/clearsolddefault; resolved scheduler failure loses lastError; concurrent and post-timeout callers execute source again while underlying pending. Allpendingwork settled. Preflight used actual default30second source timeout; independent oracle pins timeout boundaries separately."
     }
   ],
-  "oracle_status": "First red checkpoint plus independently accepted four-suite strengthening amendment:403discovered,191passed,146behavioural failures,1infrastructure,65unexecuted. All398originalnames preserved. Fifth migration-parity witnesses remain before implementation release.",
+  "oracle_status": "Independent red421case oracle accepted before implementation:196pass,159behavioural failures,1labelledmissing-parser infrastructure,65unexecuted parsercases. All421mustexecute/pass for green; no skips.",
   "oracle_author": "01a0fcf4-e827-7393-8d98-3ababa620034; independent ORACLE; stopped writing at 2026-10-02T14:48:54.280Z",
   "scope_review": "Turing 01a0fcea-6e43-74d1-b149-9bd09f700a8f recommends exact15source/8oracle allowance, noQ015amendment; coordinator independently reproduced additional model/scheduler defects before claiming their implementation.",
   "additional_consolidation": {
@@ -410,6 +411,29 @@
         "unexecuted": 65
       },
       "remaining": "Additional fifth migration-parity suite witnesses pending; implementation still held."
+    },
+    "second_freeze": {
+      "receipt": "tmp/t0189-oracle-amendment/freeze-20261002-second.json",
+      "sha256": "7167ff358e7efddce3dd4eb6e33be53747145fe804d8beef375b41d85a8aba0f",
+      "counts": {
+        "discovered": 421,
+        "passed": 196,
+        "behaviouralFailures": 159,
+        "infrastructureFailures": 1,
+        "unexecuted": 65
+      },
+      "identity": "All403previous names preserved,18newmigration cases; four first-amendment files unchanged.",
+      "suites": {
+        "tests/unit/data-transaction-migration-parity.test.ts": "e18dc6b5fa3adfe7886e79ebd6f85ad83813a17e92f4bedce723440d7f97f79c",
+        "tests/unit/data-transaction-stories.test.ts": "19219f90cef539950605506464a37439e60bb828e6692183df4f4212f1570cc0",
+        "tests/unit/data-transaction-sync.test.ts": "ccf06ef1c110b3c3ed5978aa1df434c6eb940499c2a2cfe2586b93811dddbe00",
+        "tests/unit/data-transaction-usage.test.ts": "f0961c36ff72a00ef97aa007433ab85a0c38bf9f8b46a9f0622c947947882e66",
+        "tests/unit/data-transaction-models.test.ts": "fdf9790657530a4255a37ab9ed1c79f1e49329e85486cc2c743edd3c290a3196",
+        "tests/unit/data-transaction-scheduler.test.ts": "e34a2f0003f8239488d33ca331d65691bfb98e3844b9ce7474fe6e2be6c08c58",
+        "tests/unit/data-transaction-repository-contracts.test.ts": "d89b86f4ad1c5d34101908fa0c9a730fbf71b364b14bc255fa80068c4f5c3206",
+        "tests/unit/data-transaction-schema-health.test.ts": "4af2dd92655ec12888d7ccf8a5b07a0c8b61f50fcaddf81db75836b7a635bd66"
+      },
+      "reviewer": "Schrodinger PASS finalfreeze7167ff358e7efddce3dd4eb6e33be53747145fe804d8beef375b41d85a8aba0f:all421names/hashes verified, migration16pass15matcherreds; no preimplementation blocker. Implement only after exact red commit; no final acceptance."
     }
   },
   "schema_maintenance": {
@@ -440,5 +464,10 @@
       ],
       "discrepancies": []
     }
+  },
+  "implementation_lanes": {
+    "coordinator": "2026-10-02-t0189-coordinator",
+    "sync": "Carver 01a0fd33-6991-7a93-be6b-9285743b5ccc",
+    "status": "Released after this red commit; coordinator and Carver source paths disjoint; all frozen/historical tests immutable."
   }
 }

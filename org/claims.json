@@ -15,9 +15,6 @@
         "src/lib/analytics/run-aggregates.ts",
         "src/lib/spend/spend-window.ts",
         "src/modules/rec-room/lib/story-repository.ts",
-        "src/lib/sync/sync-repository.ts",
-        "src/lib/sync/sources/ProcessSync.ts",
-        "src/lib/sync/sources/LogSync.ts",
         "org/tasks/T-0189.json",
         "org/claims.json",
         "org/briefs/T-0189-oracle.md",
@@ -31,11 +28,7 @@
         "docs/manifest.json",
         "scripts/tooling/line-census.baseline.json",
         "tests/fixtures/mutants/T-0189.json",
-        "src/lib/sync/sources/SessionSync.ts",
-        "src/lib/sync/sources/EnvSync.ts",
-        "src/lib/sync/env-token-presence.ts",
         "src/lib/models/models-repository.ts",
-        "src/lib/sync/SyncScheduler.ts",
         "src/lib/db/apply-mission-repeat-migration.ts",
         "scripts/tooling/migrate-db.ts",
         "docs/running/migration.md",
@@ -48,27 +41,30 @@
         "org/briefs/T-0189-oracle-amendment.md",
         "src/lib/db/sql-migrations.ts",
         "src/lib/db/index.ts",
-        "src/lib/db/apply-sql.ts"
+        "src/lib/db/apply-sql.ts",
+        "org/briefs/T-0189-sync-implementation.md"
       ],
       "acquired": "2026-10-02T14:10:33.645498+00:00",
       "expires": "2026-10-03T14:10:33.645498+00:00"
     },
     {
-      "lane_id": "T-0189-oracle-amendment",
+      "lane_id": "T-0189-sync",
       "task_id": "T-0189",
-      "session_id": "01a0fd1f-516a-7323-af9c-0682d6bbbe6c",
+      "session_id": "01a0fd33-6991-7a93-be6b-9285743b5ccc",
       "host": "local",
       "path_claims": [
-        "tests/unit/data-transaction-usage.test.ts",
-        "tests/unit/data-transaction-stories.test.ts",
-        "tests/unit/data-transaction-sync.test.ts",
-        "tests/unit/data-transaction-repository-contracts.test.ts",
-        "tests/unit/data-transaction-migration-parity.test.ts"
+        "src/lib/sync/sync-repository.ts",
+        "src/lib/sync/sources/ProcessSync.ts",
+        "src/lib/sync/sources/EnvSync.ts",
+        "src/lib/sync/sources/LogSync.ts",
+        "src/lib/sync/sources/SessionSync.ts",
+        "src/lib/sync/env-token-presence.ts",
+        "src/lib/sync/SyncScheduler.ts"
       ],
       "acquired": "2026-10-02T14:10:33.645498+00:00",
       "expires": "2026-10-03T14:10:33.645498+00:00",
-      "harness_task_id": "01a0fd1f-516a-7323-af9c-0682d6bbbe6c"
+      "harness_task_id": "01a0fd33-6991-7a93-be6b-9285743b5ccc"
     }
   ],
-  "note": "Two writing lanes: coordinator metadata until new red commit; Planck five new oracle files. Other frozen suites/historical tests immutable; reviewer read-only."
+  "note": "Two disjoint implementation lanes released after final red commit. All421oraclecases frozen; historical tests immutable. Schrodinger independent review required before closure."
 }

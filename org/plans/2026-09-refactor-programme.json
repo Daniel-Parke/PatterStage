@@ -391,7 +391,8 @@
         "org/briefs/T-0189-oracle-amendment.md",
         "src/lib/db/sql-migrations.ts",
         "src/lib/db/index.ts",
-        "src/lib/db/apply-sql.ts"
+        "src/lib/db/apply-sql.ts",
+        "org/briefs/T-0189-sync-implementation.md"
       ],
       "dependsOn": [
         "T-0188"
@@ -438,7 +439,35 @@
         "Mutation invalidation, deadline timing and read-only refusals survive composition-root moves."
       ],
       "rollback": "Revert one page or hook cohort independently while retaining the shared contract and original read/write behaviour.",
-      "verify": "The missions board uses the shared cache, a failed read renders feedback, one representative write invalidates the correct keys, and focused browser plus hook tests retain their test-name set."
+      "verify": "The missions board uses the shared cache, a failed read renders feedback, one representative write invalidates the correct keys, and focused browser plus hook tests retain their test-name set.",
+      "reviewed_followups": {
+        "reviewer": "Fermat 01a0fd2b-be08-7d50-848f-4034e5832160, read-only 2026-10-02; no independent runtime execution",
+        "status": "Queued for exact claims, router verdict and red oracle before batch implementation; not acceptance",
+        "items": [
+          {
+            "title": "Chat response ownership",
+            "evidenceStatus": "source-supported, runtime reproduction pending",
+            "sourcePaths": [
+              "src/hooks/useChatConversations.ts",
+              "src/hooks/useChatSend.ts",
+              "src/hooks/useChatTranscript.ts",
+              "src/hooks/useAgentRunStream.ts"
+            ],
+            "receiptNote": "tmp/t0185-current-review-20261002.md",
+            "verify": "Deferred NewChat creation, conversation switch, late send failure and draft/transcript/approval ownership; late POST alone is not draft-loss proof."
+          },
+          {
+            "title": "Missions response ownership",
+            "evidenceStatus": "source-supported, runtime reproduction pending",
+            "sourcePaths": [
+              "src/hooks/useMissionsData.ts"
+            ],
+            "receiptNote": "tmp/t0185-current-review-20261002.md",
+            "verify": "Old detail after newer detail/deletion/selection; obsolete list error after newer success; category/template invalidation, visible errors, polling, old links and cancellation rollback."
+          }
+        ],
+        "claim_rule": "Name exact new unit .tsx and browser oracle paths; current glob claims do not establish ownership. Amend Verify and rollback at opening. Preserve T0189 -> T0190 -> T0191 -> T0192 dependencies."
+      }
     },
     {
       "id": "T-0191",
@@ -471,7 +500,50 @@
         "Chat uses SimpleMarkdown with guarded links and a Copy button for code blocks."
       ],
       "rollback": "Revert each independently measured primitive fold with its consumers and preserve named accessibility fixes.",
-      "verify": "Ten unnamed dropdowns gain contextual names; 1440x900 and 390x844 visual states plus keyboard/ARIA checks pass, and every folded primitive has a documented net-line benefit and unchanged public interaction."
+      "verify": "Ten unnamed dropdowns gain contextual names; 1440x900 and 390x844 visual states plus keyboard/ARIA checks pass, and every folded primitive has a documented net-line benefit and unchanged public interaction.",
+      "reviewed_followups": {
+        "reviewer": "Fermat 01a0fd2b-be08-7d50-848f-4034e5832160, read-only 2026-10-02; no independent runtime execution",
+        "status": "Queued for exact claims, router verdict and red oracle before batch implementation; not acceptance",
+        "items": [
+          {
+            "title": "Phone chat input",
+            "evidenceStatus": "reproduced in owned production fixture",
+            "sourcePaths": [
+              "src/components/layout/AppPageShell.tsx"
+            ],
+            "receiptNote": "tmp/t0191-chat-viewport-finding-20261002.md",
+            "verify": "390x844 input834..876; require visible input/focus/mobile sheet at both widths, preserve transcript scrolling. Claim chat page/root layout only if required."
+          },
+          {
+            "title": "Phone credential name",
+            "evidenceStatus": "reproduced in owned production fixture",
+            "sourcePaths": [
+              "src/components/models/CredentialsPanel.tsx"
+            ],
+            "receiptNote": "tmp/t0191-credential-viewport-finding-20261002.md",
+            "verify": "Require readable visible populated-row label, not only accessible name; preserve controls/secret hints/CRUD."
+          },
+          {
+            "title": "Fallback actions",
+            "evidenceStatus": "observed phone clipping; geometry/touch proof pending",
+            "sourcePaths": [
+              "src/components/models/FallbackChainList.tsx"
+            ],
+            "receiptNote": "tmp/t0192-fallback-live-finding-20261002.md",
+            "verify": "Require visible/focusable/discoverable controls and deliberate scroll reachability; automatic Playwright scroll is insufficient."
+          },
+          {
+            "title": "Story card phone hierarchy",
+            "evidenceStatus": "inspected presentation judgement, not WCAG classification",
+            "sourcePaths": [
+              "src/modules/rec-room/components/StoryCard.tsx"
+            ],
+            "receiptNote": "tmp/t0189-story-live-finding-20261002.md",
+            "verify": "Pin observed20character title/six metadata items, action hierarchy and existing functions; consume accepted T0189 fixture."
+          }
+        ],
+        "claim_rule": "Name exact new unit .tsx and browser oracle paths; current glob claims do not establish ownership. Amend Verify and rollback at opening. Preserve T0189 -> T0190 -> T0191 -> T0192 dependencies."
+      }
     },
     {
       "id": "T-0192",
@@ -502,7 +574,59 @@
         "Body validation, auth, read-only, errors and status codes stay exact while large pages move to hooks."
       ],
       "rollback": "Revert one route/page cohort at a time with URL and method oracle intact.",
-      "verify": "A generated route matrix preserves every public method and URL, app-01's four operator routes have item-specific API reference labels and an explicit caller-gate allowlist, malformed bodies return deliberate 4xx, auth and read-only refusals remain exact, and full desktop/phone API-backed smoke journeys pass."
+      "verify": "A generated route matrix preserves every public method and URL, app-01's four operator routes have item-specific API reference labels and an explicit caller-gate allowlist, malformed bodies return deliberate 4xx, auth and read-only refusals remain exact, and full desktop/phone API-backed smoke journeys pass.",
+      "reviewed_followups": {
+        "reviewer": "Fermat 01a0fd2b-be08-7d50-848f-4034e5832160, read-only 2026-10-02; no independent runtime execution",
+        "status": "Queued for exact claims, router verdict and red oracle before batch implementation; not acceptance",
+        "items": [
+          {
+            "title": "Profile rename metadata",
+            "evidenceStatus": "reproduced stale metadata",
+            "sourcePaths": [
+              "src/app/api/agent/profiles/[id]/route.ts"
+            ],
+            "receiptNote": "tmp/t0192-profile-live-finding-20261002.md",
+            "verify": "Changed/same slug, clear description, filesystem failure, reference preservation and reload. Claim profiles-repository only if changed."
+          },
+          {
+            "title": "Settings pending-save draft",
+            "evidenceStatus": "reproduced",
+            "sourcePaths": [
+              "src/hooks/useSettingsEditor.ts"
+            ],
+            "receiptNote": "tmp/t0192-settings-live-finding-20261002.md",
+            "verify": "40 -> submit41 -> type42 -> release success: baseline41/newer draft42 unsaved; unchanged success and failure controls. Handoff afterT0190."
+          },
+          {
+            "title": "Last fallback YAML entry",
+            "evidenceStatus": "reproduced stored discrepancy, not Hermes execution",
+            "sourcePaths": [
+              "src/modules/hermes/lib/fallback-sync.ts"
+            ],
+            "receiptNote": "tmp/t0192-fallback-live-finding-20261002.md",
+            "verify": "Real SQLite/YAML disable sole, delete last, explicit empty sync; preserve nonempty/backup/error contracts. Claim config helper only if changed."
+          },
+          {
+            "title": "Bulk default feedback",
+            "evidenceStatus": "reproduced semantic errors reported as success",
+            "sourcePaths": [
+              "src/hooks/useModelActions.ts"
+            ],
+            "receiptNote": "tmp/t0192-bulk-live-finding-20261002.md",
+            "verify": "Allsuccess/semantic/transport/mixed outcome feedback and refreshed defaults; preserve HTTP200data.error for SQLite success/YAML failure. Handoff afterT0190."
+          },
+          {
+            "title": "Story false-empty list",
+            "evidenceStatus": "damaged-row masking reproduced; post-parser SQL failure pending",
+            "sourcePaths": [
+              "src/modules/rec-room/handlers/crud.ts"
+            ],
+            "receiptNote": "tmp/t0189-story-live-finding-20261002.md",
+            "verify": "Injected read failure plus healthy/empty and visible consumer recovery. Explicit bug-fix exception to unchanged error/status wording; preserve URL/method, claim consumers only if required."
+          }
+        ],
+        "claim_rule": "Name exact new unit .tsx and browser oracle paths; current glob claims do not establish ownership. Amend Verify and rollback at opening. Preserve T0189 -> T0190 -> T0191 -> T0192 dependencies."
+      }
     },
     {
       "id": "T-0193",
