@@ -159,3 +159,33 @@ Earlier green evidence does not establish that new schedule.
 ## Independent amendment, 2 October
 
 Schrodinger, different from original author Carver, preserved the20Mission and9Story test identities and assertions. Common Mission fixtures reduce actual repeated test windows from4842 to4796, below the unchanged4800C4 ceiling. Extraction costs4physical lines; the entire amendment adds43physical lines including2Story cases. It is not a net line saving. The mounted title/read-status case fails semantically; unmount preservation passes. Amended suites30pass1fail; C4 adds24passes, with0skips/runtime errors. Full test typing and scoped lint exit0. Final manifest tmp/t0190-oracle-amendment/freeze.json binds hashes, preserved controls, failed matcher and snapshot. Author STOPPED; Sagan accepted this freeze only. Implementation/full-gate/sweep/hosted acceptance remain outstanding.
+
+## Second gate and current personal walks
+
+The second unchanged-tree gate, tmp/t0190-full-gate-1790973879719,
+passes lint, type checking,8265unit cases with9existing skips, Knip,
+canary, production build and both database-purity checks. The browser stage
+fails one phone Story navigation assertion at its unchanged5-second deadline;
+364cases pass and24existing skips remain. Both census stages are unexecuted.
+The exact frozen client spec passes10/10 alone on owned port3998 at
+tmp/t0190-browser-oracle-1790974592401. Both results and the failure trace are
+retained. The trace shows successful creation and a reader navigation request;
+the load-sensitive timing cause is not established. This is not a green gate.
+
+Story title ownership now survives read-status cache publication. All159
+integrated cases pass at tmp/t0190-coordinator-jest-1790973698993, with full
+test typing at tmp/t0190-coordinator-types-1790973657251. The independent
+reviewer withdrew an unconfirmed cancellation-boundary hypothesis. The newer
+Mission write-continuation finding remains open for independent reproduction.
+
+Personal production walks at1440x900 and390x844 retain16Memory-state images
+and5Story images in the task's personal_walks_latest receipts. The Story walk
+confirms title and read flag together, drawer dismissal and focus return.
+Inspected screenshots show readable titles and controls with no horizontal
+overflow; each walked route has oneh1 and no page exception. Expected sign-in
+401s and deliberately injected service failures remain recorded. Providers
+are intercepted, so this does not establish real-provider or release acceptance.
+
+## Mission continuation oracle
+
+Independent Carver oracle reproduces cancel/update/promote ofA invalidating selectedBdetail before the15-second poll. Actual composed hooks/query/write helpers run together. Three semantic reds and four preservation controls are frozen in tmp/t0190-continuation-oracle/freeze.json. Existing18frozenfiles and866sourcefiles match the baseline. Types/lint exit0; C4 passes24cases at4796. The current line ratchet honestly exits1 for169newtestlines, pending an explicit growth reason. Author STOPPED; Sagan accepts freeze/redcommit only. No implementation or final gate acceptance follows.

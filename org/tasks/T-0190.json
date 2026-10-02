@@ -99,7 +99,9 @@
     "org/briefs/T-0190-story-cache-oracle.md",
     "tests/unit/mission-link-handoff.test.tsx",
     "tests/helpers/mission-link-query-fixture.tsx",
-    "org/briefs/T-0190-oracle-amendment.md"
+    "org/briefs/T-0190-oracle-amendment.md",
+    "tests/unit/mission-write-continuation.test.tsx",
+    "org/briefs/T-0190-continuation-oracle.md"
   ],
   "timestamps": {
     "opened": "2026-10-02T17:49:07.371181+00:00",
@@ -894,7 +896,8 @@
       "reviewer": "Sagan 01a0fe05-a6c0-7d22-ae2f-ba3716eded80",
       "verdict": "PASS",
       "scope": "Freeze and red commit only; final implementation acceptance pending"
-    }
+    },
+    "commit": "ac33173e3c680f4065c8a8c328c27fb05823c46d"
   },
   "first_full_gate": {
     "receipt": "tmp/t0190-full-gate-1790971757353/summary.json",
@@ -944,5 +947,100 @@
     "passed": 95,
     "failed": 0,
     "skipped": 0
-  }
+  },
+  "continuation_oracle": {
+    "author": "Carver",
+    "file": "tests/unit/mission-write-continuation.test.tsx",
+    "brief": "org/briefs/T-0190-continuation-oracle.md",
+    "status": "Frozen; author explicitly STOPPED; independent freeze accepted before red commit",
+    "sha256": "b3741acf811cb9e812a614343840e91b10dfbd5589655eda4387f7fa825b11b6",
+    "manifest": "tmp\\t0190-continuation-oracle\\freeze.json",
+    "manifestSha256": "8b39e9603dcd9170d7592630962340c373150b014589e776bf1f0c9fc886b9e1",
+    "counts": {
+      "passed": 4,
+      "failed": 3,
+      "skipped": 0,
+      "runtimeErrors": 0
+    },
+    "results": "tmp/t0190-continuation-oracle/red-1790974895788/receipt.json",
+    "census": "Fixed C4 passes24cases at4796; current line ratchet exits1 for169newtestlines. Growth needs explicit recorded reason.",
+    "independence": "Source-informed separate oracle author; actual useMissionsPage/composer/dispatch/data/read/write helpers and QueryClient. Only navigation and HTTP arrival order controlled; bounded fake time stays below the 15-second polling recovery.",
+    "review": {
+      "reviewer": "Sagan 01a0fe05-a6c0-7d22-ae2f-ba3716eded80",
+      "verdict": "PASS",
+      "scope": "Freeze/redcommit only; no final implementation acceptance."
+    }
+  },
+  "second_full_gate": {
+    "receipt": "tmp/t0190-full-gate-1790973879719/summary.json",
+    "result": "FAIL",
+    "treeUnchanged": true,
+    "passedSteps": [
+      "lint",
+      "tsc",
+      "jest",
+      "knip",
+      "canary",
+      "build",
+      "build-purity"
+    ],
+    "jest": {
+      "passed": 8265,
+      "existingSkipped": 9
+    },
+    "browser": {
+      "passed": 364,
+      "failed": 1,
+      "existingSkipped": 24
+    },
+    "failure": "Phone Story storage-denial journey stayed on create URL after5s. Preserve trace and rerun frozen spec alone; no timeout change.",
+    "unexecuted": [
+      "census",
+      "census-lines"
+    ],
+    "isolatedRepeat": {
+      "receipt": "tmp/t0190-browser-oracle-1790974592401/summary.json",
+      "exit": 0,
+      "passed": 10,
+      "skipped": 0,
+      "specUnchanged": true,
+      "port": 3998,
+      "ownedProcessesStopped": true,
+      "qualification": "Original load failure retained. No timeout/assertion change; source cause not established. Final complete gate still required."
+    },
+    "trace": "tmp/t0190-full-gate-1790973879719/phone-story-failure/trace.zip",
+    "traceTiming": "tmp/t0190-full-gate-1790973879719/phone-story-failure/redacted-timings.json"
+  },
+  "story_title_repair": {
+    "oracleCommit": "ac33173e3c680f4065c8a8c328c27fb05823c46d",
+    "integrated": "tmp/t0190-coordinator-jest-1790973698993/summary.json",
+    "passed": 159,
+    "types": "tmp/t0190-coordinator-types-1790973657251/summary.json",
+    "behaviour": "Owner lifetime follows story selection/mount, not query publication. Title-only functional merge retains current read flags and changed titles; arc merge requires unchanged starting arc.",
+    "review": "Sagan found no blocker in this repair. Cancellation-boundary hypothesis withdrawn as unconfirmed against actual scheduling."
+  },
+  "personal_walks_latest": [
+    {
+      "receipt": "tmp/t0190-green-validation/tmp/t0190-personal-1790972646965/walk.json",
+      "scope": "Memory disconnected state, collection failures/recovery and create/cancel dialogs",
+      "viewports": [
+        "1440x900",
+        "390x844"
+      ],
+      "images": 16,
+      "result": "PASS",
+      "qualification": "Controlled Hindsight HTTP responses; expected401/503/service diagnostics retained. No external backend acceptance."
+    },
+    {
+      "receipt": "tmp/t0190-green-validation/tmp/t0190-personal-1790974850848/walk.json",
+      "scope": "Held title reply after confirmed read flag; chapter drawer dismissal/focus return",
+      "viewports": [
+        "1440x900",
+        "390x844"
+      ],
+      "images": 5,
+      "result": "PASS",
+      "qualification": "Actual production UI/sign-in; all Story requests controlled. Oneh1/nohorizontaloverflow/no page exceptions; expected presignin401 retained. Screenshots personally inspected. Earlier1790974746789phone probe incorrectly looked for badge while drawerclosed; preserved as harness failure."
+    }
+  ]
 }
