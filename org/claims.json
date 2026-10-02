@@ -30,7 +30,12 @@
         "org/STATE.md",
         "docs/manifest.json",
         "scripts/tooling/line-census.baseline.json",
-        "tests/fixtures/mutants/T-0189.json"
+        "tests/fixtures/mutants/T-0189.json",
+        "src/lib/sync/sources/SessionSync.ts",
+        "src/lib/sync/sources/EnvSync.ts",
+        "src/lib/sync/env-token-presence.ts",
+        "src/lib/models/models-repository.ts",
+        "src/lib/sync/SyncScheduler.ts"
       ],
       "acquired": "2026-10-02T14:10:33.645498+00:00",
       "expires": "2026-10-03T14:10:33.645498+00:00"
@@ -46,7 +51,12 @@
       "path_claims": [
         "tests/unit/data-transaction-usage.test.ts",
         "tests/unit/data-transaction-stories.test.ts",
-        "tests/unit/data-transaction-sync.test.ts"
+        "tests/unit/data-transaction-sync.test.ts",
+        "tests/unit/data-transaction-models.test.ts",
+        "tests/unit/data-transaction-scheduler.test.ts",
+        "tests/unit/data-transaction-migration-parity.test.ts",
+        "tests/unit/data-transaction-schema-health.test.ts",
+        "tests/unit/data-transaction-repository-contracts.test.ts"
       ]
     }
   ],

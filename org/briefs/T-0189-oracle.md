@@ -1,7 +1,7 @@
 # T-0189 independent oracle brief, 2 October 2026
 
 Adopt ORACLE. Read T-0189's ruled R2 record. No implementation exists yet.
-Write only the three assigned `tests/unit/data-transaction-*.test.ts` files
+Write only the assigned `tests/unit/data-transaction-*.test.ts` files
 after your disjoint lane is committed and the coordinator releases authorship.
 Do not edit an existing test, helper, configuration, source or historical file.
 Record evidence and hashes under ignored `tmp/t0189-oracle/`. Return exact test
@@ -66,8 +66,12 @@ Exercise actual ProcessSync with controlled ps/filesystem inputs and real SQLite
 Fail the second new insert with a SQLite trigger: all previous process rows must
 remain. Success replaces stale rows; a successful empty scan clears them. Keep
 timestamps/result reporting, no false success and no actual operating-system
-process enumeration. Platform-token consistency is a later oracle slice until
-its additional source claims and criteria are registered.
+process enumeration. Platform labels and EnvSync must use the same token-presence
+rule: empty, commented and placeholder `changeme` values are absent; real nonempty
+values are present, including quoted values. Preserve Discord/Telegram/Slack
+labels and the existing WhatsApp key-or-phone-ID platform rule. Use fake values.
+SessionSync must report its underlying result without writing sync_registry;
+the table and historical/recovery support remain intact under lib-data-09a.
 
 Error identity is `(source, timestamp, full message)`. Repeated ticks must not
 append the same identity; different source/time/message tails survive. Severity
@@ -79,9 +83,39 @@ owned log files or controlled reader dependencies. An insertion/pruning failure
 rolls back the entire tick; preserve existing 500-row retention. No new schema,
 index, migration or one-off duplicate deletion is authorised.
 
+## Additional data and scheduler controls
+
+The independently reviewed scope includes five more suites: models, scheduler,
+migration-parity, schema-health and repository-contracts. Their exact paths are
+in the committed claims. A real-source preflight reproduced model creation
+leaving one new row and removing the old default after the new default insert
+failed. Require one atomic creation/default replacement, including rollback
+after clearing an earlier slot and preservation of unrelated defaults.
+
+The same preflight reproduced concurrent source execution, repeated execution
+after timeout while underlying work was pending, and lost lastError on resolved
+`success:false`. Test runOne/runAll/forceSync overlap, timeout, late settlement,
+rejection and later retry, while different sources may progress. Keep the
+per-source execution claim until the underlying work settles. A failed result
+must retain its error; a late result must not overwrite a newer observation.
+Preserve ConfigSync's deliberate nonfatal malformed-YAML result. Fake timers
+may pin timeout boundaries, but settle all owned promises and restore timers.
+
+Migration parity is an observation/control obligation: compare actual final
+fresh and synthetic degraded-v2 schemas, columns and indexes after one pass,
+including idx_runs_story, and repeat stability. Use real SQLite and immutable
+SQL fixtures; preserve historical tests and exact head43/Auth43 controls. Report
+unresolved parity as a defect, not permission to alter old migrations. Schema
+health must preserve the actual missing-category-table 503 boundary and normal
+healthy response. Repository-contracts should cover the remaining reviewed
+retention/progression, preferences and defensive-read contracts with meaningful
+behaviour rather than restating source or adding generic assertion inventories.
+Resolve the exact remaining disposition matrix before claiming those obligations
+covered; this suite title is not a claim of complete repository acceptance.
+
 ## Freeze and limits
 
-These three suites cover the first coherent slice, not all T-0189 ownership.
+These suites do not by themselves discharge all T-0189 ownership.
 Additional independently authored controls must precede any later implementation
 slice. Existing historical oracles stay unchanged; report any conflict for a
 different author's Q-015 amendment. Prove actual assertion failures independently

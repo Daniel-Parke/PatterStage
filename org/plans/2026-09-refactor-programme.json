@@ -368,7 +368,17 @@
         "org/STATE.md",
         "docs/manifest.json",
         "scripts/tooling/line-census.baseline.json",
-        "tests/fixtures/mutants/T-0189.json"
+        "tests/fixtures/mutants/T-0189.json",
+        "src/lib/sync/sources/SessionSync.ts",
+        "src/lib/sync/sources/EnvSync.ts",
+        "src/lib/sync/env-token-presence.ts",
+        "src/lib/models/models-repository.ts",
+        "src/lib/sync/SyncScheduler.ts",
+        "tests/unit/data-transaction-models.test.ts",
+        "tests/unit/data-transaction-scheduler.test.ts",
+        "tests/unit/data-transaction-migration-parity.test.ts",
+        "tests/unit/data-transaction-schema-health.test.ts",
+        "tests/unit/data-transaction-repository-contracts.test.ts"
       ],
       "dependsOn": [
         "T-0188"
