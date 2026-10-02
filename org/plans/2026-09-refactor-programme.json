@@ -387,7 +387,11 @@
         "src/lib/db/safe-read.ts",
         "src/lib/analytics/analytics-repository.ts",
         "src/lib/spend/spend-summary.ts",
-        "src/lib/sessions/sessions-api-helpers.ts"
+        "src/lib/sessions/sessions-api-helpers.ts",
+        "org/briefs/T-0189-oracle-amendment.md",
+        "src/lib/db/sql-migrations.ts",
+        "src/lib/db/index.ts",
+        "src/lib/db/apply-sql.ts"
       ],
       "dependsOn": [
         "T-0188"

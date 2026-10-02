@@ -45,7 +45,10 @@
         "src/lib/analytics/analytics-repository.ts",
         "src/lib/spend/spend-summary.ts",
         "src/lib/sessions/sessions-api-helpers.ts",
-        "org/briefs/T-0189-oracle-amendment.md"
+        "org/briefs/T-0189-oracle-amendment.md",
+        "src/lib/db/sql-migrations.ts",
+        "src/lib/db/index.ts",
+        "src/lib/db/apply-sql.ts"
       ],
       "acquired": "2026-10-02T14:10:33.645498+00:00",
       "expires": "2026-10-03T14:10:33.645498+00:00"
@@ -59,12 +62,13 @@
         "tests/unit/data-transaction-usage.test.ts",
         "tests/unit/data-transaction-stories.test.ts",
         "tests/unit/data-transaction-sync.test.ts",
-        "tests/unit/data-transaction-repository-contracts.test.ts"
+        "tests/unit/data-transaction-repository-contracts.test.ts",
+        "tests/unit/data-transaction-migration-parity.test.ts"
       ],
       "acquired": "2026-10-02T14:10:33.645498+00:00",
       "expires": "2026-10-03T14:10:33.645498+00:00",
       "harness_task_id": "01a0fd1f-516a-7323-af9c-0682d6bbbe6c"
     }
   ],
-  "note": "Two disjoint writing lanes: coordinator metadata only until amended red oracle; Planck four new oracle files only. Original frozen evidence retained. Reviewer read-only."
+  "note": "Two writing lanes: coordinator metadata until new red commit; Planck five new oracle files. Other frozen suites/historical tests immutable; reviewer read-only."
 }

@@ -36,3 +36,24 @@ Record before/after test-name identity, added names, behavioural versus infrastr
 counts, raw SHA256 of all eight suites, diagnostics, timing and unchanged tree.
 Append dated provenance in the four amended files. Obtain reviewer feedback and
 stop writing at the new freeze. Coordinator owns commits, metadata and views.
+
+## Additional migration witnesses, independently reviewed before implementation
+
+The coordinator extends your claim to data-transaction-migration-parity.test.ts
+before this authorship. Preserve all existing names; add real SQLite controls for:
+
+- Pending 040 partially applied columns: complete the remaining historical
+  backfill and exact partial index; preserve rows and recorded usage.
+- An injected later failure rolls back pending completion and version recording.
+- Public runMigrations repairs a head43 database missing idx_runs_story. Keep
+  populated rows, explicit spend classifications (including Composer-linked rows),
+  usage, links, version43 and Auth43 validation unchanged. Do not replay the old
+  backfill at head. Pin the index's table, column and WHERE story_id IS NOT NULL.
+- Repeated calls are stable. The old applyRunsSpendSourceMigration >=40 no-op
+  contract survives. A conflicting index is never silently dropped/replaced.
+
+Production scope will be the current driver, not historical SQL. Source review
+suggests the older all-file upgrade partially applies040 before the ordered
+driver, which then stops on a duplicate ALTER and omits the index. Treat the
+precise intermediate sequence as an inference unless observed. The existing
+fresh/degraded parity failures already demonstrate the missing final index.

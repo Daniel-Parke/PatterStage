@@ -82,3 +82,44 @@ Separate REVIEWER clarification preserves finite usage components on sum overflo
 rather than dropping the row and possibly understating spend. Concurrent sync
 callers share a bounded result; a timeout keeps the execution claim until the
 underlying work settles. Late settlement cannot clear its recorded timeout.
+
+## Candidate column trace rechecked at f652de00
+
+The source remains unchanged from the oracle baseline. These are source traces,
+not proof about deployed databases or external SQLite clients.
+
+| Candidate | Current evidence | Disposition boundary |
+| --- | --- | --- |
+| benchmark_runs.used_skills, used_tools, used_memory | Named production references remain the three ALTER statements in immutable 015_benchmark_config.sql. T-0188's real SQLite partial-apply control now preserves a non-null used_tools value. | Retain all three. No current product reader does not establish safe deletion; generic online backup preserves the database. The legacy rebuild whitelist omits benchmark_runs. |
+| sessions.provider | dispatch.ts:68 and sessions/route.ts:122 supply it; session-repository.ts:186/219 maps and inserts it. session-sync-repository.ts:87-115 inserts NULL for new foreign sessions and does not overwrite it on conflict. | Live persisted/API contract. Retain. Missing UI use is irrelevant to that contract. |
+| sync_registry.source_mtime | Baseline line239 defines it. The only current named source occurrence is the schema. SessionSync invokes INSERT OR REPLACE writers which omit the column; upgrade.ts:51-68/93-122 includes generic export and shared-column import. | Remove only the ruled status writers. Keep table, column and existing rows. Historical non-null values and external SQL remain unresolved. |
+
+Re-run with `rg -n -e used_skills -e used_tools -e used_memory src scripts tests docs`,
+`rg -n 'source_mtime|sync_registry' src scripts tests`, and the named provider
+paths. The inventory of49tables/529columns does not change these conclusions.
+`snapshotDatabase` uses the driver's online backup at db/backup.ts:155-169;
+`restoreCommand` documents stopping the server and removing stale WAL sidecars.
+No operator backup or restore was inspected or executed. The legacy rebuild
+predicate requires version greater than103, which the current head43 chain does
+not emit. Its separate retirement and destructive manual prebuild path remain
+T-0199 obligations. Migration history stays immutable; ADR-0004 preserves
+benchmark history and ADR-0009's opt-in pruning does not authorise table drops.
+
+## First oracle checkpoint and review hold
+
+Commit f652de00 preserves eight independently authored suites:398 discovered,
+333 executed,192 passed,140 behavioural failures, one missing-parser
+infrastructure failure and65 conditional parser cases not executed. The first
+freeze is retained unchanged at tmp/t0189-oracle/freeze-20261002.json. Review
+requires stronger mixed-chapter, recovery, stale-process and WhatsApp assertions,
+explicit infrastructure classification and an actual failing aggregate read.
+Planck owns that narrow amendment separately from original author Sartre and
+the coordinator. No implementation is permitted until its red commit and review.
+
+Eighteen unchanged historical suites pass205/205 tests, with no skips, in the
+isolated checkout at d0b9a7ed. Receipt
+`tmp/t0189-historical-controls/1790953409207/summary.json` names every test and
+records unchanged source and selected-suite hashes. This covers existing
+retention, progression, Composer, credentials, schedules, chat, research spend,
+stats, analytics, spend refusal, ConfigSync, scheduler, backup and migration
+controls. It does not replace the new oracle or the finished-tree full gate.

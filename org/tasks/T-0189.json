@@ -13,7 +13,8 @@
     ],
     "side_effects": [
       "financial-impact",
-      "sends-external"
+      "sends-external",
+      "migrates-schema"
     ]
   },
   "mode": "high-assurance",
@@ -66,7 +67,10 @@
     "src/lib/analytics/analytics-repository.ts",
     "src/lib/spend/spend-summary.ts",
     "src/lib/sessions/sessions-api-helpers.ts",
-    "org/briefs/T-0189-oracle-amendment.md"
+    "org/briefs/T-0189-oracle-amendment.md",
+    "src/lib/db/sql-migrations.ts",
+    "src/lib/db/index.ts",
+    "src/lib/db/apply-sql.ts"
   ],
   "timestamps": {
     "opened": "2026-10-02T14:10:33.645498+00:00",
@@ -79,6 +83,12 @@
       "tier_floor": "R2",
       "source": "declared",
       "evidence": "declared side effect: financial-impact"
+    },
+    {
+      "factor": "schema-change",
+      "tier_floor": "R2",
+      "source": "declared",
+      "evidence": "declared side effect: migrates-schema"
     },
     {
       "factor": "boundary-contact",
@@ -299,9 +309,10 @@
     "Historical tests and test identities, all target baselines, auth schema43, provider usage normalisation, read-only refusals and protected governance remain intact.",
     "Model creation and selected default slots commit atomically, restoring the old defaults on any failed insert.",
     "Each sync source has one underlying execution until it settles, including after timeout; resolved failures remain visible. ConfigSync nonfatal malformed-YAML behaviour remains deliberate.",
-    "Token presence agrees across process labels and EnvSync; only ruled internal sync_registry writers are removed, leaving the table and recovery intact."
+    "Token presence agrees across process labels and EnvSync; only ruled internal sync_registry writers are removed, leaving the table and recovery intact.",
+    "Pending040 completion/version recording is atomic; at head43 only restore the missing historical index, preserving rows, explicit spend classifications, usage, links, Auth43 and old applier no-op. Never silently replace a conflicting index."
   ],
-  "rollback": "Revert only this batch code on an owned fixture. No migration or live data rewrite is proposed; preserve original stored JSON, failure receipts and worktrees.",
+  "rollback": "Revert this batch code on an owned fixture. The additive repair only restores the already specified historical index; no table/column drop or operator data rewrite. Pending historical040 completion is transactional. Preserve rawJSON, failure receipts and worktrees.",
   "verify_line": "Separate-author red-first behaviour oracle with real SQLite rollback and parser metamorphic cases; unchanged historical test identities; focused and full Jest/type checks; desktop1440x900/phone390x844 affected journeys; complete unchanged-tree ten-step gate; clean committed mutation controls/restoration; independent R2 acceptance; every required exact-head hosted push and PR job.",
   "preflight": [
     {
@@ -387,5 +398,34 @@
     "authority": "EXECUTOR/ORACLE different-author frozen-gate procedure; strengthening within existing T-0189 invariants. No weakening or historical oracle amendment.",
     "brief": "org/briefs/T-0189-oracle-amendment.md",
     "reviewer": "Schrodinger HOLD: story mixed elements/recovery/rollback; process old-row and WhatsApp assertions; explicit infrastructure failure; third display fallback."
+  },
+  "schema_maintenance": {
+    "scope": "Complete partially applied historical040 and repair its missing existing idx_runs_story at head43, without replaying its backfill at head, changing immutable SQL, new schema elements or dropping/replacing indexes.",
+    "reviewer": "Schrodinger independent scope PASS; new independent SQLite witnesses and red commit required before implementation.",
+    "authority": "Approved T0189 lib-data27/gap036.3 parity repair; current driver only. Existing schema contract restored, not a new schema decision.",
+    "router_verdict": {
+      "tier": "R2",
+      "reasons": [
+        {
+          "factor": "money",
+          "tier_floor": "R2",
+          "source": "declared",
+          "evidence": "declared side effect: financial-impact"
+        },
+        {
+          "factor": "schema-change",
+          "tier_floor": "R2",
+          "source": "declared",
+          "evidence": "declared side effect: migrates-schema"
+        },
+        {
+          "factor": "boundary-contact",
+          "tier_floor": "R1",
+          "source": "declared",
+          "evidence": "declared side effect: sends-external"
+        }
+      ],
+      "discrepancies": []
+    }
   }
 }
