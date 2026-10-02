@@ -1,5 +1,9 @@
 # T-0189 oracle strengthening amendment, 2 October 2026
 
+## Independent recovery preservation witness
+
+After the NODE_ENV correction, Averroes also owns the story oracle for an additive regression witness. Reviewer Schrodinger found that serialising a mixed chapter array can change an untouched `1e309` numeric value into `null` when another valid writing chapter is recovered. Test a mixed stored array with unusable overflowing chapter fields, an overflowing primitive, a valid writing chapter with unknown numeric metadata, and an untouched valid chapter. Require valid recovery and preservation of unrelated values, including positive/negative overflow and a large integer that normal JavaScript number parsing rounds. Preserve all 47 previous names and assertions. Execute the new witness against the current implementation before any repair, record structured matcher failures, and commit the new oracle red. Do not inspect implementation bodies. No new product behaviour or schema change is authorised.
+
 Planck is the different ORACLE author. No implementation exists. Schrodinger's
 review holds the first freeze. Preserve that freeze and all failed receipts.
 Only the four new suites in your claims may change. Do not inspect or edit target

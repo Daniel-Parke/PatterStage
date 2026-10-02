@@ -442,6 +442,13 @@
       "scope": "Explicitly preserve process.env.NODE_ENV after filtered environment spread; no assertion, fixture, execution, test-name or suppression changes.",
       "verify": "Full tsconfig.tests.json noEmit exits0; all31 migration cases execute/pass without skips; before/after names identical; hashes and exact unchanged validation source recorded.",
       "failed_evidence": "tmp/t0189-static-check/1790955201191/summary.json; tmp/t0189-sync-lane/handoff.json"
+    },
+    "recovery_numeric_preservation": {
+      "status": "independent additive witness claimed; red evidence required before repair",
+      "author": "Averroes/01a0fd41-d8a8-7df1-861b-b12aa52122e6",
+      "reviewer": "Schrodinger found mixed-array untouched overflow serialises to null",
+      "scope": "Preserve all prior names/assertions; add mixed recovery witness including raw numeric overflow and large-integer metadata preservation; no implementation edits in ORACLE lane.",
+      "verify": "Structured new matcher failure on current source, independent red freeze and commit before repair; all old names retained; no skips."
     }
   },
   "schema_maintenance": {
