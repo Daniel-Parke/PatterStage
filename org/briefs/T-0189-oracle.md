@@ -34,10 +34,17 @@ hard-stop refusal on SQL failure. Generate finite-count cases and check that
 omitting only total gives input+output, while adding explicit finite total keeps
 that total. Do not introduce a new negative-token/provider accounting policy.
 
-Numeric strings become numbers. Missing or invalid/non-finite individual counts
-default to zero while preserving valid fields; absent/invalid total uses the sum.
+Nonblank numeric strings become numbers; do not coerce booleans, arrays or objects.
+Missing or invalid/non-finite individual counts default to zero while preserving
+valid fields; absent/invalid total uses the sum.
 Missing/malformed/null/scalar/array roots return null; an empty object is a valid
 zero-count object. Preserve finite negative values under the existing policy.
+Component-sum overflow must not invalidate a row, clamp or zero its total, or
+discard valid input/output counts. Preserve JavaScript arithmetic and current
+serialisation; do not promise all derived totals are finite. Restrict finite-sum
+properties to representable sums and add an explicit overflow case. An enormous
+finite-count control must preserve existing component-based cost and armed-guard
+outcome; the cost can remain finite even when their unpriced sum overflows.
 
 ## Story oracle
 
@@ -58,7 +65,12 @@ four declared statuses. A valid writing chapter retains every other field when
 recovered. Display can omit invalid array elements, but recovery must preserve
 them in the stored array while changing only valid writing chapters. With no
 usable writing chapters, leave the original raw JSON bytes untouched. Optional
-fields and unknown extension metadata on valid chapters remain intact.
+fields and unknown extension metadata on valid chapters remain intact, except
+that a writing chapter's status becomes failed and its error becomes the existing
+restart reason. Preserve nonwriting chapters' existing error metadata. The whole
+recovery transaction includes the initial story-status update and every chapter
+write. Within an edited JSON document, preserve unrelated data structurally;
+untouched columns and wholly unusable documents remain byte-identical.
 
 ## Sync oracle
 
