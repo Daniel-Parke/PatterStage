@@ -802,11 +802,55 @@
       "verdict": "PASS",
       "scope": "Story oracle freeze/redcommit only",
       "evidence": "9cases6pass3behaviouralreds0skip/runtime,types/lint0.17evidencehashes866sourcefiles match;previous15frozenfiles unchanged. Validcontrols/source-informed method and retainedlauncherfailure/unreachedassertions qualified."
-    }
+    },
+    "commit": "31743133",
+    "repairFocused": "tmp/t0190-coordinator-jest-1790971369310/summary.json"
   },
   "handoff_oracle": {
     "author": "Carver",
     "file": "tests/unit/mission-link-handoff.test.tsx",
-    "status": "Independent reproduction of refreshed list/detail handoff joining superseded initial lookup."
+    "status": "Frozen, author explicitly stopped, independently accepted for red commit",
+    "manifest": "tmp\\t0190-mission-handoff-oracle\\freeze.json",
+    "manifestSha256": "a4c5fa59a99034c8c73f9f80a76159cbb8c98515aa1ca38027850b5972097feb",
+    "sha256": "b61185934f0b581a88f60feda16e5d7a948e671f6ff68b353aadb85a925c9797",
+    "counts": {
+      "total": 6,
+      "passed": 3,
+      "failed": 3,
+      "skipped": 0,
+      "runtimeErrors": 0
+    },
+    "results": [
+      {
+        "stage": "lint",
+        "exit": 0,
+        "receipt": "tmp/t0190-mission-handoff-oracle/lint-1790971185890/receipt.json"
+      },
+      {
+        "stage": "red",
+        "exit": 1,
+        "counts": {
+          "passed": 3,
+          "failed": 3,
+          "skipped": 0,
+          "runtimeErrorSuites": 0
+        },
+        "receipt": "tmp/t0190-mission-handoff-oracle/red-1790971150811/receipt.json"
+      },
+      {
+        "stage": "types",
+        "exit": 0,
+        "receipt": "tmp/t0190-mission-handoff-oracle/types-1790971166431/receipt.json"
+      }
+    ],
+    "interpretation": "Initial older-ID transport remains pending while a refreshed list gains that ID. React selection effect runs before the original response settles. A fresh detail response is available through the real query bridge. Structured failures identify stale detail/error publication, separately from list state.",
+    "independence": "Source-informed actual query bridge/selection effect; not clean-context authorship.",
+    "review": {
+      "reviewer": "Sagan 01a0fe05-a6c0-7d22-ae2f-ba3716eded80",
+      "verdict": "PASS",
+      "scope": "Handoff oracle freeze/redcommit only",
+      "evidence": "Actual6cases3pass3behaviouralred0skip/runtime;types/lint0 on capturedsnapshot. Missions and readApiResource/apiReadOptions unchanged. SubsequentStoryrepair and publishApiResource-only drift qualified; fullintegratedtyping remains required."
+    },
+    "authorStopped": "Carver explicitly confirmed both hashes unchanged, no further tests/edits, writing remains stopped."
   }
 }
