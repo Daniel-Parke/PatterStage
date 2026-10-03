@@ -349,13 +349,13 @@
   ],
   "rollback": "Revert each coherent defect or route/type/prop cohort with its callers. Retain regression tests; no schema or stored-key migration. Public contracts remain pinned.",
   "verify_line": "Independent red-first eight-defect oracles and real persistence under discovered Playwright specs; full URL/method snapshot and operator caller allowlist before route edits; exact error/optional-body/guard contracts; boot/flag/gateway consistency; current82item ledger and measured complete-cohort net counts; cold/warm Windows/Linux built endpoint and event-loop investigation; ordinary1440x900/390x844 personal walks/screenshots; full unchanged ten-stage gate; clean committed causal sweep with passing restored controls; independentR2; every implementation andclosure hosted job.",
-  "oracle_status": "Not authored or frozen. No implementation permitted before applicable independent red-first oracle commit.",
+  "oracle_status": "Browser and URL/method cohort independently accepted by Laplace before implementation: 94 new cases, 67 passing and 27 behavioural reds. Separate unit amendments remain pending and unintegrated.",
   "preservation_baseline": "tmp/t0192-preservation-baseline-20261003.json",
   "independence": {
     "oracleAuthor": "Galileo unit/contracts; Sartre browser/persistence and historical Composer fixture; source exposure disclosed",
     "implementer": "coordinator",
     "finalReviewer": "Laplace, neither source nor gate author",
-    "writing_handoff": "Coordinator becomes read-only while both disjoint oracle lanes are active. Reacquire coordinator claims only after one lane stops; never more than two writers."
+    "writing_handoff": "Galileo stopped writing after unit handoff. Coordinator reacquired disjoint metadata lane. Sartre stopped for helper review; browser lane retained for subsequent qualified runtime run. Never more than two writers."
   },
   "execution_order": [
     "Freeze complete URL/method baseline and applicable response/auth/body contracts before any route edit, including defect repairs",
@@ -385,5 +385,54 @@
     "head": "49aa7a604cfead440c6cce827a53d2a294408e60",
     "verdict": "Closure prerequisite satisfied; metadata-only eight-file closure, clean tree,11PR/9applicablepush jobs and bothscans pass. Corrected T0192 opening ready, not implementation approval.",
     "scope": "Freeze complete URL/method baseline before all route edits, including defects. Exact helper and historical fixture amendments require independent review."
-  }
+  },
+  "browser_oracle_freeze": {
+    "reviewer": "Laplace / 01a1019a-65c6-7ae2-aafe-5b79b166c745",
+    "verdict": "Accepted for bounded red-first commit and Script, Composer, profile and fallback repairs; no broader implementation acceptance.",
+    "sourceRevision": "4a0ce1968befcfd33f392478627b9ac668e67ef1",
+    "sourceTree": "016c614b1682b7a4d76a5a5c973d9dedfd59ad10",
+    "files": [
+      {
+        "file": "tests/e2e/route-contract-persistence.spec.ts",
+        "rawSha256": "91437eee360237146694c76064cac013a0d8096830310885d93a3ae123885a52",
+        "lfSha256": "91437eee360237146694c76064cac013a0d8096830310885d93a3ae123885a52",
+        "bytes": 7325
+      },
+      {
+        "file": "tests/e2e/route-contract-followups.spec.ts",
+        "rawSha256": "55f01e8b7cc0f67b417240c593c7f14d27a3c57edb534fe73f624bcdd2a77b2c",
+        "lfSha256": "55f01e8b7cc0f67b417240c593c7f14d27a3c57edb534fe73f624bcdd2a77b2c",
+        "bytes": 17625
+      },
+      {
+        "file": "tests/helpers/route-contract-runtime.ts",
+        "rawSha256": "89028f9dbe4df0e84a4b7c84be273da7ca2c82f94a46fc97e756b92955b3bc6d",
+        "lfSha256": "89028f9dbe4df0e84a4b7c84be273da7ca2c82f94a46fc97e756b92955b3bc6d",
+        "bytes": 14714
+      },
+      {
+        "file": "tests/unit/composer-review-control.test.tsx",
+        "rawSha256": "d0caedb25484c92fd88f20df9f1383abcf5660a58c3e6983ffbab4aac22ea4a1",
+        "lfSha256": "d0caedb25484c92fd88f20df9f1383abcf5660a58c3e6983ffbab4aac22ea4a1",
+        "bytes": 3312
+      }
+    ],
+    "receipt": "tmp/t0191-green-validation/tmp/t0192-browser-oracle/freeze-provenance.json",
+    "browserCases": 42,
+    "browserPassed": 15,
+    "browserBehaviouralFailures": 27,
+    "publicContractCasesPassed": 52,
+    "historicalComposerCasesPassed": 3,
+    "limitations": [
+      "Profile refusal proves original row loss; later directory assertions were not reached.",
+      "Conditional later Settings save is not proved by the failing run.",
+      "Composer requests are captured and refused; execution and HIL are not proved.",
+      "Qualified-1 contains two fixture timing failures; earlier unqualified attempts remain retained.",
+      "Census report is not a growth-gate waiver."
+    ]
+  },
+  "bounded_defect_additions": [
+    "Unread or refused Script load permits an actual empty overwrite; stale responses can replace another selected script.",
+    "Profile rename destination obstruction can remove the original database row before reporting failure. Preserve row and directory before mutation; no historical-reference rewrite."
+  ]
 }

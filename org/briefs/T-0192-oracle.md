@@ -61,3 +61,7 @@ Sartre owns:
 - tests/unit/composer-review-control.test.tsx
 
 Authors work only in the isolated validation checkout and their exact claimed paths. Do not commit, edit source, expand claims or change runners. Return structured evidence in messages; private ignored receipts are permitted inside the validation checkout. Do not share mutable data or processes. The coordinator performs no writes while both lanes are active. Stop writing when handing off for review.
+
+## Independent pre-implementation corrections, 2026-10-03
+
+Laplace withheld unit freeze. Halley owns only runtime-operational-consistency.test.ts, api-route-caller-gate.test.ts and story-list-failure-contract.test.ts in tests/unit in the isolated validation checkout. Require original fatal rejection, both sweeps before fallible startup and no later startup after failure. Restrict caller evidence to recognised request calls or traced wrappers; exclude unused literals and fixture/interception references, adding negative controls. Add a non-null guard before Story error-object matching while retaining all existing assertions. Preserve original identities and receipts, independently re-run all seven oracle suites and historical controls, and return exact hashes and failure classification. No production edits, commits or other file changes. Private ignored receipts are permitted. The coordinator is read-only while both author lanes are active.

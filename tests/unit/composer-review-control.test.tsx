@@ -23,9 +23,13 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 
 jest.mock("@/hooks/useComposer", () => ({
-  // No graph: the form falls back to its default objective label and renders
-  // no stages, which is all this test needs. The launch control is unaffected.
-  useComposerWorkflowGraph: () => ({ data: undefined }),
+  // A valid loaded, non-writing graph keeps this fixture focused on launch controls.
+  useComposerWorkflowGraph: () => ({ data: {
+    id: "wf-1", key: "wf-1", name: "Feature build", description: "Plan, implement, test.",
+    version: 1, createdAt: "2026-08-26T00:00:00.000Z", updatedAt: "2026-08-26T00:00:00.000Z",
+    nodes: [{ id: "review-1", workflowId: "wf-1", key: "review", label: "Review", kind: "review",
+      gate: "auto", isStart: true, isTerminal: true, config: null, pos: 0 }], edges: [],
+  } }),
 }));
 
 import ComposerRunForm from "@/components/composer/ComposerRunForm";
