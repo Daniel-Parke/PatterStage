@@ -69,7 +69,7 @@ import { POST as fallback } from '@/app/api/models/fallbacks/route';
 
 const request = (path: string, method = 'GET', body?: unknown) => new NextRequest(`http://owned.test/api/${path}`, { method, ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
 const fileContext = (key = 'hermes') => ({ params: Promise.resolve({ key }) });
-const runResult = { outcome: 'succeeded' as const, exitCode: 0, ok: true };
+const runResult = { outcome: 'succeeded' as const, exitCode: 0, ok: true, logFile: '/owned/logs/owned.mjs.log' };
 const terminal = (route: string, context: string, suffix: string) => `[API ${route}] Error ${context}: ${suffix}`;
 beforeEach(() => {
   jest.resetAllMocks(); mockAuthorised = true;
@@ -84,7 +84,7 @@ beforeEach(() => {
   jest.mocked(getMissionOrNotFound).mockReturnValue(NextResponse.json({ error: 'Mission not found' }, { status: 404 }));
   jest.mocked(tailScriptLog).mockReturnValue('owned log');
   jest.mocked(runScriptFile).mockResolvedValue(runResult);
-  jest.mocked(pushModelToHermes).mockReturnValue({ success: true, details: [] });
+  jest.mocked(pushModelToHermes).mockReturnValue({ success: true, backupPath: null, details: [] });
   jest.mocked(findFileWithExtension).mockReturnValue('/owned/sessions/session-safe.json');
   jest.mocked(addFallbackEntry).mockReturnValue({ id: 'owned-fallback' } as ReturnType<typeof addFallbackEntry>);
   jest.mocked(getFallbackConfig).mockReturnValue({} as ReturnType<typeof getFallbackConfig>);
@@ -151,7 +151,7 @@ describe('T-0192 route-local terminal catch contracts', () => {
     expect(response.status).toBe(400); expect(addFallbackEntry).not.toHaveBeenCalled(); expect(console.error).not.toHaveBeenCalled();
   });
   it('model refusal prevents credential lookup and push without a terminal exception log', async () => {
-    jest.mocked(pushModelToHermes).mockReturnValueOnce({ success: false, details: [{ action: 'error', detail: 'owned refusal' }] });
+    jest.mocked(pushModelToHermes).mockReturnValueOnce({ success: false, backupPath: null, details: [{ action: 'error', detail: 'owned refusal' }] });
     const response = await push(request('models/sync/push', 'POST', { modelId: 'owned-model' }));
     expect(response.status).toBe(500); expect(await response.json()).toEqual({ error: 'Push to Hermes failed for owned-model: owned refusal' });
     expect(getModelWithKey).not.toHaveBeenCalled(); expect(pushCredential).not.toHaveBeenCalled(); expect(console.error).not.toHaveBeenCalled();
@@ -160,7 +160,7 @@ describe('T-0192 route-local terminal catch contracts', () => {
     jest.mocked(getModelWithKey).mockReturnValueOnce({ apiKey: 'synthetic-not-used', credentialsId: 'owned-credential' } as ReturnType<typeof getModelWithKey>);
     jest.mocked(pushCredential).mockImplementationOnce(() => { throw new Error('owned credential refusal'); });
     const response = await push(request('models/sync/push', 'POST', { modelId: 'owned-model' }));
-    expect(response.status).toBe(200); expect(await response.json()).toEqual({ data: { success: true, details: [{ action: 'warning', detail: 'Credential push failed (non-fatal)' }] } });
+    expect(response.status).toBe(200); expect(await response.json()).toEqual({ data: { success: true, backupPath: null, details: [{ action: 'warning', detail: 'Credential push failed (non-fatal)' }] } });
     expect(pushCredential).toHaveBeenCalledWith('owned-credential'); expect(console.error).not.toHaveBeenCalled();
   });
   it.each([false, true])('Agent backup warning preserves subsequent write outcome; terminal failure=%s', async failWrite => {

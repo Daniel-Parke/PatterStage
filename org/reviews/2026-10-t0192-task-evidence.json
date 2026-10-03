@@ -726,12 +726,32 @@
     "reviewer": "Laplace",
     "receipt": "tmp/t0191-green-validation/tmp/t0192-pending-draft-red-1791068651902/manifest.json",
     "result": "8/8 causal reds at disappearing-editor assertion, six workers, zero retries; disk/single-write preconditions pass.",
-    "qualification": "Subsequent explicit-Save assertions unreached. Full test typecheck failed on four unrelated local-catch fixture fields; no green freeze gate or batch acceptance claimed."
+    "qualification": "Subsequent explicit-Save assertions unreached. Full test typecheck failed on four unrelated local-catch fixture fields; no green freeze gate or batch acceptance claimed.",
+    "canonicalLfSha256": "ed010f89c5c6351f2182e554aef9f3e5c7d74c5a866cacf777fc272e1a5a854c"
   },
   "oracleTypecheckCorrection": {
     "failedReceipt": "tmp/t0191-green-validation/tmp/t0192-pending-draft-red-1791068651902/types.log",
     "cause": "Default tsconfig.json excludes tests. Earlier default tsc exit0 does not validate any oracle fixture. Sartre retracted broader claim; four missing logFile/backupPath fixture fields require independent correction.",
     "requiredCommand": "node node_modules/typescript/bin/tsc --noEmit --incremental false -p tsconfig.tests.json",
     "scope": "All earlier default-configuration type receipts are application-only; runtime suite results remain separate valid evidence."
+  },
+  "independentFixtureCorrections": {
+    "receipt": "tmp/t0191-green-validation/tmp/t0192-independent-fixtures/final-report.json",
+    "reviewer": "Laplace",
+    "accepted": "2026-10-03T23:27:03.076935+00:00",
+    "files": [
+      {
+        "file": "tests/unit/template-create-identifiers.test.ts",
+        "originalSha256": "457f19df38ecf10011e32224dc9e638586678f9ca3a8fee722071733558dac71",
+        "finalSha256": "6645f0d0675749237470c72ed75c274d66a8cce2a266fab13fc353b031db4362"
+      },
+      {
+        "file": "tests/unit/route-local-catch-contract.test.ts",
+        "originalSha256": "dc4255a9f6bba308215389d543dfba68f7f22da32c53c9530047149e6a221de8",
+        "finalSha256": "10bc6dd5418a0def5ceaa76bb86eb97f80974129124a0b17f8d1076faaf21af5"
+      }
+    ],
+    "result": "Original/folded route76/76; real house UUID original2red/current2green;27historical controls green; explicit test types and lint exit0;868source hashes unchanged.",
+    "failuresRetained": "Original app-only type claims corrected; four missing fixture fields and75/76 backupPath mismatch remain in original receipts."
   }
 }

@@ -71,8 +71,6 @@
         "tests/unit/b3-runtime-status.test.ts",
         "docs/running/env-reference.md",
         "tests/unit/runtime-gateway-diagnostic-redaction.test.ts",
-        "tests/unit/tooling-env-contract.test.ts",
-        "tests/unit/scripts-typecheck-contract.test.ts",
         "src/lib/status/runtime-status-format.ts",
         "src/app/api/scripts/[name]/route.ts",
         "src/app/api/schedules/[id]/route.ts",
@@ -107,6 +105,7 @@
         "src/lib/feature-flags-guard.ts",
         "tests/helpers/runtime-boot-boundary.ts",
         "tests/e2e/script-editor-write-ownership.spec.ts",
+        "tests/unit/route-local-catch-contract.test.ts",
         "src/app/api/schedules/route.ts",
         "src/lib/missions/mission-promote-handler.ts",
         "src/lib/missions/mission-handlers/dispatch.ts",
@@ -120,23 +119,24 @@
         "src/app/api/agent/files/[key]/route.ts",
         "src/app/api/sessions/[id]/route.ts",
         "src/app/api/models/fallbacks/route.ts",
-        "src/lib/templates-handlers/create.ts"
+        "src/lib/templates-handlers/create.ts",
+        "tests/unit/template-create-identifiers.test.ts"
       ],
       "acquired": "2026-10-03T21:24:24.476320+00:00",
       "expires": "2026-10-04T21:24:24.476320+00:00"
     },
     {
-      "lane_id": "T-0192-independent-fixtures",
+      "lane_id": "T-0192-tooling-oracles",
       "task_id": "T-0192",
-      "session_id": "01a10195-e680-7d01-b79a-86627d74049c",
+      "session_id": "01a101b3-7c34-7a71-94b5-334c72f652cb",
       "host": "local",
       "path_claims": [
-        "tests/unit/template-create-identifiers.test.ts",
-        "tests/unit/route-local-catch-contract.test.ts"
+        "tests/unit/tooling-env-contract.test.ts",
+        "tests/unit/scripts-typecheck-contract.test.ts"
       ],
-      "acquired": "2026-10-03T23:12:41.963300+00:00",
-      "expires": "2026-10-04T23:12:41.963300+00:00"
+      "acquired": "2026-10-03T23:27:03.076935+00:00",
+      "expires": "2026-10-04T23:27:03.076935+00:00"
     }
   ],
-  "note": "Nash stopped. Halley owns only independent fixture corrections under Q015; coordinator owns production and integrations."
+  "note": "Halley stopped; Galileo owns only two uncommitted tooling oracle candidates. Coordinator owns production and integrates accepted fixtures."
 }

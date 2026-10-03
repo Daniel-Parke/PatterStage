@@ -1,4 +1,6 @@
 /** @jest-environment node */
+// Exercise the house implementation, not jest.setup's Math.random-based UUID double.
+jest.mock('@/lib/db', () => ({ uuid: jest.requireActual<typeof import('@/lib/db')>('@/lib/db').uuid }));
 jest.mock('@/lib/templates-handlers/shared', () => ({
   saveTemplate: jest.fn(), invalidateTemplatesCache: jest.fn(),
   enrichCustomTemplateFromDisk: (template: unknown) => template,

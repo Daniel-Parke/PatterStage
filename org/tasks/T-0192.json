@@ -139,7 +139,7 @@
   ],
   "timestamps": {
     "opened": "2026-10-03T20:37:32.586979+00:00",
-    "updated": "2026-10-03T22:55:36.257997+00:00"
+    "updated": "2026-10-03T23:27:03.076935+00:00"
   },
   "tier_ruled": "R2",
   "reasons": [
@@ -295,6 +295,33 @@
         "author_session": "01a101b0-fa17-7b10-a55b-b6201e93c846",
         "authorised_by": "Laplace exact R2 review under Q015",
         "date": "2026-10-03T22:45:30.523289+00:00"
+      },
+      {
+        "reason": "Independent correction of global UUID mock and required route fixture fields; exact backupPath:null expectation proved on original and folded routes. Existing identities retained.",
+        "change": "tests/unit/template-create-identifiers.test.ts",
+        "old_hash": "457f19df38ecf10011e32224dc9e638586678f9ca3a8fee722071733558dac71",
+        "new_hash": "6645f0d0675749237470c72ed75c274d66a8cce2a266fab13fc353b031db4362",
+        "author_session": "01a10195-e680-7d01-b79a-86627d74049c",
+        "authorised_by": "Laplace exact Q015 amendment acceptance",
+        "date": "2026-10-03T23:27:03.076935+00:00"
+      },
+      {
+        "reason": "Independent correction of global UUID mock and required route fixture fields; exact backupPath:null expectation proved on original and folded routes. Existing identities retained.",
+        "change": "tests/unit/route-local-catch-contract.test.ts",
+        "old_hash": "dc4255a9f6bba308215389d543dfba68f7f22da32c53c9530047149e6a221de8",
+        "new_hash": "10bc6dd5418a0def5ceaa76bb86eb97f80974129124a0b17f8d1076faaf21af5",
+        "author_session": "01a10195-e680-7d01-b79a-86627d74049c",
+        "authorised_by": "Laplace exact Q015 amendment acceptance",
+        "date": "2026-10-03T23:27:03.076935+00:00"
+      },
+      {
+        "reason": "Repository LF policy only; canonical bytes exactly match already committed oracle, no test changes.",
+        "change": "tests/e2e/script-editor-pending-draft.spec.ts",
+        "old_hash": "a7114aca2e3d0304d5c9401567b217ae5c21c16d8410e0b7604bb074ad258820",
+        "new_hash": "ed010f89c5c6351f2182e554aef9f3e5c7d74c5a866cacf777fc272e1a5a854c",
+        "author_session": "2026-10-03-t0192-coordinator",
+        "authorised_by": "Repository .gitattributes canonical text policy",
+        "date": "2026-10-03T23:27:03.076935+00:00"
       }
     ]
   },
