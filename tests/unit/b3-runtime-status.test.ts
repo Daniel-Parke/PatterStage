@@ -22,6 +22,7 @@ jest.mock("@/lib/host/paths", () => ({
   },
 }));
 jest.mock("@/modules/hermes/lib/agent-runtime", () => ({
+  ...jest.requireActual<typeof import("@/modules/hermes/lib/agent-runtime")>("@/modules/hermes/lib/agent-runtime"),
   getActiveHermesHome: () => "/tmp/hermes-home",
 }));
 const runGit = jest.fn((args: string[]) => (args.includes("--short") ? "abc1234" : "abc1234def"));
@@ -35,7 +36,7 @@ jest.mock("@/lib/db", () => ({
 
 import { GET } from "@/app/api/status/runtime/route";
 
-const ENV = ["PS_AUTH_MODE", "PS_ENABLE_DEPLOY_API", "PS_READ_ONLY", "PS_COMPOSER", "PORT", "HERMES_GATEWAY_URL"];
+const ENV = ["PS_AUTH_MODE", "PS_ENABLE_DEPLOY_API", "PS_READ_ONLY", "PS_COMPOSER", "PORT", "HERMES_GATEWAY_URL", "PS_LLM_API", "CONTROL_HUB_LLM_API"];
 const saved: Record<string, string | undefined> = {};
 
 beforeEach(() => {

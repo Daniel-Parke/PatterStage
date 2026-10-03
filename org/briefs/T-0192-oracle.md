@@ -69,3 +69,11 @@ Laplace withheld unit freeze. Halley owns only runtime-operational-consistency.t
 ## Existing liveness compatibility disposition
 
 Laplace accepted the Story/runtime amendments and held the complete unit freeze only for the caller policy. Accepted T-0170 requires keeping `/api/healthz` as the public JSON liveness alias; no in-tree caller is asserted. Sartre owns only tests/unit/api-route-caller-gate.test.ts in the validation checkout: add a separately named exact public-liveness disposition, cite T-0170 and the documented JSON contract, pin exact membership and reason, and explicitly use it in missing-caller calculation. Preserve the four operator exceptions and all existing identities/negative controls. No fabricated caller, broad documentation scan or production change. Retain the previous111-case receipt as16 behavioural reds plusone policy-coverage failure. Return revised hashes and focused receipts for independent review; stop writing on handback.
+
+## Historical runtime-status fixture
+
+Galileo owns only tests/unit/b3-runtime-status.test.ts in the validation checkout. Expose the real endpoint resolver in its incomplete module mock, keeping the home double; isolate relevant LLM override environment if needed. Preserve all four case bodies, assertions and names. Q015 supplies independent amendment authority for the approved gateway fix. Record original hash, prior4/4control, current missing-export failures and amended focused results. Return exact patch/hash for Laplace and stop. No source changes or other tests.
+
+## Profile detail selection amendment
+
+Halley owns only tests/e2e/route-contract-followups.spec.ts in the validation checkout. Laplace authorised clicking the existing Oracle After row button between the current name and description assertions. Descriptions belong to the selected detail panel. Preserve every assertion, both viewport identities, actual writes, independent database checks, timeouts and teardown. Capture the original hash and exact one-line patch, run the two affected cases and all42 cases at normal concurrency with no retries, preserving each result. Return hashes, counts and any infrastructure failures separately, then stop. No production changes.

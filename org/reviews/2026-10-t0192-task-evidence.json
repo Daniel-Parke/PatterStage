@@ -1,0 +1,437 @@
+{
+  "task": "T-0192",
+  "originalRecordSha256": "62d117b95f3c0de4670b2cda867cc31366cd6b38d67c74e75593c343185a3248",
+  "preservedExtensions": {
+    "authority": "Approved Phase2/Q010/Q013/Q014/Q016/Q032, individual T0192 item rulings and explicit follow-up repairs. Q033 preserves compatibility until first-post-v1. No protected edit, paid provider execution, unruled removal or general response-policy change.",
+    "prerequisite": {
+      "head": "49aa7a604cfead440c6cce827a53d2a294408e60",
+      "observed": "2026-10-03T20:36:08.844Z",
+      "allRequiredJobsPassed": true,
+      "allRuns": [
+        {
+          "conclusion": "success",
+          "databaseId": 37151141396,
+          "event": "pull_request",
+          "headSha": "49aa7a604cfead440c6cce827a53d2a294408e60",
+          "status": "completed",
+          "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37151141396",
+          "workflowName": "Gitleaks"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37151141385,
+          "event": "pull_request",
+          "headSha": "49aa7a604cfead440c6cce827a53d2a294408e60",
+          "status": "completed",
+          "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37151141385",
+          "workflowName": "CI"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37151137044,
+          "event": "push",
+          "headSha": "49aa7a604cfead440c6cce827a53d2a294408e60",
+          "status": "completed",
+          "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37151137044",
+          "workflowName": "Gitleaks"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37151137011,
+          "event": "push",
+          "headSha": "49aa7a604cfead440c6cce827a53d2a294408e60",
+          "status": "completed",
+          "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37151137011",
+          "workflowName": "CI"
+        }
+      ],
+      "runs": [
+        {
+          "conclusion": "success",
+          "databaseId": 37151141396,
+          "event": "pull_request",
+          "headSha": "49aa7a604cfead440c6cce827a53d2a294408e60",
+          "status": "completed",
+          "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37151141396",
+          "workflowName": "Gitleaks",
+          "receipt": "tmp/t0191-hosted-closure/pull_request-gitleaks-37151141396-1791059765576.json",
+          "jobs": [
+            {
+              "id": 111285120838,
+              "name": "scan",
+              "status": "completed",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37151141385,
+          "event": "pull_request",
+          "headSha": "49aa7a604cfead440c6cce827a53d2a294408e60",
+          "status": "completed",
+          "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37151141385",
+          "workflowName": "CI",
+          "receipt": "tmp/t0191-hosted-closure/pull_request-ci-37151141385-1791059766796.json",
+          "jobs": [
+            {
+              "id": 111285120859,
+              "name": "install-harness",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 111285121005,
+              "name": "e2e-full (PLAYWRIGHT_SMOKE unset)",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 111285121024,
+              "name": "shell-custom-scripts",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 111285121025,
+              "name": "real-hermes-integration",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 111285121032,
+              "name": "boot-smoke (ubuntu-latest)",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 111285121042,
+              "name": "e2e-smoke",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 111285121060,
+              "name": "boot-smoke (macos-latest)",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 111285121071,
+              "name": "docker-image",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 111285121129,
+              "name": "build-test-ubuntu",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 111285121169,
+              "name": "build-test-macos",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 111287081683,
+              "name": "acceptance-gate (full suite + install journey + real Hermes)",
+              "status": "completed",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37151137044,
+          "event": "push",
+          "headSha": "49aa7a604cfead440c6cce827a53d2a294408e60",
+          "status": "completed",
+          "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37151137044",
+          "workflowName": "Gitleaks",
+          "receipt": "tmp/t0191-hosted-closure/push-gitleaks-37151137044-1791059767640.json",
+          "jobs": [
+            {
+              "id": 111285107758,
+              "name": "scan",
+              "status": "completed",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37151137011,
+          "event": "push",
+          "headSha": "49aa7a604cfead440c6cce827a53d2a294408e60",
+          "status": "completed",
+          "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37151137011",
+          "workflowName": "CI",
+          "receipt": "tmp/t0191-hosted-closure/push-ci-37151137011-1791059768843.json",
+          "jobs": [
+            {
+              "id": 111285107964,
+              "name": "boot-smoke (ubuntu-latest)",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 111285107977,
+              "name": "docker-image",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 111285107988,
+              "name": "build-test-macos",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 111285108009,
+              "name": "build-test-ubuntu",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 111285108027,
+              "name": "shell-custom-scripts",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 111285108042,
+              "name": "e2e-smoke",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 111285108050,
+              "name": "boot-smoke (macos-latest)",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 111285108082,
+              "name": "real-hermes-integration",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 111285108093,
+              "name": "install-harness",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 111285108809,
+              "name": "e2e-full (PLAYWRIGHT_SMOKE unset)",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "id": 111287071440,
+              "name": "acceptance-gate (full suite + install journey + real Hermes)",
+              "status": "completed",
+              "conclusion": "skipped"
+            }
+          ]
+        }
+      ]
+    },
+    "scope_note": "Initial exact source and oracle claims replace broad globs. Read and disposition all82obligations; expand exact claims and independently freeze relevant contracts before any additional edits. Phases are execution order, not permission to omit obligations.",
+    "invariants": [
+      "Every shipped route URL/method, auth/read-only boundary, response-time session check and guard order survives.",
+      "Preserve optional-body handling, exact error text, specialised Hindsight/stream/auth and HTTP200partial-success contracts. Story genuine read failure is the narrow approved exception to false-success empty data.",
+      "Preserve all historical identities; only independently reviewed valid-loaded-graph fixture amendment is contemplated, with allthree Composer assertions/names intact.",
+      "Never touch operator data; isolated built instances and synthetic keyless data only. No paid provider calls or script execution.",
+      "No fixed target, ceiling, coverage floor, timeout, retry or concurrency weakening.",
+      "T0191 oracles and all prior invariants remain frozen."
+    ],
+    "rollback": "Revert each coherent defect or route/type/prop cohort with its callers. Retain regression tests; no schema or stored-key migration. Public contracts remain pinned.",
+    "verify_line": "Independent red-first eight-defect oracles and real persistence under discovered Playwright specs; full URL/method snapshot and operator caller allowlist before route edits; exact error/optional-body/guard contracts; boot/flag/gateway consistency; current82item ledger and measured complete-cohort net counts; cold/warm Windows/Linux built endpoint and event-loop investigation; ordinary1440x900/390x844 personal walks/screenshots; full unchanged ten-stage gate; clean committed causal sweep with passing restored controls; independentR2; every implementation andclosure hosted job.",
+    "oracle_status": "Initial defect/public-contract oracles independently accepted and committed before their implementation: browser27/42 red, unit16/51 red, public contracts52/52 passed, caller9/9 passed. Broader consolidation cohorts need their own contracts before edits.",
+    "preservation_baseline": "tmp/t0192-preservation-baseline-20261003.json",
+    "independence": {
+      "oracleAuthor": "Galileo unit/contracts; Sartre browser/persistence and historical Composer fixture; source exposure disclosed",
+      "implementer": "coordinator",
+      "finalReviewer": "Laplace, neither source nor gate author",
+      "writing_handoff": "Galileo stopped writing after unit handoff. Coordinator reacquired disjoint metadata lane. Sartre stopped for helper review; browser lane retained for subsequent qualified runtime run. Never more than two writers."
+    },
+    "execution_order": [
+      "Freeze complete URL/method baseline and applicable response/auth/body contracts before any route edit, including defect repairs",
+      "Eight focused defect contracts and repairs",
+      "Boot/flag/gateway consistency",
+      "Measured existing-helper route folds and named operator APIs",
+      "Current82dispositions, equivalent type/prop convergence and remaining investigations"
+    ],
+    "readiness": [
+      "tmp/t0192-opening-reconciliation.md",
+      "tmp/t0192-resume-readiness.md"
+    ],
+    "historical_amendment_authority": {
+      "file": "tests/unit/composer-review-control.test.tsx",
+      "scope": "Replace only missing-graph mock with valid loaded graph; preserve three expanded identities, assertions and two-step launch. Exact baseline/control/hash and independent review required before integration.",
+      "reviewer": "Laplace opening critique, 2026-10-03",
+      "reason": "Approved missing-graph disclosure fix makes the old absent-graph success fixture invalid; no failing assertion may be removed."
+    },
+    "latency_obligation": "Controlled cold/warm Windows AND Linux built-app six-endpoint timing and event-loop evidence. Current5.4-8.5s observations and fixture preloading do not establish cause or repair.",
+    "ownership_counts": {
+      "findings": 41,
+      "operatorDispositions": 16,
+      "coverage": 25
+    },
+    "prerequisite_review": {
+      "reviewer": "Laplace",
+      "head": "49aa7a604cfead440c6cce827a53d2a294408e60",
+      "verdict": "Closure prerequisite satisfied; metadata-only eight-file closure, clean tree,11PR/9applicablepush jobs and bothscans pass. Corrected T0192 opening ready, not implementation approval.",
+      "scope": "Freeze complete URL/method baseline before all route edits, including defects. Exact helper and historical fixture amendments require independent review."
+    },
+    "browser_oracle_freeze": {
+      "reviewer": "Laplace / 01a1019a-65c6-7ae2-aafe-5b79b166c745",
+      "verdict": "Accepted for bounded red-first commit and Script, Composer, profile and fallback repairs; no broader implementation acceptance.",
+      "sourceRevision": "4a0ce1968befcfd33f392478627b9ac668e67ef1",
+      "sourceTree": "016c614b1682b7a4d76a5a5c973d9dedfd59ad10",
+      "files": [
+        {
+          "file": "tests/e2e/route-contract-persistence.spec.ts",
+          "rawSha256": "91437eee360237146694c76064cac013a0d8096830310885d93a3ae123885a52",
+          "lfSha256": "91437eee360237146694c76064cac013a0d8096830310885d93a3ae123885a52",
+          "bytes": 7325
+        },
+        {
+          "file": "tests/e2e/route-contract-followups.spec.ts",
+          "rawSha256": "55f01e8b7cc0f67b417240c593c7f14d27a3c57edb534fe73f624bcdd2a77b2c",
+          "lfSha256": "55f01e8b7cc0f67b417240c593c7f14d27a3c57edb534fe73f624bcdd2a77b2c",
+          "bytes": 17625
+        },
+        {
+          "file": "tests/helpers/route-contract-runtime.ts",
+          "rawSha256": "89028f9dbe4df0e84a4b7c84be273da7ca2c82f94a46fc97e756b92955b3bc6d",
+          "lfSha256": "89028f9dbe4df0e84a4b7c84be273da7ca2c82f94a46fc97e756b92955b3bc6d",
+          "bytes": 14714
+        },
+        {
+          "file": "tests/unit/composer-review-control.test.tsx",
+          "rawSha256": "d0caedb25484c92fd88f20df9f1383abcf5660a58c3e6983ffbab4aac22ea4a1",
+          "lfSha256": "d0caedb25484c92fd88f20df9f1383abcf5660a58c3e6983ffbab4aac22ea4a1",
+          "bytes": 3312
+        }
+      ],
+      "receipt": "tmp/t0191-green-validation/tmp/t0192-browser-oracle/freeze-provenance.json",
+      "browserCases": 42,
+      "browserPassed": 15,
+      "browserBehaviouralFailures": 27,
+      "publicContractCasesPassed": 52,
+      "historicalComposerCasesPassed": 3,
+      "limitations": [
+        "Profile refusal proves original row loss; later directory assertions were not reached.",
+        "Conditional later Settings save is not proved by the failing run.",
+        "Composer requests are captured and refused; execution and HIL are not proved.",
+        "Qualified-1 contains two fixture timing failures; earlier unqualified attempts remain retained.",
+        "Census report is not a growth-gate waiver."
+      ]
+    },
+    "bounded_defect_additions": [
+      "Unread or refused Script load permits an actual empty overwrite; stale responses can replace another selected script.",
+      "Profile rename destination obstruction can remove the original database row before reporting failure. Preserve row and directory before mutation; no historical-reference rewrite."
+    ],
+    "unit_defect_freeze": {
+      "reviewer": "Laplace",
+      "sourceRevision": "4a0ce1968befcfd33f392478627b9ac668e67ef1",
+      "receipt": "tmp/t0191-green-validation/tmp/t0192-unit-amendment/manifest.json",
+      "files": [
+        {
+          "path": "tests/unit/api-fetch-error-envelope.test.ts",
+          "before": {
+            "path": "tests/unit/api-fetch-error-envelope.test.ts",
+            "exists": false,
+            "sha256": null
+          },
+          "sha256": "f19bdd09a27ac0e4204ed36fe873cfc81adc7946f8b0ffab644a6bfe6135db51",
+          "lfSha256": "f19bdd09a27ac0e4204ed36fe873cfc81adc7946f8b0ffab644a6bfe6135db51",
+          "bytes": 2071,
+          "lines": 38
+        },
+        {
+          "path": "tests/unit/settings-save-draft-ownership.test.tsx",
+          "before": {
+            "path": "tests/unit/settings-save-draft-ownership.test.tsx",
+            "exists": false,
+            "sha256": null
+          },
+          "sha256": "bcfe417bce67d68bfe6de8725e47f53eb4836d2b8c72755301a8396a1fcd025a",
+          "lfSha256": "bcfe417bce67d68bfe6de8725e47f53eb4836d2b8c72755301a8396a1fcd025a",
+          "bytes": 6767,
+          "lines": 130
+        },
+        {
+          "path": "tests/unit/model-bulk-default-feedback.test.tsx",
+          "before": {
+            "path": "tests/unit/model-bulk-default-feedback.test.tsx",
+            "exists": false,
+            "sha256": null
+          },
+          "sha256": "f91bd70cebfe92b56a5c3182f99d072a090abbe543b15963156761de8b0d9a50",
+          "lfSha256": "f91bd70cebfe92b56a5c3182f99d072a090abbe543b15963156761de8b0d9a50",
+          "bytes": 3031,
+          "lines": 57
+        },
+        {
+          "path": "tests/unit/story-list-failure-contract.test.ts",
+          "sha256": "c6f0d74f9b638b9da1f294a5639e0869b630ef4ebb81ab945332baf1522f04be",
+          "lfSha256": "c6f0d74f9b638b9da1f294a5639e0869b630ef4ebb81ab945332baf1522f04be",
+          "bytes": 3420
+        },
+        {
+          "path": "tests/unit/runtime-operational-consistency.test.ts",
+          "sha256": "7836f83645de586260256b522ea0b29993c63695130993b3d11531a88063b326",
+          "lfSha256": "7836f83645de586260256b522ea0b29993c63695130993b3d11531a88063b326",
+          "bytes": 7324
+        }
+      ],
+      "cases": 51,
+      "passed": 35,
+      "behaviouralFailures": 16,
+      "historicalControlsPassed": 150,
+      "callerGate": "Separate disposition amendment pending for public liveness alias required by accepted T0170; not a product defect."
+    },
+    "caller_oracle_freeze": {
+      "reviewer": "Laplace",
+      "verdict": "Accepted exact file, 9/9 cases passed; no implementation acceptance.",
+      "file": "tests/unit/api-route-caller-gate.test.ts",
+      "sha256": "2a1e0c589798b3989bccfbc4671339bcb6b826810d1613a4d09650350a9cebce",
+      "receipt": "tmp/t0191-green-validation/tmp/t0192-liveness-oracle/provenance.json",
+      "authority": "T0170 explicitly retains the public JSON liveness alias. Four operator exceptions remain unchanged."
+    }
+  },
+  "recordRepair": "Laplace approved lossless active-record normalisation. Historical records and protected schemas are unchanged. Complete record validation replaces no check and no unsupported value is discarded.",
+  "runtimeFixtureAmendment": {
+    "authority": "Q015 standing different-author narrow fixture amendment for approved gateway consistency repair.",
+    "file": "tests/unit/b3-runtime-status.test.ts",
+    "scope": "Expose the real endpoint resolver in the incomplete module mock and isolate relevant override environment. Keep all four case bodies, assertions and names.",
+    "failureReceipt": "tmp/t0192-defects-unit-1791063750288",
+    "author": "Galileo",
+    "reviewer": "Laplace",
+    "acceptedHash": "ab490cdb8499ece2e385923dc8f92348569e06c35b0a24388ba0515fec2808b2",
+    "verdict": "Laplace accepted exact two fixture edits; four names/bodies/assertions byte-identical;4/4 pass.",
+    "receipt": "tmp/t0191-green-validation/tmp/t0192-runtime-fixture/run-1791063881951/manifest.json"
+  },
+  "profileFixtureAmendment": {
+    "authority": "Laplace R2 exact amendment under Q015, 2026-10-03",
+    "file": "tests/e2e/route-contract-followups.spec.ts",
+    "scope": "Select Oracle After via its existing row button after the name assertion and before description assertion. Preserve both viewport identities and every assertion, API write, database check, timeout and teardown.",
+    "failureReceipt": "tmp/t0192-defects-browser-1791063962987",
+    "classification": "Two profile description failures are fixture omissions; original metadata persistence reds remain valid. No UI restyle.",
+    "author": "Halley"
+  },
+  "schemaValidation": {
+    "pinnedEosCommit": "727bee44bdd83ce569a8d711d51eccf79851af92",
+    "schemaGitBlob": "f1c7c5ed47d8bba55c4a4b849d08e1379b4d2210",
+    "workingSchemaMatchesPin": true,
+    "completeSavedRecordErrors": 0,
+    "originalFailureRetained": "tmp/t0192-record-normalisation/original-validation.txt",
+    "losslessReceipt": "tmp/t0192-record-normalisation/validation.json"
+  }
+}

@@ -46,7 +46,6 @@
         "tests/unit/model-bulk-default-feedback.test.tsx",
         "tests/unit/story-list-failure-contract.test.ts",
         "tests/e2e/route-contract-persistence.spec.ts",
-        "tests/e2e/route-contract-followups.spec.ts",
         "tests/helpers/route-contract-runtime.ts",
         "tests/unit/api-route-public-contract.test.ts",
         "tests/unit/api-route-caller-gate.test.ts",
@@ -66,11 +65,24 @@
         "docs/manifest.json",
         "docs/reference/api.md",
         "scripts/tooling/line-census.baseline.json",
-        "tests/fixtures/mutants/T-0192.json"
+        "tests/fixtures/mutants/T-0192.json",
+        "org/reviews/2026-10-t0192-task-evidence.json",
+        "tests/unit/b3-runtime-status.test.ts"
       ],
       "acquired": "2026-10-03T21:24:24.476320+00:00",
       "expires": "2026-10-04T21:24:24.476320+00:00"
+    },
+    {
+      "lane_id": "T-0192-profile-fixture",
+      "task_id": "T-0192",
+      "session_id": "01a10195-e680-7d01-b79a-86627d74049c",
+      "host": "local",
+      "path_claims": [
+        "tests/e2e/route-contract-followups.spec.ts"
+      ],
+      "acquired": "2026-10-03T21:53:30.598904+00:00",
+      "expires": "2026-10-04T21:53:30.598904+00:00"
     }
   ],
-  "note": "All independent oracle authors stopped after handoffs. Coordinator owns integration and production repairs. Laplace remains independent read-only reviewer."
+  "note": "Galileo stopped after runtime-fixture handoff. Halley independently selects the renamed profile before its existing description assertion; coordinator owns remaining integration."
 }
