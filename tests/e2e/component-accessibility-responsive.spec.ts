@@ -730,3 +730,61 @@ for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 
     });
   });
 }
+
+// T0191-toggle-geometry-oracle: Laplace-authorised additive amendment.
+// Source exposure: subsequent component review preceded this amendment; this
+// is not clean-context evidence. Geometry expectations follow the pixel-review
+// contract. The original 56 cases above are preserved byte for byte.
+for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 }]) {
+  test.describe(`T-0191 Composer toggle geometry ${viewport.width}x${viewport.height}`, () => {
+    test.use({ viewport, hasTouch: viewport.width === 390, extraHTTPHeaders: {} });
+
+    test('switch thumbs stay inside their tracks, off left and on right', async ({ page }, info) => {
+      await page.goto('/work/composer');
+      await activate(page, page.getByRole('button', { name: 'Build', exact: true }));
+      const node = page.locator('.react-flow__node').first();
+      await wheelTo(page, node); await activate(page, node);
+      const tolerance = 1; // CSS px: subpixel layout/rounding only.
+      for (const name of ['HIL gate', 'Start', 'End']) {
+        const toggle = page.getByRole('switch', { name, exact: true });
+        await expect(toggle).toHaveAccessibleName(name);
+        await keyboardFocus(page, toggle, info);
+        await expect(toggle).toHaveAttribute('aria-checked', /^(true|false)$/);
+        for (const checked of [false, true]) {
+          if (await toggle.getAttribute('aria-checked') !== String(checked)) await activate(page, toggle);
+          await expect(toggle).toHaveAttribute('aria-checked', String(checked));
+          // Finish finite visual transitions before measuring the rendered state.
+          await toggle.evaluate(async element => {
+            await Promise.all(element.getAnimations({ subtree: true }).filter(animation =>
+              animation.effect?.getComputedTiming().iterations !== Infinity).map(animation => animation.finished));
+          });
+          await keyboardFocus(page, toggle, info);
+          const track = toggle.locator(':scope > span');
+          await expect(track, 'one visual track inside the switch hit area').toHaveCount(1);
+          const thumb = track.locator(':scope > span');
+          await expect(thumb, 'one visible thumb inside the switch track').toHaveCount(1);
+          await expect(thumb).toBeVisible();
+          const geometry = await toggle.evaluate(element => {
+            const rect = (target: Element) => {
+              const r = target.getBoundingClientRect();
+              return { left: r.left, right: r.right, top: r.top, bottom: r.bottom, width: r.width, height: r.height, centreX: r.left + r.width / 2 };
+            };
+            return { checked: element.getAttribute('aria-checked'), track: rect(element.querySelector(':scope > span')!), thumb: rect(element.querySelector(':scope > span > span')!) };
+          });
+          const label = `${name}-${checked ? 'on' : 'off'}`;
+          await info.attach(`toggle-geometry-${label}`, { body: JSON.stringify({ viewport, tolerance, ...geometry }, null, 2), contentType: 'application/json' });
+          await capture(page, info, `toggle-${label}`);
+          const message = `${label}: ${JSON.stringify(geometry)}`;
+          expect.soft(geometry.thumb.width, message).toBeGreaterThan(0);
+          expect.soft(geometry.thumb.height, message).toBeGreaterThan(0);
+          expect.soft(geometry.thumb.left, message).toBeGreaterThanOrEqual(geometry.track.left - tolerance);
+          expect.soft(geometry.thumb.right, message).toBeLessThanOrEqual(geometry.track.right + tolerance);
+          expect.soft(geometry.thumb.top, message).toBeGreaterThanOrEqual(geometry.track.top - tolerance);
+          expect.soft(geometry.thumb.bottom, message).toBeLessThanOrEqual(geometry.track.bottom + tolerance);
+          if (checked) expect.soft(geometry.thumb.centreX, message).toBeGreaterThan(geometry.track.centreX + tolerance);
+          else expect.soft(geometry.thumb.centreX, message).toBeLessThan(geometry.track.centreX - tolerance);
+        }
+      }
+    });
+  });
+}
