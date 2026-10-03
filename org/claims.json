@@ -51,7 +51,6 @@
         "tests/unit/api-route-public-contract.test.ts",
         "tests/unit/api-route-caller-gate.test.ts",
         "tests/fixtures/api-route-contract-baseline.json",
-        "tests/unit/runtime-operational-consistency.test.ts",
         "tests/unit/composer-review-control.test.tsx",
         "org/tasks/T-0192.json",
         "org/claims.json",
@@ -98,6 +97,7 @@
         "src/app/api/chat/[id]/stop/route.ts",
         "src/app/api/chat/[id]/messages/[messageId]/route.ts",
         "src/app/api/artifacts/[id]/route.ts",
+        "tests/unit/config-sync-atomic-replacement.test.ts",
         "src/modules/hermes/sync/ConfigSync.ts",
         "src/app/recroom/story-weaver/layout.tsx",
         "org/LOCKBOOK.md",
@@ -108,17 +108,20 @@
       "expires": "2026-10-04T21:24:24.476320+00:00"
     },
     {
-      "lane_id": "T-0192-diagnostic-repair-oracles",
+      "lane_id": "T-0192-preserved-contracts",
       "task_id": "T-0192",
-      "session_id": "01a10198-6b4f-7593-aa19-e0b3c8facad8",
+      "session_id": "01a101b0-fa17-7b10-a55b-b6201e93c846",
       "host": "local",
       "path_claims": [
+        "tests/helpers/runtime-boot-boundary.ts",
+        "tests/unit/runtime-operational-consistency.test.ts",
         "tests/unit/runtime-gateway-diagnostic-redaction.test.ts",
-        "tests/unit/config-sync-atomic-replacement.test.ts"
+        "tests/e2e/script-editor-write-ownership.spec.ts",
+        "tests/unit/route-local-catch-contract.test.ts"
       ],
-      "acquired": "2026-10-03T22:24:19.581627+00:00",
-      "expires": "2026-10-04T22:24:19.581627+00:00"
+      "acquired": "2026-10-03T22:34:42.730182+00:00",
+      "expires": "2026-10-04T22:34:42.730182+00:00"
     }
   ],
-  "note": "Galileo stopped; preserve his unfrozen env draft. Nash independently corrects diagnostic oracle and authors ConfigSync replacement oracle. Coordinator owns production; no repair before accepted red freeze."
+  "note": "Nash stopped. Sartre independently shares duplicated boot fixtures and authors two bounded follow-up contracts. Coordinator owns production; historical test identities/assertions remain frozen."
 }

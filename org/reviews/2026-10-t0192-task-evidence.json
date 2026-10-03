@@ -535,7 +535,59 @@
       "receipt": "tmp/t0191-green-validation/tmp/t0192-config-replacement-freeze-1791066542169",
       "red": 1,
       "passed": 9,
-      "limitation": "Controlled real descriptor lifetime, not stock readFile scheduling. Linux/performance pending."
+      "limitation": "Controlled real descriptor lifetime, not stock readFile scheduling. Linux/performance pending.",
+      "canonicalNormalisation": {
+        "rawSha256": "84a11950d2d80e22025f0324c6bf6629a9d7b0511c72c2c51100ddcdefaf1ca4",
+        "committedLfSha256": "9ffab396b581bacc5abda6f846b811ec0842ced6deedfb63cbf59e05bc2b86b1",
+        "relationship": "Only CRLF to LF; canonical bytes exactly equal git show HEAD:file. Both working copies now match Git.",
+        "originalReceiptPreserved": true
+      }
     }
+  },
+  "sharedBootFixture": {
+    "receipt": "tmp/t0191-green-validation/tmp/t0192-boot-boundary-amendment/provenance.json",
+    "author": "Sartre",
+    "reviewer": "Laplace",
+    "accepted": "2026-10-03T22:45:30.523289+00:00",
+    "before": {
+      "exitCode": 0,
+      "total": 66,
+      "passed": 66
+    },
+    "after": {
+      "exitCode": 0,
+      "total": 66,
+      "passed": 66
+    },
+    "files": [
+      {
+        "file": "tests/unit/runtime-operational-consistency.test.ts",
+        "beforeRawSha256": "7836f83645de586260256b522ea0b29993c63695130993b3d11531a88063b326",
+        "beforeLfSha256": "7836f83645de586260256b522ea0b29993c63695130993b3d11531a88063b326",
+        "afterRawSha256": "d2b6c4aca363e55997bdb7acf035e688b667ba08dd1426a2cc294286969cfedd",
+        "afterLfSha256": "d2b6c4aca363e55997bdb7acf035e688b667ba08dd1426a2cc294286969cfedd",
+        "bodyAndFixtureSuffixByteIdentical": true,
+        "lineDelta": -31
+      },
+      {
+        "file": "tests/unit/runtime-gateway-diagnostic-redaction.test.ts",
+        "beforeRawSha256": "c53177fe527470a2b665bcac816bde428f585a8881816d8e431a078f5c3dba26",
+        "beforeLfSha256": "c53177fe527470a2b665bcac816bde428f585a8881816d8e431a078f5c3dba26",
+        "afterRawSha256": "fe09ca800a0ed873a5f3ef783f958320cfb2d0afa97ef9dca3622d4af3072e8b",
+        "afterLfSha256": "fe09ca800a0ed873a5f3ef783f958320cfb2d0afa97ef9dca3622d4af3072e8b",
+        "bodyAndFixtureSuffixByteIdentical": true,
+        "lineDelta": -32
+      }
+    ],
+    "helper": {
+      "file": "tests/helpers/runtime-boot-boundary.ts",
+      "rawSha256": "4a8ff944dc5e2d08f2e60caf85dad97df91f8673a1e046a2e132d6fb8aed607a",
+      "lfSha256": "4a8ff944dc5e2d08f2e60caf85dad97df91f8673a1e046a2e132d6fb8aed607a",
+      "copiedDiagnosticMocksAndLifecycleExactExceptRelativeImport": true
+    },
+    "netTestLines": -28,
+    "repeatedTestWindowsBefore": 4844,
+    "repeatedTestWindowsAfter": 4796,
+    "ceilingUnchanged": 4800
   }
 }
