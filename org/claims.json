@@ -102,7 +102,11 @@
         "src/app/recroom/story-weaver/layout.tsx",
         "org/LOCKBOOK.md",
         "src/app/api/composer/workflows/route.ts",
-        "src/lib/feature-flags-guard.ts"
+        "src/lib/feature-flags-guard.ts",
+        "src/app/api/schedules/route.ts",
+        "src/lib/missions/mission-promote-handler.ts",
+        "src/lib/missions/mission-handlers/dispatch.ts",
+        "src/lib/schedule/schedule-problem.ts"
       ],
       "acquired": "2026-10-03T21:24:24.476320+00:00",
       "expires": "2026-10-04T21:24:24.476320+00:00"

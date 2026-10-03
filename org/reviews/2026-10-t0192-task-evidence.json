@@ -589,5 +589,77 @@
     "repeatedTestWindowsBefore": 4844,
     "repeatedTestWindowsAfter": 4796,
     "ceilingUnchanged": 4800
+  },
+  "candidateChecks": {
+    "scope": "Uncommitted T0192 candidate, after accepted shared boot fixture. No full-gate, mutation, hosted or whole-product acceptance.",
+    "unit": {
+      "receipt": "tmp/t0192-defects-unit-1791067559071",
+      "exitCode": 0,
+      "passed": 545,
+      "suites": 44,
+      "qualification": "Jest emitted a delayed-exit warning and then exited 0. No cause is established."
+    },
+    "build": {
+      "receipt": "tmp/t0192-defects-build-1791066906689",
+      "exitCode": 0
+    },
+    "browser": {
+      "receipt": "tmp/t0192-defects-browser-1791067016138",
+      "passed": 42,
+      "failed": 0,
+      "workers": 6,
+      "retries": 0,
+      "instrumented": false,
+      "qualification": "Built candidate before shared fixture extraction. Earlier failures and isolated reruns remain in their receipts."
+    },
+    "linux": {
+      "receipt": "tmp/t0192-linux-1791067183812397200",
+      "passed": 95,
+      "suites": 5,
+      "exitCode": 0,
+      "node": "24.21.0",
+      "abi": 137,
+      "matchingLock": true,
+      "qualification": "Native focused unit checks before shared fixture extraction; no Linux build, journey or endpoint latency claim."
+    }
+  },
+  "windowsReplacementRepair": {
+    "causeEvidence": "tmp/t0192-defects-browser-probe-1791065712155",
+    "observation": "Both observed EPERM replacements overlapped same-process destination reads; 11 successful replacements did not.",
+    "qualification": "Promise spans, not OS handle telemetry; instrumentation can perturb timing. Earlier non-injected probe remains incomplete evidence.",
+    "nativeControl": "tmp/t0192-native-replacement-MSO8Ub/result.json",
+    "nativeResults": "6/6 held-descriptor replacements failed EPERM; 9/9 absent or closed-descriptor controls succeeded.",
+    "implementation": "Windows ConfigSync reads close synchronously before yielding; non-Windows asynchronous reads and writer retry policy retained.",
+    "measuredCost": "tmp/t0192-config-sync-cost-lkOINs/report.json",
+    "costQualification": "15/15 synthetic syncs, data unchanged. Warm, primed, comment-heavy inputs up to16MiB; largest observed timer gap47.41ms. Not production latency guarantees.",
+    "remaining": "Other historical Windows file errors, external readers and six-endpoint cold/warm platform latency remain outside this repair proof."
+  },
+  "scheduleCohort": {
+    "authority": "Approved app-11 T0192 consolidation; same ruled R2 and no public contract change.",
+    "files": [
+      "src/app/api/schedules/route.ts",
+      "src/app/api/schedules/[id]/route.ts",
+      "src/lib/missions/mission-promote-handler.ts",
+      "src/lib/missions/mission-handlers/dispatch.ts",
+      "src/lib/schedule/schedule-problem.ts"
+    ],
+    "baselineReceipt": "tmp/t0192-defects-schedule-1791067674095",
+    "baseline": "51/51 cases in five unchanged suites, exit0 before cohort implementation.",
+    "invariants": "Syntax before impossible date before interval bounds; exact refusal strings and pre-write locations. Promotion preserves parsed display. Compute-next and dispatch ordering unchanged.",
+    "status": "Claimed; independent coverage review pending before implementation."
+  },
+  "scriptWriteOracle": {
+    "author": "Sartre",
+    "reviewer": "Laplace",
+    "accepted": "2026-10-03T22:50:41.314939+00:00",
+    "receipt": "tmp/t0191-green-validation/tmp/t0192-script-write-oracle/provenance.json",
+    "originalRawSha256": "14af4525e36e1abc278d6fd0f54fa5d15cd09fa913fc4fc3b6a84587c5890b85",
+    "canonicalLfSha256": "4b26bd71b317edd2ab628ad7e40a882c887dcf2661cda31db036f8e4f8c3e7ea",
+    "normalisation": "Repository LF policy only; names, bodies and assertions unchanged.",
+    "red": 4,
+    "passed": 4,
+    "workers": 6,
+    "retries": 0,
+    "scope": "Real owned PUT/DELETE completion versus replacement editor, desktop and phone; normal controls preserve disk outcome. No script execution. Relevant built source maps match; unrelated candidate edits not claimed built."
   }
 }
