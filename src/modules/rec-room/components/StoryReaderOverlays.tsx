@@ -24,6 +24,7 @@ export interface StoryReaderOverlaysProps {
   overlayVisible: boolean;
   overlayDone: boolean;
   onOverlayComplete: () => void;
+  onStop: () => void;
   editModalOpen: boolean;
   editChapterNum: number;
   editPrompt: string;
@@ -53,6 +54,7 @@ export default function StoryReaderOverlays({
   overlayVisible,
   overlayDone,
   onOverlayComplete,
+  onStop,
   editModalOpen,
   editChapterNum,
   editPrompt,
@@ -90,6 +92,7 @@ export default function StoryReaderOverlays({
         visible={overlayVisible}
         done={overlayDone}
         onComplete={onOverlayComplete}
+        onStop={onStop}
       />
 
       {/* Edit Chapter Modal */}

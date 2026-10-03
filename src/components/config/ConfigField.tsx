@@ -21,7 +21,7 @@ import Link from "next/link";
 
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
-import { Toggle, Select, NumberInput, TextInput } from "@/components/ui/Input";
+import { Field, Input, Toggle, Select, NumberInput } from "@/components/ui/field";
 import type { FieldDef, SectionDef } from "@/lib/config/config-schema";
 
 interface ConfigFieldProps {
@@ -133,26 +133,26 @@ export default function ConfigField({ field, value, sectionDef, onUpdate }: Conf
         );
       case "select":
         return (
-          <Select
-            label={field.label}
-            // An out-of-options value shows the placeholder and is explained
-            // by the note; the option list itself is never widened to include it.
-            value={typeof value === "string" && (field.options ?? []).includes(value) ? value : ""}
-            onChange={(v) => onUpdate(field.key, v)}
-            options={field.options || []}
-            description={field.description}
-            color={sectionDef.color}
-          />
+          <Field label={field.label} hint={field.description}>
+            <Select
+              // An out-of-options value shows the placeholder and is explained
+              // by the note; the option list itself is never widened to include it.
+              value={typeof value === "string" && (field.options ?? []).includes(value) ? value : ""}
+              onChange={(v) => onUpdate(field.key, v)}
+              options={(field.options || []).map((value) => ({ value, label: value }))}
+            />
+          </Field>
         );
       default:
         return (
-          <TextInput
-            label={field.label}
-            value={typeof value === "string" ? value : ""}
-            onChange={(v) => onUpdate(field.key, v === "" ? null : v)}
-            description={field.description}
-            placeholder={unset ? "Not set" : field.placeholder}
-          />
+          <Field label={field.label} hint={field.description}>
+            <Input
+              value={typeof value === "string" ? value : ""}
+              onChange={(event) => onUpdate(field.key, event.target.value === "" ? null : event.target.value)}
+              placeholder={unset ? "Not set" : field.placeholder}
+              className="font-mono"
+            />
+          </Field>
         );
     }
   })();

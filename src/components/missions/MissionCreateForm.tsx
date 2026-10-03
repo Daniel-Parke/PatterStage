@@ -409,9 +409,9 @@ export default function MissionCreateForm({
   // clear the draft. The 4-line "trim → dedupe-by-path → push → reset"
   // sequence used to be inline in the LocalDirRow onClick. Now extracted
   // to a named callback (mirrors the `addReferenceFromInput` pattern for
-  // references, line 265). The actual dedupe + push logic is delegated
+  // references). The actual dedupe + push logic is delegated
   // to `commitLocalDirDraft` in `@/lib/fs/local-dir-entry`, which is shared
-  // with the template editor (TemplateModals.tsx) — same call site, same
+  // with the template editor (templates/TemplateEditorModal.tsx) — same call site, same
   // helper. Returns early on the no-op cases (empty path, duplicate)
   // without touching state.
   const addLocalDirFromDraft = () => {

@@ -13,7 +13,7 @@ import { formatLogAge, isLogLive } from "@/lib/logs/log-freshness";
 import { GROUP_ORDER, GROUP_LABELS } from "@/components/logs/constants";
 import { Panel } from "@/components/dashboard/Panel";
 import { LedgerRowButton } from "@/components/dashboard/LedgerRow";
-import { SearchInput } from "@/components/ui/Input";
+import { SearchInput } from "@/components/ui/field";
 import type { LogFileMeta } from "@/lib/fs/log-files";
 
 export interface LogFilePickerProps {

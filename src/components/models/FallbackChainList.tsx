@@ -10,8 +10,7 @@ import type { FallbackChainEntry } from "@/types/console";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import GlowSurface from "@/components/ui/GlowSurface";
-import { Field, Input } from "@/components/ui/field";
-import { InlineToggle } from "@/components/ui/Input";
+import { Field, Input, InlineToggle } from "@/components/ui/field";
 import PerRowDeleteButton from "@/components/models/PerRowDeleteButton";
 
 interface FallbackChainListProps {
@@ -234,31 +233,33 @@ export default function FallbackChainList({
         </Card>
       ) : (
         <GlowSurface accent="purple">
-          <table className="w-full text-body">
-            <thead>
-              <tr className="text-left text-micro font-mono uppercase tracking-widest text-ps-text-muted border-b border-ps-edge-hairline">
-                <th className="px-3 py-2 w-10">#</th>
-                <th className="px-3 py-2">Model</th>
-                <th className="px-3 py-2 w-16 text-center">Enabled</th>
-                <th className="px-3 py-2 w-28 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sortedChain.map((entry, index) => (
-                <FallbackRow
-                  key={entry.id}
-                  entry={entry}
-                  position={index}
-                  total={sortedChain.length}
-                  disabled={disabled}
-                  onReorder={onReorder}
-                  onToggle={onToggle}
-                  onDelete={onDelete}
-                  onEdit={onEdit}
-                />
-              ))}
-            </tbody>
-          </table>
+          <div role="region" aria-label="Fallback chain" tabIndex={0} className="overflow-x-auto focus-visible:outline-2 focus-visible:outline-neon-purple">
+            <table className="w-full min-w-[480px] text-body">
+              <thead>
+                <tr className="text-left text-micro font-mono uppercase tracking-widest text-ps-text-muted border-b border-ps-edge-hairline">
+                  <th className="px-3 py-2 w-10">#</th>
+                  <th className="px-3 py-2">Model</th>
+                  <th className="px-3 py-2 w-16 text-center">Enabled</th>
+                  <th className="px-3 py-2 w-28 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sortedChain.map((entry, index) => (
+                  <FallbackRow
+                    key={entry.id}
+                    entry={entry}
+                    position={index}
+                    total={sortedChain.length}
+                    disabled={disabled}
+                    onReorder={onReorder}
+                    onToggle={onToggle}
+                    onDelete={onDelete}
+                    onEdit={onEdit}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </div>
         </GlowSurface>
       )}
 

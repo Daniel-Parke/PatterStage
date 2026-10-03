@@ -37,7 +37,7 @@ import React, { useState } from "react";
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { renderWithQuery } from "../helpers/render-with-query";
 
-import { NumberInput } from "@/components/ui/Input";
+import { NumberInput } from "@/components/ui/field";
 import ConfigField from "@/components/config/ConfigField";
 import { CONFIG_SECTIONS } from "@/lib/config/config-schema";
 

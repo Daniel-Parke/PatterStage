@@ -42,11 +42,11 @@ export default function StoryCard({ story, onRead, onDelete }: StoryCardProps) {
 
   return (
     <Card as="article" padding="md" hover className="space-y-2">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+      <div className="flex flex-col sm:flex-row items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <Link
             href={`/recroom/story-weaver/${story.id}`}
-            className="block truncate font-serif text-lead font-semibold text-ps-text-primary transition-colors hover:text-neon-purple"
+            className="block break-words font-serif text-lead font-semibold text-ps-text-primary transition-colors hover:text-neon-purple"
           >
             {story.title}
           </Link>
@@ -64,7 +64,7 @@ export default function StoryCard({ story, onRead, onDelete }: StoryCardProps) {
             </span>
           </div>
         </div>
-        <div className="flex shrink-0 items-center gap-1.5">
+        <div className="flex flex-wrap shrink-0 items-center gap-1.5">
           <span className={`inline-flex items-center rounded-ps-sm px-2 py-0.5 font-mono text-body ${tone.fill} ${tone.text}`}>{word}</span>
           <Button variant="ghost" size="sm" icon={BookOpen} aria-label={`Read ${story.title}`} onClick={() => onRead(story.id)}>
             Read

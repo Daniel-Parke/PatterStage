@@ -6,7 +6,7 @@ import { Search, Bug, GitPullRequest, Wrench, PenTool, Zap,
   BarChart3, Brain, TrendingUp, DollarSign, Target, ClipboardList,
   Palette, Megaphone, Microscope, Scale, ShieldCheck, CheckSquare,
   TestTube, ShieldAlert, Gauge, BookOpen, RefreshCw, FlaskConical,
-  Sparkles, Clock } from "lucide-react";
+  Sparkles, Clock, Bot } from "lucide-react";
 import { iconColorMap } from "@/lib/ui/theme";
 import type { AccentColor } from "@/types/console";
 
@@ -17,7 +17,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   BarChart3, Brain, TrendingUp, DollarSign, Target, ClipboardList,
   Palette, Megaphone, Microscope, Scale, ShieldCheck, CheckSquare,
   TestTube, ShieldAlert, Gauge, BookOpen, RefreshCw, FlaskConical,
-  Sparkles, Clock,
+  Sparkles, Clock, Bot,
 };
 
 interface TemplateCardProps {

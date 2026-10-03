@@ -74,39 +74,6 @@ export function conversationToCsv(messages: ChatMessage[]): string {
   return rows.join("\n");
 }
 
-// ── Markdown rendering ──────────────────────────────────────────
-
-export const COPY_BTN_CLASS = "copy-btn";
-export const COPY_BTN_DATA_ATTR = "data-code";
-
-function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
-
-/**
- * Simple markdown-like rendering for chat responses.
- * Handles code blocks (with copy button), inline code, bold, italic, and line breaks.
- */
-export function renderMarkdown(text: string): string {
-  const safe = escapeHtml(text);
-  let html = safe.replace(
-    /```(\w*)\n([\s\S]*?)```/g,
-    `<div class="relative group"><div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">` +
-      `<button class="${COPY_BTN_CLASS} text-micro font-mono text-ps-text-muted hover:text-ps-text-primary bg-gray-900/80 px-2 py-1 rounded-ps-sm border border-ps-edge-hairline" ${COPY_BTN_DATA_ATTR}="$2">Copy</button></div>` +
-      '<pre class="bg-gray-900 border border-ps-edge-hairline rounded-ps-md p-4 overflow-x-auto text-body font-mono text-ps-text-primary leading-relaxed my-2"><code>$2</code></pre></div>',
-  );
-  html = html.replace(/`([^`]+)`/g, '<code class="bg-ps-surface-raised px-1 py-0.5 rounded-ps-sm text-micro font-mono text-neon-cyan">$1</code>');
-  html = html.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
-  html = html.replace(/\*([^*]+)\*/g, "<em>$1</em>");
-  html = html.replace(/\n/g, "<br />");
-  return html;
-}
-
 /** Format model ID into human-readable name. */
 export function formatModelName(id: string): string {
   if (id === "hermes-agent") return "Agent Default";

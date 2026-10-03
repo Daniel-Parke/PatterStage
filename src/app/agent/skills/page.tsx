@@ -39,7 +39,7 @@ import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
 import Button from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { SearchInput } from "@/components/ui/Input";
+import { SearchInput } from "@/components/ui/field";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import PageLoading, { pendingCount } from "@/components/ui/PageLoading";
 import { LastResult, useToast } from "@/components/ui/Toast";
@@ -320,6 +320,8 @@ export default function SkillsPage() {
     }
   };
 
+  const rowActions = { toggling, expandedSkill, skillContent, onToggleSkill: handleToggleSkill, onViewSkill: viewSkill, onEditSkill: openSkillEditor };
+
   const total = data?.skills.length ?? null;
   // Distinct categories in the catalogue, by the same grouping the rows use
   // (T-0037: a private normalisation here is a second source of truth).
@@ -372,12 +374,7 @@ export default function SkillsPage() {
                 total={total ?? 0}
                 page={clampPage(searchPage, matches.length)}
                 onPageChange={setSearchPage}
-                toggling={toggling}
-                expandedSkill={expandedSkill}
-                skillContent={skillContent}
-                onToggleSkill={handleToggleSkill}
-                onViewSkill={viewSkill}
-                onEditSkill={openSkillEditor}
+                rowActions={rowActions}
               />
             ) : (
               <SkillsSections
@@ -391,12 +388,7 @@ export default function SkillsPage() {
                 onToggleCategory={toggleCategory}
                 categoryPage={categoryPage}
                 onCategoryPageChange={changeCategoryPage}
-                expandedSkill={expandedSkill}
-                skillContent={skillContent}
-                toggling={toggling}
-                onToggleSkill={handleToggleSkill}
-                onViewSkill={viewSkill}
-                onEditSkill={openSkillEditor}
+                rowActions={rowActions}
               />
             )}
           </div>

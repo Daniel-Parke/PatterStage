@@ -55,7 +55,7 @@ export default function AppPageShell({
   const fx = variant === "scanlines" ? "relative scanlines" : "";
   return (
     <div
-      className={`min-h-screen bg-ps-surface-ground grid-bg flex flex-col ${fx} ${className}`.trim()}
+      className={`${density === "pane" ? "h-full min-h-0" : "min-h-screen"} bg-ps-surface-ground grid-bg flex flex-col ${fx} ${className}`.trim()}
     >
       {header ? (
         // Sticky and full-bleed: the BAR spans the viewport, the container inside is what the words line up with.

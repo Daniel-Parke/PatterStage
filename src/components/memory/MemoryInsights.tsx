@@ -6,8 +6,7 @@ import StatStrip from "@/components/viz/StatStrip";
 
 /**
  * Hindsight memory overview — fresh/stale fact mix + unique tag count for
- * the currently-loaded memory set. Mirrors SkillsInsights/
- * PersonalitiesInsights (StatStrip donut + tiles + ring). `hiddenStaleCount`
+ * the currently-loaded memory set. `hiddenStaleCount`
  * is the number of loaded facts the age filter is hiding (stale).
  *
  * The browser only loads a recent SAMPLE of facts (a page), so the donut +

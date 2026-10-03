@@ -29,8 +29,6 @@ import {
 } from "@/lib/schedule/picker-resolver";
 import { CustomScheduleBuilder } from "@/components/schedule/CustomScheduleBuilder";
 
-type ScheduleMode = "interval" | "wall-clock" | "weekly" | "post-run";
-
 export interface SchedulePickerProps {
   /** Current schedule value — accepts 5-field cron, "every Nh" shorthand, or JSON-serialised ParsedSchedule. */
   value: string;
@@ -42,10 +40,6 @@ export interface SchedulePickerProps {
   disabled?: boolean;
   /** Optional error message displayed below. */
   error?: string | null;
-  /** Compact mode — render only the preset dropdown, no custom builder. */
-  compact?: boolean;
-  /** Optional mode hint (kept for legacy callers; affects display ordering only). */
-  mode?: ScheduleMode;
   /**
    * Called whenever the advanced (raw cron) draft's usability changes: the
    * message when the box holds something this cannot parse, null when it does
@@ -72,8 +66,6 @@ export default function SchedulePicker({
   id,
   disabled = false,
   error = null,
-  compact = false,
-  mode: _mode,
   onDraftError,
 }: SchedulePickerProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -149,7 +141,6 @@ export default function SchedulePicker({
   // When the picker is asked to display a value that doesn't match a preset,
   // auto-open the custom builder so the user can see/edit the advanced settings.
   useEffect(() => {
-    if (compact) return;
     if (canonicalCron && !matchedPreset) {
       // Try to seed the custom builder from the cron expression
       const parts = canonicalCron.split(/\s+/);
@@ -166,7 +157,7 @@ export default function SchedulePicker({
         }
       }
     }
-  }, [canonicalCron, matchedPreset, compact]);
+  }, [canonicalCron, matchedPreset]);
 
   const groups = useMemo(() => groupSchedulePresets(), []);
 
@@ -248,60 +239,6 @@ export default function SchedulePicker({
     if (canonicalCron) return describeSchedule(canonicalCron) || canonicalCron;
     return value || "Select a frequency";
   })();
-
-  // Compact mode: just the preset dropdown (for IntervalSelector use case)
-  if (compact) {
-    return (
-      <div className="relative" ref={dropdownRef}>
-        <button
-          id={id}
-          type="button"
-          disabled={disabled}
-          onClick={() => setDropdownOpen((o) => !o)}
-          className={`w-full flex items-center justify-between ${baseInputStyles} pr-3 disabled:opacity-50 disabled:cursor-not-allowed`}
-        >
-          <span className="flex items-center gap-2">
-            <Clock className="w-3.5 h-3.5 text-neon-orange/90 flex-shrink-0" />
-            {displayLabel}
-          </span>
-          <ChevronDown className={`w-4 h-4 text-ps-text-muted transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
-        </button>
-        {dropdownOpen && (
-          <Card padding="none" className="absolute z-dropdown mt-1 w-full shadow-2xl overflow-hidden">
-            <div className="max-h-72 overflow-y-auto py-1">
-              {groups.map(({ group, items }) => (
-                <div key={group}>
-                  <div className="px-3 py-1.5 text-micro uppercase tracking-wider text-ps-text-muted font-mono">
-                    {group}
-                  </div>
-                  {items.map((p) => (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() => handlePresetSelect(p)}
-                      className={`w-full text-left px-3 py-2 text-body transition-colors ${
-                        matchedPreset?.id === p.id
-                          ? "bg-neon-orange/15 text-neon-orange"
-                          : "text-ps-text-secondary hover:bg-ps-surface-raised hover:text-ps-text-primary"
-                      }`}
-                    >
-                      {p.label}
-                    </button>
-                  ))}
-                </div>
-              ))}
-            </div>
-          </Card>
-        )}
-        {error && (
-          <p className="flex items-center gap-2 text-body text-semantic-danger mt-1.5">
-            <AlertCircle className="w-4 h-4 flex-shrink-0" />
-            {error}
-          </p>
-        )}
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-1.5">

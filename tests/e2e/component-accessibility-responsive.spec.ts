@@ -1,3 +1,6 @@
+import { request as httpRequest } from 'node:http';
+import { request as httpsRequest } from 'node:https';
+import { NextResponse } from 'next/server';
 import { test as base, expect, type Locator, type Page, type Route, type TestInfo } from '@playwright/test';
 import { createStoryWeaverSaveFixture, fulfillStoryWeaverLoadOrSpend } from '../helpers/story-weaver-save-fixture';
 
@@ -25,13 +28,84 @@ type Oracle = {
   respond: (route: Route, data: unknown, status?: number) => Promise<void>;
 };
 
+// A fresh socket per hop avoids the installed API client's stale keep-alive pool.
+// The browser still issues its normal requests; only real fixture reads use this transport.
+async function freshFixtureRequest(page: Page, target: string, method: string, headers: Record<string, string>, payload?: string) {
+  const origin = new URL(target).origin;
+  const deadline = Date.now() + 30_000;
+  const controller = new AbortController();
+  const cancel = () => controller.abort(new Error('Fixture page closed during HTTP request'));
+  page.on('close', cancel);
+  const timer = setTimeout(() => controller.abort(new Error('Fixture HTTP request deadline exceeded')), Math.max(0, deadline - Date.now()));
+  try {
+    let url = new URL(target);
+    for (let redirects = 0; ; redirects++) {
+      controller.signal.throwIfAborted();
+      if (page.isClosed()) throw new Error('Fixture page closed during HTTP request');
+      if (url.origin !== origin) throw new Error('Fixture redirect left the isolated origin');
+      const cookies = await page.context().cookies(url.href);
+      const outgoing = Object.fromEntries(Object.entries(headers).filter(([name]) => !['host', 'connection', 'content-length', 'accept-encoding'].includes(name.toLowerCase())));
+      outgoing['accept-encoding'] = 'identity';
+      if (cookies.length && !Object.keys(outgoing).some(name => name.toLowerCase() === 'cookie')) outgoing.cookie = cookies.map(cookie => cookie.name + '=' + cookie.value).join('; ');
+      if (payload !== undefined) outgoing['content-length'] = String(Buffer.byteLength(payload));
+      const response = await new Promise<{ status: number; headers: import('node:http').IncomingHttpHeaders; body: Buffer }>((resolve, reject) => {
+        const request = (url.protocol === 'https:' ? httpsRequest : httpRequest)(url, {
+          method, headers: outgoing, agent: false, signal: controller.signal,
+        });
+        const fail = (error: Error) => { request.destroy(); reject(error); };
+        request.on('error', fail);
+        request.on('response', incoming => {
+          const chunks: Buffer[] = [];
+          incoming.on('data', chunk => chunks.push(Buffer.from(chunk)));
+          incoming.on('error', fail);
+          incoming.on('aborted', () => fail(new Error('Fixture HTTP response aborted')));
+          incoming.on('end', () => {
+            if (!incoming.complete) { fail(new Error('Incomplete fixture HTTP response')); return; }
+            resolve({ status: incoming.statusCode!, headers: incoming.headers, body: Buffer.concat(chunks) });
+          });
+        });
+        request.end(payload);
+      });
+      for (const value of response.headers['set-cookie'] ?? []) {
+        const cookie = new NextResponse(null, { headers: { 'set-cookie': value } }).cookies.getAll()[0];
+        if (!cookie) throw new Error('Invalid fixture Set-Cookie response');
+        // Next's public parser supplies attributes; keep the wire value un-decoded.
+        const pair = value.slice(0, value.indexOf(';') < 0 ? value.length : value.indexOf(';'));
+        await page.context().addCookies([{
+          name: cookie.name, value: pair.slice(pair.indexOf('=') + 1).trim(),
+          domain: cookie.domain ?? url.hostname,
+          path: cookie.path ?? (url.pathname.slice(0, url.pathname.lastIndexOf('/')) || '/'),
+          httpOnly: cookie.httpOnly ?? false, secure: cookie.secure ?? false,
+          ...(typeof cookie.sameSite === 'string' ? { sameSite: ({ lax: 'Lax', strict: 'Strict', none: 'None' } as const)[cookie.sameSite] } : {}),
+          ...(cookie.maxAge !== undefined ? { expires: cookie.maxAge <= 0 ? 0 : Date.now() / 1000 + cookie.maxAge }
+            : cookie.expires ? { expires: new Date(cookie.expires).getTime() / 1000 } : {}),
+        }]);
+      }
+      if (![301, 302, 303, 307, 308].includes(response.status) || !response.headers.location) {
+        return { ok: () => response.status >= 200 && response.status < 300, json: async () => JSON.parse(response.body.toString('utf8')) as unknown };
+      }
+      if (redirects === 20) throw new Error('Fixture HTTP redirect limit exceeded');
+      url = new URL(response.headers.location, url);
+      headers = Object.fromEntries(Object.entries(headers).filter(([name]) => name.toLowerCase() !== 'cookie'));
+      if (response.status === 303 && method !== 'HEAD' || [301, 302].includes(response.status) && method === 'POST') {
+        method = 'GET'; payload = undefined;
+        headers = Object.fromEntries(Object.entries(headers).filter(([name]) => !['content-type', 'content-length'].includes(name.toLowerCase())));
+      }
+    }
+  } finally {
+    clearTimeout(timer);
+    page.off('close', cancel);
+    controller.abort();
+  }
+}
+
 const test = base.extend<{ oracle: Oracle }>({
-  oracle: [async ({ page, baseURL }, use, info) => {
+  oracle: [async ({ page, baseURL, extraHTTPHeaders }, use, info) => {
     if (!baseURL || !process.env.PS_E2E_AUTH_TOKEN) throw new Error('Isolated runtime and sign-in token required');
     const origin = new URL(baseURL).origin;
-    const signedIn = await page.request.post(`${origin}/api/auth/sign-in`, {
-      headers: { Origin: origin }, data: { token: process.env.PS_E2E_AUTH_TOKEN },
-    });
+    const signedIn = await freshFixtureRequest(page, `${origin}/api/auth/sign-in`, 'POST', {
+      ...extraHTTPHeaders, Origin: origin, 'Content-Type': 'application/json',
+    }, JSON.stringify({ token: process.env.PS_E2E_AUTH_TOKEN }));
     expect(signedIn.ok(), 'real sign-in must succeed before fixture interception').toBe(true);
     const session = (await page.context().cookies()).find(cookie => cookie.name === 'ps_session');
     expect(session?.httpOnly).toBe(true);
@@ -50,9 +124,19 @@ const test = base.extend<{ oracle: Oracle }>({
       '/api/models/fallbacks/config', '/api/models/sync/drift', '/api/agent/profiles', '/api/mission-categories',
       '/api/templates', '/api/composer/workflows', '/api/composer/runs', '/api/memory/config', '/api/monitor', '/api/sessions']);
     const cached = new Map<string, unknown>();
+    // Acquire real seed envelopes during setup, within the unchanged test budget.
+    const preloaded = await Promise.allSettled(['/api/stats', '/api/status/runtime', '/api/feature-flags',
+      '/api/models/defaults', '/api/models/sync/drift', '/api/models/fallbacks/config'].map(async path => {
+      const url = new URL(path, origin).href;
+      const response = await freshFixtureRequest(page, url, 'GET', extraHTTPHeaders ?? {});
+      expect(response.ok(), `seed fixture ${path}`).toBe(true);
+      cached.set(url, await response.json());
+    }));
+    const preloadFailures = preloaded.filter(result => result.status === 'rejected');
+    if (preloadFailures.length) throw new AggregateError(preloadFailures.map(result => result.reason), 'Oracle seed acquisition failed');
     page.on('pageerror', error => errors.push(error.message));
     page.on('console', message => { if (message.type() === 'error') consoleErrors.push({ text: message.text(), url: message.location().url }); });
-    await page.route('**/*', async route => {
+    const handleRoute = async (route: Route) => {
       const request = route.request(), url = new URL(request.url());
       if (url.origin !== origin) { unhandled.push(`external ${url.origin}${url.pathname}`); await route.abort('blockedbyclient'); return; }
       if (!url.pathname.startsWith('/api/')) { await route.continue(); return; }
@@ -63,7 +147,7 @@ const test = base.extend<{ oracle: Oracle }>({
       if (url.pathname === '/api/update') { await respond(route, { updateAvailable: false, checkFailed: false, deployEnabled: false }); return; }
       if (request.method() === 'GET' && (seededReads.has(url.pathname) || /^\/api\/composer\/workflows\/[^/]+$/.test(url.pathname))) {
         if (!cached.has(request.url())) {
-          const response = await route.fetch();
+          const response = await freshFixtureRequest(page, request.url(), 'GET', await request.allHeaders());
           expect(response.ok(), `seed fixture ${url.pathname}`).toBe(true);
           cached.set(request.url(), await response.json());
         }
@@ -71,6 +155,23 @@ const test = base.extend<{ oracle: Oracle }>({
       }
       unhandled.push(`${request.method()} ${url.pathname}`);
       await respond(route, 'Unconfigured oracle request', 503);
+    };
+    const pendingRoutes: Promise<void>[] = [];
+    const drain = async (pending: Promise<void>[]) => {
+      let observed = 0;
+      const failures: unknown[] = [];
+      while (observed < pending.length) {
+        const batch = pending.slice(observed);
+        observed = pending.length;
+        const settled = await Promise.allSettled(batch);
+        for (const result of settled) if (result.status === 'rejected') failures.push(result.reason);
+      }
+      if (failures.length) throw new AggregateError(failures, 'Oracle route handlers failed while draining');
+    };
+    await page.route('**/*', route => {
+      const pending = handleRoute(route);
+      pendingRoutes.push(pending);
+      return pending;
     });
     handlers.set('/api/models', route => respond(route, { models: [] }));
     handlers.set('/api/credentials', route => respond(route, { credentials: [] }));
@@ -78,17 +179,51 @@ const test = base.extend<{ oracle: Oracle }>({
     handlers.set('/api/gateway/health', route => respond(route, { online: true, authConfigured: true, baseUrl: 'http://127.0.0.1:8642' }));
     handlers.set('/api/gateway/models', route => respond(route, { models: [] }));
     handlers.set('/api/models/fallbacks', route => respond(route, { entries: [], config: { restorePrimaryOnFallback: true, fallbackNotification: true, apiMaxRetries: 3 } }));
-    await use({ handlers, calls, respond });
-    const signals = await page.evaluate(() => (window as unknown as { __oracleSignals?: unknown }).__oracleSignals ?? []).catch(() => []);
-    await info.attach('observed-client-signals', { body: JSON.stringify(signals), contentType: 'application/json' });
-    await info.attach('browser-state', { body: await page.locator('body').ariaSnapshot().catch(() => 'page closed'), contentType: 'text/plain' });
-    if (!page.isClosed()) await capture(page, info, 'final-viewport');
-    const intentional = consoleErrors.filter(error => refusals.has(error.url) && /Failed to load resource/.test(error.text));
-    const unexpected = consoleErrors.filter(error => !intentional.includes(error));
-    await info.attach('http-and-console', { body: JSON.stringify({ calls, refusals: [...refusals], intentional, unexpected, errors, unhandled }, null, 2), contentType: 'application/json' });
-    expect.soft(unhandled, 'fixture/configuration errors are not behavioural reds').toEqual([]);
-    expect.soft(errors, 'unexpected page exceptions').toEqual([]);
-    expect.soft(unexpected, 'unexpected console errors').toEqual([]);
+    const runTest = use;
+    try {
+      await runTest({ handlers, calls, respond });
+    } finally {
+      try {
+        const signals = await page.evaluate(() => (window as unknown as { __oracleSignals?: unknown }).__oracleSignals ?? []).catch(() => []);
+        await info.attach('observed-client-signals', { body: JSON.stringify(signals), contentType: 'application/json' });
+        await info.attach('browser-state', { body: await page.locator('body').ariaSnapshot().catch(() => 'page closed'), contentType: 'text/plain' });
+        if (!page.isClosed()) await capture(page, info, 'final-viewport');
+      } finally {
+        const teardownRequests: string[] = [];
+        const pendingGuard: Promise<void>[] = [];
+        try {
+          await page.route('**/*', route => {
+            const pending = (async () => {
+              teardownRequests.push(`${route.request().method()} ${new URL(route.request().url()).pathname}`);
+              await route.abort('aborted');
+            })();
+            pendingGuard.push(pending);
+            return pending;
+          });
+          try {
+            await drain(pendingRoutes);
+          } finally {
+            if (!page.isClosed()) await page.goto('about:blank');
+          }
+        } finally {
+          try {
+            try {
+              await drain(pendingGuard);
+            } finally {
+              await page.unrouteAll({ behavior: 'wait' });
+            }
+          } finally {
+            const intentional = consoleErrors.filter(error => refusals.has(error.url) && /Failed to load resource/.test(error.text));
+            const unexpected = consoleErrors.filter(error => !intentional.includes(error));
+            await info.attach('http-and-console', { body: JSON.stringify({ calls, refusals: [...refusals], intentional, unexpected, errors, unhandled }, null, 2), contentType: 'application/json' });
+            expect.soft(unhandled, 'fixture/configuration errors are not behavioural reds').toEqual([]);
+            expect.soft(errors, 'unexpected page exceptions').toEqual([]);
+            expect.soft(unexpected, 'unexpected console errors').toEqual([]);
+            await info.attach('teardown-guard', { body: JSON.stringify(teardownRequests), contentType: 'application/json' });
+          }
+        }
+      }
+    }
   }, { auto: true }],
 });
 
@@ -125,14 +260,53 @@ async function reachable(target: Locator) {
 // scrollIntoView, forced clicks or evaluate-clicks establish reachability.
 async function wheelTo(page: Page, target: Locator) {
   await expect(target).toBeAttached();
+  const sample = () => target.evaluate(element => {
+    const rect = element.getBoundingClientRect();
+    let anchor = element, left = Math.max(0, rect.left), right = Math.min(innerWidth, rect.right);
+    const containers = [];
+    for (let ancestor = element.parentElement; ancestor; ancestor = ancestor.parentElement) {
+      const style = getComputedStyle(ancestor), box = ancestor.getBoundingClientRect();
+      // A horizontally clipped action need not itself be hittable yet.
+      if (anchor === element && /auto|scroll/.test(style.overflowX) && ancestor.scrollWidth > ancestor.clientWidth &&
+          (rect.left < Math.max(0, box.left) || rect.right > Math.min(innerWidth, box.right))) {
+        anchor = ancestor; left = Math.max(0, box.left); right = Math.min(innerWidth, box.right);
+      }
+      if ((/auto|scroll/.test(style.overflowY) || ancestor === document.scrollingElement) && ancestor.scrollHeight > ancestor.clientHeight) {
+        let pointer: { x: number; y: number; hit: string } | null = null;
+        for (const fraction of [0.5, 0.75, 0.25]) {
+          const x = (Math.max(0, box.left) + Math.min(innerWidth, box.right)) / 2;
+          const y = Math.max(0, box.top) + (Math.min(innerHeight, box.bottom) - Math.max(0, box.top)) * fraction;
+          const hit = document.elementFromPoint(x, y);
+          if (!pointer && hit && ancestor.contains(hit)) pointer = { x, y, hit: hit.tagName + '.' + [...hit.classList].join('.') };
+        }
+        containers.push({ offset: ancestor.scrollTop, maximum: ancestor.scrollHeight - ancestor.clientHeight, pointer });
+      }
+    }
+    const exposed = rect.top >= 8 && rect.bottom <= innerHeight - 8 && right > left && [0.5, 0.25, 0.75].some(fraction => {
+      const hit = document.elementFromPoint(left + (right - left) * fraction, rect.top + rect.height / 2);
+      return hit !== null && anchor.contains(hit);
+    });
+    return { exposed, direction: rect.top < 8 || rect.top + rect.height / 2 < innerHeight / 2 ? -1 : 1, containers };
+  });
+  const attempts = [];
+  let current = await sample();
   for (let i = 0; i < 80; i++) {
-    const box = await target.boundingBox(), viewport = page.viewportSize()!;
-    if (box && box.y >= 8 && box.y + box.height <= viewport.height - 8) return;
-    await page.mouse.move(viewport.width - 30, Math.floor(viewport.height / 2));
-    await page.mouse.wheel(0, box && box.y < 8 ? -350 : 350);
+    if (current.exposed) break;
+    const container = current.containers.find(c => c.pointer && (current.direction < 0 ? c.offset > 1 : c.offset < c.maximum - 1));
+    if (!container?.pointer) break;
+    await page.mouse.move(container.pointer.x, container.pointer.y);
+    await page.mouse.wheel(0, current.direction * 350);
     await page.waitForTimeout(80);
+    const after = await sample();
+    const moved = after.containers.some((c, index) => Math.abs(c.offset - (current.containers[index]?.offset ?? c.offset)) > 0.5);
+    attempts.push({ attempt: i + 1, pointer: container.pointer, before: current, after, moved });
+    current = after;
+    if (!moved && attempts.length > 1 && !attempts[attempts.length - 2].moved) break;
   }
-  await reachable(target);
+  if (attempts.length || !current.exposed) await test.info().attach('vertical-wheel', {
+    body: JSON.stringify({ attempts, final: current }, null, 2), contentType: 'application/json',
+  });
+  if (!current.exposed) throw new Error('No exposed vertical wheel point or movement within bounds: ' + JSON.stringify(current));
 }
 
 async function fallbackActionReachable(page: Page, target: Locator, info: TestInfo) {
@@ -140,15 +314,23 @@ async function fallbackActionReachable(page: Page, target: Locator, info: TestIn
   const sample = () => target.evaluate(element => {
     const targetRect = element.getBoundingClientRect();
     let left = 0, right = innerWidth;
-    const containers: { left: number; right: number; top: number; bottom: number; offset: number; maximum: number }[] = [];
+    const containers: { left: number; right: number; top: number; bottom: number; offset: number; maximum: number; pointer: { x: number; y: number; hit: string } | null }[] = [];
     for (let ancestor = element.parentElement; ancestor; ancestor = ancestor.parentElement) {
       const style = getComputedStyle(ancestor), rect = ancestor.getBoundingClientRect();
       if (/auto|scroll|hidden|clip/.test(style.overflowX)) {
         left = Math.max(left, rect.left); right = Math.min(right, rect.right);
       }
       if (/auto|scroll/.test(style.overflowX) && ancestor.scrollWidth > ancestor.clientWidth) {
+        let pointer: { x: number; y: number; hit: string } | null = null;
+        for (const fraction of [0.5, 0.25, 0.75]) {
+          const x = Math.max(left, rect.left) + (Math.min(right, rect.right) - Math.max(left, rect.left)) * fraction;
+          const y = targetRect.top + targetRect.height / 2, hit = document.elementFromPoint(x, y);
+          if (!pointer && y > Math.max(0, rect.top) && y < Math.min(innerHeight, rect.bottom) && hit && ancestor.contains(hit)) {
+            pointer = { x, y, hit: hit.tagName + '.' + [...hit.classList].join('.') };
+          }
+        }
         containers.push({ left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom,
-          offset: ancestor.scrollLeft, maximum: ancestor.scrollWidth - ancestor.clientWidth });
+          offset: ancestor.scrollLeft, maximum: ancestor.scrollWidth - ancestor.clientWidth, pointer });
       }
     }
     return { target: { left: targetRect.left, right: targetRect.right, centreY: targetRect.top + targetRect.height / 2 },
@@ -161,11 +343,8 @@ async function fallbackActionReachable(page: Page, target: Locator, info: TestIn
     if (!direction) { outcome = 'target-within-visible-horizontal-bounds'; break; }
     const container = current.containers.find(c => direction < 0 ? c.offset > 1 : c.offset < c.maximum - 1);
     if (!container) { outcome = current.containers.length ? 'scroll-boundary' : 'no-user-scroll-container'; break; }
-    const visibleLeft = Math.max(current.left, container.left), visibleRight = Math.min(current.right, container.right);
-    const visibleTop = Math.max(0, container.top), visibleBottom = Math.min(current.height, container.bottom);
-    if (visibleRight <= visibleLeft || visibleBottom <= visibleTop) { outcome = 'scroll-container-outside-viewport'; break; }
-    const pointer = { x: (visibleLeft + visibleRight) / 2,
-      y: Math.max(visibleTop + 1, Math.min(current.target.centreY, visibleBottom - 1)) };
+    if (!container.pointer) { outcome = 'no-exposed-horizontal-scroll-point'; break; }
+    const pointer = container.pointer;
     const distance = direction < 0 ? current.left - current.target.left : current.target.right - current.right;
     const deltaX = direction * Math.min(160, Math.max(16, distance + 4));
     await page.mouse.move(pointer.x, pointer.y);

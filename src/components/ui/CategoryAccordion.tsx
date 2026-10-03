@@ -38,7 +38,11 @@ export default function CategoryAccordion({
   return (
     <div className="overflow-hidden">
       {/* Header */}
+      <div className="flex items-center gap-2">
       <button
+        type="button"
+        aria-expanded={expandable ? isExpanded : undefined}
+        disabled={!expandable}
         onClick={() => expandable && setOpen(!open)}
         className={`w-full flex items-center justify-between px-1 py-1.5 ${expandable ? "hover:bg-ps-surface-raised cursor-pointer" : "cursor-default"} transition-colors`}
       >
@@ -50,7 +54,6 @@ export default function CategoryAccordion({
           </span>
         </div>
         <div className="flex items-center gap-2">
-          {headerRight}
           {expandable && (
             isExpanded ? (
               <ChevronDown className="w-3 h-3 text-ps-viz-glyph-idle" />
@@ -60,6 +63,8 @@ export default function CategoryAccordion({
           )}
         </div>
       </button>
+      {headerRight}
+      </div>
 
       {/* Content */}
       {isExpanded && (

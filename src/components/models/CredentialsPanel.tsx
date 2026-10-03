@@ -196,8 +196,8 @@ export default function CredentialsPanel({
           const rotating = rotatingId === c.id;
           return (
             <li key={c.id} className="rounded-ps-md px-3 py-2 hover:bg-ps-surface-raised">
-              <div className="flex items-center gap-3">
-                <span className="min-w-0 flex-1 truncate text-body text-ps-text-secondary">
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="min-w-0 basis-full break-words text-body text-ps-text-secondary sm:basis-auto sm:flex-1">
                   {c.label}
                 </span>
                 <span className="font-mono text-micro text-ps-text-muted">{c.provider}</span>

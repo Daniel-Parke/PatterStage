@@ -13,6 +13,7 @@ import { useMemo } from "react";
 import { Radio, RefreshCw } from "lucide-react";
 
 import { Panel } from "@/components/dashboard/Panel";
+import IconButton from "@/components/ui/IconButton";
 import { timeAgo, titleCase } from "@/lib/utils";
 import { statusToneClasses } from "@/lib/ui/theme";
 import type { HermesProcess } from "@/types/console";
@@ -36,10 +37,7 @@ export default function ProcessesPanel({ processes, onRefresh }: ProcessesPanelP
           Running Hermes Processes
           <span className="text-body text-ps-text-faint ml-1">({activeCount} Active)</span>
         </h2>
-        <RefreshCw
-          className="w-3 h-3 text-ps-viz-glyph-idle hover:text-ps-text-muted cursor-pointer"
-          onClick={onRefresh}
-        />
+        <IconButton icon={RefreshCw} label="Refresh processes" size="sm" onClick={onRefresh} />
       </div>
       {processes.length === 0 ? (
         <Panel accent="purple" className="p-6 text-center">

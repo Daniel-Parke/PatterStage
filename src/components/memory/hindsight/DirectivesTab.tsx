@@ -33,11 +33,11 @@ export default function DirectivesTab({
 }: DirectivesTabProps) {
   return (
     <>
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex flex-wrap justify-between items-center gap-3 mb-4">
         <div className="text-body text-ps-text-muted">
           {directives.length} directive{pluralise(directives.length)} — injected into agent prompts automatically
         </div>
-        <div className="flex gap-2">
+        <div className="flex shrink-0 flex-wrap gap-2">
           <Button variant="ghost" size="sm" icon={RefreshCw} onClick={onRefresh} disabled={loading}>
             Refresh
           </Button>

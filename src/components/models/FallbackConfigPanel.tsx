@@ -90,7 +90,7 @@ export default function FallbackConfigPanel({
           <label className="block text-micro font-mono text-ps-text-muted uppercase tracking-widest mb-2">
             Restoration Policy
           </label>
-            <div className="space-y-2">
+            <div role="radiogroup" aria-label="Restoration Policy" className="space-y-2">
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="radio"

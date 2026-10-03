@@ -233,7 +233,7 @@ export const RULES = [
     // keeps `palette.rgba(1,2,3)`, a method call, out of it, which the old
     // anchor did flag. Requiring a DIGIT after the paren is what leaves
     // `rgb(var(--ps-rgb-neon-cyan) / 0.3)` alone: that is a token reference,
-    // four live call sites use it, and the built stylesheet proves it compiles.
+    // used by the current-run glow in WorkflowRunCanvas.
     pattern: /#[0-9a-fA-F]{3,8}\b|(?<![A-Za-z0-9.$])rgba?\(\s*\d/,
   },
   {

@@ -24,7 +24,7 @@ import {
   X,
 } from "lucide-react";
 
-import { renderMarkdown } from "@/lib/chat/chat-utils";
+import { SimpleMarkdown } from "@/components/skills/SimpleMarkdown";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import MessageAvatar from "@/components/chat/MessageAvatar";
@@ -100,20 +100,10 @@ function ToolCallList({ toolCalls }: { toolCalls: ToolCall[] }) {
 function AssistantBody({ msg, onRetry }: { msg: ChatMessage; onRetry?: () => void }) {
   const hasContent = msg.content.trim().length > 0;
   if (hasContent) {
-    // The content here IS model output, so the question is only whether the
-    // renderer is a boundary. renderMarkdown() in @/lib/chat-utils escapes the
-    // WHOLE string first (&, <, >, ", ') and only then substitutes its own five
-    // constructs, so no byte the model wrote can reach the DOM as markup: a
-    // reply containing a script tag renders as the visible text of a script
-    // tag. The one interpolation into an attribute, the copy button's
-    // data-code, is inside that same escaped string, so the quote that would
-    // break out of it is already &quot;.
     return (
-      <div
-        className="text-body leading-relaxed prose prose-invert max-w-none"
-        // design-lint-disable-next-line no-unsanitised-html -- renderMarkdown escapes the whole message before emitting its own fixed tag set; see the note above and tests/unit/chat-utils-*.
-        dangerouslySetInnerHTML={{ __html: renderMarkdown(msg.content) }}
-      />
+      <div className="text-body leading-relaxed prose prose-invert max-w-none">
+        <SimpleMarkdown content={msg.content} />
+      </div>
     );
   }
   // No content yet — render an explicit state from the message status.

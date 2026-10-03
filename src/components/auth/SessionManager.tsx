@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 import Button from "@/components/ui/Button";
-import { TextInput } from "@/components/ui/Input";
+import { Field, Input } from "@/components/ui/field";
 import { runWrite } from "@/lib/api/api-write";
 
 interface BrowserSession {
@@ -87,7 +87,9 @@ export default function SessionManager() {
       </p>
       <div className="flex flex-wrap items-end gap-3">
         <div className="min-w-0 flex-1 basis-64">
-          <TextInput label="Operator token for session management" value={token} onChange={setToken} type="password" />
+          <Field label="Operator token for session management">
+            <Input value={token} onChange={(event) => setToken(event.target.value)} type="password" className="font-mono" />
+          </Field>
         </div>
         <Button onClick={() => void listSessions()} disabled={!token || busy} loading={busy}>List sessions</Button>
         <Button variant="secondary" onClick={() => void signOut()} disabled={busy}>Sign out this browser</Button>

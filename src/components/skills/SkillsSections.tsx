@@ -23,6 +23,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { SkillSection } from "@/components/skills/SkillSection";
 import { SkillCategoryList } from "@/components/skills/SkillCategoryList";
 import { categoriesOpenByDefault, groupCategories } from "@/lib/skills/skills-page-helpers";
+import type { SkillRowActions } from "@/components/skills/SkillRowList";
 import type { Skill } from "@/types/console";
 
 interface SkillsSectionPanelProps {
@@ -40,12 +41,7 @@ interface SkillsSectionPanelProps {
   onToggleCategory: (stateKey: string, expandedNow: boolean) => void;
   categoryPage: Record<string, number>;
   onCategoryPageChange: (stateKey: string, page: number) => void;
-  expandedSkill: string | null;
-  skillContent: string;
-  toggling: Record<string, boolean>;
-  onToggleSkill: (skill: Skill) => void;
-  onViewSkill: (skill: Skill) => void;
-  onEditSkill: (skill: Skill) => void;
+  rowActions: SkillRowActions;
 }
 
 function SkillsSectionPanel({
@@ -63,12 +59,7 @@ function SkillsSectionPanel({
   onToggleCategory,
   categoryPage,
   onCategoryPageChange,
-  expandedSkill,
-  skillContent,
-  toggling,
-  onToggleSkill,
-  onViewSkill,
-  onEditSkill,
+  rowActions,
 }: SkillsSectionPanelProps) {
   const categories = groupCategories(skills);
 
@@ -94,12 +85,7 @@ function SkillsSectionPanel({
           categoryPage={categoryPage}
           onCategoryPageChange={onCategoryPageChange}
           accentColor={accentColor}
-          expandedSkill={expandedSkill}
-          skillContent={skillContent}
-          toggling={toggling}
-          onToggleSkill={onToggleSkill}
-          onViewSkill={onViewSkill}
-          onEditSkill={onEditSkill}
+          rowActions={rowActions}
         />
       )}
     </SkillSection>
@@ -117,12 +103,7 @@ export interface SkillsSectionsProps {
   onToggleCategory: (stateKey: string, expandedNow: boolean) => void;
   categoryPage: Record<string, number>;
   onCategoryPageChange: (stateKey: string, page: number) => void;
-  expandedSkill: string | null;
-  skillContent: string;
-  toggling: Record<string, boolean>;
-  onToggleSkill: (skill: Skill) => void;
-  onViewSkill: (skill: Skill) => void;
-  onEditSkill: (skill: Skill) => void;
+  rowActions: SkillRowActions;
 }
 
 export default function SkillsSections({
@@ -136,24 +117,14 @@ export default function SkillsSections({
   onToggleCategory,
   categoryPage,
   onCategoryPageChange,
-  expandedSkill,
-  skillContent,
-  toggling,
-  onToggleSkill,
-  onViewSkill,
-  onEditSkill,
+  rowActions,
 }: SkillsSectionsProps) {
   const shared = {
     expandedCategories,
     onToggleCategory,
     categoryPage,
     onCategoryPageChange,
-    expandedSkill,
-    skillContent,
-    toggling,
-    onToggleSkill,
-    onViewSkill,
-    onEditSkill,
+    rowActions,
   };
 
   return (

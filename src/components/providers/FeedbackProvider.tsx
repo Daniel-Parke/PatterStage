@@ -135,7 +135,9 @@ function FeedbackShell({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastEntry[]>([]);
 
   const showToast = useCallback((message: string, type: ToastType = "success") => {
-    setToasts((stack) => pushToast(stack, { id: nextToastId++, message, type }));
+    const id = nextToastId++;
+    setToasts((stack) => pushToast(stack, { id, message, type }));
+    return () => setToasts((stack) => stack.filter((toast) => toast.id !== id));
   }, []);
   const dismiss = useCallback((id: number) => {
     setToasts((stack) => stack.filter((t) => t.id !== id));

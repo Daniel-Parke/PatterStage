@@ -14,7 +14,7 @@ import {
   Search, Plus, Sparkles, List, FileText,
   Settings, RefreshCw,
 } from "lucide-react";
-import { SearchInput } from "@/components/ui/Input";
+import { SearchInput } from "@/components/ui/field";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";

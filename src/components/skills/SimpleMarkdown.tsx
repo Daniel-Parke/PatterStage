@@ -30,6 +30,27 @@
 // ═══════════════════════════════════════════════════════════════
 
 import React from "react";
+import Button from "@/components/ui/Button";
+import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
+
+function CodeBlock({ text, language }: { text: string; language: string }) {
+  const [copied, copy, feedback] = useCopyToClipboard();
+  return (
+    <div className="my-3 rounded-ps-md bg-ps-surface-inset overflow-hidden">
+      {feedback}
+      <div className="flex items-center justify-between gap-2 px-3 py-1.5 border-b border-ps-edge-hairline text-micro font-mono text-ps-text-muted">
+        <span>{language}</span>
+        <Button variant="ghost" size="sm" onClick={() => copy(text)}>{copied ? "Copied" : "Copy"}</Button>
+      </div>
+      <pre className="p-3 text-body font-mono text-ps-text-secondary overflow-x-auto">{text}</pre>
+    </div>
+  );
+}
+
+function safeLink(href: string): boolean {
+  if (/[\u0000-\u0020]|&#|\\/.test(href)) return false;
+  return /^(?:https?:|mailto:)/i.test(href) || !/^[^/?#]*:/.test(href);
+}
 
 interface TableState {
   header: string[];
@@ -85,7 +106,7 @@ function renderInline(text: string): React.ReactNode {
     if (match.index > lastIndex) {
       parts.push(renderInlineNonLink(remaining.slice(lastIndex, match.index), key++));
     }
-    parts.push(
+    parts.push(safeLink(match[2]) ? (
       <a
         key={`link-${key++}`}
         href={match[2]}
@@ -94,8 +115,8 @@ function renderInline(text: string): React.ReactNode {
         className="text-neon-cyan hover:underline"
       >
         {match[1]}
-      </a>,
-    );
+      </a>
+    ) : <React.Fragment key={`link-${key++}`}>{match[1]}</React.Fragment>);
     lastIndex = match.index + match[0].length;
   }
   if (lastIndex < remaining.length) {
@@ -210,21 +231,7 @@ export function SimpleMarkdown({ content }: { content: string }) {
         codeBlockLines = [];
       } else {
         inCodeBlock = false;
-        elements.push(
-          <div
-            key={`code-${i}`}
-            className="my-3 rounded-ps-md bg-ps-surface-inset overflow-hidden"
-          >
-            {codeBlockLang && (
-              <div className="px-3 py-1.5 border-b border-ps-edge-hairline text-micro font-mono text-ps-text-muted uppercase">
-                {codeBlockLang}
-              </div>
-            )}
-            <pre className="p-3 text-body font-mono text-ps-text-secondary overflow-x-auto">
-              {codeBlockLines.join("\n")}
-            </pre>
-          </div>,
-        );
+        elements.push(<CodeBlock key={`code-${i}`} language={codeBlockLang} text={codeBlockLines.length ? codeBlockLines.join("\n") + "\n" : ""} />);
       }
       continue;
     }
@@ -357,6 +364,10 @@ export function SimpleMarkdown({ content }: { content: string }) {
   // Flush any in-progress table at EOF.
   if (inTable && currentTable) {
     flushTable(lines.length);
+  }
+
+  if (inCodeBlock) {
+    elements.push(<CodeBlock key="streaming-code" language={codeBlockLang} text={codeBlockLines.join("\n")} />);
   }
 
   return <div className="space-y-1">{elements}</div>;

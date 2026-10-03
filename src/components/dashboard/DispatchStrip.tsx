@@ -64,7 +64,10 @@ export default function DispatchStrip({ templates, categories }: DispatchStripPr
 
   return (
     <Panel accent="cyan">
+      <div className="flex items-center gap-2 pr-4">
       <button
+        type="button"
+        aria-expanded={expanded}
         onClick={toggle}
         className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-ps-surface-raised transition-colors"
       >
@@ -79,10 +82,6 @@ export default function DispatchStrip({ templates, categories }: DispatchStripPr
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <LinkButton href="/work/missions" variant="ghost" color="cyan" size="sm" onClick={(e) => e.stopPropagation()}>
-            full control
-            <ChevronRight className="h-3 w-3" aria-hidden="true" />
-          </LinkButton>
           {expanded ? (
             <ChevronDown className="w-4 h-4 text-ps-viz-glyph-idle" />
           ) : (
@@ -90,6 +89,11 @@ export default function DispatchStrip({ templates, categories }: DispatchStripPr
           )}
         </div>
       </button>
+      <LinkButton href="/work/missions" variant="ghost" color="cyan" size="sm" className="shrink-0">
+        full control
+        <ChevronRight className="h-3 w-3" aria-hidden="true" />
+      </LinkButton>
+      </div>
 
       {/* Collapsed: horizontal pill strip */}
       {!expanded && (

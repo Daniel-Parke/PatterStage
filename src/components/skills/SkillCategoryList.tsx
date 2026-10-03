@@ -18,9 +18,8 @@
 
 import { ChevronRight } from "lucide-react";
 import Button from "@/components/ui/Button";
-import { SkillRowList } from "@/components/skills/SkillRowList";
+import { SkillRowList, type SkillRowActions } from "@/components/skills/SkillRowList";
 import { categoryStateKey, type SkillCategoryGroup } from "@/lib/skills/skills-page-helpers";
-import type { Skill } from "@/types/console";
 
 interface CategoryRowProps {
   category: string;
@@ -67,12 +66,7 @@ export interface SkillCategoryListProps {
   categoryPage: Record<string, number>;
   onCategoryPageChange: (stateKey: string, page: number) => void;
   accentColor: string;
-  expandedSkill: string | null;
-  skillContent: string;
-  toggling: Record<string, boolean>;
-  onToggleSkill: (skill: Skill) => void;
-  onViewSkill: (skill: Skill) => void;
-  onEditSkill: (skill: Skill) => void;
+  rowActions: SkillRowActions;
 }
 
 export function SkillCategoryList({
@@ -84,12 +78,7 @@ export function SkillCategoryList({
   categoryPage,
   onCategoryPageChange,
   accentColor,
-  expandedSkill,
-  skillContent,
-  toggling,
-  onToggleSkill,
-  onViewSkill,
-  onEditSkill,
+  rowActions,
 }: SkillCategoryListProps) {
   return (
     <div className="space-y-3">
@@ -115,12 +104,7 @@ export function SkillCategoryList({
                   skills={skills}
                   page={categoryPage[stateKey] ?? 0}
                   onPageChange={(p) => onCategoryPageChange(stateKey, p)}
-                  toggling={toggling}
-                  expandedSkill={expandedSkill}
-                  skillContent={skillContent}
-                  onToggleSkill={onToggleSkill}
-                  onViewSkill={onViewSkill}
-                  onEditSkill={onEditSkill}
+                  rowActions={rowActions}
                 />
               </div>
             )}

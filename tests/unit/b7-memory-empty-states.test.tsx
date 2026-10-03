@@ -30,7 +30,7 @@ jest.mock("lucide-react", () => require("../helpers/mocks").lucideMock());
 
 import MemoryTab from "@/components/memory/hindsight/MemoryTab";
 import HindsightBrowser from "@/components/memory/HindsightBrowser";
-import { SearchInput } from "@/components/ui/Input";
+import { SearchInput } from "@/components/ui/field";
 import { mapMemoryItem } from "@/lib/memory/hindsight-bridge";
 import type { Memory } from "@/components/memory/hindsight/types";
 

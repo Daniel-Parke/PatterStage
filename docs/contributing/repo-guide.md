@@ -180,7 +180,9 @@ Next.js static files go in `public/` at the repo root; the Dockerfile runs
 - **Prefer composable helpers over wrappers/base classes.** No `withApiRoute` HOF,
   no base-repository class: the routes are too heterogeneous.
 - **Form inputs use the Field Kit** (`src/components/ui/field/`): `Field`, `Input`,
-  `Textarea`, `Select`, `Toggle`. Do not reach for raw `<input>`.
+  `Textarea`, `Select`, `Toggle`, `InlineToggle`, `SearchInput`, `NumberInput`.
+  Compose `Field` with `Input` for labelled text. Toggle uses `value` and
+  `onChange`; Select and Picker remain separate. Do not reach for raw `<input>`.
 - **Use `js-yaml` for YAML.**
 - **String concatenation for paths in code traced by Turbopack NFT**, not
   `path.join`. This is a real constraint in module scope; `join` is fine inside

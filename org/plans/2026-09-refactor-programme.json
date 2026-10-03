@@ -29,7 +29,8 @@
     "ADR-0013",
     "ADR-0014",
     "Q-032",
-    "Q-033"
+    "Q-033",
+    "Q-034"
   ],
   "evidence": [
     "org/reviews/2026-09-t0164-refactor-recon.md",
@@ -635,7 +636,12 @@
         "tests/unit/b6-config-field-unset-and-range.test.tsx",
         "tests/unit/b7-memory-empty-states.test.tsx",
         "tests/unit/field-kit.test.tsx",
-        "tests/unit/t0162-house-control-names.test.tsx"
+        "tests/unit/t0162-house-control-names.test.tsx",
+        "docs/contributing/repo-guide.md",
+        "src/app/work/chat/page.tsx",
+        "src/components/models/ModelEditor.tsx",
+        "src/app/recroom/story-weaver/layout.tsx",
+        "org/QUESTIONS.md"
       ],
       "dependsOn": [
         "T-0190"
@@ -656,7 +662,7 @@
         "Chat uses SimpleMarkdown with guarded links and a Copy button for code blocks."
       ],
       "rollback": "Revert each primitive or responsive cohort with its consumers; revert Story lifecycle and feedback changes as coherent interfaces while retaining regression tests. No schema, stored-key or data migration.",
-      "verify": "Independent red-first public-action oracles; exact historical test-name parity except two ruled Schedule retirements. At1440x900/390x844 prove truthful Story progress/refusal/Stop, chapter-start positioning, accessible complete control text, keyboard/touch and responsive states. Preserve current cache/ownership contracts and all retention controls. Measure actual full-cohort net benefit before each fold. Full unchanged ten-stage gate, clean committed causal sweep with restored controls, independent R2 and every hosted job at implementation and closure heads. Account for every owned finding/split/coverage row and uncertainty. Preserve all11 historical clipboard cases unchanged; actual pending/refused writes must not display copied success. Correct six bounded stale component comments without changing their executable behaviour.",
+      "verify": "Independent red-first public-action oracles; exact historical test-name parity except two ruled Schedule test deletions and four Q-034 declaration-dependent RGB identities. At1440x900/390x844 prove truthful Story progress/refusal/Stop, chapter-start positioning, accessible complete control text, keyboard/touch and responsive states. Preserve current cache/ownership contracts and all retention controls. Measure actual full-cohort net benefit before each fold. Full unchanged ten-stage gate, clean committed causal sweep with restored controls, independent R2 and every hosted job at implementation and closure heads. Account for every owned finding/split/coverage row and uncertainty. Preserve all11 historical clipboard cases unchanged; actual pending/refused writes must not display copied success. Correct six bounded stale component comments without changing their executable behaviour.",
       "reviewed_followups": {
         "reviewer": "Fermat 01a0fd2b-be08-7d50-848f-4034e5832160, read-only 2026-10-02; no independent runtime execution",
         "status": "Queued for exact claims, router verdict and red oracle before batch implementation; not acceptance",
@@ -738,7 +744,11 @@
         "src/lib/api/**",
         "tests/e2e/route-contract-*.spec.ts",
         "docs/reference/api.md",
-        "tests/unit/api-route-caller-gate.test.ts"
+        "tests/unit/api-route-caller-gate.test.ts",
+        "src/app/work/scripts/page.tsx",
+        "src/components/scripts/ScriptEditorModal.tsx",
+        "src/components/composer/ComposerRunForm.tsx",
+        "src/app/api/composer/runs/route.ts"
       ],
       "dependsOn": [
         "T-0191"
@@ -757,7 +767,7 @@
         "Body validation, auth, read-only, errors and status codes stay exact while large pages move to hooks."
       ],
       "rollback": "Revert one route/page cohort at a time with URL and method oracle intact.",
-      "verify": "A generated route matrix preserves every public method and URL, app-01's four operator routes have item-specific API reference labels and an explicit caller-gate allowlist, malformed bodies return deliberate 4xx, auth and read-only refusals remain exact, and full desktop/phone API-backed smoke journeys pass.",
+      "verify": "A generated route matrix preserves every public method and URL, app-01's four operator routes have item-specific API reference labels and an explicit caller-gate allowlist, malformed bodies return deliberate 4xx, auth and read-only refusals remain exact, and full desktop/phone API-backed smoke journeys pass. Disposition t0191-script-unread-save with independent red-first reproduction and explicit failure/ownership controls; preserve the evidence qualifications in T-0191. Disposition t0191-composer-graph-launch with independent red-first reproduction and explicit failure/ownership controls; preserve the evidence qualifications in T-0191.",
       "reviewed_followups": {
         "reviewer": "Fermat 01a0fd2b-be08-7d50-848f-4034e5832160, read-only 2026-10-02; no independent runtime execution",
         "status": "Queued for exact claims, router verdict and red oracle before batch implementation; not acceptance",
@@ -818,6 +828,41 @@
           }
         ],
         "claim_rule": "Name exact new unit .tsx and browser oracle paths; current glob claims do not establish ownership. Amend Verify and rollback at opening. Preserve T0189 -> T0190 -> T0191 -> T0192 dependencies."
+      },
+      "t0191ReviewFollowups": [
+        {
+          "id": "t0191-script-unread-save",
+          "priority": "P1",
+          "sourcePaths": [
+            "src/app/work/scripts/page.tsx",
+            "src/components/scripts/ScriptEditorModal.tsx"
+          ],
+          "verify": "A pending or failed existing-script read leaves an empty buffer eligible for Save; valid authenticated writable PUT accepts that string. Runtime proof must hold/refuse GET, attempt Save and verify existing bytes survive. A PUT failure may prevent overwrite; this is not auth bypass.",
+          "evidenceStatus": "source-traced, runtime reproduction required"
+        },
+        {
+          "id": "t0191-composer-graph-launch",
+          "priority": "P2",
+          "sourcePaths": [
+            "src/components/composer/ComposerRunForm.tsx",
+            "src/app/api/composer/runs/route.ts"
+          ],
+          "verify": "Missing graph data becomes no stages while Review/confirm can launch. Preserve engine HIL checks; prove complete pre-launch disclosure with held/refused graph reads, not a claim of approval bypass.",
+          "evidenceStatus": "source-traced, runtime reproduction required"
+        }
+      ],
+      "t0191SeedReadLatencyFollowup": {
+        "id": "t0191-real-seed-read-latency",
+        "status": "unresolved",
+        "evidence": "tmp/t0191-full-gate-1791045503471/test-results/*/trace.zip; safe summary: python tmp/t0191-read-failed-traces.py",
+        "observed": "Three six-worker Models cases: mocked reads200 in150\u2013600ms; real stats/runtime/flags/defaults/drift/fallback-config200 in5.4\u20138.5s. Defaults keeps aggregate page loading.",
+        "qualification": "Root cause unproved. Six separate synchronous Git probes46\u201351ms do not explain stall; cold route loading remains hypothesis. Fixture preload only separates setup from geometry assertions, not a production latency fix.",
+        "verify": "Measure controlled cold and warm built-app endpoint timings and event-loop blocking on Windows and Linux; establish cause before any performance fix. Retain real-route navigation coverage and budgets; no retries or relaxed deadlines."
+      },
+      "credentialShapeAttribution": {
+        "finding": "cross-cutting-18",
+        "evidence": "gap-051.1; models/types13\u201318 and credentials-repository15\u201320",
+        "scope": "Add exact paths at opening; measure public hint-only credential shape convergence, retaining alias if necessary and keeping CredentialWithKey internal."
       }
     },
     {
@@ -830,7 +875,23 @@
         "src/app/work/missions/**",
         "src/app/recroom/story-weaver/**",
         "src/hooks/page-*.ts",
-        "tests/e2e/page-state-*.spec.ts"
+        "tests/e2e/page-state-*.spec.ts",
+        "src/app/agent/profiles/page.tsx",
+        "src/components/agents/CreateProfileModal.tsx",
+        "src/components/agents/EditProfileModal.tsx",
+        "tests/unit/profile-draft-ownership.test.tsx",
+        "src/components/composer/ComposerNodeRunDetail.tsx",
+        "src/app/work/composer/page.tsx",
+        "src/components/scripts/ScriptEditorModal.tsx",
+        "src/app/work/scripts/page.tsx",
+        "src/components/research/ResearchReport.tsx",
+        "src/components/agents/AgentGrowthPanel.tsx",
+        "src/components/skills/SkillsSearchResults.tsx",
+        "src/components/skills/SkillRowList.tsx",
+        "src/components/viz/AreaTrend.tsx",
+        "src/components/viz/StackedAreaTrend.tsx",
+        "src/components/session/MissionGroupCard.tsx",
+        "src/components/logs/LogFilePicker.tsx"
       ],
       "dependsOn": [
         "T-0192"
@@ -841,14 +902,108 @@
         "hooks-07",
         "hooks-08",
         "T-0164 44-state route walk",
-        "Q-032"
+        "Q-032",
+        "T-0191 gap-054.1 review: profile-draft late-settlement defect; independent transfer accepted by Laplace on 2026-10-03"
       ],
       "invariants": [
         "URL state, deep links, errors, dropdowns, inspector and dialogs survive the hook move.",
-        "Desktop and phone layouts retain their measured accessible structure."
+        "Desktop and phone layouts retain their measured accessible structure.",
+        "Completion of profile create/edit draft A must not close, clear, overwrite or reselect a later draft B. Preserve distinct cancel/reset/clone/default-profile semantics."
       ],
       "rollback": "Revert one page and its owned hook at a time; preserve the corrected Composer stacking and contrast oracles.",
-      "verify": "Desktop and phone walks of Composer, Missions and Story Weaver show the same route state, controls, dialogs, focus, h1 and no overflow or console errors; moved test names agree and the page-hook net change is measured."
+      "verify": "Desktop and phone walks of Composer, Missions and Story Weaver show the same route state, controls, dialogs, focus, h1 and no overflow or console errors; moved test names agree and the page-hook net change is measured. Independently authored red-first profile lifecycle cases hold A, close and open B, settle A, and prove B remains intact for create and edit. Cover success, refusal, selected identity and unmount; browser walks confirm the current dialog remains usable. Disposition t0191-composer-output-save-ownership with independent red-first reproduction and explicit failure/ownership controls; preserve the evidence qualifications in T-0191. Disposition t0191-script-tab-navigation with independent red-first reproduction and explicit failure/ownership controls; preserve the evidence qualifications in T-0191. Disposition t0191-research-copy-and-export with independent red-first reproduction and explicit failure/ownership controls; preserve the evidence qualifications in T-0191. Disposition t0191-agent-growth-error-truth with independent red-first reproduction and explicit failure/ownership controls; preserve the evidence qualifications in T-0191. Disposition t0191-skill-search-category-context with independent red-first reproduction and explicit failure/ownership controls; preserve the evidence qualifications in T-0191. Disposition t0191-trend-chart-text-equivalent with independent red-first reproduction and explicit failure/ownership controls; preserve the evidence qualifications in T-0191. Disposition t0191-collection-state-semantics with independent red-first reproduction and explicit failure/ownership controls; preserve the evidence qualifications in T-0191.",
+      "t0191ReviewFollowups": [
+        {
+          "id": "t0191-composer-output-save-ownership",
+          "priority": "P2",
+          "sourcePaths": [
+            "src/components/composer/ComposerNodeRunDetail.tsx",
+            "src/app/work/composer/page.tsx"
+          ],
+          "verify": "Saved state and pending completion belong to component instance, not selected run/node output. Hold A, select B, settle A; B must retain its own save eligibility. Refusals already reset idle.",
+          "evidenceStatus": "source-traced, runtime reproduction required"
+        },
+        {
+          "id": "t0191-script-tab-navigation",
+          "priority": "P2",
+          "sourcePaths": [
+            "src/components/scripts/ScriptEditorModal.tsx",
+            "src/app/work/scripts/page.tsx"
+          ],
+          "verify": "Tab and Shift+Tab both insert text and prevent ordinary footer navigation. Preserve deliberate editing shortcuts; demonstrate keyboard exit without changing content. Escape exists, so do not claim absolute focus trap.",
+          "evidenceStatus": "source-traced, runtime reproduction required"
+        },
+        {
+          "id": "t0191-research-copy-and-export",
+          "priority": "P2",
+          "sourcePaths": [
+            "src/components/research/ResearchReport.tsx"
+          ],
+          "verify": "Clipboard refusal lacks handled feedback; export anchors contain actual Button elements. Fresh refusal does not announce success. Preserve report renderer/content and export formats; behaviour tests and keyboard/browser proof precede repair.",
+          "evidenceStatus": "source-traced, runtime reproduction required"
+        },
+        {
+          "id": "t0191-agent-growth-error-truth",
+          "priority": "P2",
+          "sourcePaths": [
+            "src/components/agents/AgentGrowthPanel.tsx",
+            "src/app/agent/profiles/page.tsx"
+          ],
+          "verify": "Read failure ignores the hook error and can render No completed work yet. Prove failure/empty/loading/success distinctions before repair.",
+          "evidenceStatus": "source-traced, runtime reproduction required"
+        },
+        {
+          "id": "t0191-skill-search-category-context",
+          "priority": "P2",
+          "sourcePaths": [
+            "src/components/skills/SkillsSearchResults.tsx",
+            "src/components/skills/SkillRowList.tsx"
+          ],
+          "verify": "Flat search omits showCategory, whose default is false. Verify expected category context against UI contract and preserve grouped results before repair.",
+          "evidenceStatus": "source-traced, runtime reproduction required"
+        },
+        {
+          "id": "t0191-trend-chart-text-equivalent",
+          "priority": "P2",
+          "sourcePaths": [
+            "src/components/viz/AreaTrend.tsx",
+            "src/components/viz/StackedAreaTrend.tsx"
+          ],
+          "verify": "Paths have no accessible daily-value equivalent in inspected Insights placements. Verify rendered alternatives and implement equivalent information without changing values or chart semantics.",
+          "evidenceStatus": "source-traced, runtime reproduction required"
+        },
+        {
+          "id": "t0191-collection-state-semantics",
+          "priority": "P2",
+          "sourcePaths": [
+            "src/components/session/MissionGroupCard.tsx",
+            "src/components/logs/LogFilePicker.tsx"
+          ],
+          "verify": "Mission group expansion and log selection lack equivalent semantic state. Verify actual controls and preserve keyboard/selection ownership; Hindsight selected-tab semantics need the same assessment.",
+          "evidenceStatus": "source-traced, runtime reproduction required"
+        }
+      ],
+      "t0191AttributedConsolidationCandidates": {
+        "source": "gap-051.1 reproduced attribution",
+        "status": "net-benefit-unresolved",
+        "cohorts": [
+          {
+            "paths": [
+              "src/components/composer/ComposerGatePrompt.tsx",
+              "src/components/composer/ComposerNodeRunDetail.tsx"
+            ],
+            "scope": "Measure shared verdict/reasons presentation; preserve advisory versus outcome/suggestions semantics."
+          },
+          {
+            "paths": [
+              "src/components/research/ResearchReport.tsx",
+              "src/lib/laboratory/deep-research/report.ts"
+            ],
+            "scope": "Measure shared STEP_LABEL map alongside Research copy/export cohort; preserve UI/export strings and fallback. This is distinct from the existing defect."
+          }
+        ],
+        "verify": "Before folding, count replacement/import/adapter/test cost and claim all paths. Retain with measured reason if net benefit is absent."
+      }
     },
     {
       "id": "T-0194",
@@ -931,7 +1086,21 @@
           "finding": "Closure push attempt1 C02/C05 share a stalled observation: six-second watchdog crossed and final native status did not reach shell completion. Built-in isolated20-case rerun passed. A later full-job pass is verification, not a repair or proven scheduling cause. Attempt2 reran the entire unchanged push workflow, not only macOS; all applicable jobs passed. The PR acceptance path passed separately.",
           "required": "Investigate with measured native timing; preserve21 realcurl calls, all assertions, six-second watchdog,0.2-second kill grace,25-second outer/RPC/lifecycle bounds and every earlier failure. No retries untilgreen, reduced workload or speculative frozen-helper changes."
         }
-      ]
+      ],
+      "t0191WindowsRenameFollowup": {
+        "finding": "Full gate1791043080359 failed unchanged T0163 credential removal on EPERM atomic rename;8398pass/1fail. Unchanged same-environment isolated suite7/7exit0. Distinct from earlier cleanup deletion failure; no shared cause proven.",
+        "evidence": [
+          "tmp/t0191-full-gate-1791043080359/jest.log",
+          "tmp/t0191-t0163-alone.json",
+          "tmp/t0191-t0163-alone.log"
+        ],
+        "source": [
+          "src/modules/hermes/lib/hermes-config-write.ts:38",
+          "tests/unit/t0163-hermes-env-permissions.test.ts:172"
+        ],
+        "review": "Nash read-only: unique root, synchronous I/O, restored spies/umask; no explicit retained handle or same-path writer found. Laplace permits another full verification with all receipts retained. No antivirus/handle/scheduling causation established.",
+        "required": "Investigate native Windows ownership and transient replacement failure without silent retry, test weakening or deadline growth. Preserve this signature independently of cleanup and worker-exit uncertainty."
+      }
     },
     {
       "id": "T-0196",

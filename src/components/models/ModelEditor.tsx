@@ -9,7 +9,7 @@
 
 "use client";
 
-import { useState, useMemo, type ReactNode } from "react";
+import { cloneElement, useId, useState, useMemo, type ReactElement, type ReactNode } from "react";
 import type { ModelRow } from "@/lib/models/model-types";
 import {
   Plus,
@@ -128,15 +128,21 @@ function FieldRow({
   description,
 }: {
   label: ReactNode;
-  children: ReactNode;
+  children: ReactElement<{ id?: string; "aria-describedby"?: string }>;
   description?: string;
 }) {
+  const generatedId = useId();
+  const controlId = children.props.id ?? generatedId;
+  const descriptionId = description ? `${generatedId}-description` : undefined;
   return (
     <div className="space-y-1.5">
-      <label className="text-body font-medium text-ps-text-secondary">{label}</label>
-      {children}
+      <label htmlFor={controlId} className="text-body font-medium text-ps-text-secondary">{label}</label>
+      {cloneElement(children, {
+        id: controlId,
+        "aria-describedby": [children.props["aria-describedby"], descriptionId].filter(Boolean).join(" ") || undefined,
+      })}
       {description && (
-        <p className="text-micro text-ps-text-muted font-mono">{description}</p>
+        <p id={descriptionId} className="text-micro text-ps-text-muted font-mono">{description}</p>
       )}
     </div>
   );

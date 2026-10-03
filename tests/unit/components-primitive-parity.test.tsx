@@ -1,6 +1,6 @@
 /** @jest-environment jsdom */
 import { fireEvent, render, screen } from "@testing-library/react";
-import { NumberInput, SearchInput, TextInput } from "@/components/ui/Input";
+import { NumberInput, SearchInput, Field, Input } from "@/components/ui/field";
 import { Toggle } from "@/components/ui/field/Toggle";
 import { NativeSelect } from "@/components/ui/field/Select";
 
@@ -10,9 +10,9 @@ describe("T0191 primitive parity", () => {
   it("legacy text keeps its name and description after external reset", () => {
     const change = jest.fn();
     const props = { label: "Webhook", description: "Destination URL", onChange: change };
-    const view = render(<TextInput {...props} value="first" />);
+    const view = render(<Field label={props.label} hint={props.description}><Input value="first" onChange={(event) => props.onChange(event.target.value)} /></Field>);
     expect(screen.getByRole("textbox", { name: "Webhook" })).toHaveAccessibleDescription("Destination URL");
-    view.rerender(<TextInput {...props} value="reset" />);
+    view.rerender(<Field label={props.label} hint={props.description}><Input value="reset" onChange={(event) => props.onChange(event.target.value)} /></Field>);
     expect(screen.getByRole("textbox", { name: "Webhook" })).toHaveValue("reset");
     expect(screen.getByRole("textbox", { name: "Webhook" })).toHaveAccessibleDescription("Destination URL");
     expect(change).not.toHaveBeenCalled();
@@ -50,14 +50,14 @@ describe("T0191 primitive parity", () => {
   });
   it("labelled inspector track retains hint, disabled state and exactly one callback", () => {
     const change = jest.fn();
-    const view = render(<Toggle label="Require approval" checked={false} onChange={change} hint="Pause before execution" />);
+    const view = render(<Toggle label="Require approval" value={false} onChange={change} hint="Pause before execution" />);
     const toggle = screen.getByRole("switch", { name: "Require approval" });
     expect(toggle).toHaveAccessibleDescription("Pause before execution");
     expect(toggle).toHaveAttribute("aria-checked", "false");
     fireEvent.click(toggle);
     expect(change).toHaveBeenCalledTimes(1);
     expect(change).toHaveBeenCalledWith(true);
-    view.rerender(<Toggle label="Require approval" checked onChange={change} disabled hint="Pause before execution" />);
+    view.rerender(<Toggle label="Require approval" value onChange={change} disabled hint="Pause before execution" />);
     fireEvent.click(screen.getByRole("switch", { name: "Require approval" }));
     expect(change).toHaveBeenCalledTimes(1);
   });

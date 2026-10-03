@@ -21,7 +21,7 @@ import { sessionLoadErrorHeading } from "@/lib/sessions/session-load-error";
 import { SESSIONS_LIVE_POLL_MS } from "@/hooks/useSessions";
 import { SESSION_STATUS_LABELS } from "@/lib/ui/status-labels";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
-import { SearchInput } from "@/components/ui/Input";
+import { SearchInput } from "@/components/ui/field";
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 import { MISSIONS_PATH } from "@/lib/missions/mission-deep-link";
 
@@ -116,17 +116,7 @@ export default function SessionDetailPage() {
     [setRoleFilter],
   );
 
-  if (loading) {
-    return (
-      <AppPageShell>
-        <div className="min-h-[60vh] flex items-center justify-center">
-          <LoadingSpinner text="Loading transcript..." />
-        </div>
-      </AppPageShell>
-    );
-  }
-
-  if (error || !data) {
+  if (loading || error || !data) {
     return (
       <AppPageShell>
         <div className="min-h-[60vh] flex items-center justify-center">
@@ -134,10 +124,12 @@ export default function SessionDetailPage() {
             {/* Every failure used to read "Session Not Found": a malformed id,
                 a transcript over the ceiling and a rate limit all told the
                 operator the same untrue thing (T-0105, D33). */}
-            <h2 className="text-title font-bold text-ps-text-primary mb-2">
-              {sessionLoadErrorHeading(errorStatus)}
-            </h2>
-            <LoadErrorBanner error={error ?? "Unknown error"} onRetry={() => void refetch()} />
+            <h1 className="text-title font-bold text-ps-text-primary mb-2">
+              {loading ? "Session" : sessionLoadErrorHeading(errorStatus)}
+            </h1>
+            {loading ? <LoadingSpinner text="Loading transcript..." /> : (
+              <LoadErrorBanner error={error ?? "Unknown error"} onRetry={() => void refetch()} />
+            )}
             <Link
               href="/results/sessions"
               className="text-neon-orange text-body font-mono hover:underline"

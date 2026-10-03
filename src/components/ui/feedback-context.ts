@@ -16,7 +16,7 @@ import { createContext } from "react";
 import type { ToastType } from "./Toast";
 
 export interface FeedbackContextValue {
-  showToast: (message: string, type?: ToastType) => void;
+  showToast: (message: string, type?: ToastType) => void | (() => void);
 }
 
 export const FeedbackContext = createContext<FeedbackContextValue | null>(null);

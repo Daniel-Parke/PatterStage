@@ -4,7 +4,7 @@
 // The reader retains its own write intent, abort controllers, failure ceiling
 // and overlay completion state. Presentation lives beside ChapterList.
 "use client";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useLayoutEffect, useCallback, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { publishApiResource, useApiResource } from "@/hooks/useApiResource";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
@@ -79,6 +79,10 @@ export default function StoryReaderPage() {
    * running and billing with nothing left holding its controller.
    */
   const inFlightRef = useRef<Set<AbortController>>(new Set());
+  useEffect(() => {
+    const controllers = inFlightRef.current;
+    return () => controllers.forEach((controller) => controller.abort());
+  }, [storyId]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [bibleOpen, setBibleOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -102,6 +106,9 @@ export default function StoryReaderPage() {
   const [continueWordCount, setContinueWordCount] = useState("standard");
 
   const contentRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    if (contentRef.current) contentRef.current.scrollTop = 0;
+  }, [currentChapter]);
   /** Consecutive auto-generate failures. A ref: bumping it must not re-run the effect. */
   const autoFailuresRef = useRef(0);
 
@@ -185,6 +192,7 @@ export default function StoryReaderPage() {
         signal: controller.signal,
       });
       const d = await res.json();
+      if (controller.signal.aborted) throw new DOMException("Aborted", "AbortError");
       if (!res.ok || d?.error || !Array.isArray(d?.data?.story?.chapters)) throw new Error(d?.error || "Story write could not be confirmed");
       if (d.data?.story) {
         autoFailuresRef.current = 0; // progress: re-arm auto-generation
@@ -228,12 +236,14 @@ export default function StoryReaderPage() {
   /** Stop before the next call, and abort every call already on the wire. */
   const stopWriting = useCallback(() => {
     setWriting(false);
+    if (editDone) { setEditing(false); setEditDone(false); }
+    if (continueDone) { setContinuing(false); setContinueDone(false); }
     // Each call removes its own controller when it settles, so this is only
     // ever the set of generations still running. Aborting all of them is the
     // point: Stop has to mean stopped on every path that bills, not just the
     // most recent one.
     inFlightRef.current.forEach((controller) => controller.abort());
-  }, []);
+  }, [editDone, continueDone]);
 
   /**
    * Auto-generate the next pending chapter.
@@ -293,6 +303,7 @@ export default function StoryReaderPage() {
         signal: controller.signal,
       });
       const d = await res.json();
+      if (controller.signal.aborted) throw new DOMException("Aborted", "AbortError");
       if (!res.ok || d?.error || !Array.isArray(d?.data?.story?.chapters)) throw new Error(d?.error || "Story write could not be confirmed");
       if (d.data?.story) await publishStory(d.data.story as StoryState);
       else if (d.error) setError(d.error);
@@ -318,7 +329,11 @@ export default function StoryReaderPage() {
     if (!editPrompt.trim()) return;
     setEditModalOpen(false);
     setEditing(true);
+    setEditDone(false);
     setError(null);
+    const controller = new AbortController();
+    inFlightRef.current.add(controller);
+    callStarted();
     try {
       const res = await writeStory({
         method: "POST", headers: { "Content-Type": "application/json" },
@@ -330,28 +345,40 @@ export default function StoryReaderPage() {
           wordCountRange: editWordCount,
           count: editCount,
         }),
+        signal: controller.signal,
       });
       const d = await res.json();
+      if (controller.signal.aborted) throw new DOMException("Aborted", "AbortError");
       if (!res.ok || d?.error || !Array.isArray(d?.data?.story?.chapters)) throw new Error(d?.error || "Story write could not be confirmed");
       if (d.data?.story) {
         await publishStory(d.data.story as StoryState);
-        setEditDone(true);
-      } else if (d.error) {
-        setError(d.error);
+        if (controller.signal.aborted) throw new DOMException("Aborted", "AbortError");
         setEditDone(true);
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Edit failed");
-      setEditDone(true);
+      setEditing(false);
+      setEditDone(false);
+      if (controller.signal.aborted) {
+        void loadStory();
+      } else {
+        setError(e instanceof Error ? e.message : "Edit failed");
+      }
+    } finally {
+      inFlightRef.current.delete(controller);
+      callSettled();
     }
-  }, [storyId, editChapterNum, editPrompt, editWordCount, editCount, writeStory, publishStory]);
+  }, [storyId, editChapterNum, editPrompt, editWordCount, editCount, writeStory, publishStory, loadStory, callStarted, callSettled]);
 
   // Continue story
   const handleContinue = useCallback(async () => {
     if (!continueDirection.trim()) return;
     setContinueModalOpen(false);
     setContinuing(true);
+    setContinueDone(false);
     setError(null);
+    const controller = new AbortController();
+    inFlightRef.current.add(controller);
+    callStarted();
     try {
       const res = await writeStory({
         method: "POST", headers: { "Content-Type": "application/json" },
@@ -362,21 +389,29 @@ export default function StoryReaderPage() {
           count: continueCount,
           wordCountRange: continueWordCount,
         }),
+        signal: controller.signal,
       });
       const d = await res.json();
+      if (controller.signal.aborted) throw new DOMException("Aborted", "AbortError");
       if (!res.ok || d?.error || !Array.isArray(d?.data?.chapters)) throw new Error(d?.error || "Story write could not be confirmed");
       if (d.data) {
         await publishStory(d.data as StoryState);
-        setContinueDone(true);
-      } else if (d.error) {
-        setError(d.error);
+        if (controller.signal.aborted) throw new DOMException("Aborted", "AbortError");
         setContinueDone(true);
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Continue failed");
-      setContinueDone(true);
+      setContinuing(false);
+      setContinueDone(false);
+      if (controller.signal.aborted) {
+        void loadStory();
+      } else {
+        setError(e instanceof Error ? e.message : "Continue failed");
+      }
+    } finally {
+      inFlightRef.current.delete(controller);
+      callSettled();
     }
-  }, [storyId, continueDirection, continueCount, continueWordCount, writeStory, publishStory]);
+  }, [storyId, continueDirection, continueCount, continueWordCount, writeStory, publishStory, loadStory, callStarted, callSettled]);
 
   const openEditModal = (chapterNumber: number) => {
     setEditChapterNum(chapterNumber);
@@ -434,7 +469,6 @@ export default function StoryReaderPage() {
     const nextComplete = chapters.find((c: Chapter) => c.number > currentChapter && c.status === "complete");
     if (nextComplete) {
       setCurrentChapter(nextComplete.number);
-      setTimeout(() => contentRef.current?.scrollTo({ top: 0, behavior: "smooth" }), 50);
       setStory((prev: StoryState | null) => {
         if (!prev) return prev;
         return {
@@ -448,8 +482,8 @@ export default function StoryReaderPage() {
   }, [story, currentChapter, saveReadStatus]);
 
   const handleChapterSelect = async (num: number) => {
+    if (contentRef.current) contentRef.current.scrollTop = 0;
     setCurrentChapter(num);
-    setTimeout(() => contentRef.current?.scrollTo({ top: 0, behavior: "smooth" }), 50);
 
     if (window.innerWidth < 768) setSidebarOpen(false);
     setError(null);
@@ -496,7 +530,8 @@ export default function StoryReaderPage() {
         bibleOpen={bibleOpen}
         onCloseBible={() => setBibleOpen(false)}
         overlayVisible={continuing || editing}
-        overlayDone={continueDone || editDone}
+        overlayDone={(continueDone || editDone) && !generating}
+        onStop={stopWriting}
         onOverlayComplete={continuing ? handleContinueComplete : handleEditComplete}
         editModalOpen={editModalOpen}
         editChapterNum={editChapterNum}
@@ -520,6 +555,7 @@ export default function StoryReaderPage() {
         onRetryFromCreate={() => router.push("/recroom/story-weaver/create")}
       />
 
+      <div className="contents" inert={editing || continuing} aria-hidden={editing || continuing ? true : undefined}>
       <ReaderBody
         title={story.title}
         errorBanner={error && (
@@ -558,6 +594,7 @@ export default function StoryReaderPage() {
         onNext={handleNextChapter}
         spend={spend}
       />
+      </div>
     </AppPageShell>
   );
 }

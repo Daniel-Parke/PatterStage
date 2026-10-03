@@ -21,7 +21,7 @@
 // Order is load-bearing: the transcript's `closeStream` has to exist
 // before anything that tears a stream down, and the effects must still
 // fire in the sequence gateway health, load conversations, load the
-// active conversation, auto-scroll, unmount cleanup, copy delegation.
+// active conversation, auto-scroll and unmount cleanup.
 // ═══════════════════════════════════════════════════════════════
 
 "use client";
@@ -30,7 +30,6 @@ import { useCallback, useEffect, useRef } from "react";
 import type { Dispatch, SetStateAction } from "react";
 
 import { useToast } from "@/components/ui/Toast";
-import { COPY_BTN_CLASS, COPY_BTN_DATA_ATTR } from "@/lib/chat/chat-utils";
 import { bannerStatesFor } from "@/components/chat/gateway-banner-states";
 import { useGatewayHealth } from "@/hooks/useGatewayHealth";
 import { useChatInput } from "@/hooks/useChatInput";
@@ -114,19 +113,6 @@ export function useChatPage() {
 
   // Cleanup any live stream on unmount.
   useEffect(() => transcript.closeStream, [transcript.closeStream]);
-
-  // ── Copy-code-block delegation (renderMarkdown injects the buttons) ──
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      if (target.classList.contains(COPY_BTN_CLASS)) {
-        const code = target.getAttribute(COPY_BTN_DATA_ATTR) || "";
-        void navigator.clipboard.writeText(code).then(() => showToast("Code copied", "success"));
-      }
-    };
-    document.addEventListener("click", handler);
-    return () => document.removeEventListener("click", handler);
-  }, [showToast]);
 
   return {
     toastElement,

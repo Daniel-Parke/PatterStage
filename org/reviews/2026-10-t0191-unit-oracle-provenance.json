@@ -514,7 +514,7 @@
           "SchedulePicker accepts JSON-serialised ParsedSchedule on load (live mission's storage format)",
           "SchedulePicker calls onChange with the canonical 5-field cron when a preset is selected",
           "SchedulePicker emits 0 9 * * 1-5 for the existing live mission's expected replacement",
-          "SchedulePicker shows the custom builder when 'Custom…' is clicked",
+          "SchedulePicker shows the custom builder when 'Custom\u2026' is clicked",
           "SchedulePicker in custom builder, checking Mon/Wed/Fri at 18:00 calls onChange with 0 18 * * 1,3,5",
           "SchedulePicker in custom builder, the Weekdays shortcut sets days 1-5",
           "SchedulePicker typing a cron expression in the advanced field calls onChange on blur",
@@ -536,7 +536,7 @@
           "SchedulePicker accepts JSON-serialised ParsedSchedule on load (live mission's storage format)",
           "SchedulePicker calls onChange with the canonical 5-field cron when a preset is selected",
           "SchedulePicker emits 0 9 * * 1-5 for the existing live mission's expected replacement",
-          "SchedulePicker shows the custom builder when 'Custom…' is clicked",
+          "SchedulePicker shows the custom builder when 'Custom\u2026' is clicked",
           "SchedulePicker in custom builder, checking Mon/Wed/Fri at 18:00 calls onChange with 0 18 * * 1,3,5",
           "SchedulePicker in custom builder, the Weekdays shortcut sets days 1-5",
           "SchedulePicker typing a cron expression in the advanced field calls onChange on blur",
@@ -1134,7 +1134,7 @@
             "status": "passed"
           },
           {
-            "name": "ConfigField: an unset value is said, not coerced select undefined: the trigger reads Select… with the pill; choosing high drops the pill and shows Clear",
+            "name": "ConfigField: an unset value is said, not coerced select undefined: the trigger reads Select\u2026 with the pill; choosing high drops the pill and shows Clear",
             "status": "passed"
           },
           {
@@ -1322,23 +1322,23 @@
         "workingMatchesGitLF": true,
         "expandedNames": [
           {
-            "name": "T-0162 · house controls keep visible labels associated Field associates its label with the Select button",
+            "name": "T-0162 \u00b7 house controls keep visible labels associated Field associates its label with the Select button",
             "status": "passed"
           },
           {
-            "name": "T-0162 · house controls keep visible labels associated NumberInput associates its own label with the spinbutton",
+            "name": "T-0162 \u00b7 house controls keep visible labels associated NumberInput associates its own label with the spinbutton",
             "status": "passed"
           },
           {
-            "name": "T-0162 · house controls keep visible labels associated TextInput associates its own label with the textbox",
+            "name": "T-0162 \u00b7 house controls keep visible labels associated TextInput associates its own label with the textbox",
             "status": "passed"
           },
           {
-            "name": "T-0162 · house controls keep visible labels associated Field associates its label with AutoTextarea",
+            "name": "T-0162 \u00b7 house controls keep visible labels associated Field associates its label with AutoTextarea",
             "status": "passed"
           },
           {
-            "name": "T-0162 · house controls keep visible labels associated AutoTextarea does not override a Field label with its placeholder",
+            "name": "T-0162 \u00b7 house controls keep visible labels associated AutoTextarea does not override a Field label with its placeholder",
             "status": "passed"
           }
         ],
@@ -1399,5 +1399,1766 @@
     "passing": 105,
     "red": 74,
     "verdict": "ACCEPT: bounded freeze of179 original-API oracle cases. Laplace independently verified final progress hash b51ff9cb40535dc4ac458d027bf10a2bd7b43beed19082e439a8638ecb376455, exact four acknowledgement replacements and123 unit80pass43 unchanged causal reds; accepted browser e45007c923cd28e0e6ba0aad86f17250cded8ceb7979004891cebb2392488cc6,56 cases25pass31reds. Original/intermediate receipt hashes intact; production unchanged. Both fixture-correction blockers closed. Baseline only, not implementation/release acceptance; retain context exposure, unexecuted downstream assertions and independent migration amendment procedure. Strict census accounting outstanding without waiver."
+  },
+  "field_migration_amendment": {
+    "date": "2026-10-03",
+    "author": "Sartre",
+    "authoriser": "Laplace, canonical component verification dated 2026-10-03; operator explicit instruction",
+    "head": "c941bdb2a741536b5c5f4944e5127e11728fa37d",
+    "scope": "Five suites only; imports, equivalent Field/Input composition, Toggle checked to value, field-kit header",
+    "files": [
+      {
+        "file": "tests/unit/b6-config-field-unset-and-range.test.tsx",
+        "gitBlobId": "d9678b0f640614d5554ee260a669e793725e10f5",
+        "rawSHA256": "49ea773f14d6aa3a1e56f4ae86f7a23da016e80378a83d7664753e8610a2b11a",
+        "lfSHA256": "49ea773f14d6aa3a1e56f4ae86f7a23da016e80378a83d7664753e8610a2b11a",
+        "expandedNames": [
+          {
+            "name": "NumberInput: keystrokes, blur and the range GREEN CONTROL: a valid keystroke still emits the number at once (field-kit pin)",
+            "status": "passed"
+          },
+          {
+            "name": "NumberInput: keystrokes, blur and the range typing 9999 then blurring clamps to the max and emits onChange(500)",
+            "status": "passed"
+          },
+          {
+            "name": "NumberInput: keystrokes, blur and the range typing 0 then blurring clamps to the min and emits onChange(1)",
+            "status": "passed"
+          },
+          {
+            "name": "NumberInput: keystrokes, blur and the range GREEN CONTROL: a value inside the range is emitted as typed and left alone by blur",
+            "status": "passed"
+          },
+          {
+            "name": "NumberInput: keystrokes, blur and the range clearing the control emits onChange(null), never 0",
+            "status": "passed"
+          },
+          {
+            "name": "NumberInput: keystrokes, blur and the range a stray '-' never reaches onChange as 0 or NaN",
+            "status": "passed"
+          },
+          {
+            "name": "NumberInput: keystrokes, blur and the range shows the range as helper text",
+            "status": "passed"
+          },
+          {
+            "name": "NumberInput: keystrokes, blur and the range an out-of-range value is aria-invalid and names the problem until blur clamps it",
+            "status": "passed"
+          },
+          {
+            "name": "ConfigField: an unset value is said, not coerced boolean undefined: switch unchecked, Not set pill, the default helper, no Clear",
+            "status": "passed"
+          },
+          {
+            "name": "ConfigField: an unset value is said, not coerced boolean false: unchecked, no pill, and Clear Show Cost calls onUpdate('show_cost', null)",
+            "status": "passed"
+          },
+          {
+            "name": "ConfigField: an unset value is said, not coerced boolean null reads as unset too (the value a Clear leaves behind)",
+            "status": "passed"
+          },
+          {
+            "name": "ConfigField: an unset value is said, not coerced number undefined: an empty input and the Not set pill",
+            "status": "passed"
+          },
+          {
+            "name": "ConfigField: an unset value is said, not coerced clearing a number that held 40 calls onUpdate(key, null), never onUpdate(key, 0)",
+            "status": "passed"
+          },
+          {
+            "name": "ConfigField: an unset value is said, not coerced a set number carries Clear Max Turns, which calls onUpdate('max_turns', null)",
+            "status": "passed"
+          },
+          {
+            "name": "ConfigField: an unset value is said, not coerced select undefined: the trigger reads Select\u2026 with the pill; choosing high drops the pill and shows Clear",
+            "status": "passed"
+          },
+          {
+            "name": "ConfigField: an unset value is said, not coerced text undefined: empty input with placeholder Not set and the pill; emptying a text emits null, not ''",
+            "status": "passed"
+          },
+          {
+            "name": "ConfigField: a field another surface owns is shown, not offered renders the value read-only, with no control and no Clear",
+            "status": "passed"
+          },
+          {
+            "name": "ConfigField: a field another surface owns is shown, not offered says where it IS set, and links there",
+            "status": "passed"
+          },
+          {
+            "name": "ConfigField: a field another surface owns is shown, not offered an unset managed field says Not set rather than nothing",
+            "status": "passed"
+          },
+          {
+            "name": "ConfigField: a value the schema does not expect is shown, not hidden a select value outside its options is named beside the options",
+            "status": "passed"
+          },
+          {
+            "name": "ConfigField: a value the schema does not expect is shown, not hidden a toggle holding a string says not a boolean, and does not render as on",
+            "status": "passed"
+          },
+          {
+            "name": "ConfigField: a value the schema does not expect is shown, not hidden a number holding a string says not a number",
+            "status": "passed"
+          },
+          {
+            "name": "the agent section page: Save follows the range Max Turns 9999 before blur: Save disabled with the problem in its title; 300 enables it",
+            "status": "passed"
+          },
+          {
+            "name": "the agent section page: Clear and the diff-only send Clear enables Save; the save sends {max_turns: null}; afterwards the field is Not set and the key has left state",
+            "status": "passed"
+          },
+          {
+            "name": "the agent section page: Clear and the diff-only send a foreign out-of-options value on disk is shown, and a save of another field sends only that field",
+            "status": "passed"
+          },
+          {
+            "name": "the agent section page: Clear and the diff-only send GREEN CONTROL: an untouched page sends nothing and shows no UNSAVED marker",
+            "status": "passed"
+          }
+        ],
+        "newRawSHA256": "fec960be5502276cd8c3ec6c5149b790fbfaa45e6d3a13d8bb2717ae3483c469",
+        "newLfSHA256": "fec960be5502276cd8c3ec6c5149b790fbfaa45e6d3a13d8bb2717ae3483c469",
+        "expandedIdentitiesPreserved": true,
+        "assertionAndFireEventASTPreserved": true,
+        "fullASTAndBytesEqualAfterReversingOnlyAuthorisedEdits": true,
+        "transformations": [
+          "import"
+        ],
+        "results": [
+          {
+            "name": "NumberInput: keystrokes, blur and the range GREEN CONTROL: a valid keystroke still emits the number at once (field-kit pin)",
+            "status": "passed"
+          },
+          {
+            "name": "NumberInput: keystrokes, blur and the range typing 9999 then blurring clamps to the max and emits onChange(500)",
+            "status": "passed"
+          },
+          {
+            "name": "NumberInput: keystrokes, blur and the range typing 0 then blurring clamps to the min and emits onChange(1)",
+            "status": "passed"
+          },
+          {
+            "name": "NumberInput: keystrokes, blur and the range GREEN CONTROL: a value inside the range is emitted as typed and left alone by blur",
+            "status": "passed"
+          },
+          {
+            "name": "NumberInput: keystrokes, blur and the range clearing the control emits onChange(null), never 0",
+            "status": "passed"
+          },
+          {
+            "name": "NumberInput: keystrokes, blur and the range a stray '-' never reaches onChange as 0 or NaN",
+            "status": "passed"
+          },
+          {
+            "name": "NumberInput: keystrokes, blur and the range shows the range as helper text",
+            "status": "passed"
+          },
+          {
+            "name": "NumberInput: keystrokes, blur and the range an out-of-range value is aria-invalid and names the problem until blur clamps it",
+            "status": "passed"
+          },
+          {
+            "name": "ConfigField: an unset value is said, not coerced boolean undefined: switch unchecked, Not set pill, the default helper, no Clear",
+            "status": "passed"
+          },
+          {
+            "name": "ConfigField: an unset value is said, not coerced boolean false: unchecked, no pill, and Clear Show Cost calls onUpdate('show_cost', null)",
+            "status": "passed"
+          },
+          {
+            "name": "ConfigField: an unset value is said, not coerced boolean null reads as unset too (the value a Clear leaves behind)",
+            "status": "passed"
+          },
+          {
+            "name": "ConfigField: an unset value is said, not coerced number undefined: an empty input and the Not set pill",
+            "status": "passed"
+          },
+          {
+            "name": "ConfigField: an unset value is said, not coerced clearing a number that held 40 calls onUpdate(key, null), never onUpdate(key, 0)",
+            "status": "passed"
+          },
+          {
+            "name": "ConfigField: an unset value is said, not coerced a set number carries Clear Max Turns, which calls onUpdate('max_turns', null)",
+            "status": "passed"
+          },
+          {
+            "name": "ConfigField: an unset value is said, not coerced select undefined: the trigger reads Select\u2026 with the pill; choosing high drops the pill and shows Clear",
+            "status": "passed"
+          },
+          {
+            "name": "ConfigField: an unset value is said, not coerced text undefined: empty input with placeholder Not set and the pill; emptying a text emits null, not ''",
+            "status": "passed"
+          },
+          {
+            "name": "ConfigField: a field another surface owns is shown, not offered renders the value read-only, with no control and no Clear",
+            "status": "passed"
+          },
+          {
+            "name": "ConfigField: a field another surface owns is shown, not offered says where it IS set, and links there",
+            "status": "passed"
+          },
+          {
+            "name": "ConfigField: a field another surface owns is shown, not offered an unset managed field says Not set rather than nothing",
+            "status": "passed"
+          },
+          {
+            "name": "ConfigField: a value the schema does not expect is shown, not hidden a select value outside its options is named beside the options",
+            "status": "passed"
+          },
+          {
+            "name": "ConfigField: a value the schema does not expect is shown, not hidden a toggle holding a string says not a boolean, and does not render as on",
+            "status": "passed"
+          },
+          {
+            "name": "ConfigField: a value the schema does not expect is shown, not hidden a number holding a string says not a number",
+            "status": "passed"
+          },
+          {
+            "name": "the agent section page: Save follows the range Max Turns 9999 before blur: Save disabled with the problem in its title; 300 enables it",
+            "status": "passed"
+          },
+          {
+            "name": "the agent section page: Clear and the diff-only send Clear enables Save; the save sends {max_turns: null}; afterwards the field is Not set and the key has left state",
+            "status": "passed"
+          },
+          {
+            "name": "the agent section page: Clear and the diff-only send a foreign out-of-options value on disk is shown, and a save of another field sends only that field",
+            "status": "passed"
+          },
+          {
+            "name": "the agent section page: Clear and the diff-only send GREEN CONTROL: an untouched page sends nothing and shows no UNSAVED marker",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "file": "tests/unit/b7-memory-empty-states.test.tsx",
+        "gitBlobId": "7c512fcdd3109819f7852ff4c6e448960d9cd1fc",
+        "rawSHA256": "8e75de4a10294ac8e92ed42cb4016d9211caf39dd569371f85a2037bccb0804f",
+        "lfSHA256": "8e75de4a10294ac8e92ed42cb4016d9211caf39dd569371f85a2037bccb0804f",
+        "expandedNames": [
+          {
+            "name": "Enter runs the search the label promises SearchInput fires onSubmit for Enter and for nothing else",
+            "status": "passed"
+          },
+          {
+            "name": "Enter runs the search the label promises GREEN CONTROL: a SearchInput with no onSubmit still types without throwing",
+            "status": "passed"
+          },
+          {
+            "name": "Enter runs the search the label promises pressing Enter in the memory search recalls",
+            "status": "passed"
+          },
+          {
+            "name": "the browser hands the search down to the list a recall that matched nothing names the query on the page",
+            "status": "passed"
+          },
+          {
+            "name": "the browser hands the search down to the list Enter twice while a recall is in flight runs it once",
+            "status": "passed"
+          },
+          {
+            "name": "an empty list says which kind of empty it is a store that is entirely stale says so, and offers the way to see it",
+            "status": "passed"
+          },
+          {
+            "name": "an empty list says which kind of empty it is a search that matched nothing names the query and offers to clear it",
+            "status": "passed"
+          },
+          {
+            "name": "an empty list says which kind of empty it is a store nothing is answering for says it is not connected",
+            "status": "passed"
+          },
+          {
+            "name": "an empty list says which kind of empty it is GREEN CONTROL: a genuinely empty, reachable, unsearched store still says 'No memories yet'",
+            "status": "passed"
+          },
+          {
+            "name": "an empty list says which kind of empty it is the stale banner stays quiet when it is hiding nothing",
+            "status": "passed"
+          },
+          {
+            "name": "an empty list says which kind of empty it is but says so while the filter is off, so it can be put back on",
+            "status": "passed"
+          },
+          {
+            "name": "an empty list says which kind of empty it is the stale banner is above the list, not inside the non-empty branch",
+            "status": "passed"
+          },
+          {
+            "name": "the number beside a fact is the number it is the bridge maps proof_count to a field called proofCount",
+            "status": "passed"
+          },
+          {
+            "name": "the number beside a fact is the number it is one proof reads 'Proof count: 1', never a percentage",
+            "status": "passed"
+          },
+          {
+            "name": "the number beside a fact is the number it is a fact with no proofs shows no count at all",
+            "status": "passed"
+          },
+          {
+            "name": "the number beside a fact is the number it is neither the tab nor the bridge mentions relevance any more",
+            "status": "passed"
+          }
+        ],
+        "newRawSHA256": "e1dc0c870a72330a7da1134de26ec3f46f622a5f3dcec84a8378ddd9e9a94a23",
+        "newLfSHA256": "e1dc0c870a72330a7da1134de26ec3f46f622a5f3dcec84a8378ddd9e9a94a23",
+        "expandedIdentitiesPreserved": true,
+        "assertionAndFireEventASTPreserved": true,
+        "fullASTAndBytesEqualAfterReversingOnlyAuthorisedEdits": true,
+        "transformations": [
+          "import"
+        ],
+        "results": [
+          {
+            "name": "Enter runs the search the label promises SearchInput fires onSubmit for Enter and for nothing else",
+            "status": "passed"
+          },
+          {
+            "name": "Enter runs the search the label promises GREEN CONTROL: a SearchInput with no onSubmit still types without throwing",
+            "status": "passed"
+          },
+          {
+            "name": "Enter runs the search the label promises pressing Enter in the memory search recalls",
+            "status": "passed"
+          },
+          {
+            "name": "the browser hands the search down to the list a recall that matched nothing names the query on the page",
+            "status": "passed"
+          },
+          {
+            "name": "the browser hands the search down to the list Enter twice while a recall is in flight runs it once",
+            "status": "passed"
+          },
+          {
+            "name": "an empty list says which kind of empty it is a store that is entirely stale says so, and offers the way to see it",
+            "status": "passed"
+          },
+          {
+            "name": "an empty list says which kind of empty it is a search that matched nothing names the query and offers to clear it",
+            "status": "passed"
+          },
+          {
+            "name": "an empty list says which kind of empty it is a store nothing is answering for says it is not connected",
+            "status": "passed"
+          },
+          {
+            "name": "an empty list says which kind of empty it is GREEN CONTROL: a genuinely empty, reachable, unsearched store still says 'No memories yet'",
+            "status": "passed"
+          },
+          {
+            "name": "an empty list says which kind of empty it is the stale banner stays quiet when it is hiding nothing",
+            "status": "passed"
+          },
+          {
+            "name": "an empty list says which kind of empty it is but says so while the filter is off, so it can be put back on",
+            "status": "passed"
+          },
+          {
+            "name": "an empty list says which kind of empty it is the stale banner is above the list, not inside the non-empty branch",
+            "status": "passed"
+          },
+          {
+            "name": "the number beside a fact is the number it is the bridge maps proof_count to a field called proofCount",
+            "status": "passed"
+          },
+          {
+            "name": "the number beside a fact is the number it is one proof reads 'Proof count: 1', never a percentage",
+            "status": "passed"
+          },
+          {
+            "name": "the number beside a fact is the number it is a fact with no proofs shows no count at all",
+            "status": "passed"
+          },
+          {
+            "name": "the number beside a fact is the number it is neither the tab nor the bridge mentions relevance any more",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "file": "tests/unit/field-kit.test.tsx",
+        "gitBlobId": "43dc45ceddf361ef4fbdeea94c1c8043ce40c87b",
+        "rawSHA256": "498c509a3c6a98a549fa7d7fd049b84417999d5567891a6871220f9d09f4a097",
+        "lfSHA256": "498c509a3c6a98a549fa7d7fd049b84417999d5567891a6871220f9d09f4a097",
+        "expandedNames": [
+          {
+            "name": "Field renders the label and hint",
+            "status": "passed"
+          },
+          {
+            "name": "Field shows the error instead of the hint when both are set",
+            "status": "passed"
+          },
+          {
+            "name": "Field Kit Input / Textarea forwards props and fires onChange",
+            "status": "passed"
+          },
+          {
+            "name": "Field Kit Input / Textarea Textarea forwards a custom className alongside the base styles",
+            "status": "passed"
+          },
+          {
+            "name": "legacy TextInput (delegates to the Field Kit Input) renders label + description and calls onChange with the raw value",
+            "status": "passed"
+          },
+          {
+            "name": "legacy TextInput (delegates to the Field Kit Input) respects the disabled prop",
+            "status": "passed"
+          },
+          {
+            "name": "legacy NumberInput (delegates to the Field Kit Input) calls onChange with a parsed number",
+            "status": "passed"
+          }
+        ],
+        "newRawSHA256": "13e327b391184269793e490bfffa2cf2d5044d2b7d6fe9c4500bbced1fb18897",
+        "newLfSHA256": "13e327b391184269793e490bfffa2cf2d5044d2b7d6fe9c4500bbced1fb18897",
+        "expandedIdentitiesPreserved": true,
+        "assertionAndFireEventASTPreserved": true,
+        "fullASTAndBytesEqualAfterReversingOnlyAuthorisedEdits": true,
+        "transformations": [
+          "header",
+          "import",
+          "TextInput composition",
+          "TextInput composition"
+        ],
+        "results": [
+          {
+            "name": "Field renders the label and hint",
+            "status": "passed"
+          },
+          {
+            "name": "Field shows the error instead of the hint when both are set",
+            "status": "passed"
+          },
+          {
+            "name": "Field Kit Input / Textarea forwards props and fires onChange",
+            "status": "passed"
+          },
+          {
+            "name": "Field Kit Input / Textarea Textarea forwards a custom className alongside the base styles",
+            "status": "passed"
+          },
+          {
+            "name": "legacy TextInput (delegates to the Field Kit Input) renders label + description and calls onChange with the raw value",
+            "status": "passed"
+          },
+          {
+            "name": "legacy TextInput (delegates to the Field Kit Input) respects the disabled prop",
+            "status": "passed"
+          },
+          {
+            "name": "legacy NumberInput (delegates to the Field Kit Input) calls onChange with a parsed number",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "file": "tests/unit/t0162-house-control-names.test.tsx",
+        "gitBlobId": "bd0ffab880dea0a1241dfcbee2cdc76d7533b87d",
+        "rawSHA256": "b6e48adf5f6e6d140888aaf920fe88f40c2d15b9eee76585d5a512f3173c252e",
+        "lfSHA256": "b6e48adf5f6e6d140888aaf920fe88f40c2d15b9eee76585d5a512f3173c252e",
+        "expandedNames": [
+          {
+            "name": "T-0162 \u00b7 house controls keep visible labels associated Field associates its label with the Select button",
+            "status": "passed"
+          },
+          {
+            "name": "T-0162 \u00b7 house controls keep visible labels associated NumberInput associates its own label with the spinbutton",
+            "status": "passed"
+          },
+          {
+            "name": "T-0162 \u00b7 house controls keep visible labels associated TextInput associates its own label with the textbox",
+            "status": "passed"
+          },
+          {
+            "name": "T-0162 \u00b7 house controls keep visible labels associated Field associates its label with AutoTextarea",
+            "status": "passed"
+          },
+          {
+            "name": "T-0162 \u00b7 house controls keep visible labels associated AutoTextarea does not override a Field label with its placeholder",
+            "status": "passed"
+          }
+        ],
+        "newRawSHA256": "025207fe52d67f387332472e0f8f242cf3c891ab8536f400340740872f3a793b",
+        "newLfSHA256": "025207fe52d67f387332472e0f8f242cf3c891ab8536f400340740872f3a793b",
+        "expandedIdentitiesPreserved": true,
+        "assertionAndFireEventASTPreserved": true,
+        "fullASTAndBytesEqualAfterReversingOnlyAuthorisedEdits": true,
+        "transformations": [
+          "import",
+          "TextInput composition"
+        ],
+        "results": [
+          {
+            "name": "T-0162 \u00b7 house controls keep visible labels associated Field associates its label with the Select button",
+            "status": "passed"
+          },
+          {
+            "name": "T-0162 \u00b7 house controls keep visible labels associated NumberInput associates its own label with the spinbutton",
+            "status": "passed"
+          },
+          {
+            "name": "T-0162 \u00b7 house controls keep visible labels associated TextInput associates its own label with the textbox",
+            "status": "passed"
+          },
+          {
+            "name": "T-0162 \u00b7 house controls keep visible labels associated Field associates its label with AutoTextarea",
+            "status": "passed"
+          },
+          {
+            "name": "T-0162 \u00b7 house controls keep visible labels associated AutoTextarea does not override a Field label with its placeholder",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "file": "tests/unit/components-primitive-parity.test.tsx",
+        "gitBlobId": "187052e9cae4f02f8c8f1224bb173836a5c2ff72",
+        "rawSHA256": "bf5a63f709a60b495cb2d42e0b5ae66286a4d67ecfe0dbd0fee0aa33e7bb2cf4",
+        "lfSHA256": "bf5a63f709a60b495cb2d42e0b5ae66286a4d67ecfe0dbd0fee0aa33e7bb2cf4",
+        "expandedNames": [
+          {
+            "name": "T0191 primitive parity legacy text keeps its name and description after external reset",
+            "status": "failed"
+          },
+          {
+            "name": "T0191 primitive parity search preserves exact value and invokes its submit callback once",
+            "status": "passed"
+          },
+          {
+            "name": "T0191 primitive parity numeric edit \"\" retains description and resets from the external value",
+            "status": "failed"
+          },
+          {
+            "name": "T0191 primitive parity numeric edit \"-\" retains description and resets from the external value",
+            "status": "failed"
+          },
+          {
+            "name": "T0191 primitive parity numeric edit \"1e\" retains description and resets from the external value",
+            "status": "failed"
+          },
+          {
+            "name": "T0191 primitive parity numeric edit \"999\" retains description and resets from the external value",
+            "status": "failed"
+          },
+          {
+            "name": "T0191 primitive parity numeric edit \"42\" retains description and resets from the external value",
+            "status": "failed"
+          },
+          {
+            "name": "T0191 primitive parity labelled inspector track retains hint, disabled state and exactly one callback",
+            "status": "passed"
+          },
+          {
+            "name": "T0191 primitive parity native select adapter preserves browser semantics and exact values",
+            "status": "passed"
+          },
+          {
+            "name": "T0191 numeric partial draft never fabricates a numeric callback and remains editable",
+            "status": "passed"
+          }
+        ],
+        "newRawSHA256": "41df45ecbbf67977c1b2c520300ea5c0c5dda8fce0c1e39652693bdd75a530f6",
+        "newLfSHA256": "41df45ecbbf67977c1b2c520300ea5c0c5dda8fce0c1e39652693bdd75a530f6",
+        "expandedIdentitiesPreserved": true,
+        "assertionAndFireEventASTPreserved": true,
+        "fullASTAndBytesEqualAfterReversingOnlyAuthorisedEdits": true,
+        "transformations": [
+          "import",
+          "TextInput composition",
+          "TextInput composition",
+          "Toggle checked to value",
+          "Toggle checked to value"
+        ],
+        "results": [
+          {
+            "name": "T0191 primitive parity legacy text keeps its name and description after external reset",
+            "status": "passed"
+          },
+          {
+            "name": "T0191 primitive parity search preserves exact value and invokes its submit callback once",
+            "status": "passed"
+          },
+          {
+            "name": "T0191 primitive parity numeric edit \"\" retains description and resets from the external value",
+            "status": "passed"
+          },
+          {
+            "name": "T0191 primitive parity numeric edit \"-\" retains description and resets from the external value",
+            "status": "passed"
+          },
+          {
+            "name": "T0191 primitive parity numeric edit \"1e\" retains description and resets from the external value",
+            "status": "passed"
+          },
+          {
+            "name": "T0191 primitive parity numeric edit \"999\" retains description and resets from the external value",
+            "status": "passed"
+          },
+          {
+            "name": "T0191 primitive parity numeric edit \"42\" retains description and resets from the external value",
+            "status": "passed"
+          },
+          {
+            "name": "T0191 primitive parity labelled inspector track retains hint, disabled state and exactly one callback",
+            "status": "passed"
+          },
+          {
+            "name": "T0191 primitive parity native select adapter preserves browser semantics and exact values",
+            "status": "passed"
+          },
+          {
+            "name": "T0191 numeric partial draft never fabricates a numeric callback and remains editable",
+            "status": "passed"
+          }
+        ]
+      }
+    ],
+    "checks": {
+      "tests": 64,
+      "passed": 64,
+      "failed": 0,
+      "runtimeErrorSuites": 0,
+      "jestExit": 0,
+      "lintExit": 0,
+      "typescriptExit": 0
+    },
+    "sourceHashesPreserved": true,
+    "otherTestFilesUnchanged": true,
+    "originalHistoricalBaseline": {
+      "exit": 0,
+      "tests": 54,
+      "passed": 54,
+      "failed": 0,
+      "pending": 0,
+      "runtimeErrorSuites": 0,
+      "rawSHA256": "5be1bd2d5058557159063b1a384f73a91e4c8c92c42ccae27bb8a67709c1fb88"
+    },
+    "preAmendmentTypes": {
+      "exit": 2,
+      "classification": "infrastructure, not causal behavioural red"
+    },
+    "contextExposure": "Read task authority, public field barrel and Field prop contract. Field.tsx first 65 lines also exposed unchanged label/description association implementation; no migrated NumberInput/SearchInput/Toggle implementation bodies read. No production authored.",
+    "limits": "Bounded migration amendment control; not full combined oracle or implementation acceptance.",
+    "review": "Laplace accepted bounded five-suite amendment on 2026-10-03; exact integrated candidate hashes verified. Original freeze remains unchanged. Combined production acceptance outstanding."
+  },
+  "reverse_settlement_addition": {
+    "author": "Sartre",
+    "authoriser": "Laplace and operator, 2026-10-03",
+    "file": "tests/unit/components-progress-feedback.test.tsx",
+    "head": "c941bdb2a741536b5c5f4944e5127e11728fa37d",
+    "beforeRawSHA256": "ff9410efaad9353461dc307c39e5a6db0ada2dbc2d547de3251e6c4df3f0e0a2",
+    "beforeLfSHA256": "ff9410efaad9353461dc307c39e5a6db0ada2dbc2d547de3251e6c4df3f0e0a2",
+    "newRawSHA256": "ee82a3cee3f3785902292d800a5902de0f51561f2c8649ff39599618571e6796",
+    "newLfSHA256": "ee82a3cee3f3785902292d800a5902de0f51561f2c8649ff39599618571e6796",
+    "allOldBytesPreserved": true,
+    "allOldNamesAndOutcomesPreserved": true,
+    "oldIdentities": [
+      "T0191 truthful Story progress elapsed time never invents percentage or completion for pending work",
+      "T0191 truthful Story progress confirmed completion invokes exactly one callback after 2000ms",
+      "T0191 truthful Story progress hidden work cannot deliver an obsolete completion",
+      "T0191 truthful Story progress unmounted work cannot deliver an obsolete completion",
+      "T0191 actual Reader edit and continue lifecycle edit-chapter HTTP failure retains chapter data and never announces ready",
+      "T0191 actual Reader edit and continue lifecycle edit-chapter network failure retains chapter data and never announces ready",
+      "T0191 actual Reader edit and continue lifecycle continue HTTP failure retains chapter data and never announces ready",
+      "T0191 actual Reader edit and continue lifecycle continue network failure retains chapter data and never announces ready",
+      "T0191 actual Reader edit and continue lifecycle held edit-chapter registers a client abort, clears its overlay and rereads truth neutrally",
+      "T0191 actual Reader edit and continue lifecycle held continue registers a client abort, clears its overlay and rereads truth neutrally",
+      "T0191 actual Reader edit and continue lifecycle generate plus edit retains Stop when one settles and suppresses late reactivation after Stop",
+      "T0191 actual Reader edit and continue lifecycle successful edit-chapter publishes confirmed data and completes its overlay",
+      "T0191 actual Reader edit and continue lifecycle successful continue publishes confirmed data and completes its overlay",
+      "T0191 actual Reader edit and continue lifecycle Stop aborts both concurrent generate and edit requests before either settles",
+      "T0191 Mission cancellation owns pending feedback success settlement clears only its pending message before normal expiry [provider=true]",
+      "T0191 Mission cancellation owns pending feedback success settlement clears only its pending message before normal expiry [provider=false]",
+      "T0191 Mission cancellation owns pending feedback refusal settlement clears only its pending message before normal expiry [provider=true]",
+      "T0191 Mission cancellation owns pending feedback refusal settlement clears only its pending message before normal expiry [provider=false]",
+      "T0191 later Mission cancellation keeps its pending feedback when an earlier operation settles",
+      "T0191 settled Mission timers cannot clear a newer held cancellation or unrelated error"
+    ],
+    "newIdentity": "T0191 actual Reader edit and continue lifecycle edit-first settlement retains operable Stop while generation remains outstanding",
+    "baseline": {
+      "tests": 20,
+      "passed": 20,
+      "exit": 0
+    },
+    "after": {
+      "tests": 21,
+      "passed": 20,
+      "failed": 1,
+      "runtimeErrorSuites": 0,
+      "exit": 1
+    },
+    "failure": "Immediate accessible Stop query fails after confirmed edit publication while generation signal remains un-aborted. The completion overlay is present; Stop is not accessible.",
+    "unexecutedAssertions": "1000ms Stop visibility/enabled, click within interval, actual signal abort, late-settlement neutral feedback and no automatic follow-up remain downstream of the causal failure.",
+    "checks": {
+      "typescript": 0,
+      "changedFileLint": 0
+    },
+    "contextExposure": "Existing tests and fixture helpers only; no production implementation bodies read for this addition.",
+    "finalReceipt": "final.json",
+    "attempts": [
+      "Initial suite 20 pass/1 causal red; initial type check exit2 caught optional chapterContents access in the added test.",
+      "Added optional chaining only in new assertion; final suite retains same causal red. Initial receipts retained."
+    ],
+    "primaryOriginalRawSHA256": "b51ff9cb40535dc4ac458d027bf10a2bd7b43beed19082e439a8638ecb376455",
+    "normalisation": "Primary CRLF bytes equal independent original after LF normalisation; no executable old-case edits."
+  },
+  "model_label_addition": {
+    "date": "2026-10-03",
+    "author": "Sartre",
+    "authoriser": "Laplace and operator; T0191-model-label-oracle",
+    "file": "tests/unit/components-contextual-controls.test.tsx",
+    "head": "c941bdb2a741536b5c5f4944e5127e11728fa37d",
+    "beforeRawSHA256": "a5cdf3fe7d157d1b350e958c3622bf1f25465df3b355cd944814ac10fba57697",
+    "beforeLfSHA256": "bb46f51cca563d47c01b9c01cc55becfbc225b04f475eeef045e6f86f622c6ba",
+    "newRawSHA256": "5a3b6d0d3da3a5a06010ce3815bffbe8816abb8f4999899738b9a966da7aa426",
+    "newLfSHA256": "f4d1ee3d679fc99b1246f6280a91ecbb79f2f9c1563da5be1ee31b22ff23dac6",
+    "oldBytesPreserved": true,
+    "oldIdentitiesAndOutcomesPreserved": true,
+    "originalCases": [
+      {
+        "name": "T0191 contextual controls Composer's workflow and profile controls expose their rendered contextual names",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 contextual controls Field-linked Select retains the visible name and keyboard selection without extra aria labels",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 contextual controls Picker keeps its separately named selection and Escape contract",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 contextual controls category disclosure exposes expanded state without nesting its independent action",
+        "status": "failed"
+      },
+      {
+        "name": "T0191 fallback restore choices remain one mutually exclusive radio group",
+        "status": "failed"
+      },
+      {
+        "name": "T0191 fallback alternative changes only restore preference [initial=true]",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 fallback alternative changes only restore preference [initial=false]",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 actual Research inputs and selectors have contextual rendered names",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 actual Composer inspector names selectors and preserves approved switch callbacks",
+        "status": "passed"
+      }
+    ],
+    "newCases": [
+      {
+        "name": "T0191 contextual controls ModelEditor Name label activates its associated control",
+        "status": "failed",
+        "failure": "Error: expect(received).toEqual(expected) // deep equality\n\n- Expected  - 8\n+ Received  + 2\n\n  Object {\n-   \"activationCount\": 1,\n-   \"associatedControl\": <input\n-     aria-label=\"Name\"\n-     class=\"w-full rounded-ps-md border border-ps-edge bg-ps-surface-panel px-3 py-2 text-body text-ps-text-primary placeholder-ps-text-muted transition-colors hover:border-ps-edge-emphasis disabled:cursor-not-allowed disabled:opacity-40 \"\n-     placeholder=\"e.g. Claude Sonnet 4 (production)\"\n-     type=\"text\"\n-     value=\"\"\n-   />,\n+   \"activationCount\": 0,\n+   \"associatedControl\": null,\n  }\n"
+      },
+      {
+        "name": "T0191 contextual controls ModelEditor API Key label activates its associated control",
+        "status": "failed",
+        "failure": "Error: expect(received).toEqual(expected) // deep equality\n\n- Expected  - 9\n+ Received  + 2\n\n  Object {\n-   \"activationCount\": 1,\n-   \"associatedControl\": <input\n-     aria-label=\"API Key\"\n-     autocomplete=\"off\"\n-     class=\"w-full rounded-ps-md border border-ps-edge bg-ps-surface-panel px-3 py-2 text-body text-ps-text-primary placeholder-ps-text-muted transition-colors hover:border-ps-edge-emphasis disabled:cursor-not-allowed disabled:opacity-40 \"\n-     placeholder=\"sk-...\"\n-     type=\"password\"\n-     value=\"\"\n-   />,\n+   \"activationCount\": 0,\n+   \"associatedControl\": null,\n  }\n"
+      },
+      {
+        "name": "T0191 contextual controls ModelEditor Name exposes its visible description",
+        "status": "failed",
+        "failure": "Error: expect(element).toHaveAccessibleDescription()\n\nExpected element to have accessible description:\n  Display name only \u2014 does not need to match the model identifier\nReceived:\n\n"
+      },
+      {
+        "name": "T0191 contextual controls ModelEditor API Key exposes its visible description",
+        "status": "failed",
+        "failure": "Error: expect(element).toHaveAccessibleDescription()\n\nExpected element to have accessible description:\n  Stored plain text in the registry and synced to ~/.hermes/.env so Hermes can read it.\nReceived:\n\n"
+      }
+    ],
+    "baseline": {
+      "total": 9,
+      "passed": 7,
+      "failed": 2,
+      "exit": 1
+    },
+    "after": {
+      "total": 13,
+      "passed": 7,
+      "failed": 6,
+      "runtimeErrorSuites": 0,
+      "exit": 1
+    },
+    "checks": {
+      "typescript": 0,
+      "changedFileLint": 0
+    },
+    "exposure": "Prior read-only proposal inspected ModelEditor public props, FieldRow implementation and relevant rendered inputs/descriptions, plus existing model-editor-modal and keyless-provider fixtures. This authorship used those explicit contracts and actual consumer. No production implementation authored or changed.",
+    "limits": "jsdom verifies label.control and real label-click forwarding. No manual focus. Physical focus still requires browser verification. Other two reds pre-exist in this isolated checkout.",
+    "review": "Laplace accepted bounded four-case addition on2026-10-03; hash integrated exactly. Physical focus remains browser obligation."
+  },
+  "reselection_addition": {
+    "date": "2026-10-03",
+    "author": "Sartre",
+    "authoriser": "Laplace and operator, T0191-reselection-oracle",
+    "file": "tests/unit/components-progress-feedback.test.tsx",
+    "head": "c941bdb2a741536b5c5f4944e5127e11728fa37d",
+    "beforeRawSHA256": "ee82a3cee3f3785902292d800a5902de0f51561f2c8649ff39599618571e6796",
+    "beforeLfSHA256": "ee82a3cee3f3785902292d800a5902de0f51561f2c8649ff39599618571e6796",
+    "newRawSHA256": "762779b42bf230dda66206de330c845603527897ba98df6fab69dbf3c3e095ad",
+    "newLfSHA256": "762779b42bf230dda66206de330c845603527897ba98df6fab69dbf3c3e095ad",
+    "allExistingBytesPreserved": true,
+    "allExistingIdentitiesAndOutcomesPreserved": true,
+    "oldIdentities": [
+      "T0191 truthful Story progress elapsed time never invents percentage or completion for pending work",
+      "T0191 truthful Story progress confirmed completion invokes exactly one callback after 2000ms",
+      "T0191 truthful Story progress hidden work cannot deliver an obsolete completion",
+      "T0191 truthful Story progress unmounted work cannot deliver an obsolete completion",
+      "T0191 actual Reader edit and continue lifecycle edit-chapter HTTP failure retains chapter data and never announces ready",
+      "T0191 actual Reader edit and continue lifecycle edit-chapter network failure retains chapter data and never announces ready",
+      "T0191 actual Reader edit and continue lifecycle continue HTTP failure retains chapter data and never announces ready",
+      "T0191 actual Reader edit and continue lifecycle continue network failure retains chapter data and never announces ready",
+      "T0191 actual Reader edit and continue lifecycle held edit-chapter registers a client abort, clears its overlay and rereads truth neutrally",
+      "T0191 actual Reader edit and continue lifecycle held continue registers a client abort, clears its overlay and rereads truth neutrally",
+      "T0191 actual Reader edit and continue lifecycle generate plus edit retains Stop when one settles and suppresses late reactivation after Stop",
+      "T0191 actual Reader edit and continue lifecycle edit-first settlement retains operable Stop while generation remains outstanding",
+      "T0191 actual Reader edit and continue lifecycle successful edit-chapter publishes confirmed data and completes its overlay",
+      "T0191 actual Reader edit and continue lifecycle successful continue publishes confirmed data and completes its overlay",
+      "T0191 actual Reader edit and continue lifecycle Stop aborts both concurrent generate and edit requests before either settles",
+      "T0191 Mission cancellation owns pending feedback success settlement clears only its pending message before normal expiry [provider=true]",
+      "T0191 Mission cancellation owns pending feedback success settlement clears only its pending message before normal expiry [provider=false]",
+      "T0191 Mission cancellation owns pending feedback refusal settlement clears only its pending message before normal expiry [provider=true]",
+      "T0191 Mission cancellation owns pending feedback refusal settlement clears only its pending message before normal expiry [provider=false]",
+      "T0191 later Mission cancellation keeps its pending feedback when an earlier operation settles",
+      "T0191 settled Mission timers cannot clear a newer held cancellation or unrelated error"
+    ],
+    "newIdentity": "T0191 actual Reader edit and continue lifecycle reselecting the current chapter resets the reading container to the top",
+    "before": {
+      "total": 21,
+      "passed": 21,
+      "exit": 0
+    },
+    "after": {
+      "total": 22,
+      "passed": 21,
+      "failed": 1,
+      "runtimeErrorSuites": 0,
+      "exit": 1
+    },
+    "causalFailure": "Expected actual reading-container scrollTop 0, received 240 after activating enabled aria-current chapter dot. Same connected reading container verified before failure.",
+    "unexecutedAssertions": "Post-reset current marker, content and no-write assertions are downstream of the causal failure.",
+    "checks": {
+      "typescript": 0,
+      "changedFileLint": 0
+    },
+    "exposure": "Read existing progress suite, b14 Reader fixtures and public ChapterReader/ReaderBody/ChapterList/ChapterDots/ReaderNavigation DOM and callback wiring. No page selection or layout-effect implementation read for this addition. No source edits.",
+    "limits": "jsdom scrollTop behaviour through the real Reader public control; browser scrolling/geometry and separate sidebar-list path are not claimed.",
+    "review": "Laplace accepted bounded addition on2026-10-03; exact hash integrated. Four separate physical browser reds recorded in personal-walk-second.log."
+  },
+  "toggle_geometry_addition": {
+    "file": "tests/e2e/component-accessibility-responsive.spec.ts",
+    "originalBytes": 50148,
+    "originalSha256": "e45007c923cd28e0e6ba0aad86f17250cded8ceb7979004891cebb2392488cc6",
+    "finalSha256": "d65961d8dd16303ad247356f3c33a8b8be5a3d4e216569ded6889e6ea7d3494a",
+    "originalBytePrefixPreserved": true,
+    "expectedOriginalCases": 56,
+    "addedCases": 2,
+    "provenance": "Source-exposed Laplace-authorised amendment following prior 81-component review and current InlineToggle DOM inspection. Original clean-context provenance applies only to preserved original bytes.",
+    "run": "tmp/run-1791039258561",
+    "stats": {
+      "startTime": "2026-10-03T14:54:20.662Z",
+      "duration": 23583.187,
+      "expected": 0,
+      "skipped": 0,
+      "unexpected": 2,
+      "flaky": 0
+    },
+    "ownership": {
+      "app": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0191-green-validation",
+      "root": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0191-green-validation",
+      "run": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0191-green-validation\\tmp\\run-1791039258561",
+      "port": 3999,
+      "serverPid": 11676,
+      "stopped": true,
+      "code": 1
+    },
+    "earlierAttempts": [
+      {
+        "run": "tmp/run-1791039120864",
+        "classification": "setup failure: isolated schema migration exit 1; browser not run; underlying error suppressed by prepare helper"
+      },
+      {
+        "run": "tmp/run-1791039146844",
+        "classification": "fixture navigation failure before geometry"
+      },
+      {
+        "run": "tmp/run-1791039206410",
+        "classification": "incorrect track/thumb selection and post-state layout navigation; not causal evidence"
+      }
+    ],
+    "validation": {
+      "censusReceipt": "tmp/toggle-geometry-oracle/census.log",
+      "lintExit": 0,
+      "censusExit": 0,
+      "typecheckRun": false,
+      "laneReleased": true
+    },
+    "review": "Laplace independently accepted bounded source-exposed addition on2026-10-03; original56 byte prefix preserved. Two causal geometry reds; no full58 pre-fix claim."
+  },
+  "documentation_captures": [
+    {
+      "path": "docs/images/settings.png",
+      "sha256": "fee400e476ea819826a84aee63abfc03289bf90a69f13d81fc6d308db31bd882",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "phoneEvidence": {
+        "title": "personal-walk.spec.ts / coordinator walk 390 / Settings Field Kit documentation state",
+        "status": "passed",
+        "name": "documentation-settings",
+        "path": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0191-green-validation\\tmp\\run-1791039673852\\review-images\\7-documentation-settings.png",
+        "sha256": "ff030b1ed6577cb28aa701cc9b683d6462e566efbe4186a393da73b5f6df6666"
+      },
+      "fixture": "tmp/t0191-personal-walk.ts: settings documentation state",
+      "run": "tmp/t0191-green-validation/tmp/run-1791039673852",
+      "candidate": "6bbea3e0 plus claimed uncommitted implementation; production source stamp f9ae5565eceffe70409e10b05069af5531472056e9f1f75a75569418768c280d",
+      "authority": "Existing components-11/-12 Field/track restyle rulings; synthetic credential-free fixtures, actual built browser controls."
+    },
+    {
+      "path": "docs/images/memory.png",
+      "sha256": "9755dcc6ac1aba94ff9e8dd98e3d79bd81acfad139f76a34b8f77e065843770f",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "phoneEvidence": {
+        "title": "personal-walk.spec.ts / coordinator walk 390 / Memory Field Kit documentation state",
+        "status": "passed",
+        "name": "documentation-memory",
+        "path": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0191-green-validation\\tmp\\run-1791039673852\\review-images\\8-documentation-memory.png",
+        "sha256": "0820be795199b26f85200a47f7c02cdc64bf728bc767764b2766333fd42ada6c"
+      },
+      "fixture": "tmp/t0191-personal-walk.ts: memory documentation state",
+      "run": "tmp/t0191-green-validation/tmp/run-1791039673852",
+      "candidate": "6bbea3e0 plus claimed uncommitted implementation; production source stamp f9ae5565eceffe70409e10b05069af5531472056e9f1f75a75569418768c280d",
+      "authority": "Existing components-11/-12 Field/track restyle rulings; synthetic credential-free fixtures, actual built browser controls."
+    },
+    {
+      "path": "docs/images/composer.png",
+      "sha256": "d42ac43d6405800620b6ca6edfcc8dadb9e1c98ac5f918efc332836a667cfd55",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "phoneEvidence": {
+        "title": "personal-walk.spec.ts / coordinator walk 390 / Composer selected inspector documentation state",
+        "status": "passed",
+        "name": "documentation-composer",
+        "path": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0191-green-validation\\tmp\\run-1791039673852\\review-images\\9-documentation-composer.png",
+        "sha256": "c6f26a583ec3761a449f6ebfc13979b34b9c8ae5ea717bf1d81f140744f9cbfa"
+      },
+      "fixture": "tmp/t0191-personal-walk.ts: composer documentation state",
+      "run": "tmp/t0191-green-validation/tmp/run-1791039673852",
+      "candidate": "6bbea3e0 plus claimed uncommitted implementation; production source stamp f9ae5565eceffe70409e10b05069af5531472056e9f1f75a75569418768c280d",
+      "authority": "Existing components-11/-12 Field/track restyle rulings; synthetic credential-free fixtures, actual built browser controls."
+    }
+  ],
+  "neutral_stop_addition": {
+    "date": "2026-10-03",
+    "author": "Sartre",
+    "authoriser": "Laplace/operator, T-0191-neutral-stop-oracle",
+    "head": "c941bdb2a741536b5c5f4944e5127e11728fa37d",
+    "file": "tests/unit/components-progress-feedback.test.tsx",
+    "beforeRawSHA256": "762779b42bf230dda66206de330c845603527897ba98df6fab69dbf3c3e095ad",
+    "beforeLfSHA256": "762779b42bf230dda66206de330c845603527897ba98df6fab69dbf3c3e095ad",
+    "newRawSHA256": "43eaa1adeb7e3f0a03af6f36890c6872bb55d64ed153a1489b9ec43adcf03b96",
+    "newLfSHA256": "43eaa1adeb7e3f0a03af6f36890c6872bb55d64ed153a1489b9ec43adcf03b96",
+    "old22BytesIdentitiesAndOutcomesPreserved": true,
+    "oldIdentities": [
+      "T0191 truthful Story progress elapsed time never invents percentage or completion for pending work",
+      "T0191 truthful Story progress confirmed completion invokes exactly one callback after 2000ms",
+      "T0191 truthful Story progress hidden work cannot deliver an obsolete completion",
+      "T0191 truthful Story progress unmounted work cannot deliver an obsolete completion",
+      "T0191 actual Reader edit and continue lifecycle edit-chapter HTTP failure retains chapter data and never announces ready",
+      "T0191 actual Reader edit and continue lifecycle edit-chapter network failure retains chapter data and never announces ready",
+      "T0191 actual Reader edit and continue lifecycle continue HTTP failure retains chapter data and never announces ready",
+      "T0191 actual Reader edit and continue lifecycle continue network failure retains chapter data and never announces ready",
+      "T0191 actual Reader edit and continue lifecycle held edit-chapter registers a client abort, clears its overlay and rereads truth neutrally",
+      "T0191 actual Reader edit and continue lifecycle held continue registers a client abort, clears its overlay and rereads truth neutrally",
+      "T0191 actual Reader edit and continue lifecycle reselecting the current chapter resets the reading container to the top",
+      "T0191 actual Reader edit and continue lifecycle generate plus edit retains Stop when one settles and suppresses late reactivation after Stop",
+      "T0191 actual Reader edit and continue lifecycle edit-first settlement retains operable Stop while generation remains outstanding",
+      "T0191 actual Reader edit and continue lifecycle successful edit-chapter publishes confirmed data and completes its overlay",
+      "T0191 actual Reader edit and continue lifecycle successful continue publishes confirmed data and completes its overlay",
+      "T0191 actual Reader edit and continue lifecycle Stop aborts both concurrent generate and edit requests before either settles",
+      "T0191 Mission cancellation owns pending feedback success settlement clears only its pending message before normal expiry [provider=true]",
+      "T0191 Mission cancellation owns pending feedback success settlement clears only its pending message before normal expiry [provider=false]",
+      "T0191 Mission cancellation owns pending feedback refusal settlement clears only its pending message before normal expiry [provider=true]",
+      "T0191 Mission cancellation owns pending feedback refusal settlement clears only its pending message before normal expiry [provider=false]",
+      "T0191 later Mission cancellation keeps its pending feedback when an earlier operation settles",
+      "T0191 settled Mission timers cannot clear a newer held cancellation or unrelated error"
+    ],
+    "newIdentity": "T0191 actual Reader edit and continue lifecycle aborted generation after a confirmed edit restores the Reader immediately without transient ready feedback",
+    "before": {
+      "total": 22,
+      "passed": 22,
+      "exit": 0
+    },
+    "after": {
+      "total": 23,
+      "passed": 22,
+      "failed": 1,
+      "runtimeErrorSuites": 0,
+      "exit": 1
+    },
+    "checks": {
+      "typescript": 0,
+      "changedFileLint": 0
+    },
+    "sourceBytesUnchanged": true,
+    "causalFailure": "Immediately after actual signal abort and controlled AbortError rejection settles, confirmed edit cache data is preserved but body includes Your story is ready!.",
+    "downstreamUnexecuted": "Immediate content visibility/non-inert ancestry, restored Reader controls, no follow-up assertions and all 1000/1999ms observations follow the failing immediate feedback assertion.",
+    "sourceExposure": "Known author amendment exposure: reviewer disclosed generating/editing/editDone transient; prior Reader public consumer, overlay DOM and callback inspections recorded. This addition reused existing fixtures and observer; no page state implementation read or altered.",
+    "receipts": [
+      "before.json",
+      "before.log",
+      "after.json",
+      "after.log",
+      "types.log",
+      "lint.log",
+      "progress.original",
+      "addition.txt",
+      "additive.diff",
+      "source-before.json"
+    ],
+    "review": "Laplace accepted bounded addition on2026-10-03; exact hash integrated. One immediate transient feedback red,22 existing passes; downstream interval assertions require green rerun."
+  },
+  "token_identity_retirement": {
+    "authority": "Q-034, Daniel Parke,2026-10-03, explicit interactive approval",
+    "retiredIdentities": [
+      {
+        "name": "the RGB mirror tokens are usable by the rules that consume them --ps-rgb-neon-purple is space separated, not a comma list",
+        "originalStatus": "passed"
+      },
+      {
+        "name": "the RGB mirror tokens are usable by the rules that consume them --ps-rgb-neon-green is space separated, not a comma list",
+        "originalStatus": "passed"
+      },
+      {
+        "name": "the RGB mirror tokens are usable by the rules that consume them --ps-rgb-neon-pink is space separated, not a comma list",
+        "originalStatus": "passed"
+      },
+      {
+        "name": "the RGB mirror tokens are usable by the rules that consume them --ps-rgb-neon-orange is space separated, not a comma list",
+        "originalStatus": "passed"
+      }
+    ],
+    "baseline": {
+      "checkout": "tmp/t0190-green-validation",
+      "report": "tmp/t0191-retired-token-baseline.json",
+      "sha256": "c500fbd99ded3ff949cd387a682c47c66859fe3a21663e201584e9d184b50169",
+      "passed": 21
+    },
+    "current": {
+      "report": "tmp/t0191-token-current.json",
+      "sha256": "617783b0f1abac6af59a3bc7b6d0d5ceec6c4850a07fa26cabdd14141404bf03",
+      "passed": 21,
+      "scope": "17 unchanged production-mirror cases plus4 exact-removal oracle cases"
+    },
+    "testSourceUnchanged": "tests/unit/lockbook-tokens.test.ts",
+    "countEquation": "8275+130-2-4=8399 passing;9 existing skips",
+    "limit": "Dynamic enumeration changed by the explicitly ruled declaration removal. Not an equivalent synthetic replacement or a claim that only two tests retired."
+  },
+  "browser_fixture_lifecycle_amendment": {
+    "author": "Sartre",
+    "authoriser": "Laplace/operator explicit fixture-internal tracking authority",
+    "file": "tests/e2e/component-accessibility-responsive.spec.ts",
+    "head": "c941bdb2a741536b5c5f4944e5127e11728fa37d",
+    "originalRawSHA256": "d65961d8dd16303ad247356f3c33a8b8be5a3d4e216569ded6889e6ea7d3494a",
+    "newRawSHA256": "30a75481bf8babe924cfd27c9ede9d64dcc4d02569f7c26f0faae26122207683",
+    "newLfSHA256": "30a75481bf8babe924cfd27c9ede9d64dcc4d02569f7c26f0faae26122207683",
+    "outsideFixtureBytesUnchanged": true,
+    "allAssertionASTsUnchanged": true,
+    "expandedIdentities": [
+      "T-0191 production browser 1440x900 > Chat empty: composer remains visible and a draft survives the phone sheet",
+      "T-0191 production browser 1440x900 > Chat offline: composer remains visible and a draft survives the phone sheet",
+      "T-0191 production browser 1440x900 > Chat long transcript: composer remains visible and a draft survives the phone sheet",
+      "T-0191 production browser 1440x900 > Credentials: long visible label and rotation controls remain usable",
+      "T-0191 production browser 1440x900 > Fallback row 1: long identity and boundary actions are discoverable",
+      "T-0191 production browser 1440x900 > Fallback row 2: long identity and boundary actions are discoverable",
+      "T-0191 production browser 1440x900 > Fallback row 3: long identity and boundary actions are discoverable",
+      "T-0191 production browser 1440x900 > Story card: readable identity, separate phone action row and two-step deletion",
+      "T-0191 production browser 1440x900 > Session 404: one heading, Retry and back navigation",
+      "T-0191 production browser 1440x900 > Session 500: one heading, Retry and back navigation",
+      "T-0191 production browser 1440x900 > Hindsight Directives: full toolbar labels and named keyboard dialog",
+      "T-0191 production browser 1440x900 > Hindsight Mental Models: full toolbar labels and named keyboard dialog",
+      "T-0191 production browser 1440x900 > Mission selected details: distinct long metadata is readable without hovering",
+      "T-0191 production browser 1440x900 > Mission cancellation: settled feedback replaces pending while an unrelated error survives",
+      "T-0191 production browser 1440x900 > Session loading and normal transcript controls remain usable",
+      "T-0191 production browser 1440x900 > Reader large supported font: footer and chapter dots remain reachable",
+      "T-0191 production browser 1440x900 > Reader Next and Previous: long chapter starts below the header and read writes survive",
+      "T-0191 production browser 1440x900 > Reader chapter selection: long chapter starts below the header and read writes survive",
+      "T-0191 production browser 1440x900 > Reader edit refusal: chapter data remains and ready is never announced",
+      "T-0191 production browser 1440x900 > Reader held edit: Stop is reachable, focused and aborts the actual client",
+      "T-0191 production browser 1440x900 > Reader edit success: confirmed content survives completion",
+      "T-0191 production browser 1440x900 > Reader continue refusal: chapter data remains and ready is never announced",
+      "T-0191 production browser 1440x900 > Reader held continue: Stop is reachable, focused and aborts the actual client",
+      "T-0191 production browser 1440x900 > Reader continue success: confirmed content survives completion",
+      "T-0191 production browser 1440x900 > Reader generation plus edit overlap: Stop owns both actual abort signals",
+      "T-0191 production browser 1440x900 > Reader ordinary generate-chapter: physical Stop aborts without a later write or success",
+      "T-0191 production browser 1440x900 > Reader ordinary retry-chapter: physical Stop aborts without a later write or success",
+      "T-0191 production browser 1440x900 > Composer inspector: labelled dropdown, keyboard switches and focus remain usable",
+      "T-0191 production browser 390x844 > Chat empty: composer remains visible and a draft survives the phone sheet",
+      "T-0191 production browser 390x844 > Chat offline: composer remains visible and a draft survives the phone sheet",
+      "T-0191 production browser 390x844 > Chat long transcript: composer remains visible and a draft survives the phone sheet",
+      "T-0191 production browser 390x844 > Credentials: long visible label and rotation controls remain usable",
+      "T-0191 production browser 390x844 > Fallback row 1: long identity and boundary actions are discoverable",
+      "T-0191 production browser 390x844 > Fallback row 2: long identity and boundary actions are discoverable",
+      "T-0191 production browser 390x844 > Fallback row 3: long identity and boundary actions are discoverable",
+      "T-0191 production browser 390x844 > Story card: readable identity, separate phone action row and two-step deletion",
+      "T-0191 production browser 390x844 > Session 404: one heading, Retry and back navigation",
+      "T-0191 production browser 390x844 > Session 500: one heading, Retry and back navigation",
+      "T-0191 production browser 390x844 > Hindsight Directives: full toolbar labels and named keyboard dialog",
+      "T-0191 production browser 390x844 > Hindsight Mental Models: full toolbar labels and named keyboard dialog",
+      "T-0191 production browser 390x844 > Mission selected details: distinct long metadata is readable without hovering",
+      "T-0191 production browser 390x844 > Mission cancellation: settled feedback replaces pending while an unrelated error survives",
+      "T-0191 production browser 390x844 > Session loading and normal transcript controls remain usable",
+      "T-0191 production browser 390x844 > Reader large supported font: footer and chapter dots remain reachable",
+      "T-0191 production browser 390x844 > Reader Next and Previous: long chapter starts below the header and read writes survive",
+      "T-0191 production browser 390x844 > Reader chapter selection: long chapter starts below the header and read writes survive",
+      "T-0191 production browser 390x844 > Reader edit refusal: chapter data remains and ready is never announced",
+      "T-0191 production browser 390x844 > Reader held edit: Stop is reachable, focused and aborts the actual client",
+      "T-0191 production browser 390x844 > Reader edit success: confirmed content survives completion",
+      "T-0191 production browser 390x844 > Reader continue refusal: chapter data remains and ready is never announced",
+      "T-0191 production browser 390x844 > Reader held continue: Stop is reachable, focused and aborts the actual client",
+      "T-0191 production browser 390x844 > Reader continue success: confirmed content survives completion",
+      "T-0191 production browser 390x844 > Reader generation plus edit overlap: Stop owns both actual abort signals",
+      "T-0191 production browser 390x844 > Reader ordinary generate-chapter: physical Stop aborts without a later write or success",
+      "T-0191 production browser 390x844 > Reader ordinary retry-chapter: physical Stop aborts without a later write or success",
+      "T-0191 production browser 390x844 > Composer inspector: labelled dropdown, keyboard switches and focus remain usable",
+      "T-0191 Composer toggle geometry 1440x900 > switch thumbs stay inside their tracks, off left and on right",
+      "T-0191 Composer toggle geometry 390x844 > switch thumbs stay inside their tracks, off left and on right"
+    ],
+    "identityCount": 58,
+    "sourceBytesUnchanged": true,
+    "frameworkVersions": {
+      "playwrightTest": "1.62.1",
+      "playwrightCore": "1.62.1",
+      "coreBundleSHA256": "9393fa79e1c67c74edc26b610d65a4f7ed73d345a762465cc88340a33a2454ac"
+    },
+    "reproduction": [
+      {
+        "name": "t0191-route-drain-repro.mjs",
+        "sha256": "7e131fc5d27c908c4aab8e15ce2654bf056ecf44546bb1fa592f5bd3a266e30d",
+        "originalUnchanged": true
+      },
+      {
+        "name": "t0191-route-drain-repro.json",
+        "sha256": "dde97117ec8d7b5490ac628deb84a965064ac4043d7b34d1028c9fe6e53a2543",
+        "originalUnchanged": true
+      }
+    ],
+    "change": "Track original callback promises without altering body; install higher-priority same-page abort guard. Explicit all-settled drain while interception remains installed, navigate blank, explicitly drain guard callbacks, finally unrouteAll(wait) and unchanged error accounting.",
+    "selfChecks": {
+      "exactDrainFunctionWaitsForSlowHandler": true,
+      "rejectionRethrownAsAggregateError": true,
+      "promisesAppendedDuringDrainAwaited": true,
+      "method": "Extracted candidate drain function via TypeScript AST; in-memory deferred controls only, no browser/server/network"
+    },
+    "checks": {
+      "lint": 0,
+      "census": 1,
+      "censusReason": "line-census: the tree moved the wrong way: testLines rose from 146896 to 146947. Run with --report to see what is behind each number, or --allow-growth \"<reason>\".",
+      "typescript": 0
+    },
+    "limits": "Runtime qualification pending coordinator six-worker run. The copied diagnostic exit0 records reproduction of a framework failure, not an application pass. Source/contexts not patched. Existing error filters unchanged; guard console errors remain actionable.",
+    "originalHandlerBodyBytesUnchanged": true,
+    "coordinator_runtime_receipt": "tmp/t0191-full-gate-1791042795365/rerun/summary.rerun.json",
+    "review": "Laplace accepted exact candidate scope; normal six-worker runtime passed before integration. Whole gate remains required."
+  },
+  "latest_coordinator_walk": {
+    "run": "tmp/t0191-green-validation/tmp/run-1791042953649",
+    "log": "tmp/t0191-personal-walk-final-drain-selected.log",
+    "passing": 14,
+    "exit": 0,
+    "viewports": [
+      "1440x900",
+      "390x844"
+    ],
+    "images": [
+      {
+        "title": "personal-walk.spec.ts / coordinator walk 1440 / Settings Field Kit documentation state",
+        "status": "passed",
+        "name": "documentation-settings",
+        "path": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0191-green-validation\\tmp\\run-1791042953649\\review-images\\0-documentation-settings.png",
+        "sha256": "fee400e476ea819826a84aee63abfc03289bf90a69f13d81fc6d308db31bd882"
+      },
+      {
+        "title": "personal-walk.spec.ts / coordinator walk 1440 / Settings Field Kit documentation state",
+        "status": "passed",
+        "name": "final-viewport",
+        "path": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0191-green-validation\\tmp\\run-1791042953649\\review-images\\0-final-viewport.png",
+        "sha256": "fee400e476ea819826a84aee63abfc03289bf90a69f13d81fc6d308db31bd882"
+      },
+      {
+        "title": "personal-walk.spec.ts / coordinator walk 1440 / Memory Field Kit documentation state",
+        "status": "passed",
+        "name": "documentation-memory",
+        "path": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0191-green-validation\\tmp\\run-1791042953649\\review-images\\1-documentation-memory.png",
+        "sha256": "9755dcc6ac1aba94ff9e8dd98e3d79bd81acfad139f76a34b8f77e065843770f"
+      },
+      {
+        "title": "personal-walk.spec.ts / coordinator walk 1440 / Memory Field Kit documentation state",
+        "status": "passed",
+        "name": "final-viewport",
+        "path": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0191-green-validation\\tmp\\run-1791042953649\\review-images\\1-final-viewport.png",
+        "sha256": "9b4cc23f4e8ab20771c9ccb16b93cd5c48a882221582253d2287bde20226bdd0"
+      },
+      {
+        "title": "personal-walk.spec.ts / coordinator walk 1440 / Composer selected inspector documentation state",
+        "status": "passed",
+        "name": "documentation-composer",
+        "path": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0191-green-validation\\tmp\\run-1791042953649\\review-images\\2-documentation-composer.png",
+        "sha256": "d42ac43d6405800620b6ca6edfcc8dadb9e1c98ac5f918efc332836a667cfd55"
+      },
+      {
+        "title": "personal-walk.spec.ts / coordinator walk 1440 / Composer selected inspector documentation state",
+        "status": "passed",
+        "name": "final-viewport",
+        "path": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0191-green-validation\\tmp\\run-1791042953649\\review-images\\2-final-viewport.png",
+        "sha256": "718965d82aa2ba99bfda6de645ada993ab3a068c208c43f27594c437eac10632"
+      },
+      {
+        "title": "personal-walk.spec.ts / coordinator walk 1440 / ModelEditor labels physically focus controls and describe them",
+        "status": "passed",
+        "name": "model-Name-focus",
+        "path": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0191-green-validation\\tmp\\run-1791042953649\\review-images\\3-model-Name-focus.png",
+        "sha256": "2f69fc9ceddc76f5ca777bb78e328570a1a3d7847cc4c7605cb4ff5794bb1601"
+      },
+      {
+        "title": "personal-walk.spec.ts / coordinator walk 1440 / ModelEditor labels physically focus controls and describe them",
+        "status": "passed",
+        "name": "model-API-Key-focus",
+        "path": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0191-green-validation\\tmp\\run-1791042953649\\review-images\\3-model-API-Key-focus.png",
+        "sha256": "042f4aa7a02854f28ecab6d2073d2102c576ddd0e908fce21575c68d7403009a"
+      },
+      {
+        "title": "personal-walk.spec.ts / coordinator walk 1440 / ModelEditor labels physically focus controls and describe them",
+        "status": "passed",
+        "name": "final-viewport",
+        "path": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0191-green-validation\\tmp\\run-1791042953649\\review-images\\3-final-viewport.png",
+        "sha256": "f7c4858de153fef340e0bea07ca417ca0dd6c18de28d2c944ad0e15ad48e0ff6"
+      },
+      {
+        "title": "personal-walk.spec.ts / coordinator walk 1440 / Reader edit-first completion retains physical Stop for pending generation",
+        "status": "passed",
+        "name": "reverse-settlement-stop",
+        "path": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0191-green-validation\\tmp\\run-1791042953649\\review-images\\4-reverse-settlement-stop.png",
+        "sha256": "55e3b5d0caa096ea09c966d5f96e658524f4cd76b449e274de663a15cd110f3f"
+      },
+      {
+        "title": "personal-walk.spec.ts / coordinator walk 1440 / Reader edit-first completion retains physical Stop for pending generation",
+        "status": "passed",
+        "name": "final-viewport",
+        "path": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0191-green-validation\\tmp\\run-1791042953649\\review-images\\4-final-viewport.png",
+        "sha256": "e1b7c4633d2430c24ba4ec0d146a5f875075a85d047b9f76303cedf4dff67acd"
+      },
+      {
+        "title": "personal-walk.spec.ts / coordinator walk 1440 / Reader same chapter dot resets the reading position",
+        "status": "passed",
+        "name": "same-chapter-dot",
+        "path": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0191-green-validation\\tmp\\run-1791042953649\\review-images\\5-same-chapter-dot.png",
+        "sha256": "2571ce00c5bb9a1c07bf24f64a8b78bac83f8d3b29fd8e61931e5bcce50e18b3"
+      },
+      {
+        "title": "personal-walk.spec.ts / coordinator walk 1440 / Reader same chapter dot resets the reading position",
+        "status": "passed",
+        "name": "final-viewport",
+        "path": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0191-green-validation\\tmp\\run-1791042953649\\review-images\\5-final-viewport.png",
+        "sha256": "2571ce00c5bb9a1c07bf24f64a8b78bac83f8d3b29fd8e61931e5bcce50e18b3"
+      },
+      {
+        "title": "personal-walk.spec.ts / coordinator walk 1440 / Reader same chapter list resets the reading position",
+        "status": "passed",
+        "name": "same-chapter-list",
+        "path": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0191-green-validation\\tmp\\run-1791042953649\\review-images\\6-same-chapter-list.png",
+        "sha256": "2571ce00c5bb9a1c07bf24f64a8b78bac83f8d3b29fd8e61931e5bcce50e18b3"
+      },
+      {
+        "title": "personal-walk.spec.ts / coordinator walk 1440 / Reader same chapter list resets the reading position",
+        "status": "passed",
+        "name": "final-viewport",
+        "path": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0191-green-validation\\tmp\\run-1791042953649\\review-images\\6-final-viewport.png",
+        "sha256": "2571ce00c5bb9a1c07bf24f64a8b78bac83f8d3b29fd8e61931e5bcce50e18b3"
+      },
+      {
+        "title": "personal-walk.spec.ts / coordinator walk 390 / Settings Field Kit documentation state",
+        "status": "passed",
+        "name": "documentation-settings",
+        "path": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0191-green-validation\\tmp\\run-1791042953649\\review-images\\7-documentation-settings.png",
+        "sha256": "ff030b1ed6577cb28aa701cc9b683d6462e566efbe4186a393da73b5f6df6666"
+      },
+      {
+        "title": "personal-walk.spec.ts / coordinator walk 390 / Settings Field Kit documentation state",
+        "status": "passed",
+        "name": "final-viewport",
+        "path": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0191-green-validation\\tmp\\run-1791042953649\\review-images\\7-final-viewport.png",
+        "sha256": "ff030b1ed6577cb28aa701cc9b683d6462e566efbe4186a393da73b5f6df6666"
+      },
+      {
+        "title": "personal-walk.spec.ts / coordinator walk 390 / Memory Field Kit documentation state",
+        "status": "passed",
+        "name": "documentation-memory",
+        "path": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0191-green-validation\\tmp\\run-1791042953649\\review-images\\8-documentation-memory.png",
+        "sha256": "0820be795199b26f85200a47f7c02cdc64bf728bc767764b2766333fd42ada6c"
+      },
+      {
+        "title": "personal-walk.spec.ts / coordinator walk 390 / Memory Field Kit documentation state",
+        "status": "passed",
+        "name": "final-viewport",
+        "path": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0191-green-validation\\tmp\\run-1791042953649\\review-images\\8-final-viewport.png",
+        "sha256": "0820be795199b26f85200a47f7c02cdc64bf728bc767764b2766333fd42ada6c"
+      },
+      {
+        "title": "personal-walk.spec.ts / coordinator walk 390 / Composer selected inspector documentation state",
+        "status": "passed",
+        "name": "documentation-composer",
+        "path": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0191-green-validation\\tmp\\run-1791042953649\\review-images\\9-documentation-composer.png",
+        "sha256": "c6f26a583ec3761a449f6ebfc13979b34b9c8ae5ea717bf1d81f140744f9cbfa"
+      },
+      {
+        "title": "personal-walk.spec.ts / coordinator walk 390 / Composer selected inspector documentation state",
+        "status": "passed",
+        "name": "final-viewport",
+        "path": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0191-green-validation\\tmp\\run-1791042953649\\review-images\\9-final-viewport.png",
+        "sha256": "cce0875931205534e74eeb24058ce708368ae6b4aede50e7c5c85df1d6359849"
+      },
+      {
+        "title": "personal-walk.spec.ts / coordinator walk 390 / ModelEditor labels physically focus controls and describe them",
+        "status": "passed",
+        "name": "model-Name-focus",
+        "path": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0191-green-validation\\tmp\\run-1791042953649\\review-images\\10-model-Name-focus.png",
+        "sha256": "94ebdfbd2df5e784579e815e690862cfe7a131883157e22b32a2261640c0a139"
+      },
+      {
+        "title": "personal-walk.spec.ts / coordinator walk 390 / ModelEditor labels physically focus controls and describe them",
+        "status": "passed",
+        "name": "model-API-Key-focus",
+        "path": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0191-green-validation\\tmp\\run-1791042953649\\review-images\\10-model-API-Key-focus.png",
+        "sha256": "df9462dff27896d5a6208b8a9df8ba9c930d47a697e86e714283ef83749854c1"
+      },
+      {
+        "title": "personal-walk.spec.ts / coordinator walk 390 / ModelEditor labels physically focus controls and describe them",
+        "status": "passed",
+        "name": "final-viewport",
+        "path": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0191-green-validation\\tmp\\run-1791042953649\\review-images\\10-final-viewport.png",
+        "sha256": "d450e714da3562e3eac08a6305b6c3f43bf0be4055564dc540c0645856fdc131"
+      },
+      {
+        "title": "personal-walk.spec.ts / coordinator walk 390 / Reader edit-first completion retains physical Stop for pending generation",
+        "status": "passed",
+        "name": "reverse-settlement-stop",
+        "path": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0191-green-validation\\tmp\\run-1791042953649\\review-images\\11-reverse-settlement-stop.png",
+        "sha256": "c48f78a155bd9e93c1a20073882d1a77af8dc5dd6972ec47d8d3b6358f01d114"
+      },
+      {
+        "title": "personal-walk.spec.ts / coordinator walk 390 / Reader edit-first completion retains physical Stop for pending generation",
+        "status": "passed",
+        "name": "final-viewport",
+        "path": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0191-green-validation\\tmp\\run-1791042953649\\review-images\\11-final-viewport.png",
+        "sha256": "9939a9c53089f4ca83dbad90999ad643829e0baa20d8822217aace9ac3444c58"
+      },
+      {
+        "title": "personal-walk.spec.ts / coordinator walk 390 / Reader same chapter dot resets the reading position",
+        "status": "passed",
+        "name": "same-chapter-dot",
+        "path": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0191-green-validation\\tmp\\run-1791042953649\\review-images\\12-same-chapter-dot.png",
+        "sha256": "0944b5010172595244047e71de7b8c8a4514ba61607a48d6879229c57c55f612"
+      },
+      {
+        "title": "personal-walk.spec.ts / coordinator walk 390 / Reader same chapter dot resets the reading position",
+        "status": "passed",
+        "name": "final-viewport",
+        "path": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0191-green-validation\\tmp\\run-1791042953649\\review-images\\12-final-viewport.png",
+        "sha256": "0944b5010172595244047e71de7b8c8a4514ba61607a48d6879229c57c55f612"
+      },
+      {
+        "title": "personal-walk.spec.ts / coordinator walk 390 / Reader same chapter list resets the reading position",
+        "status": "passed",
+        "name": "same-chapter-list",
+        "path": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0191-green-validation\\tmp\\run-1791042953649\\review-images\\13-same-chapter-list.png",
+        "sha256": "0944b5010172595244047e71de7b8c8a4514ba61607a48d6879229c57c55f612"
+      },
+      {
+        "title": "personal-walk.spec.ts / coordinator walk 390 / Reader same chapter list resets the reading position",
+        "status": "passed",
+        "name": "final-viewport",
+        "path": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0191-green-validation\\tmp\\run-1791042953649\\review-images\\13-final-viewport.png",
+        "sha256": "0944b5010172595244047e71de7b8c8a4514ba61607a48d6879229c57c55f612"
+      }
+    ],
+    "limits": "Real local sign-in and built UI, controlled service fixtures, no paid providers or whole-product acceptance."
+  },
+  "browser_fixture_transport_amendment": {
+    "author": "Sartre",
+    "authoriser": "Laplace/operator bounded fresh-socket fixture amendment",
+    "file": "tests/e2e/component-accessibility-responsive.spec.ts",
+    "beforeRawSHA256": "30a75481bf8babe924cfd27c9ede9d64dcc4d02569f7c26f0faae26122207683",
+    "afterRawSHA256": "036c2df944c94d7808614412ea3f8984ad34f7e124c9345666dcdc8ffb9f0aec",
+    "afterLfSHA256": "036c2df944c94d7808614412ea3f8984ad34f7e124c9345666dcdc8ffb9f0aec",
+    "bodyBytesUnchanged": true,
+    "acceptedDrainBytesUnchanged": true,
+    "allAssertionASTsUnchanged": true,
+    "expandedIdentities": [
+      "T-0191 production browser 1440x900 > Chat empty: composer remains visible and a draft survives the phone sheet",
+      "T-0191 production browser 1440x900 > Chat offline: composer remains visible and a draft survives the phone sheet",
+      "T-0191 production browser 1440x900 > Chat long transcript: composer remains visible and a draft survives the phone sheet",
+      "T-0191 production browser 1440x900 > Credentials: long visible label and rotation controls remain usable",
+      "T-0191 production browser 1440x900 > Fallback row 1: long identity and boundary actions are discoverable",
+      "T-0191 production browser 1440x900 > Fallback row 2: long identity and boundary actions are discoverable",
+      "T-0191 production browser 1440x900 > Fallback row 3: long identity and boundary actions are discoverable",
+      "T-0191 production browser 1440x900 > Story card: readable identity, separate phone action row and two-step deletion",
+      "T-0191 production browser 1440x900 > Session 404: one heading, Retry and back navigation",
+      "T-0191 production browser 1440x900 > Session 500: one heading, Retry and back navigation",
+      "T-0191 production browser 1440x900 > Hindsight Directives: full toolbar labels and named keyboard dialog",
+      "T-0191 production browser 1440x900 > Hindsight Mental Models: full toolbar labels and named keyboard dialog",
+      "T-0191 production browser 1440x900 > Mission selected details: distinct long metadata is readable without hovering",
+      "T-0191 production browser 1440x900 > Mission cancellation: settled feedback replaces pending while an unrelated error survives",
+      "T-0191 production browser 1440x900 > Session loading and normal transcript controls remain usable",
+      "T-0191 production browser 1440x900 > Reader large supported font: footer and chapter dots remain reachable",
+      "T-0191 production browser 1440x900 > Reader Next and Previous: long chapter starts below the header and read writes survive",
+      "T-0191 production browser 1440x900 > Reader chapter selection: long chapter starts below the header and read writes survive",
+      "T-0191 production browser 1440x900 > Reader edit refusal: chapter data remains and ready is never announced",
+      "T-0191 production browser 1440x900 > Reader held edit: Stop is reachable, focused and aborts the actual client",
+      "T-0191 production browser 1440x900 > Reader edit success: confirmed content survives completion",
+      "T-0191 production browser 1440x900 > Reader continue refusal: chapter data remains and ready is never announced",
+      "T-0191 production browser 1440x900 > Reader held continue: Stop is reachable, focused and aborts the actual client",
+      "T-0191 production browser 1440x900 > Reader continue success: confirmed content survives completion",
+      "T-0191 production browser 1440x900 > Reader generation plus edit overlap: Stop owns both actual abort signals",
+      "T-0191 production browser 1440x900 > Reader ordinary generate-chapter: physical Stop aborts without a later write or success",
+      "T-0191 production browser 1440x900 > Reader ordinary retry-chapter: physical Stop aborts without a later write or success",
+      "T-0191 production browser 1440x900 > Composer inspector: labelled dropdown, keyboard switches and focus remain usable",
+      "T-0191 production browser 390x844 > Chat empty: composer remains visible and a draft survives the phone sheet",
+      "T-0191 production browser 390x844 > Chat offline: composer remains visible and a draft survives the phone sheet",
+      "T-0191 production browser 390x844 > Chat long transcript: composer remains visible and a draft survives the phone sheet",
+      "T-0191 production browser 390x844 > Credentials: long visible label and rotation controls remain usable",
+      "T-0191 production browser 390x844 > Fallback row 1: long identity and boundary actions are discoverable",
+      "T-0191 production browser 390x844 > Fallback row 2: long identity and boundary actions are discoverable",
+      "T-0191 production browser 390x844 > Fallback row 3: long identity and boundary actions are discoverable",
+      "T-0191 production browser 390x844 > Story card: readable identity, separate phone action row and two-step deletion",
+      "T-0191 production browser 390x844 > Session 404: one heading, Retry and back navigation",
+      "T-0191 production browser 390x844 > Session 500: one heading, Retry and back navigation",
+      "T-0191 production browser 390x844 > Hindsight Directives: full toolbar labels and named keyboard dialog",
+      "T-0191 production browser 390x844 > Hindsight Mental Models: full toolbar labels and named keyboard dialog",
+      "T-0191 production browser 390x844 > Mission selected details: distinct long metadata is readable without hovering",
+      "T-0191 production browser 390x844 > Mission cancellation: settled feedback replaces pending while an unrelated error survives",
+      "T-0191 production browser 390x844 > Session loading and normal transcript controls remain usable",
+      "T-0191 production browser 390x844 > Reader large supported font: footer and chapter dots remain reachable",
+      "T-0191 production browser 390x844 > Reader Next and Previous: long chapter starts below the header and read writes survive",
+      "T-0191 production browser 390x844 > Reader chapter selection: long chapter starts below the header and read writes survive",
+      "T-0191 production browser 390x844 > Reader edit refusal: chapter data remains and ready is never announced",
+      "T-0191 production browser 390x844 > Reader held edit: Stop is reachable, focused and aborts the actual client",
+      "T-0191 production browser 390x844 > Reader edit success: confirmed content survives completion",
+      "T-0191 production browser 390x844 > Reader continue refusal: chapter data remains and ready is never announced",
+      "T-0191 production browser 390x844 > Reader held continue: Stop is reachable, focused and aborts the actual client",
+      "T-0191 production browser 390x844 > Reader continue success: confirmed content survives completion",
+      "T-0191 production browser 390x844 > Reader generation plus edit overlap: Stop owns both actual abort signals",
+      "T-0191 production browser 390x844 > Reader ordinary generate-chapter: physical Stop aborts without a later write or success",
+      "T-0191 production browser 390x844 > Reader ordinary retry-chapter: physical Stop aborts without a later write or success",
+      "T-0191 production browser 390x844 > Composer inspector: labelled dropdown, keyboard switches and focus remain usable",
+      "T-0191 Composer toggle geometry 1440x900 > switch thumbs stay inside their tracks, off left and on right",
+      "T-0191 Composer toggle geometry 390x844 > switch thumbs stay inside their tracks, off left and on right"
+    ],
+    "productionSourceUnchanged": true,
+    "sourceFileCount": 867,
+    "node": "v24.21.0",
+    "playwright": "1.62.1",
+    "changes": [
+      "Public Node HTTP/HTTPS agent:false per hop",
+      "Original JSON sign-in POST, real 303 follow-up GET, NextResponse cookie parsing and server wire cookie value",
+      "Existing allowlisted seed GET with request.allHeaders including actual Cookie and Authorization",
+      "Single 30000ms deadline per request chain, page-close cancellation, errors propagated and requests destroyed",
+      "Same-origin redirect restriction and existing 20-hop cap"
+    ],
+    "exposure": [
+      "Installed framework transport and cookie parser",
+      "Public auth sign-in and public-origin cookie options",
+      "Existing candidate fixture and tests"
+    ],
+    "limitations": [
+      "No browser/application run; coordinator owns normal six-worker validation",
+      "Native checks use an owned HTTP server and fake browser cookie adapter; Secure attribute is checked without local TLS",
+      "Two Models locator failures remain unattributed; assertions unchanged"
+    ],
+    "selfchecks": {
+      "node": "v24.21.0",
+      "receipts": [
+        {
+          "name": "real 303 applies server cookie before same-origin GET and preserves attributes",
+          "passed": true
+        },
+        {
+          "name": "each GET uses a new socket",
+          "passed": true
+        },
+        {
+          "name": "seed transport retains actual browser Cookie and Authorization headers",
+          "passed": true
+        },
+        {
+          "name": "socket reset rejects without retry",
+          "passed": true
+        },
+        {
+          "name": "partial aborted response rejects",
+          "passed": true
+        },
+        {
+          "name": "30-second shared request deadline closes held request (clock accelerated)",
+          "passed": true
+        },
+        {
+          "name": "page close cancels held request",
+          "passed": true
+        },
+        {
+          "name": "external redirect is rejected before dispatch",
+          "passed": true
+        },
+        {
+          "name": "redirect loop stops after original plus 20 hops",
+          "passed": true
+        }
+      ],
+      "serverClosed": true,
+      "scope": "Extracted candidate helper, owned local HTTP, fake browser cookie adapter; no application/browser validation."
+    },
+    "initialTypeFailure": "Unsupported TestInfo.startTime and number|Date expires; corrected using original 30-second API request deadline and Date conversion; retained types.log"
+  },
+  "browser_fixture_preload_amendment": {
+    "candidateSHA256": "73e8f513b8dcf0dc20ad1b21c4de7f37ac6e34e6c5a50ffdd1f7bbf9259a77c2",
+    "provenance": {
+      "author": "Sartre",
+      "authoriser": "Laplace via operator; tmp/t0191-preload-brief.md",
+      "file": "tests/e2e/component-accessibility-responsive.spec.ts",
+      "beforeRawSHA256": "036c2df944c94d7808614412ea3f8984ad34f7e124c9345666dcdc8ffb9f0aec",
+      "afterRawSHA256": "73e8f513b8dcf0dc20ad1b21c4de7f37ac6e34e6c5a50ffdd1f7bbf9259a77c2",
+      "afterLfSHA256": "73e8f513b8dcf0dc20ad1b21c4de7f37ac6e34e6c5a50ffdd1f7bbf9259a77c2",
+      "onlyChange": "Ten-line fixture insertion immediately after per-test cache creation",
+      "preloadURLs": [
+        "/api/stats",
+        "/api/status/runtime",
+        "/api/feature-flags",
+        "/api/models/defaults",
+        "/api/models/sync/drift",
+        "/api/models/fallbacks/config"
+      ],
+      "all58BodiesAndExistingAssertionsByteIdentical": true,
+      "expandedIdentities": [
+        "T-0191 production browser 1440x900 > Chat empty: composer remains visible and a draft survives the phone sheet",
+        "T-0191 production browser 1440x900 > Chat offline: composer remains visible and a draft survives the phone sheet",
+        "T-0191 production browser 1440x900 > Chat long transcript: composer remains visible and a draft survives the phone sheet",
+        "T-0191 production browser 1440x900 > Credentials: long visible label and rotation controls remain usable",
+        "T-0191 production browser 1440x900 > Fallback row 1: long identity and boundary actions are discoverable",
+        "T-0191 production browser 1440x900 > Fallback row 2: long identity and boundary actions are discoverable",
+        "T-0191 production browser 1440x900 > Fallback row 3: long identity and boundary actions are discoverable",
+        "T-0191 production browser 1440x900 > Story card: readable identity, separate phone action row and two-step deletion",
+        "T-0191 production browser 1440x900 > Session 404: one heading, Retry and back navigation",
+        "T-0191 production browser 1440x900 > Session 500: one heading, Retry and back navigation",
+        "T-0191 production browser 1440x900 > Hindsight Directives: full toolbar labels and named keyboard dialog",
+        "T-0191 production browser 1440x900 > Hindsight Mental Models: full toolbar labels and named keyboard dialog",
+        "T-0191 production browser 1440x900 > Mission selected details: distinct long metadata is readable without hovering",
+        "T-0191 production browser 1440x900 > Mission cancellation: settled feedback replaces pending while an unrelated error survives",
+        "T-0191 production browser 1440x900 > Session loading and normal transcript controls remain usable",
+        "T-0191 production browser 1440x900 > Reader large supported font: footer and chapter dots remain reachable",
+        "T-0191 production browser 1440x900 > Reader Next and Previous: long chapter starts below the header and read writes survive",
+        "T-0191 production browser 1440x900 > Reader chapter selection: long chapter starts below the header and read writes survive",
+        "T-0191 production browser 1440x900 > Reader edit refusal: chapter data remains and ready is never announced",
+        "T-0191 production browser 1440x900 > Reader held edit: Stop is reachable, focused and aborts the actual client",
+        "T-0191 production browser 1440x900 > Reader edit success: confirmed content survives completion",
+        "T-0191 production browser 1440x900 > Reader continue refusal: chapter data remains and ready is never announced",
+        "T-0191 production browser 1440x900 > Reader held continue: Stop is reachable, focused and aborts the actual client",
+        "T-0191 production browser 1440x900 > Reader continue success: confirmed content survives completion",
+        "T-0191 production browser 1440x900 > Reader generation plus edit overlap: Stop owns both actual abort signals",
+        "T-0191 production browser 1440x900 > Reader ordinary generate-chapter: physical Stop aborts without a later write or success",
+        "T-0191 production browser 1440x900 > Reader ordinary retry-chapter: physical Stop aborts without a later write or success",
+        "T-0191 production browser 1440x900 > Composer inspector: labelled dropdown, keyboard switches and focus remain usable",
+        "T-0191 production browser 390x844 > Chat empty: composer remains visible and a draft survives the phone sheet",
+        "T-0191 production browser 390x844 > Chat offline: composer remains visible and a draft survives the phone sheet",
+        "T-0191 production browser 390x844 > Chat long transcript: composer remains visible and a draft survives the phone sheet",
+        "T-0191 production browser 390x844 > Credentials: long visible label and rotation controls remain usable",
+        "T-0191 production browser 390x844 > Fallback row 1: long identity and boundary actions are discoverable",
+        "T-0191 production browser 390x844 > Fallback row 2: long identity and boundary actions are discoverable",
+        "T-0191 production browser 390x844 > Fallback row 3: long identity and boundary actions are discoverable",
+        "T-0191 production browser 390x844 > Story card: readable identity, separate phone action row and two-step deletion",
+        "T-0191 production browser 390x844 > Session 404: one heading, Retry and back navigation",
+        "T-0191 production browser 390x844 > Session 500: one heading, Retry and back navigation",
+        "T-0191 production browser 390x844 > Hindsight Directives: full toolbar labels and named keyboard dialog",
+        "T-0191 production browser 390x844 > Hindsight Mental Models: full toolbar labels and named keyboard dialog",
+        "T-0191 production browser 390x844 > Mission selected details: distinct long metadata is readable without hovering",
+        "T-0191 production browser 390x844 > Mission cancellation: settled feedback replaces pending while an unrelated error survives",
+        "T-0191 production browser 390x844 > Session loading and normal transcript controls remain usable",
+        "T-0191 production browser 390x844 > Reader large supported font: footer and chapter dots remain reachable",
+        "T-0191 production browser 390x844 > Reader Next and Previous: long chapter starts below the header and read writes survive",
+        "T-0191 production browser 390x844 > Reader chapter selection: long chapter starts below the header and read writes survive",
+        "T-0191 production browser 390x844 > Reader edit refusal: chapter data remains and ready is never announced",
+        "T-0191 production browser 390x844 > Reader held edit: Stop is reachable, focused and aborts the actual client",
+        "T-0191 production browser 390x844 > Reader edit success: confirmed content survives completion",
+        "T-0191 production browser 390x844 > Reader continue refusal: chapter data remains and ready is never announced",
+        "T-0191 production browser 390x844 > Reader held continue: Stop is reachable, focused and aborts the actual client",
+        "T-0191 production browser 390x844 > Reader continue success: confirmed content survives completion",
+        "T-0191 production browser 390x844 > Reader generation plus edit overlap: Stop owns both actual abort signals",
+        "T-0191 production browser 390x844 > Reader ordinary generate-chapter: physical Stop aborts without a later write or success",
+        "T-0191 production browser 390x844 > Reader ordinary retry-chapter: physical Stop aborts without a later write or success",
+        "T-0191 production browser 390x844 > Composer inspector: labelled dropdown, keyboard switches and focus remain usable",
+        "T-0191 Composer toggle geometry 1440x900 > switch thumbs stay inside their tracks, off left and on right",
+        "T-0191 Composer toggle geometry 390x844 > switch thumbs stay inside their tracks, off left and on right"
+      ],
+      "acceptedDrainAndTransportBytesUnchanged": true,
+      "productionSourceUnchanged": true,
+      "productionFileCount": 867,
+      "authentication": "Unchanged real bootstrap; helper obtains actual context cookies for each preload",
+      "cache": "Per test; exact absolute URL; original explicit handler precedence unchanged",
+      "failure": "All six acquisitions settle; rejected acquisitions propagate in AggregateError. Original success-status assertion retained for each acquisition.",
+      "budgets": "Unchanged request/test/locator deadlines; no retries; setup remains inside test budget",
+      "evidenceBoundary": "Six real responses acquired in fixture setup rather than during component navigation; underlying read latency unresolved",
+      "exposure": "Existing oracle fixture/body and authorised preload brief; no new production implementation reads",
+      "node": "v24.21.0",
+      "playwright": "1.62.1",
+      "validation": {
+        "browserRun": false,
+        "typesLog": "types.log",
+        "lintLog": "lint.log",
+        "typesExitCode": 0,
+        "lintExitCode": 0,
+        "identityProof": "Removing the exact saved insertion reproduces original036 bytes; inherited 58 expanded identities preserved."
+      }
+    },
+    "coordinatorRuntimeReceipt": "tmp/t0191-full-gate-1791053156358/rerun/summary.rerun.json",
+    "boundary": "Exact real seed responses acquired before component interaction. No production latency acceptance.",
+    "reviewer": "Laplace exact source review; final full-gate R2 acceptance still required."
+  },
+  "browser_wheel_amendment": {
+    "candidateSHA256": "b176968e10b9d78fcaba798e286bc55d8cc4b8149b513348c26fe75b6a216279",
+    "provenance": {
+      "author": "Sartre",
+      "authoriser": "Laplace/operator tmp/t0191-wheel-brief.md",
+      "file": "tests/e2e/component-accessibility-responsive.spec.ts",
+      "beforeRawSHA256": "73e8f513b8dcf0dc20ad1b21c4de7f37ac6e34e6c5a50ffdd1f7bbf9259a77c2",
+      "afterRawSHA256": "b176968e10b9d78fcaba798e286bc55d8cc4b8149b513348c26fe75b6a216279",
+      "afterLfSHA256": "b176968e10b9d78fcaba798e286bc55d8cc4b8149b513348c26fe75b6a216279",
+      "changedOnly": [
+        "wheelTo",
+        "fallbackActionReachable"
+      ],
+      "expandedIdentities": [
+        "T-0191 production browser 1440x900 > Chat empty: composer remains visible and a draft survives the phone sheet",
+        "T-0191 production browser 1440x900 > Chat offline: composer remains visible and a draft survives the phone sheet",
+        "T-0191 production browser 1440x900 > Chat long transcript: composer remains visible and a draft survives the phone sheet",
+        "T-0191 production browser 1440x900 > Credentials: long visible label and rotation controls remain usable",
+        "T-0191 production browser 1440x900 > Fallback row 1: long identity and boundary actions are discoverable",
+        "T-0191 production browser 1440x900 > Fallback row 2: long identity and boundary actions are discoverable",
+        "T-0191 production browser 1440x900 > Fallback row 3: long identity and boundary actions are discoverable",
+        "T-0191 production browser 1440x900 > Story card: readable identity, separate phone action row and two-step deletion",
+        "T-0191 production browser 1440x900 > Session 404: one heading, Retry and back navigation",
+        "T-0191 production browser 1440x900 > Session 500: one heading, Retry and back navigation",
+        "T-0191 production browser 1440x900 > Hindsight Directives: full toolbar labels and named keyboard dialog",
+        "T-0191 production browser 1440x900 > Hindsight Mental Models: full toolbar labels and named keyboard dialog",
+        "T-0191 production browser 1440x900 > Mission selected details: distinct long metadata is readable without hovering",
+        "T-0191 production browser 1440x900 > Mission cancellation: settled feedback replaces pending while an unrelated error survives",
+        "T-0191 production browser 1440x900 > Session loading and normal transcript controls remain usable",
+        "T-0191 production browser 1440x900 > Reader large supported font: footer and chapter dots remain reachable",
+        "T-0191 production browser 1440x900 > Reader Next and Previous: long chapter starts below the header and read writes survive",
+        "T-0191 production browser 1440x900 > Reader chapter selection: long chapter starts below the header and read writes survive",
+        "T-0191 production browser 1440x900 > Reader edit refusal: chapter data remains and ready is never announced",
+        "T-0191 production browser 1440x900 > Reader held edit: Stop is reachable, focused and aborts the actual client",
+        "T-0191 production browser 1440x900 > Reader edit success: confirmed content survives completion",
+        "T-0191 production browser 1440x900 > Reader continue refusal: chapter data remains and ready is never announced",
+        "T-0191 production browser 1440x900 > Reader held continue: Stop is reachable, focused and aborts the actual client",
+        "T-0191 production browser 1440x900 > Reader continue success: confirmed content survives completion",
+        "T-0191 production browser 1440x900 > Reader generation plus edit overlap: Stop owns both actual abort signals",
+        "T-0191 production browser 1440x900 > Reader ordinary generate-chapter: physical Stop aborts without a later write or success",
+        "T-0191 production browser 1440x900 > Reader ordinary retry-chapter: physical Stop aborts without a later write or success",
+        "T-0191 production browser 1440x900 > Composer inspector: labelled dropdown, keyboard switches and focus remain usable",
+        "T-0191 production browser 390x844 > Chat empty: composer remains visible and a draft survives the phone sheet",
+        "T-0191 production browser 390x844 > Chat offline: composer remains visible and a draft survives the phone sheet",
+        "T-0191 production browser 390x844 > Chat long transcript: composer remains visible and a draft survives the phone sheet",
+        "T-0191 production browser 390x844 > Credentials: long visible label and rotation controls remain usable",
+        "T-0191 production browser 390x844 > Fallback row 1: long identity and boundary actions are discoverable",
+        "T-0191 production browser 390x844 > Fallback row 2: long identity and boundary actions are discoverable",
+        "T-0191 production browser 390x844 > Fallback row 3: long identity and boundary actions are discoverable",
+        "T-0191 production browser 390x844 > Story card: readable identity, separate phone action row and two-step deletion",
+        "T-0191 production browser 390x844 > Session 404: one heading, Retry and back navigation",
+        "T-0191 production browser 390x844 > Session 500: one heading, Retry and back navigation",
+        "T-0191 production browser 390x844 > Hindsight Directives: full toolbar labels and named keyboard dialog",
+        "T-0191 production browser 390x844 > Hindsight Mental Models: full toolbar labels and named keyboard dialog",
+        "T-0191 production browser 390x844 > Mission selected details: distinct long metadata is readable without hovering",
+        "T-0191 production browser 390x844 > Mission cancellation: settled feedback replaces pending while an unrelated error survives",
+        "T-0191 production browser 390x844 > Session loading and normal transcript controls remain usable",
+        "T-0191 production browser 390x844 > Reader large supported font: footer and chapter dots remain reachable",
+        "T-0191 production browser 390x844 > Reader Next and Previous: long chapter starts below the header and read writes survive",
+        "T-0191 production browser 390x844 > Reader chapter selection: long chapter starts below the header and read writes survive",
+        "T-0191 production browser 390x844 > Reader edit refusal: chapter data remains and ready is never announced",
+        "T-0191 production browser 390x844 > Reader held edit: Stop is reachable, focused and aborts the actual client",
+        "T-0191 production browser 390x844 > Reader edit success: confirmed content survives completion",
+        "T-0191 production browser 390x844 > Reader continue refusal: chapter data remains and ready is never announced",
+        "T-0191 production browser 390x844 > Reader held continue: Stop is reachable, focused and aborts the actual client",
+        "T-0191 production browser 390x844 > Reader continue success: confirmed content survives completion",
+        "T-0191 production browser 390x844 > Reader generation plus edit overlap: Stop owns both actual abort signals",
+        "T-0191 production browser 390x844 > Reader ordinary generate-chapter: physical Stop aborts without a later write or success",
+        "T-0191 production browser 390x844 > Reader ordinary retry-chapter: physical Stop aborts without a later write or success",
+        "T-0191 production browser 390x844 > Composer inspector: labelled dropdown, keyboard switches and focus remain usable",
+        "T-0191 Composer toggle geometry 1440x900 > switch thumbs stay inside their tracks, off left and on right",
+        "T-0191 Composer toggle geometry 390x844 > switch thumbs stay inside their tracks, off left and on right"
+      ],
+      "all58TestBodiesAndAssertionsByteIdentical": true,
+      "transportPreloadDrainBytesUnchanged": true,
+      "productionSourceUnchanged": true,
+      "sourceFileCount": 867,
+      "preservedLimits": {
+        "verticalAttempts": 80,
+        "horizontalAttempts": 16,
+        "verticalWaitMs": 80,
+        "horizontalWaitMs": 150
+      },
+      "approach": "Read-only hit testing; physically expose vertical target band (horizontal container for clipped actions), then wheel horizontally from a point hit inside that container. Record hit target and before/after scroll offsets; explicit bounded failure.",
+      "exposure": [
+        "Existing two helper bodies",
+        "Saved header-occlusion screenshot",
+        "Authorised wheel brief"
+      ],
+      "validation": {
+        "typesExitCode": 0,
+        "lintExitCode": 0,
+        "initialDiagnostic": "Chromium spawn EPERM; infrastructure failure preserved in diagnostic.log",
+        "ownedDiagnosticExitCode": 0,
+        "ownedBrowserClosed": true,
+        "diagnosticCases": [
+          {
+            "name": "original",
+            "result": "expected refusal/failure"
+          },
+          {
+            "name": "candidate",
+            "result": "passed"
+          },
+          {
+            "name": "fixed overlay refusal",
+            "result": "expected refusal/failure"
+          }
+        ],
+        "applicationRun": false
+      },
+      "node": "v24.21.0",
+      "playwright": "1.62.1",
+      "limits": "Synthetic helper control is bounded evidence only; coordinator owns normal six-worker application qualification."
+    },
+    "coordinatorRuntimeReceipt": "tmp/t0191-full-gate-1791054723911/rerun/summary.rerun.json",
+    "boundary": "Read-only hit testing selects exposed points for physical wheel input; same limits and final assertions. No forced or DOM scrolling.",
+    "reviewer": "Laplace exact source review; final full-gate R2 acceptance still required."
   }
 }

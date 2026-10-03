@@ -1,0 +1,201 @@
+{
+  "task": "T-0191",
+  "notes": [
+    "Proposed causal mutants only; no sweep or kill result is recorded here.",
+    "Runner tests entries name whole suites. Review the intended assertion in why; infrastructure/query exceptions alone are not kills.",
+    "Multiline anchors use LF and match the inspected primary source bytes. Repository .gitattributes declares text=auto eol=lf. The runner does not normalise line endings; a CRLF target must be reconciled before a sweep and must never be counted as killed when NOT-APPLIED.",
+    "The runner requires a clean committed candidate and passing unmodified/restored controls. Browser-only clipping, horizontal reachability and responsive geometry are outside this Jest manifest."
+  ],
+  "mutants": [
+    {
+      "id": "m01-clipboard-await",
+      "file": "src/hooks/useCopyToClipboard.ts",
+      "anchor": "await navigator.clipboard.writeText(text);",
+      "replacement": "void navigator.clipboard.writeText(text).catch(() => undefined);",
+      "why": "Intended assertion: T0191 actual Session Copy confirmation does not announce Copied while the clipboard promise is pending. Remove awaiting without introducing an unhandled rejection.",
+      "tests": [
+        "tests/unit/components-chat-markdown.test.tsx"
+      ]
+    },
+    {
+      "id": "m02-link-guard",
+      "file": "src/components/skills/SimpleMarkdown.tsx",
+      "anchor": "parts.push(safeLink(match[2]) ? (",
+      "replacement": "parts.push(true ? (",
+      "why": "Intended assertion: T0191 Chat markdown public contract rejects unsafe or obfuscated scheme data:text/html,unsafe through both public renderers. The rendered href must fail the unsafe-scheme matcher.",
+      "tests": [
+        "tests/unit/components-chat-markdown.test.tsx"
+      ]
+    },
+    {
+      "id": "m03-exact-code-payload",
+      "file": "src/components/skills/SimpleMarkdown.tsx",
+      "anchor": "codeBlockLines.length ? codeBlockLines.join(\"\\n\") + \"\\n\" : \"\"",
+      "replacement": "codeBlockLines.join(\"\\n\").trim()",
+      "why": "Intended assertion: T0191 Chat markdown public contract Copy preserves whitespace and reports refusal=false truthfully. Clipboard payload must preserve leading/trailing whitespace and the final newline.",
+      "tests": [
+        "tests/unit/components-chat-markdown.test.tsx"
+      ]
+    },
+    {
+      "id": "m04-premature-completion",
+      "file": "src/modules/rec-room/components/GenerateOverlay.tsx",
+      "anchor": "if (!visible || !done) return;",
+      "replacement": "if (!visible) return;",
+      "why": "Intended assertion: T0191 truthful Story progress elapsed time never invents percentage or completion for pending work. The pending callback must remain uncalled.",
+      "tests": [
+        "tests/unit/components-progress-feedback.test.tsx"
+      ]
+    },
+    {
+      "id": "m05-obsolete-completion",
+      "file": "src/modules/rec-room/components/GenerateOverlay.tsx",
+      "anchor": "return () => clearTimeout(timeout);",
+      "replacement": "return () => undefined;",
+      "why": "Intended assertions: T0191 truthful Story progress hidden work cannot deliver an obsolete completion; T0191 truthful Story progress unmounted work cannot deliver an obsolete completion.",
+      "tests": [
+        "tests/unit/components-progress-feedback.test.tsx"
+      ]
+    },
+    {
+      "id": "m06-edit-stop-registration",
+      "file": "src/app/recroom/story-weaver/[id]/page.tsx",
+      "anchor": "setEditDone(false);\n    setError(null);\n    const controller = new AbortController();\n    inFlightRef.current.add(controller);",
+      "replacement": "setEditDone(false);\n    setError(null);\n    const controller = new AbortController();",
+      "why": "Intended assertion: T0191 actual Reader edit and continue lifecycle held edit-chapter registers a client abort, clears its overlay and rereads truth neutrally. The request signal must become aborted after Stop.",
+      "tests": [
+        "tests/unit/components-progress-feedback.test.tsx"
+      ]
+    },
+    {
+      "id": "m07-late-abort-publication",
+      "file": "src/app/recroom/story-weaver/[id]/page.tsx",
+      "anchor": "if (controller.signal.aborted) throw new DOMException(\"Aborted\", \"AbortError\");\n      if (!res.ok || d?.error || !Array.isArray(d?.data?.story?.chapters)) throw new Error(d?.error || \"Story write could not be confirmed\");\n      if (d.data?.story) {\n        await publishStory(d.data.story as StoryState);\n        if (controller.signal.aborted) throw new DOMException(\"Aborted\", \"AbortError\");\n        setEditDone(true);",
+      "replacement": "\n      if (!res.ok || d?.error || !Array.isArray(d?.data?.story?.chapters)) throw new Error(d?.error || \"Story write could not be confirmed\");\n      if (d.data?.story) {\n        await publishStory(d.data.story as StoryState);\n        \n        setEditDone(true);",
+      "why": "Intended assertion: T0191 actual Reader edit and continue lifecycle generate plus edit retains Stop when one settles and suppresses late reactivation after Stop. An aborted late edit must not render ready/generating feedback.",
+      "tests": [
+        "tests/unit/components-progress-feedback.test.tsx"
+      ]
+    },
+    {
+      "id": "m08-overlap-loses-owner",
+      "file": "src/app/recroom/story-weaver/[id]/page.tsx",
+      "anchor": "const callSettled = useCallback(() => setInFlight((n) => Math.max(0, n - 1)), []);",
+      "replacement": "const callSettled = useCallback(() => { inFlightRef.current.clear(); setInFlight((n) => Math.max(0, n - 1)); }, []);",
+      "why": "Intended assertion: T0191 actual Reader edit and continue lifecycle edit-first settlement retains operable Stop while generation remains outstanding. Preserve the visible Stop but lose its remaining controller; the explicit signal.aborted matcher must fail.",
+      "tests": [
+        "tests/unit/components-progress-feedback.test.tsx"
+      ]
+    },
+    {
+      "id": "m09-same-chapter-reset",
+      "file": "src/app/recroom/story-weaver/[id]/page.tsx",
+      "anchor": "const handleChapterSelect = async (num: number) => {\n    if (contentRef.current) contentRef.current.scrollTop = 0;",
+      "replacement": "const handleChapterSelect = async (num: number) => {\n    if (contentRef.current && num !== currentChapter) contentRef.current.scrollTop = 0;",
+      "why": "Intended assertion: T0191 actual Reader edit and continue lifecycle reselecting the current chapter resets the reading container to the top. Full handler context distinguishes the other scroll reset. This proves DOM scrollTop assignment, not browser geometry.",
+      "tests": [
+        "tests/unit/components-progress-feedback.test.tsx"
+      ]
+    },
+    {
+      "id": "m10-pending-not-dismissed",
+      "file": "src/hooks/useMissionDispatch.ts",
+      "anchor": "if (typeof dismissPending === \"function\") dismissPending();",
+      "replacement": "void dismissPending;",
+      "why": "Intended assertion: T0191 Mission cancellation owns pending feedback success settlement clears only its pending message before normal expiry [provider=true]. Settled pending feedback must be absent.",
+      "tests": [
+        "tests/unit/components-progress-feedback.test.tsx"
+      ]
+    },
+    {
+      "id": "m11-dismisses-other-owners",
+      "file": "src/components/providers/FeedbackProvider.tsx",
+      "anchor": "return () => setToasts((stack) => stack.filter((toast) => toast.id !== id));",
+      "replacement": "return () => setToasts([]);",
+      "why": "Intended assertion: T0191 later Mission cancellation keeps its pending feedback when an earlier operation settles. Inspect the newer pending-message matcher; an unrelated missing-text query exception alone is not a causal kill.",
+      "tests": [
+        "tests/unit/components-progress-feedback.test.tsx"
+      ]
+    },
+    {
+      "id": "m12-label-association",
+      "file": "src/components/ui/field/Field.tsx",
+      "anchor": "htmlFor={controlId}",
+      "replacement": "htmlFor={undefined}",
+      "why": "Intended assertion: T-0162 \u00b7 house controls keep visible labels associated TextInput associates its own label with the textbox. Use the static-markup forId matcher rather than treating a rendered getByRole exception as a kill.",
+      "tests": [
+        "tests/unit/t0162-house-control-names.test.tsx"
+      ]
+    },
+    {
+      "id": "m13-description-link",
+      "file": "src/components/ui/field/Field.tsx",
+      "anchor": "\"aria-describedby\": described,",
+      "replacement": "\"aria-describedby\": undefined,",
+      "why": "Intended assertion: T0191 primitive parity legacy text keeps its name and description after external reset. The named textbox must lose its accessible description.",
+      "tests": [
+        "tests/unit/components-primitive-parity.test.tsx"
+      ]
+    },
+    {
+      "id": "m14-disabled-forwarding",
+      "file": "src/components/ui/field/Toggle.tsx",
+      "anchor": "        disabled={disabled}",
+      "replacement": "        disabled={false}",
+      "why": "Intended assertion: T0191 primitive parity labelled inspector track retains hint, disabled state and exactly one callback. Eight-space indentation uniquely selects the labelled wrapper forwarding; disabled clicks must not add a callback.",
+      "tests": [
+        "tests/unit/components-primitive-parity.test.tsx"
+      ]
+    },
+    {
+      "id": "m15-empty-is-zero",
+      "file": "src/components/ui/field/NumberInput.tsx",
+      "anchor": "emit(null);",
+      "replacement": "emit(0);",
+      "why": "Intended assertion: T0191 primitive parity numeric edit \"\" retains description and resets from the external value. Empty input must emit null, not zero.",
+      "tests": [
+        "tests/unit/components-primitive-parity.test.tsx"
+      ]
+    },
+    {
+      "id": "m16-upper-clamp",
+      "file": "src/components/ui/field/NumberInput.tsx",
+      "anchor": "if (max !== undefined && clamped > max) clamped = max;",
+      "replacement": "if (max !== undefined && clamped > max) clamped = numeric;",
+      "why": "Intended assertion: T0191 primitive parity numeric edit \"999\" retains description and resets from the external value. Blur must emit the declared maximum 120.",
+      "tests": [
+        "tests/unit/components-primitive-parity.test.tsx"
+      ]
+    },
+    {
+      "id": "m17-bot-falls-back",
+      "file": "src/components/ui/TemplateCard.tsx",
+      "anchor": "Sparkles, Clock, Bot,",
+      "replacement": "Sparkles, Clock, Bot: Zap,",
+      "why": "Intended assertion: T0191 collection action identities template stored icon Bot preserves identity and selection. The rendered SVG must match the independent Bot constructor.",
+      "tests": [
+        "tests/unit/components-collection-actions.test.tsx"
+      ]
+    },
+    {
+      "id": "m18-skill-action-misroute",
+      "file": "src/components/skills/SkillRowList.tsx",
+      "anchor": "onToggle={() => rowActions.onToggleSkill(skill)}",
+      "replacement": "onToggle={() => rowActions.onViewSkill(skill)}",
+      "why": "Intended assertion: INV-4 every existing action survives the restructure enabling an inactive skill asks the API to ENABLE it. The actual page must send the exact toggle endpoint, not route the action to View.",
+      "tests": [
+        "tests/unit/skills-catalogue-restructure.test.tsx"
+      ]
+    },
+    {
+      "id": "m19-stop-revives-completed-overlay",
+      "file": "src/app/recroom/story-weaver/[id]/page.tsx",
+      "anchor": "if (editDone) { setEditing(false); setEditDone(false); }",
+      "replacement": "void editDone;",
+      "why": "Immediate and interval neutrality after edit-first success and generation Stop; preserve confirmed edited content rather than reactivate the ready overlay. Intended assertion: aborted generation after a confirmed edit restores the Reader immediately without transient ready feedback.",
+      "tests": [
+        "tests/unit/components-progress-feedback.test.tsx"
+      ]
+    }
+  ]
+}

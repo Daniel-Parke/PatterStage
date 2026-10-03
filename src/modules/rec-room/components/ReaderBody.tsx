@@ -125,7 +125,7 @@ export default function ReaderBody({
         spend={spend}
       />
 
-      <div className="flex flex-1" style={{ height: "calc(100vh - 72px)" }}>
+      <div className="flex flex-1 min-h-0">
         {sidebarOpen && !narrow && (
           <aside
             aria-label="Chapters"
@@ -138,7 +138,7 @@ export default function ReaderBody({
           </aside>
         )}
 
-        <div className="flex flex-1 flex-col overflow-hidden">
+        <div className="flex flex-1 min-w-0 min-h-0 flex-col overflow-hidden">
           <ChapterReader
             contentRef={contentRef}
             chapterContent={chapterContent}

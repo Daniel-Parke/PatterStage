@@ -670,10 +670,10 @@ function CanvasInner({ workflows, onSaved }: { workflows: ComposerWorkflow[]; on
                 );
               })()
             ) : null}
-            <div className="flex flex-wrap gap-2">
-              <Toggle label="HIL gate" checked={node.data.gate === "hil"} onChange={(c) => patchNode(node.id, { gate: c ? "hil" : "auto" })} />
-              <Toggle label="Start" checked={node.data.isStart} onChange={(c) => patchNode(node.id, { isStart: c })} />
-              <Toggle label="End" checked={node.data.isTerminal} onChange={(c) => patchNode(node.id, { isTerminal: c })} />
+            <div className="space-y-2">
+              <Toggle label="HIL gate" value={node.data.gate === "hil"} onChange={(c) => patchNode(node.id, { gate: c ? "hil" : "auto" })} />
+              <Toggle label="Start" value={node.data.isStart} onChange={(c) => patchNode(node.id, { isStart: c })} />
+              <Toggle label="End" value={node.data.isTerminal} onChange={(c) => patchNode(node.id, { isTerminal: c })} />
             </div>
             <Button variant="secondary" color="pink" size="sm" onClick={deleteSelected}><Trash2 className="h-3.5 w-3.5" /> Delete stage</Button>
           </Card>

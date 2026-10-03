@@ -8,7 +8,7 @@
 // Per the project's two-step-confirm convention, the auto-dismiss is
 // 4000ms (matches the rest of the codebase: dashboard's mission
 // cancel, log page's clear-all, etc.). The hook's `useTwoStepConfirm`
-// instance is created inside the parent row, so each row owns its
+// instance is created inside this button, so each rendered button owns its
 // own armed state — a stale "armed" state from one row can't
 // accidentally fire when the user clicks a different row's delete
 // button minutes later (the `isArmedFor(id)` check gates the confirm

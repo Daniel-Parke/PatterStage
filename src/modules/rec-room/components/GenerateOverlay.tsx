@@ -1,111 +1,71 @@
-// GenerateOverlay — Loading overlay with smooth progress bar and fun messages
 "use client";
+
 import { useState, useEffect, useRef } from "react";
 import { Sparkles, CheckCircle2 } from "lucide-react";
-
+import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
-import { statusToneClasses } from "@/lib/ui/theme";
+import Dialog from "@/components/ui/Dialog";
 import { LOADING_MESSAGES } from "@/modules/rec-room/lib/prompts";
 
 interface GenerateOverlayProps {
   title: string;
   visible: boolean;
-  done: boolean; // Parent signals when generation is complete
+  done: boolean;
   onComplete?: () => void;
+  onStop?: () => void;
 }
 
-export default function GenerateOverlay({ title, visible, done, onComplete }: GenerateOverlayProps) {
-  const [msg, setMsg] = useState(LOADING_MESSAGES[0]);
-  const [progress, setProgress] = useState(0);
-  const [phase, setPhase] = useState<"generating" | "complete">("generating");
-  const startTimeRef = useRef(0);
-  const msgIndexRef = useRef(0);
+export default function GenerateOverlay({ title, visible, done, onComplete, onStop }: GenerateOverlayProps) {
+  const [messageIndex, setMessageIndex] = useState(0);
+  const completion = useRef(onComplete);
+  useEffect(() => { completion.current = onComplete; }, [onComplete]);
 
-  // Reset on visibility change
   useEffect(() => {
-    if (visible) {
-      setProgress(0);
-      setPhase("generating");
-      startTimeRef.current = Date.now();
-      msgIndexRef.current = 0;
-    }
-  }, [visible]);
-
-  // When parent signals done, snap to 100% and show success
-  useEffect(() => {
-    if (done && phase === "generating") {
-      setProgress(100);
-      setPhase("complete");
-    }
-  }, [done, phase]);
-
-  // Message rotation — 5 seconds per message
-  useEffect(() => {
-    if (!visible || phase !== "generating") return;
-    const interval = setInterval(() => {
-      msgIndexRef.current = (msgIndexRef.current + 1) % LOADING_MESSAGES.length;
-      setMsg(LOADING_MESSAGES[msgIndexRef.current]);
-    }, 5000);
+    if (!visible) return;
+    setMessageIndex(0);
+    if (done) return;
+    const interval = setInterval(() => setMessageIndex(index => (index + 1) % LOADING_MESSAGES.length), 5000);
     return () => clearInterval(interval);
-  }, [visible, phase]);
+  }, [visible, done]);
 
-  // Smooth progress bar with ease-out curve — 90s to ~85%
   useEffect(() => {
-    if (!visible || phase !== "generating") return;
-    const interval = setInterval(() => {
-      const elapsed = Date.now() - startTimeRef.current;
-      // Ease-out curve: fast start, gradual slowdown
-      // Reaches ~85% at 90 seconds
-      const t = Math.min(elapsed / 90000, 1); // normalised 0-1 over 90s
-      const eased = 1 - Math.pow(1 - t, 2.5); // ease-out
-      const target = eased * 85;
-      // Subtle noise to feel organic (±1.5%)
-      const noise = (Math.random() - 0.5) * 3;
-      setProgress((prev) => Math.min(90, Math.max(prev, target + noise)));
-    }, 300);
-    return () => clearInterval(interval);
-  }, [visible, phase]);
-
-  // After showing success for 2s, call onComplete to navigate
-  useEffect(() => {
-    if (phase === "complete" && onComplete) {
-      const timeout = setTimeout(onComplete, 2000);
-      return () => clearTimeout(timeout);
-    }
-  }, [phase, onComplete]);
+    if (!visible || !done) return;
+    const timeout = setTimeout(() => completion.current?.(), 2000);
+    return () => clearTimeout(timeout);
+  }, [visible, done]);
 
   if (!visible) return null;
 
-  return (
-    // Not a dialog: there is nothing to focus and nothing to close. It is a
-    // live status the screen reader should announce as it changes, and the
-    // Stop control that B14 adds will make it one (T-0096, D116).
-    // design-lint-disable-next-line overlay-uses-dialog-a11y -- a progress status with no controls, announced via role=status rather than trapped as a dialog
-    <div className="fixed inset-0 z-overlay flex items-center justify-center bg-ps-surface-ground/90 backdrop-blur-sm" role="status" aria-live="polite" aria-busy={phase === "generating"}>
-      <Card padding="lg" className="mx-4 w-full max-w-md text-center">
-        {phase === "generating" ? (
-          <>
-            <Sparkles className="w-12 h-12 text-neon-purple animate-pulse mx-auto mb-6" />
-            <h2 className="text-title font-serif text-ps-text-primary mb-1">{title || "Your Story"}</h2>
-            <p className="text-body text-ps-text-muted mb-6 h-5 transition-opacity">{msg}</p>
-          </>
-        ) : (
-          <>
-            <CheckCircle2 className="w-12 h-12 text-neon-green mx-auto mb-6" />
-            <h2 className="text-title font-serif text-ps-text-primary mb-1">{title || "Your Story"}</h2>
-            <p className="text-body text-neon-green mb-6">Your story is ready!</p>
-          </>
-        )}
+  const content = (
+    <div role="status" aria-live="polite" aria-busy={!done} className="text-center">
+      {done ? (
+        <CheckCircle2 className="w-12 h-12 text-neon-green mx-auto mb-6" aria-hidden="true" />
+      ) : (
+        <Sparkles className="w-12 h-12 text-neon-purple animate-pulse mx-auto mb-6" aria-hidden="true" />
+      )}
+      <h2 className="text-title font-serif text-ps-text-primary mb-1">{title || "Your Story"}</h2>
+      <p className={`text-body mb-6 ${done ? "text-neon-green" : "text-ps-text-muted"}`}>
+        {done ? "Your story is ready!" : LOADING_MESSAGES[messageIndex]}
+      </p>
+      {!done && <p className="text-micro font-mono text-ps-text-faint">Waiting for confirmed results</p>}
+    </div>
+  );
 
-        {/* Progress bar */}
-        <div className="w-full h-2.5 rounded-full bg-ps-surface-raised mb-6 overflow-hidden">
-          <div className={`h-full rounded-full transition-all duration-500 ${
-            phase === "complete" ? statusToneClasses.ok.dot : "bg-gradient-to-r from-neon-purple to-neon-pink"
-          }`} style={{ width: `${progress}%` }} />
+  if (onStop && !done) {
+    return (
+      <Dialog open onClose={onStop} ariaLabel={`Writing ${title || "your story"}`} size="sm">
+        {content}
+        <div className="flex justify-center mt-4">
+          <Button onClick={onStop}>Stop</Button>
         </div>
+      </Dialog>
+    );
+  }
 
-        <p className="text-micro font-mono text-ps-text-faint">{Math.round(progress)}%</p>
-      </Card>
+  return (
+    // design-lint-disable-next-line overlay-uses-dialog-a11y -- no controls: create progress or the confirmed completion delay is a live status; cancellable work uses Dialog above
+    <div className="fixed inset-0 z-overlay flex items-center justify-center bg-ps-surface-ground/90 backdrop-blur-sm">
+      <Card padding="lg" className="mx-4 w-full max-w-md">{content}</Card>
     </div>
   );
 }

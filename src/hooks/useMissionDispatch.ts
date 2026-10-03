@@ -278,7 +278,11 @@ export function useMissionDispatch({
           : current,
       );
     };
-    showToast("Cancelling mission…", "info");
+    const dismissPending = showToast("Cancelling mission…", "info");
+    const showOutcome: ToastFn = (message, type) => {
+      if (typeof dismissPending === "function") dismissPending();
+      return showToast(message, type);
+    };
     updateMission(id, (m) => ({
       ...m,
       status: "failed" as const,
@@ -288,7 +292,7 @@ export function useMissionDispatch({
       "cancel",
       { missionId: id },
       {
-        showToast,
+        showToast: showOutcome,
         setBusy: (busy) => setCancellingMissionId(busy ? id : null),
         successMessage: "Mission cancelled",
         errorMessage: "Failed to cancel mission",

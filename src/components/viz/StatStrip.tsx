@@ -2,7 +2,7 @@
 
 // Reusable insights strip: an optional status donut, a row of animated count-up
 // tiles, and an optional progress ring. Pages compute their own slice and drop
-// this in (see MissionInsights, SessionInsights, LogInsights). Layout collapses
+// this in (see MemoryInsights, SessionInsights, LogInsights). Layout collapses
 // gracefully when the donut or ring is omitted.
 
 import type { ReactNode } from "react";

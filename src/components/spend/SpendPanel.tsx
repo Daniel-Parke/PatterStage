@@ -28,7 +28,7 @@ import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import { Input } from "@/components/ui/field";
 import { NativeSelect } from "@/components/ui/field/Select";
-import { InlineToggle } from "@/components/ui/Input";
+import { InlineToggle } from "@/components/ui/field";
 import { neonAlpha } from "@/components/viz/colors";
 import { sectionHeadingClasses } from "@/lib/ui/theme";
 import {

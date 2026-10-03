@@ -121,7 +121,7 @@ export function sourceMeta(source: string): SourceMeta {
 
 // ── Session title helper ────────────────────────────────────
 //
-// `formatSessionTitle` lives in src/lib/session-title.ts and is
+// `formatSessionTitle` lives in src/lib/sessions/session-title.ts and is
 // imported directly by consumers. This file used to re-export it
 // for backward compatibility, but every consumer has been migrated
 // to import from the canonical location.

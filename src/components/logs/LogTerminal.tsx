@@ -24,7 +24,7 @@ import type { RefObject } from "react";
 import { LogRow } from "@/components/logs/LogRow";
 import { Panel } from "@/components/dashboard/Panel";
 import { useId } from "react";
-import { InlineToggle } from "@/components/ui/Input";
+import { InlineToggle } from "@/components/ui/field";
 import { InlineSelect } from "@/components/ui/Select";
 
 const LINE_COUNTS = [100, 200, 500, 1000].map((n) => ({ value: String(n), label: `${n} lines` }));

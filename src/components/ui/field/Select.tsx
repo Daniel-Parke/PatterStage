@@ -26,6 +26,7 @@ export function Select({
   disabled = false,
   ariaLabel,
   id,
+  "aria-describedby": describedBy,
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -34,6 +35,7 @@ export function Select({
   disabled?: boolean;
   ariaLabel?: string;
   id?: string;
+  "aria-describedby"?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
@@ -95,6 +97,7 @@ export function Select({
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label={ariaLabel}
+        aria-describedby={describedBy}
         onClick={() => !disabled && setOpen((o) => !o)}
         onKeyDown={onKeyDown}
         className="flex w-full items-center justify-between gap-2 rounded-ps-md border border-ps-edge bg-ps-surface-panel px-3 py-2 text-left text-body text-ps-text-primary transition-colors hover:border-ps-edge-emphasis disabled:cursor-not-allowed disabled:opacity-40"

@@ -8,7 +8,7 @@
 "use client";
 
 import { Activity, AlertTriangle, EyeOff, Filter, Layers } from "lucide-react";
-import { SearchInput } from "@/components/ui/Input";
+import { SearchInput } from "@/components/ui/field";
 import { LiveDot } from "@/components/ui/LiveDot";
 import { sourceMeta } from "@/components/session/constants";
 import { SESSION_STATUS_LABELS } from "@/lib/ui/status-labels";

@@ -251,3 +251,12 @@ are recorded in `org/reviews/2026-09-refactor-addendum.md`.
   v1.0.0 and defer T-0200 retirement. Q-032 permits the other approved
   consolidation before release. The separate item-specific retirement
   promise remains; T-0200 is not silently marked implemented or removed.
+
+- Q-034 (test identity): may critic-09 retire the four dynamically generated
+  RGB mirror-format cases alongside the four explicitly ruled unused declarations?
+  Answer, from the operator on 2026-10-03: approve these four test retirements.
+  The unchanged lockbook-token suite still checks every retained and future mirror,
+  its non-vacuity guard and the code mirror. Four new component-oracle cases prove
+  the removed declarations remain absent. T-0191 records the original identities
+  and results; this adds four exact exceptions to its two Schedule retirements,
+  not authority to weaken a failing check or retire other tests.

@@ -26,17 +26,21 @@ import {
 } from "@/lib/skills/skills-page-helpers";
 import type { Skill } from "@/types/console";
 
-export interface SkillRowListProps {
-  /** Every skill in this bucket. The window is taken here, not by the caller. */
-  skills: Skill[];
-  page: number;
-  onPageChange: (page: number) => void;
+export interface SkillRowActions {
   toggling: Record<string, boolean>;
   expandedSkill: string | null;
   skillContent: string;
   onToggleSkill: (skill: Skill) => void;
   onViewSkill: (skill: Skill) => void;
   onEditSkill: (skill: Skill) => void;
+}
+
+export interface SkillRowListProps {
+  /** Every skill in this bucket. The window is taken here, not by the caller. */
+  skills: Skill[];
+  page: number;
+  onPageChange: (page: number) => void;
+  rowActions: SkillRowActions;
   /** Name each row's category: the search results, where the rows are out of theirs. */
   showCategory?: boolean;
 }
@@ -45,12 +49,7 @@ export function SkillRowList({
   skills,
   page,
   onPageChange,
-  toggling,
-  expandedSkill,
-  skillContent,
-  onToggleSkill,
-  onViewSkill,
-  onEditSkill,
+  rowActions,
   showCategory = false,
 }: SkillRowListProps) {
   const pages = pageCount(skills.length);
@@ -68,14 +67,14 @@ export function SkillRowList({
             // Per skill, never per section. The Inactive grid used to pass a
             // negated fallback down instead, which meant the toggle on an
             // inactive skill computed its "current" state as ENABLED.
-            enabled={effectiveSkillEnabled(skill, toggling)}
-            isExpanded={expandedSkill === skill.name}
-            isPending={skill.name in toggling}
+            enabled={effectiveSkillEnabled(skill, rowActions.toggling)}
+            isExpanded={rowActions.expandedSkill === skill.name}
+            isPending={skill.name in rowActions.toggling}
             showCategory={showCategory}
-            onToggle={() => onToggleSkill(skill)}
-            onView={() => onViewSkill(skill)}
-            onEdit={() => onEditSkill(skill)}
-            expandedContent={expandedSkill === skill.name ? skillContent : undefined}
+            onToggle={() => rowActions.onToggleSkill(skill)}
+            onView={() => rowActions.onViewSkill(skill)}
+            onEdit={() => rowActions.onEditSkill(skill)}
+            expandedContent={rowActions.expandedSkill === skill.name ? rowActions.skillContent : undefined}
           />
         ))}
       </Panel>

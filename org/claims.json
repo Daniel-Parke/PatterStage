@@ -50,6 +50,15 @@
         "src/modules/rec-room/components/StoryReaderOverlays.tsx",
         "src/app/recroom/story-weaver/[id]/page.tsx",
         "src/components/missions/MissionEditorPanel.tsx",
+        "tests/unit/components-contextual-controls.test.tsx",
+        "tests/unit/components-primitive-parity.test.tsx",
+        "tests/unit/components-collection-actions.test.tsx",
+        "tests/unit/components-chat-markdown.test.tsx",
+        "tests/unit/components-progress-feedback.test.tsx",
+        "tests/unit/components-token-preservation.test.tsx",
+        "tests/unit/u0-the-gate-sees-what-it-claims.test.ts",
+        "tests/unit/u2-the-contrast-gate-refuses.test.ts",
+        "tests/unit/components/schedule/SchedulePicker.test.tsx",
         "org/tasks/T-0191.json",
         "org/claims.json",
         "org/briefs/T-0191-oracle.md",
@@ -74,14 +83,6 @@
         "src/components/models/PerRowDeleteButton.tsx",
         "src/components/missions/MissionCreateForm.tsx",
         "org/reviews/2026-10-t0191-unit-oracle-provenance.json",
-        "tests/unit/components-contextual-controls.test.tsx",
-        "tests/unit/components-primitive-parity.test.tsx",
-        "tests/unit/components-collection-actions.test.tsx",
-        "tests/unit/components-chat-markdown.test.tsx",
-        "tests/unit/components-token-preservation.test.tsx",
-        "tests/unit/u0-the-gate-sees-what-it-claims.test.ts",
-        "tests/unit/u2-the-contrast-gate-refuses.test.ts",
-        "tests/unit/components/schedule/SchedulePicker.test.tsx",
         "src/components/auth/SessionManager.tsx",
         "src/components/config/ConfigField.tsx",
         "src/components/memory/MemoryProviderSettings.tsx",
@@ -103,12 +104,16 @@
         "tests/unit/b7-memory-empty-states.test.tsx",
         "tests/unit/field-kit.test.tsx",
         "tests/unit/t0162-house-control-names.test.tsx",
-        "tests/e2e/component-accessibility-responsive.spec.ts",
-        "tests/unit/components-progress-feedback.test.tsx"
+        "docs/contributing/repo-guide.md",
+        "src/app/work/chat/page.tsx",
+        "src/components/models/ModelEditor.tsx",
+        "src/app/recroom/story-weaver/layout.tsx",
+        "org/QUESTIONS.md",
+        "tests/e2e/component-accessibility-responsive.spec.ts"
       ],
-      "acquired": "2026-10-03T12:59:58.432606+00:00",
-      "expires": "2026-10-04T12:13:29.785227+00:00"
+      "acquired": "2026-10-03T18:36:48.186145+00:00",
+      "expires": "2026-10-04T18:36:48.186145+00:00"
     }
   ],
-  "note": "Independent authors released. Exact originalAPI candidates integrated; final freeze acceptance pending. No production implementation."
+  "note": "Independently reviewed browser wheel-helper amendment integrated after passing normal six-worker affected suite. Coordinator owns full verification; production latency remains unresolved in T-0192."
 }

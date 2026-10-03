@@ -18,7 +18,7 @@ import { ChevronDown, Edit3, X } from "lucide-react";
 
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
-import { InlineToggle } from "@/components/ui/Input";
+import { InlineToggle } from "@/components/ui/field";
 import { LedgerRow } from "@/components/dashboard/LedgerRow";
 import type { Skill } from "@/types/console";
 

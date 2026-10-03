@@ -23,8 +23,7 @@ import { Plug } from "lucide-react";
 
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
-import { Field, Input } from "@/components/ui/field";
-import { Select } from "@/components/ui/Input";
+import { Field, Input, Select } from "@/components/ui/field";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import { useToast } from "@/components/ui/Toast";
 import { useApiResource } from "@/hooks/useApiResource";
@@ -269,12 +268,13 @@ export default function MemoryProviderSettings({
           the enabled flag already says, and two controls for one decision is
           how they come to disagree. */}
       <div className="mb-3">
-        <Select
-          label="Provider"
-          value={chosenType ?? row?.type ?? FALLBACK_ROW.type}
-          onChange={(v) => setChosenType(v as MemoryProviderType)}
-          options={SELECTABLE_PROVIDERS.map((p) => p.type)}
-        />
+        <Field label="Provider">
+          <Select
+            value={chosenType ?? row?.type ?? FALLBACK_ROW.type}
+            onChange={(v) => setChosenType(v as MemoryProviderType)}
+            options={SELECTABLE_PROVIDERS.map((p) => ({ value: p.type, label: p.type }))}
+          />
+        </Field>
         <p className="mt-1 text-body text-ps-text-faint">
           Which memory backend the agent uses. Saving a different one switches
           the agent over and writes it into its configuration.

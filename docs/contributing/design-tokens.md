@@ -354,9 +354,11 @@ choice: `GlowSurface` sets the triplet inline as `--glow-surface-rgb`, and
 `globals.css` reads it back as `rgb(var(--glow-surface-rgb) / <alpha>)`. That is
 the CSS Color 4 slash-alpha form, which rejects the legacy comma syntax, so a
 comma triplet yields a glow that silently does not render. This file said
-"comma-separated" until 2026-08-30. The `--ps-rgb-*` mirrors in `globals.css` are
-spelled the same way for the same reason. If you change an `@theme` neon hex,
-update `GLOW_RGBS` and the matching `--ps-rgb-*` in the same PR.
+"comma-separated" until 2026-08-30. The retained `--ps-rgb-neon-cyan` token in
+`globals.css` uses the same format for the current-run glow in WorkflowRunCanvas.
+If you change an `@theme` neon hex, update `GLOW_RGBS`; a cyan change must also
+update `--ps-rgb-neon-cyan`. The unused purple, green, pink and orange RGB mirrors
+were removed in T-0191. Their accent colours remain available through the theme.
 
 **Restraint (deep-space Cherenkov):** glow is the live signature and nothing else. `pulse-glow` and `glow-surface` are reserved for **live/active** states (a running process, a live session, a status dot that is on), never for a static card; the five hard-coded `.glow-<colour>` classes that once painted cards went in T-0120 and their nine call sites moved onto `GlowSurface`. New surfaces follow the same discipline: cyan (Cherenkov) is *the* primary; the other accents (purple/green/pink/orange) are semantic, not decorative. Keep few competing accents per screen.
 
@@ -364,8 +366,12 @@ update `GLOW_RGBS` and the matching `--ps-rgb-*` in the same PR.
 
 A form control is the Field Kit, `src/components/ui/field`: `Field` (the only
 label, associated to its control by construction), `Input`, `Textarea`,
-`Select` (the accessible listbox) and `Toggle`, at one control height, with
-captions above. None of them paints a focus ring of its own; the global ring
+`Select` (the accessible listbox), `Toggle`, `InlineToggle`, `SearchInput` and
+`NumberInput`. Use `Field` with `Input` for a labelled text input; the former
+`ui/Input` module has been consolidated into this kit. NumberInput preserves
+empty values and clamps declared bounds on blur. Select and Picker remain
+separate controls, each with a contextual accessible name.
+None of them paints a focus ring of its own; the global ring
 below is the ring. `inputFieldClasses(accent)` in `src/lib/ui/theme.ts` still
 exists for the seven sites that predate the kit; do not add an eighth.
 

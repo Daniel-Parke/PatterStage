@@ -1,16 +1,16 @@
 {
-  "measuredAt": "2026-10-02",
+  "measuredAt": "2026-10-03",
   "counts": {
-    "srcLines": 102378,
-    "testLines": 145150,
+    "srcLines": 102132,
+    "testLines": 147075,
     "scriptsLines": 13667,
-    "srcRepeatedWindowLines": 895,
+    "srcRepeatedWindowLines": 807,
     "testRepeatedWindowLines": 4796,
     "routesWithTryCatch": 18,
     "handRolledReadHooks": 2,
     "writeHooksWithoutMutation": 0,
     "repeatedTypeShapeFiles": 2,
-    "oneImporterComponents": 104,
+    "oneImporterComponents": 103,
     "libRootFiles": 6,
     "commentEssays": 9,
     "suitesMockingDbInline": 15
@@ -1190,6 +1190,36 @@
       "measuredAt": "2026-10-02",
       "rise": "testLines rose from 145129 to 145150",
       "reason": "T-0190 independent mutation-test strengthening preserves50cases and adds3HTTP200 Hindsight fallback/recovery controls;21test lines, unchanged4796duplicate windows and4800C4ceiling. Fixed programme targets remain unchanged."
+    },
+    {
+      "measuredAt": "2026-10-03",
+      "rise": "testLines rose from 145150 to 146855",
+      "reason": "T-0191: 1705 net test lines add the independently authored component oracle and accepted additive lifecycle, label, reselection and geometry regressions; original identities are preserved except the two separately ruled Schedule retirements. Source shrinks250 lines, repeated source coverage shrinks88, test repeated coverage stays4796. Fixed programme targets unchanged."
+    },
+    {
+      "measuredAt": "2026-10-03",
+      "rise": "srcLines rose from 102128 to 102132",
+      "reason": "T-0191 independent R2 found transient ready feedback after Stop; accepted red-first regression adds41 test lines. Four source lines clear completed feedback and guard post-publication cancellation; confirmed edits survive. No fixed target or coverage floor changes."
+    },
+    {
+      "measuredAt": "2026-10-03",
+      "rise": "testLines rose from 146855 to 146896",
+      "reason": "T-0191 independent R2 found transient ready feedback after Stop; accepted red-first regression adds41 test lines. Four source lines clear completed feedback and guard post-publication cancellation; confirmed edits survive. No fixed target or coverage floor changes."
+    },
+    {
+      "measuredAt": "2026-10-03",
+      "rise": "testLines rose from 146896 to 146947",
+      "reason": "T-0191: 51 independently authored browser-fixture lifecycle lines preserve all 58 cases, explicitly drain active handlers before interception removal, and retain route failures; Playwright 1.62.1 premature fallback reproduced and normal six-worker run passed."
+    },
+    {
+      "measuredAt": "2026-10-03",
+      "rise": "testLines rose from 146947 to 147031",
+      "reason": "T-0191 independently reviewed fixture-only fresh-socket transport and six real seed preloads preserve 58 case bodies, assertions and deadlines; normal six-worker receipt1791053156358 passes58. Extra test infrastructure lines address proven transport/reset and fixture timing defects; production latency remains T-0192 unresolved."
+    },
+    {
+      "measuredAt": "2026-10-03",
+      "rise": "testLines rose from 147031 to 147075",
+      "reason": "T-0191 independent physical-wheel helper correction verifies exposed hit targets before gestures, preserving58case bodies,80/16limits,waits and finalgeometry assertions. Synthetic original-red/candidate-green/overlay-refusal and normal6worker58pass receipt1791054723911. Added test instrumentation records hit targets and offsets; no sourcegrowth or fixedtarget change."
     }
   ]
 }

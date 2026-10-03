@@ -38,7 +38,7 @@
 
 "use client";
 
-import { useContext, useEffect, useState, useCallback, useMemo } from "react";
+import { useContext, useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Check, AlertCircle, Info, X } from "lucide-react";
 
@@ -88,6 +88,9 @@ export function ToastView({
 }: ToastProps) {
   const [visible, setVisible] = useState(true);
   const [mounted, setMounted] = useState(false);
+  const closeRef = useRef(onClose);
+  useEffect(() => { closeRef.current = onClose; }, [onClose]);
+  const exitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const config = typeConfig[type];
   const Icon = config.icon;
 
@@ -95,16 +98,22 @@ export function ToastView({
   // appears, and four seconds is not a reading.
   const persists = type === "error";
 
-  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    setMounted(true);
+    return () => { if (exitTimer.current) clearTimeout(exitTimer.current); };
+  }, []);
+
+  const close = useCallback(() => {
+    if (exitTimer.current) return;
+    setVisible(false);
+    exitTimer.current = setTimeout(() => closeRef.current(), 200);
+  }, []);
 
   useEffect(() => {
     if (persists) return;
-    const timer = setTimeout(() => {
-      setVisible(false);
-      setTimeout(onClose, 200);
-    }, duration);
+    const timer = setTimeout(close, duration);
     return () => clearTimeout(timer);
-  }, [duration, onClose, persists]);
+  }, [duration, close, persists]);
 
   const node = (
     <div
@@ -127,10 +136,7 @@ export function ToastView({
       <button
         type="button"
         aria-label="Dismiss notification"
-        onClick={() => {
-          setVisible(false);
-          setTimeout(onClose, 200);
-        }}
+        onClick={close}
         className="ml-2 p-0.5 rounded-ps-sm hover:bg-ps-surface-raised transition-colors"
       >
         <X className="w-3 h-3" aria-hidden="true" />
@@ -180,6 +186,8 @@ interface ToastState {
   id: number;
 }
 
+let nextLocalToastId = 1;
+
 /**
  * Prefer destructuring `{ showToast, toastElement }` — the returned object is
  * not referentially stable when toasts mount/unmount.
@@ -197,13 +205,18 @@ export function useToast(duration = 4000) {
   const showToast = useCallback(
     (message: string, type: ToastType = "success") => {
       setLastResult({ message, type, at: new Date() });
-      if (shell) shell.showToast(message, type);
-      else setToast({ message, type, id: Date.now() });
+      if (shell) return shell.showToast(message, type);
+      const id = nextLocalToastId++;
+      setToast({ message, type, id });
+      return () => setToast((current) => current?.id === id ? null : current);
     },
     [shell],
   );
 
-  const handleClose = useCallback(() => setToast(null), []);
+  const toastId = toast?.id;
+  const handleClose = useCallback(() => {
+    setToast((current) => current?.id === toastId ? null : current);
+  }, [toastId]);
 
   const toastElement = useMemo(
     () =>

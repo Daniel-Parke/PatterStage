@@ -45,7 +45,7 @@ export default function StoryWeaverLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className={`${literata.variable} ${ebGaramond.variable} ${lora.variable} ${merriweather.variable}`}>
+    <div className={`h-full min-h-0 ${literata.variable} ${ebGaramond.variable} ${lora.variable} ${merriweather.variable}`}>
       {children}
     </div>
   );

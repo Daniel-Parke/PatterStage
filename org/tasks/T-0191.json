@@ -117,11 +117,16 @@
     "tests/unit/b6-config-field-unset-and-range.test.tsx",
     "tests/unit/b7-memory-empty-states.test.tsx",
     "tests/unit/field-kit.test.tsx",
-    "tests/unit/t0162-house-control-names.test.tsx"
+    "tests/unit/t0162-house-control-names.test.tsx",
+    "docs/contributing/repo-guide.md",
+    "src/app/work/chat/page.tsx",
+    "src/components/models/ModelEditor.tsx",
+    "src/app/recroom/story-weaver/layout.tsx",
+    "org/QUESTIONS.md"
   ],
   "timestamps": {
     "opened": "2026-10-03T12:13:29.785227+00:00",
-    "updated": "2026-10-03T13:41:10.258549+00:00"
+    "updated": "2026-10-03T15:57:39.231529+00:00"
   },
   "tier_ruled": "R2",
   "reasons": [
@@ -387,12 +392,12 @@
     "Mission cancellation settles only its own pending feedback. Preserve unrelated persistent errors, stack bounds, no-provider fallback, rollback, selected identity and later operations. Long agent/model/provider values are visually accessible without losing desktop density.",
     "Chat uses the ruled SimpleMarkdown with guarded links, exact Copy whitespace and truthful clipboard refusal. Preserve incomplete streaming fences, escaped content and Research renderer.",
     "Retain all stored template icons, separate editor choices and unknown Zap; add missing Bot. Remove only ruled Schedule compact/mode surface and two exact retired tests. Retain other public adapters without measured full-cohort net benefit.",
-    "Remove only four ruled unused RGB mirrors and correct three stale comments. Preserve synthetic gate fixtures, retained tokens, durations, spinner/reduced-motion exceptions, all historical identities except the two explicit Schedule retirements, and all T0190 async/cache oracles.",
+    "Remove only four ruled unused RGB mirrors and correct three stale comments. Preserve synthetic gate fixtures, retained tokens, durations, spinner/reduced-motion exceptions, all historical identities except the two explicit Schedule retirements and the four declaration-dependent RGB cases explicitly approved by the operator in Q-034, and all T0190 async/cache oracles.",
     "Keep fixed census targets and every adverse receipt. No generated/protected/history rewrite for savings. Max two writers; independent final reviewer authors neither source nor gates."
   ],
   "rollback": "Revert each primitive or responsive cohort with its consumers; revert Story lifecycle and feedback changes as coherent interfaces while retaining regression tests. No schema, stored-key or data migration.",
-  "verify_line": "Independent red-first public-action oracles; exact historical test-name parity except two ruled Schedule retirements. At1440x900/390x844 prove truthful Story progress/refusal/Stop, chapter-start positioning, accessible complete control text, keyboard/touch and responsive states. Preserve current cache/ownership contracts and all retention controls. Measure actual full-cohort net benefit before each fold. Full unchanged ten-stage gate, clean committed causal sweep with restored controls, independent R2 and every hosted job at implementation and closure heads. Account for every owned finding/split/coverage row and uncertainty.",
-  "oracle_status": "Independently accepted originalAPI oracle;179 cases105pass74causalred. Commit red before production implementation. Later Field migration adaptations require independent author and exact preservation evidence.",
+  "verify_line": "Independent red-first public-action oracles; exact historical test-name parity except two ruled Schedule test deletions and four Q-034 declaration-dependent RGB identities. At1440x900/390x844 prove truthful Story progress/refusal/Stop, chapter-start positioning, accessible complete control text, keyboard/touch and responsive states. Preserve current cache/ownership contracts and all retention controls. Measure actual full-cohort net benefit before each fold. Full unchanged ten-stage gate, clean committed causal sweep with restored controls, independent R2 and every hosted job at implementation and closure heads. Account for every owned finding/split/coverage row and uncertainty.",
+  "oracle_status": "Original179-case redfreeze committedc941bdb2; accepted independent migration adaptations preserve historical identities. Seven additive unit cases and two browser geometry cases separately committed red. Current130 unit oracle and58 browser cases. Final full gate/sweep/R2/hosted acceptance pending.",
   "preservation_baseline": "tmp/t0191-preservation-baseline-20261003.json",
   "independence": {
     "method": "clean-context authorship",
@@ -528,5 +533,142 @@
     "passing": 105,
     "red": 74,
     "verdict": "ACCEPT: bounded freeze of179 original-API oracle cases. Laplace independently verified final progress hash b51ff9cb40535dc4ac458d027bf10a2bd7b43beed19082e439a8638ecb376455, exact four acknowledgement replacements and123 unit80pass43 unchanged causal reds; accepted browser e45007c923cd28e0e6ba0aad86f17250cded8ceb7979004891cebb2392488cc6,56 cases25pass31reds. Original/intermediate receipt hashes intact; production unchanged. Both fixture-correction blockers closed. Baseline only, not implementation/release acceptance; retain context exposure, unexecuted downstream assertions and independent migration amendment procedure. Strict census accounting outstanding without waiver."
+  },
+  "implementation_progress": {
+    "unit": "Full coverage gate1791040253227 exit0:828 passing suites,8399 passing tests;2 historical skipped suites and9 skipped tests. Q-034 explains all6 authorised retirements. Existing worker-exit warning remains assignedT0195.",
+    "build": "Whole gate1791040253227 production build and both database-purity checks exit0; unchanged stampd1f63514dce067e69b02aecdf9e8da89b7b098ceb9ab76fd26266762c2dcc5d4. Isolated data only.",
+    "browser": "Exact independent explicit-drain fixture30a75481 integrated after Laplace acceptance and normal six-worker58/58 exit0 in receipt1791042795365. Refreshed coordinator14/14 walk passed run1791042953649 including immediate Stop neutrality and2100ms observation. Phone Settings/Memory/Composer images inspected. Whole gate remains required.",
+    "limits": "Synthetic provider fixtures, no paid execution or whole-product/release acceptance. Ten additional source-traced followups assignedT0192/T0193.",
+    "review": "Laplace accepted bounded Stop correction for fullgate; final acceptance pending. Original35findings/9OP/32coverage itemised; ten separate source-traced followups retainedT0192/T0193. Protected baseline audit1175/1182unchanged, only7authorisedhistorical amendments.",
+    "design_census": "Separate preflight t0191-design-census-probe.log exit0; no measure/tolerance/baseline change. Not a completed full-gate census stage.",
+    "gate_attempts": [
+      {
+        "receipt": "tmp/t0191-full-gate-1791040253227/summary.json",
+        "exit": 1,
+        "kind": "full"
+      },
+      {
+        "receipt": "tmp/t0191-full-gate-1791040894491/rerun/summary.rerun.json",
+        "exit": 1,
+        "kind": "affected-spec"
+      },
+      {
+        "receipt": "tmp/t0191-full-gate-1791041601068/rerun/summary.rerun.json",
+        "exit": 1,
+        "kind": "affected-spec-with-independent-fixture-candidate"
+      },
+      {
+        "receipt": "tmp/t0191-full-gate-1791042155421/rerun/summary.rerun.json",
+        "exit": 1,
+        "kind": "affected-spec-with-guarded-unroute-candidate"
+      },
+      {
+        "receipt": "tmp/t0191-full-gate-1791042795365/rerun/summary.rerun.json",
+        "exit": 0,
+        "kind": "affected-spec-with-explicit-drain-candidate"
+      },
+      {
+        "receipt": "tmp/t0191-full-gate-1791043080359/summary.json",
+        "exit": 1,
+        "kind": "full",
+        "failure": "EPERM atomic replacement in unchanged T0163 credential fixture;8398pass/1fail/9skip. Unchanged isolated7/7exit0, receipts t0191-t0163-alone.json/.log. Cause unresolved, exact signature assignedT0195."
+      },
+      {
+        "receipt": "tmp/t0191-full-gate-1791043589650/summary.json",
+        "exit": 1,
+        "kind": "full",
+        "failure": "All pre-browser stages pass including8399unit cases;browser422pass1reset24historicalskip. Census stages unexecuted."
+      },
+      {
+        "receipt": "tmp/t0191-full-gate-1791044238377/rerun/summary.rerun.json",
+        "exit": 1,
+        "kind": "affected-spec",
+        "failure": "55pass3fail, transport resets recur without full-suite workload."
+      },
+      {
+        "receipt": "tmp/t0191-full-gate-1791044417432/rerun/summary.rerun.json",
+        "exit": 1,
+        "kind": "instrumented-transport-diagnostic",
+        "failure": "Two captured client resets correlate with server idle-timeout destruction of reused sockets. Diagnostic instrumentation is not acceptance."
+      },
+      {
+        "receipt": "tmp/t0191-full-gate-1791045503471/rerun/summary.rerun.json",
+        "exit": 1,
+        "kind": "fresh-transport-candidate affected-spec",
+        "failure": "55 passed, 3 failed: desktop Credentials label and Fallback rows 1/2 missing expected locators. Unchanged tree stamp a51b0135373736e798f33b9d991a5ca4082452be959206cf359fd1523d9dec23. Cause unresolved; no rerun after operator stop."
+      },
+      {
+        "receipt": "tmp/t0191-full-gate-1791053077395/rerun/summary.rerun.json",
+        "exit": 1,
+        "kind": "affected-spec setup infrastructure failure",
+        "failure": "0 browser cases executed. Isolated migration process exit1 before server start. Direct diagnostic exposed Node24.21 os.userInfo uv_os_get_passwd ENOMEM in tsx temporary-directory module; identical script outside sandbox exit0, schema0to43. No test/source change or waiver."
+      },
+      {
+        "receipt": "tmp/t0191-full-gate-1791053156358/rerun/summary.rerun.json",
+        "exit": 0,
+        "kind": "affected-spec",
+        "result": "58/58 normal six-worker component browser cases; independently reviewed73e8 fixture integrated. Full gate still required."
+      },
+      {
+        "receipt": "tmp/t0191-full-gate-1791053306080/summary.json",
+        "exit": 1,
+        "kind": "full",
+        "failure": "All seven pre-browser stages pass including8399unit cases; browser422pass1phoneFallbackrow2geometryfailure24historicalskips. Both census stages unexecuted."
+      },
+      {
+        "receipt": "tmp/t0191-full-gate-1791053927189/rerun/summary.rerun.json",
+        "exit": 0,
+        "kind": "unchanged affected-spec",
+        "result": "58/58 normal six workers. Does not waive failed fullgate."
+      },
+      {
+        "receipt": "tmp/t0191-full-gate-1791054723911/rerun/summary.rerun.json",
+        "exit": 0,
+        "kind": "wheel-corrected affected-spec",
+        "result": "58/58 normal six workers, exact independently reviewedb176968e. Full gate still required."
+      }
+    ],
+    "census": "102132 source,147075 tests,807/4796 repeated windows,103 one-importer components. Source-246 and tests+1925 against acceptedT0190. Test infrastructure growth explicitly recorded; all fixed targets held.",
+    "transport_diagnosis": {
+      "receipt": "tmp/t0191-socket-analysis.json",
+      "raw": "tmp/t0191-socket-diagnostic-1791044417434",
+      "reviewer": "Nash, independent read-only correlation of raw events",
+      "finding": "Two Playwright requests reuse pooled connections after5052/6024ms idle. Paired server sockets close through socketOnTimeout; client resets follow5/15ms later. No prior client request destruction observed. Instrumented sign-in POST returned303; its followedGET reset.",
+      "versions": "Playwright1.62.1; Node24.21.0",
+      "limits": "Explains two instrumented resets only, not every prior failure or additional assertions. No headers, cookies, tokens, bodies or queries were recorded. No production retry or server/test deadline increase. Fixture transport correction pending independent scope."
+    },
+    "pending_browser_transport_candidate": {
+      "sha256": "73e8f513b8dcf0dc20ad1b21c4de7f37ac6e34e6c5a50ffdd1f7bbf9259a77c2",
+      "status": "Integrated after independent exact review and passing affected suite",
+      "receipt": "tmp/t0191-full-gate-1791053156358/rerun/summary.rerun.json",
+      "wholeGate": "pending"
+    },
+    "wheel_diagnosis": {
+      "evidence": [
+        "tmp/t0191-read-scroll-trace.py",
+        "tmp/t0191-scroll-3657caf0da60b6d1ad2ec9e98c76424cff8716cb.png"
+      ],
+      "observed": "Fallback Move up actionx401..423,tabley21..215; helper sends horizontal74 at195,134.5 twice,scrolloffset remains0. Sticky Models header covers pointer. Existing viewport-only vertical helper can stop with target under header.",
+      "ruling": "Laplace accepted exactb176968e independently authored correction. Owned-browser original-red/candidate-green/fixed-overlay-refusal and58/58 normal six-worker app cases pass. Integrated; full gate outstanding."
+    },
+    "browser_wheel_candidate": {
+      "sha256": "b176968e10b9d78fcaba798e286bc55d8cc4b8149b513348c26fe75b6a216279",
+      "status": "Integrated after independent exact review and passing affected suite",
+      "receipt": "tmp/t0191-full-gate-1791054723911/rerun/summary.rerun.json",
+      "wholeGate": "pending"
+    }
+  },
+  "token_retirement_ruling": {
+    "authority": "Q-034; Daniel Parke,2026-10-03, interactive response: Approve these four test retirements (Recommended)",
+    "scope": [
+      "--ps-rgb-neon-purple is space separated, not a comma list",
+      "--ps-rgb-neon-green is space separated, not a comma list",
+      "--ps-rgb-neon-pink is space separated, not a comma list",
+      "--ps-rgb-neon-orange is space separated, not a comma list"
+    ],
+    "sourceSuite": "tests/unit/lockbook-tokens.test.ts",
+    "reason": "The existing unchanged suite enumerates production declarations; approved critic-09 removal removes these four expanded identities. Do not substitute synthetic cases or absence branches under misleading old names. Remaining declarations, future declarations, non-vacuity and code-mirror checks remain; four new oracle cases assert exact ruled absence.",
+    "totalRetirements": 6,
+    "countEquation": "8275 baseline passing +130 new unit oracle -2 Schedule -4 declaration-dependent cases =8399 passing;9 historical skips separately preserved."
   }
 }

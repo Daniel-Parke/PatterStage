@@ -9,4 +9,6 @@
 export { Field } from "./Field";
 export { Input, Textarea } from "./Input";
 export { Select } from "./Select";
-export { Toggle } from "./Toggle";
+export { Toggle, InlineToggle } from "./Toggle";
+export { SearchInput } from "./SearchInput";
+export { NumberInput } from "./NumberInput";

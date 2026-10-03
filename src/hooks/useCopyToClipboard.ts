@@ -3,12 +3,12 @@
 // for N ms" hook
 // ═══════════════════════════════════════════════════════════════
 //
-// Deliberately sync: `writeText` is fire-and-forget. MissionPromptPreview
-// awaits it inside a try/catch, which is a different shape and is left alone.
+// Success follows the clipboard promise; obsolete replies cannot update a new owner.
 
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useToast } from "@/components/ui/Toast";
 
 export interface UseCopyToClipboardOptions {
   /**
@@ -32,16 +32,22 @@ export interface UseCopyToClipboardOptions {
  */
 export function useCopyToClipboard(
   options: UseCopyToClipboardOptions = {},
-): [boolean, (text: string) => void] {
+): [boolean, (text: string) => void, ReactNode] {
   const { resetMs = 2000 } = options;
   const [copied, setCopied] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const owner = useRef(0);
+  const mounted = useRef(true);
+  const { showToast, toastElement } = useToast();
 
   // Cleanup the in-flight timer on unmount. Without this, navigating
   // away during the `resetMs` window would call `setCopied(false)` on
   // an unmounted component.
   useEffect(() => {
+    mounted.current = true;
     return () => {
+      mounted.current = false;
+      owner.current += 1;
       if (timerRef.current) {
         clearTimeout(timerRef.current);
         timerRef.current = null;
@@ -50,22 +56,31 @@ export function useCopyToClipboard(
   }, []);
 
   const copy = useCallback(
-    (text: string) => {
+    async (text: string) => {
+      const request = ++owner.current;
       // Cancel any in-flight timer so back-to-back copy clicks
       // don't double-fire the flip-back.
       if (timerRef.current) {
         clearTimeout(timerRef.current);
         timerRef.current = null;
       }
-      void navigator.clipboard.writeText(text);
-      setCopied(true);
-      timerRef.current = setTimeout(() => {
-        timerRef.current = null;
-        setCopied(false);
-      }, resetMs);
+      setCopied(false);
+      try {
+        await navigator.clipboard.writeText(text);
+        if (!mounted.current || owner.current !== request) return;
+        setCopied(true);
+        timerRef.current = setTimeout(() => {
+          timerRef.current = null;
+          setCopied(false);
+        }, resetMs);
+      } catch {
+        if (mounted.current && owner.current === request) {
+          showToast("Could not copy to clipboard", "error");
+        }
+      }
     },
-    [resetMs],
+    [resetMs, showToast],
   );
 
-  return [copied, copy];
+  return [copied, copy, toastElement];
 }

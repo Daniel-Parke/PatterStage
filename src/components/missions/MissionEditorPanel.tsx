@@ -129,22 +129,22 @@ export default function MissionEditorPanel({
         </div>
       ) : detail ? (
         <div className="space-y-3">
-          <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-micro font-mono">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-micro font-mono">
             <div className="flex justify-between">
               <span className="text-ps-text-muted">Agent</span>
-              <span className="text-ps-text-secondary truncate ml-2 text-right">
+              <span className="min-w-0 break-words text-ps-text-secondary ml-2 text-right">
                 {detail.mission.profileName || detail.mission.profileId || "—"}
               </span>
             </div>
             <div className="flex justify-between">
               <span className="text-ps-text-muted">Model</span>
-              <span className="text-ps-text-secondary truncate ml-2 text-right">
+              <span className="min-w-0 break-words text-ps-text-secondary ml-2 text-right">
                 {detail.mission.modelId || detail.mission.model || "—"}
               </span>
             </div>
             <div className="flex justify-between">
               <span className="text-ps-text-muted">Provider</span>
-              <span className="text-ps-text-secondary truncate ml-2 text-right">
+              <span className="min-w-0 break-words text-ps-text-secondary ml-2 text-right">
                 {detail.mission.provider || "—"}
               </span>
             </div>
@@ -196,6 +196,7 @@ export default function MissionEditorPanel({
           <div>
             <button
               type="button"
+              aria-expanded={!promptCollapsed}
               onClick={() =>
                 onPromptCollapsedChange(!promptCollapsed)
               }

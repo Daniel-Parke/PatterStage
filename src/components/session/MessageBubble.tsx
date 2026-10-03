@@ -85,7 +85,7 @@ export function MessageBubble({
     setLastExpandAll(expandAll);
     setExpanded(expandAll);
   }
-  const [copied, copy] = useCopyToClipboard({ resetMs: 1500 });
+  const [copied, copy, copyFeedback] = useCopyToClipboard({ resetMs: 1500 });
   const role = getMessageRole(msg);
   const content =
     typeof msg.content === "string"
@@ -108,7 +108,10 @@ export function MessageBubble({
       }}
       className={`rounded-ps-lg border ${config.bg} overflow-hidden`}
     >
+      {copyFeedback}
       <button
+        type="button"
+        aria-expanded={expanded}
         onClick={() => setExpanded(!expanded)}
         className="w-full flex items-center justify-between px-4 py-2 border-b border-ps-edge hover:bg-ps-surface-raised transition-colors text-left"
       >
@@ -150,9 +153,10 @@ export function MessageBubble({
         <div className="px-4 py-3">
           <div className="flex justify-end mb-2">
             <button
+              type="button"
               onClick={handleCopy}
               className="p-1 rounded-ps-sm text-ps-text-muted hover:text-ps-text-secondary transition-colors"
-              title="Copy"
+              title={copied ? "Copied" : "Copy"}
             >
               {copied ? (
                 <Check className="w-3.5 h-3.5 text-neon-green" />

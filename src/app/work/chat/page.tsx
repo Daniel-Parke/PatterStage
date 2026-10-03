@@ -14,7 +14,7 @@
 
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { MessageCircle, Send, Plus, X, Download, Square, Check, ShieldQuestion, Bot, Zap } from "lucide-react";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
@@ -132,6 +132,7 @@ function TypingIndicator() {
 }
 
 export default function ChatPage() {
+  const [selectionVersion, setSelectionVersion] = useState(0);
   const {
     toastElement,
     model,
@@ -232,7 +233,7 @@ export default function ChatPage() {
         asideLabel={`Conversations (${conversations.length})`}
         asideWidth="lg:w-60"
         asideClassName="border-r border-ps-edge-hairline bg-ps-surface-raised"
-        closeOnChange={activeId}
+        closeOnChange={`${activeId}:${selectionVersion}`}
         aside={
           <>
             {/* The column's own heading, from lg; below lg the sheet's title
@@ -261,7 +262,10 @@ export default function ChatPage() {
                   <div className="flex items-center justify-between gap-1">
                     <button
                       type="button"
-                      onClick={() => handleSelectConversation(c.id)}
+                      onClick={() => {
+                        handleSelectConversation(c.id);
+                        setSelectionVersion(version => version + 1);
+                      }}
                       className="min-w-0 flex-1 text-left"
                       title={c.title}
                       aria-current={c.id === activeId ? "true" : undefined}

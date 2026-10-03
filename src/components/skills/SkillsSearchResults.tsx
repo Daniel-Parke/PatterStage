@@ -15,7 +15,7 @@
 
 import { Search } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { SkillRowList } from "@/components/skills/SkillRowList";
+import { SkillRowList, type SkillRowActions } from "@/components/skills/SkillRowList";
 import type { Skill } from "@/types/console";
 
 export interface SkillsSearchResultsProps {
@@ -25,12 +25,7 @@ export interface SkillsSearchResultsProps {
   total: number;
   page: number;
   onPageChange: (page: number) => void;
-  toggling: Record<string, boolean>;
-  expandedSkill: string | null;
-  skillContent: string;
-  onToggleSkill: (skill: Skill) => void;
-  onViewSkill: (skill: Skill) => void;
-  onEditSkill: (skill: Skill) => void;
+  rowActions: SkillRowActions;
 }
 
 export default function SkillsSearchResults({
@@ -38,12 +33,7 @@ export default function SkillsSearchResults({
   total,
   page,
   onPageChange,
-  toggling,
-  expandedSkill,
-  skillContent,
-  onToggleSkill,
-  onViewSkill,
-  onEditSkill,
+  rowActions,
 }: SkillsSearchResultsProps) {
   return (
     <div className="space-y-3">
@@ -66,12 +56,7 @@ export default function SkillsSearchResults({
           skills={matches}
           page={page}
           onPageChange={onPageChange}
-          toggling={toggling}
-          expandedSkill={expandedSkill}
-          skillContent={skillContent}
-          onToggleSkill={onToggleSkill}
-          onViewSkill={onViewSkill}
-          onEditSkill={onEditSkill}
+          rowActions={rowActions}
         />
       )}
     </div>

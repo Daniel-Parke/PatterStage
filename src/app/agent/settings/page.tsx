@@ -27,7 +27,7 @@ import { Settings, UserCog } from "lucide-react";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
 import Card from "@/components/ui/Card";
-import { SearchInput } from "@/components/ui/Input";
+import { SearchInput } from "@/components/ui/field";
 import PageLoading from "@/components/ui/PageLoading";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import { ConfigYamlErrorAlert } from "@/components/config/ConfigYamlErrorAlert";

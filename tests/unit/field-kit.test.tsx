@@ -1,14 +1,12 @@
 /**
  * Component tests for the Field Kit primitives (src/components/ui/field/*)
- * and the legacy labeled inputs (src/components/ui/Input.tsx) that now
- * delegate to the Field Kit `Input`. Guards the consolidation: the labeled
- * wrappers must keep their public API (label/description/onChange) while
- * rendering the unified control.
+ * and equivalent Field/Input compositions after retiring TextInput.
+ * Guards label, description, disabled state and event-to-value semantics
+ * alongside the migrated NumberInput control.
  */
 import { render, screen, fireEvent } from "@testing-library/react";
 
-import { Field, Input, Textarea } from "@/components/ui/field";
-import { TextInput, NumberInput } from "@/components/ui/Input";
+import { Field, Input, Textarea, NumberInput } from "@/components/ui/field";
 
 describe("Field", () => {
   it("renders the label and hint", () => {
@@ -52,12 +50,9 @@ describe("legacy TextInput (delegates to the Field Kit Input)", () => {
   it("renders label + description and calls onChange with the raw value", () => {
     const onChange = jest.fn();
     render(
-      <TextInput
-        label="Webhook URL"
-        description="POSTed on each run"
-        value=""
-        onChange={onChange}
-      />,
+      <Field label="Webhook URL" hint="POSTed on each run">
+        <Input value="" onChange={(event) => onChange(event.target.value)} />
+      </Field>,
     );
     expect(screen.getByText("Webhook URL")).toBeInTheDocument();
     expect(screen.getByText("POSTed on each run")).toBeInTheDocument();
@@ -68,7 +63,7 @@ describe("legacy TextInput (delegates to the Field Kit Input)", () => {
   });
 
   it("respects the disabled prop", () => {
-    render(<TextInput label="Locked" value="x" onChange={() => {}} disabled />);
+    render(<Field label="Locked"><Input value="x" onChange={() => {}} disabled /></Field>);
     expect(screen.getByDisplayValue("x")).toBeDisabled();
   });
 });
