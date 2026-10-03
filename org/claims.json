@@ -120,7 +120,14 @@
         "src/app/api/sessions/[id]/route.ts",
         "src/app/api/models/fallbacks/route.ts",
         "src/lib/templates-handlers/create.ts",
-        "tests/unit/template-create-identifiers.test.ts"
+        "tests/unit/template-create-identifiers.test.ts",
+        "scripts/tooling/load-env-local.ts",
+        "scripts/tooling/_env-local.mjs",
+        "scripts/tooling/ensure-hermes-model-sync.ts",
+        "scripts/tooling/import-hermes-state.ts",
+        "scripts/tooling/migrate-db.ts",
+        "scripts/tooling/seed-catalog.ts",
+        "scripts/tooling/retention-prune.ts"
       ],
       "acquired": "2026-10-03T21:24:24.476320+00:00",
       "expires": "2026-10-04T21:24:24.476320+00:00"

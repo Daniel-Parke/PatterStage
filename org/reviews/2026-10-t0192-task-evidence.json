@@ -753,5 +753,31 @@
     ],
     "result": "Original/folded route76/76; real house UUID original2red/current2green;27historical controls green; explicit test types and lint exit0;868source hashes unchanged.",
     "failuresRetained": "Original app-only type claims corrected; four missing fixture fields and75/76 backupPath mismatch remain in original receipts."
+  },
+  "gatewayBoundaryRepair": {
+    "problem": "Design-lint reported four Hermes adapter-boundary violations in the new gateway diagnostic bindings.",
+    "repair": "Both bindings use the existing neutral getAgentGateway port. No rule, suppression or baseline changed.",
+    "qualification": "The neutral port removes all trailing slashes; the module resolver can retain some. Diagnostic output follows the established neutral contract; operational endpoint configuration is unchanged.",
+    "reviewer": "Laplace",
+    "verification": "design-lint exit0; 650/650 tests in49suites, no pending cases.",
+    "receipt": "tmp/t0192-defects-unit-1791071240862/summary.json"
+  },
+  "scriptEditorVisualRepair": {
+    "before": "tmp/t0192-script-visual-1791070549435",
+    "after": "tmp/t0192-script-visual-1791071202218",
+    "build": "tmp/t0192-defects-build-1791070836378/summary.json",
+    "change": "Phone textarea height leaves metadata and help text visible; wrapping is explicit. Help accurately says runs on the server instead of claiming all supported scripts use Bash.",
+    "observed": "Owned built journeys at1440x900 and390x844 both exit0, no console/page errors or horizontal overflow, one page h1; explicit save of retained draft succeeds. Phone screenshot personally inspected.",
+    "limits": "Focused walks only; gateway repair followed this build. Full candidate gate and whole-product acceptance pending."
+  },
+  "toolingEnvironmentOracle": {
+    "file": "tests/unit/tooling-env-contract.test.ts",
+    "sha256": "c2994435592fbeaa804a53adc2c008927b067824ea3b90f70ad6f5be213e5c43",
+    "author": "Galileo",
+    "reviewer": "Laplace",
+    "receipt": "tmp/t0191-green-validation/tmp/t0192-env-candidate-1791070203854",
+    "result": "46cases:26pass,10missing-helper contracts,5missing-import structural checks,5behavioural deploy failures; no runtime errors or pending cases.",
+    "limits": "Copied CLI probes stop before application import. Copied deploy runner intercepts external effects; actual child only records handoff, not real deployment. AST imports alone do not prove consolidation; source review must check helper calls and removal of all five duplicate loaders. Historical alias and packaging controls remain required.",
+    "typecheck": "Explicit tsconfig.tests.json and focused lint exit0; repeated test windows4796/4800."
   }
 }
