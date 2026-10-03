@@ -539,11 +539,74 @@
       "phase": "prerelease-structural",
       "tierProposed": "R2",
       "claims": [
-        "src/components/ui/**",
-        "src/components/**",
+        "src/components/layout/AppPageShell.tsx",
+        "src/components/models/CredentialsPanel.tsx",
+        "src/components/models/FallbackChainList.tsx",
+        "src/modules/rec-room/components/StoryCard.tsx",
+        "src/app/results/sessions/[id]/page.tsx",
+        "src/components/memory/hindsight/DirectivesTab.tsx",
+        "src/components/memory/hindsight/MentalModelsTab.tsx",
+        "src/app/work/research/page.tsx",
+        "src/components/composer/ComposerRunForm.tsx",
+        "src/components/composer/WorkflowCanvas.tsx",
+        "src/components/ui/Input.tsx",
+        "src/components/ui/field/Toggle.tsx",
+        "src/components/ui/field/Select.tsx",
+        "src/components/dashboard/DispatchStrip.tsx",
+        "src/components/dashboard/ProcessesPanel.tsx",
+        "src/components/layout/BranchDropdown.tsx",
+        "src/components/ui/CategoryAccordion.tsx",
+        "src/components/session/MessageBubble.tsx",
+        "src/components/models/FallbackConfigPanel.tsx",
+        "src/app/agent/skills/page.tsx",
+        "src/components/skills/SkillsSections.tsx",
+        "src/components/skills/SkillsSearchResults.tsx",
+        "src/components/skills/SkillCategoryList.tsx",
+        "src/components/skills/SkillRowList.tsx",
+        "src/components/ui/TemplateCard.tsx",
+        "src/components/schedule/SchedulePicker.tsx",
+        "src/components/chat/MessageBubble.tsx",
+        "src/components/skills/SimpleMarkdown.tsx",
         "src/lib/chat/chat-utils.ts",
-        "tests/unit/components-*.test.tsx",
-        "tests/e2e/component-accessibility*.spec.ts"
+        "src/hooks/useChatPage.ts",
+        "src/modules/rec-room/components/GenerateOverlay.tsx",
+        "src/app/globals.css",
+        "scripts/tooling/design-lint.mjs",
+        "src/hooks/useMissionDispatch.ts",
+        "src/components/ui/Toast.tsx",
+        "src/components/ui/feedback-context.ts",
+        "src/components/providers/FeedbackProvider.tsx",
+        "src/modules/rec-room/components/ReaderBody.tsx",
+        "src/modules/rec-room/components/ChapterReader.tsx",
+        "src/modules/rec-room/components/StoryReaderOverlays.tsx",
+        "src/app/recroom/story-weaver/[id]/page.tsx",
+        "src/components/missions/MissionEditorPanel.tsx",
+        "tests/unit/components-contextual-controls.test.tsx",
+        "tests/unit/components-primitive-parity.test.tsx",
+        "tests/unit/components-collection-actions.test.tsx",
+        "tests/unit/components-chat-markdown.test.tsx",
+        "tests/unit/components-progress-feedback.test.tsx",
+        "tests/unit/components-token-preservation.test.tsx",
+        "tests/e2e/component-accessibility-responsive.spec.ts",
+        "tests/unit/u0-the-gate-sees-what-it-claims.test.ts",
+        "tests/unit/u2-the-contrast-gate-refuses.test.ts",
+        "tests/unit/components/schedule/SchedulePicker.test.tsx",
+        "org/tasks/T-0191.json",
+        "org/claims.json",
+        "org/briefs/T-0191-oracle.md",
+        "org/briefs/T-0191-review.md",
+        "org/reviews/2026-10-t0191-component-verification.md",
+        "org/reviews/2026-10-t0191-dispositions.json",
+        "org/plans/2026-09-refactor-programme.json",
+        "org/plans/2026-09-refactor-ownership.mjs",
+        "org/plans/2026-09-refactor-ownership.json",
+        "org/HANDOVER.md",
+        "org/TASKS.md",
+        "org/STATE.md",
+        "docs/manifest.json",
+        "scripts/tooling/line-census.baseline.json",
+        "scripts/tooling/design-lint.baseline.json",
+        "tests/fixtures/mutants/T-0191.json"
       ],
       "dependsOn": [
         "T-0190"
@@ -563,8 +626,8 @@
         "Contextual names, keyboard focus, reduced motion and responsive hierarchy remain accessible.",
         "Chat uses SimpleMarkdown with guarded links and a Copy button for code blocks."
       ],
-      "rollback": "Revert each independently measured primitive fold with its consumers and preserve named accessibility fixes.",
-      "verify": "Ten unnamed dropdowns gain contextual names; 1440x900 and 390x844 visual states plus keyboard/ARIA checks pass, and every folded primitive has a documented net-line benefit and unchanged public interaction.",
+      "rollback": "Revert each primitive or responsive cohort with its consumers; revert Story lifecycle and feedback changes as coherent interfaces while retaining regression tests. No schema, stored-key or data migration.",
+      "verify": "Independent red-first public-action oracles; exact historical test-name parity except two ruled Schedule retirements. At1440x900/390x844 prove truthful Story progress/refusal/Stop, chapter-start positioning, accessible complete control text, keyboard/touch and responsive states. Preserve current cache/ownership contracts and all retention controls. Measure actual full-cohort net benefit before each fold. Full unchanged ten-stage gate, clean committed causal sweep with restored controls, independent R2 and every hosted job at implementation and closure heads. Account for every owned finding/split/coverage row and uncertainty.",
       "reviewed_followups": {
         "reviewer": "Fermat 01a0fd2b-be08-7d50-848f-4034e5832160, read-only 2026-10-02; no independent runtime execution",
         "status": "Queued for exact claims, router verdict and red oracle before batch implementation; not acceptance",
@@ -625,7 +688,15 @@
             "verify": "At390x844 the collection description must not compress New Directive into a two-line label outside its compact button. Preserve complete readable labels, reachable Refresh/create actions, keyboard focus and desktop hierarchy. Test both collection toolbars and long metadata. This is responsive repair, not redesign; independently freeze before implementation."
           }
         ],
-        "claim_rule": "Name exact new unit .tsx and browser oracle paths; current glob claims do not establish ownership. Amend Verify and rollback at opening. Preserve T0189 -> T0190 -> T0191 -> T0192 dependencies."
+        "claim_rule": "Name exact new unit .tsx and browser oracle paths; current glob claims do not establish ownership. Amend Verify and rollback at opening. Preserve T0189 -> T0190 -> T0191 -> T0192 dependencies.",
+        "opening_additions": [
+          "tmp/t0191-mission-metadata-review-20261002.md",
+          "tmp/t0191-reader-position-finding-20261002.md",
+          "tmp/t0190-green-validation/tmp/t0190-personal-1790980892020/walk.json",
+          "tmp/t0189-green-validation/tmp/t0190-personal-1790980945735/walk.json",
+          "tmp/t0190-green-validation/tmp/t0190-personal-1791028989606/walk.json",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ]
       }
     },
     {
@@ -758,7 +829,13 @@
       "claims": [
         "src/lib/**",
         "src/modules/hermes/**",
-        "tests/unit/lib-domain-*.test.ts"
+        "tests/unit/lib-domain-*.test.ts",
+        "src/lib/auth/**",
+        "src/lib/api/auth-token.ts",
+        "src/lib/api/auth-throttle.ts",
+        "src/lib/fs/path-security.ts",
+        "src/lib/search/url-guard.ts",
+        "src/lib/scripts/scripts-manager.ts"
       ],
       "dependsOn": [
         "T-0193"
@@ -776,7 +853,7 @@
         "All five path spellings, including regex alternations, are checked when files move."
       ],
       "rollback": "Restore the former module exports with aliases only for documented callers; retain moved tests and public behaviour.",
-      "verify": "TypeScript, Knip, path-citation scan and complete test-name comparison pass; agent_root and Hermes section ownership reside in the Hermes module, and Laboratory has the accepted ADR scope before any move."
+      "verify": "TypeScript, Knip, path-citation scan and complete test-name comparison pass; agent_root and Hermes section ownership reside in the Hermes module, and Laboratory has the accepted ADR scope before any move. Reconcile critic03 and atomic auth evidence; exercise path/symlink, URL/DNS and script-execution controls for gap105a/b/c. Missing proof is not a demonstrated exploit."
     },
     {
       "id": "T-0195",
@@ -787,7 +864,8 @@
         "tests/helpers/**",
         "tests/unit/**",
         "jest.config.*",
-        "tests/e2e/**"
+        "tests/e2e/**",
+        "tests/jest.setup.ts"
       ],
       "dependsOn": [
         "T-0194"
@@ -806,7 +884,7 @@
         "Closed-oracle changes use a different author and a dated amendment."
       ],
       "rollback": "Revert one fixture or suite cohort while keeping behaviour tests that exposed defects.",
-      "verify": "Before/after test-name sets agree except red-first additions; jsdom default and node exceptions match execution needs, source-reading suites converted only where behavioural replacements pass, and e2e flake reruns record both results.",
+      "verify": "Before/after test-name sets agree except red-first additions; jsdom default and node exceptions match execution needs, source-reading suites converted only where behavioural replacements pass, and e2e flake reruns record both results. Independently prove mock factory, restoreAllMocks and SQLite mapping before critic12 comment correction; preserve restoration and all old identities.",
       "reviewed_followups": [
         {
           "id": "t0189-windows-shell-fixture-cleanup",
@@ -814,6 +892,15 @@
           "evidence": "tmp/t0189-full-gate-1790959016924/summary.json;tmp/t0189-coordinator-check/1790959482685/summary.json;tmp/t0189-shell-observation-1790959743905/summary.json",
           "finding": "Unchanged T0161after-catalog shell fixture once failed Windows cleanup EPERM in full Jest;4/4alone and8106-test diagnostic workload passed. A finally cleanup error can hide a primary setup failure. Originalrootcauseunconfirmed.",
           "required": "Preserve four historical names/assertions and30-second setupdeadline. Investigate nativeprocess ownership and preserve primary pluscleanup failures. No silentretry/deadlinegrowth/skips; controlled Windows failed-run lifecycle proof before closure."
+        },
+        {
+          "id": "t0190-closure-native-macos-stalled-context",
+          "status": "unresolved-intermittent-harness-failure",
+          "original": "tmp/t0190-closure-failure-attempt1/qualification.json",
+          "review": "org/reviews/2026-10-t0191-component-verification.md#independent-prerequisite-verdict",
+          "laterVerification": "tmp/t0190-hosted-closure-rerun/snapshot-1791029119234.json",
+          "finding": "Closure push attempt1 C02/C05 share a stalled observation: six-second watchdog crossed and final native status did not reach shell completion. Built-in isolated20-case rerun passed. A later full-job pass is verification, not a repair or proven scheduling cause. Attempt2 reran the entire unchanged push workflow, not only macOS; all applicable jobs passed. The PR acceptance path passed separately.",
+          "required": "Investigate with measured native timing; preserve21 realcurl calls, all assertions, six-second watchdog,0.2-second kill grace,25-second outer/RPC/lifecycle bounds and every earlier failure. No retries untilgreen, reduced workload or speculative frozen-helper changes."
         }
       ]
     },
@@ -830,7 +917,10 @@
         "docker-compose.yml",
         "docker-compose.real-hermes.yml",
         "docker-compose.bench-gateway.yml",
-        "tests/scripts/**"
+        "tests/scripts/**",
+        "mock-hermes/server.mjs",
+        "mock-llm/server.mjs",
+        "mock-hindsight/server.mjs"
       ],
       "dependsOn": [
         "T-0195"
@@ -851,7 +941,7 @@
         "The ch_data, ch_hermes and /data/ch Compose names stay to preserve existing data; add why-comments."
       ],
       "rollback": "Restore a removed internal wrapper only if its caller test demonstrates a live need; do not restore blind gates.",
-      "verify": "Windows and Linux install, update, build, Docker context, CI and ten-step gate pass; planted design/read/write violations fail, and live tooling census falls against its frozen target."
+      "verify": "Windows and Linux install, update, build, Docker context, CI and ten-step gate pass; planted design/read/write violations fail, and live tooling census falls against its frozen target. Measure critic11 mock JSON-reader consolidation including standalone Docker packaging. Reconcile gap005b historical15-patch discrepancy and three expired alerts using redacted scanner/ref evidence; retain unavailable historical proof explicitly."
     },
     {
       "id": "T-0197",

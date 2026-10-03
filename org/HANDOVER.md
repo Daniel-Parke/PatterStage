@@ -7,14 +7,19 @@ updated: 2026-10-02
 
 # Handover · PatterStage, 2026-10-02
 
-## Current programme, 2026-10-02
+## Active batch, 2026-10-03
+
+T-0191 is open at R2 with exact component claims and an independent oracle brief. Implementation has not started. Closure head `39d7a895` now has all required hosted jobs green. The original macOS coverage failure remains recorded: one unchanged second push-workflow attempt passed, including the full macOS workload. This is verification, not an intermittent-failure repair; T-0195 owns the cause investigation. See [T-0191 opening and independent prerequisite review](reviews/2026-10-t0191-component-verification.md).
+
+The batch includes the six prior UI repairs, Story progress/refusal/Stop, operation-owned Mission feedback, readable metadata and Reader chapter-start positioning. Production baseline additionally confirms Stop is covered by the edit overlay during supported overlap. New tests must freeze red before implementation. No paid service validation or whole-product acceptance is claimed. Personal validation uses an owned instance on port 3998; no instance remains running from the baseline.
+
+## Previous accepted batch, 2026-10-02
 
 T-0190 is independently accepted at `08bd39cf`. All ten unchanged-tree gate
 stages pass: 8,275 unit tests, 365 browser tests and two database-purity checks.
 The nine unit and 24 browser skips are pre-existing. All 30 committed mutants
 are caught, with 167 passing controls before and after and exact restoration.
-Every required implementation-head hosted job passes. Closure-head hosted
-jobs must pass before T-0191 opens. See the
+Every required implementation-head hosted job passes. Closure-head hosted jobs subsequently passed as qualified above. See the
 [independent acceptance](reviews/2026-10-t0190-final-acceptance.md) and
 [verification and completeness handoffs](reviews/2026-10-t0190-client-verification.md).
 

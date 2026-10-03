@@ -1,0 +1,5 @@
+# T-0191 independent review
+
+Final reviewer: Laplace, session 01a1019a-65c6-7ae2-aafe-5b79b166c745, neither production nor gate author. Inspect task invariants, exact claims, rulings and independent red-first freeze. Review public behaviour, historic test identities, every owned disposition, unchanged whole gate, clean committed causal mutations/restoration and implementation/closure hosted jobs. Preserve failed receipts and explicit provider, keyboard and environment limits. Require personal browser geometry and screenshot inspection at 1440x900 and 390x844. No whole-product or release acceptance follows from one batch.
+
+The two historical comment-only corrections and two exact ruled Schedule compact-test retirements have narrow authority in the opening verification report. They require different-author amendments, original blobs/hashes/expanded names and controls. No broader frozen assertion, fixture, timeout, runner or coverage change is authorised. Default unconfirmed findings to unresolved/refuted; never count infrastructure failures as oracle reds or mutation kills. Do not author source or tests while serving as final reviewer.

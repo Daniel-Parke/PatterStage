@@ -1,0 +1,417 @@
+{
+  "id": "T-0191",
+  "intent": "Repair evidenced responsive and accessible component interactions, make Story progress and cancellation truthful, preserve chapter navigation position and current async ownership, and consolidate only components with demonstrated net benefit.",
+  "declared": {
+    "capabilities": [
+      "edit-code",
+      "edit-tests",
+      "edit-docs",
+      "git",
+      "git-push",
+      "run-isolated-process",
+      "owned-temporary-git"
+    ],
+    "side_effects": [
+      "financial-impact",
+      "sends-external"
+    ]
+  },
+  "mode": "high-assurance",
+  "tier_proposed": "R2",
+  "status": "active",
+  "owner_session": "2026-10-03-t0191-coordinator",
+  "claims": [
+    "src/components/layout/AppPageShell.tsx",
+    "src/components/models/CredentialsPanel.tsx",
+    "src/components/models/FallbackChainList.tsx",
+    "src/modules/rec-room/components/StoryCard.tsx",
+    "src/app/results/sessions/[id]/page.tsx",
+    "src/components/memory/hindsight/DirectivesTab.tsx",
+    "src/components/memory/hindsight/MentalModelsTab.tsx",
+    "src/app/work/research/page.tsx",
+    "src/components/composer/ComposerRunForm.tsx",
+    "src/components/composer/WorkflowCanvas.tsx",
+    "src/components/ui/Input.tsx",
+    "src/components/ui/field/Toggle.tsx",
+    "src/components/ui/field/Select.tsx",
+    "src/components/dashboard/DispatchStrip.tsx",
+    "src/components/dashboard/ProcessesPanel.tsx",
+    "src/components/layout/BranchDropdown.tsx",
+    "src/components/ui/CategoryAccordion.tsx",
+    "src/components/session/MessageBubble.tsx",
+    "src/components/models/FallbackConfigPanel.tsx",
+    "src/app/agent/skills/page.tsx",
+    "src/components/skills/SkillsSections.tsx",
+    "src/components/skills/SkillsSearchResults.tsx",
+    "src/components/skills/SkillCategoryList.tsx",
+    "src/components/skills/SkillRowList.tsx",
+    "src/components/ui/TemplateCard.tsx",
+    "src/components/schedule/SchedulePicker.tsx",
+    "src/components/chat/MessageBubble.tsx",
+    "src/components/skills/SimpleMarkdown.tsx",
+    "src/lib/chat/chat-utils.ts",
+    "src/hooks/useChatPage.ts",
+    "src/modules/rec-room/components/GenerateOverlay.tsx",
+    "src/app/globals.css",
+    "scripts/tooling/design-lint.mjs",
+    "src/hooks/useMissionDispatch.ts",
+    "src/components/ui/Toast.tsx",
+    "src/components/ui/feedback-context.ts",
+    "src/components/providers/FeedbackProvider.tsx",
+    "src/modules/rec-room/components/ReaderBody.tsx",
+    "src/modules/rec-room/components/ChapterReader.tsx",
+    "src/modules/rec-room/components/StoryReaderOverlays.tsx",
+    "src/app/recroom/story-weaver/[id]/page.tsx",
+    "src/components/missions/MissionEditorPanel.tsx",
+    "tests/unit/components-contextual-controls.test.tsx",
+    "tests/unit/components-primitive-parity.test.tsx",
+    "tests/unit/components-collection-actions.test.tsx",
+    "tests/unit/components-chat-markdown.test.tsx",
+    "tests/unit/components-progress-feedback.test.tsx",
+    "tests/unit/components-token-preservation.test.tsx",
+    "tests/e2e/component-accessibility-responsive.spec.ts",
+    "tests/unit/u0-the-gate-sees-what-it-claims.test.ts",
+    "tests/unit/u2-the-contrast-gate-refuses.test.ts",
+    "tests/unit/components/schedule/SchedulePicker.test.tsx",
+    "org/tasks/T-0191.json",
+    "org/claims.json",
+    "org/briefs/T-0191-oracle.md",
+    "org/briefs/T-0191-review.md",
+    "org/reviews/2026-10-t0191-component-verification.md",
+    "org/reviews/2026-10-t0191-dispositions.json",
+    "org/plans/2026-09-refactor-programme.json",
+    "org/plans/2026-09-refactor-ownership.mjs",
+    "org/plans/2026-09-refactor-ownership.json",
+    "org/HANDOVER.md",
+    "org/TASKS.md",
+    "org/STATE.md",
+    "docs/manifest.json",
+    "scripts/tooling/line-census.baseline.json",
+    "scripts/tooling/design-lint.baseline.json",
+    "tests/fixtures/mutants/T-0191.json"
+  ],
+  "timestamps": {
+    "opened": "2026-10-03T12:13:29.785227+00:00",
+    "updated": "2026-10-03T12:15:24.832293+00:00"
+  },
+  "tier_ruled": "R2",
+  "reasons": [
+    {
+      "factor": "money",
+      "tier_floor": "R2",
+      "source": "declared",
+      "evidence": "declared side effect: financial-impact"
+    },
+    {
+      "factor": "boundary-contact",
+      "tier_floor": "R1",
+      "source": "declared",
+      "evidence": "declared side effect: sends-external"
+    }
+  ],
+  "authority": "Approved Phase2/Q016/Q025/Q032, component item rulings and existing T0108 Stop intent. Q033 keeps compatibility throughv1.0. No protected edit, paid provider execution or unruled public removal.",
+  "prerequisite": {
+    "head": "39d7a8956d597175f553c558012f9a25738cafe1",
+    "observed": "2026-10-03T12:05:19.233Z",
+    "allRequiredJobsPassed": true,
+    "allRuns": [
+      {
+        "conclusion": "success",
+        "databaseId": 37074426694,
+        "event": "pull_request",
+        "headSha": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "status": "completed",
+        "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37074426694",
+        "workflowName": "Gitleaks"
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 37074426705,
+        "event": "pull_request",
+        "headSha": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "status": "completed",
+        "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37074426705",
+        "workflowName": "CI"
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 37074421300,
+        "event": "push",
+        "headSha": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "status": "completed",
+        "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37074421300",
+        "workflowName": "Gitleaks"
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 37074421302,
+        "event": "push",
+        "headSha": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "status": "completed",
+        "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37074421302",
+        "workflowName": "CI"
+      }
+    ],
+    "runs": [
+      {
+        "conclusion": "success",
+        "databaseId": 37074426694,
+        "event": "pull_request",
+        "headSha": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "status": "completed",
+        "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37074426694",
+        "workflowName": "Gitleaks",
+        "receipt": "tmp/t0190-hosted-closure-rerun/pull_request-gitleaks-37074426694-1791029115167.json",
+        "jobs": [
+          {
+            "id": 111061018150,
+            "name": "scan",
+            "status": "completed",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 37074426705,
+        "event": "pull_request",
+        "headSha": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "status": "completed",
+        "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37074426705",
+        "workflowName": "CI",
+        "receipt": "tmp/t0190-hosted-closure-rerun/pull_request-ci-37074426705-1791029116512.json",
+        "jobs": [
+          {
+            "id": 111061018461,
+            "name": "e2e-smoke",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 111061018526,
+            "name": "boot-smoke (macos-latest)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 111061018547,
+            "name": "boot-smoke (ubuntu-latest)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 111061018569,
+            "name": "build-test-ubuntu",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 111061018604,
+            "name": "build-test-macos",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 111061018615,
+            "name": "install-harness",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 111061018644,
+            "name": "real-hermes-integration",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 111061018652,
+            "name": "e2e-full (PLAYWRIGHT_SMOKE unset)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 111061018690,
+            "name": "shell-custom-scripts",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 111061018694,
+            "name": "docker-image",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 111063900297,
+            "name": "acceptance-gate (full suite + install journey + real Hermes)",
+            "status": "completed",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 37074421300,
+        "event": "push",
+        "headSha": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "status": "completed",
+        "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37074421300",
+        "workflowName": "Gitleaks",
+        "receipt": "tmp/t0190-hosted-closure-rerun/push-gitleaks-37074421300-1791029117501.json",
+        "jobs": [
+          {
+            "id": 111061000999,
+            "name": "scan",
+            "status": "completed",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 37074421302,
+        "event": "push",
+        "headSha": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "status": "completed",
+        "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37074421302",
+        "workflowName": "CI",
+        "receipt": "tmp/t0190-hosted-closure-rerun/push-ci-37074421302-1791029119232.json",
+        "jobs": [
+          {
+            "id": 111197456223,
+            "name": "build-test-macos",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 111197456749,
+            "name": "boot-smoke (ubuntu-latest)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 111197456923,
+            "name": "shell-custom-scripts",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 111197456984,
+            "name": "e2e-full (PLAYWRIGHT_SMOKE unset)",
+            "status": "completed",
+            "conclusion": "skipped"
+          },
+          {
+            "id": 111197457071,
+            "name": "boot-smoke (macos-latest)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 111197457216,
+            "name": "build-test-ubuntu",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 111197457536,
+            "name": "acceptance-gate (full suite + install journey + real Hermes)",
+            "status": "completed",
+            "conclusion": "skipped"
+          },
+          {
+            "id": 111197472439,
+            "name": "real-hermes-integration",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 111197475330,
+            "name": "e2e-smoke",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 111197476033,
+            "name": "install-harness",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "id": 111197482238,
+            "name": "docker-image",
+            "status": "completed",
+            "conclusion": "success"
+          }
+        ]
+      }
+    ]
+  },
+  "scope_note": "Exact claims replace programme globs. Implement nothing before independent oracle freeze and red commit. Existing broad Stop intent includes edit/continue client registration and accessible overlay Stop; no new create cancellation or server/provider guarantee. Coordinator production baseline confirms missing Stop in isolated edit/continue and covered Stop in supported generate-plus-edit overlap at both widths. Keyboard coverage remains pending. Footer reachability is already proved; chapter-position reset is the confirmed defect.",
+  "invariants": [
+    "Select and Picker stay separate. Prove rendered contextual names rather than treating eight missing explicit ariaLabel props as eight unnamed controls.",
+    "Preserve numeric null/partial/clamp/range and search semantics, disabled/hint associations, keyboard/focus and exactly-once callbacks. Inspector pill-to-track is the explicitly ruled restyle.",
+    "Preserve dark-neon palette and warm Reader identity. Phone repairs must show complete text and deliberately reachable controls at390x844 and1440x900; DOM presence and automatic scrolling are not geometry proof.",
+    "Elapsed time must not invent percentage or completion. Confirmed success retains the2000ms completion delay; refusal and cancellation never announce success. Hidden/unmounted operations cannot fire obsolete completion callbacks.",
+    "Existing Stop intent cancels registered edit/continue/generate/retry requests, prevents further automatic writes and rereads confirmed state. Keep concurrency ownership and late-answer suppression; never promise rollback or refunded provider spend. Create has no new cancellation contract.",
+    "Reader chapter changes present the beginning of the selected chapter below the header while footer access, fonts/settings, departing-chapter read status and explicit paid intent survive.",
+    "Mission cancellation settles only its own pending feedback. Preserve unrelated persistent errors, stack bounds, no-provider fallback, rollback, selected identity and later operations. Long agent/model/provider values are visually accessible without losing desktop density.",
+    "Chat uses the ruled SimpleMarkdown with guarded links, exact Copy whitespace and truthful clipboard refusal. Preserve incomplete streaming fences, escaped content and Research renderer.",
+    "Retain all stored template icons, separate editor choices and unknown Zap; add missing Bot. Remove only ruled Schedule compact/mode surface and two exact retired tests. Retain other public adapters without measured full-cohort net benefit.",
+    "Remove only four ruled unused RGB mirrors and correct three stale comments. Preserve synthetic gate fixtures, retained tokens, durations, spinner/reduced-motion exceptions, all historical identities except the two explicit Schedule retirements, and all T0190 async/cache oracles.",
+    "Keep fixed census targets and every adverse receipt. No generated/protected/history rewrite for savings. Max two writers; independent final reviewer authors neither source nor gates."
+  ],
+  "rollback": "Revert each primitive or responsive cohort with its consumers; revert Story lifecycle and feedback changes as coherent interfaces while retaining regression tests. No schema, stored-key or data migration.",
+  "verify_line": "Independent red-first public-action oracles; exact historical test-name parity except two ruled Schedule retirements. At1440x900/390x844 prove truthful Story progress/refusal/Stop, chapter-start positioning, accessible complete control text, keyboard/touch and responsive states. Preserve current cache/ownership contracts and all retention controls. Measure actual full-cohort net benefit before each fold. Full unchanged ten-stage gate, clean committed causal sweep with restored controls, independent R2 and every hosted job at implementation and closure heads. Account for every owned finding/split/coverage row and uncertainty.",
+  "oracle_status": "Not authored or frozen; implementation prohibited.",
+  "preservation_baseline": "tmp/t0191-preservation-baseline-20261003.json",
+  "independence": {
+    "method": "clean-context authorship",
+    "supplement": "coordinator human screenshot and interactive production samples; parser metamorphic unsafe-scheme and streaming cases",
+    "finalReviewer": "Laplace, 01a1019a-65c6-7ae2-aafe-5b79b166c745; neither production nor gate author",
+    "oracleAuthor": "Sartre, 01a101b0-fa17-7b10-a55b-b6201e93c846, fresh context; no source authorship"
+  },
+  "readiness": [
+    "tmp/t0191-full-readiness-review-20261002.md",
+    "tmp/t0191-primitive-cost-preparation.md",
+    "tmp/t0191-expanded-opening-20261002.md",
+    "tmp/t0191-independent-opening-critique-20261003.md",
+    "tmp/t0191-stop-overlay-review-20261002.md"
+  ],
+  "current_ui_evidence": [
+    "tmp/t0191-mission-metadata-review-20261002.md",
+    "tmp/t0191-reader-position-finding-20261002.md",
+    "tmp/t0190-green-validation/tmp/t0190-personal-1790980892020/walk.json",
+    "tmp/t0189-green-validation/tmp/t0190-personal-1790980945735/walk.json",
+    "tmp/t0190-green-validation/tmp/t0190-personal-1791028989606/walk.json"
+  ],
+  "independent_amendments": {
+    "scope": [
+      "tests/unit/u0-the-gate-sees-what-it-claims.test.ts",
+      "tests/unit/u2-the-contrast-gate-refuses.test.ts",
+      "tests/unit/components/schedule/SchedulePicker.test.tsx"
+    ],
+    "rule": "Different author; u0/u2 comments only, all fixtures/names/assertions preserved. Schedule permits only two named compact-mode identities to retire under its item ruling; capture complete original blobs/hashes/names. Additional historical changes require separate evidenced authorisation.",
+    "retired_names": [
+      "compact mode renders just the preset dropdown (no custom builder)",
+      "compact mode opens dropdown and selecting a preset calls onChange"
+    ]
+  },
+  "handoffs": "At opening regenerate explicit critic09/13->T0191,critic11->T0196,critic12->T0195 and auth/security/history coverage owners. No historical T0164 or closed-task edits; missing proof does not establish a defect. Parent completion still requires all children.",
+  "ownership_counts": {
+    "findings": 35,
+    "operatorDispositions": 9,
+    "coverage": 32
+  },
+  "prerequisite_review": "org/reviews/2026-10-t0191-component-verification.md#independent-prerequisite-verdict",
+  "historical_amendment_authority": {
+    "reviewer": "Laplace, 01a1019a-65c6-7ae2-aafe-5b79b166c745",
+    "evidence": "org/reviews/2026-10-t0191-component-verification.md",
+    "scope": [
+      "tests/unit/u0-the-gate-sees-what-it-claims.test.ts",
+      "tests/unit/u2-the-contrast-gate-refuses.test.ts",
+      "tests/unit/components/schedule/SchedulePicker.test.tsx"
+    ],
+    "status": "Authorised, not authored or executed; original controls and identities precede amendments."
+  }
+}

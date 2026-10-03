@@ -23,7 +23,7 @@
     {
       "id": "critic-03",
       "outcome": "planned",
-      "task": "T-0182",
+      "task": "T-0194",
       "reason": "Reverify this T-0164 source-level observation and its item ruling before any edit: Token printing and permissive creation paths are addressed in source. Existing operator-file permissions cannot be certified from source."
     },
     {
@@ -47,25 +47,25 @@
     {
       "id": "critic-11",
       "outcome": "planned",
-      "task": "T-0182",
+      "task": "T-0196",
       "reason": "Reverify this T-0164 source-level observation and its item ruling before any edit: Body readers repeat, but headers, error messages and Docker single-file layouts differ. A shared-helper saving is unproved."
     },
     {
       "id": "critic-09",
       "outcome": "planned",
-      "task": "T-0182",
+      "task": "T-0191",
       "reason": "Reverify this T-0164 source-level observation and its item ruling before any edit: Sampled tokens/class have no found source consumer; dynamic class use, docs and test pins need their own check. Historical “nine” count not re-derived."
     },
     {
       "id": "critic-13",
       "outcome": "planned",
-      "task": "T-0182",
+      "task": "T-0191",
       "reason": "Reverify this T-0164 source-level observation and its item ruling before any edit: Simulated announced percentage and stale Stop comment remain. The end-of-line button is now visible to the corrected lint regex, so that subclaim is fixed."
     },
     {
       "id": "critic-12",
       "outcome": "planned",
-      "task": "T-0182",
+      "task": "T-0195",
       "reason": "Reverify this T-0164 source-level observation and its item ruling before any edit: Warning remains; historic suite count is stale. Jest runtime semantics were not re-tested."
     },
     {
@@ -1626,14 +1626,14 @@
       "id": "critic-03a",
       "parentId": "critic-03",
       "outcome": "planned",
-      "task": "T-0182",
+      "task": "T-0194",
       "reason": "org/reviews/2026-09-decision-register.md:983; Reverify the item-specific ruled disposition against its accepted decision and parent qualification."
     },
     {
       "id": "critic-03b",
       "parentId": "critic-03",
       "outcome": "planned",
-      "task": "T-0182",
+      "task": "T-0194",
       "reason": "org/reviews/2026-09-decision-register.md:3127; Reverify the item-specific free-band disposition against its accepted decision and parent qualification."
     },
     {
@@ -1654,7 +1654,7 @@
       "id": "critic-09",
       "parentId": "critic-09",
       "outcome": "planned",
-      "task": "T-0182",
+      "task": "T-0191",
       "reason": "org/reviews/2026-09-decision-register.md:2187; Reverify the item-specific ruled disposition against its accepted decision and parent qualification."
     },
     {
@@ -2752,7 +2752,7 @@
     {
       "id": "gap-002.a",
       "outcome": "planned",
-      "task": "T-0181",
+      "task": "T-0194",
       "reason": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Verify repository token-file and setup permission code. Starting check: src/lib/api/auth-token.ts:66-70; scripts/bootstrap/setup.sh:121-124. Record command/exit or exact file:line, revision and independent review."
     },
     {
@@ -2770,7 +2770,7 @@
     {
       "id": "gap-003.a",
       "outcome": "planned",
-      "task": "T-0182",
+      "task": "T-0194",
       "reason": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Identify current forwarded-header throttle policy. Starting check: src/lib/api/auth-throttle.ts:35-72. Record command/exit or exact file:line, revision and independent review."
     },
     {
@@ -2812,7 +2812,7 @@
     {
       "id": "gap-005.b",
       "outcome": "planned",
-      "task": "T-0180",
+      "task": "T-0196",
       "reason": "Run this T-0164 atomic next proof before closing its owner batch: Explain the 15-patch difference with a reproducible ref/merge control; account for each expired historical alert or record an explicit unrecoverable disposition if its original report is unavailable; rerun a repaired config with a planted violation."
     },
     {
@@ -2836,19 +2836,19 @@
     {
       "id": "gap-007.a",
       "outcome": "planned",
-      "task": "T-0182",
+      "task": "T-0194",
       "reason": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Check whether browser cookie contains root token. Starting check: src/proxy.ts:268-290; src/lib/auth/session-store.ts:68-90 issues random secret. Record command/exit or exact file:line, revision and independent review."
     },
     {
       "id": "gap-007.b",
       "outcome": "planned",
-      "task": "T-0182",
+      "task": "T-0194",
       "reason": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Check cookie lifetime ceiling. Starting check: src/lib/auth/public-origin.ts:45-51 caps Max-Age at 43,200 seconds. Record command/exit or exact file:line, revision and independent review."
     },
     {
       "id": "gap-007.c",
       "outcome": "planned",
-      "task": "T-0182",
+      "task": "T-0194",
       "reason": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Check idle, absolute and token-rotation binding. Starting check: src/lib/auth/session-store.ts:10-11,42-53,97-115. Record command/exit or exact file:line, revision and independent review."
     },
     {
@@ -4390,19 +4390,19 @@
     {
       "id": "gap-105.a",
       "outcome": "planned",
-      "task": "T-0182",
+      "task": "T-0194",
       "reason": "Run this T-0164 atomic next proof before closing its owner batch: Trace every caller of src/lib/fs/path-security.ts, then run traversal, symlink and boundary cases in a disposable filesystem fixture; record paths, statuses and source lines."
     },
     {
       "id": "gap-105.b",
       "outcome": "planned",
-      "task": "T-0182",
+      "task": "T-0194",
       "reason": "Run this T-0164 atomic next proof before closing its owner batch: Trace the URL guard call path and run mapped IPv4, NAT64, DNS rebinding and private-address probes on an authorised isolated network fixture; record resolver and transport outcomes."
     },
     {
       "id": "gap-105.c",
       "outcome": "planned",
-      "task": "T-0182",
+      "task": "T-0194",
       "reason": "Run this T-0164 atomic next proof before closing its owner batch: Trace scripts-manager.ts execFile call sites, allowlist, argument construction and time/output caps; run rejected-path and argument-injection cases in a disposable script fixture."
     },
     {

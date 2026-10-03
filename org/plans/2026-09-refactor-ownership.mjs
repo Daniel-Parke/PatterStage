@@ -16,6 +16,9 @@ const deliberateKeep = new Set([
   "critic-02", "critic-15",
 ]);
 const specific = new Map([
+  ["critic-03", "T-0194"], ["critic-09", "T-0191"],
+  ["critic-11", "T-0196"], ["critic-12", "T-0195"],
+  ["critic-13", "T-0191"],
   ["lib-data-01", "T-0188"], ["lib-data-02", "T-0188"],
   ["critic-01", "T-0181"], ["critic-06", "T-0196"],
   ["critic-14", "T-0181"], ["tooling-29", "T-0180"],
@@ -144,6 +147,10 @@ const externalDeferred = new Set([
   "gap-097.b", "gap-099.a",
 ]);
 const proofTask = new Map([
+  ["gap-002.a", "T-0194"], ["gap-003.a", "T-0194"],
+  ["gap-007.a", "T-0194"], ["gap-007.b", "T-0194"], ["gap-007.c", "T-0194"],
+  ["gap-105.a", "T-0194"], ["gap-105.b", "T-0194"], ["gap-105.c", "T-0194"],
+  ["gap-005.b", "T-0196"],
   ["gap-033.a", "T-0188"], ["gap-059.2", "T-0193"],
   ["gap-083.b", "T-0196"], ["gap-090.a", "T-0191"],
   ["gap-101.a", "T-0195"],

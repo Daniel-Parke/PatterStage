@@ -1,0 +1,1310 @@
+{
+  "task": "T-0191",
+  "draft": true,
+  "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+  "counts": {
+    "findings": 35,
+    "operatorDispositions": 9,
+    "coverage": 32
+  },
+  "groups": {
+    "findings": [
+      {
+        "id": "critic-09",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/critic-09",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Sampled tokens/class have no found source consumer; dynamic class use, docs and test pins need their own check. Historical \u201cnine\u201d count not re-derived.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "critic-13",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/critic-13",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Simulated announced percentage and stale Stop comment remain. The end-of-line button is now visible to the corrected lint regex, so that subclaim is fixed.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "components-02",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/components-02",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Two dropdowns remain; Picker has stronger listbox handling. Migration changes size and labelling.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "components-10",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/components-10",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Repeated two-step delete/cancel logic and page-owned armed state remain.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "components-15",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/components-15",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Full-card branch has no found production caller. `Bot` is offered but absent from card map, so it falls back to Zap; visual defect, not data loss.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "components-08",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/components-08",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Chrome overlaps, but Card lacks forwarded DOM props and overflow behaviour.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "components-05",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/components-05",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Thin wrappers remain. Modal's required title and Sheet's labelling must survive any move.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "components-06",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/components-06",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Directory/reference editors repeat with different labels, keys and setters; saving unknown.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "components-16",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/components-16",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Production callers omit `compact` and `mode`; `mode` is discarded and the compact branch is test-only. This is an explicit operator-authorised deletion of both props and the tests for deleted behaviour, not a conclusion from caller search alone. No deletion or test run occurred here.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "components-07",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/components-07",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Six-field bundle still passes through four components.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "components-11",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/components-11",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Two input families remain. Historical unnamed TextInput/NumberInput harm is fixed: linked labels and `aria-label` are now present.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "components-17",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/components-17",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Dispatch helper remains in component; modal declares 43 props, not 44. Hook-state migration cost unmeasured.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "components-03",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/components-03",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Some visible labels lack association, but ModelEditor controls have explicit `aria-label`, and Field links a single child. Historical 28/8 unnamed counts need current accessible-name census.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "components-14",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/components-14",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Empty focus maps and misleading lint pragmas remain. Accent-prop removal needs visual intent proof.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "components-21",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/components-21",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Raw fields/buttons remain; modal fields have manual label/id pairs.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "components-12",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/components-12",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Three switch forms remain. Ruled consolidation changes inspector layout.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "components-19",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/components-19",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Large view-model destructure and repeated state predicate remain; read-contract remedy needs behavioural check.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "components-30",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/components-30",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Distinct renderers remain in source. The later operator ruling moves chat to `SimpleMarkdown` with an http/https/mailto/relative link-scheme guard and test, plus a code-block hover Copy replacement. Raw `href={match[2]}` must not gain untrusted chat input unguarded; browser behaviour and render cost were not tested here. The earlier keep-three ruling is superseded for chat.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "components-31",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/components-31",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Hand-built controls remain; icon buttons have title names, so \u201cunnamed\u201d overstates the evidence.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "components-04",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/components-04",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Nested interactive content and SVG click target are concrete. Historical 13-toggle count not rerun.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "components-13",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/components-13",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Three native-select presentations remain; caller attributes differ.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "components-28",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/components-28",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Sampled comments still cite stale paths, consumers or hook ownership.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "components-25",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/components-25",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Non-component modules remain; some UI helpers properly belong in this layer. Historical 24/1,450 is not a safe move list.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "components-23",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/components-23",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Two primitives plus inline status dots remain. \u201cNine ways\u201d conflates status, category and legend swatches.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "components-22",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/components-22",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Some list placeholders remain hand-built. Per-step glyphs and explanatory checking text are different semantics.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "components-27",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/components-27",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Alias is real. Historical \u201c85 unused exports\u201d lacks a reproducible current scan and conflicts with Knip; do not remove exports on this evidence.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "components-01",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/components-01",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: End-of-line raw tags now match; baseline and oracle exist. Not executed in this review.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "components-09",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/components-09",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Cross-domain locations and Card-exported StatusDot remain; move alone has zero proved saving.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "components-24",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/components-24",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Two subjects share a name; session types are imported by a hook. Button names/expanded state need focused checks.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "components-26",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/components-26",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: API envelope, theme type and domain records still share one file; move cost includes many imports.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "components-29",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/components-29",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Barrel imports can skew one-importer measure. \u201cOnly three pure wrappers\u201d unproved; StatusBadge has semantics.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "components-32",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/components-32",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Constant ternary, doubled expression and redundant loading icon remain; minor, zero-net tidies.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "components-33",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/components-33",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Source-path pins remain; 81-versus-82 count depends on matching rules. Inventory exact pins for each move.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "components-18",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/components-18",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Editor state and three `runWrite` sequences remain together; extraction cost unmeasured.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "components-20",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/components-20",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Pure merge logic and writes remain in components; split requires contract-preserving tests.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      }
+    ],
+    "operatorDispositions": [
+      {
+        "id": "critic-09",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#operatorDispositions/critic-09",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "org/reviews/2026-09-decision-register.md:2187; Reverify the item-specific ruled disposition against its accepted decision and parent qualification.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "components-02",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#operatorDispositions/components-02",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "org/reviews/2026-09-decision-register.md:2599; Reverify the item-specific ruled disposition against its accepted decision and parent qualification.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "components-16",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#operatorDispositions/components-16",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "org/reviews/2026-09-decision-register.md:3090; Reverify the item-specific free-band disposition against its accepted decision and parent qualification.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "components-11",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#operatorDispositions/components-11",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "org/reviews/2026-09-decision-register.md:2614; Reverify the item-specific ruled disposition against its accepted decision and parent qualification.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "components-12",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#operatorDispositions/components-12",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "org/reviews/2026-09-decision-register.md:2628; Reverify the item-specific ruled disposition against its accepted decision and parent qualification.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "components-30",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#operatorDispositions/components-30",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "org/reviews/2026-09-decision-register.md:2642; Reverify the item-specific ruled disposition against its accepted decision and parent qualification.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "components-31",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#operatorDispositions/components-31",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "org/reviews/2026-09-decision-register.md:3109; Reverify the item-specific free-band disposition against its accepted decision and parent qualification.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "components-01",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#operatorDispositions/components-01",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "org/reviews/2026-09-decision-register.md:1786; Reverify the item-specific ruled disposition against its accepted decision and parent qualification.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "cross-cutting-14b",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#operatorDispositions/cross-cutting-14b",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "org/reviews/2026-09-decision-register.md:2439; Use the ruled SimpleMarkdown renderer with Copy and guarded links.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      }
+    ],
+    "coverage": [
+      {
+        "id": "gap-044.1",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-044.1",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Render and compare proposed Select/Picker fold, components-02. Starting check: org/reviews/2026-09-codebase-review-evidence.md:1051. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "gap-044.2",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-044.2",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Render and compare Panel/Card fold, components-08. Starting check: org/reviews/2026-09-codebase-review-evidence.md:1076. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "gap-044.3",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-044.3",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Render and compare Input/Field fold, components-11. Starting check: org/reviews/2026-09-codebase-review-evidence.md:1117. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "gap-044.4",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-044.4",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Render and compare Hindsight modal fold, components-21. Starting check: org/reviews/2026-09-codebase-review-evidence.md:1150. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "gap-044.5",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-044.5",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Render and compare Toggle fold, components-12. Starting check: org/reviews/2026-09-codebase-review-evidence.md:1158. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "gap-044.6",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-044.6",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Render and compare Models primitive fold, components-31. Starting check: org/reviews/2026-09-codebase-review-evidence.md:1184. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "gap-045.1",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-045.1",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Identify suites importing each proposed component target. Starting check: rg -n 'from \"@/components/' tests src. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "gap-045.2",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-045.2",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Verify actual suite impact before each fold. Starting check: rg -n 'textRefs|source.text|readFileSync' tests/unit. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "gap-046.1",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-046.1",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Reconstruct the exact historical unread-file roster. Starting check: rg --files src/components. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "gap-046.2",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-046.2",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, each(named file at source line 1337): read full body and callers. Starting check: rg --files src/components | rg 'PageHeader|SettingsSection|CategoryCombobox|CategoryManagerModal|ComposerRunForm|ComposerNodeRunDetail|WorkflowRunCanvas|ResearchReport|SegmentedControl|IconButton|LinkButton|Badge|EmptyState|Popover|SplitPane|button-chrome|DataList|DeployControls|AchievementShowcase'. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "gap-046.3",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-046.3",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, each(Quest/Agent/Help/Log/Session/Script/Skill row or modal file): read full body and callers. Starting check: rg --files src/components | rg 'quests|agents|help|logs|session|scripts|skills'. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "gap-046.4",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-046.4",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, each(viz chart and motion file): review rendering and ownership. Starting check: rg --files src/components/viz src/components/motion. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "gap-047.1",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-047.1",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Determine whether ui/Badge can contain an icon. Starting check: src/components/ui/Badge.tsx:7-11,50-54; src/components/dashboard/StatusBadge.tsx:21-35. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "gap-047.2",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-047.2",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Check StatusBadge-to-Badge visual and semantic equivalence. Starting check: src/components/dashboard/StatusBadge.tsx:31-35. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "gap-048.1",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-048.1",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Recompute import users with namespace imports. Starting check: rg -n 'import \\* as' src/components src/app. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "gap-048.2",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-048.2",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Recompute barrel and re-export chains. Starting check: rg -n '^export (\\*|\\{)' src/components. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "gap-049.1",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-049.1",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Separate comment hits from JSX button hits. Starting check: src/components/ui/Card.tsx:31; src/components/ui/GlowSurface.tsx:9; src/components/models/PerRowDeleteButton.tsx:29; src/components/memory/hindsight/RowActionButtons.tsx:19. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "gap-049.2",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-049.2",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Verify SegmentedControl button type. Starting check: src/components/ui/SegmentedControl.tsx:103-109. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "gap-049.3",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-049.3",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Assess HindsightBrowser tab button and form ancestry. Starting check: src/components/memory/HindsightBrowser.tsx:122-132. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "gap-049.4",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-049.4",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Assess SessionFilterBar source-filter buttons and form ancestry. Starting check: src/components/session/SessionFilterBar.tsx:64-90. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "gap-049.5",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-049.5",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Assess ErrorBoundary retry button and form ancestry. Starting check: src/components/ui/ErrorBoundary.tsx:50-56. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "gap-049.6",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-049.6",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Assess RowEditButton and any other real no-type button missed by comment correction. Starting check: src/components/memory/hindsight/RowActionButtons.tsx:21-27. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "gap-050.1",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-050.1",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Trace ConceptHint Escape handling. Starting check: src/components/help/ConceptHint.tsx:64-80. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "gap-050.2",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-050.2",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Trace ConceptHint outside-pointer and focus-leave handling. Starting check: src/components/help/ConceptHint.tsx:50-56,74-80. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "gap-051.1",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-051.1",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Attribute repeated-window lines outside the four skills files. Starting check: scripts/tooling/line-census.mjs:93-120,377-392. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "gap-052.1",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-052.1",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Verify BloomField provenance hash against current bytes. Starting check: src/kit/PROVENANCE.md:15-33; tests/unit/kit-provenance.test.ts:29-47. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "gap-052.2",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-052.2",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Keep vendored scope separate from component refactor claims. Starting check: src/kit/PROVENANCE.md:3-10. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "gap-053.1",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-053.1",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Assess design-lint effect on components-01 and -29. Starting check: rg -n 'component|raw|button' scripts/tooling/design-lint.mjs. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "gap-053.2",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-053.2",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Assess line-census effect on components-01 and -29. Starting check: scripts/tooling/line-census.mjs:377-392. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "gap-054.1",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-054.1",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Verify current create/edit state ownership and consumers. Starting check: src/components/agents/CreateProfileModal.tsx:29-62; src/components/agents/EditProfileModal.tsx:28-72; src/app/agent/profiles/page.tsx:561-576. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "gap-054.2",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-054.2",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Measure whether a shared form saves net code without changing behaviour. Starting check: rg -n 'CreateProfileModal|EditProfileModal' src/app/agent/profiles/page.tsx. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      },
+      {
+        "id": "gap-090.a",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-090.a",
+        "inspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
+        "evidence": [
+          "tmp/t0191-full-readiness-review-20261002.md",
+          "tmp/t0191-primitive-cost-preparation.md",
+          "tmp/t0191-expanded-opening-20261002.md",
+          "tmp/t0191-independent-opening-critique-20261003.md",
+          "tmp/t0191-stop-overlay-review-20261002.md"
+        ],
+        "scepticVerdict": "Opening scope reviewed; final independent verdict pending",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: In an isolated or authorised fixture, Audit CSS token and class naming under the UI programme. Starting check: UI overhaul plan (org/plans/2026-09-ui-overhaul.md:1), design-lint and census. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0191",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Bind each conclusion to actual preservation, implementation or explicit deferral evidence before closure."
+      }
+    ]
+  }
+}
