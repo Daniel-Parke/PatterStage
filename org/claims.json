@@ -49,6 +49,7 @@
         "tests/e2e/route-contract-followups.spec.ts",
         "tests/helpers/route-contract-runtime.ts",
         "tests/unit/api-route-public-contract.test.ts",
+        "tests/unit/api-route-caller-gate.test.ts",
         "tests/fixtures/api-route-contract-baseline.json",
         "tests/unit/runtime-operational-consistency.test.ts",
         "tests/unit/composer-review-control.test.tsx",
@@ -69,18 +70,7 @@
       ],
       "acquired": "2026-10-03T21:24:24.476320+00:00",
       "expires": "2026-10-04T21:24:24.476320+00:00"
-    },
-    {
-      "lane_id": "T-0192-liveness-disposition",
-      "task_id": "T-0192",
-      "session_id": "01a101b0-fa17-7b10-a55b-b6201e93c846",
-      "host": "local",
-      "path_claims": [
-        "tests/unit/api-route-caller-gate.test.ts"
-      ],
-      "acquired": "2026-10-03T21:35:39.582245+00:00",
-      "expires": "2026-10-04T21:35:39.582245+00:00"
     }
   ],
-  "note": "Halley stopped after three-file amendment. Sartre independently records only the accepted T0170 public liveness alias in the caller oracle. Coordinator owns other files; no more than two writers."
+  "note": "All independent oracle authors stopped after handoffs. Coordinator owns integration and production repairs. Laplace remains independent read-only reviewer."
 }

@@ -349,7 +349,7 @@
   ],
   "rollback": "Revert each coherent defect or route/type/prop cohort with its callers. Retain regression tests; no schema or stored-key migration. Public contracts remain pinned.",
   "verify_line": "Independent red-first eight-defect oracles and real persistence under discovered Playwright specs; full URL/method snapshot and operator caller allowlist before route edits; exact error/optional-body/guard contracts; boot/flag/gateway consistency; current82item ledger and measured complete-cohort net counts; cold/warm Windows/Linux built endpoint and event-loop investigation; ordinary1440x900/390x844 personal walks/screenshots; full unchanged ten-stage gate; clean committed causal sweep with passing restored controls; independentR2; every implementation andclosure hosted job.",
-  "oracle_status": "Reviewed browser/public-contract cohort committed red 27/94. Reviewed five-file unit defect cohort red 16/51 before its implementation. Caller gate remains separate pending exact accepted T0170 compatibility disposition.",
+  "oracle_status": "Initial defect/public-contract oracles independently accepted and committed before their implementation: browser27/42 red, unit16/51 red, public contracts52/52 passed, caller9/9 passed. Broader consolidation cohorts need their own contracts before edits.",
   "preservation_baseline": "tmp/t0192-preservation-baseline-20261003.json",
   "independence": {
     "oracleAuthor": "Galileo unit/contracts; Sartre browser/persistence and historical Composer fixture; source exposure disclosed",
@@ -494,5 +494,13 @@
     "behaviouralFailures": 16,
     "historicalControlsPassed": 150,
     "callerGate": "Separate disposition amendment pending for public liveness alias required by accepted T0170; not a product defect."
+  },
+  "caller_oracle_freeze": {
+    "reviewer": "Laplace",
+    "verdict": "Accepted exact file, 9/9 cases passed; no implementation acceptance.",
+    "file": "tests/unit/api-route-caller-gate.test.ts",
+    "sha256": "2a1e0c589798b3989bccfbc4671339bcb6b826810d1613a4d09650350a9cebce",
+    "receipt": "tmp/t0191-green-validation/tmp/t0192-liveness-oracle/provenance.json",
+    "authority": "T0170 explicitly retains the public JSON liveness alias. Four operator exceptions remain unchanged."
   }
 }
