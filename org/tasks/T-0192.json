@@ -349,7 +349,7 @@
   ],
   "rollback": "Revert each coherent defect or route/type/prop cohort with its callers. Retain regression tests; no schema or stored-key migration. Public contracts remain pinned.",
   "verify_line": "Independent red-first eight-defect oracles and real persistence under discovered Playwright specs; full URL/method snapshot and operator caller allowlist before route edits; exact error/optional-body/guard contracts; boot/flag/gateway consistency; current82item ledger and measured complete-cohort net counts; cold/warm Windows/Linux built endpoint and event-loop investigation; ordinary1440x900/390x844 personal walks/screenshots; full unchanged ten-stage gate; clean committed causal sweep with passing restored controls; independentR2; every implementation andclosure hosted job.",
-  "oracle_status": "Browser and URL/method cohort independently accepted by Laplace before implementation: 94 new cases, 67 passing and 27 behavioural reds. Separate unit amendments remain pending and unintegrated.",
+  "oracle_status": "Reviewed browser/public-contract cohort committed red 27/94. Reviewed five-file unit defect cohort red 16/51 before its implementation. Caller gate remains separate pending exact accepted T0170 compatibility disposition.",
   "preservation_baseline": "tmp/t0192-preservation-baseline-20261003.json",
   "independence": {
     "oracleAuthor": "Galileo unit/contracts; Sartre browser/persistence and historical Composer fixture; source exposure disclosed",
@@ -434,5 +434,65 @@
   "bounded_defect_additions": [
     "Unread or refused Script load permits an actual empty overwrite; stale responses can replace another selected script.",
     "Profile rename destination obstruction can remove the original database row before reporting failure. Preserve row and directory before mutation; no historical-reference rewrite."
-  ]
+  ],
+  "unit_defect_freeze": {
+    "reviewer": "Laplace",
+    "sourceRevision": "4a0ce1968befcfd33f392478627b9ac668e67ef1",
+    "receipt": "tmp/t0191-green-validation/tmp/t0192-unit-amendment/manifest.json",
+    "files": [
+      {
+        "path": "tests/unit/api-fetch-error-envelope.test.ts",
+        "before": {
+          "path": "tests/unit/api-fetch-error-envelope.test.ts",
+          "exists": false,
+          "sha256": null
+        },
+        "sha256": "f19bdd09a27ac0e4204ed36fe873cfc81adc7946f8b0ffab644a6bfe6135db51",
+        "lfSha256": "f19bdd09a27ac0e4204ed36fe873cfc81adc7946f8b0ffab644a6bfe6135db51",
+        "bytes": 2071,
+        "lines": 38
+      },
+      {
+        "path": "tests/unit/settings-save-draft-ownership.test.tsx",
+        "before": {
+          "path": "tests/unit/settings-save-draft-ownership.test.tsx",
+          "exists": false,
+          "sha256": null
+        },
+        "sha256": "bcfe417bce67d68bfe6de8725e47f53eb4836d2b8c72755301a8396a1fcd025a",
+        "lfSha256": "bcfe417bce67d68bfe6de8725e47f53eb4836d2b8c72755301a8396a1fcd025a",
+        "bytes": 6767,
+        "lines": 130
+      },
+      {
+        "path": "tests/unit/model-bulk-default-feedback.test.tsx",
+        "before": {
+          "path": "tests/unit/model-bulk-default-feedback.test.tsx",
+          "exists": false,
+          "sha256": null
+        },
+        "sha256": "f91bd70cebfe92b56a5c3182f99d072a090abbe543b15963156761de8b0d9a50",
+        "lfSha256": "f91bd70cebfe92b56a5c3182f99d072a090abbe543b15963156761de8b0d9a50",
+        "bytes": 3031,
+        "lines": 57
+      },
+      {
+        "path": "tests/unit/story-list-failure-contract.test.ts",
+        "sha256": "c6f0d74f9b638b9da1f294a5639e0869b630ef4ebb81ab945332baf1522f04be",
+        "lfSha256": "c6f0d74f9b638b9da1f294a5639e0869b630ef4ebb81ab945332baf1522f04be",
+        "bytes": 3420
+      },
+      {
+        "path": "tests/unit/runtime-operational-consistency.test.ts",
+        "sha256": "7836f83645de586260256b522ea0b29993c63695130993b3d11531a88063b326",
+        "lfSha256": "7836f83645de586260256b522ea0b29993c63695130993b3d11531a88063b326",
+        "bytes": 7324
+      }
+    ],
+    "cases": 51,
+    "passed": 35,
+    "behaviouralFailures": 16,
+    "historicalControlsPassed": 150,
+    "callerGate": "Separate disposition amendment pending for public liveness alias required by accepted T0170; not a product defect."
+  }
 }
