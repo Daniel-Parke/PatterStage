@@ -369,7 +369,8 @@
     "method": "clean-context authorship",
     "supplement": "coordinator human screenshot and interactive production samples; parser metamorphic unsafe-scheme and streaming cases",
     "finalReviewer": "Laplace, 01a1019a-65c6-7ae2-aafe-5b79b166c745; neither production nor gate author",
-    "oracleAuthor": "Sartre, 01a101b0-fa17-7b10-a55b-b6201e93c846, fresh context; no source authorship"
+    "oracleAuthor": "Sartre, 01a101b0-fa17-7b10-a55b-b6201e93c846, fresh context; no source authorship",
+    "browserOracleAuthor": "Galileo,01a101b3-7c34-7a71-94b5-334c72f652cb, fresh context; browser suite only"
   },
   "readiness": [
     "tmp/t0191-full-readiness-review-20261002.md",
