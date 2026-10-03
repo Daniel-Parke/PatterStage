@@ -107,12 +107,12 @@
         "src/lib/feature-flags-guard.ts",
         "tests/helpers/runtime-boot-boundary.ts",
         "tests/e2e/script-editor-write-ownership.spec.ts",
-        "tests/unit/route-local-catch-contract.test.ts",
         "src/app/api/schedules/route.ts",
         "src/lib/missions/mission-promote-handler.ts",
         "src/lib/missions/mission-handlers/dispatch.ts",
         "src/lib/schedule/schedule-problem.ts",
         "tests/e2e/schedule-validation-contract.spec.ts",
+        "tests/e2e/script-editor-pending-draft.spec.ts",
         "src/app/api/missions/route.ts",
         "src/app/api/scripts/logs/route.ts",
         "src/app/api/scripts/run/route.ts",
@@ -120,23 +120,23 @@
         "src/app/api/agent/files/[key]/route.ts",
         "src/app/api/sessions/[id]/route.ts",
         "src/app/api/models/fallbacks/route.ts",
-        "src/lib/templates-handlers/create.ts",
-        "tests/unit/template-create-identifiers.test.ts"
+        "src/lib/templates-handlers/create.ts"
       ],
       "acquired": "2026-10-03T21:24:24.476320+00:00",
       "expires": "2026-10-04T21:24:24.476320+00:00"
     },
     {
-      "lane_id": "T-0192-pending-draft-oracle",
+      "lane_id": "T-0192-independent-fixtures",
       "task_id": "T-0192",
-      "session_id": "01a10198-6b4f-7593-aa19-e0b3c8facad8",
+      "session_id": "01a10195-e680-7d01-b79a-86627d74049c",
       "host": "local",
       "path_claims": [
-        "tests/e2e/script-editor-pending-draft.spec.ts"
+        "tests/unit/template-create-identifiers.test.ts",
+        "tests/unit/route-local-catch-contract.test.ts"
       ],
-      "acquired": "2026-10-03T23:02:10.706333+00:00",
-      "expires": "2026-10-04T23:02:10.706333+00:00"
+      "acquired": "2026-10-03T23:12:41.963300+00:00",
+      "expires": "2026-10-04T23:12:41.963300+00:00"
     }
   ],
-  "note": "Sartre stopped. Coordinator integrates reviewed oracles and implements; Nash owns only the new pending-draft oracle."
+  "note": "Nash stopped. Halley owns only independent fixture corrections under Q015; coordinator owns production and integrations."
 }

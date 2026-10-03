@@ -177,7 +177,8 @@
       "tests/e2e/script-editor-write-ownership.spec.ts",
       "tests/e2e/schedule-validation-contract.spec.ts",
       "tests/unit/route-local-catch-contract.test.ts",
-      "tests/unit/template-create-identifiers.test.ts"
+      "tests/unit/template-create-identifiers.test.ts",
+      "tests/e2e/script-editor-pending-draft.spec.ts"
     ],
     "hashes": {
       "tests/unit/api-fetch-error-envelope.test.ts": "f19bdd09a27ac0e4204ed36fe873cfc81adc7946f8b0ffab644a6bfe6135db51",
@@ -199,7 +200,8 @@
       "tests/e2e/script-editor-write-ownership.spec.ts": "4b26bd71b317edd2ab628ad7e40a882c887dcf2661cda31db036f8e4f8c3e7ea",
       "tests/e2e/schedule-validation-contract.spec.ts": "516a93fe938fb06124c8752974c4327b3b585ad9d08e4b8ee5532cb470542fea",
       "tests/unit/route-local-catch-contract.test.ts": "dc4255a9f6bba308215389d543dfba68f7f22da32c53c9530047149e6a221de8",
-      "tests/unit/template-create-identifiers.test.ts": "457f19df38ecf10011e32224dc9e638586678f9ca3a8fee722071733558dac71"
+      "tests/unit/template-create-identifiers.test.ts": "457f19df38ecf10011e32224dc9e638586678f9ca3a8fee722071733558dac71",
+      "tests/e2e/script-editor-pending-draft.spec.ts": "a7114aca2e3d0304d5c9401567b217ae5c21c16d8410e0b7604bb074ad258820"
     },
     "author_session": "Galileo and Sartre original authors; Halley and Sartre independent amendments; full attribution in org/reviews/2026-10-t0192-task-evidence.json; Nash independently corrected diagnostic candidate and authored ConfigSync replacement oracle; coordinator authored schedule persistence characterisation before consolidation; coordinator authored template identifier oracle before correction",
     "independence_method": "metamorphic",

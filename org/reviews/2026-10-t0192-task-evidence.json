@@ -718,5 +718,20 @@
     "result": "2 causal reds,27 historical controls pass, no runtime errors.",
     "review": "Suitable for source-informed freeze conditional on observed expected reds; both confirmed by structured Jest output.",
     "limits": "Mocked persistence/events/enrichment; not real-file collision, legacy-ID loading or import-pack proof. House-helper adoption needs source review."
+  },
+  "pendingDraftOracle": {
+    "file": "tests/e2e/script-editor-pending-draft.spec.ts",
+    "sha256": "a7114aca2e3d0304d5c9401567b217ae5c21c16d8410e0b7604bb074ad258820",
+    "author": "Nash",
+    "reviewer": "Laplace",
+    "receipt": "tmp/t0191-green-validation/tmp/t0192-pending-draft-red-1791068651902/manifest.json",
+    "result": "8/8 causal reds at disappearing-editor assertion, six workers, zero retries; disk/single-write preconditions pass.",
+    "qualification": "Subsequent explicit-Save assertions unreached. Full test typecheck failed on four unrelated local-catch fixture fields; no green freeze gate or batch acceptance claimed."
+  },
+  "oracleTypecheckCorrection": {
+    "failedReceipt": "tmp/t0191-green-validation/tmp/t0192-pending-draft-red-1791068651902/types.log",
+    "cause": "Default tsconfig.json excludes tests. Earlier default tsc exit0 does not validate any oracle fixture. Sartre retracted broader claim; four missing logFile/backupPath fixture fields require independent correction.",
+    "requiredCommand": "node node_modules/typescript/bin/tsc --noEmit --incremental false -p tsconfig.tests.json",
+    "scope": "All earlier default-configuration type receipts are application-only; runtime suite results remain separate valid evidence."
   }
 }
