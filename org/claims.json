@@ -51,6 +51,7 @@
         "tests/unit/api-route-public-contract.test.ts",
         "tests/unit/api-route-caller-gate.test.ts",
         "tests/fixtures/api-route-contract-baseline.json",
+        "tests/unit/runtime-operational-consistency.test.ts",
         "tests/unit/composer-review-control.test.tsx",
         "org/tasks/T-0192.json",
         "org/claims.json",
@@ -69,6 +70,7 @@
         "org/reviews/2026-10-t0192-task-evidence.json",
         "tests/unit/b3-runtime-status.test.ts",
         "docs/running/env-reference.md",
+        "tests/unit/runtime-gateway-diagnostic-redaction.test.ts",
         "tests/unit/tooling-env-contract.test.ts",
         "tests/unit/scripts-typecheck-contract.test.ts",
         "src/lib/status/runtime-status-format.ts",
@@ -103,29 +105,36 @@
         "org/LOCKBOOK.md",
         "src/app/api/composer/workflows/route.ts",
         "src/lib/feature-flags-guard.ts",
+        "tests/helpers/runtime-boot-boundary.ts",
+        "tests/e2e/script-editor-write-ownership.spec.ts",
+        "tests/unit/route-local-catch-contract.test.ts",
         "src/app/api/schedules/route.ts",
         "src/lib/missions/mission-promote-handler.ts",
         "src/lib/missions/mission-handlers/dispatch.ts",
-        "src/lib/schedule/schedule-problem.ts"
+        "src/lib/schedule/schedule-problem.ts",
+        "tests/e2e/schedule-validation-contract.spec.ts",
+        "src/app/api/missions/route.ts",
+        "src/app/api/scripts/logs/route.ts",
+        "src/app/api/scripts/run/route.ts",
+        "src/app/api/models/sync/push/route.ts",
+        "src/app/api/agent/files/[key]/route.ts",
+        "src/app/api/sessions/[id]/route.ts",
+        "src/app/api/models/fallbacks/route.ts"
       ],
       "acquired": "2026-10-03T21:24:24.476320+00:00",
       "expires": "2026-10-04T21:24:24.476320+00:00"
     },
     {
-      "lane_id": "T-0192-preserved-contracts",
+      "lane_id": "T-0192-pending-draft-oracle",
       "task_id": "T-0192",
-      "session_id": "01a101b0-fa17-7b10-a55b-b6201e93c846",
+      "session_id": "01a10198-6b4f-7593-aa19-e0b3c8facad8",
       "host": "local",
       "path_claims": [
-        "tests/helpers/runtime-boot-boundary.ts",
-        "tests/unit/runtime-operational-consistency.test.ts",
-        "tests/unit/runtime-gateway-diagnostic-redaction.test.ts",
-        "tests/e2e/script-editor-write-ownership.spec.ts",
-        "tests/unit/route-local-catch-contract.test.ts"
+        "tests/e2e/script-editor-pending-draft.spec.ts"
       ],
-      "acquired": "2026-10-03T22:34:42.730182+00:00",
-      "expires": "2026-10-04T22:34:42.730182+00:00"
+      "acquired": "2026-10-03T23:02:10.706333+00:00",
+      "expires": "2026-10-04T23:02:10.706333+00:00"
     }
   ],
-  "note": "Nash stopped. Sartre independently shares duplicated boot fixtures and authors two bounded follow-up contracts. Coordinator owns production; historical test identities/assertions remain frozen."
+  "note": "Sartre stopped. Coordinator integrates reviewed oracles and implements; Nash owns only the new pending-draft oracle."
 }

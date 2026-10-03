@@ -125,7 +125,15 @@
     "src/lib/missions/mission-promote-handler.ts",
     "src/lib/missions/mission-handlers/dispatch.ts",
     "src/lib/schedule/schedule-problem.ts",
-    "tests/e2e/schedule-validation-contract.spec.ts"
+    "tests/e2e/schedule-validation-contract.spec.ts",
+    "tests/e2e/script-editor-pending-draft.spec.ts",
+    "src/app/api/missions/route.ts",
+    "src/app/api/scripts/logs/route.ts",
+    "src/app/api/scripts/run/route.ts",
+    "src/app/api/models/sync/push/route.ts",
+    "src/app/api/agent/files/[key]/route.ts",
+    "src/app/api/sessions/[id]/route.ts",
+    "src/app/api/models/fallbacks/route.ts"
   ],
   "timestamps": {
     "opened": "2026-10-03T20:37:32.586979+00:00",
@@ -165,7 +173,8 @@
       "tests/unit/config-sync-atomic-replacement.test.ts",
       "tests/helpers/runtime-boot-boundary.ts",
       "tests/e2e/script-editor-write-ownership.spec.ts",
-      "tests/e2e/schedule-validation-contract.spec.ts"
+      "tests/e2e/schedule-validation-contract.spec.ts",
+      "tests/unit/route-local-catch-contract.test.ts"
     ],
     "hashes": {
       "tests/unit/api-fetch-error-envelope.test.ts": "f19bdd09a27ac0e4204ed36fe873cfc81adc7946f8b0ffab644a6bfe6135db51",
@@ -185,7 +194,8 @@
       "tests/unit/config-sync-atomic-replacement.test.ts": "84a11950d2d80e22025f0324c6bf6629a9d7b0511c72c2c51100ddcdefaf1ca4",
       "tests/helpers/runtime-boot-boundary.ts": "4a8ff944dc5e2d08f2e60caf85dad97df91f8673a1e046a2e132d6fb8aed607a",
       "tests/e2e/script-editor-write-ownership.spec.ts": "4b26bd71b317edd2ab628ad7e40a882c887dcf2661cda31db036f8e4f8c3e7ea",
-      "tests/e2e/schedule-validation-contract.spec.ts": "516a93fe938fb06124c8752974c4327b3b585ad9d08e4b8ee5532cb470542fea"
+      "tests/e2e/schedule-validation-contract.spec.ts": "516a93fe938fb06124c8752974c4327b3b585ad9d08e4b8ee5532cb470542fea",
+      "tests/unit/route-local-catch-contract.test.ts": "dc4255a9f6bba308215389d543dfba68f7f22da32c53c9530047149e6a221de8"
     },
     "author_session": "Galileo and Sartre original authors; Halley and Sartre independent amendments; full attribution in org/reviews/2026-10-t0192-task-evidence.json; Nash independently corrected diagnostic candidate and authored ConfigSync replacement oracle; coordinator authored schedule persistence characterisation before consolidation",
     "independence_method": "metamorphic",

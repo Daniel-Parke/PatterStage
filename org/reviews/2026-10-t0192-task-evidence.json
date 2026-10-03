@@ -647,14 +647,22 @@
     "baselineReceipt": "tmp/t0192-defects-schedule-1791067674095",
     "baseline": "51/51 cases in five unchanged suites, exit0 before cohort implementation.",
     "invariants": "Syntax before impossible date before interval bounds; exact refusal strings and pre-write locations. Promotion preserves parsed display. Compute-next and dispatch ordering unchanged.",
-    "status": "Pre-consolidation contracts frozen, production schedule code unchanged.",
+    "status": "Consolidated; focused checks green; full gate and final review remain.",
     "oracle": "tests/e2e/schedule-validation-contract.spec.ts",
     "sha256": "516a93fe938fb06124c8752974c4327b3b585ad9d08e4b8ee5532cb470542fea",
     "baselineBrowserReceipt": "tmp/t0192-defects-schedule-browser-1791068081146",
     "baselineBrowser": "16/16 pass, six workers, zero retries. Characterisation controls, not claimed causal reds.",
     "review": "Halley found no blocking defect in16case draft; coordinator strengthened omitted-expression assertion to require the renamed value before freeze and reran16/16. Existing task red-first defect oracles remain separate.",
     "qualifications": "Leap-day acceptance is calendar-dependent for next-run nullness; past one-shot pins null. Persisted snapshots do not prove absence of all transient side effects.",
-    "types": "tmp/t0192-defects-types-1791068040648 exit0; focused ESLint exit0 before added name field assertion."
+    "types": "tmp/t0192-defects-types-1791068040648 exit0; focused ESLint exit0 before added name field assertion.",
+    "postUnitReceipt": "tmp/t0192-defects-schedule-1791068255826",
+    "postUnit": "51/51 exit0",
+    "postBuildReceipt": "tmp/t0192-defects-build-1791068277825",
+    "postBrowserReceipt": "tmp/t0192-defects-schedule-browser-1791068421691",
+    "postBrowser": "16/16 exit0",
+    "measuredSourceDelta": -41,
+    "measurementQualification": "Includes new18line helper, comments/imports; excludes unrelated minus2line Ctx change. Test growth reported separately.",
+    "implementationReview": "Halley: no regression or additional blocking behavioural gap in five-file extraction."
   },
   "scriptWriteOracle": {
     "author": "Sartre",
@@ -676,5 +684,25 @@
     "result": "50/50 pass, six workers, zero retries; includes all8 Script write cases and42 prior browser cases.",
     "implementation": "Capture editor epoch before write; close only matching current editor on success; always refresh persisted list.",
     "remaining": "Final full gate, mutation, hosted jobs and overall Script lifecycle review remain open."
+  },
+  "localCatchCharacterisation": {
+    "author": "Sartre",
+    "reviewer": "Laplace",
+    "originalRawSha256": "770a0cd69ab2ffdb3e543236c9d270e87f089fab6a629fc9b8fdca5cb81c680e",
+    "canonicalLfSha256": "dc4255a9f6bba308215389d543dfba68f7f22da32c53c9530047149e6a221de8",
+    "normalisation": "Repository LF policy only.",
+    "receipt": "tmp/t0191-green-validation/tmp/t0192-local-catch-oracle/provenance.json",
+    "baseline": "76/76 passed before folding; characterisation controls, not product reds.",
+    "earlierAttempt": "75/76, quotation-mark expectation corrected before freeze; retained oracle failure, not a product defect.",
+    "files": [
+      "src/app/api/missions/route.ts",
+      "src/app/api/scripts/logs/route.ts",
+      "src/app/api/scripts/run/route.ts",
+      "src/app/api/models/sync/push/route.ts",
+      "src/app/api/agent/files/[key]/route.ts",
+      "src/app/api/sessions/[id]/route.ts",
+      "src/app/api/models/fallbacks/route.ts"
+    ],
+    "qualification": "Pins terminal contexts, selected inner failures and response-time revocation; unexercised JSONL recovery remains outside new proof."
   }
 }
