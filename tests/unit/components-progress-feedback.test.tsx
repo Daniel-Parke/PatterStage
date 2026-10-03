@@ -313,7 +313,7 @@ describe("T0191 Mission cancellation owns pending feedback", () => {
     if (outcome === "success") current = { ...row, status: "failed", result: "Cancelled by user" };
     await act(async () => { held.complete(outcome === "success" ? jsonResponse({ data: { mission: current, cancel: { accepted: true, processKillPending: true } } }) : jsonResponse({ error: "Owned cancel refusal" }, 409)); await pending; await jest.advanceTimersByTimeAsync(400); });
     fallbackView?.rerender(<>{hook.result.current.toastElement}</>);
-    if (provider) expect(screen.getByText("Unrelated persistent error")).toBeInTheDocument();
+    if (provider) expect(screen.queryAllByText("Unrelated persistent error")).toHaveLength(1);
     expect(screen.queryAllByTestId("toast").length).toBeLessThanOrEqual(3);
     expect(screen.queryByText(/cancelling/i)).not.toBeInTheDocument();
     expect(document.body.textContent).toMatch(outcome === "success" ? /cancelled/i : /Owned cancel refusal/);
@@ -348,7 +348,7 @@ it("T0191 later Mission cancellation keeps its pending feedback when an earlier 
     expect(transport.mock.calls.filter(([, init]) => init?.method === "POST")).toHaveLength(2);
     rows[0] = { ...rows[0], status: "failed", result: "Cancelled by user" };
     await act(async () => { held.A.complete(jsonResponse({ data: { mission: rows[0], cancel: { accepted: true, processKillPending: true } } })); await first; await jest.advanceTimersByTimeAsync(400); });
-    expect(screen.getAllByText(/cancelling mission/i)).toHaveLength(1);
+    expect(screen.queryAllByText(/cancelling mission/i)).toHaveLength(1);
     expect(screen.queryAllByTestId("toast").length).toBeLessThanOrEqual(3);
     await act(async () => { held.B.complete(jsonResponse({ error: "Second owned refusal" }, 409)); await second; await jest.advanceTimersByTimeAsync(400); });
     expect(screen.queryByText(/cancelling mission/i)).not.toBeInTheDocument();
@@ -399,6 +399,7 @@ it("T0191 settled Mission timers cannot clear a newer held cancellation or unrel
       await act(async () => { await jest.advanceTimersByTimeAsync(deadline - (Date.now() - epoch)); });
       expect(pending).toBeVisible();
       expect(screen.getAllByText(/cancelling mission/i)).toEqual([pending]);
+      expect(screen.queryAllByText("Persistent independent timer error")).toHaveLength(1);
       expect(screen.getByText("Persistent independent timer error")).toBeVisible();
       expect(handle.result.current.page.cancellingMissionId).toBe("timer-C");
     }

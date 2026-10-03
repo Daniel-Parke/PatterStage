@@ -2,7 +2,7 @@
   "measuredAt": "2026-10-03",
   "counts": {
     "srcLines": 102132,
-    "testLines": 147075,
+    "testLines": 147076,
     "scriptsLines": 13667,
     "srcRepeatedWindowLines": 807,
     "testRepeatedWindowLines": 4796,
@@ -1220,6 +1220,11 @@
       "measuredAt": "2026-10-03",
       "rise": "testLines rose from 147031 to 147075",
       "reason": "T-0191 independent physical-wheel helper correction verifies exposed hit targets before gestures, preserving58case bodies,80/16limits,waits and finalgeometry assertions. Synthetic original-red/candidate-green/overlay-refusal and normal6worker58pass receipt1791054723911. Added test instrumentation records hit targets and offsets; no sourcegrowth or fixedtarget change."
+    },
+    {
+      "measuredAt": "2026-10-03",
+      "rise": "testLines rose from 147075 to 147076",
+      "reason": "T-0191 independent mutation-attribution amendment adds one explicit cardinality assertion before preserved timer visibility;23case identities and all other behaviour unchanged. Original18KILLED1ERROR retained; exact candidate04bd5c1e reviewed by Laplace and23controls/type/lint pass. No production or runner change."
     }
   ]
 }

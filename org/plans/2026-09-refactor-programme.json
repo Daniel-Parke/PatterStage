@@ -1099,7 +1099,15 @@
           "tests/unit/t0163-hermes-env-permissions.test.ts:172"
         ],
         "review": "Nash read-only: unique root, synchronous I/O, restored spies/umask; no explicit retained handle or same-path writer found. Laplace permits another full verification with all receipts retained. No antivirus/handle/scheduling causation established.",
-        "required": "Investigate native Windows ownership and transient replacement failure without silent retry, test weakening or deadline growth. Preserve this signature independently of cleanup and worker-exit uncertainty."
+        "required": "Investigate native Windows ownership and transient replacement failure without silent retry, test weakening or deadline growth. Preserve this signature independently of cleanup and worker-exit uncertainty.",
+        "recurrence20261003": {
+          "full": "tmp/t0191-full-gate-1791056177702/jest.log",
+          "case": "hermes-config-sync-env: every Hermes provider with an env var routes to its mapped env var",
+          "alone": "tmp/t0191-hermes-sync-env-alone.json",
+          "alonePassed": 9,
+          "signature": "EPERM rename .env.tmp-PID-time-random to .env at hermes-config-write.ts38",
+          "limits": "Same writer signature as priorT0163, different case. Tests/source unchanged; cause unproved. No sharedcause claim with older cleanup-delete EPERM. No source retry, new permissions, lowered concurrency or waived check."
+        }
       }
     },
     {

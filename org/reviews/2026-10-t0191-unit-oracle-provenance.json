@@ -3160,5 +3160,69 @@
     "coordinatorRuntimeReceipt": "tmp/t0191-full-gate-1791054723911/rerun/summary.rerun.json",
     "boundary": "Read-only hit testing selects exposed points for physical wheel input; same limits and final assertions. No forced or DOM scrolling.",
     "reviewer": "Laplace exact source review; final full-gate R2 acceptance still required."
+  },
+  "mutation_attribution_amendment": {
+    "manifest": {
+      "claim": "T-0191-mutation-oracle",
+      "author": "Galileo",
+      "originalUnitAuthor": "Sartre",
+      "reviewer": "Laplace",
+      "file": "tests/unit/components-progress-feedback.test.tsx",
+      "beforeSha256": "43eaa1adeb7e3f0a03af6f36890c6872bb55d64ed153a1489b9ec43adcf03b96",
+      "afterSha256": "04bd5c1e3733589aa5627a557fa264a8b2e95d73af8a831c3dddc99bf9df2384",
+      "exactAuthorisedSubstitutionsOnly": true,
+      "sites": 3,
+      "identitiesUnchanged": true,
+      "allExpandedIdentities": [
+        "T0191 truthful Story progress elapsed time never invents percentage or completion for pending work",
+        "T0191 truthful Story progress confirmed completion invokes exactly one callback after 2000ms",
+        "T0191 truthful Story progress hidden work cannot deliver an obsolete completion",
+        "T0191 truthful Story progress unmounted work cannot deliver an obsolete completion",
+        "T0191 actual Reader edit and continue lifecycle edit-chapter HTTP failure retains chapter data and never announces ready",
+        "T0191 actual Reader edit and continue lifecycle edit-chapter network failure retains chapter data and never announces ready",
+        "T0191 actual Reader edit and continue lifecycle continue HTTP failure retains chapter data and never announces ready",
+        "T0191 actual Reader edit and continue lifecycle continue network failure retains chapter data and never announces ready",
+        "T0191 actual Reader edit and continue lifecycle held edit-chapter registers a client abort, clears its overlay and rereads truth neutrally",
+        "T0191 actual Reader edit and continue lifecycle held continue registers a client abort, clears its overlay and rereads truth neutrally",
+        "T0191 actual Reader edit and continue lifecycle reselecting the current chapter resets the reading container to the top",
+        "T0191 actual Reader edit and continue lifecycle generate plus edit retains Stop when one settles and suppresses late reactivation after Stop",
+        "T0191 actual Reader edit and continue lifecycle edit-first settlement retains operable Stop while generation remains outstanding",
+        "T0191 actual Reader edit and continue lifecycle aborted generation after a confirmed edit restores the Reader immediately without transient ready feedback",
+        "T0191 actual Reader edit and continue lifecycle successful edit-chapter publishes confirmed data and completes its overlay",
+        "T0191 actual Reader edit and continue lifecycle successful continue publishes confirmed data and completes its overlay",
+        "T0191 actual Reader edit and continue lifecycle Stop aborts both concurrent generate and edit requests before either settles",
+        "T0191 Mission cancellation owns pending feedback success settlement clears only its pending message before normal expiry [provider=true]",
+        "T0191 Mission cancellation owns pending feedback success settlement clears only its pending message before normal expiry [provider=false]",
+        "T0191 Mission cancellation owns pending feedback refusal settlement clears only its pending message before normal expiry [provider=true]",
+        "T0191 Mission cancellation owns pending feedback refusal settlement clears only its pending message before normal expiry [provider=false]",
+        "T0191 later Mission cancellation keeps its pending feedback when an earlier operation settles",
+        "T0191 settled Mission timers cannot clear a newer held cancellation or unrelated error"
+      ],
+      "affectedExpandedIdentities": [
+        "T0191 Mission cancellation owns pending feedback success settlement clears only its pending message before normal expiry [provider=true]",
+        "T0191 Mission cancellation owns pending feedback refusal settlement clears only its pending message before normal expiry [provider=true]",
+        "T0191 later Mission cancellation keeps its pending feedback when an earlier operation settles",
+        "T0191 settled Mission timers cannot clear a newer held cancellation or unrelated error"
+      ],
+      "controls": {
+        "total": 23,
+        "passed": 23,
+        "failed": 0,
+        "exit": 0
+      },
+      "lintExit": 0,
+      "productionMutated": false,
+      "causalSweepRun": false,
+      "priorMutationReceipt": "../t0191-sweep-85ed87b2/call-11.json",
+      "priorMutationVerdict": "ERROR preserved; no new KILLED claim",
+      "provenance": "Independent amendment author differs from original unit author and production implementer; prior source review exposure disclosed.",
+      "typesExit": 0,
+      "typeCommand": "tsc --noEmit --incremental false -p tsconfig.tests.json",
+      "status": "FROZEN for independent review; writes stopped; coordinator commit and actual sweep pending"
+    },
+    "reviewer": "Laplace exact candidate acceptance",
+    "candidateSHA256": "04bd5c1e3733589aa5627a557fa264a8b2e95d73af8a831c3dddc99bf9df2384",
+    "firstSweep": "tmp/t0191-sweep-85ed87b2/summary.json",
+    "qualification": "23 names preserved; source/manifest/runner unchanged; actual causal sweep remains required."
   }
 }

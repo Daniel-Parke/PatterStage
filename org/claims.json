@@ -54,7 +54,6 @@
         "tests/unit/components-primitive-parity.test.tsx",
         "tests/unit/components-collection-actions.test.tsx",
         "tests/unit/components-chat-markdown.test.tsx",
-        "tests/unit/components-progress-feedback.test.tsx",
         "tests/unit/components-token-preservation.test.tsx",
         "tests/unit/u0-the-gate-sees-what-it-claims.test.ts",
         "tests/unit/u2-the-contrast-gate-refuses.test.ts",
@@ -109,11 +108,13 @@
         "src/components/models/ModelEditor.tsx",
         "src/app/recroom/story-weaver/layout.tsx",
         "org/QUESTIONS.md",
-        "tests/e2e/component-accessibility-responsive.spec.ts"
+        "tests/e2e/component-accessibility-responsive.spec.ts",
+        "org/briefs/T-0191-mutation-oracle.md",
+        "tests/unit/components-progress-feedback.test.tsx"
       ],
       "acquired": "2026-10-03T18:36:48.186145+00:00",
       "expires": "2026-10-04T18:36:48.186145+00:00"
     }
   ],
-  "note": "Independently reviewed browser wheel-helper amendment integrated after passing normal six-worker affected suite. Coordinator owns full verification; production latency remains unresolved in T-0192."
+  "note": "Independent three-site mutation attribution amendment integrated by exact reviewed hash. Coordinator owns final unchanged-tree gate, separate test commit and full committed sweep."
 }

@@ -122,7 +122,8 @@
     "src/app/work/chat/page.tsx",
     "src/components/models/ModelEditor.tsx",
     "src/app/recroom/story-weaver/layout.tsx",
-    "org/QUESTIONS.md"
+    "org/QUESTIONS.md",
+    "org/briefs/T-0191-mutation-oracle.md"
   ],
   "timestamps": {
     "opened": "2026-10-03T12:13:29.785227+00:00",
@@ -626,9 +627,15 @@
         "exit": 0,
         "kind": "wheel-corrected affected-spec",
         "result": "58/58 normal six workers, exact independently reviewedb176968e. Full gate still required."
+      },
+      {
+        "receipt": "tmp/t0191-full-gate-1791056177702/summary.json",
+        "exit": 1,
+        "kind": "full",
+        "failure": "Lint/types0; Jest8398pass1fail9historicalskip. Unchanged Hermes env provider-loop case hit Windows EPERM at atomicWriteFile renameSync38. Laterstagesunexecuted; unchangedsuitealone9/9pass. No cause proven or failure waived."
       }
     ],
-    "census": "102132 source,147075 tests,807/4796 repeated windows,103 one-importer components. Source-246 and tests+1925 against acceptedT0190. Test infrastructure growth explicitly recorded; all fixed targets held.",
+    "census": "102132 source,147076 tests,807/4796 repeated windows,103 one-importer components. Source-246/tests+1926 againstT0190; extra assertion line explicitly recorded by census. Fixed targets unchanged.",
     "transport_diagnosis": {
       "receipt": "tmp/t0191-socket-analysis.json",
       "raw": "tmp/t0191-socket-diagnostic-1791044417434",
@@ -656,6 +663,31 @@
       "status": "Integrated after independent exact review and passing affected suite",
       "receipt": "tmp/t0191-full-gate-1791054723911/rerun/summary.rerun.json",
       "wholeGate": "pending"
+    },
+    "green_gate": {
+      "receipt": "tmp/t0191-full-gate-1791054875331/summary.json",
+      "stages": 10,
+      "unitPassed": 8399,
+      "browserPassed": 423,
+      "historicalSkips": {
+        "unit": 9,
+        "browser": 24
+      },
+      "treeUnchanged": true,
+      "implementation": "85ed87b279b8358bfc40c589226214c1664bdce4",
+      "tree": "a8bf4f5625e754c25402c2af2a0942844c07a115",
+      "binding": "Claim-checked staged Git trees equal before commit; independent local readiness Laplace."
+    },
+    "first_sweep": {
+      "receipt": "tmp/t0191-sweep-85ed87b2/summary.json",
+      "killed": 18,
+      "errors": [
+        "m11-dismisses-other-owners"
+      ],
+      "controlsBefore": 134,
+      "controlsAfter": 134,
+      "restored": true,
+      "verdict": "Not accepted; independent attribution amendment and full rerun required."
     }
   },
   "token_retirement_ruling": {
@@ -670,5 +702,17 @@
     "reason": "The existing unchanged suite enumerates production declarations; approved critic-09 removal removes these four expanded identities. Do not substitute synthetic cases or absence branches under misleading old names. Remaining declarations, future declarations, non-vacuity and code-mirror checks remain; four new oracle cases assert exact ruled absence.",
     "totalRetirements": 6,
     "countEquation": "8275 baseline passing +130 new unit oracle -2 Schedule -4 declaration-dependent cases =8399 passing;9 historical skips separately preserved."
+  },
+  "mutation_oracle_amendment_authority": {
+    "reviewer": "Laplace",
+    "author": "Galileo,01a101b3-7c34-7a71-94b5-334c72f652cb; different from original unit author Sartre and implementer",
+    "scope": "Three assertion sites across four expanded cases: unique unrelated error presence, one newer cancellation, and timer error count before preserved visibility. Keep all names,fixtures,timings,interactions and remaining assertions; no source/manifest/runner change.",
+    "firstSweep": "tmp/t0191-sweep-85ed87b2/summary.json",
+    "result": "18KILLED,1ERROR(m11);134controls before/after and exact restoration. Query exceptions are not accepted kills.",
+    "brief": "org/briefs/T-0191-mutation-oracle.md",
+    "status": "exact candidate reviewed and integrated; full gate/test commit/sweep pending",
+    "sha256": "04bd5c1e3733589aa5627a557fa264a8b2e95d73af8a831c3dddc99bf9df2384",
+    "identities": 23,
+    "focusedControlsPassed": 23
   }
 }

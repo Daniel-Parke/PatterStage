@@ -250,3 +250,19 @@ Full gate1791053306080 passed lint,types,8399unit tests,Knip,canary,production b
 
 
 Independent wheel candidateb176968e changes only the two authorised helpers, preserves58bodies/assertions,80/16limits,80/150mswaits, transport/preload/drain and867production hashes. Laplace accepted exact source scope. Owned-browser diagnostic reproduced original header failure, passed candidate and refused fixed overlay; initial Chromium sandbox EPERM is preserved in author provenance. Normal six-worker application run1791054723911 passed58/58, so coordinator integrated by hash. Added44test lines have an explicit census reason; current tests147075 and repeatedtestcoveredlines4796 remain below fixed4800 ceiling. Full gate and mutation acceptance remain outstanding.
+
+
+## Implementation and first committed sweep
+
+Full gate1791054875331 completed all10stages at exit0, with8399unit passes/9historicalskips,423browser passes/24historicalskips and both censuses green. Fingerprints before/after equaleca1fb6d75eb830440b7e57260c21e33c2d30dd15b9c68e808778bc214cd8a59. Laplace affirmed local readiness. Claim-checked primary and validation staged Git trees both equala8bf4f5625e754c25402c2af2a0942844c07a115, committed as85ed87b279b8358bfc40c589226214c1664bdce4. No push yet.
+
+Committed sweep `tmp/t0191-sweep-85ed87b2/summary.json` caught18mutants, but m11 was ERROR: four expanded Mission cases threw TestingLibrary missing-text exceptions before native matcher results. All134control cases passed before and after; fingerprints match and restoration is exact. This is not19kills. Laplace authorised Galileo, distinct from originalunitSartre, to amend three assertion sites only: preserve unique-presence/count semantics and add count before the existing timer visibility assertion. Names, fixtures, interactions, deadlines, production, manifest and runner remain unchanged. Separate test commit and complete sweep rerun are required.
+
+
+Galileo froze mutation-attribution candidate04bd5c1e3733589aa5627a557fa264a8b2e95d73af8a831c3dddc99bf9df2384: three authorised assertion sites,23identities preserved,23focused controls/type/lint pass. Unique-presence/count semantics remain; timer count precedes the unchanged visibility assertion. Laplace accepted exact scope. Coordinator integrated by before/after hash for final full gate, separate test commit and complete committed sweep. Production, mutation manifest and runner are unchanged.
+
+
+Final-tree gate1791056177702 passedlint/types but stopped atJest:8398pass1fail9historicalskips. The unchanged `hermes-config-sync-env` provider-loop case hit Windows EPERM at `atomicWriteFile` renameSync38, staging.env to.env. Its unchanged isolated rerun passed9/9 in `tmp/t0191-hermes-sync-env-alone.json`; both receipts remain. This recurs at the same writer as earlierT0163 but a different case, and stays distinct from olderT0195cleanup-delete EPERM. T0195 now records the recurrence. Root cause remains unproved; no retry logic, test weakening, permission change, concurrency reduction or gate waiver has been introduced.
+
+
+Laplace permits a new complete verification after syncing evidence-only task/review/plan records and rendered views. Runtime source, tests, scripts, baseline, environment and concurrency remain unchanged from1791056177702; the complete trees differ only in recorded metadata, and are not described as byte-identical. The next gate must fingerprint its frozen tree and bind the separate test commit through staged-tree equality. Nash confirms cleanup follows both rename failures and Windows skips existing-file chmod; no source evidence supports cleanup-race or read-only-mode attribution.
