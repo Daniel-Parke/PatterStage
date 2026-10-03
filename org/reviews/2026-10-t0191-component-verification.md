@@ -111,3 +111,35 @@ Original baseline observed here, for comparison with the author's later capture 
 | components/schedule/SchedulePicker.test.tsx | 731b74502523a7a4e50cb0010d8ad08478177804 | adfd2deafc5d46bfa67f39a64e6899afdb794c415cf603f9cbca55872156ac30 |
 
 No authority is granted to alter other historical assertions, synthetic fixtures, test counts beyond the two explicit removals, deadlines, runners, CI or coverage floors. Any wider required amendment returns for independent disposition before editing. This reviewer has evaluated scope only and has not authored replacement tests or comments.
+
+## Independent unit draft handoff, 3 October
+
+Sartre completed six new suites:75 executed,32 passing controls and43 behavioural reds. The original65 historical cases passed before amendment;63 remain after the two exactly ruled Schedule retirements. U0/U2 executable AST and expanded identities are unchanged, and all retained Schedule bytes are unchanged. Original blobs, raw/LF hashes, names and amendment authority are preserved in [unit provenance](2026-10-t0191-unit-oracle-provenance.json). This is a review candidate, not a freeze or implementation acceptance.
+
+Coordinator independently ran TypeScript with `--noEmit --incremental false` and ESLint over the six new suites in the isolated checkout; both exited0. The author's320-case preservation run and unchanged11-case clipboard suite are additional bounded controls. Current unit-only repeated-window census remains4796; the browser addition still needs combined measurement. Initial fixture errors and discarded draft identities remain in the hashed attempt ledger. The crosswalk lists exact reused historical test identities and downstream assertions not reached by red baselines.
+
+The shared clipboard helper is now an explicit source claim. Controlled actual Session Copy tests distinguish its premature visual Check from its separately missing accessible confirmation. Refused clipboard writes require visible failure, and late/unmounted replies cannot announce a current success. No existing clipboard test amendment is authorised or needed at this stage. Six exact components-28 comment sites are also claimed; their correction must preserve executable behaviour.
+
+## Combined final candidate, 3 October
+
+The four reviewer-requested additions contribute48 passing cases while preserving the original75 identities and outcomes. Coordinator reruns confirm123 unit cases:80 passing and43 red, with no pending cases or runtime-error suites. The exact final browser candidate ran56 Chromium cases:25 passing and31 red, no skips or retries. These are failing identities, not distinct defect counts. Both runs exited1 as expected for the red baseline. Combined TypeScript and seven-suite ESLint exited0. The owned synthetic-data server on3999 stopped after the run; the prebuilt application checkout remains clean. No production implementation has started. Independent freeze review is pending.
+
+The hashed receipts and browser authorship/limitations are included in the unit provenance document. The earlier75-case draft and adverse attempts remain preserved. Assertions after first failures remain unexecuted and must run after repair. These results do not establish complete product, provider or release acceptance.
+
+## Independent fixture corrections before freeze
+
+Laplace withheld freeze for two narrowly identified fixture problems: the unit cancellation responses used an impossible cancelled status, and browser fallback reachability demanded all actions after one fixed scroll. This qualifies earlier causal-red descriptions. Sartre corrected only cancellation response/status fixtures to the actual failed/Cancelled by user contract and retained all123 identities/outcomes:80 pass,43 fail, no runtime errors. Prior receipts remain unchanged. Browser scrolling correction is in progress. These are oracle corrections before implementation, not waived production failures.
+
+## Ruled Field migration scope correction
+
+A read-only full-cohort audit found that the opening claims omitted ten current consumers and the destination modules for the already approved components-11/-12 migration. In-place repairs cannot discharge those explicit rulings. The active record now claims all13 consumers, destination SearchInput/NumberInput modules and field barrel, the four historical preservation suites, and affected documentation/screenshots. Production remains unchanged. Independent test adaptations require separate scope acceptance and unchanged identities/assertions. TemplateCard full-variant retirement has no equivalent ruling and remains retained; Bot repair is a distinct outcome.
+
+## Corrected browser candidate and migration amendment authority
+
+Galileo corrected only fallback target reachability, preserving all56 identities. Full corrected run1791033990017 remains25 pass/31 fail: enabled phone actions are offscreen with no user-scrollable ancestor. The new per-target audit preserves hit-testing and records boundaries without claiming movement. Types/lint pass; strict line ratchet fails on added oracle lines, which are not yet baselined. No production implementation has started.
+
+Laplace independently granted narrow amendment authority on3 October under Q-015 and the existingcomponents11/12 rulings. Exact scope: b6-config-field-unset-and-range, b7-memory-empty-states, field-kit, t0162-house-control-names and the new components-primitive-parity suite. Permitted changes are NumberInput/SearchInput imports; equivalent retired TextInput Field/Input composition with label, description, disabled, reset and event-to-value semantics; Toggle checked-to-value alignment; and field-kit header commentary. Every expanded test identity, assertion, interaction and fixture value must remain. Sartre is distinct from the implementation author and has preserved the54/54 original historical controls. Record blobs, raw/LF hashes and name sets, and verify AST differences are limited to these transformations. Freeze the executable original API first; amend only after destination modules exist. Missing-module/type failures are never causal behavioural reds. This is amendment authority, not implementation acceptance.
+
+## Independent original-API oracle freeze acceptance
+
+ACCEPT: bounded freeze of179 original-API oracle cases. Laplace independently verified final progress hash b51ff9cb40535dc4ac458d027bf10a2bd7b43beed19082e439a8638ecb376455, exact four acknowledgement replacements and123 unit80pass43 unchanged causal reds; accepted browser e45007c923cd28e0e6ba0aad86f17250cded8ceb7979004891cebb2392488cc6,56 cases25pass31reds. Original/intermediate receipt hashes intact; production unchanged. Both fixture-correction blockers closed. Baseline only, not implementation/release acceptance; retain context exposure, unexecuted downstream assertions and independent migration amendment procedure. Strict census accounting outstanding without waiver.

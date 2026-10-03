@@ -1,0 +1,1403 @@
+{
+  "unitOracle": {
+    "date": "2026-10-03",
+    "author": "Sartre",
+    "session": "01a101b0-fa17-7b10-a55b-b6201e93c846",
+    "head": "048d3329c20a3298f253b18cd554a3029076e62d",
+    "method": "Independent task-contract authorship with disclosed accidental partial body exposure; supplementary metamorphic parser cases. Browser and human visual review remain a separate lane.",
+    "state": "Review candidate, not acceptance or coordinator integration",
+    "files": [
+      {
+        "file": "tests/unit/components-contextual-controls.test.tsx",
+        "rawSHA256": "f854c8aad93a3fb4e3d478a2dd93069b7f3d4d06e4853845edb515907663003f",
+        "lfSHA256": "ae1d9aa6b4a82635aecdda8efab9345240ed681831249a2f7d72d535f546200d",
+        "tests": [
+          {
+            "name": "T0191 contextual controls Composer's workflow and profile controls expose their rendered contextual names",
+            "status": "passed"
+          },
+          {
+            "name": "T0191 contextual controls Field-linked Select retains the visible name and keyboard selection without extra aria labels",
+            "status": "passed"
+          },
+          {
+            "name": "T0191 contextual controls Picker keeps its separately named selection and Escape contract",
+            "status": "passed"
+          },
+          {
+            "name": "T0191 contextual controls category disclosure exposes expanded state without nesting its independent action",
+            "status": "failed"
+          },
+          {
+            "name": "T0191 fallback restore choices remain one mutually exclusive radio group",
+            "status": "failed"
+          },
+          {
+            "name": "T0191 actual Research inputs and selectors have contextual rendered names",
+            "status": "passed"
+          },
+          {
+            "name": "T0191 actual Composer inspector names selectors and preserves approved switch callbacks",
+            "status": "passed"
+          }
+        ],
+        "passed": 5,
+        "failed": 2
+      },
+      {
+        "file": "tests/unit/components-primitive-parity.test.tsx",
+        "rawSHA256": "b75136d80aec9a6c476866a7e259f497f454205cc9da5c07e1dd289b5705ba1f",
+        "lfSHA256": "bf5a63f709a60b495cb2d42e0b5ae66286a4d67ecfe0dbd0fee0aa33e7bb2cf4",
+        "tests": [
+          {
+            "name": "T0191 primitive parity legacy text keeps its name and description after external reset",
+            "status": "failed"
+          },
+          {
+            "name": "T0191 primitive parity search preserves exact value and invokes its submit callback once",
+            "status": "passed"
+          },
+          {
+            "name": "T0191 primitive parity numeric edit \"\" retains description and resets from the external value",
+            "status": "failed"
+          },
+          {
+            "name": "T0191 primitive parity numeric edit \"-\" retains description and resets from the external value",
+            "status": "failed"
+          },
+          {
+            "name": "T0191 primitive parity numeric edit \"1e\" retains description and resets from the external value",
+            "status": "failed"
+          },
+          {
+            "name": "T0191 primitive parity numeric edit \"999\" retains description and resets from the external value",
+            "status": "failed"
+          },
+          {
+            "name": "T0191 primitive parity numeric edit \"42\" retains description and resets from the external value",
+            "status": "failed"
+          },
+          {
+            "name": "T0191 primitive parity labelled inspector track retains hint, disabled state and exactly one callback",
+            "status": "passed"
+          },
+          {
+            "name": "T0191 primitive parity native select adapter preserves browser semantics and exact values",
+            "status": "passed"
+          },
+          {
+            "name": "T0191 numeric partial draft never fabricates a numeric callback and remains editable",
+            "status": "passed"
+          }
+        ],
+        "passed": 4,
+        "failed": 6
+      },
+      {
+        "file": "tests/unit/components-collection-actions.test.tsx",
+        "rawSHA256": "d04e420aebc9497be286f1de4d87d4acf426224f20d2fd4d63dfb0524760b4f9",
+        "lfSHA256": "afdaafddae79b1d8da1c7fe28b5d0f7e4eaf9f62e19694bc3bbd0af32e607f6b",
+        "tests": [
+          {
+            "name": "T0191 collection action identities template stored icon Bot preserves identity and selection",
+            "status": "failed"
+          },
+          {
+            "name": "T0191 collection action identities template stored icon Zap preserves identity and selection",
+            "status": "passed"
+          },
+          {
+            "name": "T0191 collection action identities template stored icon UnknownStoredIcon preserves identity and selection",
+            "status": "passed"
+          },
+          {
+            "name": "T0191 collection action identities Story read and confirmed deletion retain the selected ID",
+            "status": "passed"
+          },
+          {
+            "name": "T0191 collection action identities credential rotation cancellation does not leak a write or retarget another row",
+            "status": "passed"
+          },
+          {
+            "name": "T0191 Session 404 retains Retry, back navigation and one visible primary heading",
+            "status": "failed"
+          },
+          {
+            "name": "T0191 Session 500 retains Retry, back navigation and one visible primary heading",
+            "status": "failed"
+          },
+          {
+            "name": "T0191 Directives toolbar keeps named refresh/create actions",
+            "status": "passed"
+          },
+          {
+            "name": "T0191 Mental models toolbar keeps named refresh/create actions",
+            "status": "passed"
+          },
+          {
+            "name": "T0191 fallback first/middle/last actions retain bounds and exact row identity",
+            "status": "passed"
+          },
+          {
+            "name": "T0191 Mission metadata retains distinct agent model and provider values",
+            "status": "passed"
+          },
+          {
+            "name": "T0191 fallback add from registry reports the chosen registry ID",
+            "status": "passed"
+          },
+          {
+            "name": "T0191 stored icon support preserves the existing template editor choices without enlargement",
+            "status": "passed"
+          },
+          {
+            "name": "T0191 fallback custom add preserves exact typed identity",
+            "status": "passed"
+          }
+        ],
+        "passed": 11,
+        "failed": 3
+      },
+      {
+        "file": "tests/unit/components-chat-markdown.test.tsx",
+        "rawSHA256": "bafa8fda08a7eae396b13265179e0ffed47cece5e4a732b4f7f960ba3e04cfcc",
+        "lfSHA256": "1d6f85f4c9020e53333240d7ef9ec7ad79ee2356261db87f01ac540d94fa5fa5",
+        "tests": [
+          {
+            "name": "T0191 Chat markdown public contract preserves allowed link https://example.test/path in the actual assistant bubble",
+            "status": "failed"
+          },
+          {
+            "name": "T0191 Chat markdown public contract preserves allowed link http://example.test in the actual assistant bubble",
+            "status": "failed"
+          },
+          {
+            "name": "T0191 Chat markdown public contract preserves allowed link mailto:reader@example.test in the actual assistant bubble",
+            "status": "failed"
+          },
+          {
+            "name": "T0191 Chat markdown public contract preserves allowed link /results/sessions in the actual assistant bubble",
+            "status": "failed"
+          },
+          {
+            "name": "T0191 Chat markdown public contract rejects unsafe or obfuscated scheme javascript:alert(1) through both public renderers",
+            "status": "failed"
+          },
+          {
+            "name": "T0191 Chat markdown public contract rejects unsafe or obfuscated scheme JaVaScRiPt:alert(1) through both public renderers",
+            "status": "failed"
+          },
+          {
+            "name": "T0191 Chat markdown public contract rejects unsafe or obfuscated scheme data:text/html,unsafe through both public renderers",
+            "status": "failed"
+          },
+          {
+            "name": "T0191 Chat markdown public contract rejects unsafe or obfuscated scheme vbscript:msgbox(1) through both public renderers",
+            "status": "failed"
+          },
+          {
+            "name": "T0191 Chat markdown public contract rejects unsafe or obfuscated scheme java&#x73;cript:alert(1) through both public renderers",
+            "status": "failed"
+          },
+          {
+            "name": "T0191 Chat markdown public contract rejects unsafe or obfuscated scheme java\tscript:alert(1) through both public renderers",
+            "status": "passed"
+          },
+          {
+            "name": "T0191 Chat markdown public contract equivalent streaming chunkings converge on the same safe rendered content",
+            "status": "failed"
+          },
+          {
+            "name": "T0191 Chat markdown public contract keeps user text safe with a long incomplete fence",
+            "status": "passed"
+          },
+          {
+            "name": "T0191 Chat markdown public contract keeps assistant text safe with a long incomplete fence",
+            "status": "passed"
+          },
+          {
+            "name": "T0191 Chat markdown public contract Copy preserves whitespace and reports refusal=false truthfully",
+            "status": "failed"
+          },
+          {
+            "name": "T0191 Chat markdown public contract Copy preserves whitespace and reports refusal=true truthfully",
+            "status": "failed"
+          },
+          {
+            "name": "T0191 actual Session Copy confirmation does not announce Copied while the clipboard promise is pending",
+            "status": "failed"
+          },
+          {
+            "name": "T0191 actual Session Copy confirmation clipboard refusal cannot announce Copied and remains visible",
+            "status": "failed"
+          },
+          {
+            "name": "T0191 actual Session Copy confirmation confirmed clipboard success announces Copied",
+            "status": "passed"
+          },
+          {
+            "name": "T0191 actual Session Copy confirmation unmounted Session Copy ignores late success feedback",
+            "status": "passed"
+          },
+          {
+            "name": "T0191 actual Session Copy confirmation unmounted Session Copy ignores late refusal feedback",
+            "status": "passed"
+          },
+          {
+            "name": "T0191 standalone shared markdown reports clipboard refusal visibly",
+            "status": "failed"
+          }
+        ],
+        "passed": 6,
+        "failed": 15
+      },
+      {
+        "file": "tests/unit/components-progress-feedback.test.tsx",
+        "rawSHA256": "a327cb1e964d570b79929fdedf79355bc46d0988cf62c65c29de26498256e400",
+        "lfSHA256": "10841b26d8b6cf4405b76467d4ccfa578da1d2c78362a88d4a5c921afe234910",
+        "tests": [
+          {
+            "name": "T0191 truthful Story progress elapsed time never invents percentage or completion for pending work",
+            "status": "failed"
+          },
+          {
+            "name": "T0191 truthful Story progress confirmed completion invokes exactly one callback after 2000ms",
+            "status": "passed"
+          },
+          {
+            "name": "T0191 truthful Story progress hidden work cannot deliver an obsolete completion",
+            "status": "failed"
+          },
+          {
+            "name": "T0191 truthful Story progress unmounted work cannot deliver an obsolete completion",
+            "status": "passed"
+          },
+          {
+            "name": "T0191 actual Reader edit and continue lifecycle edit-chapter HTTP failure retains chapter data and never announces ready",
+            "status": "failed"
+          },
+          {
+            "name": "T0191 actual Reader edit and continue lifecycle edit-chapter network failure retains chapter data and never announces ready",
+            "status": "failed"
+          },
+          {
+            "name": "T0191 actual Reader edit and continue lifecycle continue HTTP failure retains chapter data and never announces ready",
+            "status": "failed"
+          },
+          {
+            "name": "T0191 actual Reader edit and continue lifecycle continue network failure retains chapter data and never announces ready",
+            "status": "failed"
+          },
+          {
+            "name": "T0191 actual Reader edit and continue lifecycle held edit-chapter registers a client abort, clears its overlay and rereads truth neutrally",
+            "status": "failed"
+          },
+          {
+            "name": "T0191 actual Reader edit and continue lifecycle held continue registers a client abort, clears its overlay and rereads truth neutrally",
+            "status": "failed"
+          },
+          {
+            "name": "T0191 actual Reader edit and continue lifecycle generate plus edit retains Stop when one settles and suppresses late reactivation after Stop",
+            "status": "failed"
+          },
+          {
+            "name": "T0191 actual Reader edit and continue lifecycle successful edit-chapter publishes confirmed data and completes its overlay",
+            "status": "passed"
+          },
+          {
+            "name": "T0191 actual Reader edit and continue lifecycle successful continue publishes confirmed data and completes its overlay",
+            "status": "passed"
+          },
+          {
+            "name": "T0191 actual Reader edit and continue lifecycle Stop aborts both concurrent generate and edit requests before either settles",
+            "status": "failed"
+          },
+          {
+            "name": "T0191 Mission cancellation owns pending feedback success settlement clears only its pending message before normal expiry [provider=true]",
+            "status": "failed"
+          },
+          {
+            "name": "T0191 Mission cancellation owns pending feedback success settlement clears only its pending message before normal expiry [provider=false]",
+            "status": "passed"
+          },
+          {
+            "name": "T0191 Mission cancellation owns pending feedback refusal settlement clears only its pending message before normal expiry [provider=true]",
+            "status": "failed"
+          },
+          {
+            "name": "T0191 Mission cancellation owns pending feedback refusal settlement clears only its pending message before normal expiry [provider=false]",
+            "status": "passed"
+          },
+          {
+            "name": "T0191 later Mission cancellation keeps its pending feedback when an earlier operation settles",
+            "status": "failed"
+          }
+        ],
+        "passed": 6,
+        "failed": 13
+      },
+      {
+        "file": "tests/unit/components-token-preservation.test.tsx",
+        "rawSHA256": "894418c8441126d2d0c193da134c97f31de949feeb1816b5e1e2d676e4e870fb",
+        "lfSHA256": "30f4d6bd22d85e5f94436bd29ff3d5427551a59facb0d89913d748a51f3d7c2c",
+        "tests": [
+          {
+            "name": "T0191 unused RGB declaration removal removes only the ruled unused purple RGB mirror declaration",
+            "status": "failed"
+          },
+          {
+            "name": "T0191 unused RGB declaration removal removes only the ruled unused green RGB mirror declaration",
+            "status": "failed"
+          },
+          {
+            "name": "T0191 unused RGB declaration removal removes only the ruled unused pink RGB mirror declaration",
+            "status": "failed"
+          },
+          {
+            "name": "T0191 unused RGB declaration removal removes only the ruled unused orange RGB mirror declaration",
+            "status": "failed"
+          }
+        ],
+        "passed": 0,
+        "failed": 4
+      }
+    ]
+  },
+  "historicalAmendments": {
+    "date": "2026-10-03",
+    "author": "Sartre",
+    "session": "01a101b0-fa17-7b10-a55b-b6201e93c846",
+    "authoriser": "Laplace 01a1019a-65c6-7ae2-aafe-5b79b166c745 independent R2 and operator",
+    "authority": [
+      "Q-015",
+      "components-16",
+      "critic-09"
+    ],
+    "baseline": "048d3329c20a3298f253b18cd554a3029076e62d",
+    "baselineExit": 0,
+    "newControlExit": 0,
+    "files": [
+      {
+        "file": "tests/unit/u0-the-gate-sees-what-it-claims.test.ts",
+        "oldRaw": "5b4dd7e15f2aff7d67e2e7146324b10d7373214caf3cac668b988052984960e0",
+        "oldLF": "5b4dd7e15f2aff7d67e2e7146324b10d7373214caf3cac668b988052984960e0",
+        "newRaw": "9532451c46f8732c4f3f79f0167ab35f6586c1df7eb0d5cf1b95415e6b0a4932",
+        "newLF": "9532451c46f8732c4f3f79f0167ab35f6586c1df7eb0d5cf1b95415e6b0a4932",
+        "gitBlob": "9848c47e2273de1d2ec76444443fef584072f310",
+        "oldExpanded": [
+          "no-raw-colour-in-tsx sees a colour written the way Tailwind writes one is a registered rule",
+          "no-raw-colour-in-tsx sees a colour written the way Tailwind writes one flags a raw colour behind an underscore: rgba, comma form",
+          "no-raw-colour-in-tsx sees a colour written the way Tailwind writes one flags a raw colour behind an underscore: rgb, space form",
+          "no-raw-colour-in-tsx sees a colour written the way Tailwind writes one does not fire on a token triplet in an arbitrary value",
+          "no-raw-colour-in-tsx sees a colour written the way Tailwind writes one does not fire on a method whose name ends in rgba",
+          "no-raw-colour-in-tsx sees a colour written the way Tailwind writes one does not fire on a colour() function naming the srgb space",
+          "no-raw-colour-in-tsx sees a colour written the way Tailwind writes one does not fire on color-mix against a token",
+          "no-raw-colour-in-tsx sees a colour written the way Tailwind writes one reaches the files it was missing, so a clean tree is not a blind rule",
+          "no-raw-colour-in-tsx sees a colour written the way Tailwind writes one and the tree carries none",
+          "no-sub-12px-type sees a size set as a prop, not only as a class flags fontSize={8}",
+          "no-sub-12px-type sees a size set as a prop, not only as a class flags fontSize={9}",
+          "no-sub-12px-type sees a size set as a prop, not only as a class flags fontSize={11}",
+          "no-sub-12px-type sees a size set as a prop, not only as a class flags fontSize=\"10\"",
+          "no-sub-12px-type sees a size set as a prop, not only as a class flags the class form it already caught",
+          "no-sub-12px-type sees a size set as a prop, not only as a class does not fire on the floor itself",
+          "no-sub-12px-type sees a size set as a prop, not only as a class does not fire on a size above the floor",
+          "no-sub-12px-type sees a size set as a prop, not only as a class does not fire on a three-digit size",
+          "no-sub-12px-type sees a size set as a prop, not only as a class does not fire on a size the component computes",
+          "no-sub-12px-type sees a size set as a prop, not only as a class does not fire on a longer identifier ending in the prop name",
+          "no-sub-12px-type sees a size set as a prop, not only as a class reaches the chart files it was missing",
+          "no-sub-12px-type sees a size set as a prop, not only as a class and the tree carries none",
+          "no-sub-12px-type sees a size set as a prop, not only as a class and no chart paints text below the floor by any spelling",
+          "globals.css does not assert a defect the build disproves no longer carries the claim that its own rules paint nothing",
+          "globals.css does not assert a defect the build disproves no longer carries the instruction not to repair them",
+          "globals.css does not assert a defect the build disproves no longer carries the premise that the token holds a comma list",
+          "globals.css does not assert a defect the build disproves still says what the bloom is and why its two guards exist",
+          "globals.css does not assert a defect the build disproves restates no token declaration in prose, because a gate reads this file as text",
+          "globals.css does not assert a defect the build disproves and the mirrors stay in the form that made the claim stale",
+          "knip is green: four symbols are used only inside their own file src/modules/rec-room/handlers/generate.ts does not export CHAPTER_STOPPED_STATUS",
+          "knip is green: four symbols are used only inside their own file src/lib/models/model-readiness.ts does not export ModelReadinessState",
+          "knip is green: four symbols are used only inside their own file src/lib/scripts/scripts-manager.ts does not export ScriptRunOutcome",
+          "knip is green: four symbols are used only inside their own file src/lib/scripts/scripts-manager.ts does not export ScriptStartFailure"
+        ],
+        "newExpanded": [
+          "no-raw-colour-in-tsx sees a colour written the way Tailwind writes one is a registered rule",
+          "no-raw-colour-in-tsx sees a colour written the way Tailwind writes one flags a raw colour behind an underscore: rgba, comma form",
+          "no-raw-colour-in-tsx sees a colour written the way Tailwind writes one flags a raw colour behind an underscore: rgb, space form",
+          "no-raw-colour-in-tsx sees a colour written the way Tailwind writes one does not fire on a token triplet in an arbitrary value",
+          "no-raw-colour-in-tsx sees a colour written the way Tailwind writes one does not fire on a method whose name ends in rgba",
+          "no-raw-colour-in-tsx sees a colour written the way Tailwind writes one does not fire on a colour() function naming the srgb space",
+          "no-raw-colour-in-tsx sees a colour written the way Tailwind writes one does not fire on color-mix against a token",
+          "no-raw-colour-in-tsx sees a colour written the way Tailwind writes one reaches the files it was missing, so a clean tree is not a blind rule",
+          "no-raw-colour-in-tsx sees a colour written the way Tailwind writes one and the tree carries none",
+          "no-sub-12px-type sees a size set as a prop, not only as a class flags fontSize={8}",
+          "no-sub-12px-type sees a size set as a prop, not only as a class flags fontSize={9}",
+          "no-sub-12px-type sees a size set as a prop, not only as a class flags fontSize={11}",
+          "no-sub-12px-type sees a size set as a prop, not only as a class flags fontSize=\"10\"",
+          "no-sub-12px-type sees a size set as a prop, not only as a class flags the class form it already caught",
+          "no-sub-12px-type sees a size set as a prop, not only as a class does not fire on the floor itself",
+          "no-sub-12px-type sees a size set as a prop, not only as a class does not fire on a size above the floor",
+          "no-sub-12px-type sees a size set as a prop, not only as a class does not fire on a three-digit size",
+          "no-sub-12px-type sees a size set as a prop, not only as a class does not fire on a size the component computes",
+          "no-sub-12px-type sees a size set as a prop, not only as a class does not fire on a longer identifier ending in the prop name",
+          "no-sub-12px-type sees a size set as a prop, not only as a class reaches the chart files it was missing",
+          "no-sub-12px-type sees a size set as a prop, not only as a class and the tree carries none",
+          "no-sub-12px-type sees a size set as a prop, not only as a class and no chart paints text below the floor by any spelling",
+          "globals.css does not assert a defect the build disproves no longer carries the claim that its own rules paint nothing",
+          "globals.css does not assert a defect the build disproves no longer carries the instruction not to repair them",
+          "globals.css does not assert a defect the build disproves no longer carries the premise that the token holds a comma list",
+          "globals.css does not assert a defect the build disproves still says what the bloom is and why its two guards exist",
+          "globals.css does not assert a defect the build disproves restates no token declaration in prose, because a gate reads this file as text",
+          "globals.css does not assert a defect the build disproves and the mirrors stay in the form that made the claim stale",
+          "knip is green: four symbols are used only inside their own file src/modules/rec-room/handlers/generate.ts does not export CHAPTER_STOPPED_STATUS",
+          "knip is green: four symbols are used only inside their own file src/lib/models/model-readiness.ts does not export ModelReadinessState",
+          "knip is green: four symbols are used only inside their own file src/lib/scripts/scripts-manager.ts does not export ScriptRunOutcome",
+          "knip is green: four symbols are used only inside their own file src/lib/scripts/scripts-manager.ts does not export ScriptStartFailure"
+        ],
+        "removed": [],
+        "added": [],
+        "oldPassed": true,
+        "newPassed": true,
+        "executableIdentical": true
+      },
+      {
+        "file": "tests/unit/u2-the-contrast-gate-refuses.test.ts",
+        "oldRaw": "b8809558343cdef6cc206ff58e9c8fec34d9f818fc6fe48f28de681cbe06b71a",
+        "oldLF": "b8809558343cdef6cc206ff58e9c8fec34d9f818fc6fe48f28de681cbe06b71a",
+        "newRaw": "5d8869928378b4489244a9702feb9e0f67fd8653a30f00e613275bfa01a38c60",
+        "newLF": "5d8869928378b4489244a9702feb9e0f67fd8653a30f00e613275bfa01a38c60",
+        "gitBlob": "b1d0d16afed0b466e52f97e2a69cad6252336130",
+        "oldExpanded": [
+          "contrast-check accepts the ladder it is given passes on the real stylesheet, so the fixtures below mean something",
+          "and refuses a ladder that does not separate refuses the flat ladder the walk found, at 1.06:1",
+          "and refuses a ladder that does not separate refuses a panel that barely lifts",
+          "and refuses a ladder that does not separate refuses a raised surface level with its panel",
+          "and refuses a ladder that does not separate refuses an edge at the old white/10 hairline",
+          "and refuses a ladder that does not separate refuses an emphasis that cannot beat an edge",
+          "and refuses a ladder that does not separate refuses a keyword rather than skipping it",
+          "and refuses a ladder that does not separate refuses an oklab rather than skipping it",
+          "and refuses a ladder that does not separate refuses a colour-mix rather than skipping it",
+          "and refuses a ladder that does not separate refuses a stylesheet with no ladder at all",
+          "and refuses a ladder that does not separate still refuses a text tier below AA",
+          "and refuses a ladder that does not separate follows an alias to the value underneath it",
+          "and refuses a ladder that does not separate re-measures every rung that hangs off the panel when the panel moves"
+        ],
+        "newExpanded": [
+          "contrast-check accepts the ladder it is given passes on the real stylesheet, so the fixtures below mean something",
+          "and refuses a ladder that does not separate refuses the flat ladder the walk found, at 1.06:1",
+          "and refuses a ladder that does not separate refuses a panel that barely lifts",
+          "and refuses a ladder that does not separate refuses a raised surface level with its panel",
+          "and refuses a ladder that does not separate refuses an edge at the old white/10 hairline",
+          "and refuses a ladder that does not separate refuses an emphasis that cannot beat an edge",
+          "and refuses a ladder that does not separate refuses a keyword rather than skipping it",
+          "and refuses a ladder that does not separate refuses an oklab rather than skipping it",
+          "and refuses a ladder that does not separate refuses a colour-mix rather than skipping it",
+          "and refuses a ladder that does not separate refuses a stylesheet with no ladder at all",
+          "and refuses a ladder that does not separate still refuses a text tier below AA",
+          "and refuses a ladder that does not separate follows an alias to the value underneath it",
+          "and refuses a ladder that does not separate re-measures every rung that hangs off the panel when the panel moves"
+        ],
+        "removed": [],
+        "added": [],
+        "oldPassed": true,
+        "newPassed": true,
+        "executableIdentical": true
+      },
+      {
+        "file": "tests/unit/components/schedule/SchedulePicker.test.tsx",
+        "oldRaw": "adfd2deafc5d46bfa67f39a64e6899afdb794c415cf603f9cbca55872156ac30",
+        "oldLF": "adfd2deafc5d46bfa67f39a64e6899afdb794c415cf603f9cbca55872156ac30",
+        "newRaw": "d07c5f16ca712736f7b57b1e577b181d42d63af19be2bf6e1f0d06584cb00724",
+        "newLF": "d07c5f16ca712736f7b57b1e577b181d42d63af19be2bf6e1f0d06584cb00724",
+        "gitBlob": "731b74502523a7a4e50cb0010d8ad08478177804",
+        "oldExpanded": [
+          "SchedulePicker renders with a 5-field cron value and shows the matching preset label",
+          "SchedulePicker accepts 'every Nh' shorthand on load and canonicalises it",
+          "SchedulePicker accepts JSON-serialised ParsedSchedule on load (live mission's storage format)",
+          "SchedulePicker calls onChange with the canonical 5-field cron when a preset is selected",
+          "SchedulePicker emits 0 9 * * 1-5 for the existing live mission's expected replacement",
+          "SchedulePicker shows the custom builder when 'Custom…' is clicked",
+          "SchedulePicker in custom builder, checking Mon/Wed/Fri at 18:00 calls onChange with 0 18 * * 1,3,5",
+          "SchedulePicker in custom builder, the Weekdays shortcut sets days 1-5",
+          "SchedulePicker typing a cron expression in the advanced field calls onChange on blur",
+          "SchedulePicker does not emit an invalid advanced draft to the parent",
+          "SchedulePicker says WHY an invalid advanced draft was not accepted",
+          "SchedulePicker keeps the operator's text on screen so they can fix it",
+          "SchedulePicker clears the error once the draft becomes valid",
+          "SchedulePicker Escape does not reach the dialog behind the field",
+          "SchedulePicker commits the advanced draft on Enter",
+          "SchedulePicker displays the error message when error prop is set",
+          "SchedulePicker disables all interactive controls when disabled prop is set",
+          "SchedulePicker compact mode renders just the preset dropdown (no custom builder)",
+          "SchedulePicker compact mode opens dropdown and selecting a preset calls onChange",
+          "SchedulePicker renders the schedule label and cron display in a read-only state for the existing live mission"
+        ],
+        "newExpanded": [
+          "SchedulePicker renders with a 5-field cron value and shows the matching preset label",
+          "SchedulePicker accepts 'every Nh' shorthand on load and canonicalises it",
+          "SchedulePicker accepts JSON-serialised ParsedSchedule on load (live mission's storage format)",
+          "SchedulePicker calls onChange with the canonical 5-field cron when a preset is selected",
+          "SchedulePicker emits 0 9 * * 1-5 for the existing live mission's expected replacement",
+          "SchedulePicker shows the custom builder when 'Custom…' is clicked",
+          "SchedulePicker in custom builder, checking Mon/Wed/Fri at 18:00 calls onChange with 0 18 * * 1,3,5",
+          "SchedulePicker in custom builder, the Weekdays shortcut sets days 1-5",
+          "SchedulePicker typing a cron expression in the advanced field calls onChange on blur",
+          "SchedulePicker does not emit an invalid advanced draft to the parent",
+          "SchedulePicker says WHY an invalid advanced draft was not accepted",
+          "SchedulePicker keeps the operator's text on screen so they can fix it",
+          "SchedulePicker clears the error once the draft becomes valid",
+          "SchedulePicker Escape does not reach the dialog behind the field",
+          "SchedulePicker commits the advanced draft on Enter",
+          "SchedulePicker displays the error message when error prop is set",
+          "SchedulePicker disables all interactive controls when disabled prop is set",
+          "SchedulePicker renders the schedule label and cron display in a read-only state for the existing live mission"
+        ],
+        "removed": [
+          "SchedulePicker compact mode renders just the preset dropdown (no custom builder)",
+          "SchedulePicker compact mode opens dropdown and selecting a preset calls onChange"
+        ],
+        "added": [],
+        "oldPassed": true,
+        "newPassed": true,
+        "retainedBytesIdentical": true
+      }
+    ]
+  },
+  "coverageCrosswalk": {
+    "path": "tmp/t0191-oracle-validation/tmp/oracle-receipts/coverage-crosswalk.md",
+    "sha256": "1e286efb5ac820d2c7a6f1b22251d9cb0ab6c73be1970460da413a1fdaf1faed"
+  },
+  "attemptLedger": {
+    "path": "tmp/t0191-oracle-validation/tmp/oracle-receipts/attempt-ledger.json",
+    "sha256": "aa223ea4e8f46d80dcefec9a730944714a5e6f898912951c074931f1a3b08337"
+  },
+  "integration": "Original75-case draft preserved above. Final123-case unit candidate and56-case browser candidate integrated exactly; independent freeze review and combined validation pending.",
+  "boundedAdditions": {
+    "baselineHead": "048d3329c20a3298f253b18cd554a3029076e62d",
+    "author": "Sartre",
+    "session": "01a101b0-fa17-7b10-a55b-b6201e93c846",
+    "scope": "Four bounded additions; three previously authored unit files only",
+    "originalReceipt": {
+      "file": "unit-final.json",
+      "sha256": "6e97a26db4e3175d66036ee40faf286df1c8919397ddf7a54524f2915bba0cfa",
+      "tests": 75,
+      "unchanged": true
+    },
+    "acceptedHistoricalBytesUnchanged": true,
+    "old75IdentitiesAndStatusesUnchanged": true,
+    "added": [
+      {
+        "name": "T0191 settled Mission timers cannot clear a newer held cancellation or unrelated error",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 collection action identities template stored icon Search preserves identity and selection",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 collection action identities template stored icon Bug preserves identity and selection",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 collection action identities template stored icon GitPullRequest preserves identity and selection",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 collection action identities template stored icon Wrench preserves identity and selection",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 collection action identities template stored icon PenTool preserves identity and selection",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 collection action identities template stored icon Rocket preserves identity and selection",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 collection action identities template stored icon Cpu preserves identity and selection",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 collection action identities template stored icon Activity preserves identity and selection",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 collection action identities template stored icon Shield preserves identity and selection",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 collection action identities template stored icon Terminal preserves identity and selection",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 collection action identities template stored icon Database preserves identity and selection",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 collection action identities template stored icon Globe preserves identity and selection",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 collection action identities template stored icon Code preserves identity and selection",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 collection action identities template stored icon FileText preserves identity and selection",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 collection action identities template stored icon Layers preserves identity and selection",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 collection action identities template stored icon HardDrive preserves identity and selection",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 collection action identities template stored icon AlertTriangle preserves identity and selection",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 collection action identities template stored icon BarChart3 preserves identity and selection",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 collection action identities template stored icon Brain preserves identity and selection",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 collection action identities template stored icon TrendingUp preserves identity and selection",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 collection action identities template stored icon DollarSign preserves identity and selection",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 collection action identities template stored icon Target preserves identity and selection",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 collection action identities template stored icon ClipboardList preserves identity and selection",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 collection action identities template stored icon Palette preserves identity and selection",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 collection action identities template stored icon Megaphone preserves identity and selection",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 collection action identities template stored icon Microscope preserves identity and selection",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 collection action identities template stored icon Scale preserves identity and selection",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 collection action identities template stored icon ShieldCheck preserves identity and selection",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 collection action identities template stored icon CheckSquare preserves identity and selection",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 collection action identities template stored icon TestTube preserves identity and selection",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 collection action identities template stored icon ShieldAlert preserves identity and selection",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 collection action identities template stored icon Gauge preserves identity and selection",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 collection action identities template stored icon BookOpen preserves identity and selection",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 collection action identities template stored icon RefreshCw preserves identity and selection",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 collection action identities template stored icon FlaskConical preserves identity and selection",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 collection action identities template stored icon Sparkles preserves identity and selection",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 collection action identities template stored icon Clock preserves identity and selection",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 Mission metadata preserves current fallback display [preferred fields win]",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 Mission metadata preserves current fallback display [absent preferred agent]",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 Mission metadata preserves current fallback display [absent preferred model]",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 Mission metadata preserves current fallback display [both preferred fields absent]",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 Mission metadata preserves current fallback display [empty preferred fields]",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 Mission metadata preserves current fallback display [provider missing]",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 Mission metadata preserves current fallback display [agent and model missing]",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 Mission metadata preserves current fallback display [all metadata missing]",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 fallback alternative changes only restore preference [initial=true]",
+        "status": "passed"
+      },
+      {
+        "name": "T0191 fallback alternative changes only restore preference [initial=false]",
+        "status": "passed"
+      }
+    ],
+    "final": {
+      "tests": 123,
+      "passed": 80,
+      "failed": 43,
+      "skipped": 0,
+      "exit": 1
+    },
+    "hashes": [
+      {
+        "file": "tests/unit/components-contextual-controls.test.tsx",
+        "previousRawSHA256": "f854c8aad93a3fb4e3d478a2dd93069b7f3d4d06e4853845edb515907663003f",
+        "rawSHA256": "a5cdf3fe7d157d1b350e958c3622bf1f25465df3b355cd944814ac10fba57697",
+        "lfSHA256": "bb46f51cca563d47c01b9c01cc55becfbc225b04f475eeef045e6f86f622c6ba",
+        "changed": true
+      },
+      {
+        "file": "tests/unit/components-primitive-parity.test.tsx",
+        "previousRawSHA256": "b75136d80aec9a6c476866a7e259f497f454205cc9da5c07e1dd289b5705ba1f",
+        "rawSHA256": "b75136d80aec9a6c476866a7e259f497f454205cc9da5c07e1dd289b5705ba1f",
+        "lfSHA256": "bf5a63f709a60b495cb2d42e0b5ae66286a4d67ecfe0dbd0fee0aa33e7bb2cf4",
+        "changed": false
+      },
+      {
+        "file": "tests/unit/components-collection-actions.test.tsx",
+        "previousRawSHA256": "d04e420aebc9497be286f1de4d87d4acf426224f20d2fd4d63dfb0524760b4f9",
+        "rawSHA256": "eddc5db45bd312f28053fdec01781b0bcdace0171373a6fe070e1fa7804a4e79",
+        "lfSHA256": "0d1f1192e7081b7bc41c5ce2fde59baf8ebfe7fb1bb1eb8654b42f36765336be",
+        "changed": true
+      },
+      {
+        "file": "tests/unit/components-chat-markdown.test.tsx",
+        "previousRawSHA256": "bafa8fda08a7eae396b13265179e0ffed47cece5e4a732b4f7f960ba3e04cfcc",
+        "rawSHA256": "bafa8fda08a7eae396b13265179e0ffed47cece5e4a732b4f7f960ba3e04cfcc",
+        "lfSHA256": "1d6f85f4c9020e53333240d7ef9ec7ad79ee2356261db87f01ac540d94fa5fa5",
+        "changed": false
+      },
+      {
+        "file": "tests/unit/components-progress-feedback.test.tsx",
+        "previousRawSHA256": "a327cb1e964d570b79929fdedf79355bc46d0988cf62c65c29de26498256e400",
+        "rawSHA256": "52c0014eeae90f2137406ef74edb0bbf6fddd13c06190f0651719b6609e9caf5",
+        "lfSHA256": "c81db5ca47c6483c02b30eb2a14477874cf0c7d03ef5a7f003db04c97d0f1c66",
+        "changed": true
+      },
+      {
+        "file": "tests/unit/components-token-preservation.test.tsx",
+        "previousRawSHA256": "894418c8441126d2d0c193da134c97f31de949feeb1816b5e1e2d676e4e870fb",
+        "rawSHA256": "894418c8441126d2d0c193da134c97f31de949feeb1816b5e1e2d676e4e870fb",
+        "lfSHA256": "30f4d6bd22d85e5f94436bd29ff3d5427551a59facb0d89913d748a51f3d7c2c",
+        "changed": false
+      }
+    ],
+    "checks": {
+      "typescript": 0,
+      "eslint": 0,
+      "readOnlyCensus": 0,
+      "testRepeatedWindowLines": 4796
+    },
+    "contextExposure": "Stored-name inventory confirmed from TemplateCard Lucide import declaration (adjacent existing map was also displayed). Expected glyphs use public Lucide constructors, not the production map. Targeted MissionEditorPanel metadata fallback expressions inspected to preserve the existing display contract."
+  },
+  "coordinatorFinalCandidate": {
+    "unit": {
+      "receipt": "tmp/t0191-oracle-validation/tmp/oracle-receipts/coordinator-final-unit.json",
+      "sha256": "4783048f15a50473faf78e5d89111f46e70104a0e96df0dede704e5b32e438e2",
+      "total": 123,
+      "passed": 80,
+      "failed": 43,
+      "exitCode": 1,
+      "runtimeErrors": 0,
+      "skipped": 0
+    },
+    "browser": {
+      "receipt": "tmp/t0191-browser-validation/tmp/run-1791033369945/results.json",
+      "sha256": "b87020ff157e275e381cc88e8313cca259a505ae77c77e0278dc15e804f6aaf0",
+      "total": 56,
+      "passed": 25,
+      "failed": 31,
+      "exitCode": 1,
+      "skipped": 0,
+      "retries": 0,
+      "file": "tests/e2e/component-accessibility-responsive.spec.ts",
+      "sha256File": "306fd795a95e87f6d277f7fa50acb034da8044b88655ea7e60581af867fa2534",
+      "author": "Galileo, 01a101b3-7c34-7a71-94b5-334c72f652cb",
+      "handoff": "tmp/t0191-browser-validation/tmp/t0191-browser-oracle-handoff.md",
+      "handoffSHA256": "fe31dbcbd15717bdbb22b0edf7ee2c13cd88fbf2987bc6a83b3f5044c2a164b3",
+      "ownership": {
+        "app": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0190-green-validation",
+        "root": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0191-browser-validation",
+        "run": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0191-browser-validation\\tmp\\run-1791033369945",
+        "port": 3999,
+        "serverPid": 13888,
+        "stopped": true,
+        "code": 1
+      },
+      "limits": "Chromium and controlled synthetic responses at1440x900/390x844; no paid inference, physical keyboard, release acceptance or assertions beyond each first failure. Prebuilt unchanged accepted08bd application. No whole-gate or before/after stamp claim for this private browser runner."
+    },
+    "combinedTypecheckExit": 0,
+    "combinedLintExit": 0,
+    "census": {
+      "path": "tmp/t0191-oracle-validation/tmp/oracle-receipts/coordinator-combined-census.json",
+      "sha256": "b38ea1dc62d8f24f86341df6f72eb26a55f9b1c137996c9efc9e0c967baa37c7"
+    },
+    "freeze": "Independent review pending; no production implementation.",
+    "qualification": "Superseded candidate, preserved. Independent review found impossible unit cancellation status and overconstrained browser scrolling. Corrected author receipts follow; final freeze pending."
+  },
+  "cancellationFixtureCorrection": {
+    "scope": "tests/unit/components-progress-feedback.test.tsx",
+    "baselineHead": "048d3329c20a3298f253b18cd554a3029076e62d",
+    "rawSHA256": "5bf7bfa438d757b2e42e604ad643669a7c184221e70824f3ddb583df3a951566",
+    "lfSHA256": "147aa04e4d4c0e14cdccd312327f797190f423bfa6fc35fd834628de5005a950",
+    "tests": 123,
+    "passed": 80,
+    "failed": 43,
+    "pending": 0,
+    "runtimeErrorSuites": 0,
+    "identitiesAndOutcomesUnchanged": true,
+    "unchanged": [
+      {
+        "file": "tests/unit/components-contextual-controls.test.tsx",
+        "sha256": "a5cdf3fe7d157d1b350e958c3622bf1f25465df3b355cd944814ac10fba57697",
+        "unchanged": true
+      },
+      {
+        "file": "tests/unit/components-primitive-parity.test.tsx",
+        "sha256": "b75136d80aec9a6c476866a7e259f497f454205cc9da5c07e1dd289b5705ba1f",
+        "unchanged": true
+      },
+      {
+        "file": "tests/unit/components-collection-actions.test.tsx",
+        "sha256": "eddc5db45bd312f28053fdec01781b0bcdace0171373a6fe070e1fa7804a4e79",
+        "unchanged": true
+      },
+      {
+        "file": "tests/unit/components-chat-markdown.test.tsx",
+        "sha256": "bafa8fda08a7eae396b13265179e0ffed47cece5e4a732b4f7f960ba3e04cfcc",
+        "unchanged": true
+      },
+      {
+        "file": "tests/unit/components-token-preservation.test.tsx",
+        "sha256": "894418c8441126d2d0c193da134c97f31de949feeb1816b5e1e2d676e4e870fb",
+        "unchanged": true
+      },
+      {
+        "file": "tests/unit/u0-the-gate-sees-what-it-claims.test.ts",
+        "sha256": "9532451c46f8732c4f3f79f0167ab35f6586c1df7eb0d5cf1b95415e6b0a4932",
+        "unchanged": true
+      },
+      {
+        "file": "tests/unit/u2-the-contrast-gate-refuses.test.ts",
+        "sha256": "5d8869928378b4489244a9702feb9e0f67fd8653a30f00e613275bfa01a38c60",
+        "unchanged": true
+      },
+      {
+        "file": "tests/unit/components/schedule/SchedulePicker.test.tsx",
+        "sha256": "d07c5f16ca712736f7b57b1e577b181d42d63af19be2bf6e1f0d06584cb00724",
+        "unchanged": true
+      },
+      {
+        "file": "tests/e2e/component-accessibility-responsive.spec.ts",
+        "sha256": "306fd795a95e87f6d277f7fa50acb034da8044b88655ea7e60581af867fa2534",
+        "unchanged": true
+      },
+      {
+        "file": "tmp/oracle-receipts/unit-final.json",
+        "sha256": "6e97a26db4e3175d66036ee40faf286df1c8919397ddf7a54524f2915bba0cfa",
+        "unchanged": true
+      },
+      {
+        "file": "tmp/oracle-receipts/bounded-all-six.json",
+        "sha256": "f86f5e4cbb604cbcd2ad175f0868e7fef5ead79125655fecfac73f4820a81228",
+        "unchanged": true
+      }
+    ],
+    "checks": {
+      "jest": 1,
+      "typescript": 0,
+      "eslint": 0
+    },
+    "contextExposure": "Operator-provided cancellation contract, targeted cancellation handler comment/return matches and acknowledgement return lines 47-54; no implementation authored. Fixtures now use failed/result Cancelled by user and cancel accepted/processKillPending acknowledgement. Existing feedback assertions and identities retained."
+  },
+  "browserScrollCorrection": {
+    "author": "Galileo,01a101b3-7c34-7a71-94b5-334c72f652cb",
+    "sha256": "e45007c923cd28e0e6ba0aad86f17250cded8ceb7979004891cebb2392488cc6",
+    "handoff": "tmp/t0191-browser-validation/tmp/t0191-browser-oracle-laplace-handoff.md",
+    "receipt": "tmp/t0191-browser-validation/tmp/run-1791033990017/results.json",
+    "stats": {
+      "startTime": "2026-10-03T13:26:31.743Z",
+      "duration": 188993.264,
+      "expected": 25,
+      "skipped": 0,
+      "unexpected": 31,
+      "flaky": 0
+    },
+    "ownership": {
+      "app": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0190-green-validation",
+      "root": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0191-browser-validation",
+      "run": "C:\\Users\\Daniel\\Documents\\Coding\\Github\\PatterStage\\tmp\\t0191-browser-validation\\tmp\\run-1791033990017",
+      "port": 3999,
+      "serverPid": 13668,
+      "stopped": true,
+      "code": 1
+    },
+    "qualification": "All56 identities preserved; bounded per-target deliberate scrolling. Three phone fallback reds remain: offscreen actions have no user-scrollable ancestor. No horizontal movement claim.",
+    "checks": {
+      "node": "v24.21.0",
+      "rawSha256": "e45007c923cd28e0e6ba0aad86f17250cded8ceb7979004891cebb2392488cc6",
+      "lfSha256": "e45007c923cd28e0e6ba0aad86f17250cded8ceb7979004891cebb2392488cc6",
+      "lines": 733,
+      "checks": [
+        {
+          "name": "eslint",
+          "exitCode": 0
+        },
+        {
+          "name": "typecheck-tests",
+          "exitCode": 0
+        },
+        {
+          "name": "line-census-report",
+          "exitCode": 0
+        }
+      ],
+      "census": {
+        "srcLines": 102378,
+        "testLines": 145883,
+        "scriptsLines": 13667,
+        "srcRepeatedWindowLines": 895,
+        "testRepeatedWindowLines": 4796,
+        "routesWithTryCatch": 18,
+        "handRolledReadHooks": 2,
+        "writeHooksWithoutMutation": 0,
+        "repeatedTypeShapeFiles": 2,
+        "oneImporterComponents": 104,
+        "libRootFiles": 6,
+        "commentEssays": 9,
+        "suitesMockingDbInline": 15
+      },
+      "baseline": {
+        "srcLines": 102378,
+        "testLines": 145150,
+        "scriptsLines": 13667,
+        "srcRepeatedWindowLines": 895,
+        "testRepeatedWindowLines": 4796,
+        "routesWithTryCatch": 18,
+        "handRolledReadHooks": 2,
+        "writeHooksWithoutMutation": 0,
+        "repeatedTypeShapeFiles": 2,
+        "oneImporterComponents": 104,
+        "libRootFiles": 6,
+        "commentEssays": 9,
+        "suitesMockingDbInline": 15
+      }
+    }
+  },
+  "cancellationAcknowledgementCorrection": {
+    "file": "tests/unit/components-progress-feedback.test.tsx",
+    "rawSHA256": "b51ff9cb40535dc4ac458d027bf10a2bd7b43beed19082e439a8638ecb376455",
+    "lfSHA256": "ff9410efaad9353461dc307c39e5a6db0ada2dbc2d547de3251e6c4df3f0e0a2",
+    "onlyChange": "Exactly four processKillPending false values changed to true",
+    "identitiesAssertionsAndOtherBytesPreserved": true,
+    "identitiesAndOutcomesUnchanged": true,
+    "tests": 123,
+    "passed": 80,
+    "failed": 43,
+    "pending": 0,
+    "runtimeErrorSuites": 0,
+    "exit": 1,
+    "preservedReceipts": [
+      {
+        "file": "unit-final.json",
+        "sha256": "6e97a26db4e3175d66036ee40faf286df1c8919397ddf7a54524f2915bba0cfa",
+        "unchanged": true
+      },
+      {
+        "file": "bounded-all-six.json",
+        "sha256": "f86f5e4cbb604cbcd2ad175f0868e7fef5ead79125655fecfac73f4820a81228",
+        "unchanged": true
+      },
+      {
+        "file": "cancel-contract-all-six.json",
+        "sha256": "f4107c6aacc81596d70b6b7c46de7b68b3a444a2eb73ba2ed80bf76a5f29fc7f",
+        "unchanged": true
+      }
+    ]
+  },
+  "fieldMigrationHistoricalBaseline": {
+    "head": "048d3329c20a3298f253b18cd554a3029076e62d",
+    "files": [
+      {
+        "file": "tests/unit/b6-config-field-unset-and-range.test.tsx",
+        "gitBlobId": "d9678b0f640614d5554ee260a669e793725e10f5",
+        "originalGit": {
+          "rawSHA256": "49ea773f14d6aa3a1e56f4ae86f7a23da016e80378a83d7664753e8610a2b11a",
+          "lfSHA256": "49ea773f14d6aa3a1e56f4ae86f7a23da016e80378a83d7664753e8610a2b11a"
+        },
+        "workingCopy": {
+          "rawSHA256": "49ea773f14d6aa3a1e56f4ae86f7a23da016e80378a83d7664753e8610a2b11a",
+          "lfSHA256": "49ea773f14d6aa3a1e56f4ae86f7a23da016e80378a83d7664753e8610a2b11a"
+        },
+        "workingMatchesGitLF": true,
+        "expandedNames": [
+          {
+            "name": "NumberInput: keystrokes, blur and the range GREEN CONTROL: a valid keystroke still emits the number at once (field-kit pin)",
+            "status": "passed"
+          },
+          {
+            "name": "NumberInput: keystrokes, blur and the range typing 9999 then blurring clamps to the max and emits onChange(500)",
+            "status": "passed"
+          },
+          {
+            "name": "NumberInput: keystrokes, blur and the range typing 0 then blurring clamps to the min and emits onChange(1)",
+            "status": "passed"
+          },
+          {
+            "name": "NumberInput: keystrokes, blur and the range GREEN CONTROL: a value inside the range is emitted as typed and left alone by blur",
+            "status": "passed"
+          },
+          {
+            "name": "NumberInput: keystrokes, blur and the range clearing the control emits onChange(null), never 0",
+            "status": "passed"
+          },
+          {
+            "name": "NumberInput: keystrokes, blur and the range a stray '-' never reaches onChange as 0 or NaN",
+            "status": "passed"
+          },
+          {
+            "name": "NumberInput: keystrokes, blur and the range shows the range as helper text",
+            "status": "passed"
+          },
+          {
+            "name": "NumberInput: keystrokes, blur and the range an out-of-range value is aria-invalid and names the problem until blur clamps it",
+            "status": "passed"
+          },
+          {
+            "name": "ConfigField: an unset value is said, not coerced boolean undefined: switch unchecked, Not set pill, the default helper, no Clear",
+            "status": "passed"
+          },
+          {
+            "name": "ConfigField: an unset value is said, not coerced boolean false: unchecked, no pill, and Clear Show Cost calls onUpdate('show_cost', null)",
+            "status": "passed"
+          },
+          {
+            "name": "ConfigField: an unset value is said, not coerced boolean null reads as unset too (the value a Clear leaves behind)",
+            "status": "passed"
+          },
+          {
+            "name": "ConfigField: an unset value is said, not coerced number undefined: an empty input and the Not set pill",
+            "status": "passed"
+          },
+          {
+            "name": "ConfigField: an unset value is said, not coerced clearing a number that held 40 calls onUpdate(key, null), never onUpdate(key, 0)",
+            "status": "passed"
+          },
+          {
+            "name": "ConfigField: an unset value is said, not coerced a set number carries Clear Max Turns, which calls onUpdate('max_turns', null)",
+            "status": "passed"
+          },
+          {
+            "name": "ConfigField: an unset value is said, not coerced select undefined: the trigger reads Select… with the pill; choosing high drops the pill and shows Clear",
+            "status": "passed"
+          },
+          {
+            "name": "ConfigField: an unset value is said, not coerced text undefined: empty input with placeholder Not set and the pill; emptying a text emits null, not ''",
+            "status": "passed"
+          },
+          {
+            "name": "ConfigField: a field another surface owns is shown, not offered renders the value read-only, with no control and no Clear",
+            "status": "passed"
+          },
+          {
+            "name": "ConfigField: a field another surface owns is shown, not offered says where it IS set, and links there",
+            "status": "passed"
+          },
+          {
+            "name": "ConfigField: a field another surface owns is shown, not offered an unset managed field says Not set rather than nothing",
+            "status": "passed"
+          },
+          {
+            "name": "ConfigField: a value the schema does not expect is shown, not hidden a select value outside its options is named beside the options",
+            "status": "passed"
+          },
+          {
+            "name": "ConfigField: a value the schema does not expect is shown, not hidden a toggle holding a string says not a boolean, and does not render as on",
+            "status": "passed"
+          },
+          {
+            "name": "ConfigField: a value the schema does not expect is shown, not hidden a number holding a string says not a number",
+            "status": "passed"
+          },
+          {
+            "name": "the agent section page: Save follows the range Max Turns 9999 before blur: Save disabled with the problem in its title; 300 enables it",
+            "status": "passed"
+          },
+          {
+            "name": "the agent section page: Clear and the diff-only send Clear enables Save; the save sends {max_turns: null}; afterwards the field is Not set and the key has left state",
+            "status": "passed"
+          },
+          {
+            "name": "the agent section page: Clear and the diff-only send a foreign out-of-options value on disk is shown, and a save of another field sends only that field",
+            "status": "passed"
+          },
+          {
+            "name": "the agent section page: Clear and the diff-only send GREEN CONTROL: an untouched page sends nothing and shows no UNSAVED marker",
+            "status": "passed"
+          }
+        ],
+        "postRunUnchanged": true
+      },
+      {
+        "file": "tests/unit/b7-memory-empty-states.test.tsx",
+        "gitBlobId": "7c512fcdd3109819f7852ff4c6e448960d9cd1fc",
+        "originalGit": {
+          "rawSHA256": "8e75de4a10294ac8e92ed42cb4016d9211caf39dd569371f85a2037bccb0804f",
+          "lfSHA256": "8e75de4a10294ac8e92ed42cb4016d9211caf39dd569371f85a2037bccb0804f"
+        },
+        "workingCopy": {
+          "rawSHA256": "8e75de4a10294ac8e92ed42cb4016d9211caf39dd569371f85a2037bccb0804f",
+          "lfSHA256": "8e75de4a10294ac8e92ed42cb4016d9211caf39dd569371f85a2037bccb0804f"
+        },
+        "workingMatchesGitLF": true,
+        "expandedNames": [
+          {
+            "name": "Enter runs the search the label promises SearchInput fires onSubmit for Enter and for nothing else",
+            "status": "passed"
+          },
+          {
+            "name": "Enter runs the search the label promises GREEN CONTROL: a SearchInput with no onSubmit still types without throwing",
+            "status": "passed"
+          },
+          {
+            "name": "Enter runs the search the label promises pressing Enter in the memory search recalls",
+            "status": "passed"
+          },
+          {
+            "name": "the browser hands the search down to the list a recall that matched nothing names the query on the page",
+            "status": "passed"
+          },
+          {
+            "name": "the browser hands the search down to the list Enter twice while a recall is in flight runs it once",
+            "status": "passed"
+          },
+          {
+            "name": "an empty list says which kind of empty it is a store that is entirely stale says so, and offers the way to see it",
+            "status": "passed"
+          },
+          {
+            "name": "an empty list says which kind of empty it is a search that matched nothing names the query and offers to clear it",
+            "status": "passed"
+          },
+          {
+            "name": "an empty list says which kind of empty it is a store nothing is answering for says it is not connected",
+            "status": "passed"
+          },
+          {
+            "name": "an empty list says which kind of empty it is GREEN CONTROL: a genuinely empty, reachable, unsearched store still says 'No memories yet'",
+            "status": "passed"
+          },
+          {
+            "name": "an empty list says which kind of empty it is the stale banner stays quiet when it is hiding nothing",
+            "status": "passed"
+          },
+          {
+            "name": "an empty list says which kind of empty it is but says so while the filter is off, so it can be put back on",
+            "status": "passed"
+          },
+          {
+            "name": "an empty list says which kind of empty it is the stale banner is above the list, not inside the non-empty branch",
+            "status": "passed"
+          },
+          {
+            "name": "the number beside a fact is the number it is the bridge maps proof_count to a field called proofCount",
+            "status": "passed"
+          },
+          {
+            "name": "the number beside a fact is the number it is one proof reads 'Proof count: 1', never a percentage",
+            "status": "passed"
+          },
+          {
+            "name": "the number beside a fact is the number it is a fact with no proofs shows no count at all",
+            "status": "passed"
+          },
+          {
+            "name": "the number beside a fact is the number it is neither the tab nor the bridge mentions relevance any more",
+            "status": "passed"
+          }
+        ],
+        "postRunUnchanged": true
+      },
+      {
+        "file": "tests/unit/field-kit.test.tsx",
+        "gitBlobId": "43dc45ceddf361ef4fbdeea94c1c8043ce40c87b",
+        "originalGit": {
+          "rawSHA256": "498c509a3c6a98a549fa7d7fd049b84417999d5567891a6871220f9d09f4a097",
+          "lfSHA256": "498c509a3c6a98a549fa7d7fd049b84417999d5567891a6871220f9d09f4a097"
+        },
+        "workingCopy": {
+          "rawSHA256": "498c509a3c6a98a549fa7d7fd049b84417999d5567891a6871220f9d09f4a097",
+          "lfSHA256": "498c509a3c6a98a549fa7d7fd049b84417999d5567891a6871220f9d09f4a097"
+        },
+        "workingMatchesGitLF": true,
+        "expandedNames": [
+          {
+            "name": "Field renders the label and hint",
+            "status": "passed"
+          },
+          {
+            "name": "Field shows the error instead of the hint when both are set",
+            "status": "passed"
+          },
+          {
+            "name": "Field Kit Input / Textarea forwards props and fires onChange",
+            "status": "passed"
+          },
+          {
+            "name": "Field Kit Input / Textarea Textarea forwards a custom className alongside the base styles",
+            "status": "passed"
+          },
+          {
+            "name": "legacy TextInput (delegates to the Field Kit Input) renders label + description and calls onChange with the raw value",
+            "status": "passed"
+          },
+          {
+            "name": "legacy TextInput (delegates to the Field Kit Input) respects the disabled prop",
+            "status": "passed"
+          },
+          {
+            "name": "legacy NumberInput (delegates to the Field Kit Input) calls onChange with a parsed number",
+            "status": "passed"
+          }
+        ],
+        "postRunUnchanged": true
+      },
+      {
+        "file": "tests/unit/t0162-house-control-names.test.tsx",
+        "gitBlobId": "bd0ffab880dea0a1241dfcbee2cdc76d7533b87d",
+        "originalGit": {
+          "rawSHA256": "b6e48adf5f6e6d140888aaf920fe88f40c2d15b9eee76585d5a512f3173c252e",
+          "lfSHA256": "b6e48adf5f6e6d140888aaf920fe88f40c2d15b9eee76585d5a512f3173c252e"
+        },
+        "workingCopy": {
+          "rawSHA256": "b6e48adf5f6e6d140888aaf920fe88f40c2d15b9eee76585d5a512f3173c252e",
+          "lfSHA256": "b6e48adf5f6e6d140888aaf920fe88f40c2d15b9eee76585d5a512f3173c252e"
+        },
+        "workingMatchesGitLF": true,
+        "expandedNames": [
+          {
+            "name": "T-0162 · house controls keep visible labels associated Field associates its label with the Select button",
+            "status": "passed"
+          },
+          {
+            "name": "T-0162 · house controls keep visible labels associated NumberInput associates its own label with the spinbutton",
+            "status": "passed"
+          },
+          {
+            "name": "T-0162 · house controls keep visible labels associated TextInput associates its own label with the textbox",
+            "status": "passed"
+          },
+          {
+            "name": "T-0162 · house controls keep visible labels associated Field associates its label with AutoTextarea",
+            "status": "passed"
+          },
+          {
+            "name": "T-0162 · house controls keep visible labels associated AutoTextarea does not override a Field label with its placeholder",
+            "status": "passed"
+          }
+        ],
+        "postRunUnchanged": true
+      }
+    ],
+    "control": {
+      "exit": 0,
+      "tests": 54,
+      "passed": 54,
+      "failed": 0,
+      "pending": 0,
+      "runtimeErrorSuites": 0,
+      "rawSHA256": "5be1bd2d5058557159063b1a384f73a91e4c8c92c42ccae27bb8a67709c1fb88"
+    }
+  },
+  "correctedCombinedChecks": {
+    "typecheckExit": 0,
+    "testLines": 146722,
+    "repeatedTestWindows": 4796,
+    "strictCensus": "Unbaselined oracle growth; no gate-pass claim."
+  },
+  "freeze": {
+    "accepted": true,
+    "date": "2026-10-03T13:41:10.258533+00:00",
+    "reviewer": "Laplace,01a1019a-65c6-7ae2-aafe-5b79b166c745",
+    "files": [
+      {
+        "path": "tests/unit/components-contextual-controls.test.tsx",
+        "sha256": "a5cdf3fe7d157d1b350e958c3622bf1f25465df3b355cd944814ac10fba57697"
+      },
+      {
+        "path": "tests/unit/components-primitive-parity.test.tsx",
+        "sha256": "b75136d80aec9a6c476866a7e259f497f454205cc9da5c07e1dd289b5705ba1f"
+      },
+      {
+        "path": "tests/unit/components-collection-actions.test.tsx",
+        "sha256": "eddc5db45bd312f28053fdec01781b0bcdace0171373a6fe070e1fa7804a4e79"
+      },
+      {
+        "path": "tests/unit/components-chat-markdown.test.tsx",
+        "sha256": "bafa8fda08a7eae396b13265179e0ffed47cece5e4a732b4f7f960ba3e04cfcc"
+      },
+      {
+        "path": "tests/unit/components-progress-feedback.test.tsx",
+        "sha256": "b51ff9cb40535dc4ac458d027bf10a2bd7b43beed19082e439a8638ecb376455"
+      },
+      {
+        "path": "tests/unit/components-token-preservation.test.tsx",
+        "sha256": "894418c8441126d2d0c193da134c97f31de949feeb1816b5e1e2d676e4e870fb"
+      },
+      {
+        "path": "tests/e2e/component-accessibility-responsive.spec.ts",
+        "sha256": "e45007c923cd28e0e6ba0aad86f17250cded8ceb7979004891cebb2392488cc6"
+      }
+    ],
+    "total": 179,
+    "passing": 105,
+    "red": 74,
+    "verdict": "ACCEPT: bounded freeze of179 original-API oracle cases. Laplace independently verified final progress hash b51ff9cb40535dc4ac458d027bf10a2bd7b43beed19082e439a8638ecb376455, exact four acknowledgement replacements and123 unit80pass43 unchanged causal reds; accepted browser e45007c923cd28e0e6ba0aad86f17250cded8ceb7979004891cebb2392488cc6,56 cases25pass31reds. Original/intermediate receipt hashes intact; production unchanged. Both fixture-correction blockers closed. Baseline only, not implementation/release acceptance; retain context exposure, unexecuted downstream assertions and independent migration amendment procedure. Strict census accounting outstanding without waiver."
+  }
+}

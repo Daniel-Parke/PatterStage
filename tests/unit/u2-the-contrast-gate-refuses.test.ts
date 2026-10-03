@@ -93,10 +93,10 @@ describe("and refuses a ladder that does not separate", () => {
   });
 
   /**
-   * An alias must be followed, not treated as unmeasurable. `well` is still
-   * `var(--color-dark-800)` today and the roles the codemods retire will be
-   * aliases for a batch each; a gate that gave up on the first `var()` would
-   * stop measuring exactly while things are moving.
+   * An alias must be followed, not treated as unmeasurable. This synthetic
+   * alias verifies resolution independently of the current stylesheet.
+   * A gate that gave up on the first `var()` would stop measuring the
+   * referenced value.
    *
    * A LEAF rung, deliberately. The first draft aliased the panel, which does
    * not test alias resolution at all: it moves the base that four other rungs

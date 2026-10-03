@@ -79,8 +79,8 @@ describe("no-raw-colour-in-tsx sees a colour written the way Tailwind writes one
   /**
    * The half that matters more than the catch. `rgb(var(--ps-rgb-neon-purple)
    * / 0.06)` is a TOKEN reference wearing the same punctuation, it is the form
-   * four live call sites already use, and the built stylesheet proves it
-   * compiles. A rule that fires on it would push those sites back onto hex.
+   * a synthetic lexer fixture exercises. It need not exist in the live
+   * stylesheet: token references must remain distinct from literal colours.
    */
   it.each([
     ["a token triplet in an arbitrary value", 'x = "shadow-[0_0_15px_rgb(var(--ps-rgb-neon-purple)_/_0.06)]";'],

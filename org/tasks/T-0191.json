@@ -88,11 +88,40 @@
     "docs/manifest.json",
     "scripts/tooling/line-census.baseline.json",
     "scripts/tooling/design-lint.baseline.json",
-    "tests/fixtures/mutants/T-0191.json"
+    "tests/fixtures/mutants/T-0191.json",
+    "src/hooks/useCopyToClipboard.ts",
+    "src/components/session/constants.tsx",
+    "src/components/ui/LiveDot.tsx",
+    "src/components/memory/MemoryInsights.tsx",
+    "src/components/viz/StatStrip.tsx",
+    "src/components/models/PerRowDeleteButton.tsx",
+    "src/components/missions/MissionCreateForm.tsx",
+    "org/reviews/2026-10-t0191-unit-oracle-provenance.json",
+    "src/components/auth/SessionManager.tsx",
+    "src/components/config/ConfigField.tsx",
+    "src/components/memory/MemoryProviderSettings.tsx",
+    "src/components/memory/HindsightBrowser.tsx",
+    "src/components/logs/LogFilePicker.tsx",
+    "src/components/logs/LogTerminal.tsx",
+    "src/components/session/SessionFilterBar.tsx",
+    "src/components/skills/SkillRow.tsx",
+    "src/components/spend/SpendPanel.tsx",
+    "src/app/agent/settings/page.tsx",
+    "src/components/ui/field/SearchInput.tsx",
+    "src/components/ui/field/NumberInput.tsx",
+    "src/components/ui/field/index.ts",
+    "docs/contributing/design-tokens.md",
+    "docs/images/settings.png",
+    "docs/images/memory.png",
+    "docs/images/composer.png",
+    "tests/unit/b6-config-field-unset-and-range.test.tsx",
+    "tests/unit/b7-memory-empty-states.test.tsx",
+    "tests/unit/field-kit.test.tsx",
+    "tests/unit/t0162-house-control-names.test.tsx"
   ],
   "timestamps": {
     "opened": "2026-10-03T12:13:29.785227+00:00",
-    "updated": "2026-10-03T12:15:24.832293+00:00"
+    "updated": "2026-10-03T13:41:10.258549+00:00"
   },
   "tier_ruled": "R2",
   "reasons": [
@@ -363,14 +392,15 @@
   ],
   "rollback": "Revert each primitive or responsive cohort with its consumers; revert Story lifecycle and feedback changes as coherent interfaces while retaining regression tests. No schema, stored-key or data migration.",
   "verify_line": "Independent red-first public-action oracles; exact historical test-name parity except two ruled Schedule retirements. At1440x900/390x844 prove truthful Story progress/refusal/Stop, chapter-start positioning, accessible complete control text, keyboard/touch and responsive states. Preserve current cache/ownership contracts and all retention controls. Measure actual full-cohort net benefit before each fold. Full unchanged ten-stage gate, clean committed causal sweep with restored controls, independent R2 and every hosted job at implementation and closure heads. Account for every owned finding/split/coverage row and uncertainty.",
-  "oracle_status": "Not authored or frozen; implementation prohibited.",
+  "oracle_status": "Independently accepted originalAPI oracle;179 cases105pass74causalred. Commit red before production implementation. Later Field migration adaptations require independent author and exact preservation evidence.",
   "preservation_baseline": "tmp/t0191-preservation-baseline-20261003.json",
   "independence": {
     "method": "clean-context authorship",
     "supplement": "coordinator human screenshot and interactive production samples; parser metamorphic unsafe-scheme and streaming cases",
     "finalReviewer": "Laplace, 01a1019a-65c6-7ae2-aafe-5b79b166c745; neither production nor gate author",
     "oracleAuthor": "Sartre, 01a101b0-fa17-7b10-a55b-b6201e93c846, fresh context; no source authorship",
-    "browserOracleAuthor": "Galileo,01a101b3-7c34-7a71-94b5-334c72f652cb, fresh context; browser suite only"
+    "browserOracleAuthor": "Galileo,01a101b3-7c34-7a71-94b5-334c72f652cb, fresh context; browser suite only",
+    "contextExposure": "Independent task-contract authorship with disclosed accidental partial body exposure; supplementary metamorphic parser cases. Browser and human visual review remain a separate lane."
   },
   "readiness": [
     "tmp/t0191-full-readiness-review-20261002.md",
@@ -413,6 +443,90 @@
       "tests/unit/u2-the-contrast-gate-refuses.test.ts",
       "tests/unit/components/schedule/SchedulePicker.test.tsx"
     ],
-    "status": "Authorised, not authored or executed; original controls and identities precede amendments."
+    "status": "Independently authored and executed;65 original pass,63 retained pass, exactly two authorised compact identities retired. Original blobs, hashes, AST and name parity retained in unit provenance."
+  },
+  "oracle_unit_handoff": "org/reviews/2026-10-t0191-unit-oracle-provenance.json",
+  "scope_addendum": {
+    "date": "2026-10-03",
+    "sourceClaims": [
+      "src/hooks/useCopyToClipboard.ts",
+      "src/components/session/constants.tsx",
+      "src/components/ui/LiveDot.tsx",
+      "src/components/memory/MemoryInsights.tsx",
+      "src/components/viz/StatStrip.tsx",
+      "src/components/models/PerRowDeleteButton.tsx",
+      "src/components/missions/MissionCreateForm.tsx"
+    ],
+    "reason": "Six exact components-28 stale-comment sites plus the shared clipboard helper. The actual Session Copy oracle confirms premature visual success while pending; refusal feedback and confirmed success are separate checks. The existing11-case clipboard suite remains unchanged. All three helper consumers remain preservation obligations; Logs needs an explicit claim only if edited.",
+    "authority": "Existing approved component and truthful-feedback programme; independent R2 reviewer Laplace accepted bounded clipboard investigation before repair, without granting any historical amendment."
+  },
+  "field_migration_scope": {
+    "authority": "Explicit operator rulings components-11 Adopt Field as it is and components-12 Track switches everywhere, 2026-09-12; not a new removal decision.",
+    "inventory": "13 current ui/Input production importers, three existing claims and ten added claims; WorkflowCanvas already claimed. Four historical importing suites and the new primitive oracle require independently authored preservation adaptations.",
+    "implementation": "Move SearchInput and NumberInput into field, consolidate track Toggle and InlineToggle in field/Toggle, compose TextInput and labelled Select callers using existing Field and Input/Select, then delete ui/Input. Preserve numerical state, reset/clamp/null semantics, descriptions, disabled state, exact callbacks and all existing test identities.",
+    "amendmentStatus": "Granted by Laplace,2026-10-03, under Q-015 and explicitcomponents11/12 rulings. OriginalAPI executablefreeze first; independently authored bounded transformations afterdestinations exist. Everyexpandedidentity/assertion/interaction/fixturevalue preserved; original54/54 historicalbaseline, blobs/hashes andASTdifference verification required.",
+    "visual": "Settings and Memory label restyle and Composer stacked track switches are explicitly ruled. Capture isolated controlled states and refresh affected guide screenshots.",
+    "addedClaims": [
+      "src/components/auth/SessionManager.tsx",
+      "src/components/config/ConfigField.tsx",
+      "src/components/memory/MemoryProviderSettings.tsx",
+      "src/components/memory/HindsightBrowser.tsx",
+      "src/components/logs/LogFilePicker.tsx",
+      "src/components/logs/LogTerminal.tsx",
+      "src/components/session/SessionFilterBar.tsx",
+      "src/components/skills/SkillRow.tsx",
+      "src/components/spend/SpendPanel.tsx",
+      "src/app/agent/settings/page.tsx",
+      "src/components/ui/field/SearchInput.tsx",
+      "src/components/ui/field/NumberInput.tsx",
+      "src/components/ui/field/index.ts",
+      "docs/contributing/design-tokens.md",
+      "docs/images/settings.png",
+      "docs/images/memory.png",
+      "docs/images/composer.png",
+      "tests/unit/b6-config-field-unset-and-range.test.tsx",
+      "tests/unit/b7-memory-empty-states.test.tsx",
+      "tests/unit/field-kit.test.tsx",
+      "tests/unit/t0162-house-control-names.test.tsx"
+    ]
+  },
+  "oracle_freeze": {
+    "accepted": true,
+    "date": "2026-10-03T13:41:10.258533+00:00",
+    "reviewer": "Laplace,01a1019a-65c6-7ae2-aafe-5b79b166c745",
+    "files": [
+      {
+        "path": "tests/unit/components-contextual-controls.test.tsx",
+        "sha256": "a5cdf3fe7d157d1b350e958c3622bf1f25465df3b355cd944814ac10fba57697"
+      },
+      {
+        "path": "tests/unit/components-primitive-parity.test.tsx",
+        "sha256": "b75136d80aec9a6c476866a7e259f497f454205cc9da5c07e1dd289b5705ba1f"
+      },
+      {
+        "path": "tests/unit/components-collection-actions.test.tsx",
+        "sha256": "eddc5db45bd312f28053fdec01781b0bcdace0171373a6fe070e1fa7804a4e79"
+      },
+      {
+        "path": "tests/unit/components-chat-markdown.test.tsx",
+        "sha256": "bafa8fda08a7eae396b13265179e0ffed47cece5e4a732b4f7f960ba3e04cfcc"
+      },
+      {
+        "path": "tests/unit/components-progress-feedback.test.tsx",
+        "sha256": "b51ff9cb40535dc4ac458d027bf10a2bd7b43beed19082e439a8638ecb376455"
+      },
+      {
+        "path": "tests/unit/components-token-preservation.test.tsx",
+        "sha256": "894418c8441126d2d0c193da134c97f31de949feeb1816b5e1e2d676e4e870fb"
+      },
+      {
+        "path": "tests/e2e/component-accessibility-responsive.spec.ts",
+        "sha256": "e45007c923cd28e0e6ba0aad86f17250cded8ceb7979004891cebb2392488cc6"
+      }
+    ],
+    "total": 179,
+    "passing": 105,
+    "red": 74,
+    "verdict": "ACCEPT: bounded freeze of179 original-API oracle cases. Laplace independently verified final progress hash b51ff9cb40535dc4ac458d027bf10a2bd7b43beed19082e439a8638ecb376455, exact four acknowledgement replacements and123 unit80pass43 unchanged causal reds; accepted browser e45007c923cd28e0e6ba0aad86f17250cded8ceb7979004891cebb2392488cc6,56 cases25pass31reds. Original/intermediate receipt hashes intact; production unchanged. Both fixture-correction blockers closed. Baseline only, not implementation/release acceptance; retain context exposure, unexecuted downstream assertions and independent migration amendment procedure. Strict census accounting outstanding without waiver."
   }
 }

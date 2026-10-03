@@ -246,25 +246,6 @@ describe("SchedulePicker", () => {
     expect(dropdownButton).toBeDisabled();
   });
 
-  it("compact mode renders just the preset dropdown (no custom builder)", () => {
-    const onChange = jest.fn();
-    render(<SchedulePicker value="0 */2 * * *" onChange={onChange} compact onDraftError={jest.fn()} />);
-    // No "Schedule" label in compact mode
-    expect(screen.queryByText(/^Schedule$/i)).not.toBeInTheDocument();
-    // The preset label is shown
-    expect(screen.getByRole("button", { name: /Every 2 hours/i })).toBeInTheDocument();
-  });
-
-  it("compact mode opens dropdown and selecting a preset calls onChange", () => {
-    const onChange = jest.fn();
-    render(<SchedulePicker value="" onChange={onChange} compact onDraftError={jest.fn()} />);
-
-    fireEvent.click(screen.getByRole("button", { name: /Select a frequency/i }));
-    fireEvent.click(screen.getByRole("button", { name: /Weekdays at 9am/i }));
-
-    expect(onChange).toHaveBeenCalledWith("0 9 * * 1-5");
-  });
-
   it("renders the schedule label and cron display in a read-only state for the existing live mission", () => {
     const onChange = jest.fn();
     const stored = JSON.stringify({ kind: "interval", minutes: 120, display: "every 2h" });
