@@ -68,23 +68,57 @@
         "scripts/tooling/line-census.baseline.json",
         "tests/fixtures/mutants/T-0192.json",
         "org/reviews/2026-10-t0192-task-evidence.json",
-        "tests/unit/b3-runtime-status.test.ts"
+        "tests/unit/b3-runtime-status.test.ts",
+        "docs/running/env-reference.md",
+        "tests/unit/tooling-env-contract.test.ts",
+        "tests/unit/scripts-typecheck-contract.test.ts",
+        "src/lib/status/runtime-status-format.ts",
+        "src/app/api/scripts/[name]/route.ts",
+        "src/app/api/schedules/[id]/route.ts",
+        "src/app/api/schedules/[id]/run/route.ts",
+        "src/app/api/runs/[id]/route.ts",
+        "src/app/api/models/[id]/route.ts",
+        "src/app/api/missions/[id]/route.ts",
+        "src/app/api/missions/[id]/cancel/route.ts",
+        "src/app/api/missions/[id]/run/route.ts",
+        "src/app/api/laboratory/research/[id]/route.ts",
+        "src/app/api/laboratory/research/[id]/cancel/route.ts",
+        "src/app/api/laboratory/research/[id]/events/route.ts",
+        "src/app/api/laboratory/research/[id]/export/route.ts",
+        "src/app/api/credentials/[id]/route.ts",
+        "src/app/api/composer/workflows/[id]/route.ts",
+        "src/app/api/composer/runs/[id]/route.ts",
+        "src/app/api/composer/runs/[id]/cancel/route.ts",
+        "src/app/api/composer/runs/[id]/clarify/route.ts",
+        "src/app/api/composer/runs/[id]/events/route.ts",
+        "src/app/api/composer/runs/[id]/nodes/[nodeId]/approve/route.ts",
+        "src/app/api/chat/[id]/route.ts",
+        "src/app/api/chat/[id]/approval/route.ts",
+        "src/app/api/chat/[id]/messages/route.ts",
+        "src/app/api/chat/[id]/stop/route.ts",
+        "src/app/api/chat/[id]/messages/[messageId]/route.ts",
+        "src/app/api/artifacts/[id]/route.ts",
+        "src/modules/hermes/sync/ConfigSync.ts",
+        "src/app/recroom/story-weaver/layout.tsx",
+        "org/LOCKBOOK.md",
+        "src/app/api/composer/workflows/route.ts",
+        "src/lib/feature-flags-guard.ts"
       ],
       "acquired": "2026-10-03T21:24:24.476320+00:00",
       "expires": "2026-10-04T21:24:24.476320+00:00"
     },
     {
-      "lane_id": "T-0192-private-fs-diagnostic",
+      "lane_id": "T-0192-diagnostic-repair-oracles",
       "task_id": "T-0192",
       "session_id": "01a10198-6b4f-7593-aa19-e0b3c8facad8",
       "host": "local",
       "path_claims": [
-        "tmp/t0192-fs-observer.cjs",
-        "tmp/t0192-fs-diagnostic-review.json"
+        "tests/unit/runtime-gateway-diagnostic-redaction.test.ts",
+        "tests/unit/config-sync-atomic-replacement.test.ts"
       ],
-      "acquired": "2026-10-03T22:07:40.484806+00:00",
-      "expires": "2026-10-04T22:07:40.484806+00:00"
+      "acquired": "2026-10-03T22:24:19.581627+00:00",
+      "expires": "2026-10-04T22:24:19.581627+00:00"
     }
   ],
-  "note": "Coordinator implements. Nash may correct and run only the private filesystem diagnostic, with owned outputs. No production or oracle edits; diagnostic results do not qualify acceptance."
+  "note": "Galileo stopped; preserve his unfrozen env draft. Nash independently corrects diagnostic oracle and authors ConfigSync replacement oracle. Coordinator owns production; no repair before accepted red freeze."
 }

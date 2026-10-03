@@ -433,5 +433,109 @@
     "completeSavedRecordErrors": 0,
     "originalFailureRetained": "tmp/t0192-record-normalisation/original-validation.txt",
     "losslessReceipt": "tmp/t0192-record-normalisation/validation.json"
+  },
+  "implementationReviewFollowups": [
+    {
+      "id": "T0192-review-diagnostic-secrets",
+      "priority": "P1",
+      "reviewer": "Laplace",
+      "status": "open",
+      "owner": "T-0192",
+      "evidence": "src/instrumentation.ts:52; src/app/api/status/runtime/route.ts:12; module resolver preserves URL userinfo and query",
+      "requiredProof": "Independent synthetic URL-secret regressions at actual boot and status boundaries; diagnostics redact without changing operational endpoints."
+    },
+    {
+      "id": "T0192-review-script-write-owner",
+      "priority": "P2",
+      "reviewer": "Laplace",
+      "status": "open",
+      "owner": "T-0192",
+      "classification": "Pre-existing, not introduced by the current diff.",
+      "evidence": "src/app/work/scripts/page.tsx:181,198; late save/delete callback closes the current editor",
+      "requiredProof": "Independent held-write tests: close A, open B, settle A; B and its draft survive."
+    }
+  ],
+  "focusedImplementationValidation": {
+    "unit": {
+      "receipt": "tmp/t0192-defects-unit-1791064568690",
+      "passed": 279,
+      "failed": 0
+    },
+    "build": {
+      "receipt": "tmp/t0192-defects-build-1791063848807",
+      "exitCode": 0,
+      "isolated": true
+    },
+    "browserAcceptance": "Open: recurring Windows rename EPERM in full cohorts; isolated passes do not erase failures.",
+    "fullGate": "Not yet run for T-0192."
+  },
+  "windowsReplacementInvestigation": {
+    "status": "Repair and regression pending; no full-browser acceptance.",
+    "incompleteProbe": "tmp/t0192-fs-diagnostic-review.json",
+    "correctedProbe": "tmp/t0192-defects-browser-probe-1791065712155",
+    "correctedCoverage": "42 child injections, 50 observer logs, no incomplete markers; 40/42 cases passed, two actual EPERM failures.",
+    "observedCorrelation": "Both failed renames had same-process pending ConfigSync read spans; all 11 successful renames had none. Spans do not prove OS handle lifetime.",
+    "nativeControl": "tmp/t0192-native-replacement-MSO8Ub/result.json",
+    "nativeResult": "6/6 open-read-handle replacements failed with EPERM; 9/9 closed/no-handle controls succeeded. Owned synthetic files only.",
+    "readCost": "tmp/t0192-read-cost-Vxtemj/report.json",
+    "readCostLimit": "Read-only microbenchmark on freshly written, likely cached files; no YAML parsing or loaded server. 32KiB/1MiB/16MiB synchronous maximum read times 9.9243/5.9674/11.6013ms. No production latency guarantee.",
+    "proposedRepair": "Windows-only synchronous content read in ConfigSync, with async existence checks, parsing/stats/errors unchanged. Linux retains async read. Independent red regression precedes implementation.",
+    "limits": "Does not establish external-process ownership or explain earlier .env EPERM. No retries, deadlines, concurrency or atomic writer changes."
+  },
+  "boundedConsolidation": {
+    "routes": {
+      "files": [
+        "src/app/api/sync/route.ts",
+        "src/app/api/status/route.ts",
+        "src/app/api/update/route.ts"
+      ],
+      "netSourceLines": -26,
+      "review": "Sartre read-only exact-cohort review found no source-level contract mismatch; full acceptance pending."
+    },
+    "typeOnly": {
+      "receipt": "tmp/t0192-type-only-proof.json",
+      "files": 29,
+      "identicalExecutableOutputs": 29,
+      "routeContextReceipt": "tmp/t0192-context-cohort.json",
+      "qualification": "TypeScript transpile output comparison removes comments; independent typechecking still required."
+    },
+    "focused": {
+      "receipt": "tmp/t0192-defects-unit-1791066085146",
+      "suites": 30,
+      "passed": 334,
+      "failed": 0
+    },
+    "typecheck": {
+      "receipt": "tmp/t0192-defects-types-1791066012354",
+      "exitCode": 0,
+      "scope": "Route-context candidate before credential type fold; latest full candidate remains pending."
+    },
+    "docs": "Four retained operator API labels; four source-verified environment entries added. Link check passes. This is not a complete environment inventory."
+  },
+  "criticalOracleFreeze": {
+    "files": {
+      "tests/unit/runtime-gateway-diagnostic-redaction.test.ts": "c53177fe527470a2b665bcac816bde428f585a8881816d8e431a078f5c3dba26",
+      "tests/unit/config-sync-atomic-replacement.test.ts": "84a11950d2d80e22025f0324c6bf6629a9d7b0511c72c2c51100ddcdefaf1ca4"
+    },
+    "reviewer": "Laplace",
+    "accepted": "2026-10-03T22:32:09.307339+00:00",
+    "security": {
+      "originalAuthor": "Galileo",
+      "correctionAuthor": "Nash",
+      "originalHash": "e5c7f8d3590a6dd7eb6575bf0f76d4ca7624de078d1a8b482d1a63f30a7ca418",
+      "originalReceipt": "tmp/t0191-green-validation/tmp/t0192-diagnostic-oracle-1791065872501",
+      "originalQualification": "15 causal disclosure failures;24 invalid/control failures initially blocked by broad vocabulary assertion. This unsuccessful candidate is preserved.",
+      "acceptedReceipt": "tmp/t0191-green-validation/tmp/t0192-security-corrected-1791066331106",
+      "red": 39,
+      "passed": 8,
+      "limitation": "Explicit environment double preserves control bytes; not native NUL-environment transport proof."
+    },
+    "replacement": {
+      "author": "Nash",
+      "receipt": "tmp/t0191-green-validation/tmp/t0192-config-replacement-freeze-1791066542169",
+      "red": 1,
+      "passed": 9,
+      "limitation": "Controlled real descriptor lifetime, not stock readFile scheduling. Linux/performance pending."
+    }
   }
 }

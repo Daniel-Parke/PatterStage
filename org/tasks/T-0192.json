@@ -81,11 +81,47 @@
     "scripts/tooling/line-census.baseline.json",
     "tests/fixtures/mutants/T-0192.json",
     "org/reviews/2026-10-t0192-task-evidence.json",
-    "tests/unit/b3-runtime-status.test.ts"
+    "tests/unit/b3-runtime-status.test.ts",
+    "docs/running/env-reference.md",
+    "tests/unit/runtime-gateway-diagnostic-redaction.test.ts",
+    "tests/unit/tooling-env-contract.test.ts",
+    "tests/unit/scripts-typecheck-contract.test.ts",
+    "src/lib/status/runtime-status-format.ts",
+    "src/app/api/scripts/[name]/route.ts",
+    "src/app/api/schedules/[id]/route.ts",
+    "src/app/api/schedules/[id]/run/route.ts",
+    "src/app/api/runs/[id]/route.ts",
+    "src/app/api/models/[id]/route.ts",
+    "src/app/api/missions/[id]/route.ts",
+    "src/app/api/missions/[id]/cancel/route.ts",
+    "src/app/api/missions/[id]/run/route.ts",
+    "src/app/api/laboratory/research/[id]/route.ts",
+    "src/app/api/laboratory/research/[id]/cancel/route.ts",
+    "src/app/api/laboratory/research/[id]/events/route.ts",
+    "src/app/api/laboratory/research/[id]/export/route.ts",
+    "src/app/api/credentials/[id]/route.ts",
+    "src/app/api/composer/workflows/[id]/route.ts",
+    "src/app/api/composer/runs/[id]/route.ts",
+    "src/app/api/composer/runs/[id]/cancel/route.ts",
+    "src/app/api/composer/runs/[id]/clarify/route.ts",
+    "src/app/api/composer/runs/[id]/events/route.ts",
+    "src/app/api/composer/runs/[id]/nodes/[nodeId]/approve/route.ts",
+    "src/app/api/chat/[id]/route.ts",
+    "src/app/api/chat/[id]/approval/route.ts",
+    "src/app/api/chat/[id]/messages/route.ts",
+    "src/app/api/chat/[id]/stop/route.ts",
+    "src/app/api/chat/[id]/messages/[messageId]/route.ts",
+    "src/app/api/artifacts/[id]/route.ts",
+    "tests/unit/config-sync-atomic-replacement.test.ts",
+    "src/modules/hermes/sync/ConfigSync.ts",
+    "src/app/recroom/story-weaver/layout.tsx",
+    "org/LOCKBOOK.md",
+    "src/app/api/composer/workflows/route.ts",
+    "src/lib/feature-flags-guard.ts"
   ],
   "timestamps": {
     "opened": "2026-10-03T20:37:32.586979+00:00",
-    "updated": "2026-10-03T22:07:40.484806+00:00"
+    "updated": "2026-10-03T22:32:09.307339+00:00"
   },
   "tier_ruled": "R2",
   "reasons": [
@@ -116,7 +152,9 @@
       "tests/e2e/route-contract-followups.spec.ts",
       "tests/helpers/route-contract-runtime.ts",
       "tests/unit/composer-review-control.test.tsx",
-      "tests/unit/b3-runtime-status.test.ts"
+      "tests/unit/b3-runtime-status.test.ts",
+      "tests/unit/runtime-gateway-diagnostic-redaction.test.ts",
+      "tests/unit/config-sync-atomic-replacement.test.ts"
     ],
     "hashes": {
       "tests/unit/api-fetch-error-envelope.test.ts": "f19bdd09a27ac0e4204ed36fe873cfc81adc7946f8b0ffab644a6bfe6135db51",
@@ -131,9 +169,11 @@
       "tests/e2e/route-contract-followups.spec.ts": "55f01e8b7cc0f67b417240c593c7f14d27a3c57edb534fe73f624bcdd2a77b2c",
       "tests/helpers/route-contract-runtime.ts": "89028f9dbe4df0e84a4b7c84be273da7ca2c82f94a46fc97e756b92955b3bc6d",
       "tests/unit/composer-review-control.test.tsx": "d378978bb5f9dbb13968b5c9d688c474decdd5d6a5f348fabc5a7e4f8b884240",
-      "tests/unit/b3-runtime-status.test.ts": "f527dcd66157e9ea35d924965b3ce29371bfb0496c371bb012886f241054f68d"
+      "tests/unit/b3-runtime-status.test.ts": "f527dcd66157e9ea35d924965b3ce29371bfb0496c371bb012886f241054f68d",
+      "tests/unit/runtime-gateway-diagnostic-redaction.test.ts": "c53177fe527470a2b665bcac816bde428f585a8881816d8e431a078f5c3dba26",
+      "tests/unit/config-sync-atomic-replacement.test.ts": "84a11950d2d80e22025f0324c6bf6629a9d7b0511c72c2c51100ddcdefaf1ca4"
     },
-    "author_session": "Galileo and Sartre original authors; Halley and Sartre independent amendments; full attribution in org/reviews/2026-10-t0192-task-evidence.json",
+    "author_session": "Galileo and Sartre original authors; Halley and Sartre independent amendments; full attribution in org/reviews/2026-10-t0192-task-evidence.json; Nash independently corrected diagnostic candidate and authored ConfigSync replacement oracle",
     "independence_method": "metamorphic",
     "amendments": [
       {
@@ -208,6 +248,13 @@
       "verdict": "pass",
       "date": "2026-10-03T21:50:25.535344+00:00",
       "notes": "Scoped acceptance only: exact browser and unit oracle freezes, authorised amendments, and lossless metadata normalisation. No implementation or whole-product acceptance. Independence uses source-informed controlled-input/order and persistence invariants, not source-blind authorship; receipt limitations and authorship remain in org/reviews/2026-10-t0192-task-evidence.json"
+    },
+    {
+      "role": "REVIEWER",
+      "session": "01a1019a-65c6-7ae2-aafe-5b79b166c745",
+      "verdict": "pass",
+      "date": "2026-10-03T22:32:09.307339+00:00",
+      "notes": "Scoped red-freeze acceptance of exact diagnostic and ConfigSync oracles only: 40 causal reds of57. Security uses a plain environment double; ConfigSync controls real descriptor lifetime. Linux, performance and implementation acceptance remain open."
     }
   ]
 }
