@@ -120,6 +120,7 @@ for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 
       expect((await runtime.api('/api/agent/profiles/oracle-before', 'PUT', { name: 'Oracle After', description: 'New description' })).status).toBe(200);
       await page.goto(`${runtime.origin}/agent/profiles`);
       await expect.soft(page.getByText('Oracle After', { exact: true })).toBeVisible();
+      await page.getByRole('button', { name: 'Oracle After', exact: true }).click();
       await expect.soft(page.getByText('New description', { exact: true })).toBeVisible();
       expect(runtime.sql(db => db.prepare("SELECT display_name,description FROM agent_profiles WHERE slug='oracle-after'").get())).toEqual({ display_name: 'Oracle After', description: 'New description' });
     });

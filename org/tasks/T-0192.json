@@ -85,7 +85,7 @@
   ],
   "timestamps": {
     "opened": "2026-10-03T20:37:32.586979+00:00",
-    "updated": "2026-10-03T21:50:25.535344+00:00"
+    "updated": "2026-10-03T22:07:40.484806+00:00"
   },
   "tier_ruled": "R2",
   "reasons": [
@@ -189,6 +189,15 @@
         "author_session": "01a101b3-7c34-7a71-94b5-334c72f652cb",
         "authorised_by": "Laplace R2 exact review under Q015",
         "date": "2026-10-03T21:56:02.269531+00:00"
+      },
+      {
+        "reason": "Select the renamed profile before asserting its detail-only description. All 42 identities and assertions remain unchanged.",
+        "change": "tests/e2e/route-contract-followups.spec.ts",
+        "old_hash": "55f01e8b7cc0f67b417240c593c7f14d27a3c57edb534fe73f624bcdd2a77b2c",
+        "new_hash": "29b0532d0c7d81b7f0141b5943e10ddcecdf3a7d5addc7d8ed1f5c6c90bee615",
+        "author_session": "01a10195-e680-7d01-b79a-86627d74049c",
+        "authorised_by": "Laplace R2 exact review under Q015",
+        "date": "2026-10-03T22:07:40.484806+00:00"
       }
     ]
   },

@@ -46,6 +46,7 @@
         "tests/unit/model-bulk-default-feedback.test.tsx",
         "tests/unit/story-list-failure-contract.test.ts",
         "tests/e2e/route-contract-persistence.spec.ts",
+        "tests/e2e/route-contract-followups.spec.ts",
         "tests/helpers/route-contract-runtime.ts",
         "tests/unit/api-route-public-contract.test.ts",
         "tests/unit/api-route-caller-gate.test.ts",
@@ -73,16 +74,17 @@
       "expires": "2026-10-04T21:24:24.476320+00:00"
     },
     {
-      "lane_id": "T-0192-profile-fixture",
+      "lane_id": "T-0192-private-fs-diagnostic",
       "task_id": "T-0192",
-      "session_id": "01a10195-e680-7d01-b79a-86627d74049c",
+      "session_id": "01a10198-6b4f-7593-aa19-e0b3c8facad8",
       "host": "local",
       "path_claims": [
-        "tests/e2e/route-contract-followups.spec.ts"
+        "tmp/t0192-fs-observer.cjs",
+        "tmp/t0192-fs-diagnostic-review.json"
       ],
-      "acquired": "2026-10-03T21:53:30.598904+00:00",
-      "expires": "2026-10-04T21:53:30.598904+00:00"
+      "acquired": "2026-10-03T22:07:40.484806+00:00",
+      "expires": "2026-10-04T22:07:40.484806+00:00"
     }
   ],
-  "note": "Galileo stopped after runtime-fixture handoff. Halley independently selects the renamed profile before its existing description assertion; coordinator owns remaining integration."
+  "note": "Coordinator implements. Nash may correct and run only the private filesystem diagnostic, with owned outputs. No production or oracle edits; diagnostic results do not qualify acceptance."
 }

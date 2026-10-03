@@ -419,12 +419,12 @@
     "receipt": "tmp/t0191-green-validation/tmp/t0192-runtime-fixture/run-1791063881951/manifest.json"
   },
   "profileFixtureAmendment": {
-    "authority": "Laplace R2 exact amendment under Q015, 2026-10-03",
-    "file": "tests/e2e/route-contract-followups.spec.ts",
-    "scope": "Select Oracle After via its existing row button after the name assertion and before description assertion. Preserve both viewport identities and every assertion, API write, database check, timeout and teardown.",
-    "failureReceipt": "tmp/t0192-defects-browser-1791063962987",
-    "classification": "Two profile description failures are fixture omissions; original metadata persistence reds remain valid. No UI restyle.",
-    "author": "Halley"
+    "acceptedHash": "29b0532d0c7d81b7f0141b5943e10ddcecdf3a7d5addc7d8ed1f5c6c90bee615",
+    "author": "Halley",
+    "reviewer": "Laplace",
+    "receipt": "tmp/t0191-green-validation/tmp/t0192-profile-fixture/report.json",
+    "focused": "2/2 pass",
+    "full": "41/42 pass; nonempty fallback sync failed with Windows rename EPERM. Unchanged isolated rerun passed 1/1; cause and full acceptance remain open."
   },
   "schemaValidation": {
     "pinnedEosCommit": "727bee44bdd83ce569a8d711d51eccf79851af92",
