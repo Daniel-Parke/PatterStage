@@ -1,6 +1,6 @@
 {
   "task": "T-0191",
-  "draft": true,
+  "draft": false,
   "inspectedRevision": "c4b9df75c6e7119686caa39edc18b1cb40c326b4 plus claimed implementation working tree",
   "counts": {
     "findings": 35,
@@ -24,16 +24,21 @@
           "org/reviews/2026-10-t0191-unit-oracle-provenance.json#historicalAmendments",
           "org/tasks/T-0191.json#historical_amendment_authority",
           "tests/unit/u0-the-gate-sees-what-it-claims.test.ts",
-          "tests/unit/u2-the-contrast-gate-refuses.test.ts"
+          "tests/unit/u2-the-contrast-gate-refuses.test.ts",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Sampled tokens/class have no found source consumer; dynamic class use, docs and test pins need their own check. Historical \u201cnine\u201d count not re-derived.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "Current source and recorded bounded checks support the repair; final integrated gates, causal controls, exact-head evidence and independent R2 acceptance remain separate.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "implemented-ruled-removal-pending-final-validation",
-        "reason": "Only four unused RGB mirrors are removed. Retain synthetic purple-token fixtures and all other palette/duration/motion contracts; historical nine-token claim is not re-established."
+        "reason": "Only four unused RGB mirrors are removed. Retain synthetic purple-token fixtures and all other palette/duration/motion contracts; historical nine-token claim is not re-established.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "critic-13",
@@ -59,16 +64,21 @@
           "org/reviews/2026-10-t0191-unit-oracle-provenance.json#reselection_addition",
           "tmp/t0191-reader-position-finding-20261002.md",
           "tests/unit/components-progress-feedback.test.tsx",
-          "tmp/t0191-neutral-stop-green.json"
+          "tmp/t0191-neutral-stop-green.json",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Simulated announced percentage and stale Stop comment remain. The end-of-line button is now visible to the corrected lint regex, so that subclaim is fixed.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "Opening occlusion was initially a hypothesis; later controlled production baseline records it. No provider rollback/refund or new create cancellation guarantee. Current source and recorded bounded checks support the repair; final integrated gates, causal controls, exact-head evidence and independent R2 acceptance remain separate.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "implemented-behavioural-repair-pending-final-validation",
-        "reason": "Replace invented elapsed percentage with truthful pending/confirmed state. Register edit/continue cancellation, suppress aborted answers, preserve 2000ms confirmed completion and Stop through both overlap settlement orders. Reader scroll/refusal and Mission cancellation feedback are explicit scoped repairs, not absence-of-Stop preservation."
+        "reason": "Replace invented elapsed percentage with truthful pending/confirmed state. Register edit/continue cancellation, suppress aborted answers, preserve 2000ms confirmed completion and Stop through both overlap settlement orders. Reader scroll/refusal and Mission cancellation feedback are explicit scoped repairs, not absence-of-Stop preservation.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "components-02",
@@ -84,16 +94,21 @@
           "src/components/ui/field/Field.tsx",
           "src/components/ui/Picker.tsx",
           "tests/unit/components-contextual-controls.test.tsx",
-          "org/tasks/T-0191.json#invariants"
+          "org/tasks/T-0191.json#invariants",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Two dropdowns remain; Picker has stronger listbox handling. Migration changes size and labelling.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "ruled-out",
         "remainingUncertainty": "Rendered contextual-name controls are bounded evidence, not confirmation of historical unnamed counts.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "preserve-ruled-distinct-controls",
-        "reason": "Keep Select and Picker distinct under the current superseding contract. Eight absent ariaLabel props were already in linked Fields; ten unnamed dropdowns is stale. Select description forwarding is a real separate repair."
+        "reason": "Keep Select and Picker distinct under the current superseding contract. Eight absent ariaLabel props were already in linked Fields; ten unnamed dropdowns is stale. Select description forwarding is a real separate repair.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "components-10",
@@ -108,16 +123,21 @@
           "src/components/ui/ConfirmButton.tsx",
           "src/components/models/PerRowDeleteButton.tsx",
           "src/components/memory/hindsight/RowActionButtons.tsx",
-          "tests/unit/components-collection-actions.test.tsx"
+          "tests/unit/components-collection-actions.test.tsx",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Repeated two-step delete/cancel logic and page-owned armed state remain.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "ruled-out",
         "remainingUncertainty": "No measured equivalent full-cohort replacement has been demonstrated. Preservation is a cost/contract judgement, not proof that future consolidation cannot help.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "preserve-owned-confirmation-contracts",
-        "reason": "Keep row-ID confirmation, cancel/expiry/busy and exactly-once writes. Generic ConfirmButton replacement has not demonstrated equivalent ownership or net benefit."
+        "reason": "Keep row-ID confirmation, cancel/expiry/busy and exactly-once writes. Generic ConfirmButton replacement has not demonstrated equivalent ownership or net benefit.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "components-15",
@@ -133,16 +153,21 @@
           "src/components/ui/TemplatePill.tsx",
           "src/components/missions/templates/TemplateEditorModal.tsx",
           "tests/unit/components-collection-actions.test.tsx",
-          "org/tasks/T-0191.json#invariants"
+          "org/tasks/T-0191.json#invariants",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Full-card branch has no found production caller. `Bot` is offered but absent from card map, so it falls back to Zap; visual defect, not data loss.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "Shared icon-map consolidation and full-card deletion have no demonstrated full-cohort benefit/authority. Current source and recorded bounded checks support the repair; final integrated gates, causal controls, exact-head evidence and independent R2 acceptance remain separate.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "implemented-Bot-repair-preserve-public-variant",
-        "reason": "Add missing Bot display mapping while preserving existing icons, editor choices and unknown Zap fallback. Retain full-card variant: absence of a found production caller is not its retirement ruling."
+        "reason": "Add missing Bot display mapping while preserving existing icons, editor choices and unknown Zap fallback. Retain full-card variant: absence of a found production caller is not its retirement ruling.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "components-08",
@@ -155,16 +180,21 @@
           "tmp/t0191-independent-opening-critique-20261003.md",
           "tmp/t0191-stop-overlay-review-20261002.md",
           "src/components/dashboard/Panel.tsx",
-          "src/components/ui/Card.tsx"
+          "src/components/ui/Card.tsx",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Chrome overlaps, but Card lacks forwarded DOM props and overflow behaviour.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "ruled-out",
         "remainingUncertainty": "No measured equivalent full-cohort replacement has been demonstrated. Preservation is a cost/contract judgement, not proof that future consolidation cannot help.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "preserve-no-equivalent-fold",
-        "reason": "Panel/Card overlap in chrome, but DOM props/ref/overflow/accent contracts differ. Keep them; a visual-equivalent cheaper replacement is unproved."
+        "reason": "Panel/Card overlap in chrome, but DOM props/ref/overflow/accent contracts differ. Keep them; a visual-equivalent cheaper replacement is unproved.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "components-05",
@@ -178,16 +208,21 @@
           "tmp/t0191-stop-overlay-review-20261002.md",
           "src/components/ui/Modal.tsx",
           "src/components/ui/Sheet.tsx",
-          "src/components/ui/Dialog.tsx"
+          "src/components/ui/Dialog.tsx",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Thin wrappers remain. Modal's required title and Sheet's labelling must survive any move.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "ruled-out",
         "remainingUncertainty": "No measured equivalent full-cohort replacement has been demonstrated. Preservation is a cost/contract judgement, not proof that future consolidation cannot help.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "preserve-not-cost-effective-on-evidence",
-        "reason": "Modal and Sheet are already thin Dialog adapters with distinct title, placement and dismissal contracts. Retain both."
+        "reason": "Modal and Sheet are already thin Dialog adapters with distinct title, placement and dismissal contracts. Retain both.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "components-06",
@@ -200,16 +235,21 @@
           "tmp/t0191-independent-opening-critique-20261003.md",
           "tmp/t0191-stop-overlay-review-20261002.md",
           "src/components/missions/MissionCreateForm.tsx",
-          "src/components/missions/DirectoryPickerModal.tsx"
+          "src/components/missions/DirectoryPickerModal.tsx",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Directory/reference editors repeat with different labels, keys and setters; saving unknown.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "ruled-out",
         "remainingUncertainty": "No measured equivalent full-cohort replacement has been demonstrated. Preservation is a cost/contract judgement, not proof that future consolidation cannot help.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "preserve-no-demonstrated-net-benefit",
-        "reason": "Directory/reference editor repetitions carry different labels, keys and setters. No equivalent extraction with net savings established."
+        "reason": "Directory/reference editor repetitions carry different labels, keys and setters. No equivalent extraction with net savings established.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "components-16",
@@ -224,16 +264,21 @@
           "src/components/schedule/SchedulePicker.tsx",
           "tests/unit/components/schedule/SchedulePicker.test.tsx",
           "org/reviews/2026-10-t0191-unit-oracle-provenance.json#historicalAmendments",
-          "org/tasks/T-0191.json#independent_amendments"
+          "org/tasks/T-0191.json#independent_amendments",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Production callers omit `compact` and `mode`; `mode` is discarded and the compact branch is test-only. This is an explicit operator-authorised deletion of both props and the tests for deleted behaviour, not a conclusion from caller search alone. No deletion or test run occurred here.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "Original 65 historical cases versus 63 retained are recorded controls; Schedule's 20 literal cases become 18. This is not evidence that all historical props were removed.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "implemented-explicitly-ruled-retirement",
-        "reason": "Remove only SchedulePicker compact/mode and exactly two compact test identities under explicit operator authority. Preserve retained preset/custom/advanced/disabled/error/stored-schedule behaviour."
+        "reason": "Remove only SchedulePicker compact/mode and exactly two compact test identities under explicit operator authority. Preserve retained preset/custom/advanced/disabled/error/stored-schedule behaviour.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "components-07",
@@ -250,16 +295,21 @@
           "src/components/skills/SkillsSearchResults.tsx",
           "src/components/skills/SkillCategoryList.tsx",
           "src/components/skills/SkillRowList.tsx",
-          "org/reviews/2026-10-t0191-component-verification.md:169"
+          "org/reviews/2026-10-t0191-component-verification.md:169",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Six-field bundle still passes through four components.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "Measurement is a recorded independent snapshot against c941bdb2, not a new measurement here. Final census must include subsequent changes; flat-search category context remains separate additional follow-up.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "implemented-measured-consolidation",
-        "reason": "Skills action/state bundle removes repeated prop threading while state stays page-owned. Nash records 88 fewer covered repeated-window lines; do not substitute the opening 63-line estimate."
+        "reason": "Skills action/state bundle removes repeated prop threading while state stays page-owned. Nash records 88 fewer covered repeated-window lines; do not substitute the opening 63-line estimate.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "components-11",
@@ -283,16 +333,21 @@
           "org/reviews/2026-10-t0191-unit-oracle-provenance.json#documentation_captures",
           "tmp/t0191-browser-full-fourth.log",
           "tmp/t0191-walk-images.json",
-          "org/reviews/2026-10-t0191-unit-oracle-provenance.json"
+          "org/reviews/2026-10-t0191-unit-oracle-provenance.json",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Two input families remain. Historical unnamed TextInput/NumberInput harm is fixed: linked labels and `aria-label` are now present.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "Guide images were refreshed with hashes/provenance and14/14 controlled walks at1440/390. Final complete gate/census and independent acceptance remain required; latest full gate still failed one phone helper-targeting case.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "implemented-ruled-migration-pending-visual-closeout",
-        "reason": "Full approved Field migration is present: SearchInput/NumberInput destinations, Field/Input compositions and removal of ui/Input. Thirteen production importers are recorded. Field/Skills union measurement is 4828 to 4654 physical lines, not 371 deleted lines credited in isolation."
+        "reason": "Full approved Field migration is present: SearchInput/NumberInput destinations, Field/Input compositions and removal of ui/Input. Thirteen production importers are recorded. Field/Skills union measurement is 4828 to 4654 physical lines, not 371 deleted lines credited in isolation.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "components-17",
@@ -304,16 +359,21 @@
           "tmp/t0191-expanded-opening-20261002.md",
           "tmp/t0191-independent-opening-critique-20261003.md",
           "tmp/t0191-stop-overlay-review-20261002.md",
-          "src/components/missions/MissionCreateForm.tsx"
+          "src/components/missions/MissionCreateForm.tsx",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Dispatch helper remains in component; modal declares 43 props, not 44. Hook-state migration cost unmeasured.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "ruled-out",
         "remainingUncertainty": "No measured equivalent full-cohort replacement has been demonstrated. Preservation is a cost/contract judgement, not proof that future consolidation cannot help.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "preserve-lifecycle-ownership",
-        "reason": "Keep Mission form dispatch/state ownership; 43 props, not historical 44, and no measured hook migration benefit. T0191 does not require cosmetic relocation."
+        "reason": "Keep Mission form dispatch/state ownership; 43 props, not historical 44, and no measured hook migration benefit. T0191 does not require cosmetic relocation.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "components-03",
@@ -329,16 +389,21 @@
           "src/components/models/ModelEditor.tsx:139",
           "tests/unit/components-contextual-controls.test.tsx",
           "org/reviews/2026-10-t0191-unit-oracle-provenance.json#model_label_addition",
-          "org/reviews/2026-10-t0191-component-verification.md:161"
+          "org/reviews/2026-10-t0191-component-verification.md:161",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Some visible labels lack association, but ModelEditor controls have explicit `aria-label`, and Field links a single child. Historical 28/8 unnamed counts need current accessible-name census.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "Historical 28/8 count unproved; four additive ModelEditor cases were independently committed red at bcc92010. Coordinator reports physical label-focus walkthroughs.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "mixed-preservation-and-label-repair",
-        "reason": "ModelEditor controls already had accessible names; FieldRow now links visible label to preserved/generated child ID and merges descriptions. Record this as activation/description repair, not eight unnamed controls repaired."
+        "reason": "ModelEditor controls already had accessible names; FieldRow now links visible label to preserved/generated child ID and merges descriptions. Record this as activation/description repair, not eight unnamed controls repaired.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "components-14",
@@ -351,16 +416,21 @@
           "tmp/t0191-independent-opening-critique-20261003.md",
           "tmp/t0191-stop-overlay-review-20261002.md",
           "org/reviews/2026-10-t0191-component-verification.md",
-          "src/components/ui/Button.tsx"
+          "src/components/ui/Button.tsx",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Empty focus maps and misleading lint pragmas remain. Accent-prop removal needs visual intent proof.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "Credit predecessor only for its actual accepted changes; broader accent API retirement remains unproved and unnecessary.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "previously-addressed-with-retained-props",
-        "reason": "Empty focus maps and misleading pragmas were handled by T0190. Do not infer authority to remove every historical accent prop or claim every such prop disappeared."
+        "reason": "Empty focus maps and misleading pragmas were handled by T0190. Do not infer authority to remove every historical accent prop or claim every such prop disappeared.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "components-21",
@@ -375,16 +445,21 @@
           "src/components/memory/HindsightBrowser.tsx",
           "src/components/memory/hindsight/DirectivesTab.tsx",
           "src/components/memory/hindsight/MentalModelsTab.tsx",
-          "tests/e2e/component-accessibility-responsive.spec.ts"
+          "tests/e2e/component-accessibility-responsive.spec.ts",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Raw fields/buttons remain; modal fields have manual label/id pairs.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "Selected-tab semantic-state assessment remains in additional t0191-collection-state-semantics, distinct from non-form untyped-button observations.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "preserve-labelled-modal-with-responsive-repair",
-        "reason": "Hindsight modal inputs already have manual label/ID pairs. Preserve this valid contract; responsive tab-toolbars are repaired without introducing a new tab framework."
+        "reason": "Hindsight modal inputs already have manual label/ID pairs. Preserve this valid contract; responsive tab-toolbars are repaired without introducing a new tab framework.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "components-12",
@@ -401,16 +476,21 @@
           "tests/e2e/component-accessibility-responsive.spec.ts",
           "org/reviews/2026-10-t0191-unit-oracle-provenance.json#toggle_geometry_addition",
           "org/reviews/2026-10-t0191-unit-oracle-provenance.json#documentation_captures",
-          "tmp/t0191-browser-full-fourth.log"
+          "tmp/t0191-browser-full-fourth.log",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Three switch forms remain. Ruled consolidation changes inspector layout.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "Latest green is user/coordinator-reported, not raw receipt independently inspected here. Final ledger should attach exact58-case receipt/hash and unchanged build identity. R2/full gate remain pending.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "implemented-geometry-green-reported-pending-R2",
-        "reason": "Track consolidation preserves disabled/hint/checked semantics and now sets explicit left-0 thumb positioning. Two independently accepted geometry reds were committed at6bbea3e0; latest coordinator update reports all58 browser and14 personal green."
+        "reason": "Track consolidation preserves disabled/hint/checked semantics and now sets explicit left-0 thumb positioning. Two independently accepted geometry reds were committed at6bbea3e0; latest coordinator update reports all58 browser and14 personal green.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "components-19",
@@ -426,16 +506,21 @@
           "src/hooks/useMissionDispatch.ts",
           "tests/unit/components-collection-actions.test.tsx",
           "tests/unit/components-progress-feedback.test.tsx",
-          "tmp/t0191-mission-metadata-review-20261002.md"
+          "tmp/t0191-mission-metadata-review-20261002.md",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Large view-model destructure and repeated state predicate remain; read-contract remedy needs behavioural check.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "Long-value controlled browser evidence supports bounded visibility, not universal metadata lengths. No new view-model fold claimed.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "mixed-inherited-contracts-and-targeted-fix",
-        "reason": "Retain T0190 read/retry contracts; Mission metadata wraps and prompt expansion now has aria-expanded. Large view-model destructure is not itself a required extraction."
+        "reason": "Retain T0190 read/retry contracts; Mission metadata wraps and prompt expansion now has aria-expanded. Large view-model destructure is not itself a required extraction.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "components-30",
@@ -451,16 +536,21 @@
           "src/components/skills/SimpleMarkdown.tsx:50",
           "src/hooks/useCopyToClipboard.ts",
           "tests/unit/components-chat-markdown.test.tsx",
-          "tests/e2e/component-accessibility-responsive.spec.ts"
+          "tests/e2e/component-accessibility-responsive.spec.ts",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Distinct renderers remain in source. The later operator ruling moves chat to `SimpleMarkdown` with an http/https/mailto/relative link-scheme guard and test, plus a code-block hover Copy replacement. Raw `href={match[2]}` must not gain untrusted chat input unguarded; browser behaviour and render cost were not tested here. The earlier keep-three ruling is superseded for chat.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "Streaming chunk convergence is tested, not a rendering-performance benchmark. Final independent acceptance remains pending.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "implemented-ruled-shared-markdown",
-        "reason": "Chat uses SimpleMarkdown; unsafe schemes/control encodings are rejected and React text remains escaped. Code Copy preserves payload whitespace and shows refusal; incomplete fences remain visible. Keep Research renderer."
+        "reason": "Chat uses SimpleMarkdown; unsafe schemes/control encodings are rejected and React text remains escaped. Code Copy preserves payload whitespace and shows refusal; incomplete fences remain visible. Keep Research renderer.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "components-31",
@@ -477,16 +567,21 @@
           "src/components/models/CredentialsPanel.tsx",
           "tests/unit/components-contextual-controls.test.tsx:88",
           "tests/unit/components-collection-actions.test.tsx",
-          "tests/e2e/component-accessibility-responsive.spec.ts"
+          "tests/e2e/component-accessibility-responsive.spec.ts",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Hand-built controls remain; icon buttons have title names, so \u201cunnamed\u201d overstates the evidence.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "A radiogroup is a valid semantic implementation of grouping intent; preparatory fieldset suggestion is not an exclusive prescription. No all-handmade-controls-removed claim.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "implemented-targeted-controls-preserve-radio-intent",
-        "reason": "Fallback restore choices remain native radios in an explicitly named radiogroup; native bulk checkboxes retained. Credentials/fallback actions receive responsive repair. Title-named icons were not all unnamed."
+        "reason": "Fallback restore choices remain native radios in an explicitly named radiogroup; native bulk checkboxes retained. Credentials/fallback actions receive responsive repair. Title-named icons were not all unnamed.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "components-04",
@@ -504,16 +599,21 @@
           "src/components/session/MessageBubble.tsx",
           "src/components/missions/MissionEditorPanel.tsx:199",
           "tests/unit/components-contextual-controls.test.tsx",
-          "tests/e2e/component-accessibility-responsive.spec.ts"
+          "tests/e2e/component-accessibility-responsive.spec.ts",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Nested interactive content and SVG click target are concrete. Historical 13-toggle count not rerun.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "Collection-state semantics newly found elsewhere remain additional T0193 follow-up; not erased by these fixes.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "implemented-specific-interaction-repairs",
-        "reason": "Separate DispatchStrip interactive targets, make Processes refresh a real control, expose CategoryAccordion/Session disclosure state, and expose Mission prompt aria-expanded. Do not claim all historical thirteen toggles were repaired."
+        "reason": "Separate DispatchStrip interactive targets, make Processes refresh a real control, expose CategoryAccordion/Session disclosure state, and expose Mission prompt aria-expanded. Do not claim all historical thirteen toggles were repaired.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "components-13",
@@ -526,16 +626,21 @@
           "tmp/t0191-independent-opening-critique-20261003.md",
           "tmp/t0191-stop-overlay-review-20261002.md",
           "src/components/ui/field/Select.tsx",
-          "tests/unit/components-primitive-parity.test.tsx"
+          "tests/unit/components-primitive-parity.test.tsx",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Three native-select presentations remain; caller attributes differ.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "ruled-out",
         "remainingUncertainty": "No measured equivalent full-cohort replacement has been demonstrated. Preservation is a cost/contract judgement, not proof that future consolidation cannot help.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "preserve-adapter-contracts",
-        "reason": "Keep native/event and value/options select presentations; DOM attribute forwarding and caller contracts differ."
+        "reason": "Keep native/event and value/options select presentations; DOM attribute forwarding and caller contracts differ.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "components-28",
@@ -553,16 +658,21 @@
           "src/components/viz/StatStrip.tsx",
           "src/components/models/PerRowDeleteButton.tsx",
           "src/components/missions/MissionCreateForm.tsx",
-          "org/tasks/T-0191.json#scope_addendum"
+          "org/tasks/T-0191.json#scope_addendum",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Sampled comments still cite stale paths, consumers or hook ownership.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "Do not count these six as a complete repository comment audit; critic-09 historical commentary has separate amendment authority.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "implemented-six-specific-comment-corrections",
-        "reason": "Correct stale path/consumer/ownership text at six named sites while preserving executable behaviour."
+        "reason": "Correct stale path/consumer/ownership text at six named sites while preserving executable behaviour.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "components-25",
@@ -574,16 +684,21 @@
           "tmp/t0191-expanded-opening-20261002.md",
           "tmp/t0191-independent-opening-critique-20261003.md",
           "tmp/t0191-stop-overlay-review-20261002.md",
-          "src/components/session/constants.tsx"
+          "src/components/session/constants.tsx",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Non-component modules remain; some UI helpers properly belong in this layer. Historical 24/1,450 is not a safe move list.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "ruled-out",
         "remainingUncertainty": "Historical inventory not reproduced; no saving credited for path-only moves.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "preserve-justified-UI-utilities",
-        "reason": "Colocated UI helpers can belong in components. Historical 24 files/1450 lines is not a current safe move list."
+        "reason": "Colocated UI helpers can belong in components. Historical 24 files/1450 lines is not a current safe move list.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "components-23",
@@ -598,16 +713,21 @@
           "src/components/ui/LiveDot.tsx",
           "src/components/ui/Card.tsx",
           "src/components/dashboard/StatusBadge.tsx",
-          "tests/unit/components-token-preservation.test.tsx"
+          "tests/unit/components-token-preservation.test.tsx",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Two primitives plus inline status dots remain. \u201cNine ways\u201d conflates status, category and legend swatches.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "ruled-out",
         "remainingUncertainty": "No historical nine-item equivalence roster recovered.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "preserve-status-category-legend-differences",
-        "reason": "Historical nine ways conflates status signals with category and legend swatches. Retain live/motion/reduced-motion distinctions."
+        "reason": "Historical nine ways conflates status signals with category and legend swatches. Retain live/motion/reduced-motion distinctions.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "components-22",
@@ -619,16 +739,21 @@
           "tmp/t0191-expanded-opening-20261002.md",
           "tmp/t0191-independent-opening-critique-20261003.md",
           "tmp/t0191-stop-overlay-review-20261002.md",
-          "src/components/ui/LiveDot.tsx"
+          "src/components/ui/LiveDot.tsx",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Some list placeholders remain hand-built. Per-step glyphs and explanatory checking text are different semantics.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "ruled-out",
         "remainingUncertainty": "No measured equivalent full-cohort replacement has been demonstrated. Preservation is a cost/contract judgement, not proof that future consolidation cannot help.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "preserve-semantic-loading-differences",
-        "reason": "Per-step glyphs, explanatory checking text and full list placeholders are not interchangeable spinner usages. No blanket replacement."
+        "reason": "Per-step glyphs, explanatory checking text and full list placeholders are not interchangeable spinner usages. No blanket replacement.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "components-27",
@@ -641,16 +766,21 @@
           "tmp/t0191-independent-opening-critique-20261003.md",
           "tmp/t0191-stop-overlay-review-20261002.md",
           "org/plans/2026-09-refactor-programme.json",
-          "scripts/tooling/line-census.mjs:333"
+          "scripts/tooling/line-census.mjs:333",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Alias is real. Historical \u201c85 unused exports\u201d lacks a reproducible current scan and conflicts with Knip; do not remove exports on this evidence.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "ruled-out",
         "remainingUncertainty": "No current 85-symbol scan or deletion list established. T0196 owns tooling/scanner reconciliation under the programme; this does not transfer authority to delete exports.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "historical-unused-export-claim-unproved",
-        "reason": "Do not delete exports based on historical 85 unused claim; alias/barrel handling and contradictory Knip evidence require reconciliation."
+        "reason": "Do not delete exports based on historical 85 unused claim; alias/barrel handling and contradictory Knip evidence require reconciliation.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "components-01",
@@ -662,16 +792,21 @@
           "tmp/t0191-expanded-opening-20261002.md",
           "tmp/t0191-independent-opening-critique-20261003.md",
           "tmp/t0191-stop-overlay-review-20261002.md",
-          "scripts/tooling/design-lint.mjs:429"
+          "scripts/tooling/design-lint.mjs:429",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: End-of-line raw tags now match; baseline and oracle exist. Not executed in this review.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "No lint run performed by this review; current full gate result must be bound to final source.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "previously-addressed-preserve-detector",
-        "reason": "End-of-line raw JSX tags already match the corrected detector. Do not count this as a new T0191 repair or weaken baseline thresholds."
+        "reason": "End-of-line raw JSX tags already match the corrected detector. Do not count this as a new T0191 repair or weaken baseline thresholds.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "components-09",
@@ -683,16 +818,21 @@
           "tmp/t0191-expanded-opening-20261002.md",
           "tmp/t0191-independent-opening-critique-20261003.md",
           "tmp/t0191-stop-overlay-review-20261002.md",
-          "src/components/ui/Card.tsx"
+          "src/components/ui/Card.tsx",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Cross-domain locations and Card-exported StatusDot remain; move alone has zero proved saving.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "ruled-out",
         "remainingUncertainty": "No measured equivalent full-cohort replacement has been demonstrated. Preservation is a cost/contract judgement, not proof that future consolidation cannot help.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "preserve-colocation",
-        "reason": "Moving cross-domain files or Card's StatusDot alone proves no saving. Preserve semantics and imports."
+        "reason": "Moving cross-domain files or Card's StatusDot alone proves no saving. Preserve semantics and imports.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "components-24",
@@ -710,16 +850,21 @@
           "src/app/results/sessions/[id]/page.tsx",
           "tests/unit/components-chat-markdown.test.tsx",
           "tests/e2e/component-accessibility-responsive.spec.ts",
-          "org/reviews/2026-10-t0191-component-verification.md:157"
+          "org/reviews/2026-10-t0191-component-verification.md:157",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Two subjects share a name; session types are imported by a hook. Button names/expanded state need focused checks.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "Recorded browser retry/back checks and clipboard cases are bounded; no full session lifecycle or naming consolidation claimed.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "implemented-session-feedback-preserve-distinct-renderers",
-        "reason": "Session disclosure/copy now exposes state and truthful clipboard settlement; shared helper suppresses obsolete/unmounted answers. Loading/error shell keeps one stable backlink and h1. Two MessageBubble domain meanings do not mandate relocation."
+        "reason": "Session disclosure/copy now exposes state and truthful clipboard settlement; shared helper suppresses obsolete/unmounted answers. Loading/error shell keeps one stable backlink and h1. Two MessageBubble domain meanings do not mandate relocation.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "components-26",
@@ -731,16 +876,21 @@
           "tmp/t0191-expanded-opening-20261002.md",
           "tmp/t0191-independent-opening-critique-20261003.md",
           "tmp/t0191-stop-overlay-review-20261002.md",
-          "src/types/console.ts"
+          "src/types/console.ts",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: API envelope, theme type and domain records still share one file; move cost includes many imports.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "ruled-out",
         "remainingUncertainty": "No measured equivalent full-cohort replacement has been demonstrated. Preservation is a cost/contract judgement, not proof that future consolidation cannot help.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "preserve-type-layout-no-net-benefit",
-        "reason": "Do not split mixed theme/API/domain types solely to relocate declarations; importer churn must be included in any future proposal."
+        "reason": "Do not split mixed theme/API/domain types solely to relocate declarations; importer churn must be included in any future proposal.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "components-29",
@@ -756,16 +906,21 @@
           "src/components/dashboard/StatusBadge.tsx:75",
           "scripts/tooling/line-census.mjs:333",
           "src/components/viz/index.ts",
-          "src/components/achievements/index.ts"
+          "src/components/achievements/index.ts",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Barrel imports can skew one-importer measure. \u201cOnly three pure wrappers\u201d unproved; StatusBadge has semantics.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "ruled-out",
         "remainingUncertainty": "Historical only-three-pure-wrappers claim unproved; static consumer audit is not dynamic runtime coverage.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "preserve-semantic-wrappers-correct-accounting",
-        "reason": "StatusBadge contains domain state/icon/label mapping, not merely chrome. One-importer detector is textual and misses symbol propagation through barrels. Retain wrappers unless full graph and equivalent fold prove benefit."
+        "reason": "StatusBadge contains domain state/icon/label mapping, not merely chrome. One-importer detector is textual and misses symbol propagation through barrels. Retain wrappers unless full graph and equivalent fold prove benefit.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "components-32",
@@ -776,16 +931,21 @@
           "tmp/t0191-primitive-cost-preparation.md",
           "tmp/t0191-expanded-opening-20261002.md",
           "tmp/t0191-independent-opening-critique-20261003.md",
-          "tmp/t0191-stop-overlay-review-20261002.md"
+          "tmp/t0191-stop-overlay-review-20261002.md",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Constant ternary, doubled expression and redundant loading icon remain; minor, zero-net tidies.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "ruled-out",
         "remainingUncertainty": "No claim those historical expressions were all removed; retain as non-blocking cost judgement.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "preserve-low-value-tidies",
-        "reason": "Minor constant ternary/doubled expression/redundant icon observations are not mandatory broad cleanup absent measurable benefit or demonstrated defect."
+        "reason": "Minor constant ternary/doubled expression/redundant icon observations are not mandatory broad cleanup absent measurable benefit or demonstrated defect.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "components-33",
@@ -800,16 +960,21 @@
           "org/tasks/T-0191.json#field_migration_scope",
           "org/reviews/2026-10-t0191-unit-oracle-provenance.json#field_migration_amendment",
           "org/reviews/2026-10-t0191-unit-oracle-provenance.json#historicalAmendments",
-          "org/reviews/2026-10-t0191-component-verification.md:147"
+          "org/reviews/2026-10-t0191-component-verification.md:147",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Source-path pins remain; 81-versus-82 count depends on matching rules. Inventory exact pins for each move.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "Historical pin count depends on matching rules. Final source-text tests and unchanged full gates still required.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "bounded-import-and-test-amendment-accounting",
-        "reason": "Use exact importer/test impact for selected Field/Schedule/Chat changes, preserve unrelated source-path pins. Independently accepted transformations are finite; do not claim all historical 81/82 pins retired."
+        "reason": "Use exact importer/test impact for selected Field/Schedule/Chat changes, preserve unrelated source-path pins. Independently accepted transformations are finite; do not claim all historical 81/82 pins retired.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "components-18",
@@ -822,16 +987,21 @@
           "tmp/t0191-independent-opening-critique-20261003.md",
           "tmp/t0191-stop-overlay-review-20261002.md",
           "src/components/composer/WorkflowCanvas.tsx",
-          "org/plans/2026-09-refactor-programme.json:854"
+          "org/plans/2026-09-refactor-programme.json:854",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Editor state and three `runWrite` sequences remain together; extraction cost unmeasured.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "ruled-out",
         "remainingUncertainty": "T0193 is a planned later page-hook batch; original finding remains preservation, additional runtime defects retain their own IDs.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "preserve-broad-decomposition-followup-separate",
-        "reason": "Keep WorkflowCanvas state and writes together absent a costed equivalent extraction. Source-traced Composer graph disclosure/output ownership are separately retained findings, not reasons to mark broad extraction done."
+        "reason": "Keep WorkflowCanvas state and writes together absent a costed equivalent extraction. Source-traced Composer graph disclosure/output ownership are separately retained findings, not reasons to mark broad extraction done.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "components-20",
@@ -843,16 +1013,21 @@
           "tmp/t0191-expanded-opening-20261002.md",
           "tmp/t0191-independent-opening-critique-20261003.md",
           "tmp/t0191-stop-overlay-review-20261002.md",
-          "org/tasks/T-0190.json"
+          "org/tasks/T-0190.json",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Pure merge logic and writes remain in components; split requires contract-preserving tests.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "ruled-out",
         "remainingUncertainty": "No measured equivalent full-cohort replacement has been demonstrated. Preservation is a cost/contract judgement, not proof that future consolidation cannot help.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "preserve-existing-query-write-boundaries",
-        "reason": "Keep T0190 cache/read/write ownership and pure merge contracts. Moving code out of component files alone is not net improvement."
+        "reason": "Keep T0190 cache/read/write ownership and pure merge contracts. Moving code out of component files alone is not net improvement.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       }
     ],
     "operatorDispositions": [
@@ -872,16 +1047,21 @@
           "org/tasks/T-0191.json#historical_amendment_authority",
           "tests/unit/u0-the-gate-sees-what-it-claims.test.ts",
           "tests/unit/u2-the-contrast-gate-refuses.test.ts",
-          "org/reviews/2026-09-decision-register.md"
+          "org/reviews/2026-09-decision-register.md",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "org/reviews/2026-09-decision-register.md:2187; Reverify the item-specific ruled disposition against its accepted decision and parent qualification.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "Current source and recorded bounded checks support the repair; final integrated gates, causal controls, exact-head evidence and independent R2 acceptance remain separate.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "implemented-ruled-removal-pending-final-validation",
-        "reason": "Only four unused RGB mirrors are removed. Retain synthetic purple-token fixtures and all other palette/duration/motion contracts; historical nine-token claim is not re-established."
+        "reason": "Only four unused RGB mirrors are removed. Retain synthetic purple-token fixtures and all other palette/duration/motion contracts; historical nine-token claim is not re-established.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "components-02",
@@ -898,16 +1078,21 @@
           "src/components/ui/Picker.tsx",
           "tests/unit/components-contextual-controls.test.tsx",
           "org/tasks/T-0191.json#invariants",
-          "org/reviews/2026-09-decision-register.md"
+          "org/reviews/2026-09-decision-register.md",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "org/reviews/2026-09-decision-register.md:2599; Reverify the item-specific ruled disposition against its accepted decision and parent qualification.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "ruled-out",
         "remainingUncertainty": "Rendered contextual-name controls are bounded evidence, not confirmation of historical unnamed counts.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "preserve-ruled-distinct-controls",
-        "reason": "Keep Select and Picker distinct under the current superseding contract. Eight absent ariaLabel props were already in linked Fields; ten unnamed dropdowns is stale. Select description forwarding is a real separate repair."
+        "reason": "Keep Select and Picker distinct under the current superseding contract. Eight absent ariaLabel props were already in linked Fields; ten unnamed dropdowns is stale. Select description forwarding is a real separate repair.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "components-16",
@@ -923,16 +1108,21 @@
           "tests/unit/components/schedule/SchedulePicker.test.tsx",
           "org/reviews/2026-10-t0191-unit-oracle-provenance.json#historicalAmendments",
           "org/tasks/T-0191.json#independent_amendments",
-          "org/reviews/2026-09-decision-register.md"
+          "org/reviews/2026-09-decision-register.md",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "org/reviews/2026-09-decision-register.md:3090; Reverify the item-specific free-band disposition against its accepted decision and parent qualification.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "Original 65 historical cases versus 63 retained are recorded controls; Schedule's 20 literal cases become 18. This is not evidence that all historical props were removed.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "implemented-explicitly-ruled-retirement",
-        "reason": "Remove only SchedulePicker compact/mode and exactly two compact test identities under explicit operator authority. Preserve retained preset/custom/advanced/disabled/error/stored-schedule behaviour."
+        "reason": "Remove only SchedulePicker compact/mode and exactly two compact test identities under explicit operator authority. Preserve retained preset/custom/advanced/disabled/error/stored-schedule behaviour.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "components-11",
@@ -957,16 +1147,21 @@
           "org/reviews/2026-10-t0191-unit-oracle-provenance.json#documentation_captures",
           "tmp/t0191-browser-full-fourth.log",
           "tmp/t0191-walk-images.json",
-          "org/reviews/2026-10-t0191-unit-oracle-provenance.json"
+          "org/reviews/2026-10-t0191-unit-oracle-provenance.json",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "org/reviews/2026-09-decision-register.md:2614; Reverify the item-specific ruled disposition against its accepted decision and parent qualification.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "Guide images were refreshed with hashes/provenance and14/14 controlled walks at1440/390. Final complete gate/census and independent acceptance remain required; latest full gate still failed one phone helper-targeting case.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "implemented-ruled-migration-pending-visual-closeout",
-        "reason": "Full approved Field migration is present: SearchInput/NumberInput destinations, Field/Input compositions and removal of ui/Input. Thirteen production importers are recorded. Field/Skills union measurement is 4828 to 4654 physical lines, not 371 deleted lines credited in isolation."
+        "reason": "Full approved Field migration is present: SearchInput/NumberInput destinations, Field/Input compositions and removal of ui/Input. Thirteen production importers are recorded. Field/Skills union measurement is 4828 to 4654 physical lines, not 371 deleted lines credited in isolation.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "components-12",
@@ -984,16 +1179,21 @@
           "org/reviews/2026-10-t0191-unit-oracle-provenance.json#toggle_geometry_addition",
           "org/reviews/2026-09-decision-register.md",
           "org/reviews/2026-10-t0191-unit-oracle-provenance.json#documentation_captures",
-          "tmp/t0191-browser-full-fourth.log"
+          "tmp/t0191-browser-full-fourth.log",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "org/reviews/2026-09-decision-register.md:2628; Reverify the item-specific ruled disposition against its accepted decision and parent qualification.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "Latest green is user/coordinator-reported, not raw receipt independently inspected here. Final ledger should attach exact58-case receipt/hash and unchanged build identity. R2/full gate remain pending.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "implemented-geometry-green-reported-pending-R2",
-        "reason": "Track consolidation preserves disabled/hint/checked semantics and now sets explicit left-0 thumb positioning. Two independently accepted geometry reds were committed at6bbea3e0; latest coordinator update reports all58 browser and14 personal green."
+        "reason": "Track consolidation preserves disabled/hint/checked semantics and now sets explicit left-0 thumb positioning. Two independently accepted geometry reds were committed at6bbea3e0; latest coordinator update reports all58 browser and14 personal green.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "components-30",
@@ -1010,16 +1210,21 @@
           "src/hooks/useCopyToClipboard.ts",
           "tests/unit/components-chat-markdown.test.tsx",
           "tests/e2e/component-accessibility-responsive.spec.ts",
-          "org/reviews/2026-09-decision-register.md"
+          "org/reviews/2026-09-decision-register.md",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "org/reviews/2026-09-decision-register.md:2642; Reverify the item-specific ruled disposition against its accepted decision and parent qualification.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "Streaming chunk convergence is tested, not a rendering-performance benchmark. Final independent acceptance remains pending.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "implemented-ruled-shared-markdown",
-        "reason": "Chat uses SimpleMarkdown; unsafe schemes/control encodings are rejected and React text remains escaped. Code Copy preserves payload whitespace and shows refusal; incomplete fences remain visible. Keep Research renderer."
+        "reason": "Chat uses SimpleMarkdown; unsafe schemes/control encodings are rejected and React text remains escaped. Code Copy preserves payload whitespace and shows refusal; incomplete fences remain visible. Keep Research renderer.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "components-31",
@@ -1037,16 +1242,21 @@
           "tests/unit/components-contextual-controls.test.tsx:88",
           "tests/unit/components-collection-actions.test.tsx",
           "tests/e2e/component-accessibility-responsive.spec.ts",
-          "org/reviews/2026-09-decision-register.md"
+          "org/reviews/2026-09-decision-register.md",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "org/reviews/2026-09-decision-register.md:3109; Reverify the item-specific free-band disposition against its accepted decision and parent qualification.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "A radiogroup is a valid semantic implementation of grouping intent; preparatory fieldset suggestion is not an exclusive prescription. No all-handmade-controls-removed claim.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "implemented-targeted-controls-preserve-radio-intent",
-        "reason": "Fallback restore choices remain native radios in an explicitly named radiogroup; native bulk checkboxes retained. Credentials/fallback actions receive responsive repair. Title-named icons were not all unnamed."
+        "reason": "Fallback restore choices remain native radios in an explicitly named radiogroup; native bulk checkboxes retained. Credentials/fallback actions receive responsive repair. Title-named icons were not all unnamed.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "components-01",
@@ -1059,16 +1269,21 @@
           "tmp/t0191-independent-opening-critique-20261003.md",
           "tmp/t0191-stop-overlay-review-20261002.md",
           "scripts/tooling/design-lint.mjs:429",
-          "org/reviews/2026-09-decision-register.md"
+          "org/reviews/2026-09-decision-register.md",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "org/reviews/2026-09-decision-register.md:1786; Reverify the item-specific ruled disposition against its accepted decision and parent qualification.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "No lint run performed by this review; current full gate result must be bound to final source.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "previously-addressed-preserve-detector",
-        "reason": "End-of-line raw JSX tags already match the corrected detector. Do not count this as a new T0191 repair or weaken baseline thresholds."
+        "reason": "End-of-line raw JSX tags already match the corrected detector. Do not count this as a new T0191 repair or weaken baseline thresholds.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "cross-cutting-14b",
@@ -1085,16 +1300,21 @@
           "src/hooks/useCopyToClipboard.ts",
           "tests/unit/components-chat-markdown.test.tsx",
           "tests/e2e/component-accessibility-responsive.spec.ts",
-          "org/reviews/2026-09-decision-register.md:2439"
+          "org/reviews/2026-09-decision-register.md:2439",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "org/reviews/2026-09-decision-register.md:2439; Use the ruled SimpleMarkdown renderer with Copy and guarded links.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "Streaming chunk convergence is tested, not a rendering-performance benchmark. Final independent acceptance remains pending.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "implemented-ruled-shared-markdown",
-        "reason": "Chat uses SimpleMarkdown; unsafe schemes/control encodings are rejected and React text remains escaped. Code Copy preserves payload whitespace and shows refusal; incomplete fences remain visible. Keep Research renderer."
+        "reason": "Chat uses SimpleMarkdown; unsafe schemes/control encodings are rejected and React text remains escaped. Code Copy preserves payload whitespace and shows refusal; incomplete fences remain visible. Keep Research renderer.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       }
     ],
     "coverage": [
@@ -1110,16 +1330,21 @@
           "tmp/t0191-stop-overlay-review-20261002.md",
           "org/tasks/T-0191.json#invariants",
           "tests/unit/components-contextual-controls.test.tsx:24",
-          "tests/unit/components-contextual-controls.test.tsx:57"
+          "tests/unit/components-contextual-controls.test.tsx:57",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Render and compare proposed Select/Picker fold, components-02. Starting check: org/reviews/2026-09-codebase-review-evidence.md:1051. Record command/exit or exact file:line, revision and independent review.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "ruled-out",
         "remainingUncertainty": "Do not claim a fold render comparison happened or ten missing names were repaired.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "superseded-fold-preserve-distinct-controls",
-        "reason": "The Select-to-Picker comparison is superseded by current keep-separate contract. Contextual names and keyboard/selection preservation are the relevant checks."
+        "reason": "The Select-to-Picker comparison is superseded by current keep-separate contract. Contextual names and keyboard/selection preservation are the relevant checks.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "gap-044.2",
@@ -1132,16 +1357,21 @@
           "tmp/t0191-independent-opening-critique-20261003.md",
           "tmp/t0191-stop-overlay-review-20261002.md",
           "src/components/dashboard/Panel.tsx",
-          "src/components/ui/Card.tsx"
+          "src/components/ui/Card.tsx",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Render and compare Panel/Card fold, components-08. Starting check: org/reviews/2026-09-codebase-review-evidence.md:1076. Record command/exit or exact file:line, revision and independent review.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "ruled-out",
         "remainingUncertainty": "No measured visual-equivalent consolidation. Recommend disposition by non-equivalence/cost, not fabricated rendered parity.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "preserve-no-equivalent-fold",
-        "reason": "Panel/Card differ in DOM/ref/overflow and visual contracts; no replacement was selected."
+        "reason": "Panel/Card differ in DOM/ref/overflow and visual contracts; no replacement was selected.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "gap-044.3",
@@ -1159,16 +1389,21 @@
           "org/reviews/2026-10-t0191-component-verification.md:169",
           "tmp/t0191-walk-images.json",
           "org/reviews/2026-10-t0191-unit-oracle-provenance.json#documentation_captures",
-          "tmp/t0191-browser-full-fourth.log"
+          "tmp/t0191-browser-full-fourth.log",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Render and compare Input/Field fold, components-11. Starting check: org/reviews/2026-09-codebase-review-evidence.md:1117. Record command/exit or exact file:line, revision and independent review.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "No tests or browser runs executed by this reviewer. Current coordinator reports 58/58 browser and 14/14 personal green; final full gate and independent R2 remain pending. Confirm guide screenshot refresh in final documentation evidence; private walk images alone do not prove the guide assets changed.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "implemented-visual-evidence-recorded",
-        "reason": "Field migration and controlled Settings/Memory/Composer walks cover ruled label presentation. Whole-cohort reduction recorded separately."
+        "reason": "Field migration and controlled Settings/Memory/Composer walks cover ruled label presentation. Whole-cohort reduction recorded separately.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "gap-044.4",
@@ -1183,16 +1418,21 @@
           "src/components/memory/HindsightBrowser.tsx",
           "src/components/memory/hindsight/DirectivesTab.tsx",
           "src/components/memory/hindsight/MentalModelsTab.tsx",
-          "tests/e2e/component-accessibility-responsive.spec.ts"
+          "tests/e2e/component-accessibility-responsive.spec.ts",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Render and compare Hindsight modal fold, components-21. Starting check: org/reviews/2026-09-codebase-review-evidence.md:1150. Record command/exit or exact file:line, revision and independent review.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "ruled-out",
         "remainingUncertainty": "Do not claim a modal-fold equivalence run; additional selected-tab semantics remains planned T0193.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "preserve-modal-contract-targeted-responsive-fix",
-        "reason": "Hindsight modal retains manual label links; toolbar layout repaired. No modal fold selected."
+        "reason": "Hindsight modal retains manual label links; toolbar layout repaired. No modal fold selected.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "gap-044.5",
@@ -1209,16 +1449,21 @@
           "tests/e2e/component-accessibility-responsive.spec.ts",
           "tests/unit/components-primitive-parity.test.tsx",
           "org/reviews/2026-10-t0191-unit-oracle-provenance.json#documentation_captures",
-          "tmp/t0191-browser-full-fourth.log"
+          "tmp/t0191-browser-full-fourth.log",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Render and compare Toggle fold, components-12. Starting check: org/reviews/2026-09-codebase-review-evidence.md:1158. Record command/exit or exact file:line, revision and independent review.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "Green update is user/coordinator report received during this review, not independently inspected raw receipt. Final record should link exact58-case log/hash/build.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "implemented-geometry-green-reported",
-        "reason": "Track consolidation now has explicit thumb positioning and two accepted geometry oracles beyond original56; coordinator reports all58 green."
+        "reason": "Track consolidation now has explicit thumb positioning and two accepted geometry oracles beyond original56; coordinator reports all58 green.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "gap-044.6",
@@ -1235,16 +1480,21 @@
           "src/components/models/ModelEditor.tsx:125",
           "tests/unit/components-contextual-controls.test.tsx",
           "tests/unit/components-collection-actions.test.tsx",
-          "tests/e2e/component-accessibility-responsive.spec.ts"
+          "tests/e2e/component-accessibility-responsive.spec.ts",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Render and compare Models primitive fold, components-31. Starting check: org/reviews/2026-09-codebase-review-evidence.md:1184. Record command/exit or exact file:line, revision and independent review.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "No tests or browser runs executed by this reviewer. Current coordinator reports 58/58 browser and 14/14 personal green; final full gate and independent R2 remain pending.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "implemented-bounded-model-controls",
-        "reason": "Keep restoration radios/checkboxes while repairing grouping and phone reachability; ModelEditor label activation/description repaired separately."
+        "reason": "Keep restoration radios/checkboxes while repairing grouping and phone reachability; ModelEditor label activation/description repaired separately.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "gap-045.1",
@@ -1258,16 +1508,21 @@
           "tmp/t0191-stop-overlay-review-20261002.md",
           "org/tasks/T-0191.json#field_migration_scope",
           "org/reviews/2026-10-t0191-unit-oracle-provenance.json#field_migration_amendment",
-          "src/components/ui/field/index.ts"
+          "src/components/ui/field/index.ts",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Identify suites importing each proposed component target. Starting check: rg -n 'from \"@/components/' tests src. Record command/exit or exact file:line, revision and independent review.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "Scope is selected moves, not a fresh exhaustive import graph for every retained component. Namespace/barrel qualification in gap048 remains.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "bounded-importer-inventory-satisfied",
-        "reason": "Selected Field migration names thirteen production importers and four historical suites, plus new primitive suite. New destinations and barrel are included."
+        "reason": "Selected Field migration names thirteen production importers and four historical suites, plus new primitive suite. New destinations and barrel are included.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "gap-045.2",
@@ -1281,16 +1536,21 @@
           "tmp/t0191-stop-overlay-review-20261002.md",
           "org/reviews/2026-10-t0191-unit-oracle-provenance.json#historicalAmendments",
           "org/reviews/2026-10-t0191-unit-oracle-provenance.json#field_migration_amendment",
-          "org/reviews/2026-10-t0191-component-verification.md:147"
+          "org/reviews/2026-10-t0191-component-verification.md:147",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Verify actual suite impact before each fold. Starting check: rg -n 'textRefs|source.text|readFileSync' tests/unit. Record command/exit or exact file:line, revision and independent review.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "Final full gate remains necessary; prior baseline or AST equivalence does not prove all integrated code passes.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "bounded-independent-amendments-recorded",
-        "reason": "Original API freeze, baseline hashes/names and independently authorised exact transformations are preserved. No arbitrary source-text assertion removal."
+        "reason": "Original API freeze, baseline hashes/names and independently authorised exact transformations are preserved. No arbitrary source-text assertion removal.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "gap-046.1",
@@ -1302,16 +1562,21 @@
           "tmp/t0191-expanded-opening-20261002.md",
           "tmp/t0191-independent-opening-critique-20261003.md",
           "tmp/t0191-stop-overlay-review-20261002.md",
-          "org/reviews/2026-10-t0191-component-verification.md:165"
+          "org/reviews/2026-10-t0191-component-verification.md:165",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Reconstruct the exact historical unread-file roster. Starting check: rg --files src/components. Record command/exit or exact file:line, revision and independent review.",
         "owningTask": "T-0191",
-        "status": "deferred-historical-evidence-unrecoverable",
+        "status": "deferred",
         "remainingUncertainty": "Cannot truthfully mark historical roster recovered. Coordinator should explicitly accept the bounded limitation while preserving new review evidence.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "historical-evidence-unrecoverable",
-        "reason": "Original about45-of204 review supplied no exact unread roster. Preserve this historical evidence limit; new81-file review does not reconstruct it."
+        "reason": "Original about45-of204 review supplied no exact unread roster. Preserve this historical evidence limit; new81-file review does not reconstruct it.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "gap-046.2",
@@ -1325,16 +1590,21 @@
           "tmp/t0191-stop-overlay-review-20261002.md",
           "org/reviews/2026-10-t0191-component-verification.md:165",
           "org/reviews/2026-10-t0191-dispositions.json#additionalFindings",
-          "org/reviews/2026-10-t0191-dispositions.json#currentSourceReviewRoster"
+          "org/reviews/2026-10-t0191-dispositions.json#currentSourceReviewRoster",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, each(named file at source line 1337): read full body and callers. Starting check: rg --files src/components | rg 'PageHeader|SettingsSection|CategoryCombobox|CategoryManagerModal|ComposerRunForm|ComposerNodeRunDetail|WorkflowRunCanvas|ResearchReport|SegmentedControl|IconButton|LinkButton|Badge|EmptyState|Popover|SplitPane|button-chrome|DataList|DeployControls|AchievementShowcase'. Record command/exit or exact file:line, revision and independent review.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "Exact81-file roster is attached at currentSourceReviewRoster, preserving its concurrent non-atomic source-review qualification. This does not establish all202 components, backend coverage or historical unread roster recovery.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "current-source-review-recorded-runtime-followups-open",
-        "reason": "Galileo records22 named component bodies plus callers. Newly found defects retain separate additional IDs."
+        "reason": "Galileo records22 named component bodies plus callers. Newly found defects retain separate additional IDs.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "gap-046.3",
@@ -1349,16 +1619,21 @@
           "org/reviews/2026-10-t0191-component-verification.md:165",
           "org/plans/2026-09-refactor-programme.json:832",
           "org/plans/2026-09-refactor-programme.json:899",
-          "org/reviews/2026-10-t0191-dispositions.json#currentSourceReviewRoster"
+          "org/reviews/2026-10-t0191-dispositions.json#currentSourceReviewRoster",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, each(Quest/Agent/Help/Log/Session/Script/Skill row or modal file): read full body and callers. Starting check: rg --files src/components | rg 'quests|agents|help|logs|session|scripts|skills'. Record command/exit or exact file:line, revision and independent review.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "Exact81-file roster is attached at currentSourceReviewRoster, preserving its concurrent non-atomic source-review qualification. This does not establish all202 components, backend coverage or historical unread roster recovery.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "current-family-review-recorded-runtime-followups-open",
-        "reason": "Galileo records45 files across seven families with production caller review. Profile/script/growth/Skills/collection hypotheses are preserved."
+        "reason": "Galileo records45 files across seven families with production caller review. Profile/script/growth/Skills/collection hypotheses are preserved.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "gap-046.4",
@@ -1373,16 +1648,21 @@
           "org/reviews/2026-10-t0191-component-verification.md:165",
           "src/components/viz/AreaTrend.tsx",
           "src/components/viz/StackedAreaTrend.tsx",
-          "org/plans/2026-09-refactor-programme.json:899"
+          "org/plans/2026-09-refactor-programme.json:899",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, each(viz chart and motion file): review rendering and ownership. Starting check: rg --files src/components/viz src/components/motion. Record command/exit or exact file:line, revision and independent review.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "Do not equate source reading with accessible rendered alternatives or whole motion acceptance.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "current-viz-motion-review-recorded-followup-open",
-        "reason": "Galileo records14 viz/motion files; chart daily-value alternatives remain separately assigned T0193."
+        "reason": "Galileo records14 viz/motion files; chart daily-value alternatives remain separately assigned T0193.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "gap-047.1",
@@ -1395,16 +1675,21 @@
           "tmp/t0191-independent-opening-critique-20261003.md",
           "tmp/t0191-stop-overlay-review-20261002.md",
           "src/components/ui/Badge.tsx:8",
-          "src/components/ui/Badge.tsx:53"
+          "src/components/ui/Badge.tsx:53",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Determine whether ui/Badge can contain an icon. Starting check: src/components/ui/Badge.tsx:7-11,50-54; src/components/dashboard/StatusBadge.tsx:21-35. Record command/exit or exact file:line, revision and independent review.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "Source capability proof only; not a claim every current badge has ideal icon accessibility.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "historical-limitation-refuted",
-        "reason": "Badge children are ReactNode and rendered directly; icons are already supported without a dedicated icon prop."
+        "reason": "Badge children are ReactNode and rendered directly; icons are already supported without a dedicated icon prop.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "gap-047.2",
@@ -1419,16 +1704,21 @@
           "src/components/dashboard/StatusBadge.tsx:32",
           "src/components/dashboard/StatusBadge.tsx:41",
           "src/components/dashboard/StatusBadge.tsx:75",
-          "src/components/ui/Badge.tsx:51"
+          "src/components/ui/Badge.tsx:51",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Check StatusBadge-to-Badge visual and semantic equivalence. Starting check: src/components/dashboard/StatusBadge.tsx:31-35. Record command/exit or exact file:line, revision and independent review.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "Badge can contain icons, but replacement still needs adapter code and visual proof; no net benefit established.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "preserve-not-visually-or-semantically-equivalent",
-        "reason": "StatusBadge has status icons/spin, fallback mapping and Draft versus Queued label semantics. Its rounded-full/text-micro/gap differs from Badge rounded-ps-sm/text-body."
+        "reason": "StatusBadge has status icons/spin, fallback mapping and Draft versus Queued label semantics. Its rounded-full/text-micro/gap differs from Badge rounded-ps-sm/text-body.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "gap-048.1",
@@ -1440,16 +1730,21 @@
           "tmp/t0191-expanded-opening-20261002.md",
           "tmp/t0191-independent-opening-critique-20261003.md",
           "tmp/t0191-stop-overlay-review-20261002.md",
-          "scripts/tooling/line-census.mjs:333"
+          "scripts/tooling/line-census.mjs:333",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Recompute import users with namespace imports. Starting check: rg -n 'import \\* as' src/components src/app. Record command/exit or exact file:line, revision and independent review.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "Count belongs to prior c7dc1ed3 working-tree audit, not rerun at final source; no new wide investigation requested. Reproduce with rg -n 'import \\* as' src, then resolve each module. Text grep is a candidate list, not AST proof.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "bounded-static-namespace-accounting",
-        "reason": "Prior focused AST audit found10 src namespace imports, none targeting components. Namespace imports did not hide a component user in that snapshot."
+        "reason": "Prior focused AST audit found10 src namespace imports, none targeting components. Namespace imports did not hide a component user in that snapshot.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "gap-048.2",
@@ -1465,16 +1760,21 @@
           "src/components/achievements/index.ts",
           "src/components/ui/field/index.ts",
           "src/components/missions/TemplateModals.tsx",
-          "scripts/tooling/line-census.mjs:333"
+          "scripts/tooling/line-census.mjs:333",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Recompute barrel and re-export chains. Starting check: rg -n '^export (\\*|\\{)' src/components. Record command/exit or exact file:line, revision and independent review.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "Prior audit snapshot, not final recensus: viz7 exports/1 barrel consumer; achievements3 runtime consumer files; TemplateModals1 runtime plus8 type-only. One-importer metric uses path text, not symbol graph. Preserve metric and qualify its meaning.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "bounded-barrel-accounting-preserve-census-limit",
-        "reason": "Prior audit followed viz, achievements, field and TemplateModals barrels. Field had50 unique value-importer files; symbol users differ from barrel-path matches. StatusBadge is semantic, not a safe one-importer deletion."
+        "reason": "Prior audit followed viz, achievements, field and TemplateModals barrels. Field had50 unique value-importer files; symbol users differ from barrel-path matches. StatusBadge is semantic, not a safe one-importer deletion.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "gap-049.1",
@@ -1490,16 +1790,21 @@
           "src/components/ui/GlowSurface.tsx:9",
           "src/components/models/PerRowDeleteButton.tsx:52",
           "src/components/memory/hindsight/RowActionButtons.tsx:23",
-          "src/components/memory/hindsight/RowActionButtons.tsx:63"
+          "src/components/memory/hindsight/RowActionButtons.tsx:63",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Separate comment hits from JSX button hits. Starting check: src/components/ui/Card.tsx:31; src/components/ui/GlowSurface.tsx:9; src/components/models/PerRowDeleteButton.tsx:29; src/components/memory/hindsight/RowActionButtons.tsx:19. Record command/exit or exact file:line, revision and independent review.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "Comment correction does not establish absence of all raw/untyped controls.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "comment-hits-distinguished-from-controls",
-        "reason": "Card/GlowSurface hits are documentation; GlowSurface tag union excludes button/form. PerRowDeleteButton has a real explicitly typed button. RowActionButtons has a real untyped Edit and typed Delete."
+        "reason": "Card/GlowSurface hits are documentation; GlowSurface tag union excludes button/form. PerRowDeleteButton has a real explicitly typed button. RowActionButtons has a real untyped Edit and typed Delete.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "gap-049.2",
@@ -1512,16 +1817,21 @@
           "tmp/t0191-independent-opening-critique-20261003.md",
           "tmp/t0191-stop-overlay-review-20261002.md",
           "src/components/ui/SegmentedControl.tsx:103",
-          "src/components/ui/SegmentedControl.tsx:108"
+          "src/components/ui/SegmentedControl.tsx:108",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Verify SegmentedControl button type. Starting check: src/components/ui/SegmentedControl.tsx:103-109. Record command/exit or exact file:line, revision and independent review.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "No missing-type repair required; not a general keyboard conformance certification.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "missing-type-claim-refuted",
-        "reason": "SegmentedControl actual option button explicitly sets type=button and implements radio state/tabindex."
+        "reason": "SegmentedControl actual option button explicitly sets type=button and implements radio state/tabindex.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "gap-049.3",
@@ -1534,16 +1844,21 @@
           "tmp/t0191-independent-opening-critique-20261003.md",
           "tmp/t0191-stop-overlay-review-20261002.md",
           "src/components/memory/HindsightBrowser.tsx:137",
-          "src/app/agent/memory/page.tsx"
+          "src/app/agent/memory/page.tsx",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Assess HindsightBrowser tab button and form ancestry. Starting check: src/components/memory/HindsightBrowser.tsx:122-132. Record command/exit or exact file:line, revision and independent review.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "Explicit type is reasonable future hardening. Selected-tab semantic state is a different issue retained in additional collection-state finding; prior ancestry trace should not imply universal reuse safety.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "preserve-nonform-button-hardening-optional",
-        "reason": "Hindsight tab buttons are untyped but current HindsightBrowser -> Memory page -> AppShell/root main ancestry has no form. No demonstrated submit bug."
+        "reason": "Hindsight tab buttons are untyped but current HindsightBrowser -> Memory page -> AppShell/root main ancestry has no form. No demonstrated submit bug.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "gap-049.4",
@@ -1557,16 +1872,21 @@
           "tmp/t0191-stop-overlay-review-20261002.md",
           "src/components/session/SessionFilterBar.tsx:66",
           "src/components/session/SessionFilterBar.tsx:78",
-          "src/app/results/sessions/page.tsx"
+          "src/app/results/sessions/page.tsx",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Assess SessionFilterBar source-filter buttons and form ancestry. Starting check: src/components/session/SessionFilterBar.tsx:64-90. Record command/exit or exact file:line, revision and independent review.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "No current accidental-submit reproduction; future form reuse would need explicit type.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "preserve-nonform-button-hardening-optional",
-        "reason": "Session source filters are untyped, expose aria-pressed and are currently outside a form through results/sessions/AppShell."
+        "reason": "Session source filters are untyped, expose aria-pressed and are currently outside a form through results/sessions/AppShell.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "gap-049.5",
@@ -1579,16 +1899,21 @@
           "tmp/t0191-independent-opening-critique-20261003.md",
           "tmp/t0191-stop-overlay-review-20261002.md",
           "src/components/ui/ErrorBoundary.tsx:50",
-          "src/app/layout.tsx:150"
+          "src/app/layout.tsx:150",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Assess ErrorBoundary retry button and form ancestry. Starting check: src/components/ui/ErrorBoundary.tsx:50-56. Record command/exit or exact file:line, revision and independent review.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "Current placement only; no universal guarantee for future ErrorBoundary reuse.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "preserve-nonform-button-hardening-optional",
-        "reason": "ErrorBoundary retry is untyped but root layout main owns the boundary. Its fallback replaces descendants; descendant forms are not ancestors."
+        "reason": "ErrorBoundary retry is untyped but root layout main owns the boundary. Its fallback replaces descendants; descendant forms are not ancestors.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "gap-049.6",
@@ -1603,16 +1928,21 @@
           "src/components/memory/hindsight/RowActionButtons.tsx:23",
           "src/components/memory/hindsight/DirectivesTab.tsx",
           "src/components/memory/hindsight/MentalModelsTab.tsx",
-          "src/components/memory/HindsightBrowser.tsx"
+          "src/components/memory/HindsightBrowser.tsx",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Assess RowEditButton and any other real no-type button missed by comment correction. Starting check: src/components/memory/hindsight/RowActionButtons.tsx:21-27. Record command/exit or exact file:line, revision and independent review.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "Not all historical untyped buttons are fixed. Explicit type remains optional defensive improvement, not a blocker on this evidence.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "preserve-nonform-button-hardening-optional",
-        "reason": "RowEditButton is a genuine untyped button. Directives/MentalModels -> HindsightBrowser -> Memory placements are outside forms; no demonstrated submission harm."
+        "reason": "RowEditButton is a genuine untyped button. Directives/MentalModels -> HindsightBrowser -> Memory placements are outside forms; no demonstrated submission harm.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "gap-050.1",
@@ -1624,16 +1954,21 @@
           "tmp/t0191-expanded-opening-20261002.md",
           "tmp/t0191-independent-opening-critique-20261003.md",
           "tmp/t0191-stop-overlay-review-20261002.md",
-          "src/components/help/ConceptHint.tsx:64"
+          "src/components/help/ConceptHint.tsx:64",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Trace ConceptHint Escape handling. Starting check: src/components/help/ConceptHint.tsx:64-80. Record command/exit or exact file:line, revision and independent review.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "Source trace, no runtime execution by this reviewer; preserve outer modal instead of treating Escape as missing.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "existing-behaviour-preserved",
-        "reason": "ConceptHint Escape stops propagation, closes its panel and returns focus to trigger."
+        "reason": "ConceptHint Escape stops propagation, closes its panel and returns focus to trigger.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "gap-050.2",
@@ -1646,16 +1981,21 @@
           "tmp/t0191-independent-opening-critique-20261003.md",
           "tmp/t0191-stop-overlay-review-20261002.md",
           "src/components/help/ConceptHint.tsx:50",
-          "src/components/help/ConceptHint.tsx:74"
+          "src/components/help/ConceptHint.tsx:74",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Trace ConceptHint outside-pointer and focus-leave handling. Starting check: src/components/help/ConceptHint.tsx:50-56,74-80. Record command/exit or exact file:line, revision and independent review.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "Do not overclaim every pointer/touch/focus-null event is covered. Existing guard is intentional, not proof of a defect.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "existing-behaviour-preserved",
-        "reason": "Outside mousedown dismisses with cleanup. Focus leaving to a known outside target dismisses; null relatedTarget deliberately preserves panel."
+        "reason": "Outside mousedown dismisses with cleanup. Focus leaving to a known outside target dismisses; null relatedTarget deliberately preserves panel.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "gap-051.1",
@@ -1672,16 +2012,21 @@
           "tmp/t0191-current-census.log",
           "tmp/t0191-window-attribution.mjs",
           "tmp/t0191-window-attribution.json",
-          "org/reviews/2026-10-t0191-component-verification.md#reproduced-component-window-attribution"
+          "org/reviews/2026-10-t0191-component-verification.md#reproduced-component-window-attribution",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Attribute repeated-window lines outside the four skills files. Starting check: scripts/tooling/line-census.mjs:93-120,377-392. Record command/exit or exact file:line, revision and independent review.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "Exact attribution reproduced, including genuine remaining duplication. Cross-cutting-18/T-0192 and T-0193 presentation cost assessments remain outstanding; no blanket distinct-semantics or net-savings claim.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "measurement-recorded-final-census-pending",
-        "reason": "88 removed Skills covered lines and161 remaining component lines reproduced at full-src matching scope;67 interface/import/type lines and94 presentation/projection/constant lines. These are not deleted source lines."
+        "reason": "88 removed Skills covered lines and161 remaining component lines reproduced at full-src matching scope;67 interface/import/type lines and94 presentation/projection/constant lines. These are not deleted source lines.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "gap-052.1",
@@ -1695,16 +2040,21 @@
           "tmp/t0191-stop-overlay-review-20261002.md",
           "src/kit/BloomField.tsx",
           "src/kit/PROVENANCE.md:23",
-          "tests/unit/kit-provenance.test.ts:40"
+          "tests/unit/kit-provenance.test.ts:40",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Verify BloomField provenance hash against current bytes. Starting check: src/kit/PROVENANCE.md:15-33; tests/unit/kit-provenance.test.ts:29-47. Record command/exit or exact file:line, revision and independent review.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "Read-only hash commands executed successfully; no Jest run. Raw Windows SHA2565770113f090d074c7b19a8b3112bc76aa0a6654bf4a69fa72297f14a288ae4ba differs by checkout representation. Proves recorded local vendored identity, not current private-upstream drift.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "current-bytes-provenance-verified",
-        "reason": "Current git hash-object equals recorded58fc69edbe91c74049efa88dd5e886d85a890336. UTF8 remove-leading-BOM and CRLF-to-LF SHA256 equals0317e253dab48d07775261b20e915f461360e5f12c76718fcfdce8a403bdfde8."
+        "reason": "Current git hash-object equals recorded58fc69edbe91c74049efa88dd5e886d85a890336. UTF8 remove-leading-BOM and CRLF-to-LF SHA256 equals0317e253dab48d07775261b20e915f461360e5f12c76718fcfdce8a403bdfde8.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "gap-052.2",
@@ -1717,16 +2067,21 @@
           "tmp/t0191-independent-opening-critique-20261003.md",
           "tmp/t0191-stop-overlay-review-20261002.md",
           "src/kit/PROVENANCE.md:3",
-          "org/tasks/T-0191.json#invariants"
+          "org/tasks/T-0191.json#invariants",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Keep vendored scope separate from component refactor claims. Starting check: src/kit/PROVENANCE.md:3-10. Record command/exit or exact file:line, revision and independent review.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "No upstream fetch or private repository verification performed.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "preserve-vendored-boundary",
-        "reason": "BloomField remains a vendored kit asset, not a T0191 authored component or source-saving deletion."
+        "reason": "BloomField remains a vendored kit asset, not a T0191 authored component or source-saving deletion.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "gap-053.1",
@@ -1738,16 +2093,21 @@
           "tmp/t0191-expanded-opening-20261002.md",
           "tmp/t0191-independent-opening-critique-20261003.md",
           "tmp/t0191-stop-overlay-review-20261002.md",
-          "scripts/tooling/design-lint.mjs:429"
+          "scripts/tooling/design-lint.mjs:429",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Assess design-lint effect on components-01 and -29. Starting check: rg -n 'component|raw|button' scripts/tooling/design-lint.mjs. Record command/exit or exact file:line, revision and independent review.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "No lint execution by reviewer; full gate pending. Do not loosen rules/baseline for this disposition.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "detector-already-fixed-retain-bounds",
-        "reason": "End-of-line raw-control regex repaired previously. Design lint identifies syntax/style observations, not semantic wrapper equivalence or form ancestry."
+        "reason": "End-of-line raw-control regex repaired previously. Design lint identifies syntax/style observations, not semantic wrapper equivalence or form ancestry.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "gap-053.2",
@@ -1760,16 +2120,21 @@
           "tmp/t0191-independent-opening-critique-20261003.md",
           "tmp/t0191-stop-overlay-review-20261002.md",
           "scripts/tooling/line-census.mjs:333",
-          "org/reviews/2026-10-t0191-component-verification.md:169"
+          "org/reviews/2026-10-t0191-component-verification.md:169",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Assess line-census effect on components-01 and -29. Starting check: scripts/tooling/line-census.mjs:377-392. Record command/exit or exact file:line, revision and independent review.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "Keep fixed targets; do not rewrite detector or assert all one-importer components are removable. Final current census remains required.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "census-accounting-limit-explicit",
-        "reason": "oneImporterComponents counts literal import paths; barrel/type/comment effects prevent interpreting it as exact runtime graph. Repeated-window convention also differs from physical lines."
+        "reason": "oneImporterComponents counts literal import paths; barrel/type/comment effects prevent interpreting it as exact runtime graph. Repeated-window convention also differs from physical lines.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "gap-054.1",
@@ -1785,16 +2150,21 @@
           "src/components/agents/EditProfileModal.tsx:31",
           "src/app/agent/profiles/page.tsx:277",
           "src/app/agent/profiles/page.tsx:425",
-          "org/plans/2026-09-refactor-programme.json:891"
+          "org/plans/2026-09-refactor-programme.json:891",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Verify current create/edit state ownership and consumers. Starting check: src/components/agents/CreateProfileModal.tsx:29-62; src/components/agents/EditProfileModal.tsx:28-72; src/app/agent/profiles/page.tsx:561-576. Record command/exit or exact file:line, revision and independent review.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "Runtime held-A/open-B reproduction remains required. Neither original gap history nor separate draft defect may be marked fixed by preserving forms.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "ownership-traced-preserve-original-history",
-        "reason": "Create form is page-owned; Edit is locally seeded. Their late-settlement risk is retained separately as t0191-profile-draft-ownership with planned T0193 ownership."
+        "reason": "Create form is page-owned; Edit is locally seeded. Their late-settlement risk is retained separately as t0191-profile-draft-ownership with planned T0193 ownership.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "gap-054.2",
@@ -1807,16 +2177,21 @@
           "tmp/t0191-independent-opening-critique-20261003.md",
           "tmp/t0191-stop-overlay-review-20261002.md",
           "src/components/agents/CreateProfileModal.tsx",
-          "src/components/agents/EditProfileModal.tsx"
+          "src/components/agents/EditProfileModal.tsx",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Measure whether a shared form saves net code without changing behaviour. Starting check: rg -n 'CreateProfileModal|EditProfileModal' src/app/agent/profiles/page.tsx. Record command/exit or exact file:line, revision and independent review.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "ruled-out",
         "remainingUncertainty": "Recommendation of non-cost-effective on available evidence, not a fabricated zero-line benchmark. T0193 lifecycle repair is separate.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "preserve-no-measured-equivalent-consolidation",
-        "reason": "No measured equivalent shared profile form saving established; keep differing state owners."
+        "reason": "No measured equivalent shared profile form saving established; keep differing state owners.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       },
       {
         "id": "gap-090.a",
@@ -1833,16 +2208,21 @@
           "tests/e2e/component-accessibility-responsive.spec.ts",
           "org/tasks/T-0191.json#invariants",
           "tests/unit/components-progress-feedback.test.tsx",
-          "tmp/t0191-neutral-stop-green.json"
+          "tmp/t0191-neutral-stop-green.json",
+          "org/reviews/2026-10-t0191-final-acceptance.md",
+          "tmp/t0191-full-gate-1791056851437/summary.json",
+          "tmp/t0191-final-sweep-qualification.json"
         ],
-        "scepticVerdict": "Halley itemised source review; acceptance remains pending Laplace R2 and full gate/sweep/hosted results.",
+        "scepticVerdict": "Independent Laplace R2 PASS within itemised evidence and retained uncertainty; see final acceptance.",
         "ruling": "Run this T-0164 atomic next proof before closing its owner batch: In an isolated or authorised fixture, Audit CSS token and class naming under the UI programme. Starting check: UI overhaul plan (org/plans/2026-09-ui-overhaul.md:1), design-lint and census. Record command/exit or exact file:line, revision and independent review.",
         "owningTask": "T-0191",
-        "status": "reviewed-pending-final-verification",
+        "status": "done",
         "remainingUncertainty": "Not a complete CSS/brand audit. Final design lint/census/visual evidence required; no fixed target waiver.",
         "openingInspectedRevision": "39d7a8956d597175f553c558012f9a25738cafe1",
         "disposition": "bounded-token-preservation-final-gates-pending",
-        "reason": "Only four ruled RGB mirrors removed; named dark-neon palette and warm Reader identity retained. Token oracle and controlled responsive evidence support bounded preservation."
+        "reason": "Only four ruled RGB mirrors removed; named dark-neon palette and warm Reader identity retained. Token oracle and controlled responsive evidence support bounded preservation.",
+        "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+        "acceptanceQualification": "Investigation completion does not imply all related defects are fixed. Preserve the existing reason, historical limitations and separately owned follow-ups."
       }
     ]
   },
@@ -2014,17 +2394,20 @@
       "remainingUncertainty": "Real seeded endpoints took5.4\u20138.5s under six-worker component run. Distinguish cold route, host contention and runtime work through controlled measurements. No cause attribution or latency acceptance yet."
     }
   ],
-  "acceptance": "Itemised recommendations integrated; full gate, clean committed sweep, final R2 and hosted acceptance outstanding.",
+  "acceptance": "org/reviews/2026-10-t0191-final-acceptance.md",
   "dispositionTotals": {
     "findings": {
-      "reviewed-pending-final-verification": 35
+      "done": 18,
+      "ruled-out": 17
     },
     "operatorDispositions": {
-      "reviewed-pending-final-verification": 9
+      "done": 8,
+      "ruled-out": 1
     },
     "coverage": {
-      "reviewed-pending-final-verification": 31,
-      "deferred-historical-evidence-unrecoverable": 1
+      "ruled-out": 4,
+      "done": 27,
+      "deferred": 1
     }
   },
   "additionalFindingsCount": 11,
@@ -2135,5 +2518,6 @@
         "src/components/viz/TopList.tsx"
       ]
     }
-  }
+  },
+  "acceptanceRevision": "2f0ccfb7214c7a4448aff06bf97e892663414e62"
 }

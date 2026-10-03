@@ -18,7 +18,7 @@
   },
   "mode": "high-assurance",
   "tier_proposed": "R2",
-  "status": "active",
+  "status": "done",
   "owner_session": "2026-10-03-t0191-coordinator",
   "claims": [
     "src/components/layout/AppPageShell.tsx",
@@ -123,11 +123,13 @@
     "src/components/models/ModelEditor.tsx",
     "src/app/recroom/story-weaver/layout.tsx",
     "org/QUESTIONS.md",
-    "org/briefs/T-0191-mutation-oracle.md"
+    "org/briefs/T-0191-mutation-oracle.md",
+    "org/reviews/2026-10-t0191-final-acceptance.md"
   ],
   "timestamps": {
     "opened": "2026-10-03T12:13:29.785227+00:00",
-    "updated": "2026-10-03T15:57:39.231529+00:00"
+    "updated": "2026-10-03T20:19:26.784935+00:00",
+    "closed": "2026-10-03T20:19:26.784922+00:00"
   },
   "tier_ruled": "R2",
   "reasons": [
@@ -398,7 +400,7 @@
   ],
   "rollback": "Revert each primitive or responsive cohort with its consumers; revert Story lifecycle and feedback changes as coherent interfaces while retaining regression tests. No schema, stored-key or data migration.",
   "verify_line": "Independent red-first public-action oracles; exact historical test-name parity except two ruled Schedule test deletions and four Q-034 declaration-dependent RGB identities. At1440x900/390x844 prove truthful Story progress/refusal/Stop, chapter-start positioning, accessible complete control text, keyboard/touch and responsive states. Preserve current cache/ownership contracts and all retention controls. Measure actual full-cohort net benefit before each fold. Full unchanged ten-stage gate, clean committed causal sweep with restored controls, independent R2 and every hosted job at implementation and closure heads. Account for every owned finding/split/coverage row and uncertainty.",
-  "oracle_status": "Original179-case redfreeze committedc941bdb2; accepted independent migration adaptations preserve historical identities. Seven additive unit cases and two browser geometry cases separately committed red. Current130 unit oracle and58 browser cases. Final full gate/sweep/R2/hosted acceptance pending.",
+  "oracle_status": "130 new unit and58 browser cases pass. Historical identity changes are exactly Q034 two Schedule and four declaration-dependent RGB cases; all other identities retained.",
   "preservation_baseline": "tmp/t0191-preservation-baseline-20261003.json",
   "independence": {
     "method": "clean-context authorship",
@@ -714,5 +716,84 @@
     "sha256": "04bd5c1e3733589aa5627a557fa264a8b2e95d73af8a831c3dddc99bf9df2384",
     "identities": 23,
     "focusedControlsPassed": 23
-  }
+  },
+  "final_full_gate": {
+    "head": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+    "receipt": "tmp/t0191-full-gate-1791056851437/summary.json",
+    "sha256": "120a2dee1d3fb64c8fd0f150cb81bdf331b0ad62ac4a6f6f59fe934e9469d5f9",
+    "steps": 10,
+    "treeStamp": "d7ec1143fc00f90e7375c65e7068bfcea4afea769394d48de9e473d5972c929f",
+    "unchanged": true,
+    "jest": {
+      "passed": 8399,
+      "existingSkipped": 9
+    },
+    "browser": {
+      "passed": 423,
+      "existingSkipped": 24
+    },
+    "buildPurity": 2
+  },
+  "mutation": {
+    "receipt": "tmp/t0191-final-sweep-qualification.json",
+    "sha256": "7ce9ac00890f45674989d701532f68fb3b7b90737b2aad868101da0a1e5fdaf9",
+    "killed": 19,
+    "controls": 134,
+    "restored": true,
+    "binding": "tmp/t0191-gate-sweep-binding.json",
+    "priorSweep": "18KILLED/1ERROR preserved; independent three-site amendment followed by a complete committed sweep.",
+    "qualification": "m07 is a combined mutation; its kill does not independently prove the post-publication guard."
+  },
+  "verification": "Independent R2 at2f0ccfb7: all10 unchanged-tree stages,8399unit/423browser passes, build purity, design and line censuses;19 causal committed kills,134controls before/after and exact restoration. All required exact-head hosted jobs pass.76dispositions:53done22ruledout1deferred;11additional findings remain open with T0192/T0193. Existing9unit/24browser skips unchanged.",
+  "deviation": "Retain failed gates, isolated repeats, first failed sweep and traces. Frozen amendments have different authors and exact review; all identities and final assertions remain except Q034 six exact retirements. Latest Windows .env replacement EPERM has unresolved cause, recorded under T0195; isolated9/9 and complete unchanged-source verification pass. Real six-endpoint read latency remains with T0192; fixture preloading does not establish production latency acceptance. Gate and sweep stamps differ only in HEAD/index metadata, proven over2626actual paths. No protected edit, lowered floor, relaxed deadline, source retry or mutation-classifier change. Dev push reports configured PR-rule bypass; settings unchanged.",
+  "final_acceptance": {
+    "head": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+    "review": "org/reviews/2026-10-t0191-final-acceptance.md",
+    "reviewer": "Laplace, independent R2",
+    "verdictSHA256": "2bf270339d58fcd9893fba1fc7513ed50c4ac195413d5f0574536076c65bda84",
+    "hosted": {
+      "receipt": "tmp\\t0191-hosted-implementation\\snapshot-1791058641012.json",
+      "sha256": "8027adc5fbb248cab4104af0c5bdf5bef531026f24ca57d31dafa39e2133e646",
+      "runs": [
+        {
+          "databaseId": 37150086217,
+          "event": "pull_request",
+          "workflowName": "Gitleaks",
+          "headSha": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37150086217"
+        },
+        {
+          "databaseId": 37150086222,
+          "event": "pull_request",
+          "workflowName": "CI",
+          "headSha": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37150086222"
+        },
+        {
+          "databaseId": 37150083059,
+          "event": "push",
+          "workflowName": "Gitleaks",
+          "headSha": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37150083059"
+        },
+        {
+          "databaseId": 37150083036,
+          "event": "push",
+          "workflowName": "CI",
+          "headSha": "2f0ccfb7214c7a4448aff06bf97e892663414e62",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/Daniel-Parke/PatterStage/actions/runs/37150083036"
+        }
+      ]
+    },
+    "limits": "Controlled service responses and owned data; no paid-provider, physical-phone-keyboard, whole-product or release acceptance. Closure-head hosted jobs remain required."
+  },
+  "closure_next": "Observe every closure-head hosted job, then open T0192 with exact claims, router verdict, independently authored red oracles and current item reconciliation. T0200 remains deferred afterv1.0;T0201 depends on it."
 }

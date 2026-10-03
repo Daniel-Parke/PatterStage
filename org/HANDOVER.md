@@ -7,11 +7,37 @@ updated: 2026-10-02
 
 # Handover · PatterStage, 2026-10-02
 
-## Active batch, 2026-10-03
+## Current programme, 2026-10-03
 
-T-0191 implementation is committed locally as `85ed87b2`, exactly matching green ten-stage gate `1791054875331`:8,399unit and423browser passes, build/purity and both censuses green. First committed sweep caught18/19mutants; m11 was ERROR from throwing text queries, with134controls passing before/after and exact restoration. A different author corrected three assertion sites without changing23case identities or timer visibility; candidate04bd5c1e is reviewed and integrated. Final full gate, separate test commit, complete sweep rerun, hosted jobs and final independent R2 acceptance remain. No push yet. Real seed latency stays unresolved in T-0192; documented consolidation candidates have named follow-up owners. See [task](tasks/T-0191.json) and [verification](reviews/2026-10-t0191-component-verification.md).
+T-0191 is independently accepted at `2f0ccfb7`: all ten unchanged-tree gate
+stages, 8,399 unit and 423 browser passes, 19 causal mutant kills and 134
+restored controls. The nine unit and 24 browser skips are unchanged. Every
+required implementation-head hosted job passes. Observe closure-head hosted
+jobs before opening T-0192. See the [acceptance](reviews/2026-10-t0191-final-acceptance.md)
+and [verification](reviews/2026-10-t0191-component-verification.md).
 
-The batch consolidates Field controls and Skills action properties, repairs truthful clipboard and Story feedback, preserves concurrent Stop ownership, and fixes responsive controls and Reader navigation. Screenshot inspection additionally found and corrected toggle thumb positioning with its own red-first browser regression. Validation uses an owned isolated instance on port3999,1440x900 and390x844, with synthetic service responses. Eleven further findings, including unresolved real seed-read latency, have explicit T-0192/T-0193 follow-ups; no paid service validation or whole-product acceptance is claimed.
+The batch consolidates Field controls and Skills action properties, repairs
+clipboard and Story feedback, preserves concurrent Stop ownership, and fixes
+responsive controls and Reader navigation. Personal walks used port 3999 at
+1440x900 and 390x844 with owned data and controlled services. No whole-product,
+paid-provider or release acceptance is claimed.
+
+Twelve of 22 main batches are done. T-0192 through T-0199 remain authorised.
+T-0200 compatibility retirement remains deferred until after v1.0.0; T-0201
+depends on it. PR #157 merge, settings, tags and releases remain operator actions.
+The 76 current dispositions are 53 done, 22 ruled out and one deferred history
+gap. Eleven additional findings retain named T-0192/T-0193 owners. The Windows
+rename EPERM remains unresolved under T-0195, despite subsequent passing checks.
+
+Current census: source 102,132; tests 147,076; tooling 13,667; repeated source
+and test windows 807/4,796; one-importer components 103. Fixed targets remain.
+T-0192 must reconcile 41 findings, 16 split rulings and 25 coverage obligations,
+retain route/auth/read-only contracts, and reproduce its focused defects before
+repair. Include real seed-read latency, unread Script Save, Composer graph
+disclosure and the public credential shape. Do not infer a production latency
+fix from the component fixture's seed preloading.
+
+Earlier checkpoints below describe their own revisions and remain as history.
 
 ## Previous accepted batch, 2026-10-02
 

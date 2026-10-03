@@ -266,3 +266,34 @@ Final-tree gate1791056177702 passedlint/types but stopped atJest:8398pass1fail9h
 
 
 Laplace permits a new complete verification after syncing evidence-only task/review/plan records and rendered views. Runtime source, tests, scripts, baseline, environment and concurrency remain unchanged from1791056177702; the complete trees differ only in recorded metadata, and are not described as byte-identical. The next gate must fingerprint its frozen tree and bind the separate test commit through staged-tree equality. Nash confirms cleanup follows both rename failures and Windows skips existing-file chmod; no source evidence supports cleanup-race or read-only-mode attribution.
+
+## Final bounded acceptance
+
+At `2f0ccfb7`, gate `1791056851437` passes all ten stages on an unchanged
+tree: 8,399 unit tests, 423 browser tests, database-purity checks and both
+censuses. Nine unit and 24 browser skips remain historical. The committed
+sweep catches all 19 mutants, with 134 controls before and after and exact
+restoration. The combined m07 mutation does not independently prove the
+post-publication guard. `tmp/t0191-gate-sweep-binding.json` proves the precommit gate
+stamp from current actual contents and modes over 2,626 paths; only HEAD and
+index metadata account for the committed stamp difference.
+
+The first sweep remains 18 KILLED and one ERROR. Galileo's independently
+reviewed three-site amendment retains all 23 names and timer visibility.
+The earlier Windows rename EPERM, browser failures and sandbox failures remain
+recorded. An unchanged isolated nine-case suite and complete gate pass; the
+Windows cause is still unresolved under T-0195. No retry was added to production.
+
+Laplace's final acceptance and all required implementation-head hosted jobs
+pass. Closure-head hosted jobs remain required before the next batch opens.
+The 76 dispositions are 53 done, 22 ruled out and one deferred historical
+evidence gap. All 11 additional findings retain their T-0192/T-0193 owners.
+Completed investigation does not imply those defects are repaired. The
+remaining component-window attribution retains genuine convergence candidates.
+
+Source lines: 102,132; test lines: 147,076; tooling lines: 13,667; repeated
+source/test windows: 807/4,796; one-importer components: 103. Source decreased
+246 lines and 88 physical lines covered by repeated windows from T-0190; tests grew 1,926 lines with
+written reasons. Fixed targets and the 4,800 test-repeat ceiling remain.
+Personal desktop/phone walks used owned port 3999 fixtures, real local sign-in
+and controlled services. This is bounded verification, not release acceptance.
