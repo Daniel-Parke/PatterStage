@@ -779,5 +779,15 @@
     "result": "46cases:26pass,10missing-helper contracts,5missing-import structural checks,5behavioural deploy failures; no runtime errors or pending cases.",
     "limits": "Copied CLI probes stop before application import. Copied deploy runner intercepts external effects; actual child only records handoff, not real deployment. AST imports alone do not prove consolidation; source review must check helper calls and removal of all five duplicate loaders. Historical alias and packaging controls remain required.",
     "typecheck": "Explicit tsconfig.tests.json and focused lint exit0; repeated test windows4796/4800."
+  },
+  "scriptTypecheckOracle": {
+    "file": "tests/unit/scripts-typecheck-contract.test.ts",
+    "sha256": "b7a5b7c81c4e164af788679348179eef0fa1a77f9d3fb6eaeb16ec01386ad650",
+    "author": "Galileo",
+    "reviewer": "Laplace",
+    "receipt": "tmp/t0191-green-validation/tmp/t0192-typing-oracle-1791071397501",
+    "result": "8cases:2controls pass,6missing-contract failures. Five stop at missing config; one exposes missing mandatory wiring.",
+    "baseline": "Three TS5097 diagnostics at scripts/docs/check.mts lines29-31. Existing explicit extension imports need allowImportingTsExtensions in a no-emit config.",
+    "limits": "Passing isolated control proves compiler refusal/correction without CLI execution. Production-config planted TS/MTS tests and actual scripts program remain unexecuted until config implementation. No full-gate claim."
   }
 }

@@ -142,7 +142,9 @@
     "scripts/tooling/import-hermes-state.ts",
     "scripts/tooling/migrate-db.ts",
     "scripts/tooling/seed-catalog.ts",
-    "scripts/tooling/retention-prune.ts"
+    "scripts/tooling/retention-prune.ts",
+    "package.json",
+    "tsconfig.scripts.json"
   ],
   "timestamps": {
     "opened": "2026-10-03T20:37:32.586979+00:00",
@@ -186,7 +188,8 @@
       "tests/unit/route-local-catch-contract.test.ts",
       "tests/unit/template-create-identifiers.test.ts",
       "tests/e2e/script-editor-pending-draft.spec.ts",
-      "tests/unit/tooling-env-contract.test.ts"
+      "tests/unit/tooling-env-contract.test.ts",
+      "tests/unit/scripts-typecheck-contract.test.ts"
     ],
     "hashes": {
       "tests/unit/api-fetch-error-envelope.test.ts": "f19bdd09a27ac0e4204ed36fe873cfc81adc7946f8b0ffab644a6bfe6135db51",
@@ -210,7 +213,8 @@
       "tests/unit/route-local-catch-contract.test.ts": "dc4255a9f6bba308215389d543dfba68f7f22da32c53c9530047149e6a221de8",
       "tests/unit/template-create-identifiers.test.ts": "457f19df38ecf10011e32224dc9e638586678f9ca3a8fee722071733558dac71",
       "tests/e2e/script-editor-pending-draft.spec.ts": "a7114aca2e3d0304d5c9401567b217ae5c21c16d8410e0b7604bb074ad258820",
-      "tests/unit/tooling-env-contract.test.ts": "c2994435592fbeaa804a53adc2c008927b067824ea3b90f70ad6f5be213e5c43"
+      "tests/unit/tooling-env-contract.test.ts": "c2994435592fbeaa804a53adc2c008927b067824ea3b90f70ad6f5be213e5c43",
+      "tests/unit/scripts-typecheck-contract.test.ts": "b7a5b7c81c4e164af788679348179eef0fa1a77f9d3fb6eaeb16ec01386ad650"
     },
     "author_session": "Galileo and Sartre original authors; Halley and Sartre independent amendments; full attribution in org/reviews/2026-10-t0192-task-evidence.json; Nash independently corrected diagnostic candidate and authored ConfigSync replacement oracle; coordinator authored schedule persistence characterisation before consolidation; coordinator authored template identifier oracle before correction; Galileo tooling environment oracle independently reviewed by Laplace",
     "independence_method": "metamorphic",
