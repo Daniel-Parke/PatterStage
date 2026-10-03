@@ -7,7 +7,11 @@ updated: 2026-10-02
 
 # Handover · PatterStage, 2026-10-02
 
-## Current programme, 2026-10-03
+## Active batch, 2026-10-03
+
+T-0192 is open at R2 after every T-0191 closure-head hosted job passed. Independent oracles precede implementation. It owns41findings,16operator dispositions and25coverage obligations, plus linked defects and latency investigation. See [record](tasks/T-0192.json) and [opening](reviews/2026-10-t0192-route-verification.md). No new implementation or product acceptance is implied.
+
+## Previous accepted batch, 2026-10-03
 
 T-0191 is independently accepted at `2f0ccfb7`: all ten unchanged-tree gate
 stages, 8,399 unit and 423 browser passes, 19 causal mutant kills and 134

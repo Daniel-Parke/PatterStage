@@ -1,0 +1,38 @@
+# T-0192 route and application verification
+
+Opened at clean dev `49aa7a604cfead440c6cce827a53d2a294408e60`, ruledR2. Closure-head hosted jobs for T0191 allpass. No oracle authored or implementation started.
+
+# T-0192 opening preparation at 2f0ccfb7
+
+Read-only preparation by Halley and Nash, coordinator transcription. No task opening, oracle freeze or implementation acceptance. T-0191 closure-head hosted jobs must pass first.
+
+Halley reconciled 41 findings,16 OP dispositions,25 coverage obligations. Reuse completed app-06 non-host proxy guard, app-04 catch detector, cross-cutting-14 Chat SimpleMarkdown migration, cross-cutting-21 storage guard and T0190 hook ownership. Preserve cross-cutting-04/app-21 compatibility to first-post-v1 under T0200. app-02/app-14 needs narrower prop composition, not another hook extraction.
+
+Required route cohorts: app-05/07/11/12/13/18, cross-cutting-10 exact wrapper, params, scheduling, guards, envelopes and required/optional parsing contracts. app-16 startup recovery remains after throwing calls; cross-cutting-01 boot flag no/off mismatch; cross-cutting-02 gateway status/runtime mismatch. Environment/home/logging/types/config/type convergence must receive bounded evidence, not blanket rewrites. Preserve shell-wins scripts versus file-wins deploy and ADR0005 exceptions. Assess standalone proxy independently.
+
+Six source-supported defect claims: profiles/[id]/route.ts changed-slug metadata; useSettingsEditor.ts newer draft erased at save; fallback-sync.ts empty chain early return; useModelActions.ts semantic bulk failures; rec-room/handlers/crud.ts false-empty catch; api-fetch.ts JSON-null cronPushError access. Add independent red reproduction for each. Additional current followups: unread Script Save; incomplete Composer graph disclosure; six real seed endpoints latency cause unproved. Public ApiCredential/CredentialSummary convergence must keep hint-only surface and private CredentialWithKey.
+
+Nash proposes minimum consolidation using existing factories: sync/status plain envelopes projected18source lines, not implemented savings. Fixed-message catches syncGET/updateGET/POST can reuse route with exact guard order. Dynamic syncPOST/categoryGET/PUT errors are not compatible with serverErrorFromError as written: String(Error) preserves Error: prefix in sync; categories require message/fallback. Freeze Error/empty/string/nonError throws before selecting helper. Do not add a general body framework.
+
+Existing 76 route files use route();24 mention schema parser,24 plain parser,3optional parser. Remaining direct route request.json sites prefs/update/backfill must stay separate. Preferences has distinct wording; update signature/read-only/deploy order; backfill default dry-run and null distinction; Composer approval bespoke errors; Hindsight503/500nesteddata; HTTP200partialsuccess; auth/cookies/raw/streams retain contracts. New URL/method inventory and caller-gate tests are absent and need exact claims. Handler tests with mocked auth cannot prove proxy refusals.
+
+Reuse c1-one-route-body,api-response,parse-optional-json-body,api-json-400-regressions,missions-invalid-json-400,sync-api-route,mission-categories-route,update-api,deploy-action-fallback and current framework/session e2e. Retain all identities. Actual net counts include helpers/imports and separate test/docs growth.
+
+No new operator choice identified yet. Scope/router/exact claims and current contracts must be frozen before implementation; the Story false-empty bug fix needs its existing explicit response-behaviour exception restated. Broader proposed claim globs are not ownership.
+
+## Independent defect oracle proposal, Galileo
+
+No implementation read beyond current source. Proposed exact files: tests/unit/api-fetch-error-envelope.test.ts; tests/unit/settings-save-draft-ownership.test.tsx; tests/unit/model-bulk-default-feedback.test.tsx; tests/unit/story-list-failure-contract.test.ts; tests/integration/t0192-route-persistence.mjs; tests/e2e/route-contract-followups.spec.ts.
+
+Profiles require real isolated SQLite/profile directories, changed/same slug metadata, clearing description, filesystem failure and reference consistency. Settings requires40->submit41->type42 while real response held, baseline41/draft42, refusal and unchanged success. Fallback requires actual endpoints+SQLite+synthetic YAML for sole-disable/last-delete/explicitempty, nonempty order, unrelated keys, backup/write refusal. Bulk defaults covers allsuccess/semantic/transport/mixed, refreshed defaults and malformed owned YAML partial success. Story separates injected repository exception from genuine empty/healthy/parser preservation and UI recovery. apiFetch uses real Response with null/primitives/arrays/objects/invalidJSON and exact published error precedence. Script holds/refuses GET but keeps PUT real and independently checks synthetic file bytes, then successful read/edit/save and stale selection. Composer holds/refuses graph, requires complete stages/write warning/recovery and one explicit confirmation, refuses run response to prevent providers; stale graph must not qualify. Preserve engine HIL tests.
+
+Historical composer-review-control.test.tsx supplies no graph but expects launch. Independently amend only fixture to loaded graph after exact review, retaining three names/assertions: labelled Review; opens review rather than running; run only from Confirm and launch. Capture hash/name baseline and authority before amendment. Other profile/fallback/feedback/Story/Settings suites retain all identities. Browser fixtures use normal concurrency, real signin, both widths, drained callbacks and no timeout/retry relaxation. This defect subset does not discharge route matrix, credential shape or latency evidence.
+
+## Laplace opening critique
+
+Approach fits existing authority, no new operator decision evident. Three mandatory details: standalone persistence.mjs would be outside Jest/gate and needs executable mandatory wiring, preferably discovered e2e with isolated real storage; freeze full URL/method inventory and caller-gate plus individual four-operator-route labels/allowlist before route edits; explicitly measure built-app cold/warm Windows AND Linux endpoints with event-loop investigation. Preserve Story's narrow failure-response exception and all other contract boundaries. Historical Composer fixture amendment requires exact independent review and unchanged three names/assertions/two-step launch. No phase can discharge the82rows without evidence or justify unmeasured savings.
+
+Galileo refinement replaces standalone persistence.mjs with discovered tests/e2e/route-contract-persistence.spec.ts plus tests/helpers/route-contract-runtime.ts. Test-scoped root/random token/loopbackport, real production build and SQLite, stripped inherited runtime/provider env, owned data/Hermes/home/temp, refuse checkout envfiles, explicit origin+signin and cleared inheritedBearer, synthetic profiles/keylessmodels/neverexecutedscripts, awaited readiness/callbackdrain/DBclose/process-exit. Preserve normal concurrency/zero retries; do not kill foreign listeners or delete roots still in use. Deterministic owned-path obstruction proves write refusal crossplatform. Helper isolation/lifecycle require exact independent review before freeze. Current process.execPath must remain ABI-compatible with builtdependencies; do not hardcode localWindowsNode path in portabletests.
+
+
+The preceding preparation is historical read-only evidence; this opening record now governs exact claims. The complete82-row ledger remains pending; none is discharged by source review alone.

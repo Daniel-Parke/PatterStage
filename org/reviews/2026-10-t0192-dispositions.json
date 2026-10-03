@@ -1,0 +1,1084 @@
+{
+  "task": "T-0192",
+  "draft": true,
+  "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+  "counts": {
+    "findings": 41,
+    "operatorDispositions": 16,
+    "coverage": 25
+  },
+  "groups": {
+    "findings": [
+      {
+        "id": "app-06",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/app-06",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Eleven non-host route guards were removed; exact authentication lifecycle writes qualify the proxy rule. Host-side guards remain. Two focused suites passed 21 tests.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "app-02",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/app-02",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Template fields are individually forwarded. The historical b10 suite exercises the hook, not the modal. Original saving estimate is unproved.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "app-08",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/app-08",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Both error boundaries exist. Source cannot establish that the outer fallback is unreachable if the inner error UI fails. Need an isolated error journey before removal.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "app-07",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/app-07",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Repeated context types persist. The historic 23-count and saving were not re-derived as a current net result.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "app-05",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/app-05",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Own catches and parameterised wrapper coexist. The historical seven-of-thirteen population predates the widened census; current report is 18 own-catch routes.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "app-04",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/app-04",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Detector now includes hand-rolled log-and-500 catches: 18 routes, 25 sites. Rewriting particular catches is separate app-04b work and must retain error text. Focused census tests passed.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "app-10",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/app-10",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: `toastElement` is null under the product shell; fallback can still render outside it and in tests. Do not call it universally dead.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "app-11",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/app-11",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Schedule checks and refusal text repeat across four paths, but result shapes differ.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "app-13",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/app-13",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Repeated composer flag guard and 503 sentence remain. A shared helper must preserve the API status/body.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "app-19",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/app-19",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Some old comments were corrected, but these still contradict behaviour or current paths.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "app-16",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/app-16",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Sync and scheduler can throw before recovery sweeps. No injected boot failure was run. Catalog seed catches internally, so the risk is narrower than all three bare calls.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "app-12",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/app-12",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Direct JSON responses and factories coexist. Current `rg -n 'NextResponse.json\\(' src/app/api` returned 44 text hits; the historical 31/19 semantic split was not reproduced.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "app-17",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/app-17",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Domain work remains in large route files despite extracted helpers. A move alone has no proved saving.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "app-20",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/app-20",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Two gateway fetch implementations remain. Streaming, authentication and timeout behaviour must be compared before sharing.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "app-18",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/app-18",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Raw and shared body parsing coexist; optional-body contracts differ deliberately.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "app-21",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/app-21",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Both CH aliases remain and may still serve pre-migration installs.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "app-09",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/app-09",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Different loading/error surfaces remain. Visual equivalence and saving were not tested.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "app-14",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/app-14",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Large pages still own state and handlers. Extraction value is unmeasured.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "cross-cutting-06",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/cross-cutting-06",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Directives remain; current search returned 294 lines, so historical 285 is stale. Override and directive deletion must be atomic.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "cross-cutting-04",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/cross-cutting-04",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Aliases remain. Retirement needs ruled tripwire and canonical signing tests; installed script copies complicate it.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "cross-cutting-17",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/cross-cutting-17",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Escape hatches remain; static hits alone do not prove runtime harm or historic grouping/count.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "cross-cutting-08",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/cross-cutting-08",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Multiple readers remain. The operator ruled **two** precedence rules: in-process scripts keep shell-wins, while the deploy runner re-reads `.env.local` file-wins so in-app Restart applies edits inherited from the old process. Strip surrounding quotes, retain supported aliases and deduplicate the TS copies; one universal precedence rule would change behaviour. No fixture or restarted server was run here.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "cross-cutting-15",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/cross-cutting-15",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: `truncate` has no found source caller; `safeJsonParse` is live in mission repository. Keep compound \u201cdead utils\u201d claim narrow.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "cross-cutting-07",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/cross-cutting-07",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Default-on flag and repeated guards remain. Explicit off is supported, so \u201cnever off\u201d describes shipped default only.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "cross-cutting-13",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/cross-cutting-13",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Different byte/number formatters remain; rounding contracts must be compared before merging.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "cross-cutting-12",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/cross-cutting-12",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Relative, elapsed and future time have different semantics; only equivalent cases are candidates.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "cross-cutting-14",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/cross-cutting-14",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Three renderers remain in source, but the later `components-30` ruling supersedes keep-three for chat: chat and skills should share `SimpleMarkdown`, with the link-scheme guard/test and code-block Copy preserved. Research remains separate. The independent escape-helper ruling excludes `proxy.ts`; sink safety and streaming cost require tests after implementation.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "cross-cutting-19",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/cross-cutting-19",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Seed rows duplicate in SQL and a TypeScript string.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "cross-cutting-22",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/cross-cutting-22",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: `ts-jest` remains ignored by Knip; full dependency/Next-option removal needs current tooling proof.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "cross-cutting-20",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/cross-cutting-20",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Repeated Hermes-home fallback remains; cross-process defaults must be reconciled.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "cross-cutting-16",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/cross-cutting-16",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Some helper bypasses remain; each apparent duplicate needs semantic matching.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "cross-cutting-18",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/cross-cutting-18",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Domain types are still imported upward from component files.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "cross-cutting-23",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/cross-cutting-23",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Naming and legacy-key drift remain; naming alone proves no behavioural defect.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "cross-cutting-09",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/cross-cutting-09",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: `scripts` excluded from typecheck configurations; stale `trace_import.ts` exclude remains. Historical type-clean scratch probe not rerun.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "cross-cutting-21",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/cross-cutting-21",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Separate **prefix** from **migration**: `cross-cutting-21b` keeps existing browser keys and sets a convention for new keys; it does not rename stored values. The Sessions `legacyKey` migration is the distinct `hooks-25` ruling: retain it until the alias-retirement date, then remove it with the documented reset of two display toggles. Guarded storage calls are `cross-cutting-21a`, not authority to rename keys. No browser storage was inspected here.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "cross-cutting-01",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/cross-cutting-01",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: `PS_COMPOSER=off` or `no` disables feature while boot prints `composer=on`. Source-supported defect; no boot process run.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "cross-cutting-02",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/cross-cutting-02",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Mismatch when `PS_LLM_API` has a chat-completions URL from which runtime derives another base; a bare base does not establish same case.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "cross-cutting-10",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/cross-cutting-10",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Raw error responses remain. Historical 62 misses multiline cases; preserve status/body equivalence.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "cross-cutting-11",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/cross-cutting-11",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Tag drift and some silent paths remain. Historical 28 includes client/CLI calls, not a server-only count.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "cross-cutting-05",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/cross-cutting-05",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Three live variables are absent from the \u201cevery variable\u201d reference; historical \u201cat least 12\u201d not recounted.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "cross-cutting-03",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#findings/cross-cutting-03",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Reverify this T-0164 source-level observation and its item ruling before any edit: Multiple env readers and boolean vocabularies remain. Registry needs explicit precedence and fail-closed cases.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      }
+    ],
+    "operatorDispositions": [
+      {
+        "id": "app-06",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#operatorDispositions/app-06",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "org/reviews/2026-09-decision-register.md:1121; Reverify the item-specific ruled disposition against its accepted decision and parent qualification.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "app-01a",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#operatorDispositions/app-01a",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "org/reviews/2026-09-decision-register.md:2008; Keep the manual sweep route and label its API reference row as an operator action with no UI caller.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "app-01b",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#operatorDispositions/app-01b",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "org/reviews/2026-09-decision-register.md:2021; Keep progression history and label its API reference row as having no UI caller yet.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "app-01c",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#operatorDispositions/app-01c",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "org/reviews/2026-09-decision-register.md:2034; Keep the provider status route and label its API reference row as having no UI caller.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "app-01d",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#operatorDispositions/app-01d",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "org/reviews/2026-09-decision-register.md:2047; Keep the documented operator route and add its item-specific API reference label.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "app-01h",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#operatorDispositions/app-01h",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "org/reviews/2026-09-decision-register.md:3086; Add the ruled caller gate for four documented, uncalled operator routes.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "app-04b",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#operatorDispositions/app-04b",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "org/reviews/2026-09-decision-register.md:1814; Reverify the item-specific ruled disposition against its accepted decision and parent qualification.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "app-16",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#operatorDispositions/app-16",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "org/reviews/2026-09-decision-register.md:2396; Reverify the item-specific ruled disposition against its accepted decision and parent qualification.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "app-18",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#operatorDispositions/app-18",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "org/reviews/2026-09-decision-register.md:3103; Reverify the item-specific free-band disposition against its accepted decision and parent qualification.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "app-21",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#operatorDispositions/app-21",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "org/reviews/2026-09-decision-register.md:1305; Reverify the item-specific ruled disposition against its accepted decision and parent qualification.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "cross-cutting-06",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#operatorDispositions/cross-cutting-06",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "org/reviews/2026-09-decision-register.md:1644; Reverify the item-specific ruled disposition against its accepted decision and parent qualification.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "cross-cutting-08",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#operatorDispositions/cross-cutting-08",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "org/reviews/2026-09-decision-register.md:1493; Reverify the item-specific ruled disposition against its accepted decision and parent qualification.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "cross-cutting-07",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#operatorDispositions/cross-cutting-07",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "org/reviews/2026-09-decision-register.md:2410; Reverify the item-specific ruled disposition against its accepted decision and parent qualification.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "cross-cutting-22",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#operatorDispositions/cross-cutting-22",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "org/reviews/2026-09-decision-register.md:1870; Reverify the item-specific ruled disposition against its accepted decision and parent qualification.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "cross-cutting-16",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#operatorDispositions/cross-cutting-16",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "org/reviews/2026-09-decision-register.md:3105; Reverify the item-specific free-band disposition against its accepted decision and parent qualification.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "cross-cutting-11",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#operatorDispositions/cross-cutting-11",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "org/reviews/2026-09-decision-register.md:2424; Reverify the item-specific ruled disposition against its accepted decision and parent qualification.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      }
+    ],
+    "coverage": [
+      {
+        "id": "gap-055.1",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-055.1",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, each of 11 named pages: read body, handler ownership and calls. Starting check: rg --files src/app | rg 'page.tsx'. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "gap-056.1",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-056.1",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Reconstruct the exact route-file roster named by the historical families. Starting check: rg --files src/app/api | rg 'route.ts'. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "gap-056.2",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-056.2",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, each listed route file: read all methods, validation, errors and side effects. Starting check: rg --files src/app/api | rg 'config|credentials|models|monitor|logs|sessions|chat|composer|laboratory/research|artifacts|skills|agent/root|agent/profiles|sync|fs|analytics/timeseries|status|schedules'. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "gap-057.1",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-057.1",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Run relevant Jest behaviour checks. Starting check: rg -n 'app-08|app-15|ErrorBoundary|redirect' tests/unit tests/e2e. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "gap-057.2",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-057.2",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Verify app-08 ErrorBoundary overlap at runtime. Starting check: src/app/layout.tsx:150; src/app/error.tsx:1. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "gap-057.3",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-057.3",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Verify app-15 redirect chain at runtime. Starting check: rg -n 'redirect' src/proxy.ts src/app. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "gap-057.4",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-057.4",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Replace app-23's 2026-09-10 build-artefact evidence with current build evidence. Starting check: org/reviews/2026-09-codebase-review-evidence.md:1539-1554. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "gap-057.5",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-057.5",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Run visual browser check for these app claims. Starting check: rg --files tests/e2e. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "gap-058.1",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-058.1",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Detect routes assembled from variables or path fragments. Starting check: rg -n 'fetch\\(|apiFetch|safeApiCall' src scripts. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "gap-059.1",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-059.1",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At the current tree, Review globals.css against current UI-overhaul tokens. Starting check: src/app/globals.css:1. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "gap-060.1",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-060.1",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Verify hard-coded colours remain in proxy's inline refusal page. Starting check: src/proxy.ts:139. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "gap-060.2",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-060.2",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Compare inline page against current tokens and judge standalone exception. Starting check: rg -n '#05080d|#0d1420|#eaf2f8' src/proxy.ts src/app/globals.css. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "gap-061.1",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-061.1",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Identify tests that pin app-18's individual 400 response sentences. Starting check: rg -n 'status: 400|status\\).toBe\\(400\\)|error.*toEqual|error.*toBe' tests/unit. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "gap-061.2",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-061.2",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, each of seven app-05 routes: identify tests pinning log context. Starting check: rg -n 'listing missions|pushing model|reading session|fallback action|logApiError' tests/unit. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "gap-062.1",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-062.1",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Verify ReaderSettings font roster and reader use. Starting check: src/modules/rec-room/components/ReaderSettings.tsx:34-39,186-194; src/app/recroom/story-weaver/[id]/page.tsx:416. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "gap-062.2",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-062.2",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Measure those fonts for app-22 visual/accessibility claim. Starting check: rg -n 'fontFamily|FONTS' src/modules/rec-room/components/ReaderSettings.tsx. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "gap-063.2",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-063.2",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Reconstruct and pin repeatable orphan/page-shape methods. Starting check: org/reviews/2026-09-codebase-review-evidence.md:1363-1368. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "gap-081.b",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-081.b",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Recheck client imports and deferred Flow dependency. Starting check: rg -n 'use client|zod|js-yaml|@xyflow/react|next/dynamic' src. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "gap-084.a",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-084.a",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Verify PS_COMPOSER=no/off reporting mismatch. Starting check: boot-diagnostics.ts:46 (src/lib/deploy/boot-diagnostics.ts:46) recognises only 0/false; feature-flags.ts:15 (src/lib/feature-flags.ts:15) also recognises no/off. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "gap-084.b",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-084.b",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Verify conditional gateway-reporting mismatch. Starting check: runtime-status.ts:77 (src/lib/status/runtime-status.ts:77) reads only HERMES_GATEWAY_URL; agent-runtime.ts:30 (src/modules/hermes/lib/agent-runtime.ts:30) can derive a different base from PS_LLM_API containing /v1/chat/completions. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "gap-084.c",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-084.c",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: In an isolated or authorised fixture, Prove both mismatches in process. Starting check: Focus boot/status tests with those exact environment values. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "gap-085.b",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-085.b",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Classify all 253 by error consequence. Starting check: AST site list plus caller/response trace. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "gap-087.a",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-087.a",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Inventory client error messages and duplicate spellings. Starting check: rg -n 'setError|toast|role=\\\"alert\\\"' src/app src/components src/hooks. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "gap-088.a",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-088.a",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Recount direct src/lib module imports. Starting check: rg -n '@/modules/' src/lib: six static imports in five files; additional type/dynamic references appear in modules/server.ts. Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      },
+      {
+        "id": "gap-088.b",
+        "sourceReference": "org/plans/2026-09-refactor-ownership.json#coverage/gap-088.b",
+        "inspectedRevision": "49aa7a604cfead440c6cce827a53d2a294408e60",
+        "evidence": [
+          "tmp/t0192-opening-reconciliation.md"
+        ],
+        "scepticVerdict": "Opening read-only reconciliation only; final evidence and independent verdict pending.",
+        "ruling": "Run this T-0164 atomic next proof before closing its owner batch: At current HEAD, Classify each import against ADR-0005 and current exceptions. Starting check: ADR-0005:50 (org/decisions/ADR-0005-product-modules.md:50), LOCKBOOK:169 (org/LOCKBOOK.md:169). Record command/exit or exact file:line, revision and independent review.",
+        "owningTask": "T-0192",
+        "status": "pending-final-disposition",
+        "remainingUncertainty": "Reverify and link current proof before marking done, ruled out or deferred."
+      }
+    ]
+  }
+}
